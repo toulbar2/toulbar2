@@ -37,13 +37,14 @@ protected:
     virtual void dummy() = 0;	// avoid any instantiation of ToulBar2
 public:
     static int verbose;
+    static bool showSolutions;
 };
 
 /*
  * Classes and basic data structures used everywhere
  * 
  */
- 
+
 class CostVariable;
 class Constraint;
 class WCSP;
