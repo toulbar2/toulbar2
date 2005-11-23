@@ -36,10 +36,13 @@ public:
     }
     
     CostVariable *pop() {
+        assert(!empty());
         DLink<CostVariableWithTimeStamp> *elt = pop_back(false);
         elt->content.timeStamp = -1;
         return elt->content.var;
     }
+    
+    CostVariable *pop_min();
 };
 
 #endif /*TB2QUEUE_HPP_*/
