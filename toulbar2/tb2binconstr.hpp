@@ -46,10 +46,21 @@ class BinaryConstraint : public Constraint
     friend void projection(BinaryConstraint *c, CostVariable *x, Value valueY, GetCostFunc getCost);
     friend bool verify(BinaryConstraint *c, CostVariable *x, CostVariable *y, GetCostFunc getCost);
 
+#ifdef FASTWCSP
+    friend void findSupportFast(BinaryConstraint *c, CostVariable *x, CostVariable *y, 
+            vector<Value> &supportX, vector<StoreCost> &deltaCostsX, GetCostFunc getCost);
+    friend void projectionFast(BinaryConstraint *c, CostVariable *x, Value valueY, GetCostFunc getCost);
+    void findSupportX() {findSupportFast(this,x,y,supportX,deltaCostsX,::getCost);}
+    void findSupportY() {findSupportFast(this,y,x,supportY,deltaCostsY,::getCostReverse);}
+    void projectX() {projectionFast(this,x,y->getValue(),::getCost);}
+    void projectY() {projectionFast(this,y,x->getValue(),::getCostReverse);}
+#else
     void findSupportX() {findSupport(this,x,y,supportX,deltaCostsX,::getCost);}
     void findSupportY() {findSupport(this,y,x,supportY,deltaCostsY,::getCostReverse);}
     void projectX() {projection(this,x,y->getValue(),::getCost);}
     void projectY() {projection(this,y,x->getValue(),::getCostReverse);}
+#endif
+
     bool verifyX() {return ::verify(this,x,y,::getCost);}
     bool verifyY() {return ::verify(this,y,x,::getCostReverse);}
     
@@ -75,7 +86,7 @@ public:
     void decrease(int varIndex) {propagate(varIndex);}
     void remove(int varIndex) {propagate(varIndex);}
     void assign(int varIndex) {
-        deconnect();
+        deconnect();                    // Warning! deconnection has to be done before the projection
         if (varIndex == 0) projectY(); else projectX();
     }
     
