@@ -39,6 +39,7 @@ public:
     int getSize() const {return size;}
     bool empty() const {return size == 0;}
     
+    // Warning! Not backtrackable...
     void clear() {size = 0; head = NULL; last = NULL;}
     
     void push_back(DLink<T> *elt, bool backtrack) {
@@ -143,6 +144,8 @@ public:
             assert(elt != NULL);
             return elt->content;
         }
+        
+        DLink<T> *getElt() const {return elt;}
         
         iterator &operator++() {    // Prefix form
             if (elt != NULL) {
