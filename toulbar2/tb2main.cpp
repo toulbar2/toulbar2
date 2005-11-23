@@ -75,7 +75,12 @@ void test() {
 }
 
 int main(int argc, char **argv) {
-    ToulBar2::verbose = 0;
+    if (argc<=1) {
+        cerr << "Missing wcsp filename as first argument!" << endl;
+        exit(EXIT_FAILURE);
+    } 
+    if (argc>=3) ToulBar2::verbose = atoi(argv[2]);
+    if (argc>=4) ToulBar2::showSolutions = true;
     // test();
     Store store(16);
     Variable obj("obj",0,MAX_COST,&store);
