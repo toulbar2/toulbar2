@@ -14,6 +14,7 @@
  */
  
 int ToulBar2::verbose  = 0;
+bool ToulBar2::showSolutions  = false;
 
 
 /*
@@ -28,6 +29,13 @@ WCSP::WCSP(Variable *obj, Store *s) : objective(obj), storeData(s),
         nbNodes(0), nbBacktracks(0)
 {
     objective->addWCSP(this, -1);
+}
+
+WCSP::~WCSP()
+{
+    for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
+    for (unsigned int i=0; i<constrs.size(); i++) delete constrs[i];
+    for (unsigned int i=0; i<readVars.size(); i++) delete readVars[i];
 }
 
 // create a CostVariable object AND link it and the original variable to the wcsp
@@ -67,9 +75,18 @@ int WCSP::addBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab)
     CostVariable *yy = vars[link(y)];
     Constraint *c = new BinaryConstraint(xx,yy,tab,&storeData->storeCost);
     int index = link(c);
-   c->propagate();
+    c->propagate();
     propagate();
     return index;
+}
+ 
+Value WCSP::getDomainSizeSum()
+{
+    Value sum = 0;
+    for (unsigned int i=0; i<vars.size(); i++) {
+        if (vars[i]->unassigned()) sum += vars[i]->getDomainSize();
+    }
+    return sum;
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp)
@@ -117,7 +134,11 @@ void WCSP::propagateNC()
     if (ToulBar2::verbose >= 2) cout << "NCQueue size: " << NC.getSize() << endl;
     while (!NC.empty()) {
         CostVariable *x = NC.pop();
+#ifdef FASTWCSP
+        if (x->unassigned()) x->propagateNCFast();
+#else
         if (x->unassigned()) x->propagateNC();
+#endif
     }
     if (ToulBar2::verbose >= 3) {
         for (unsigned int i=0; i<vars.size(); i++) cout << *vars[i] << endl;
@@ -127,9 +148,14 @@ void WCSP::propagateNC()
     if (objectiveChanged) {
         objectiveChanged = false;
         for (int bucket = cost2log2(getUb() - getLb() + 1); bucket < NCBucketSize; bucket++) {
-            for (CostVariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end(); ++iter) {
+            for (CostVariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end();) {
                 CostVariable *x = *iter;
+                 ++iter; // Warning! the previous iterator could be moved to another place by propagateNC
+#ifdef FASTWCSP
+                if (x->unassigned() && x->maxCost + getLb() > getUb()) x->propagateNCFast();
+#else
                 if (x->unassigned() && x->maxCost + getLb() > getUb()) x->propagateNC();
+#endif
             }
         }
     }
@@ -150,5 +176,5 @@ void WCSP::propagate()
         propagateAC();
         while (objectiveChanged || !NC.empty()) propagateNC();
     }
-    if (ToulBar2::verbose >= 2) verify();
+    assert( verify() );
 }

@@ -34,7 +34,9 @@ class WCSP {
 
     // Search methods
     CostVariable *getVarMinDomainDivMaxDegree();
+    CostVariable *getNextUnassignedVar();
     void binaryChoicePoint(CostVariable *x, Value value);
+    void naryChoicePoint(CostVariable *x);
     void recursiveSolve();
 
     // make it private because we don't want copy nor assignment
@@ -43,12 +45,8 @@ class WCSP {
     
 public:
     WCSP(Variable *objective, Store *s);
-
-    ~WCSP() {
-        for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
-        for (unsigned int i=0; i<constrs.size(); i++) delete constrs[i];
-        for (unsigned int i=0; i<readVars.size(); i++) delete readVars[i];
-    }
+    
+    ~WCSP();
 
     // Warning! Can return NULL if index corresponds to the objective
     CostVariable *getVar(int index) {return (index >= 0)?vars[index]:NULL;}
@@ -79,6 +77,7 @@ public:
     void read_wcsp(const char *fileName);
 
     void printNCBuckets();
+    Value getDomainSizeSum();
     
     bool solve();
     
