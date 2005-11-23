@@ -99,6 +99,7 @@ void Variable::decrease(Value newSup)
 
 void Variable::assign(Value newValue)
 {
+    assert(value > sup);
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
     if (unassigned() || value != newValue) {
         if (cannotbe(newValue)) throw Contradiction();

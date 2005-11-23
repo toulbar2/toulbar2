@@ -8,9 +8,23 @@
 
 #include "tb2domain.hpp"
 
+/*
+ * Backtrack exception
+ * 
+ */
+
+class Contradiction {
+public:
+    Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
+};
+
+/*
+ * Main class
+ * 
+ */
+
 class Variable
 {
-private:
     bool enumerated;            // should be a constant
     string name;
     StoreValue inf;
@@ -48,7 +62,21 @@ public:
     void decrease(Value newSup);
     void assign(Value newValue);
     void remove(Value val);
-
+#ifdef FASTWCSP
+    bool removeFast(Value val) {     // return true if variable is assigned
+        assert(enumerated);
+        assert(canbe(val));
+        if (ToulBar2::verbose >= 2) cout << "removeFast " << *this << " <> " << val << endl;
+        if (inf == sup) throw Contradiction();
+        if (inf == val) inf = domain.increase(val + 1);
+        else if (sup == val) sup = domain.decrease(val - 1);
+        else domain.erase(val);
+        if (inf == sup) {
+            value = inf;
+            return true;
+        } else return false;
+    }
+#endif
     class iterator;
     friend class iterator;
     class iterator {
@@ -164,16 +192,6 @@ public:
         os << "/" << var.getDegree();
         return os;
     }
-};
-
-/*
- * Backtrack exception
- * 
- */
-
-class Contradiction {
-public:
-    Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
 
 /*
