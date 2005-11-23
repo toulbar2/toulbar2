@@ -1,32 +1,32 @@
-SRCS = $(wildcard toulbar2/tb2*.cpp)
+SRCS = $(wildcard tb2*.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
 
 CC = g++
 ICC = icc
 
-CFLAGS = -Wall
+CFLAGS = -Wall -g3
 
-# -ftrapv -g3 -ansi
-OFLAGS = -O3 -funroll-loops -fomit-frame-pointer -DNDEBUG
+# -ftrapv -g3 -ansi -pedantic
+OFLAGS = -O3 -funroll-loops -DNDEBUG -DFASTWCSP
+#OFLAGS = -O3 -funroll-loops -fomit-frame-pointer -DNDEBUG
 ICCFLAGS = -O3 -ipo -static -DNDEBUG
 
-PFLAGS = 
-# -pg -g3
+PFLAGS = -pg -g3
 
 %.o : %.cpp
 	$(CC) $(OFLAGS) $(CFLAGS) -c -o $@  $< $(PFLAGS)
 
 toulbar2: $(OBJS)
-	$(CC) $(OBJS) -o toulbar2/$@ $(PFLAGS)
+	$(CC) $(OBJS) -o $@ $(PFLAGS)
 
 toulbar2i: $(SRCS)
-	$(ICC) $(SRCS) -o toulbar2/$@ $(ICCFLAGS) $(CFLAGS)
+	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)
 
 lint: $(SRCS)
 	splint -nullassign -nullstate -globstate -compdef -unqualifiedtrans $(SRCS)
 
 clean:
-	-rm -f toulbar2/*.o toulbar2/toulbar2 toulbar2/toulbar2i
+	-rm -f *.o toulbar2 toulbar2i
 
 all:	toulbar2 toulbar2i
