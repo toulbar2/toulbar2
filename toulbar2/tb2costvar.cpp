@@ -53,7 +53,9 @@ ostream& operator<<(ostream& os, CostVariable &var)
             os << " " << var.getInfCost() << "," << var.getSupCost();
         }
         os << " > s:" << var.support;
+#ifndef FASTWCSP
         assert(var.canbe(var.support) && var.getCost(var.support)==0);
+#endif
     }
     for (ConstraintList::iterator iter=var.constrs.begin(); iter != var.constrs.end(); ++iter) {
         os << " (" << (*iter).constr << "," << (*iter).scopeIndex << ")";
@@ -154,6 +156,7 @@ void CostVariable::propagateNC()
     Value maxcostvalue = getSup()+1;
     Cost maxcost = -1;
     // Warning! Avoid reinsertion into NC due to a value removal
+    long long temp = linkNCQueue.content.timeStamp;
     linkNCQueue.content.timeStamp = wcsp->nbNodes;
     // Warning! the first value must be visited because it may be removed
     for (iterator iter = begin(); iter != end(); ++iter) {
@@ -164,17 +167,44 @@ void CostVariable::propagateNC()
             maxcost = getCost(*iter);
         }
     }
-    linkNCQueue.content.timeStamp = -1;
+    linkNCQueue.content.timeStamp = temp;
     setMaxUnaryCost(maxcostvalue);
 }
+
+#ifdef FASTWCSP
+void CostVariable::propagateNCFast()
+{
+    assert(enumerated);
+    if (ToulBar2::verbose >= 3) cout << "propagateNCFast for " << getName() << endl;
+    bool removed = false;
+    Value maxcostvalue = getSup()+1;
+    Cost maxcost = -1;
+    // Warning! the first value must be visited because it may be removed
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        if (getCost(*iter) + wcsp->getLb() > wcsp->getUb()) {
+            if (removeFast(*iter)) return;
+            removed = true;
+        } else if (getCost(*iter) > maxcost) {
+            maxcostvalue = *iter;
+            maxcost = getCost(*iter);
+        }
+    }
+    setMaxUnaryCost(maxcostvalue);
+    if (removed) queueAC();
+}
+#endif
 
 bool CostVariable::verifyNC()
 {
     bool supported = false;
     for (iterator iter = begin(); iter != end(); ++iter) {
-        if (getCost(*iter) + wcsp->getLb() > wcsp->getUb()) return false;
+        if (getCost(*iter) + wcsp->getLb() > wcsp->getUb()) {
+            cout << *this << " not NC!" << endl;
+            return false;
+        }
         if (getCost(*iter) == 0) supported = true;
     }
+    if (!supported) cout << *this << " not NC*!" << endl;
     return supported;
 }
 
@@ -203,8 +233,12 @@ void CostVariable::decreaseWCSP()
 void CostVariable::assignWCSP()
 {
     changeNCBucket(-1);
+    support = getValue();
+    maxCostValue = getValue();
+    maxCost = 0;
     Cost cost = getCost(getValue());
     if (cost > 0) {
+        deltaCost += cost;
         if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
         wcsp->getObjective()->increase(wcsp->getLb() + cost);
     }

@@ -11,7 +11,6 @@
 
 class CostVariable : public WCSPLink
 {
-private:
     bool enumerated;            // should be a constant
     Variable *var;
     ConstraintList constrs;
@@ -37,11 +36,7 @@ private:
     void assignWCSP();
     void removeWCSP(Value val);
 
-    void setMaxUnaryCost(Value a);
     void changeNCBucket(int newBucket);
-
-    void queueNC();
-    void queueAC();
         
     // make it private because we don't want copy nor assignment
     CostVariable(const CostVariable &x);
@@ -86,7 +81,21 @@ public:
     // Warning! Only if the variable is represented by an enumerated domain
     void project(Value value, Cost cost);
     void extend(Value value, Cost cost);
+#ifdef FASTWCSP
+    void projectFast(Value value, Cost cost) {
+        assert(cost >= 0);
+        assert(enumerated);
+        costs[toIndex(value)] += cost;
+    }
+    void extendFast(Value value, Cost cost) {
+        assert(cost >= 0);
+        assert(enumerated);
+        assert(costs[toIndex(value)] >= cost);
+        costs[toIndex(value)] -= cost;
+    }
+#endif
     Value getSupport() const {assert(enumerated);return support;}
+    void setSupport(Value val) {assert(enumerated);support = val;}
     
     Cost getCost(Value value) const {
         if (enumerated) return costs[toIndex(value)] - deltaCost;
@@ -97,9 +106,29 @@ public:
     
     void extendAll(Cost cost);
     void propagateAC();
-    void propagateNC();         // return true if some value has been removed
-    void findSupport();         // return true if the lower bound has been increased
+    void propagateNC();
+    void findSupport();
     bool verifyNC();
+
+#ifdef FASTWCSP
+    void extendAllFast(Cost cost) {
+        assert(cost >= 0);
+        deltaCost += cost;
+    }
+    void propagateNCFast();
+    bool removeFast(Value val) {
+        if (var->removeFast(val)) {
+            assignWCSP();
+            return true;
+        } else return false;
+    }
+#endif
+    
+    Cost getMaxCostValue() const {return maxCostValue;}
+    Cost getMaxCost() const {return maxCost;}
+    void setMaxUnaryCost(Value a);
+    void queueNC();
+    void queueAC();
 
     typedef Variable::iterator iterator;
     iterator begin() {return var->begin();}
