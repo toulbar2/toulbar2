@@ -107,12 +107,22 @@ class StoreBasic
 {
     T v;
     StoreStack<T,T> *store;
-    
+
 public:
     StoreBasic(T vv, StoreStack<T,T> *s) : v(vv), store(s) {}
 
     operator T() const {return v;}    // allows conversion from StoreBasic to T
      
+    StoreBasic(const StoreBasic &elt) : v(elt.v), store(elt.store) {}
+
+    StoreBasic &operator=(const StoreBasic &elt) {      // Warning! storable assignment needed!
+        if (&elt != this) {
+            store->store(&v);
+            v = elt.v;
+        }
+        return *this;
+    }
+    
     StoreBasic &operator=(const T vv) {
         store->store(&v);
         v = vv;
