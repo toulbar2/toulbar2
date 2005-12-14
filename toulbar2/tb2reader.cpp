@@ -4,9 +4,9 @@
  */
 
 #include "tb2system.hpp"
-#include "tb2wcsp.hpp"
+#include "tb2solver.hpp"
 
-void WCSP::read_wcsp(const char *fileName)
+void WCSP::read_wcsp(const char *fileName, Solver *solver)
 {
     string pbname;
     int nbvar,nbval,nbconstr;
@@ -20,9 +20,15 @@ void WCSP::read_wcsp(const char *fileName)
     Cost cost;
     int ntuples;
     int arity;
+    string funcname;
+    Value funcparam1;
             
     // open the file
     ifstream file(fileName);
+    if (!file) {
+        cerr << "Could not open file " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
     
     // read problem name and sizes
     file >> pbname;
@@ -38,14 +44,14 @@ void WCSP::read_wcsp(const char *fileName)
     NCBucketSize = cost2log2(objective->getSup()) + 1;
     
     // read variable domain sizes
+    vector<Variable *> &variables = *(solver->getVars());
     for (i = 0; i < nbvar; i++) {
         char varname_[128];
         sprintf(varname_, "%d", i);
         string varname(varname_);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
-        Variable *x = new Variable(varname,0,domsize-1,storeData,true);
-        readVars.push_back(x);
+        Variable *x = new Variable(varname,0,domsize-1,solver,DECISION_VAR,true);
         link(x);
     }
     
@@ -55,32 +61,42 @@ void WCSP::read_wcsp(const char *fileName)
         if (arity == 2) {
             file >> i;
             file >> j;
-            if (ToulBar2::verbose >= 3) cout << "read binary constraint " << c << " on " << i << "," << j << endl;
         	if (i == j) {
     	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
             file >> defval;
-            file >> ntuples;
-            vector<Cost> costs;
-            for (a = 0; a < readVars[i]->getDomainInitSize(); a++) {
-                for (b = 0; b < readVars[j]->getDomainInitSize(); b++) {
-                    costs.push_back(defval);
+            if (defval >= 0) {
+                if (ToulBar2::verbose >= 3) cout << "read binary constraint " << c << " on " << i << "," << j << endl;
+                file >> ntuples;
+                vector<Cost> costs;
+                for (a = 0; a < variables[i]->getDomainInitSize(); a++) {
+                    for (b = 0; b < variables[j]->getDomainInitSize(); b++) {
+                        costs.push_back(defval);
+                    }
+                }
+            	for (k = 0; k < ntuples; k++) {
+                    file >> a;
+                    file >> b;
+                    file >> cost;
+                    costs[a * variables[j]->getDomainInitSize() + b] = cost;
+                }
+                postBinaryConstraint(variables[i],variables[j],costs);
+            } else {
+                file >> funcname;
+                if (funcname == "<") {
+                    file >> funcparam1;
+                } else {
+                    cerr << "Error: function " << funcname << " not implemented!" << endl;
+                    exit(EXIT_FAILURE);
                 }
             }
-        	for (k = 0; k < ntuples; k++) {
-                file >> a;
-                file >> b;
-                file >> cost;
-                costs[a * readVars[j]->getDomainInitSize() + b] = cost;
-            }
-            addBinaryConstraint(readVars[i],readVars[j],costs);
         } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary constraint " << c << " on " << i << endl;
             file >> defval;
             file >> ntuples;
-            for (a = 0; a < readVars[i]->getDomainInitSize(); a++) {
+            for (a = 0; a < variables[i]->getDomainInitSize(); a++) {
                 vars[i]->project(a, defval);
             }
             for (k = 0; k < ntuples; k++) {
@@ -90,8 +106,9 @@ void WCSP::read_wcsp(const char *fileName)
                 vars[i]->project(a, cost);
             }
             vars[i]->findSupport();
-            vars[i]->propagateNC();
-            propagate();
+//            vars[i]->propagateNC();
+//            propagate();
+            vars[i]->queueNC();
         } else if (arity == 0) {
             file >> defval;
             file >> ntuples;
@@ -101,13 +118,14 @@ void WCSP::read_wcsp(const char *fileName)
                 exit(EXIT_FAILURE);
             }
             objective->increase(getLb() + defval);
-            propagate();
+//            propagate();
         } else {
-            cerr << "Error: not implemented for this constraint arity " << arity << endl;
+            cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
             exit(EXIT_FAILURE);
         }
     }
-    if (ToulBar2::verbose) {
+    sortConstraints();
+    if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }
 }

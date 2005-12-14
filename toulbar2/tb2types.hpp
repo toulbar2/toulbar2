@@ -26,6 +26,8 @@ using namespace std;
 
 #define MAX_DOMAIN_SIZE 1000
 
+#define STORE_SIZE 16
+
 /*
  * Global variables encapsulated as static members
  * 
@@ -38,6 +40,7 @@ protected:
 public:
     static int verbose;
     static bool showSolutions;
+    static bool binaryBranching;
 };
 
 /*
@@ -45,9 +48,11 @@ public:
  * 
  */
 
+class Variable;
 class CostVariable;
 class Constraint;
 class WCSP;
+class Solver;
 
 struct ConstraintLink 
 {

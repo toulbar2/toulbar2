@@ -8,7 +8,7 @@ ICC = icc
 CFLAGS = -Wall -g3
 
 # -ftrapv -g3 -ansi -pedantic
-OFLAGS = -O3 -funroll-loops -DNDEBUG -DFASTWCSP
+OFLAGS = -O3 -funroll-loops -DNDEBUG
 #OFLAGS = -O3 -funroll-loops -fomit-frame-pointer -DNDEBUG
 ICCFLAGS = -O3 -ipo -static -DNDEBUG
 

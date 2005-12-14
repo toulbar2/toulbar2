@@ -13,7 +13,8 @@
  * 
  */
 
-class Contradiction {
+class Contradiction
+{
 public:
     Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
@@ -23,20 +24,27 @@ public:
  * 
  */
 
+typedef enum {OBJ_VAR=0, AUX_VAR=1, DECISION_VAR=2} VariableType;
+
 class Variable
 {
     bool enumerated;            // should be a constant
+    VariableType type;
     string name;
     StoreValue inf;
     StoreValue sup;
     StoreValue value;
     Domain domain;
-    vector< WCSPLink > wcsps;     // in which soft global constraint the variable occurs
+    vector< WCSPLink > wcsps;   // in which soft global constraint the variable occurs
+    Solver *solver;
+    DLink< Variable * > linkUnassignedVars;
+    
+    void addVarToSolver();   
     
 public:    
-    Variable(string n, Value iinf, Value isup, Store *s);
-    Variable(string n, Value iinf, Value isup, Store *s, bool enumerate);
-    Variable(string n, Value *d, int dsize, Store *s, bool enumerate);
+    Variable(string n, Value iinf, Value isup, Solver *s, VariableType t);
+    Variable(string n, Value iinf, Value isup, Solver *s, VariableType t, bool enumerate);
+    Variable(string n, Value *d, int dsize, Solver *s, VariableType t, bool enumerate);
 
     bool getEnumerated() const {return enumerated;}
     // Warning! Only valid if the variable is represented by an enumerated domain
@@ -58,25 +66,14 @@ public:
     bool canbe(Value v) const {return v >= inf && v <= sup && (!enumerated || domain.canbe(v));}
     bool cannotbe(Value v) const {return v < inf || v > sup || (enumerated && domain.cannotbe(v));}
     
-    void increase(Value newInf);
-    void decrease(Value newSup);
+    void increase(WCSP *wcsp, Value newInf);
+    void decrease(WCSP *wcsp, Value newSup);
+    void remove(WCSP *wcsp, Value val);
+    void increase(Value newInf) {increase(NULL, newInf);}
+    void decrease(Value newSup) {decrease(NULL, newSup);}
+    void remove(Value val) {remove(NULL, val);}
     void assign(Value newValue);
-    void remove(Value val);
-#ifdef FASTWCSP
-    bool removeFast(Value val) {     // return true if variable is assigned
-        assert(enumerated);
-        assert(canbe(val));
-        if (ToulBar2::verbose >= 2) cout << "removeFast " << *this << " <> " << val << endl;
-        if (inf == sup) throw Contradiction();
-        if (inf == val) inf = domain.increase(val + 1);
-        else if (sup == val) sup = domain.decrease(val - 1);
-        else domain.erase(val);
-        if (inf == sup) {
-            value = inf;
-            return true;
-        } else return false;
-    }
-#endif
+
     class iterator;
     friend class iterator;
     class iterator {
@@ -90,9 +87,9 @@ public:
 
         Value operator*() const {if (enumerated) return *diter; else return value;}
         
-        iterator &operator++() {    // Prefix form
+        inline iterator &operator++() {    // Prefix form
             if (enumerated) {
-                if (var.unassigned()) ++diter;
+                if (var.inf != var.sup) ++diter;
                 else {
                     if (*diter < var.value) diter = var.domain.lower_bound(var.value);
                     else diter = var.domain.end();
@@ -179,7 +176,7 @@ public:
         return -1;
     }
     void addWCSP(WCSP *wcsp, int index) {WCSPLink w; w.wcsp = wcsp; w.wcspIndex = index; wcsps.push_back(w);}
-
+    
     int getDegree();
 
     friend ostream& operator<<(ostream& os, Variable &var) {

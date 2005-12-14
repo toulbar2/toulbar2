@@ -24,14 +24,19 @@ public:
     virtual bool connected() {cout << "dummy connected on (" << this << ")!" << endl;return true;}
     virtual bool deconnected() {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
 
-    virtual void propagate() = 0;
-    virtual void propagate(int varIndex) = 0;
-    virtual bool verify() {return true;};
+    virtual int arity() const = 0;
+    virtual CostVariable *getCostVar(int index) const = 0;
+    // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
+    virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
 
-    virtual void increase(int index) {cout << "dummy increase on (" << this << "," << index << ")!" << endl;}
-    virtual void decrease(int index) {cout << "dummy decrease on (" << this << "," << index << ")!" << endl;}
-    virtual void assign(int index) {cout << "dummy assign on (" << this << "," << index << ")!" << endl;}
-    virtual void remove(int index) {cout << "dummy remove on (" << this << "," << index << ")!" << endl;}
+    virtual void propagate() = 0;
+    virtual void increase(int index) {propagate();}
+    virtual void decrease(int index) {propagate();}
+    virtual void remove(int index) {propagate();}
+    virtual void projectFromZero(int index) {}
+    virtual void assign(int index) {propagate();}
+
+    virtual bool verify() {return true;};
     
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
 

@@ -158,10 +158,12 @@ public:
     StoreStack<Cost, Cost> storeCost;
     StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink> *> storeConstraint;
     StoreStack<BTList<CostVariable *>, DLink<CostVariable *> *> storeCostVariable;
+    StoreStack<BTList<Variable *>, DLink<Variable *> *> storeVariable;
     
     Store(int pow) : depth(0),
         storeValue("Value",pow), storeDomain("Domain",pow), storeCost("Cost",pow), 
-        storeConstraint("Constraint",pow), storeCostVariable("CostVariable",pow) {}
+        storeConstraint("Constraint",pow), storeCostVariable("CostVariable",pow),
+        storeVariable("Variable",pow) {}
 
     int getDepth() const {return depth;}
     
@@ -172,6 +174,7 @@ public:
         storeDomain.store();
         storeConstraint.store();
         storeCostVariable.store();
+        storeVariable.store();
     }
     
     void restore() {
@@ -181,6 +184,7 @@ public:
         storeDomain.restore();
         storeConstraint.restore();
         storeCostVariable.restore();
+        storeVariable.restore();
     }
 };
 

@@ -1,6 +1,7 @@
 /*
- * **************** Globals and WCSP methods ************************
+ * ****** Global soft constraint representing a weighted CSP ********
  * 
+ * Contains also ToulBar2 global variable definitions
  */
 
 #include "tb2system.hpp"
@@ -15,7 +16,7 @@
  
 int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
-
+bool ToulBar2::binaryBranching = false;
 
 /*
  * WCSP constructors
@@ -25,8 +26,8 @@ bool ToulBar2::showSolutions  = false;
 WCSP::WCSP(Variable *obj, Store *s) : objective(obj), storeData(s), 
         NCBucketSize(cost2log2(objective->getSup()) + 1),
         NCBuckets(NCBucketSize, CostVariableList(&s->storeCostVariable)),
-        upperBound(objective->getSup()), objectiveChanged(false),
-        nbNodes(0), nbBacktracks(0)
+        objectiveChanged(false),
+        nbNodes(0)
 {
     objective->addWCSP(this, -1);
 }
@@ -35,7 +36,6 @@ WCSP::~WCSP()
 {
     for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
     for (unsigned int i=0; i<constrs.size(); i++) delete constrs[i];
-    for (unsigned int i=0; i<readVars.size(); i++) delete readVars[i];
 }
 
 // create a CostVariable object AND link it and the original variable to the wcsp
@@ -69,17 +69,32 @@ int WCSP::link(Constraint *c)
     return idx;
 }
 
-int WCSP::addBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab)
+int WCSP::postBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab)
 {
     CostVariable *xx = vars[link(x)];
     CostVariable *yy = vars[link(y)];
     Constraint *c = new BinaryConstraint(xx,yy,tab,&storeData->storeCost);
     int index = link(c);
-    c->propagate();
-    propagate();
+//    c->propagate();
+//    propagate();
+    xx->queueInc();
+    xx->queueDec();
+    xx->queueAC();
+    xx->queueDAC();
+    yy->queueInc();
+    yy->queueDec();
+    yy->queueAC();
+    yy->queueDAC();
     return index;
 }
- 
+
+void WCSP::sortConstraints()
+{
+    for (unsigned int i=0; i<vars.size(); i++) {
+        vars[i]->sortConstraints();
+    }
+}
+
 Value WCSP::getDomainSizeSum()
 {
     Value sum = 0;
@@ -89,13 +104,28 @@ Value WCSP::getDomainSizeSum()
     return sum;
 }
 
+void WCSP::printNCBuckets()
+{
+    for (int bucket = 0; bucket < NCBucketSize; bucket++) {
+        cout << "NC " << bucket << ":";
+        for (CostVariableList::iterator iter = NCBuckets[bucket].begin (); iter != NCBuckets[bucket].end(); ++iter) {
+           cout << " " << (*iter)->getName() << "," << (*iter)->maxCostValue << "," << (*iter)->maxCost;
+           assert((*iter)->canbe((*iter)->maxCostValue));
+           assert((*iter)->getUnaryCost((*iter)->maxCostValue) == (*iter)->maxCost);
+        }
+        cout << endl;
+    }
+}
+
 ostream& operator<<(ostream& os, WCSP &wcsp)
 {
     os << "Objective: " << *wcsp.objective << endl;
     os << "Variables:" << endl;
     for (unsigned int i=0; i<wcsp.vars.size(); i++) os << *wcsp.vars[i] << endl;
-    os << "Constraints:" << endl;
-    for (unsigned int i=0; i<wcsp.constrs.size(); i++) if (wcsp.constrs[i]->connected()) os << *wcsp.constrs[i];
+    if (ToulBar2::verbose >= 4) {
+        os << "Constraints:" << endl;
+        for (unsigned int i=0; i<wcsp.constrs.size(); i++) if (wcsp.constrs[i]->connected()) os << *wcsp.constrs[i];
+    }
     return os;
 }
 
@@ -104,19 +134,6 @@ ostream& operator<<(ostream& os, WCSP &wcsp)
  * WCSP propagation methods
  * 
  */
-
-void WCSP::printNCBuckets()
-{
-    for (int bucket = 0; bucket < NCBucketSize; bucket++) {
-        cout << "NC " << bucket << ":";
-        for (CostVariableList::iterator iter = NCBuckets[bucket].begin (); iter != NCBuckets[bucket].end(); ++iter) {
-           cout << " " << (*iter)->getName() << "," << (*iter)->maxCostValue << "," << (*iter)->maxCost;
-           assert((*iter)->canbe((*iter)->maxCostValue));
-           assert((*iter)->getCost((*iter)->maxCostValue) == (*iter)->maxCost);
-        }
-        cout << endl;
-    }
-}
 
 bool WCSP::verify()
 {
@@ -129,16 +146,22 @@ bool WCSP::verify()
     return true;
 }
 
+void WCSP::whenContradiction()
+{
+    NC.clear();
+    IncDec.clear();
+    AC.clear();
+    DAC.clear();
+    objectiveChanged = false;
+    nbNodes++;
+}
+
 void WCSP::propagateNC()
 {
     if (ToulBar2::verbose >= 2) cout << "NCQueue size: " << NC.getSize() << endl;
     while (!NC.empty()) {
         CostVariable *x = NC.pop();
-#ifdef FASTWCSP
-        if (x->unassigned()) x->propagateNCFast();
-#else
         if (x->unassigned()) x->propagateNC();
-#endif
     }
     if (ToulBar2::verbose >= 3) {
         for (unsigned int i=0; i<vars.size(); i++) cout << *vars[i] << endl;
@@ -150,14 +173,20 @@ void WCSP::propagateNC()
         for (int bucket = cost2log2(getUb() - getLb() + 1); bucket < NCBucketSize; bucket++) {
             for (CostVariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end();) {
                 CostVariable *x = *iter;
-                 ++iter; // Warning! the previous iterator could be moved to another place by propagateNC
-#ifdef FASTWCSP
-                if (x->unassigned() && x->maxCost + getLb() > getUb()) x->propagateNCFast();
-#else
+                ++iter; // Warning! the previous iterator could be moved to another place by propagateNC
                 if (x->unassigned() && x->maxCost + getLb() > getUb()) x->propagateNC();
-#endif
             }
         }
+    }
+}
+
+void WCSP::propagateIncDec()
+{
+    if (ToulBar2::verbose >= 2) cout << "IncDecQueue size: " << IncDec.getSize() << endl;
+    while (!IncDec.empty()) {
+        int incdec;
+        CostVariable *x = IncDec.pop(&incdec);
+        if (x->unassigned()) x->propagateIncDec(incdec);
     }
 }
 
@@ -165,16 +194,38 @@ void WCSP::propagateAC()
 {
     if (ToulBar2::verbose >= 2) cout << "ACQueue size: " << AC.getSize() << endl;
     while (!AC.empty()) {
-        CostVariable *x = AC.pop();
+        CostVariable *x = AC.pop_min();
         if (x->unassigned()) x->propagateAC();
+        // Warning! propagateIncDec() necessary to transform inc/dec event into remove event
+        propagateIncDec();          // always examine inc/dec events before remove events
+    }
+}
+
+void WCSP::propagateDAC()
+{
+    if (ToulBar2::verbose >= 2) cout << "DACQueue size: " << DAC.getSize() << endl;
+    while (!DAC.empty()) {
+        CostVariable *x = DAC.pop_max();
+        if (x->unassigned()) x->propagateDAC();
+        propagateIncDec();          // always examine inc/dec events before projectFromZero events
     }
 }
 
 void WCSP::propagate()
 {
-    while (!AC.empty() || objectiveChanged || !NC.empty()) {
+    while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) {
+        propagateIncDec();
         propagateAC();
-        while (objectiveChanged || !NC.empty()) propagateNC();
+        assert(IncDec.empty());
+        propagateDAC();
+        assert(IncDec.empty());
+        propagateNC();
     }
     assert( verify() );
+    assert(!objectiveChanged);
+    assert(NC.empty());
+    assert(IncDec.empty());
+    assert(AC.empty());
+    assert(DAC.empty());
+    nbNodes++;
 }
