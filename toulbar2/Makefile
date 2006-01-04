@@ -12,7 +12,8 @@ OFLAGS = -O3 -funroll-loops -DNDEBUG
 #OFLAGS = -O3 -funroll-loops -fomit-frame-pointer -DNDEBUG
 ICCFLAGS = -O3 -ipo -static -DNDEBUG
 
-PFLAGS = -pg -g3
+PFLAGS = 
+#-pg -g3
 
 %.o : %.cpp
 	$(CC) $(OFLAGS) $(CFLAGS) -c -o $@  $< $(PFLAGS)
