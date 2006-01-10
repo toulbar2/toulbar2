@@ -17,7 +17,7 @@ class WCSP {
     int NCBucketSize;
     vector< CostVariableList > NCBuckets;     // vector of backtrackable lists
     Queue NC;                                 // non backtrackable list
-    Queue IncDec;                                 // non backtrackable list
+    Queue IncDec;                             // non backtrackable list
     Queue AC;                                 // non backtrackable list
     Queue DAC;                                // non backtrackable list
     bool objectiveChanged;

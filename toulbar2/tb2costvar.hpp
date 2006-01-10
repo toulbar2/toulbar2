@@ -19,7 +19,7 @@ class CostVariable : public WCSPLink
     StoreCost supCost;
     StoreCost deltaCost;
     vector<StoreCost> costs;
-    StoreValue support;     // Warning! unary support needs to be backtrackable in order to maintain findSupport
+    StoreValue support;     // Warning! the unary support has to be backtrackable 
     
     // incremental NC data
     StoreCost maxCost;
@@ -82,7 +82,7 @@ public:
     void increase(Value newInf) {increase(false, newInf);}
     void decrease(Value newSup) {decrease(false, newSup);}
     void remove(Value value) {remove(false, value);}
-    void assign(Value newValue) {var->assign(newValue);}            // it will call assignFromOutside() for this WCSP
+    void assign(Value newValue) {var->assign(newValue);}
 
     Cost getInfCost() const {if (enumerated) return costs[toIndex(getInf())] - deltaCost; else return infCost - deltaCost;}
     Cost getSupCost() const {if (enumerated) return costs[toIndex(getSup())] - deltaCost; else return supCost - deltaCost;}

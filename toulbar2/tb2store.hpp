@@ -115,7 +115,7 @@ public:
      
     StoreBasic(const StoreBasic &elt) : v(elt.v), store(elt.store) {}
 
-    StoreBasic &operator=(const StoreBasic &elt) {      // Warning! storable assignment needed!
+    StoreBasic &operator=(const StoreBasic &elt) {      // Warning! assignment has to be backtrackable
         if (&elt != this) {
             store->store(&v);
             v = elt.v;

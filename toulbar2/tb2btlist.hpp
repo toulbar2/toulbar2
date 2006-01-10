@@ -39,7 +39,7 @@ public:
     int getSize() const {return size;}
     bool empty() const {return size == 0;}
     
-    // Warning! Not backtrackable...
+    // Warning! clear() is not a backtrackable operation
     void clear() {size = 0; head = NULL; last = NULL;}
     
     void push_back(DLink<T> *elt, bool backtrack) {
@@ -111,21 +111,21 @@ public:
     }
 
     // deprecated method to be used with erase(..) storing just one element
-    void undoErase(DLink<T> *elt) {
-        assert(elt->removed);
-        size++;
-        elt->removed = false;
-        if (elt->prev != NULL) {
-            assert(!elt->prev->removed);
-            assert(elt->prev->next == elt->next);
-            elt->prev->next = elt;
-        } else head = elt;
-        if (elt->next != NULL) {
-            assert(!elt->next->removed);
-            assert(elt->next->prev == elt->prev);
-            elt->next->prev = elt;
-        } else last = elt;
-    }
+//    void undoErase(DLink<T> *elt) {
+//        assert(elt->removed);
+//        size++;
+//        elt->removed = false;
+//        if (elt->prev != NULL) {
+//            assert(!elt->prev->removed);
+//            assert(elt->prev->next == elt->next);
+//            elt->prev->next = elt;
+//        } else head = elt;
+//        if (elt->next != NULL) {
+//            assert(!elt->next->removed);
+//            assert(elt->next->prev == elt->prev);
+//            elt->next->prev = elt;
+//        } else last = elt;
+//    }
     
     DLink<T> *pop_back(bool backtrack) {
         assert(last != NULL);

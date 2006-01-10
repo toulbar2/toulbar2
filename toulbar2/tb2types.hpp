@@ -36,7 +36,7 @@ using namespace std;
 class ToulBar2
 {
 protected:
-    virtual void dummy() = 0;	// avoid any instantiation of ToulBar2
+    virtual void dummy() = 0;	// Trick to avoid any instantiation of ToulBar2
 public:
     static int verbose;
     static bool showSolutions;

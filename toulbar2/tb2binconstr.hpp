@@ -106,7 +106,9 @@ public:
             if (varIndex == 0) findFullSupportY();
         }
     } 
-    void increase(int index) {if (index==0) x->queueAC(); else y->queueAC();}  // Trick! instead of remove(index);
+    //Trick! instead of doing remove(index) now, let AC queue do the job. 
+    //So several incdec events on the same constraint can be merged into one AC event
+    void increase(int index) {if (index==0) x->queueAC(); else y->queueAC();}
     void decrease(int index) {if (index==0) x->queueAC(); else y->queueAC();}  // Trick! instead of remove(index);
     void assign(int varIndex) {
         deconnect();                    // Warning! deconnection has to be done before the projection

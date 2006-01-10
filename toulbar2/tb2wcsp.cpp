@@ -75,7 +75,7 @@ int WCSP::postBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab)
     CostVariable *yy = vars[link(y)];
     Constraint *c = new BinaryConstraint(xx,yy,tab,&storeData->storeCost);
     int index = link(c);
-//    c->propagate();
+//    c->propagate();       // Let the initial propagation be done only once in solver.cpp
 //    propagate();
     xx->queueInc();
     xx->queueDec();
@@ -173,7 +173,7 @@ void WCSP::propagateNC()
         for (int bucket = cost2log2(getUb() - getLb() + 1); bucket < NCBucketSize; bucket++) {
             for (CostVariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end();) {
                 CostVariable *x = *iter;
-                ++iter; // Warning! the previous iterator could be moved to another place by propagateNC
+                ++iter; // Warning! the iterator could be moved to another place by propagateNC
                 if (x->unassigned() && x->maxCost + getLb() > getUb()) x->propagateNC();
             }
         }

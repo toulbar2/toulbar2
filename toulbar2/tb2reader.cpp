@@ -106,7 +106,7 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                 vars[i]->project(a, cost);
             }
             vars[i]->findSupport();
-//            vars[i]->propagateNC();
+//            vars[i]->propagateNC();       // Let the initial propagation be done only once in solver.cpp
 //            propagate();
             vars[i]->queueNC();
         } else if (arity == 0) {
@@ -118,7 +118,7 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                 exit(EXIT_FAILURE);
             }
             objective->increase(getLb() + defval);
-//            propagate();
+//            propagate();       // Let the initial propagation be done only once in solver.cpp
         } else {
             cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
             exit(EXIT_FAILURE);
