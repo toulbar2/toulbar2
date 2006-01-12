@@ -51,7 +51,9 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
         string varname(varname_);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
-        Variable *x = new Variable(varname,0,domsize-1,solver,DECISION_VAR,true);
+        Variable *x = NULL;
+        if (domsize >= 0) x = new Variable(varname,0,domsize-1,solver,DECISION_VAR,true);
+        else x = new Variable(varname,0,-domsize-1,solver,DECISION_VAR);
         link(x);
     }
     
@@ -84,8 +86,9 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                 postBinaryConstraint(variables[i],variables[j],costs);
             } else {
                 file >> funcname;
-                if (funcname == "<") {
+                if (funcname == ">=") {
                     file >> funcparam1;
+                    postSupxyc(variables[i],variables[j],funcparam1);
                 } else {
                     cerr << "Error: function " << funcname << " not implemented!" << endl;
                     exit(EXIT_FAILURE);
