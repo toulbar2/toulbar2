@@ -40,7 +40,7 @@ Variable *Solver::getVarMinDomainDivMaxDegree()
     for (VariableList::iterator iter = unassignedVars.begin(); iter != unassignedVars.end(); ++iter) {
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double) (*iter)->getDomainSize() / ((*iter)->getDegree() + 1);
-        if (var == NULL || heuristic < best) { // - 1./100001.) {
+        if (var == NULL || heuristic < best - 1./100001.) {
             best = heuristic;
             var = *iter;
         }
@@ -191,8 +191,14 @@ void Solver::recursiveSolve()
             binaryChoicePoint(var, var->getInf());
         }
     } else {
+        assert(unassignedVars.empty());
+#ifndef NDEBUG
+        bool allVarsAssigned = true;
+        for (unsigned int i=0; i<vars.size(); i++) allVarsAssigned &= vars[i]->assigned();
+        assert(allVarsAssigned);
+#endif
         upperBound = wcsp.getLb();
-        wcsp.decreaseUb(upperBound);        //  do not need to propagate after this ?
+        wcsp.decreaseUb(upperBound);
         cout << "New solution: " <<  upperBound << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         if (ToulBar2::showSolutions) cout << wcsp;
     }
