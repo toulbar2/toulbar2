@@ -134,11 +134,10 @@ void CostVariable::changeNCBucket(int newBucket)
     }
 }
 
-void CostVariable::setMaxUnaryCost(Value a)
+void CostVariable::setMaxUnaryCost(Value a, Cost cost)
 {
     assert(canbe(a));
     maxCostValue = a;
-    Cost cost = getCost(a);
     assert(cost >= 0);
     if (maxCost != cost) {
         maxCost = cost;
@@ -149,7 +148,7 @@ void CostVariable::setMaxUnaryCost(Value a)
 
 void CostVariable::project(Value value, Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost > 0);
     assert(enumerated);
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
@@ -159,9 +158,53 @@ void CostVariable::project(Value value, Cost cost)
     if (newcost + wcsp->getLb() > wcsp->getUb()) remove(true, value);     // Avoid any unary cost overflow
 }
 
+void CostVariable::projectInfCost(Cost cost)
+{
+    assert(cost > 0);
+    if (enumerated) {
+        Value value = getInf();
+        project(value, cost);
+        if (support == value) findSupport();
+    } else {
+        Cost oldcost = getInfCost();
+        infCost += cost;
+        Cost newcost = oldcost + cost;
+        if (getInf() == maxCostValue || newcost > maxCost) queueNC();
+        if (newcost + wcsp->getLb() > wcsp->getUb()) increase(true, getInf() + 1);     // Avoid any unary cost overflow
+        if (getSup() == getInf() + 1 && getInfCost() > 0 && getSupCost() > 0) {
+            Cost minCost = min(getInfCost(),getSupCost());
+            extendAll(minCost);
+            if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
+            wcsp->increaseLb(wcsp->getLb() + minCost);
+        }
+    }
+}
+
+void CostVariable::projectSupCost(Cost cost)
+{
+    assert(cost > 0);
+    if (enumerated) {
+        Value value = getSup();
+        project(value, cost);
+        if (support == value) findSupport();
+    } else {
+        Cost oldcost = getSupCost();
+        supCost += cost;
+        Cost newcost = oldcost + cost;
+        if (getSup() == maxCostValue || newcost > maxCost) queueNC();
+        if (newcost + wcsp->getLb() > wcsp->getUb()) decrease(true, getSup() - 1);     // Avoid any unary cost overflow
+        if (getSup() == getInf() + 1 && getInfCost() > 0 && getSupCost() > 0) {
+            Cost minCost = min(getInfCost(),getSupCost());
+            extendAll(minCost);
+            if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
+            wcsp->increaseLb(wcsp->getLb() + minCost);
+        }
+    }
+}
+
 void CostVariable::extend(Value value, Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost > 0);
     assert(enumerated);
     assert(costs[toIndex(value)] >= cost);
     costs[toIndex(value)] -= cost;
@@ -170,7 +213,7 @@ void CostVariable::extend(Value value, Cost cost)
 
 void CostVariable::extendAll(Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost > 0);
     deltaCost += cost;          // Warning! Possible overflow???
     queueNC();
 }
@@ -215,12 +258,14 @@ void CostVariable::propagateNC()
                 maxcost = cost;
             }
         }
-        setMaxUnaryCost(maxcostvalue);
+        setMaxUnaryCost(maxcostvalue, getCost(maxcostvalue));
     } else {
+        if (getInfCost() + wcsp->getLb() > wcsp->getUb()) increase(true, getInf() + 1);
+        if (getSupCost() + wcsp->getLb() > wcsp->getUb()) decrease(true, getSup() - 1);
         if (getInfCost() > getSupCost()) {
-            setMaxUnaryCost(getInf());
+            setMaxUnaryCost(getInf(), getInfCost());
         } else {
-            setMaxUnaryCost(getSup());
+            setMaxUnaryCost(getSup(), getSupCost());
         }
     }
 }
@@ -275,6 +320,7 @@ void CostVariable::propagateDAC()
     }
 }
 
+// noZeroCostRemoved flag is used to avoid checking NC* and queueing in DAC if it was already done
 void CostVariable::increaseFromOutside(bool noZeroCostRemoved)
 {
     if (!enumerated) infCost = deltaCost;

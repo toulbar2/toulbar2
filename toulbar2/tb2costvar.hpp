@@ -17,6 +17,7 @@ class CostVariable : public WCSPLink
 
     StoreCost infCost;
     StoreCost supCost;
+    
     StoreCost deltaCost;
     vector<StoreCost> costs;
     StoreValue support;     // Warning! the unary support has to be backtrackable 
@@ -41,7 +42,7 @@ class CostVariable : public WCSPLink
     void changeNCBucket(int newBucket);
     Cost getMaxCostValue() const {return maxCostValue;}
     Cost getMaxCost() const {return maxCost;}
-    void setMaxUnaryCost(Value a);
+    void setMaxUnaryCost(Value a, Cost cost);
     void queueNC();
     void queueInc();
     void queueDec();
