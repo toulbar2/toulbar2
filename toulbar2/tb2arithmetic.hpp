@@ -17,8 +17,8 @@ class Supxyc : public AbstractBinaryConstraint
     StoreCost deltaCost;
     StoreValue deltaValueXinf;
     StoreValue deltaValueYsup;
-    StoreValue deltaCostXinf;
-    StoreValue deltaCostYsup;
+    StoreCost deltaCostXinf;
+    StoreCost deltaCostYsup;
     
 public:
     Supxyc(CostVariable *xx, CostVariable *yy, Value c, StoreStack<Cost,Cost> *storeCost, StoreStack<Value,Value> *storeValue);
