@@ -89,6 +89,19 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                 if (funcname == ">=") {
                     file >> funcparam1;
                     postSupxyc(variables[i],variables[j],funcparam1);
+                } else if (funcname == ">") {
+                    file >> funcparam1;
+                    postSupxyc(variables[i],variables[j],funcparam1 + 1);
+                } else if (funcname == "<=") {
+                    file >> funcparam1;
+                    postSupxyc(variables[j],variables[i], -funcparam1);
+                } else if (funcname == "<") {
+                    file >> funcparam1;
+                    postSupxyc(variables[j],variables[i], -funcparam1 + 1);
+                } else if (funcname == "=") {
+                    file >> funcparam1;
+                    postSupxyc(variables[i],variables[j],funcparam1);
+                    postSupxyc(variables[j],variables[i],-funcparam1);
                 } else {
                     cerr << "Error: function " << funcname << " not implemented!" << endl;
                     exit(EXIT_FAILURE);
