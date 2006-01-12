@@ -79,10 +79,10 @@ void Variable::increase(WCSP *wcsp, Value newInf)
     if (newInf > inf) {
         if (newInf > sup) throw Contradiction();
         else {
-            if (enumerated) inf = domain.increase(newInf);
-            else inf = newInf;
-            if (inf == sup) assign(inf);
+            if (enumerated) newInf = domain.increase(newInf);
+            if (newInf == sup) assign(newInf);
             else {
+            	inf = newInf;
                 for (unsigned int i=0; i<wcsps.size(); i++) {
                     wcsps[i].wcsp->increase((wcsps[i].wcsp == wcsp), wcsps[i].wcspIndex);
                 }
@@ -97,10 +97,10 @@ void Variable::decrease(WCSP *wcsp, Value newSup)
     if (newSup < sup) {
         if (newSup < inf) throw Contradiction();
         else {
-            if (enumerated) sup = domain.decrease(newSup);
-            else sup = newSup;
-            if (inf == sup) assign(sup);
+            if (enumerated) newSup = domain.decrease(newSup);
+            if (inf == newSup) assign(newSup);
             else {
+            	sup = newSup;
                 for (unsigned int i=0; i<wcsps.size(); i++) {
                     wcsps[i].wcsp->decrease((wcsps[i].wcsp == wcsp), wcsps[i].wcspIndex);
                 }
