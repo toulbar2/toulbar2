@@ -7,6 +7,7 @@
 #include "tb2system.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
+#include "tb2arithmetic.hpp"
 
 
 /*
@@ -77,14 +78,25 @@ int WCSP::postBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab)
     int index = link(c);
 //    c->propagate();       // Let the initial propagation be done only once in solver.cpp
 //    propagate();
-    xx->queueInc();
-    xx->queueDec();
     xx->queueAC();
     xx->queueDAC();
-    yy->queueInc();
-    yy->queueDec();
     yy->queueAC();
     yy->queueDAC();
+    return index;
+}
+
+int WCSP::postSupxyc(Variable *x, Variable *y, Value cst)
+{
+    CostVariable *xx = vars[link(x)];
+    CostVariable *yy = vars[link(y)];
+    Constraint *c = new Supxyc(xx,yy,cst,&storeData->storeCost,&storeData->storeValue);
+    int index = link(c);
+//    c->propagate();       // Let the initial propagation be done only once in solver.cpp
+//    propagate();
+    xx->queueInc();
+    xx->queueDec();
+    yy->queueInc();
+    yy->queueDec();
     return index;
 }
 

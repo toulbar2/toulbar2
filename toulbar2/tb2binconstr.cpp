@@ -11,23 +11,14 @@
  */
 
 BinaryConstraint::BinaryConstraint(CostVariable *xx, CostVariable *yy, vector<Cost> &tab, StoreStack<Cost,Cost> *store) : 
-        x(xx), y(yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), costs(tab),
-        linkX(NULL), linkY(NULL)
+        AbstractBinaryConstraint(xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), costs(tab)
 {
-    assert(xx != yy);
     assert(xx->getEnumerated() && yy->getEnumerated());
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(0,store));
     deltaCostsY = vector<StoreCost>(sizeY,StoreCost(0,store));
-    linkX = xx->postConstraint(this,0);
-    linkY = yy->postConstraint(this,1);
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX,y->getInf());
     supportY = vector<Value>(sizeY,x->getInf());
-}
-
-int BinaryConstraint::getSmallestVarIndexInScope(int forbiddenScopeIndex)
-{
-    return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;
 }
 
 void BinaryConstraint::print(ostream& os)

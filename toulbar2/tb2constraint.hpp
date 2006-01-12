@@ -1,5 +1,5 @@
 /** \file tb2constraint.hpp
- *  \brief Generic virtual constraint.
+ *  \brief Abstract constraint.
  *
  */
 
@@ -19,10 +19,10 @@ public:
     virtual ~Constraint() {}
 
     // remove a constraint from the set of active constraints
-    virtual void deconnect() {cout << "dummy deconnect on (" << this << ")!" << endl;}
-    virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
     virtual bool connected() {cout << "dummy connected on (" << this << ")!" << endl;return true;}
     virtual bool deconnected() {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
+    virtual void deconnect() {cout << "dummy deconnect on (" << this << ")!" << endl;}
+    virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
 
     virtual int arity() const = 0;
     virtual CostVariable *getCostVar(int index) const = 0;

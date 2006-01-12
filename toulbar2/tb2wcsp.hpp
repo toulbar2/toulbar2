@@ -75,6 +75,7 @@ public:
     bool verify();
     
     int postBinaryConstraint(Variable *x, Variable *y, vector<Cost> &tab);
+    int postSupxyc(Variable *x, Variable *y, Value cst);
 
     void sortConstraints();
     
