@@ -1,194 +1,126 @@
 /** \file tb2variable.hpp
- *  \brief Variable with domain represented by an interval or an enumerated domain.
+ *  \brief Abstract Variable class extended with unary costs.
  * 
  */
  
 #ifndef TB2VARIABLE_HPP_
 #define TB2VARIABLE_HPP_
 
-#include "tb2domain.hpp"
-
-/*
- * Backtrack exception
- * 
- */
-
-class Contradiction
-{
-public:
-    Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
-};
+#include "tb2btlist.hpp"
+#include "tb2queue.hpp"
 
 /*
  * Main class
  * 
  */
 
-typedef enum {OBJ_VAR=0, AUX_VAR=1, DECISION_VAR=2} VariableType;
-
-class Variable
+class Variable : public WCSPLink
 {
-    bool enumerated;            // should be a constant
-    VariableType type;
+protected:
     string name;
+    
     StoreValue inf;
     StoreValue sup;
-    StoreValue value;
-    Domain domain;
-    vector< WCSPLink > wcsps;   // in which soft global constraint the variable occurs
-    Solver *solver;
-    DLink< Variable * > linkUnassignedVars;
+
+    ConstraintList constrs;
+
+    StoreCost deltaCost;
     
-    void addVarToSolver();   
+    // incremental NC data
+    StoreCost maxCost;
+    StoreValue maxCostValue;
+    StoreInt NCBucket;
+    DLink< Variable * > linkNCBucket;
+    
+    DLink<VariableWithTimeStamp> linkNCQueue;
+    DLink<VariableWithTimeStamp> linkIncDecQueue;
+
+    Cost getMaxCost() const {return maxCost;}
+    Cost getMaxCostValue() const {return maxCostValue;}
+    void setMaxUnaryCost(Value a, Cost cost);
+    void changeNCBucket(int newBucket);
+    void queueNC();
+        
+    // make it private because we don't want copy nor assignment
+    Variable(const Variable &x);
+    Variable& operator=(const Variable &x);
     
 public:    
-    Variable(string n, Value iinf, Value isup, Solver *s, VariableType t);
-    Variable(string n, Value iinf, Value isup, Solver *s, VariableType t, bool enumerate);
-    Variable(string n, Value *d, int dsize, Solver *s, VariableType t, bool enumerate);
-
-    bool getEnumerated() const {return enumerated;}
-    // Warning! Only valid if the variable is represented by an enumerated domain
-    unsigned int getDomainInitSize() const {assert(enumerated); return domain.getInitSize();}
-    unsigned int toIndex(Value v) const {assert(enumerated); return domain.toIndex(v);}
-    Value toValue(int idx) const {assert(enumerated); return domain.toValue(idx);}
-   
+    Variable(WCSP *w, string n, Value iinf, Value isup);
+        
+    virtual ~Variable() {}
+    
+    virtual bool enumerated() const =0;
+    
     string getName() const {return name;}
     Value getInf() const {return inf;}
     Value getSup() const {return sup;}
-    Value getValue() const {return value;}
-    unsigned int getDomainSize() const {
-        if (enumerated) {if (assigned()) return 1; else return domain.getSize();}
-        else return sup - inf + 1;
-    }
+    Value getValue() const {assert(assigned()); return inf;}
+    virtual unsigned int getDomainSize() const =0;
 
     bool assigned() const {return inf == sup;}
     bool unassigned() const {return inf != sup;}
-    bool canbe(Value v) const {return v >= inf && v <= sup && (!enumerated || domain.canbe(v));}
-    bool cannotbe(Value v) const {return v < inf || v > sup || (enumerated && domain.cannotbe(v));}
+    virtual bool canbe(Value v) const {return v >= inf && v <= sup;}
+    virtual bool cannotbe(Value v) const {return v < inf || v > sup;}
     
-    void increase(WCSP *wcsp, Value newInf);
-    void decrease(WCSP *wcsp, Value newSup);
-    void remove(WCSP *wcsp, Value val);
-    void increase(Value newInf) {increase(NULL, newInf);}
-    void decrease(Value newSup) {decrease(NULL, newSup);}
-    void remove(Value val) {remove(NULL, val);}
-    void assign(Value newValue);
+    virtual void increase(Value newInf) =0;
+    virtual void decrease(Value newSup) =0;
+    virtual void remove(Value remValue) =0;
+    virtual void assign(Value newValue) =0;
+    
+    ConstraintList *getConstrs() {return &constrs;}
+    int getDegree() {return constrs.getSize();}
+    DLink<ConstraintLink> *link(Constraint *c, int index);
+    void sortConstraints();
 
+    virtual Cost getInfCost() const =0;
+    virtual Cost getSupCost() const =0;
+    virtual void projectInfCost(Cost cost) =0;
+    virtual void projectSupCost(Cost cost) =0;
+    virtual Cost getCost(const Value value) const =0;
+
+    virtual Value getSupport() const {return inf;}      // If there is no defined support then return inf
+    
+    void extendAll(Cost cost);
+    virtual void propagateNC() =0;    
+    virtual bool verifyNC() =0;
+
+    void queueInc();
+    void queueDec();
+
+    void propagateIncDec(int incdec);
+
+/*
     class iterator;
     friend class iterator;
     class iterator {
-        bool enumerated;            // should be a constant
-        Variable &var;
-        Value value;
-        Domain::iterator diter;
     public:
-        iterator(Variable &v, Value vv) : enumerated(false), var(v), value(vv), diter(NULL) {}
-        iterator(Variable &v, Domain::iterator iter) : enumerated(true), var(v), value(v.sup+1), diter(iter) {}
-
-        Value operator*() const {if (enumerated) return *diter; else return value;}
+        virtual Value operator*() const {}
         
-        inline iterator &operator++() {    // Prefix form
-            if (enumerated) {
-                if (var.inf != var.sup) ++diter;
-                else {
-                    if (*diter < var.value) diter = var.domain.lower_bound(var.value);
-                    else diter = var.domain.end();
-                }
-            } else {
-                if (value < var.sup) ++value;
-                else value = var.sup + 1;
-            }
-            return *this;
-        }
-        
-        iterator &operator--() {    // Prefix form
-            if (enumerated) {
-                if (var.unassigned()) --diter;
-                else {
-                    if (*diter > var.value) diter = var.domain.lower_bound(var.value);
-                    else diter = var.domain.end();
-                }
-            } else {
-                if (value > var.inf) --value;
-                else value = var.sup + 1;
-            }
-            return *this;
-        }
+        virtual iterator &operator++() {}     // Prefix form
+        virtual iterator &operator--() {}     // Prefix form
 
         // To see if you're at the end:
-        bool operator==(const iterator &iter) const {
-            if (enumerated) return diter == iter.diter;
-            else return value == iter.value;
-        }
-        bool operator!=(const iterator &iter) const {
-            if (enumerated) return diter != iter.diter;
-            else return value != iter.value;
-        }
+        virtual bool operator==(const iterator &iter) const {}
+        virtual bool operator!=(const iterator &iter) const {}
     };
-    iterator begin() {
-        if (enumerated) {
-            if (assigned()) return iterator(*this, domain.lower_bound(value));
-            else return iterator(*this, domain.begin());
-        } else return iterator(*this, inf);
-    }
-    iterator end() {
-        if (enumerated) return iterator(*this, domain.end()); 
-        else return iterator(*this, sup + 1);
-    }
-    iterator rbegin() {
-        if (enumerated) {
-            if (assigned()) return iterator(*this, domain.upper_bound(value));
-            else return iterator(*this, domain.rbegin());
-        } else return iterator(*this, sup);
-    }
-    iterator rend() {return end();}
+    virtual iterator& begin() {}
+    virtual iterator& end() {}
+    virtual iterator& rbegin() {}
+    virtual iterator& rend() {return end();}
 
     //Finds the first available element whose value is greater or equal to v
-    iterator lower_bound(Value v) {
-        if (enumerated) {
-            if (assigned()) {
-                if (v <= value) return iterator(*this, domain.lower_bound(value));
-                else return end();
-            } else return iterator(*this, domain.lower_bound(v));
-        } else {
-            if (v <= sup) return iterator(*this, v);
-            else return end();
-        }
-    }
+    virtual iterator& lower_bound(Value v) {}
 
     //Finds the first available element whose value is lower or equal to v
-    iterator upper_bound(Value v) {
-        if (enumerated) {
-            if (assigned()) {
-                if (v >= value) return iterator(*this, domain.upper_bound(value));
-                else return end();
-            } else return iterator(*this, domain.upper_bound(v));
-        } else {
-            if (v >= inf) return iterator(*this, v);
-            else return end();
-        }
-    }
+    virtual iterator& upper_bound(Value v) {}
+*/
 
-    int findWCSPIndex(WCSP *wcsp) {
-        for (unsigned int i=0; i<wcsps.size(); i++) {
-            if (wcsps[i].wcsp == wcsp) return wcsps[i].wcspIndex;
-        }
-        return -1;
-    }
-    void addWCSP(WCSP *wcsp, int index) {WCSPLink w; w.wcsp = wcsp; w.wcspIndex = index; wcsps.push_back(w);}
+    virtual void print(ostream& os) =0;
     
-    int getDegree();
-
-    friend ostream& operator<<(ostream& os, Variable &var) {
-        os << var.name;
-        if (var.enumerated && var.unassigned()) {
-            os << " " << var.domain;
-        } else {
-            os << " [" << var.inf << "," << var.sup << "]";
-        }
-        os << "/" << var.getDegree();
-        return os;
-    }
+    friend ostream& operator<<(ostream& os, Variable &var);
+    
+    friend class WCSP;
 };
 
 /*

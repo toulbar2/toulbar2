@@ -9,19 +9,21 @@
 #include "tb2constraint.hpp"
 #include "tb2wcsp.hpp"
 
+template<class T1, class T2>
 class AbstractBinaryConstraint : public Constraint
 {
 protected:
-    CostVariable *x;
-    CostVariable *y;
+    T1 *x;
+    T2 *y;
     DLink<ConstraintLink> *linkX;
     DLink<ConstraintLink> *linkY;
     
-    CostVariable *getX() const {return x;}
-    CostVariable *getY() const {return y;}
-    
 public:
-    AbstractBinaryConstraint(CostVariable *xx, CostVariable *yy);
+    AbstractBinaryConstraint(WCSP *wcsp, T1 *xx, T2 *yy) : Constraint(wcsp), x(xx), y(yy), linkX(NULL), linkY(NULL) {
+        assert(xx != yy);
+        linkX = xx->link(this,0);
+        linkY = yy->link(this,1);
+    }
 
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
 
@@ -43,9 +45,9 @@ public:
 
     int arity() const {return 2;}
     
-    CostVariable *getCostVar(int varIndex) const {return (varIndex == 0)?getX():getY();}
+    Variable *getVar(int varIndex) const {return (varIndex == 0)?x:y;}
 
-    int getSmallestVarIndexInScope(int forbiddenScopeIndex);    
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex) {return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
 };
 
 #endif /*TB2ABSTRACTCONSTR_HPP_*/

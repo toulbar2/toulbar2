@@ -15,7 +15,8 @@ class Constraint : public WCSPLink
     Constraint& operator=(const Constraint &c);
 
 public:
-    Constraint() {}
+    Constraint(WCSP *wcsp);
+        
     virtual ~Constraint() {}
 
     // remove a constraint from the set of active constraints
@@ -25,7 +26,7 @@ public:
     virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
 
     virtual int arity() const = 0;
-    virtual CostVariable *getCostVar(int index) const = 0;
+    virtual Variable *getVar(int index) const = 0;
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
 

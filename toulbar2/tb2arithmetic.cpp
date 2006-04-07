@@ -10,10 +10,17 @@
  * 
  */
 
-Supxyc::Supxyc(CostVariable *xx, CostVariable *yy, Value c, StoreStack<Cost,Cost> *storeCost, StoreStack<Value,Value> *storeValue) :
-    AbstractBinaryConstraint(xx,yy), cst(c), deltaCost(0, storeCost),
+Supxyc::Supxyc(WCSP *wcsp, Variable *xx, Variable *yy, Value c, 
+               StoreStack<Cost, Cost> *storeCost, StoreStack<Value, Value> *storeValue) :
+    AbstractBinaryConstraint<Variable,Variable>(wcsp, xx, yy), cst(c), deltaCost(0, storeCost),
     deltaValueXinf(xx->getSup()+1, storeValue), deltaValueYsup(yy->getSup()+1, storeValue),
-    deltaCostXinf(0, storeCost), deltaCostYsup(0, storeCost) {}
+    deltaCostXinf(0, storeCost), deltaCostYsup(0, storeCost)
+{
+    xx->queueInc();
+    xx->queueDec();
+    yy->queueInc();
+    yy->queueDec();
+}
 
 void Supxyc::print(ostream& os)
 {
@@ -33,22 +40,22 @@ void Supxyc::propagate()
     }
 
     // deconnect the constraint if always satisfied
-    if (getX()->getInf() >= getY()->getSup() + cst) {
+    if (x->getInf() >= y->getSup() + cst) {
         deconnect();
     } else {
         Cost cost;
         
         // propagate hard constraint
-        Value newInf = getY()->getInf() + cst - deltaCost - (wcsp->getUb() - wcsp->getLb());
-        if (getX()->getInf() < newInf) getX()->increase(newInf);
+        Value newInf = y->getInf() + cst - deltaCost - (wcsp->getUb() - wcsp->getLb() - 1);
+        if (x->getInf() < newInf) x->increase(newInf);
         
-        Value newSup = getX()->getSup() - cst + deltaCost + (wcsp->getUb() - wcsp->getLb());
-        if (getY()->getSup() > newSup) getY()->decrease(newSup);
+        Value newSup = x->getSup() - cst + deltaCost + (wcsp->getUb() - wcsp->getLb() - 1);
+        if (y->getSup() > newSup) y->decrease(newSup);
     
         // IC0 propagatation (increase global lower bound)
-        cost = getY()->getInf() + cst - getX()->getSup() - deltaCost;
-        if (getY()->getInf() == deltaValueYsup) cost -= deltaCostYsup;
-        if (getX()->getSup() == deltaValueXinf) cost -= deltaCostXinf;
+        cost = y->getInf() + cst - x->getSup() - deltaCost;
+        if (y->getInf() == deltaValueYsup) cost -= deltaCostYsup;
+        if (x->getSup() == deltaValueXinf) cost -= deltaCostXinf;
         if (cost > 0) {
             deltaCost += cost;
             if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
@@ -56,8 +63,8 @@ void Supxyc::propagate()
         }
         
         // BAC* propagation (increase unary costs of domain bounds)
-        Value xinf = getX()->getInf();
-        Value yinf = getY()->getInf();
+        Value xinf = x->getInf();
+        Value yinf = y->getInf();
         cost = yinf + cst - xinf - deltaCost;
         if (yinf == deltaValueYsup) cost -= deltaCostYsup;
         if (xinf == deltaValueXinf) cost -= deltaCostXinf;
@@ -65,11 +72,11 @@ void Supxyc::propagate()
         if (cost > 0) {
             deltaValueXinf = xinf;
             deltaCostXinf += cost;
-            getX()->projectInfCost(cost);
+            x->projectInfCost(cost);
         }
         
-        Value xsup = getX()->getSup();
-        Value ysup = getY()->getSup();
+        Value xsup = x->getSup();
+        Value ysup = y->getSup();
         cost = ysup + cst - xsup - deltaCost;
         if (xsup == deltaValueXinf) cost -= deltaCostXinf;
         if (ysup == deltaValueYsup) cost -= deltaCostYsup;
@@ -77,7 +84,7 @@ void Supxyc::propagate()
         if (cost > 0) {
             deltaValueYsup = ysup;
             deltaCostYsup += cost;
-            getY()->projectSupCost(cost);
+            y->projectSupCost(cost);
         }
     }
 }
@@ -86,17 +93,17 @@ bool Supxyc::verify()
 {
     Cost cmin,cxinf,cysup;
     
-    cmin = getY()->getInf() + cst - getX()->getSup() - deltaCost
-            - ((getY()->getInf() == deltaValueYsup)?deltaCostYsup:0)
-            - ((getX()->getSup() == deltaValueXinf)?deltaCostXinf:0);
+    cmin = y->getInf() + cst - x->getSup() - deltaCost
+            - ((y->getInf() == deltaValueYsup)?deltaCostYsup:0)
+            - ((x->getSup() == deltaValueXinf)?deltaCostXinf:0);
     if (cmin > 0) cout << "cmin=" << cmin << endl;
-    cxinf = getY()->getInf() + cst - getX()->getInf() - deltaCost
-            - ((getY()->getInf() == deltaValueYsup)?deltaCostYsup:0)
-            - ((getX()->getInf() == deltaValueXinf)?deltaCostXinf:0);
+    cxinf = y->getInf() + cst - x->getInf() - deltaCost
+            - ((y->getInf() == deltaValueYsup)?deltaCostYsup:0)
+            - ((x->getInf() == deltaValueXinf)?deltaCostXinf:0);
     if (cxinf > 0) cout << "cxinf=" << cxinf << endl;
-    cysup = getY()->getSup() + cst - getX()->getSup() - deltaCost
-            - ((getY()->getSup() == deltaValueYsup)?deltaCostYsup:0)
-            - ((getX()->getSup() == deltaValueXinf)?deltaCostXinf:0);
+    cysup = y->getSup() + cst - x->getSup() - deltaCost
+            - ((y->getSup() == deltaValueYsup)?deltaCostYsup:0)
+            - ((x->getSup() == deltaValueXinf)?deltaCostXinf:0);
     if (cysup > 0) cout << "cysup=" << cysup << endl;
     bool icbac = (cmin <= 0) && (cysup <= 0) && (cxinf <= 0);
     if (!icbac) {

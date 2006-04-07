@@ -10,57 +10,57 @@
 
 typedef enum {NOTHING_EVENT=0, INCREASE_EVENT=1, DECREASE_EVENT=2} EventType;
 
-struct CostVariableWithTimeStamp 
+struct VariableWithTimeStamp 
 {
-    CostVariable *var;
+    Variable *var;
     long long timeStamp;
     int incdec;
 };
 
-class Queue : private BTList<CostVariableWithTimeStamp>
+class Queue : private BTList<VariableWithTimeStamp>
 {  
     // make it private because we don't want copy nor assignment
     Queue(const Queue &s);
     Queue& operator=(const Queue &s);
     
 public:
-    Queue() : BTList<CostVariableWithTimeStamp>(NULL) {}
+    Queue() : BTList<VariableWithTimeStamp>(NULL) {}
     
-    int getSize() const {return BTList<CostVariableWithTimeStamp>::getSize();}
-    bool empty() const {return BTList<CostVariableWithTimeStamp>::empty();}
+    int getSize() const {return BTList<VariableWithTimeStamp>::getSize();}
+    bool empty() const {return BTList<VariableWithTimeStamp>::empty();}
 
-    void clear() {BTList<CostVariableWithTimeStamp>::clear();}
+    void clear() {BTList<VariableWithTimeStamp>::clear();}
     
-    void push(DLink<CostVariableWithTimeStamp> *elt, long long curTimeStamp) {
+    void push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp) {
         if (elt->content.timeStamp < curTimeStamp) {
             elt->content.timeStamp = curTimeStamp;
             push_back(elt, false);
         }
     }
     
-    void push(DLink<CostVariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp) {
+    void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp) {
         elt->content.incdec |= incdec;
         push(elt, curTimeStamp);
     }
     
-    CostVariable *pop() {
+    Variable *pop() {
         assert(!empty());
-        DLink<CostVariableWithTimeStamp> *elt = pop_back(false);
+        DLink<VariableWithTimeStamp> *elt = pop_back(false);
         elt->content.timeStamp = -1;
         elt->content.incdec = NOTHING_EVENT;
         return elt->content.var;
     }
     
-    CostVariable *pop(int *incdec) {
+    Variable *pop(int *incdec) {
         assert(!empty());
         *incdec = (*rbegin()).incdec;
         return pop();
     }
     
-    CostVariable *pop_min();
-    CostVariable *pop_min(int *incdec);
-    CostVariable *pop_max();
-    CostVariable *pop_max(int *incdec);
+    Variable *pop_min();
+    Variable *pop_min(int *incdec);
+    Variable *pop_max();
+    Variable *pop_max(int *incdec);
 };
 
 #endif /*TB2QUEUE_HPP_*/

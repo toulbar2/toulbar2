@@ -7,11 +7,13 @@
 #define TB2BINCONSTR_HPP_
 
 #include "tb2abstractconstr.hpp"
+#include "tb2enumvar.hpp"
 
 class BinaryConstraint;
-typedef Cost (*GetCostFunc)(BinaryConstraint *c, Value vx, Value vy);
+typedef Cost (BinaryConstraint::*GetCostMember)(Value vx, Value vy);
+#define GETCOST (this->*getCost)
 
-class BinaryConstraint : public AbstractBinaryConstraint
+class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>
 {
     unsigned int sizeX;
     unsigned int sizeY;
@@ -28,37 +30,27 @@ class BinaryConstraint : public AbstractBinaryConstraint
         assert(res >= 0);
         return res;
     }
+    Cost getCostReverse(Value vy, Value vx) {return getCost(vx,vy);}
+    
+    void findSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
+            vector<Value> &supportX, vector<StoreCost> &deltaCostsX, GetCostMember getCost);
+    void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
+            vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
+            vector<Value> &supportY, vector<StoreCost> &deltaCostsY, GetCostMember getCost);
+    void projection(EnumeratedVariable *x, Value valueY, GetCostMember getCost);
+    bool verify(EnumeratedVariable *x, EnumeratedVariable *y, GetCostMember getCost);
 
-//    friend Cost getCost(BinaryConstraint *c, Value vx, Value vy) {return c->getCost(vx,vy);}
-//    friend Cost getCostReverse(BinaryConstraint *c, Value vx, Value vy) {return c->getCost(vy,vx);}
-//    friend void findSupport(BinaryConstraint *c, CostVariable *x, CostVariable *y, 
-//            vector<Value> &supportX, vector<StoreCost> &deltaCostsX, GetCostFunc getCost);
-//    friend void findFullSupport(BinaryConstraint *c, CostVariable *x, CostVariable *y, 
-//            vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
-//            vector<Value> &supportY, vector<StoreCost> &deltaCostsY, GetCostFunc getCost);
-//    friend void projection(BinaryConstraint *c, CostVariable *x, Value valueY, GetCostFunc getCost);
-//    friend bool verify(BinaryConstraint *c, CostVariable *x, CostVariable *y, GetCostFunc getCost);
-
-//    void findSupportX() {::findSupport(this,x,y,supportX,deltaCostsX,::getCost);}
-//    void findSupportY() {::findSupport(this,y,x,supportY,deltaCostsY,::getCostReverse);}
-//    void findFullSupportX() {::findFullSupport(this,x,y,supportX,deltaCostsX,supportY,deltaCostsY,::getCost);}
-//    void findFullSupportY() {::findFullSupport(this,y,x,supportY,deltaCostsY,supportX,deltaCostsX,::getCostReverse);}
-//    void projectX() {::projection(this,x,y->getValue(),::getCost);}
-//    void projectY() {::projection(this,y,x->getValue(),::getCostReverse);}
-//    bool verifyX() {return ::verify(this,x,y,::getCost);}
-//    bool verifyY() {return ::verify(this,y,x,::getCostReverse);}
-
-    void findSupportX();
-    void findSupportY();
-    void findFullSupportX();
-    void findFullSupportY();
-    void projectX();
-    void projectY();
-    bool verifyX();
-    bool verifyY();
+    void findSupportX() {findSupport(x,y,supportX,deltaCostsX,&BinaryConstraint::getCost);}
+    void findSupportY() {findSupport(y,x,supportY,deltaCostsY,&BinaryConstraint::getCostReverse);}
+    void findFullSupportX() {findFullSupport(x,y,supportX,deltaCostsX,supportY,deltaCostsY,&BinaryConstraint::getCost);}
+    void findFullSupportY() {findFullSupport(y,x,supportY,deltaCostsY,supportX,deltaCostsX,&BinaryConstraint::getCostReverse);}
+    void projectX() {projection(x,y->getValue(),&BinaryConstraint::getCost);}
+    void projectY() {projection(y,x->getValue(),&BinaryConstraint::getCostReverse);}
+    bool verifyX() {return verify(x,y,&BinaryConstraint::getCost);}
+    bool verifyY() {return verify(y,x,&BinaryConstraint::getCostReverse);}
     
 public:
-    BinaryConstraint(CostVariable *xx, CostVariable *yy, vector<Cost> &tab, StoreStack<Cost,Cost> *store);
+    BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
 
     ~BinaryConstraint() {}
     

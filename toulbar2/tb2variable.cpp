@@ -2,69 +2,83 @@
  * ****** Variable with domain represented by an interval or an enumerated domain *******
  */
  
-#include "tb2solver.hpp"
-
+#include "tb2variable.hpp"
+#include "tb2wcsp.hpp"
+#include "tb2system.hpp"
 
 /*
  * Constructors and misc.
  * 
  */
 
-Variable::Variable(string n, Value iinf, Value isup, Solver *s, VariableType t) : enumerated(false), type(t), name(n), 
-        inf(iinf, &s->getStore()->storeValue), sup(isup, &s->getStore()->storeValue), 
-        value((iinf==isup)?iinf:(isup+1), &s->getStore()->storeValue), solver(s)
+Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : 
+        WCSPLink(w,w->numberOfVariables()), name(n),
+        inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
+        constrs(&w->getStore()->storeConstraint), deltaCost(0, &w->getStore()->storeCost),
+        maxCost(0, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
+        NCBucket(-1, &w->getStore()->storeValue)
+        
 {
-    if (s->getStore()->getDepth() > 0) {
+    if (w->getStore()->getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
         exit(EXIT_FAILURE);
     }
-    linkUnassignedVars.content = this;
-    addVarToSolver();
+    w->link(this);
+
+    linkNCBucket.content = this;
+    linkNCQueue.content.var = this;
+    linkNCQueue.content.timeStamp = -1;
+    linkIncDecQueue.content.var = this;
+    linkIncDecQueue.content.timeStamp = -1;
+    linkIncDecQueue.content.incdec = NOTHING_EVENT;
 }
 
-Variable::Variable(string n, Value iinf, Value isup, Solver *s, VariableType t, bool enumerate) : 
-        enumerated(true), type(t), name(n),
-        inf(iinf, &s->getStore()->storeValue), sup(isup, &s->getStore()->storeValue),
-        value((iinf==isup)?iinf:(isup+1), &s->getStore()->storeValue),
-        domain(iinf, isup, &s->getStore()->storeDomain), solver(s)
+DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
 {
-    assert(enumerate == true);
-    if (s->getStore()->getDepth() > 0) {
-        cerr << "You cannot create a variable during the search!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    linkUnassignedVars.content = this;
-    addVarToSolver();
+    ConstraintLink e;
+    e.constr = c;
+    e.scopeIndex = index;
+    DLink<ConstraintLink> *elt = new DLink<ConstraintLink>;
+    elt->content = e;
+    constrs.push_back(elt,true);
+    return elt;
 }
 
-Variable::Variable(string n, Value *d, int dsize, Solver *s, VariableType t, bool enumerate) : 
-        enumerated(true), type(t), name(n),
-        inf(min(d,dsize), &s->getStore()->storeValue), sup(max(d, dsize), &s->getStore()->storeValue),
-        value((inf==sup)?inf:(sup+1), &s->getStore()->storeValue),
-        domain(d, dsize, &s->getStore()->storeDomain), solver(s)
+int cmpConstraint(const void *p1, const void *p2)
 {
-    assert(enumerate == true);
-    if (s->getStore()->getDepth() > 0) {
-        cerr << "You cannot create a variable during the search!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    linkUnassignedVars.content = this;
-    addVarToSolver();
+    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
+    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    int v1 = c1->content.constr->getSmallestVarIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestVarIndexInScope(c2->content.scopeIndex);
+    if (v1 < v2) return -1;
+    else if (v1 > v2) return 1;
+    else return 0;
 }
 
-void Variable::addVarToSolver()
+void Variable::sortConstraints()
 {
-    if (type >= AUX_VAR) solver->getVars()->push_back(this);
-    if (type >= DECISION_VAR && unassigned()) solver->getUnassignedVars()->push_back(&linkUnassignedVars, true);
-} 
-
-int Variable::getDegree()
-{
-    int sum = 0;
-    for (unsigned int i=0; i<wcsps.size(); i++) {
-        sum += wcsps[i].wcsp->getDegree(wcsps[i].wcspIndex);
+    int size = constrs.getSize();
+    DLink<ConstraintLink> *sorted[size];
+    int i=0;
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        sorted[i++] = iter.getElt();
     }
-    return sum;
+    qsort(sorted, size, sizeof(DLink<ConstraintLink> *), cmpConstraint);
+    for (int i = 0; i < size; i++) {
+        constrs.erase(sorted[i],true);
+        constrs.push_back(sorted[i],true);
+    }
+}
+
+ostream& operator<<(ostream& os, Variable &var) {
+    os << var.name;
+    var.print(os);
+    if (ToulBar2::verbose >= 3) {
+        for (ConstraintList::iterator iter=var.constrs.begin(); iter != var.constrs.end(); ++iter) {
+            os << " (" << (*iter).constr << "," << (*iter).scopeIndex << ")";
+        }
+    }
+    return os;
 }
 
 
@@ -73,69 +87,53 @@ int Variable::getDegree()
  * 
  */
 
-void Variable::increase(WCSP *wcsp, Value newInf)
+void Variable::queueNC()
 {
-    if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
-    if (newInf > inf) {
-        if (newInf > sup) throw Contradiction();
-        else {
-            if (enumerated) newInf = domain.increase(newInf);
-            if (newInf == sup) assign(newInf);
-            else {
-            	inf = newInf;
-                for (unsigned int i=0; i<wcsps.size(); i++) {
-                    wcsps[i].wcsp->increase((wcsps[i].wcsp == wcsp), wcsps[i].wcspIndex);
-                }
-            }
-        }
-      }
+    wcsp->NC.push(&linkNCQueue, wcsp->nbNodes);
 }
 
-void Variable::decrease(WCSP *wcsp, Value newSup)
+void Variable::queueInc()
 {
-    if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
-    if (newSup < sup) {
-        if (newSup < inf) throw Contradiction();
-        else {
-            if (enumerated) newSup = domain.decrease(newSup);
-            if (inf == newSup) assign(newSup);
-            else {
-            	sup = newSup;
-                for (unsigned int i=0; i<wcsps.size(); i++) {
-                    wcsps[i].wcsp->decrease((wcsps[i].wcsp == wcsp), wcsps[i].wcspIndex);
-                }
-            }
-        }
-      }
+    wcsp->IncDec.push(&linkIncDecQueue, INCREASE_EVENT, wcsp->nbNodes);
 }
 
-void Variable::assign(Value newValue)
+void Variable::queueDec()
 {
-    assert(value > sup);
-    if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
-    if (unassigned() || value != newValue) {
-        if (cannotbe(newValue)) throw Contradiction();
-        Value lastInfBeforeAssign = inf;    // previous inf and sup values just before being assigned
-        Value lastSupBeforeAssign = sup;
-        value = newValue;
-        inf = newValue;
-        sup = newValue;
-        if (type == DECISION_VAR) solver->getUnassignedVars()->erase(&linkUnassignedVars, true);
-        for (unsigned int i=0; i<wcsps.size(); i++) {
-            wcsps[i].wcsp->assign(wcsps[i].wcspIndex,lastInfBeforeAssign,lastSupBeforeAssign);
-        }
+    wcsp->IncDec.push(&linkIncDecQueue, DECREASE_EVENT, wcsp->nbNodes);
+}
+
+void Variable::changeNCBucket(int newBucket)
+{
+    if (NCBucket != newBucket) {
+        if (ToulBar2::verbose >= 3) cout << "changeNCbucket " << getName() << ": " << NCBucket << " -> " << newBucket << endl;
+        wcsp->changeNCBucket(NCBucket, newBucket, &linkNCBucket);
+        NCBucket = newBucket;
     }
 }
 
-void Variable::remove(WCSP *wcsp, Value val)
+void Variable::setMaxUnaryCost(Value a, Cost cost)
 {
-    if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << val << endl;
-    if (val == inf) increase(wcsp, inf + 1);
-    else if (val == sup) decrease(wcsp, sup - 1);
-    else if (enumerated && domain.canbe(val)) {
-        domain.erase(val);
-        for (unsigned int i=0; i<wcsps.size(); i++) {
-            wcsps[i].wcsp->remove((wcsps[i].wcsp == wcsp), wcsps[i].wcspIndex, val);
-        }
+    assert(canbe(a));
+    maxCostValue = a;
+    assert(cost >= 0);
+    if (maxCost != cost) {
+        maxCost = cost;
+        int newbucket = min(cost2log2(cost), wcsp->NCBucketSize - 1);
+        changeNCBucket(newbucket);
+    }
+}
+
+void Variable::extendAll(Cost cost)
+{
+    assert(cost > 0);
+    deltaCost += cost;          // Warning! Possible overflow???
+    queueNC();
+}
+
+void Variable::propagateIncDec(int incdec)
+{
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        if (incdec & INCREASE_EVENT) (*iter).constr->increase((*iter).scopeIndex);
+        if (incdec & DECREASE_EVENT) (*iter).constr->decrease((*iter).scopeIndex);
     }
 }

@@ -11,7 +11,7 @@
 
 /** semantic: soft(x >= y + cst) : max( y + cst - x , 0 )
  */
-class Supxyc : public AbstractBinaryConstraint
+class Supxyc : public AbstractBinaryConstraint<Variable, Variable>
 {
     Value cst;
     StoreCost deltaCost;
@@ -21,7 +21,8 @@ class Supxyc : public AbstractBinaryConstraint
     StoreCost deltaCostYsup;
     
 public:
-    Supxyc(CostVariable *xx, CostVariable *yy, Value c, StoreStack<Cost,Cost> *storeCost, StoreStack<Value,Value> *storeValue);
+    Supxyc(WCSP *wcsp, Variable *xx, Variable *yy, Value c, 
+        StoreStack<Cost, Cost> *storeCost, StoreStack<Value, Value> *storeValue);
 
     ~Supxyc() {}
     
@@ -40,7 +41,7 @@ public:
 //    }
 //    
     void assign(int varIndex) {
-        if (getX()->assigned() && getY()->assigned()) deconnect();  // Warning! deconnection has to be done before the projection
+        if (x->assigned() && y->assigned()) deconnect();  // Warning! deconnection has to be done before the projection
         propagate();
     }
         

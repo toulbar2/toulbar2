@@ -3,13 +3,13 @@
  */
  
 #include "tb2queue.hpp"
-#include "tb2costvar.hpp"
+#include "tb2variable.hpp"
 
-CostVariable *Queue::pop_min()
+Variable *Queue::pop_min()
 {
     assert(!empty());
     iterator iter=begin();
-    DLink<CostVariableWithTimeStamp> *elt = iter.getElt();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->wcspIndex;
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->wcspIndex < pos) {
@@ -23,11 +23,11 @@ CostVariable *Queue::pop_min()
     return elt->content.var;
 }
 
-CostVariable *Queue::pop_min(int *incdec)
+Variable *Queue::pop_min(int *incdec)
 {
     assert(!empty());
     iterator iter=begin();
-    DLink<CostVariableWithTimeStamp> *elt = iter.getElt();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->wcspIndex;
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->wcspIndex < pos) {
@@ -42,11 +42,11 @@ CostVariable *Queue::pop_min(int *incdec)
     return elt->content.var;
 }
 
-CostVariable *Queue::pop_max()
+Variable *Queue::pop_max()
 {
     assert(!empty());
     iterator iter=begin();
-    DLink<CostVariableWithTimeStamp> *elt = iter.getElt();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->wcspIndex;
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->wcspIndex > pos) {
@@ -60,11 +60,11 @@ CostVariable *Queue::pop_max()
     return elt->content.var;
 }
 
-CostVariable *Queue::pop_max(int *incdec)
+Variable *Queue::pop_max(int *incdec)
 {
     assert(!empty());
     iterator iter=begin();
-    DLink<CostVariableWithTimeStamp> *elt = iter.getElt();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->wcspIndex;
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->wcspIndex > pos) {

@@ -181,7 +181,6 @@ public:
 };
 
 typedef BTList<ConstraintLink> ConstraintList;
-typedef BTList<CostVariable *> CostVariableList;
 typedef BTList<Variable *> VariableList;
 
 #endif /*TB2BTLIST_HPP_*/

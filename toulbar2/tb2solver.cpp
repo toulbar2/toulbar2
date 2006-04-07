@@ -4,27 +4,47 @@
  */
 
 #include "tb2solver.hpp"
-
+#include "tb2enumvar.hpp"
 
 /*
  * Solver constructors
  * 
  */
 
-Solver::Solver(int storeSize, Cost initUpperBound) : store(storeSize), nbNodes(0), nbBacktracks(0), 
-        unassignedVars(&store.storeVariable),
-        upperBound(initUpperBound), objective("obj",0,MAX_COST,this,OBJ_VAR), wcsp(&objective, &store)
+Solver *Solver::currentSolver = NULL;
+
+Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), unassignedVars(NULL)
 {
+    store = new Store(storeSize);
+    wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
 }
-        
+
 Solver::~Solver()
 {
-    for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
+    delete store;
+    delete wcsp;
 }
 
 void Solver::read_wcsp(const char *fileName)
 {
-    wcsp.read_wcsp(fileName, this);
+    wcsp->read_wcsp(fileName);
+    unassignedVars = new Domain(0, wcsp->numberOfVariables()-1, &store->storeDomain);
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+        if (wcsp->assigned(i)) unassignedVars->erase(i);
+    }
+    ToulBar2::setvalue = setvalue;
+}
+
+/*
+ * Link between solver and wcsp: maintain a backtrackable list of unassigned variable indexes
+ * 
+ */
+
+void setvalue(int wcspId, int varIndex, Value value)
+{
+    assert(wcspId == 0);
+    assert(unassignedVars->canbe(varIndex));
+    Solver::currentSolver->unassignedVars->erase(varIndex);
 }
 
 /*
@@ -32,25 +52,25 @@ void Solver::read_wcsp(const char *fileName)
  * 
  */
 
-Variable *Solver::getVarMinDomainDivMaxDegree()
+int Solver::getVarMinDomainDivMaxDegree()
 {
-    Variable *var = NULL;
+    int varIndex = -1;;
     double best = MAX_VAL - MIN_VAL;
 
-    for (VariableList::iterator iter = unassignedVars.begin(); iter != unassignedVars.end(); ++iter) {
+    for (Domain::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) (*iter)->getDomainSize() / ((*iter)->getDegree() + 1);
-        if (var == NULL || heuristic < best - 1./100001.) {
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+        if (varIndex < 0 || heuristic < best - 1./100001.) {
             best = heuristic;
-            var = *iter;
+            varIndex = *iter;
         }
     }
-    return var;
+    return varIndex;
 }
 
-Variable *Solver::getNextUnassignedVar()
+int Solver::getNextUnassignedVar()
 {
-    return (unassignedVars.empty())?NULL:*unassignedVars.begin();
+    return (unassignedVars->empty())?NULL:*unassignedVars->begin();
 }
 
 /*
@@ -58,33 +78,33 @@ Variable *Solver::getNextUnassignedVar()
  * 
  */
 
-void Solver::binaryChoicePoint(Variable *x, Value value)
+void Solver::binaryChoicePoint(int varIndex, Value value)
 {
-    assert(x->unassigned());
-    assert(x->canbe(value));
+    assert(wcsp->unassigned(varIndex));
+    assert(wcsp->canbe(varIndex,value));
     try {
-        store.store();
+        store->store();
         if (ToulBar2::verbose >= 2) {
             cout << wcsp;
         }
-        if (ToulBar2::verbose >= 1) cout << "[" << store.getDepth() << "," << wcsp.getLb() << "," << upperBound << "," << wcsp.getDomainSizeSum() << "] Try " << x->getName() << " = " << value << endl;
+        if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
         nbNodes++;
-        x->assign(value);
-        wcsp.propagate();
+        wcsp->assign(varIndex, value);
+        wcsp->propagate();
         recursiveSolve();
     } catch (Contradiction) {
-        whenContradiction();
+        wcsp->whenContradiction();
     }
-    store.restore();
+    store->restore();
     nbBacktracks++;
-    wcsp.decreaseUb(upperBound - 1);
+    wcsp->enforceUb();
     if (ToulBar2::verbose >= 2) {
         cout << wcsp;
     }
-    if (ToulBar2::verbose >= 1) cout << "[" << store.getDepth() << "," << wcsp.getLb() << "," << upperBound << "," << wcsp.getDomainSizeSum() << "] Refute " << x->getName() << " != " << value << endl;
+    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " != " << value << endl;
     nbNodes++;
-    x->remove(value);
-    wcsp.propagate();
+    wcsp->remove(varIndex, value);
+    wcsp->propagate();
     recursiveSolve();
 }
 
@@ -106,59 +126,36 @@ int cmpCostValue(const void *p1, const void *p2)
     else return 0;
 }
 
-void Solver::narySortedChoicePoint(Variable *x)
+void Solver::narySortedChoicePoint(int varIndex)
 {
-    assert(x->unassigned());
-    assert(x->getEnumerated());
-    int size = x->getDomainSize();
+    assert(wcsp->enumerated(varIndex));
+    int size = wcsp->getDomainSize(varIndex);
     CostValue sorted[size]; 
     int v = 0;
-    int currentVariableIndex = x->findWCSPIndex(&wcsp);
-    for (Variable::iterator iter = x->begin(); iter != x->end(); ++iter) {
-        sorted[v].val = *iter;
-        sorted[v].cost = wcsp.getUnaryCost(currentVariableIndex,*iter);
-        v++;
+    for (Value value = wcsp->getInf(varIndex); value <= wcsp->getSup(varIndex); value++) {
+        if (wcsp->canbe(varIndex, value)) {
+            sorted[v].val = value;
+            sorted[v].cost = wcsp->getUnaryCost(varIndex, value);
+            v++;
+        }
     }
     qsort(sorted, size, sizeof(CostValue), cmpCostValue);
     for (v = 0; v < size; v++) {
         try {
-            store.store();
+            store->store();
             nbNodes++;
             if (ToulBar2::verbose >= 2) {
                 cout << wcsp << endl;
             }
-            if (ToulBar2::verbose >= 1) cout << "[" << store.getDepth() << "," << wcsp.getLb() << "," << upperBound << "," << wcsp.getDomainSizeSum() << "] Try " << x->getName() << " = " << sorted[v].val << endl;
-            wcsp.decreaseUb(upperBound - 1);
-            x->assign(sorted[v].val);
-            wcsp.propagate();
+            if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << sorted[v].val << endl;
+            wcsp->enforceUb();
+            wcsp->assign(varIndex, sorted[v].val);
+            wcsp->propagate();
             recursiveSolve();
         } catch (Contradiction) {
-            whenContradiction();
+            wcsp->whenContradiction();
         }
-        store.restore();
-    }
-    nbBacktracks++;
-}
-
-void Solver::naryChoicePoint(Variable *x)
-{
-    assert(x->unassigned());
-    for (Variable::iterator iter = x->begin(); iter != x->end(); ++iter) {
-        try {
-            store.store();
-            nbNodes++;
-            if (ToulBar2::verbose >= 2) {
-                cout << wcsp;
-            }
-            if (ToulBar2::verbose >= 1) cout << "[" << store.getDepth() << "," << wcsp.getLb() << "," << upperBound << "," << wcsp.getDomainSizeSum() << "] Try " << x->getName() << " = " << *iter << endl;
-            wcsp.decreaseUb(upperBound - 1);
-            x->assign(*iter);
-            wcsp.propagate();
-            recursiveSolve();
-        } catch (Contradiction) {
-            whenContradiction();
-        }
-        store.restore();
+        store->restore();
     }
     nbBacktracks++;
 }
@@ -168,59 +165,51 @@ void Solver::naryChoicePoint(Variable *x)
  * 
  */
 
-void Solver::whenContradiction()
-{
-    wcsp.whenContradiction();
-}
-            
 void Solver::recursiveSolve()
 {
-//    Variable *var = getNextUnassignedVar();
-    Variable *var = getVarMinDomainDivMaxDegree();
-    if (var != NULL) {
-        if (var->getEnumerated()) {
+//    int varIndex = getNextUnassignedVar();
+    int varIndex = getVarMinDomainDivMaxDegree();
+    if (varIndex >= 0) {
+        if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
-//                binaryChoicePoint(var, var->getInf());
-                assert(var->canbe(wcsp.getSupport(var->findWCSPIndex(&wcsp))));
-                binaryChoicePoint(var, wcsp.getSupport(var->findWCSPIndex(&wcsp)));
+                assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
+                binaryChoicePoint(varIndex, wcsp->getSupport(varIndex));
             } else {
-//                naryChoicePoint(var);
-                narySortedChoicePoint(var);
+                narySortedChoicePoint(varIndex);
             }
         } else {
-            binaryChoicePoint(var, var->getInf());
+            binaryChoicePoint(varIndex, wcsp->getInf(varIndex));
         }
     } else {
-        assert(unassignedVars.empty());
+        assert(unassignedVars->empty());
 #ifndef NDEBUG
         bool allVarsAssigned = true;
-        for (unsigned int i=0; i<vars.size(); i++) allVarsAssigned &= vars[i]->assigned();
+        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) allVarsAssigned &= wcsp->assigned(i);
         assert(allVarsAssigned);
 #endif
-        upperBound = wcsp.getLb();
-        wcsp.decreaseUb(upperBound);
-        cout << "New solution: " <<  upperBound << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+        wcsp->updateUb(wcsp->getLb());
+        cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         if (ToulBar2::showSolutions) cout << wcsp;
     }
 }
 
 bool Solver::solve()
 {
-    Cost initialUpperBound = min(wcsp.getUb() + 1, upperBound);
-    upperBound = initialUpperBound;
+    currentSolver = this;
+    Cost initialUpperBound = wcsp->getUb();
     nbBacktracks = 0;
     nbNodes = 0;
     try {
-        store.store();
-        wcsp.decreaseUb(upperBound - 1);
-        wcsp.propagate();                // initial propagation
+        store->store();
+        wcsp->decreaseUb(initialUpperBound);
+        wcsp->propagate();                // initial propagation
         recursiveSolve();
     } catch (Contradiction) {
-        whenContradiction();
+        wcsp->whenContradiction();
     }
-    store.restore();
-    if (upperBound < initialUpperBound) {
-        cout << "Optimun: " << upperBound << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+    store->restore();
+    if (wcsp->getUb() < initialUpperBound) {
+        cout << "Optimun: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
         return true;
     } else {
         cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;

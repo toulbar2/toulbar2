@@ -4,9 +4,9 @@
  */
 
 #include "tb2system.hpp"
-#include "tb2solver.hpp"
+#include "tb2wcsp.hpp"
 
-void WCSP::read_wcsp(const char *fileName, Solver *solver)
+void WCSP::read_wcsp(const char *fileName)
 {
     string pbname;
     int nbvar,nbval,nbconstr;
@@ -40,21 +40,20 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
     
     assert(vars.empty());
     assert(constrs.empty());
-    objective->decrease(top - 1);
-    NCBucketSize = cost2log2(objective->getSup()) + 1;
+    updateUb(top);
+    NCBucketSize = cost2log2(getUb()) + 1;
     
     // read variable domain sizes
-    vector<Variable *> &variables = *(solver->getVars());
     for (i = 0; i < nbvar; i++) {
         char varname_[128];
         sprintf(varname_, "%d", i);
         string varname(varname_);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
-        Variable *x = NULL;
-        if (domsize >= 0) x = new Variable(varname,0,domsize-1,solver,DECISION_VAR,true);
-        else x = new Variable(varname,0,-domsize-1,solver,DECISION_VAR);
-        link(x);
+        int theindex = -1;
+        if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
+        else theindex = makeIntervalVariable(varname,0,-domsize-1);
+        assert(theindex == i);
     }
     
     // read each constraint
@@ -67,13 +66,17 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
     	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
+            assert(vars[i]->enumerated());
+            assert(vars[j]->enumerated());
+            EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
+            EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
             file >> defval;
             if (defval >= 0) {
                 if (ToulBar2::verbose >= 3) cout << "read binary constraint " << c << " on " << i << "," << j << endl;
                 file >> ntuples;
                 vector<Cost> costs;
-                for (a = 0; a < variables[i]->getDomainInitSize(); a++) {
-                    for (b = 0; b < variables[j]->getDomainInitSize(); b++) {
+                for (a = 0; a < x->getDomainInitSize(); a++) {
+                    for (b = 0; b < y->getDomainInitSize(); b++) {
                         costs.push_back(defval);
                     }
                 }
@@ -81,27 +84,27 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                     file >> a;
                     file >> b;
                     file >> cost;
-                    costs[a * variables[j]->getDomainInitSize() + b] = cost;
+                    costs[a * y->getDomainInitSize() + b] = cost;
                 }
-                postBinaryConstraint(variables[i],variables[j],costs);
+                postBinaryConstraint(i,j,costs);
             } else {
                 file >> funcname;
                 if (funcname == ">=") {
                     file >> funcparam1;
-                    postSupxyc(variables[i],variables[j],funcparam1);
+                    postSupxyc(i,j,funcparam1);
                 } else if (funcname == ">") {
                     file >> funcparam1;
-                    postSupxyc(variables[i],variables[j],funcparam1 + 1);
+                    postSupxyc(i,j,funcparam1 + 1);
                 } else if (funcname == "<=") {
                     file >> funcparam1;
-                    postSupxyc(variables[j],variables[i], -funcparam1);
+                    postSupxyc(j,i, -funcparam1);
                 } else if (funcname == "<") {
                     file >> funcparam1;
-                    postSupxyc(variables[j],variables[i], -funcparam1 + 1);
+                    postSupxyc(j,i, -funcparam1 + 1);
                 } else if (funcname == "=") {
                     file >> funcparam1;
-                    postSupxyc(variables[i],variables[j],funcparam1);
-                    postSupxyc(variables[j],variables[i],-funcparam1);
+                    postSupxyc(i,j,funcparam1);
+                    postSupxyc(j,i,-funcparam1);
                 } else {
                     cerr << "Error: function " << funcname << " not implemented!" << endl;
                     exit(EXIT_FAILURE);
@@ -110,21 +113,23 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
         } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary constraint " << c << " on " << i << endl;
+            assert(vars[i]->enumerated());
+            EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
             file >> defval;
             file >> ntuples;
-            for (a = 0; a < variables[i]->getDomainInitSize(); a++) {
-                vars[i]->project(a, defval);
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                x->project(a, defval);
             }
             for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
-                vars[i]->extend(a, defval);
-                vars[i]->project(a, cost);
+                x->extend(a, defval);
+                x->project(a, cost);
             }
-            vars[i]->findSupport();
-//            vars[i]->propagateNC();       // Let the initial propagation be done only once in solver.cpp
+            x->findSupport();
+//            x->propagateNC();       // Let the initial propagation be done only once in solver.cpp
 //            propagate();
-            vars[i]->queueNC();
+            x->queueNC();
         } else if (arity == 0) {
             file >> defval;
             file >> ntuples;
@@ -133,7 +138,7 @@ void WCSP::read_wcsp(const char *fileName, Solver *solver)
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
                 exit(EXIT_FAILURE);
             }
-            objective->increase(getLb() + defval);
+            increaseLb(getLb() + defval);
 //            propagate();       // Let the initial propagation be done only once in solver.cpp
         } else {
             cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
