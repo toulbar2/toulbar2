@@ -4,7 +4,7 @@
  */
 
 #include "tb2solver.hpp"
-#include "tb2enumvar.hpp"
+#include "tb2domain.hpp"
 
 /*
  * Solver constructors
@@ -13,7 +13,7 @@
 
 Solver *Solver::currentSolver = NULL;
 
-Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), unassignedVars(NULL)
+Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL), unassignedVars(NULL)
 {
     store = new Store(storeSize);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
@@ -23,6 +23,7 @@ Solver::~Solver()
 {
     delete store;
     delete wcsp;
+    delete unassignedVars;
 }
 
 void Solver::read_wcsp(const char *fileName)
@@ -43,7 +44,7 @@ void Solver::read_wcsp(const char *fileName)
 void setvalue(int wcspId, int varIndex, Value value)
 {
     assert(wcspId == 0);
-    assert(unassignedVars->canbe(varIndex));
+    assert(Solver::currentSolver->unassignedVars->canbe(varIndex));
     Solver::currentSolver->unassignedVars->erase(varIndex);
 }
 
@@ -108,17 +109,12 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     recursiveSolve();
 }
 
-struct CostValue {
-    Value val;
-    Cost cost;
-};
-
-int cmpCostValue(const void *p1, const void *p2)
+int cmpValueCost(const void *p1, const void *p2)
 {
-    Cost c1 = ((CostValue *) p1)->cost;
-    Cost c2 = ((CostValue *) p2)->cost;
-    Value v1 = ((CostValue *) p1)->val;
-    Value v2 = ((CostValue *) p2)->val;
+    Cost c1 = ((ValueCost *) p1)->cost;
+    Cost c2 = ((ValueCost *) p2)->cost;
+    Value v1 = ((ValueCost *) p1)->value;
+    Value v2 = ((ValueCost *) p2)->value;
     if (c1 < c2) return -1;
     else if (c1 > c2) return 1;
     else if (v1 < v2) return -1;
@@ -130,26 +126,19 @@ void Solver::narySortedChoicePoint(int varIndex)
 {
     assert(wcsp->enumerated(varIndex));
     int size = wcsp->getDomainSize(varIndex);
-    CostValue sorted[size]; 
-    int v = 0;
-    for (Value value = wcsp->getInf(varIndex); value <= wcsp->getSup(varIndex); value++) {
-        if (wcsp->canbe(varIndex, value)) {
-            sorted[v].val = value;
-            sorted[v].cost = wcsp->getUnaryCost(varIndex, value);
-            v++;
-        }
-    }
-    qsort(sorted, size, sizeof(CostValue), cmpCostValue);
-    for (v = 0; v < size; v++) {
+    ValueCost sorted[size]; 
+    wcsp->getEnumDomainAndCost(varIndex, sorted);
+    qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+    for (int v = 0; v < size; v++) {
         try {
             store->store();
             nbNodes++;
             if (ToulBar2::verbose >= 2) {
                 cout << wcsp << endl;
             }
-            if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << sorted[v].val << endl;
+            if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << sorted[v].value << endl;
             wcsp->enforceUb();
-            wcsp->assign(varIndex, sorted[v].val);
+            wcsp->assign(varIndex, sorted[v].value);
             wcsp->propagate();
             recursiveSolve();
         } catch (Contradiction) {

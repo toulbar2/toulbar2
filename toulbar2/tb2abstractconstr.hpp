@@ -7,7 +7,7 @@
 #define TB2ABSTRACTCONSTR_HPP_
 
 #include "tb2constraint.hpp"
-#include "tb2wcsp.hpp"
+#include "tb2variable.hpp"
 
 template<class T1, class T2>
 class AbstractBinaryConstraint : public Constraint

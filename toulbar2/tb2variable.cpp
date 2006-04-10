@@ -2,9 +2,9 @@
  * ****** Variable with domain represented by an interval or an enumerated domain *******
  */
  
+#include "tb2system.hpp"
 #include "tb2variable.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2system.hpp"
 
 /*
  * Constructors and misc.
@@ -89,17 +89,17 @@ ostream& operator<<(ostream& os, Variable &var) {
 
 void Variable::queueNC()
 {
-    wcsp->NC.push(&linkNCQueue, wcsp->nbNodes);
+    wcsp->queueNC(&linkNCQueue);
 }
 
 void Variable::queueInc()
 {
-    wcsp->IncDec.push(&linkIncDecQueue, INCREASE_EVENT, wcsp->nbNodes);
+    wcsp->queueInc(&linkIncDecQueue);
 }
 
 void Variable::queueDec()
 {
-    wcsp->IncDec.push(&linkIncDecQueue, DECREASE_EVENT, wcsp->nbNodes);
+    wcsp->queueDec(&linkIncDecQueue);
 }
 
 void Variable::changeNCBucket(int newBucket)
@@ -118,7 +118,7 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
     assert(cost >= 0);
     if (maxCost != cost) {
         maxCost = cost;
-        int newbucket = min(cost2log2(cost), wcsp->NCBucketSize - 1);
+        int newbucket = min(cost2log2(cost), wcsp->getNCBucketSize() - 1);
         changeNCBucket(newbucket);
     }
 }

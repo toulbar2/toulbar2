@@ -5,8 +5,9 @@
  */
 
 #include "tb2system.hpp"
-#include "toulbar2.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2intervar.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2arithmetic.hpp"
 
@@ -23,6 +24,7 @@ externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
 externalevent ToulBar2::removevalue = NULL;
+externalevent ToulBar2::setminobj = NULL;
 
 int WCSP::wcspCounter = 0;
 
@@ -93,14 +95,30 @@ Value WCSP::getDomainSizeSum()
     return sum;
 }
 
+bool WCSP::getEnumDomain(int varIndex, Value *array)
+{
+	if (EnumeratedVariable *var = dynamic_cast<EnumeratedVariable*>(vars[varIndex])) {
+		var->getDomain(array);
+		return true;
+	} else return false;
+}
+
+bool WCSP::getEnumDomainAndCost(int varIndex, ValueCost *array)
+{
+	if (EnumeratedVariable *var = dynamic_cast<EnumeratedVariable*>(vars[varIndex])) {
+		var->getDomainAndCost(array);
+		return true;
+	} else return false;
+}
+
 void WCSP::printNCBuckets()
 {
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
         cout << "NC " << bucket << ":";
         for (VariableList::iterator iter = NCBuckets[bucket].begin (); iter != NCBuckets[bucket].end(); ++iter) {
-           cout << " " << (*iter)->getName() << "," << (*iter)->maxCostValue << "," << (*iter)->maxCost;
-           assert((*iter)->canbe((*iter)->maxCostValue));
-           assert((*iter)->getCost((*iter)->maxCostValue) == (*iter)->maxCost);
+           cout << " " << (*iter)->getName() << "," << (*iter)->getMaxCostValue() << "," << (*iter)->getMaxCost();
+           assert((*iter)->canbe((*iter)->getMaxCostValue()));
+           assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost());
         }
         cout << endl;
     }
@@ -165,7 +183,7 @@ void WCSP::propagateNC()
             for (VariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end();) {
                 Variable *x = *iter;
                 ++iter; // Warning! the iterator could be moved to another place by propagateNC
-                if (x->unassigned() && x->maxCost + getLb() >= getUb()) x->propagateNC();
+                if (x->unassigned() && x->getMaxCost() + getLb() >= getUb()) x->propagateNC();
             }
         }
     }

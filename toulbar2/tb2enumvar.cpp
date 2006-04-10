@@ -41,6 +41,23 @@ void EnumeratedVariable::init()
     linkDACQueue.content.timeStamp = -1;
 }
 
+void EnumeratedVariable::getDomain(Value *array)
+{
+    for (iterator iter = begin(); iter != end(); ++iter) {
+    	*array = *iter;
+    	++array;
+    }
+}
+
+void EnumeratedVariable::getDomainAndCost(ValueCost *array)
+{
+    for (iterator iter = begin(); iter != end(); ++iter) {
+    	array->value = *iter;
+    	array->cost = getCost(*iter);
+    	++array;
+    }
+}
+
 void EnumeratedVariable::print(ostream& os)
 {
     if (unassigned()) {
@@ -66,12 +83,12 @@ void EnumeratedVariable::print(ostream& os)
 
 void EnumeratedVariable::queueAC()
 {
-    wcsp->AC.push(&linkACQueue, wcsp->nbNodes);
+    wcsp->queueAC(&linkACQueue);
 }
 
 void EnumeratedVariable::queueDAC()
 {
-    wcsp->DAC.push(&linkDACQueue, wcsp->nbNodes);
+    wcsp->queueDAC(&linkDACQueue);
 }
 
 void EnumeratedVariable::project(Value value, Cost cost)

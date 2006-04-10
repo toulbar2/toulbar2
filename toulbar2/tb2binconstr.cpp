@@ -3,6 +3,10 @@
  */
 
 #include "tb2binconstr.hpp"
+#include "tb2wcsp.hpp"
+
+// coding shorthand
+#define GETCOST (this->*getBinaryCost)
 
 /*
  * Constructors and misc.
@@ -42,7 +46,9 @@ void BinaryConstraint::print(ostream& os)
  * 
  */
 
-void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y, vector<Value> &supportX, vector<StoreCost> &deltaCostsX, GetCostMember getCost)
+template <GetCostMember getBinaryCost>
+void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
+        vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
@@ -75,9 +81,10 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
     }
 }
 
+template <GetCostMember getBinaryCost>
 void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
-        vector<Value> &supportY, vector<StoreCost> &deltaCostsY, GetCostMember getCost)
+        vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
     if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
@@ -121,7 +128,8 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
     }
 }
 
-void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY, GetCostMember getCost)
+template <GetCostMember getBinaryCost>
+void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY)
 {
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -137,7 +145,8 @@ void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY, GetCostMe
     }
 }
 
-bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, GetCostMember getCost)
+template <GetCostMember getBinaryCost>
+bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost minCost = GETCOST(*iterX, y->getInf());

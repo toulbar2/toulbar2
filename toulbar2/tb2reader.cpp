@@ -5,6 +5,7 @@
 
 #include "tb2system.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2enumvar.hpp"
 
 void WCSP::read_wcsp(const char *fileName)
 {

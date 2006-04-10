@@ -7,10 +7,8 @@
 #define TB2WCSP_HPP_
 
 #include "toulbar2.hpp"
-#include "tb2constraint.hpp"
 #include "tb2variable.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2intervar.hpp"
+#include "tb2constraint.hpp"
 
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
@@ -29,24 +27,6 @@ class WCSP : public WeightedCSP {
     bool objectiveChanged;
     long long nbNodes;                        // used as a time-stamp by Queue methods
 
-    Store *getStore() {return storeData;}
-    
-    void link(Variable *x) {vars.push_back(x);}
-    void link(Constraint *c) {constrs.push_back(c);}
-
-    void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt) {
-        if (oldBucket >= 0) NCBuckets[oldBucket].erase(elt, true);
-        if (newBucket >= 0) NCBuckets[newBucket].push_back(elt, true);
-    }
-    void printNCBuckets();
-
-    void propagateNC();
-    void propagateIncDec();
-    void propagateAC();
-    void propagateDAC();
-
-    void sortConstraints();
-
     // make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
@@ -55,6 +35,8 @@ public:
     WCSP(Store *s, Cost upperBound);
     
     virtual ~WCSP();
+    
+    // General API for weighted CSP global constraint
     
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
     
@@ -78,6 +60,7 @@ public:
             if (newLb >= ub) throw Contradiction();
             lb = newLb;
             objectiveChanged=true;
+            if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
         }
     }
     void decreaseUb(Cost newUb) {
@@ -95,6 +78,8 @@ public:
     Value getSup(int varIndex) const {return vars[varIndex]->getSup();}
     Value getValue(int varIndex) const {return vars[varIndex]->getValue();}
     unsigned int getDomainSize(int varIndex) const {return vars[varIndex]->getDomainSize();}
+    bool getEnumDomain(int varIndex, Value *array);
+    bool getEnumDomainAndCost(int varIndex, ValueCost *array);
 
     bool assigned(int varIndex) const {return vars[varIndex]->assigned();}
     bool unassigned(int varIndex) const {return vars[varIndex]->unassigned();}
@@ -127,16 +112,35 @@ public:
     void postSupxyc(int xIndex, int yIndex, Value cste);
     
     void read_wcsp(const char *fileName);
+
+    // Specific API for Variable and Constraint classes
+
+    Store *getStore() {return storeData;}
+    
+    void link(Variable *x) {vars.push_back(x);}
+    void link(Constraint *c) {constrs.push_back(c);}
+
+    int getNCBucketSize() const {return NCBucketSize;}
+    void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt) {
+        if (oldBucket >= 0) NCBuckets[oldBucket].erase(elt, true);
+        if (newBucket >= 0) NCBuckets[newBucket].push_back(elt, true);
+    }
+    void printNCBuckets();
+
+    void queueNC(DLink<VariableWithTimeStamp> *link) {NC.push(link, nbNodes);}
+    void queueInc(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, INCREASE_EVENT, nbNodes);}
+    void queueDec(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, DECREASE_EVENT, nbNodes);}
+    void queueAC(DLink<VariableWithTimeStamp> *link) {AC.push(link, nbNodes);}
+    void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
+
+    void propagateNC();
+    void propagateIncDec();
+    void propagateAC();
+    void propagateDAC();
+
+    void sortConstraints();
     
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
-    
-    friend class Variable;
-    friend class EnumeratedVariable;
-    friend class IntervalVariable;
-    friend class Constraint;
-    template<class T1, class T2> friend class AbstractBinaryConstraint;
-    friend class Supxyc;
-    friend class BinaryConstraint;
 };
 
 #endif /*TB2WCSP_HPP_*/

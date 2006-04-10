@@ -36,6 +36,8 @@ public:
     virtual Value getSup(int varIndex) const =0;
     virtual Value getValue(int varIndex) const =0;
     virtual unsigned int getDomainSize(int varIndex) const =0;
+    virtual bool getEnumDomain(int varIndex, Value *array) =0;
+    virtual bool getEnumDomainAndCost(int varIndex, ValueCost *array) =0;
 
     virtual bool assigned(int varIndex) const =0;
     virtual bool unassigned(int varIndex) const =0;
@@ -68,8 +70,6 @@ public:
     virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
-    
-//    friend ostream& operator<<(ostream& os, WeightedCSP &wcsp);
 };
 
 #endif /*TOULBAR2_HPP_*/

@@ -183,4 +183,20 @@ public:
 typedef BTList<ConstraintLink> ConstraintList;
 typedef BTList<Variable *> VariableList;
 
+/*
+ * For internal use only! Interaction between tb2store and tb2btlist
+ * 
+ */
+
+template <class T, class V> template <class Q> void StoreStack<T,V>::restore(BTList<Q> **l, DLink<Q> **elt, int &x)
+{
+    if (elt[x] == NULL) {
+        l[x]->undoPushBack();
+    } else {
+        assert(l[x] == l[x-1]);
+        l[x]->undoErase(elt[x],elt[x-1]);
+        x--;
+    }
+}
+
 #endif /*TB2BTLIST_HPP_*/

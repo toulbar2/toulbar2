@@ -42,7 +42,9 @@ public:
         if (assigned()) return 1; 
         else return domain.getSize();
     }
-
+	void getDomain(Value *array);
+	void getDomainAndCost(ValueCost *array);
+	
     bool canbe(Value v) const {return v >= inf && v <= sup && domain.canbe(v);}
     bool cannotbe(Value v) const {return v < inf || v > sup || domain.cannotbe(v);}
     
@@ -74,28 +76,28 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator { //: public Variable::iterator {
-        EnumeratedVariable &var;
+    class iterator {        // : public Variable::iterator {
+        EnumeratedVariable *var;
         Domain::iterator diter;
     public:
-        iterator(EnumeratedVariable &v, Domain::iterator iter) : var(v), diter(iter) {}
+        iterator(EnumeratedVariable *v, Domain::iterator iter) : var(v), diter(iter) {}
 
         Value operator*() const {return *diter;}
         
         iterator &operator++() {    // Prefix form
-            if (var.unassigned()) ++diter;
+            if (var->unassigned()) ++diter;
             else {
-                if (*diter < var.getValue()) diter = var.domain.lower_bound(var.getValue());
-                else diter = var.domain.end();
+                if (*diter < var->getValue()) diter = var->domain.lower_bound(var->getValue());
+                else diter = var->domain.end();
             }
             return *this;
         }
         
         iterator &operator--() {    // Prefix form
-            if (var.unassigned()) --diter;
+            if (var->unassigned()) --diter;
             else {
-                if (*diter > var.getValue()) diter = var.domain.lower_bound(var.getValue());
-                else diter = var.domain.end();
+                if (*diter > var->getValue()) diter = var->domain.lower_bound(var->getValue());
+                else diter = var->domain.end();
             }
             return *this;
         }
@@ -105,30 +107,30 @@ public:
         bool operator!=(const iterator &iter) const {return diter != iter.diter;}
     };
     iterator begin() {
-        if (assigned()) return iterator(*this, domain.lower_bound(getValue()));
-        else return iterator(*this, domain.begin());
+        if (assigned()) return iterator(this, domain.lower_bound(getValue()));
+        else return iterator(this, domain.begin());
     }
-    iterator end() {return iterator(*this, domain.end());}
+    iterator end() {return iterator(this, domain.end());}
     iterator rbegin() {
-        if (assigned()) return iterator(*this, domain.upper_bound(getValue()));
-        else return iterator(*this, domain.rbegin());
+        if (assigned()) return iterator(this, domain.upper_bound(getValue()));
+        else return iterator(this, domain.rbegin());
     }
     iterator rend() {return end();}
 
     //Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v) {
         if (assigned()) {
-            if (v <= getValue()) return iterator(*this, domain.lower_bound(getValue()));
+            if (v <= getValue()) return iterator(this, domain.lower_bound(getValue()));
             else return end();
-        } else return iterator(*this, domain.lower_bound(v));
+        } else return iterator(this, domain.lower_bound(v));
     }
 
     //Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v) {
         if (assigned()) {
-            if (v >= getValue()) return iterator(*this, domain.upper_bound(getValue()));
+            if (v >= getValue()) return iterator(this, domain.upper_bound(getValue()));
             else return end();
-        } else return iterator(*this, domain.upper_bound(v));
+        } else return iterator(this, domain.upper_bound(v));
     }
     
     void print(ostream& os);

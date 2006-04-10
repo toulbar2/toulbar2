@@ -3,6 +3,7 @@
  */
 
 #include "tb2arithmetic.hpp"
+#include "tb2wcsp.hpp"
 
 
 /*

@@ -8,6 +8,7 @@
 
 #include "tb2btlist.hpp"
 #include "tb2queue.hpp"
+#include "tb2domain.hpp"
 
 /*
  * Main class
@@ -35,11 +36,8 @@ protected:
     DLink<VariableWithTimeStamp> linkNCQueue;
     DLink<VariableWithTimeStamp> linkIncDecQueue;
 
-    Cost getMaxCost() const {return maxCost;}
-    Cost getMaxCostValue() const {return maxCostValue;}
     void setMaxUnaryCost(Value a, Cost cost);
     void changeNCBucket(int newBucket);
-    void queueNC();
         
     // make it private because we don't want copy nor assignment
     Variable(const Variable &x);
@@ -81,10 +79,14 @@ public:
 
     virtual Value getSupport() const {return inf;}      // If there is no defined support then return inf
     
+    Cost getMaxCost() const {return maxCost;}
+    Cost getMaxCostValue() const {return maxCostValue;}
+    
     void extendAll(Cost cost);
     virtual void propagateNC() =0;    
     virtual bool verifyNC() =0;
 
+    void queueNC();
     void queueInc();
     void queueDec();
 
@@ -95,48 +97,30 @@ public:
     friend class iterator;
     class iterator {
     public:
-        virtual Value operator*() const {}
+        virtual Value operator*() const =0;
         
-        virtual iterator &operator++() {}     // Prefix form
-        virtual iterator &operator--() {}     // Prefix form
+        virtual iterator &operator++() =0;     // Prefix form
+        virtual iterator &operator--() =0;     // Prefix form
 
         // To see if you're at the end:
-        virtual bool operator==(const iterator &iter) const {}
-        virtual bool operator!=(const iterator &iter) const {}
+        virtual bool operator==(const iterator &iter) const =0;
+        virtual bool operator!=(const iterator &iter) const =0;
     };
-    virtual iterator& begin() {}
-    virtual iterator& end() {}
-    virtual iterator& rbegin() {}
-    virtual iterator& rend() {return end();}
+    virtual iterator begin() =0;
+    virtual iterator end() =0;
+    virtual iterator rbegin() =0;
+    virtual iterator rend() =0;
 
     //Finds the first available element whose value is greater or equal to v
-    virtual iterator& lower_bound(Value v) {}
+    virtual iterator lower_bound(Value v) =0;
 
     //Finds the first available element whose value is lower or equal to v
-    virtual iterator& upper_bound(Value v) {}
+    virtual iterator upper_bound(Value v) =0;
 */
 
     virtual void print(ostream& os) =0;
     
     friend ostream& operator<<(ostream& os, Variable &var);
-    
-    friend class WCSP;
 };
-
-/*
- * For internal use only! Interaction between tb2store and tb2btlist
- * 
- */
-
-template <class T, class V> template <class Q> void StoreStack<T,V>::restore(BTList<Q> **l, DLink<Q> **elt, int &x)
-{
-    if (elt[x] == NULL) {
-        l[x]->undoPushBack();
-    } else {
-        assert(l[x] == l[x-1]);
-        l[x]->undoErase(elt[x],elt[x-1]);
-        x--;
-    }
-}
 
 #endif /*TB2VARIABLE_HPP_*/

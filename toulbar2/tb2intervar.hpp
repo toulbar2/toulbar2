@@ -47,23 +47,23 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator { // : public Variable::iterator {
-        IntervalVariable &var;
+    class iterator {    // : public Variable::iterator {
+        IntervalVariable *var;
         Value value;
     public:
-        iterator(IntervalVariable &v, Value vv) : var(v), value(vv) {}
+        iterator(IntervalVariable *v, Value vv) : var(v), value(vv) {}
 
         Value operator*() const {return value;}
         
         inline iterator &operator++() {    // Prefix form
-            if (value < var.sup) ++value;
-            else value = var.sup + 1;
+            if (value < var->sup) ++value;
+            else value = var->sup + 1;
             return *this;
         }
         
         iterator &operator--() {    // Prefix form
-            if (value > var.inf) --value;
-            else value = var.sup + 1;
+            if (value > var->inf) --value;
+            else value = var->sup + 1;
             return *this;
         }
 
@@ -72,25 +72,25 @@ public:
         bool operator!=(const iterator &iter) const {return value != iter.value;}
     };
     iterator begin() {
-        return iterator(*this, inf);
+        return iterator(this, inf);
     }
     iterator end() {
-        return iterator(*this, sup + 1);
+        return iterator(this, sup + 1);
     }
     iterator rbegin() {
-        return iterator(*this, sup);
+        return iterator(this, sup);
     }
     iterator rend() {return end();}
 
     //Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v) {
-        if (v <= sup) return iterator(*this, v);
+        if (v <= sup) return iterator(this, v);
         else return end();
     }
 
     //Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v) {
-        if (v >= inf) return iterator(*this, v);
+        if (v >= inf) return iterator(this, v);
         else return end();
     }
 

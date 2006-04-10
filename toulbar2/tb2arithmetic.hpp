@@ -30,16 +30,6 @@ public:
     
     void remove(int varIndex) {}
 
-//    void increase(int index) {
-//        if (index==0) 
-//        else 
-//    }
-//    
-//    void decrease(int index) {
-//        if (index==0) 
-//        else 
-//    }
-//    
     void assign(int varIndex) {
         if (x->assigned() && y->assigned()) deconnect();  // Warning! deconnection has to be done before the projection
         propagate();

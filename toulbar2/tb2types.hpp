@@ -17,16 +17,17 @@ using namespace std;
 
 #include "tb2utils.hpp"
 
-#define Value int
-#define MAX_VAL (INT_MAX / 2)
-#define MIN_VAL -(INT_MAX / 2)
+typedef int Value;
 
-#define Cost int
-#define MAX_COST (INT_MAX / 2)
+const Value MAX_VAL = (INT_MAX / 2);
+const Value MIN_VAL = -(INT_MAX / 2);
 
-#define MAX_DOMAIN_SIZE 1000
+typedef int Cost;
+const Cost MAX_COST = (INT_MAX / 2);
 
-#define STORE_SIZE 16
+const Value MAX_DOMAIN_SIZE  = 1000;
+
+const int STORE_SIZE = 16;
 
 /*
  * Global variables encapsulated as static members
@@ -47,6 +48,7 @@ public:
     static externalevent setmin;
     static externalevent setmax;
     static externalevent removevalue;
+    static externalevent setminobj;
 };
 
 /*
@@ -68,9 +70,17 @@ public:
 class Store;
 class Domain;
 class Variable;
+class IntervalVariable;
+class EnumeratedVariable;
 class Constraint;
 class WCSP;
 class Solver;
+
+struct ValueCost
+{
+	Value value;
+	Cost cost;
+};
 
 struct ConstraintLink 
 {
