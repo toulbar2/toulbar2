@@ -60,6 +60,10 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (c = 0; c < nbconstr; c++) {
         file >> arity;
+        if (!file) {
+            cerr << "Error: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
+            exit(EXIT_FAILURE);
+        }
         if (arity == 2) {
             file >> i;
             file >> j;
@@ -118,18 +122,19 @@ void WCSP::read_wcsp(const char *fileName)
             EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
             file >> defval;
             file >> ntuples;
+            vector<Cost> costs;
             for (a = 0; a < x->getDomainInitSize(); a++) {
-                x->project(a, defval);
+                costs.push_back(defval);
             }
             for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
-                x->extend(a, defval);
-                x->project(a, cost);
+                costs[a] = cost;
+            }
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                if (costs[a] > 0) x->project(a, costs[a]);
             }
             x->findSupport();
-//            x->propagateNC();       // Let the initial propagation be done only once in solver.cpp
-//            propagate();
             x->queueNC();
         } else if (arity == 0) {
             file >> defval;
@@ -140,7 +145,6 @@ void WCSP::read_wcsp(const char *fileName)
                 exit(EXIT_FAILURE);
             }
             increaseLb(getLb() + defval);
-//            propagate();       // Let the initial propagation be done only once in solver.cpp
         } else {
             cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
             exit(EXIT_FAILURE);
