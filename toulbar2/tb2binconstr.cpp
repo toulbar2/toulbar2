@@ -21,8 +21,10 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX,y->getInf());
     supportY = vector<Value>(sizeY,x->getInf());
+    assert(xx->unassigned());
     xx->queueAC();
     xx->queueDAC();
+    assert(yy->unassigned());
     yy->queueAC();
     yy->queueDAC();
 }

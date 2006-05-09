@@ -7,6 +7,11 @@
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 
+typedef struct {
+    EnumeratedVariable *var;
+    vector<Cost> costs;
+} TemporaryUnaryConstraint;
+
 void WCSP::read_wcsp(const char *fileName)
 {
     string pbname;
@@ -23,7 +28,9 @@ void WCSP::read_wcsp(const char *fileName)
     int arity;
     string funcname;
     Value funcparam1;
-            
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+    Cost inclowerbound = 0;
+    
     // open the file
     ifstream file(fileName);
     if (!file) {
@@ -122,19 +129,17 @@ void WCSP::read_wcsp(const char *fileName)
             EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
             file >> defval;
             file >> ntuples;
-            vector<Cost> costs;
+            TemporaryUnaryConstraint unaryconstr;
+            unaryconstr.var = x;
             for (a = 0; a < x->getDomainInitSize(); a++) {
-                costs.push_back(defval);
+                unaryconstr.costs.push_back(defval);
             }
             for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
-                costs[a] = cost;
+                unaryconstr.costs[a] = cost;
             }
-            for (a = 0; a < x->getDomainInitSize(); a++) {
-                if (costs[a] > 0) x->project(a, costs[a]);
-            }
-            x->findSupport();
+            unaryconstrs.push_back(unaryconstr);
             x->queueNC();
         } else if (arity == 0) {
             file >> defval;
@@ -144,13 +149,21 @@ void WCSP::read_wcsp(const char *fileName)
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
                 exit(EXIT_FAILURE);
             }
-            increaseLb(getLb() + defval);
+            inclowerbound += defval;
         } else {
             cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
             exit(EXIT_FAILURE);
         }
     }
     sortConstraints();
+    // apply basic initial propagation AFTER complete network loading
+    increaseLb(getLb() + inclowerbound);
+    for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+        for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
+            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+        }
+        unaryconstrs[u].var->findSupport();
+    }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }
