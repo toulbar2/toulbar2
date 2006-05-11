@@ -54,8 +54,8 @@ public:
     
     virtual int getDegree(int varIndex) const =0;
 
-    virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues and increase nbNodes
-    virtual void propagate() =0;               // propagate until a fix point and increase nbNodes
+    virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues
+    virtual void propagate() =0;               // propagate until a fix point
     virtual bool verify() =0;
 
     virtual unsigned int numberOfVariables() const =0;
