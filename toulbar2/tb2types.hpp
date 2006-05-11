@@ -6,11 +6,15 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
+#ifdef ILOGLUE
+#include <ilsolver/ilosolverint.h>
+#else
 #include <assert.h>
-
 #include <string>
 #include <iostream>
 #include <fstream>
+#endif
+
 #include <vector>
 
 using namespace std;
@@ -56,11 +60,17 @@ public:
  * 
  */
 
+#ifdef ILOGLUE
+extern IloSolver IlogSolver;
+#define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; IlogSolver.fail(0);})
+#else
 class Contradiction
 {
 public:
     Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
+#define THROWCONTRADICTION (throw Contradiction())
+#endif
 
 /*
  * Internal classes and basic data structures used everywhere

@@ -52,12 +52,12 @@ public:
         ub = min(ub,newUb);
     }
     void enforceUb() {
-        if (lb >= ub) throw Contradiction();
+        if (lb >= ub) THROWCONTRADICTION;
         objectiveChanged=true;
     }
     void increaseLb(Cost newLb) {
         if (newLb > lb) {
-            if (newLb >= ub) throw Contradiction();
+            if (newLb >= ub) THROWCONTRADICTION;
             lb = newLb;
             objectiveChanged=true;
             if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
@@ -65,7 +65,7 @@ public:
     }
     void decreaseUb(Cost newUb) {
         if (newUb < ub) {
-            if (newUb <= lb) throw Contradiction();
+            if (newUb <= lb) THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged=true;
         }
