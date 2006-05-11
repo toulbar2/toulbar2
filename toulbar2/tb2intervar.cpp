@@ -97,7 +97,7 @@ void IntervalVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) throw Contradiction();
+        if (newInf > sup) THROWCONTRADICTION;
         else {
             if (newInf == sup) assign(newInf);
             else {
@@ -114,7 +114,7 @@ void IntervalVariable::increase(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) throw Contradiction();
+        if (newInf > sup) THROWCONTRADICTION;
         else {
             if (newInf == sup) assign(newInf);
             else {
@@ -132,7 +132,7 @@ void IntervalVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) throw Contradiction();
+        if (newSup < inf) THROWCONTRADICTION;
         else {
             if (inf == newSup) assign(newSup);
             else {
@@ -149,7 +149,7 @@ void IntervalVariable::decrease(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) throw Contradiction();
+        if (newSup < inf) THROWCONTRADICTION;
         else {
             if (inf == newSup) assign(newSup);
             else {
@@ -167,7 +167,7 @@ void IntervalVariable::assign(Value newValue)
 {
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
     if (unassigned() || getValue() != newValue) {
-        if (cannotbe(newValue)) throw Contradiction();
+        if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
         maxCostValue = newValue;
         maxCost = 0;
