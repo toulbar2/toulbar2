@@ -68,8 +68,8 @@ void WCSP::read_wcsp(const char *fileName)
     for (c = 0; c < nbconstr; c++) {
         file >> arity;
         if (!file) {
-            cerr << "Error: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
-            exit(EXIT_FAILURE);
+            cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
+            break;
         }
         if (arity == 2) {
             file >> i;
