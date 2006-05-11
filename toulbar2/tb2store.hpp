@@ -183,7 +183,7 @@ public:
     }
     
     void restore(int newDepth) {
-        assert(depth > newDepth);
+        assert(depth >= newDepth);
         while (depth > newDepth) restore();
     }
 };
