@@ -203,7 +203,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) throw Contradiction();
+        if (newInf > sup) THROWCONTRADICTION;
         else {
             newInf = domain.increase(newInf);
             if (newInf == sup) assign(newInf);
@@ -220,7 +220,7 @@ void EnumeratedVariable::increase(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) throw Contradiction();
+        if (newInf > sup) THROWCONTRADICTION;
         else {
             newInf = domain.increase(newInf);
             if (newInf == sup) assign(newInf);
@@ -240,7 +240,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) throw Contradiction();
+        if (newSup < inf) THROWCONTRADICTION;
         else {
             newSup = domain.decrease(newSup);
             if (inf == newSup) assign(newSup);
@@ -257,7 +257,7 @@ void EnumeratedVariable::decrease(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) throw Contradiction();
+        if (newSup < inf) THROWCONTRADICTION;
         else {
             newSup = domain.decrease(newSup);
             if (inf == newSup) assign(newSup);
@@ -278,7 +278,7 @@ void EnumeratedVariable::removeFast(Value value)
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
     if (value == inf) increaseFast(value + 1);
     else if (value == sup) decreaseFast(value - 1);
-    else if (domain.canbe(value)) {
+    else if (canbe(value)) {
         domain.erase(value);
         queueAC();
         if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value);
@@ -290,7 +290,7 @@ void EnumeratedVariable::remove(Value value)
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
     if (value == inf) increase(value + 1);
     else if (value == sup) decrease(value - 1);
-    else if (domain.canbe(value)) {
+    else if (canbe(value)) {
         domain.erase(value);
         if (value == maxCostValue) queueNC();
         if (value == support) findSupport();
@@ -304,7 +304,7 @@ void EnumeratedVariable::assign(Value newValue)
 {
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
     if (unassigned() || getValue() != newValue) {
-        if (cannotbe(newValue)) throw Contradiction();
+        if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
         maxCostValue = newValue;
         maxCost = 0;
