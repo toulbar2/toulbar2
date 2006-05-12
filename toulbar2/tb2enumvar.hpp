@@ -32,7 +32,7 @@ public:
 
     unsigned int getDomainInitSize() const {return domain.getInitSize();}
 #ifdef WCSPFORMATONLY
-    int toIndex(int v) const {return v;}
+    unsigned int toIndex(int v) const {return (unsigned int) v;}
     int toValue(int idx) const {return idx;}
 #else
     unsigned int toIndex(Value v) const {return domain.toIndex(v);}

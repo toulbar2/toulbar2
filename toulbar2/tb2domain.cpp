@@ -32,6 +32,9 @@ Domain::Domain(Value *d, int dsize, StoreStack<BTList<Value>, DLink<Value> *> *s
 void Domain::init(Value inf, Value sup) {
     assert( sup - inf + 1 >= 1 );
     assert( sup - inf + 1 <= MAX_DOMAIN_SIZE );
+#ifdef WCSPFORMATONLY
+    assert(distanceToZero == 0);
+#endif    
     all = new DLink<Value>[sup-inf+1];
     for (int idx=0; idx<sup-inf+1; idx++) {
         all[idx].content = idx + inf;
