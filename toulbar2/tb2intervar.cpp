@@ -171,7 +171,7 @@ void IntervalVariable::assign(Value newValue)
         changeNCBucket(-1);
         maxCostValue = newValue;
         maxCost = 0;
-        Cost cost = ((maxCostValue==inf)?getInfCost():((maxCostValue==sup)?getSupCost():0));
+        Cost cost = ((newValue==inf)?getInfCost():((newValue==sup)?getSupCost():0));
         inf = newValue;
         sup = newValue;
         if (cost > 0) {

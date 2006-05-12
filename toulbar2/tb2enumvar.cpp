@@ -311,6 +311,7 @@ void EnumeratedVariable::assign(Value newValue)
         Cost cost = getCost(newValue);
         inf = newValue;
         sup = newValue;
+        support = newValue;
         if (cost > 0) {
             deltaCost += cost;
             if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
