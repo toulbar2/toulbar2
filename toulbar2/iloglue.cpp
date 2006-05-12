@@ -1,3 +1,8 @@
+/** \file iloglue.cpp
+ *  \brief Link with Ilog Solver, adding a global soft constraint representing a weighted CSP and propagated by ToulBar2.
+ * 
+ */
+ 
 #include <ilsolver/ilosolver.h>
 #include <ilsolver/ilctrace.h>
 #include "toulbar2.hpp"
@@ -383,6 +388,7 @@ void wqueens(IloEnv &env, IloModel &model, IloIntVarArray &vars)
   model.add(IloAllDiff(env, vars2));
 }
 
+// Usage: iloglue problem_name.wcsp [verbosity]
 int main(int argc, char **argv)
 {
   string pbname;
