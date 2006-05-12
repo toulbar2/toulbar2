@@ -70,6 +70,10 @@ public:
     virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
+    
+    virtual void print(ostream& os) =0;
 };
+
+ostream& operator<<(ostream& os, WeightedCSP &wcsp);
 
 #endif /*TOULBAR2_HPP_*/

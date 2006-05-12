@@ -124,15 +124,26 @@ void WCSP::printNCBuckets()
     }
 }
 
-ostream& operator<<(ostream& os, WCSP &wcsp)
+void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << wcsp.getLb() << "," << wcsp.getUb() << "]" << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
     os << "Variables:" << endl;
-    for (unsigned int i=0; i<wcsp.vars.size(); i++) os << *wcsp.vars[i] << endl;
+    for (unsigned int i=0; i<vars.size(); i++) os << *vars[i] << endl;
     if (ToulBar2::verbose >= 4) {
         os << "Constraints:" << endl;
-        for (unsigned int i=0; i<wcsp.constrs.size(); i++) if (wcsp.constrs[i]->connected()) os << *wcsp.constrs[i];
+        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
     }
+}
+
+ostream& operator<<(ostream& os, WCSP &wcsp)
+{
+    wcsp.print(os);
+    return os;
+}
+
+ostream& operator<<(ostream& os, WeightedCSP &wcsp)
+{
+    wcsp.print(os);
     return os;
 }
 

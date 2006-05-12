@@ -86,7 +86,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     try {
         store->store();
         if (ToulBar2::verbose >= 2) {
-            cout << wcsp;
+            cout << *wcsp;
         }
         if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
         nbNodes++;
@@ -100,7 +100,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     nbBacktracks++;
     wcsp->enforceUb();
     if (ToulBar2::verbose >= 2) {
-        cout << wcsp;
+        cout << *wcsp;
     }
     if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " != " << value << endl;
     nbNodes++;
@@ -134,7 +134,7 @@ void Solver::narySortedChoicePoint(int varIndex)
             store->store();
             nbNodes++;
             if (ToulBar2::verbose >= 2) {
-                cout << wcsp << endl;
+                cout << *wcsp << endl;
             }
             if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << sorted[v].value << endl;
             wcsp->enforceUb();
@@ -178,7 +178,13 @@ void Solver::recursiveSolve()
 #endif
         wcsp->updateUb(wcsp->getLb());
         cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
-        if (ToulBar2::showSolutions) cout << wcsp;
+        if (ToulBar2::showSolutions) {
+            if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
+            for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+                cout << " " << wcsp->getValue(i);
+            }
+            cout << endl;
+        }
     }
 }
 

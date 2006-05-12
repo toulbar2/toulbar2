@@ -139,7 +139,8 @@ public:
     void propagateDAC();
 
     void sortConstraints();
-    
+
+    void print(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
 };
 
