@@ -78,12 +78,12 @@ void WCSP::read_wcsp(const char *fileName)
     	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
-            assert(vars[i]->enumerated());
-            assert(vars[j]->enumerated());
-            EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
-            EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
             file >> defval;
             if (defval >= 0) {
+                assert(vars[i]->enumerated());
+                assert(vars[j]->enumerated());
+                EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
+                EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
                 if (ToulBar2::verbose >= 3) cout << "read binary constraint " << c << " on " << i << "," << j << endl;
                 file >> ntuples;
                 vector<Cost> costs;
