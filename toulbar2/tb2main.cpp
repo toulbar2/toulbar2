@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     } 
 
     if (argc >= 4) ToulBar2::verbose = atoi(argv[3]);
-    if (ToulBar2::verbose >= 2) ToulBar2::showSolutions = true;
+    if (ToulBar2::verbose >= 1) ToulBar2::showSolutions = true;
     if (argc >= 6 && strchr(argv[5],'b')) ToulBar2::binaryBranching = true;
     
     Solver solver((argc >= 5)?atoi(argv[4]):STORE_SIZE, (argc >= 3)?atoi(argv[2]):MAX_COST);
