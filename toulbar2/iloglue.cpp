@@ -335,10 +335,7 @@ IlcInt IlcChooseMinSizeIntDivMaxDegree(const IlcIntVarArray vars)
 
 // For Queens problem
 // variable ordering heuristic: among the unassigned variables with the smallest current domain size, selects the first one with the smallest domain value
-IlcChooseIndex2(IlcChooseMinSizeMin, 
-                var.getSize(),
-                var.getMin(),
-                IlcIntVar)
+IlcChooseIndex2(IlcChooseMinSizeMin,var.getSize(),var.getMin(),IlcIntVar)
 
 ILCGOAL1(IlcGenerateVars, IlcIntVarArray, vars)
 {
@@ -350,6 +347,12 @@ ILCGOAL1(IlcGenerateVars, IlcIntVarArray, vars)
 ILOCPGOALWRAPPER1(IloGenerateVars, solver, IloIntVarArray, vars)
 {
   return IlcGenerateVars(solver, solver.getIntVarArray(vars));
+}
+
+void alldiff(IloEnv &env, IloModel &model, IloIntVarArray &vars)
+{   
+   cout << "Add 1 hard AllDiff constraint on all the (permutation) problem variables." << endl;
+   model.add(IloAllDiff(env, vars));
 }
 
 void zebra(IloEnv &env, IloModel &model, IloIntVarArray &vars)
@@ -386,6 +389,30 @@ void wqueens(IloEnv &env, IloModel &model, IloIntVarArray &vars)
   model.add(IloAllDiff(env, vars));
   model.add(IloAllDiff(env, vars1));
   model.add(IloAllDiff(env, vars2));
+}
+
+void quasi(IloEnv &env, IloModel &model, IloIntVarArray &vars)
+{
+    int n = sqrt((double) vars.getSize());
+    cout << "Add " << n*2 << " hard AllDiff constraints for the \"homogeneous\" QuasiGroup problem." << endl;
+    for (int i=0; i<n; i++) {
+        int pos = i * n;
+        IloIntVarArray vars1(env,n);
+        for (int j=0; j<n; j++) {
+            vars1[j] = vars[pos];
+            pos++;
+        }
+        model.add(IloAllDiff(env, vars1));
+    }
+    for (int j=0; j<n; j++) {
+        int pos = j;
+        IloIntVarArray vars1(env,n);
+        for (int i=0; i<n; i++) {
+            vars1[i] = vars[pos];
+            pos += n;
+        }
+        model.add(IloAllDiff(env, vars1));
+    }
 }
 
 // Usage: iloglue problem_name.wcsp [verbosity]
@@ -431,7 +458,9 @@ int main(int argc, char **argv)
 
     if (strstr(argv[1],"zebra")) zebra(env, model, vars);
     if (strstr(argv[1],"wqueens")) wqueens(env, model, vars);
-
+    if (strstr(argv[1],"quasi")) quasi(env, model, vars);
+    if (strstr(argv[1],"alldiff")) alldiff(env, model, vars);
+    
 //     model.add(IloMinimize(env, obj)); DOES NOT WORK???
 
     IloSolver solver(model);
