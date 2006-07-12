@@ -22,13 +22,6 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     vector<Value> supportX;
     vector<Value> supportY;
 
-    Cost getCost(Value vx, Value vy) {
-        int ix = x->toIndex(vx);
-        int iy = y->toIndex(vy);
-        Cost res = costs[ix * sizeY + iy] - deltaCostsX[ix] - deltaCostsY[iy];
-        assert(res >= 0);
-        return res;
-    }
     Cost getCostReverse(Value vy, Value vx) {return getCost(vx,vy);}
     
     template <GetCostMember getBinaryCost> void findSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
@@ -53,6 +46,14 @@ public:
 
     ~BinaryConstraint() {}
     
+    Cost getCost(Value vx, Value vy) {
+        int ix = x->toIndex(vx);
+        int iy = y->toIndex(vy);
+        Cost res = costs[ix * sizeY + iy] - deltaCostsX[ix] - deltaCostsY[iy];
+        assert(res >= 0);
+        return res;
+    }
+
     void propagate() {
         if (x->wcspIndex < y->wcspIndex) {
             findSupportY();             // must do AC before DAC
