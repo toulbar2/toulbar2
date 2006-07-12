@@ -53,6 +53,7 @@ public:
     virtual Value getSupport(int varIndex) const =0;
     
     virtual int getDegree(int varIndex) const =0;
+    virtual void preprocessing() =0;
 
     virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues
     virtual void propagate() =0;               // propagate until a fix point

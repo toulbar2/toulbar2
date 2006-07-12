@@ -198,6 +198,7 @@ bool Solver::solve()
         store->store();
         wcsp->decreaseUb(initialUpperBound);
         wcsp->propagate();                // initial propagation
+        wcsp->preprocessing();            // preprocessing after initial propagation
         recursiveSolve();
     } catch (Contradiction) {
         wcsp->whenContradiction();
