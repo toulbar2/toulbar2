@@ -20,6 +20,7 @@
 int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::binaryBranching = false;
+int ToulBar2::elimLevel  = -1;
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -84,6 +85,19 @@ void WCSP::sortConstraints()
     for (unsigned int i=0; i<vars.size(); i++) {
         vars[i]->sortConstraints();
     }
+}
+
+void WCSP::preprocessing()
+{
+    if (ToulBar2::elimLevel >= 0) {
+        cout << "Eliminates variables with small degree <= " << ToulBar2::elimLevel << endl;
+        while (!Eliminate.empty()) {
+            EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop_first();
+	    if (x->unassigned()) x->eliminate();
+	}
+	ToulBar2::elimLevel = -1; // ONLY IN PREPROCESSING
+    }
+    propagate();
 }
 
 Value WCSP::getDomainSizeSum()

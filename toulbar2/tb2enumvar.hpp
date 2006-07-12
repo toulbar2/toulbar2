@@ -60,7 +60,8 @@ public:
     Cost getCost(const Value value) const {
         return costs[toIndex(value)] - deltaCost;
     }
-
+    Cost getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue);
+            
     Cost getInfCost() const {return costs[toIndex(getInf())] - deltaCost;}
     Cost getSupCost() const {return costs[toIndex(getSup())] - deltaCost;}
     void projectInfCost(Cost cost);
@@ -73,6 +74,8 @@ public:
     void propagateAC();
     void propagateDAC();
     void findSupport();
+
+    void eliminate();
 
     class iterator;
     friend class iterator;

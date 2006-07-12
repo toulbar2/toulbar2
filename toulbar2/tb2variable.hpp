@@ -35,6 +35,7 @@ protected:
     
     DLink<VariableWithTimeStamp> linkNCQueue;
     DLink<VariableWithTimeStamp> linkIncDecQueue;
+    DLink<VariableWithTimeStamp> linkEliminateQueue;
 
     void setMaxUnaryCost(Value a, Cost cost);
     void changeNCBucket(int newBucket);
@@ -70,6 +71,9 @@ public:
     int getDegree() {return constrs.getSize();}
     DLink<ConstraintLink> *link(Constraint *c, int index);
     void sortConstraints();
+    virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};
+    
+    void deconnect(DLink<ConstraintLink> *link);
 
     virtual Cost getInfCost() const =0;
     virtual Cost getSupCost() const =0;
@@ -89,6 +93,7 @@ public:
     void queueNC();
     void queueInc();
     void queueDec();
+    void queueEliminate();
 
     void propagateIncDec(int incdec);
 

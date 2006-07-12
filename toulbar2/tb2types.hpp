@@ -48,6 +48,7 @@ public:
     static int verbose;
     static bool showSolutions;
     static bool binaryBranching;
+    static int elimLevel;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;

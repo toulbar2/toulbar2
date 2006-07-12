@@ -26,6 +26,7 @@ class WCSP : public WeightedCSP {
     Queue DAC;                                // non backtrackable list
     bool objectiveChanged;
     long long nbNodes;                        // used as a time-stamp by Queue methods
+    Queue Eliminate;                          // non backtrackable list
 
     // make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
@@ -73,6 +74,7 @@ public:
 
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     
+    Variable *getVar(int varIndex) const {return vars[varIndex];}
     string getName(int varIndex) const {return vars[varIndex]->getName();}
     Value getInf(int varIndex) const {return vars[varIndex]->getInf();}
     Value getSup(int varIndex) const {return vars[varIndex]->getSup();}
@@ -132,6 +134,7 @@ public:
     void queueDec(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, DECREASE_EVENT, nbNodes);}
     void queueAC(DLink<VariableWithTimeStamp> *link) {AC.push(link, nbNodes);}
     void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
+    void queueEliminate(DLink<VariableWithTimeStamp> *link) {Eliminate.push(link, nbNodes);}
 
     void propagateNC();
     void propagateIncDec();
@@ -139,7 +142,8 @@ public:
     void propagateDAC();
 
     void sortConstraints();
-
+    void preprocessing();
+    
     void print(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
 };

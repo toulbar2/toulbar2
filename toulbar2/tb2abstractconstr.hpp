@@ -32,8 +32,8 @@ public:
     void deconnect() {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            x->getConstrs()->erase(linkX, true); 
-            y->getConstrs()->erase(linkY, true);
+            x->deconnect(linkX);
+            y->deconnect(linkY);
         }
     }
     void reconnect() {

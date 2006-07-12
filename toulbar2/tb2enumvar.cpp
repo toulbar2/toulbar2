@@ -4,6 +4,7 @@
  
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2binconstr.hpp"
 
 
 /*
@@ -39,6 +40,7 @@ void EnumeratedVariable::init()
     linkACQueue.content.timeStamp = -1;
     linkDACQueue.content.var = this;
     linkDACQueue.content.timeStamp = -1;
+    queueEliminate();
 }
 
 void EnumeratedVariable::getDomain(Value *array)
@@ -56,6 +58,11 @@ void EnumeratedVariable::getDomainAndCost(ValueCost *array)
     	array->cost = getCost(*iter);
     	++array;
     }
+}
+
+Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue)
+{
+    return (c.scopeIndex == 0)?((BinaryConstraint *) c.constr)->getCost(myvalue, itsvalue):((BinaryConstraint *) c.constr)->getCost(itsvalue, myvalue);
 }
 
 void EnumeratedVariable::print(ostream& os)
@@ -321,5 +328,53 @@ void EnumeratedVariable::assign(Value newValue)
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
         }
+    }
+}
+
+void EnumeratedVariable::eliminate()
+{
+    assert(ToulBar2::elimLevel <= 2);
+    if (getDegree() <= ToulBar2::elimLevel) {
+        ConstraintLink constr1;
+        ConstraintLink constr2;
+        EnumeratedVariable *var1 = NULL;
+        EnumeratedVariable *var2 = NULL;
+        if (ToulBar2::elimLevel >= 1 && getDegree() >= 1) {
+            constr1 = *constrs.begin();
+            var1 = (EnumeratedVariable *) wcsp->getVar(constr1.constr->getSmallestVarIndexInScope(constr1.scopeIndex));
+	    assert(var1 != this);
+            if (ToulBar2::elimLevel >= 2 && getDegree() >= 2) {
+                constr2 = *constrs.rbegin();
+                var2 = (EnumeratedVariable *) wcsp->getVar(constr2.constr->getSmallestVarIndexInScope(constr2.scopeIndex));
+		assert(var2 != this);
+                assert(var1 != var2); // TO BE MODIFIED !!!
+            }
+        }
+        if (var1 && !var2) { // project only one binary constraint
+//	    cout << "project from " << getName() << " to " << var1->getName() << endl;
+	    assert(getDegree() == 1);
+	    // deconnect first to be sure the current var is not involved in future propagation
+            constr1.constr->deconnect();
+	    bool supportBroken = false;
+            for (iterator iter1 = var1->begin(); iter1 != var1->end(); ++iter1) {
+                Cost mincost = MAX_COST;
+                for (iterator iter = begin(); iter != end(); ++iter) {
+                    Cost curcost = getCost(*iter) + getBinaryCost(constr1, *iter, *iter1);
+                    if (curcost < mincost) mincost = curcost;
+                }
+                if (mincost > 0) {
+		    if (var1->getSupport() == *iter1) supportBroken = true;
+                    var1->project(*iter1, mincost);
+                }
+            }
+	    // apply NC findSupport if needed // IT SHOULD BE DONE ELSEWHERE AUTOMATICALLY
+	    if (supportBroken) {
+	      var1->findSupport();
+	    }
+	}
+	assert(getDegree() == 0);
+	if (ToulBar2::verbose) cout << "Eliminate " << getName() << endl;
+	assert(getCost(support) == 0); // it is ensured by previous calls to findSupport
+	assign(support); // warning! dummy assigned value
     }
 }

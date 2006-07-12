@@ -12,6 +12,7 @@ int main(int argc, char **argv)
              << ") [storesize(" << STORE_SIZE << ") [options]]]]" << endl;
         cerr << "Available options are:" << endl;
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
+        cerr << "   e : boosting search with variable elimination of small degree (<2)" << endl;
         exit(EXIT_FAILURE);
     } 
 
@@ -22,6 +23,7 @@ int main(int argc, char **argv)
     Solver solver((argc >= 5)?atoi(argv[4]):STORE_SIZE, (argc >= 3)?atoi(argv[2]):MAX_COST);
     try {
         solver.read_wcsp(argv[1]);
+        if (argc >= 6 && strchr(argv[5],'e')) ToulBar2::elimLevel = 1;
         solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;

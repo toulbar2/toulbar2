@@ -31,6 +31,8 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
     linkIncDecQueue.content.var = this;
     linkIncDecQueue.content.timeStamp = -1;
     linkIncDecQueue.content.incdec = NOTHING_EVENT;
+    linkEliminateQueue.content.var = this;
+    linkEliminateQueue.content.timeStamp = -1;
 }
 
 DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
@@ -70,6 +72,13 @@ void Variable::sortConstraints()
     }
 }
 
+void Variable::deconnect(DLink<ConstraintLink> *link) {
+    if (!link->removed) {
+        getConstrs()->erase(link, true);
+	if (getDegree() <= ToulBar2::elimLevel) queueEliminate();
+    }
+}
+
 ostream& operator<<(ostream& os, Variable &var) {
     os << var.name;
     var.print(os);
@@ -100,6 +109,11 @@ void Variable::queueInc()
 void Variable::queueDec()
 {
     wcsp->queueDec(&linkIncDecQueue);
+}
+
+void Variable::queueEliminate()
+{
+    wcsp->queueEliminate(&linkEliminateQueue);
 }
 
 void Variable::changeNCBucket(int newBucket)
