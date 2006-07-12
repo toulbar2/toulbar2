@@ -61,6 +61,7 @@ public:
     Variable *pop_min(int *incdec);
     Variable *pop_max();
     Variable *pop_max(int *incdec);
+    Variable *pop_first();
 };
 
 #endif /*TB2QUEUE_HPP_*/

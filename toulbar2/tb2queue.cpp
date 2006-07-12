@@ -78,3 +78,14 @@ Variable *Queue::pop_max(int *incdec)
     elt->content.incdec = NOTHING_EVENT;
     return elt->content.var;
 }
+
+Variable *Queue::pop_first()
+{
+    assert(!empty());
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
+    erase(elt, false);
+    elt->content.timeStamp = -1;
+    elt->content.incdec = NOTHING_EVENT;
+    return elt->content.var;
+}
