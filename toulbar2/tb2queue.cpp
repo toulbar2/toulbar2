@@ -5,6 +5,35 @@
 #include "tb2queue.hpp"
 #include "tb2variable.hpp"
 
+
+void Queue::push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp) {
+    if (elt->content.timeStamp < curTimeStamp) {
+        elt->content.timeStamp = curTimeStamp;
+        push_back(elt, false);
+    }
+}
+
+void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp) {
+    elt->content.incdec |= incdec;
+    push(elt, curTimeStamp);
+}
+
+Variable* Queue::pop() {
+    assert(!empty());
+    DLink<VariableWithTimeStamp> *elt = pop_back(false);
+    elt->content.timeStamp = -1;
+    elt->content.incdec = NOTHING_EVENT;
+    return elt->content.var;
+}
+    
+Variable* Queue::pop(int *incdec) {
+    assert(!empty());
+    *incdec = (*rbegin()).incdec;
+    return pop();
+}
+
+
+
 Variable *Queue::pop_min()
 {
     assert(!empty());
@@ -89,3 +118,22 @@ Variable *Queue::pop_first()
     elt->content.incdec = NOTHING_EVENT;
     return elt->content.var;
 }
+
+
+void Queue::print(ostream& os)
+{
+	os << "Queue: ";
+	iterator iter=begin();
+ 	if(iter != end()) { 
+		VariableWithTimeStamp vts = iter.getElt()->content;
+		os << "<var:" << vts.var->getName() << ",node:" << vts.timeStamp << "> ";
+		for (++iter; iter != end(); ++iter) {
+		     vts = iter.getElt()->content;
+		     os << "<var:" << vts.var->getName() << ",node:" << vts.timeStamp << "> ";
+		}     	
+ 	}
+	os << endl;
+}  
+
+
+

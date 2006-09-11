@@ -8,6 +8,7 @@
 
 #include "tb2btlist.hpp"
 
+
 typedef enum {NOTHING_EVENT=0, INCREASE_EVENT=1, DECREASE_EVENT=2} EventType;
 
 struct VariableWithTimeStamp 
@@ -31,37 +32,20 @@ public:
 
     void clear() {BTList<VariableWithTimeStamp>::clear();}
     
-    void push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp) {
-        if (elt->content.timeStamp < curTimeStamp) {
-            elt->content.timeStamp = curTimeStamp;
-            push_back(elt, false);
-        }
-    }
+    void push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp);   
+    void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp);
     
-    void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp) {
-        elt->content.incdec |= incdec;
-        push(elt, curTimeStamp);
-    }
-    
-    Variable *pop() {
-        assert(!empty());
-        DLink<VariableWithTimeStamp> *elt = pop_back(false);
-        elt->content.timeStamp = -1;
-        elt->content.incdec = NOTHING_EVENT;
-        return elt->content.var;
-    }
-    
-    Variable *pop(int *incdec) {
-        assert(!empty());
-        *incdec = (*rbegin()).incdec;
-        return pop();
-    }
-    
+    Variable *pop();
+    Variable *pop(int *incdec);
     Variable *pop_min();
     Variable *pop_min(int *incdec);
     Variable *pop_max();
     Variable *pop_max(int *incdec);
     Variable *pop_first();
+    
+ 
+    void print(ostream& o);
 };
+
 
 #endif /*TB2QUEUE_HPP_*/

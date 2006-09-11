@@ -42,7 +42,17 @@ public:
     // Warning! clear() is not a backtrackable operation
     void clear() {size = 0; head = NULL; last = NULL;}
     
+   
+    bool inBTList(DLink<T> *elt) {
+    	for(iterator iter = begin(); iter != end(); ++iter) {
+    		if(elt == iter.getElt()) return elt->removed;
+    	}
+    	return false;
+    }
+
+
     void push_back(DLink<T> *elt, bool backtrack) {
+		assert( !inBTList(elt) );
         size++;
         elt->removed = false;
         if (last != NULL) {
@@ -56,6 +66,7 @@ public:
         last->next = NULL;
         if (backtrack) storeUndo->store(this, NULL);
     }
+
         
     void undoPushBack() {
         assert(last != NULL);
@@ -133,6 +144,7 @@ public:
         erase(last, backtrack);
         return oldlast;
     }
+    
         
     class iterator
     {
@@ -173,11 +185,14 @@ public:
         bool operator==(const iterator &iter) const {return elt == iter.elt;}
         bool operator!= (const iterator &iter) const {return elt != iter.elt;}
     };
+
+
     
     iterator begin() {return iterator(head);}
     iterator end() {return iterator(NULL);}    
     iterator rbegin() {return iterator(last);}
     iterator rend() {return end();}
+
 };
 
 typedef BTList<ConstraintLink> ConstraintList;
