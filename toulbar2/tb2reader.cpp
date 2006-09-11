@@ -12,16 +12,22 @@ typedef struct {
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
+
+
+
+
+
 void WCSP::read_wcsp(const char *fileName)
 {
     string pbname;
     int nbvar,nbval,nbconstr;
     Cost top;
-    int i,j,c,k;
+    int i,j,k,t, ic;
     string varname;
     int domsize;
     unsigned int a;
     unsigned int b;
+    unsigned int c;
     Cost defval;
     Cost cost;
     int ntuples;
@@ -30,6 +36,7 @@ void WCSP::read_wcsp(const char *fileName)
     Value funcparam1;
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = 0;
+    
     
     // open the file
     ifstream file(fileName);
@@ -50,6 +57,9 @@ void WCSP::read_wcsp(const char *fileName)
     assert(constrs.empty());
     updateUb(top);
     NCBucketSize = cost2log2(getUb()) + 1;
+
+	maxdomainsize = 0; 
+	isternary = false;   
     
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
@@ -59,19 +69,58 @@ void WCSP::read_wcsp(const char *fileName)
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
         int theindex = -1;
+         
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
-        assert(theindex == i);
+        assert(theindex == i);   
+        
+        if(maxdomainsize < domsize) maxdomainsize = domsize;
     }
     
     // read each constraint
-    for (c = 0; c < nbconstr; c++) {
+    for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
         if (!file) {
             cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
             break;
         }
-        if (arity == 2) {
+        if (arity == 3) {
+            file >> i;
+            file >> j;
+            file >> k;
+        	if ((i == j) || (i == k) || (k == j)) {
+    	       cerr << "Error: ternary constraint!" << endl;
+               exit(EXIT_FAILURE);
+            }
+            file >> defval;
+            if (defval >= 0) {
+                assert(vars[i]->enumerated());
+                assert(vars[j]->enumerated());
+                assert(vars[k]->enumerated());
+                EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
+                EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
+                EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
+                if (ToulBar2::verbose >= 3) cout << "read ternary constraint " << ic << " on " << i << "," << j << "," << k << endl;
+                file >> ntuples;
+                vector<Cost> costs;
+                for (a = 0; a < x->getDomainInitSize(); a++) {
+                    for (b = 0; b < y->getDomainInitSize(); b++) {
+	                    for (c = 0; c < z->getDomainInitSize(); c++) {
+	                        costs.push_back(defval);
+						}
+                    }
+                }
+            	for (t = 0; t < ntuples; t++) {
+                    file >> a;
+                    file >> b;
+                    file >> c;
+                    file >> cost;
+                    costs[c*x->getDomainInitSize()*y->getDomainInitSize() + a * y->getDomainInitSize() + b] = cost;
+                }
+                postTernaryConstraint(i,j,k,costs);
+				isternary = true;   
+            }
+		} else if (arity == 2) {
             file >> i;
             file >> j;
         	if (i == j) {
@@ -84,7 +133,7 @@ void WCSP::read_wcsp(const char *fileName)
                 assert(vars[j]->enumerated());
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
                 EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
-                if (ToulBar2::verbose >= 3) cout << "read binary constraint " << c << " on " << i << "," << j << endl;
+                if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
                 file >> ntuples;
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
@@ -168,3 +217,4 @@ void WCSP::read_wcsp(const char *fileName)
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }
 }
+
