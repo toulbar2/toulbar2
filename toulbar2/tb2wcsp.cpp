@@ -9,6 +9,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
 #include "tb2binconstr.hpp"
+#include "tb2ternaryconstr.hpp"
 #include "tb2arithmetic.hpp"
 
 
@@ -21,6 +22,7 @@ int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::binaryBranching = false;
 int ToulBar2::elimLevel  = -1;
+bool ToulBar2::only_preprocessing  = false;
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -33,13 +35,23 @@ int WCSP::wcspCounter = 0;
  * WCSP constructors
  * 
  */
+ 
+ 
 
-WCSP::WCSP(Store *s, Cost upperBound) : instance(wcspCounter), storeData(s), 
-        lb(0, &s->storeCost), ub(upperBound),
+WCSP::WCSP(Store *s, Cost upperBound) : 
+ 		storeData(s), 
+        lb(0, &s->storeCost), 
+        ub(upperBound),
         NCBucketSize(cost2log2(getUb()) + 1),
         NCBuckets(NCBucketSize, VariableList(&s->storeVariable)),
-        objectiveChanged(false),
-        nbNodes(0) {wcspCounter++;}
+		elimOrder(0, &s->storeValue)  
+{ 
+    objectiveChanged = false;
+    nbNodes = 0;
+	isternary = false;
+	instance = wcspCounter++;
+}
+
 
 WCSP::~WCSP()
 {
@@ -49,7 +61,8 @@ WCSP::~WCSP()
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
 {
-    return new WCSP(s, upperBound);
+	WeightedCSP * W = new WCSP(s, upperBound);
+    return W;
 }
 
 int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
@@ -70,10 +83,99 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
     return x->wcspIndex;
 }
 
+
+// Inefficient function that looks in the list of all constraints
+BinaryConstraint* WCSP::existBinaryConstraint( int xIndex, int yIndex )
+{
+	Constraint* ctr = NULL;    		
+    for (unsigned int i=0; i<constrs.size(); i++) {
+    	if(constrs[i]->arity() == 2) {
+    		ctr = constrs[i];    		
+			
+    		Variable* x = ctr->getVar(0);
+    		Variable* y = ctr->getVar(1);
+			bool exist = ((x->wcspIndex == xIndex) && (y->wcspIndex == yIndex)) ||
+						 ((x->wcspIndex == yIndex) && (y->wcspIndex == xIndex));
+
+			if(exist) return (BinaryConstraint*) ctr;			 
+    	}
+    }
+    return NULL;
+}
+
+TernaryConstraint* WCSP::existTernaryConstraint( int xIndex, int yIndex, int zIndex )
+{
+	TernaryConstraint* ctr = NULL;    		
+    for (unsigned int i=0; i<constrs.size(); i++) {
+    	if(constrs[i]->arity() == 3) {
+    		ctr = (TernaryConstraint*) constrs[i];    		
+			
+    		Variable* x = (EnumeratedVariable *) vars[xIndex];
+    		Variable* y = (EnumeratedVariable *) vars[yIndex];
+    		Variable* z = (EnumeratedVariable *) vars[zIndex];
+	
+			int neq = 0;
+			if(ctr->getIndex(x) >= 0) neq++;
+			if(ctr->getIndex(y) >= 0) neq++;
+			if(ctr->getIndex(z) >= 0) neq++;
+			
+			if(neq == 3) return ctr;			 
+    	}
+    }
+    return NULL;
+}
+
+// postBinaryConstraint looks for an existing constraint in the whole
+// list of constraints (even not connected constraints). It also alocates
+// memory for a new constraints. For this two reasons it should 
+// ONLY be called when creating the initial wcsp
 void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 {
-    new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+	BinaryConstraint* ctr = existBinaryConstraint( xIndex, yIndex );    		
+	if(ctr)	{
+		EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
+		EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];		
+		ctr->addCosts(x,y,costs);
+		if(!ctr->connected()) ctr->reconnect();
+	}
+    else ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
 }
+
+
+void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
+{
+	TernaryConstraint* ctr = existTernaryConstraint( xIndex, yIndex, zIndex );    		
+
+	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
+	EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];
+	EnumeratedVariable* z =  (EnumeratedVariable *) vars[zIndex];
+
+	if(!ctr)
+	{
+		unsigned int a,b;
+		vector<Cost> zerocostsxy;
+		vector<Cost> zerocostsxz;
+		vector<Cost> zerocostsyz;
+		
+	    for (a = 0; a < x->getDomainInitSize(); a++) { for (b = 0; b < y->getDomainInitSize(); b++) { zerocostsxy.push_back(0); } }
+	    for (a = 0; a < x->getDomainInitSize(); a++) { for (b = 0; b < z->getDomainInitSize(); b++) { zerocostsxz.push_back(0); } }
+	    for (a = 0; a < y->getDomainInitSize(); a++) { for (b = 0; b < z->getDomainInitSize(); b++) { zerocostsyz.push_back(0); } }
+
+		BinaryConstraint* xy = existBinaryConstraint( xIndex, yIndex );
+		BinaryConstraint* xz = existBinaryConstraint( xIndex, zIndex );
+		BinaryConstraint* yz = existBinaryConstraint( yIndex, zIndex );
+	       
+		if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
+		if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
+		if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+
+	    ctr = new TernaryConstraint(this,x,y,z, costs, &storeData->storeCost);  
+	    ctr->setBinaries(xy,xz,yz);
+	}
+	else ctr->addCosts(x,y,z,costs);
+}
+
+
 
 void WCSP::postSupxyc(int xIndex, int yIndex, Value cste)
 {
@@ -87,17 +189,47 @@ void WCSP::sortConstraints()
     }
 }
 
+// Creates n fake empty constraints and puts them in the pool 'elimConstrs'
+void WCSP::initElimConstrs()
+{
+    BinaryConstraint* xy;
+    for (unsigned int i=0; i<vars.size(); i++) {	
+	   xy = new BinaryConstraint(this, &storeData->storeCost); 
+	   elimConstrs.push_back(xy);
+    }
+}
+
+
+// Function that adds a new binary constraint from the pool of fake constraints
+BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y )
+{
+	int newIndex = (int) elimOrder;
+	BinaryConstraint* ctr = elimConstrs[newIndex]; 
+	ctr->fillElimConstr(x,y);
+	return ctr;
+}
+
+
+
 void WCSP::preprocessing()
 {
     if (ToulBar2::elimLevel >= 0) {
-        cout << "Eliminates variables with small degree <= " << ToulBar2::elimLevel << endl;
-        while (!Eliminate.empty()) {
-            EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop_first();
-	    if (x->unassigned()) x->eliminate();
-	}
-	ToulBar2::elimLevel = -1; // ONLY IN PREPROCESSING
+
+		initElimConstrs();
+		
+	    for (unsigned int i=0; i<vars.size(); i++) {
+	        vars[i]->queueEliminate();
+	    }
+
+        cout << "Eliminates variables with small degree <= " << ToulBar2::elimLevel;  flush(cout);		
+        propagate();
+		
+		if(ToulBar2::only_preprocessing) { ToulBar2::elimLevel = -1; cout << "  only in preprocessing"; }
+		else cout << "  during search";
+		cout << endl;
+		flush(cout);		
     }
-    propagate();
+    else propagate();
 }
 
 Value WCSP::getDomainSizeSum()
@@ -184,6 +316,7 @@ void WCSP::whenContradiction()
     IncDec.clear();
     AC.clear();
     DAC.clear();
+	Eliminate.clear();
     objectiveChanged = false;
     nbNodes++;
 }
@@ -245,21 +378,40 @@ void WCSP::propagateDAC()
     }
 }
 
-void WCSP::propagate()
+void WCSP::eliminate()
 {
-    while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) {
-        propagateIncDec();
-        propagateAC();
-        assert(IncDec.empty());
-        propagateDAC();
-        assert(IncDec.empty());
-        propagateNC();
-    }
+	//if(!Eliminate.empty())
+	while(!Eliminate.empty())
+	{
+	    EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop_first();
+	    if (x->unassigned()) x->eliminate();
+	}
+}
+
+void WCSP::propagate()
+{    
+	
+    while (!Eliminate.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) 
+    {
+	    eliminate();  
+
+	    while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) {
+	        propagateIncDec();
+	        propagateAC();
+	        assert(IncDec.empty());
+	        propagateDAC();
+	        assert(IncDec.empty());
+	        propagateNC();
+	    }
+	}
+
+	
     assert(verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
     assert(AC.empty());
     assert(DAC.empty());
+    assert(Eliminate.empty());
     nbNodes++;
 }

@@ -10,6 +10,9 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 
+class BinaryConstraint;
+class TernaryConstraint;
+
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
     int instance; // instantiation occurence number
@@ -26,14 +29,17 @@ class WCSP : public WeightedCSP {
     Queue DAC;                                // non backtrackable list
     bool objectiveChanged;
     long long nbNodes;                        // used as a time-stamp by Queue methods
-    Queue Eliminate;                          // non backtrackable list
 
-    // make it private because we don't want copy nor assignment
+	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
     
 public:
+
     WCSP(Store *s, Cost upperBound);
+
+    Queue Eliminate;                          // non backtrackable list
+
     
     virtual ~WCSP();
     
@@ -42,7 +48,7 @@ public:
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
     
     Cost getLb() const {return lb;}
-    Cost getUb() const {return ub;}
+    Cost getUb() const { return ub; }
 
     // avoid cost overflow
     Cost add(const Cost a, const Cost b) const {return (a + b >= getUb())?getUb():(a+b);}
@@ -109,9 +115,16 @@ public:
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value *d, int dsize);
     int makeIntervalVariable(string n, Value iinf, Value isup);
+
+	BinaryConstraint* existBinaryConstraint( int xIndex, int yIndex );
+    TernaryConstraint* existTernaryConstraint( int xIndex, int yIndex, int zIndex );
+
     
     void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     void postSupxyc(int xIndex, int yIndex, Value cste);
+        
+    void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+    
     
     void read_wcsp(const char *fileName);
 
@@ -134,12 +147,25 @@ public:
     void queueDec(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, DECREASE_EVENT, nbNodes);}
     void queueAC(DLink<VariableWithTimeStamp> *link) {AC.push(link, nbNodes);}
     void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
-    void queueEliminate(DLink<VariableWithTimeStamp> *link) {Eliminate.push(link, nbNodes);}
+    void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
 
+    // functions and data for variable elimination
+    // all these may be used when toulbar2::elimLevel > 0
+	bool isternary;
+	int maxdomainsize;	                              						   
+	StoreInt elimOrder;    		 				 	// used to count the order in which variables are eliminated
+	void elimination() { elimOrder = elimOrder + 1; }          // function called when a variable has been eliminated
+    vector<BinaryConstraint *> elimConstrs;   		// pool of empty binary constraints ready to perform a variable elimination 
+	void initElimConstrs();
+	BinaryConstraint* newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
+    
+    
+    
     void propagateNC();
     void propagateIncDec();
     void propagateAC();
     void propagateDAC();
+	void eliminate();
 
     void sortConstraints();
     void preprocessing();

@@ -16,6 +16,7 @@ class Constraint : public WCSPLink
 
 public:
     Constraint(WCSP *wcsp);
+    Constraint(WCSP *wcsp, int elimCtrIndex);
         
     virtual ~Constraint() {}
 
@@ -27,6 +28,9 @@ public:
 
     virtual int arity() const = 0;
     virtual Variable *getVar(int index) const = 0;
+    virtual int getIndex(Variable* var) const = 0;
+    
+    
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
 

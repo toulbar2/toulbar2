@@ -60,7 +60,8 @@ public:
     Cost getCost(const Value value) const {
         return costs[toIndex(value)] - deltaCost;
     }
-    Cost getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue);
+    Cost getBinaryCost(ConstraintLink c,    Value myvalue, Value itsvalue);
+	Cost getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue);
             
     Cost getInfCost() const {return costs[toIndex(getInf())] - deltaCost;}
     Cost getSupCost() const {return costs[toIndex(getSup())] - deltaCost;}
@@ -76,6 +77,10 @@ public:
     void findSupport();
 
     void eliminate();
+    void elimVar( BinaryConstraint* xy );
+    void elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
+    bool elimVar( TernaryConstraint* xyz );
+
 
     class iterator;
     friend class iterator;

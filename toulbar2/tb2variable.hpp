@@ -15,6 +15,13 @@
  * 
  */
 
+class BinaryConstraint;
+class TernaryConstraint;
+
+
+
+
+
 class Variable : public WCSPLink
 {
 protected:
@@ -37,12 +44,17 @@ protected:
     DLink<VariableWithTimeStamp> linkIncDecQueue;
     DLink<VariableWithTimeStamp> linkEliminateQueue;
 
+
+	StoreInt elimOrder;  // added to retrieve the order in which variables are eliminated
+	                     // used when Toulbar2::elimLevel > 0  
+
     void setMaxUnaryCost(Value a, Cost cost);
     void changeNCBucket(int newBucket);
         
     // make it private because we don't want copy nor assignment
     Variable(const Variable &x);
     Variable& operator=(const Variable &x);
+
     
 public:    
     Variable(WCSP *w, string n, Value iinf, Value isup);
@@ -73,7 +85,13 @@ public:
     void sortConstraints();
     virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};
     
+    BinaryConstraint* getConstr( Variable* x ); 
+    TernaryConstraint* getConstr( Variable* x, Variable* y ); 
+    TernaryConstraint* existTernary(); 
+    
+    
     void deconnect(DLink<ConstraintLink> *link);
+	bool eliminated() { return elimOrder >= 0; } 
 
     virtual Cost getInfCost() const =0;
     virtual Cost getSupCost() const =0;

@@ -14,13 +14,20 @@
  */
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : 
-        AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), costs(tab)
+        AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize())
 {
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(0,storeCost));
     deltaCostsY = vector<StoreCost>(sizeY,StoreCost(0,storeCost));
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX,y->getInf());
     supportY = vector<Value>(sizeY,x->getInf());
+
+	costs = vector<StoreCost>(sizeX*sizeY,StoreCost(0,storeCost));
+	
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
+         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
+                costs[a * sizeY + b] = tab[a * sizeY + b];
+
     assert(xx->unassigned());
     xx->queueAC();
     xx->queueDAC();
@@ -28,6 +35,25 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     yy->queueAC();
     yy->queueDAC();
 }
+
+
+BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)
+ 	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(wcsp->maxdomainsize), sizeY(wcsp->maxdomainsize)
+{
+	unsigned int maxdomainsize = wcsp->maxdomainsize;
+    deltaCostsX = vector<StoreCost>(maxdomainsize,StoreCost(0,storeCost));
+    deltaCostsY = vector<StoreCost>(maxdomainsize,StoreCost(0,storeCost));
+    supportX = vector<Value>(maxdomainsize,0);
+    supportY = vector<Value>(maxdomainsize,0);
+    linkX = new DLink<ConstraintLink>;
+    linkY = new DLink<ConstraintLink>;    
+
+    costs = vector<StoreCost>(maxdomainsize*maxdomainsize,StoreCost(0,storeCost));         	
+    for (unsigned int a = 0; a < maxdomainsize; a++) 
+         for (unsigned int b = 0; b < maxdomainsize; b++) 
+                costs[a * maxdomainsize + b] = 0;
+}
+
 
 void BinaryConstraint::print(ostream& os)
 {

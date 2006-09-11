@@ -14,3 +14,7 @@ Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints())
 {
     w->link(this);
 }
+
+Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex)
+{
+}

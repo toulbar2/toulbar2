@@ -18,7 +18,8 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     unsigned int sizeY;
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
-    vector<Cost> costs;
+    vector<StoreCost> costs;
+    
     vector<Value> supportX;
     vector<Value> supportY;
 
@@ -44,6 +45,8 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
 public:
     BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
 
+    BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
+
     ~BinaryConstraint() {}
     
     Cost getCost(Value vx, Value vy) {
@@ -54,6 +57,63 @@ public:
         return res;
     }
 
+    Cost getCostNoDelta(Value vx, Value vy) {
+        int ix = x->toIndex(vx);
+        int iy = y->toIndex(vy);
+        Cost res = costs[ix * sizeY + iy];
+        assert(res >= 0);
+        return res;
+    }
+
+
+   void addcost( int vx, int vy, Cost mincost ) {
+   	        int ix = x->toIndex(vx);
+            int iy = y->toIndex(vy);
+   	       	costs[ix * sizeY + iy] += mincost;
+    }
+
+   void setcost( int vx, int vy, Cost mincost ) {
+   	        int ix = x->toIndex(vx);
+            int iy = y->toIndex(vy);
+   	       	costs[ix * sizeY + iy] = mincost;
+    }
+
+   void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
+		assert(costsin.size() == costs.size());
+		int ix, iy;
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+        	ix = xin->toIndex(*iterx);  	iy = yin->toIndex(*itery);
+        	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
+			else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
+	    }}
+    }
+    
+   void addCosts( BinaryConstraint* xy ) {
+		assert( ((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)) );
+		int ix, iy;
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+        	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
+        	if(xy->x == x) costs[ix * sizeY + iy] += xy->getCostNoDelta(*iterx,*itery);
+			else	       costs[ix * sizeY + iy] += xy->getCostNoDelta(*itery,*iterx);
+	    }}
+    }
+    
+    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin)
+	{
+		x = xin;
+		y = yin;
+		sizeX = x->getDomainInitSize();
+		sizeY = y->getDomainInitSize();
+		linkX->removed = true;
+		linkY->removed = true;
+		linkX->content.constr = this;
+		linkY->content.constr = this; 
+		linkX->content.scopeIndex = 0;
+		linkY->content.scopeIndex = 1;
+	}
+    
     void propagate() {
         if (x->wcspIndex < y->wcspIndex) {
             findSupportY();             // must do AC before DAC
@@ -63,6 +123,7 @@ public:
             findFullSupportY();
         }
     }
+    
     void remove(int varIndex) {
         if (x->wcspIndex < y->wcspIndex) {
             if (varIndex == 0) findSupportY();

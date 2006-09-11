@@ -1,3 +1,4 @@
+
 /*
  * ****** Variable with domain represented by an enumerated domain *******
  */
@@ -5,6 +6,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
+#include "tb2ternaryconstr.hpp"
 
 
 /*
@@ -35,12 +37,12 @@ void EnumeratedVariable::init()
         cerr << "You cannot create a variable during the search!" << endl;
         exit(EXIT_FAILURE);
     }
+
     costs = vector<StoreCost>(getDomainInitSize(), StoreCost(0, &wcsp->getStore()->storeCost));
     linkACQueue.content.var = this;
     linkACQueue.content.timeStamp = -1;
     linkDACQueue.content.var = this;
     linkDACQueue.content.timeStamp = -1;
-    queueEliminate();
 }
 
 void EnumeratedVariable::getDomain(Value *array)
@@ -60,10 +62,14 @@ void EnumeratedVariable::getDomainAndCost(ValueCost *array)
     }
 }
 
-Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue)
-{
+Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue) {
     return (c.scopeIndex == 0)?((BinaryConstraint *) c.constr)->getCost(myvalue, itsvalue):((BinaryConstraint *) c.constr)->getCost(itsvalue, myvalue);
 }
+
+Cost EnumeratedVariable::getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue) {
+    return (c->getIndex(this) == 0)?c->getCost(myvalue, itsvalue):c->getCost(itsvalue, myvalue);
+}
+
 
 void EnumeratedVariable::print(ostream& os)
 {
@@ -315,66 +321,193 @@ void EnumeratedVariable::assign(Value newValue)
         changeNCBucket(-1);
         maxCostValue = newValue;
         maxCost = 0;
-        Cost cost = getCost(newValue);
         inf = newValue;
         sup = newValue;
         support = newValue;
+   
+        Cost cost = getCost(newValue);
         if (cost > 0) {
             deltaCost += cost;
             if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
             wcsp->increaseLb(wcsp->getLb() + cost);
         }
-        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+
+	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
         }
     }
 }
 
+
+// eliminates the current (this) variable that participates
+// in a single binary consraint ctr
+void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
+{
+       assert(getDegree() == 1);
+       // deconnect first to be sure the current var is not involved in future propagation	
+       ctr->deconnect();
+
+	   EnumeratedVariable *x = (EnumeratedVariable *) wcsp->getVar(ctr->getSmallestVarIndexInScope(ctr->getIndex(this)));
+       bool supportBroken = false;
+       for (iterator iter1 = x->begin(); iter1 != x->end(); ++iter1) {
+           Cost mincost = MAX_COST;
+           for (iterator iter = begin(); iter != end(); ++iter) {
+               Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1);
+               if (curcost < mincost) mincost = curcost;
+           }
+           if (mincost > 0) {
+		       if (x->getSupport() == *iter1) supportBroken = true;
+               x->project(*iter1, mincost);
+           }
+       }
+      if (supportBroken) {  x->findSupport();  }
+}
+
+
+// eliminates the current (this) variable that participates
+// in two binary constraints (its links ara xylink and xzlink)
+void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink )
+{
+  	 assert(getDegree() == 2);
+     xylink.constr->deconnect(); 	            
+	 xzlink.constr->deconnect();
+
+	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
+	 EnumeratedVariable *z = (EnumeratedVariable *) wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
+	
+	 BinaryConstraint* yz = y->getConstr(z);
+	        
+     BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
+
+	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
+	 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+	    Cost mincost = MAX_COST;
+
+	    for (iterator iter = begin(); iter != end(); ++iter) {
+	        Cost curcost = getCost(*iter) + 
+						   getBinaryCost(xylink, *iter, *itery) +
+						   getBinaryCost(xzlink, *iter, *iterz);
+						   
+	        if (curcost < mincost) mincost = curcost;
+	    }
+		yznew->setcost(*itery,*iterz,mincost);
+	 }}
+
+	 if(yz) yz->addCosts( yznew );
+	 else { 
+	 		yz = yznew;
+	 		yz->reconnect();
+	 		wcsp->elimination();
+	 }	
+     yz->propagate(); 
+     y->queueAC();  y->queueDAC(); 
+     z->queueAC();  z->queueDAC();
+}
+
+// eliminates the current (this) variable that participates
+// in the ternary constraint 'xyz'
+// the function can fail to eliminate the current variable
+// if it is linked to more than (in total) two variables.
+// It returns true if the current variable was eliminated
+bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
+{
+	BinaryConstraint* yz = NULL;
+	if(xyz->xy->getIndex(this) < 0) yz = xyz->xy;
+	else if(xyz->xz->getIndex(this) < 0) yz = xyz->xz;
+	else if(xyz->yz->getIndex(this) < 0) yz = xyz->yz;	 
+	assert(yz != NULL);
+
+	int n2links = 0;
+	int n3links = 0;
+
+	ConstraintLink links[2] = {{NULL, 0},{NULL, 0}};
+ 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+ 	   if((*iter).constr->arity() == 2) links[n2links++] =  (*iter);
+ 	   else n3links++;
+ 	}
+
+	if(n3links > 1) return false;
+
+	for(int i=0; i<n2links; i++) {		
+		int idvar = links[i].constr->getSmallestVarIndexInScope(links[i].scopeIndex);
+		if(xyz->getIndex( wcsp->getVar(idvar) ) < 0) return false; 
+	}
+
+	xyz->deconnect();
+	if(n2links > 0) links[0].constr->deconnect();
+	if(n2links > 1) links[1].constr->deconnect();
+
+	EnumeratedVariable* y = (EnumeratedVariable*) yz->getVar(0);
+	EnumeratedVariable* z = (EnumeratedVariable*) yz->getVar(1);
+
+	bool flag_rev = false;
+	if(n2links > 0) {
+		if(this == links[0].constr->getVar(0)) flag_rev = (y != links[0].constr->getVar(1)); 
+		else flag_rev = (y != links[0].constr->getVar(0)); 
+	}
+		
+	for (iterator itery = y->begin(); itery != y->end(); ++itery) {
+	for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+	    Cost mincost = MAX_COST;
+	    for (iterator iter = begin(); iter != end(); ++iter) {
+	        Cost curcost = getCost(*iter) + xyz->getCost(this,y,z,*iter,*itery,*iterz); 
+
+			if(!flag_rev) {
+		        if(n2links > 0) curcost += getBinaryCost(links[0], *iter, *itery);
+				if(n2links > 1) curcost += getBinaryCost(links[1], *iter, *iterz);
+			} else {
+		        if(n2links > 0) curcost += getBinaryCost(links[0], *iter, *iterz);
+				if(n2links > 1) curcost += getBinaryCost(links[1], *iter, *itery);
+			}
+
+	        if (curcost < mincost) mincost = curcost;
+	    }
+		yz->addcost(*itery,*iterz,mincost);
+	 }}
+
+	if(!yz->connected()) yz->reconnect();
+    yz->propagate(); 
+    y->queueAC();  y->queueDAC(); 
+    z->queueAC();  z->queueDAC();
+	 
+	return true;
+}
+
+
 void EnumeratedVariable::eliminate()
 {
     assert(ToulBar2::elimLevel <= 2);
-    if (getDegree() <= ToulBar2::elimLevel) {
-        ConstraintLink constr1;
-        ConstraintLink constr2;
-        EnumeratedVariable *var1 = NULL;
-        EnumeratedVariable *var2 = NULL;
-        if (ToulBar2::elimLevel >= 1 && getDegree() >= 1) {
-            constr1 = *constrs.begin();
-            var1 = (EnumeratedVariable *) wcsp->getVar(constr1.constr->getSmallestVarIndexInScope(constr1.scopeIndex));
-	    assert(var1 != this);
-            if (ToulBar2::elimLevel >= 2 && getDegree() >= 2) {
-                constr2 = *constrs.rbegin();
-                var2 = (EnumeratedVariable *) wcsp->getVar(constr2.constr->getSmallestVarIndexInScope(constr2.scopeIndex));
-		assert(var2 != this);
-                assert(var1 != var2); // TO BE MODIFIED !!!
-            }
-        }
-        if (var1 && !var2) { // project only one binary constraint
-//	    cout << "project from " << getName() << " to " << var1->getName() << endl;
-	    assert(getDegree() == 1);
-	    // deconnect first to be sure the current var is not involved in future propagation
-            constr1.constr->deconnect();
-	    bool supportBroken = false;
-            for (iterator iter1 = var1->begin(); iter1 != var1->end(); ++iter1) {
-                Cost mincost = MAX_COST;
-                for (iterator iter = begin(); iter != end(); ++iter) {
-                    Cost curcost = getCost(*iter) + getBinaryCost(constr1, *iter, *iter1);
-                    if (curcost < mincost) mincost = curcost;
-                }
-                if (mincost > 0) {
-		    if (var1->getSupport() == *iter1) supportBroken = true;
-                    var1->project(*iter1, mincost);
-                }
-            }
-	    // apply NC findSupport if needed // IT SHOULD BE DONE ELSEWHERE AUTOMATICALLY
-	    if (supportBroken) {
-	      var1->findSupport();
-	    }
+
+    if((ToulBar2::elimLevel == 1) &&  (getDegree() > 1)) return;
+    if((ToulBar2::elimLevel == 2) &&  (getDegree() > 3)) return;
+
+	if(getDegree() > 0) {
+		TernaryConstraint* ternCtr = existTernary();
+				
+		if(ternCtr) { if(!elimVar(ternCtr)) return; }
+		else {
+			if(getDegree() > 2) return;
+	
+			ConstraintLink xylink = *constrs.begin();
+			ConstraintLink xzlink = {NULL,0};
+			
+			if(getDegree() == 2) {
+				xzlink = *constrs.rbegin();
+				elimVar(xylink,xzlink);		
+			}
+			else 
+			{
+				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;	
+				elimVar( xy );
+			}		
+		}
 	}
+
 	assert(getDegree() == 0);
 	if (ToulBar2::verbose) cout << "Eliminate " << getName() << endl;
 	assert(getCost(support) == 0); // it is ensured by previous calls to findSupport
 	assign(support); // warning! dummy assigned value
-    }
 }
+
+
