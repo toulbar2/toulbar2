@@ -19,11 +19,15 @@ int main(int argc, char **argv)
     if (argc >= 4) ToulBar2::verbose = atoi(argv[3]);
     if (ToulBar2::verbose >= 1) ToulBar2::showSolutions = true;
     if (argc >= 6 && strchr(argv[5],'b')) ToulBar2::binaryBranching = true;
-    
-    Solver solver((argc >= 5)?atoi(argv[4]):STORE_SIZE, (argc >= 3)?atoi(argv[2]):MAX_COST);
+
+	int storesize = (argc >= 5)?atoi(argv[4]):STORE_SIZE;
+	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST; 	
+    Solver solver(storesize, c);
+
     try {
         solver.read_wcsp(argv[1]);
-        if (argc >= 6 && strchr(argv[5],'e')) ToulBar2::elimLevel = 1;
+        if (argc >= 6 && strchr(argv[5],'e')) ToulBar2::elimLevel = 2;
+        if (argc >= 6 && strchr(argv[5],'p')) { ToulBar2::elimLevel = 2; ToulBar2::only_preprocessing = true; }
         solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;
