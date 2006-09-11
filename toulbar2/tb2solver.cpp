@@ -6,6 +6,8 @@
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
 
+extern void setvalue(int wcspId, int varIndex, Value value);
+
 /*
  * Solver constructors
  * 

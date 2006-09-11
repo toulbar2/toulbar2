@@ -108,7 +108,7 @@ class StoreBasic
     StoreStack<T,T> *store;
 
 public:
-    StoreBasic(T vv, StoreStack<T,T> *s) : v(vv), store(s) {}
+    StoreBasic(T vv, StoreStack<T,T> *s) : v(vv), store(s) { }
 
     operator T() const {return v;}    // allows conversion from StoreBasic to T
      
