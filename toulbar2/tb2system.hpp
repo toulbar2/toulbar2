@@ -24,6 +24,22 @@
 //cost= 15 log2= 3
 //cost= 16 log2= 4
 
+inline int cost2log2(int x)
+{
+        register int l2 = 0;
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
+
+
+// This only works for a 32bits machine
+// and compiler g++ version < 4.0 
+ 
+ /*
 inline int cost2log2(int v)
 { 
   float x;
@@ -32,5 +48,7 @@ inline int cost2log2(int v)
   x=(float) v; 
   return (*(int*)&x >> 23) - 127;
 }
+*/
+
 
 #endif /* TB2SYSTEM_HPP_ */

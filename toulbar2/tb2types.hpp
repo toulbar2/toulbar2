@@ -29,7 +29,7 @@ const Value MIN_VAL = -(INT_MAX / 2);
 typedef int Cost;
 const Cost MAX_COST = (INT_MAX / 2);
 
-const Value MAX_DOMAIN_SIZE  = 1000;
+const Value MAX_DOMAIN_SIZE  = 100000;
 
 const int STORE_SIZE = 16;
 
@@ -43,12 +43,13 @@ typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 class ToulBar2
 {
 protected:
-    virtual void dummy() = 0;	// Trick to avoid any instantiation of ToulBar2
+    virtual ~ToulBar2() = 0;	// Trick to avoid any instantiation of ToulBar2
 public:
     static int verbose;
     static bool showSolutions;
     static bool binaryBranching;
     static int elimLevel;
+    static bool only_preprocessing;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;
