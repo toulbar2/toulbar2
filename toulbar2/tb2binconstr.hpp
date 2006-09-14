@@ -95,8 +95,8 @@ public:
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
-        	if(xy->x == x) costs[ix * sizeY + iy] += xy->getCostNoDelta(*iterx,*itery);
-			else	       costs[ix * sizeY + iy] += xy->getCostNoDelta(*itery,*iterx);
+        	if(xy->x == x) costs[ix * sizeY + iy] += xy->getCost(*iterx,*itery);
+			else	       costs[ix * sizeY + iy] += xy->getCost(*itery,*iterx);
 	    }}
     }
     
@@ -117,10 +117,10 @@ public:
     void propagate() {
         if (x->wcspIndex < y->wcspIndex) {
             findSupportY();             // must do AC before DAC
-            findFullSupportX();
+            if(connected()) findFullSupportX();
         } else {
             findSupportX();             // must do AC before DAC
-            findFullSupportY();
+            if(connected()) findFullSupportY();
         }
     }
     

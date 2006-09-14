@@ -78,6 +78,7 @@ template <GetCostMember getBinaryCost>
 void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
+	assert(connected());
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -114,6 +115,8 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
         vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
+	assert(connected());
+	
     if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
