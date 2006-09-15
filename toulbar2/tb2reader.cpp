@@ -19,6 +19,10 @@ typedef struct {
 
 void WCSP::read_wcsp(const char *fileName)
 {
+    if (strstr(fileName,".pre")) {
+      read_pedigree(fileName);
+      return;
+    }
     string pbname;
     int nbvar,nbval,nbconstr;
     Cost top;

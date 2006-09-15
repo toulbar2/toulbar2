@@ -125,8 +125,8 @@ public:
         
     void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     
-    
     void read_wcsp(const char *fileName);
+    void read_pedigree(const char *fileName);
 
     // Specific API for Variable and Constraint classes
 
