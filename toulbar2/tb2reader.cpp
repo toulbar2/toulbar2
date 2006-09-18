@@ -119,7 +119,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> c;
                     file >> cost;
-                    costs[c*x->getDomainInitSize()*y->getDomainInitSize() + a * y->getDomainInitSize() + b] = cost;
+                    costs[a * x->getDomainInitSize() * y->getDomainInitSize() + b * y->getDomainInitSize() + c] = cost;
                 }
                 postTernaryConstraint(i,j,k,costs);
 				isternary = true;   

@@ -42,7 +42,7 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         int iz = z->toIndex(vz);
-        Cost res = costs[iz*sizeX*sizeY + ix*sizeY + iy];
+        Cost res = costs[ix*sizeX*sizeY + iy*sizeY + iz];
         assert(res >= 0);
         return res;
     }
@@ -53,7 +53,7 @@ public:
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
       
-        Cost res = costs[vindex[2]*sizeX*sizeY + vindex[0]*sizeY + vindex[1]];
+        Cost res = costs[vindex[0]*sizeX*sizeY + vindex[1]*sizeY + vindex[2]];
         assert(res >= 0);
         return res;
     }
@@ -77,7 +77,7 @@ public:
 	        vindex[ getIndex(yin) ] = vyin;
 	        vindex[ getIndex(zin) ] = vzin;
 	        
-			costs[vindex[2]*sizeX*sizeY + vindex[0]*sizeY + vindex[1]] += costsin[vzin*sizeXin*sizeYin + vxin*sizeYin + vyin];
+			costs[vindex[0]*sizeX*sizeY + vindex[1]*sizeY + vindex[2]] += costsin[vxin*sizeXin*sizeYin + vyin*sizeYin + vzin];
 	    }}}
     }
 
