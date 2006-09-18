@@ -100,6 +100,7 @@ void WCSP::read_pedigree(const char *fileName)
   assert(vars.empty());
   assert(constrs.empty());
   maxdomainsize = nballeles*(nballeles+1)/2;
+  isternary = true;
   updateUb(nbtypings+1);
   NCBucketSize = cost2log2(getUb()) + 1;
   
