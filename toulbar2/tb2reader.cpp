@@ -62,9 +62,6 @@ void WCSP::read_wcsp(const char *fileName)
     updateUb(top);
     NCBucketSize = cost2log2(getUb()) + 1;
 
-	maxdomainsize = 0; 
-	isternary = false;   
-    
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         char varname_[128];
@@ -77,8 +74,6 @@ void WCSP::read_wcsp(const char *fileName)
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
         assert(theindex == i);   
-        
-        if(maxdomainsize < domsize) maxdomainsize = domsize;
     }
     
     // read each constraint
@@ -122,7 +117,6 @@ void WCSP::read_wcsp(const char *fileName)
                     costs[a * x->getDomainInitSize() * y->getDomainInitSize() + b * y->getDomainInitSize() + c] = cost;
                 }
                 postTernaryConstraint(i,j,k,costs);
-				isternary = true;   
             }
 		} else if (arity == 2) {
             file >> i;

@@ -48,8 +48,9 @@ WCSP::WCSP(Store *s, Cost upperBound) :
 { 
     objectiveChanged = false;
     nbNodes = 0;
-	isternary = false;
-	instance = wcspCounter++;
+    maxdomainsize = 0;
+    isternary = false;
+    instance = wcspCounter++;
 }
 
 
@@ -68,12 +69,14 @@ WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
 int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
 {
     EnumeratedVariable *x = new EnumeratedVariable(this, n, iinf, isup);
+    if(maxdomainsize < isup - iinf + 1) maxdomainsize = isup - iinf + 1;
     return x->wcspIndex;
 }
 
 int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize)
 {
     EnumeratedVariable *x = new EnumeratedVariable(this, n, d, dsize);
+    if(maxdomainsize < dsize) maxdomainsize = dsize;
     return x->wcspIndex;
 }
 
@@ -144,6 +147,8 @@ void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 
 void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
 {
+    isternary = true;
+
 	TernaryConstraint* ctr = existTernaryConstraint( xIndex, yIndex, zIndex );    		
 
 	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
