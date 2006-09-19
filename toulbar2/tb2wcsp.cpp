@@ -28,6 +28,7 @@ externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
 externalevent ToulBar2::removevalue = NULL;
 externalevent ToulBar2::setminobj = NULL;
+Pedigree *ToulBar2::pedigree = NULL;
 
 int WCSP::wcspCounter = 0;
 

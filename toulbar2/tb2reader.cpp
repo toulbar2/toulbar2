@@ -6,6 +6,7 @@
 #include "tb2system.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2pedigree.hpp"
 
 typedef struct {
     EnumeratedVariable *var;
@@ -19,8 +20,8 @@ typedef struct {
 
 void WCSP::read_wcsp(const char *fileName)
 {
-    if (strstr(fileName,".pre")) {
-      read_pedigree(fileName);
+    if (ToulBar2::pedigree) {
+      ToulBar2::pedigree->readPedigree(fileName, this);
       return;
     }
     string pbname;
@@ -60,7 +61,6 @@ void WCSP::read_wcsp(const char *fileName)
     assert(vars.empty());
     assert(constrs.empty());
     updateUb(top);
-    NCBucketSize = cost2log2(getUb()) + 1;
 
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {

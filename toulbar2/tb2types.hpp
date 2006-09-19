@@ -40,6 +40,8 @@ const int STORE_SIZE = 16;
 
 typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 
+class Pedigree;
+
 class ToulBar2
 {
 protected:
@@ -55,6 +57,7 @@ public:
     static externalevent setmax;
     static externalevent removevalue;
     static externalevent setminobj;
+    static Pedigree *pedigree;
 };
 
 /*

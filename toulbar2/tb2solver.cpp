@@ -5,6 +5,7 @@
 
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
+#include "tb2pedigree.hpp"
 
 extern void setvalue(int wcspId, int varIndex, Value value);
 
@@ -179,7 +180,10 @@ void Solver::recursiveSolve()
         assert(allVarsAssigned);
 #endif
         wcsp->updateUb(wcsp->getLb());
-        cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+        cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+	if (ToulBar2::pedigree) {
+	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
+	}
         if (ToulBar2::showSolutions) {
             if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
             for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {

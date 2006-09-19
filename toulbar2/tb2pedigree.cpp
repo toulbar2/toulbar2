@@ -3,19 +3,19 @@
  * 
  */
 
-#include <map>
-
 #include "tb2system.hpp"
-#include "tb2wcsp.hpp"
+#include "toulbar2.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2pedigree.hpp"
+
+#include <map>
 
 typedef struct {
     EnumeratedVariable *var;
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
-
-void WCSP::read_pedigree(const char *fileName)
+void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
 {
   int nbindividuals = 0;
   int nballeles = 0;
@@ -32,7 +32,7 @@ void WCSP::read_pedigree(const char *fileName)
     cerr << "Could not open file " << fileName << endl;
     exit(EXIT_FAILURE);
   }
-  
+
   while (file) {
     int locus = -1;
     int individual = 0;
@@ -94,21 +94,37 @@ void WCSP::read_pedigree(const char *fileName)
       abort();
     }
     nballeles = max(nballeles,allele2);
-    if (allele1>0 || allele2>0) nbtypings++;
+    if (allele1>0 || allele2>0) {
+      nbtypings++;
+      Individual geno;
+      geno.individual = individual;
+      geno.varindex = individuals[individual];
+      geno.genotype.allele1 = allele1;
+      geno.genotype.allele2 = allele2;
+      genotypes.push_back(geno);
+    }
   }
 
-  assert(vars.empty());
-  assert(constrs.empty());
-  updateUb(nbtypings+1);
-  NCBucketSize = cost2log2(getUb()) + 1;
+  assert(wcsp->numberOfVariables() == 0);
+  assert(wcsp->numberOfConstraints() == 0);
+  wcsp->updateUb(nbtypings+1);
   
   /* create variables */
   for (int i=0; i<nbindividuals; i++) {
     char varname_[128];
     sprintf(varname_, "%d", individualsReverse[i]);
     string varname(varname_);
-    makeEnumeratedVariable(varname, 0, nballeles*(nballeles+1)/2 - 1);
+    wcsp->makeEnumeratedVariable(varname, 0, nballeles*(nballeles+1)/2 - 1);
     if (notfounders.count(individualsReverse[i])==0) nbfounders++;
+  }
+  
+  for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
+    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+      Genotype geno;
+      geno.allele1 = i;
+      geno.allele2 = j;
+      myconvert.push_back(geno);
+    }
   }
 
   /* create ternary Mendelian hard constraint table */
@@ -164,7 +180,7 @@ void WCSP::read_pedigree(const char *fileName)
 
     /* add unary costs (soft constraint) if genotyping is given */
     if (allele1 > 0 || allele2 > 0) {
-      EnumeratedVariable *var = (EnumeratedVariable *) vars[individuals[individual]];
+      EnumeratedVariable *var = (EnumeratedVariable *) wcsp->getVar(individuals[individual]);
       TemporaryUnaryConstraint unaryconstr;
       unaryconstr.var = var;
       for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
@@ -184,15 +200,15 @@ void WCSP::read_pedigree(const char *fileName)
     /* add ternary or binary Mendelian hard constraint */
     if (father > 0 || mother > 0) {
       if (father > 0 && mother > 0) {
-	postTernaryConstraint(individuals[individual],individuals[father],individuals[mother],costs3);
+	wcsp->postTernaryConstraint(individuals[individual],individuals[father],individuals[mother],costs3);
       } else if (father > 0) {
-	postBinaryConstraint(individuals[individual],individuals[father],costs2);
+	wcsp->postBinaryConstraint(individuals[individual],individuals[father],costs2);
       } else {
-	postBinaryConstraint(individuals[individual],individuals[mother],costs2);
+	wcsp->postBinaryConstraint(individuals[individual],individuals[mother],costs2);
       }
     }
   }
-  sortConstraints();
+  wcsp->sortConstraints();
 
   // apply basic initial propagation AFTER complete network loading
   for (unsigned int u=0; u<unaryconstrs.size(); u++) {
@@ -205,4 +221,21 @@ void WCSP::read_pedigree(const char *fileName)
   if (ToulBar2::verbose >= 0) {
     cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles and " << nbtypings << " typings." << endl;
   }
+}
+
+void Pedigree::printCorrection(WCSP *wcsp)
+{
+  cout << "Correction:";
+  for (unsigned int i=0; i<genotypes.size(); i++) {
+    int sol = wcsp->getValue(genotypes[i].varindex);
+    int a1 = myconvert[sol].allele1;
+    int a2 = myconvert[sol].allele2;
+    int allele1 = genotypes[i].genotype.allele1;
+    int allele2 = genotypes[i].genotype.allele2;
+    if (!((allele1>0 && allele2>0 && ((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
+		|| ((allele1==0 || allele2==0) && (a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2)))) {
+      cout << " " << genotypes[i].individual;
+    }
+  }
+  cout << endl;
 }

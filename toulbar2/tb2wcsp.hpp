@@ -6,6 +6,7 @@
 #ifndef TB2WCSP_HPP_
 #define TB2WCSP_HPP_
 
+#include "tb2system.hpp"
 #include "toulbar2.hpp"
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
@@ -57,6 +58,7 @@ public:
 
     void updateUb(Cost newUb) {
         ub = min(ub,newUb);
+	if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;
     }
     void enforceUb() {
         if (lb >= ub) THROWCONTRADICTION;
@@ -126,7 +128,6 @@ public:
     void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     
     void read_wcsp(const char *fileName);
-    void read_pedigree(const char *fileName);
 
     // Specific API for Variable and Constraint classes
 
