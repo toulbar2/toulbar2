@@ -6,6 +6,7 @@
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
 
+#include <math.h>
 #include "tb2types.hpp"
 
 template <class T> class BTList;
@@ -37,22 +38,48 @@ class StoreStack
     
 public:
     StoreStack(string s, int powbckmemory) : name(s) {        
-        pointers = new T *[(1 << powbckmemory)];
-        content = new V[(1 << powbckmemory)];
+      if (pow(2.,powbckmemory) >= INT_MAX) {
+	cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
+	exit(EXIT_FAILURE);
+      }
+        indexMax = (int) pow(2.,powbckmemory);
+        pointers = new T *[indexMax];
+        content = new V[indexMax];
         index = 0;
         base = 0;
-        indexMax = (1 << (powbckmemory - 1));
         if (ToulBar2::verbose) {
-            cout << (1 << powbckmemory) * sizeof(V) + (1 << powbckmemory) * sizeof(T *)
+	  cout << indexMax * (sizeof(V) + sizeof(T *))
                  << " Bytes allocated for " << name << " stack." << endl;
         }
     }
     
     ~StoreStack() {delete[] pointers; delete[] content;}
-    
+
+    void realloc() {
+      T **newpointers = new T *[indexMax * 2];
+      V *newcontent = new V[indexMax * 2];
+      if (!newpointers || !newcontent) {
+	cerr << name << " stack out of memory!" << endl;
+	exit(EXIT_FAILURE);
+      }
+      for (int i = 0; i<indexMax; i++) {
+	newpointers[i] = pointers[i];
+	newcontent[i] = content[i];
+      }
+      delete[] pointers; delete[] content;
+      pointers = newpointers;
+      content = newcontent;
+      indexMax *= 2;
+      if (ToulBar2::verbose) {
+	cout << indexMax * (sizeof(V) + sizeof(T *))
+	     << " Bytes allocated for " << name << " stack." << endl;
+      }
+    }
+      
     void store(T *x, V y) {
         if (index > 0) {
             index++;
+	    if (index >= indexMax) realloc();
             content[index] = y;
             pointers[index] = x;
         }
@@ -61,17 +88,16 @@ public:
     void store(T *x) {
         if (index > 0) {
             index++;
+	    if (index >= indexMax) realloc();
             content[index] = *x;
             pointers[index] = x;
         }
     }
     
     void store() {
-        if (index >= indexMax) {
-            cerr << name << " stack out of memory!" << endl;
-            exit(EXIT_FAILURE);
-        }
-        content[++index] = (V) base;
+	index++;
+	if (index >= indexMax) realloc();
+        content[index] = (V) base;
         base = index;
     }
 
