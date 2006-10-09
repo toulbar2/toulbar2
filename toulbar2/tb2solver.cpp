@@ -132,7 +132,7 @@ void Solver::narySortedChoicePoint(int varIndex)
     ValueCost sorted[size]; 
     wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-    for (int v = 0; v < size; v++) {
+    for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {
         try {
             store->store();
             nbNodes++;
@@ -181,9 +181,7 @@ void Solver::recursiveSolve()
 #endif
         wcsp->updateUb(wcsp->getLb());
         cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-	if (ToulBar2::pedigree) {
-	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
-	}
+        wcsp->restoreSolution();
         if (ToulBar2::showSolutions) {
             if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
             for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
@@ -191,6 +189,10 @@ void Solver::recursiveSolve()
             }
             cout << endl;
         }
+	if (ToulBar2::pedigree) {
+	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
+	}
+    
     }
 }
 
@@ -211,7 +213,7 @@ bool Solver::solve()
     }
     store->restore();
     if (wcsp->getUb() < initialUpperBound) {
-        cout << "Optimun: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+        cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
         return true;
     } else {
         cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
