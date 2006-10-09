@@ -14,6 +14,7 @@
 class BinaryConstraint;
 class TernaryConstraint;
 
+
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
     int instance; // instantiation occurence number
@@ -118,14 +119,13 @@ public:
     int makeEnumeratedVariable(string n, Value *d, int dsize);
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
-	BinaryConstraint* existBinaryConstraint( int xIndex, int yIndex );
-    TernaryConstraint* existTernaryConstraint( int xIndex, int yIndex, int zIndex );
-
+    void processTernary();
     
     void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     void postSupxyc(int xIndex, int yIndex, Value cste);
         
     void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+    
     
     void read_wcsp(const char *fileName);
 
@@ -152,24 +152,37 @@ public:
 
     // functions and data for variable elimination
     // all these may be used when toulbar2::elimLevel > 0
+
+	typedef struct {
+		EnumeratedVariable* x;
+		EnumeratedVariable* y;
+		EnumeratedVariable* z;
+		BinaryConstraint* xy;
+		BinaryConstraint* xz;
+		TernaryConstraint* xyz;
+	} elimInfo;
+
 	bool isternary;
 	int maxdomainsize;	                              						   
-	StoreInt elimOrder;    		 				 	// used to count the order in which variables are eliminated
-	void elimination() { elimOrder = elimOrder + 1; }          // function called when a variable has been eliminated
-    vector<BinaryConstraint *> elimConstrs;   		// pool of empty binary constraints ready to perform a variable elimination 
+	StoreInt elimOrder;    		 				 	    // used to count the order in which variables are eliminated
+	int getElimOrder() { return (int) elimOrder; } 
+	void elimination() { elimOrder = elimOrder + 1; }   // function called when a variable has been eliminated
+    vector<BinaryConstraint *> elimConstrs;   		    // pool of empty binary constraints ready to perform a variable elimination 
+	vector<elimInfo> elimInfos; 
 	void initElimConstrs();
 	BinaryConstraint* newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
-    
-    
+	void eliminate();
+	void restoreSolution(); 
+   
     
     void propagateNC();
     void propagateIncDec();
     void propagateAC();
     void propagateDAC();
-	void eliminate();
 
     void sortConstraints();
     void preprocessing();
+    
     
     void print(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);

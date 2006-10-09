@@ -13,8 +13,10 @@
 Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints())
 {
     w->link(this);
+    tight = -1;
 }
 
 Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex)
 {
+    tight = -1;
 }

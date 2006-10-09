@@ -46,12 +46,14 @@ public:
 	void getDomainAndCost(ValueCost *array);
 	
     bool canbe(Value v) const {return v >= inf && v <= sup && domain.canbe(v);}
+    bool canbeAfterElim(Value v) const {return domain.canbe(v);}
     bool cannotbe(Value v) const {return v < inf || v > sup || domain.cannotbe(v);}
     
     void increase(Value newInf);
     void decrease(Value newSup);
     void remove(Value value);
     void assign(Value newValue);
+    void assignWhenEliminated(Value newValue);
 
     void project(Value value, Cost cost);
     void extend(Value value, Cost cost);
@@ -80,7 +82,7 @@ public:
     void elimVar( BinaryConstraint* xy );
     void elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
-
+	
 
     class iterator;
     friend class iterator;

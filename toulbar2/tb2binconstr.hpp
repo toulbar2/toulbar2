@@ -115,12 +115,14 @@ public:
 	}
     
     void propagate() {
-        if (x->wcspIndex < y->wcspIndex) {
-            findSupportY();             // must do AC before DAC
-            if(connected()) findFullSupportX();
-        } else {
-            findSupportX();             // must do AC before DAC
-            if(connected()) findFullSupportY();
+        if(connected()) {
+            if (x->wcspIndex < y->wcspIndex) {
+                findSupportY();             // must do AC before DAC
+                if(connected()) findFullSupportX();
+            } else {
+                findSupportX();             // must do AC before DAC
+                if(connected()) findFullSupportY();
+            }
         }
     }
     
@@ -148,6 +150,21 @@ public:
     }
         
     bool verify() {return verifyX() && verifyY();}
+    
+
+	double computeTightness() {
+	   int count = 0;
+	   double sum = 0;
+	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+				sum += getCost(*iterX, *iterY);
+				count++;
+	       }
+	    }
+	    tight = sum / (double) count;
+	    return tight;
+	}
+
     
     void print(ostream& os);
 };

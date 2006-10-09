@@ -71,6 +71,10 @@ public:
     virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
+  
+  virtual int getElimOrder() =0;
+  virtual void restoreSolution() =0;
+
     
     virtual void print(ostream& os) =0;
 };

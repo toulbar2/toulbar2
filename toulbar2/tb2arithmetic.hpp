@@ -37,6 +37,8 @@ public:
         
     bool verify();
     
+    double  computeTightness() { return 0; }
+    
     void print(ostream& os);
 };
 

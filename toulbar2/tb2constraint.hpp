@@ -27,8 +27,13 @@ public:
     virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
 
     virtual int arity() const = 0;
-    virtual Variable *getVar(int index) const = 0;
+    virtual Variable *getVar(int scopeIndex) const = 0;
     virtual int getIndex(Variable* var) const = 0;
+
+
+	double tight;
+    double getTightness() { if(tight < 0) computeTightness(); return tight; }
+    virtual double  computeTightness() = 0;
     
     
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index

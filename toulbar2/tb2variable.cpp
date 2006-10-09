@@ -18,9 +18,8 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
         constrs(&w->getStore()->storeConstraint), deltaCost(0, &w->getStore()->storeCost),
         maxCost(0, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
-        NCBucket(-1, &w->getStore()->storeValue),
-        elimOrder(-1, &w->getStore()->storeValue) 
-        
+        NCBucket(-1, &w->getStore()->storeValue)
+//        elimOrder(-1, &w->getStore()->storeValue)
 {
     if (w->getStore()->getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -79,8 +78,7 @@ void Variable::deconnect(DLink<ConstraintLink> *link) {
 	//cout << "deconnect de variable: " << *this << endl;	
     if (!link->removed) {
         getConstrs()->erase(link, true);
-        if(!eliminated())
-			if (getDegree() <= ToulBar2::elimLevel) queueEliminate();
+        if (ToulBar2::elimVarWithSmallDegree && getDegree() <= 3) queueEliminate();
     }
 }
 
@@ -199,6 +197,65 @@ TernaryConstraint* Variable::existTernary()
     	}
     }
 	return NULL;
+}
+
+
+
+double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1max, TernaryConstraint* &tctr2max  ) {
+	double maxtight = -1;
+	strvar = NULL; tctr1max = NULL; tctr2max = NULL; 
+
+	TernaryConstraint *tctr1 = NULL; 
+	
+ 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+ 	   if((*iter).constr->arity() == 2) {
+	 	  BinaryConstraint* bctr = (BinaryConstraint*) (*iter).constr;
+	 	  double bintight = bctr->getTightness();
+	 	  if(bintight > maxtight) { maxtight = bintight; strvar = wcsp->getVar(bctr->getSmallestVarIndexInScope((*iter).scopeIndex)); tctr1max = NULL; tctr2max = NULL; }
+ 	   }
+ 	   else {
+	   	  double terntight;
+	 	  tctr1 = (TernaryConstraint*) (*iter).constr;
+	 	  terntight = tctr1->getTightness() + 
+	 	  			  tctr1->xy->getTightness() +
+	 	  			  tctr1->xz->getTightness() +
+	 	  			  tctr1->yz->getTightness();
+	 	  		
+	 	  Variable *x1 = NULL, *x2 = NULL;			
+	 	  switch((*iter).scopeIndex) {
+	 	  	case 0: x1 = tctr1->getVar(1); x2 = tctr1->getVar(2); break;  
+	 	  	case 1: x1 = tctr1->getVar(0); x2 = tctr1->getVar(2); break;  
+	 	  	case 2: x1 = tctr1->getVar(0); x2 = tctr1->getVar(1); break; 
+	 	  	default:; 
+	 	  }
+
+		  if(terntight > maxtight) { maxtight = terntight; strvar = x1; tctr1max = tctr1; tctr1max = NULL; }   	  
+	 	  			  
+		  for(ConstraintList::iterator iter2=iter; iter2 != constrs.end(); ++iter2) {
+		     if((*iter2).constr->arity() == 3) {
+				TernaryConstraint* tctr2 = (TernaryConstraint*) (*iter2).constr;
+				Variable* commonvar = NULL;
+				if(tctr2->getIndex(x1) >= 0) commonvar = x1;
+				else if(tctr2->getIndex(x2) >= 0) commonvar = x2;
+								
+				if(commonvar) {
+			 	  terntight += tctr2->getTightness() + 
+			 	  			   tctr2->xy->getTightness() +
+			 	  			   tctr2->xz->getTightness() +
+			 	  			   tctr2->yz->getTightness();
+			 	  			  
+			 	  if(tctr1->xy->getIndex(commonvar) >= 0) terntight -= tctr1->xy->getTightness();
+			 	  else if(tctr1->xz->getIndex(commonvar) >= 0) terntight -= tctr1->xz->getTightness();
+			 	  else if(tctr1->yz->getIndex(commonvar) >= 0) terntight -= tctr1->yz->getTightness();
+
+				  if(terntight > maxtight) { maxtight = terntight; strvar = commonvar; tctr1max = tctr1; tctr2max = tctr2; }   	  
+				}
+		     }
+		  }		  
+ 	   }
+ 	}
+ 	
+ 	return maxtight;
 }
 
 
