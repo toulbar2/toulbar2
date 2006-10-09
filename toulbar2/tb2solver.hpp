@@ -27,7 +27,6 @@ class Solver
     
 public:
     Solver(int storeSize, Cost initUpperBound);
-    
     ~Solver();
     
     void read_wcsp(const char *fileName);
