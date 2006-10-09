@@ -29,7 +29,7 @@ const Value MIN_VAL = -(INT_MAX / 2);
 typedef int Cost;
 const Cost MAX_COST = (INT_MAX / 2);
 
-const Value MAX_DOMAIN_SIZE  = 100000;
+const Value MAX_DOMAIN_SIZE  = 1000000;
 
 const int STORE_SIZE = 16;
 
@@ -50,8 +50,9 @@ public:
     static int verbose;
     static bool showSolutions;
     static bool binaryBranching;
-    static int elimLevel;
+    static bool elimVarWithSmallDegree;
     static bool only_preprocessing;
+    static bool preprocessTernary;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;
