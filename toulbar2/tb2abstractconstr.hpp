@@ -29,7 +29,6 @@ public:
     {
     }
 
-
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
 
     bool connected() {return !linkX->removed && !linkY->removed;}
@@ -51,7 +50,13 @@ public:
     int arity() const {return 2;}
     
     Variable *getVar(int varCtrIndex) const {return (varCtrIndex == 0)?x:y;}
-    
+
+    Variable *getVarDiffFrom( Variable* v ) const  {
+		if(v == x) return y;
+		else if(v == y) return x;
+		else abort();
+	}
+		    
     int getIndex(Variable* var) const 
     {
     	if(var == x) return 0;
@@ -59,7 +64,7 @@ public:
     	return -1;
     }
 
-    int getSmallestVarIndexInScope(int forbiddenScopeIndex) {return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
 };
 
 
@@ -111,8 +116,18 @@ public:
 		switch(varCtrIndex) { case 0: return x; break;
 						      case 1: return y; break;
 						      case 2: return z; break;
-						      default:; }
-		return NULL;				   
+						      default: abort(); }
+	}
+
+    Variable *getVarDiffFrom( Variable* v1, Variable* v2 ) const 
+	{
+		if      ((x == v1) && (y == v2)) return z;
+		else if ((x == v2) && (y == v1)) return z;
+		else if ((x == v1) && (z == v2)) return y;
+		else if ((x == v2) && (z == v1)) return y;
+		else if ((y == v1) && (z == v2)) return x;
+		else if ((y == v2) && (z == v1)) return x;
+		else abort();
 	}
 
     int getIndex(Variable* var) const 
@@ -125,8 +140,14 @@ public:
 
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
-	{ 
-		return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;
+	{
+        assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 3);
+		switch (forbiddenScopeIndex) {
+            case 0: return min(y->wcspIndex,z->wcspIndex); break;
+            case 1: return min(x->wcspIndex,z->wcspIndex); break;
+            case 2: return min(x->wcspIndex,y->wcspIndex); break;
+            default: abort();
+        }
 	}
 };
 
