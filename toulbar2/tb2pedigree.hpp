@@ -8,22 +8,36 @@
 
 #include "tb2wcsp.hpp"
 
+#include <map>
+
 class Genotype {
 public:
   int allele1;
   int allele2;
 };
 
+typedef enum {MALE=1, FEMALE=2} Sex;
+
 class Individual {
 public:
   int individual;
   int varindex;
+  int father;
+  int mother;
+  int sex;
   Genotype genotype;
+  bool typed; // true if one of its descendant children (or itself) is typed
+  
+  Individual(int ind);
 };
 
 class Pedigree {
-  vector<Individual> genotypes;
-  vector<Genotype> myconvert;
+  vector<Individual> pedigree;
+  vector<int> genotypes;
+  vector<Genotype> genoconvert;
+  map<int, int> individuals;
+  
+  void typeAscendants(int individual);
 
 public:
   void readPedigree(const char *fileName, WCSP *wcsp);

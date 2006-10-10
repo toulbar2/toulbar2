@@ -47,6 +47,7 @@ int main(int argc, char **argv)
             if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
             if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
             if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
+            if (strchr(argv[i],'h')) ToulBar2::preprocessTernaryHeuristic = true;
         }
         solver.solve();
     } catch (Contradiction) {
