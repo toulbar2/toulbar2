@@ -111,8 +111,16 @@ public:
     void propagate();               // propagate until a fix point and increase nbNodes
     bool verify();
 
-    unsigned int numberOfVariables() const {return vars.size();};
-    unsigned int numberOfConstraints() const {return constrs.size();};
+    unsigned int numberOfVariables() const {return vars.size();}
+    unsigned int numberOfUnassignedVariables() const {
+        int res = 0; 
+        for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) res++;
+        return res;}
+    unsigned int numberOfConstraints() const {return constrs.size();}
+    unsigned int numberOfConnectedConstraints() const {
+        int res = 0; 
+        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res++;
+        return res;}
     Value getDomainSizeSum();       // total current number of values
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
