@@ -8,6 +8,7 @@
 
 #include "tb2abstractconstr.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2wcsp.hpp"
 
 class BinaryConstraint;
 typedef Cost (BinaryConstraint::*GetCostMember)(Value vx, Value vy);
@@ -52,7 +53,8 @@ public:
     Cost getCost(Value vx, Value vy) {
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
-        Cost res = costs[ix * sizeY + iy] - deltaCostsX[ix] - deltaCostsY[iy];
+        Cost res = costs[ix * sizeY + iy];
+        if (res < wcsp->getUb()) res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= 0);
         return res;
     }
