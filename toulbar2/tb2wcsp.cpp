@@ -25,6 +25,7 @@ bool ToulBar2::binaryBranching = false;
 bool ToulBar2::elimVarWithSmallDegree  = false;
 bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernary  = false;
+bool ToulBar2::preprocessTernaryHeuristic  = false;
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -189,24 +190,26 @@ void WCSP::processTernary()
 	Variable* var;
 	TernaryConstraint *tctr1max = NULL, *tctr2max = NULL;
 
-    for (unsigned int i=0; i<vars.size(); i++) {
-//        vars[i]->queueEliminate();
-		TernaryConstraint *tctr1, *tctr2;
-        double tight = vars[i]->strongLinkedby(var,tctr1,tctr2);
-        if(tight > maxtight) { maxtight = tight; tctr1max = tctr1; tctr2max = tctr2; }
-
-		if(tctr1 && tctr2)
-		{
-			tctr1->extendTernary();
-			tctr2->extendTernary();
-
-			BinaryConstraint* b = tctr1->commonBinary(tctr2);
-			if(!b->connected()) b->reconnect();
-	
-			tctr1->projectTernaryBinary(b);	
-			tctr2->projectTernaryBinary(b);
-			b->propagate();	
-		}
+    if (ToulBar2::preprocessTernaryHeuristic) {
+        for (unsigned int i=0; i<vars.size(); i++) {
+    //        vars[i]->queueEliminate();
+    		TernaryConstraint *tctr1, *tctr2;
+            double tight = vars[i]->strongLinkedby(var,tctr1,tctr2);
+            if(tight > maxtight) { maxtight = tight; tctr1max = tctr1; tctr2max = tctr2; }
+    
+    		if(tctr1 && tctr2)
+    		{
+    			tctr1->extendTernary();
+    			tctr2->extendTernary();
+    
+    			BinaryConstraint* b = tctr1->commonBinary(tctr2);
+    			if(!b->connected()) b->reconnect();
+    	
+    			tctr1->projectTernaryBinary(b);	
+    			tctr2->projectTernaryBinary(b);
+    			b->propagate();	
+    		}
+        }
     }
     
     for (unsigned int i=0; i<constrs.size(); i++) 

@@ -53,6 +53,7 @@ public:
     static bool elimVarWithSmallDegree;
     static bool only_preprocessing;
     static bool preprocessTernary;
+    static bool preprocessTernaryHeuristic;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;
