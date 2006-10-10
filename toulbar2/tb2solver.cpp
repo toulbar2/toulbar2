@@ -207,6 +207,7 @@ bool Solver::solve()
         wcsp->decreaseUb(initialUpperBound);
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
+        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
         recursiveSolve();
     } catch (Contradiction) {
         wcsp->whenContradiction();
