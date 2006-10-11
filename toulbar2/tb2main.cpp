@@ -32,6 +32,13 @@ int main(int argc, char **argv)
     ToulBar2::verbose = 0;
     for (int i=2; i<argc; i++) {
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
+        if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
+        if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
+        if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
+        if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
+        if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
+        if (strchr(argv[i],'h')) ToulBar2::preprocessTernaryHeuristic = true;
+        if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
     }
 	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST; 	
     Solver solver(STORE_SIZE, (c>0)?c:MAX_COST);
@@ -39,16 +46,6 @@ int main(int argc, char **argv)
     try {
         if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
         solver.read_wcsp(argv[1]);
-        
-        // warning! do not set elimVarWithSmallDegree option before reading the constraint network
-        for (int i=2; i<argc; i++) {
-            if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
-            if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
-            if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
-            if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
-            if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
-            if (strchr(argv[i],'h')) ToulBar2::preprocessTernaryHeuristic = true;
-        }
         solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;

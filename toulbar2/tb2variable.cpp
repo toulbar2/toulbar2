@@ -78,7 +78,7 @@ void Variable::deconnect(DLink<ConstraintLink> *link) {
 	//cout << "deconnect de variable: " << *this << endl;	
     if (!link->removed) {
         getConstrs()->erase(link, true);
-        if (ToulBar2::elimVarWithSmallDegree && getDegree() <= 3) queueEliminate();
+        if (ToulBar2::elimVarWithSmallDegree_ && getDegree() <= 3) queueEliminate();
     }
 }
 

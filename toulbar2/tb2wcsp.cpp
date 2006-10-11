@@ -23,9 +23,11 @@ int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::binaryBranching = false;
 bool ToulBar2::elimVarWithSmallDegree  = false;
+bool ToulBar2::elimVarWithSmallDegree_  = false;
 bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
+bool ToulBar2::FDAComplexity = false;
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -240,11 +242,12 @@ void WCSP::preprocessing()
     if (ToulBar2::elimVarWithSmallDegree) {
 
 		initElimConstrs();
-
+        
         cout << "Eliminates variables with small degree"; flush(cout);		
+        ToulBar2::elimVarWithSmallDegree_ = true;
         propagate();
 		
-		if(ToulBar2::only_preprocessing) { ToulBar2::elimVarWithSmallDegree = false; cout << "  only in preprocessing"; }
+		if(ToulBar2::only_preprocessing) { ToulBar2::elimVarWithSmallDegree_ = false; cout << "  only in preprocessing"; }
 		else cout << "  during search";
 		cout << endl;
 		flush(cout);		
@@ -383,7 +386,7 @@ void WCSP::propagateAC()
 {
     if (ToulBar2::verbose >= 2) cout << "ACQueue size: " << AC.getSize() << endl;
     while (!AC.empty()) {
-        EnumeratedVariable *x = (EnumeratedVariable *) AC.pop_min();
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?AC.pop_min():AC.pop());
         if (x->unassigned()) x->propagateAC();
         // Warning! propagateIncDec() necessary to transform inc/dec event into remove event
         propagateIncDec();          // always examine inc/dec events before remove events
@@ -394,7 +397,7 @@ void WCSP::propagateDAC()
 {
     if (ToulBar2::verbose >= 2) cout << "DACQueue size: " << DAC.getSize() << endl;
     while (!DAC.empty()) {
-        EnumeratedVariable *x = (EnumeratedVariable *) DAC.pop_max();
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?DAC.pop_max():DAC.pop());
         if (x->unassigned()) x->propagateDAC();
         propagateIncDec();          // always examine inc/dec events before projectFromZero events
     }
@@ -426,8 +429,8 @@ void WCSP::restoreSolution()
 //   if (xz) cout << "xz=" << *xz << endl;
 //   if (xyz) cout << "xyz=" << *xyz << endl;
     
-		Value vy;
-		Value vz;
+		Value vy = -1;
+		Value vz = -1;
 			
 		if(y) vy = getValue(y->wcspIndex);
 		if(z) vz = getValue(z->wcspIndex);		
