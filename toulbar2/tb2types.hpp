@@ -51,9 +51,11 @@ public:
     static bool showSolutions;
     static bool binaryBranching;
     static bool elimVarWithSmallDegree;
+    static bool elimVarWithSmallDegree_; // flag activated after elimination data structures initialization
     static bool only_preprocessing;
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
+    static bool FDAComplexity;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;
