@@ -32,6 +32,7 @@ void Pedigree::typeAscendants(int individual)
         int index = individuals[individual];
         if (!pedigree[index].typed) {
             pedigree[index].typed = true;
+            nbtyped++;
             typeAscendants(pedigree[index].father);
             typeAscendants(pedigree[index].mother);
         }
@@ -128,6 +129,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   for (unsigned int i=0; i<genotypes.size(); i++) {
     typeAscendants(genotypes[i]);
   }
+  cout << nbtyped << " individuals found with a genotyped descendant.." << endl;
   
   assert(wcsp->numberOfVariables() == 0);
   assert(wcsp->numberOfConstraints() == 0);

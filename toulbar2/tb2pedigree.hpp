@@ -36,10 +36,13 @@ class Pedigree {
   vector<int> genotypes;
   vector<Genotype> genoconvert;
   map<int, int> individuals;
+  int nbtyped;
   
   void typeAscendants(int individual);
 
 public:
+  Pedigree() : nbtyped(0) {}
+  
   void readPedigree(const char *fileName, WCSP *wcsp);
 
   void printCorrection(WCSP *wcsp);
