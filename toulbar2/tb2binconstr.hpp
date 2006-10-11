@@ -54,7 +54,9 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
-        if (res < wcsp->getUb()) res -= deltaCostsX[ix] + deltaCostsY[iy];
+// BUG: incompatible with ternary preproject heurisitc
+//        if (res < wcsp->getUb()) res -= deltaCostsX[ix] + deltaCostsY[iy];
+        res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= 0);
         return res;
     }
