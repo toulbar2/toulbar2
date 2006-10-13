@@ -8,6 +8,7 @@
 int main(int argc, char **argv)
 {
     if (argc <= 1) {
+        cerr << argv[0] << " version " << ToulBar2::version << endl;
         cerr << "Missing a problem filename as first argument!" << endl;
         cerr << endl;
         cerr << argv[0] << " filename upperbound options" << endl;
@@ -25,6 +26,8 @@ int main(int argc, char **argv)
         cerr << "   e : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
+        cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
+        cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
         cerr << endl;
         exit(EXIT_FAILURE);
     } 
@@ -37,7 +40,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
         if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
-        if (strchr(argv[i],'h')) ToulBar2::preprocessTernaryHeuristic = true;
+        if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
     }
 	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST; 	

@@ -19,6 +19,7 @@
  * 
  */
  
+double ToulBar2::version  = 0.3;
 int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::binaryBranching = false;

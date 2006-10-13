@@ -47,6 +47,7 @@ class ToulBar2
 protected:
     virtual ~ToulBar2() = 0;	// Trick to avoid any instantiation of ToulBar2
 public:
+    static double version;
     static int verbose;
     static bool showSolutions;
     static bool binaryBranching;
