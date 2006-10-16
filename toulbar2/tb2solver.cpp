@@ -17,7 +17,7 @@ extern void setvalue(int wcspId, int varIndex, Value value);
 Solver *Solver::currentSolver = NULL;
 
 Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL), 
-                                                     unassignedVars(NULL), lastConflictVar(-1)
+                                                     unassignedVars(NULL)
 {
     store = new Store(storeSize);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
