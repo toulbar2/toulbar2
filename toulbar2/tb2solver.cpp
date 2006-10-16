@@ -16,7 +16,8 @@ extern void setvalue(int wcspId, int varIndex, Value value);
 
 Solver *Solver::currentSolver = NULL;
 
-Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL), unassignedVars(NULL)
+Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL), 
+                                                     unassignedVars(NULL), lastConflictVar(-1)
 {
     store = new Store(storeSize);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
@@ -32,9 +33,12 @@ Solver::~Solver()
 void Solver::read_wcsp(const char *fileName)
 {
     wcsp->read_wcsp(fileName);
-    unassignedVars = new Domain(0, wcsp->numberOfVariables()-1, &store->storeDomain);
+    unassignedVars = new BTList<Value>(&store->storeDomain);
+    allVars = new DLink<Value>[wcsp->numberOfVariables()];
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-        if (wcsp->assigned(i)) unassignedVars->erase(i);
+        allVars[i].content = i;
+        unassignedVars->push_back(&allVars[i], false);
+        if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
     }
     ToulBar2::setvalue = setvalue;
 }
@@ -47,8 +51,8 @@ void Solver::read_wcsp(const char *fileName)
 void setvalue(int wcspId, int varIndex, Value value)
 {
     assert(wcspId == 0);
-    assert(Solver::currentSolver->unassignedVars->canbe(varIndex));
-    Solver::currentSolver->unassignedVars->erase(varIndex);
+    assert(!Solver::currentSolver->allVars[varIndex].removed);
+    Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
 }
 
 /*
@@ -58,10 +62,10 @@ void setvalue(int wcspId, int varIndex, Value value)
 
 int Solver::getVarMinDomainDivMaxDegree()
 {
-    int varIndex = -1;;
+    int varIndex = -1;
     double best = MAX_VAL - MIN_VAL;
 
-    for (Domain::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - 1./100001.) {
@@ -129,7 +133,7 @@ void Solver::narySortedChoicePoint(int varIndex)
 {
     assert(wcsp->enumerated(varIndex));
     int size = wcsp->getDomainSize(varIndex);
-    ValueCost sorted[size]; 
+    ValueCost sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
     wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
     for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {

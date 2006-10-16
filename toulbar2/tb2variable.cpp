@@ -62,7 +62,7 @@ int cmpConstraint(const void *p1, const void *p2)
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();
-    DLink<ConstraintLink> *sorted[size];
+    DLink<ConstraintLink> *sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
     int i=0;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         sorted[i++] = iter.getElt();

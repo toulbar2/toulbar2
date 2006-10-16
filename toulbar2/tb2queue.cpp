@@ -6,14 +6,14 @@
 #include "tb2variable.hpp"
 
 
-void Queue::push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp) {
+void Queue::push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp) {
     if (elt->content.timeStamp < curTimeStamp) {
         elt->content.timeStamp = curTimeStamp;
         push_back(elt, false);
     }
 }
 
-void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp) {
+void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp) {
     elt->content.incdec |= incdec;
     push(elt, curTimeStamp);
 }

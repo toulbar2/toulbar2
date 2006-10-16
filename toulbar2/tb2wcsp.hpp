@@ -30,7 +30,7 @@ class WCSP : public WeightedCSP {
     Queue AC;                                 // non backtrackable list
     Queue DAC;                                // non backtrackable list
     bool objectiveChanged;
-    long long nbNodes;                        // used as a time-stamp by Queue methods
+    Long nbNodes;                        // used as a time-stamp by Queue methods
 
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);

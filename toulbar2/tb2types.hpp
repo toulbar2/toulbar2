@@ -26,10 +26,12 @@ typedef int Value;
 const Value MAX_VAL = (INT_MAX / 2);
 const Value MIN_VAL = -(INT_MAX / 2);
 
+const Value MAX_DOMAIN_SIZE  = 1000;
+
 typedef int Cost;
 const Cost MAX_COST = (INT_MAX / 2);
 
-const Value MAX_DOMAIN_SIZE  = 1000000;
+typedef long long Long;
 
 const int STORE_SIZE = 16;
 

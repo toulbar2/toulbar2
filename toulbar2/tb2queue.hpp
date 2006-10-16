@@ -14,7 +14,7 @@ typedef enum {NOTHING_EVENT=0, INCREASE_EVENT=1, DECREASE_EVENT=2} EventType;
 struct VariableWithTimeStamp 
 {
     Variable *var;
-    long long timeStamp;
+    Long timeStamp;
     int incdec;
 };
 
@@ -32,8 +32,8 @@ public:
 
     void clear() {BTList<VariableWithTimeStamp>::clear();}
     
-    void push(DLink<VariableWithTimeStamp> *elt, long long curTimeStamp);   
-    void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, long long curTimeStamp);
+    void push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp);   
+    void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp);
     
     Variable *pop();
     Variable *pop(int *incdec);

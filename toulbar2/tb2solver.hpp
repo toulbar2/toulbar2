@@ -7,16 +7,19 @@
 #define TB2SOLVER_HPP_
 
 #include "toulbar2.hpp"
+template <class T> struct DLink;
+template <class T> class BTList;
 
 class Solver
 {
     static Solver *currentSolver;
 
     Store *store;
-    long long nbNodes;
-    long long nbBacktracks;
+    Long nbNodes;
+    Long nbBacktracks;
     WeightedCSP *wcsp;
-    Domain *unassignedVars;
+    DLink<Value> *allVars;
+    BTList<Value> *unassignedVars;
         
     // Heuristics and search methods
     int getVarMinDomainDivMaxDegree();
