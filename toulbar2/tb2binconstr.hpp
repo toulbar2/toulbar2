@@ -33,7 +33,21 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
             vector<Value> &supportY, vector<StoreCost> &deltaCostsY);
     template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, Value valueY);
     template <GetCostMember getBinaryCost> bool verify(EnumeratedVariable *x, EnumeratedVariable *y);
-
+    // return true if unary support of x is broken
+    bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+    {
+        // hard binary constraint costs are not changed
+        if (cost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+        x->project(value, cost);
+        return (x->getSupport() == value);
+    }
+    
+    void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+    {
+        deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
+        x->extend(value, cost);
+    }
+    
     void findSupportX() {findSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX);}
     void findSupportY() {findSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY);}
     void findFullSupportX() {findFullSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
@@ -42,6 +56,10 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x->getValue());}
     bool verifyX() {return verify<&BinaryConstraint::getCost>(x,y);}
     bool verifyY() {return verify<&BinaryConstraint::getCostReverse>(y,x);}
+    bool projectX(Value value, Cost cost) {return project(x,value,cost,deltaCostsX);}
+    bool projectY(Value value, Cost cost) {return project(y,value,cost,deltaCostsY);}
+    void extendX(Value value, Cost cost) {extend(x,value,cost,deltaCostsX);}
+    void extendY(Value value, Cost cost) {extend(y,value,cost,deltaCostsY);}
     
 public:
     BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
@@ -117,6 +135,15 @@ public:
 		linkX->content.scopeIndex = 0;
 		linkY->content.scopeIndex = 1;
 	}
+
+    bool project(int varIndex, Value value, Cost cost) {
+        if (varIndex == 0) return projectX(value, cost);
+        else return projectY(value, cost);
+    }
+    void extend(int varIndex, Value value, Cost cost) {
+        if (varIndex == 0) return extendX(value, cost);
+        else return extendY(value, cost);
+    }
     
     void propagate() {
         if(connected()) {
