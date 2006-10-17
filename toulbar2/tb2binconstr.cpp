@@ -138,9 +138,9 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
                 for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                     Cost cost = GETCOST(*iterX, *iterY);
                     if (minCost > cost) {
-                        deltaCostsY[*iterY] -= (minCost - cost);  // Warning! Possible overflow???
-                        y->extend(*iterY, minCost - cost);
                         int yindex = y->toIndex(*iterY);
+                        deltaCostsY[yindex] -= (minCost - cost);  // Warning! Possible overflow???
+                        y->extend(*iterY, minCost - cost);
                         supportY[yindex] = *iterX;
                      }
                 }
