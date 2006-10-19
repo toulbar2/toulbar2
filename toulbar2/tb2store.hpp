@@ -18,11 +18,9 @@ class ConstraintLink;
 /*
  * Storable stack
  * 
- * Warning! limitation on the second parameter of StoreStack template
- * 
  */
 
-template <class T, class V>        // Warning! Conversions between V and int must exist (store base in content)
+template <class T, class V>
 class StoreStack
 {
     string name;
@@ -38,17 +36,17 @@ class StoreStack
     
 public:
     StoreStack(string s, int powbckmemory) : name(s) {        
-      if (pow(2.,powbckmemory) >= INT_MAX) {
-	cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
-	exit(EXIT_FAILURE);
-      }
+        if (pow(2.,powbckmemory) >= INT_MAX) {
+            cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
+            exit(EXIT_FAILURE);
+        }
         indexMax = (int) pow(2.,powbckmemory);
         pointers = new T *[indexMax];
         content = new V[indexMax];
         index = 0;
         base = 0;
         if (ToulBar2::verbose) {
-	  cout << indexMax * (sizeof(V) + sizeof(T *))
+            cout << indexMax * (sizeof(V) + sizeof(T *))
                  << " Bytes allocated for " << name << " stack." << endl;
         }
     }
@@ -59,27 +57,27 @@ public:
       T **newpointers = new T *[indexMax * 2];
       V *newcontent = new V[indexMax * 2];
       if (!newpointers || !newcontent) {
-	cerr << name << " stack out of memory!" << endl;
-	exit(EXIT_FAILURE);
+        cerr << name << " stack out of memory!" << endl;
+        exit(EXIT_FAILURE);
       }
       for (int i = 0; i<indexMax; i++) {
-	newpointers[i] = pointers[i];
-	newcontent[i] = content[i];
+        newpointers[i] = pointers[i];
+        newcontent[i] = content[i];
       }
       delete[] pointers; delete[] content;
       pointers = newpointers;
       content = newcontent;
       indexMax *= 2;
       if (ToulBar2::verbose) {
-	cout << indexMax * (sizeof(V) + sizeof(T *))
-	     << " Bytes allocated for " << name << " stack." << endl;
+        cout << indexMax * (sizeof(V) + sizeof(T *))
+             << " Bytes allocated for " << name << " stack." << endl;
       }
     }
       
     void store(T *x, V y) {
         if (index > 0) {
             index++;
-	    if (index >= indexMax) realloc();
+	        if (index >= indexMax) realloc();
             content[index] = y;
             pointers[index] = x;
         }
@@ -88,17 +86,17 @@ public:
     void store(T *x) {
         if (index > 0) {
             index++;
-	    if (index >= indexMax) realloc();
+    	    if (index >= indexMax) realloc();
             content[index] = *x;
             pointers[index] = x;
         }
     }
     
     void store() {
-	index++;
-	if (index >= indexMax) realloc();
-        content[index] = (V) base;
-        base = index;
+	   index++;
+	   if (index >= indexMax) realloc();
+       pointers[index] = (T *) base;
+       base = index;
     }
 
     void restore(int **adr, int *val, int x) {
@@ -118,7 +116,7 @@ public:
             }
             
             index = y - 1;
-            base = (int) content[y];
+            base = (long) pointers[y];
         }
     }
 };
