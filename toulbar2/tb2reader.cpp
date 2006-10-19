@@ -64,9 +64,8 @@ void WCSP::read_wcsp(const char *fileName)
 
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
-        char varname_[128];
-        sprintf(varname_, "%d", i);
-        string varname(varname_);
+        string varname;
+        varname = to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
         int theindex = -1;
@@ -114,7 +113,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> c;
                     file >> cost;
-                    costs[a * x->getDomainInitSize() * y->getDomainInitSize() + b * y->getDomainInitSize() + c] = cost;
+                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost;
                 }
                 postTernaryConstraint(i,j,k,costs);
             }

@@ -140,9 +140,8 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   for (int i=0; i<nbindividuals; i++) {
     if (pedigree[i].father == 0 && pedigree[i].mother == 0) nbfounders++;
     if (pedigree[i].typed) {
-        char varname_[128];
-        sprintf(varname_, "%d", pedigree[i].individual);
-        string varname(varname_);
+        string varname;
+        varname = to_string(pedigree[i].individual);
         wcsp->makeEnumeratedVariable(varname, 0, nballeles*(nballeles+1)/2 - 1);
         pedigree[i].varindex = nbvar;
         nbvar++;
@@ -160,30 +159,30 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
 
   /* create ternary Mendelian hard constraint table */
   vector<Cost> costs3;
-  for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
-    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-      for (int k=1; k<=nballeles; k++) { /* k = first allele of father */
+  for (int k=1; k<=nballeles; k++) { /* k = first allele of father */
 	for (int l=k; l<=nballeles; l++) { /* l = second allele of father */
 	  for (int m=1; m<=nballeles; m++) { /* m = first allele of mother */
 	    for (int n=m; n<=nballeles; n++) { /* n = second allele of mother */
-	      costs3.push_back(((i==k && j==m) || (i==k && j==n) || (i==l && j==m) || (i==l && j==n) || (i==m && j==k) || (i==m && j==l) || (i==n && j==k) || (i==n && j==l))?0:nbtypings+1);
-	    }
-	  }
-	}
+            for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
+                for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+	               costs3.push_back(((i==k && j==m) || (i==k && j==n) || (i==l && j==m) || (i==l && j==n) || (i==m && j==k) || (i==m && j==l) || (i==n && j==k) || (i==n && j==l))?0:nbtypings+1);
+                }
+            }
+        }
       }
     }
   }
 
   /* create binary Mendelian hard constraint table */
   vector<Cost> costs2;
-  for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
-    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-      for (int k=1; k<=nballeles; k++) { /* k = first allele of father or mother */
-	     for (int l=k; l<=nballeles; l++) { /* l = second allele of father or mother */
-	       costs2.push_back((i==k || i==l || j==k || j==l)?0:nbtypings+1);
-	     }
-      }
-    }
+  for (int k=1; k<=nballeles; k++) { /* k = first allele of father or mother */
+     for (int l=k; l<=nballeles; l++) { /* l = second allele of father or mother */
+        for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
+            for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+	           costs2.push_back((i==k || i==l || j==k || j==l)?0:nbtypings+1);
+	        }
+        }
+     }
   }
 
   // re-read the file
@@ -234,11 +233,11 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
       if (father > 0 && mother > 0) {
            assert(pedigree[individuals[pedigree[individuals[individual]].father]].typed);
            assert(pedigree[individuals[pedigree[individuals[individual]].mother]].typed);
-	       wcsp->postTernaryConstraint(pedigree[individuals[individual]].varindex,pedigree[individuals[pedigree[individuals[individual]].father]].varindex,pedigree[individuals[pedigree[individuals[individual]].mother]].varindex,costs3);
+	       wcsp->postTernaryConstraint(pedigree[individuals[pedigree[individuals[individual]].father]].varindex,pedigree[individuals[pedigree[individuals[individual]].mother]].varindex,pedigree[individuals[individual]].varindex,costs3);
       } else if (father > 0) {
-	       wcsp->postBinaryConstraint(pedigree[individuals[individual]].varindex,pedigree[individuals[pedigree[individuals[individual]].father]].varindex,costs2);
+	       wcsp->postBinaryConstraint(pedigree[individuals[pedigree[individuals[individual]].father]].varindex,pedigree[individuals[individual]].varindex,costs2);
       } else {
-	       wcsp->postBinaryConstraint(pedigree[individuals[individual]].varindex,pedigree[individuals[pedigree[individuals[individual]].mother]].varindex,costs2);
+	       wcsp->postBinaryConstraint(pedigree[individuals[pedigree[individuals[individual]].mother]].varindex,pedigree[individuals[individual]].varindex,costs2);
       }
     }
   }

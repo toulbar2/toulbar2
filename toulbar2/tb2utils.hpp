@@ -6,6 +6,8 @@
 #ifndef TB2UTILS_HPP_
 #define TB2UTILS_HPP_
 
+#include <sstream>
+
 template<class T>
 T abs(T x) {
     if (x < 0) return -(x);
@@ -49,6 +51,14 @@ T max(T *array, int size)
         }
     }
     return res;
+}
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+std::stringstream ss;
+ss << t;
+return ss.str();
 }
 
 #endif /* TB2UTILS_HPP_ */
