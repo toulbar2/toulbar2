@@ -17,12 +17,14 @@ protected:
     T2 *y;
     DLink<ConstraintLink> *linkX;
     DLink<ConstraintLink> *linkY;
+    int dacvar;
     
 public:
     AbstractBinaryConstraint(WCSP *wcspin, T1 *xx, T2 *yy) : Constraint(wcspin), x(xx), y(yy), linkX(NULL), linkY(NULL) {
         assert(xx != yy);
         linkX = xx->link(this,0);
         linkY = yy->link(this,1);
+        if (xx->wcspIndex < yy->wcspIndex) dacvar = 0; else dacvar = 1;
     }
 
     AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), linkX(NULL), linkY(NULL) 
@@ -65,6 +67,7 @@ public:
     }
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
+    int getDACScopeIndex() {return dacvar;}
 };
 
 
@@ -78,6 +81,7 @@ protected:
     DLink<ConstraintLink> *linkX;
     DLink<ConstraintLink> *linkY;
     DLink<ConstraintLink> *linkZ;
+    int dacvar;
     
 public:
     AbstractTernaryConstraint(WCSP *wcsp, T1 *xx, T2 *yy, T2 *zz) : Constraint(wcsp), x(xx), y(yy), z(zz), linkX(NULL), linkY(NULL), linkZ(NULL) {
@@ -87,6 +91,9 @@ public:
         linkX = xx->link(this,0);
         linkY = yy->link(this,1);
         linkZ = zz->link(this,2);
+        if (xx->wcspIndex < yy->wcspIndex && xx->wcspIndex < zz->wcspIndex) dacvar = 0;
+        else if (yy->wcspIndex < xx->wcspIndex && yy->wcspIndex < zz->wcspIndex) dacvar = 1;
+        else dacvar = 2;
     }
 
     virtual ~AbstractTernaryConstraint() {delete linkX; delete linkY; delete linkZ;}
@@ -149,6 +156,7 @@ public:
             default: abort();
         }
 	}
+    int getDACScopeIndex() {return dacvar;}
 };
 
 

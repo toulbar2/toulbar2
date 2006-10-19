@@ -79,6 +79,7 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
 	assert(connected());
+//    wcsp->revise(this);
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -116,7 +117,7 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
         vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
 	assert(connected());
-	
+//    wcsp->revise(this);	
     if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -163,6 +164,7 @@ template <GetCostMember getBinaryCost>
 void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY)
 {
     bool supportBroken = false;
+//    wcsp->revise(this);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost cost = GETCOST(*iterX, valueY);
         if (cost > 0) {

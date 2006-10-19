@@ -20,8 +20,32 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     unsigned int sizeY;
     unsigned int sizeZ;
     vector<Cost> costs;
+    vector<StoreCost> deltaCostsX;
+    vector<StoreCost> deltaCostsY;
+    vector<StoreCost> deltaCostsZ;
+    vector< pair<Value,Value> > supportX;
+    vector< pair<Value,Value> > supportY;
+    vector< pair<Value,Value> > supportZ;
     
-   
+    void findSupport(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
+            vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
+            vector< pair<Value,Value> > &supportY, vector< pair<Value,Value> > &supportZ);
+    void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
+            vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
+            vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY, 
+            vector< pair<Value,Value> > &supportZ, vector<StoreCost> &deltaCostsZ);
+    bool verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z);
+    
+    void findSupportX() {findSupport(x,y,z,supportX,deltaCostsX,supportY,supportZ);}
+    void findSupportY() {findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);}
+    void findSupportZ() {findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);}
+    void findFullSupportX() {findFullSupport(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ);}
+    void findFullSupportY() {findFullSupport(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ);}
+    void findFullSupportZ() {findFullSupport(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY);}
+    bool verifyX() {return verify(x,y,z);}
+    bool verifyY() {return verify(y,x,z);}
+    bool verifyZ() {return verify(z,x,y);}
+    
 public:
     TernaryConstraint(WCSP *wcsp, 
 					  EnumeratedVariable *xx, 
@@ -42,7 +66,7 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         int iz = z->toIndex(vz);
-        Cost res = costs[ix*sizeX*sizeY + iy*sizeY + iz];
+        Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
         assert(res >= 0);
         return res;
     }
@@ -53,7 +77,21 @@ public:
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
       
-        Cost res = costs[vindex[0]*sizeX*sizeY + vindex[1]*sizeY + vindex[2]];
+        Cost res = costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]];
+        assert(res >= 0);
+        return res;
+    }
+
+    Cost getCostWithBinaries(EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, Value vx, Value vy, Value vz) {
+        int vindex[3];
+        vindex[ getIndex(xx) ] = xx->toIndex(vx);
+        vindex[ getIndex(yy) ] = yy->toIndex(vy);
+        vindex[ getIndex(zz) ] = zz->toIndex(vz);
+      
+        Cost res = costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]];
+        if (xy->connected()) res += xy->getCost(x,y,vindex[0],vindex[1]);
+        if (xz->connected()) res += xz->getCost(x,z,vindex[0],vindex[2]);
+        if (yz->connected()) res += yz->getCost(y,z,vindex[1],vindex[2]);
         assert(res >= 0);
         return res;
     }
@@ -77,7 +115,7 @@ public:
 	        vindex[ getIndex(yin) ] = vyin;
 	        vindex[ getIndex(zin) ] = vzin;
 	        
-			costs[vindex[0]*sizeX*sizeY + vindex[1]*sizeY + vindex[2]] += costsin[vxin*sizeXin*sizeYin + vyin*sizeYin + vzin];
+			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeXin*sizeYin + vyin*sizeYin + vzin];
 	    }}}
     }
 
@@ -92,31 +130,59 @@ public:
         vindex[ getIndex(yin) ] = vy;
         vindex[ getIndex(zin) ] = vz;
 	        
-		costs[vindex[0]*sizeX*sizeY + vindex[1]*sizeY + vindex[2]] += c;
+		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
+    }
+    
+    void propagate() {
+//        if(connected()) {
+            switch(getDACScopeIndex()) {
+                // warning! must do AC before DAC
+                case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
+                case 1: findSupportX(); if(connected()) findSupportZ(); if(connected()) findFullSupportY(); break;
+                case 2: findSupportX(); if(connected()) findSupportY(); if(connected()) findFullSupportZ(); break;
+            }
+//        }
+    }
+    
+    void remove(int varIndex) {
+        switch(varIndex) {
+            case 0: if (getDACScopeIndex()!=1) findSupportY(); if(connected()&&(getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 1: if (getDACScopeIndex()!=0) findSupportX(); if(connected()&&(getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 2: if (getDACScopeIndex()!=0) findSupportX(); if(connected()&&(getDACScopeIndex()!=1)) findSupportY(); break;
+        }
     }
 
+    void projectFromZero(int varIndex) {
+        switch(varIndex) {
+            case 0: if (getDACScopeIndex()==1) findFullSupportY(); else if (getDACScopeIndex()==2) findFullSupportZ(); break;
+            case 1: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==2) findFullSupportZ(); break;
+            case 2: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==1) findFullSupportY(); break;
+        }
+    } 
 
-    void propagate();
-     
-    void remove(int varIndex) {}
-
-    void projectFromZero(int varIndex) {} 
-
-    void increase(int index) {}
+    //Trick! instead of doing remove(index) now, let AC queue do the job. 
+    //So several incdec events on the same constraint can be merged into one AC event
+    void increase(int index) {if (index==0) x->queueAC(); else if (index==1) y->queueAC(); else z->queueAC();}
+    void decrease(int index) {if (index==0) x->queueAC(); else if (index==1) y->queueAC(); else z->queueAC();}
     
-	void decrease(int index) {}
+    void assign(int varIndex) {
+        deconnect();                    
+        switch(varIndex) {
+            case 0: projectTernaryBinary(yz);  break;
+            case 1: projectTernaryBinary(xz);  break;
+            case 2: projectTernaryBinary(xy);  break;
+        }
+    }
+        
+    bool verify() {return verifyX() && verifyY() && verifyZ();}
 	  
-	void projectTernary() {
-		projectTernaryBinary(xy); //if(!xy->connected()) xy->reconnect();
-		projectTernaryBinary(xz); //if(!xz->connected()) xz->reconnect();
-		projectTernaryBinary(yz); //if(!yz->connected()) yz->reconnect();
-		
-		//xy->propagate();
-		//xz->propagate();
-		//yz->propagate();
-	}
-
     void projectTernaryBinary( BinaryConstraint* yzin );
+
+	void projectTernary() {
+		projectTernaryBinary(xy);
+		projectTernaryBinary(xz);
+		projectTernaryBinary(yz);
+	}
 
 	void extendTernary()
 	{
@@ -137,18 +203,6 @@ public:
 		else if((t->getIndex(yz->getVar(0)) >= 0) && (t->getIndex(yz->getVar(1)) >= 0)) return yz;
 		return NULL;
 	}
-    
-	void assign(int varIndex) {
-	    deconnect();                    
-		switch(varIndex) {
-			case 0: projectTernaryBinary(yz);  break;
-			case 1: projectTernaryBinary(xz);  break;
-			case 2: projectTernaryBinary(xy);  break;
-			default:;
-		}
-    }
-        
-    bool verify() { return true; }
 
     double computeTightness();
 

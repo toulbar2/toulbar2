@@ -78,6 +78,15 @@ public:
         assert(res >= 0);
         return res;
     }
+    
+    Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) {
+        int vindex[2];
+        vindex[ getIndex(xx) ] = xx->toIndex(vx);
+        vindex[ getIndex(yy) ] = yy->toIndex(vy);
+        Cost res = costs[vindex[0] * sizeY + vindex[1]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]];
+        assert(res >= 0);
+        return res;
+    }
 
     Cost getCostNoDelta(Value vx, Value vy) {
         int ix = x->toIndex(vx);
@@ -134,6 +143,7 @@ public:
 		linkY->content.constr = this; 
 		linkX->content.scopeIndex = 0;
 		linkY->content.scopeIndex = 1;
+        if (xin->wcspIndex < yin->wcspIndex) dacvar = 0; else dacvar = 1;
 	}
 
     bool project(int varIndex, Value value, Cost cost) {
@@ -146,26 +156,24 @@ public:
     }
     
     void propagate() {
-        if(connected()) {
-            if (x->wcspIndex < y->wcspIndex) {
-                findSupportY();             // must do AC before DAC
-                if(connected()) findFullSupportX();
-            } else {
-                findSupportX();             // must do AC before DAC
-                if(connected()) findFullSupportY();
-            }
+        if (getDACScopeIndex()==0) {
+            findSupportY();             // must do AC before DAC
+            if(connected()) findFullSupportX();
+        } else {
+            findSupportX();             // must do AC before DAC
+            if(connected()) findFullSupportY();
         }
     }
     
     void remove(int varIndex) {
-        if (x->wcspIndex < y->wcspIndex) {
+        if (getDACScopeIndex()==0) {
             if (varIndex == 0) findSupportY();
         } else {
             if (varIndex == 1) findSupportX();
         }
     }
     void projectFromZero(int varIndex) {
-        if (x->wcspIndex < y->wcspIndex) {
+        if (getDACScopeIndex()==0) {
             if (varIndex == 1) findFullSupportX();
         } else {
             if (varIndex == 0) findFullSupportY();

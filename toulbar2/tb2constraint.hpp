@@ -10,6 +10,8 @@
 
 class Constraint : public WCSPLink
 {
+    Long conflictWeight;
+    
     // make it private because we don't want copy nor assignment
     Constraint(const Constraint &c);
     Constraint& operator=(const Constraint &c);
@@ -30,7 +32,9 @@ public:
     virtual Variable *getVar(int scopeIndex) const = 0;
     virtual int getIndex(Variable* var) const = 0;
 
-
+    Long getConflictWeight() const {return conflictWeight;}
+    void incConflictWeight() {conflictWeight++;}
+    
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }
     virtual double  computeTightness() = 0;
@@ -38,6 +42,7 @@ public:
     
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
+    virtual int getDACScopeIndex() = 0;
 
     virtual void propagate() = 0;
     virtual void increase(int index) {propagate();}
