@@ -18,10 +18,6 @@
 class BinaryConstraint;
 class TernaryConstraint;
 
-
-
-
-
 class Variable : public WCSPLink
 {
 protected:
@@ -50,6 +46,7 @@ protected:
 
     void setMaxUnaryCost(Value a, Cost cost);
     void changeNCBucket(int newBucket);
+    void conflict();
         
     // make it private because we don't want copy nor assignment
     Variable(const Variable &x);
@@ -81,6 +78,7 @@ public:
     
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
+    Long getWeightedDegree();
     DLink<ConstraintLink> *link(Constraint *c, int index);
     void sortConstraints();
     virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};

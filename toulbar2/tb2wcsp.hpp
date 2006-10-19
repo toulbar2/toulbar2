@@ -31,7 +31,8 @@ class WCSP : public WeightedCSP {
     Queue DAC;                                // non backtrackable list
     bool objectiveChanged;
     Long nbNodes;                        // used as a time-stamp by Queue methods
-
+    Constraint *lastConflictConstr;
+    
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
@@ -103,10 +104,20 @@ public:
     void remove(int varIndex, Value remValue) {vars[varIndex]->remove(remValue);}
         
     Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}
+    Cost getMaxUnaryCost(int varIndex) const {return vars[varIndex]->getMaxCost();}
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
-
+    Long getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
+    void revise(Constraint *c) {lastConflictConstr = c;}
+    void conflict() {
+        if (lastConflictConstr) {
+            if (ToulBar2::verbose>=2) cout << "Last conflict on " << *lastConflictConstr << endl;
+            lastConflictConstr->incConflictWeight();
+            lastConflictConstr=NULL;
+        }
+    }
+    
     void whenContradiction();       // after a contradiction, reset propagation queues and increase nbNodes
     void propagate();               // propagate until a fix point and increase nbNodes
     bool verify();

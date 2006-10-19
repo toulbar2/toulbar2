@@ -50,9 +50,11 @@ public:
     virtual void remove(int varIndex, Value remValue) =0;
         
     virtual Cost getUnaryCost(int varIndex, Value v) const =0;
+    virtual Cost getMaxUnaryCost(int varIndex) const =0;
     virtual Value getSupport(int varIndex) const =0;
     
     virtual int getDegree(int varIndex) const =0;
+    virtual Long getWeightedDegree(int varIndex) const =0;
     virtual void preprocessing() =0;
 
     virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues

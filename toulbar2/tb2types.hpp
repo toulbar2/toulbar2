@@ -59,6 +59,7 @@ public:
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;
+    static bool lastConflict;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;
@@ -81,7 +82,7 @@ class Contradiction
 public:
     Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
-#define THROWCONTRADICTION (throw Contradiction())
+#define THROWCONTRADICTION (/* conflict(), */ throw Contradiction())
 #endif
 
 /*

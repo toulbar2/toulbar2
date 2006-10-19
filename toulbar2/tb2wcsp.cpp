@@ -29,6 +29,7 @@ bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
+bool ToulBar2::lastConflict = false;
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -51,7 +52,8 @@ WCSP::WCSP(Store *s, Cost upperBound) :
         ub(upperBound),
         NCBucketSize(cost2log2(getUb()) + 1),
         NCBuckets(NCBucketSize, VariableList(&s->storeVariable)),
-		elimOrder(0, &s->storeValue)  
+        lastConflictConstr(NULL),
+		elimOrder(0, &s->storeValue)
 { 
     objectiveChanged = false;
     nbNodes = 0;
@@ -213,6 +215,13 @@ void WCSP::processTernary()
     			b->propagate();	
     		}
         }
+        if(ToulBar2::verbose > 0) {
+            cout << "Strongest part has mean cost: " << maxtight;
+            if(var) cout << "  Variable: " << var->wcspIndex;  
+            if(tctr1max) cout << ", 1. ternary with tight: " << tctr1max->getTightness();
+            if(tctr2max) cout << ", 2. ternary with tight: " << tctr2max->getTightness();
+            cout << endl;
+        }
     }
     
     for (unsigned int i=0; i<constrs.size(); i++) 
@@ -222,15 +231,6 @@ void WCSP::processTernary()
     		//t->extendTernary();
     		t->projectTernary();
     	}
-    
-    
-	if(ToulBar2::verbose > 0) {
-		cout << "Strongest part has mean cost: " << maxtight;
-		if(var) cout << "  Variable: " << var->wcspIndex;  
-		if(tctr1max) cout << ", 1. ternary with tight: " << tctr1max->getTightness();
-		if(tctr2max) cout << ", 2. ternary with tight: " << tctr2max->getTightness();
-		cout << endl;
-	}
 }
 
 void WCSP::preprocessing()
@@ -475,6 +475,7 @@ void WCSP::restoreSolution()
 
 void WCSP::propagate()
 {    
+//    revise(NULL);
 	
     while (!Eliminate.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) 
     {
@@ -489,7 +490,8 @@ void WCSP::propagate()
 	    }
 	}
 
-	
+//    revise(NULL);
+    	
     assert(verify());
     assert(!objectiveChanged);
     assert(NC.empty());

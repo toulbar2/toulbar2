@@ -74,7 +74,8 @@ void Variable::sortConstraints()
     }
 }
 
-void Variable::deconnect(DLink<ConstraintLink> *link) {
+void Variable::deconnect(DLink<ConstraintLink> *link)
+{
 	//cout << "deconnect de variable: " << *this << endl;	
     if (!link->removed) {
         getConstrs()->erase(link, true);
@@ -82,7 +83,19 @@ void Variable::deconnect(DLink<ConstraintLink> *link) {
     }
 }
 
+Long Variable::getWeightedDegree()
+{
+    Long res = 0;
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        res += (*iter).constr->getConflictWeight();
+    }
+    return res;
+}
 
+void Variable::conflict()
+{
+    wcsp->conflict();
+}
 
 /*
  * Propagation methods

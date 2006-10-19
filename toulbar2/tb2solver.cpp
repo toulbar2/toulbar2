@@ -17,7 +17,7 @@ extern void setvalue(int wcspId, int varIndex, Value value);
 Solver *Solver::currentSolver = NULL;
 
 Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL), 
-                                                     unassignedVars(NULL)
+                                                     unassignedVars(NULL), lastConflictVar(-1)
 {
     store = new Store(storeSize);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
@@ -64,17 +64,61 @@ int Solver::getVarMinDomainDivMaxDegree()
 {
     int varIndex = -1;
     double best = MAX_VAL - MIN_VAL;
-
+    Cost worstUnaryCost = 0;
+    
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - 1./100001.) {
+        if (varIndex < 0 || heuristic < best - 1./100001.
+            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
         }
     }
     return varIndex;
 }
+
+int Solver::getVarMinDomainDivMaxDegreeLastConflict()
+{
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
+    int varIndex = -1;
+    Cost worstUnaryCost = 0;
+    double best = MAX_VAL - MIN_VAL;
+    
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        // remove following "+1" when isolated variables are automatically assigned
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+        if (varIndex < 0 || heuristic < best - 1./100001.
+            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+    return varIndex;
+}
+
+// First experiments are not convincing. Wait to try on CSP benchmark of [Lecoutre ECAI-04]
+//int Solver::getVarMinDomainDivWeightedDegreeLastConflict()
+//{
+//    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
+//    int varIndex = -1;
+//    Cost worstUnaryCost = 0;
+//    double best = MAX_VAL - MIN_VAL;
+//    
+//    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+//        // remove following "+1" when isolated variables are automatically assigned
+//        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getWeightedDegree(*iter) + 1);
+//        if (varIndex < 0 || heuristic < best - 1./100001.
+//            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+//            best = heuristic;
+//            varIndex = *iter;
+//            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+//        }
+//    }
+//    return varIndex;
+//}
 
 int Solver::getNextUnassignedVar()
 {
@@ -97,8 +141,10 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
         }
         if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
         nbNodes++;
+        lastConflictVar = varIndex;
         wcsp->assign(varIndex, value);
         wcsp->propagate();
+        lastConflictVar = -1;
         recursiveSolve();
     } catch (Contradiction) {
         wcsp->whenContradiction();
@@ -164,7 +210,7 @@ void Solver::narySortedChoicePoint(int varIndex)
 void Solver::recursiveSolve()
 {
 //    int varIndex = getNextUnassignedVar();
-    int varIndex = getVarMinDomainDivMaxDegree();
+    int varIndex = (ToulBar2::lastConflict)?getVarMinDomainDivMaxDegreeLastConflict():getVarMinDomainDivMaxDegree();
     if (varIndex >= 0) {
         if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {

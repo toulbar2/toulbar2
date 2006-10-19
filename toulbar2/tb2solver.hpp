@@ -20,8 +20,11 @@ class Solver
     WeightedCSP *wcsp;
     DLink<Value> *allVars;
     BTList<Value> *unassignedVars;
+    int lastConflictVar;
         
     // Heuristics and search methods
+//    int getVarMinDomainDivWeightedDegreeLastConflict();
+    int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     void binaryChoicePoint(int xIndex, Value value);

@@ -79,6 +79,7 @@ void EnumeratedVariable::print(ostream& os)
         os << " [" << inf << "," << sup << "]";
     }
     os << "/" << getDegree();
+//    os << "/" << getWeightedDegree();
     if (unassigned()) {
         os << " <";
         for (iterator iter=begin(); iter != end(); ++iter) {
