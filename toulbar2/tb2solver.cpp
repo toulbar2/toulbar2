@@ -122,7 +122,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 
 int Solver::getNextUnassignedVar()
 {
-    return (unassignedVars->empty())?NULL:*unassignedVars->begin();
+    return (unassignedVars->empty())?-1:(*unassignedVars->begin());
 }
 
 /*
