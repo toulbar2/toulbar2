@@ -17,6 +17,8 @@ class EnumeratedVariable : public Variable
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
+    DLink<VariableWithTimeStamp> linkEAC1Queue;
+    DLink<VariableWithTimeStamp> linkEAC2Queue;
 
     void init();
         
@@ -77,6 +79,13 @@ public:
     void propagateAC();
     void propagateDAC();
     void findSupport();
+
+    void queueEAC1();
+    void queueEAC2();
+    void fillEAC2(bool self);
+    bool isEAC(Value a);
+    bool isEAC();
+    void propagateEAC();
 
     void eliminate();
     void elimVar( BinaryConstraint* xy );

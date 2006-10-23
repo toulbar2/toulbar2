@@ -31,11 +31,12 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     assert(xx->unassigned());
     xx->queueAC();
     xx->queueDAC();
+    xx->queueEAC1();
     assert(yy->unassigned());
     yy->queueAC();
     yy->queueDAC();
+    yy->queueEAC1();
 }
-
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)
  	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(wcsp->maxdomainsize), sizeY(wcsp->maxdomainsize)
@@ -53,7 +54,6 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost
          for (unsigned int b = 0; b < maxdomainsize; b++) 
                 costs[a * maxdomainsize + b] = 0;
 }
-
 
 void BinaryConstraint::print(ostream& os)
 {

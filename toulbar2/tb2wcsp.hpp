@@ -29,6 +29,8 @@ class WCSP : public WeightedCSP {
     Queue IncDec;                             // non backtrackable list
     Queue AC;                                 // non backtrackable list
     Queue DAC;                                // non backtrackable list
+    Queue EAC1;                               // non backtrackable list
+    Queue EAC2;                               // non backtrackable list
     bool objectiveChanged;
     Long nbNodes;                        // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
@@ -145,7 +147,6 @@ public:
         
     void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     
-    
     void read_wcsp(const char *fileName);
 
     // Specific API for Variable and Constraint classes
@@ -162,11 +163,14 @@ public:
     }
     void printNCBuckets();
 
+    Long getNbNodes() {return nbNodes;}
     void queueNC(DLink<VariableWithTimeStamp> *link) {NC.push(link, nbNodes);}
     void queueInc(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, INCREASE_EVENT, nbNodes);}
     void queueDec(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, DECREASE_EVENT, nbNodes);}
     void queueAC(DLink<VariableWithTimeStamp> *link) {AC.push(link, nbNodes);}
     void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
+    void queueEAC1(DLink<VariableWithTimeStamp> *link) {EAC1.push(link, nbNodes);}
+    void queueEAC2(DLink<VariableWithTimeStamp> *link) {EAC2.push(link, nbNodes);}
     void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
 
     // functions and data for variable elimination
@@ -198,6 +202,9 @@ public:
     void propagateIncDec();
     void propagateAC();
     void propagateDAC();
+    void fillEAC2();
+    Queue *getQueueEAC1() {return &EAC1;}
+    void propagateEAC();
 
     void sortConstraints();
     void preprocessing();

@@ -104,6 +104,7 @@ public:
     void extendAll(Cost cost);
     virtual void propagateNC() =0;    
     virtual bool verifyNC() =0;
+    virtual bool isEAC() {return true;}
 
     void queueNC();
     void queueInc();

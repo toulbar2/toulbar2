@@ -43,6 +43,10 @@ void EnumeratedVariable::init()
     linkACQueue.content.timeStamp = -1;
     linkDACQueue.content.var = this;
     linkDACQueue.content.timeStamp = -1;
+    linkEAC1Queue.content.var = this;
+    linkEAC1Queue.content.timeStamp = -1;
+    linkEAC2Queue.content.var = this;
+    linkEAC2Queue.content.timeStamp = -1;
 }
 
 void EnumeratedVariable::getDomain(Value *array)
@@ -105,6 +109,16 @@ void EnumeratedVariable::queueDAC()
     wcsp->queueDAC(&linkDACQueue);
 }
 
+void EnumeratedVariable::queueEAC1()
+{
+    wcsp->queueEAC1(&linkEAC1Queue);
+}
+
+void EnumeratedVariable::queueEAC2()
+{
+    wcsp->queueEAC2(&linkEAC2Queue);
+}
+
 void EnumeratedVariable::project(Value value, Cost cost)
 {
     assert(cost >= 0);
@@ -112,7 +126,10 @@ void EnumeratedVariable::project(Value value, Cost cost)
     costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || newcost > maxCost) queueNC();
-    if (oldcost == 0 && cost > 0) queueDAC();
+    if (oldcost == 0 && cost > 0) {
+        queueDAC();
+        queueEAC1();
+    }
     if (newcost + wcsp->getLb() >= wcsp->getUb()) removeFast(value);     // Avoid any unary cost overflow
 }
 
@@ -137,6 +154,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
     assert(cost >= 0);
     assert(costs[toIndex(value)] >= cost);
     costs[toIndex(value)] -= cost;
+//    cout << "extend " << getName() << " (" << value << ") -= " << cost << endl;
     if (value == maxCostValue) queueNC();
 }
 
@@ -213,6 +231,70 @@ void EnumeratedVariable::propagateDAC()
     }
 }
 
+void EnumeratedVariable::fillEAC2(bool self)
+{
+  if (self) queueEAC2();
+  for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    (*iter).constr->fillEAC2((*iter).scopeIndex);
+  }
+}
+
+bool EnumeratedVariable::isEAC(Value a)
+{
+    if (getCost(a)==0) {
+        for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+            if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
+                return false;
+            }
+        }
+        support = a;
+        return true;
+    }
+    return false;
+}
+
+bool EnumeratedVariable::isEAC()
+{
+    assert(canbe(support));
+    if (isEAC(support)) return true;
+    else {
+        for (iterator iter = begin(); iter != end(); ++iter) {
+            if (*iter != support && isEAC(*iter)) return true;
+        }
+    }
+    return false;
+}
+
+void EnumeratedVariable::propagateEAC()
+{
+    // remove current variable from EAC1 if it was inserted by previous assign propagations
+//    if (!linkEAC1Queue.removed && linkEAC1Queue.content.timeStamp==wcsp->getNbNodes()) {
+    if (((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue)) {
+      wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
+    }
+    if (!isEAC()) {
+        Cost beforeLb = wcsp->getLb();
+        for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        	(*iter).constr->findFullSupport((*iter).scopeIndex);
+        }
+//        if (!linkEAC1Queue.removed && linkEAC1Queue.content.timeStamp == wcsp->getNbNodes()) {
+        if (((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue)) {
+           // findFullSupport has inserted current variable in EAC1
+    	   wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
+    	   if (unassigned()) fillEAC2 (false);
+        }
+        // check if lb has effectively been increased otherwise do a kind of path consistency
+        if (wcsp->isternary && wcsp->getLb() == beforeLb) {
+            if (ToulBar2::verbose >= 2) cout << "EAC failed on " << getName() << ", try project ternary to binary" << endl; 
+            for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+                if ((*iter).constr->arity()==3) ((TernaryConstraint *) (*iter).constr)->projectTernary();
+            }
+//        } else {
+//            cout << "EAC succed on " << getName() << ", lb: " << beforeLb << " -> " << wcsp->getLb() << endl; 
+        }
+    }
+}
+
 void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
@@ -243,6 +325,7 @@ void EnumeratedVariable::increase(Value newInf)
                 if (newInf > maxCostValue) queueNC();           // diff with increaseFast
                 if (newInf > support) findSupport();            // diff with increaseFast
                 queueDAC();                                     // diff with increaseFast
+                queueEAC1();                                     // diff with increaseFast
                 queueInc();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
@@ -280,6 +363,7 @@ void EnumeratedVariable::decrease(Value newSup)
                 if (newSup < maxCostValue) queueNC();           // diff with decreaseFast
                 if (newSup < support) findSupport();            // diff with decreaseFast
                 queueDAC();                                     // diff with decreaseFast
+                queueEAC1();                                     // diff with decreaseFast
                 queueDec();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
@@ -309,6 +393,7 @@ void EnumeratedVariable::remove(Value value)
         if (value == maxCostValue) queueNC();
         if (value == support) findSupport();
         queueDAC();
+        queueEAC1();
         queueAC();
         if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value);
     }
@@ -428,8 +513,6 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 wcsp->elimination();
 
      yz->propagate(); 
-//     y->queueAC();  y->queueDAC(); 
-//     z->queueAC();  z->queueDAC();	
 }
 
 // eliminates the current (this) variable that participates
@@ -517,8 +600,6 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	wcsp->elimination();
 
     yz->propagate(); 
-//    y->queueAC();  y->queueDAC(); 
-//    z->queueAC();  z->queueDAC();
  
 	return true;
 }
@@ -555,7 +636,7 @@ void EnumeratedVariable::eliminate()
 //	}
 	
 	assert(getDegree() == 0);
-	if (ToulBar2::verbose) cout << "Eliminate " << getName() << endl;
+	if (ToulBar2::verbose >= 2) cout << "Eliminate " << getName() << endl;
 	assert(getCost(support) == 0); // it is ensured by previous calls to findSupport
 	assign(support); // warning! dummy assigned value
 }

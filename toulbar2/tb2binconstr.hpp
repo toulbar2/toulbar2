@@ -73,7 +73,7 @@ public:
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
 // BUG: incompatible with ternary preproject heurisitc
-//        if (res < wcsp->getUb()) res -= deltaCostsX[ix] + deltaCostsY[iy];
+//        if (res + wcsp->getLb() < wcsp->getUb()) res -= deltaCostsX[ix] + deltaCostsY[iy];
         res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= 0);
         return res;
@@ -159,12 +159,25 @@ public:
         if (getDACScopeIndex()==0) {
             findSupportY();             // must do AC before DAC
             if(connected()) findFullSupportX();
+            if(connected()) {
+                int yindex = y->toIndex(y->getSupport());
+                if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
+                    x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], y->getSupport()) > 0) {
+                    y->queueEAC1();
+                }
+            }
         } else {
             findSupportX();             // must do AC before DAC
             if(connected()) findFullSupportY();
+            if(connected()) {
+                int xindex = x->toIndex(x->getSupport());
+                if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
+                    y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(), supportX[xindex]) > 0) {
+                    x->queueEAC1();
+                }
+            }
         }
     }
-    
     void remove(int varIndex) {
         if (getDACScopeIndex()==0) {
             if (varIndex == 0) findSupportY();
@@ -187,10 +200,61 @@ public:
         deconnect();                    // Warning! deconnection has to be done before the projection
         if (varIndex == 0) projectY(); else projectX();
     }
-        
+
+  void fillEAC2(int varIndex) {
+    if (getDACScopeIndex()==0) {
+      if (varIndex==0) {
+	   assert(y->canbe(y->getSupport()));
+	   int yindex = y->toIndex(y->getSupport());
+	   if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex],y->getSupport()) > 0) {
+	       y->queueEAC2();
+	   }
+      }
+    } else {
+      if (varIndex==1) {
+	   assert(x->canbe(x->getSupport()));
+	   int xindex = x->toIndex(x->getSupport());
+	   if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(),supportX[xindex]) > 0) {
+	       x->queueEAC2();
+	   }
+      }
+    }
+  }
+  
+  bool isEAC(int varIndex, Value a) {
+    if (varIndex==0) {
+        int xindex = x->toIndex(a);
+        if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex])) {
+            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                if (y->getCost(*iterY) == 0 && getCost(a,*iterY) == 0) {
+                    supportX[xindex] = *iterY;
+                    return true;
+                }
+            }
+            return false;
+        }
+    } else {
+        int yindex = y->toIndex(a);
+        if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], a)) {
+            for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+                if (x->getCost(*iterX) == 0 && getCost(*iterX, a) == 0) {
+                    supportY[yindex] = *iterX;
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    return true;
+  }
+  
+    void findFullSupport(int varIndex) {
+        if (varIndex == 0) findFullSupportX();
+        else findFullSupportY();
+    } 
+    
     bool verify() {return verifyX() && verifyY();}
     
-
 	double computeTightness() {
 	   int count = 0;
 	   double sum = 0;
@@ -204,7 +268,6 @@ public:
 	    return tight;
 	}
 
-    
     void print(ostream& os);
 };
 

@@ -19,7 +19,7 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     unsigned int sizeX;
     unsigned int sizeY;
     unsigned int sizeZ;
-    vector<Cost> costs;
+    vector<StoreCost> costs;
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
     vector<StoreCost> deltaCostsZ;
@@ -35,7 +35,10 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
             vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY, 
             vector< pair<Value,Value> > &supportZ, vector<StoreCost> &deltaCostsZ);
     bool verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z);
-    
+
+    bool isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
+               vector< pair<Value,Value> > &supportX);
+               
     void findSupportX() {findSupport(x,y,z,supportX,deltaCostsX,supportY,supportZ);}
     void findSupportY() {findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);}
     void findSupportZ() {findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);}
@@ -134,14 +137,15 @@ public:
     }
     
     void propagate() {
-//        if(connected()) {
-            switch(getDACScopeIndex()) {
-                // warning! must do AC before DAC
-                case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
-                case 1: findSupportX(); if(connected()) findSupportZ(); if(connected()) findFullSupportY(); break;
-                case 2: findSupportX(); if(connected()) findSupportY(); if(connected()) findFullSupportZ(); break;
-            }
-//        }
+        switch(getDACScopeIndex()) {
+            // warning! must do AC before DAC
+            case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
+            case 1: findSupportX(); if(connected()) findSupportZ(); if(connected()) findFullSupportY(); break;
+            case 2: findSupportX(); if(connected()) findSupportY(); if(connected()) findFullSupportZ(); break;
+        }
+        x->queueEAC1();     // TO BE IMPROVED !!!
+        y->queueEAC1();
+        z->queueEAC1();
     }
     
     void remove(int varIndex) {
@@ -158,7 +162,7 @@ public:
             case 1: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==2) findFullSupportZ(); break;
             case 2: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==1) findFullSupportY(); break;
         }
-    } 
+    }
 
     //Trick! instead of doing remove(index) now, let AC queue do the job. 
     //So several incdec events on the same constraint can be merged into one AC event
@@ -173,7 +177,46 @@ public:
             case 2: projectTernaryBinary(xy);  break;
         }
     }
-        
+
+  void fillEAC2(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z,
+                vector< pair<Value,Value> > &supportX) {
+    assert(x->canbe(x->getSupport()));
+    assert(getIndex(y) < getIndex(z));
+    int xindex = x->toIndex(x->getSupport());
+    Value ysupport = supportX[xindex].first;
+    Value zsupport = supportX[xindex].second;
+    if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || 
+        getCost(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > 0) {
+            x->queueEAC2();
+    }
+  }
+                
+  void fillEAC2(int varIndex) {
+        switch(varIndex) {
+            case 0: if (getDACScopeIndex()!=1) fillEAC2(y,x,z,supportY); if (getDACScopeIndex()!=2) fillEAC2(z,x,y,supportZ); break;
+            case 1: if (getDACScopeIndex()!=0) fillEAC2(x,y,z,supportX); if (getDACScopeIndex()!=2) fillEAC2(z,x,y,supportZ); break;
+            case 2: if (getDACScopeIndex()!=0) fillEAC2(x,y,z,supportX); if (getDACScopeIndex()!=1) fillEAC2(y,x,z,supportY); break;
+        }
+  }
+   
+  bool isEAC(int varIndex, Value a) {
+    switch(varIndex) {
+            case 0: return isEAC(x,a,y,z,supportX); break;
+            case 1: return isEAC(y,a,x,z,supportY); break;
+            case 2: return isEAC(z,a,x,y,supportZ); break;
+            default: abort();
+    }
+    return true;
+  }
+
+    void findFullSupport(int varIndex) {
+        switch(varIndex) {
+            case 0: findFullSupportX(); break;
+            case 1: findFullSupportY(); break;
+            case 2: findFullSupportZ(); break;
+        }
+    }
+            
     bool verify() {return verifyX() && verifyY() && verifyZ();}
 	  
     void projectTernaryBinary( BinaryConstraint* yzin );

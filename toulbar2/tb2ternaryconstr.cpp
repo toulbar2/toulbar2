@@ -19,7 +19,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 									 StoreStack<Cost, Cost> *storeCost) 
 									 
 					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz), 
-					  sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize()), costs(tab)
+					  sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize())
 {
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(0,storeCost));
     deltaCostsY = vector<StoreCost>(sizeY,StoreCost(0,storeCost));
@@ -29,15 +29,25 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
     supportY = vector< pair<Value,Value> >(sizeY,make_pair(x->getInf(),z->getInf()));
     supportZ = vector< pair<Value,Value> >(sizeZ,make_pair(x->getInf(),y->getInf()));
 
+    costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(0,storeCost));
+    
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
+         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
+            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) 
+                costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
+
     assert(xx->unassigned());
     xx->queueAC();
     xx->queueDAC();
+    xx->queueEAC1();
     assert(yy->unassigned());
     yy->queueAC();
     yy->queueDAC();
+    yy->queueEAC1();
     assert(zz->unassigned());
     zz->queueAC();
     zz->queueDAC();
+    zz->queueEAC1();
 }
 
 double TernaryConstraint::computeTightness()
@@ -112,11 +122,18 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
                 x->project(*iterX, minCost);
             }
             supportX[xindex] = support;
+            assert(getIndex(y) < getIndex(z));
             int yindex = y->toIndex(support.first);
             int zindex = z->toIndex(support.second);
             // warning! do not break DAC for the variable in the constraint scope having the smallest wcspIndex
-            if (getIndex(y)!=getDACScopeIndex()) supportY[yindex] = make_pair(*iterX, support.second);
-            if (getIndex(z)!=getDACScopeIndex()) supportZ[zindex] = make_pair(*iterX, support.first);
+            if (getIndex(y)!=getDACScopeIndex()) {
+                if (getIndex(x) < getIndex(z)) supportY[yindex] = make_pair(*iterX, support.second);
+                else supportY[yindex] = make_pair(support.second, *iterX);
+            }
+            if (getIndex(z)!=getDACScopeIndex()) {
+                if (getIndex(x) < getIndex(y)) supportZ[zindex] = make_pair(*iterX, support.first);
+                else supportZ[zindex] = make_pair(support.first, *iterX);
+            }
         }
     }
 //    projectTernary();
@@ -192,8 +209,10 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                                     yACRevise = true;   // AC may be broken by unary extension to ternary
                                 }
                             }
-                            supportY[yindex] = make_pair(*iterX, *iterZ);
-                            supportZ[zindex] = make_pair(*iterX, *iterY);
+                            if (getIndex(x) < getIndex(z)) supportY[yindex] = make_pair(*iterX, *iterZ);
+                            else supportY[yindex] = make_pair(*iterZ, *iterX);
+                            if (getIndex(x) < getIndex(y)) supportZ[zindex] = make_pair(*iterX, *iterY);
+                            else supportZ[zindex] = make_pair(*iterY, *iterX);
                          }
                     }
                 }
@@ -204,17 +223,26 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                 x->project(*iterX, minCost);
             }
             supportX[xindex] = support;
+            assert(getIndex(y) < getIndex(z));
             int yindex = y->toIndex(support.first);
             int zindex = z->toIndex(support.second);
-            supportY[yindex] = make_pair(*iterX, support.second);
-            supportZ[zindex] = make_pair(*iterX, support.first);
+            if (getIndex(x) < getIndex(z)) supportY[yindex] = make_pair(*iterX, support.second);
+            else supportY[yindex] = make_pair(support.second, *iterX);
+            if (getIndex(x) < getIndex(y)) supportZ[zindex] = make_pair(*iterX, support.first);
+            else supportZ[zindex] = make_pair(support.first, *iterX);
         }
     }
     if (supportBroken) {
         x->findSupport();
     }
-    if (yACRevise && connected()) findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);
-    if (zACRevise && connected()) findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);
+    if (yACRevise && connected()) {
+        if (getIndex(x) < getIndex(z)) findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);
+        else findSupport(y,z,x,supportY,deltaCostsY,supportZ,supportX);
+    }
+    if (zACRevise && connected()) {
+        if (getIndex(x) < getIndex(y)) findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);
+        else findSupport(z,y,x,supportZ,deltaCostsZ,supportY,supportX);
+    }
 }
 
 void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
@@ -240,9 +268,9 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
         if (mincost > 0) {
             flag = true;
             yzin->addcost(*itery,*iterz,mincost);   // project mincost to binary
-//            if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
+            if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
             
-            if (connected() && mincost < wcsp->getUb()) {  // substract mincost from ternary constraint
+            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  // substract mincost from ternary constraint
                 for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
                     addcost(xx, yy, zz, *iterx, *itery, *iterz, -mincost);                            
                 }
@@ -253,9 +281,29 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
     if (flag) {
         if(!yzin->connected()) yzin->reconnect();
         yzin->propagate();
-//      yy->queueAC();  yy->queueDAC();
-//      zz->queueAC();  zz->queueDAC();
     }
+}
+
+bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
+            vector< pair<Value,Value> > &supportX)
+{
+    int xindex = x->toIndex(a);
+    assert(getIndex(y) < getIndex(z));
+    pair<Value,Value> support = supportX[xindex];
+    if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
+        getCost(x,y,z,a,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > 0) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                if (getCost(x,y,z,a,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == 0) {
+                    supportX[xindex] = make_pair(*iterY,*iterZ);
+                    return true;
+                }
+            }
+        }
+//        cout << x->getName() << " = " << a << " not EAC due to constraint " << *this << endl; 
+        return false;
+    }
+    return true;
 }
 
 bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z)

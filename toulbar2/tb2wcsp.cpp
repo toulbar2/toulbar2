@@ -329,6 +329,10 @@ bool WCSP::verify()
 {
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
+        if (!isternary && vars[i]->unassigned() && !vars[i]->isEAC()) {
+            cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
+            return false;
+        }
     }
     for (unsigned int i=0; i<constrs.size(); i++) {
         if (constrs[i]->connected() &&  !constrs[i]->verify()) return false;
@@ -342,7 +346,9 @@ void WCSP::whenContradiction()
     IncDec.clear();
     AC.clear();
     DAC.clear();
-	Eliminate.clear();
+    EAC1.clear();
+    EAC2.clear();
+    Eliminate.clear();
     objectiveChanged = false;
     nbNodes++;
 }
@@ -400,6 +406,27 @@ void WCSP::propagateDAC()
     while (!DAC.empty()) {
         EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?DAC.pop_max():DAC.pop());
         if (x->unassigned()) x->propagateDAC();
+        propagateIncDec();          // always examine inc/dec events before projectFromZero events
+    }
+}
+
+void WCSP::fillEAC2()
+{
+  assert(EAC2.empty());
+  if (ToulBar2::verbose >= 2) cout << "EAC1Queue size: " << EAC1.getSize() << endl;
+  while(!EAC1.empty()) {
+    EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?EAC1.pop_min():EAC1.pop());
+    if (x->unassigned()) x->fillEAC2(true); // test unassigned ???????????????????????????????????????????????????
+  }
+}
+
+void WCSP::propagateEAC()
+{
+    fillEAC2();
+    if (ToulBar2::verbose >= 2) cout << "EAC2Queue size: " << EAC2.getSize() << endl;
+    while (!EAC2.empty()) {
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?EAC2.pop_min():EAC2.pop());
+        if (x->unassigned()) x->propagateEAC();
         propagateIncDec();          // always examine inc/dec events before projectFromZero events
     }
 }
@@ -477,19 +504,33 @@ void WCSP::propagate()
 {    
 //    revise(NULL);
 	
-    while (!Eliminate.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) 
-    {
-         eliminate();  
-	     while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged) {
-	        propagateIncDec();
-	        propagateAC();
-	        assert(IncDec.empty());
-	        propagateDAC();
-	        assert(IncDec.empty());
-	        propagateNC();
-	    }
-	}
-
+  do {
+    eliminate();
+    int EACnothing = 0;
+    while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged
+	   || ((getUb()-getLb() > 1) && !EAC1.empty())) {
+      propagateIncDec();
+      if (getUb()-getLb() > 1) {
+        Cost previousLb = getLb();
+        propagateEAC();
+        if (getLb() == previousLb) EACnothing++;
+        else EACnothing = 0;
+      }
+      assert(IncDec.empty());
+      propagateDAC();
+      assert(IncDec.empty());
+      propagateAC();
+      assert(IncDec.empty());
+      propagateNC();
+      if (isternary && IncDec.empty() && AC.empty() && DAC.empty() && NC.empty() && !objectiveChanged && EACnothing >= 2) {
+        if (ToulBar2::verbose >= 2) cout << "EAC in infinite loop due to ternary constraints!" << endl; 
+        EAC1.clear();
+        break;
+      }
+    }
+  } while (!Eliminate.empty());
+  if (getUb()-getLb() <= 1) EAC1.clear();
+  
 //    revise(NULL);
     	
     assert(verify());
@@ -498,6 +539,8 @@ void WCSP::propagate()
     assert(IncDec.empty());
     assert(AC.empty());
     assert(DAC.empty());
+    assert(EAC1.empty());
+    assert(EAC2.empty());
     assert(Eliminate.empty());
     nbNodes++;
 }

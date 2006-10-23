@@ -51,6 +51,10 @@ public:
     virtual void projectFromZero(int index) {}
     virtual void assign(int index) {propagate();}
 
+    virtual void fillEAC2(int index) {}
+    virtual bool isEAC(int index, Value a) {return true;}
+    virtual void findFullSupport(int index) {}
+
     virtual bool verify() {return true;};
     
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}

@@ -18,6 +18,12 @@ void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTi
     push(elt, curTimeStamp);
 }
 
+void Queue::remove(DLink<VariableWithTimeStamp> *elt) {
+    elt->content.timeStamp = -1;
+    elt->content.incdec = NOTHING_EVENT;
+    erase(elt, false);
+}
+
 Variable* Queue::pop() {
     assert(!empty());
     DLink<VariableWithTimeStamp> *elt = pop_back(false);

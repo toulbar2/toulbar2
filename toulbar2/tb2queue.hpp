@@ -34,6 +34,8 @@ public:
     
     void push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp);   
     void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp);
+
+    void remove(DLink<VariableWithTimeStamp> *elt);
     
     Variable *pop();
     Variable *pop(int *incdec);
