@@ -45,7 +45,7 @@ public:
    
     bool inBTList(DLink<T> *elt) {
     	for(iterator iter = begin(); iter != end(); ++iter) {
-    		if(elt == iter.getElt()) return elt->removed;
+    		if(elt == iter.getElt()) return !elt->removed;
     	}
     	return false;
     }
