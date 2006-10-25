@@ -545,7 +545,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	ConstraintLink links[2] = {{NULL, 0},{NULL, 0}};
  	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
  	   if((*iter).constr->arity() == 2) links[n2links++] =  (*iter);
- 	   else n3links++;
+ 	   else if((*iter).constr->arity() == 3) n3links++;
+ 	   else return false;
  	}
 
 	if(n3links > 1) return false;
@@ -621,6 +622,8 @@ void EnumeratedVariable::eliminate()
     if (getDegree() > 3) return;
 //   cout << *wcsp;
 
+	
+
 	if(getDegree() > 0) {
 		TernaryConstraint* ternCtr = existTernary();
 				
@@ -630,9 +633,13 @@ void EnumeratedVariable::eliminate()
 	
 			ConstraintLink xylink = *constrs.begin();
 			ConstraintLink xzlink = {NULL,0};
+
+			if(xylink.constr->arity() > 2) return;
 			
 			if(getDegree() == 2) {
 				xzlink = *constrs.rbegin();
+			    if(xzlink.constr->arity() > 2) return;
+
 				elimVar(xylink,xzlink);		
 			} else {
 				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;	

@@ -8,6 +8,9 @@
 
 #include "tb2constraint.hpp"
 #include "tb2variable.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2wcsp.hpp"
+
 
 template<class T1, class T2>
 class AbstractBinaryConstraint : public Constraint
@@ -28,8 +31,7 @@ public:
     }
 
     AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), linkX(NULL), linkY(NULL) 
-    {
-    }
+    { }
 
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
 
@@ -160,6 +162,115 @@ public:
 };
 
 
+
+
+
+
+
+
+#include <set>
+
+class AbstractNaryConstraint : public Constraint
+{
+protected:
+	
+	int arity_;
+    int arity() const {return arity_;}
+	
+	typedef struct { 
+		EnumeratedVariable* var;
+		int pos;
+	} varElem;
+
+	struct indexCmp {
+		bool operator()(const varElem* e1, const varElem* e2) const { return e1->var->wcspIndex > e2->var->wcspIndex; }
+	};
+	
+	EnumeratedVariable** scope;
+    typedef set<varElem*, indexCmp> SCOPE;
+    SCOPE scope_inv;
+	
+	int nconnected_links;
+    DLink<ConstraintLink>** links;
+    
+public:
+    AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in) 
+    {
+    	nconnected_links = 0;
+    	scope = new EnumeratedVariable* [arity_];
+    	links = new DLink<ConstraintLink>* [arity_];
+    	
+		varElem* ve;
+		for(int i=0; i < arity_; i++) {
+			ve = new varElem;
+			ve->var = scope_in[i];
+			ve->pos = i;
+			scope_inv.insert( ve );
+			scope[i] = ve->var;
+			links[i] = ve->var->link(this,i);
+			if(!links[i]->removed) nconnected_links++;
+		}
+    }
+
+    virtual ~AbstractNaryConstraint() {}
+
+    Variable *getVar(int varCtrIndex) const { 
+    	assert(varCtrIndex < arity_); 
+    	return scope[varCtrIndex];
+    }
+
+	int getIndex(Variable* var) const { 
+		varElem ve;
+		ve.var = (EnumeratedVariable*) var;
+		SCOPE::iterator it = scope_inv.find(&ve);
+		if(it == scope_inv.end()) return -1;
+		else return (*it)->pos;
+    }
+
+
+	bool connected() {
+       for(int i=0;i<arity_;i++) if(!links[i]->removed) return true;
+       return false;
+	}
+	
+    bool deconnected() {
+       for(int i=0;i<arity_;i++) if(!links[i]->removed) return false;
+       return true;
+    }
+
+    void deconnect() {
+        if (connected()) {
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            for(int i=0;i<arity_;i++) {
+            	scope[i]->deconnect( links[i] );
+            }
+        }
+    }
+
+    void reconnect() {
+        if (deconnected()) {
+            for(int i=0;i<arity_;i++) {
+	            scope[i]->getConstrs()->push_back(links[i], true); 
+	        }
+        }
+    }
+
+	virtual Cost eval( string& t ) { return -1; }
+	virtual void insertTuple( string t, Cost c, EnumeratedVariable** scope_in ) { }
+
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
+    {
+		return -1;
+	}
+
+    int getDACScopeIndex() {return -1;}
+
+
+
+	virtual void sum( AbstractNaryConstraint* nary ) {}
+	virtual void project( EnumeratedVariable* x ) {}
+    
+};
 
 
 

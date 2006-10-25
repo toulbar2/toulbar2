@@ -13,6 +13,7 @@
 
 class BinaryConstraint;
 class TernaryConstraint;
+class NaryConstraint;
 
 
 class WCSP : public WeightedCSP {
@@ -146,6 +147,7 @@ public:
     void postSupxyc(int xIndex, int yIndex, Value cste);
         
     void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+	NaryConstraint* postNaryConstraint(EnumeratedVariable** scope, int arity, Cost defval);
     
     void read_wcsp(const char *fileName);
 

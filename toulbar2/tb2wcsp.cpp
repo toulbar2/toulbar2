@@ -11,6 +11,7 @@
 #include "tb2intervar.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
+#include "tb2naryconstr.hpp"
 #include "tb2arithmetic.hpp"
 
 
@@ -116,7 +117,7 @@ void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 
 void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
 {
-  isternary = true;
+    isternary = true;
 
 	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];
@@ -147,6 +148,13 @@ void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost
 	    ctr->setBinaries(xy,xz,yz);
 	}
 	else ctr->addCosts(x,y,z,costs);
+}
+
+
+
+NaryConstraint* WCSP::postNaryConstraint(EnumeratedVariable** scope, int arity, Cost defval)
+{
+	 return new NaryConstraint(this,scope,arity,defval);  
 }
 
 

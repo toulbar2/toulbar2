@@ -7,6 +7,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2naryconstr.hpp"
 
 typedef struct {
     EnumeratedVariable *var;
@@ -16,7 +17,7 @@ typedef struct {
 
 
 
-
+#define MAX_ARITY 50
 
 void WCSP::read_wcsp(const char *fileName)
 {
@@ -82,7 +83,30 @@ void WCSP::read_wcsp(const char *fileName)
             cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
             break;
         }
-        if (arity == 3) {
+        if (arity > 3) {
+        	EnumeratedVariable* scope[MAX_ARITY];
+			for(i=0;i<arity;i++) {
+	            file >> j;
+	            scope[i] = (EnumeratedVariable*) vars[j];
+			}     	
+            file >> defval;
+			NaryConstraint* nary = postNaryConstraint(scope,arity,defval);
+
+		    file >> ntuples;
+            
+            char buf[MAX_ARITY];
+            for (t = 0; t < ntuples; t++) {
+				for(i=0;i<arity;i++) {
+		            file >> j;
+		            buf[i] = j + CHAR_FIRST;
+				}
+				buf[i] = '\0';
+			    file >> cost;
+			
+				string tup = buf;
+				nary->insertTuple(tup, cost, NULL);
+            } 	           
+        } else if (arity == 3) {
             file >> i;
             file >> j;
             file >> k;
@@ -196,10 +220,7 @@ void WCSP::read_wcsp(const char *fileName)
                 exit(EXIT_FAILURE);
             }
             inclowerbound += defval;
-        } else {
-            cerr << "Error: not implemented for this constraint arity " << arity << "!" << endl;
-            exit(EXIT_FAILURE);
-        }
+        } 
     }
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading

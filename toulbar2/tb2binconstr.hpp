@@ -109,6 +109,12 @@ public:
       else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
    }
 
+   void setCost( Cost c ) {   	
+	    for (unsigned int a = 0; a < sizeX; a++) 
+	         for (unsigned int b = 0; b < sizeY; b++) 
+	                costs[a * sizeY + b] = c;
+    }
+
    void setcost( int vx, int vy, Cost mincost ) {
    	        int ix = x->toIndex(vx);
             int iy = y->toIndex(vy);
