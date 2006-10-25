@@ -53,7 +53,7 @@ public:
 
     virtual void fillEAC2(int index) {}
     virtual bool isEAC(int index, Value a) {return true;}
-    virtual void findFullSupport(int index) {}
+    virtual void findFullSupportEAC(int index) {}
 
     virtual bool verify() {return true;};
     

@@ -26,6 +26,15 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     vector< pair<Value,Value> > supportX;
     vector< pair<Value,Value> > supportY;
     vector< pair<Value,Value> > supportZ;
+
+    void extend(BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
+        assert( ToulBar2::verbose < 4 || ((cout << "extend " << x->getName() << "," << y->getName() << " (" << valx << "," << valy << ") to C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << " += " << cost << endl), true) );
+        for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+            addcost(x,y,z,valx,valy,*iterZ,cost);
+        }
+        assert(xy->connected());
+        xy->addcost(x,y,valx,valy,-cost);
+    }
     
     void findSupport(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
@@ -34,6 +43,11 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
             vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY, 
             vector< pair<Value,Value> > &supportZ, vector<StoreCost> &deltaCostsZ);
+    void findFullSupportEAC(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
+            vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
+            vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY, 
+            vector< pair<Value,Value> > &supportZ, vector<StoreCost> &deltaCostsZ,
+            BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz);
     bool verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z);
 
     bool isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
@@ -45,6 +59,9 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     void findFullSupportX() {findFullSupport(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ);}
     void findFullSupportY() {findFullSupport(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ);}
     void findFullSupportZ() {findFullSupport(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY);}
+    void findFullSupportEACX() {findFullSupportEAC(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ,xy,xz,yz);}
+    void findFullSupportEACY() {findFullSupportEAC(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ,xy,yz,xz);}
+    void findFullSupportEACZ() {findFullSupportEAC(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY,xz,yz,xy);}
     bool verifyX() {return verify(x,y,z);}
     bool verifyY() {return verify(y,x,z);}
     bool verifyZ() {return verify(z,x,y);}
@@ -186,16 +203,16 @@ public:
     Value ysupport = supportX[xindex].first;
     Value zsupport = supportX[xindex].second;
     if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || 
-        getCost(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > 0) {
+        getCostWithBinaries(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > 0) {
             x->queueEAC2();
     }
   }
                 
   void fillEAC2(int varIndex) {
         switch(varIndex) {
-            case 0: if (getDACScopeIndex()!=1) fillEAC2(y,x,z,supportY); if (getDACScopeIndex()!=2) fillEAC2(z,x,y,supportZ); break;
-            case 1: if (getDACScopeIndex()!=0) fillEAC2(x,y,z,supportX); if (getDACScopeIndex()!=2) fillEAC2(z,x,y,supportZ); break;
-            case 2: if (getDACScopeIndex()!=0) fillEAC2(x,y,z,supportX); if (getDACScopeIndex()!=1) fillEAC2(y,x,z,supportY); break;
+            case 0: fillEAC2(y,x,z,supportY); fillEAC2(z,x,y,supportZ); break;
+            case 1: fillEAC2(x,y,z,supportX); fillEAC2(z,x,y,supportZ); break;
+            case 2: fillEAC2(x,y,z,supportX); fillEAC2(y,x,z,supportY); break;
         }
   }
    
@@ -209,11 +226,11 @@ public:
     return true;
   }
 
-    void findFullSupport(int varIndex) {
+    void findFullSupportEAC(int varIndex) {
         switch(varIndex) {
-            case 0: findFullSupportX(); break;
-            case 1: findFullSupportY(); break;
-            case 2: findFullSupportZ(); break;
+            case 0: findFullSupportEACX(); break;
+            case 1: findFullSupportEACY(); break;
+            case 2: findFullSupportEACZ(); break;
         }
     }
             

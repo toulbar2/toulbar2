@@ -329,7 +329,7 @@ bool WCSP::verify()
 {
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
-        if (!isternary && vars[i]->unassigned() && !vars[i]->isEAC()) {
+        if (vars[i]->unassigned() && !vars[i]->isEAC()) {
             cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }
@@ -522,11 +522,11 @@ void WCSP::propagate()
       propagateAC();
       assert(IncDec.empty());
       propagateNC();
-      if (isternary && IncDec.empty() && AC.empty() && DAC.empty() && NC.empty() && !objectiveChanged && EACnothing >= 2) {
-        if (ToulBar2::verbose >= 2) cout << "EAC in infinite loop due to ternary constraints!" << endl; 
-        EAC1.clear();
-        break;
-      }
+//      if (isternary && IncDec.empty() && AC.empty() && DAC.empty() && NC.empty() && !objectiveChanged && EACnothing >= 2) {
+//        if (ToulBar2::verbose >= 2) cout << "EAC in infinite loop due to ternary constraints!" << endl; 
+//        EAC1.clear();
+//        break;
+//      }
     }
   } while (!Eliminate.empty());
   if (getUb()-getLb() <= 1) EAC1.clear();

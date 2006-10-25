@@ -127,6 +127,7 @@ void EnumeratedVariable::project(Value value, Cost cost)
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || newcost > maxCost) queueNC();
     if (oldcost == 0 && cost > 0) {
+//        cout << "insert in DAC and EAC1 of " << getName() << endl;
         queueDAC();
         queueEAC1();
     }
@@ -154,7 +155,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
     assert(cost >= 0);
     assert(costs[toIndex(value)] >= cost);
     costs[toIndex(value)] -= cost;
-//    cout << "extend " << getName() << " (" << value << ") -= " << cost << endl;
+    assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
     if (value == maxCostValue) queueNC();
 }
 
@@ -244,12 +245,29 @@ bool EnumeratedVariable::isEAC(Value a)
     if (getCost(a)==0) {
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
+#ifndef NDEBUG
+                if (ToulBar2::verbose >=4) {
+                    cout << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl; 
+                    if ((*iter).constr->arity()==3) {
+                        TernaryConstraint *c = (TernaryConstraint *) (*iter).constr;
+                        if (c->xy->connected()) cout << *c->xy;
+                        if (c->xz->connected()) cout << *c->xz;
+                        if (c->yz->connected()) cout << *c->yz;
+                    }
+                }
+#endif
                 return false;
             }
         }
         support = a;
+#ifndef NDEBUG
+        if (ToulBar2::verbose >=4) cout << getName() << "(" << a << ") is EAC!" << endl;
+#endif
         return true;
     }
+#ifndef NDEBUG
+    if (ToulBar2::verbose >=4) cout << getName() << "(" << a << ") is not EAC due to unary cost " << getCost(a) << endl; 
+#endif
     return false;
 }
 
@@ -267,30 +285,23 @@ bool EnumeratedVariable::isEAC()
 
 void EnumeratedVariable::propagateEAC()
 {
-    // remove current variable from EAC1 if it was inserted by previous assign propagations
-//    if (!linkEAC1Queue.removed && linkEAC1Queue.content.timeStamp==wcsp->getNbNodes()) {
-    if (((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue)) {
-      wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
-    }
     if (!isEAC()) {
+#ifndef NDEBUG
         Cost beforeLb = wcsp->getLb();
+#endif
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        	(*iter).constr->findFullSupport((*iter).scopeIndex);
+        	(*iter).constr->findFullSupportEAC((*iter).scopeIndex);
         }
-//        if (!linkEAC1Queue.removed && linkEAC1Queue.content.timeStamp == wcsp->getNbNodes()) {
-        if (((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue)) {
-           // findFullSupport has inserted current variable in EAC1
-    	   wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
-    	   if (unassigned()) fillEAC2 (false);
-        }
-        // check if lb has effectively been increased otherwise do a kind of path consistency
-        if (wcsp->isternary && wcsp->getLb() == beforeLb) {
-            if (ToulBar2::verbose >= 2) cout << "EAC failed on " << getName() << ", try project ternary to binary" << endl; 
-            for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-                if ((*iter).constr->arity()==3) ((TernaryConstraint *) (*iter).constr)->projectTernary();
-            }
-//        } else {
-//            cout << "EAC succed on " << getName() << ", lb: " << beforeLb << " -> " << wcsp->getLb() << endl; 
+        fillEAC2(false);
+        if (unassigned()) {
+            assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
+            // findFullSupportEAC must have inserted current variable in EAC1
+	        if (!linkEAC1Queue.removed) wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
+#ifndef NDEBUG
+            // check if lb has effectively been increased
+            if (wcsp->isternary && wcsp->getLb() == beforeLb)
+                if (ToulBar2::verbose) cout << "EAC failed on " << getName() << endl;
+#endif
         }
     }
 }

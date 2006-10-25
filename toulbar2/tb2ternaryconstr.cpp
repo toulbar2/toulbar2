@@ -141,6 +141,7 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
         x->findSupport();
     }
 }
+
 void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
             vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY,
@@ -245,6 +246,159 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
     }
 }
 
+// take into account associated binary constraints and perform unary extension to binary instead of ternary
+void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z,
+            vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
+            vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY,
+            vector< pair<Value,Value> > &supportZ, vector<StoreCost> &deltaCostsZ,
+            BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz)
+{
+    assert(connected());
+//    wcsp->revise(this);   
+    if (ToulBar2::verbose >= 3) cout << "findFullSupportEAC C" << x->getName() << "," << y->getName()<< "," << z->getName() << endl;
+    bool supportBroken = false;
+    bool yACRevise = false;
+    bool zACRevise = false;
+    bool xyRevise = false;
+    bool xzRevise = false;
+    bool yzRevise = false;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        int xindex = x->toIndex(*iterX);
+        pair<Value,Value> support = supportX[xindex];
+        if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
+            getCostWithBinaries(x,y,z,*iterX,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > 0) {
+
+            Cost minCost = MAX_COST;
+            for (EnumeratedVariable::iterator iterY = y->begin(); minCost > 0 && iterY != y->end(); ++iterY) {
+                for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > 0 && iterZ != z->end(); ++iterZ) {
+                    Cost cost = getCostWithBinaries(x,y,z,*iterX,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ);
+                    if (cost < minCost) {
+                        minCost = cost;
+                        support = make_pair(*iterY,*iterZ);
+                    }
+                }
+            }
+            if (minCost > 0) {
+                // extend unary to binary and extend binary to ternary
+                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                    for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                        Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
+                        if (minCost > cost) {
+                            int yindex = y->toIndex(*iterY);
+                            int zindex = z->toIndex(*iterZ);
+                            Cost ycost = y->getCost(*iterY);
+                            Cost zcost = z->getCost(*iterZ);
+                            Cost xycost = (xy->connected())?xy->getCost(x,y,*iterX,*iterY):0;
+                            Cost xzcost = (xz->connected())?xz->getCost(x,z,*iterX,*iterZ):0;
+                            Cost yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):0;
+                            Cost remain = minCost - cost - xycost - xzcost - yzcost;
+                            if (remain > 0) {
+                                // extend unary to binary
+                                // Try to extend unary cost from highest variable first
+                                if (z->wcspIndex > y->wcspIndex) {
+                                    if (zcost > 0) {
+                                        Cost costfromz = min(remain,zcost);
+                                        xz->extend(xz->getIndex(z), *iterZ, costfromz);
+                                        remain = remain - costfromz;
+                                        xzRevise = true;
+                                        xz->reconnect();
+                                        yACRevise = true;   // AC may be broken by unary extension to ternary
+                                    }
+                                    if (remain > 0) {
+                                        assert(remain <= ycost);
+                                        xy->extend(xy->getIndex(y), *iterY, remain);
+                                        xyRevise = true;
+                                        xy->reconnect();
+                                        zACRevise = true;   // AC may be broken by unary extension to ternary
+                                    }
+                                } else {
+                                    if (ycost > 0) {
+                                        Cost costfromy = min(remain,ycost);
+                                        xy->extend(xy->getIndex(y), *iterY, costfromy);
+                                        remain = remain - costfromy;
+                                        xyRevise = true;
+                                        xy->reconnect();
+                                        zACRevise = true;   // AC may be broken by unary extension to ternary
+                                    }
+                                    if (remain > 0) {
+                                        assert(remain <= zcost);
+                                        xz->extend(xz->getIndex(z), *iterZ, remain);
+                                        xzRevise = true;
+                                        xz->reconnect();
+                                        yACRevise = true;   // AC may be broken by unary extension to ternary
+                                    }
+                                }
+                            }
+                            remain = minCost - cost;
+                            xycost = (xy->connected())?xy->getCost(x,y,*iterX,*iterY):0;
+                            xzcost = (xz->connected())?xz->getCost(x,z,*iterX,*iterZ):0;
+                            yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):0;
+                            assert(xycost + xzcost + yzcost >= remain);
+                            // extend binary to ternary
+                            if (xycost > 0) {
+                                Cost costfromxy = min(remain,xycost);
+                                extend(xy,x,y,z,*iterX,*iterY,costfromxy);
+                                yACRevise = true;   // AC may be broken by binary extension to ternary
+                                zACRevise = true;   // AC may be broken by binary extension to ternary
+                                remain = remain - costfromxy;
+                            }
+                            if (remain > 0 && xzcost > 0) {
+                                Cost costfromxz = min(remain,xzcost);
+                                extend(xz,x,z,y,*iterX,*iterZ,costfromxz);
+                                yACRevise = true;   // AC may be broken by binary extension to ternary
+                                zACRevise = true;   // AC may be broken by binary extension to ternary
+                                remain = remain - costfromxz;
+                            }
+                            if (remain > 0 && yzcost > 0) {
+                                Cost costfromyz = min(remain,yzcost);
+                                extend(yz,y,z,x,*iterY,*iterZ,costfromyz);
+                                yACRevise = true;   // AC may be broken by binary extension to ternary
+                                zACRevise = true;   // AC may be broken by binary extension to ternary
+                                remain = remain - costfromyz;
+                            }
+                            assert(remain==0);
+                            
+                            if (getIndex(x) < getIndex(z)) supportY[yindex] = make_pair(*iterX, *iterZ);
+                            else supportY[yindex] = make_pair(*iterZ, *iterX);
+                            if (getIndex(x) < getIndex(y)) supportZ[zindex] = make_pair(*iterX, *iterY);
+                            else supportZ[zindex] = make_pair(*iterY, *iterX);
+                         }
+                    }
+                }
+                // hard ternary constraint costs are not changed
+                if (minCost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
+                if (x->getSupport() == *iterX) supportBroken = true;
+                if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
+                x->project(*iterX, minCost);
+            }
+            
+            supportX[xindex] = support;
+            
+            assert(getIndex(y) < getIndex(z));
+            int yindex = y->toIndex(support.first);
+            int zindex = z->toIndex(support.second);
+            if (getIndex(x) < getIndex(z)) supportY[yindex] = make_pair(*iterX, support.second);
+            else supportY[yindex] = make_pair(support.second, *iterX);
+            if (getIndex(x) < getIndex(y)) supportZ[zindex] = make_pair(*iterX, support.first);
+            else supportZ[zindex] = make_pair(support.first, *iterX);
+        }
+    }
+    if (supportBroken) {
+        x->findSupport();
+    }
+    if (xyRevise && xy->connected()) xy->propagate();
+    if (xzRevise && xz->connected()) xz->propagate();
+    if (yzRevise && yz->connected()) yz->propagate();
+    if (yACRevise && connected()) {
+        if (getIndex(x) < getIndex(z)) findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);
+        else findSupport(y,z,x,supportY,deltaCostsY,supportZ,supportX);
+    }
+    if (zACRevise && connected()) {
+        if (getIndex(x) < getIndex(y)) findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);
+        else findSupport(z,y,x,supportZ,deltaCostsZ,supportY,supportX);
+    }
+}
+
 void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
 {
     bool flag = false;
@@ -291,10 +445,10 @@ bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable
     assert(getIndex(y) < getIndex(z));
     pair<Value,Value> support = supportX[xindex];
     if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
-        getCost(x,y,z,a,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > 0) {
+        getCostWithBinaries(x,y,z,a,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > 0) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-                if (getCost(x,y,z,a,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == 0) {
+                if (getCostWithBinaries(x,y,z,a,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == 0) {
                     supportX[xindex] = make_pair(*iterY,*iterZ);
                     return true;
                 }
@@ -320,7 +474,7 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
             }
         }
         if (minCost > 0) {
-            cout << *this;
+            cout << "not FDAC: variable " << x->getName() << " value " << *iterX << " of " << *this;
             return false;
         }
     }

@@ -44,6 +44,7 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     
     void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
     {
+        assert( ToulBar2::verbose < 4 || ((cout << "extend " << x->getName() << " (" << value << ") to C" << getVar(0)->getName() << "," << getVar(1)->getName() << " += " << cost << endl), true) );
         deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
         x->extend(value, cost);
     }
@@ -101,7 +102,12 @@ public:
    	        int ix = x->toIndex(vx);
             int iy = y->toIndex(vy);
    	       	costs[ix * sizeY + iy] += mincost;
-    }
+   }
+
+   void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+      if (xin==x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
+      else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
+   }
 
    void setcost( int vx, int vy, Cost mincost ) {
    	        int ix = x->toIndex(vx);
@@ -156,24 +162,39 @@ public:
     }
     
     void propagate() {
+        // delay true propagation in order to not interfer with ternary findFullSupportEAC
         if (getDACScopeIndex()==0) {
-            findSupportY();             // must do AC before DAC
-            if(connected()) findFullSupportX();
-            if(connected()) {
-                int yindex = y->toIndex(y->getSupport());
-                if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
-                    x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], y->getSupport()) > 0) {
-                    y->queueEAC1();
+//            findSupportY();             // must do AC before DAC
+//            if(connected()) findFullSupportX();
+            x->queueAC(); 
+            y->queueDAC();
+            if (wcsp->isternary) {
+                x->queueEAC1();
+                y->queueEAC1();
+            } else {
+                if(connected()) {
+                    int yindex = y->toIndex(y->getSupport());
+                    if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
+                        x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], y->getSupport()) > 0) {
+                        y->queueEAC1();
+                    }
                 }
             }
         } else {
-            findSupportX();             // must do AC before DAC
-            if(connected()) findFullSupportY();
-            if(connected()) {
-                int xindex = x->toIndex(x->getSupport());
-                if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
-                    y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(), supportX[xindex]) > 0) {
-                    x->queueEAC1();
+//            findSupportX();             // must do AC before DAC
+//            if(connected()) findFullSupportY();
+            y->queueAC(); 
+            x->queueDAC();
+            if (wcsp->isternary) {
+                x->queueEAC1();
+                y->queueEAC1();
+            } else {
+                if(connected()) {
+                    int xindex = x->toIndex(x->getSupport());
+                    if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
+                        y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(), supportX[xindex]) > 0) {
+                        x->queueEAC1();
+                    }
                 }
             }
         }
@@ -248,7 +269,7 @@ public:
     return true;
   }
   
-    void findFullSupport(int varIndex) {
+    void findFullSupportEAC(int varIndex) {
         if (varIndex == 0) findFullSupportX();
         else findFullSupportY();
     } 
