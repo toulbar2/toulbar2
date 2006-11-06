@@ -4,7 +4,7 @@
 
 
 NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
-			:nonassigned(arity_in, &wcsp->getStore()->storeValue), AbstractNaryConstraint(wcsp, scope_in, arity_in)
+			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	default_cost = defval;
 	store_top = default_cost < wcsp->getUb();
@@ -152,7 +152,7 @@ void NaryConstraint::project( EnumeratedVariable* x )
 		bool sameprefix = true;
 		bool end = false;
 
-		int ntuples = 1;
+		unsigned int ntuples = 1;
 
 		while(!end) {		
 			it++;
