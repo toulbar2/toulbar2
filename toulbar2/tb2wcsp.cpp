@@ -20,7 +20,7 @@
  * 
  */
  
-double ToulBar2::version  = 0.3;
+double ToulBar2::version  = 0.4;
 int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::binaryBranching = false;
@@ -514,30 +514,20 @@ void WCSP::propagate()
 	
   do {
     eliminate();
-    int EACnothing = 0;
+    // warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
     while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged
-	   || ((getUb()-getLb() > 1) && !EAC1.empty())) {
+	   || ((isternary || getUb()-getLb() > 1) && !EAC1.empty())) {
       propagateIncDec();
-      if (getUb()-getLb() > 1) {
-        Cost previousLb = getLb();
-        propagateEAC();
-        if (getLb() == previousLb) EACnothing++;
-        else EACnothing = 0;
-      }
+      if (isternary || getUb()-getLb() > 1) propagateEAC();
       assert(IncDec.empty());
       propagateDAC();
       assert(IncDec.empty());
       propagateAC();
       assert(IncDec.empty());
       propagateNC();
-//      if (isternary && IncDec.empty() && AC.empty() && DAC.empty() && NC.empty() && !objectiveChanged && EACnothing >= 2) {
-//        if (ToulBar2::verbose >= 2) cout << "EAC in infinite loop due to ternary constraints!" << endl; 
-//        EAC1.clear();
-//        break;
-//      }
     }
   } while (!Eliminate.empty());
-  if (getUb()-getLb() <= 1) EAC1.clear();
+  if (!isternary && getUb()-getLb() <= 1) EAC1.clear();
   
 //    revise(NULL);
     	
