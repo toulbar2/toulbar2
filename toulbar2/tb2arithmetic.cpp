@@ -47,10 +47,10 @@ void Supxyc::propagate()
         Cost cost;
         
         // propagate hard constraint
-        Value newInf = y->getInf() + cst - deltaCost - (wcsp->getUb() - wcsp->getLb() - 1);
+        Value newInf = ceil(y->getInf() + cst - deltaCost - (wcsp->getUb() - wcsp->getLb() - 1));
         if (x->getInf() < newInf) x->increase(newInf);
         
-        Value newSup = x->getSup() - cst + deltaCost + (wcsp->getUb() - wcsp->getLb() - 1);
+        Value newSup = floor(x->getSup() - cst + deltaCost + (wcsp->getUb() - wcsp->getLb() - 1));
         if (y->getSup() > newSup) y->decrease(newSup);
     
         // IC0 propagatation (increase global lower bound)
@@ -95,16 +95,16 @@ bool Supxyc::verify()
     Cost cmin,cxinf,cysup;
     
     cmin = y->getInf() + cst - x->getSup() - deltaCost
-            - ((y->getInf() == deltaValueYsup)?deltaCostYsup:0)
-            - ((x->getSup() == deltaValueXinf)?deltaCostXinf:0);
+            - ((y->getInf() == deltaValueYsup)?(Cost) deltaCostYsup:0)
+            - ((x->getSup() == deltaValueXinf)?(Cost) deltaCostXinf:0);
     if (cmin > 0) cout << "cmin=" << cmin << endl;
     cxinf = y->getInf() + cst - x->getInf() - deltaCost
-            - ((y->getInf() == deltaValueYsup)?deltaCostYsup:0)
-            - ((x->getInf() == deltaValueXinf)?deltaCostXinf:0);
+            - ((y->getInf() == deltaValueYsup)?(Cost) deltaCostYsup:0)
+            - ((x->getInf() == deltaValueXinf)?(Cost) deltaCostXinf:0);
     if (cxinf > 0) cout << "cxinf=" << cxinf << endl;
     cysup = y->getSup() + cst - x->getSup() - deltaCost
-            - ((y->getSup() == deltaValueYsup)?deltaCostYsup:0)
-            - ((x->getSup() == deltaValueXinf)?deltaCostXinf:0);
+            - ((y->getSup() == deltaValueYsup)?(Cost) deltaCostYsup:0)
+            - ((x->getSup() == deltaValueXinf)?(Cost) deltaCostXinf:0);
     if (cysup > 0) cout << "cysup=" << cysup << endl;
     bool icbac = (cmin <= 0) && (cysup <= 0) && (cxinf <= 0);
     if (!icbac) {

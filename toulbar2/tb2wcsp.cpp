@@ -35,7 +35,7 @@ externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
 externalevent ToulBar2::removevalue = NULL;
-externalevent ToulBar2::setminobj = NULL;
+externalcostevent ToulBar2::setminobj = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
 
 int WCSP::wcspCounter = 0;
@@ -297,8 +297,8 @@ void WCSP::printNCBuckets()
            cout << " " << (*iter)->getName() << "," << (*iter)->getMaxCostValue() << "," << (*iter)->getMaxCost();
            assert((*iter)->canbe((*iter)->getMaxCostValue()));
            assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost());
-           assert((*iter)->getMaxCost() >= pow(2.,bucket));
-           assert((*iter)->getMaxCost() < pow(2.,bucket+1));
+           assert((*iter)->getMaxCost() >= (Long) pow(2.,bucket));
+           assert((*iter)->getMaxCost() < (Long) pow(2.,bucket+1));
         }
         cout << endl;
     }

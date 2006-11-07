@@ -251,7 +251,7 @@ public:
   bool isEAC(int varIndex, Value a) {
     if (varIndex==0) {
         int xindex = x->toIndex(a);
-        if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex])) {
+        if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex]) > 0) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                 if (y->getCost(*iterY) == 0 && getCost(a,*iterY) == 0) {
                     supportX[xindex] = *iterY;
@@ -262,7 +262,7 @@ public:
         }
     } else {
         int yindex = y->toIndex(a);
-        if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], a)) {
+        if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], a) > 0) {
             for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
                 if (x->getCost(*iterX) == 0 && getCost(*iterX, a) == 0) {
                     supportY[yindex] = *iterX;
@@ -287,7 +287,7 @@ public:
 	   double sum = 0;
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-				sum += getCost(*iterX, *iterY);
+                sum += to_double(getCost(*iterX, *iterY));
 				count++;
 	       }
 	    }

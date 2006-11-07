@@ -103,6 +103,14 @@ public:
         *adr[x] = val[x];
     }
 
+    void restore(Long **adr, Long *val, int x) {
+        *adr[x] = val[x];
+    }
+
+    void restore(Rational **adr, Rational *val, int x) {
+        *adr[x] = val[x];
+    }
+
     template <class Q> void restore(BTList<Q> **l, DLink<Q> **elt, int &x);
 
     void restore() {

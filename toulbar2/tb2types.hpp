@@ -19,7 +19,10 @@
 
 using namespace std;
 
+typedef long long Long;
+
 #include "tb2utils.hpp"
+#include "tb2rational.hpp"
 
 typedef int Value;
 
@@ -31,7 +34,11 @@ const Value MAX_DOMAIN_SIZE  = 1000;
 typedef int Cost;
 const Cost MAX_COST = (INT_MAX / 2);
 
-typedef long long Long;
+//typedef Long Cost;
+//const Cost MAX_COST = (LONG_LONG_MAX / 2);
+
+//typedef Rational Cost;
+//const Cost MAX_COST = RATIONAL_MAX;
 
 const int STORE_SIZE = 16;
 
@@ -41,6 +48,7 @@ const int STORE_SIZE = 16;
  */
 
 typedef void (*externalevent)(int wcspId, int varIndex, Value value);
+typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
 
 class Pedigree;
 
@@ -64,7 +72,7 @@ public:
     static externalevent setmin;
     static externalevent setmax;
     static externalevent removevalue;
-    static externalevent setminobj;
+    static externalcostevent setminobj;
     static Pedigree *pedigree;
 };
 

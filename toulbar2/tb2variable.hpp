@@ -99,7 +99,7 @@ public:
     virtual Value getSupport() const {return inf;}      // If there is no defined support then return inf
     
     Cost getMaxCost() const {return maxCost;}
-    Cost getMaxCostValue() const {return maxCostValue;}
+    Value getMaxCostValue() const {return maxCostValue;}
     
     void extendAll(Cost cost);
     virtual void propagateNC() =0;    

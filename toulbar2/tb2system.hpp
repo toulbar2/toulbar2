@@ -6,6 +6,8 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
+#include "tb2types.hpp"
+
 //cost= 0 log2= -1
 //cost= 1 log2= 0
 //cost= 2 log2= 1
@@ -36,6 +38,30 @@ inline int cost2log2(int x)
         return (l2);
 }
 
+inline int cost2log2(Long x)
+{
+        if (x==0) return -1;
+        register int l2 = 0;
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
+
+inline int cost2log2(const Rational &r)
+{
+        if (r.p==0) return -1;
+        register int l2 = 0;
+        register Long x = r.p / r.q;
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
 
 // This only works for a 32bits machine
 // and compiler g++ version < 4.0 
