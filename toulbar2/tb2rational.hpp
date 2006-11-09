@@ -40,6 +40,12 @@ struct Rational {
 	friend const Rational operator-(const Rational& left, const Rational& right) {
 		return Rational(left.p * right.q - left.q * right.p, left.q * right.q);
 	}
+    friend const Rational operator*(const Rational& left, const Rational& right) {
+        return Rational(left.p * right.p, left.q * right.q);
+    }
+    friend const Rational operator/(const Rational& left, const Rational& right) {
+        return Rational(left.p * right.q, left.q * right.p);
+    }
 	friend bool operator==(const Rational& left, const Rational& right) {
 		return left.p * right.q == left.q * right.p;
 	}
@@ -76,6 +82,10 @@ inline double to_double(const int cost) {return (double) cost;}
 inline double to_double(const Long cost) {return (double) cost;}
 inline double to_double(const Rational r) {return r.to_double();}
 
+inline int ceil(const int e) {return e;}
+inline int floor(const int e) {return e;}
+inline Long ceil(const Long e) {return e;}
+inline Long floor(const Long e) {return e;}
 inline double ceil(const Rational r) {return ceil(r.to_double());}
 inline double floor(const Rational r) {return floor(r.to_double());}
 
