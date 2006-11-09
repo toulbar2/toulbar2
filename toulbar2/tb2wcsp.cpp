@@ -4,7 +4,6 @@
  * Contains also ToulBar2 global variable definitions
  */
 
-#include <math.h>
 #include "tb2system.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
@@ -23,14 +22,23 @@
 double ToulBar2::version  = 0.4;
 int ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
-bool ToulBar2::binaryBranching = false;
-bool ToulBar2::elimVarWithSmallDegree  = false;
+bool ToulBar2::writeSolution  = false;
 bool ToulBar2::elimVarWithSmallDegree_  = false;
 bool ToulBar2::only_preprocessing  = false;
-bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
+#ifdef MENDELSOFT
+bool ToulBar2::binaryBranching = true;
+bool ToulBar2::elimVarWithSmallDegree  = true;
+bool ToulBar2::preprocessTernary  = true;
+bool ToulBar2::lastConflict = true;
+#else
+bool ToulBar2::binaryBranching = false;
+bool ToulBar2::elimVarWithSmallDegree  = false;
+bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = false;
+#endif
+
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
@@ -337,7 +345,8 @@ bool WCSP::verify()
 {
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
-        if (vars[i]->unassigned() && !vars[i]->isEAC()) {
+        // warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
+        if (vars[i]->unassigned() && (!isternary || getUb()-getLb() > 1) && !vars[i]->isEAC()) {
             cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }
@@ -514,11 +523,10 @@ void WCSP::propagate()
 	
   do {
     eliminate();
-    // warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
-    while (!IncDec.empty() || !AC.empty() || !DAC.empty() || !NC.empty() || objectiveChanged
-	   || ((isternary || getUb()-getLb() > 1) && !EAC1.empty())) {
+    while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
+	       || ((getUb()-getLb() > 1) && !EAC1.empty())) {
       propagateIncDec();
-      if (isternary || getUb()-getLb() > 1) propagateEAC();
+      if (getUb()-getLb() > 1) propagateEAC();
       assert(IncDec.empty());
       propagateDAC();
       assert(IncDec.empty());
@@ -527,7 +535,7 @@ void WCSP::propagate()
       propagateNC();
     }
   } while (!Eliminate.empty());
-  if (!isternary && getUb()-getLb() <= 1) EAC1.clear();
+  if (getUb()-getLb() <= 1) EAC1.clear();
   
 //    revise(NULL);
     	

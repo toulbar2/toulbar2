@@ -40,13 +40,14 @@ void Pedigree::typeAscendants(int individual)
 }
 
 // warning! locus information is not used: assume that only one locus is defined in the pedigree file
-void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
+void Pedigree::read(const char *fileName, WCSP *wcsp)
 {
   int nbindividuals = 0;
   int nballeles = 0;
   int nbtypings = 0;
   int nbfounders = 0;
   vector<TemporaryUnaryConstraint> unaryconstrs;
+  map<int, int> allelesInv;
   
   // open the file
   ifstream file(fileName);
@@ -56,11 +57,16 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   }
 
   while (file) {
-    int locus = -1;
+    int cur_locus = -1;
     int individual = 0;
 
-    file >> locus;
+    file >> cur_locus;
     if (!file) break;
+    if (locus == -1) locus = cur_locus;
+    if (locus != cur_locus) {
+        cerr << "Pedigree datafile contains more than one locus!" << endl;
+        exit(EXIT_FAILURE);
+    } 
 
     file >> individual;
     if (!file) {
@@ -112,13 +118,20 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
       cerr << "Wrong data after individual " << individual << endl;
       abort();
     }
-    nballeles = max(nballeles,pedigree[individuals[individual]].genotype.allele1);
+    if (alleles.count(pedigree[individuals[individual]].genotype.allele1)==0) {
+        nballeles++;
+        alleles[pedigree[individuals[individual]].genotype.allele1] = nballeles;
+    }
+
     file >> pedigree[individuals[individual]].genotype.allele2;
     if (!file) {
       cerr << "Wrong data after individual " << individual << endl;
       abort();
     }
-    nballeles = max(nballeles,pedigree[individuals[individual]].genotype.allele2);
+    if (alleles.count(pedigree[individuals[individual]].genotype.allele2)==0) {
+        nballeles++;
+        alleles[pedigree[individuals[individual]].genotype.allele2] = nballeles;
+    }
     
     if (pedigree[individuals[individual]].genotype.allele1>0 || pedigree[individuals[individual]].genotype.allele2>0) {
       nbtypings++;
@@ -126,6 +139,33 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     }
   }
 
+  /* re-encoding of alleles */
+  int nb = 0;
+  if (ToulBar2::verbose >= 2) cout << "Alleles encoding:" << endl;
+  for (map<int,int>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
+    if ((*iter).first == 0) continue;
+    nb++;
+    if (ToulBar2::verbose >= 2) cout << (*iter).first << ": " << nb << endl;
+    alleles[(*iter).first] = nb;
+    allelesInv[nb] = (*iter).first;
+  }
+  assert(nballeles == nb);
+  
+  if (ToulBar2::verbose) cout << "Genotype encoding:" << endl;
+  for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
+    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+      Genotype geno;
+      geno.allele1 = allelesInv[i];
+      geno.allele2 = allelesInv[j];
+      genoconvert.push_back(geno);
+      if (ToulBar2::verbose) {
+        cout << genoconvert.size()-1 << ": ";
+        printGenotype(cout, genoconvert.size()-1);
+        cout << endl;
+      }
+    }
+  }
+    
   for (unsigned int i=0; i<genotypes.size(); i++) {
     typeAscendants(genotypes[i]);
   }
@@ -145,15 +185,6 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
         wcsp->makeEnumeratedVariable(varname, 0, nballeles*(nballeles+1)/2 - 1);
         pedigree[i].varindex = nbvar;
         nbvar++;
-    }
-  }
-  
-  for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
-    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-      Genotype geno;
-      geno.allele1 = i;
-      geno.allele2 = j;
-      genoconvert.push_back(geno);
     }
   }
 
@@ -191,7 +222,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
 
   /* create constraint network */
   while (file) {
-    int locus = -1;
+    int cur_locus = -1;
     int individual = 0;
     int father = 0;
     int mother = 0;
@@ -199,14 +230,16 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     int allele1 = 0;
     int allele2 = 0;
 
-    file >> locus;
+    file >> cur_locus;
     if (!file) break;
     file >> individual;
     file >> father;
     file >> mother;
     file >> sex;
     file >> allele1;
+    allele1 = alleles[allele1];
     file >> allele2;
+    allele2 = alleles[allele2];
     if (!pedigree[individuals[individual]].typed) continue;
     
     /* add unary costs (soft constraint) if genotyping is given */
@@ -271,4 +304,45 @@ void Pedigree::printCorrection(WCSP *wcsp)
     }
   }
   cout << endl;
+}
+
+void Pedigree::printGenotype(ostream& os, Value value)
+{
+    os << genoconvert[value].allele1 << "/" << genoconvert[value].allele2;
+}
+
+void Individual::print(ostream& os)
+{
+    os << individual << " " << father << " " << mother << " " << sex << " " << genotype.allele1 << " " << genotype.allele2 << endl; 
+}
+
+void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected)
+{
+    // open the file
+    ofstream file(fileName);
+    if (!file) {
+      cerr << "Could not open file " << fileName << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    for (map<int,int>::iterator iter = individuals.begin(); iter != individuals.end(); ++iter) {
+        file << locus << " ";
+        if (corrected && pedigree[(*iter).second].varindex >= 0 && pedigree[(*iter).second].varindex < (int) wcsp->numberOfVariables() && wcsp->assigned(pedigree[(*iter).second].varindex)) {
+            int sol = wcsp->getValue(pedigree[(*iter).second].varindex);
+            int a1 = genoconvert[sol].allele1;
+            int a2 = genoconvert[sol].allele2;
+            int allele1 = pedigree[(*iter).second].genotype.allele1;
+            int allele2 = pedigree[(*iter).second].genotype.allele2;
+            if (!((allele1>0 && allele2>0 && ((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
+                || ((allele1==0 || allele2==0) && (a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2)))) {
+              pedigree[(*iter).second].genotype.allele1 = 0;
+              pedigree[(*iter).second].genotype.allele2 = 0;
+            }
+            pedigree[(*iter).second].print(file);
+            pedigree[(*iter).second].genotype.allele1 = allele1;
+            pedigree[(*iter).second].genotype.allele2 = allele2;
+        } else {
+            pedigree[(*iter).second].print(file);
+        }
+    }
 }

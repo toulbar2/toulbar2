@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #endif
 
 #include <vector>
@@ -60,6 +61,7 @@ public:
     static double version;
     static int verbose;
     static bool showSolutions;
+    static bool writeSolution;
     static bool binaryBranching;
     static bool elimVarWithSmallDegree;
     static bool elimVarWithSmallDegree_; // flag activated after elimination data structures initialization

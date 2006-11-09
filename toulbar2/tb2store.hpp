@@ -6,7 +6,6 @@
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
 
-#include <math.h>
 #include "tb2types.hpp"
 
 template <class T> class BTList;

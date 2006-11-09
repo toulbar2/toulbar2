@@ -235,14 +235,33 @@ void Solver::recursiveSolve()
         if (ToulBar2::showSolutions) {
             if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
             for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-                cout << " " << wcsp->getValue(i);
+                cout << " ";
+                if (ToulBar2::pedigree) {
+                    ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
+                } else {
+                    cout << wcsp->getValue(i);
+                }
             }
             cout << endl;
         }
-	if (ToulBar2::pedigree) {
-	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
-	}
-    
+    	if (ToulBar2::pedigree) {
+    	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
+        }
+        if (ToulBar2::writeSolution) {
+            if (ToulBar2::pedigree) {
+                ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
+            } else {
+                ofstream file("solution");
+                if (!file) {
+                  cerr << "Could not write file " << "solution" << endl;
+                  exit(EXIT_FAILURE);
+                }
+                for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+                    file << " " << wcsp->getValue(i);
+                }
+                file << endl;
+            }
+        }
     }
 }
 

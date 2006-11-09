@@ -22,7 +22,7 @@ typedef struct {
 void WCSP::read_wcsp(const char *fileName)
 {
     if (ToulBar2::pedigree) {
-      ToulBar2::pedigree->readPedigree(fileName, this);
+      ToulBar2::pedigree->read(fileName, this);
       return;
     }
     string pbname;

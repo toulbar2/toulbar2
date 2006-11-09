@@ -29,23 +29,30 @@ public:
   bool typed; // true if one of its descendant children (or itself) is typed
   
   Individual(int ind);
+
+  void print(ostream& os);
 };
 
 class Pedigree {
-  vector<Individual> pedigree;
-  vector<int> genotypes;
-  vector<Genotype> genoconvert;
-  map<int, int> individuals;
-  int nbtyped;
+  int locus;    // same locus for all the genotypes
+  vector<Individual> pedigree;  // list of individuals
+  vector<int> genotypes;    // list of genotyped individuals id.
+  vector<Genotype> genoconvert; // convert domain value to genotype
+  map<int, int> individuals;    // sorted list of pair<individual id, pedigree id>
+  map<int, int> alleles;    // sorted list of pair<allele number, encoding consecutive number>  
+  int nbtyped;  // number of individuals with a genotyped descendant
   
   void typeAscendants(int individual);
 
 public:
-  Pedigree() : nbtyped(0) {}
+  Pedigree() : locus(-1), nbtyped(0) {alleles[0] = 0;}
   
-  void readPedigree(const char *fileName, WCSP *wcsp);
+  void read(const char *fileName, WCSP *wcsp);
+  void save(const char *fileName, WCSP *wcsp, bool corrected);
 
   void printCorrection(WCSP *wcsp);
+  
+  void printGenotype(ostream& os, Value value);
 };
 
 #endif /*TB2PEDIGREE_HPP_*/

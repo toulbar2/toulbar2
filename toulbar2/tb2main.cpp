@@ -13,15 +13,19 @@ int main(int argc, char **argv)
         cerr << endl;
         cerr << argv[0] << " filename upperbound options" << endl;
         cerr << endl;
+#ifndef MENDELSOFT
         cerr << "Available problem formats (specified by the filename extension):" << endl;
         cerr << "   *.wcsp : wcsp format" << endl;
         cerr << "   *.pre  : pedigree format" << endl;
         cerr << endl;
+#endif
         cerr << "Initial upperbound is optional (default value: " << MAX_COST << ")" << endl;
         cerr << endl;
         cerr << "Available options:" << endl;
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
+        cerr << "   w : write last solution found" << endl;
+#ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
         cerr << "   e : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
@@ -29,6 +33,7 @@ int main(int argc, char **argv)
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
+#endif
         cerr << endl;
         exit(EXIT_FAILURE);
     } 
@@ -37,6 +42,7 @@ int main(int argc, char **argv)
     for (int i=2; i<argc; i++) {
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
+        if (strchr(argv[i],'w')) ToulBar2::writeSolution = true;
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
         if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
@@ -49,7 +55,11 @@ int main(int argc, char **argv)
     Solver solver(STORE_SIZE, (c>0)?c:MAX_COST);
 
     try {
+#ifdef MENDELSOFT
+        ToulBar2::pedigree = new Pedigree;
+#else
         if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
+#endif
         solver.read_wcsp(argv[1]);
         solver.solve();
     } catch (Contradiction) {
