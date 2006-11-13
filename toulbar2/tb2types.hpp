@@ -63,6 +63,8 @@ public:
     static bool showSolutions;
     static bool writeSolution;
     static bool binaryBranching;
+    static bool dichotomicBranching;
+    static unsigned int dichotomicBranchingSize;
     static bool elimVarWithSmallDegree;
     static bool elimVarWithSmallDegree_; // flag activated after elimination data structures initialization
     static bool only_preprocessing;

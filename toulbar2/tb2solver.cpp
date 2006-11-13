@@ -134,15 +134,33 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
+    bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
+    Value middle;
+    bool increasing;
+    if (dichotomic) {
+      middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
+      if (value <= middle) increasing = true;
+      else increasing = false;
+    }
     try {
         store->store();
         if (ToulBar2::verbose >= 2) {
             cout << *wcsp;
         }
-        if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
         nbNodes++;
         lastConflictVar = varIndex;
-        wcsp->assign(varIndex, value);
+        if (dichotomic) {
+	  if (increasing) {
+	    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " <= " << middle << " (s:" << value << ")" << endl;
+	    wcsp->decrease(varIndex, middle);
+	  } else {
+	    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " >= " << middle+1 << " (s:" << value << ")" << endl;
+	    wcsp->increase(varIndex, middle+1);
+	  }
+	} else {
+	  if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
+	  wcsp->assign(varIndex, value);
+	}
         wcsp->propagate();
         lastConflictVar = -1;
         recursiveSolve();
@@ -155,9 +173,19 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     if (ToulBar2::verbose >= 2) {
         cout << *wcsp;
     }
-    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " != " << value << endl;
     nbNodes++;
-    wcsp->remove(varIndex, value);
+    if (dichotomic) {
+      if (increasing) {
+	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " >= " << middle+1 << " (s:" << value << ")" << endl;
+	wcsp->increase(varIndex, middle+1);
+      } else {
+	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " <= " << middle << " (s:" << value << ")" << endl;
+	wcsp->decrease(varIndex, middle);
+      }
+    } else {
+      if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " != " << value << endl;
+      wcsp->remove(varIndex, value);
+    }
     wcsp->propagate();
     recursiveSolve();
 }

@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 #ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
+        cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
         cerr << "   e : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
@@ -45,6 +46,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'w')) ToulBar2::writeSolution = true;
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
+        if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
         if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
         if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;

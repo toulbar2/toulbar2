@@ -27,6 +27,8 @@ bool ToulBar2::elimVarWithSmallDegree_  = false;
 bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
+bool ToulBar2::dichotomicBranching = false;
+unsigned int ToulBar2::dichotomicBranchingSize = 10;
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
 bool ToulBar2::elimVarWithSmallDegree  = true;
