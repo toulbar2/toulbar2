@@ -226,7 +226,7 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
 	 	  double bintight = bctr->getTightness();
 	 	  if(bintight > maxtight) { maxtight = bintight; strvar = wcsp->getVar(bctr->getSmallestVarIndexInScope((*iter).scopeIndex)); tctr1max = NULL; tctr2max = NULL; }
  	   }
- 	   else {
+ 	   else if((*iter).constr->arity() == 3) {
 	   	  double terntight;
 	 	  tctr1 = (TernaryConstraint*) (*iter).constr;
 	 	  terntight = tctr1->getTightness() + 
