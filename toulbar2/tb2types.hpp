@@ -72,6 +72,8 @@ public:
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;
     static bool lastConflict;
+    static bool lds;
+    static bool limited;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;

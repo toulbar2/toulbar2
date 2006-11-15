@@ -27,9 +27,17 @@ class Solver
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
+    void increase(int varIndex, Value value);
+    void decrease(int varIndex, Value value);
+    void assign(int varIndex, Value value);
+    void remove(int varIndex, Value value);
     void binaryChoicePoint(int xIndex, Value value);
+    void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex);
+    void narySortedChoicePointLDS(int xIndex, int discrepancy);
+    void newSolution();
     void recursiveSolve();
+    void recursiveSolveLDS(int discrepancy);
     
 public:
     Solver(int storeSize, Cost initUpperBound);

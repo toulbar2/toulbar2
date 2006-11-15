@@ -130,13 +130,61 @@ int Solver::getNextUnassignedVar()
  * 
  */
 
+void Solver::increase(int varIndex, Value value)
+{
+    wcsp->enforceUb();
+    nbNodes++;
+    if (ToulBar2::verbose >= 1) {
+        if (ToulBar2::verbose >= 2) cout << *wcsp;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+    }
+    wcsp->increase(varIndex, value);
+    wcsp->propagate();
+}
+
+void Solver::decrease(int varIndex, Value value)
+{
+    wcsp->enforceUb();
+    nbNodes++;
+    if (ToulBar2::verbose >= 1) {
+        if (ToulBar2::verbose >= 2) cout << *wcsp;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+    }
+    wcsp->decrease(varIndex, value);
+    wcsp->propagate();
+}
+
+void Solver::assign(int varIndex, Value value)
+{
+    wcsp->enforceUb();
+    nbNodes++;
+    if (ToulBar2::verbose >= 1) {
+        if (ToulBar2::verbose >= 2) cout << *wcsp;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+    }
+    wcsp->assign(varIndex, value);
+    wcsp->propagate();
+}
+
+void Solver::remove(int varIndex, Value value)
+{
+    wcsp->enforceUb();
+    nbNodes++;
+    if (ToulBar2::verbose >= 1) {
+        if (ToulBar2::verbose >= 2) cout << *wcsp;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+    }
+    wcsp->remove(varIndex, value);
+    wcsp->propagate();
+}
+
 void Solver::binaryChoicePoint(int varIndex, Value value)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
-    Value middle;
-    bool increasing;
+    Value middle = value;
+    bool increasing = true;
     if (dichotomic) {
       middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
       if (value <= middle) increasing = true;
@@ -144,24 +192,10 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     }
     try {
         store->store();
-        if (ToulBar2::verbose >= 2) {
-            cout << *wcsp;
-        }
-        nbNodes++;
         lastConflictVar = varIndex;
         if (dichotomic) {
-	  if (increasing) {
-	    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " <= " << middle << " (s:" << value << ")" << endl;
-	    wcsp->decrease(varIndex, middle);
-	  } else {
-	    if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " >= " << middle+1 << " (s:" << value << ")" << endl;
-	    wcsp->increase(varIndex, middle+1);
-	  }
-	} else {
-	  if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << value << endl;
-	  wcsp->assign(varIndex, value);
-	}
-        wcsp->propagate();
+    	  if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+    	} else assign(varIndex, value);
         lastConflictVar = -1;
         recursiveSolve();
     } catch (Contradiction) {
@@ -169,25 +203,51 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     }
     store->restore();
     nbBacktracks++;
-    wcsp->enforceUb();
-    if (ToulBar2::verbose >= 2) {
-        cout << *wcsp;
-    }
-    nbNodes++;
     if (dichotomic) {
-      if (increasing) {
-	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " >= " << middle+1 << " (s:" << value << ")" << endl;
-	wcsp->increase(varIndex, middle+1);
-      } else {
-	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " <= " << middle << " (s:" << value << ")" << endl;
-	wcsp->decrease(varIndex, middle);
-      }
-    } else {
-      if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Refute " << wcsp->getName(varIndex) << " != " << value << endl;
-      wcsp->remove(varIndex, value);
-    }
-    wcsp->propagate();
+      if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
+    } else remove(varIndex, value);
     recursiveSolve();
+}
+
+void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
+{
+    assert(wcsp->unassigned(varIndex));
+    assert(wcsp->canbe(varIndex,value));
+    bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
+    Value middle = value;
+    bool increasing = true;
+    if (dichotomic) {
+      middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
+      if (value <= middle) increasing = true;
+      else increasing = false;
+    }
+    if (discrepancy > 0) {
+        try {
+            store->store();
+            lastConflictVar = varIndex;
+            if (dichotomic) {
+              if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
+            } else remove(varIndex, value);
+            lastConflictVar = -1;
+            recursiveSolveLDS(discrepancy - 1);
+        } catch (Contradiction) {
+            wcsp->whenContradiction();
+        }
+        store->restore();
+        nbBacktracks++;
+        if (dichotomic) {
+          if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+        } else assign(varIndex, value);
+        recursiveSolveLDS(discrepancy);
+    } else {
+        ToulBar2::limited = true;
+        lastConflictVar = varIndex;
+        if (dichotomic) {
+          if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+        } else assign(varIndex, value);
+        lastConflictVar = -1;
+        recursiveSolveLDS(0);
+    }
 }
 
 int cmpValueCost(const void *p1, const void *p2)
@@ -213,15 +273,30 @@ void Solver::narySortedChoicePoint(int varIndex)
     for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {
         try {
             store->store();
-            nbNodes++;
-            if (ToulBar2::verbose >= 2) {
-                cout << *wcsp << endl;
-            }
-            if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " = " << sorted[v].value << endl;
-            wcsp->enforceUb();
-            wcsp->assign(varIndex, sorted[v].value);
-            wcsp->propagate();
+            assign(varIndex, sorted[v].value);
             recursiveSolve();
+        } catch (Contradiction) {
+            wcsp->whenContradiction();
+        }
+        store->restore();
+    }
+    nbBacktracks++;
+}
+
+/* returns true if a limit has occured during the search */
+void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
+{
+    assert(wcsp->enumerated(varIndex));
+    int size = wcsp->getDomainSize(varIndex);
+    ValueCost sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+    wcsp->getEnumDomainAndCost(varIndex, sorted);
+    qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+    if (discrepancy < size-1) ToulBar2::limited = true;
+    for (int v = min(size-1, discrepancy); wcsp->getLb() < wcsp->getUb() && v >= 0; v--) {
+        try {
+            store->store();
+            assign(varIndex, sorted[v].value);
+            recursiveSolveLDS(discrepancy - v);
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
@@ -234,6 +309,49 @@ void Solver::narySortedChoicePoint(int varIndex)
  * Depth-First Branch and Bound
  * 
  */
+
+void Solver::newSolution()
+{
+    assert(unassignedVars->empty());
+#ifndef NDEBUG
+    bool allVarsAssigned = true;
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) allVarsAssigned &= wcsp->assigned(i);
+    assert(allVarsAssigned);
+#endif
+    wcsp->updateUb(wcsp->getLb());
+    cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+    wcsp->restoreSolution();
+    if (ToulBar2::showSolutions) {
+        if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
+        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+            cout << " ";
+            if (ToulBar2::pedigree) {
+                ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
+            } else {
+                cout << wcsp->getValue(i);
+            }
+        }
+        cout << endl;
+    }
+    if (ToulBar2::pedigree) {
+      ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
+    }
+    if (ToulBar2::writeSolution) {
+        if (ToulBar2::pedigree) {
+            ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
+        } else {
+            ofstream file("solution");
+            if (!file) {
+              cerr << "Could not write file " << "solution" << endl;
+              exit(EXIT_FAILURE);
+            }
+            for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+                file << " " << wcsp->getValue(i);
+            }
+            file << endl;
+        }
+    }
+}
 
 void Solver::recursiveSolve()
 {
@@ -250,47 +368,26 @@ void Solver::recursiveSolve()
         } else {
             binaryChoicePoint(varIndex, wcsp->getInf(varIndex));
         }
-    } else {
-        assert(unassignedVars->empty());
-#ifndef NDEBUG
-        bool allVarsAssigned = true;
-        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) allVarsAssigned &= wcsp->assigned(i);
-        assert(allVarsAssigned);
-#endif
-        wcsp->updateUb(wcsp->getLb());
-        cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-        wcsp->restoreSolution();
-        if (ToulBar2::showSolutions) {
-            if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
-            for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-                cout << " ";
-                if (ToulBar2::pedigree) {
-                    ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
-                } else {
-                    cout << wcsp->getValue(i);
-                }
-            }
-            cout << endl;
-        }
-    	if (ToulBar2::pedigree) {
-    	  ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
-        }
-        if (ToulBar2::writeSolution) {
-            if (ToulBar2::pedigree) {
-                ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
+    } else newSolution();
+}
+
+/* returns true if a limit has occured during the search */
+void Solver::recursiveSolveLDS(int discrepancy)
+{
+//    int varIndex = getNextUnassignedVar();
+    int varIndex = (ToulBar2::lastConflict)?getVarMinDomainDivMaxDegreeLastConflict():getVarMinDomainDivMaxDegree();
+    if (varIndex >= 0) {
+        if (wcsp->enumerated(varIndex)) {
+            if (ToulBar2::binaryBranching) {
+                assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
+                binaryChoicePointLDS(varIndex, wcsp->getSupport(varIndex), discrepancy);
             } else {
-                ofstream file("solution");
-                if (!file) {
-                  cerr << "Could not write file " << "solution" << endl;
-                  exit(EXIT_FAILURE);
-                }
-                for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-                    file << " " << wcsp->getValue(i);
-                }
-                file << endl;
+                narySortedChoicePointLDS(varIndex, discrepancy);
             }
+        } else {
+            binaryChoicePointLDS(varIndex, wcsp->getInf(varIndex), discrepancy);
         }
-    }
+    } else newSolution();
 }
 
 bool Solver::solve()
@@ -305,7 +402,24 @@ bool Solver::solve()
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
-        recursiveSolve();
+        if (ToulBar2::lds) {
+            int discrepancy = 0;
+            do {
+                cout << "--- LDS " << discrepancy << " ---" << endl;
+                ToulBar2::limited = false;
+                try {
+                    store->store();
+                    recursiveSolveLDS(discrepancy);
+                } catch (Contradiction) {
+                    wcsp->whenContradiction();
+                }
+                store->restore();
+                if (discrepancy > 0) discrepancy *= 2;
+                else discrepancy++;
+            } while (ToulBar2::limited);
+        } else {
+            recursiveSolve();
+        }
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }

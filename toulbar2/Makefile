@@ -22,7 +22,7 @@ CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY
 
 # -ftrapv -g3 -ansi -pedantic
 #OFLAGS = -O2 -DNDEBUG
-OFLAGS = -O3 -funroll-loops -fomit-frame-pointer -DNDEBUG
+OFLAGS = -O3 -DNDEBUG
 ICCFLAGS = -O3 -ipo -static -DNDEBUG -pg
 
 PFLAGS = 

@@ -34,6 +34,7 @@ int main(int argc, char **argv)
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
+        cerr << "   l : limited discrepancy search" << endl;
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -52,6 +53,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
+        if (strchr(argv[i],'l')) ToulBar2::lds = true;
     }
 	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST; 	
     Solver solver(STORE_SIZE, (c>0)?c:MAX_COST);

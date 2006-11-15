@@ -28,6 +28,8 @@ bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
 bool ToulBar2::dichotomicBranching = false;
+bool ToulBar2::lds = false;
+bool ToulBar2::limited = false;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
