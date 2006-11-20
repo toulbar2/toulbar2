@@ -20,7 +20,7 @@ ICC = icc
 CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY
 # -g3 -ftrapv -ansi -pedantic
 
-#OFLAGS = -O3 -DNDEBUG
+OFLAGS = -O3 -DNDEBUG
 # -O2
 
 ICCFLAGS = -O3 -ipo -static -DNDEBUG -pg
