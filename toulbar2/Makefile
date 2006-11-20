@@ -18,20 +18,23 @@ ICC = icc
 #ILOGLIBS = -L/usr/local/Ilog/solver60/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -L/usr/local/Ilog/concert20/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -lsolverfloat -lsolver -lconcert
 
 CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY
-# -g3 -ftrapv
+# -g3 -ftrapv -ansi -pedantic
 
-# -ftrapv -g3 -ansi -pedantic
-#OFLAGS = -O2 -DNDEBUG
-OFLAGS = -O3 -DNDEBUG
+#OFLAGS = -O3 -DNDEBUG
+# -O2
+
 ICCFLAGS = -O3 -ipo -static -DNDEBUG -pg
 
 PFLAGS = 
-#-pg -g3
+# -pg -g3
+
+LIBFLAGS = 
+# -fPIC
 
 BUILD = $(CC) -shared
 
 %.o : %.cpp
-	$(CC) $(OFLAGS) $(CFLAGS) -c -o $@  $< $(PFLAGS)
+	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
 toulbar2: $(OBJS)
 	$(CC) $(OBJS) -o $@ $(PFLAGS)
@@ -39,8 +42,9 @@ toulbar2: $(OBJS)
 toulbar2i: $(SRCS)
 	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)
 
+libtb2.so: LIBFLAGS = -fPIC
 libtb2.so: $(LIBOBJS)
-	$(BUILD) $(LIBOBJS) -o $@
+	$(BUILD) $(LIBFLAGS) $(LIBOBJS) -o $@
 
 iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2
