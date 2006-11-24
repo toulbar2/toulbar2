@@ -28,14 +28,7 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
          for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
                 costs[a * sizeY + b] = tab[a * sizeY + b];
 
-    assert(xx->unassigned());
-    xx->queueAC();
-    xx->queueDAC();
-    xx->queueEAC1();
-    assert(yy->unassigned());
-    yy->queueAC();
-    yy->queueDAC();
-    yy->queueEAC1();
+    propagate();
 }
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)
@@ -161,7 +154,7 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
 }
 
 template <GetCostMember getBinaryCost>
-void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY)
+void BinaryConstraint::projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY)
 {
     bool supportBroken = false;
 //    wcsp->revise(this);
@@ -170,6 +163,7 @@ void BinaryConstraint::projection(EnumeratedVariable *x, Value valueY)
         if (cost > 0) {
             if (x->getSupport() == *iterX) supportBroken = true;
             if (ToulBar2::verbose >= 2) cout << "binary projection of " << cost << " on C(" << x->getName() << "," << *iterX << ")" << endl;
+            addcost(x, y, *iterX, valueY, -cost);
             x->project(*iterX, cost);
         }
     }

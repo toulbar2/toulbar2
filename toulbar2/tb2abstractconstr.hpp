@@ -227,6 +227,8 @@ public:
 		else return (*it)->pos;
     }
 
+    bool connected(int varIndex) {return !links[varIndex]->removed;}
+    bool deconnected(int varIndex) {return links[varIndex]->removed;}
 
 	bool connected() {
        for(int i=0;i<arity_;i++) if(!links[i]->removed) return true;
@@ -238,12 +240,14 @@ public:
        return true;
     }
 
+    void deconnect(int varIndex) {
+        scope[varIndex]->deconnect( links[varIndex] );
+    }
+    
     void deconnect() {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            for(int i=0;i<arity_;i++) {
-            	scope[i]->deconnect( links[i] );
-            }
+            for(int i=0;i<arity_;i++) deconnect(i);
         }
     }
 

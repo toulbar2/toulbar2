@@ -120,8 +120,9 @@ void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 
 	BinaryConstraint* ctr = x->getConstr(y);   		
 	if(ctr)	{
+        ctr->reconnect();
 		ctr->addCosts(x,y,costs);
-		if(!ctr->connected()) ctr->reconnect();
+        ctr->propagate();
 	}
     else ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
 }

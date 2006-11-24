@@ -39,10 +39,14 @@ public:
     double computeTightness() { return 0; }
 
 
-    void propagate() {};
-    void increase(int index) {propagate();}
-    void decrease(int index) {propagate();}
-    void remove(int index) {propagate();}
+    void propagate() {
+        for(int i=0;connected() && i<arity_;i++) {         
+            if (getVar(i)->assigned()) assign(i);
+        }
+    };
+    void increase(int index) {}
+    void decrease(int index) {}
+    void remove(int index) {}
     void projectFromZero(int index) {}
     void fillEAC2(int index) {}
     bool isEAC(int index, Value a) {return true;}

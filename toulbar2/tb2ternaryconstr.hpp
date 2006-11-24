@@ -154,6 +154,18 @@ public:
     }
     
     void propagate() {
+        if (x->assigned()) {
+            assign(0);
+            return;
+        }
+        if (y->assigned()) {
+            assign(1);
+            return;
+        }
+        if (z->assigned()) {
+            assign(2);
+            return;
+        }
         switch(getDACScopeIndex()) {
             // warning! must do AC before DAC
             case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
@@ -250,10 +262,13 @@ public:
 		for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
-			if(xy->connected()) { c = xy->getCost(*iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); xy->addcost(*iterx, *itery, -c); xy->deconnect(); }
-			if(xz->connected()) { c = xz->getCost(*iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); xz->addcost(*iterx, *iterz, -c); xz->deconnect(); }
-			if(yz->connected()) { c = yz->getCost(*iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); yz->addcost(*itery, *iterz, -c); yz->deconnect(); }
+			if(xy->connected()) { c = xy->getCost(*iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); xy->addcost(*iterx, *itery, -c); }
+			if(xz->connected()) { c = xz->getCost(*iterx, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); xz->addcost(*iterx, *iterz, -c); }
+			if(yz->connected()) { c = yz->getCost(*itery, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); yz->addcost(*itery, *iterz, -c); }
 		}}}
+        xy->deconnect();
+        xz->deconnect();
+        yz->deconnect();         
 	}
 
 	BinaryConstraint* commonBinary( TernaryConstraint* t )

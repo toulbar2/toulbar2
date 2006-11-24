@@ -36,18 +36,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) 
                 costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
 
-    assert(xx->unassigned());
-    xx->queueAC();
-    xx->queueDAC();
-    xx->queueEAC1();
-    assert(yy->unassigned());
-    yy->queueAC();
-    yy->queueDAC();
-    yy->queueEAC1();
-    assert(zz->unassigned());
-    zz->queueAC();
-    zz->queueDAC();
-    zz->queueEAC1();
+    propagate();
 }
 
 double TernaryConstraint::computeTightness()
@@ -298,33 +287,33 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                                 if (z->wcspIndex > y->wcspIndex) {
                                     if (zcost > 0) {
                                         Cost costfromz = min(remain,zcost);
+                                        xz->reconnect();    // must be done before using the constraint
                                         xz->extend(xz->getIndex(z), *iterZ, costfromz);
                                         remain = remain - costfromz;
                                         xzRevise = true;
-                                        xz->reconnect();
                                         yACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                     if (remain > 0) {
                                         assert(remain <= ycost);
+                                        xy->reconnect();    // must be done before using the constraint
                                         xy->extend(xy->getIndex(y), *iterY, remain);
                                         xyRevise = true;
-                                        xy->reconnect();
                                         zACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                 } else {
                                     if (ycost > 0) {
                                         Cost costfromy = min(remain,ycost);
+                                        xy->reconnect();    // must be done before using the constraint
                                         xy->extend(xy->getIndex(y), *iterY, costfromy);
                                         remain = remain - costfromy;
                                         xyRevise = true;
-                                        xy->reconnect();
                                         zACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                     if (remain > 0) {
                                         assert(remain <= zcost);
+                                        xz->reconnect();    // must be done before using the constraint
                                         xz->extend(xz->getIndex(z), *iterZ, remain);
                                         xzRevise = true;
-                                        xz->reconnect();
                                         yACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                 }
@@ -433,7 +422,7 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
     }}
     
     if (flag) {
-        if(!yzin->connected()) yzin->reconnect();
+        yzin->reconnect();
         yzin->propagate();
     }
 }

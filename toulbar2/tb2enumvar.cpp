@@ -509,7 +509,7 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
  
 	 if(yz) {
 		yz->addCosts( yznew );
-	 	if(!yz->connected()) yz->reconnect();
+	 	yz->reconnect();
 	 }
 	 else 
 	 { 

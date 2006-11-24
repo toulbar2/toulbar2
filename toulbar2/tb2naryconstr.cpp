@@ -9,6 +9,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	default_cost = defval;
 	store_top = default_cost < wcsp->getUb();
 	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
+    propagate();
 }
 
 
@@ -85,12 +86,15 @@ void NaryConstraint::projectNaryBinary()
 
 // USED ONLY DURING SEARCH 
 void NaryConstraint::assign(int varIndex) {
-	assert(nonassigned > 2);	
-	nonassigned = nonassigned - 1;
-	if(nonassigned == 2) {
+	assert(nonassigned > 2);
+    if (connected(varIndex)) {
+       deconnect(varIndex);	
+	   nonassigned = nonassigned - 1;
+	   if(nonassigned == 2) {
 			deconnect();
 			projectNaryBinary();
-	}
+	   }
+    }
 }
 
 

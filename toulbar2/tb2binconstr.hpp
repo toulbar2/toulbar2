@@ -31,7 +31,7 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     template <GetCostMember getBinaryCost> void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
             vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
             vector<Value> &supportY, vector<StoreCost> &deltaCostsY);
-    template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, Value valueY);
+    template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY);
     template <GetCostMember getBinaryCost> bool verify(EnumeratedVariable *x, EnumeratedVariable *y);
     // return true if unary support of x is broken
     bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
@@ -53,8 +53,8 @@ class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,Enum
     void findSupportY() {findSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY);}
     void findFullSupportX() {findFullSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
     void findFullSupportY() {findFullSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY,supportX,deltaCostsX);}
-    void projectX() {projection<&BinaryConstraint::getCost>(x,y->getValue());}
-    void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x->getValue());}
+    void projectX() {projection<&BinaryConstraint::getCost>(x,y,y->getValue());}
+    void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x,x->getValue());}
     bool verifyX() {return verify<&BinaryConstraint::getCost>(x,y);}
     bool verifyY() {return verify<&BinaryConstraint::getCostReverse>(y,x);}
     bool projectX(Value value, Cost cost) {return project(x,value,cost,deltaCostsX);}
@@ -168,6 +168,14 @@ public:
     }
     
     void propagate() {
+        if (x->assigned()) {
+            assign(0);
+            return;
+        }
+        if (y->assigned()) {
+            assign(1);
+            return;
+        }
         // delay true propagation in order to not interfer with ternary findFullSupportEAC
         if (getDACScopeIndex()==0) {
 //            findSupportY();             // must do AC before DAC
