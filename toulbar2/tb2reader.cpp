@@ -90,22 +90,25 @@ void WCSP::read_wcsp(const char *fileName)
 	            scope[i] = (EnumeratedVariable*) vars[j];
 			}     	
             file >> defval;
-			NaryConstraint* nary = postNaryConstraint(scope,arity,defval);
-
 		    file >> ntuples;
-            
-            char buf[MAX_ARITY];
-            for (t = 0; t < ntuples; t++) {
-				for(i=0;i<arity;i++) {
-		            file >> j;
-		            buf[i] = j + CHAR_FIRST;
-				}
-				buf[i] = '\0';
-			    file >> cost;
-			
-				string tup = buf;
-				nary->insertTuple(tup, cost, NULL);
-            } 	           
+    
+		    if((defval != 0) || (ntuples > 0))           
+		    { 
+	            NaryConstraint* nary = postNaryConstraint(scope,arity,defval);
+                    
+	            char buf[MAX_ARITY];
+	            for (t = 0; t < ntuples; t++) {
+					for(i=0;i<arity;i++) {
+			            file >> j;
+			            buf[i] = j + CHAR_FIRST;
+					}
+					buf[i] = '\0';
+				    file >> cost;
+				
+					string tup = buf;
+					nary->insertTuple(tup, cost, NULL);
+	            } 	           
+		    }
         } else if (arity == 3) {
             file >> i;
             file >> j;
@@ -139,7 +142,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost;
                 }
-                postTernaryConstraint(i,j,k,costs);
+                if((defval != 0) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
 		} else if (arity == 2) {
             file >> i;
@@ -168,7 +171,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
                     costs[a * y->getDomainInitSize() + b] = cost;
                 }
-                postBinaryConstraint(i,j,costs);
+                if((defval != 0) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
             } else {
                 file >> funcname;
                 if (funcname == ">=") {

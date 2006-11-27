@@ -340,7 +340,7 @@ void Solver::newSolution()
         if (ToulBar2::pedigree) {
             ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
         } else {
-            ofstream file("solution");
+            ofstream file("sol");
             if (!file) {
               cerr << "Could not write file " << "solution" << endl;
               exit(EXIT_FAILURE);
