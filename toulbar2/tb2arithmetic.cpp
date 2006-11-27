@@ -28,6 +28,11 @@ void Supxyc::print(ostream& os)
     os << this << " " << x->getName() << " >= " << y->getName() << " + " << cst << endl;
 }
 
+void Supxyc::dump(ostream& os)
+{
+    os << "2 " << x->wcspIndex << " " << y->wcspIndex << " -1 >= " << cst << endl;
+}
+
 /*
  * Propagation methods
  * 

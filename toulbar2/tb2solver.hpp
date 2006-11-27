@@ -47,6 +47,8 @@ public:
     
     bool solve();
     
+    void dump_wcsp(const char *fileName);
+    
     friend void setvalue(int wcspId, int varIndex, Value value);
 };
 

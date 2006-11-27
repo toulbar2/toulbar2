@@ -131,10 +131,7 @@ public:
         for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) res++;
         return res;}
     unsigned int numberOfConstraints() const {return constrs.size();}
-    unsigned int numberOfConnectedConstraints() const {
-        int res = 0; 
-        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res++;
-        return res;}
+    unsigned int numberOfConnectedConstraints() const;
     Value getDomainSizeSum();       // total current number of values
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
@@ -176,8 +173,6 @@ public:
     void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
 
     // functions and data for variable elimination
-    // all these may be used when toulbar2::elimLevel > 0
-
 	typedef struct {
 		EnumeratedVariable* x;
 		EnumeratedVariable* y;
@@ -213,6 +208,7 @@ public:
     
     
     void print(ostream& os);
+    void dump(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
 };
 

@@ -73,6 +73,18 @@ void TernaryConstraint::print(ostream& os)
     }
 }
 
+void TernaryConstraint::dump(ostream& os)
+{
+    os << "3 " << x->wcspIndex << " " << y->wcspIndex << " " << z->wcspIndex << " 0 " << x->getDomainSize() * y->getDomainSize() * z->getDomainSize() << endl;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+           for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+             os << *iterX << " " << *iterY << " " << *iterZ << " " << getCost(*iterX, *iterY, *iterZ) << endl;
+           }
+        }
+    }
+}
+
 /*
  * Propagation methods
  * 

@@ -59,6 +59,8 @@ public:
     
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
 
+    virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
+
     friend ostream& operator<<(ostream& os, Constraint &c) {
         c.print(os);
         return os;

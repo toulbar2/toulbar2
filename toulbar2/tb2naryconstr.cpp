@@ -219,3 +219,21 @@ void NaryConstraint::print(ostream& os)
 	} 
 	os << "} " << endl;
 }
+
+void NaryConstraint::dump(ostream& os)
+{
+    os << arity_;
+    for(int i = 0; i < arity_;i++) 
+    {
+        os << " " << scope[i]->wcspIndex;
+    }
+    os << default_cost << " " << f.size() << endl;
+    
+    TUPLES::iterator  it = f.begin();
+    while(it != f.end()) {
+        string t = it->first;
+        Cost c =  it->second;       
+        it++;
+        os << t << " " << c << endl; 
+    } 
+}

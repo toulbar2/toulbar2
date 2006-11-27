@@ -43,6 +43,12 @@ void Solver::read_wcsp(const char *fileName)
     ToulBar2::setvalue = setvalue;
 }
 
+void Solver::dump_wcsp(const char *fileName)
+{
+    ofstream pb(fileName);
+    if (pb) wcsp->dump(pb);
+}
+
 /*
  * Link between solver and wcsp: maintain a backtrackable list of unassigned variable indexes
  * 

@@ -282,6 +282,7 @@ public:
     double computeTightness();
 
     void print(ostream& os);
+    void dump(ostream& os);
 };
 
 #endif /*TB2TERNARYCONSTR_HPP_*/

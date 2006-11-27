@@ -40,6 +40,7 @@ public:
     double  computeTightness() { return 0; }
     
     void print(ostream& os);
+    void dump(ostream& os);
 };
 
 #endif /*TB2ARITHMETIC_HPP_*/

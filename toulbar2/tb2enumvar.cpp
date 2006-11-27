@@ -93,7 +93,6 @@ void EnumeratedVariable::print(ostream& os)
     }
 }
 
-
 /*
  * Propagation methods
  * 

@@ -81,6 +81,7 @@ public:
 
     
     virtual void print(ostream& os) =0;
+    virtual void dump(ostream& os) =0;
 };
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);

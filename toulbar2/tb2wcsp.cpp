@@ -302,6 +302,14 @@ bool WCSP::getEnumDomainAndCost(int varIndex, ValueCost *array)
 	} else return false;
 }
 
+unsigned int WCSP::numberOfConnectedConstraints() const
+{
+    int res = 0; 
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res++;
+    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) res++;
+    return res;
+}
+
 void WCSP::printNCBuckets()
 {
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
@@ -325,7 +333,49 @@ void WCSP::print(ostream& os)
     if (ToulBar2::verbose >= 4) {
         os << "Constraints:" << endl;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
+        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) os << *elimConstrs[i];
     }
+}
+
+// Warning! make the assumption that all initial domains start at zero!!!
+void WCSP::dump(ostream& os)
+{
+    Value maxdomsize = 0;
+    Value xcosts = 0;
+    if (getLb() > 0) xcosts++;
+    for (unsigned int i=0; i<vars.size(); i++) {
+        if (vars[i]->getInf() < 0) {
+            cerr << "Cannot save domain of variable " << vars[i]->getName() << " with negative values!!!" << endl;
+            exit(EXIT_FAILURE);
+        }
+        if (vars[i]->getSup()+1 > maxdomsize) maxdomsize = vars[i]->getSup()+1;
+        if (vars[i]->enumerated()) xcosts++;
+        else if (vars[i]->getInfCost() > 0 || vars[i]->getSupCost() > 0) {
+            cerr << "Cannot save interval variable " << vars[i]->getName() << " with bound unary costs!!!" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    os << "wcsp " << numberOfVariables() << " " << maxdomsize << " " << numberOfConnectedConstraints()+xcosts << " " << getUb() << endl;
+    for (unsigned int i=0; i<vars.size(); i++) {
+        if (!vars[i]->enumerated()) os << "-";
+        os << vars[i]->getSup()+1;
+        if (i < vars.size()-1) os << " ";
+    }
+    os << endl;
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->dump(os);
+    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) elimConstrs[i]->dump(os);
+    for (unsigned int i=0; i<vars.size(); i++) {
+        if (vars[i]->enumerated()) {
+            int size = vars[i]->getDomainSize();
+            ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+            getEnumDomainAndCost(i, domcost);
+            os << "1 " << i << " " << getUb() << " " << size << endl;
+            for (int v=0; v<size; v++) {
+                os << domcost[v].value << " " << domcost[v].cost << endl;
+            }
+        }
+    }
+    if (getLb() > 0) os << " 0 " << getLb() << " 0" << endl;
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp)

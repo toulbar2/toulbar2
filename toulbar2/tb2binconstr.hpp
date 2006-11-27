@@ -304,6 +304,7 @@ public:
 	}
 
     void print(ostream& os);
+    void dump(ostream& os);
 };
 
 #endif /*TB2BINCONSTR_HPP_*/

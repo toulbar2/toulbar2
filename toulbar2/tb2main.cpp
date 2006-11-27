@@ -71,6 +71,7 @@ bool localSearch(char *filename, Cost *upperbound)
 int main(int argc, char **argv)
 {
     bool localsearch = false;
+    bool saveproblem = false;
     if (argc <= 1) {
         cerr << argv[0] << " version " << ToulBar2::version << endl;
         cerr << "Missing a problem filename as first argument!" << endl;
@@ -100,6 +101,7 @@ int main(int argc, char **argv)
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
+        cerr << "   z : save current problem in wcsp format" << endl;
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -120,6 +122,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
         if (strchr(argv[i],'i')) localsearch = true;
+        if (strchr(argv[i],'z')) saveproblem = true;
     }
 	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;
@@ -137,6 +140,7 @@ int main(int argc, char **argv)
         if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
 #endif
         solver.read_wcsp(argv[1]);
+        if (saveproblem) solver.dump_wcsp("problem.wcsp");
         solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;
