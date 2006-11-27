@@ -11,6 +11,12 @@ bool localSearch(char *filename, Cost *upperbound)
     char *fich = "resincop";
     char line[1024];
     Cost tmpUB=-1;
+    int varIndex;
+    int value;
+    map<int, int> solution;
+    map<int, int> bestsol;
+    Cost bestcost = MAX_COST;
+    Cost solcost = MAX_COST;
     
     // run local search solver INCOP from Bertrand Neveu on wcsp format
     sprintf(line,"./narycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", fich, filename);
@@ -30,7 +36,29 @@ bool localSearch(char *filename, Cost *upperbound)
                 file >> keyword; // skip ":"
                 file >> tmpUB;
                 if (tmpUB>=0 && tmpUB < *upperbound) *upperbound = tmpUB;
+                if (ToulBar2::writeSolution && *upperbound == bestcost) {
+                    ofstream sol("sol");
+                    if (file) {
+                        for (map<int,int>::iterator iter = bestsol.begin(); iter != bestsol.end(); ++iter) {
+                            sol << " " << (*iter).second;
+                        }
+                        sol << endl;
+                    }
+                }
                 break;
+            }
+        }
+        if (keyword == "variable") {
+            file >> varIndex;
+            file >> keyword; // skip ":"
+            file >> value;
+            solution[varIndex] = value;
+        }
+        if (keyword == "verification") {
+            file >> solcost;
+            if (solcost < bestcost) {
+                bestcost = solcost;
+                bestsol = solution;
             }
         }
     }
