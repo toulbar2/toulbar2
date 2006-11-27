@@ -5,8 +5,44 @@
 #include "tb2solver.hpp"
 #include "tb2pedigree.hpp"
 
+bool localSearch(char *filename, Cost *upperbound)
+{
+    string keyword;
+    char *fich = "resincop";
+    char line[1024];
+    Cost tmpUB=-1;
+    
+    // run local search solver INCOP from Bertrand Neveu on wcsp format
+    sprintf(line,"./narycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", fich, filename);
+    system(line);
+
+    // open the file
+    ifstream file(fich);
+    if (!file) {
+        return false;
+    }
+
+    while (file) {
+        file >> keyword;
+        if (keyword == "Meilleur") {
+            file >> keyword;
+            if (keyword == "essai") {
+                file >> keyword; // skip ":"
+                file >> tmpUB;
+                if (tmpUB>=0 && tmpUB < *upperbound) *upperbound = tmpUB;
+                break;
+            }
+        }
+    }
+    file.close();
+    sprintf(line,"rm -f %s",fich);
+    system(line);
+    return true;
+}
+
 int main(int argc, char **argv)
 {
+    bool localsearch = false;
     if (argc <= 1) {
         cerr << argv[0] << " version " << ToulBar2::version << endl;
         cerr << "Missing a problem filename as first argument!" << endl;
@@ -35,6 +71,7 @@ int main(int argc, char **argv)
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
         cerr << "   l : limited discrepancy search" << endl;
+        cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -54,9 +91,16 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
+        if (strchr(argv[i],'i')) localsearch = true;
     }
-	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST; 	
-    Solver solver(STORE_SIZE, (c>0)?c:MAX_COST);
+	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST;
+    if (c <= 0) c = MAX_COST;
+    if (localsearch && !strstr(argv[1],".pre")) {
+        if (localSearch(argv[1],&c)) {
+            cout << "Initial upperbound: " << c << endl;
+        } else cerr << "INCOP solver ./narycsp not found!" << endl;
+    }
+    Solver solver(STORE_SIZE, c);
 
     try {
 #ifdef MENDELSOFT
