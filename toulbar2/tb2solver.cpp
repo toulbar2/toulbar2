@@ -321,7 +321,12 @@ void Solver::newSolution()
     assert(unassignedVars->empty());
 #ifndef NDEBUG
     bool allVarsAssigned = true;
-    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) allVarsAssigned &= wcsp->assigned(i);
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+        if (wcsp->unassigned(i)) {
+            allVarsAssigned = false;
+            break;
+        }
+    }
     assert(allVarsAssigned);
 #endif
     wcsp->updateUb(wcsp->getLb());
@@ -411,7 +416,7 @@ bool Solver::solve()
         if (ToulBar2::lds) {
             int discrepancy = 0;
             do {
-                cout << "--- LDS " << discrepancy << " ---" << endl;
+                cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " ---" << endl;
                 ToulBar2::limited = false;
                 try {
                     store->store();
