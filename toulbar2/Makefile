@@ -27,6 +27,7 @@ ICCFLAGS = -O3 -ipo -static -DNDEBUG -pg
 
 PFLAGS = 
 # -pg -g3
+# -static -static-libgcc
 
 LIBFLAGS = 
 # -fPIC
