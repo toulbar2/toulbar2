@@ -371,6 +371,15 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
+                if (deconnected()) {
+                    if (supportBroken) {
+                        x->findSupport();
+                    }
+                    if (xyRevise && xy->connected()) xy->propagate();
+                    if (xzRevise && xz->connected()) xz->propagate();
+                    if (yzRevise && yz->connected()) yz->propagate();
+                    return;
+                }
             }
             
             supportX[xindex] = support;
