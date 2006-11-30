@@ -131,6 +131,12 @@ int main(int argc, char **argv)
             cout << "Initial upperbound: " << c << endl;
         } else cerr << "INCOP solver ./narycsp not found!" << endl;
     }
+    if (c==0) {
+        cout << "Initial upperbound equal to zero!" << endl;
+        cout << "No solution found by initial propagation!" << endl;
+        cout << "end." << endl;
+        return 0;
+    }
     Solver solver(STORE_SIZE, c);
 
     try {
