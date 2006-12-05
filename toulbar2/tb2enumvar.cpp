@@ -293,8 +293,7 @@ void EnumeratedVariable::propagateEAC()
         }
         fillEAC2(false);
         if (unassigned()) {
-            assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
-            // findFullSupportEAC must have inserted current variable in EAC1
+            // findFullSupportEAC may have inserted current variable in EAC1
 	        if (!linkEAC1Queue.removed) {
                 assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
                 wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
@@ -564,7 +563,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 
 	EnumeratedVariable* y = (EnumeratedVariable*) yz->getVar(0);
 	EnumeratedVariable* z = (EnumeratedVariable*) yz->getVar(1);
-
+    
 	bool flag_rev = false;
 	if(n2links > 0) {
 //		if(this == links[0].constr->getVar(0)) flag_rev = (y != links[0].constr->getVar(1)); 

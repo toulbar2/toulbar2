@@ -98,7 +98,6 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
 //    wcsp->revise(this);
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << "," << z->getName() << endl;
     bool supportBroken = false;
-//    extendTernary();
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         int xindex = x->toIndex(*iterX);
         pair<Value,Value> support = supportX[xindex];
@@ -121,6 +120,7 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
+                if (deconnected()) return;
             }
             supportX[xindex] = support;
             assert(getIndex(y) < getIndex(z));
@@ -137,7 +137,6 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
             }
         }
     }
-//    projectTernary();
     if (supportBroken) {
         x->findSupport();
     }
@@ -223,6 +222,7 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
+                if (deconnected()) return;
             }
             supportX[xindex] = support;
             assert(getIndex(y) < getIndex(z));
@@ -372,11 +372,9 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
                 if (deconnected()) {
-                    if (supportBroken) {
-                        x->findSupport();
-                    }
-                    if (xyRevise && xy->connected()) xy->propagate();
-                    if (xzRevise && xz->connected()) xz->propagate();
+                    assert(x->assigned());
+                    assert(xy->deconnected());
+                    assert(xz->deconnected());
                     if (yzRevise && yz->connected()) yz->propagate();
                     return;
                 }

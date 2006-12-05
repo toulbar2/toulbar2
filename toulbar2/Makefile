@@ -23,7 +23,7 @@ CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY
 OFLAGS = -O3 -DNDEBUG
 # -O2
 
-ICCFLAGS = -O3 -ipo -static -DNDEBUG -pg
+ICCFLAGS = -O3 -ipo -static -DNDEBUG
 
 PFLAGS = 
 # -pg -g3

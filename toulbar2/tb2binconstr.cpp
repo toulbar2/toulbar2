@@ -104,6 +104,7 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "binary projection of " << minCost << " from C" << x->getName() << "," << y->getName() << "(" << *iterX << "," << minCostValue << ")" << endl;
                 x->project(*iterX, minCost);
+                if (deconnected()) return;
             }
             supportX[xindex] = minCostValue;
         }
@@ -153,6 +154,7 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "binary projection of " << minCost << " from C" << x->getName() << "," << y->getName() << "(" << *iterX << "," << minCostValue << ")" << endl;
                 x->project(*iterX, minCost);
+                if (deconnected()) return;
             }
             supportX[xindex] = minCostValue;
         }

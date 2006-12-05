@@ -229,7 +229,7 @@ void WCSP::processTernary()
     			tctr2->extendTernary();
     
     			BinaryConstraint* b = tctr1->commonBinary(tctr2);
-    			if(!b->connected()) b->reconnect();
+    			b->reconnect();
     	
     			tctr1->projectTernaryBinary(b);	
     			tctr2->projectTernaryBinary(b);
