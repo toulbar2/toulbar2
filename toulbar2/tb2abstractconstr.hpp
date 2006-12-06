@@ -168,7 +168,7 @@ public:
 
 
 
-#include <set>
+#include <map>
 
 class AbstractNaryConstraint : public Constraint
 {
@@ -177,18 +177,8 @@ protected:
 	int arity_;
     int arity() const {return arity_;}
 	
-	typedef struct { 
-		EnumeratedVariable* var;
-		int pos;
-	} varElem;
-
-	struct indexCmp {
-		bool operator()(const varElem* e1, const varElem* e2) const { return e1->var->wcspIndex > e2->var->wcspIndex; }
-	};
-	
 	EnumeratedVariable** scope;
-    typedef set<varElem*, indexCmp> SCOPE;
-    SCOPE scope_inv;
+    map<int,int> scope_inv;
 	
 	int nconnected_links;
     DLink<ConstraintLink>** links;
@@ -200,14 +190,11 @@ public:
     	scope = new EnumeratedVariable* [arity_];
     	links = new DLink<ConstraintLink>* [arity_];
     	
-		varElem* ve;
 		for(int i=0; i < arity_; i++) {
-			ve = new varElem;
-			ve->var = scope_in[i];
-			ve->pos = i;
-			scope_inv.insert( ve );
-			scope[i] = ve->var;
-			links[i] = ve->var->link(this,i);
+			EnumeratedVariable* var = scope_in[i];
+			scope_inv[ var->wcspIndex ] = i;
+			scope[i] = var;
+			links[i] = var->link(this,i);
 			if(!links[i]->removed) nconnected_links++;
 		}
     }
@@ -220,11 +207,10 @@ public:
     }
 
 	int getIndex(Variable* var) const { 
-		varElem ve;
-		ve.var = (EnumeratedVariable*) var;
-		SCOPE::iterator it = scope_inv.find(&ve);
+		int index = var->wcspIndex;
+		map<int,int>::const_iterator it = scope_inv.find(index);
 		if(it == scope_inv.end()) return -1;
-		else return (*it)->pos;
+		else return it->second;
     }
 
     bool connected(int varIndex) {return !links[varIndex]->removed;}
@@ -268,12 +254,7 @@ public:
 	}
 
     int getDACScopeIndex() {return -1;}
-
-
-
-	virtual void sum( AbstractNaryConstraint* nary ) {}
-	virtual void project( EnumeratedVariable* x ) {}
-    
+   
 };
 
 

@@ -9,7 +9,15 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	default_cost = defval;
 	store_top = default_cost < wcsp->getUb();
 	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
+  
     propagate();
+
+	pf = new TUPLES;
+}
+
+NaryConstraint::~NaryConstraint()
+{
+	if(pf) delete pf;
 }
 
 
@@ -18,18 +26,41 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 void NaryConstraint::insertTuple( string tin, Cost c, EnumeratedVariable** scope_in = NULL)
 {
 	string t(tin);
-
 	if(scope_in) {
 		for(int i = 0; i < arity_; i++) {
 			int pos = getIndex(scope_in[i]);
 			t[pos] = tin[i];
 		}  
 	}
-	f[t] = c;
+	(*pf)[t] = c;
+}  
+
+void NaryConstraint::insertSum( string t1, Cost c1, NaryConstraint* nary1, string t2, Cost c2, NaryConstraint* nary2 )
+{
+	string t(t1+t2);
+
+	for(int i = 0; i < arity_; i++) {
+		EnumeratedVariable* v = scope[i]; 
+		int pos = i;
+		int pos1 = nary1->getIndex(v);
+		int pos2 = nary2->getIndex(v);
+		
+		if((pos1 >= 0) && (pos2 >= 0)) 
+		{
+			if(t1[pos1] != t2[pos2]) return;
+			t[pos] = t1[pos1];
+		}
+		else if(pos1 >= 0) t[pos] = t1[pos1];			
+		else if(pos2 >= 0) t[pos] = t2[pos2];			
+	}  
+
+	(*pf)[t] = c1 + c2;
 }  
 
 
+
 Cost NaryConstraint::eval( string s ) {
+	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
 	else return default_cost;  
@@ -97,13 +128,71 @@ void NaryConstraint::assign(int varIndex) {
     }
 }
 
+#include <map>
+using namespace std;
 
 
 
 
-void NaryConstraint::sum( AbstractNaryConstraint* nary )
+void NaryConstraint::sum( NaryConstraint* nary )
 {
+	deconnect();
 	
+	map<int,int> snew;
+	set_union( scope_inv.begin(), scope_inv.end(),
+		  	   nary->scope_inv.begin(), nary->scope_inv.end(),
+		  	   inserter(snew, snew.begin()) );
+	
+	arity_ = snew.size();
+	EnumeratedVariable** scope1 = scope;
+	DLink<ConstraintLink>** links1 = links; 
+	scope = new EnumeratedVariable* [arity_];
+	links = new DLink<ConstraintLink>* [arity_];
+		
+	int i = 0;
+	map<int,int>::iterator its = snew.begin();
+	while(its != snew.end()) {
+		EnumeratedVariable* var = (EnumeratedVariable*) wcsp->getVar(its->first);
+		its->second = i;
+		scope[i] =  var;
+		int index1 = getIndex(var);
+		if(index1 >= 0) {
+			links[i] = links1[index1];
+			ConstraintLink e = {this, i};
+			links[i]->content = e;
+		}
+		else links[i] = nary->links[ nary->getIndex(var) ];
+
+		i++;
+		its++;
+	}
+
+	TUPLES& f1 = *pf;
+	TUPLES& f2 = *nary->pf;
+	TUPLES::iterator  it1 = f1.begin();
+	TUPLES::iterator  it2 = f2.begin();
+	TUPLES& f = * new TUPLES;
+	pf = &f;
+
+	string t1,t2;
+	Cost c1,c2;   
+	while(it1 != f1.end()) {
+		t1 = it1->first;
+		c1 =  it1->second;
+		while(it2 != f2.end()) {
+			t2 = it2->first;
+			c2 =  it2->second;	
+			insertSum(t1, c1, this, t2, c2, nary);
+			it2++;
+		}
+		it1++;
+	}
+	
+	scope_inv = snew;
+	delete [] scope1;
+	delete [] links1;
+	
+	reconnect();
 }
 
 // Projection of variable x of the nary constraint 
@@ -111,13 +200,16 @@ void NaryConstraint::sum( AbstractNaryConstraint* nary )
 // this function is independent of the search 
 void NaryConstraint::project( EnumeratedVariable* x )
 {
+	
 	if(arity_ <= 1) return;
 	if(getIndex(x) < 0) return;
 	
 	string t,tnext,tproj;
 	Cost c,cnext;
-	
+
+	TUPLES& f = *pf;	
 	TUPLES fproj;
+	
 	
 	int xindex = getIndex(x);
 	
@@ -181,15 +273,12 @@ void NaryConstraint::project( EnumeratedVariable* x )
 	}
 	
 	// Update of internal structures: scope, indexes, links, arity_.
-	varElem    x_ve = {x, xindex};
-	varElem last_ve = {(EnumeratedVariable*) getVar(arity_-1), xindex};
-		
-	scope_inv.erase(&x_ve);
+	scope_inv.erase(x->wcspIndex);
 	x->deconnect(links[xindex]);
 	if(!links[xindex]->removed) nconnected_links--;
 	links[xindex] = links[arity_-1];
 
-	scope_inv.insert(&last_ve);
+	scope_inv[getVar(arity_-1)->wcspIndex] = xindex;
 	scope[ xindex ] = (EnumeratedVariable*) getVar(arity_-1);
 	arity_--;	
 }
@@ -198,6 +287,7 @@ void NaryConstraint::project( EnumeratedVariable* x )
 
 void NaryConstraint::print(ostream& os)
 {
+	TUPLES& f = *pf;
 	os << endl << "f(";
 	for(int i = 0; i < arity_;i++) 
 	{
@@ -222,6 +312,7 @@ void NaryConstraint::print(ostream& os)
 
 void NaryConstraint::dump(ostream& os)
 {
+	TUPLES& f = *pf;
     os << arity_;
     for(int i = 0; i < arity_;i++) 
     {

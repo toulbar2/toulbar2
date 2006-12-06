@@ -14,7 +14,7 @@ using namespace std;
 class NaryConstraint : public AbstractNaryConstraint
 {
 	typedef map<string,Cost> TUPLES;
-    TUPLES f;
+    TUPLES* pf;
 
 	Cost default_cost;          // default cost returned when tuple t is not found in TUPLES (used by function eval(t)
 	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
@@ -23,6 +23,7 @@ class NaryConstraint : public AbstractNaryConstraint
 
 public:
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
+	virtual ~NaryConstraint();
 
 
 	BinaryConstraint* xy;      	// xy is an empty constraint that is created at start time for 
@@ -30,6 +31,8 @@ public:
 	void projectNaryBinary();
 
 	void insertTuple( string t, Cost c, EnumeratedVariable** scope_in );  
+    void insertSum( string t1, Cost c1, NaryConstraint* nary1, string t2, Cost c2, NaryConstraint* nary2 );  
+
     Cost eval( string s );
 
 
@@ -56,12 +59,13 @@ public:
     
 
 	void project( EnumeratedVariable* x );
-	void sum( AbstractNaryConstraint* nary );
+	void sum( NaryConstraint* nary );
 
 
 	void fillRandom();
     void print(ostream& os);
     void dump(ostream& os);
+    
 };
 
 
