@@ -27,6 +27,7 @@ bool ToulBar2::elimVarWithSmallDegree_  = false;
 bool ToulBar2::only_preprocessing  = false;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
+bool ToulBar2::FDAC = false;
 bool ToulBar2::dichotomicBranching = false;
 bool ToulBar2::lds = false;
 bool ToulBar2::limited = false;
@@ -401,7 +402,7 @@ bool WCSP::verify()
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
         // warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
-        if (vars[i]->unassigned() && (!isternary || getUb()-getLb() > 1) && !vars[i]->isEAC()) {
+        if (!ToulBar2::FDAC && vars[i]->unassigned() && (!isternary || getUb()-getLb() > 1) && !vars[i]->isEAC()) {
             cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }
@@ -579,9 +580,9 @@ void WCSP::propagate()
   do {
     eliminate();
     while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
-	       || ((getUb()-getLb() > 1) && !EAC1.empty())) {
+	       || (!ToulBar2::FDAC && (getUb()-getLb() > 1) && !EAC1.empty())) {
       propagateIncDec();
-      if (getUb()-getLb() > 1) propagateEAC();
+      if (!ToulBar2::FDAC && getUb()-getLb() > 1) propagateEAC();
       assert(IncDec.empty());
       propagateDAC();
       assert(IncDec.empty());
@@ -590,7 +591,7 @@ void WCSP::propagate()
       propagateNC();
     }
   } while (!Eliminate.empty());
-  if (getUb()-getLb() <= 1) EAC1.clear();
+  if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
   
 //    revise(NULL);
     	

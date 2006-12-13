@@ -71,6 +71,7 @@ public:
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;
+    static bool FDAC;
     static bool lastConflict;
     static bool lds;
     static bool limited;

@@ -99,6 +99,7 @@ int main(int argc, char **argv)
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
+        cerr << "   f : FDAC soft local consistency propagation instead of EDAC" << endl;
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
@@ -120,6 +121,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
+        if (strchr(argv[i],'f')) ToulBar2::FDAC = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
         if (strchr(argv[i],'i')) localsearch = true;
         if (strchr(argv[i],'z')) saveproblem = true;
