@@ -140,10 +140,10 @@ public:
 
     void processTernary();
     
-    void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     void postSupxyc(int xIndex, int yIndex, Value cste);
-        
-    void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+
+    BinaryConstraint* postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
+    TernaryConstraint* postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
 	NaryConstraint* postNaryConstraint(EnumeratedVariable** scope, int arity, Cost defval);
     
     void read_wcsp(const char *fileName);
@@ -205,6 +205,8 @@ public:
 
     void sortConstraints();
     void preprocessing();
+    
+	Constraint* sum( Constraint* ctr1, Constraint* ctr2  );
     
     
     void print(ostream& os);

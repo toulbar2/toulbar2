@@ -114,7 +114,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 // (even not connected constraints). It also alocates
 // memory for a new constraints. For this two reasons it should 
 // ONLY be called when creating the initial wcsp
-void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
+BinaryConstraint* WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 {
 	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];		
@@ -126,10 +126,11 @@ void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
         ctr->propagate();
 	}
     else ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+    return ctr;
 }
 
 
-void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
+TernaryConstraint* WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
 {
     isternary = true;
 
@@ -162,6 +163,8 @@ void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost
 	    ctr->setBinaries(xy,xz,yz);
 	}
 	else ctr->addCosts(x,y,z,costs);
+	
+	return ctr;
 }
 
 
@@ -218,25 +221,24 @@ void WCSP::processTernary()
 	TernaryConstraint *tctr1max = NULL, *tctr2max = NULL;
 
     if (ToulBar2::preprocessTernaryHeuristic) {
+
         for (unsigned int i=0; i<vars.size(); i++) {
-    //        vars[i]->queueEliminate();
     		TernaryConstraint *tctr1, *tctr2;
             double tight = vars[i]->strongLinkedby(var,tctr1,tctr2);
             if(tight > maxtight) { maxtight = tight; tctr1max = tctr1; tctr2max = tctr2; }
-    
-    		if(tctr1 && tctr2)
-    		{
+    		if(tctr1 && tctr2 && (tctr1 != tctr2)) {
     			tctr1->extendTernary();
     			tctr2->extendTernary();
-    
     			BinaryConstraint* b = tctr1->commonBinary(tctr2);
-    			b->reconnect();
-    	
-    			tctr1->projectTernaryBinary(b);	
-    			tctr2->projectTernaryBinary(b);
-    			b->propagate();	
+    			if(b->connected())
+    			{
+	    			tctr1->projectTernaryBinary(b);	
+	    			tctr2->projectTernaryBinary(b);
+	    			b->propagate();	
+    			}
     		}
         }
+        
         if(ToulBar2::verbose > 0) {
             cout << "Strongest part has mean cost: " << maxtight;
             if(var) cout << "  Variable: " << var->wcspIndex;  
@@ -250,7 +252,7 @@ void WCSP::processTernary()
     	if(constrs[i]->arity() == 3)  
     	{
     		TernaryConstraint* t = (TernaryConstraint*) constrs[i];
-    		//t->extendTernary();
+    		t->extendTernary();
     		t->projectTernary();
     	}
 }
@@ -606,3 +608,42 @@ void WCSP::propagate()
     assert(Eliminate.empty());
     nbNodes++;
 }
+
+
+
+
+
+Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
+{
+	TSCOPE scopeU;
+	ctr1->scopeUnion(scopeU, ctr2);
+	
+	int arityU = scopeU.size();
+
+	EnumeratedVariable** scope = new EnumeratedVariable * [arityU];
+	
+	int i = 0;
+	TSCOPE::iterator it = scopeU.begin();
+	while(it != scopeU.end()) {
+		scope[i++] = (EnumeratedVariable*) getVar( it->first );
+		it++;
+	}	
+	
+	Cost Top = getUb(); 
+	NaryConstraint* nary = postNaryConstraint(scope, arityU, Top );  
+	
+	string tuple1,tuple2;
+	Cost cost1,cost2;
+	
+	ctr1->first();
+    while(ctr1->next(tuple1,cost1)) {
+		ctr2->first();
+	    while(ctr2->next(tuple2,cost2)) {
+	    	if(cost1 + cost2 < Top)	nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2);
+	    }
+	}    
+	
+	delete [] scope;
+	return nary;
+}
+    

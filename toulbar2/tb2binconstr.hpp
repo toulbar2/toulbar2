@@ -142,7 +142,66 @@ public:
 			else	       costs[ix * sizeY + iy] += xy->getCost(*itery,*iterx);
 	    }}
     }
+ 
+
+    EnumeratedVariable* xvar;
+    EnumeratedVariable* yvar;
+    EnumeratedVariable::iterator itvx;
+    EnumeratedVariable::iterator itvy;
+
+    void first() {
+    	itvx = x->begin(); 
+    	itvy = y->begin(); 
+    	xvar = x;
+    	yvar = y;
+    }
     
+    void first( EnumeratedVariable** scope_in) 
+    { 
+    	xvar = scope_in[0];
+    	yvar = scope_in[1];
+    	itvx = xvar->begin(); 
+    	itvy = yvar->begin(); 
+    }
+
+    bool next( string& t, Cost& c) 
+    { 
+    	char tch[3];
+    	if(itvx != xvar->end()) {
+    		int ix = xvar->toIndex(*itvx);
+	    	tch[0] = ix + CHAR_FIRST;
+	    	if(itvy != yvar->end()) {
+	    		int iy = yvar->toIndex(*itvy);
+		    	tch[1] = iy + CHAR_FIRST;
+		    	tch[2] = '\0';
+		    	t = tch;
+		    	c = getCost(xvar,yvar,*itvx, *itvy); 
+				++itvy;
+		    	return true;
+	    	} else {
+	    		++itvx;
+	    		itvy = yvar->begin();
+	    		return next(t,c);
+	    	}
+    	}
+    	return false; 
+    }
+
+	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
+	{
+		int ix,iy;
+		char tch[3]; 
+		strcpy(tch,t.c_str());
+		if(scope_in[0] == x) {
+			   ix = tch[0] - CHAR_FIRST; 
+		       iy = tch[1] - CHAR_FIRST; }
+		else { ix = tch[1] - CHAR_FIRST; 
+			   iy = tch[0] - CHAR_FIRST; }
+			   
+		costs[ix * sizeY + iy] = c;			
+	}
+	
+   
     void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin)
 	{
 		x = xin;

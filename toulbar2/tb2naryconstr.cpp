@@ -21,51 +21,6 @@ NaryConstraint::~NaryConstraint()
 }
 
 
-// for adding a tuple in f
-// scope_in contains the order of the values in string tin 
-void NaryConstraint::insertTuple( string tin, Cost c, EnumeratedVariable** scope_in = NULL)
-{
-	string t(tin);
-	if(scope_in) {
-		for(int i = 0; i < arity_; i++) {
-			int pos = getIndex(scope_in[i]);
-			t[pos] = tin[i];
-		}  
-	}
-	(*pf)[t] = c;
-}  
-
-void NaryConstraint::insertSum( string t1, Cost c1, NaryConstraint* nary1, string t2, Cost c2, NaryConstraint* nary2 )
-{
-	string t(t1+t2);
-
-	for(int i = 0; i < arity_; i++) {
-		EnumeratedVariable* v = scope[i]; 
-		int pos = i;
-		int pos1 = nary1->getIndex(v);
-		int pos2 = nary2->getIndex(v);
-		
-		if((pos1 >= 0) && (pos2 >= 0)) 
-		{
-			if(t1[pos1] != t2[pos2]) return;
-			t[pos] = t1[pos1];
-		}
-		else if(pos1 >= 0) t[pos] = t1[pos1];			
-		else if(pos2 >= 0) t[pos] = t2[pos2];			
-	}  
-
-	(*pf)[t] = c1 + c2;
-}  
-
-
-
-Cost NaryConstraint::eval( string s ) {
-	TUPLES& f = *pf;
-	TUPLES::iterator  it = f.find(s);
-	if(it != f.end()) return it->second;
-	else return default_cost;  
-}
-
 
 // USED ONLY DURING SEARCH to project the nary constraint 
 // to the binary constraint xy, when all variables but 2 are assigned 
@@ -132,6 +87,100 @@ void NaryConstraint::assign(int varIndex) {
 using namespace std;
 
 
+Cost NaryConstraint::eval( string s ) {
+	TUPLES& f = *pf;
+	TUPLES::iterator  it = f.find(s);
+	if(it != f.end()) return it->second;
+	else return default_cost;  
+}
+
+void NaryConstraint::first() 
+{ 
+	tuple_it = pf->begin();
+}
+
+void NaryConstraint::first(EnumeratedVariable** scope_in)
+{
+	first();
+}
+
+bool NaryConstraint::next( string& t, Cost& c)
+{
+	if(tuple_it != pf->end()) { 
+		t = tuple_it->first;
+		c = tuple_it->second;
+		tuple_it++;
+		return true;
+	}
+	else return false;
+}
+
+void NaryConstraint::permute( EnumeratedVariable** scope_in )
+{
+	TUPLES* pf_old = pf;
+	pf = new TUPLES;
+
+	TUPLES::iterator it = pf_old->begin(); 
+	while(it != pf_old->end()) {
+		setTuple( it->first, it->second, scope_in );
+		it++;
+	}
+	
+	delete pf_old;
+	for(int i=0; i<arity_; i++)
+	{
+		map<int,int>::iterator it_pos =  scope_inv.find(scope_in[i]->wcspIndex);
+		int i_old = it_pos->second;
+		it_pos->second = i;
+				
+		scope_inv[ scope_in[i]->wcspIndex ] = i;
+		scope[i] = scope_in[i];
+
+   	    DLink<ConstraintLink>* l = links[i];
+   	    links[i] = links[i_old];
+   	    links[i_old] = l;
+   	    
+   	    links[i]->content.scopeIndex = i;
+   	    l->content.scopeIndex = i_old; 
+	} 
+}
+
+
+// for adding a tuple in f
+// scope_in contains the order of the values in string tin 
+void NaryConstraint::setTuple( string tin, Cost c, EnumeratedVariable** scope_in )
+{
+	string t(tin);
+	if(scope_in) {
+		for(int i = 0; i < arity_; i++) {
+			int pos = getIndex(scope_in[i]);
+			t[pos] = tin[i];
+		}  
+	}
+	(*pf)[t] = c;
+}
+
+void NaryConstraint::insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
+{
+	string t(t1+t2);
+
+	for(int i = 0; i < arity_; i++) {
+		EnumeratedVariable* v = scope[i]; 
+		int pos = i;
+		int pos1 = ctr1->getIndex(v);
+		int pos2 = ctr2->getIndex(v);
+		
+		if((pos1 >= 0) && (pos2 >= 0)) 
+		{
+			if(t1[pos1] != t2[pos2]) return;
+			t[pos] = t1[pos1];
+		}
+		else if(pos1 >= 0) t[pos] = t1[pos1];			
+		else if(pos2 >= 0) t[pos] = t2[pos2];			
+	}  
+
+	(*pf)[t] = c1 + c2;
+}  
 
 
 void NaryConstraint::sum( NaryConstraint* nary )

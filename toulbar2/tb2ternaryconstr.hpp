@@ -166,6 +166,7 @@ public:
             assign(2);
             return;
         }
+
         switch(getDACScopeIndex()) {
             // warning! must do AC before DAC
             case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
@@ -266,6 +267,7 @@ public:
 			if(xz->connected()) { c = xz->getCost(*iterx, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); xz->addcost(*iterx, *iterz, -c); }
 			if(yz->connected()) { c = yz->getCost(*itery, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); yz->addcost(*itery, *iterz, -c); }
 		}}}
+
         xy->deconnect();
         xz->deconnect();
         yz->deconnect();         
@@ -280,6 +282,88 @@ public:
 	}
 
     double computeTightness();
+
+
+    EnumeratedVariable* xvar;
+    EnumeratedVariable* yvar;
+    EnumeratedVariable* zvar;
+    EnumeratedVariable::iterator itvx;
+    EnumeratedVariable::iterator itvy;
+    EnumeratedVariable::iterator itvz;
+
+    void first() {
+    	itvx = x->begin(); 
+    	itvy = y->begin(); 
+    	itvz = z->begin(); 
+    	xvar = x;
+    	yvar = y;
+    	zvar = z;
+    }
+    
+    void first( EnumeratedVariable** scope_in) 
+    { 
+    	xvar = scope_in[0];
+    	yvar = scope_in[1];
+    	zvar = scope_in[2];
+    	itvx = xvar->begin(); 
+    	itvy = yvar->begin(); 
+    	itvz = zvar->begin(); 
+    }
+
+    bool next( string& t, Cost& c) 
+    { 
+    	char tch[4];
+    	if(itvx != xvar->end()) {
+    		int ix = xvar->toIndex(*itvx);
+	    	tch[0] = ix + CHAR_FIRST;
+	    	if(itvy != yvar->end()) {
+	    		int iy = yvar->toIndex(*itvy);
+		    	tch[1] = iy + CHAR_FIRST;
+		    	if(itvz != zvar->end()) {
+		    		int iz = zvar->toIndex(*itvz);
+			    	tch[2] = iz + CHAR_FIRST;
+		 	    	tch[3] = '\0';
+			    	t = tch;
+			    	c = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz); 
+					++itvz;
+			    	return true;
+	    		} else {
+		    		++itvy;
+		    		itvz = zvar->begin();
+		    		return next(t,c);
+		    	}
+	    	} else {
+		    		++itvx;
+		    		itvy = yvar->begin();
+		    		return next(t,c);
+		    }
+    	}
+    	return false; 
+    }
+
+	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
+	{
+		int ix,iy;
+		char tch[3]; 
+		strcpy(tch,t.c_str());
+		if(scope_in[0] == x) {
+			   ix = tch[0] - CHAR_FIRST; 
+		       iy = tch[1] - CHAR_FIRST; }
+		else { ix = tch[1] - CHAR_FIRST; 
+			   iy = tch[0] - CHAR_FIRST; }
+			   
+		costs[ix * sizeY + iy] = c;			
+	}
+
+
+
+
+
+
+
+
+
+
 
     void print(ostream& os);
     void dump(ostream& os);

@@ -70,6 +70,14 @@ public:
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
     int getDACScopeIndex() {return dacvar;}
+
+
+	void scopeSet( TSCOPE& scope_inv ) {
+		scope_inv.clear();
+		scope_inv[ x->wcspIndex ] = 0;
+		scope_inv[ y->wcspIndex ] = 1;
+	}	
+
 };
 
 
@@ -159,6 +167,15 @@ public:
         }
 	}
     int getDACScopeIndex() {return dacvar;}
+
+	void scopeSet( TSCOPE& scope_inv ) {
+		scope_inv.clear();
+		scope_inv[ x->wcspIndex ] = 0;
+		scope_inv[ y->wcspIndex ] = 1;
+		scope_inv[ z->wcspIndex ] = 2;
+	}	
+
+
 };
 
 
@@ -178,7 +195,7 @@ protected:
     int arity() const {return arity_;}
 	
 	EnumeratedVariable** scope;
-    map<int,int> scope_inv;
+    TSCOPE scope_inv;
 	
 	int nconnected_links;
     DLink<ConstraintLink>** links;
@@ -255,6 +272,10 @@ public:
 
     int getDACScopeIndex() {return -1;}
    
+   
+	void scopeSet( TSCOPE& scope_inv_in ) {
+		scope_inv_in = scope_inv;
+	}
 };
 
 

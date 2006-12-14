@@ -9,7 +9,6 @@
 #include <map>
 using namespace std;
 
-#define CHAR_FIRST 'a'
 
 class NaryConstraint : public AbstractNaryConstraint
 {
@@ -30,8 +29,6 @@ public:
 								// projecting the nary constraint when all variables but 2 are assigned  	
 	void projectNaryBinary();
 
-	void insertTuple( string t, Cost c, EnumeratedVariable** scope_in );  
-    void insertSum( string t1, Cost c1, NaryConstraint* nary1, string t2, Cost c2, NaryConstraint* nary2 );  
 
     Cost eval( string s );
 
@@ -60,6 +57,16 @@ public:
 
 	void project( EnumeratedVariable* x );
 	void sum( NaryConstraint* nary );
+
+
+	TUPLES::iterator  tuple_it;
+	void first();
+    void first(EnumeratedVariable** scope_in);
+    bool next( string& t, Cost& c);
+	void setTuple( string tin, Cost c, EnumeratedVariable** scope_in );
+    void insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
+	void permute( EnumeratedVariable** scope_in );
+
 
 
 	void fillRandom();
