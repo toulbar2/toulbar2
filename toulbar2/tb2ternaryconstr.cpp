@@ -35,7 +35,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
          for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) 
                 costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
-
+                
     propagate();
 }
 
@@ -260,9 +260,6 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
     bool supportBroken = false;
     bool yACRevise = false;
     bool zACRevise = false;
-    bool xyRevise = false;
-    bool xzRevise = false;
-    bool yzRevise = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         int xindex = x->toIndex(*iterX);
         pair<Value,Value> support = supportX[xindex];
@@ -302,15 +299,11 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                                         xz->reconnect();    // must be done before using the constraint
                                         xz->extend(xz->getIndex(z), *iterZ, costfromz);
                                         remain = remain - costfromz;
-                                        xzRevise = true;
-                                        yACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                     if (remain > 0) {
                                         assert(remain <= ycost);
                                         xy->reconnect();    // must be done before using the constraint
                                         xy->extend(xy->getIndex(y), *iterY, remain);
-                                        xyRevise = true;
-                                        zACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                 } else {
                                     if (ycost > 0) {
@@ -318,15 +311,11 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                                         xy->reconnect();    // must be done before using the constraint
                                         xy->extend(xy->getIndex(y), *iterY, costfromy);
                                         remain = remain - costfromy;
-                                        xyRevise = true;
-                                        zACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                     if (remain > 0) {
                                         assert(remain <= zcost);
                                         xz->reconnect();    // must be done before using the constraint
                                         xz->extend(xz->getIndex(z), *iterZ, remain);
-                                        xzRevise = true;
-                                        yACRevise = true;   // AC may be broken by unary extension to ternary
                                     }
                                 }
                             }
@@ -339,7 +328,6 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                             if (xycost > 0) {
                                 Cost costfromxy = min(remain,xycost);
                                 extend(xy,x,y,z,*iterX,*iterY,costfromxy);
-                                yACRevise = true;   // AC may be broken by binary extension to ternary
                                 zACRevise = true;   // AC may be broken by binary extension to ternary
                                 remain = remain - costfromxy;
                             }
@@ -347,14 +335,11 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                                 Cost costfromxz = min(remain,xzcost);
                                 extend(xz,x,z,y,*iterX,*iterZ,costfromxz);
                                 yACRevise = true;   // AC may be broken by binary extension to ternary
-                                zACRevise = true;   // AC may be broken by binary extension to ternary
                                 remain = remain - costfromxz;
                             }
                             if (remain > 0 && yzcost > 0) {
                                 Cost costfromyz = min(remain,yzcost);
                                 extend(yz,y,z,x,*iterY,*iterZ,costfromyz);
-                                yACRevise = true;   // AC may be broken by binary extension to ternary
-                                zACRevise = true;   // AC may be broken by binary extension to ternary
                                 remain = remain - costfromyz;
                             }
                             assert(remain==0);
@@ -371,13 +356,7 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
-                if (deconnected()) {
-                    assert(x->assigned());
-                    assert(xy->deconnected());
-                    assert(xz->deconnected());
-                    if (yzRevise && yz->connected()) yz->propagate();
-                    return;
-                }
+                if (deconnected()) return;
             }
             
             supportX[xindex] = support;
@@ -394,9 +373,6 @@ void TernaryConstraint::findFullSupportEAC(EnumeratedVariable *x, EnumeratedVari
     if (supportBroken) {
         x->findSupport();
     }
-    if (xyRevise && xy->connected()) xy->propagate();
-    if (xzRevise && xz->connected()) xz->propagate();
-    if (yzRevise && yz->connected()) yz->propagate();
     if (yACRevise && connected()) {
         if (getIndex(x) < getIndex(z)) findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);
         else findSupport(y,z,x,supportY,deltaCostsY,supportZ,supportX);
@@ -432,8 +408,8 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
             yzin->addcost(*itery,*iterz,mincost);   // project mincost to binary
             if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
             
-            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) 
-            {  // substract mincost from ternary constraint
+            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
+                // substract mincost from ternary constraint
                 for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
                     addcost(xx, yy, zz, *iterx, *itery, *iterz, -mincost);                            
                 }
