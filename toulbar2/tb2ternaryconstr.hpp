@@ -71,6 +71,9 @@ public:
 					  EnumeratedVariable *xx, 
 					  EnumeratedVariable *yy, 
 					  EnumeratedVariable *zz, 
+					  BinaryConstraint* xy,
+					  BinaryConstraint* xz,
+					  BinaryConstraint* yz,
 					  vector<Cost> &tab, 
 					  StoreStack<Cost, Cost> *storeCost);
 

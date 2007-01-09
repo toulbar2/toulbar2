@@ -15,6 +15,9 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 									 EnumeratedVariable *xx, 
 									 EnumeratedVariable *yy,
 									 EnumeratedVariable *zz,
+									 BinaryConstraint *xy_,
+									 BinaryConstraint *xz_,
+									 BinaryConstraint *yz_,
 									 vector<Cost> &tab, 
 									 StoreStack<Cost, Cost> *storeCost) 
 									 
@@ -35,6 +38,10 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
          for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) 
                 costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
+ 
+    xy = xy_;
+    xz = xz_;
+    yz = yz_;
                 
     propagate();
 }

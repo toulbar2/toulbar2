@@ -168,8 +168,7 @@ TernaryConstraint* WCSP::postTernaryConstraint(int xIndex, int yIndex, int zInde
 		if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
 		if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
 
-	    ctr = new TernaryConstraint(this,x,y,z, costs, &storeData->storeCost);  
-	    ctr->setBinaries(xy,xz,yz);
+	    ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);  
 	}
 	else ctr->addCosts(x,y,z,costs);
 	
