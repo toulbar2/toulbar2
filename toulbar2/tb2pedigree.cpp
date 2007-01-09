@@ -12,7 +12,7 @@
 void Pedigree::iniProb( WCSP* wcsp ) { 
    Cost TopProb = 0;
 
-   ToulBar2::NormFactor = (-log(10)/log1p( - pow(10, -(double)ToulBar2::resolution)));
+   ToulBar2::NormFactor = (-log(10.)/log1p( - pow(10., -(double)ToulBar2::resolution)));
    if (ToulBar2::NormFactor > (pow(2,(float)INTEGERBITS)-1)/-log10(pow(10, -(float)ToulBar2::resolution))) {
 	  fprintf(stderr,"This resolution cannot be ensured on the data type used to represent costs.\n");
 	  fprintf(stderr,"Please use toolbarl. Aborting.\n");
@@ -427,11 +427,11 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 	    for (int n=m; n<=nballeles; n++) { /* n = second allele of mother */
             for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
                 for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-				   TProb p = 0;
-				   if((i==k && j==m) || (i==k && j==n)) p += 0.25; 
-				   if((i==l && j==m) || (i==l && j==n)) p += 0.25;
-				   if((i==m && j==k) || (i==m && j==l)) p += 0.25;
-				   if((i==n && j==k) || (i==n && j==l)) p += 0.25;
+				   TProb p = 0.;
+				   if((i==k && j==m) || (i==m && j==k)) p += 0.25; 
+				   if((i==k && j==n) || (i==n && j==k)) p += 0.25;
+				   if((i==l && j==m) || (i==m && j==l)) p += 0.25;
+				   if((i==l && j==n) || (i==n && j==l)) p += 0.25;
 	               costs3.push_back( wcsp->Prob2Cost(p) );
                 }
             }
@@ -447,7 +447,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
   	case 0: foundersprob.clear();
 		  	for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
 		      for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-		         foundersprob.push_back( wcsp->Prob2Cost( 1./(TProb)domsize ) );
+		         foundersprob.push_back( 1./(TProb)domsize );
 		      }
 		  	}
 		    break;
@@ -458,7 +458,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 		  	 }
 		   	 for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
 		       for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-				  foundersprob.push_back( wcsp->Prob2Cost( (TProb)freqalleles[ allelesInv[i] ]*(TProb)freqalleles[ allelesInv[j] ] / (TProb)(nbtypings * nbtypings * 4)  ) );		  
+				  foundersprob.push_back( (TProb)freqalleles[ allelesInv[i] ]*(TProb)freqalleles[ allelesInv[j] ] / (TProb)(nbtypings * nbtypings * 4) );		  
 		       }
 		   	 }    
 			 break;
