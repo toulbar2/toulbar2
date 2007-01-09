@@ -52,8 +52,8 @@ externalcostevent ToulBar2::setminobj = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
 
 bool ToulBar2::bayesian = false;
-int ToulBar2::resolution = 8;
-TProb ToulBar2::errorg = 0.01;
+int ToulBar2::resolution = 7;
+TProb ToulBar2::errorg = 0.05;
 TProb ToulBar2::NormFactor = 1;
 int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
 										 // 1: 			probs depending on the frequencies
@@ -386,7 +386,7 @@ void WCSP::dump(ostream& os)
             }
         }
     }
-    if (getLb() > 0) os << " 0 " << getLb() << " 0" << endl;
+    if (getLb() > 0) os << "0 " << getLb() << " 0" << endl;
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp)
