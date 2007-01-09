@@ -51,7 +51,16 @@ externalevent ToulBar2::removevalue = NULL;
 externalcostevent ToulBar2::setminobj = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
 
+bool ToulBar2::bayesian = false;
+int ToulBar2::resolution = 8;
+TProb ToulBar2::errorg = 0.01;
+TProb ToulBar2::NormFactor = 1;
+int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
+										 // 1: 			probs depending on the frequencies
+										 // otherwise:  read from file
 int WCSP::wcspCounter = 0;
+
+
 
 /*
  * WCSP constructors
@@ -646,4 +655,18 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	delete [] scope;
 	return nary;
 }
+    
+
+   
+
+Cost WCSP::Prob2Cost(TProb p) {
+	if (p == 0.0) return getUb();
+	Cost c = -log10(p)*ToulBar2::NormFactor;
+	if(c >= MAX_COST) return getUb();
+	return c;
+}
+
+TProb WCSP::Cost2LogLike(Cost c) { return -(TProb)c/ToulBar2::NormFactor; }
+TProb WCSP::Cost2Prob(Cost c) { return pow(10, -(TProb)c/ToulBar2::NormFactor); }
+
     

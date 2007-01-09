@@ -65,6 +65,7 @@ bool localSearch(char *filename, Cost *upperbound)
     file.close();
     sprintf(line,"rm -f %s",fich);
     system(line);
+    
     return true;
 }
 
@@ -125,12 +126,22 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
         if (strchr(argv[i],'i')) localsearch = true;
         if (strchr(argv[i],'z')) saveproblem = true;
+        if (strchr(argv[i],'y')) { 
+        	ToulBar2::bayesian = true;
+        	float f;
+        	if(argc > 3) { sscanf(argv[3],"%f",&f); ToulBar2::errorg = f; }        		 
+        	if(argc > 4) sscanf(argv[4],"%d",&ToulBar2::resolution);
+        	if(argc > 5) sscanf(argv[5],"%d",&ToulBar2::foundersprob_class); // 0: 			equal frequencies
+								   										     // 1: 			probs depending on the frequencies
+										 									 // otherwise:  read from file 
+        }
     }
 	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
         if (localSearch(argv[1],&c)) {
             cout << "Initial upperbound: " << c << endl;
+            
         } else cerr << "INCOP solver ./narycsp not found!" << endl;
     }
     if (c==0) {
@@ -149,10 +160,19 @@ int main(int argc, char **argv)
 #endif
         solver.read_wcsp(argv[1]);
         if (saveproblem) solver.dump_wcsp("problem.wcsp");
-        solver.solve();
+        else solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;
     }
     cout << "end." << endl;    
+    
+	/* // for the competition it was necessary to write a file with the optimal sol  
+	char line[80];
+    string strfile(argv[1]);
+    int pos = strfile.find_last_of(".");
+    string strfilewcsp = strfile.substr(0,pos) + ".ub";
+    sprintf(line,"echo %d > %s",(int)solver.getWCSP()->getUb(),strfilewcsp.c_str());
+    system(line); */
+
     return 0;
 }

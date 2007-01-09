@@ -50,6 +50,8 @@ public:
     void dump_wcsp(const char *fileName);
     
     friend void setvalue(int wcspId, int varIndex, Value value);
+
+    WeightedCSP* getWCSP() { return wcsp; }
 };
 
 #endif /*TB2SOLVER_HPP_*/

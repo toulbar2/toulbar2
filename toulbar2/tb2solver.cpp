@@ -184,6 +184,7 @@ void Solver::remove(int varIndex, Value value)
     wcsp->propagate();
 }
 
+
 void Solver::binaryChoicePoint(int varIndex, Value value)
 {
     assert(wcsp->unassigned(varIndex));
@@ -209,10 +210,14 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     }
     store->restore();
     nbBacktracks++;
+
+
+
     if (dichotomic) {
       if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
     } else remove(varIndex, value);
     recursiveSolve();
+
 }
 
 void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
@@ -330,7 +335,9 @@ void Solver::newSolution()
     assert(allVarsAssigned);
 #endif
     wcsp->updateUb(wcsp->getLb());
-    cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+    
+    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+	else cout << "New solution: " <<  wcsp->getUb() << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
     wcsp->restoreSolution();
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
@@ -365,7 +372,7 @@ void Solver::newSolution()
 }
 
 void Solver::recursiveSolve()
-{
+{		
 //    int varIndex = getNextUnassignedVar();
     int varIndex = (ToulBar2::lastConflict)?getVarMinDomainDivMaxDegreeLastConflict():getVarMinDomainDivMaxDegree();
     if (varIndex >= 0) {
@@ -380,6 +387,7 @@ void Solver::recursiveSolve()
             binaryChoicePoint(varIndex, wcsp->getInf(varIndex));
         }
     } else newSolution();
+
 }
 
 /* returns true if a limit has occured during the search */
@@ -434,12 +442,15 @@ bool Solver::solve()
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
+
     store->restore();
     if (wcsp->getUb() < initialUpperBound) {
-        cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+        if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+		else cout << "Optimum: " << wcsp->getUb() << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
         return true;
     } else {
         cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
         return false;
     }
+    
 }

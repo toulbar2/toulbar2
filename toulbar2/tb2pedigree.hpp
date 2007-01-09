@@ -33,14 +33,18 @@ public:
   void print(ostream& os);
 };
 
+
 class Pedigree {
-  int locus;    // same locus for all the genotypes
-  vector<Individual> pedigree;  // list of individuals
-  vector<int> genotypes;    // list of genotyped individuals id.
-  vector<Genotype> genoconvert; // convert domain value to genotype
-  map<int, int> individuals;    // sorted list of pair<individual id, pedigree id>
-  map<int, int> alleles;    // sorted list of pair<allele number, encoding consecutive number>  
-  int nbtyped;  // number of individuals with a genotyped descendant
+  int locus;    				  // same locus for all the genotypes
+  vector<Individual> pedigree;    // list of individuals
+  vector<int> genotypes;          // list of genotyped individuals id.
+  vector<Genotype> genoconvert;   // convert domain value to genotype
+  map<int, int> individuals;      // sorted list of pair<individual id, pedigree id>
+  map<int, int> alleles;          // sorted list of pair<allele number, encoding consecutive number>  
+  int nbtyped;  				  // number of individuals with a genotyped descendant
+
+  vector<TProb> foundersprob;	
+  map<int, int> freqalleles;      // frequencies of original alleles: freqalleles[allele number] = frequency
   
   void typeAscendants(int individual);
 
@@ -48,7 +52,16 @@ public:
   Pedigree() : locus(-1), nbtyped(0) {alleles[0] = 0;}
   
   void read(const char *fileName, WCSP *wcsp);
+  void read_bayesian(const char *fileName, WCSP *wcsp);
   void save(const char *fileName, WCSP *wcsp, bool corrected);
+  
+  void readPedigree(const char *fileName, WCSP *wcsp);
+  void buildWCSP(const char *fileName, WCSP *wcsp);
+  void buildWCSP_bayesian(const char *fileName, WCSP *wcsp );
+  void iniProb( WCSP* wcsp );
+  
+
+  void translateWCSP( WCSP *wcsp, bool equalfreq );	
 
   void printCorrection(WCSP *wcsp);
   

@@ -150,6 +150,7 @@ public:
     {
         DLink<T> *elt;
     public:
+        iterator() { elt = NULL; }
         iterator(DLink<T> *e) : elt(e) {}
 
         T operator*() const {

@@ -99,6 +99,7 @@ public:
         EnumeratedVariable *var;
         Domain::iterator diter;
     public:
+        iterator() { var = NULL; }
         iterator(EnumeratedVariable *v, Domain::iterator iter) : var(v), diter(iter) {}
 
         Value operator*() const {return *diter;}

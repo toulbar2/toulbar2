@@ -61,6 +61,13 @@ public:
     // avoid weakning hard costs
     Cost sub(const Cost a, const Cost b) const {assert(b <= a); return (a >= getUb())?a:(a-b);}
 
+	// Functions for dealing with probabilities
+	// warning: NormFactor has to be initiailized
+	Cost Prob2Cost(TProb p);
+	TProb Cost2LogLike(Cost c);
+	TProb Cost2Prob(Cost c);
+
+
     void updateUb(Cost newUb) {
         ub = min(ub,newUb);
 	if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;

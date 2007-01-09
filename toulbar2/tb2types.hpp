@@ -32,16 +32,27 @@ const Value MIN_VAL = -(INT_MAX / 2);
 
 const Value MAX_DOMAIN_SIZE  = 1000;
 
-typedef int Cost;
-const Cost MAX_COST = (INT_MAX / 2);
+//typedef int Cost;
+//const Cost MAX_COST = (INT_MAX / 2);
 
-//typedef Long Cost;
-//const Cost MAX_COST = (LONG_LONG_MAX / 2);
+typedef Long Cost;
+const Cost MAX_COST = (LONG_LONG_MAX / 2);
 
 //typedef Rational Cost;
 //const Cost MAX_COST = RATIONAL_MAX;
 
 const int STORE_SIZE = 16;
+
+
+
+
+
+
+// Type for probabilities in pedigree bayesian conversion 
+typedef double TProb;
+#define INTEGERBITS (8*sizeof(Cost)-2)
+
+
 
 /*
  * Global variables encapsulated as static members
@@ -52,6 +63,7 @@ typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
 
 class Pedigree;
+
 
 class ToulBar2
 {
@@ -81,6 +93,11 @@ public:
     static externalevent removevalue;
     static externalcostevent setminobj;
     static Pedigree *pedigree;
+    static bool bayesian;
+    static int resolution;
+    static TProb errorg;
+    static TProb NormFactor;
+    static int foundersprob_class; 
 };
 
 /*

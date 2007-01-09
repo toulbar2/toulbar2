@@ -16,13 +16,13 @@ typedef struct {
 
 
 
-
 #define MAX_ARITY 50
 
 void WCSP::read_wcsp(const char *fileName)
 {
     if (ToulBar2::pedigree) {
-      ToulBar2::pedigree->read(fileName, this);
+      if (!ToulBar2::bayesian) ToulBar2::pedigree->read(fileName, this);
+      else ToulBar2::pedigree->read_bayesian(fileName, this);
       return;
     }
     string pbname;
@@ -106,7 +106,7 @@ void WCSP::read_wcsp(const char *fileName)
 				    file >> cost;
 				
 					string tup = buf;
-					nary->insertTuple(tup, cost, NULL);
+					nary->setTuple(tup, cost, NULL);
 	            } 	           
 		    }
         } else if (arity == 3) {
@@ -142,7 +142,9 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost;
                 }
-                if((defval != 0) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
+                if((defval != 0) || (ntuples > 0)) {
+                		TernaryConstraint* ctr = postTernaryConstraint(i,j,k,costs); 
+                }
             }
 		} else if (arity == 2) {
             file >> i;
@@ -171,7 +173,9 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
                     costs[a * y->getDomainInitSize() + b] = cost;
                 }
-                if((defval != 0) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
+                if((defval != 0) || (ntuples > 0)) {
+                	BinaryConstraint* ctr =  postBinaryConstraint(i,j,costs);
+                }
             } else {
                 file >> funcname;
                 if (funcname == ">=") {
@@ -225,6 +229,7 @@ void WCSP::read_wcsp(const char *fileName)
             inclowerbound += defval;
         } 
     }
+
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(getLb() + inclowerbound);

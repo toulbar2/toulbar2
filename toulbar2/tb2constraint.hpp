@@ -8,6 +8,14 @@
 
 #include "tb2types.hpp"
 
+
+#define CHAR_FIRST 'A'
+
+#include <map>
+using namespace std;
+typedef map<int,int> TSCOPE;
+
+
 class Constraint : public WCSPLink
 {
     Long conflictWeight;
@@ -60,6 +68,48 @@ public:
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
 
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
+
+
+    virtual void first() {}
+    virtual void first(EnumeratedVariable** scope_in) {}
+    virtual bool next( string& t, Cost& c) { return false; }
+	virtual void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) {}
+	virtual void scopeSet( TSCOPE& scope_inv ) {}	
+
+	void scopeCommon( TSCOPE& scope_in, Constraint* ctr ) 
+	{
+		TSCOPE scope1,scope2;
+		scopeSet( scope1 );
+		ctr->scopeSet( scope2 );
+		
+		set_intersection( scope1.begin(), scope1.end(),
+				  	   	  scope2.begin(), scope2.end(),
+					  	  inserter(scope_in, scope_in.begin()) );		
+	}
+	
+		
+	void scopeUnion( TSCOPE& scope_in, Constraint* ctr ) 
+	{
+		TSCOPE scope1,scope2;
+		scopeSet( scope1 );
+		ctr->scopeSet( scope2 );
+		
+		set_union( scope1.begin(), scope1.end(),
+		  	   	   scope2.begin(), scope2.end(),
+			  	   inserter(scope_in, scope_in.begin()) );		
+	}
+		
+	void scopeDifference( TSCOPE& scope_in, Constraint* ctr )
+	{
+		TSCOPE scope1,scope2;
+		scopeSet( scope1 );
+		ctr->scopeSet( scope2 );
+		
+		set_difference( scope1.begin(), scope1.end(),
+			  	   	    scope2.begin(), scope2.end(),
+				  	    inserter(scope_in, scope_in.begin()) );		
+	}
+
 
     friend ostream& operator<<(ostream& os, Constraint &c) {
         c.print(os);
