@@ -8,6 +8,11 @@
 
 #include "tb2types.hpp"
 
+long double pow(long double x, long double y) {return powl(x,y);}
+long double log10(long double x) {return log10l(x);}
+long double log(long double x) {return logl(x);}
+long double log1p(long double x) {return log1pl(x);}
+
 //cost= 0 log2= -1
 //cost= 1 log2= 0
 //cost= 2 log2= 1

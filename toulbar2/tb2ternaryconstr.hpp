@@ -170,12 +170,20 @@ public:
             return;
         }
 
-        switch(getDACScopeIndex()) {
-            // warning! must do AC before DAC
-            case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
-            case 1: findSupportX(); if(connected()) findSupportZ(); if(connected()) findFullSupportY(); break;
-            case 2: findSupportX(); if(connected()) findSupportY(); if(connected()) findFullSupportZ(); break;
-        }
+//        switch(getDACScopeIndex()) {
+//            // warning! must do AC before DAC
+//            case 0: findSupportY(); if(connected()) findSupportZ(); if(connected()) findFullSupportX(); break;
+//            case 1: findSupportX(); if(connected()) findSupportZ(); if(connected()) findFullSupportY(); break;
+//            case 2: findSupportX(); if(connected()) findSupportY(); if(connected()) findFullSupportZ(); break;
+//        }
+
+        x->queueAC(); 
+        y->queueAC(); 
+        z->queueAC(); 
+        x->queueDAC();
+        y->queueDAC();
+        z->queueDAC();
+
         x->queueEAC1();     // TO BE IMPROVED !!!
         y->queueEAC1();
         z->queueEAC1();

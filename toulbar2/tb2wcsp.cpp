@@ -123,7 +123,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 // (even not connected constraints). It also alocates
 // memory for a new constraints. For this two reasons it should 
 // ONLY be called when creating the initial wcsp
-BinaryConstraint* WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
+void WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 {
 	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];		
@@ -135,11 +135,10 @@ BinaryConstraint* WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost
         ctr->propagate();
 	}
     else ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
-    return ctr;
 }
 
 
-TernaryConstraint* WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
+void WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
 {
     isternary = true;
 
@@ -171,15 +170,17 @@ TernaryConstraint* WCSP::postTernaryConstraint(int xIndex, int yIndex, int zInde
 	    ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);  
 	}
 	else ctr->addCosts(x,y,z,costs);
-	
-	return ctr;
 }
 
 
 
-NaryConstraint* WCSP::postNaryConstraint(EnumeratedVariable** scope, int arity, Cost defval)
+int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
 {
-	 return new NaryConstraint(this,scope,arity,defval);  
+     EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];
+     for(int i = 0; i < arity; i++) scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+     NaryConstraint *ctr = new NaryConstraint(this,scopeVars,arity,defval);  
+     delete [] scopeVars;
+     return ctr->wcspIndex;
 }
 
 
@@ -628,18 +629,18 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	
 	int arityU = scopeU.size();
 
-	EnumeratedVariable** scope = new EnumeratedVariable * [arityU];
+	int* scope = new int [arityU];
 	
 	int i = 0;
 	TSCOPE::iterator it = scopeU.begin();
 	while(it != scopeU.end()) {
-		scope[i++] = (EnumeratedVariable*) getVar( it->first );
+		scope[i++] = it->first;
 		it++;
 	}	
 	
 	Cost Top = getUb(); 
-	NaryConstraint* nary = postNaryConstraint(scope, arityU, Top );  
-	
+	int naryIndex = postNaryConstraint(scope, arityU, Top );  
+	NaryConstraint* nary = (NaryConstraint*) constrs[naryIndex];
 	string tuple1,tuple2;
 	Cost cost1,cost2;
 	
@@ -658,14 +659,14 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 
    
 
-Cost WCSP::Prob2Cost(TProb p) {
+Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
 	Cost c = -log10(p)*ToulBar2::NormFactor;
-	if(c >= MAX_COST) return getUb();
+	if(c > getUb()) return getUb();
 	return c;
 }
 
-TProb WCSP::Cost2LogLike(Cost c) { return -(TProb)c/ToulBar2::NormFactor; }
-TProb WCSP::Cost2Prob(Cost c) { return pow(10, -(TProb)c/ToulBar2::NormFactor); }
+TProb WCSP::Cost2LogLike(Cost c) const { return -(TProb)c/ToulBar2::NormFactor; }
+TProb WCSP::Cost2Prob(Cost c) const { return pow(10., -(TProb)c/ToulBar2::NormFactor); }
 
     

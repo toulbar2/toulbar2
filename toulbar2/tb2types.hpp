@@ -49,7 +49,7 @@ const int STORE_SIZE = 16;
 
 
 // Type for probabilities in pedigree bayesian conversion 
-typedef double TProb;
+typedef long double TProb;
 #define INTEGERBITS (8*sizeof(Cost)-2)
 
 

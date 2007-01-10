@@ -8,8 +8,6 @@
 
 #include "tb2types.hpp"
 
-class BinaryConstraint;
-
 class WeightedCSP {
 public:
     static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound);      // WCSP factory
@@ -26,10 +24,9 @@ public:
     // avoid weakning hard costs
     virtual Cost sub(const Cost a, const Cost b) const =0;
 
-	virtual Cost Prob2Cost(TProb p) =0;
-	virtual TProb Cost2LogLike(Cost c) =0;
-	virtual TProb Cost2Prob(Cost c) =0;
-
+    virtual Cost Prob2Cost(TProb p)const =0;
+    virtual TProb Cost2LogLike(Cost c) const =0;
+    virtual TProb Cost2Prob(Cost c) const =0;
 
     virtual void updateUb(Cost newUb) =0;
     virtual void enforceUb() =0;
@@ -78,13 +75,15 @@ public:
     virtual int makeEnumeratedVariable(string n, Value *d, int dsize) =0;
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) =0;
     
-    virtual BinaryConstraint* postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
+    virtual void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
+    virtual void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
+    virtual int postNaryConstraint(int* scope, int arity, Cost defval) =0;
     virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
   
-  virtual int getElimOrder() =0;
-  virtual void restoreSolution() =0;
+    virtual int getElimOrder() =0;
+    virtual void restoreSolution() =0;
 
     
     virtual void print(ostream& os) =0;

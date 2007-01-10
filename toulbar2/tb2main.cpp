@@ -165,14 +165,6 @@ int main(int argc, char **argv)
         cout << "No solution found by initial propagation!" << endl;
     }
     cout << "end." << endl;    
-    
-	/* // for the competition it was necessary to write a file with the optimal sol  
-	char line[80];
-    string strfile(argv[1]);
-    int pos = strfile.find_last_of(".");
-    string strfilewcsp = strfile.substr(0,pos) + ".ub";
-    sprintf(line,"echo %d > %s",(int)solver.getWCSP()->getUb(),strfilewcsp.c_str());
-    system(line); */
 
     return 0;
 }

@@ -63,9 +63,9 @@ public:
 
 	// Functions for dealing with probabilities
 	// warning: NormFactor has to be initiailized
-	Cost Prob2Cost(TProb p);
-	TProb Cost2LogLike(Cost c);
-	TProb Cost2Prob(Cost c);
+	Cost Prob2Cost(TProb p) const;
+	TProb Cost2LogLike(Cost c) const;
+	TProb Cost2Prob(Cost c) const;
 
 
     void updateUb(Cost newUb) {
@@ -149,9 +149,9 @@ public:
     
     void postSupxyc(int xIndex, int yIndex, Value cste);
 
-    BinaryConstraint* postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
-    TernaryConstraint* postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
-	NaryConstraint* postNaryConstraint(EnumeratedVariable** scope, int arity, Cost defval);
+    void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
+    void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+    int postNaryConstraint(int* scopeIndex, int arity, Cost defval);
     
     void read_wcsp(const char *fileName);
 

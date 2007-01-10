@@ -10,24 +10,21 @@
 
 
 void Pedigree::iniProb( WCSP* wcsp ) { 
-   Cost TopProb = 0;
+   TProb TopProb = 0;
 
    ToulBar2::NormFactor = (-log(10.)/log1p( - pow(10., -(double)ToulBar2::resolution)));
    if (ToulBar2::NormFactor > (pow(2,(float)INTEGERBITS)-1)/-log10(pow(10, -(float)ToulBar2::resolution))) {
-	  fprintf(stderr,"This resolution cannot be ensured on the data type used to represent costs.\n");
-	  fprintf(stderr,"Please use toolbarl. Aborting.\n");
+	  cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 	  abort();
    }
 	
    int nballeles = alleles.size()-1;
-   bool overflow = false;
 
-   TopProb = 0;
+   TopProb = 0.;
    
    int ngenotyped = genotypes.size();
    while(ngenotyped) {
-   		if(TopProb < MAX_COST) TopProb += -log10(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
-   		else overflow = true; 
+   		TopProb += -log10(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
    		ngenotyped--;
    }
   
@@ -35,20 +32,17 @@ void Pedigree::iniProb( WCSP* wcsp ) {
   	Individual& individual = *iter;
 	if(individual.typed) {
 		if(individual.mother && individual.father) {
-			if(TopProb < MAX_COST) TopProb += -log10(0.25) * ToulBar2::NormFactor;
-			else overflow = true;
+			TopProb += -log10(0.25) * ToulBar2::NormFactor;
 		}
 		else if(individual.mother || individual.father) {
-			if(TopProb < MAX_COST) TopProb += -log10(0.50) * ToulBar2::NormFactor;
-			else overflow = true;
+			TopProb += -log10(0.50) * ToulBar2::NormFactor;
 		}
 		else
 		{
 			TProb minp = 1;
 			switch(ToulBar2::foundersprob_class)
 			{
-				case 0:  if(TopProb < MAX_COST) TopProb += -log10(1./nballeles) * ToulBar2::NormFactor;
-						 else overflow = true;			
+				case 0:  TopProb += -log10(1./nballeles) * ToulBar2::NormFactor;
 						 break;
 						
 				case 1:  for (map<int,int>::iterator iter = freqalleles.begin(); iter != freqalleles.end(); ++iter) {
@@ -56,21 +50,22 @@ void Pedigree::iniProb( WCSP* wcsp ) {
 							if(p < minp) minp = p;
 						 }
 						
-						 if(TopProb < MAX_COST) TopProb += -log10(minp) * ToulBar2::NormFactor;
-						 else overflow = true;			
+						 TopProb += -log10(minp) * ToulBar2::NormFactor;
 						 break;
 						 
 				default: for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
 				        	if(*iter < minp) minp = *iter;
 				         }
-						 if(TopProb < MAX_COST) TopProb += -log10(minp) * ToulBar2::NormFactor;
-						 else overflow = true;			
+						 TopProb += -log10(minp) * ToulBar2::NormFactor;
 			}
 		}
 	}
   }	
-  wcsp->updateUb(TopProb);
-  if(overflow) cout << "Possible risk of overflow: product of min probabilities < size of used datatype" << endl;
+  if(TopProb > MAX_COST) {
+      cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
+      abort();
+  }
+  wcsp->updateUb((Cost) TopProb);
 }
 
 
