@@ -661,12 +661,11 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 
 Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
-	Cost c = -log10(p)*ToulBar2::NormFactor;
+	Cost c = -Log10(p)*ToulBar2::NormFactor;
 	if(c > getUb()) return getUb();
 	return c;
 }
 
 TProb WCSP::Cost2LogLike(Cost c) const { return -(TProb)c/ToulBar2::NormFactor; }
-TProb WCSP::Cost2Prob(Cost c) const { return pow(10., -(TProb)c/ToulBar2::NormFactor); }
-
-    
+TProb WCSP::Cost2Prob(Cost c) const { return Pow((TProb)10., -(TProb)c/ToulBar2::NormFactor); }
+ 

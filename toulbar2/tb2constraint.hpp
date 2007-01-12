@@ -9,11 +9,7 @@
 #include "tb2types.hpp"
 
 
-#define CHAR_FIRST 'A'
-
-#include <map>
 using namespace std;
-typedef map<int,int> TSCOPE;
 
 
 class Constraint : public WCSPLink

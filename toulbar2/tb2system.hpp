@@ -8,10 +8,21 @@
 
 #include "tb2types.hpp"
 
-long double pow(long double x, long double y) {return powl(x,y);}
-long double log10(long double x) {return log10l(x);}
-long double log(long double x) {return logl(x);}
-long double log1p(long double x) {return log1pl(x);}
+
+#ifdef INT_COST
+double Pow(double x, double y);
+double Log10(double x);
+double Log(double x);
+double Log1p(double x);
+#endif
+
+#ifdef LONGLONG_COST
+long double Pow(long double x, long double y);
+long double Log10(long double x);
+long double Log(long double x);
+long double Log1p(long double x);
+#endif
+
 
 //cost= 0 log2= -1
 //cost= 1 log2= 0

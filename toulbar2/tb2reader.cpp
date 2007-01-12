@@ -16,7 +16,7 @@ typedef struct {
 
 
 
-#define MAX_ARITY 50
+#define MAX_ARITY 100
 
 void WCSP::read_wcsp(const char *fileName)
 {
@@ -79,6 +79,7 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
+        if(arity > MAX_ARITY)  { cout << "Nary constraints with variables than more than 254 values are not supported." << endl; abort(); }       
         if (!file) {
             cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
             break;
@@ -100,7 +101,8 @@ void WCSP::read_wcsp(const char *fileName)
 	            char buf[MAX_ARITY];
 	            for (t = 0; t < ntuples; t++) {
 					for(i=0;i<arity;i++) {
-			            file >> j;
+			            file >> j;			            
+			            if(j + CHAR_FIRST > 254) { cout << "Nary constraints with variables than more than 254 values are not supported." << endl; abort(); }
 			            buf[i] = j + CHAR_FIRST;
 					}
 					buf[i] = '\0';
