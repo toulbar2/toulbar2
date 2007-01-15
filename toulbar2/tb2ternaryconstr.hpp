@@ -56,9 +56,13 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     void findSupportX() {findSupport(x,y,z,supportX,deltaCostsX,supportY,supportZ);}
     void findSupportY() {findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);}
     void findSupportZ() {findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);}
-    void findFullSupportX() {findFullSupport(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ);}
-    void findFullSupportY() {findFullSupport(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ);}
-    void findFullSupportZ() {findFullSupport(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY);}
+//    void findFullSupportX() {findFullSupport(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ);}
+//    void findFullSupportY() {findFullSupport(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ);}
+//    void findFullSupportZ() {findFullSupport(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY);}
+    // DAC and EAC enforce strong supports (including ternary, binary and unary costs)
+    void findFullSupportX() {findFullSupportEAC(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ,xy,xz,yz);}
+    void findFullSupportY() {findFullSupportEAC(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ,xy,yz,xz);}
+    void findFullSupportZ() {findFullSupportEAC(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY,xz,yz,xy);}
     void findFullSupportEACX() {findFullSupportEAC(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ,xy,xz,yz);}
     void findFullSupportEACY() {findFullSupportEAC(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ,xy,yz,xz);}
     void findFullSupportEACZ() {findFullSupportEAC(z,x,y,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY,xz,yz,xy);}
