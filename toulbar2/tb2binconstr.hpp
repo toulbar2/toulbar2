@@ -143,7 +143,16 @@ public:
 	    }}
     }
  
-
+    void clearCosts() {
+        for (unsigned int i=0; i<sizeX; i++) deltaCostsX[i] = 0;
+        for (unsigned int j=0; j<sizeY; j++) deltaCostsY[j] = 0;
+        for (unsigned int i=0; i<sizeX; i++) {
+          for (unsigned int j=0; j<sizeY; j++) {
+            costs[i * sizeY + j] = 0;
+          }
+        }
+    }
+    
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
     EnumeratedVariable::iterator itvx;
