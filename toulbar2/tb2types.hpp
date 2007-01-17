@@ -34,6 +34,7 @@
 using namespace std;
 
 typedef long long Long;
+typedef long double Double;
 
 #include "tb2utils.hpp"
 #include "tb2rational.hpp"
@@ -55,14 +56,14 @@ typedef double TProb;
 #ifdef LONGLONG_COST
 typedef Long Cost;
 const Cost MAX_COST = (LONG_LONG_MAX / 2);
-typedef long double TProb;
+typedef Double TProb;
 #endif
 
 
 #ifdef RATIONAL_COST
 typedef Rational Cost;
 const Cost MAX_COST = RATIONAL_MAX;
-typedef long double TProb;
+typedef Double TProb;
 #endif
 
 

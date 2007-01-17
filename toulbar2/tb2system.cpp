@@ -10,11 +10,13 @@ double Pow(double x, double y) {return pow(x,y);}
 double Log10(double x) {return log10(x);}
 double Log(double x) {return log(x);}
 double Log1p(double x) {return log1p(x);}
+Cost String2Cost(char *ptr) {return atoi(ptr);}
 #endif
 
 #ifdef LONGLONG_COST
-long double Pow(long double x, long double y) {return powl(x,y);}
-long double Log10(long double x) {return log10l(x);}
-long double Log(long double x) {return logl(x);}
-long double Log1p(long double x) {return log1pl(x);}
+Double Pow(Double x, Double y) {return powl(x,y);}
+Double Log10(Double x) {return log10l(x);}
+Double Log(Double x) {return logl(x);}
+Double Log1p(Double x) {return log1pl(x);}
+Cost String2Cost(char *ptr) {return atoll(ptr);}
 #endif

@@ -17,12 +17,13 @@ double Log1p(double x);
 #endif
 
 #ifdef LONGLONG_COST
-long double Pow(long double x, long double y);
-long double Log10(long double x);
-long double Log(long double x);
-long double Log1p(long double x);
+Double Pow(Double x, Double y);
+Double Log10(Double x);
+Double Log(Double x);
+Double Log1p(Double x);
 #endif
 
+Cost String2Cost(char *ptr);
 
 //cost= 0 log2= -1
 //cost= 1 log2= 0
