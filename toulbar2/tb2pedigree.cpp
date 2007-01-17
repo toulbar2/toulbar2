@@ -128,6 +128,10 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   int nballeles = 0;
   int nbtypings = 0;
   map<int, int> allelesInv;
+
+  string strfile(fileName);
+  int pos = strfile.find_last_of(".");
+  string errorfilename = strfile.substr(0,pos) + ".errors";
   
   // open the file
   ifstream file(fileName);
@@ -135,6 +139,17 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     cerr << "Could not open file " << fileName << endl;
     exit(EXIT_FAILURE);
   }
+
+  generrors.clear();
+  int individual;
+  ifstream fileErrors( errorfilename.c_str() );
+  if (fileErrors) {
+	  while(fileErrors) {
+		fileErrors >> individual;
+	  	fileErrors >> generrors[individual];
+	  }
+  }
+
 
   while (file) {
     int cur_locus = -1;
@@ -583,10 +598,55 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 }
 
 
+void Pedigree::printCorrectSol(WCSP *wcsp)
+{
+	if(!generrors.size()) return;
+	
+    ofstream file("sol_correct");
+    if (!file) {
+      cerr << "Could not write file " << "solution" << endl;
+      exit(EXIT_FAILURE);
+    }
+ 
+	for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it ) 
+	{
+		Individual& ind = *it;
+		if(ind.typed) {
+			map<int,int>::iterator it = generrors.find(ind.individual);
+			if(it != generrors.end()) file << " " << it->second;
+			else file << " " << wcsp->getValue(ind.varindex);
+		}
+		else file << " " << -1;
+    }
+    file << endl;
+}
 
+
+void Pedigree::printSol(WCSP *wcsp)
+{
+    ofstream file("sol");
+    if (!file) {
+      cerr << "Could not write file " << "solution" << endl;
+      exit(EXIT_FAILURE);
+    }
+       
+	for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it ) 
+	{
+		Individual& ind = *it;
+		if(ind.typed) file << " " << wcsp->getValue(ind.varindex);
+		else file << " " << -1;
+    }
+    file << endl;
+}
 
 void Pedigree::printCorrection(WCSP *wcsp)
 {
+  bool errorinfo = generrors.size() > 0;
+  
+  int ncorrect = 0;
+  int ncorrections = 0;
+  int ncorrectok = 0;
+  	
   cout << "Correction:";
   for (unsigned int i=0; i<genotypes.size(); i++) {
     int sol = wcsp->getValue(pedigree[individuals[genotypes[i]]].varindex);
@@ -597,10 +657,26 @@ void Pedigree::printCorrection(WCSP *wcsp)
     if (!((allele1>0 && allele2>0 && ((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
 		|| ((allele1==0 || allele2==0) && (a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2)))) {
       cout << " " << genotypes[i];
+
+	  if(errorinfo) {
+	      map<int,int>::iterator it = generrors.find(genotypes[i]);
+	      if(it != generrors.end()) {
+	      	ncorrect++;
+	      	int allellereal = it->second;
+	      	if((allellereal == a1) && (a1 != allele1)) ncorrectok++;
+	      }
+	  }   
+      ncorrections++;
     }
   }
-  cout << endl;
+  cout << endl;   
+  if(errorinfo) {
+  	cout << "Errorfile info: ";
+  	cout << ncorrect << "/"  << ncorrections << ", " <<  ncorrectok << "/" << ncorrect << ", " << generrors.size() << " original" << endl;
+    cout << endl;  
+  }
 }
+
 
 void Pedigree::printGenotype(ostream& os, Value value)
 {

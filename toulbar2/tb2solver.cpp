@@ -357,16 +357,19 @@ void Solver::newSolution()
     if (ToulBar2::writeSolution) {
         if (ToulBar2::pedigree) {
             ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
-        } else {
-            ofstream file("sol");
-            if (!file) {
-              cerr << "Could not write file " << "solution" << endl;
-              exit(EXIT_FAILURE);
-            }
-            for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-                file << " " << wcsp->getValue(i);
-            }
-            file << endl;
+            ToulBar2::pedigree->printSol((WCSP*) wcsp);
+            ToulBar2::pedigree->printCorrectSol((WCSP*) wcsp);
+        }
+        else {
+	        ofstream file("sol");
+	        if (!file) {
+	          cerr << "Could not write file " << "solution" << endl;
+	          exit(EXIT_FAILURE);
+	        }
+	        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+	            file << " " << wcsp->getValue(i);
+	        }
+	        file << endl;
         }
     }
 }
