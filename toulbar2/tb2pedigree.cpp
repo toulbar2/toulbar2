@@ -13,7 +13,7 @@ void Pedigree::iniProb( WCSP* wcsp ) {
    TProb TopProb = 0.;
 
    ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
-   if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
+   if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
 	  cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 	  abort();
    }
@@ -205,7 +205,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     if (alleles.count(allele1)==0) {
         nballeles++;
         alleles[allele1] = nballeles;
-        freqalleles[ allele1 ] = 0;
+        freqalleles[ allele1 ] = 1;
     }
     else { freqalleles[ allele1 ]++; }
    
@@ -213,7 +213,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     if (alleles.count(allele2)==0) {
         nballeles++;
         alleles[allele2] = nballeles;
-        freqalleles[ allele2 ] = 0;
+        freqalleles[ allele2 ] = 1;
     }
     else { freqalleles[ allele2 ]++; }
 
@@ -461,7 +461,13 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 			 
 	 default:;
   }
-
+  if (ToulBar2::verbose) {
+      cout << "Genotype prior:" << endl;
+      for (unsigned int n = 0; n < genoconvert.size(); n++) {
+        printGenotype(cout, n);
+        cout << " " << foundersprob[n] << endl;
+      }
+  }
 
   /* create binary Mendelian hard constraint table */
   vector<Cost> costs2;
@@ -571,7 +577,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
   if (ToulBar2::verbose >= 0) {
     int nbtypings = genotypes.size();
     cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles and " << nbtypings << " genotypings." << endl;
-    cout << "Bayesian translated WCSP (errorg=" <<  ToulBar2::errorg << ", resolution=" << ToulBar2::resolution << ", ub:" << wcsp->getUb() << ")" << endl;
+    cout << "Bayesian MPE (genotyping error rate: " <<  ToulBar2::errorg << ", genotype prior: " << ToulBar2::foundersprob_class << ", precision(1-10^-p): " << ToulBar2::resolution << ", normalization: " << ToulBar2::NormFactor << ", ub: " << wcsp->getUb() << ")" << endl;
    
   }  
 }
