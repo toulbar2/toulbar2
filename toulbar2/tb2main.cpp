@@ -91,6 +91,7 @@ int main(int argc, char **argv)
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
         cerr << "   w : write last solution found" << endl;
+        cerr << "   y [genotypinpErrorRate probabilityPrecision(pow of 10) genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
 #ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
 										 									 // otherwise:  read from file 
         }
     }
-	Cost c = (argc >= 3)?(Cost) atoi(argv[2]):MAX_COST;
+	Cost c = (argc >= 3)?String2Cost(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
         if (localSearch(argv[1],&c)) {
