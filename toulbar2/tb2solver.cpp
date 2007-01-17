@@ -337,7 +337,7 @@ void Solver::newSolution()
     wcsp->updateUb(wcsp->getLb());
     
     if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-	else cout << "New solution: " <<  wcsp->getUb() << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+	else cout << "New solution: " <<  wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
     wcsp->restoreSolution();
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
@@ -446,7 +446,7 @@ bool Solver::solve()
     store->restore();
     if (wcsp->getUb() < initialUpperBound) {
         if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
-		else cout << "Optimum: " << wcsp->getUb() << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
+		else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
         return true;
     } else {
         cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
