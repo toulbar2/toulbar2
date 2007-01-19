@@ -278,9 +278,9 @@ public:
 		for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
-			if(xy->connected()) { c = xy->getCost(*iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); }
-			if(xz->connected()) { c = xz->getCost(*iterx, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); }
-			if(yz->connected()) { c = yz->getCost(*itery, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); }
+			if(xy->connected()) { c = xy->getCost(x, y, *iterx, *itery); addcost(x,y,z,*iterx,*itery,*iterz, c); }
+			if(xz->connected()) { c = xz->getCost(x, z, *iterx, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); }
+			if(yz->connected()) { c = yz->getCost(y, z, *itery, *iterz); addcost(x,y,z,*iterx,*itery,*iterz, c); }
 		}}}
 
         xy->clearCosts();

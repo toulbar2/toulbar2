@@ -414,13 +414,14 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
             flag = true;
             yzin->addcost(*itery,*iterz,mincost);   // project mincost to binary
             if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
-            
-            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
+
+//BUG: connected() incompatible with preproject ternary ???            
+//            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
                 // substract mincost from ternary constraint
                 for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
                     addcost(xx, yy, zz, *iterx, *itery, *iterz, -mincost);                            
                 }
-            }               
+//            }               
         }
     }}
     
