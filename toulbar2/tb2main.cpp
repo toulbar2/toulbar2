@@ -73,6 +73,7 @@ int main(int argc, char **argv)
 {
     bool localsearch = false;
     bool saveproblem = false;
+    bool certificate = false;
     if (argc <= 1) {
         cerr << argv[0] << " version " << ToulBar2::version << endl;
         cerr << "Missing a problem filename as first argument!" << endl;
@@ -105,6 +106,7 @@ int main(int argc, char **argv)
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
+        cerr << "   x : load a solution from a file" << endl;
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -127,6 +129,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
         if (strchr(argv[i],'i')) localsearch = true;
         if (strchr(argv[i],'z')) saveproblem = true;
+        if (strchr(argv[i],'x')) certificate = true;
         if (strchr(argv[i],'y')) { 
         	ToulBar2::bayesian = true;
         	float f;
@@ -160,7 +163,8 @@ int main(int argc, char **argv)
         if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
 #endif
         solver.read_wcsp(argv[1]);
-        if (saveproblem) solver.dump_wcsp("problem.wcsp");
+        if (certificate) solver.read_solution("sol");
+        else if (saveproblem) solver.dump_wcsp("problem.wcsp");
         else solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;

@@ -43,6 +43,33 @@ void Solver::read_wcsp(const char *fileName)
     ToulBar2::setvalue = setvalue;
 }
 
+void Solver::read_solution(const char *filename)
+{
+    currentSolver = this;
+    store->store();
+
+    // open the file
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Solution file " << filename << " not found!" << endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    int i = 0;
+    while (file) {
+        if ((unsigned int) i >= wcsp->numberOfVariables()) break;
+        int value = 0;
+        file >> value;
+        if (wcsp->unassigned(i)) {
+            wcsp->assign(i, value);
+        } else {
+            if (wcsp->getValue(i) != value) THROWCONTRADICTION;
+        }
+        i++;
+    }
+    cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+}
+
 void Solver::dump_wcsp(const char *fileName)
 {
     ofstream pb(fileName);
@@ -360,7 +387,7 @@ void Solver::newSolution()
             ToulBar2::pedigree->printSol((WCSP*) wcsp);
             ToulBar2::pedigree->printCorrectSol((WCSP*) wcsp);
         }
-        else {
+//        else {
 	        ofstream file("sol");
 	        if (!file) {
 	          cerr << "Could not write file " << "solution" << endl;
@@ -370,7 +397,7 @@ void Solver::newSolution()
 	            file << " " << wcsp->getValue(i);
 	        }
 	        file << endl;
-        }
+//        }
     }
 }
 
