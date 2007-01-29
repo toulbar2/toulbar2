@@ -121,6 +121,7 @@ public:
     static TProb errorg;
     static TProb NormFactor;
     static int foundersprob_class; 
+    static bool consecutiveAllele;
 };
 
 /*

@@ -45,7 +45,7 @@ class Pedigree {
 
   vector<TProb> foundersprob;	
   map<int, int> freqalleles;      // frequencies of original alleles: freqalleles[allele number] = frequency
-  map<int, int> generrors;
+  map<int, int> gencorrects;
   
   void typeAscendants(int individual);
 
@@ -60,6 +60,8 @@ public:
   void buildWCSP(const char *fileName, WCSP *wcsp);
   void buildWCSP_bayesian(const char *fileName, WCSP *wcsp );
   void iniProb( WCSP* wcsp );
+  
+  int convertgen( int allele1, int allele2 ); 
   
 
   void translateWCSP( WCSP *wcsp, bool equalfreq );	

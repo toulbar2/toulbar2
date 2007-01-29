@@ -124,10 +124,12 @@ void Pedigree::read_bayesian(const char *fileName, WCSP *wcsp )
 // warning! locus information is not used: assume that only one locus is defined in the pedigree file
 void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
 {
+  int individual;
   int nbindividuals = 0;
   int nballeles = 0;
   int nbtypings = 0;
   map<int, int> allelesInv;
+  int maxallele = 0;
 
   string strfile(fileName);
   int pos = strfile.find_last_of(".");
@@ -140,20 +142,13 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     exit(EXIT_FAILURE);
   }
 
-  generrors.clear();
-  int individual;
   ifstream fileErrors( errorfilename.c_str() );
-  if (fileErrors) {
-	  while(fileErrors) {
-		fileErrors >> individual;
-	  	fileErrors >> generrors[individual];
-	  }
-  }
+  if (fileErrors) ToulBar2::consecutiveAllele = true;
 
 
   while (file) {
     int cur_locus = -1;
-    int individual = 0;
+    individual = 0;
 
     file >> cur_locus;
     if (!file) break;
@@ -221,6 +216,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
         nballeles++;
         alleles[allele1] = nballeles;
         freqalleles[ allele1 ] = 1;
+        if(allele1 > maxallele) maxallele =  allele1;
     }
     else { freqalleles[ allele1 ]++; }
    
@@ -229,6 +225,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
         nballeles++;
         alleles[allele2] = nballeles;
         freqalleles[ allele2 ] = 1;
+        if(allele2 > maxallele) maxallele =  allele2;
     }
     else { freqalleles[ allele2 ]++; }
 
@@ -239,17 +236,32 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     }
   }
 
+  if(ToulBar2::consecutiveAllele) {
+  	cout << "Make alleles consecutive and supose 4 allele." << endl;
+    maxallele = 4; 
+  	for(int i=1;i<=maxallele;i++) {
+  		map<int,int>::iterator it = alleles.find(i);
+  		if(it == alleles.end()) {
+	        nballeles++;
+  			alleles[i] = nballeles;
+ 	        freqalleles[i] = 0;
+  		}
+  	}
+  }
+
   /* re-encoding of alleles */
-  int nb = 0;
+  int nb = 0;  
   if (ToulBar2::verbose >= 2) cout << "Alleles encoding:" << endl;
   for (map<int,int>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
     if ((*iter).first == 0) continue;
     nb++;
     if (ToulBar2::verbose >= 2) cout << (*iter).first << ": " << nb << endl;
-    alleles[(*iter).first] = nb;
+    iter->second = nb;
     allelesInv[nb] = (*iter).first;
   }
+
   assert(nballeles == nb);
+
   
   if (ToulBar2::verbose) cout << "Genotype encoding:" << endl;
   for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
@@ -270,11 +282,40 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     typeAscendants(genotypes[i]);
   }
   cout << nbtyped << " individuals found with a genotyped descendant.." << endl;
-  
+
+
+  gencorrects.clear();
+  if (fileErrors) {
+	  while(fileErrors) {
+		int bonallele1;
+		fileErrors >> individual;
+	  	fileErrors >> bonallele1;
+	 	int bonallele2 = pedigree[individuals[individual]].genotype.allele2;
+	  	if(bonallele1 == pedigree[individuals[individual]].genotype.allele1) cout << "error file with a mistake" << endl;
+		gencorrects[individual] = convertgen(bonallele1, bonallele2);	
+	  }
+  }
   assert(wcsp->numberOfVariables() == 0);
   assert(wcsp->numberOfConstraints() == 0);
 }  
 
+int Pedigree::convertgen( int allele1, int allele2 ) {
+    int nballeles = alleles.size() - 1;      
+  	int bongen = 0;
+  	
+  	if(allele1 > allele2) { 
+  		int alleleaux = allele1;
+  		allele1 = allele2;
+  		allele2 = alleleaux;
+  	}
+    
+    for (int i=1; i<=nballeles; i++) { 
+    for (int j=i; j<=nballeles; j++) { 
+    	if((i==allele1) && (j==allele2)) return bongen;
+    	bongen++;	
+    }}	
+    return -1;
+} 
 
 
   
@@ -285,7 +326,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
   vector<TemporaryUnaryConstraint> unaryconstrs;
  
   int nbindividuals = individuals.size();
-  int nballeles = alleles.size() - 1;       // a demander pourquoi le -1
+  int nballeles = alleles.size() - 1;      
   int nbfounders = 0;
   int nbtypings = genotypes.size();
 
@@ -600,7 +641,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 
 void Pedigree::printCorrectSol(WCSP *wcsp)
 {
-	if(!generrors.size()) return;
+	if(!gencorrects.size()) return;
 	
     ofstream file("sol_correct");
     if (!file) {
@@ -611,10 +652,12 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
 	for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it ) 
 	{
 		Individual& ind = *it;
-		if(ind.typed) {
-			map<int,int>::iterator it = generrors.find(ind.individual);
-			if(it != generrors.end()) file << " " << it->second;
-			else file << " " << wcsp->getValue(ind.varindex);
+		int allele1 = ind.genotype.allele1;
+		int allele2 = ind.genotype.allele2;
+		if((allele1 > 0) || (allele2 > 0)) {
+			map<int,int>::iterator it = gencorrects.find(ind.individual);
+			if(it != gencorrects.end()) file << " " << it->second;
+			else file << " " << convertgen(allele1, allele2);
 		}
 		else file << " " << -1;
     }
@@ -641,7 +684,7 @@ void Pedigree::printSol(WCSP *wcsp)
 
 void Pedigree::printCorrection(WCSP *wcsp)
 {
-  bool errorinfo = generrors.size() > 0;
+  bool errorinfo = gencorrects.size() > 0;
   
   int ncorrect = 0;
   int ncorrections = 0;
@@ -659,8 +702,8 @@ void Pedigree::printCorrection(WCSP *wcsp)
       cout << " " << genotypes[i];
 
 	  if(errorinfo) {
-	      map<int,int>::iterator it = generrors.find(genotypes[i]);
-	      if(it != generrors.end()) {
+	      map<int,int>::iterator it = gencorrects.find(genotypes[i]);
+	      if(it != gencorrects.end()) {
 	      	ncorrect++;
 	      	int allellereal = it->second;
 	      	if((allellereal == a1) && (a1 != allele1)) ncorrectok++;
@@ -671,8 +714,8 @@ void Pedigree::printCorrection(WCSP *wcsp)
   }
   cout << endl;   
   if(errorinfo) {
-  	cout << "Errorfile info: ";
-  	cout << ncorrect << "/"  << ncorrections << ", " <<  ncorrectok << "/" << ncorrect << ", " << generrors.size() << " original" << endl;
+  	cout << "Info errorfile: ";
+  	cout << ncorrect << "/"  << ncorrections << ", " <<  ncorrectok << "/" << ncorrect << ", " << gencorrects.size() << " original" << endl;
     cout << endl;  
   }
 }

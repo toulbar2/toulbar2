@@ -58,6 +58,8 @@ TProb ToulBar2::NormFactor = 1;
 int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
 										 // 1: 			probs depending on the frequencies
 										 // otherwise:  read from file
+bool ToulBar2::consecutiveAllele = false;
+
 int WCSP::wcspCounter = 0;
 
 
@@ -273,12 +275,14 @@ void WCSP::preprocessing()
         processTernary();
     }
 
+
     if (ToulBar2::elimVarWithSmallDegree) {
 
 		initElimConstrs();
         
         cout << "Eliminates variables with small degree"; flush(cout);		
         ToulBar2::elimVarWithSmallDegree_ = true;
+        
         propagate();
 		
 		if(ToulBar2::only_preprocessing) { ToulBar2::elimVarWithSmallDegree_ = false; cout << "  only in preprocessing"; }
@@ -286,7 +290,7 @@ void WCSP::preprocessing()
 		cout << endl;
 		flush(cout);		
     }
-    else propagate();
+    else propagate();	
 }
 
 Value WCSP::getDomainSizeSum()
