@@ -89,6 +89,7 @@ Individual::Individual(int ind)
     genotype.allele1 = 0;
     genotype.allele2 = 0;
     typed = false;
+    generation = -1;
 }
 
 void Pedigree::typeAscendants(int individual)
@@ -119,7 +120,25 @@ void Pedigree::read_bayesian(const char *fileName, WCSP *wcsp )
 	buildWCSP_bayesian(fileName, wcsp);
 }
 
+inline bool cmp_generation(Individual i1, Individual i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
 
+int Pedigree::fixGenerationNumber(int index)
+{
+    if (pedigree[index].generation!=-1) return pedigree[index].generation;
+    else {
+        if (pedigree[index].father>0 && pedigree[index].mother>0) {
+            pedigree[index].generation = max(fixGenerationNumber(individuals[pedigree[index].father]), fixGenerationNumber(individuals[pedigree[index].mother]))+1;
+        } else if (pedigree[index].father>0 && pedigree[index].mother==0) {
+            pedigree[index].generation = fixGenerationNumber(individuals[pedigree[index].father])+1;
+        } else if (pedigree[index].mother>0 && pedigree[index].father==0) {
+            pedigree[index].generation = fixGenerationNumber(individuals[pedigree[index].mother])+1;
+        } else {
+            assert(pedigree[index].mother==0 && pedigree[index].father==0);
+            pedigree[index].generation = 1;
+        }
+        return pedigree[index].generation;
+    }
+}
 
 // warning! locus information is not used: assume that only one locus is defined in the pedigree file
 void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
@@ -196,6 +215,20 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
       pedigree.push_back(geno);
       nbindividuals++;
     }
+
+    if (pedigree[individuals[individual]].father==0 && pedigree[individuals[individual]].mother==0) {
+        pedigree[individuals[individual]].generation = 1;
+    } else if (pedigree[individuals[individual]].father>0 && pedigree[individuals[individual]].mother>0 &&
+               pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1 &&
+               pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
+        pedigree[individuals[individual]].generation = max(pedigree[individuals[pedigree[individuals[individual]].father]].generation, pedigree[individuals[pedigree[individuals[individual]].mother]].generation) + 1;
+    } else if (pedigree[individuals[individual]].father>0 && pedigree[individuals[individual]].mother==0 &&
+               pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1) {
+        pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].father]].generation + 1;
+    } else if (pedigree[individuals[individual]].father==0 && pedigree[individuals[individual]].mother>0 &&
+               pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
+        pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].mother]].generation + 1;
+    }                
 
     file >> pedigree[individuals[individual]].sex;
     if (!file) {
@@ -277,7 +310,19 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
       }
     }
   }
-    
+  
+  /* individuals re-ordering by generation levels */
+  for (unsigned int i=0; i<pedigree.size(); i++) {
+    if (pedigree[i].generation==-1) fixGenerationNumber(i);
+    if (pedigree[i].generation > generations) generations = pedigree[i].generation;
+  }
+  if (ToulBar2::generation) {
+    stable_sort(pedigree.begin(), pedigree.end(), cmp_generation);
+    for (unsigned int i=0; i<pedigree.size(); i++) {
+        individuals[pedigree[i].individual] = i;
+    }
+  }
+  
   for (unsigned int i=0; i<genotypes.size(); i++) {
     typeAscendants(genotypes[i]);
   }
@@ -438,7 +483,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
   }
   
   if (ToulBar2::verbose >= 0) {
-    cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles and " << nbtypings << " genotypings." << endl;
+    cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
   }
 }
 
@@ -632,7 +677,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
   
   if (ToulBar2::verbose >= 0) {
     int nbtypings = genotypes.size();
-    cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles and " << nbtypings << " genotypings." << endl;
+    cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
     cout << "Bayesian MPE (genotyping error rate: " <<  ToulBar2::errorg << ", genotype prior: " << ToulBar2::foundersprob_class << ", precision(1-10^-p): " << ToulBar2::resolution << ", normalization: " << ToulBar2::NormFactor << ", ub: " << wcsp->getUb() << ")" << endl;
    
   }  
@@ -728,7 +773,7 @@ void Pedigree::printGenotype(ostream& os, Value value)
 
 void Individual::print(ostream& os)
 {
-    os << individual << " " << father << " " << mother << " " << sex << " " << genotype.allele1 << " " << genotype.allele2 << endl; 
+    os << individual << " " << father << " " << mother << " " << sex << " " << genotype.allele1 << " " << genotype.allele2 << endl;
 }
 
 void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected)

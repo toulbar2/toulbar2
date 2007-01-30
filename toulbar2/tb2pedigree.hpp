@@ -27,6 +27,7 @@ public:
   int sex;
   Genotype genotype;
   bool typed; // true if one of its descendant children (or itself) is typed
+  int generation;
   
   Individual(int ind);
 
@@ -42,15 +43,17 @@ class Pedigree {
   map<int, int> individuals;      // sorted list of pair<individual id, pedigree id>
   map<int, int> alleles;          // sorted list of pair<allele number, encoding consecutive number>  
   int nbtyped;  				  // number of individuals with a genotyped descendant
-
+  int generations;
+  
   vector<TProb> foundersprob;	
   map<int, int> freqalleles;      // frequencies of original alleles: freqalleles[allele number] = frequency
   map<int, int> gencorrects;
   
   void typeAscendants(int individual);
-
+  int fixGenerationNumber(int index);
+  
 public:
-  Pedigree() : locus(-1), nbtyped(0) {alleles[0] = 0;}
+  Pedigree() : locus(-1), nbtyped(0), generations(0) {alleles[0] = 0;}
   
   void read(const char *fileName, WCSP *wcsp);
   void read_bayesian(const char *fileName, WCSP *wcsp);

@@ -32,6 +32,7 @@ bool ToulBar2::dichotomicBranching = false;
 bool ToulBar2::lds = false;
 bool ToulBar2::limited = false;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
+bool ToulBar2::generation = false;
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
 bool ToulBar2::elimVarWithSmallDegree  = true;

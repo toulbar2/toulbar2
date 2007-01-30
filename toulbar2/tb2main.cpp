@@ -93,6 +93,7 @@ int main(int argc, char **argv)
         cerr << "   s : show each solution found" << endl;
         cerr << "   w : write last solution found" << endl;
         cerr << "   y [genotypinpErrorRate probabilityPrecision(pow of 10) genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
+        cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
 #ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
@@ -130,6 +131,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'i')) localsearch = true;
         if (strchr(argv[i],'z')) saveproblem = true;
         if (strchr(argv[i],'x')) certificate = true;
+        if (strchr(argv[i],'g')) ToulBar2::generation = true;
         if (strchr(argv[i],'y')) { 
         	ToulBar2::bayesian = true;
         	float f;
