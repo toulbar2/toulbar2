@@ -361,6 +361,7 @@ void Solver::newSolution()
     }
     assert(allVarsAssigned);
 #endif
+    //    wcsp->updateUb(wcsp->getLb()+1); // to generate all optimal solutions (warning! in the solver output, substract one to any solution cost to get the exact cost)
     wcsp->updateUb(wcsp->getLb());
     
     if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
@@ -371,6 +372,7 @@ void Solver::newSolution()
         for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
             cout << " ";
             if (ToulBar2::pedigree) {
+                cout <<  wcsp->getName(i) << ":";
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else {
                 cout << wcsp->getValue(i);
