@@ -11,13 +11,8 @@
 //#define LONGLONG_COST
 //#define RATIONAL_COST
 
-
-
-
-
-
-
-
+//#define DOUBLE_PROB
+#define LONGDOUBLE_PROB
 
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
@@ -49,23 +44,25 @@ const Value MAX_DOMAIN_SIZE  = 1000;
 #ifdef INT_COST
 typedef int Cost;
 const Cost MAX_COST = (INT_MAX / 2);
-typedef double TProb;
 #endif
-
 
 #ifdef LONGLONG_COST
 typedef Long Cost;
 const Cost MAX_COST = (LONG_LONG_MAX / 2);
-typedef Double TProb;
 #endif
-
 
 #ifdef RATIONAL_COST
 typedef Rational Cost;
 const Cost MAX_COST = RATIONAL_MAX;
-typedef Double TProb;
 #endif
 
+#ifdef DOUBLE_PROB
+typedef double TProb;
+#endif
+
+#ifdef LONGDOUBLE_PROB
+typedef Double TProb;
+#endif
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)

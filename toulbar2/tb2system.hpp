@@ -9,14 +9,14 @@
 #include "tb2types.hpp"
 
 
-#ifdef INT_COST
+#ifdef DOUBLE_PROB
 double Pow(double x, double y);
 double Log10(double x);
 double Log(double x);
 double Log1p(double x);
 #endif
 
-#ifdef LONGLONG_COST
+#ifdef LONGDOUBLE_PROB
 Double Pow(Double x, Double y);
 Double Log10(Double x);
 Double Log(Double x);
