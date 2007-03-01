@@ -83,6 +83,15 @@ void Variable::deconnect(DLink<ConstraintLink> *link)
     }
 }
 
+int Variable::getRealDegree()
+{
+    TSCOPE neighbors;
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        (*iter).constr->scopeUnion( neighbors, (*iter).constr );
+    }
+    return neighbors.size()-1;
+}
+
 Long Variable::getWeightedDegree()
 {
     Long res = 0;

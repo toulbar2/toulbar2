@@ -28,6 +28,7 @@ public:
   Genotype genotype;
   bool typed; // true if one of its descendant children (or itself) is typed
   int generation;
+  int bityped; // negative if it is genotyped or connected (ascendants and descendants) to atleast two genotyped individuals
   
   Individual(int ind);
 
@@ -51,13 +52,15 @@ class Pedigree {
   
   void typeAscendants(int individual);
   int fixGenerationNumber(int index);
+  void bitypeAscendants(int individual, int typedindiv);
+  void bitypeDescendants(int individual, int typedindiv);
   
 public:
   Pedigree() : locus(-1), nbtyped(0), generations(0) {alleles[0] = 0;}
   
   void read(const char *fileName, WCSP *wcsp);
   void read_bayesian(const char *fileName, WCSP *wcsp);
-  void save(const char *fileName, WCSP *wcsp, bool corrected);
+  void save(const char *fileName, WCSP *wcsp, bool corrected, bool reduced);
   
   void readPedigree(const char *fileName, WCSP *wcsp);
   void buildWCSP(const char *fileName, WCSP *wcsp);

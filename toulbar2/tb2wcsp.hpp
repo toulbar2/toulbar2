@@ -118,6 +118,7 @@ public:
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
+    int getRealDegree(int varIndex) const {return vars[varIndex]->getRealDegree();}
     Long getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
     void revise(Constraint *c) {lastConflictConstr = c;}
     void conflict() {
@@ -140,6 +141,7 @@ public:
     unsigned int numberOfConstraints() const {return constrs.size();}
     unsigned int numberOfConnectedConstraints() const;
     Value getDomainSizeSum();       // total current number of values
+    void degreeDistribution();
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value *d, int dsize);

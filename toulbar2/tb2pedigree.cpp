@@ -90,6 +90,7 @@ Individual::Individual(int ind)
     genotype.allele2 = 0;
     typed = false;
     generation = -1;
+    bityped = 0;
 }
 
 void Pedigree::typeAscendants(int individual)
@@ -106,7 +107,33 @@ void Pedigree::typeAscendants(int individual)
     }
 }
 
+void Pedigree::bitypeAscendants(int individual, int typedindiv)
+{
+    if (individual > 0) {
+        assert(individuals.count(individual)!=0);
+        int index = individuals[individual];
+        if (pedigree[index].bityped >= 0) {
+            pedigree[index].typed = true;
+            nbtyped++;
+            typeAscendants(pedigree[index].father);
+            typeAscendants(pedigree[index].mother);
+        }
+    }
+}
 
+void Pedigree::bitypeDescendants(int individual, int typedindiv)
+{
+    if (individual > 0) {
+        assert(individuals.count(individual)!=0);
+        int index = individuals[individual];
+        if (pedigree[index].bityped >= 0) {
+            pedigree[index].typed = true;
+            nbtyped++;
+            typeAscendants(pedigree[index].father);
+            typeAscendants(pedigree[index].mother);
+        }
+    }
+}
 
 void Pedigree::read(const char *fileName, WCSP *wcsp)
 {
@@ -776,8 +803,10 @@ void Individual::print(ostream& os)
     os << individual << " " << father << " " << mother << " " << sex << " " << genotype.allele1 << " " << genotype.allele2 << endl;
 }
 
-void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected)
+void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduced)
 {
+    assert(not(corrected && reduced));
+    
     // open the file
     ofstream file(fileName);
     if (!file) {
@@ -786,6 +815,9 @@ void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected)
     }
 
     for (map<int,int>::iterator iter = individuals.begin(); iter != individuals.end(); ++iter) {
+        if (reduced && (pedigree[(*iter).second].varindex < 0 || pedigree[(*iter).second].varindex >= (int) wcsp->numberOfVariables() || wcsp->assigned(pedigree[(*iter).second].varindex))) {
+            continue;
+        }
         file << locus << " ";
         if (corrected && pedigree[(*iter).second].varindex >= 0 && pedigree[(*iter).second].varindex < (int) wcsp->numberOfVariables() && wcsp->assigned(pedigree[(*iter).second].varindex)) {
             int sol = wcsp->getValue(pedigree[(*iter).second].varindex);

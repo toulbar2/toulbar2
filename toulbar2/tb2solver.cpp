@@ -385,7 +385,7 @@ void Solver::newSolution()
     }
     if (ToulBar2::writeSolution) {
         if (ToulBar2::pedigree) {
-            ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true);
+            ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true, false);
             ToulBar2::pedigree->printSol((WCSP*) wcsp);
             ToulBar2::pedigree->printCorrectSol((WCSP*) wcsp);
         }

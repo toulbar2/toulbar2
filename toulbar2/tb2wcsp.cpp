@@ -12,6 +12,7 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2arithmetic.hpp"
+#include "tb2pedigree.hpp"
 
 
 /*
@@ -291,7 +292,9 @@ void WCSP::preprocessing()
 		cout << endl;
 		flush(cout);		
     }
-    else propagate();	
+    else propagate();
+    
+    if (getenv("TB2DEGREE")) degreeDistribution();
 }
 
 Value WCSP::getDomainSizeSum()
@@ -327,6 +330,38 @@ unsigned int WCSP::numberOfConnectedConstraints() const
     return res;
 }
 
+void WCSP::degreeDistribution()
+{
+  int* degDistrib = new int [vars.size()];
+ 
+  for (unsigned int i=0; i<vars.size(); i++) degDistrib[i] = 0;
+  for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) degDistrib[getRealDegree(i)]++;
+ 
+  unsigned int lastnonzero = 0;
+  for (unsigned int i=0; i<vars.size(); i++)
+      if(degDistrib[i]) lastnonzero = i;
+ 
+  ofstream file("problem.deg");
+  for (unsigned int i=0; i<=lastnonzero; i++) if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;
+  delete [] degDistrib;
+  
+  int limit = atoi(getenv("TB2DEGREE"));
+  if (limit > 0) {
+      cout << "remove variables with degree > " << limit << endl;
+      for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i) && getRealDegree(i) > limit) {
+            cout << "remove variable " << getName(i) << endl;
+            for (ConstraintList::iterator iter=vars[i]->getConstrs()->begin(); iter != vars[i]->getConstrs()->end(); ++iter) {
+                (*iter).constr->deconnect();
+            }
+            assign(i, getSupport(i));
+      }
+  }
+  
+  ofstream pb("problem.wcsp");
+  dump(pb);
+  exit(0);
+}
+
 void WCSP::printNCBuckets()
 {
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
@@ -351,6 +386,15 @@ void WCSP::print(ostream& os)
         os << "Constraints:" << endl;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
         for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) os << *elimConstrs[i];
+    }
+}
+
+void printClique(ostream& os, int arity, Constraint *ctr) {
+    assert(arity >= 2);
+    for (int i=0;i<arity-1;i++) {
+        for (int j=i+1;j<arity;j++) {
+            os << ctr->getVar(i)->wcspIndex + 1 << " " << ctr->getVar(j)->wcspIndex + 1 << endl;
+        }
     }
 }
 
@@ -393,6 +437,32 @@ void WCSP::dump(ostream& os)
         }
     }
     if (getLb() > 0) os << "0 " << getLb() << " 0" << endl;
+    
+    if (getenv("TB2GRAPH")) {
+        ofstream pb("problem.graph");
+        int res = 0; 
+        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res+=(constrs[i]->arity()*(constrs[i]->arity()-1)/2);
+        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) res+=(elimConstrs[i]->arity()*(elimConstrs[i]->arity()-1)/2);
+        pb << res << " " << numberOfVariables() << endl;
+        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {
+//            pb << constrs[i]->getVar(0)->wcspIndex + 1;
+//            for (int j=1; j<constrs[i]->arity(); j++) {
+//                pb << " " << constrs[i]->getVar(j)->wcspIndex + 1;
+//            }
+//            pb << endl;
+            printClique(pb, constrs[i]->arity(), constrs[i]);
+        }
+        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) {
+//            pb << elimConstrs[i]->getVar(0)->wcspIndex + 1;
+//            for (int j=1; j<elimConstrs[i]->arity(); j++) {
+//                pb << " " << elimConstrs[i]->getVar(j)->wcspIndex + 1;
+//            }
+//            pb << endl;
+            printClique(pb, elimConstrs[i]->arity(), elimConstrs[i]);
+        }
+    }
+    
+    if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp)
@@ -667,7 +737,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
     TProb res = -Log10(p)*ToulBar2::NormFactor;
-    if (res > (TProb) MAX_COST) {
+    if (res > to_double(MAX_COST)) {
       cerr << "Overflow when converting probability to cost." << endl;
       abort();
     }
@@ -676,5 +746,5 @@ Cost WCSP::Prob2Cost(TProb p) const {
 	return c;
 }
 
-TProb WCSP::Cost2LogLike(Cost c) const { return -(TProb)c/ToulBar2::NormFactor; }
-TProb WCSP::Cost2Prob(Cost c) const { return Pow((TProb)10., -(TProb)c/ToulBar2::NormFactor); }
+TProb WCSP::Cost2LogLike(Cost c) const { return -to_double(c)/ToulBar2::NormFactor; }
+TProb WCSP::Cost2Prob(Cost c) const { return Pow((TProb)10., -to_double(c)/ToulBar2::NormFactor); }
