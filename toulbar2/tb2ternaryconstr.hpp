@@ -73,6 +73,8 @@ public:
 					  vector<Cost> &tab, 
 					  StoreStack<Cost, Cost> *storeCost);
 
+	TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost); 
+
     void setBinaries( BinaryConstraint* xyin, BinaryConstraint* xzin, BinaryConstraint* yzin ) { xy = xyin; xz = xzin; yz = yzin; }
 
     BinaryConstraint* xy;
@@ -311,15 +313,7 @@ public:
     	zvar = z;
     }
     
-    void first( EnumeratedVariable** scope_in) 
-    { 
-    	xvar = scope_in[0];
-    	yvar = scope_in[1];
-    	zvar = scope_in[2];
-    	itvx = xvar->begin(); 
-    	itvy = yvar->begin(); 
-    	itvz = zvar->begin(); 
-    }
+    
 
     bool next( string& t, Cost& c) 
     { 
@@ -351,6 +345,8 @@ public:
     	}
     	return false; 
     }
+
+	bool nextlex( string& t, Cost& c) { return next(t,c); }
 
 	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
 	{

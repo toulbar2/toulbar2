@@ -67,46 +67,67 @@ public:
 
 
     virtual void first() {}
-    virtual void first(EnumeratedVariable** scope_in) {}
     virtual bool next( string& t, Cost& c) { return false; }
+    virtual bool nextlex( string& t, Cost& c) { return false; }
 	virtual void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) {}
-	virtual void scopeSet( TSCOPE& scope_inv ) {}	
-
-	void scopeCommon( TSCOPE& scope_in, Constraint* ctr ) 
+	virtual void getScope( TSCOPE& scope_inv ) {}
+	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
+	virtual Cost getDefCost() { return 0; }
+	void scopeCommon( TSCOPE& scope_out, Constraint* ctr ) 
 	{
 		TSCOPE scope1,scope2;
-		scopeSet( scope1 );
-		ctr->scopeSet( scope2 );
+		getScope( scope1 );
+		ctr->getScope( scope2 );
 		
+		TSCOPE::iterator it1 = scope1.begin();
+		TSCOPE::iterator it2 = scope2.begin();
+		while(it1 != scope1.end()) { it1->second = 0; ++it1; }
+		while(it2 != scope2.end()) { it2->second = 0; ++it2; }
 		set_intersection( scope1.begin(), scope1.end(),
 				  	   	  scope2.begin(), scope2.end(),
-					  	  inserter(scope_in, scope_in.begin()) );		
+					  	  inserter(scope_out, scope_out.begin()) );			 	  
 	}
 	
 		
-	void scopeUnion( TSCOPE& scope_in, Constraint* ctr ) 
+	void scopeUnion( TSCOPE& scope_out, Constraint* ctr ) 
 	{
 		TSCOPE scope1,scope2;
-		scopeSet( scope1 );
-		ctr->scopeSet( scope2 );
-		
+		getScope( scope1 );
+		ctr->getScope( scope2 );
 		set_union( scope1.begin(), scope1.end(),
 		  	   	   scope2.begin(), scope2.end(),
-			  	   inserter(scope_in, scope_in.begin()) );		
+			  	   inserter(scope_out, scope_out.begin()) );		
 	}
 		
-	void scopeDifference( TSCOPE& scope_in, Constraint* ctr )
+	void scopeDifference( TSCOPE& scope_out, Constraint* ctr )
 	{
 		TSCOPE scope1,scope2;
-		scopeSet( scope1 );
-		ctr->scopeSet( scope2 );
-		
+		getScope( scope1 );
+		ctr->getScope( scope2 );
 		set_difference( scope1.begin(), scope1.end(),
 			  	   	    scope2.begin(), scope2.end(),
-				  	    inserter(scope_in, scope_in.begin()) );		
+				  	    inserter(scope_out, scope_out.begin()) );				
 	}
-
-
+	
+	int order( Constraint* ctr )
+	{
+		if(arity() < ctr->arity()) return 1;
+		else if (arity()  > ctr->arity()) return -1;	
+		TSCOPE scope1,scope2;
+		getScope( scope1 );
+		ctr->getScope( scope2 );
+		TSCOPE::iterator it1 = scope1.begin();
+		TSCOPE::iterator it2 = scope2.begin();
+		while(it1 != scope1.end()) {
+			if(it1->first < it2->first) return 1;
+			else if (it1->first > it2->first) return -1;
+			++it1;
+			++it2;
+		}	
+		return 0;
+	}
+	
+	
     friend ostream& operator<<(ostream& os, Constraint &c) {
         c.print(os);
         return os;

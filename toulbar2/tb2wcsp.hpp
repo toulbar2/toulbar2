@@ -11,6 +11,10 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 
+#include <list>
+#include <vector>
+using namespace std;
+
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
@@ -150,10 +154,10 @@ public:
     void processTernary();
     
     void postSupxyc(int xIndex, int yIndex, Value cste);
-
-    void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
-    void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
+	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
+    int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval);
+	int postNaryConstraint(EnumeratedVariable** scopeVars, int arity, Cost defval);    
     
     void read_wcsp(const char *fileName);
 
@@ -180,29 +184,7 @@ public:
     void queueEAC1(DLink<VariableWithTimeStamp> *link) {EAC1.push(link, nbNodes);}
     void queueEAC2(DLink<VariableWithTimeStamp> *link) {EAC2.push(link, nbNodes);}
     void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
-
-    // functions and data for variable elimination
-	typedef struct {
-		EnumeratedVariable* x;
-		EnumeratedVariable* y;
-		EnumeratedVariable* z;
-		BinaryConstraint* xy;
-		BinaryConstraint* xz;
-		TernaryConstraint* xyz;
-	} elimInfo;
-
-	bool isternary;
-	int maxdomainsize;	                              						   
-	StoreInt elimOrder;    		 				 	    // used to count the order in which variables are eliminated
-	int getElimOrder() { return (int) elimOrder; } 
-	void elimination() { elimOrder = elimOrder + 1; }   // function called when a variable has been eliminated
-    vector<BinaryConstraint *> elimConstrs;   		    // pool of empty binary constraints ready to perform a variable elimination 
-	vector<elimInfo> elimInfos; 
-	void initElimConstrs();
-	BinaryConstraint* newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
-	void eliminate();
-	void restoreSolution(); 
-   
+  
     
     void propagateNC();
     void propagateIncDec();
@@ -214,8 +196,54 @@ public:
 
     void sortConstraints();
     void preprocessing();
+
+
+
+
+    // Functions and data for Variable Elimination
+	typedef struct {
+		EnumeratedVariable* x;
+		EnumeratedVariable* y;
+		EnumeratedVariable* z;
+		BinaryConstraint*   xy;
+		BinaryConstraint*   xz;
+		TernaryConstraint*  xyz;
+	} elimInfo;
+
+	bool isternary;
+	int maxdomainsize;	                              						   
+	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
+	StoreInt binaryOrder;    		 			    // used to count the order in which variables are eliminated
+	StoreInt ternaryOrder;    		 			    // used to count the order in which variables are eliminated
+	StoreInt naryOrder;    		 				    // used to count the order in which variables are eliminated
+
+	vector<elimInfo> elimInfos; 
+	vector<Constraint*>  elimConstrs;
+    vector<BinaryConstraint*>  elimBinaryConstrs;   // pool of binary constraints for variable elimination 
+    vector<TernaryConstraint*> elimTernaryConstrs;  // pool of Ternary constraints for variable elimination
+    vector<NaryConstraint*>    elimNaryConstrs;     // pool of Nary constraints for variable elimination  
+
+
+
+	void initElimConstrs();
+	int getElimOrder() { return (int) elimOrder; } 
+	void elimination() { elimOrder = elimOrder + 1; }   
+	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
+	TernaryConstraint* newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
+	NaryConstraint*    newNaryConstr( TSCOPE& scope );
+	void deleteTmpConstraint( Constraint* ctr );
+
+	void eliminate();
+	void restoreSolution(); 
     
 	Constraint* sum( Constraint* ctr1, Constraint* ctr2  );
+	void project( Constraint* &ctr_inout, EnumeratedVariable* var  );
+	void variableElimination( EnumeratedVariable* var );
+    BinaryConstraint* getArbitraryBinaryCtr();
+    TernaryConstraint* getArbitraryTernaryCtr();
+    NaryConstraint* getArbitraryNaryCtr();
+    // -----------------------------------------------------------
+    
     
     
     void print(ostream& os);

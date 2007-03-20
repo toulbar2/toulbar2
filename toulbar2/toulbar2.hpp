@@ -75,8 +75,8 @@ public:
     virtual int makeEnumeratedVariable(string n, Value *d, int dsize) =0;
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) =0;
     
-    virtual void postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
-    virtual void postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
+    virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
     virtual int postNaryConstraint(int* scope, int arity, Cost defval) =0;
     virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
     

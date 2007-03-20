@@ -46,6 +46,32 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
     propagate();
 }
 
+
+TernaryConstraint::TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) 
+					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp), 
+					  sizeX(wcsp->maxdomainsize), sizeY(wcsp->maxdomainsize), sizeZ(wcsp->maxdomainsize)
+{
+	unsigned int maxdom = wcsp->maxdomainsize;
+    deltaCostsX = vector<StoreCost>(maxdom,StoreCost(0,storeCost));
+    deltaCostsY = vector<StoreCost>(maxdom,StoreCost(0,storeCost));
+    deltaCostsZ = vector<StoreCost>(maxdom,StoreCost(0,storeCost));
+    supportX = vector< pair<Value,Value> >(maxdom);
+    supportY = vector< pair<Value,Value> >(maxdom);
+    supportZ = vector< pair<Value,Value> >(maxdom);
+
+    costs = vector<StoreCost>(maxdom*maxdom*maxdom,StoreCost(0,storeCost));
+    
+    for (unsigned int a = 0; a < maxdom; a++) 
+       for (unsigned int b = 0; b < maxdom; b++) 
+           for (unsigned int c = 0; c < maxdom; c++) 
+               costs[a * maxdom * maxdom + b * maxdom + c] = 0;
+ 
+    xy = NULL;
+    xz = NULL;
+    yz = NULL ;
+}
+
+
 double TernaryConstraint::computeTightness()
 {
    int count = 0;
@@ -317,24 +343,23 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
      
     for (EnumeratedVariable::iterator itery = yy->begin(); itery != yy->end(); ++itery) {
     for (EnumeratedVariable::iterator iterz = zz->begin(); iterz != zz->end(); ++iterz) {
-        Cost mincost = MAX_COST;
+        Cost mincost = wcsp->getUb();
         for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
             Cost curcost = getCost(xx, yy, zz, *iterx, *itery, *iterz);                            
             if (curcost < mincost) mincost = curcost;
         }
-        assert(mincost != MAX_COST);
         if (mincost > 0) {
             flag = true;
             yzin->addcost(*itery,*iterz,mincost);   // project mincost to binary
             if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
 
-//BUG: connected() incompatible with preproject ternary ???            
-//            if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
-                // substract mincost from ternary constraint
+			//BUG: connected() incompatible with preproject ternary ???            
+			//if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
+            // substract mincost from ternary constraint
                 for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
                     addcost(xx, yy, zz, *iterx, *itery, *iterz, -mincost);                            
                 }
-//            }               
+			//}               
         }
     }}
     

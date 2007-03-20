@@ -72,7 +72,7 @@ public:
     int getDACScopeIndex() {return dacvar;}
 
 
-	void scopeSet( TSCOPE& scope_inv ) {
+	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
 		scope_inv[ x->wcspIndex ] = 0;
 		scope_inv[ y->wcspIndex ] = 1;
@@ -105,7 +105,11 @@ public:
         else if (yy->wcspIndex < xx->wcspIndex && yy->wcspIndex < zz->wcspIndex) dacvar = 1;
         else dacvar = 2;
     }
-
+	
+	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)  
+    { }
+    
+    
     virtual ~AbstractTernaryConstraint() {delete linkX; delete linkY; delete linkZ;}
 
     bool connected() {return !linkX->removed && !linkY->removed && !linkZ->removed;}
@@ -168,7 +172,7 @@ public:
 	}
     int getDACScopeIndex() {return dacvar;}
 
-	void scopeSet( TSCOPE& scope_inv ) {
+	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
 		scope_inv[ x->wcspIndex ] = 0;
 		scope_inv[ y->wcspIndex ] = 1;
@@ -197,13 +201,11 @@ protected:
 	EnumeratedVariable** scope;
     TSCOPE scope_inv;
 	
-	int nconnected_links;
     DLink<ConstraintLink>** links;
     
 public:
     AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in) 
     {
-    	nconnected_links = 0;
     	scope = new EnumeratedVariable* [arity_];
     	links = new DLink<ConstraintLink>* [arity_];
     	
@@ -212,8 +214,11 @@ public:
 			scope_inv[ var->wcspIndex ] = i;
 			scope[i] = var;
 			links[i] = var->link(this,i);
-			if(!links[i]->removed) nconnected_links++;
 		}
+    }
+    
+    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp) 
+    {
     }
 
     virtual ~AbstractNaryConstraint() {}
@@ -273,7 +278,7 @@ public:
     int getDACScopeIndex() {return -1;}
    
    
-	void scopeSet( TSCOPE& scope_inv_in ) {
+	void getScope( TSCOPE& scope_inv_in ) {
 		scope_inv_in = scope_inv;
 	}
 };

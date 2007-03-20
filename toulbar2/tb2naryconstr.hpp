@@ -22,6 +22,8 @@ class NaryConstraint : public AbstractNaryConstraint
 
 public:
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
+	NaryConstraint(WCSP *wcsp);
+	
 	virtual ~NaryConstraint();
 
 
@@ -31,6 +33,9 @@ public:
 
 
     Cost eval( string s );
+	Cost evalsubstr( string& s, Constraint* ctr );
+	
+	Cost getDefCost() { return default_cost; }
 
 
 	void assign(int varIndex);
@@ -58,15 +63,15 @@ public:
 	void project( EnumeratedVariable* x );
 	void sum( NaryConstraint* nary );
 
-
+	string lex_it;
 	TUPLES::iterator  tuple_it;
 	void first();
-    void first(EnumeratedVariable** scope_in);
+	void firstlex( string& t );
     bool next( string& t, Cost& c);
-	void setTuple( string tin, Cost c, EnumeratedVariable** scope_in );
+    bool nextlex( string& t, Cost& c);
+	void setTuple( string tin, Cost c, EnumeratedVariable** scope_in = NULL );
     void insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
 	void permute( EnumeratedVariable** scope_in );
-
 
 
 	void fillRandom();

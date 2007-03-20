@@ -9,11 +9,17 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	default_cost = defval;
 	store_top = default_cost < wcsp->getUb();
 	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
-  
     propagate();
-
 	pf = new TUPLES;
 }
+
+NaryConstraint::NaryConstraint(WCSP *wcsp)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
+{
+	xy = NULL;
+	pf = new TUPLES;
+}
+
 
 NaryConstraint::~NaryConstraint()
 {
@@ -36,8 +42,9 @@ void NaryConstraint::projectNaryBinary()
 	for(i=0;i<arity_;i++) { 		
 		if(getVar(i)->unassigned()) { 
 			unassigned[j] = (EnumeratedVariable*) getVar(i); 
-			indexs[j++] = i;
+			indexs[j] = i;
 			tbuf[i] = CHAR_FIRST;
+			j++;
 		} else tbuf[i] = getVar(i)->getValue() + CHAR_FIRST;
 	}
 	tbuf[arity_] =  '\0';
@@ -56,14 +63,15 @@ void NaryConstraint::projectNaryBinary()
 		t[indexs[1]] =  yval + CHAR_FIRST;					
 		xy->setcost(xval,yval,eval(t));
     }}
-
 	BinaryConstraint* ctr = x->getConstr(y);   			
-	if(ctr) {
+
+	/*if(ctr) {
 		ctr->reconnect();
 		ctr->addCosts(xy);
 		ctr->propagate();
-	}
-	else {
+	} 
+	else*/ 
+	{
 		xy->reconnect();
 		xy->propagate();
 	}	
@@ -94,15 +102,66 @@ Cost NaryConstraint::eval( string s ) {
 	else return default_cost;  
 }
 
+Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
+{
+	int arity_in = s.size();
+	int count = 0;
+	char* cht = new char [arity_+1];
+	cht[arity_] = '\0';
+	
+	for(int i=0;i<arity_in;i++) {
+		int ind = getIndex( ctr->getVar(i) );
+		if(ind >= 0) { cht[ind] = s[i]; count++; }	
+	}
+	Cost cost;
+	if(count == arity_) cost = eval( string(cht) );
+	else cost = 0;
+	
+	delete [] cht;
+	return cost;
+}    
+
+void NaryConstraint::firstlex( string& t )
+{
+	int i;
+	char* cht = new char [arity_+1];
+	cht[arity_]='\0';
+
+	for(i=0;i<arity_;i++) cht[i] = 0 + CHAR_FIRST;
+	t = string(cht);
+	delete [] cht;	
+}
+
 void NaryConstraint::first() 
 { 
 	tuple_it = pf->begin();
 }
 
-void NaryConstraint::first(EnumeratedVariable** scope_in)
+
+bool NaryConstraint::nextlex( string& t, Cost& c)
 {
-	first();
+	int i;
+	bool finish = false;
+	bool last = true;
+	char* cht = new char [arity_+1];
+	for(i=0;i<arity_;i++) cht[i] = t[i];
+	cht[i]='\0';
+	int pos = arity_-1;
+	while(last && !finish) {
+		last = (cht[pos] - CHAR_FIRST == getVar(pos)->getDomainSize() - 1);
+		if(!last) cht[pos]++;
+		else cht[pos] = 0 + CHAR_FIRST;
+		pos--;  
+		finish = (pos < 0) && last;
+	}
+	if(!finish) {
+		t = string(cht);
+		c = eval(t); 
+	}
+	delete [] cht;	
+	return !finish;
 }
+
 
 bool NaryConstraint::next( string& t, Cost& c)
 {
@@ -162,7 +221,7 @@ void NaryConstraint::setTuple( string tin, Cost c, EnumeratedVariable** scope_in
 
 void NaryConstraint::insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
 {
-	string t(t1+t2);
+	char* t = new char [arity_+1];
 
 	for(int i = 0; i < arity_; i++) {
 		EnumeratedVariable* v = scope[i]; 
@@ -170,16 +229,16 @@ void NaryConstraint::insertSum( string t1, Cost c1, Constraint* ctr1, string t2,
 		int pos1 = ctr1->getIndex(v);
 		int pos2 = ctr2->getIndex(v);
 		
-		if((pos1 >= 0) && (pos2 >= 0)) 
-		{
-			if(t1[pos1] != t2[pos2]) return;
+		if((pos1 >= 0) && (pos2 >= 0)) {
+			if(t1[pos1] != t2[pos2])  { delete [] t; return; }
 			t[pos] = t1[pos1];
 		}
 		else if(pos1 >= 0) t[pos] = t1[pos1];			
 		else if(pos2 >= 0) t[pos] = t2[pos2];			
 	}  
-
-	(*pf)[t] = c1 + c2;
+	t[arity_] = '\0';
+	(*pf)[string(t)] = c1 + c2;
+	delete [] t;
 }  
 
 
@@ -249,12 +308,12 @@ void NaryConstraint::sum( NaryConstraint* nary )
 // this function is independent of the search 
 void NaryConstraint::project( EnumeratedVariable* x )
 {
-	
-	if(arity_ <= 1) return;
 	if(getIndex(x) < 0) return;
+	assert(x->getDegree() == 1);
+
 	
 	string t,tnext,tproj;
-	Cost c,cnext;
+	Cost c;
 
 	TUPLES& f = *pf;	
 	TUPLES fproj;
@@ -262,10 +321,7 @@ void NaryConstraint::project( EnumeratedVariable* x )
 	
 	int xindex = getIndex(x);
 	
-	// First part of the projection: complexity O(|f|)
-	// we swap positions between the projected variable
-	// and the last variable
-	
+	// First part of the projection: complexity O(|f|) we swap positions between the projected variable and the last variable		
 	TUPLES::iterator  it = f.begin();
 	while(it != f.end()) {
 		t = it->first;
@@ -276,59 +332,61 @@ void NaryConstraint::project( EnumeratedVariable* x )
 		tswap[arity_-1] = tswap[xindex];
 		tswap[xindex] = a;
 				
-		fproj[tswap] = c;		
+		fproj[tswap] = c + x->getCost(tswap[arity_-1] - CHAR_FIRST);		
 		f.erase(t);		
 				
 		it++;
 	} 
-
-	// Second part of the projection: complexity O(|f|)
-	// as the projected variable is in the last position,
-	// it is sufficient to look for tuples with the same
-	// arity-1 posotions. If there are less than d (domain of
-	// the projected variable) tuples, we have also to perform 
-	// the minimum with default_cost
+	// Second part of the projection: complexity O(|f|) as the projected variable is in the last position,
+	// it is sufficient to look for tuples with the same arity-1 posotions. If there are less than d (domain of
+	// the projected variable) tuples, we have also to perform the minimum with default_cost
 	// this is only true when the tuples are LEXICOGRAPHICALY ordered	
     it = fproj.begin();
-	while(it != fproj.end()) {
+	if(it != fproj.end()) {
 		t = it->first;
-		c =  it->second;
-		
-		bool sameprefix = true;
+		c = it->second;
 		bool end = false;
-
 		unsigned int ntuples = 1;
 
 		while(!end) {		
 			it++;
 			end = (it == fproj.end());
+			bool sameprefix = false;
 			
+			Cost cnext = -1;
 			if(!end) { 
 				tnext = it->first;
 				cnext = it->second;
-				sameprefix = (t.compare(0,arity_-2,tnext) == 0);
-				if(!sameprefix) {
-					if((ntuples < x->getDomainInitSize()) && (cnext < c)) c = cnext;
-					if(c != default_cost) f[ t.substr(0,arity_-2) ] = c;
-					t = tnext;
-					c = cnext;
-					ntuples = 1;
-				} else {
-					ntuples++;
-					if(cnext < c) c = cnext;
-				}			
+				sameprefix = (t.compare(0,arity_-1,tnext,0,arity_-1) == 0);
+				//cout << "<" << t << "," << c << ">   <" << tnext << "," << cnext << ">       : " << t.compare(0,arity_-1,tnext,0,arity_-1) << endl;
 			}
+			if(!sameprefix) {
+				if(ntuples < x->getDomainInitSize()) 
+					if(default_cost < c) c = default_cost;
+				
+				if(c != default_cost) f[ t.substr(0,arity_-1) ] = c;
+				t = tnext;
+				c = cnext;
+				ntuples = 1;
+			} else {
+				ntuples++;
+				if(cnext < c) c = cnext;
+			}			
 		}
 	}
 	
 	// Update of internal structures: scope, indexes, links, arity_.
-	scope_inv.erase(x->wcspIndex);
 	x->deconnect(links[xindex]);
-	if(!links[xindex]->removed) nconnected_links--;
+	DLink<ConstraintLink>* linkx = links[xindex];
 	links[xindex] = links[arity_-1];
-
-	scope_inv[getVar(arity_-1)->wcspIndex] = xindex;
-	scope[ xindex ] = (EnumeratedVariable*) getVar(arity_-1);
+	links[arity_-1] = linkx;
+	links[xindex]->content.scopeIndex = xindex;
+	links[arity_-1]->content.scopeIndex = arity_-1;
+	scope_inv.erase(scope[xindex]->wcspIndex);
+	scope_inv[scope[arity_-1]->wcspIndex] = xindex;
+	scope[ xindex ] = scope[arity_-1];
+	scope[ arity_-1 ] = x;
+	nonassigned = nonassigned - 1;
 	arity_--;	
 }
 
@@ -338,14 +396,18 @@ void NaryConstraint::print(ostream& os)
 {
 	TUPLES& f = *pf;
 	os << endl << "f(";
-	for(int i = 0; i < arity_;i++) 
-	{
+	
+	int unassigned_ = 0;
+	 
+	for(int i = 0; i < arity_;i++) {
+		if(scope[i]->unassigned()) unassigned_++;
 		os << scope[i]->wcspIndex;
 		if(i < arity_-1) os << ",";
 	}
 	os << ")    ";
 	os << " |f| = " << f.size();
-	os << "    default_cost: " << default_cost << endl;
+	os << "    default_cost: " << default_cost;
+	os << "       unassigned: " << (int) nonassigned << "   and real unassigned: " << unassigned_ << endl;
 	os << "tuples: {";
 	
 	TUPLES::iterator  it = f.begin();

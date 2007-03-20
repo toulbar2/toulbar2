@@ -79,7 +79,7 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
-        if(arity > MAX_ARITY)  { cout << "Nary constraints with variables than more than 254 values are not supported." << endl; abort(); }       
+        if(arity > MAX_ARITY)  { cout << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; abort(); }       
         if (!file) {
             cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
             break;
@@ -228,7 +228,7 @@ void WCSP::read_wcsp(const char *fileName)
             inclowerbound += defval;
         } 
     }
-
+    
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(getLb() + inclowerbound);
@@ -240,6 +240,6 @@ void WCSP::read_wcsp(const char *fileName)
     }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
-    }
+    }   
 }
 

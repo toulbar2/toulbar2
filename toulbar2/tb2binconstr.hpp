@@ -126,7 +126,7 @@ public:
 		int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-        	ix = xin->toIndex(*iterx);  	iy = yin->toIndex(*itery);
+        	ix = x->toIndex(*iterx);  	iy = y->toIndex(*itery);
         	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
 			else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
 	    }}
@@ -152,6 +152,22 @@ public:
           }
         }
     }
+
+
+	Cost evalsubstr( string& s, Constraint* ctr )
+	{
+		int arity_in = s.size();
+		Value vals[2];
+		int count = 0;
+		
+		for(int i=0;i<arity_in;i++) {
+			int ind = getIndex( ctr->getVar(i) );
+			if(ind >= 0) { vals[ind] = s[i] - CHAR_FIRST; count++; }	
+		}
+		if(count == 2) return getCost(vals[0], vals[1]);
+		else return 0;
+	}    
+    
     
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
@@ -165,13 +181,6 @@ public:
     	yvar = y;
     }
     
-    void first( EnumeratedVariable** scope_in) 
-    { 
-    	xvar = scope_in[0];
-    	yvar = scope_in[1];
-    	itvx = xvar->begin(); 
-    	itvy = yvar->begin(); 
-    }
 
     bool next( string& t, Cost& c) 
     { 
@@ -195,6 +204,9 @@ public:
     	}
     	return false; 
     }
+
+	bool nextlex( string& t, Cost& c) { return next(t,c); }
+
 
 	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
 	{
@@ -369,6 +381,12 @@ public:
 	    }
 	    tight = sum / (double) count;
 	    return tight;
+	}
+
+	EnumeratedVariable* commonVar( BinaryConstraint* bctr ) {
+		if(getIndex(bctr->getVar(0)) >= 0) return (EnumeratedVariable*) bctr->getVar(0);
+		else if (getIndex(bctr->getVar(1)) >= 0) return (EnumeratedVariable*) bctr->getVar(1);
+		else return NULL;
 	}
 
     void print(ostream& os);

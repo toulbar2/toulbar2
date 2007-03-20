@@ -113,6 +113,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     } 
     
+    char* ch;
     ToulBar2::verbose = 0;
     for (int i=2; i<argc; i++) {
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
@@ -121,8 +122,18 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
-        if (strchr(argv[i],'e')) ToulBar2::elimVarWithSmallDegree = true;
-        if (strchr(argv[i],'p')) { ToulBar2::elimVarWithSmallDegree = true; ToulBar2::only_preprocessing = true; }
+        if ( (ch = strchr(argv[i],'e')) ) {
+        	ToulBar2::elimDegree = -3;
+        	int ndegree = ((int)*(ch+1)) - '0'; 
+        	if(ndegree > 3) { cout << "Not implemented: Eliminate during search only for degree < 3" << endl; ndegree = 3; }
+        	if(ndegree > 0) ToulBar2::elimDegree = -ndegree;
+        }
+        if ( (ch = strchr(argv[i],'p')) ) { 
+        	ToulBar2::elimDegree_preprocessing = -3; 
+        	int ndegree = ((int)*(ch+1)) - '0'; 
+        	if((ndegree > 0) && (ndegree <= 10)) ToulBar2::elimDegree_preprocessing = -ndegree;
+        }
+        
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
@@ -181,10 +192,6 @@ int main(int argc, char **argv)
     string strfilewcsp = strfile.substr(0,pos) + ".ub";
     sprintf(line,"echo %d > %s",(int)solver.getWCSP()->getUb(),strfilewcsp.c_str());
     system(line); */
-
-
-
-
 
     return 0;
 }

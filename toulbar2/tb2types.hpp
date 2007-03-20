@@ -70,8 +70,8 @@ const int STORE_SIZE = 16;
 
 #include <map>
 typedef map<int,int> TSCOPE;
-#define CHAR_FIRST 1
-//#define CHAR_FIRST 'A'
+//#define CHAR_FIRST 1
+#define CHAR_FIRST 'a'
 
 
 /*
@@ -97,9 +97,8 @@ public:
     static bool binaryBranching;
     static bool dichotomicBranching;
     static unsigned int dichotomicBranchingSize;
-    static bool elimVarWithSmallDegree;
-    static bool elimVarWithSmallDegree_; // flag activated after elimination data structures initialization
-    static bool only_preprocessing;
+    static int  elimDegree; 
+    static int  elimDegree_preprocessing;
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;

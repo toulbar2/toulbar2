@@ -76,20 +76,34 @@ void Variable::sortConstraints()
 
 void Variable::deconnect(DLink<ConstraintLink> *link)
 {
-	//cout << "deconnect de variable: " << *this << endl;	
     if (!link->removed) {
         getConstrs()->erase(link, true);
-        if (ToulBar2::elimVarWithSmallDegree_ && getDegree() <= 3) queueEliminate();
+
+		if((ToulBar2::elimDegree < 0) && (ToulBar2::elimDegree_preprocessing < 0)) return;
+
+        if(ToulBar2::elimDegree < 0) {
+  	        if((getRealDegree() <= ToulBar2::elimDegree_preprocessing) ||
+  	           (getDegree() <= 1))
+  		           queueEliminate();
+        }
+        else if(getDegree() <= ToulBar2::elimDegree) queueEliminate();
     }
 }
 
 int Variable::getRealDegree()
 {
-    TSCOPE neighbors;
+    TSCOPE scope1,scope2,scope3;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-        (*iter).constr->scopeUnion( neighbors, (*iter).constr );
+		(*iter).constr->getScope(scope2);
+
+     	set_union( scope1.begin(), scope1.end(),
+	  		   	   scope2.begin(), scope2.end(),
+			  	   inserter(scope3, scope3.begin()) );		
+		
+		scope1 = scope3;  
+		scope3.clear();   
     }
-    return neighbors.size()-1;
+    return scope1.size();
 }
 
 Long Variable::getWeightedDegree()

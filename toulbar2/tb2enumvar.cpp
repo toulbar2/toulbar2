@@ -411,7 +411,8 @@ void EnumeratedVariable::remove(Value value)
     }
 }
 
-
+// this function is used ONLY for restoring the solution when
+// variable elimination is tuned on
 void EnumeratedVariable::assignWhenEliminated(Value newValue)
 {
         assert(NCBucket == -1);
@@ -509,21 +510,17 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 }}
  
 	 if(yz) {
-		yz->addCosts( yznew );
-	 	yz->reconnect();
-	 }
-	 else 
-	 { 
-	 		yz = yznew;
-	 		yz->reconnect();
-//	 		wcsp->elimination();
+		 yz->addCosts( yznew );
+	 	 yz->reconnect();
+	 } else { 
+		 yz = yznew;
+	 	 yz->reconnect();
 	 }	
 
 	 // to be done before propagation
 	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL};
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	 wcsp->elimination();
-
      yz->propagate(); 
 }
 
@@ -566,8 +563,6 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
     
 	bool flag_rev = false;
 	if(n2links > 0) {
-//		if(this == links[0].constr->getVar(0)) flag_rev = (y != links[0].constr->getVar(1)); 
-//		else flag_rev = (y != links[0].constr->getVar(0)); 
         if (links[0].constr->getSmallestVarIndexInScope(links[0].scopeIndex) != y->wcspIndex) {
             assert(links[0].constr->getSmallestVarIndexInScope(links[0].scopeIndex) == z->wcspIndex);
             flag_rev = true;
@@ -599,7 +594,6 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
                     curcost += getBinaryCost(links[1], *iter, *itery);
                 }
 			}
-
 	        if (curcost < mincost) mincost = curcost;
 	    }
 		yz->addcost(*itery,*iterz,mincost);
@@ -620,10 +614,13 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 
 void EnumeratedVariable::eliminate()
 {
-    if (getDegree() > 3) return;
-//   cout << *wcsp;
-
+	if((ToulBar2::elimDegree >= 0) && (getDegree() > ToulBar2::elimDegree)) return;
 	
+	if(ToulBar2::elimDegree < 0) {
+		if((getDegree() > 1) && (getRealDegree() > ToulBar2::elimDegree_preprocessing)) return;
+		wcsp->variableElimination(this); 
+		return;
+	}
 
 	if(getDegree() > 0) {
 		TernaryConstraint* ternCtr = existTernary();
@@ -648,12 +645,6 @@ void EnumeratedVariable::eliminate()
 			}		
 		}
 	}
-//	else
-//	{
-//		WCSP::elimInfo ei = {this,NULL,NULL,NULL,NULL,NULL};
-//		wcsp->elimInfos[wcsp->getElimOrder()] = ei;	
-//	}
-	
 	assert(getDegree() == 0);
 	if (ToulBar2::verbose >= 2) cout << "Eliminate " << getName() << endl;
 	assert(getCost(support) == 0); // it is ensured by previous calls to findSupport
