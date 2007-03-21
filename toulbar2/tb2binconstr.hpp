@@ -338,6 +338,7 @@ public:
   }
   
   bool isEAC(int varIndex, Value a) {
+    if (varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
         int xindex = x->toIndex(a);
         if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex]) > 0) {
@@ -365,6 +366,7 @@ public:
   }
   
     void findFullSupportEAC(int varIndex) {
+        if (varIndex==getDACScopeIndex()) return;
         if (varIndex == 0) findFullSupportX();
         else findFullSupportY();
     } 

@@ -239,6 +239,7 @@ public:
   }
    
   bool isEAC(int varIndex, Value a) {
+//      if (varIndex==getDACScopeIndex()) return true;
     switch(varIndex) {
             case 0: return isEAC(x,a,y,z,supportX); break;
             case 1: return isEAC(y,a,x,z,supportY); break;
@@ -249,6 +250,7 @@ public:
   }
 
     void findFullSupportEAC(int varIndex) {
+//          if (varIndex==getDACScopeIndex()) return;
         switch(varIndex) {
             case 0: findFullSupportX(); break;
             case 1: findFullSupportY(); break;
