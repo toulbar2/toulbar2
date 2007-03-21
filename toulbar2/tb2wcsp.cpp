@@ -13,6 +13,7 @@
 #include "tb2naryconstr.hpp"
 #include "tb2arithmetic.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2vac.hpp"
 
 
 /*
@@ -61,6 +62,10 @@ int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
 										 // otherwise:  read from file
 bool ToulBar2::consecutiveAllele = false;
 
+bool ToulBar2::vac = false;
+bool ToulBar2::vacAlternative = false;
+bool ToulBar2::vacDecomposition = false;
+
 int WCSP::wcspCounter = 0;
 
 
@@ -89,6 +94,12 @@ WCSP::WCSP(Store *s, Cost upperBound) :
     maxdomainsize = 0;
     isternary = false;
     instance = wcspCounter++;
+
+    if (ToulBar2::vac) {
+	  vac = new VACExtension(this, ToulBar2::vacAlternative, ToulBar2::vacDecomposition);
+	} else {
+	  vac = NULL;
+	}
 }
 
 
@@ -100,20 +111,32 @@ WCSP::~WCSP()
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
 {
-	WeightedCSP * W = new WCSP(s, upperBound);
+    WeightedCSP * W = new WCSP(s, upperBound);
     return W;
 }
 
 int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
 {
-    EnumeratedVariable *x = new EnumeratedVariable(this, n, iinf, isup);
+    EnumeratedVariable *x;
+    if (!ToulBar2::vac) {
+      x = new EnumeratedVariable(this, n, iinf, isup);
+    }
+    else {
+      x = new VACVariable(this, n, iinf, isup);
+    }
     if(maxdomainsize < isup - iinf + 1) maxdomainsize = isup - iinf + 1;
     return x->wcspIndex;
 }
 
 int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize)
 {
-    EnumeratedVariable *x = new EnumeratedVariable(this, n, d, dsize);
+    EnumeratedVariable *x;
+    if (!ToulBar2::vac) {
+      x = new EnumeratedVariable(this, n, d, dsize);
+    }
+    else {
+      x = new VACVariable(this, n, d, dsize);
+    }
     if(maxdomainsize < dsize) maxdomainsize = dsize;
     return x->wcspIndex;
 }
@@ -140,7 +163,14 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 		ctr->addCosts(x,y,costs);
         ctr->propagate();
 	}
-    else ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+    else {
+      if (!ToulBar2::vac) {
+        ctr = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+      }
+      else {
+        ctr = new VACConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+      }
+    }
 
     return ctr->wcspIndex;
 }
@@ -267,7 +297,7 @@ void WCSP::preprocessing()
     }
 
 	ToulBar2::elimDegree_preprocessing = -ToulBar2::elimDegree_preprocessing;
-    for (int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
+    for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
     cout << "Variable elimination in preprocessing of real degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
 
     propagate();		
@@ -368,7 +398,7 @@ void WCSP::print(ostream& os)
     for (unsigned int i=0; i<vars.size(); i++) os << *vars[i] << endl;
     if (ToulBar2::verbose >= 4) {
         os << "Constraints:" << endl;
-        for (int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
+        for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
         for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) os << *elimConstrs[i];
     }
 }
@@ -492,6 +522,9 @@ void WCSP::whenContradiction()
     EAC1.clear();
     EAC2.clear();
     Eliminate.clear();
+    if (ToulBar2::vac) {
+      vac->clear();
+    }
     objectiveChanged = false;
     nbNodes++;
 }
@@ -574,6 +607,8 @@ void WCSP::propagateEAC()
     }
 }
 
+
+
 void WCSP::eliminate()
 {
 	//if(!Eliminate.empty())
@@ -591,21 +626,24 @@ void WCSP::propagate()
 //    revise(NULL);
 	
   do {
-    eliminate();
-    while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
-	       || (!ToulBar2::FDAC && (getUb()-getLb() > 1) && !EAC1.empty())) {
-      propagateIncDec();
-      if (!ToulBar2::FDAC && getUb()-getLb() > 1) propagateEAC();
-      assert(IncDec.empty());
-      propagateDAC();
-      assert(IncDec.empty());
-      propagateAC();
-      assert(IncDec.empty());
-      propagateNC();
-    }
-  } while (!Eliminate.empty());
-  if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
-  
+    do {
+      eliminate();
+      while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
+	     || (!ToulBar2::FDAC && (getUb()-getLb() > 1) && !EAC1.empty())) {
+	propagateIncDec();
+	if (!ToulBar2::FDAC && getUb()-getLb() > 1) propagateEAC();
+	assert(IncDec.empty());
+	propagateDAC();
+	assert(IncDec.empty());
+	propagateAC();
+	assert(IncDec.empty());
+	propagateNC();
+      }
+    } while (!Eliminate.empty());
+    if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
+    if (ToulBar2::vac) vac->propagate();
+  } while ((ToulBar2::vac) && (!vac->remainedIdle()));
+ 
 //    revise(NULL);
     	
     assert(verify());
@@ -1007,7 +1045,7 @@ Cost WCSP::Prob2Cost(TProb p) const {
       cerr << "Overflow when converting probability to cost." << endl;
       abort();
     }
-	Cost c = (Cost) res;
+	Cost c = (Cost) ((Long) res);
 	if(c > getUb()) return getUb();
 	return c;
 }

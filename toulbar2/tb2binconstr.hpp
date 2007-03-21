@@ -15,6 +15,7 @@ typedef Cost (BinaryConstraint::*GetCostMember)(Value vx, Value vy);
 
 class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>
 {
+protected:
     unsigned int sizeX;
     unsigned int sizeY;
     vector<StoreCost> deltaCostsX;

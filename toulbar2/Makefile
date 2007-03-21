@@ -38,7 +38,7 @@ BUILD = $(CC) -shared
 	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
 toulbar2: $(OBJS)
-	$(CC) $(OBJS) -o $@ $(PFLAGS)
+	$(CC) $(OBJS) -o $@ $(PFLAGS) -lgmp
 
 toulbar2i: $(SRCS)
 	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)

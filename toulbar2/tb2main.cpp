@@ -108,6 +108,9 @@ int main(int argc, char **argv)
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
         cerr << "   x : load a solution from a file" << endl;
+        cerr << "   V : enforce VAC (still ongoing work)" << endl;
+        cerr << "   A : enforce VAC alternative (still ongoing work)" << endl;
+        cerr << "   D : enforce VAC decomposition (still ongoing work)" << endl;
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -152,6 +155,9 @@ int main(int argc, char **argv)
 								   										     // 1: 			probs depending on the frequencies
 										 									 // otherwise:  read from file 
         }
+        if (strchr(argv[i],'V')) ToulBar2::vac = true;
+        if (strchr(argv[i],'A')) { ToulBar2::vac = true; ToulBar2::vacAlternative = true;}
+        if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
     }
 	Cost c = (argc >= 3)?String2Cost(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;

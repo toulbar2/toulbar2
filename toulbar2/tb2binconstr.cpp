@@ -146,6 +146,10 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
                         deltaCostsY[yindex] -= (minCost - cost);  // Warning! Possible overflow???
                         y->extend(*iterY, minCost - cost);
                         supportY[yindex] = *iterX;
+                        if (ToulBar2::vacAlternative) {
+                            x->queueVAC2();
+                            y->queueVAC2();
+                        }
                      }
                 }
                 

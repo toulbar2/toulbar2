@@ -69,9 +69,9 @@ inline int cost2log2(Long x)
 
 inline int cost2log2(const Rational &r)
 {
-        if (r.p==0) return -1;
+        if (r.getNumerator()==0) return -1;
         register int l2 = 0;
-        register Long x = (Long) r.to_double();
+        register Long x = floor(r);
         x>>=1;
         for (; x != 0; x >>=1)
         {

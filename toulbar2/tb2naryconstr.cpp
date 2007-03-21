@@ -63,9 +63,9 @@ void NaryConstraint::projectNaryBinary()
 		t[indexs[1]] =  yval + CHAR_FIRST;					
 		xy->setcost(xval,yval,eval(t));
     }}
-	BinaryConstraint* ctr = x->getConstr(y);   			
 
-	/*if(ctr) {
+  /*BinaryConstraint* ctr = x->getConstr(y);   			
+	if(ctr) {
 		ctr->reconnect();
 		ctr->addCosts(xy);
 		ctr->propagate();

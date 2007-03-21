@@ -18,6 +18,7 @@ using namespace std;
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
+class VACExtension;
 
 
 class WCSP : public WeightedCSP {
@@ -39,7 +40,7 @@ class WCSP : public WeightedCSP {
     bool objectiveChanged;
     Long nbNodes;                        // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
-    
+
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
@@ -49,7 +50,8 @@ public:
     WCSP(Store *s, Cost upperBound);
 
     Queue Eliminate;                          // non backtrackable list
-
+    
+    VACExtension *vac;                        // all the stuff to (possibly) enforce VAC
     
     virtual ~WCSP();
     
@@ -74,15 +76,15 @@ public:
 
     void updateUb(Cost newUb) {
         ub = min(ub,newUb);
-	if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;
+		if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;
     }
     void enforceUb() {
-        if (lb >= ub) THROWCONTRADICTION;
+        if (ceil(lb) >= ub) THROWCONTRADICTION;
         objectiveChanged=true;
     }
     void increaseLb(Cost newLb) {
         if (newLb > lb) {
-            if (newLb >= ub) THROWCONTRADICTION;
+            if (ceil(newLb) >= ub) THROWCONTRADICTION;
             lb = newLb;
             objectiveChanged=true;
             if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
@@ -90,7 +92,7 @@ public:
     }
     void decreaseUb(Cost newUb) {
         if (newUb < ub) {
-            if (newUb <= lb) THROWCONTRADICTION;
+            if (newUb <= ceil(lb)) THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged=true;
         }
@@ -183,8 +185,7 @@ public:
     void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
     void queueEAC1(DLink<VariableWithTimeStamp> *link) {EAC1.push(link, nbNodes);}
     void queueEAC2(DLink<VariableWithTimeStamp> *link) {EAC2.push(link, nbNodes);}
-    void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
-  
+    void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }  
     
     void propagateNC();
     void propagateIncDec();

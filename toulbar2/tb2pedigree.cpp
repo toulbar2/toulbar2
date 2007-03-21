@@ -61,11 +61,11 @@ void Pedigree::iniProb( WCSP* wcsp ) {
 		}
 	}
   }	
-  if(TopProb > MAX_COST) {
+  if(TopProb > to_double(MAX_COST)) {
       cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
       abort();
   }
-  wcsp->updateUb((Cost) TopProb);
+  wcsp->updateUb((Cost) ((Long) TopProb));
 }
 
 

@@ -11,6 +11,7 @@
 
 class EnumeratedVariable : public Variable
 {
+protected:
     Domain domain;
     vector<StoreCost> costs;
     StoreValue support;     // Warning! the unary support has to be backtrackable 
@@ -22,9 +23,9 @@ class EnumeratedVariable : public Variable
 
     void init();
         
-    void increaseFast(Value newInf);        // Do not check for a support nor insert in NC and DAC queue
-    void decreaseFast(Value newSup);        // Do not check for a support nor insert in NC and DAC queue
-    void removeFast(Value val);             // Do not check for a support nor insert in NC and DAC queue
+    virtual void increaseFast(Value newInf);        // Do not check for a support nor insert in NC and DAC queue
+    virtual void decreaseFast(Value newSup);        // Do not check for a support nor insert in NC and DAC queue
+    virtual void removeFast(Value val);             // Do not check for a support nor insert in NC and DAC queue
     
 public:    
     EnumeratedVariable(WCSP *wcsp, string n, Value iinf, Value isup);
@@ -51,14 +52,14 @@ public:
     bool canbeAfterElim(Value v) const {return domain.canbe(v);}
     bool cannotbe(Value v) const {return v < inf || v > sup || domain.cannotbe(v);}
     
-    void increase(Value newInf);
-    void decrease(Value newSup);
-    void remove(Value value);
-    void assign(Value newValue);
+    virtual void increase(Value newInf);
+    virtual void decrease(Value newSup);
+    virtual void remove(Value value);
+    virtual void assign(Value newValue);
     void assignWhenEliminated(Value newValue);
 
-    void project(Value value, Cost cost);
-    void extend(Value value, Cost cost);
+    virtual void project(Value value, Cost cost);
+    virtual void extend(Value value, Cost cost);
     Value getSupport() const {return support;}
     void setSupport(Value val) {support = val;}    
     Cost getCost(const Value value) const {
@@ -86,6 +87,8 @@ public:
     bool isEAC(Value a);
     bool isEAC();
     void propagateEAC();
+
+    virtual void queueVAC2() {}
 
     void eliminate();
     void elimVar( BinaryConstraint* xy );

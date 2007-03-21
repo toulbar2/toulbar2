@@ -140,6 +140,3 @@ void Queue::print(ostream& os)
  	}
 	os << endl;
 }  
-
-
-

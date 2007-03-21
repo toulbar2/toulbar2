@@ -119,6 +119,9 @@ public:
     static int foundersprob_class; 
     static bool consecutiveAllele;
     static bool generation;
+    static bool vac;
+    static bool vacAlternative;
+    static bool vacDecomposition;
 };
 
 /*

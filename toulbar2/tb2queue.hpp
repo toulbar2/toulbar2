@@ -49,5 +49,4 @@ public:
     void print(ostream& o);
 };
 
-
 #endif /*TB2QUEUE_HPP_*/
