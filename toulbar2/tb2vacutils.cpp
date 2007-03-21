@@ -107,7 +107,7 @@ void VACVariable::reset () {
     if (ToulBar2::verbose > 5) {
       cout << " " << (*it) << "(" << getCost(*it) << ")";
     }
-    if (getCost(*it) > wcsp->vac->getCostThreshold()) {
+    if (!wcsp->vac->isNull(getCost(*it))) {
       vacValues[i]->remove();
       if (ToulBar2::verbose > 5) {
         cout << "X";
@@ -167,7 +167,8 @@ void VACVariable::increaseCost (const unsigned int i, const Cost c) {
 }
 
 void VACVariable::VACproject (const unsigned int i, const Cost c) {
-  Cost oldCost = getVACCost(i), newCost;
+  Cost newCost;
+  Cost oldCost = getVACCost(i);
   increaseCost(i, c);
   newCost = getVACCost(i);
   if ((getValue(i)->getValue() == maxCostValue) || (newCost > maxCost) || (wcsp->getLb() + newCost >= wcsp->getUb())) {
@@ -177,7 +178,7 @@ void VACVariable::VACproject (const unsigned int i, const Cost c) {
     queueDAC();
     queueEAC1();
   }
-  if ((oldCost <= wcsp->vac->getCostThreshold()) && (newCost > wcsp->vac->getCostThreshold())) {
+  if ((wcsp->vac->isNull(oldCost)) && (!wcsp->vac->isNull(newCost))) {
     queueVAC2();
   }
 }
@@ -250,8 +251,7 @@ void VACVariable::project (Value value, Cost cost) {
   assert(cost >= 0);
   Cost oldcost = getCost(value);
   Cost newcost = oldcost + cost;
-  //cout << "cost from " << oldcost << " to " << newcost << " (" << wcsp->vac->getCostThreshold() << ")" <<endl;
-  if ((oldcost <= wcsp->vac->getCostThreshold()) && (newcost > wcsp->vac->getCostThreshold())) {
+  if ((wcsp->vac->isNull(oldcost)) && (!wcsp->vac->isNull(newcost))) {
     queueVAC2();
   }
   EnumeratedVariable::project(value, cost);
@@ -494,13 +494,13 @@ bool VACConstraint::revise (const int i, const unsigned int v) {
   assert(v < getVariable(i)->getDomainSize());
 
   xj = getVariable(1-i);
-  if ((!xj->getValue(support[i][v])->isRemoved()) && (getVACCost(v, support[i][v], i) <= wcsp->vac->getCostThreshold())) {
+  if ((!xj->getValue(support[i][v])->isRemoved()) && (wcsp->vac->isNull(getVACCost(v, support[i][v], i)))) {
     return false;
   }
   for (unsigned int w = ((support[i][v]+1) % xj->getDomainSize()); w != support[i][v]; w = (w+1) % xj->getDomainSize()) {
     if (!xj->getValue(w)->isRemoved()) {
       cost = getVACCost(v, w, i);
-      if (cost <= wcsp->vac->getCostThreshold()) {
+      if (wcsp->vac->isNull(cost)) {
         support[i][v] = w;
         return false;
       }

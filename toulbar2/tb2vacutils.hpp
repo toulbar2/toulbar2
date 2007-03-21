@@ -274,15 +274,15 @@ public:
   /**
    * overload the function of EnumeratedVariable
    * move the lower bound of a domain
-   * @param value the lower bound
+   * @param newInf the lower bound
    */
   virtual void increase (Value newInf);
   /**
    * overload the function of EnumeratedVariable
    * move the upper bound of a domain
-   * @param value the new upper bound
+   * @param newSup the new upper bound
    */
-  virtual void decrease (Value newInf);
+  virtual void decrease (Value newSup);
 
   /**
    * empty @a deltaCost variable, so that they are equal to 0

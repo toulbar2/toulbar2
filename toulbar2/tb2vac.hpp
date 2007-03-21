@@ -160,13 +160,20 @@ public:
    * get the threshold above which a cost is considered as 0
    * @return the threshold
    */
-  Cost getCostThreshold ();
+  Cost getCostThreshold () const;
+  /**
+   * check is a cost is considered as 0
+   * (in VAC Alternative, a cost not greater the @a costThreshold is considered as 0)
+   * @param c a cost
+   * @return true if the cost is considered as 0
+   */
+  bool isNull(Cost c) const;
   /**
    * @pre supposes that VAC alternative is used
    * get the last the threshold was updated
    * @return the timestamp
    */
-  Long getLastCostThresholdUpdate ();
+  Long getLastCostThresholdUpdate () const;
   /**
    * @pre supposes that VAC alternative is used
    * update the threshold above which a cost is considered as 0
@@ -174,9 +181,20 @@ public:
    * @param d the current timestamp
    */
   void updateThreshold (Cost t, Long d);
-
+  /**
+   * queue a variable to the VAC queue
+   * @param link the link the variable
+   */
   void queueVAC(DLink<VariableWithTimeStamp> *link);
+  /**
+   * queue a variable to the VAC2 queue
+   * @param link the link the variable
+   */
   void queueVAC2(DLink<Variable *> *link);
+  /**
+   * unqueue a variable to the VAC queue
+   * @param link the link the variable
+   */
   void dequeueVAC2(DLink<Variable *> *link);
 };
 

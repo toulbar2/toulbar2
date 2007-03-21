@@ -71,7 +71,7 @@ inline int cost2log2(const Rational &r)
 {
         if (r.getNumerator()==0) return -1;
         register int l2 = 0;
-        register Long x = floor(r);
+        register Long x = (Long) floor(r);
         x>>=1;
         for (; x != 0; x >>=1)
         {

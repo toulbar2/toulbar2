@@ -384,7 +384,8 @@ void WCSP::printNCBuckets()
            cout << " " << (*iter)->getName() << "," << (*iter)->getMaxCostValue() << "," << (*iter)->getMaxCost();
            assert((*iter)->canbe((*iter)->getMaxCostValue()));
            assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost());
-           assert((*iter)->getMaxCost() >= (Long) pow(2.,bucket));
+           assert((bucket) ? ((*iter)->getMaxCost() >= (Long) pow(2.,bucket)) : ((*iter)->getMaxCost() > 0));
+           //assert((*iter)->getMaxCost() >= (Long) pow(2.,bucket));
            assert((*iter)->getMaxCost() < (Long) pow(2.,bucket+1));
         }
         cout << endl;
@@ -629,36 +630,34 @@ void WCSP::propagate()
     do {
       eliminate();
       while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
-	     || (!ToulBar2::FDAC && (getUb()-getLb() > 1) && !EAC1.empty())) {
-	propagateIncDec();
-	if (!ToulBar2::FDAC && getUb()-getLb() > 1) propagateEAC();
-	assert(IncDec.empty());
-	propagateDAC();
-	assert(IncDec.empty());
-	propagateAC();
-	assert(IncDec.empty());
-	propagateNC();
+          || (((ToulBar2::vac) || (!ToulBar2::FDAC && (getUb()-getLb() > 1))) && !EAC1.empty())) {
+        propagateIncDec();
+        if ((ToulBar2::vac) || (!ToulBar2::FDAC && getUb()-getLb() > 1)) propagateEAC();
+        assert(IncDec.empty());
+        propagateDAC();
+        assert(IncDec.empty());
+        propagateAC();
+        assert(IncDec.empty());
+        propagateNC();
       }
     } while (!Eliminate.empty());
     if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
     if (ToulBar2::vac) vac->propagate();
   } while ((ToulBar2::vac) && (!vac->remainedIdle()));
- 
-//    revise(NULL);
-    	
-    assert(verify());
-    assert(!objectiveChanged);
-    assert(NC.empty());
-    assert(IncDec.empty());
-    assert(AC.empty());
-    assert(DAC.empty());
-    assert(EAC1.empty());
-    assert(EAC2.empty());
-    assert(Eliminate.empty());
-    nbNodes++;
+
+  //    revise(NULL);
+
+  assert(verify());
+  assert(!objectiveChanged);
+  assert(NC.empty());
+  assert(IncDec.empty());
+  assert(AC.empty());
+  assert(DAC.empty());
+  assert(EAC1.empty());
+  assert(EAC2.empty());
+  assert(Eliminate.empty());
+  nbNodes++;
 }
-
-
 
 
 void WCSP::restoreSolution()
