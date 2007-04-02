@@ -60,7 +60,7 @@ public:
     bool verify() {return true;}
     
 
-	void project( EnumeratedVariable* x );
+	void project( EnumeratedVariable* x, bool addUnaryCtr = true );
 	void sum( NaryConstraint* nary );
 
 	string lex_it;

@@ -73,6 +73,9 @@ public:
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
 	virtual Cost getDefCost() { return 0; }
+	
+	void sumScopeIncluded( Constraint* ctr );
+	
 	void scopeCommon( TSCOPE& scope_out, Constraint* ctr ) 
 	{
 		TSCOPE scope1,scope2;
@@ -92,8 +95,11 @@ public:
 	void scopeUnion( TSCOPE& scope_out, Constraint* ctr ) 
 	{
 		TSCOPE scope1,scope2;
-		getScope( scope1 );
-		ctr->getScope( scope2 );
+		getScope( scope1 ); ctr->getScope( scope2 );
+
+		assert(arity() == scope1.size());
+		assert(ctr->arity() == scope2.size());
+
 		set_union( scope1.begin(), scope1.end(),
 		  	   	   scope2.begin(), scope2.end(),
 			  	   inserter(scope_out, scope_out.begin()) );		

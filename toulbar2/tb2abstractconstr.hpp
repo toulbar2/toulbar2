@@ -196,7 +196,6 @@ class AbstractNaryConstraint : public Constraint
 protected:
 	
 	int arity_;
-    int arity() const {return arity_;}
 	
 	EnumeratedVariable** scope;
     TSCOPE scope_inv;
@@ -222,6 +221,8 @@ public:
     }
 
     virtual ~AbstractNaryConstraint() {}
+
+    int arity() const {return arity_;}
 
     Variable *getVar(int varCtrIndex) const { 
     	assert(varCtrIndex < arity_); 

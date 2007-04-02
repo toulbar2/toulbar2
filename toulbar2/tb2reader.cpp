@@ -8,6 +8,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2naryconstr.hpp"
+#include "tb2randomgen.hpp"
+
 
 typedef struct {
     EnumeratedVariable *var;
@@ -102,7 +104,6 @@ void WCSP::read_wcsp(const char *fileName)
 	            for (t = 0; t < ntuples; t++) {
 					for(i=0;i<arity;i++) {
 			            file >> j;			            
-			            if(j + CHAR_FIRST > 254) { cout << "Nary constraints with variables than more than 254 values are not supported." << endl; abort(); }
 			            buf[i] = j + CHAR_FIRST;
 					}
 					buf[i] = '\0';
@@ -110,7 +111,7 @@ void WCSP::read_wcsp(const char *fileName)
 				
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
-	            } 	           
+	            }
 		    }
         } else if (arity == 3) {
             file >> i;
@@ -242,4 +243,22 @@ void WCSP::read_wcsp(const char *fileName)
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
 }
+
+
+
+
+
+void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
+{
+	naryRandom randwcsp(this);
+    randwcsp.Input(n,m,p,seed);	    
+ 
+ 	unsigned int nbconstr = numberOfConstraints();
+    sortConstraints();
+    
+    if (ToulBar2::verbose >= 0) {
+        cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " constraints." << endl;
+    }  
+}
+
 

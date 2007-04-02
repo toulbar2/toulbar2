@@ -121,8 +121,8 @@ public:
 		assert(costsin.size() == costs.size());
 
         int vindex[3];
-        int sizeXin = xin->getDomainInitSize();
         int sizeYin = yin->getDomainInitSize();
+        int sizeZin = zin->getDomainInitSize();
        
 		for (EnumeratedVariable::iterator iterx = xin->begin(); iterx != xin->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = yin->begin(); itery != yin->end(); ++itery) {
@@ -136,7 +136,7 @@ public:
 	        vindex[ getIndex(yin) ] = vyin;
 	        vindex[ getIndex(zin) ] = vzin;
 	        
-			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeXin*sizeYin + vyin*sizeYin + vzin];
+			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
 	    }}}
     }
 
@@ -153,6 +153,18 @@ public:
 	        
 		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
     }
+
+    void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, int vxi, int vyi, int vzi, Cost c ) {
+        int vindex[3];
+	    int vx = xin->toIndex(vxi);
+	    int vy = yin->toIndex(vyi);
+	    int vz = zin->toIndex(vzi);
+        vindex[ getIndex(xin) ] = vx;
+        vindex[ getIndex(yin) ] = vy;
+        vindex[ getIndex(zin) ] = vz;
+		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] = c;
+    }
+
     
     void propagate() {
         if (x->assigned()) {
@@ -350,21 +362,22 @@ public:
 
 	bool nextlex( string& t, Cost& c) { return next(t,c); }
 
-	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
-	{
-		int ix,iy;
-		char tch[3]; 
-		strcpy(tch,t.c_str());
-		if(scope_in[0] == x) {
-			   ix = tch[0] - CHAR_FIRST; 
-		       iy = tch[1] - CHAR_FIRST; }
-		else { ix = tch[1] - CHAR_FIRST; 
-			   iy = tch[0] - CHAR_FIRST; }
-			   
-		costs[ix * sizeY + iy] = c;			
+	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) {
+		setcost( scope_in[0], scope_in[1], scope_in[2], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, t[2]-CHAR_FIRST, c );		
 	}
 
-
+	Cost evalsubstr( string& s, Constraint* ctr )
+	{
+		Value vals[3];
+		int count = 0;
+		
+		for(int i=0;i<arity();i++) {
+			int ind = ctr->getIndex(getVar(i));
+			if(ind >= 0) { vals[i] = s[ind] - CHAR_FIRST; count++; }	
+		}
+		if(count == 3) return getCost(vals[0], vals[1], vals[2]);
+		else return 0;
+	}    
 
 
 

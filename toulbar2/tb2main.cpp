@@ -83,7 +83,15 @@ int main(int argc, char **argv)
 #ifndef MENDELSOFT
         cerr << "Available problem formats (specified by the filename extension):" << endl;
         cerr << "   *.wcsp : wcsp format" << endl;
-        cerr << "   *.pre  : pedigree format" << endl;
+        cerr << "   *.pre  : pedigree format" << endl << endl;
+
+        cerr << "Alternatively one call the random problem generator: " << endl; 
+		cerr << "     binary{n}-{m}-{p1}-{p2}-{seed}          p1 is the tightness in percentage %" << endl; 
+		cerr << "      						                  p2 is the num of binary constraints to include" << endl;
+		cerr << "      						                  the seed parameter is optional" << endl;
+		 
+		cerr << "or:                                                                               " << endl;            
+		cerr << "     ternary{n}-{m}-{p1}-{p2}-{p3}-{seed}    p3 is the num of ternary constraints" << endl; 
         cerr << endl;
 #endif
         cerr << "Initial upperbound is optional (default value: " << MAX_COST << ")" << endl;
@@ -116,8 +124,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     } 
     
+    
     char* ch;
     ToulBar2::verbose = 0;
+   
     for (int i=2; i<argc; i++) {
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
@@ -127,14 +137,14 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
         	ToulBar2::elimDegree = -3;
-        	int ndegree = ((int)*(ch+1)) - '0'; 
-        	if(ndegree > 3) { cout << "Not implemented: Eliminate during search only for degree < 3" << endl; ndegree = 3; }
+        	int ndegree = ch[1] - '0';
+        	if((ndegree > 3) && (ndegree < 9)) { cout << "Not implemented: Eliminate during search only for degree < 3" << endl; ndegree = 3; }
         	if(ndegree > 0) ToulBar2::elimDegree = -ndegree;
         }
         if ( (ch = strchr(argv[i],'p')) ) { 
         	ToulBar2::elimDegree_preprocessing = -3; 
         	int ndegree = ((int)*(ch+1)) - '0'; 
-        	if((ndegree > 0) && (ndegree <= 10)) ToulBar2::elimDegree_preprocessing = -ndegree;
+        	if((ndegree > 0) && (ndegree < 10)) ToulBar2::elimDegree_preprocessing = -ndegree;
         }
         
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
@@ -159,6 +169,9 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'A')) { ToulBar2::vac = true; ToulBar2::vacAlternative = true;}
         if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
     }
+    
+    
+    
 	Cost c = (argc >= 3)?String2Cost(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
@@ -173,7 +186,25 @@ int main(int argc, char **argv)
         cout << "end." << endl;
         return 0;
     }
+
     Solver solver(STORE_SIZE, c);
+    
+   	int n = 10;
+   	int m = 2;
+   	int seed = 3;
+	vector<int> p;	
+	bool randomproblem = false;
+    if(!strchr(argv[1],'.')) {
+    	randomproblem = true;	
+    	int pn[10];
+    	int narities = 0;
+    	if(strstr(argv[1],"binary"))  { sscanf(argv[1], "binary%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
+    	if(strstr(argv[1],"ternary")) { sscanf(argv[1], "ternary%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed); narities = 3; }
+		if(pn[0] > 100) { cout << pn[0] << " tightness is a percentage" << endl; pn[0] = 100; } 
+		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
+		if(narities == 0) cout << "Random problem incorrect, use:   binary{n}-{m}-{%}-{n. of bin ctrs}  or  ternary{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
+    } 
+
 
     try {
 #ifdef MENDELSOFT
@@ -181,7 +212,11 @@ int main(int argc, char **argv)
 #else
         if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
 #endif
-        solver.read_wcsp(argv[1]);
+        if(randomproblem)    solver.read_random(n,m,p,seed);
+        else 		         solver.read_wcsp(argv[1]);
+        
+        
+        
         if (certificate) solver.read_solution("sol");
         else if (saveproblem) solver.dump_wcsp("problem.wcsp");
         else solver.solve();
@@ -191,8 +226,8 @@ int main(int argc, char **argv)
     cout << "end." << endl;    
 
 
-    /* // for the competition it was necessary to write a file with the optimal sol  
-	char line[80];
+    // for the competition it was necessary to write a file with the optimal sol  
+	/*char line[80];
     string strfile(argv[1]);
     int pos = strfile.find_last_of(".");
     string strfilewcsp = strfile.substr(0,pos) + ".ub";

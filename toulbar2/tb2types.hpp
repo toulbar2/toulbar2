@@ -70,8 +70,12 @@ const int STORE_SIZE = 16;
 
 #include <map>
 typedef map<int,int> TSCOPE;
-//#define CHAR_FIRST 1
-#define CHAR_FIRST 'a'
+
+#ifdef NARYCHAR
+#define CHAR_FIRST 'A'
+#else
+#define CHAR_FIRST 1
+#endif
 
 
 /*

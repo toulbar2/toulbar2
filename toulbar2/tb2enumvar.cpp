@@ -491,7 +491,7 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 
 	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
 	 EnumeratedVariable *z = (EnumeratedVariable *) wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
-	
+	    
 	 BinaryConstraint* yz = y->getConstr(z);
      BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
 
@@ -576,23 +576,15 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	        Cost curcost = getCost(*iter) + xyz->getCost(this,y,z,*iter,*itery,*iterz); 
 
 			if(!flag_rev) {
-		        if(n2links > 0) {
-                    assert(links[0].constr->getIndex(y) >= 0);
-                    curcost += getBinaryCost(links[0], *iter, *itery);
-                }
-				if(n2links > 1) {
-                    assert(links[1].constr->getIndex(z) >= 0);
-                    curcost += getBinaryCost(links[1], *iter, *iterz);
-                }
+		        if(n2links > 0) { assert(links[0].constr->getIndex(y) >= 0);
+		                          curcost += getBinaryCost(links[0], *iter, *itery); }
+				if(n2links > 1) { assert(links[1].constr->getIndex(z) >= 0);
+                    			  curcost += getBinaryCost(links[1], *iter, *iterz); }
 			} else {
-		        if(n2links > 0) {
-                    assert(links[0].constr->getIndex(z) >= 0);
-                    curcost += getBinaryCost(links[0], *iter, *iterz);
-                }
-				if(n2links > 1) {
-                    assert(links[1].constr->getIndex(y) >= 0);
-                    curcost += getBinaryCost(links[1], *iter, *itery);
-                }
+		        if(n2links > 0) { assert(links[0].constr->getIndex(z) >= 0);
+   				                  curcost += getBinaryCost(links[0], *iter, *iterz); }
+				if(n2links > 1) { assert(links[1].constr->getIndex(y) >= 0);
+  								  curcost += getBinaryCost(links[1], *iter, *itery); }
 			}
 	        if (curcost < mincost) mincost = curcost;
 	    }
@@ -605,9 +597,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
 	wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	wcsp->elimination();
-
     yz->propagate(); 
- 
 	return true;
 }
 
@@ -621,7 +611,7 @@ void EnumeratedVariable::eliminate()
 		wcsp->variableElimination(this); 
 		return;
 	}
-
+ 	
 	if(getDegree() > 0) {
 		TernaryConstraint* ternCtr = existTernary();
 				

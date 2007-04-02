@@ -7,6 +7,7 @@
 #include "tb2domain.hpp"
 #include "tb2pedigree.hpp"
 
+
 extern void setvalue(int wcspId, int varIndex, Value value);
 
 /*
@@ -42,6 +43,20 @@ void Solver::read_wcsp(const char *fileName)
     }
     ToulBar2::setvalue = setvalue;
 }
+
+void Solver::read_random(int n, int m, vector<int>& p, int seed)
+{
+    wcsp->read_random(n,m,p,seed);
+    unassignedVars = new BTList<Value>(&store->storeDomain);
+    allVars = new DLink<Value>[wcsp->numberOfVariables()];
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+        allVars[i].content = i;
+        unassignedVars->push_back(&allVars[i], false);
+        if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
+    }
+    ToulBar2::setvalue = setvalue;
+}
+
 
 void Solver::read_solution(const char *filename)
 {

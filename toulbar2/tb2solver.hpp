@@ -6,9 +6,14 @@
 #ifndef TB2SOLVER_HPP_
 #define TB2SOLVER_HPP_
 
+#include <vector>
+using namespace std;
+
 #include "toulbar2.hpp"
 template <class T> struct DLink;
 template <class T> class BTList;
+
+
 
 class Solver
 {
@@ -44,6 +49,7 @@ public:
     ~Solver();
     
     void read_wcsp(const char *fileName);
+    void read_random(int n, int m, vector<int>& p, int seed);
     
     bool solve();
     

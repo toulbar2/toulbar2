@@ -186,7 +186,6 @@ BinaryConstraint* Variable::getConstr( Variable* x )
 {
 	BinaryConstraint* ctr2;
 	TernaryConstraint* ctr3;
-	
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
     	if ((*iter).constr->arity() == 2) {
     		ctr2 = (BinaryConstraint*) (*iter).constr;

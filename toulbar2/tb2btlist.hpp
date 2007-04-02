@@ -23,6 +23,8 @@ struct DLink
     DLink *next;
     DLink *prev;
     T content;
+    
+    public: DLink<T>() : removed(true), next(NULL), prev(NULL) {}
 };
 
 template <class T>

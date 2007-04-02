@@ -116,11 +116,15 @@ public:
 	                costs[a * sizeY + b] = c;
     }
 
+   void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+      if (xin==x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
+      else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] = mincost;
+   }
+
    void setcost( int vx, int vy, Cost mincost ) {
-   	        int ix = x->toIndex(vx);
-            int iy = y->toIndex(vy);
-   	       	costs[ix * sizeY + iy] = mincost;
-    }
+   	   costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
+   }
+
 
    void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
 		assert(costsin.size() == costs.size());
@@ -157,13 +161,12 @@ public:
 
 	Cost evalsubstr( string& s, Constraint* ctr )
 	{
-		int arity_in = s.size();
 		Value vals[2];
 		int count = 0;
 		
-		for(int i=0;i<arity_in;i++) {
-			int ind = getIndex( ctr->getVar(i) );
-			if(ind >= 0) { vals[ind] = s[i] - CHAR_FIRST; count++; }	
+		for(int i=0;i<arity();i++) {
+			int ind = ctr->getIndex( getVar(i) );
+			if(ind >= 0) { vals[i] = s[ind] - CHAR_FIRST; count++; }	
 		}
 		if(count == 2) return getCost(vals[0], vals[1]);
 		else return 0;
@@ -209,18 +212,8 @@ public:
 	bool nextlex( string& t, Cost& c) { return next(t,c); }
 
 
-	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) 
-	{
-		int ix,iy;
-		char tch[3]; 
-		strcpy(tch,t.c_str());
-		if(scope_in[0] == x) {
-			   ix = tch[0] - CHAR_FIRST; 
-		       iy = tch[1] - CHAR_FIRST; }
-		else { ix = tch[1] - CHAR_FIRST; 
-			   iy = tch[0] - CHAR_FIRST; }
-			   
-		costs[ix * sizeY + iy] = c;			
+	void setTuple( string t, Cost c, EnumeratedVariable** scope_in )  {
+		setcost( scope_in[0], scope_in[1], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, c );				
 	}
 	
    

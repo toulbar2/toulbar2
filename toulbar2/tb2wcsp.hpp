@@ -28,7 +28,6 @@ class WCSP : public WeightedCSP {
     StoreCost lb;
     Cost ub;
     vector<Variable *> vars;
-    vector<Constraint *> constrs;
     int NCBucketSize;
     vector< VariableList > NCBuckets;         // vector of backtrackable lists
     Queue NC;                                 // non backtrackable list
@@ -46,6 +45,8 @@ class WCSP : public WeightedCSP {
     WCSP& operator=(const WCSP &wcsp);
     
 public:
+
+    vector<Constraint *> constrs;
 
     WCSP(Store *s, Cost upperBound);
 
@@ -162,6 +163,9 @@ public:
 	int postNaryConstraint(EnumeratedVariable** scopeVars, int arity, Cost defval);    
     
     void read_wcsp(const char *fileName);
+    void read_random(int n, int m, vector<int>& p, int seed);
+
+
 
     // Specific API for Variable and Constraint classes
 
