@@ -70,6 +70,7 @@ public:
     virtual bool next( string& t, Cost& c) { return false; }
     virtual bool nextlex( string& t, Cost& c) { return false; }
 	virtual void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) {}
+	virtual void addtoTuple( string t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
 	virtual Cost getDefCost() { return 0; }

@@ -366,6 +366,10 @@ public:
 		setcost( scope_in[0], scope_in[1], scope_in[2], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, t[2]-CHAR_FIRST, c );		
 	}
 
+	void addtoTuple( string t, Cost c, EnumeratedVariable** scope_in ) {
+		addcost( scope_in[0], scope_in[1], scope_in[2], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, t[2]-CHAR_FIRST, c );		
+	}
+
 	Cost evalsubstr( string& s, Constraint* ctr )
 	{
 		Value vals[3];

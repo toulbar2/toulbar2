@@ -805,9 +805,9 @@ void WCSP::deleteTmpConstraint( Constraint* ctr )
 
 Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 {
-	if (ToulBar2::verbose >= 1) cout << endl << "Sum of constraints: " << *ctr1 << " " << *ctr2 << endl;
-		
+	assert( ctr1 != ctr2 );
 	if(ctr1->order(ctr2) < 0) { Constraint* ctraux = ctr1; ctr1 = ctr2; ctr2 = ctraux; }
+	if (ToulBar2::verbose >= 1) cout << endl << "Sum of constraints: " << *ctr1 << " " << *ctr2 << endl;
 		
 	ctr1->deconnect();
 	ctr2->deconnect();
@@ -819,12 +819,12 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	int arityU = scopeUinv.size();
 	int arityI = scopeIinv.size();
 
-	if(arityU == ctr1->arity()) {
-		ctr1->sumScopeIncluded(ctr2);
-		ctr1->reconnect();
-		ctr1->propagate();
-		if (ToulBar2::verbose >= 1) cout << endl << "Has result: " << *ctr1 << endl;				
-		return ctr1;
+	if(arityU == ctr2->arity()) {
+		ctr2->sumScopeIncluded(ctr1);
+		ctr2->reconnect();
+		ctr2->propagate();
+		if (ToulBar2::verbose >= 1) cout << endl << "Scopes Included.  Has result: " << *ctr2 << endl;				
+		return ctr2;
 	}
 
 
@@ -1022,25 +1022,23 @@ void WCSP::variableElimination( EnumeratedVariable* var )
 {
 	if(var->wcspIndex == 6) return; 
 	if (ToulBar2::verbose >= 1) cout << endl << "Variable General Elimination de " << var->getName() << "    degree: " << var->getDegree() << " real: " << var->getRealDegree() << endl;
-	list<Constraint*> ctrs;
 
 	if(var->getDegree() > 0) {
-		for (ConstraintList::iterator it=var->getConstrs()->begin(); it != var->getConstrs()->end(); ++it)  {
-			Constraint* ctr = (*it).constr;
-			ctrs.push_back( ctr );
-		}
-		list<Constraint*>::iterator it = ctrs.begin();
-		Constraint* csum1 = *it;
-		if(ctrs.size() == 1) csum1->reconnect();
-		Constraint* csum2;
-		++it;
 		
-		for (; it != ctrs.end(); ++it) {
-	    	Constraint* ctr = *it;
-	    	csum2 = sum(ctr,csum1);
-			csum1 = csum2;    	
-	   	}
-	   	project(csum1, var);
+		ConstraintList::iterator it1 = var->getConstrs()->begin();
+		ConstraintList::iterator it2;
+		Constraint* c1   = (*it1).constr;
+		Constraint* c2   = NULL;
+		Constraint* csum = c1;
+		
+		while(var->getDegree() > 1) {
+			it1 = var->getConstrs()->begin();
+			it2 = var->getConstrs()->rbegin();
+			c1  = (*it1).constr;
+			c2  = (*it2).constr;
+			csum = sum(c1,c2);
+		}
+	   	project(csum, var);
 	}
    	assert(var->getDegree() == 0);
    	

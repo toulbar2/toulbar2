@@ -242,6 +242,19 @@ void NaryConstraint::setTuple( string tin, Cost c, EnumeratedVariable** scope_in
 	(*pf)[t] = c;
 }
 
+void NaryConstraint::addtoTuple( string tin, Cost c, EnumeratedVariable** scope_in )
+{
+	string t(tin);
+	if(scope_in) {
+		for(int i = 0; i < arity_; i++) {
+			int pos = getIndex(scope_in[i]);
+			t[pos] = tin[i];
+		}  
+	}
+	(*pf)[t] += c;
+}
+
+
 void NaryConstraint::insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
 {
 	char* t = new char [arity_+1];

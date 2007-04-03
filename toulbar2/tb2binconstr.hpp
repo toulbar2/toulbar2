@@ -215,6 +215,9 @@ public:
 	void setTuple( string t, Cost c, EnumeratedVariable** scope_in )  {
 		setcost( scope_in[0], scope_in[1], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, c );				
 	}
+	void addtoTuple( string t, Cost c, EnumeratedVariable** scope_in )  {
+		addcost( scope_in[0], scope_in[1], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, c );				
+	}
 	
    
     void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin)

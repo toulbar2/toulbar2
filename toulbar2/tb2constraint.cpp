@@ -35,7 +35,7 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 	first();
 	while( next(t,c) ) {
 		Cost cplus = ctr->evalsubstr(t, this);
-		if(c + cplus < Top) setTuple( t, c + cplus, scopethis);
+		if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
 		else setTuple( t, Top, scopethis);
 	}
 	
