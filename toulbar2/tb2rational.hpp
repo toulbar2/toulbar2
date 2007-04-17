@@ -134,17 +134,25 @@ struct Rational {
   }
 };
 
-const Rational RATIONAL_MAX = Rational((Long) (sqrt((double) LONG_LONG_MAX)/2.), (Long) 1);
+const Rational RATIONAL_MAX = Rational((Long) (sqrt((double) LONGLONG_MAX)/2.), (Long) 1);
 
-inline double to_double(const int cost) {return (double) cost;}
-inline double to_double(const Long cost) {return (double) cost;}
 inline double to_double(const Rational r) {return r.to_double();}
-
-inline int ceil(const int e) {return e;}
-inline int floor(const int e) {return e;}
-inline Long ceil(const Long e) {return e;}
-inline Long floor(const Long e) {return e;}
 inline Long ceil(const Rational r) {return (Long) ceil(r.to_double());}
 inline Long floor(const Rational r) {return (Long) floor(r.to_double());}
+inline Rational randomCost(Rational min, Rational max) {return ceil(min) + (myrandl() % (floor(max) - ceil(min) + 1));}
+inline Rational string2Cost(char *ptr) {return atoll(ptr);}
+
+inline int cost2log2(const Rational &r)
+{
+        if (r.getNumerator()==0) return -1;
+        register int l2 = 0;
+        register Long x = (Long) floor(r);
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
 
 #endif /*TB2RATIONAL_HPP_*/

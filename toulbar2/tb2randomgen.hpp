@@ -1,28 +1,26 @@
+/* \file tb2randomgen.hpp
+ * \brief Random WCSP generator.
+ */
+
 #ifndef TB2RANDOMGEN_H_
 #define TB2RANDOMGEN_H_
 
 #include "tb2wcsp.hpp"
-#include <vector>
-using namespace std;
-
 
 class naryRandom {
 public:
 
   WCSP& wcsp;
 
-  naryRandom(WCSP* wcspin) : wcsp(*wcspin) { srand48(3); }
+  naryRandom(WCSP* wcspin, int seed = 0) : wcsp(*wcspin) { mysrand(seed); }
   ~naryRandom() {}
-
-  long myrand() {  return lrand48();   }
      
   int n,m;
      
   bool connected();
   void generateTernCtr( int i, int j, int k, long p, Cost costMin = 1, Cost costMax = 1 );
   void generateBinCtr( int i, int j, long p, Cost costMin = 1, Cost costMax = 1 );
-  void Input( int in_n, int in_m, vector<int>& p, int seed = 0 );  
-
+  void Input( int in_n, int in_m, vector<int>& p );  
   
   void ini( vector<int>& index, int arity );
   long toIndex( vector<int>& index );

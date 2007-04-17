@@ -3,7 +3,6 @@
  * 
  */
 
-#include "tb2system.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
@@ -244,14 +243,10 @@ void WCSP::read_wcsp(const char *fileName)
     }   
 }
 
-
-
-
-
 void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
 {
-	naryRandom randwcsp(this);
-    randwcsp.Input(n,m,p,seed);	    
+	naryRandom randwcsp(this,seed);
+    randwcsp.Input(n,m,p);	    
  
  	unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
@@ -260,5 +255,3 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed)
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " constraints." << endl;
     }  
 }
-
-

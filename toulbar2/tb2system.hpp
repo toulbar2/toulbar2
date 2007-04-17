@@ -6,24 +6,35 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
-#include "tb2types.hpp"
+typedef long long Long;
+const Long LONGLONG_MAX = LONG_LONG_MAX;
 
+typedef long double Double;
+
+inline void mysrand(long seed) {return srand48(seed);}
+inline int myrand() {return lrand48();}
+inline Long myrandl() {return (Long) (drand48()*LONGLONG_MAX);}
 
 #ifdef DOUBLE_PROB
-double Pow(double x, double y);
-double Log10(double x);
-double Log(double x);
-double Log1p(double x);
+inline double Pow(double x, double y) {return pow(x,y);}
+inline double Log10(double x) {return log10(x);}
+inline double Log(double x) {return log(x);}
+inline double Log1p(double x) {return log1p(x);}
 #endif
 
 #ifdef LONGDOUBLE_PROB
-Double Pow(Double x, Double y);
-Double Log10(Double x);
-Double Log(Double x);
-Double Log1p(Double x);
+inline Double Pow(Double x, Double y) {return powl(x,y);}
+inline Double Log10(Double x) {return log10l(x);}
+inline Double Log(Double x) {return logl(x);}
+inline Double Log1p(Double x) {return log1pl(x);}
 #endif
 
-Cost String2Cost(char *ptr);
+#ifdef INT_COST
+inline double to_double(const int cost) {return (double) cost;}
+inline int ceil(const int e) {return e;}
+inline int floor(const int e) {return e;}
+inline int randomCost(int min, int max) {return min + (myrand() % (max - min + 1));}
+inline int string2Cost(char *ptr) {return atoi(ptr);}
 
 //cost= 0 log2= -1
 //cost= 1 log2= 0
@@ -43,43 +54,6 @@ Cost String2Cost(char *ptr);
 //cost= 15 log2= 3
 //cost= 16 log2= 4
 
-inline int cost2log2(int x)
-{
-        if (x==0) return -1;
-        register int l2 = 0;
-        x>>=1;
-        for (; x != 0; x >>=1)
-        {
-                ++ l2;
-        }
-        return (l2);
-}
-
-inline int cost2log2(Long x)
-{
-        if (x==0) return -1;
-        register int l2 = 0;
-        x>>=1;
-        for (; x != 0; x >>=1)
-        {
-                ++ l2;
-        }
-        return (l2);
-}
-
-inline int cost2log2(const Rational &r)
-{
-        if (r.getNumerator()==0) return -1;
-        register int l2 = 0;
-        register Long x = (Long) floor(r);
-        x>>=1;
-        for (; x != 0; x >>=1)
-        {
-                ++ l2;
-        }
-        return (l2);
-}
-
 // This only works for a 32bits machine
 // and compiler g++ version < 4.0 
  
@@ -94,5 +68,37 @@ inline int cost2log2(int v)
 }
 */
 
+inline int cost2log2(int x)
+{
+        if (x==0) return -1;
+        register int l2 = 0;
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
+#endif
+
+#ifdef LONGLONG_COST
+inline double to_double(const Long cost) {return (double) cost;}
+inline Long ceil(const Long e) {return e;}
+inline Long floor(const Long e) {return e;}
+inline Long randomCost(Long min, Long max) {return min + (myrandl() % (max - min + 1));}
+inline Long string2Cost(char *ptr) {return atoll(ptr);}
+
+inline int cost2log2(Long x)
+{
+        if (x==0) return -1;
+        register int l2 = 0;
+        x>>=1;
+        for (; x != 0; x >>=1)
+        {
+                ++ l2;
+        }
+        return (l2);
+}
+#endif
 
 #endif /* TB2SYSTEM_HPP_ */

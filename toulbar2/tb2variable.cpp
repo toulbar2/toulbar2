@@ -2,7 +2,6 @@
  * ****** Variable with domain represented by an interval or an enumerated domain *******
  */
  
-#include "tb2system.hpp"
 #include "tb2variable.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"

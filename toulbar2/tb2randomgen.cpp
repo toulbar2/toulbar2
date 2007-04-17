@@ -1,6 +1,7 @@
-
-#include <vector>
-using namespace std;
+/*
+ * ****** Random WCSP generator *******
+ */
+ 
 
 #include "tb2randomgen.hpp"
 #include "tb2constraint.hpp"
@@ -36,7 +37,7 @@ void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMi
 	  for(c=0;c<mz;c++) {
 	     if(costs[my*mz*a + b*mz + c] == 0) {
 		    if(dice == 0) {
-		    	costs[my*mz*a + b*mz + c] = myrand() % (costMax - costMin + 1) + costMin;
+		    	costs[my*mz*a + b*mz + c] = randomCost(costMin, costMax);
 			    nogoods--;
 			    total_nogoods--;
 			    a=mx;b=my;c=mz;
@@ -71,7 +72,7 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
 	  for(b=0;b<my;b++) {
 	     if(costs[my*a+b] == 0) {
 		    if(dice == 0) {
-		    	costs[my*a+b] = myrand() % (costMax - costMin + 1) + costMin;
+		    	costs[my*a+b] = randomCost(costMin, costMax);
 			    nogoods--;
 			    total_nogoods--;
 			    a=mx;b=my;
@@ -125,7 +126,7 @@ int naryRandom::inc( vector<int>& index, int i )
 }
 
 
-void naryRandom::Input( int in_n, int in_m, vector<int>& p, int seed )
+void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 {
   n = in_n;	
   m = in_m;

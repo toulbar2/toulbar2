@@ -6,7 +6,6 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
-
 //#define INT_COST
 #define LONGLONG_COST
 //#define RATIONAL_COST
@@ -14,25 +13,7 @@
 //#define DOUBLE_PROB
 #define LONGDOUBLE_PROB
 
-#ifdef ILOGLUE
-#include <ilsolver/ilosolverint.h>
-#else
-#include <assert.h>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#endif
-
-#include <vector>
-
-using namespace std;
-
-typedef long long Long;
-typedef long double Double;
-
 #include "tb2utils.hpp"
-#include "tb2rational.hpp"
 
 typedef int Value;
 
@@ -40,19 +21,22 @@ const Value MAX_VAL = (INT_MAX / 2);
 const Value MIN_VAL = -(INT_MAX / 2);
 const Value MAX_DOMAIN_SIZE  = 1000;
 
-
 #ifdef INT_COST
 typedef int Cost;
+const Cost MIN_COST = 0;
 const Cost MAX_COST = (INT_MAX / 2);
 #endif
 
 #ifdef LONGLONG_COST
 typedef Long Cost;
-const Cost MAX_COST = (LONG_LONG_MAX / 2);
+const Cost MIN_COST = 0;
+const Cost MAX_COST = (LONGLONG_MAX / 2);
 #endif
 
 #ifdef RATIONAL_COST
+#include "tb2rational.hpp"
 typedef Rational Cost;
+const Cost MIN_COST = 0;
 const Cost MAX_COST = RATIONAL_MAX;
 #endif
 

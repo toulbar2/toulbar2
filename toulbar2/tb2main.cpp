@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     
     
     
-	Cost c = (argc >= 3)?String2Cost(argv[2]):MAX_COST;
+	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
         if (localSearch(argv[1],&c)) {

@@ -98,15 +98,13 @@ public:
        base = index;
     }
 
+#ifndef INT_COST
     void restore(int **adr, int *val, int x) {
         *adr[x] = val[x];
     }
+#endif
 
-    void restore(Long **adr, Long *val, int x) {
-        *adr[x] = val[x];
-    }
-
-    void restore(Rational **adr, Rational *val, int x) {
+    void restore(Cost **adr, Cost *val, int x) {
         *adr[x] = val[x];
     }
 

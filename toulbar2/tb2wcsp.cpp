@@ -4,7 +4,6 @@
  * Contains also ToulBar2 global variable definitions
  */
 
-#include "tb2system.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"

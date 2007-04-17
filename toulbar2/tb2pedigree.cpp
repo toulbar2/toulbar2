@@ -3,7 +3,6 @@
  * 
  */
 
-#include "tb2system.hpp"
 #include "toulbar2.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"

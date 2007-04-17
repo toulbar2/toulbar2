@@ -6,7 +6,6 @@
 #ifndef TB2WCSP_HPP_
 #define TB2WCSP_HPP_
 
-#include "tb2system.hpp"
 #include "toulbar2.hpp"
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"

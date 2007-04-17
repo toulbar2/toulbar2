@@ -6,7 +6,20 @@
 #ifndef TB2UTILS_HPP_
 #define TB2UTILS_HPP_
 
+#ifdef ILOGLUE
+#include <ilsolver/ilosolverint.h>
+#else
+#include <assert.h>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#endif
+
+#include <vector>
 #include <sstream>
+
+using namespace std;
 
 template<class T>
 T abs(T x) {
@@ -60,5 +73,7 @@ std::stringstream ss;
 ss << t;
 return ss.str();
 }
+
+#include "tb2system.hpp"
 
 #endif /* TB2UTILS_HPP_ */
