@@ -24,7 +24,7 @@ public:
   void Input( int in_n, int in_m, vector<int>& p, int seed = 0 );  
 
   
-  bool ini( vector<int>& index, int arity );
+  void ini( vector<int>& index, int arity );
   long toIndex( vector<int>& index );
   int inc( vector<int>& index, int i );
   bool inc( vector<int>& index );

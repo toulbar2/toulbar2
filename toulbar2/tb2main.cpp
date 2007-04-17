@@ -107,7 +107,7 @@ int main(int argc, char **argv)
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
         cerr << "   e : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
-        cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 2)" << endl;
+        cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
@@ -136,15 +136,14 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
-        	ToulBar2::elimDegree = -3;
-        	int ndegree = ch[1] - '0';
-        	if((ndegree > 3) && (ndegree < 9)) { cout << "Not implemented: Eliminate during search only for degree < 3" << endl; ndegree = 3; }
-        	if(ndegree > 0) ToulBar2::elimDegree = -ndegree;
+        	ToulBar2::elimDegree = 3;
+        	int ndegree = atoi(&ch[1]);
+        	if((ndegree > 0) && (ndegree <= 3)) ToulBar2::elimDegree = ndegree;
         }
         if ( (ch = strchr(argv[i],'p')) ) { 
-        	ToulBar2::elimDegree_preprocessing = -3; 
-        	int ndegree = ((int)*(ch+1)) - '0'; 
-        	if((ndegree > 0) && (ndegree < 10)) ToulBar2::elimDegree_preprocessing = -ndegree;
+        	ToulBar2::elimDegree_preprocessing = 3; 
+        	int ndegree = atoi(&ch[1]); 
+        	if(ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
         }
         
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;

@@ -103,6 +103,8 @@ public:
     static unsigned int dichotomicBranchingSize;
     static int  elimDegree; 
     static int  elimDegree_preprocessing;
+    static int  elimDegree_; 
+    static int  elimDegree_preprocessing_;
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;

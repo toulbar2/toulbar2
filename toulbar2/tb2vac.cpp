@@ -333,7 +333,6 @@ void VACExtension::enforcePass3VAC () {
   int i, j;
   VACVariable *xi, *xj;
   VACConstraint *cij;
-  Cost tmpK;
   int i0 = inconsistentVariable;
   VACVariable *xi0 = (VACVariable *) wcsp->getVar(i0);
   unsigned int w;

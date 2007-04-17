@@ -98,8 +98,8 @@ public:
 		TSCOPE scope1,scope2;
 		getScope( scope1 ); ctr->getScope( scope2 );
 
-		assert(arity() == scope1.size());
-		assert(ctr->arity() == scope2.size());
+		assert(arity() == (int) scope1.size());
+		assert(ctr->arity() == (int) scope2.size());
 
 		set_union( scope1.begin(), scope1.end(),
 		  	   	   scope2.begin(), scope2.end(),

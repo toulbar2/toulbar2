@@ -604,15 +604,16 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 
 void EnumeratedVariable::eliminate()
 {
-	if((ToulBar2::elimDegree >= 0) && (getDegree() > ToulBar2::elimDegree)) return;
-	
-	if(ToulBar2::elimDegree < 0) {
-		if((getDegree() > 1) && (getRealDegree() > ToulBar2::elimDegree_preprocessing)) return;
-		wcsp->variableElimination(this); 
-		return;
-	}
+    if (ToulBar2::elimDegree_preprocessing_ >= 0 && 
+        (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) || 
+         getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
+	  wcsp->variableElimination(this); 
+	  return;
+    }
  	
-	if(getDegree() > 0) {
+    if (getDegree() > ToulBar2::elimDegree_) return;
+
+    if(getDegree() > 0) {
 		TernaryConstraint* ternCtr = existTernary();
 				
 		if(ternCtr) { if(!elimVar(ternCtr)) return; }

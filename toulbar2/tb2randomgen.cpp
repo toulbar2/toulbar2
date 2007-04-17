@@ -87,12 +87,12 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
 long naryRandom::toIndex( vector<int>& index )
 {
 	long result = 1;
-	for(int i=0;i<index.size();i++) result += (long) pow((double)n,i)*index[i];
+	for(int i=0;i<(int)index.size();i++) result += (long) pow((double)n,i)*index[i];
 	return result;
 }
 
 
-bool naryRandom::ini( vector<int>& index, int arity )
+void naryRandom::ini( vector<int>& index, int arity )
 {
 	index.clear();
 	for(int i=0;i<arity;i++) index.push_back(i);
@@ -110,10 +110,10 @@ bool naryRandom::inc( vector<int>& index )
 int naryRandom::inc( vector<int>& index, int i )
 {
 	if(i < 0) return i;
-	assert( i < index.size());
+	assert( i < (int) index.size());
 	
 	index[i]++;
-	if(index[i] == n - (index.size() - i - 1) ) {
+	if(index[i] == n - ((int) index.size() - i - 1) ) {
 		if(i>=0) {
 			int val = inc(index,i-1);
 			if(val < 0) return -1;
@@ -132,7 +132,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, int seed )
   	
   assert(p.size() >= 2);
 
-  int i,j,k,arity;
+  int i,arity;
   vector<int>  indexs;
   vector<long> totalCtrs;
   vector<long> numCtrs;
@@ -151,11 +151,10 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, int seed )
 
   for(arity=maxa;arity>1;arity--)        
   {
-  	  long nogoods =  ((double)p[0] / 100.) * (long) pow( (double)m, arity);
+  	  long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
   	  long totalarraysize = (long) pow( (double)n, arity);
 	  vector<bool> existCtr;
       long tCtrs = 1;
-  	  long factoriel = 1;
 	  for(i=0; i < totalarraysize; i++) existCtr.push_back(false);
 	  for(i=0; i < arity; i++)  tCtrs *= (n - i);
 	  for(i=2; i <= arity; i++)  tCtrs /= i;	

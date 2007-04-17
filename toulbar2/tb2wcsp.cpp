@@ -27,6 +27,8 @@ bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
 int  ToulBar2::elimDegree = -1;
 int  ToulBar2::elimDegree_preprocessing  = -1;
+int  ToulBar2::elimDegree_ = -1;
+int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
 bool ToulBar2::FDAComplexity = false;
 bool ToulBar2::FDAC = false;
@@ -312,22 +314,28 @@ void WCSP::processTernary()
 void WCSP::preprocessing()
 {
 	
-	if (ToulBar2::preprocessTernary) {
+    if (ToulBar2::preprocessTernary) {
         cout << "Preproject ternary constraints to binary constraints" << endl;
         processTernary();
     }
 
-	ToulBar2::elimDegree_preprocessing = -ToulBar2::elimDegree_preprocessing;
-    for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
-    cout << "Variable elimination in preprocessing of real degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
-
-    propagate();		
-    
-    ToulBar2::elimDegree = -ToulBar2::elimDegree;
-    if(ToulBar2::elimDegree >= 0) {
-    	initElimConstrs();
-        cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
+    Eliminate.clear();
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
+        for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
+        if (ToulBar2::elimDegree_preprocessing >= 0) {
+            cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
+            ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
+            propagate();
+        }
+        ToulBar2::elimDegree_preprocessing_ = -1;
+        if(ToulBar2::elimDegree >= 0) {
+            ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+            initElimConstrs();
+            cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
+        }
     }
+    
+    propagate();
      
     if (getenv("TB2DEGREE")) degreeDistribution();
 }
@@ -370,7 +378,7 @@ void WCSP::degreeDistribution()
   int* degDistrib = new int [vars.size()];
  
   for (unsigned int i=0; i<vars.size(); i++) degDistrib[i] = 0;
-  for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) degDistrib[getRealDegree(i)]++;
+  for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) degDistrib[getTrueDegree(i)]++;
  
   unsigned int lastnonzero = 0;
   for (unsigned int i=0; i<vars.size(); i++)
@@ -383,7 +391,7 @@ void WCSP::degreeDistribution()
   int limit = atoi(getenv("TB2DEGREE"));
   if (limit > 0) {
       cout << "remove variables with degree > " << limit << endl;
-      for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i) && getRealDegree(i) > limit) {
+      for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i) && getTrueDegree(i) > limit) {
             cout << "remove variable " << getName(i) << endl;
             for (ConstraintList::iterator iter=vars[i]->getConstrs()->begin(); iter != vars[i]->getConstrs()->end(); ++iter) {
                 (*iter).constr->deconnect();
@@ -637,7 +645,7 @@ void WCSP::eliminate()
 	//if(!Eliminate.empty())
 	while(!Eliminate.empty())
 	{
-	    EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop_first();
+	    EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop();
 	    if (x->unassigned()) x->eliminate();
 	}
 }
@@ -1020,8 +1028,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 
 void WCSP::variableElimination( EnumeratedVariable* var )
 {
-	if(var->wcspIndex == 6) return; 
-	if (ToulBar2::verbose >= 1) cout << endl << "Variable General Elimination de " << var->getName() << "    degree: " << var->getDegree() << " real: " << var->getRealDegree() << endl;
+	if (ToulBar2::verbose >= 1) cout << endl << "Generic variable elimination of " << var->getName() << "    degree: " << var->getDegree() << " real: " << var->getTrueDegree() << endl;
 
 	if(var->getDegree() > 0) {
 		

@@ -125,7 +125,7 @@ public:
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
-    int getRealDegree(int varIndex) const {return vars[varIndex]->getRealDegree();}
+    int getTrueDegree(int varIndex) const {return vars[varIndex]->getTrueDegree();}
     Long getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
     void revise(Constraint *c) {lastConflictConstr = c;}
     void conflict() {

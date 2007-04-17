@@ -79,18 +79,14 @@ void Variable::deconnect(DLink<ConstraintLink> *link)
     if (!link->removed) {
         getConstrs()->erase(link, true);
 
-		if((ToulBar2::elimDegree < 0) && (ToulBar2::elimDegree_preprocessing < 0)) return;
-
-        if(ToulBar2::elimDegree < 0) {
-  	        if((getRealDegree() <= ToulBar2::elimDegree_preprocessing) ||
-  	           (getDegree() <= 1))
-  		           queueEliminate();
-        }
-        else if(getDegree() <= ToulBar2::elimDegree) queueEliminate();
+        if (getDegree() <= ToulBar2::elimDegree_ ||
+            (ToulBar2::elimDegree_preprocessing_ >= 0 &&
+             (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
+              getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
     }
 }
 
-int Variable::getRealDegree()
+int Variable::getTrueDegree()
 {
     TSCOPE scope1,scope2,scope3;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
@@ -103,7 +99,8 @@ int Variable::getRealDegree()
 		scope1 = scope3;  
 		scope3.clear();   
     }
-    return scope1.size();
+    if (constrs.getSize() >= 1) return scope1.size() - 1;
+    else return 0;
 }
 
 Long Variable::getWeightedDegree()

@@ -78,7 +78,7 @@ public:
     
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
-    int getRealDegree();
+    int getTrueDegree();
     Long getWeightedDegree();
     DLink<ConstraintLink> *link(Constraint *c, int index);
     void sortConstraints();
