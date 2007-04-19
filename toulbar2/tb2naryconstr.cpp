@@ -483,9 +483,10 @@ void NaryConstraint::print(ostream& os)
 
 void NaryConstraint::dump(ostream& os)
 {
+	int i; 
 	TUPLES& f = *pf;
     os << arity_;
-    for(int i = 0; i < arity_;i++) 
+    for(i = 0; i < arity_;i++) 
     {
         os << " " << scope[i]->wcspIndex;
     }
@@ -496,6 +497,7 @@ void NaryConstraint::dump(ostream& os)
         string t = it->first;
         Cost c =  it->second;       
         it++;
+        for(i=0;i<t.size();i++) t[i] = t[i] - CHAR_FIRST + '0';
         os << t << " " << c << endl; 
     } 
 }
