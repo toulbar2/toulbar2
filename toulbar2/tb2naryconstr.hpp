@@ -69,9 +69,9 @@ public:
 	void firstlex( string& t );
     bool next( string& t, Cost& c);
     bool nextlex( string& t, Cost& c);
-	void setTuple( string tin, Cost c, EnumeratedVariable** scope_in = NULL );
-	void addtoTuple( string tin, Cost c, EnumeratedVariable** scope_in = NULL );
-    void insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
+	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+    void insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
 	void permute( EnumeratedVariable** scope_in );
 
 

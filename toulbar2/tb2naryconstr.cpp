@@ -9,7 +9,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	int i;
 
     for(i=0;i<arity_in;i++) {
-    	int domsize = scope_in[i]->getDomainSize();
+    	int domsize = scope_in[i]->getDomainInitSize();
         if(domsize + CHAR_FIRST > 125) { cout << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; abort(); }
     } 	           
 
@@ -36,6 +36,7 @@ NaryConstraint::~NaryConstraint()
 
 
 
+
 // USED ONLY DURING SEARCH to project the nary constraint 
 // to the binary constraint xy, when all variables but 2 are assigned 
 void NaryConstraint::projectNaryBinary()
@@ -46,13 +47,14 @@ void NaryConstraint::projectNaryBinary()
 	string t;
 
 	int i,nunassigned = 0;
-	for(i=0;i<arity_;i++) { 		
+	for(i=0;i<arity_;i++) {
+		EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 		
 		if(getVar(i)->unassigned()) { 
-			unassigned[nunassigned] = (EnumeratedVariable*) getVar(i); 
+			unassigned[nunassigned] = var; 
 			indexs[nunassigned] = i;
 			tbuf[i] = CHAR_FIRST;
 			nunassigned++;
-		} else tbuf[i] = getVar(i)->getValue() + CHAR_FIRST;
+		} else tbuf[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
 	}
 	assert(	nunassigned <= 2 );
 	tbuf[arity_] =  '\0';
@@ -69,8 +71,8 @@ void NaryConstraint::projectNaryBinary()
 	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {	
 			Value xval = *iterx;
 			Value yval = *itery;
-			t[indexs[0]] =  xval + CHAR_FIRST;			
-			t[indexs[1]] =  yval + CHAR_FIRST;					
+			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
+			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
 			xy->setcost(xval,yval,eval(t));
 	    }}
 	    BinaryConstraint* ctr = x->getConstr(y);   			
@@ -85,7 +87,7 @@ void NaryConstraint::projectNaryBinary()
 	} else if(nunassigned == 1) {
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 			Value xval = *iterx;
-			t[indexs[0]] =  xval + CHAR_FIRST;			
+			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
 	  		Cost c = eval(t);
 	  		if(c > 0) x->project(xval, c);	
 	    }
@@ -96,6 +98,9 @@ void NaryConstraint::projectNaryBinary()
 		wcsp->increaseLb(wcsp->getLb() + c);
 	}	  	 
 }
+
+
+
 
 
 // USED ONLY DURING SEARCH 
@@ -168,7 +173,7 @@ bool NaryConstraint::nextlex( string& t, Cost& c)
 	cht[i]='\0';
 	int pos = arity_-1;
 	while(last && !finish) {
-		int dsize = getVar(pos)->getDomainSize();
+		int dsize = ((EnumeratedVariable*) getVar(pos))->getDomainInitSize();
 		last = ((unsigned char)cht[pos] - CHAR_FIRST == dsize - 1);		
 		if(!last) cht[pos]++;
 		else cht[pos] = 0 + CHAR_FIRST;
@@ -204,7 +209,8 @@ void NaryConstraint::permute( EnumeratedVariable** scope_in )
 
 	TUPLES::iterator it = pf_old->begin(); 
 	while(it != pf_old->end()) {
-		setTuple( it->first, it->second, scope_in );
+		string s(it->first); 
+		setTuple(s, it->second, scope_in );
 		it++;
 	}
 	
@@ -230,7 +236,7 @@ void NaryConstraint::permute( EnumeratedVariable** scope_in )
 
 // for adding a tuple in f
 // scope_in contains the order of the values in string tin 
-void NaryConstraint::setTuple( string tin, Cost c, EnumeratedVariable** scope_in )
+void NaryConstraint::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
 {
 	string t(tin);
 	if(scope_in) {
@@ -242,7 +248,7 @@ void NaryConstraint::setTuple( string tin, Cost c, EnumeratedVariable** scope_in
 	(*pf)[t] = c;
 }
 
-void NaryConstraint::addtoTuple( string tin, Cost c, EnumeratedVariable** scope_in )
+void NaryConstraint::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
 {
 	string t(tin);
 	if(scope_in) {
@@ -255,7 +261,7 @@ void NaryConstraint::addtoTuple( string tin, Cost c, EnumeratedVariable** scope_
 }
 
 
-void NaryConstraint::insertSum( string t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
+void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
 {
 	char* t = new char [arity_+1];
 
@@ -360,7 +366,7 @@ void NaryConstraint::project( EnumeratedVariable* x, bool addUnaryCtr )
 		c =  it->second;
 		if(addUnaryCtr) {
 			assert( x->getDegree() == 1);
-			c += x->getCost(t[xindex] - CHAR_FIRST);
+			c += x->getCost( x->toValue(t[xindex] - CHAR_FIRST) );
 			if(c > Top) c = Top;
 		}		
 		string tswap(t);

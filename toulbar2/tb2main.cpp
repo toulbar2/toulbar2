@@ -4,6 +4,7 @@
 
 #include "tb2solver.hpp"
 #include "tb2pedigree.hpp"
+#include <string.h>
 
 bool localSearch(char *filename, Cost *upperbound)
 {
@@ -86,12 +87,14 @@ int main(int argc, char **argv)
         cerr << "   *.pre  : pedigree format" << endl << endl;
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
-		cerr << "     binary{n}-{m}-{p1}-{p2}-{seed}          p1 is the tightness in percentage %" << endl; 
-		cerr << "                                             p2 is the num of binary constraints to include" << endl;
-		cerr << "                                             the seed parameter is optional" << endl;
+		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}          p1 is the tightness in percentage %" << endl; 
+		cerr << "      						                p2 is the num of binary constraints to include" << endl;
+		cerr << "      						                the seed parameter is optional" << endl;
 		 
 		cerr << "or:                                                                               " << endl;            
-		cerr << "     ternary{n}-{m}-{p1}-{p2}-{p3}-{seed}    p3 is the num of ternary constraints" << endl; 
+		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}    p3 is the num of ternary constraints" << endl; 
+        cerr << "or:                                                                               " << endl;            
+		cerr << "     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}   " << endl; 
         cerr << endl;
 #endif
         cerr << "Initial upperbound is optional (default value: " << MAX_COST << ")" << endl;
@@ -194,14 +197,29 @@ int main(int argc, char **argv)
 	vector<int> p;	
 	bool randomproblem = false;
     if(!strchr(argv[1],'.')) {
-    	randomproblem = true;	
     	int pn[10];
     	int narities = 0;
-    	if(strstr(argv[1],"binary"))  { sscanf(argv[1], "binary%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
-    	if(strstr(argv[1],"ternary")) { sscanf(argv[1], "ternary%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed); narities = 3; }
+    	if(strstr(argv[1],"bin"))  { randomproblem = true; sscanf(argv[1], "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
+    	if(strstr(argv[1],"tern")) { randomproblem = true; sscanf(argv[1], "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed); narities = 3; }
+    	if(strstr(argv[1],"nary")) {  
+    		randomproblem = true; 
+       		char* pch = strtok (argv[1],"-");
+       		pch = strtok (NULL, "-"); n = atoi(pch);
+       		pch = strtok (NULL, "-"); m = atoi(pch);
+       		
+			while (pch != NULL) {
+			   pch = strtok (NULL, "-");
+			   if(pch != NULL) {
+				   pn[narities] = atoi(pch);			 
+				   narities++;  
+			   }
+			}
+			narities--;
+			seed = pn[narities];
+    	}
 		if(pn[0] > 100) { cout << pn[0] << " tightness is a percentage" << endl; pn[0] = 100; } 
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
-		if(narities == 0) cout << "Random problem incorrect, use:   binary{n}-{m}-{%}-{n. of bin ctrs}  or  ternary{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
+		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
 
 

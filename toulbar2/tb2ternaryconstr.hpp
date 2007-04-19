@@ -362,12 +362,19 @@ public:
 
 	bool nextlex( string& t, Cost& c) { return next(t,c); }
 
-	void setTuple( string t, Cost c, EnumeratedVariable** scope_in ) {
-		setcost( scope_in[0], scope_in[1], scope_in[2], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, t[2]-CHAR_FIRST, c );		
+
+	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {
+		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
+		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
+		Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
+		setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
 
-	void addtoTuple( string t, Cost c, EnumeratedVariable** scope_in ) {
-		addcost( scope_in[0], scope_in[1], scope_in[2], t[0]-CHAR_FIRST, t[1]-CHAR_FIRST, t[2]-CHAR_FIRST, c );		
+	void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {
+		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
+		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
+		Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
+		addcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
 
 	Cost evalsubstr( string& s, Constraint* ctr )
@@ -376,20 +383,14 @@ public:
 		int count = 0;
 		
 		for(int i=0;i<arity();i++) {
-			int ind = ctr->getIndex(getVar(i));
-			if(ind >= 0) { vals[i] = s[ind] - CHAR_FIRST; count++; }	
+			EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 
+			int ind = ctr->getIndex(var);
+			if(ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }	
 		}
 		if(count == 3) return getCost(vals[0], vals[1], vals[2]);
 		else return 0;
 	}    
-
-
-
-
-
-
-
-
+	
 
     void print(ostream& os);
     void dump(ostream& os);

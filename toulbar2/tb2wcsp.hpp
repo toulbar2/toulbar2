@@ -100,7 +100,8 @@ public:
 
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     
-    Variable *getVar(int varIndex) const {return vars[varIndex];}
+    Variable   *getVar(int varIndex) const {return vars[varIndex];}
+    Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
     string getName(int varIndex) const {return vars[varIndex]->getName();}
     Value getInf(int varIndex) const {return vars[varIndex]->getInf();}
     Value getSup(int varIndex) const {return vars[varIndex]->getSup();}

@@ -16,7 +16,7 @@ while (( $n < $nend )) ; do
   while (( $seed < $ninstances )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt
-    randomfile=ternary$n-$m-$tight-$bctr-$tctr-$seed 
+    randomfile=tern-$n-$m-$tight-$bctr-$tctr-$seed 
     /tmp/toulbar2 $randomfile z > /dev/null
     /tmp/toulbar2 problem.wcsp $1 | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     /tmp/toolbar  problem.wcsp    | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt

@@ -810,6 +810,8 @@ void WCSP::deleteTmpConstraint( Constraint* ctr )
 }
 
 
+
+
 Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 {
 	assert( ctr1 != ctr2 );
@@ -858,7 +860,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	EnumeratedVariable* y = scopeU[1]; 
 
 	Cost Top = getUb(); 
-	unsigned int vx,vy,vz;
+	unsigned int vxi,vyi,vzi;
 	string tuple,tuple1,tuple2;
 	Cost cost,cost1,cost2;
 	int ctrIndex = -1; 
@@ -884,8 +886,8 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 			bool notfin = true;
 			nary->firstlex(tuple); 
 		    while(notfin) {
-		    	cost1 = ctr1->evalsubstr(tuple, nary );	
-		    	cost2 = ctr2->evalsubstr(tuple, nary );	
+		    	cost1 = ctr1->evalsubstr(tuple, nary);	
+		    	cost2 = ctr2->evalsubstr(tuple, nary);	
 			    if(cost1 + cost2 < Top) nary->setTuple(tuple, cost1 + cost2);
 			    notfin = nary->nextlex(tuple,cost);
 			}
@@ -893,17 +895,21 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	}
 	else if(arityU == 3) {
 		EnumeratedVariable* z = scopeU[2]; 
-		for (vx = 0; vx < x->getDomainInitSize(); vx++)
-		  for (vy = 0; vy < y->getDomainInitSize(); vy++)
-		    for (vz = 0; vz < z->getDomainInitSize(); vz++) {
-
-				Cost costsum = 0;
-		    	if(arityI == 1)       costsum += ((BinaryConstraint*)ctr1)->getCost(x,y,vx,vy) + ((BinaryConstraint*)ctr2)->getCost(x,z,vx,vz);		
-		    	else if(arityI == 2)  costsum += ((BinaryConstraint*)ctr1)->getCost(x,y,vx,vy) + ((TernaryConstraint*)ctr2)->getCost(x,y,z,vx,vy,vz);
-		    	else if(arityI == 3)  costsum += ((TernaryConstraint*)ctr1)->getCost(x,y,z,vx,vy,vz) + ((TernaryConstraint*)ctr2)->getCost(x,y,z,vx,vy,vz);
-		    	else assert(false);
-				
-				if(costsum > Top) costsum = Top;
+		for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
+		  for (vyi = 0; vyi < y->getDomainInitSize(); vyi++)
+		    for (vzi = 0; vzi < z->getDomainInitSize(); vzi++) {
+		   	    Value vx = x->toValue(vxi);
+			    Value vy = y->toValue(vyi);
+			    Value vz = z->toValue(vzi);
+				Cost costsum = Top;
+			    if(x->canbe(vx) && y->canbe(vy) && z->canbe(vz)) {
+					costsum = 0;
+			    	if(arityI == 1)       costsum += ((BinaryConstraint*)ctr1)->getCost(x,y,vx,vy) + ((BinaryConstraint*)ctr2)->getCost(x,z,vx,vz);		
+			    	else if(arityI == 2)  costsum += ((BinaryConstraint*)ctr1)->getCost(x,y,vx,vy) + ((TernaryConstraint*)ctr2)->getCost(x,y,z,vx,vy,vz);
+			    	else if(arityI == 3)  costsum += ((TernaryConstraint*)ctr1)->getCost(x,y,z,vx,vy,vz) + ((TernaryConstraint*)ctr2)->getCost(x,y,z,vx,vy,vz);
+			    	else assert(false);				
+					if(costsum > Top) costsum = Top;
+			    }
 				costs.push_back(costsum);
 		    }		   
 		ctrIndex = postTernaryConstraint( x->wcspIndex, y->wcspIndex, z->wcspIndex, costs );  
@@ -911,11 +917,15 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	else if(arityU == 2) {
 		BinaryConstraint* bctr1 = (BinaryConstraint*) ctr1;
 		BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
-		for (vx = 0; vx < x->getDomainInitSize(); vx++)
-		  for (vy = 0; vy < y->getDomainInitSize(); vy++)
-		  {
-		   	 Cost costsum = bctr1->getCost(x,y,vx,vy) + bctr2->getCost(x,y,vx,vy);		
-			 if(costsum > Top) costsum = Top;
+		for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
+		  for (vyi = 0; vyi < y->getDomainInitSize(); vyi++) {
+		  	 Value vx = x->toValue(vxi);
+			 Value vy = y->toValue(vyi);
+			 Cost costsum = Top;
+		     if(x->canbe(vx) && y->canbe(vy)) {
+			   	 Cost costsum = bctr1->getCost(x,y,vx,vy) + bctr2->getCost(x,y,vx,vy);		
+				 if(costsum > Top) costsum = Top;
+		     }
   			 costs.push_back(costsum);
 		  }	 
 		ctrIndex= postBinaryConstraint( x->wcspIndex, y->wcspIndex, costs );  
@@ -934,7 +944,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
        
 void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 {
-	unsigned int vx,vy,vz,vvar;
+	unsigned int vxi,vyi,vzi;
 	int arity = ctr_inout->arity();
 	if(ctr_inout->getIndex(var) < 0) return;	
 
@@ -967,51 +977,65 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 
 	switch(arity-1)
 	{
-		case 3:  for (vx = 0; vx < evars[0]->getDomainInitSize(); vx++)
-				  for (vy = 0; vy < evars[1]->getDomainInitSize(); vy++)
-				   for (vz = 0; vz < evars[2]->getDomainInitSize(); vz++) {  	
-				   	 t[ ctr_inout->getIndex(evars[0]) ] = vx + CHAR_FIRST;
-				   	 t[ ctr_inout->getIndex(evars[1]) ] = vy + CHAR_FIRST;
-				   	 t[ ctr_inout->getIndex(evars[2]) ] = vz + CHAR_FIRST;
-
-				   	 Cost mincost = Top;
-				  	 for (vvar = 0; vvar < var->getDomainInitSize(); vvar++) {
-					   	t[ctr_inout->getIndex(var)] = vvar + CHAR_FIRST;
-			   	   		t[4] =  '\0';
-				   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(string(t)) + var->getCost(vvar);
-				   	 	if(c < mincost) mincost = c;
-				   	 }  	
-				   	 costs.push_back(mincost);	 
+		case 3:  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)
+				  for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++)
+				   for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {  	
+				   	  Value v0 = evars[0]->toValue(vxi);
+					  Value v1 = evars[1]->toValue(vyi);
+					  Value v2 = evars[2]->toValue(vzi);
+				      Cost mincost = Top;
+				
+					  if(evars[0]->canbe(v0) && evars[1]->canbe(v1) && evars[2]->canbe(v2)) {
+					   	 t[ ctr_inout->getIndex(evars[0]) ] = vxi + CHAR_FIRST;
+					   	 t[ ctr_inout->getIndex(evars[1]) ] = vyi + CHAR_FIRST;
+					   	 t[ ctr_inout->getIndex(evars[2]) ] = vzi + CHAR_FIRST;
+					
+						 for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
+							   	t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
+					   	   		t[4] =  '\0';
+						   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(string(t)) + var->getCost(*itv);
+						   	 	if(c < mincost) mincost = c;
+						 }
+					  } 	 	
+				   	  costs.push_back(mincost);	 
 				   }
 			  	  ctrIndex = postTernaryConstraint(ivars[0],ivars[1],ivars[2],costs);  
 				  ctr = constrs[ctrIndex];
 				  break;
 
 		case 2:   tctr = (TernaryConstraint*)ctr_inout;
-				  for (vx = 0; vx < evars[0]->getDomainInitSize(); vx++)
-					for (vy = 0; vy < evars[1]->getDomainInitSize(); vy++) {
+				  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)
+					for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) {
+					  Value v0 = evars[0]->toValue(vxi);
+					  Value v1 = evars[1]->toValue(vyi);
 					  Cost mincost = Top;
-					  for (vvar = 0; vvar < var->getDomainInitSize(); vvar++) {
-				   	   	Cost c = ((TernaryConstraint*)ctr_inout)->getCost(evars[0], evars[1], var, vx, vy, vvar)  + var->getCost(vvar);
-	 				    if(c < mincost) mincost = c;
-					  }  		 
+					  if(evars[0]->canbe(v0) && evars[1]->canbe(v1)) {
+  				     	  for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
+						   	   	Cost c = ((TernaryConstraint*)ctr_inout)->getCost(evars[0], evars[1], var, v0, v1, *itv)  + var->getCost(*itv);
+			 				    if(c < mincost) mincost = c;
+						  }
+					  }
 				      costs.push_back(mincost);
 				   }				 	  
 				   ctrIndex = postBinaryConstraint(ivars[0],ivars[1],costs);  
 				   ctr = constrs[ctrIndex];
 				break;						
 			
-		case 1: for (vx = 0; vx < evars[0]->getDomainInitSize(); vx++) {
-				   	 Cost mincost = Top;
-				  	 for (vvar = 0; vvar < var->getDomainInitSize(); vvar++) {
-			   	   		Cost c = ((BinaryConstraint*)ctr_inout)->getCost(evars[0], var, vx, vvar)  + var->getCost(vvar);
+    	case 1: for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)  {
+				  Value v0 = evars[0]->toValue(vxi);
+				  Cost mincost = Top;
+				  if(evars[0]->canbe(v0)) {
+				  	 for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
+			   	   		Cost c = ((BinaryConstraint*)ctr_inout)->getCost(evars[0], var, v0, *itv)  + var->getCost(*itv);
  				   	 	if(c < mincost) mincost = c;
-				   	 }  		 
-			     	 costs.push_back(mincost);
+				  	 }
 				  }
-				for(unsigned int a = 0; a < evars[0]->getDomainInitSize(); a++)
-					if(costs[a] > 0) evars[0]->project(a, costs[a]);	
-
+			      costs.push_back(mincost);
+				}			
+				for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
+					vxi = evars[0]->toIndex(*itv0);
+					if(costs[vxi] > 0) evars[0]->project(*itv0, costs[vxi]);	
+				}
 				evars[0]->findSupport();
 				break;						
 							
@@ -1023,6 +1047,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 		if (ToulBar2::verbose >= 1) cout << endl << "   has result: " << *ctr_inout << endl;
 	}
 }
+
 
 
 void WCSP::variableElimination( EnumeratedVariable* var )

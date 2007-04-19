@@ -8,10 +8,40 @@
 #include "tb2variable.hpp"
 #include "tb2enumvar.hpp"
 
+#include <set>
 
 bool naryRandom::connected() {
 	return true;
 }
+
+
+void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMin, Cost costMax)
+{
+	int i;
+	int arity = indexs.size();
+	EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];  
+	char* tuple = new char [arity+1];  
+	Cost Top = wcsp.getUb();
+
+	for(i = 0; i<arity; i++) {
+		scopeVars[i] = (EnumeratedVariable*) wcsp.getVar( indexs[i] );
+		tuple[i] = 0 + CHAR_FIRST;
+	}
+	tuple[arity] = '\0';
+
+	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeVars, arity, Top) );
+	
+	string s(tuple);
+	while(nogoods>0) {
+		for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST; 
+		nctr->setTuple(s, randomCost(0, costMax), scopeVars);
+		nogoods--;
+	}
+	  	
+	delete [] scopeVars;	
+	delete [] tuple;
+}
+
 
 void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMin, Cost costMax )
 {
@@ -154,9 +184,8 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
   {
   	  long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
   	  long totalarraysize = (long) pow( (double)n, arity);
-	  vector<bool> existCtr;
       long tCtrs = 1;
-	  for(i=0; i < totalarraysize; i++) existCtr.push_back(false);
+	  set<long> scopes;
 	  for(i=0; i < arity; i++)  tCtrs *= (n - i);
 	  for(i=2; i <= arity; i++)  tCtrs /= i;	
 		
@@ -165,21 +194,18 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 	  	numCtrs[arity] = tCtrs;
 	  } 
 	
-  	  while(numCtrs[arity])
-  	  {	
+  	  while(numCtrs[arity]) {	
 		  bool oneadded = false;
 	      int dice = myrand() % tCtrs;
-	
 		  ini(indexs,arity);
 		  do {  
- 
-		  		 if(!existCtr[toIndex(indexs)]) {
+		  		 if(scopes.end() == scopes.find(toIndex(indexs))) {
 					 if(dice == 0) {
-					    existCtr[toIndex(indexs)] = true;
+					    scopes.insert( toIndex(indexs) ); 
 					    switch(arity) {
 					    	case 2:  generateBinCtr(indexs[0],indexs[1],nogoods); break;
 					    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
-					    	default: /*generateNaryCtr(indexs,nogoods)*/ ;
+					    	default: generateNaryCtr(indexs,nogoods);
 					    }
 					    tCtrs--;
 					    numCtrs[arity]--;
