@@ -202,7 +202,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		BinaryConstraint* xz = x->getConstr(z);
 		BinaryConstraint* yz = y->getConstr(z);
 
-		if(ToulBar2::verbose > 0) {
+#ifndef NDEBUG
 			if(!xy) {  for (unsigned int i=0; i<constrs.size(); i++) {
 					 	 bool is = (constrs[i]->getIndex(x) >= 0) && (constrs[i]->getIndex(y) >= 0);
 					 	 if(is && (constrs[i]->arity() == 2)) cout << "BinaryCtr Not found in ternary post: " << *constrs[i];
@@ -218,7 +218,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 				    	 if(is && (constrs[i]->arity() == 2)) cout << "BinaryCtr Not found in ternary post: " << *constrs[i];
 				    }
 			}
-		}
+#endif
 
 	       
 		if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
@@ -320,6 +320,7 @@ void WCSP::preprocessing()
 
     Eliminate.clear();
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
+        initElimConstrs();
         for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
         if (ToulBar2::elimDegree_preprocessing >= 0) {
             cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
@@ -329,7 +330,6 @@ void WCSP::preprocessing()
         ToulBar2::elimDegree_preprocessing_ = -1;
         if(ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
-            initElimConstrs();
             cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
         }
     }

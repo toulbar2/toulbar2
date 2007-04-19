@@ -6,9 +6,10 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
-//#define INT_COST
-#define LONGLONG_COST
+#define INT_COST
+//#define LONGLONG_COST
 //#define RATIONAL_COST
+//#define PARETOPAIR_COST
 
 //#define DOUBLE_PROB
 #define LONGDOUBLE_PROB
@@ -38,6 +39,13 @@ const Cost MAX_COST = (LONGLONG_MAX / 2);
 typedef Rational Cost;
 const Cost MIN_COST = 0;
 const Cost MAX_COST = RATIONAL_MAX;
+#endif
+
+#ifdef PARETOPAIR_COST
+#include "tb2paretopair.hpp"
+typedef ParetoPair Cost;
+const Cost MIN_COST = PARETOPAIR_MIN;
+const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
 #ifdef DOUBLE_PROB

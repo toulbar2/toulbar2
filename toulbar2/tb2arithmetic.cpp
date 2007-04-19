@@ -52,10 +52,18 @@ void Supxyc::propagate()
         Cost cost;
         
         // propagate hard constraint
+#ifdef PARETOPAIR_COST
+        Value newInf = x->getInf();
+#else
         Value newInf = ceil(y->getInf() + cst - deltaCost - (wcsp->getUb() - wcsp->getLb() - 1));
+#endif
         if (x->getInf() < newInf) x->increase(newInf);
         
+#ifdef PARETOPAIR_COST
+        Value newSup = x->getSup();
+#else
         Value newSup = floor(x->getSup() - cst + deltaCost + (wcsp->getUb() - wcsp->getLb() - 1));
+#endif
         if (y->getSup() > newSup) y->decrease(newSup);
     
         // IC0 propagatation (increase global lower bound)

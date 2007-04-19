@@ -87,8 +87,8 @@ int main(int argc, char **argv)
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
 		cerr << "     binary{n}-{m}-{p1}-{p2}-{seed}          p1 is the tightness in percentage %" << endl; 
-		cerr << "      						                  p2 is the num of binary constraints to include" << endl;
-		cerr << "      						                  the seed parameter is optional" << endl;
+		cerr << "                                             p2 is the num of binary constraints to include" << endl;
+		cerr << "                                             the seed parameter is optional" << endl;
 		 
 		cerr << "or:                                                                               " << endl;            
 		cerr << "     ternary{n}-{m}-{p1}-{p2}-{p3}-{seed}    p3 is the num of ternary constraints" << endl; 
