@@ -510,6 +510,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
   
   if (ToulBar2::verbose >= 0) {
     cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
+    cout << "Diameter: " << wcsp->diameter() << endl;
   }
 }
 

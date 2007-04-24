@@ -241,6 +241,7 @@ void WCSP::read_wcsp(const char *fileName)
     }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
+        cout << "Diameter: " << diameter() << endl;
     }   
 }
 
