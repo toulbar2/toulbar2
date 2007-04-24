@@ -327,8 +327,6 @@ public:
     	zvar = z;
     }
     
-    
-
     bool next( string& t, Cost& c) 
     { 
     	char tch[4];
@@ -360,7 +358,8 @@ public:
     	return false; 
     }
 
-	bool nextlex( string& t, Cost& c) { return next(t,c); }
+    void firstlex() { first(); }
+    bool nextlex( string& t, Cost& c) { return next(t,c); } 
 
 
 	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {
@@ -376,6 +375,10 @@ public:
 		Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
 		addcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
+
+    Cost getDefCost() { return wcsp->getUb(); }
+	void setDefCost( Cost df ) {}
+
 
 	Cost evalsubstr( string& s, Constraint* ctr )
 	{

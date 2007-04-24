@@ -4,19 +4,21 @@
 nerr=0
 ninstances=50
 nend=100
-bctr=50
-tctr=50
-tight=40
-n=3
-m=5
+bctr=10
+tctr=10
+nary=1
+tight=30
+n=5
+m=4
 
 
 while (( $n < $nend )) ; do
   seed=0
+  echo n:$n m:$m tight:$tight%  binary:$bctr  ternary:$tctr  quatary:$nary  quintary:$nary 
   while (( $seed < $ninstances )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt
-    randomfile=tern-$n-$m-$tight-$bctr-$tctr-$seed 
+    randomfile=nary-$n-$m-$tight-$bctr-$tctr-$nary-$nary-$seed 
     /tmp/toulbar2 $randomfile z > /dev/null
     /tmp/toulbar2 problem.wcsp $1 | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     /tmp/toolbar  problem.wcsp    | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
@@ -29,7 +31,7 @@ while (( $n < $nend )) ; do
     fi
     seed=`expr $seed + 1`
   done	
-  tctr=`expr $tctr + 20` 
+  nary=`expr $nary + 15` 
   n=`expr $n + 1`
 done
 

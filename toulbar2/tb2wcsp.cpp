@@ -828,6 +828,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	int arityU = scopeUinv.size();
 	int arityI = scopeIinv.size();
 
+
 	if(arityU == ctr2->arity()) {
 		ctr2->sumScopeIncluded(ctr1);
 		ctr2->reconnect();
@@ -883,13 +884,11 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 			    }
 			}
 		} else {
-			bool notfin = true;
-			nary->firstlex(tuple); 
-		    while(notfin) {
+			nary->firstlex(); 
+		    while(nary->nextlex(tuple,cost)) {
 		    	cost1 = ctr1->evalsubstr(tuple, nary);	
 		    	cost2 = ctr2->evalsubstr(tuple, nary);	
 			    if(cost1 + cost2 < Top) nary->setTuple(tuple, cost1 + cost2);
-			    notfin = nary->nextlex(tuple,cost);
 			}
 		}    
 	}

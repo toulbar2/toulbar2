@@ -111,6 +111,7 @@ void WCSP::read_wcsp(const char *fileName)
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
+	            nary->changeDefCost( top );
 		    }
         } else if (arity == 3) {
             file >> i;

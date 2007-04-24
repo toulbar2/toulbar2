@@ -65,17 +65,22 @@ public:
 
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
 
-
+	virtual void firstlex() {}
+	virtual bool nextlex(string& t, Cost& c) { return false; }
+ 
     virtual void first() {}
     virtual bool next( string& t, Cost& c) { return false; }
-    virtual bool nextlex( string& t, Cost& c) { return false; }
+       
 	virtual void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
 	virtual Cost getDefCost() { return 0; }
+	virtual void setDefCost( Cost df ) {}
 	
 	void sumScopeIncluded( Constraint* ctr );
+	
+
 	
 	void scopeCommon( TSCOPE& scope_out, Constraint* ctr ) 
 	{
@@ -133,6 +138,11 @@ public:
 		}	
 		return 0;
 	}
+	
+	
+	
+	
+	
 	
 	
     friend ostream& operator<<(ostream& os, Constraint &c) {

@@ -6,8 +6,8 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
-#define INT_COST
-//#define LONGLONG_COST
+//#define INT_COST
+#define LONGLONG_COST
 //#define RATIONAL_COST
 //#define PARETOPAIR_COST
 

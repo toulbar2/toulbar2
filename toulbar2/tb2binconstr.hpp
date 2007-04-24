@@ -173,7 +173,10 @@ public:
 		else return 0;
 	}    
     
+    Cost getDefCost() { return wcsp->getUb(); }
+	void setDefCost( Cost df ) {}
     
+   
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
     EnumeratedVariable::iterator itvx;
@@ -185,8 +188,7 @@ public:
     	xvar = x;
     	yvar = y;
     }
-    
-
+   
     bool next( string& t, Cost& c) 
     { 
     	char tch[3];
@@ -209,8 +211,10 @@ public:
     	}
     	return false; 
     }
-
-	bool nextlex( string& t, Cost& c) { return next(t,c); }
+    
+    void firstlex() { first(); }
+    bool nextlex( string& t, Cost& c) { return next(t,c); } 
+    
 
 	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);

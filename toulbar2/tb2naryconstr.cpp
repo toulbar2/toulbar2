@@ -14,8 +14,10 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
     } 	           
 
 	
+	Cost Top = wcsp->getUb();
 	default_cost = defval;
-	store_top = default_cost < wcsp->getUb();
+	if(default_cost > Top) default_cost = Top;
+	store_top = default_cost < Top;
 	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
     propagate();
 	pf = new TUPLES;
@@ -122,6 +124,7 @@ using namespace std;
 
 
 Cost NaryConstraint::eval( string s ) {
+	if(default_cost > wcsp->getUb()) default_cost = wcsp->getUb(); 
 	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
@@ -146,60 +149,102 @@ Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
 	return cost;
 }    
 
-void NaryConstraint::firstlex( string& t )
+void NaryConstraint::firstlex()
+{
+	it_values.clear();
+	EnumeratedVariable* var; 
+	for(int i=0;i<arity_;i++) {
+		var = (EnumeratedVariable*) getVar(i);
+		it_values.push_back( var->begin() );
+	}
+}
+	
+bool NaryConstraint::nextlex( string& t, Cost& c)
 {
 	int i;
-	char* cht = new char [arity_+1];
-	cht[arity_]='\0';
+	int a = arity();
+	EnumeratedVariable* var = (EnumeratedVariable*) getVar(0); 
+	if(it_values[0] == var->end()) return false;		
+	char* cht = new char [a + 1];
+	cht[a] = '\0';
 
-	for(i=0;i<arity_;i++) cht[i] = 0 + CHAR_FIRST;
+	for(i=0;i<a;i++) {
+		var = (EnumeratedVariable*) getVar(i); 
+		cht[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
+	}
 	t = string(cht);
-	delete [] cht;	
+	c = eval(t); 
+	delete [] cht;
+
+	// and now increment	
+	bool finished = false;
+	i = a-1;
+	while(!finished) {
+		var = (EnumeratedVariable*) getVar(i); 
+		++it_values[i];
+		finished = it_values[i] != var->end();
+		if(!finished) {
+			if(i>0) {
+				it_values[i] = var->begin();
+				i--;
+			} else finished = true;
+		}
+	}
+	return true;
 }
+
+void NaryConstraint::changeDefCost( Cost df )
+{
+	Cost Top = wcsp->getUb();
+	if(df > Top) df = Top;
+	TUPLES* pfnew = new TUPLES;
+	
+	Cost maxCost = 0;
+	
+	string t;
+	Cost c;	
+	firstlex();
+    while(nextlex(t,c)) {
+    	if(c > maxCost) maxCost = c;
+	    if(c != df) (*pfnew)[t] = c;
+	}
+	if(df == Top) default_cost = maxCost;
+	else default_cost = df;
+
+	delete pf;
+	pf = pfnew;
+}
+
+
+
+
+bool NaryConstraint::consistent( string& t ) {
+	int a = arity();
+	bool ok = true;
+	for(int i=0;i<a && ok;i++) {
+		EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 
+		ok = ok && var->canbe( var->toValue(t[i] - CHAR_FIRST) );
+	}
+	return ok;
+}
+
 
 void NaryConstraint::first() 
 { 
 	tuple_it = pf->begin();
 }
 
-
-bool NaryConstraint::nextlex( string& t, Cost& c)
-{
-	int i;
-	bool finish = false;
-	bool last = true;
-	char* cht = new char [arity_+1];
-	for(i=0;i<arity_;i++) cht[i] = t[i];
-	cht[i]='\0';
-	int pos = arity_-1;
-	while(last && !finish) {
-		int dsize = ((EnumeratedVariable*) getVar(pos))->getDomainInitSize();
-		last = ((unsigned char)cht[pos] - CHAR_FIRST == dsize - 1);		
-		if(!last) cht[pos]++;
-		else cht[pos] = 0 + CHAR_FIRST;
-
-		if(cht[pos] <= 0) { cout << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; abort(); }	            	
-		pos--;  
-		finish = (pos < 0) && last;
-	}
-	if(!finish) {
-		t = string(cht);
-		c = eval(t); 
-	}
-	delete [] cht;	
-	return !finish;
-}
-
-
 bool NaryConstraint::next( string& t, Cost& c)
 {
-	if(tuple_it != pf->end()) { 
+	bool ok = false;
+	while(!ok && (tuple_it != pf->end())) {
 		t = tuple_it->first;
 		c = tuple_it->second;
+		ok = consistent(t);
 		tuple_it++;
-		return true;
 	}
-	else return false;
+	if(!ok && tuple_it == pf->end()) return false;
+	else return true;	
 }
 
 void NaryConstraint::permute( EnumeratedVariable** scope_in )
@@ -446,13 +491,15 @@ void NaryConstraint::print(ostream& os)
 	
 	int unassigned_ = 0;
 	 
+	long totaltuples = 1;
 	for(int i = 0; i < arity_;i++) {
 		if(scope[i]->unassigned()) unassigned_++;
 		os << scope[i]->wcspIndex;
 		if(i < arity_-1) os << ",";
+		totaltuples = totaltuples * scope[i]->getDomainInitSize();
 	}
 	os << ")    ";
-	os << " |f| = " << f.size();
+	os << " |f| = " << f.size() << " / " << totaltuples;
 	os << "   default_cost: " << default_cost;
 	os << "   arity: " << arity();
 	os << "   unassigned: " << (int) nonassigned << "/" << unassigned_ << "         ";
@@ -486,18 +533,17 @@ void NaryConstraint::dump(ostream& os)
 	int i; 
 	TUPLES& f = *pf;
     os << arity_;
-    for(i = 0; i < arity_;i++) 
-    {
-        os << " " << scope[i]->wcspIndex;
-    }
-    os << default_cost << " " << f.size() << endl;
+    for(i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+    os << " " << default_cost << " " << f.size() << endl;
     
     TUPLES::iterator  it = f.begin();
     while(it != f.end()) {
         string t = it->first;
         Cost c =  it->second;       
         it++;
-        for(i=0;i<t.size();i++) t[i] = t[i] - CHAR_FIRST + '0';
-        os << t << " " << c << endl; 
+        for(unsigned int i=0;i<t.size();i++) {
+        	os << t[i] - CHAR_FIRST << " ";
+        }
+        os << c << endl; 
     } 
 }

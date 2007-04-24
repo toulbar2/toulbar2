@@ -22,6 +22,7 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
 }
 
 
+
 void Constraint::sumScopeIncluded( Constraint* ctr ) 
 {
 	int ar = arity();
@@ -29,14 +30,24 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 	for(int i=0;i<ar;i++) scopethis[i] = (EnumeratedVariable*) getVar(i);
 	
 	Cost Top = wcsp->getUb();
-	string t;
 	Cost c;
-			
-	first();
-	while( next(t,c) ) {
-		Cost cplus = ctr->evalsubstr(t, this);
-		if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
-		else setTuple( t, Top, scopethis);
+	string t;
+
+	if(getDefCost() < Top) {      // enumeration case
+		firstlex();
+		while( nextlex(t,c) ) {
+			Cost cplus = ctr->evalsubstr(t, this);
+			if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
+			else setTuple( t, Top, scopethis);
+		}
+		setDefCost(Top);		
+	} else {				
+		first();
+		while( next(t,c) ) {
+			Cost cplus = ctr->evalsubstr(t, this);
+			if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
+			else setTuple( t, Top, scopethis);
+		}
 	}
 	
 	delete [] scopethis;

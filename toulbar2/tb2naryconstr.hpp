@@ -31,11 +31,13 @@ public:
 								// projecting the nary constraint when all variables but 2 are assigned  	
 	void projectNaryBinary();
 
-
+	bool consistent( string& t );
     Cost eval( string s );
 	Cost evalsubstr( string& s, Constraint* ctr );
 	
 	Cost getDefCost() { return default_cost; }
+	void setDefCost( Cost df ) { default_cost = df; }
+	void changeDefCost( Cost df );
 
 
 	void assign(int varIndex);
@@ -63,12 +65,15 @@ public:
 	void project( EnumeratedVariable* x, bool addUnaryCtr = true );
 	void sum( NaryConstraint* nary );
 
-	string lex_it;
+	vector<EnumeratedVariable::iterator> it_values;
 	TUPLES::iterator  tuple_it;
-	void first();
-	void firstlex( string& t );
-    bool next( string& t, Cost& c);
+	void firstlex();
     bool nextlex( string& t, Cost& c);
+
+	void first();
+    bool next( string& t, Cost& c);
+    
+    
 	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
     void insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
