@@ -10,15 +10,10 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 
-#include <list>
-#include <vector>
-using namespace std;
-
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
 class VACExtension;
-
 
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
@@ -42,6 +37,8 @@ class WCSP : public WeightedCSP {
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
+    
+    void boostGraphConnection();
     
 public:
 
@@ -149,7 +146,8 @@ public:
     unsigned int numberOfConnectedConstraints() const;
     Value getDomainSizeSum();       // total current number of values
     void degreeDistribution();
-
+    int diameter();
+    
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value *d, int dsize);
     int makeIntervalVariable(string n, Value iinf, Value isup);
@@ -170,7 +168,7 @@ public:
     // Specific API for Variable and Constraint classes
 
     Store *getStore() {return storeData;}
-    
+
     void link(Variable *x) {vars.push_back(x);}
     void link(Constraint *c) {constrs.push_back(c);}
 

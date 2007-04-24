@@ -119,10 +119,6 @@ void NaryConstraint::assign(int varIndex) {
     }
 }
 
-#include <map>
-using namespace std;
-
-
 Cost NaryConstraint::eval( string s ) {
 	if(default_cost > wcsp->getUb()) default_cost = wcsp->getUb(); 
 	TUPLES& f = *pf;

@@ -8,10 +8,6 @@
 
 #include "tb2types.hpp"
 
-
-using namespace std;
-
-
 class Constraint : public WCSPLink
 {
     Long conflictWeight;

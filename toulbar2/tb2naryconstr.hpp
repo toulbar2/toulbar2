@@ -7,8 +7,6 @@
 #include "tb2wcsp.hpp"
 
 #include <map>
-using namespace std;
-
 
 class NaryConstraint : public AbstractNaryConstraint
 {

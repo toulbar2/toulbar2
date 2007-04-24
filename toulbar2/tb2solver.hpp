@@ -6,14 +6,9 @@
 #ifndef TB2SOLVER_HPP_
 #define TB2SOLVER_HPP_
 
-#include <vector>
-using namespace std;
-
 #include "toulbar2.hpp"
 template <class T> struct DLink;
 template <class T> class BTList;
-
-
 
 class Solver
 {
