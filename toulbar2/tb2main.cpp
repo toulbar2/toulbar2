@@ -209,13 +209,13 @@ int main(int argc, char **argv)
     Solver solver(STORE_SIZE, c);
     
     bool randomproblem = false;
+    int n = 10;
+    int m = 2;
+    int seed = 3;
+    vector<int> p;  
 #ifdef MENDELSOFT
     ToulBar2::pedigree = new Pedigree;
 #else
-   	int n = 10;
-   	int m = 2;
-   	int seed = 3;
-	vector<int> p;	
     if(!strchr(argv[1],'.')) {
     	int pn[10];
     	int narities = 0;
@@ -246,8 +246,6 @@ int main(int argc, char **argv)
     try {
         if(randomproblem)    solver.read_random(n,m,p,seed);
         else 		         solver.read_wcsp(argv[1]);
-        
-        
         
         if (certificate) solver.read_solution("sol");
         else if (saveproblem) solver.dump_wcsp("problem.wcsp");
