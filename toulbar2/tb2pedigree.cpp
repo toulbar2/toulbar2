@@ -498,6 +498,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
       }
     }
   }
+  wcsp->sortVariables();
   wcsp->sortConstraints();
 
   // apply basic initial propagation AFTER complete network loading
@@ -510,7 +511,6 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
   
   if (ToulBar2::verbose >= 0) {
     cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
-    cout << "Diameter: " << wcsp->diameter() << endl;
   }
 }
 
@@ -692,6 +692,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
       var->queueNC();
     }
   }
+  wcsp->sortVariables();
   wcsp->sortConstraints();
 
   // apply basic initial propagation AFTER complete network loading

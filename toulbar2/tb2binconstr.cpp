@@ -192,11 +192,11 @@ bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost minCost = GETCOST(*iterX, y->getInf());
-        if (x->wcspIndex < y->wcspIndex) minCost += y->getCost(y->getInf());
+        if (getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
         EnumeratedVariable::iterator iterY = y->begin();
         for (++iterY; minCost > 0 && iterY != y->end(); ++iterY) {
             Cost cost = GETCOST(*iterX, *iterY);
-            if (x->wcspIndex < y->wcspIndex) cost += y->getCost(*iterY);
+            if (getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
             if (cost < minCost) {
                 minCost = cost;
             }

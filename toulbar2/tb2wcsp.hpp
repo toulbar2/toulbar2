@@ -38,8 +38,6 @@ class WCSP : public WeightedCSP {
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
     
-    void boostGraphConnection();
-    
 public:
 
     vector<Constraint *> constrs;
@@ -146,8 +144,12 @@ public:
     unsigned int numberOfConnectedConstraints() const;
     Value getDomainSizeSum();       // total current number of values
     void degreeDistribution();
+#ifdef BOOST
     int diameter();
-    
+    int connectedComponents();
+    int biConnectedComponents();
+    void minimumDegreeOrdering();
+#endif
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value *d, int dsize);
     int makeIntervalVariable(string n, Value iinf, Value isup);
@@ -197,6 +199,7 @@ public:
     Queue *getQueueEAC1() {return &EAC1;}
     void propagateEAC();
 
+    void sortVariables();
     void sortConstraints();
     void preprocessing();
 

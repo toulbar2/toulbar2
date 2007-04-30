@@ -6,6 +6,11 @@
 #include "tb2pedigree.hpp"
 #include <string.h>
 
+// used for debugging purpose.
+// under gdb: p ((BinaryConstraint *) constrs[13])->dump
+// under gdb: p $2(constrs[13], myCout)
+ostream myCout(cout.rdbuf());
+
 bool localSearch(char *filename, Cost *upperbound)
 {
     string keyword;
@@ -113,6 +118,9 @@ int main(int argc, char **argv)
         cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
+#ifdef BOOST
+        cerr << "   m : preprocessing only: minimum degree re-ordering of variables" << endl;
+#endif
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
         cerr << "   f : FDAC soft local consistency propagation instead of EDAC" << endl;
         cerr << "   l : limited discrepancy search" << endl;
@@ -170,6 +178,7 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'V')) ToulBar2::vac = true;
         if (strchr(argv[i],'A')) { ToulBar2::vac = true; ToulBar2::vacAlternative = true;}
         if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
+        if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
     }
     
     

@@ -1,4 +1,13 @@
-SRCS = $(wildcard tb2*.cpp)
+SRCSFULL = $(wildcard tb2*.cpp)
+
+# Remove the first character in the following line if compile with BOOST Graph library
+#BOOST = -DBOOST
+
+ifeq ($(BOOST),-DBOOST)
+SRCS = $(SRCSFULL)
+else
+SRCS = $(SRCSFULL:tb2boostgraph.cpp=)
+endif
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -17,7 +26,7 @@ ICC = icc
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/Ilog/solver60/include -I/usr/local/Ilog/concert20/include
 #ILOGLIBS = -L/usr/local/Ilog/solver60/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -L/usr/local/Ilog/concert20/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -lsolverfloat -lsolver -lconcert
 
-CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY
+CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
 OFLAGS = -O3 -DNDEBUG

@@ -78,8 +78,9 @@ typedef map<int,int> TSCOPE;
 typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
 
-class Pedigree;
+typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX } ElimOrderType;
 
+class Pedigree;
 
 class ToulBar2
 {
@@ -120,6 +121,7 @@ public:
     static bool vac;
     static bool vacAlternative;
     static bool vacDecomposition;
+    static ElimOrderType elimOrderType;
 };
 
 /*
@@ -169,7 +171,7 @@ class WCSPLink
 {
 public:
     WCSP * const wcsp;
-    const int wcspIndex;
+    int wcspIndex;
     WCSPLink(WCSP *w, int index) : wcsp(w), wcspIndex(index) {}
 };
 

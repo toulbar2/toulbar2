@@ -1,78 +1,110 @@
 #include <boost/config.hpp>
 #include <boost/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>
 #include <boost/graph/graphviz.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <boost/graph/biconnected_components.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
-//#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/minimum_degree_ordering.hpp>
 
 using namespace boost;
 
 #include "tb2wcsp.hpp"
 
-typedef adjacency_list< vecS, vecS, undirectedS, no_property, 
-                        property< edge_weight_t, int > > Graph;
-typedef graph_traits< Graph >::vertex_descriptor vertex_ptr_t;
-typedef graph_traits< Graph >::edge_descriptor   edge_ptr_t;
-
-typedef int *int_ptr;
-    
-static Graph *WcspGraph;                             // link to Boost Graph internal graph structure
-
-void WCSP::boostGraphConnection()
+namespace boost
 {
-   if (::WcspGraph != NULL) delete ::WcspGraph;
-   
-   int V = numberOfVariables();
-   int C = numberOfConstraints();
-   ::WcspGraph = new Graph;
-   // add nodes dynamically instead of using "const int n; Graph G(n);"
-   for (int i=0; i < V; i++) {
-        add_vertex(*::WcspGraph);
-   }
-   // fill edges with original constraints only
-   property_map<Graph, edge_weight_t>::type weightmap = get(edge_weight, *::WcspGraph);
-   for (int ictr=0; ictr < C; ictr++) {
-        Constraint* c = constrs[ictr];
-
-        int a = c->arity();
-        for(int i=0;i<a;i++) {
-            for(int j=i+1;j<a;j++) {
-                Variable* vari = c->getVar(i);
-                Variable* varj = c->getVar(j);
-                edge_ptr_t e; 
-                bool inserted;
-                tie(e, inserted) = add_edge( vari->wcspIndex, varj->wcspIndex, *::WcspGraph);
-                weightmap[e] = 1;
-            }
-        }
-   }
-
-//  output graph into file   
-//   ofstream f("problem.dot");
-//   write_graphviz(f, *::WcspGraph);
+  struct edge_component_t
+  {
+    enum
+    { num = 555 };
+    typedef edge_property_tag kind;
+  }
+  edge_component;
 }
 
+typedef adjacency_list< vecS, vecS, undirectedS, no_property, 
+                        property< edge_weight_t, int, property < edge_component_t, std::size_t > > > Graph;
+typedef graph_traits < Graph >::vertex_descriptor Vertex;
+typedef graph_traits < Graph >::edge_descriptor Edge;
+
+static void addConstraint(Constraint *c, Graph& g)
+{
+    property_map<Graph, edge_weight_t>::type weight = get(edge_weight, g);
+    int a = c->arity();
+    for(int i=0;i<a;i++) {
+        for(int j=i+1;j<a;j++) {
+            Variable* vari = c->getVar(i);
+            Variable* varj = c->getVar(j);
+            weight[add_edge( vari->wcspIndex, varj->wcspIndex, g).first] = 1;
+        }
+    }
+}
+
+int WCSP::connectedComponents()
+{
+    Graph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->universal()) addConstraint(constrs[i], G);
+    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected() && !elimConstrs[i]->universal()) addConstraint(elimConstrs[i], G);
+
+    vector<int> component(num_vertices(G));
+    int num = connected_components(G, &component[0]);
+    vector<int> cctruesize(num, 0);
+    for (size_t i = 0; i < num_vertices(G); ++i) {
+        assert(component[i]>=0 && component[i]<num);
+        if (unassigned(i)) cctruesize[component[i]]++;
+    }
+    int res = 0;
+    char c = '(';
+    for (int  i = 0; i < num; ++i) {
+        if (cctruesize[i] >= 1) {
+            res++;
+            cout << c << cctruesize[i];
+            c = ' ';
+        }
+    }
+    cout << ")";
+    
+    return res;
+}
+ 
+int WCSP::biConnectedComponents()
+{
+    Graph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
+    property_map < Graph, edge_component_t >::type component = get(edge_component, G);
+
+    int num = biconnected_components(G, component);
+
+    vector<Vertex> art_points;
+    articulation_points(G, back_inserter(art_points));
+    cout << "Articulation points: " << art_points.size() <<  endl;
+
+    return num;
+}
+    
 int WCSP::diameter()
 {
-   boostGraphConnection();
-   
-   int V = numberOfVariables();
+  Graph G;
+  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
 
-//  vector<int> D(numberOfVariables());
-//  vertex_ptr_t s = *(vertices(*::WcspGraph).first);
-//  dijkstra_shortest_paths(*::WcspGraph, s, distance_map(&D[0]));
-
+  typedef int *int_ptr;
   int **D;
-  D = new int_ptr[V];
-  for (int i = 0; i < V; ++i) D[i] = new int[V];
-  johnson_all_pairs_shortest_paths(*::WcspGraph, D);
+  D = new int_ptr[num_vertices(G)];
+  for (unsigned int i = 0; i < num_vertices(G); ++i) D[i] = new int[num_vertices(G)];
+  johnson_all_pairs_shortest_paths(G, D);
 
   if (ToulBar2::verbose >= 2) {
       cout << "     ";
-      for (int i = 0; i < V; ++i) {
-        cout << i << " -> ";
-        for (int j = 0; j < V; ++j) {
-            cout << " " << D[i][j];
+  for (unsigned int i = 0; i < num_vertices(G); ++i) {
+    cout << i << " -> ";
+    for (unsigned int j = 0; j < num_vertices(G); ++j) {
+        cout << " " << D[i][j];
         }
         cout << endl;
       }
@@ -80,21 +112,72 @@ int WCSP::diameter()
   
   int maxd = 0;
   double meand = 0;
-  for (int i = 0; i < V; ++i) {
-    for (int j = 0; j < V; ++j) {
+  for (unsigned int i = 0; i < num_vertices(G); ++i) {
+    for (unsigned int j = 0; j < num_vertices(G); ++j) {
         if (D[i][j] > maxd) maxd = D[i][j];
         meand += D[i][j];
     }
   }
-  meand /= V*V;
+  meand /= num_vertices(G)*num_vertices(G);
   if (ToulBar2::verbose >= 1) {
     cout << "Mean diameter: " << meand << endl;
   }
 
-  for (int i = 0; i < V; ++i) delete[] D[i];
+  for (unsigned int i = 0; i < num_vertices(G); ++i) delete[] D[i];
   delete[] D;
 
   return maxd;
 }
-	
-	
+
+inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->wcspIndex); }
+       
+void WCSP::minimumDegreeOrdering()
+{
+  Graph G;
+  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
+  
+  int delta = 0;
+  int n = num_vertices(G);
+  typedef vector<int> Vector;
+  Vector inverse_perm(n, 0);
+  Vector perm(n, 0);
+
+  Vector supernode_sizes(n, 1); // init has to be 1
+
+  property_map<Graph, vertex_index_t>::type id = get(vertex_index, G);
+
+  Vector degree(n, 0);
+
+  minimum_degree_ordering(G,
+     make_iterator_property_map(&degree[0], id, degree[0]),
+     &inverse_perm[0],
+     &perm[0],
+     make_iterator_property_map(&supernode_sizes[0], id, supernode_sizes[0]), 
+     delta,
+     id);
+     
+  cout << "Minimum Degree Order:";
+  for (size_t i=0; i < num_vertices(G); ++i) {
+    cout << " " << inverse_perm[i];
+  }
+  cout << endl;
+  
+  for (size_t i=0; i < num_vertices(G); ++i) {
+    vars[i]->wcspIndex = num_vertices(G) - perm[i] - 1;
+  }
+  stable_sort(vars.begin(), vars.end(), cmp_vars);
+  for (size_t i=0; i < num_vertices(G); ++i) {
+    assert(vars[i]->wcspIndex == (int) i);
+  }
+  // update DAC ordering
+  for (unsigned int i=0; i<constrs.size(); i++) {
+    constrs[i]->setDACScopeIndex(constrs[i]->getIndex(vars[constrs[i]->getSmallestVarIndexInScope()]));
+    if (constrs[i]->connected()) constrs[i]->propagate();
+  }
+  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) {
+    elimConstrs[i]->setDACScopeIndex(elimConstrs[i]->getIndex(vars[elimConstrs[i]->getSmallestVarIndexInScope()]));
+    elimConstrs[i]->propagate();
+  }
+}

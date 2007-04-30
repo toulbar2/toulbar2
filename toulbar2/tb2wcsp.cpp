@@ -67,6 +67,8 @@ bool ToulBar2::vac = false;
 bool ToulBar2::vacAlternative = false;
 bool ToulBar2::vacDecomposition = false;
 
+ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
+
 int WCSP::wcspCounter = 0;
 
 
@@ -264,6 +266,17 @@ void WCSP::sortConstraints()
     }
 }
 
+void WCSP::sortVariables()
+{
+    switch (ToulBar2::elimOrderType) {
+        case ELIM_NONE: break;
+#ifdef BOOST
+        case MIN_DEGREE: minimumDegreeOrdering(); break;
+#endif
+        default: cerr << "Elimination ordering not implemented!" << endl; exit(EXIT_FAILURE);
+    }
+}
+
 
 
 
@@ -335,12 +348,20 @@ void WCSP::preprocessing()
     }
     
     propagate();
-     
+
+#ifdef BOOST
+    if (getenv("TB2GRAPH")) {
+        cout << "Connected components: " << connectedComponents() << endl;
+        cout << "Biconnected components: " << biConnectedComponents() << endl;
+        cout << "Diameter : " << diameter() << endl;
+    }
+#endif
     if (getenv("TB2DEGREE")) degreeDistribution();
 }
 
 Value WCSP::getDomainSizeSum()
 {
+//    cout << " " << connectedComponents() << endl;
     Value sum = 0;
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned()) sum += vars[i]->getDomainSize();

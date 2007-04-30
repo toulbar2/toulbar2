@@ -42,7 +42,9 @@ public:
     
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
+    virtual int getSmallestVarIndexInScope() = 0;
     virtual int getDACScopeIndex() = 0;
+    virtual void setDACScopeIndex(int scopeIndex) {}
 
     virtual void propagate() = 0;
     virtual void increase(int index) {propagate();}
@@ -66,13 +68,24 @@ public:
  
     virtual void first() {}
     virtual bool next( string& t, Cost& c) { return false; }
-       
+
 	virtual void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
 	virtual Cost getDefCost() { return 0; }
-	virtual void setDefCost( Cost df ) {}
+	virtual void setDefCost( Cost df ) {}       
+
+    virtual bool universal() {
+        if (getDefCost() > 0) return false;
+        string tuple;
+        Cost cost;
+        first();
+        while (next(tuple,cost)) {
+            if (cost > 0) return false;
+        }
+        return true;
+    }
 	
 	void sumScopeIncluded( Constraint* ctr );
 	

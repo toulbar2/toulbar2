@@ -229,7 +229,7 @@ void WCSP::read_wcsp(const char *fileName)
             inclowerbound += defval;
         } 
     }
-    
+    sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(getLb() + inclowerbound);
@@ -241,7 +241,6 @@ void WCSP::read_wcsp(const char *fileName)
     }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
-        cout << "Diameter: " << diameter() << endl;
     }   
 }
 
@@ -251,6 +250,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed)
     randwcsp.Input(n,m,p);	    
  
  	unsigned int nbconstr = numberOfConstraints();
+    sortVariables();
     sortConstraints();
     
     if (ToulBar2::verbose >= 0) {

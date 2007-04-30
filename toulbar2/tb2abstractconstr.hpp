@@ -69,7 +69,9 @@ public:
     }
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
+    int getSmallestVarIndexInScope() {return min(x->wcspIndex, y->wcspIndex);}
     int getDACScopeIndex() {return dacvar;}
+    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<2); dacvar=scopeIndex;}
 
 
 	void getScope( TSCOPE& scope_inv ) {
@@ -170,7 +172,13 @@ public:
             default: abort();
         }
 	}
+    int getSmallestVarIndexInScope() 
+    {
+        int res = min(x->wcspIndex,y->wcspIndex);
+        return min(res, z->wcspIndex);
+    }
     int getDACScopeIndex() {return dacvar;}
+    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<3); dacvar=scopeIndex;}
 
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -273,11 +281,33 @@ public:
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
     {
-		return -1;
+        assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < arity_);
+        int indexmin = INT_MAX;
+        for(int i=0; i < arity_; i++) if (i != forbiddenScopeIndex) {
+            if (scope[i]->wcspIndex < indexmin) {
+                indexmin = scope[i]->wcspIndex;
+            }
+        }
+        return indexmin;
 	}
+    int getSmallestVarIndexInScope() 
+    {
+        int indexmin = INT_MAX;
+        for(int i=0; i < arity_; i++) {
+            if (scope[i]->wcspIndex < indexmin) {
+                indexmin = scope[i]->wcspIndex;
+            }
+        }
+        return indexmin;
+    }
 
     int getDACScopeIndex() {return -1;}
-   
+    void setDACScopeIndex(int scopeIndex) {
+        scope_inv.clear();
+        for(int i=0; i < arity_; i++) {
+            scope_inv[ scope[i]->wcspIndex ] = i;
+        }
+    }
    
 	void getScope( TSCOPE& scope_inv_in ) {
 		scope_inv_in = scope_inv;
