@@ -463,7 +463,7 @@ bool Solver::solve()
     nbBacktracks = 0;
     nbNodes = 0;
     try {
-        store->store();
+//        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->decreaseUb(initialUpperBound);
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
@@ -489,8 +489,7 @@ bool Solver::solve()
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-
-    store->restore();
+//    store->restore();         // see above for store->store()
     if (wcsp->getUb() < initialUpperBound) {
         if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
 		else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
