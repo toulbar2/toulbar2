@@ -208,11 +208,14 @@ int main(int argc, char **argv)
 
     Solver solver(STORE_SIZE, c);
     
+    bool randomproblem = false;
+#ifdef MENDELSOFT
+    ToulBar2::pedigree = new Pedigree;
+#else
    	int n = 10;
    	int m = 2;
    	int seed = 3;
 	vector<int> p;	
-	bool randomproblem = false;
     if(!strchr(argv[1],'.')) {
     	int pn[10];
     	int narities = 0;
@@ -238,14 +241,9 @@ int main(int argc, char **argv)
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
-
-
-    try {
-#ifdef MENDELSOFT
-        ToulBar2::pedigree = new Pedigree;
-#else
-        if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
+    if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
 #endif
+    try {
         if(randomproblem)    solver.read_random(n,m,p,seed);
         else 		         solver.read_wcsp(argv[1]);
         
