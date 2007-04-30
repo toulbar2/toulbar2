@@ -116,6 +116,7 @@ public:
     static TProb errorg;
     static TProb NormFactor;
     static int foundersprob_class; 
+    static vector<TProb> allelefreqdistrib;
     static bool consecutiveAllele;
     static bool generation;
     static bool vac;

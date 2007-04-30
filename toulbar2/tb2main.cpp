@@ -92,12 +92,12 @@ int main(int argc, char **argv)
         cerr << "   *.pre  : pedigree format" << endl << endl;
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
-		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}          p1 is the tightness in percentage %" << endl; 
-		cerr << "      						                p2 is the num of binary constraints to include" << endl;
-		cerr << "      						                the seed parameter is optional" << endl;
+		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %" << endl; 
+		cerr << "                                         p2 is the num of binary constraints to include" << endl;
+		cerr << "                                         the seed parameter is optional" << endl;
 		 
 		cerr << "or:                                                                               " << endl;            
-		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}    p3 is the num of ternary constraints" << endl; 
+		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary constraints" << endl; 
         cerr << "or:                                                                               " << endl;            
 		cerr << "     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}   " << endl; 
         cerr << endl;
@@ -108,7 +108,13 @@ int main(int argc, char **argv)
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
         cerr << "   w : write last solution found" << endl;
-        cerr << "   y [genotypinpErrorRate probabilityPrecision(pow of 10) genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
+        cerr << "   y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
+        cerr << "               genotypinpErrorRate is a prior uniform probability of genotyping errors (default value: " << ToulBar2::errorg << ")" << endl;
+        cerr << "               probabilityPrecision is a conversion factor (a power of ten) for representing fixed point numbers (default value: " << ToulBar2::resolution << ")" << endl;
+        cerr << "               genotypePriorMode selects the prior mode for allele probability distribution (default value: " << ToulBar2::foundersprob_class << ")" << endl;
+        cerr << "                   = 0 : uniform allele probability distribution" << endl;
+        cerr << "                   = 1 : allele probability distribution read from pedigree data" << endl;
+        cerr << "                   = 2 p1 p2 p3...: allele probability distribution given explicitely in the command line" << endl;
         cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
 #ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
@@ -169,11 +175,13 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'y')) { 
         	ToulBar2::bayesian = true;
         	float f;
-        	if(argc > 3) { sscanf(argv[3],"%f",&f); ToulBar2::errorg = f; }        		 
-        	if(argc > 4) sscanf(argv[4],"%d",&ToulBar2::resolution);
-        	if(argc > 5) sscanf(argv[5],"%d",&ToulBar2::foundersprob_class); // 0: 			equal frequencies
-								   										     // 1: 			probs depending on the frequencies
-										 									 // otherwise:  read from file 
+            int pos = i + 1;
+        	if(argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::errorg = f; }        		 
+        	if(argc > pos) sscanf(argv[pos++],"%d",&ToulBar2::resolution);
+        	if(argc > pos) sscanf(argv[pos++],"%d",&ToulBar2::foundersprob_class); // 0: 			equal frequencies
+								   										           // 1: 			probs depending on the frequencies found in the current pedigree problem
+										 									       // otherwise:    read probability distribution from command line 
+            while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
         if (strchr(argv[i],'V')) ToulBar2::vac = true;
         if (strchr(argv[i],'A')) { ToulBar2::vac = true; ToulBar2::vacAlternative = true;}

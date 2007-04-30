@@ -24,8 +24,6 @@ double ToulBar2::version  = 0.5;
 int  ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
-int  ToulBar2::elimDegree = -1;
-int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
@@ -38,11 +36,14 @@ unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::generation = false;
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
-bool ToulBar2::elimVarWithSmallDegree  = true;
-bool ToulBar2::preprocessTernary  = true;
+int  ToulBar2::elimDegree = 3;
+int  ToulBar2::elimDegree_preprocessing  = -1;
+bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = true;
 #else
 bool ToulBar2::binaryBranching = false;
+int  ToulBar2::elimDegree = -1;
+int  ToulBar2::elimDegree_preprocessing  = -1;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = false;
 #endif
@@ -59,8 +60,9 @@ int ToulBar2::resolution = 7;
 TProb ToulBar2::errorg = 0.05;
 TProb ToulBar2::NormFactor = 1;
 int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
-										 // 1: 			probs depending on the frequencies
-										 // otherwise:  read from file
+										 // 1: 			probs depending on the frequencies found in the problem
+										 // otherwise:  read probability distribution from command line
+vector<TProb> ToulBar2::allelefreqdistrib;
 bool ToulBar2::consecutiveAllele = false;
 
 bool ToulBar2::vac = false;

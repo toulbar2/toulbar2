@@ -52,7 +52,15 @@ void Pedigree::iniProb( WCSP* wcsp ) {
 						 TopProb += -Log10(minp) * ToulBar2::NormFactor;
 						 break;
 						 
-				default: for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
+				default: foundersprob.clear();
+                         assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+                         for (int i=1; i<=nballeles; i++) { /* i = first allele of child  */
+                            for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+                              // case i!=j must be counted twice (i,j and j,i)
+                              foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);        
+                            }
+                         }    
+                         for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
 				        	if(*iter < minp) minp = *iter;
 				         }
 						 TopProb += -Log10(minp) * ToulBar2::NormFactor;
@@ -89,7 +97,6 @@ Individual::Individual(int ind)
     genotype.allele2 = 0;
     typed = false;
     generation = -1;
-    bityped = 0;
 }
 
 void Pedigree::typeAscendants(int individual)
@@ -106,42 +113,16 @@ void Pedigree::typeAscendants(int individual)
     }
 }
 
-void Pedigree::bitypeAscendants(int individual, int typedindiv)
-{
-    if (individual > 0) {
-        assert(individuals.count(individual)!=0);
-        int index = individuals[individual];
-        if (pedigree[index].bityped >= 0) {
-            pedigree[index].typed = true;
-            nbtyped++;
-            typeAscendants(pedigree[index].father);
-            typeAscendants(pedigree[index].mother);
-        }
-    }
-}
-
-void Pedigree::bitypeDescendants(int individual, int typedindiv)
-{
-    if (individual > 0) {
-        assert(individuals.count(individual)!=0);
-        int index = individuals[individual];
-        if (pedigree[index].bityped >= 0) {
-            pedigree[index].typed = true;
-            nbtyped++;
-            typeAscendants(pedigree[index].father);
-            typeAscendants(pedigree[index].mother);
-        }
-    }
-}
-
 void Pedigree::read(const char *fileName, WCSP *wcsp)
 {
+    bayesian = false;
 	readPedigree(fileName, wcsp);
 	buildWCSP(fileName, wcsp);
 }
 
 void Pedigree::read_bayesian(const char *fileName, WCSP *wcsp )
 {
+    bayesian = true;
 	readPedigree(fileName, wcsp);
 	buildWCSP_bayesian(fileName, wcsp);
 }
@@ -498,7 +479,6 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
       }
     }
   }
-  wcsp->sortVariables();
   wcsp->sortConstraints();
 
   // apply basic initial propagation AFTER complete network loading
@@ -587,7 +567,15 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 		   	 }    
 			 break;
 			 
-	 default:;
+	 default: foundersprob.clear();
+              assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+              for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
+                for (j=i; j<=nballeles; j++) { /* j = second allele of child */
+                  // case i!=j must be counted twice (i,j and j,i)
+                  foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);        
+                }
+              }    
+              break;
   }
   if (ToulBar2::verbose) {
       cout << "Genotype prior:" << endl;
@@ -692,7 +680,6 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
       var->queueNC();
     }
   }
-  wcsp->sortVariables();
   wcsp->sortConstraints();
 
   // apply basic initial propagation AFTER complete network loading
@@ -816,6 +803,7 @@ void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduc
     }
 
     for (map<int,int>::iterator iter = individuals.begin(); iter != individuals.end(); ++iter) {
+        if ((*iter).first == 0) continue;
         if (reduced && (pedigree[(*iter).second].varindex < 0 || pedigree[(*iter).second].varindex >= (int) wcsp->numberOfVariables() || wcsp->assigned(pedigree[(*iter).second].varindex))) {
             continue;
         }
@@ -826,10 +814,15 @@ void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduc
             int a2 = genoconvert[sol].allele2;
             int allele1 = pedigree[(*iter).second].genotype.allele1;
             int allele2 = pedigree[(*iter).second].genotype.allele2;
-            if (!((allele1>0 && allele2>0 && ((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
-                || ((allele1==0 || allele2==0) && (a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2)))) {
-              pedigree[(*iter).second].genotype.allele1 = 0;
-              pedigree[(*iter).second].genotype.allele2 = 0;
+            if ((allele1>0 && allele2>0 && !((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
+                || ((allele1==0 || allele2==0) && !(allele1==0 && allele2==0) && !(a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2))) {
+              if (bayesian) {
+                pedigree[(*iter).second].genotype.allele1 = a1;
+                pedigree[(*iter).second].genotype.allele2 = a2;
+              } else {
+                pedigree[(*iter).second].genotype.allele1 = 0;
+                pedigree[(*iter).second].genotype.allele2 = 0;
+              }
             }
             pedigree[(*iter).second].print(file);
             pedigree[(*iter).second].genotype.allele1 = allele1;
