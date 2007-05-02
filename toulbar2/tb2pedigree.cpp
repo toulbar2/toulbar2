@@ -41,7 +41,7 @@ void Pedigree::iniProb( WCSP* wcsp ) {
 			TProb minp = 1.;
 			switch(ToulBar2::foundersprob_class)
 			{
-				case 0:  TopProb += -Log10(1./(nballeles * ( nballeles + 1 ) / 2)) * ToulBar2::NormFactor;
+				case 0:  TopProb += -Log10(1./(nballeles * nballeles)) * ToulBar2::NormFactor;
 						 break;
 						
 				case 1:  for (map<int,int>::iterator iter = freqalleles.begin(); iter != freqalleles.end(); ++iter) {
@@ -550,7 +550,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
   	case 0: foundersprob.clear();
 		  	for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
 		      for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-		         foundersprob.push_back( 1./(TProb)domsize );
+		         foundersprob.push_back( ((i!=j)?2.:1.)/(TProb)(nballeles * nballeles) );
 		      }
 		  	}
 		    break;
