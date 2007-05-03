@@ -90,6 +90,15 @@ public:
 	void sumScopeIncluded( Constraint* ctr );
 	
 
+	bool scopeIncluded( Constraint* ctr )
+	{
+		bool isincluded = true;
+		int a_in = ctr->arity();
+		if(a_in >= arity()) return false;		
+		for(int i=0;isincluded && i<a_in;i++) isincluded = isincluded && (getIndex( ctr->getVar(i) ) >= 0);   
+		return isincluded;
+	}
+
 	
 	void scopeCommon( TSCOPE& scope_out, Constraint* ctr ) 
 	{

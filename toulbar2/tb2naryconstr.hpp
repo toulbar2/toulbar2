@@ -7,6 +7,7 @@
 #include "tb2wcsp.hpp"
 
 #include <map>
+#include <set>
 
 class NaryConstraint : public AbstractNaryConstraint
 {
@@ -59,7 +60,11 @@ public:
 
     bool verify() {return true;}
     
-
+    
+    set<Constraint*>* filters;
+	void resetFilters();
+	void fillFilters();
+	 
 	void project( EnumeratedVariable* x, bool addUnaryCtr = true );
 	void sum( NaryConstraint* nary );
 
@@ -74,7 +79,7 @@ public:
     
 	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
-    void insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 );  
+    void insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters = false );  
 	void permute( EnumeratedVariable** scope_in );
 
 

@@ -205,31 +205,10 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		BinaryConstraint* xy = x->getConstr(y);
 		BinaryConstraint* xz = x->getConstr(z);
 		BinaryConstraint* yz = y->getConstr(z);
-
-#ifndef NDEBUG
-			if(!xy) {  for (unsigned int i=0; i<constrs.size(); i++) {
-					 	 bool is = (constrs[i]->getIndex(x) >= 0) && (constrs[i]->getIndex(y) >= 0);
-					 	 if(is && (constrs[i]->arity() == 2)) cout << "BinaryCtr Not found in ternary post: " << *constrs[i];
-					   }
-			}
-			if(!xz) {  for (unsigned int i=0; i<constrs.size(); i++) {
-					 	 bool is = (constrs[i]->getIndex(x) >= 0) && (constrs[i]->getIndex(z) >= 0);
-					 	 if(is && (constrs[i]->arity() == 2)) cout << "BinaryCtr Not found in ternary post: " << *constrs[i];
-					   }
-			}
-			if(!yz) {  for (unsigned int i=0; i<constrs.size(); i++) {
-				 	     bool is = (constrs[i]->getIndex(y) >= 0) && (constrs[i]->getIndex(z) >= 0);
-				    	 if(is && (constrs[i]->arity() == 2)) cout << "BinaryCtr Not found in ternary post: " << *constrs[i];
-				    }
-			}
-#endif
-
 	       
 		if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
 		if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
 		if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
-
-
 
 	    ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);  
 	}
@@ -895,6 +874,8 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		ctrIndex= postNaryConstraint(scopeU, arityU, Top);
 		ctr =  constrs[ctrIndex];
 		NaryConstraint* nary = (NaryConstraint*) ctr;
+
+		nary->fillFilters();
 		
 		bool tupleXtuple = (ctr1->getDefCost() >= Top) && (ctr2->getDefCost() >= Top);
 
@@ -903,7 +884,8 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		    while(ctr1->next(tuple1,cost1)) {
 				ctr2->first();
 			    while(ctr2->next(tuple2,cost2)) {
-			    	if(cost1 + cost2 < Top) nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2);
+			    	//if(cost1 + cost2 < Top) nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2);
+			    	nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2,true);
 			    }
 			}
 		} else {

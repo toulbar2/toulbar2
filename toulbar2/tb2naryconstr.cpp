@@ -21,6 +21,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
     propagate();
 	pf = new TUPLES;
+	filters = NULL;
 }
 
 NaryConstraint::NaryConstraint(WCSP *wcsp)
@@ -102,8 +103,27 @@ void NaryConstraint::projectNaryBinary()
 }
 
 
+void NaryConstraint::resetFilters()
+{
+	if(filters) {
+		delete filters;
+		filters = NULL;
+	}
+}
 
-
+void NaryConstraint::fillFilters()
+{
+	if(filters == NULL) {
+		filters = new set<Constraint*>;
+		for(int i=0;i<arity();i++) {
+			EnumeratedVariable* v = (EnumeratedVariable*) getVar(i);
+	   		for (ConstraintList::iterator iter=v->getConstrs()->begin(); iter != v->getConstrs()->end(); ++iter) {
+	                Constraint* ctr = (*iter).constr;
+	                if(scopeIncluded(ctr)) filters->insert( ctr );
+	        }		
+		}
+	}
+}
 
 // USED ONLY DURING SEARCH 
 void NaryConstraint::assign(int varIndex) {
@@ -302,8 +322,13 @@ void NaryConstraint::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope
 }
 
 
-void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2 )
+void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters )
 {
+	Cost Top = wcsp->getUb();
+	if(c1 >= Top) return;
+	if(c2 >= Top) return;
+	Cost csum = c1 + c2;
+
 	char* t = new char [arity_+1];
 
 	for(int i = 0; i < arity_; i++) {
@@ -318,9 +343,30 @@ void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2
 		}
 		else if(pos1 >= 0) t[pos] = t1[pos1];			
 		else if(pos2 >= 0) t[pos] = t2[pos2];			
+		
+		Cost unaryc = v->getCost( v->toValue(t[pos] - CHAR_FIRST)  );
+		if(unaryc >= Top) return;
+		csum += unaryc;
+		if(csum >= Top) return;	
 	}  
 	t[arity_] = '\0';
-	(*pf)[string(t)] = c1 + c2;
+	string tstr(t);
+
+	if(bFilters && filters && (default_cost >= Top) ) {
+		set<Constraint*>::iterator it = filters->begin();
+		while(it != filters->end()) {
+			Constraint* ctr = *it;
+			if(ctr->connected()) {
+				Cost c = ctr->evalsubstr(tstr, (Constraint*)this );
+				if(c >= Top) return;
+				csum += c;
+			}
+			if(csum >= Top) return;
+			++it;
+		}
+	}
+
+	(*pf)[tstr] = c1 + c2;
 	delete [] t;
 }  
 
