@@ -94,7 +94,8 @@ public:
     void elimVar( BinaryConstraint* xy );
     void elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
-	
+
+	bool averaging();	
 
     class iterator;
     friend class iterator;

@@ -162,7 +162,12 @@ int main(int argc, char **argv)
         	int ndegree = atoi(&ch[1]); 
         	if(ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
         }
-        
+         if ( (ch = strchr(argv[i],'M')) ) {
+         	ToulBar2::minsumDiffusion = 1000;
+        	int nit = atoi(&ch[1]);
+        	if((nit > 0) && (nit <= 100000)) ToulBar2::minsumDiffusion = nit;
+        }
+      
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;

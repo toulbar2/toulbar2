@@ -34,6 +34,8 @@ bool ToulBar2::lds = false;
 bool ToulBar2::limited = false;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::generation = false;
+int ToulBar2::minsumDiffusion = 0;
+
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
 int  ToulBar2::elimDegree = 3;
@@ -338,6 +340,40 @@ void WCSP::preprocessing()
     }
 #endif
     if (getenv("TB2DEGREE")) degreeDistribution();
+
+
+    if (ToulBar2::minsumDiffusion)
+    { 
+    	int maxit = ToulBar2::minsumDiffusion;
+    	cout << "MinSumDiffusion: " << endl;
+    	cout << "   max iterations " << maxit << endl;
+		cout << "   C0 = " << getLb() << endl;
+	    int ntimes = 0;
+		bool change = true;
+		while(change && (ntimes < maxit) ) {
+			change = false;
+		    for (unsigned int i=0; i<vars.size(); i++) {
+		    	EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
+		    	if(evar->averaging()) change = true;	
+		    }
+		    ntimes++;
+		}
+		cout << "   done iterations: " << ntimes << endl;
+	
+	    for (unsigned int i=0; i<constrs.size(); i++) 
+		    if (constrs[i]->connected()) constrs[i]->propagate();
+		    
+		for (unsigned int i=0; i<vars.size(); i++) {
+			EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
+			evar->findSupport();
+		}
+		
+		propagate();
+		
+		cout << "   C0 = " << getLb() << endl;
+    }
+
+
 }
 
 Value WCSP::getDomainSizeSum()

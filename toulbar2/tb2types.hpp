@@ -98,6 +98,7 @@ public:
     static int  elimDegree_preprocessing;
     static int  elimDegree_; 
     static int  elimDegree_preprocessing_;
+    static int minsumDiffusion;
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
     static bool FDAComplexity;
