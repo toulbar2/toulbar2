@@ -7,7 +7,9 @@
 #define TB2SYSTEM_HPP_
 
 typedef long long Long;
+#ifndef LONGLONG_MAX
 const Long LONGLONG_MAX = LONG_LONG_MAX;
+#endif
 
 typedef long double Double;
 
