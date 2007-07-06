@@ -815,8 +815,9 @@ void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduc
             int allele1 = pedigree[(*iter).second].genotype.allele1;
             int allele2 = pedigree[(*iter).second].genotype.allele2;
             if ((allele1>0 && allele2>0 && !((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
-                || ((allele1==0 || allele2==0) && !(allele1==0 && allele2==0) && !(a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2))) {
-              if (bayesian) {
+                || ((allele1==0 || allele2==0) && !(allele1==0 && allele2==0) && !(a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2))
+		|| ToulBar2::pedigreeCorrectionMode == 2) {
+              if (ToulBar2::pedigreeCorrectionMode > 0) {
                 pedigree[(*iter).second].genotype.allele1 = a1;
                 pedigree[(*iter).second].genotype.allele2 = a2;
               } else {

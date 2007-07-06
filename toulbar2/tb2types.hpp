@@ -120,6 +120,7 @@ public:
     static vector<TProb> allelefreqdistrib;
     static bool consecutiveAllele;
     static bool generation;
+    static int pedigreeCorrectionMode;
     static bool vac;
     static bool vacAlternative;
     static bool vacDecomposition;

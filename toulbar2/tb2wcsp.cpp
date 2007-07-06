@@ -66,6 +66,7 @@ int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
 										 // otherwise:  read probability distribution from command line
 vector<TProb> ToulBar2::allelefreqdistrib;
 bool ToulBar2::consecutiveAllele = false;
+int ToulBar2::pedigreeCorrectionMode = 0;
 
 bool ToulBar2::vac = false;
 bool ToulBar2::vacAlternative = false;

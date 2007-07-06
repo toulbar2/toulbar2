@@ -107,9 +107,13 @@ int main(int argc, char **argv)
         cerr << "Available options:" << endl;
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
-        cerr << "   w : write last solution found" << endl;
+		cerr << "   w [genotypingErrorCorrectionMode] : write last solution found" << endl;
+		cerr << "     for pedigree problems only:" << endl;
+		cerr << "               mode=0: save pedigree with erroneous genotypings removed" << endl;
+		cerr << "               mode=1: save pedigree with erroneous genotypings corrected" << endl;
+		cerr << "               mode=2: save pedigree with erroneous genotypings corrected and missing genotypes of informative individuals inferred" << endl;
         cerr << "   y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
-        cerr << "               genotypinpErrorRate is a prior uniform probability of genotyping errors (default value: " << ToulBar2::errorg << ")" << endl;
+        cerr << "               genotypingErrorRate is a prior uniform probability of genotyping errors (default value: " << ToulBar2::errorg << ")" << endl;
         cerr << "               probabilityPrecision is a conversion factor (a power of ten) for representing fixed point numbers (default value: " << ToulBar2::resolution << ")" << endl;
         cerr << "               genotypePriorMode selects the prior mode for allele probability distribution (default value: " << ToulBar2::foundersprob_class << ")" << endl;
         cerr << "                   = 0 : uniform allele probability distribution" << endl;
@@ -148,7 +152,12 @@ int main(int argc, char **argv)
     for (int i=2; i<argc; i++) {
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
-        if (strchr(argv[i],'w')) ToulBar2::writeSolution = true;
+        if ( (ch = strchr(argv[i],'w')) ) {
+		  ToulBar2::writeSolution = true;
+		  int correct = atoi(&ch[1]);
+		  ToulBar2::pedigreeCorrectionMode = 0;
+		  if((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
+        }
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
