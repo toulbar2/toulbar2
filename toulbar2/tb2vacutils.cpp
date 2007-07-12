@@ -83,39 +83,37 @@ VACVariable::~VACVariable () {
 
 void VACVariable::init () {
   unsigned int i = 0;
-  nbVACValues = getDomainSize();
-  vacValues = new VACValue*[nbVACValues];
+  myThreshold = ToulBar2::costThreshold;
+  nbValues = getDomainSize();
+  nbVACValues = nbValues;
+  vacValues = new VACValue*[nbValues];
   for (EnumeratedVariable::iterator it = begin(); it != end(); ++it, ++i) {
     vacValues[i] = new VACValue();
   }
   linkVACQueue.content.var = this;
   linkVACQueue.content.timeStamp = -1;
   linkVAC2Queue.content = this;
-  queueVAC();
-  queueVAC2();
+  //queueVAC();
+  //queueVAC2();
 }
+
+void VACVariable::clear()
+{
+	for(int i=0;i<nbValues;i++) {
+		delete vacValues[i];
+		vacValues[i] = NULL;
+	}
+}
+
 
 void VACVariable::reset () {
   int i = 0;
   nbVACValues = getDomainSize();
-  if (ToulBar2::verbose > 5) {
-    cout << "variable " << name << ":";
-  }
+  if (ToulBar2::verbose > 5) cout << "variable " << name << endl;
   
   for (EnumeratedVariable::iterator it = begin(); it != end(); ++it, ++i) {
     vacValues[i]->reset(*it);
-    if (ToulBar2::verbose > 5) {
-      cout << " " << (*it) << "(" << getCost(*it) << ")";
-    }
-    if (!wcsp->vac->isNull(getCost(*it))) {
-      vacValues[i]->remove();
-      if (ToulBar2::verbose > 5) {
-        cout << "X";
-      }
-    }
-  }
-  if (ToulBar2::verbose > 5) {
-    cout << endl;
+    if(!isNull(getCost(*it))) removeValue(i);
   }
 }
 
@@ -141,9 +139,17 @@ void VACVariable::removeValue (const unsigned int i) {
   }
 }
 
-Cost VACVariable::getVACCost (const unsigned int i) {
+Cost VACVariable::getIniCost (const unsigned int i) {
   assert(i < getDomainSize());
   return getCost(vacValues[i]->getValue());
+}
+
+
+Cost VACVariable::getVACCost (const unsigned int i) {
+  assert(i < getDomainSize());
+  Cost c = getCost(vacValues[i]->getValue());
+  if(isNull(c)) return 0;
+  else return c;
 }
 
 void VACVariable::setCost (const unsigned int i, const Cost c) {
@@ -155,8 +161,9 @@ void VACVariable::setCost (const unsigned int i, const Cost c) {
 
 void VACVariable::decreaseCost (const unsigned int i, const Cost c) {
   assert(i < getDomainSize());
-  assert((getVACCost(i) >= c) || (wcsp->getLb() + getVACCost(i) >= wcsp->getUb()));
-  if (wcsp->getLb() + getVACCost(i) < wcsp->getUb()) {
+  Cost cini = getCost(vacValues[i]->getValue());  
+  assert((cini >= c) || (wcsp->getLb() + cini >= wcsp->getUb()));
+  if (wcsp->getLb() + cini < wcsp->getUb()) {
     costs[toIndex(vacValues[i]->getValue())] -= c;
   }
 }
@@ -178,7 +185,7 @@ void VACVariable::VACproject (const unsigned int i, const Cost c) {
     queueDAC();
     queueEAC1();
   }
-  if ((wcsp->vac->isNull(oldCost)) && (!wcsp->vac->isNull(newCost))) {
+  if ((isNull(oldCost)) && (!isNull(newCost))) {
     queueVAC2();
   }
 }
@@ -189,6 +196,17 @@ void VACVariable::VACextend (const unsigned int i, const Cost c) {
     queueNC();
   }
 }
+
+
+void VACVariable::setThreshold (Cost c) { myThreshold = c; } 
+Cost VACVariable::getThreshold () { return myThreshold; } 
+
+
+bool VACVariable::isNull (Cost c) 
+{
+	return (c < myThreshold);
+}
+
 
 void VACVariable::queueVAC() {
   if (ToulBar2::verbose > 5) {
@@ -251,7 +269,7 @@ void VACVariable::project (Value value, Cost cost) {
   assert(cost >= 0);
   Cost oldcost = getCost(value);
   Cost newcost = oldcost + cost;
-  if ((wcsp->vac->isNull(oldcost)) && (!wcsp->vac->isNull(newcost))) {
+  if ((isNull(oldcost)) && (!isNull(newcost))) {
     queueVAC2();
   }
   EnumeratedVariable::project(value, cost);
@@ -308,11 +326,11 @@ void VACVariable::setTop (const Cost s) {
  */
 
 VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, xx, yy, tab, storeCost) {
-  init();
+  init(getX()->getDomainSize(), getY()->getDomainSize());
 }
 
 VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) {
-  init();
+  init(wcsp->maxdomainsize, wcsp->maxdomainsize);
 }
 
 VACConstraint::~VACConstraint () {
@@ -322,15 +340,15 @@ VACConstraint::~VACConstraint () {
   delete[] k[1];
 }
 
-void VACConstraint::init () {
-  support[0] = new unsigned int[getX()->getDomainSize()];
-  k[0] = new Cost[getX()->getDomainSize()];
-  support[1] = new unsigned int[getY()->getDomainSize()];
-  k[1] = new Cost[getY()->getDomainSize()];
-  for (unsigned int i = 0; i < getX()->getDomainSize(); i++) {
+void VACConstraint::init (int sizeX, int sizeY) {
+  support[0] = new unsigned int[sizeX];
+  k[0] = new Cost[sizeX];
+  support[1] = new unsigned int[sizeY];
+  k[1] = new Cost[sizeY];
+  for (int i = 0; i < sizeX; i++) {
     support[0][i] = 0;
   }
-  for (unsigned int j = 0; j < getY()->getDomainSize(); j++) {
+  for (int j = 0; j < sizeY; j++) {
     support[1][j] = 0;
   }
 }
@@ -402,13 +420,12 @@ void VACConstraint::VACextend(const int v, const unsigned int i, const Cost c) {
 
 Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, const int i) {
   assert((i == 0) || (i == 1));
-  if (i == 0) {
-    return getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
-  }
-  if (i == 1) {
-    return getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
-  }
-  return -1;
+  Cost c;
+  if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
+  if (i == 1) c = getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
+  if(c < ToulBar2::costThreshold) c = 0;
+  assert((c == 0) || (c >= ToulBar2::costThreshold));
+  return c;
 }
 
 void VACConstraint::setCost (const unsigned int v, const unsigned int w, const int i, const Cost c) {
@@ -494,13 +511,13 @@ bool VACConstraint::revise (const int i, const unsigned int v) {
   assert(v < getVariable(i)->getDomainSize());
 
   xj = getVariable(1-i);
-  if ((!xj->getValue(support[i][v])->isRemoved()) && (wcsp->vac->isNull(getVACCost(v, support[i][v], i)))) {
+  if ((!xj->getValue(support[i][v])->isRemoved()) && (!getVACCost(v, support[i][v], i))) {
     return false;
   }
   for (unsigned int w = ((support[i][v]+1) % xj->getDomainSize()); w != support[i][v]; w = (w+1) % xj->getDomainSize()) {
     if (!xj->getValue(w)->isRemoved()) {
       cost = getVACCost(v, w, i);
-      if (wcsp->vac->isNull(cost)) {
+      if (!cost) {
         support[i][v] = w;
         return false;
       }

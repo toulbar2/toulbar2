@@ -71,6 +71,8 @@ int ToulBar2::pedigreeCorrectionMode = 0;
 bool ToulBar2::vac = false;
 bool ToulBar2::vacAlternative = false;
 bool ToulBar2::vacDecomposition = false;
+Cost ToulBar2::costThreshold = 1;
+Cost ToulBar2::costConstant = 1;
 
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
@@ -330,9 +332,8 @@ void WCSP::preprocessing()
             cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
         }
     }
-    
-    propagate();
-
+	propagate();
+	
 #ifdef BOOST
     if (getenv("TB2GRAPH")) {
         cout << "Connected components: " << connectedComponents() << endl;
@@ -341,6 +342,8 @@ void WCSP::preprocessing()
     }
 #endif
     if (getenv("TB2DEGREE")) degreeDistribution();
+
+
 
 
     if (ToulBar2::minsumDiffusion)
@@ -353,14 +356,15 @@ void WCSP::preprocessing()
 		bool change = true;
 		while(change && (ntimes < maxit) ) {
 			change = false;
+			int nchanged = 0;
 		    for (unsigned int i=0; i<vars.size(); i++) {
 		    	EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
-		    	if(evar->averaging()) change = true;	
+		    	if(evar->averaging()) { change = true;	nchanged++; }
 		    }
 		    ntimes++;
+			//cout << "it " << ntimes << "   changed: " << nchanged << endl;
 		}
 		cout << "   done iterations: " << ntimes << endl;
-	
 	    for (unsigned int i=0; i<constrs.size(); i++) 
 		    if (constrs[i]->connected()) constrs[i]->propagate();
 		    
@@ -368,9 +372,7 @@ void WCSP::preprocessing()
 			EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
 			evar->findSupport();
 		}
-		
 		propagate();
-		
 		cout << "   C0 = " << getLb() << endl;
     }
 
@@ -693,14 +695,17 @@ void WCSP::eliminate()
 void WCSP::propagate()
 {    
 //    revise(NULL);
+	bool util = true;
 
    do {
      do {
       eliminate();
       while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
-          || (((ToulBar2::vac) || (!ToulBar2::FDAC && (getUb()-getLb() > 1))) && !EAC1.empty())) {
+         // || (((ToulBar2::vac) || (!ToulBar2::FDAC && (getUb()-getLb() > 1))) && !EAC1.empty())) {
+            || ((!ToulBar2::FDAC && (getUb()-getLb() > 1)) && !EAC1.empty())) {
         propagateIncDec();
-        if ((ToulBar2::vac) || (!ToulBar2::FDAC && getUb()-getLb() > 1)) propagateEAC();
+        //if ((ToulBar2::vac) || (!ToulBar2::FDAC && getUb()-getLb() > 1)) propagateEAC();
+        if (!ToulBar2::FDAC && getUb()-getLb() > 1) propagateEAC();
         assert(IncDec.empty());
         propagateDAC();
         assert(IncDec.empty());
@@ -711,8 +716,9 @@ void WCSP::propagate()
     } while (!Eliminate.empty());
 
     if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
-    if (ToulBar2::vac) vac->propagate();
-  } while ((ToulBar2::vac) && (!vac->remainedIdle()));
+
+    if (ToulBar2::vac) util = vac->propagate();
+   } while ((ToulBar2::vac) && (!vac->remainedIdle()));
 
   //    revise(NULL);
 

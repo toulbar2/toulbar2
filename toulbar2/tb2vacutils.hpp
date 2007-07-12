@@ -116,15 +116,13 @@ public:
  */
 class VACVariable : public EnumeratedVariable {
 
+public:
+
 private:
   /**
    * the values of the domain
    */
   VACValue **vacValues;
-  /**
-   * the number of unremoved values
-   */
-  int nbVACValues;
   /**
    * a link the VAC queue
    */
@@ -164,6 +162,11 @@ public:
   /**
    * set all members of the class
    */
+  void clear ();
+
+  /**
+   * set all members of the class
+   */
   void reset ();
   /**
    * whether the variable has no possible value
@@ -190,6 +193,7 @@ public:
    * get the unary cost of a value, using VAC representation of the values
    * @param i the index of this value
    */
+  Cost getIniCost (const unsigned int i); 
   Cost getVACCost (const unsigned int i);
   /**
    * set the cost of a value
@@ -224,6 +228,26 @@ public:
   /**
    * enqueue in the VAC queue
    */
+
+  /**
+   * initial number of unremoved values
+   */
+  int nbValues;
+
+  /**
+   * the current number of unremoved values
+   */
+  int nbVACValues;
+
+  Cost myThreshold;
+  void setThreshold (Cost c); 
+  Cost getThreshold (); 
+  bool isNull (Cost c); 
+ /**
+   * specialized threshold per variable
+   */ 
+   
+   
   void queueVAC();
   /**
    * enqueue in the secondary VAC queue
@@ -327,8 +351,11 @@ private:
 
   /**
    * allocate memory
+   * @param sizeX the size of the first variable
+   * @param sizeY the size of the second variable
    */
-  void init ();
+  void init (int sizeX, int sizeY);
+
 
 public:
   /**
@@ -396,6 +423,7 @@ public:
    * @param i is 0, if the variables are correctly ordered, 1 if one should evaluate c(@a w, @a v) instead
    * @return the binary cost
    */
+    
   Cost getVACCost (const unsigned int v, const unsigned int w, const int i = 0);
   /**
    * set the cost of a tuple

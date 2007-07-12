@@ -38,17 +38,13 @@ private:
   /**
    * the maximum value of unary and binary k (useful for passes 2 and 3)
    */
-  Cost maxK;
+  double minlambda;
   /**
    * the index of the inconsistent variable
    *   or -1 if the network is VAC
    *   or -2 if the network is not NC
    */
   int inconsistentVariable;
-  /**
-   * if VAC alternative is chosen, when a cost is above the threshold, it is considered as 0
-   */
-  Cost costThreshold;
   /**
    * the last time the threshold was updated
    */
@@ -96,11 +92,13 @@ private:
   /**
    * enforce VAC or VAC decomposition pass 3 
    */
-  void enforcePass3 ();
+  bool enforcePass3 ();
   /**
    * actually enforce VAC pass 3 (project costs to increase c0)
    */
-  void enforcePass3VAC ();
+  void enforcePass3VAC (); 
+  bool enforcePass3VACint ();
+  
   /**
    * actually enforce VAC decomposition pass 3 (substract cost and decrease top)
    */
@@ -129,9 +127,13 @@ public:
    */
   ~VACExtension ();
   /**
+   * delete internal structures
+   */
+  void clean ();
+  /**
    * enforce VAC (possibly several times)
    */
-  void propagate ();
+  bool propagate ();
   /**
    * check whether VAC was actually enforced
    * @return true, if VAC was actually enforced

@@ -124,6 +124,8 @@ public:
     static bool vac;
     static bool vacAlternative;
     static bool vacDecomposition;
+    static Cost costThreshold;
+    static Cost costConstant;
     static ElimOrderType elimOrderType;
 };
 

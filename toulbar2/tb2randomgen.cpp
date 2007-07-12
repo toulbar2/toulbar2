@@ -182,6 +182,8 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
   	wcsp.makeEnumeratedVariable(varname,0,m-1);
   }
 
+
+
   for(arity=maxa;arity>1;arity--)        
   {
   	  long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
@@ -218,6 +220,16 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 		  } while(inc(indexs) && !oneadded);
   	   }
     }
+    
+    
+    for(i=0;i<n;i++) {
+	  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
+	  	for (Value a = 0; a < x->getDomainInitSize(); a++) 
+	  	{
+	  		x->project(a, rand() % 3 ); 
+	  	}
+  	}
+    
 }
 	  
  

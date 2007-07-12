@@ -43,7 +43,8 @@ void WCSP::read_wcsp(const char *fileName)
     Value funcparam1;
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = 0;
-    
+
+   
     
     // open the file
     ifstream file(fileName);
@@ -62,7 +63,12 @@ void WCSP::read_wcsp(const char *fileName)
     
     assert(vars.empty());
     assert(constrs.empty());
-    updateUb(top);
+    
+	Cost K = ToulBar2::costConstant;    
+	top = top * ToulBar2::costConstant;  
+
+	updateUb(top);
+
 
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
@@ -107,6 +113,7 @@ void WCSP::read_wcsp(const char *fileName)
 					}
 					buf[i] = '\0';
 				    file >> cost;
+				    cost = cost * K;
 				
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
@@ -135,7 +142,7 @@ void WCSP::read_wcsp(const char *fileName)
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 	                    for (c = 0; c < z->getDomainInitSize(); c++) {
-	                        costs.push_back(defval);
+	                        costs.push_back(defval*K);
 						}
                     }
                 }
@@ -144,7 +151,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> c;
                     file >> cost;
-                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost;
+                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost*K;
                 }
                 if((defval != 0) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
@@ -166,14 +173,14 @@ void WCSP::read_wcsp(const char *fileName)
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
-                        costs.push_back(defval);
+                        costs.push_back(defval*K);
                     }
                 }
             	for (k = 0; k < ntuples; k++) {
                     file >> a;
                     file >> b;
                     file >> cost;
-                    costs[a * y->getDomainInitSize() + b] = cost;
+                    costs[a * y->getDomainInitSize() + b] = cost*K;
                 }
                 if((defval != 0) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
             } else {
@@ -209,12 +216,12 @@ void WCSP::read_wcsp(const char *fileName)
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = x;
             for (a = 0; a < x->getDomainInitSize(); a++) {
-                unaryconstr.costs.push_back(defval);
+                unaryconstr.costs.push_back(defval*K);
             }
             for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
-                unaryconstr.costs[a] = cost;
+                unaryconstr.costs[a] = cost*K;
             }
             unaryconstrs.push_back(unaryconstr);
             x->queueNC();
@@ -226,7 +233,7 @@ void WCSP::read_wcsp(const char *fileName)
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
                 exit(EXIT_FAILURE);
             }
-            inclowerbound += defval;
+            inclowerbound += defval*K;
         } 
     }
     sortVariables();

@@ -608,7 +608,7 @@ bool EnumeratedVariable::averaging()
 	//Cost Top = 2000;
 	bool change = false;
 	EnumeratedVariable* x;
-	EnumeratedVariable* y;
+	//EnumeratedVariable* y;
 	Constraint* ctr = NULL;
 	ConstraintList::iterator itc = getConstrs()->begin();
 	if(itc != getConstrs()->end())	ctr = (*itc).constr;
@@ -623,8 +623,8 @@ bool EnumeratedVariable::averaging()
 					Cost cbin = bctr->getCost(this,x,*it,*itx);
 					if(cmin > cbin) cmin = cbin;
 				}
-				float mean = (cmin + cu) / 2.;	
-				float extc = cu - mean;					 
+				float mean = (float)(cmin + cu) / 2.;	
+				float extc = (float)cu - mean;					 
 
 				if(abs(extc) >= 1)
 				{

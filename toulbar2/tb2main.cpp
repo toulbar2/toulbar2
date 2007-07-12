@@ -140,6 +140,11 @@ int main(int argc, char **argv)
         cerr << "   V : enforce VAC (still ongoing work)" << endl;
         cerr << "   A : enforce VAC alternative (still ongoing work)" << endl;
         cerr << "   D : enforce VAC decomposition (still ongoing work)" << endl;
+        cerr << "   T{followed by int} : threshold value of VAC, beyond this the value is considered deleted" << endl;
+        cerr << "   " << endl;
+        cerr << "   C{followed by int} : multiply all costs by this number" << endl;
+
+
 #endif
         cerr << endl;
         exit(EXIT_FAILURE);
@@ -171,10 +176,18 @@ int main(int argc, char **argv)
         	int ndegree = atoi(&ch[1]); 
         	if(ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
         }
-         if ( (ch = strchr(argv[i],'M')) ) {
+        if ( (ch = strchr(argv[i],'M')) ) {
          	ToulBar2::minsumDiffusion = 1000;
         	int nit = atoi(&ch[1]);
         	if((nit > 0) && (nit <= 100000)) ToulBar2::minsumDiffusion = nit;
+        }
+        if ( (ch = strchr(argv[i],'T')) ) {
+        	int ct = atoi(&ch[1]);
+        	if((ct >= 1) && (ct <= 100000)) ToulBar2::costThreshold = ct;
+        }
+        if ( (ch = strchr(argv[i],'C')) ) {
+        	int co = atoi(&ch[1]);
+        	if((co > 0) && (co <= 100000)) ToulBar2::costConstant = co;
         }
       
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
