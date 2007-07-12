@@ -162,7 +162,8 @@ void VACVariable::setCost (const unsigned int i, const Cost c) {
 void VACVariable::decreaseCost (const unsigned int i, const Cost c) {
   assert(i < getDomainSize());
   Cost cini = getCost(vacValues[i]->getValue());  
-  assert((cini >= c) || (wcsp->getLb() + cini >= wcsp->getUb()));
+  assert((cini >= c));
+  //  assert((wcsp->getLb() + cini >= wcsp->getUb()));
   if (wcsp->getLb() + cini < wcsp->getUb()) {
     costs[toIndex(vacValues[i]->getValue())] -= c;
   }
@@ -425,6 +426,14 @@ Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, cons
   if (i == 1) c = getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
   if(c < ToulBar2::costThreshold) c = 0;
   assert((c == 0) || (c >= ToulBar2::costThreshold));
+  return c;
+}
+
+Cost VACConstraint::getVACCostNoThreshold (const unsigned int v, const unsigned int w, const int i) {
+  assert((i == 0) || (i == 1));
+  Cost c;
+  if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
+  if (i == 1) c = getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
   return c;
 }
 

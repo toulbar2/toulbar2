@@ -391,12 +391,12 @@ bool VACExtension::enforcePass3VACint () {
     vacOddsRecorder->addVariable(i);
     vacOddsRecorder->addVariable(j);
     for (unsigned int v = 0; v < xi->getDomainSize(); v++) {
-      if ((wcsp->getLb() + cij->getVACCost(v, w, cij->getIndex(xi)) < wcsp->getUb()) && 
-      	  (cij->getVACCost(v, w, cij->getIndex(xi)) < lambda * xj->getValue(w)->getK())) {
+      if ((wcsp->getLb() + cij->getVACCostNoThreshold(v, w, cij->getIndex(xi)) < wcsp->getUb()) && 
+      	  (cij->getVACCostNoThreshold(v, w, cij->getIndex(xi)) < lambda * xj->getValue(w)->getK())) {
           if (ToulBar2::verbose > 1) {
-            cout << "extending " << (lambda * xj->getValue(w)->getK() - cij->getVACCost(v, w, cij->getIndex(xi))) << " from (x" << i << ", " << xi->getValue(v)->getValue() << ") to c" << i << "," << j << "   (" << xi->getVACCost(v) << " is available)" << endl;
+            cout << "extending " << (lambda * xj->getValue(w)->getK() - cij->getVACCostNoThreshold(v, w, cij->getIndex(xi))) << " from (x" << i << ", " << xi->getValue(v)->getValue() << ") to c" << i << "," << j << "   (" << xi->getIniCost(v) << " is available) and " << xi->myThreshold << endl;
           }
-          Cost ecost = lambda * xj->getValue(w)->getK() - cij->getVACCost(v, w, cij->getIndex(xi));
+          Cost ecost = lambda * xj->getValue(w)->getK() - cij->getVACCostNoThreshold(v, w, cij->getIndex(xi));
 	      cij->VACextend(cij->getIndex(xi), v, ecost);
       }
     }

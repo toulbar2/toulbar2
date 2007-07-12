@@ -425,8 +425,10 @@ void Solver::recursiveSolve()
     if (varIndex >= 0) {
         if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
-                assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-                binaryChoicePoint(varIndex, wcsp->getSupport(varIndex));
+			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
+			  binaryChoicePoint(varIndex, wcsp->getSupport(varIndex));
+			  //			    assert(wcsp->canbe(varIndex, wcsp->getMaxUnaryCostValue(varIndex)));
+			  //			    binaryChoicePoint(varIndex, wcsp->getMaxUnaryCostValue(varIndex));
             } else {
                 narySortedChoicePoint(varIndex);
             }
@@ -445,8 +447,10 @@ void Solver::recursiveSolveLDS(int discrepancy)
     if (varIndex >= 0) {
         if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
-                assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-                binaryChoicePointLDS(varIndex, wcsp->getSupport(varIndex), discrepancy);
+			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
+			  binaryChoicePointLDS(varIndex, wcsp->getSupport(varIndex), discrepancy);
+			  //			    assert(wcsp->canbe(varIndex, wcsp->getMaxUnaryCostValue(varIndex)));
+			  //			    binaryChoicePointLDS(varIndex, wcsp->getMaxUnaryCostValue(varIndex), discrepancy);
             } else {
                 narySortedChoicePointLDS(varIndex, discrepancy);
             }

@@ -117,6 +117,7 @@ public:
         
     Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}
     Cost getMaxUnaryCost(int varIndex) const {return vars[varIndex]->getMaxCost();}
+    Value getMaxUnaryCostValue(int varIndex) const {return vars[varIndex]->getMaxCostValue();}
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
