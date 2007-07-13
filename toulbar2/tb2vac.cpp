@@ -8,7 +8,7 @@ VACExtension::VACExtension (WCSP *w, bool a, bool d) : VAC2(&w->getStore()->stor
   // temporary disable threshold trick
   queueP = new stack< pair<int, int> >;
   queueR = new stack< pair<int, int> >;
-  minlambda = MAX_VAL;
+  minlambda = MAX_COST;
 }
 
 VACExtension::~VACExtension () {
@@ -127,7 +127,7 @@ void VACExtension::reset () {
     }
   }
   
-  minlambda = MAX_VAL;
+  minlambda = wcsp->getUb() - wcsp->getLb();
 }
 
 void VACExtension::enforcePass1 () {
@@ -217,7 +217,7 @@ void VACExtension::enforcePass2 () {
   int i, j;
   VACVariable *xi0, *xi, *xj;
   VACConstraint *cij;
-  double tmplambda;
+  Cost tmplambda;
   unsigned int v;
   if (ToulBar2::verbose > 1) {
 	  cout << "------------------" << endl; 
@@ -229,6 +229,8 @@ void VACExtension::enforcePass2 () {
   for (unsigned int v = 0; v < xi0->getDomainSize(); v++) {
     xi0->getValue(v)->addToK(1);
     xi0->getValue(v)->setMark();
+	Cost cost = xi0->getVACCost(v);
+	if (cost > 0 && cost < minlambda) minlambda = cost;
   }
 
   while (!queueP->empty()) {
@@ -246,23 +248,22 @@ void VACExtension::enforcePass2 () {
 	        cout << "VAC pops x" << i << "(" << v << ") = " << xi->getVACCost(v) << "      k: " << xi->getValue(v)->getK() << "            killed by: " << j << endl;
 	  }
       for (unsigned int w = 0; w < xj->getDomainSize(); w++) {
-        if (cij->getVACCost(v, w, cij->getIndex(xi))) {
-	          //tmplambda = (double)cij->getVACCost(v, w, cij->getIndex(xi)) / (double)xi->getValue(v)->getK();
-	          tmplambda = (double)xi->getValue(v)->getK() / (double)cij->getVACCost(v, w, cij->getIndex(xi));
-	          if (xj->getValue(w)->getKiller() == i) tmplambda += (double)xj->getValue(w)->getK() / (double)cij->getVACCost(v, w, cij->getIndex(xi));
-
-	          if (wcsp->getLb() + cij->getVACCost(v, w, cij->getIndex(xi)) < wcsp->getUb()) {
-	            if( (1./tmplambda) < minlambda) minlambda = 1./tmplambda;
-	          }
-        } else {
-          Cost tmpK;
-          tmpK = xi->getValue(v)->getK() - cij->getK(cij->getIndex(xj), w);
+		Cost costij = cij->getVACCost(v, w, cij->getIndex(xi));
+		if (costij > 0) {
+          Cost tmpK = xi->getValue(v)->getK();
+		  if (xj->getValue(w)->getKiller() == i) tmpK += xj->getValue(w)->getK();
+		  
+		  if (wcsp->getLb() + costij < wcsp->getUb()) {
+			if( (costij/tmpK) < minlambda) minlambda = costij/tmpK;
+		  }
+		} else {
+          Cost tmpK = xi->getValue(v)->getK() - cij->getK(cij->getIndex(xj), w);
           if (tmpK > 0) {
             xj->getValue(w)->addToK(tmpK);
             cij->setK(cij->getIndex(xj), w, xi->getValue(v)->getK());
             if(!xj->getVACCost(w)) xj->getValue(w)->setMark();
             else if (wcsp->getLb() + xj->getVACCost(w) < wcsp->getUb()) {
-              tmplambda = (double)xj->getVACCost(w) / (double)xj->getValue(w)->getK();  	
+              tmplambda = xj->getVACCost(w) / xj->getValue(w)->getK();  	
 			  if(tmplambda < minlambda) minlambda = tmplambda;
             }
           }  
@@ -331,7 +332,7 @@ void VACExtension::enforcePass3VAC () {
 
 bool VACExtension::enforcePass3VACint () {
   bool util = (minlambda >= 1);
-  Cost lambda = (Cost) floor(minlambda);	
+  Cost lambda = minlambda;	
   if (ToulBar2::verbose > 1) {
 	  cout << "------------------" << endl; 
 	  cout << "VAC Enforce Pass 3" << endl; 
@@ -378,7 +379,6 @@ bool VACExtension::enforcePass3VACint () {
     return false;
   }
 
-
   while (!queueR->empty()) {
     j = queueR->top().first;
     w = queueR->top().second;
@@ -391,12 +391,12 @@ bool VACExtension::enforcePass3VACint () {
     vacOddsRecorder->addVariable(i);
     vacOddsRecorder->addVariable(j);
     for (unsigned int v = 0; v < xi->getDomainSize(); v++) {
-      if ((wcsp->getLb() + cij->getVACCostNoThreshold(v, w, cij->getIndex(xi)) < wcsp->getUb()) && 
-      	  (cij->getVACCostNoThreshold(v, w, cij->getIndex(xi)) < lambda * xj->getValue(w)->getK())) {
+      if ((wcsp->getLb() + cij->getIniCost(v, w, cij->getIndex(xi)) < wcsp->getUb()) && 
+      	  (cij->getIniCost(v, w, cij->getIndex(xi)) < lambda * xj->getValue(w)->getK())) {
           if (ToulBar2::verbose > 1) {
-            cout << "extending " << (lambda * xj->getValue(w)->getK() - cij->getVACCostNoThreshold(v, w, cij->getIndex(xi))) << " from (x" << i << ", " << xi->getValue(v)->getValue() << ") to c" << i << "," << j << "   (" << xi->getIniCost(v) << " is available) and " << xi->myThreshold << endl;
+            cout << "extending " << (lambda * xj->getValue(w)->getK() - cij->getIniCost(v, w, cij->getIndex(xi))) << " from (x" << i << ", " << xi->getValue(v)->getValue() << ") to c" << i << "," << j << "   (" << xi->getIniCost(v) << " is available) and " << xi->myThreshold << endl;
           }
-          Cost ecost = lambda * xj->getValue(w)->getK() - cij->getVACCostNoThreshold(v, w, cij->getIndex(xi));
+          Cost ecost = lambda * xj->getValue(w)->getK() - cij->getIniCost(v, w, cij->getIndex(xi));
 	      cij->VACextend(cij->getIndex(xi), v, ecost);
       }
     }
@@ -404,6 +404,19 @@ bool VACExtension::enforcePass3VACint () {
       cout << "projecting " << (lambda * xj->getValue(w)->getK()) << " from c" << j << "," << i << " to (x" << j << ", " << xj->getValue(w)->getValue() << ")" << endl;
     }
     cij->VACproject(cij->getIndex(xj), w, lambda * xj->getValue(w)->getK());
+	if (w == (unsigned int) xj->getSupport()) {
+        Value newSupport = xj->getInf();
+        Cost minCost = xj->getCost(newSupport);
+        EnumeratedVariable::iterator iter = xj->begin();
+        for (++iter; minCost > 0 && iter != xj->end(); ++iter) {
+            Cost cost = xj->getCost(*iter);
+            if (cost < minCost) {
+                minCost = cost;
+                newSupport = *iter;
+            }
+        }
+		xj->setSupport(newSupport);
+	}
   }
   xi0->extendAll(lambda);
   wcsp->increaseLb(wcsp->getLb() + lambda);

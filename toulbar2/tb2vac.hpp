@@ -38,7 +38,7 @@ private:
   /**
    * the maximum value of unary and binary k (useful for passes 2 and 3)
    */
-  double minlambda;
+  Cost minlambda;
   /**
    * the index of the inconsistent variable
    *   or -1 if the network is VAC
