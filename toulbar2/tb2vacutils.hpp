@@ -424,8 +424,8 @@ public:
    * @return the binary cost
    */
     
+  Cost getIniCost (const unsigned int v, const unsigned int w, const int i = 0);
   Cost getVACCost (const unsigned int v, const unsigned int w, const int i = 0);
-  Cost getVACCostNoThreshold (const unsigned int v, const unsigned int w, const int i = 0);
   /**
    * set the cost of a tuple
    * @param i the index of the x variable

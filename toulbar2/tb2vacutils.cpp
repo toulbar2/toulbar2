@@ -421,7 +421,7 @@ void VACConstraint::VACextend(const int v, const unsigned int i, const Cost c) {
 
 Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, const int i) {
   assert((i == 0) || (i == 1));
-  Cost c;
+  Cost c = 0;
   if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
   if (i == 1) c = getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
   if(c < ToulBar2::costThreshold) c = 0;
@@ -429,9 +429,9 @@ Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, cons
   return c;
 }
 
-Cost VACConstraint::getVACCostNoThreshold (const unsigned int v, const unsigned int w, const int i) {
+Cost VACConstraint::getIniCost (const unsigned int v, const unsigned int w, const int i) {
   assert((i == 0) || (i == 1));
-  Cost c;
+  Cost c = 0;
   if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
   if (i == 1) c = getCost(getX()->getValue(w)->getValue(), getY()->getValue(v)->getValue());
   return c;
