@@ -91,6 +91,12 @@ public:
    * add some cost to the temporary variable k
    * @param c the cost
    */
+
+  bool isNull (const Cost c);
+  void setThreshold (Cost c); 
+  Cost myThreshold;
+
+
   void addToK (const Cost c);
   /**
    * print a trace of this instance

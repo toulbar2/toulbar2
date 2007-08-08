@@ -130,7 +130,7 @@ void EnumeratedVariable::project(Value value, Cost cost)
         queueDAC();
         queueEAC1();
     }
-    if (newcost + wcsp->getLb() >= wcsp->getUb()) removeFast(value);     // Avoid any unary cost overflow
+    if (SCUT(newcost + wcsp->getLb(),wcsp->getUb())) removeFast(value);     // Avoid any unary cost overflow
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
@@ -189,7 +189,7 @@ void EnumeratedVariable::propagateNC()
     // Warning! the first value must be visited because it may be removed
     for (iterator iter = begin(); iter != end(); ++iter) {
         Cost cost = getCost(*iter);
-        if (cost + wcsp->getLb() >= wcsp->getUb()) {
+        if (SCUT(cost + wcsp->getLb(),wcsp->getUb())) {
             removeFast(*iter);
         } else if (cost > maxcost) {
             maxcostvalue = *iter;
@@ -203,7 +203,7 @@ bool EnumeratedVariable::verifyNC()
 {
     bool supported = false;
     for (iterator iter = begin(); iter != end(); ++iter) {
-        if (getCost(*iter) + wcsp->getLb() >= wcsp->getUb()) {
+        if (CUT(getCost(*iter) + wcsp->getLb(),wcsp->getUb())) {
             cout << *this << " not NC!" << endl;
             return false;
         }
@@ -623,12 +623,10 @@ bool EnumeratedVariable::averaging()
 					Cost cbin = bctr->getCost(this,x,*it,*itx);
 					if(cmin > cbin) cmin = cbin;
 				}
-				float mean = (float)(cmin + cu) / 2.;	
-				float extc = (float)cu - mean;					 
-
-				if(abs(extc) >= 1)
-				{
-					int costi =  (int) extc;
+				long double mean = (long double)(cmin + cu) / 2.;	
+				long double extc = (long double)cu - mean;					 
+				if(abs(extc) >= 1) {
+					Cost costi =  (Cost) extc;
 					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
 						bctr->addcost(this,x,*it,*itx,costi);				
 					}
@@ -637,7 +635,34 @@ bool EnumeratedVariable::averaging()
 					change = true;
 				}
 			}
-		}
+		} /*else if(ctr->arity() == 3) {
+			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+			x = (EnumeratedVariable*) tctr->getVar( 0 );
+			if(x == this) x = (EnumeratedVariable*) tctr->getVar( 1 );
+		    y = (EnumeratedVariable*) tctr->getVarDiffFrom((Variable*) this, (Variable*)x);
+
+			for (iterator it = begin(); it != end(); ++it) {
+				Cost cu = getCost(*it);
+				Cost cmin = Top;
+				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+				for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+					Cost ctern = tctr->getCost(this,x,y,*it,*itx,*ity);
+					if(cmin > ctern) cmin = ctern;
+				}}
+				float mean = (float)(cmin + cu) / 2.;	
+				float extc = (float)cu - mean;					 
+				if(abs(extc) >= 1) {
+					int costi =  (int) extc;
+					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+					for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+						tctr->addcost(this,x,y,*it,*itx,*ity,costi);				
+					}}
+					if(mean > cu) project(*it, -costi); 
+					else          extend(*it,   costi);
+					change = true;
+				}
+			}
+		}*/
 		++itc;
 		if(itc != getConstrs()->end()) ctr = (*itc).constr;
 		else ctr = NULL;

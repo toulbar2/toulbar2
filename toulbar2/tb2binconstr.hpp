@@ -38,7 +38,7 @@ protected:
     bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
     {
         // hard binary constraint costs are not changed
-        if (cost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+        if (NOCUT(cost + wcsp->getLb(),wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
         x->project(value, cost);
         return (x->getSupport() == value);
     }
@@ -74,8 +74,8 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
-// BUG: incompatible with ternary projection ???
-		if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
+		// BUG: incompatible with ternary projection ???
+		//if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
 		res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= 0);
         return res;
@@ -86,7 +86,7 @@ public:
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
-		if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
+		//if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
 		res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
         assert(res >= 0);
         return res;

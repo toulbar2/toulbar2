@@ -1,9 +1,9 @@
 
 #include "tb2naryconstr.hpp"
 #include "tb2wcsp.hpp"
-
-
-NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
+#include "tb2vac.hpp"
+	
+NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
 			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	int i;
@@ -12,20 +12,35 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
     	int domsize = scope_in[i]->getDomainInitSize();
         if(domsize + CHAR_FIRST > 125) { cout << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; abort(); }
     } 	           
-
 	
 	Cost Top = wcsp->getUb();
 	default_cost = defval;
 	if(default_cost > Top) default_cost = Top;
 	store_top = default_cost < Top;
-	xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
+}
+
+
+
+NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
+{
+}
+
+
+
+NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
+			: NaryConstraintCommon(wcsp, scope_in, arity_in, defval)
+{
+	if (!ToulBar2::vac) xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
+	else 				xy = new VACConstraint(wcsp, &wcsp->getStore()->storeCost );
     propagate();
 	pf = new TUPLES;
 	filters = NULL;
 }
 
+
 NaryConstraint::NaryConstraint(WCSP *wcsp)
-			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
+			: NaryConstraintCommon(wcsp)
 {
 	xy = NULL;
 	pf = new TUPLES;
@@ -140,7 +155,7 @@ void NaryConstraint::assign(int varIndex) {
 }
 
 Cost NaryConstraint::eval( string s ) {
-	if(default_cost > wcsp->getUb()) default_cost = wcsp->getUb(); 
+	if(default_cost >= wcsp->getUb()) default_cost = wcsp->getUb(); 
 	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
@@ -525,6 +540,205 @@ void NaryConstraint::project( EnumeratedVariable* x, bool addUnaryCtr )
 }
 
 
+// Projects out all variables except x,y,z
+// and gives the reusult at fproj
+void NaryConstraint::projectxyz( EnumeratedVariable* x,
+								 EnumeratedVariable* y,
+								 EnumeratedVariable* z, 
+								 TUPLES& fproj)
+{
+	char   stxyz[4] = {CHAR_FIRST, CHAR_FIRST, CHAR_FIRST, '\0'};	
+	string txyz(stxyz);
+	string t;
+	
+	Cost c;
+	TUPLES& f = *pf;	
+	TUPLES::iterator  it;
+	TUPLES::iterator  itproj;
+	map<string,long> fcount;
+	
+	// compute in one pass of all tuples the projection 
+	it = f.begin();
+	while(it != f.end()) {
+		t = it->first;
+		c = it->second;
+		txyz[0] = t[ getIndex(x) ];			
+		txyz[1] = t[ getIndex(y) ];			
+		txyz[2] = t[ getIndex(z) ];			
+
+		itproj = fproj.find(txyz);
+		if(itproj != fproj.end()) { 
+			if(c < itproj->second) fproj[txyz] = c; 
+			fcount[txyz]++;
+		} else {
+			fproj[txyz] = c; 
+			fcount[txyz] = 1;
+		}
+		it++;
+	}	
+	// compute all possible combinations of tuples that does not include xyz
+	long allpossible = 1;
+	for(int i = 0; i < arity_; i++) {
+		if((i != getIndex(x)) && (i != getIndex(y)) && (i != getIndex(z)))
+			allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
+	}
+
+	// if a tuples appears less times than the total possible number
+	// then if the default cost is smaller we have to update the minimum
+	it = fproj.begin();
+	while(it != fproj.end()) {
+		t = it->first;
+		c = it->second;
+		if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
+		it++;
+	}	
+	// finially we substract the projection to the initial function
+	it = f.begin();
+	while(it != f.end()) {
+		t = it->first;
+		txyz[0] = t[ getIndex(x) ];			
+		txyz[1] = t[ getIndex(y) ];			
+		txyz[2] = t[ getIndex(z) ];			
+		itproj = fproj.find(txyz);
+		if(itproj != fproj.end()) { f[t] -= itproj->second; } 
+		else assert(false);		
+		it++;
+	}
+}
+
+
+
+// Projects out all variables except x,y,z
+// and gives the reusult at fproj
+void NaryConstraint::projectxy( EnumeratedVariable* x,
+								EnumeratedVariable* y,
+								TUPLES& fproj)
+{
+	char   stxy[3] = {CHAR_FIRST, CHAR_FIRST, '\0'};	
+	string txy(stxy);
+	string t;
+	
+	Cost c;
+	TUPLES& f = *pf;	
+	TUPLES::iterator  it;
+	TUPLES::iterator  itproj;
+	map<string,long> fcount;
+	
+	// compute in one pass of all tuples the projection 
+	it = f.begin();
+	while(it != f.end()) {
+		t = it->first;
+		c = it->second;
+		txy[0] = t[ getIndex(x) ];			
+		txy[1] = t[ getIndex(y) ];			
+
+		itproj = fproj.find(txy);
+		if(itproj != fproj.end()) { 
+			if(c < itproj->second) fproj[txy] = c; 
+			fcount[txy]++;
+		} else {
+			fproj[txy] = c; 
+			fcount[txy] = 1;
+		}
+		it++;
+	}	
+	// compute all possible combinations of tuples that does not include xyz
+	long allpossible = 1;
+	for(int i = 0; i < arity_; i++) {
+		if((i != getIndex(x)) && (i != getIndex(y)))
+			allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
+	}
+
+	// if a tuples appears less times than the total possible number
+	// then if the default cost is smaller we have to update the minimum
+	it = fproj.begin();
+	while(it != fproj.end()) {
+		t = it->first;
+		c = it->second;
+		if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
+		it++;
+	}	
+	// finially we substract the projection to the initial function
+	it = f.begin();
+	while(it != f.end()) {
+		t = it->first;
+		txy[0] = t[ getIndex(x) ];			
+		txy[1] = t[ getIndex(y) ];			
+		itproj = fproj.find(txy);
+		if(itproj != fproj.end()) { f[t] -= itproj->second; } 
+		else assert(false);		
+		it++;
+	}
+}
+
+
+void NaryConstraint::preproject3()
+{
+	for(int i = 0; i < arity_ - 2; i++) {
+	   EnumeratedVariable* x = scope[i];
+	   EnumeratedVariable* y = scope[i+1];
+	   EnumeratedVariable* z = scope[i+2];
+
+	   TUPLES fproj;
+	   projectxyz(x,y,z,fproj); 
+
+	   string t;
+	   vector<Cost> xyz;
+  	   unsigned int a,b,c;
+	   unsigned int sizex = x->getDomainInitSize();
+	   unsigned int sizey = y->getDomainInitSize();
+	   unsigned int sizez = z->getDomainInitSize();
+
+	   for (a = 0; a < sizex; a++) 
+		for (b = 0; b < sizey; b++) 
+	     for (c = 0; c < sizez; c++) xyz.push_back(default_cost); 
+
+	   TUPLES::iterator it =  fproj.begin();
+	   while(it != fproj.end()) {
+		   t = it->first;
+		   a = t[0] - CHAR_FIRST;
+		   b = t[1] - CHAR_FIRST;
+		   c = t[2] - CHAR_FIRST;
+		   xyz[ a * sizey * sizez + b * sizez + c ]	= it->second;
+		   it++;
+		}		
+		if(fproj.size() > 0) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
+	}
+}
+
+
+void NaryConstraint::preprojectall2()
+{
+  for(int i = 0; i < arity_; i++) {
+  for(int j = i+1; j < arity_; j++) {
+	   EnumeratedVariable* x = scope[i];
+	   EnumeratedVariable* y = scope[j];
+
+	   TUPLES fproj;
+	   projectxy(x,y,fproj); 
+
+	   string t;
+	   vector<Cost> xy;
+  	   unsigned int a,b;
+	   unsigned int sizex = x->getDomainInitSize();
+	   unsigned int sizey = y->getDomainInitSize();
+
+	   for (a = 0; a < sizex; a++) 
+		for (b = 0; b < sizey; b++) 
+	       xy.push_back(default_cost); 
+
+	   TUPLES::iterator it =  fproj.begin();
+	   while(it != fproj.end()) {
+		   t = it->first;
+		   a = t[0] - CHAR_FIRST;
+		   b = t[1] - CHAR_FIRST;
+		   xy[ a * sizey + b ]	= it->second;
+		   it++;
+		}		
+		if(fproj.size() > 0) wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
+	}}
+}	
+
 
 void NaryConstraint::print(ostream& os)
 {
@@ -589,3 +803,24 @@ void NaryConstraint::dump(ostream& os)
         os << c << endl; 
     } 
 }
+
+
+
+
+
+/* *************************************************************
+ * NaryConstraintHybrid
+ * ************************************************************* */
+
+
+NaryConstraintHybrid::NaryConstraintHybrid( WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval )
+			: NaryConstraintCommon(wcsp, scope_in, arity_in, defval)
+{
+}	
+
+
+
+
+
+
+

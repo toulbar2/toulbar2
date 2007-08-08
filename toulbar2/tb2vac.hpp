@@ -24,17 +24,10 @@ private:
    */
   WCSP *wcsp;
   /**
-   * whether VAC alternative should be enforced
-   */
-  bool alternative;
-  /**
-   * whether VAC decomposition should be enforced
-   */
-  bool decomposition;
-  /**
    * the number of times the three passes have be run to have a VAC instance
    */
   int nbIterations;
+  
   /**
    * the maximum value of unary and binary k (useful for passes 2 and 3)
    */
@@ -118,18 +111,12 @@ public:
   /**
    * constructor
    * @param w a pointer to the network
-   * @param a whether VAC alternative should be enforced
-   * @param d whether VAC decomposition should be enforced
    */
-  VACExtension (WCSP *w, bool a = false, bool d = false);
+  VACExtension (WCSP *w);
   /**
    * destructor
    */
   ~VACExtension ();
-  /**
-   * delete internal structures
-   */
-  void clean ();
   /**
    * enforce VAC (possibly several times)
    */

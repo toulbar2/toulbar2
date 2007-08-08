@@ -15,6 +15,21 @@ class TernaryConstraint;
 class NaryConstraint;
 class VACExtension;
 
+
+inline bool CUT(Cost lb, Cost ub)  { 
+	if(lb % ToulBar2::costConstant) return lb + ToulBar2::costConstant >= ub;
+	else return lb >= ub;
+}
+
+inline bool SCUT(Cost lb, Cost ub)  { 
+	return lb >= ub;
+}
+
+inline bool NOCUT(Cost lb, Cost ub)  { 
+	return lb < ub;
+}
+
+
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
     int instance; // instantiation occurence number
@@ -73,26 +88,27 @@ public:
         ub = min(ub,newUb);
 		if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;
     }
-    void enforceUb() {
-        if (ceil(lb) >= ub) THROWCONTRADICTION;
-        objectiveChanged=true;
+    
+	void enforceUb() {
+       if (CUT(lb, ub)) THROWCONTRADICTION;
+       objectiveChanged=true;
     }
     void increaseLb(Cost newLb) {
-        if (newLb > lb) {
-            if (ceil(newLb) >= ub) THROWCONTRADICTION;
-            lb = newLb;
-            objectiveChanged=true;
-            if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
-        }
+       if (newLb > lb) {
+           if (CUT(newLb, ub)) THROWCONTRADICTION;
+           lb = newLb;
+           objectiveChanged=true;
+           if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
+       }
     }
     void decreaseUb(Cost newUb) {
-        if (newUb < ub) {
-            if (newUb <= ceil(lb)) THROWCONTRADICTION;
-            ub = newUb;
-            objectiveChanged=true;
-        }
-    }
-
+       if (newUb < ub) {
+           if (CUT(lb, newUb)) THROWCONTRADICTION;
+           ub = newUb;
+           objectiveChanged=true;
+       }
+    }     
+ 
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
@@ -252,7 +268,7 @@ public:
     // -----------------------------------------------------------
     
     
-    
+    void printTightMatrtix();
     void print(ostream& os);
     void dump(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);

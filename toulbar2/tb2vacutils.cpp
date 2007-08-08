@@ -60,6 +60,16 @@ void VACValue::addToK (const Cost c) {
   k += c;
 }
 
+void VACValue::setThreshold (Cost c)
+{
+  myThreshold = c;
+}
+
+
+bool VACValue::isNull (const Cost c) {
+	return (c < myThreshold);
+}
+
 
 /**
  * VACVariable:
@@ -89,6 +99,7 @@ void VACVariable::init () {
   vacValues = new VACValue*[nbValues];
   for (EnumeratedVariable::iterator it = begin(); it != end(); ++it, ++i) {
     vacValues[i] = new VACValue();
+    vacValues[i]->myThreshold = myThreshold;
   }
   linkVACQueue.content.var = this;
   linkVACQueue.content.timeStamp = -1;
@@ -113,7 +124,8 @@ void VACVariable::reset () {
   
   for (EnumeratedVariable::iterator it = begin(); it != end(); ++it, ++i) {
     vacValues[i]->reset(*it);
-    if(!isNull(getCost(*it))) removeValue(i);
+    //if(!isNull(getCost(*it))) removeValue(i);
+    if(!vacValues[i]->isNull(getCost(*it))) removeValue(i);
   }
 }
 
@@ -147,8 +159,10 @@ Cost VACVariable::getIniCost (const unsigned int i) {
 
 Cost VACVariable::getVACCost (const unsigned int i) {
   assert(i < getDomainSize());
-  Cost c = getCost(vacValues[i]->getValue());
-  if(isNull(c)) return 0;
+  VACValue* v = vacValues[i];
+  Cost c = getCost(v->getValue());
+  if(v->isNull(c)) return 0;
+  //if(isNull(c)) return 0;
   else return c;
 }
 
@@ -164,7 +178,7 @@ void VACVariable::decreaseCost (const unsigned int i, const Cost c) {
   Cost cini = getCost(vacValues[i]->getValue());  
   assert((cini >= c));
   //  assert((wcsp->getLb() + cini >= wcsp->getUb()));
-  if (wcsp->getLb() + cini < wcsp->getUb()) {
+  if (NOCUT(wcsp->getLb() + cini,wcsp->getUb())) {
     costs[toIndex(vacValues[i]->getValue())] -= c;
   }
 }
@@ -179,7 +193,7 @@ void VACVariable::VACproject (const unsigned int i, const Cost c) {
   Cost oldCost = getVACCost(i);
   increaseCost(i, c);
   newCost = getVACCost(i);
-  if ((getValue(i)->getValue() == maxCostValue) || (newCost > maxCost) || (wcsp->getLb() + newCost >= wcsp->getUb())) {
+  if ((getValue(i)->getValue() == maxCostValue) || (newCost > maxCost) || (SCUT(wcsp->getLb() + newCost,wcsp->getUb()))) {
     queueNC();
   }
   if ((oldCost == 0) && (c > 0)) {
@@ -234,8 +248,11 @@ void VACVariable::extendAll(Cost cost) {
   VACVariable *xj;
   if (ToulBar2::vac) {
     for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
-      xj = (VACVariable *) (*iter).constr->getVar(1 - (*iter).scopeIndex);
-      xj->queueVAC2();
+	   Constraint *c = (*iter).constr;
+       if(c->arity() == 2) {
+		   xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
+	       xj->queueVAC2();
+       }
     }
   }
   EnumeratedVariable::extendAll(cost);
@@ -245,8 +262,11 @@ void VACVariable::assign(Value newValue) {
   VACVariable *xj;
   if (ToulBar2::vac) {
     for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
-      xj = (VACVariable *) (*iter).constr->getVar(1 - (*iter).scopeIndex);
-      xj->queueVAC2();
+	   Constraint *c = (*iter).constr;
+       if(c->arity() == 2) {
+	       xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
+	       xj->queueVAC2();
+       }
     }
   }
   EnumeratedVariable::assign(newValue);
@@ -283,8 +303,11 @@ void VACVariable::extend (Value value, Cost cost) {
   }
   if (ToulBar2::vac) {
     for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
-      xj = (VACVariable *) (*iter).constr->getVar(1 - (*iter).scopeIndex);
-      xj->queueVAC2();
+   	   Constraint *c = (*iter).constr;
+       if(c->arity() == 2) {
+	      xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
+	      xj->queueVAC2();
+	   }
     }
   }
   EnumeratedVariable::extend(value, cost);
@@ -313,7 +336,7 @@ void VACVariable::repair () {
 
 void VACVariable::setTop (const Cost s) {
   for (unsigned int i = 0; i < getDomainSize(); i++) {
-    if ((s + wcsp->getLb() + getVACCost(i) >= wcsp->getUb()) && (costs[toIndex(vacValues[i]->getValue())] < wcsp->getUb() + deltaCost - wcsp->getLb())) {
+    if ((SCUT(s + wcsp->getLb() + getVACCost(i),wcsp->getUb())) && (NOCUT(costs[toIndex(vacValues[i]->getValue())],wcsp->getUb() + deltaCost - wcsp->getLb()))) {
       costs[toIndex(vacValues[i]->getValue())] = wcsp->getUb() + deltaCost - wcsp->getLb();
       assert(wcsp->getLb() + getVACCost(i) == wcsp->getUb());
     }
@@ -390,6 +413,7 @@ VACVariable *VACConstraint::getVariable (const int i) const {
 }
 
 void VACConstraint::VACproject (const int v, const unsigned int i, const Cost c) {
+  assert(arity() == 2);
   assert((v == 0) || (v == 1));
   assert(i < getVariable(v)->getDomainSize());
   int index = getVariable(v)->toIndex(getVariable(v)->getValue(i)->getValue());
@@ -420,6 +444,7 @@ void VACConstraint::VACextend(const int v, const unsigned int i, const Cost c) {
 }
 
 Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, const int i) {
+  assert(arity() == 2);
   assert((i == 0) || (i == 1));
   Cost c = 0;
   if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
@@ -430,6 +455,7 @@ Cost VACConstraint::getVACCost (const unsigned int v, const unsigned int w, cons
 }
 
 Cost VACConstraint::getIniCost (const unsigned int v, const unsigned int w, const int i) {
+  assert(arity() == 2);
   assert((i == 0) || (i == 1));
   Cost c = 0;
   if (i == 0) c = getCost(getX()->getValue(v)->getValue(), getY()->getValue(w)->getValue());
@@ -438,6 +464,7 @@ Cost VACConstraint::getIniCost (const unsigned int v, const unsigned int w, cons
 }
 
 void VACConstraint::setCost (const unsigned int v, const unsigned int w, const int i, const Cost c) {
+  assert(arity() == 2);
   Value valueX = getX()->getValue((i == 0)? v: w)->getValue();
   Value valueY = getY()->getValue((i == 0)? w: v)->getValue();
   int indexX = x->toIndex(valueX);
@@ -448,6 +475,7 @@ void VACConstraint::setCost (const unsigned int v, const unsigned int w, const i
 }
 
 void VACConstraint::decreaseCost (const unsigned int v, const unsigned int w, const int i, const Cost c) {
+  assert(arity() == 2);
   Value valueX = getX()->getValue((i == 0)? v: w)->getValue();
   Value valueY = getY()->getValue((i == 0)? w: v)->getValue();
   int indexX = x->toIndex(valueX);
@@ -513,6 +541,8 @@ Cost VACConstraint::getK (const int i, const unsigned int v) const {
 }
 
 bool VACConstraint::revise (const int i, const unsigned int v) {
+  assert(arity() == 2);
+  
   VACVariable *xj;
   Cost cost, minCost = wcsp->getUb();
   unsigned int minValue = support[i][v];
@@ -543,6 +573,7 @@ bool VACConstraint::revise (const int i, const unsigned int v) {
 }
 
 void VACConstraint::setK (const int i, const unsigned int v, const Cost c) {
+  assert(arity() == 2);
   assert((i == 0) || (i == 1));
   assert(v < getVariable(i)->getDomainSize());
 

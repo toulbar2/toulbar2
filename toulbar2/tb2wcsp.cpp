@@ -69,7 +69,7 @@ bool ToulBar2::consecutiveAllele = false;
 int ToulBar2::pedigreeCorrectionMode = 0;
 
 bool ToulBar2::vac = false;
-bool ToulBar2::vacAlternative = false;
+int  ToulBar2::vacAlternative = 0;
 bool ToulBar2::vacDecomposition = false;
 Cost ToulBar2::costThreshold = 1;
 Cost ToulBar2::costConstant = 1;
@@ -106,7 +106,7 @@ WCSP::WCSP(Store *s, Cost upperBound) :
     instance = wcspCounter++;
 
     if (ToulBar2::vac) {
-	  vac = new VACExtension(this, ToulBar2::vacAlternative, ToulBar2::vacDecomposition);
+	  vac = new VACExtension(this);
 	} else {
 	  vac = NULL;
 	}
@@ -211,9 +211,15 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		BinaryConstraint* xz = x->getConstr(z);
 		BinaryConstraint* yz = y->getConstr(z);
 	       
-		if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
-		if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
-		if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+ 	    if (!ToulBar2::vac) {
+			if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
+			if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
+			if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+ 	    } else {
+ 	    	if(!xy) { xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
+			if(!xz) { xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
+			if(!yz) { yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+ 	    }
 
 	    ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);  
 	}
@@ -309,6 +315,7 @@ void WCSP::processTernary()
     	}
 }
 
+
 void WCSP::preprocessing()
 {
 	
@@ -325,6 +332,14 @@ void WCSP::preprocessing()
             cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
             ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
             propagate();
+
+		    for (unsigned int i=0; i<constrs.size(); i++) 
+		    	if(constrs[i]->connected() && (constrs[i]->arity() > 3)) {
+		    		NaryConstraint* nary = (NaryConstraint*) constrs[i];
+		    		nary->preprojectall2(); 
+		    		nary->preproject3(); 
+		    	}
+
         }
         ToulBar2::elimDegree_preprocessing_ = -1;
         if(ToulBar2::elimDegree >= 0) {
@@ -333,6 +348,8 @@ void WCSP::preprocessing()
         }
     }
 	propagate();
+
+
 	
 #ifdef BOOST
     if (getenv("TB2GRAPH")) {
@@ -374,9 +391,10 @@ void WCSP::preprocessing()
 		}
 		propagate();
 		cout << "   C0 = " << getLb() << endl;
+		
+		printTightMatrtix();
+		
     }
-
-
 }
 
 Value WCSP::getDomainSizeSum()
@@ -550,6 +568,31 @@ void WCSP::dump(ostream& os)
     if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
 }
 
+
+void WCSP::printTightMatrtix()
+{
+	ofstream ofs("problem.dat");
+	
+	Cost Top = getUb();
+    for (unsigned int i=0; i<vars.size(); i++) {
+	    for (unsigned int j=0; j<vars.size(); j++) {
+	       if(i != j) {
+	       	   EnumeratedVariable* x = (EnumeratedVariable*) vars[i];		
+	       	   EnumeratedVariable* y = (EnumeratedVariable*) vars[j];
+			   Constraint* bctr = x->getConstr(y);
+			   double t = 0;
+			   if(bctr) t = bctr->getTightness();
+			   if(t > Top) t = Top;
+			   t = t * 256.0 / (double)Top;
+			   ofs <<  t << " ";
+	       }
+	       else 	ofs << 0             << " ";
+	    }
+	    ofs << endl;
+    }
+}
+
+
 ostream& operator<<(ostream& os, WCSP &wcsp)
 {
     wcsp.print(os);
@@ -696,7 +739,10 @@ void WCSP::propagate()
 {    
 //    revise(NULL);
 	bool util = true;
-
+	int  vacit = 0;
+	Cost inivaclb = 0;
+	
+	
    do {
      do {
       eliminate();
@@ -716,13 +762,21 @@ void WCSP::propagate()
     } while (!Eliminate.empty());
 
     if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
-
-    if (ToulBar2::vac) util = vac->propagate();
+    if (ToulBar2::vac) { 
+    	if(vacit == 0) inivaclb = getLb();
+    	util = vac->propagate(); 
+    	if((vacit == 0) && (inivaclb < getLb()) && (getStore()->getDepth() < ToulBar2::vacAlternative)) 
+   			if(ToulBar2::verbose || (getStore()->getDepth() == 0))  { cout << "VAC Lb increment from " << inivaclb << " -> "; flush(cout);  }	 
+		vacit++;
+    }
    } while ((ToulBar2::vac) && (!vac->remainedIdle()));
 
+  if((inivaclb < getLb()) &&  (getStore()->getDepth() < ToulBar2::vacAlternative))
+    if(ToulBar2::verbose || (getStore()->getDepth() == 0)) cout << getLb() << "          done " << vacit << " it." << endl; 
+  
   //    revise(NULL);
 
-  assert(verify());
+  //assert(verify());
   assert(!objectiveChanged);
   assert(NC.empty());
   assert(IncDec.empty());
@@ -799,9 +853,10 @@ void WCSP::restoreSolution()
 void WCSP::initElimConstrs()
 {
 	unsigned int i;
-    BinaryConstraint* xy;
+    BinaryConstraint* xy = NULL;
     for (i=0; i<vars.size(); i++) {	
-	   xy = new BinaryConstraint(this, &storeData->storeCost); 
+       if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost); 
+	   else 			    xy = new VACConstraint(this, &storeData->storeCost); 
 	   elimConstrs.push_back(xy);
 	   elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
 	   elimInfos.push_back(ei);
@@ -927,7 +982,6 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		    while(ctr1->next(tuple1,cost1)) {
 				ctr2->first();
 			    while(ctr2->next(tuple2,cost2)) {
-			    	//if(cost1 + cost2 < Top) nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2);
 			    	nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2,true);
 			    }
 			}

@@ -40,7 +40,7 @@ void IntervalVariable::projectInfCost(Cost cost)
     infCost += cost;
     Cost newcost = oldcost + cost;
     if (getInf() == maxCostValue || newcost > maxCost) queueNC();
-    if (newcost + wcsp->getLb() >= wcsp->getUb()) increaseFast(getInf() + 1);     // Avoid any unary cost overflow
+    if (SCUT(newcost + wcsp->getLb(),wcsp->getUb())) increaseFast(getInf() + 1);     // Avoid any unary cost overflow
     if (getSup() == getInf() + 1 && getInfCost() > 0 && getSupCost() > 0) {
         Cost minCost = min(getInfCost(),getSupCost());
         extendAll(minCost);
@@ -68,8 +68,8 @@ void IntervalVariable::projectSupCost(Cost cost)
 void IntervalVariable::propagateNC()
 {
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
-    if (getInfCost() + wcsp->getLb() >= wcsp->getUb()) increaseFast(getInf() + 1);
-    if (getSupCost() + wcsp->getLb() >= wcsp->getUb()) decreaseFast(getSup() - 1);
+    if (SCUT(getInfCost() + wcsp->getLb(), wcsp->getUb())) increaseFast(getInf() + 1);
+    if (SCUT(getSupCost() + wcsp->getLb(), wcsp->getUb())) decreaseFast(getSup() - 1);
     if (getInfCost() > getSupCost()) {
         setMaxUnaryCost(getInf(), getInfCost());
     } else {
@@ -80,11 +80,11 @@ void IntervalVariable::propagateNC()
 bool IntervalVariable::verifyNC()
 {
     bool supported = false;
-    if (getInfCost() + wcsp->getLb() >= wcsp->getUb()) {
+    if (SCUT(getInfCost() + wcsp->getLb(),wcsp->getUb())) {
         cout << *this << " has inf cost not NC!" << endl;
         return false;
     }
-    if (getSupCost() + wcsp->getLb() >= wcsp->getUb()) {
+    if (SCUT(getSupCost() + wcsp->getLb(),wcsp->getUb())) {
         cout << *this << " has sup cost not NC!" << endl;
         return false;
     }

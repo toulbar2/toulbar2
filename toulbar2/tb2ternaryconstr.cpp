@@ -150,13 +150,13 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
             }
             if (minCost > 0) {
                 // hard ternary constraint costs are not changed
-                if (minCost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
+                if (NOCUT(minCost + wcsp->getLb(),wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);
                 if (deconnected()) return;
             }
-            supportX[xindex] = support;
+            supportX[xindex] = support;    
             assert(getIndex(y) < getIndex(z));
             int yindex = y->toIndex(support.first);
             int zindex = z->toIndex(support.second);
@@ -307,7 +307,7 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                 }
                 
                 // hard ternary constraint costs are not changed
-                if (minCost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
+                if (NOCUT(minCost + wcsp->getLb(),wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
                 x->project(*iterX, minCost);

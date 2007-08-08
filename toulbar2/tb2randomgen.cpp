@@ -31,7 +31,6 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 	tuple[arity] = '\0';
 
 	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeVars, arity, Top) );
-	
 
 	string s(tuple);
 	while(nogoods>0) {
@@ -187,7 +186,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
   for(arity=maxa;arity>1;arity--)        
   {
   	  long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
-  	  long totalarraysize = (long) pow( (double)n, arity);
+  	  //long totalarraysize = (long) pow( (double)n, arity);
       long tCtrs = 1;
 	  set<long> scopes;
 	  for(i=0; i < arity; i++)  tCtrs *= (n - i);
@@ -205,12 +204,14 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 		  do {  
 		  		 if(scopes.end() == scopes.find(toIndex(indexs))) {
 					 if(dice == 0) {
-					    scopes.insert( toIndex(indexs) ); 
-					    switch(arity) {
-					    	case 2:  generateBinCtr(indexs[0],indexs[1],nogoods); break;
-					    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
-					    	default: generateNaryCtr(indexs,totalarraysize - nogoods);
-					    }
+					    scopes.insert( toIndex(indexs) );
+					    if(arity > 1) { 
+						    switch(arity) {
+						    	case 2:  generateBinCtr(indexs[0],indexs[1],nogoods); break;
+						    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
+						    	default: generateNaryCtr(indexs,nogoods);
+						    }
+					    }	
 					    tCtrs--;
 					    numCtrs[arity]--;
 					    oneadded = true;
@@ -224,7 +225,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
     
     for(i=0;i<n;i++) {
 	  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
-	  	for (Value a = 0; a < x->getDomainInitSize(); a++) 
+	  	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
 	  	{
 	  		x->project(a, rand() % 3 ); 
 	  	}

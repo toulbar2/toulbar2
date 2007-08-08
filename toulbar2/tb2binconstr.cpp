@@ -100,7 +100,7 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
             }
             if (minCost > 0) {
                 // hard binary constraint costs are not changed
-                if (minCost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
+                if (NOCUT(minCost + wcsp->getLb(),wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "binary projection of " << minCost << " from C" << x->getName() << "," << y->getName() << "(" << *iterX << "," << minCostValue << ")" << endl;
                 x->project(*iterX, minCost);
@@ -154,7 +154,7 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
                 }
                 
                 // hard binary constraint costs are not changed
-                if (minCost + wcsp->getLb() < wcsp->getUb()) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
+                if (NOCUT(minCost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
                 if (x->getSupport() == *iterX) supportBroken = true;
                 if (ToulBar2::verbose >= 2) cout << "binary projection of " << minCost << " from C" << x->getName() << "," << y->getName() << "(" << *iterX << "," << minCostValue << ")" << endl;
                 x->project(*iterX, minCost);

@@ -102,7 +102,7 @@ void WCSP::read_wcsp(const char *fileName)
     
 		    if((defval != 0) || (ntuples > 0))           
 		    { 
-	            int naryIndex = postNaryConstraint(scopeIndex,arity,defval);
+	            int naryIndex = postNaryConstraint(scopeIndex,arity,defval* K);
                 
                 NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 	            char buf[MAX_ARITY];
@@ -114,11 +114,11 @@ void WCSP::read_wcsp(const char *fileName)
 					buf[i] = '\0';
 				    file >> cost;
 				    cost = cost * K;
-				
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
 	            nary->changeDefCost( top );
+	            nary->preprojectall2();
 		    }
         } else if (arity == 3) {
             file >> i;

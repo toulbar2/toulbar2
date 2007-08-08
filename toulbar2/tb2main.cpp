@@ -179,15 +179,15 @@ int main(int argc, char **argv)
         if ( (ch = strchr(argv[i],'M')) ) {
          	ToulBar2::minsumDiffusion = 1000;
         	int nit = atoi(&ch[1]);
-        	if((nit > 0) && (nit <= 100000)) ToulBar2::minsumDiffusion = nit;
+        	if(nit > 0) ToulBar2::minsumDiffusion = nit;
         }
         if ( (ch = strchr(argv[i],'T')) ) {
         	int ct = atoi(&ch[1]);
-        	if((ct >= 1) && (ct <= 100000)) ToulBar2::costThreshold = ct;
+        	if(ct >= 1) ToulBar2::costThreshold = ct;
         }
         if ( (ch = strchr(argv[i],'C')) ) {
         	int co = atoi(&ch[1]);
-        	if((co > 0) && (co <= 100000)) ToulBar2::costConstant = co;
+        	if(co > 0) ToulBar2::costConstant = co;
         }
       
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
@@ -211,7 +211,12 @@ int main(int argc, char **argv)
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
         if (strchr(argv[i],'V')) ToulBar2::vac = true;
-        if (strchr(argv[i],'A')) { ToulBar2::vac = true; ToulBar2::vacAlternative = true;}
+        if ((ch = strchr(argv[i],'A'))) { 
+        	ToulBar2::vac = true; 
+        	ToulBar2::vacAlternative = 1;
+        	int depth = atoi(&ch[1]);
+        	if((depth > 1) && (depth < 10000)) ToulBar2::vacAlternative = depth;
+        	}
         if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
     }

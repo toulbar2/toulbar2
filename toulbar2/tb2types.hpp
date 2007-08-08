@@ -75,6 +75,7 @@ typedef map<int,int> TSCOPE;
  * 
  */
 
+
 typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
 
@@ -122,7 +123,7 @@ public:
     static bool generation;
     static int pedigreeCorrectionMode;
     static bool vac;
-    static bool vacAlternative;
+    static int  vacAlternative;
     static bool vacDecomposition;
     static Cost costThreshold;
     static Cost costConstant;

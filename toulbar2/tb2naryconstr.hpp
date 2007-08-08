@@ -8,21 +8,33 @@
 
 #include <map>
 #include <set>
+#include <list>
 
-class NaryConstraint : public AbstractNaryConstraint
+
+class NaryConstraintCommon : public AbstractNaryConstraint
+{
+	public:
+		
+	Cost default_cost;          // default cost returned when tuple t is not found in TUPLES (used by function eval(t)
+	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
+	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
+				
+	NaryConstraintCommon(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
+	NaryConstraintCommon(WCSP *wcsp);
+	
+};
+
+
+
+class NaryConstraint : public NaryConstraintCommon
 {
 	typedef map<string,Cost> TUPLES;
     TUPLES* pf;
 
-	Cost default_cost;          // default cost returned when tuple t is not found in TUPLES (used by function eval(t)
-	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
-	
-	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
-
 public:
+
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstraint(WCSP *wcsp);
-	
 	virtual ~NaryConstraint();
 
 
@@ -50,6 +62,7 @@ public:
             if (getVar(i)->assigned()) assign(i);
         }
     };
+    
     void increase(int index) {}
     void decrease(int index) {}
     void remove(int index) {}
@@ -83,11 +96,64 @@ public:
 	void permute( EnumeratedVariable** scope_in );
 
 
+	void projectxy( EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
+	void projectxyz( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
+	void preproject3();
+	void preprojectall2();
+
+
+	void buildTree();
+
+
+
 	void fillRandom();
     void print(ostream& os);
     void dump(ostream& os);
     
 };
+
+
+
+class ValueNode {
+	Value v;
+	StoreCost  c;
+	list<ValueNode*> sons;
+	
+	ValueNode(WCSP *wcsp) : c(0, &wcsp->getStore()->storeCost) {}	
+};
+
+
+class NaryConstraintHybrid : public NaryConstraintCommon
+{
+
+public:
+	
+	NaryConstraintHybrid( WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval );
+		
+	TernaryConstraint* xyz;
+	vector<ValueNode*> tuples;
+		
+	void propagate() {
+        for(int i=0;connected() && i<arity_;i++) {         
+            if (getVar(i)->assigned()) assign(i);
+        }
+    };
+    
+    void increase(int index) {}
+    void decrease(int index) {}
+    void remove(int index) {}
+    void projectFromZero(int index) {}
+    void fillEAC2(int index) {}
+    bool isEAC(int index, Value a) {return true;}
+    void findFullSupport(int index) {}
+	
+	
+};
+
+
+
+
+
 
 
 
