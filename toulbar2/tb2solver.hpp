@@ -23,14 +23,18 @@ class Solver
     int lastConflictVar;
         
     // Heuristics and search methods
-//    int getVarMinDomainDivWeightedDegreeLastConflict();
     int getVarMinDomainDivMaxDegreeLastConflict();
+	int getVarMinDomainDivMaxWDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
+    int getVarVACHeuristic();
     void increase(int varIndex, Value value);
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);
     void remove(int varIndex, Value value);
+   
+    void singletonConsistency();
+   
     void binaryChoicePoint(int xIndex, Value value);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex);

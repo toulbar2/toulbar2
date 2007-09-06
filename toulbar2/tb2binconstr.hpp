@@ -178,7 +178,17 @@ public:
     Cost getDefCost() { return wcsp->getUb(); }
 	void setDefCost( Cost df ) {}
     
-   
+    
+	Value getSupport(EnumeratedVariable* var, Value v) {
+		if(var == x) return supportX[x->toIndex(v)];
+		else  		 return supportY[y->toIndex(v)];
+	}   
+	
+	void  setSupport(EnumeratedVariable* var, Value v, Value s) {	
+		if(var == x) supportX[x->toIndex(v)] = s; 
+		else  		 supportY[y->toIndex(v)] = s; 
+	}   
+	
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
     EnumeratedVariable::iterator itvx;
@@ -344,7 +354,7 @@ public:
   }
   
   bool isEAC(int varIndex, Value a) {
-    if (varIndex==getDACScopeIndex()) return true;
+    //if (varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
         int xindex = x->toIndex(a);
         if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex]) > 0) {
@@ -372,7 +382,7 @@ public:
   }
   
     void findFullSupportEAC(int varIndex) {
-        if (varIndex==getDACScopeIndex()) return;
+        //if (varIndex==getDACScopeIndex()) return;
         if (varIndex == 0) findFullSupportX();
         else findFullSupportY();
     } 
@@ -382,9 +392,12 @@ public:
 	double computeTightness() {
 	   int count = 0;
 	   double sum = 0;
+	   maxCost = 0;
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                sum += to_double(getCost(*iterX, *iterY));
+				Cost c = getCost(*iterX, *iterY);
+                sum += to_double(c);
+				if(maxCost < c) maxCost = c;
 				count++;
 	       }
 	    }

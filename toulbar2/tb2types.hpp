@@ -105,6 +105,7 @@ public:
     static bool FDAComplexity;
     static bool FDAC;
     static bool lastConflict;
+    static bool lastWConflict;
     static bool lds;
     static bool limited;
     static externalevent setvalue;
@@ -126,8 +127,11 @@ public:
     static int  vacAlternative;
     static bool vacDecomposition;
     static Cost costThreshold;
+    static Cost relaxThreshold;
     static Cost costConstant;
+    static bool makeScaleCosts;
     static ElimOrderType elimOrderType;
+    static bool singletonConsistency;
 };
 
 /*

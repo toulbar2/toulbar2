@@ -7,6 +7,9 @@
 #define TOULBAR2_HPP_
 
 #include "tb2types.hpp"
+#include <set>
+
+
 
 class WeightedCSP {
 public:
@@ -59,7 +62,7 @@ public:
     virtual Value getSupport(int varIndex) const =0;
     
     virtual int getDegree(int varIndex) const =0;
-    virtual Long getWeightedDegree(int varIndex) const =0;
+    virtual double getWeightedDegree(int varIndex) const =0;
     virtual void preprocessing() =0;
 
     virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues
@@ -87,7 +90,12 @@ public:
     virtual int getElimOrder() =0;
     virtual void restoreSolution() =0;
 
-    
+	virtual Cost getVACHeuristicVar(int i) = 0;
+	virtual void iniSingleton() = 0;
+	virtual	void updateSingleton() = 0;
+	virtual void removeSingleton() = 0;
+
+	virtual void printVACStat() = 0;    
     virtual void print(ostream& os) =0;
     virtual void dump(ostream& os) =0;
 };

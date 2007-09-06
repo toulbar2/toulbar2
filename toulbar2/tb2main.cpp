@@ -137,6 +137,7 @@ int main(int argc, char **argv)
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
         cerr << "   x : load a solution from a file" << endl;
+        cerr << "   S : singleton Consistency on preprocessing" << endl;
         cerr << "   V : enforce VAC (still ongoing work)" << endl;
         cerr << "   A : enforce VAC alternative (still ongoing work)" << endl;
         cerr << "   D : enforce VAC decomposition (still ongoing work)" << endl;
@@ -163,8 +164,11 @@ int main(int argc, char **argv)
 		  ToulBar2::pedigreeCorrectionMode = 0;
 		  if((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
         }
+        if (strchr(argv[i],'S')) ToulBar2::singletonConsistency = true;
+        
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
+        if (strchr(argv[i],'q')) { ToulBar2::binaryBranching = true; ToulBar2::lastWConflict = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
         	ToulBar2::elimDegree = 3;
@@ -182,11 +186,15 @@ int main(int argc, char **argv)
         	if(nit > 0) ToulBar2::minsumDiffusion = nit;
         }
         if ( (ch = strchr(argv[i],'T')) ) {
-        	int ct = atoi(&ch[1]);
+        	Cost ct = atol(&ch[1]);
         	if(ct >= 1) ToulBar2::costThreshold = ct;
         }
+        if ( (ch = strchr(argv[i],'R')) ) {
+        	Cost ct = atol(&ch[1]);
+        	if(ct >= 1) ToulBar2::relaxThreshold = ct;
+        }
         if ( (ch = strchr(argv[i],'C')) ) {
-        	int co = atoi(&ch[1]);
+        	Cost co = atol(&ch[1]);
         	if(co > 0) ToulBar2::costConstant = co;
         }
       
@@ -213,9 +221,10 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'V')) ToulBar2::vac = true;
         if ((ch = strchr(argv[i],'A'))) { 
         	ToulBar2::vac = true; 
+        	ToulBar2::makeScaleCosts = true; 
         	ToulBar2::vacAlternative = 1;
         	int depth = atoi(&ch[1]);
-        	if((depth > 1) && (depth < 10000)) ToulBar2::vacAlternative = depth;
+        	if(depth > 1) ToulBar2::vacAlternative = depth;
         	}
         if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;

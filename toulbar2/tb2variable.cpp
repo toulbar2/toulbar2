@@ -102,11 +102,13 @@ int Variable::getTrueDegree()
     else return 0;
 }
 
-Long Variable::getWeightedDegree()
+double Variable::getWeightedDegree()
 {
-    Long res = 0;
+    /*Long res = 0;*/
+    double res = 0;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-        res += (*iter).constr->getConflictWeight();
+        //res += (*iter).constr->getConflictWeight();
+        res += (*iter).constr->getTightness();
     }
     return res;
 }

@@ -35,10 +35,10 @@ public:
     Long getConflictWeight() const {return conflictWeight;}
     void incConflictWeight() {conflictWeight++;}
     
+    Cost maxCost;
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }
     virtual double  computeTightness() = 0;
-    
     
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;

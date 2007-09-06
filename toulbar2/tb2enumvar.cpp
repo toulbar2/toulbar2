@@ -203,7 +203,7 @@ bool EnumeratedVariable::verifyNC()
 {
     bool supported = false;
     for (iterator iter = begin(); iter != end(); ++iter) {
-        if (CUT(getCost(*iter) + wcsp->getLb(),wcsp->getUb())) {
+        if (SCUT(getCost(*iter) + wcsp->getLb(),wcsp->getUb())) {
             cout << *this << " not NC!" << endl;
             return false;
         }

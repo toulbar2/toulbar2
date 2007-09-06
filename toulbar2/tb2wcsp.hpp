@@ -10,6 +10,9 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 
+#include <map>
+#include <list>
+
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
@@ -29,6 +32,8 @@ inline bool NOCUT(Cost lb, Cost ub)  {
 	return lb < ub;
 }
 
+typedef map<Cost,int> tScale;
+
 
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
@@ -46,12 +51,13 @@ class WCSP : public WeightedCSP {
     Queue EAC1;                               // non backtrackable list
     Queue EAC2;                               // non backtrackable list
     bool objectiveChanged;
-    Long nbNodes;                        // used as a time-stamp by Queue methods
+    Long nbNodes;                             // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
 
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
+    
     
 public:
 
@@ -60,8 +66,6 @@ public:
     WCSP(Store *s, Cost upperBound);
 
     Queue Eliminate;                          // non backtrackable list
-    
-    VACExtension *vac;                        // all the stuff to (possibly) enforce VAC
     
     virtual ~WCSP();
     
@@ -138,7 +142,7 @@ public:
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
     int getTrueDegree(int varIndex) const {return vars[varIndex]->getTrueDegree();}
-    Long getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
+    double getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
     void revise(Constraint *c) {lastConflictConstr = c;}
     void conflict() {
         if (lastConflictConstr) {
@@ -191,6 +195,7 @@ public:
     void link(Variable *x) {vars.push_back(x);}
     void link(Constraint *c) {constrs.push_back(c);}
 
+	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }
     int getNCBucketSize() const {return NCBucketSize;}
     void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt) {
         if (oldBucket >= 0) NCBuckets[oldBucket].erase(elt, true);
@@ -235,17 +240,10 @@ public:
 
 	bool isternary;
 	int maxdomainsize;	                              						   
-	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
-	StoreInt binaryOrder;    		 			    // used to count the order in which variables are eliminated
-	StoreInt ternaryOrder;    		 			    // used to count the order in which variables are eliminated
-	StoreInt naryOrder;    		 				    // used to count the order in which variables are eliminated
 
+	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
 	vector<elimInfo> elimInfos; 
 	vector<Constraint*>  elimConstrs;
-    vector<BinaryConstraint*>  elimBinaryConstrs;   // pool of binary constraints for variable elimination 
-    vector<TernaryConstraint*> elimTernaryConstrs;  // pool of Ternary constraints for variable elimination
-    vector<NaryConstraint*>    elimNaryConstrs;     // pool of Nary constraints for variable elimination  
-
 
 
 	void initElimConstrs();
@@ -265,9 +263,22 @@ public:
     BinaryConstraint* getArbitraryBinaryCtr();
     TernaryConstraint* getArbitraryTernaryCtr();
     NaryConstraint* getArbitraryNaryCtr();
+
+    // -----------------------------------------------------------
+    VACExtension*  vac;                        // all the stuff to (possibly) enforce VAC
+
+    tScale         scaleCost;
+    list<Cost>     scaleVAC;
+    void           addCost( Cost c );
+    Cost		   getVACHeuristicVar(int i);
+    void 		   iniSingleton();
+    void		   updateSingleton();
+    void		   removeSingleton();
+  
     // -----------------------------------------------------------
     
     
+    void printVACStat(); 
     void printTightMatrtix();
     void print(ostream& os);
     void dump(ostream& os);

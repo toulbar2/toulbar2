@@ -42,13 +42,17 @@ int  ToulBar2::elimDegree = 3;
 int  ToulBar2::elimDegree_preprocessing  = -1;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = true;
+bool ToulBar2::lastWConflict = false;
 #else
 bool ToulBar2::binaryBranching = false;
 int  ToulBar2::elimDegree = -1;
 int  ToulBar2::elimDegree_preprocessing  = -1;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = false;
+bool ToulBar2::lastWConflict = false;
 #endif
+
+bool ToulBar2::singletonConsistency = false;
 
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;
@@ -73,6 +77,8 @@ int  ToulBar2::vacAlternative = 0;
 bool ToulBar2::vacDecomposition = false;
 Cost ToulBar2::costThreshold = 1;
 Cost ToulBar2::costConstant = 1;
+Cost ToulBar2::relaxThreshold = -1;
+bool ToulBar2::makeScaleCosts = false;
 
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
@@ -94,10 +100,7 @@ WCSP::WCSP(Store *s, Cost upperBound) :
         NCBucketSize(cost2log2(getUb()) + 1),
         NCBuckets(NCBucketSize, VariableList(&s->storeVariable)),
         lastConflictConstr(NULL),
-		elimOrder(0, &s->storeValue),
-		binaryOrder(0, &s->storeValue),
-		ternaryOrder(0, &s->storeValue),
-		naryOrder(0, &s->storeValue)
+		elimOrder(0, &s->storeValue)
 { 
     objectiveChanged = false;
     nbNodes = 0;
@@ -318,7 +321,6 @@ void WCSP::processTernary()
 
 void WCSP::preprocessing()
 {
-	
     if (ToulBar2::preprocessTernary) {
         cout << "Preproject ternary constraints to binary constraints" << endl;
         processTernary();
@@ -360,40 +362,42 @@ void WCSP::preprocessing()
 #endif
     if (getenv("TB2DEGREE")) degreeDistribution();
 
-
-
-
-    if (ToulBar2::minsumDiffusion)
-    { 
-    	int maxit = ToulBar2::minsumDiffusion;
-    	cout << "MinSumDiffusion: " << endl;
-    	cout << "   max iterations " << maxit << endl;
-		cout << "   C0 = " << getLb() << endl;
-	    int ntimes = 0;
-		bool change = true;
-		while(change && (ntimes < maxit) ) {
-			change = false;
-			int nchanged = 0;
-		    for (unsigned int i=0; i<vars.size(); i++) {
-		    	EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
-		    	if(evar->averaging()) { change = true;	nchanged++; }
-		    }
-		    ntimes++;
-			//cout << "it " << ntimes << "   changed: " << nchanged << endl;
-		}
-		cout << "   done iterations: " << ntimes << endl;
-	    for (unsigned int i=0; i<constrs.size(); i++) 
-		    if (constrs[i]->connected()) constrs[i]->propagate();
-		    
-		for (unsigned int i=0; i<vars.size(); i++) {
-			EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
-			evar->findSupport();
-		}
-		propagate();
-		cout << "   C0 = " << getLb() << endl;
-		
-		printTightMatrtix();
-		
+    if (ToulBar2::minsumDiffusion) { 
+    	for(int times = 0; times < 4; times++) { 
+	    	bool change = true;
+	    	int maxit = ToulBar2::minsumDiffusion;
+	    	cout << "MinSumDiffusion: " << endl;
+	    	cout << "   max iterations " << maxit << endl;
+			cout << "   C0 = " << getLb() << endl;
+		    int ntimes = 0;
+			while(change && (ntimes < maxit) ) {
+				change = false;
+				int nchanged = 0;
+			    for (unsigned int i=0; i<vars.size(); i++) {
+			    	EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
+			    	if(evar->averaging()) { change = true;	nchanged++; }
+			    }
+			    ntimes++;
+				//cout << "it " << ntimes << "   changed: " << nchanged << endl;
+			}
+			cout << "   done iterations: " << ntimes << endl;
+		    for (unsigned int i=0; i<constrs.size(); i++) 
+			    if (constrs[i]->connected()) constrs[i]->propagate();
+			for (unsigned int i=0; i<vars.size(); i++) {
+				EnumeratedVariable* evar = (EnumeratedVariable*) vars[i]; 
+				evar->findSupport();
+			}
+			propagate();
+			cout << "   C0 = " << getLb() << endl;
+			printTightMatrtix();
+    	}
+    }
+    
+    if(ToulBar2::vac) { 
+    	cout << "Preprocessing "; vac->printStat(true); 
+    	vac->afterPreprocessing();
+    	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
+    	propagate();
     }
 }
 
@@ -636,9 +640,6 @@ void WCSP::whenContradiction()
     EAC1.clear();
     EAC2.clear();
     Eliminate.clear();
-    if (ToulBar2::vac) {
-      vac->clear();
-    }
     objectiveChanged = false;
     nbNodes++;
 }
@@ -738,11 +739,9 @@ void WCSP::eliminate()
 void WCSP::propagate()
 {    
 //    revise(NULL);
-	bool util = true;
-	int  vacit = 0;
-	Cost inivaclb = 0;
-	
-	
+   if (ToulBar2::vac) vac->iniThreshold();
+   
+   
    do {
      do {
       eliminate();
@@ -763,20 +762,19 @@ void WCSP::propagate()
 
     if (ToulBar2::FDAC || getUb()-getLb() <= 1) EAC1.clear();
     if (ToulBar2::vac) { 
-    	if(vacit == 0) inivaclb = getLb();
-    	util = vac->propagate(); 
-    	if((vacit == 0) && (inivaclb < getLb()) && (getStore()->getDepth() < ToulBar2::vacAlternative)) 
-   			if(ToulBar2::verbose || (getStore()->getDepth() == 0))  { cout << "VAC Lb increment from " << inivaclb << " -> "; flush(cout);  }	 
-		vacit++;
+	    assert(verify());
+    	if(vac->firstTime()) {
+    		vac->init(); 
+    		cout << "Lb before VAC: " << getLb() << endl;
+    	}
+    	vac->propagate(); 
     }
-   } while ((ToulBar2::vac) && (!vac->remainedIdle()));
+    
+   } while (ToulBar2::vac && (!vac->isVAC()));
+ 
+  //revise(NULL);
 
-  if((inivaclb < getLb()) &&  (getStore()->getDepth() < ToulBar2::vacAlternative))
-    if(ToulBar2::verbose || (getStore()->getDepth() == 0)) cout << getLb() << "          done " << vacit << " it." << endl; 
-  
-  //    revise(NULL);
-
-  //assert(verify());
+  assert(verify());
   assert(!objectiveChanged);
   assert(NC.empty());
   assert(IncDec.empty());
@@ -1220,3 +1218,48 @@ Cost WCSP::Prob2Cost(TProb p) const {
 
 TProb WCSP::Cost2LogLike(Cost c) const { return -to_double(c)/ToulBar2::NormFactor; }
 TProb WCSP::Cost2Prob(Cost c) const { return Pow((TProb)10., -to_double(c)/ToulBar2::NormFactor); }
+
+
+Cost WCSP::getVACHeuristicVar( int i ) { 
+	return vac->getVarCostStat(i);
+}
+
+void WCSP::iniSingleton() {
+	if(!ToulBar2::vac) return; 
+	vac->singletonI.clear();
+    for (unsigned int i = 0; i < numberOfVariables(); i++) {
+	  int size = getDomainSize(i);
+	  for (int a = 0; a < size; a++) vac->singletonI.insert(100*i+a);
+  }
+}
+
+void WCSP::updateSingleton() {
+  if(!ToulBar2::vac) return;
+  set<int>& s1 = vac->singleton;
+  set<int>  s2  (vac->singletonI);
+  vac->singletonI.clear();
+  set_intersection( s1.begin(), s1.end(),
+		  	   	    s2.begin(), s2.end(),
+					inserter(vac->singletonI, vac->singletonI.begin()) ); 
+  vac->singleton.clear();
+}
+
+void WCSP::removeSingleton() {
+	bool done = false;
+	set<int>& s = vac->singletonI;
+	set<int>::iterator it = s.begin();
+	while(it != s.end()) {
+		int ivar = *it / 100;
+		Value a = *it % 100;
+		Variable * var = getVar(ivar);
+		var->remove(a);
+		done = true;
+		var->queueNC();
+		++it; 
+	}
+	propagate();
+}
+
+
+
+void WCSP::printVACStat()     { vac->printStat(); }

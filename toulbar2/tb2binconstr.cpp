@@ -22,11 +22,16 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     supportX = vector<Value>(sizeX,y->getInf());
     supportY = vector<Value>(sizeY,x->getInf());
 
+	maxCost = 0;
 	costs = vector<StoreCost>(sizeX*sizeY,StoreCost(0,storeCost));
 	
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
-         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
-                costs[a * sizeY + b] = tab[a * sizeY + b];
+         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+				Cost c = tab[a * sizeY + b];
+                costs[a * sizeY + b] = c;
+                if(maxCost < c) maxCost = c;
+         }
+
 
     propagate();
 }

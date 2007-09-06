@@ -65,8 +65,7 @@ void WCSP::read_wcsp(const char *fileName)
     assert(constrs.empty());
     
 	Cost K = ToulBar2::costConstant;    
-	top = top * ToulBar2::costConstant;  
-
+	if(top < MAX_COST / K)	top = top * K;  
 	updateUb(top);
 
 
@@ -151,8 +150,18 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> c;
                     file >> cost;
-                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost*K;
+                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost*K;                    
                 }
+                if(ToulBar2::makeScaleCosts) {
+	                for (a = 0; a < x->getDomainInitSize(); a++) {
+	                    for (b = 0; b < y->getDomainInitSize(); b++) {
+		                    for (c = 0; c < z->getDomainInitSize(); c++) {
+		             			Cost co = costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c];
+		                        if(co) addCost(co);
+		                    }
+	                    }
+	                }               	
+                }                
                 if((defval != 0) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
 		} else if (arity == 2) {
@@ -181,6 +190,15 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> cost;
                     costs[a * y->getDomainInitSize() + b] = cost*K;
+                }
+                
+                if(ToulBar2::makeScaleCosts) {
+	                for (a = 0; a < x->getDomainInitSize(); a++) {
+	                    for (b = 0; b < y->getDomainInitSize(); b++) {
+	             			Cost c = costs[a * y->getDomainInitSize() + b];
+	                        if(c) addCost(c);
+	                    }
+	                }               	
                 }
                 if((defval != 0) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
             } else {
@@ -223,6 +241,12 @@ void WCSP::read_wcsp(const char *fileName)
                 file >> cost;
                 unaryconstr.costs[a] = cost*K;
             }
+            if(ToulBar2::makeScaleCosts) {
+                for (a = 0; a < x->getDomainInitSize(); a++) {
+         			Cost c = unaryconstr.costs[a];
+                    if(c) addCost(c);
+                }               	
+            }
             unaryconstrs.push_back(unaryconstr);
             x->queueNC();
         } else if (arity == 0) {
@@ -249,7 +273,33 @@ void WCSP::read_wcsp(const char *fileName)
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
+    if(ToulBar2::makeScaleCosts) {
+    	int cumulus = 0;
+    	tScale::iterator it = scaleCost.begin();
+    	while(it != scaleCost.end()) {
+    		cumulus += it->second;
+    		if(cumulus > 50) {
+	    		scaleVAC.push_front(it->first);
+	    		cumulus = 0;
+    		}
+			++it;
+    	}    	
+	    if (ToulBar2::verbose >= 1) {
+	    	cout << "Costs Scale: ";
+	    	list<Cost>::iterator itl = scaleVAC.begin();
+	    	while(itl != scaleVAC.end()) { cout << *itl << " "; ++itl; }
+	    	cout << endl;
+	    }
+    }
 }
+
+void WCSP::addCost( Cost c )
+{
+    tScale::iterator it = scaleCost.find(c);
+    if(it == scaleCost.end()) scaleCost[c] = 0;
+    else it->second++;	
+}
+
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
 {

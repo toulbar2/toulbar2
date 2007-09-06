@@ -79,7 +79,7 @@ public:
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
     int getTrueDegree();
-    Long getWeightedDegree();
+    double getWeightedDegree();
     DLink<ConstraintLink> *link(Constraint *c, int index);
     void sortConstraints();
     virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};
