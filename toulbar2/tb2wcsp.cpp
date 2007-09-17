@@ -72,9 +72,7 @@ vector<TProb> ToulBar2::allelefreqdistrib;
 bool ToulBar2::consecutiveAllele = false;
 int ToulBar2::pedigreeCorrectionMode = 0;
 
-bool ToulBar2::vac = false;
-int  ToulBar2::vacAlternative = 0;
-bool ToulBar2::vacDecomposition = false;
+int  ToulBar2::vac = 0;
 Cost ToulBar2::costThreshold = 1;
 Cost ToulBar2::costConstant = 1;
 Cost ToulBar2::relaxThreshold = -1;

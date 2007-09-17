@@ -605,7 +605,6 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 bool EnumeratedVariable::averaging()
 {
 	Cost Top = wcsp->getUb();
-	//Cost Top = 2000;
 	bool change = false;
 	EnumeratedVariable* x;
 	//EnumeratedVariable* y;

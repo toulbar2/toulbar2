@@ -54,9 +54,6 @@ private:
   vector<tVACStat*>   heap;	  	
   Long sumlb;
   Long nlb;
-	  
- 
-  list<Constraint*> lctr;
 
 public:
 

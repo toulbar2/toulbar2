@@ -107,9 +107,7 @@ public:
     static bool consecutiveAllele;
     static bool generation;
     static int pedigreeCorrectionMode;
-    static bool vac;
-    static int  vacAlternative;
-    static bool vacDecomposition;
+    static int vac;
     static Cost costThreshold;
     static Cost relaxThreshold;
     static Cost costConstant;

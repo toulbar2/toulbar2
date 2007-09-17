@@ -203,17 +203,13 @@ void VACVariable::project (Value value, Cost cost) {
 
 void VACVariable::extend (Value value, Cost cost) {
   VACVariable *xj;
-  if (ToulBar2::vacAlternative) {
-    queueVAC2();
-  }
-  if (ToulBar2::vac) {
-    for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
-   	   Constraint *c = (*iter).constr;
-       if(c->arity() == 2) {
-	      xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
-	      xj->queueVAC2();
-	   }
-    }
+  queueVAC2();
+  for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
+	Constraint *c = (*iter).constr;
+	if(c->arity() == 2) {
+	  xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
+	  xj->queueVAC2();
+	}
   }
   EnumeratedVariable::extend(value, cost);
 }

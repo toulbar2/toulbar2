@@ -124,8 +124,8 @@ int main(int argc, char **argv)
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
-        cerr << "   e : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
-        cerr << "   p : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
+        cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
+        cerr << "   p[integer] : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
 #ifdef BOOST
@@ -137,13 +137,12 @@ int main(int argc, char **argv)
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
         cerr << "   x : load a solution from a file" << endl;
-        cerr << "   S : singleton Consistency on preprocessing" << endl;
-        cerr << "   V : enforce VAC (still ongoing work)" << endl;
-        cerr << "   A : enforce VAC alternative (still ongoing work)" << endl;
-        cerr << "   D : enforce VAC decomposition (still ongoing work)" << endl;
-        cerr << "   T{followed by int} : threshold value of VAC, beyond this the value is considered deleted" << endl;
-        cerr << "   " << endl;
-        cerr << "   C{followed by int} : multiply all costs by this number" << endl;
+        cerr << "   S : singleton consistency on preprocessing" << endl;
+        cerr << "   M[integer] : min-sum diffusion on preprocessing" << endl;
+        cerr << "   A[integer] : enforce VAC at search nodes with depth less than a given threshold" << endl;
+        cerr << "   T[integer] : threshold cost value for VAC" << endl;
+        cerr << "   R[integer] : threshold mean cost value for relaxing constraints" << endl;
+        cerr << "   C[integer] : multiply all costs by this number" << endl;
 
 
 #endif
@@ -218,19 +217,14 @@ int main(int argc, char **argv)
 										 									       // otherwise:    read probability distribution from command line 
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
-        if (strchr(argv[i],'V')) ToulBar2::vac = true;
         if ((ch = strchr(argv[i],'A'))) { 
-        	ToulBar2::vac = true; 
+        	ToulBar2::vac = 1; 
         	ToulBar2::makeScaleCosts = true; 
-        	ToulBar2::vacAlternative = 1;
         	int depth = atoi(&ch[1]);
-        	if(depth > 1) ToulBar2::vacAlternative = depth;
+        	if(depth > 1) ToulBar2::vac = depth;
         	}
-        if (strchr(argv[i],'D')) { ToulBar2::vac = true; ToulBar2::vacDecomposition = true;}
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
     }
-    
-    
     
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= 0) c = MAX_COST;

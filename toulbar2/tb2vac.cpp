@@ -113,7 +113,7 @@ void VACExtension::reset()
 
 
 bool VACExtension::propagate() {	
-  if (wcsp->getStore()->getDepth() >= ToulBar2::vacAlternative) {
+  if (wcsp->getStore()->getDepth() >= ToulBar2::vac) {
     return false;
   }
  
@@ -311,18 +311,6 @@ void VACExtension::enforcePass2 () {
 }
 
 bool VACExtension::enforcePass3 () {
-  bool done = false;
-
-  if (ToulBar2::vacDecomposition) enforcePass3VACDecomposition();
-  else {
-    done = enforcePass3VACint();
-  }
-  return done;
-}
-  
-
-
-bool VACExtension::enforcePass3VACint () {
   bool util = (minlambda >= 1);
   /*if(util) {
 	  Cost ub = wcsp->getUb();
@@ -427,46 +415,6 @@ Long VACExtension::getVarTimesStat( int i )
   return v->nlb;	
 }
 
-
-
-void VACExtension::enforcePass3VACDecomposition () {
-  unsigned int i, j;
-  VACConstraint *cij;
-  VACVariable *xi, *xj;
-  Cost lambda = (Cost) minlambda;
-  Cost cost;
-
-  for (i = 0; i < wcsp->numberOfVariables(); i++) {
-    xi = (VACVariable *) wcsp->getVar(i);
-    for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
-	  Value v = *iti;	
-      if (xi->getK(v, nbIterations) != 0) {
-        if (xi->getVACCost(v) != 0) {
-          cost = ceil(lambda * xi->getK(v, nbIterations));
-          xi->decreaseCost(v, cost);
-          assert(xi->getVACCost(v) >= 0);
-        }
-        else {
-          if (xi->getKiller(v) != -1) {
-            j = xi->getKiller(v);
-            xj = (VACVariable *) wcsp->getVar(j);
-            cij = (VACConstraint *) xi->getConstr(xj);
-		    for (EnumeratedVariable::iterator itj = xj->begin(); itj != xj->end(); ++itj) {
-			  Value w = *iti;	
-              if (cij->getCost(xi,xj,v,w)) {
-                cost = ceil(lambda * xi->getK(v, nbIterations));
-                cij->addcost(xi,xj,v, w,-cost);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-
-
 void VACExtension::afterPreprocessing() 
 {
 	int discarded = 0;
@@ -475,7 +423,6 @@ void VACExtension::afterPreprocessing()
         if (c->connected()) c->computeTightness();
         if(c->getTightness() < ToulBar2::relaxThreshold) {
         	c->deconnect();
-        	lctr.push_back(c);
         	discarded++;
         }
     }
@@ -487,9 +434,7 @@ void VACExtension::afterPreprocessing()
 
 
 bool VACExtension::isNull (Cost c) const {
-  //if (ToulBar2::vacAlternative) return (c < ToulBar2::costThreshold);
-  if (ToulBar2::vacAlternative) return (c < itThreshold);
-  else return (c == 0);
+  return (c < itThreshold);
 }
 
 void VACExtension::clear () {
