@@ -392,12 +392,10 @@ public:
 	double computeTightness() {
 	   int count = 0;
 	   double sum = 0;
-	   maxCost = 0;
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
 				Cost c = getCost(*iterX, *iterY);
                 sum += to_double(c);
-				if(maxCost < c) maxCost = c;
 				count++;
 	       }
 	    }

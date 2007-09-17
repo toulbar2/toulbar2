@@ -35,7 +35,6 @@ public:
     Long getConflictWeight() const {return conflictWeight;}
     void incConflictWeight() {conflictWeight++;}
     
-    Cost maxCost;
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }
     virtual double  computeTightness() = 0;
