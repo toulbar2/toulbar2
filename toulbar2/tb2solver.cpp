@@ -33,6 +33,7 @@ Solver::~Solver()
 
 void Solver::read_wcsp(const char *fileName)
 {
+    ToulBar2::setvalue = NULL;
     wcsp->read_wcsp(fileName);
     unassignedVars = new BTList<Value>(&store->storeDomain);
     allVars = new DLink<Value>[wcsp->numberOfVariables()];
@@ -46,6 +47,7 @@ void Solver::read_wcsp(const char *fileName)
 
 void Solver::read_random(int n, int m, vector<int>& p, int seed)
 {
+    ToulBar2::setvalue = NULL;
     wcsp->read_random(n,m,p,seed);
     unassignedVars = new BTList<Value>(&store->storeDomain);
     allVars = new DLink<Value>[wcsp->numberOfVariables()];
