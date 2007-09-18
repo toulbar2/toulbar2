@@ -20,7 +20,7 @@ class VACExtension;
 
 
 inline bool CUT(Cost lb, Cost ub)  { 
-	if(lb % ToulBar2::costConstant) return lb + ToulBar2::costConstant >= ub;
+	if(lb % ToulBar2::costMultiplier) return lb + ToulBar2::costMultiplier >= ub;
 	else return lb >= ub;
 }
 
@@ -270,7 +270,7 @@ public:
     tScale         scaleCost;
     list<Cost>     scaleVAC;
     void           addCost( Cost c );
-    Cost		   getVACHeuristicVar(int i);
+
     void 		   iniSingleton();
     void		   updateSingleton();
     void		   removeSingleton();

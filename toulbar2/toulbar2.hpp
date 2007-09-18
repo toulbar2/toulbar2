@@ -90,7 +90,6 @@ public:
     virtual int getElimOrder() =0;
     virtual void restoreSolution() =0;
 
-	virtual Cost getVACHeuristicVar(int i) = 0;
 	virtual void iniSingleton() = 0;
 	virtual	void updateSingleton() = 0;
 	virtual void removeSingleton() = 0;

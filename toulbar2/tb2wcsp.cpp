@@ -42,16 +42,15 @@ int  ToulBar2::elimDegree = 3;
 int  ToulBar2::elimDegree_preprocessing  = -1;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = true;
-bool ToulBar2::lastWConflict = false;
 #else
 bool ToulBar2::binaryBranching = false;
 int  ToulBar2::elimDegree = -1;
 int  ToulBar2::elimDegree_preprocessing  = -1;
 bool ToulBar2::preprocessTernary  = false;
 bool ToulBar2::lastConflict = false;
-bool ToulBar2::lastWConflict = false;
 #endif
 
+bool ToulBar2::weightedDegree = false;
 bool ToulBar2::singletonConsistency = false;
 
 externalevent ToulBar2::setvalue = NULL;
@@ -74,9 +73,8 @@ int ToulBar2::pedigreeCorrectionMode = 0;
 
 int  ToulBar2::vac = 0;
 Cost ToulBar2::costThreshold = 1;
-Cost ToulBar2::costConstant = 1;
+Cost ToulBar2::costMultiplier = 1;
 Cost ToulBar2::relaxThreshold = -1;
-bool ToulBar2::makeScaleCosts = false;
 
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
@@ -348,8 +346,6 @@ void WCSP::preprocessing()
         }
     }
 	propagate();
-
-
 	
 #ifdef BOOST
     if (getenv("TB2GRAPH")) {
@@ -360,6 +356,7 @@ void WCSP::preprocessing()
 #endif
     if (getenv("TB2DEGREE")) degreeDistribution();
 
+	/* min-sum diffusion algorithm */
     if (ToulBar2::minsumDiffusion) { 
     	for(int times = 0; times < 4; times++) { 
 	    	bool change = true;
@@ -738,7 +735,6 @@ void WCSP::propagate()
 {    
 //    revise(NULL);
    if (ToulBar2::vac) vac->iniThreshold();
-   
    
    do {
      do {
@@ -1218,16 +1214,12 @@ TProb WCSP::Cost2LogLike(Cost c) const { return -to_double(c)/ToulBar2::NormFact
 TProb WCSP::Cost2Prob(Cost c) const { return Pow((TProb)10., -to_double(c)/ToulBar2::NormFactor); }
 
 
-Cost WCSP::getVACHeuristicVar( int i ) { 
-	return vac->getVarCostStat(i);
-}
-
 void WCSP::iniSingleton() {
 	if(!ToulBar2::vac) return; 
 	vac->singletonI.clear();
     for (unsigned int i = 0; i < numberOfVariables(); i++) {
 	  int size = getDomainSize(i);
-	  for (int a = 0; a < size; a++) vac->singletonI.insert(100*i+a);
+	  for (int a = 0; a < size; a++) vac->singletonI.insert(MAX_DOMAIN_SIZE*i+a);
   }
 }
 
@@ -1243,19 +1235,18 @@ void WCSP::updateSingleton() {
 }
 
 void WCSP::removeSingleton() {
-	bool done = false;
-	set<int>& s = vac->singletonI;
-	set<int>::iterator it = s.begin();
-	while(it != s.end()) {
-		int ivar = *it / 100;
-		Value a = *it % 100;
-		Variable * var = getVar(ivar);
-		var->remove(a);
-		done = true;
-		var->queueNC();
-		++it; 
-	}
-	propagate();
+  if(!ToulBar2::vac) return;
+  set<int>& s = vac->singletonI;
+  set<int>::iterator it = s.begin();
+  while(it != s.end()) {
+	int ivar = *it / MAX_DOMAIN_SIZE;
+	Value a = *it % MAX_DOMAIN_SIZE;
+	Variable * var = getVar(ivar);
+	var->remove(a);
+	var->queueNC();
+	++it; 
+  }
+  propagate();
 }
 
 

@@ -123,6 +123,7 @@ int main(int argc, char **argv)
 #ifndef MENDELSOFT
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
+        cerr << "   q : weighted degree variable ordering heuristic" << endl;
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
         cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   p[integer] : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
@@ -137,17 +138,15 @@ int main(int argc, char **argv)
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
         cerr << "   x : load a solution from a file" << endl;
-        cerr << "   S : singleton consistency on preprocessing" << endl;
         cerr << "   M[integer] : min-sum diffusion on preprocessing" << endl;
         cerr << "   A[integer] : enforce VAC at search nodes with depth less than a given threshold" << endl;
         cerr << "   T[integer] : threshold cost value for VAC" << endl;
-        cerr << "   R[integer] : threshold mean cost value for relaxing constraints" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
-
-
+        cerr << "   R[integer] : threshold mean cost value for relaxing constraints" << endl;
+        cerr << "   S : singleton consistency on preprocessing" << endl;
 #endif
         cerr << endl;
-        exit(EXIT_FAILURE);
+        exit(0);
     } 
     
     
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
         
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
-        if (strchr(argv[i],'q')) { ToulBar2::binaryBranching = true; ToulBar2::lastWConflict = true; }
+        if (strchr(argv[i],'q')) { ToulBar2::weightedDegree = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
         	ToulBar2::elimDegree = 3;
@@ -194,7 +193,7 @@ int main(int argc, char **argv)
         }
         if ( (ch = strchr(argv[i],'C')) ) {
         	Cost co = atol(&ch[1]);
-        	if(co > 0) ToulBar2::costConstant = co;
+        	if(co > 0) ToulBar2::costMultiplier = co;
         }
       
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
@@ -219,7 +218,6 @@ int main(int argc, char **argv)
         }
         if ((ch = strchr(argv[i],'A'))) { 
         	ToulBar2::vac = 1; 
-        	ToulBar2::makeScaleCosts = true; 
         	int depth = atoi(&ch[1]);
         	if(depth > 1) ToulBar2::vac = depth;
         	}

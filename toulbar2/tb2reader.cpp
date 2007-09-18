@@ -64,7 +64,7 @@ void WCSP::read_wcsp(const char *fileName)
     assert(vars.empty());
     assert(constrs.empty());
     
-	Cost K = ToulBar2::costConstant;    
+	Cost K = ToulBar2::costMultiplier;    
 	if(top < MAX_COST / K)	top = top * K;  
 	updateUb(top);
 
@@ -152,7 +152,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = cost*K;                    
                 }
-                if(ToulBar2::makeScaleCosts) {
+                if(ToulBar2::vac) {
 	                for (a = 0; a < x->getDomainInitSize(); a++) {
 	                    for (b = 0; b < y->getDomainInitSize(); b++) {
 		                    for (c = 0; c < z->getDomainInitSize(); c++) {
@@ -192,7 +192,7 @@ void WCSP::read_wcsp(const char *fileName)
                     costs[a * y->getDomainInitSize() + b] = cost*K;
                 }
                 
-                if(ToulBar2::makeScaleCosts) {
+                if(ToulBar2::vac) {
 	                for (a = 0; a < x->getDomainInitSize(); a++) {
 	                    for (b = 0; b < y->getDomainInitSize(); b++) {
 	             			Cost c = costs[a * y->getDomainInitSize() + b];
@@ -241,7 +241,7 @@ void WCSP::read_wcsp(const char *fileName)
                 file >> cost;
                 unaryconstr.costs[a] = cost*K;
             }
-            if(ToulBar2::makeScaleCosts) {
+            if(ToulBar2::vac) {
                 for (a = 0; a < x->getDomainInitSize(); a++) {
          			Cost c = unaryconstr.costs[a];
                     if(c) addCost(c);
@@ -273,7 +273,7 @@ void WCSP::read_wcsp(const char *fileName)
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
-    if(ToulBar2::makeScaleCosts) {
+    if(ToulBar2::vac) {
     	int cumulus = 0;
     	tScale::iterator it = scaleCost.begin();
     	while(it != scaleCost.end()) {
@@ -299,7 +299,6 @@ void WCSP::addCost( Cost c )
     if(it == scaleCost.end()) scaleCost[c] = 0;
     else it->second++;	
 }
-
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
 {

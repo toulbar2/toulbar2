@@ -119,7 +119,7 @@ bool VACExtension::propagate() {
  
   if(getVarTimesStat(varAssign) > 100) {
   	long double m = getVarCostStat(varAssign)/getVarTimesStat(varAssign);
-  	if(m < ToulBar2::costConstant/10.) { 
+  	if(m < ToulBar2::costMultiplier/10.) { 
   		inconsistentVariable = -1;  		
   		return false; 
   	}
@@ -315,7 +315,7 @@ bool VACExtension::enforcePass3 () {
   /*if(util) {
 	  Cost ub = wcsp->getUb();
 	  Cost lb = wcsp->getLb();
-	  util = ( (ub - lb)/(10000*ToulBar2::costConstant) ) < minlambda;
+	  util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
   }*/
   Cost lambda = minlambda;	
 

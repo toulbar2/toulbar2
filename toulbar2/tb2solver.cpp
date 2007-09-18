@@ -110,37 +110,13 @@ void setvalue(int wcspId, int varIndex, Value value)
  * 
  */
 
-int Solver::getVarVACHeuristic()
+int Solver::getNextUnassignedVar()
 {
-	assert(ToulBar2::vac);
-    int varIndex = -1;    
-    double best = MAX_VAL - MIN_VAL;
-    Cost worstUnaryCost = 0;
-
-	Cost max = 0;
-    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
- 		Cost maxi = wcsp->getVACHeuristicVar(*iter);
- 		if(maxi > max) {
- 			max = maxi;
- 			varIndex = *iter; 
- 		}	
- 		else if(maxi == max) {
-	        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
-	        if (varIndex < 0 || heuristic < best - 1./100001.
-	            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
-	            best = heuristic;
-	            varIndex = *iter;
-	            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-	        } 			
- 		}
-    }    
-    return varIndex;
+    return (unassignedVars->empty())?-1:(*unassignedVars->begin());
 }
-
 
 int Solver::getVarMinDomainDivMaxDegree()
 {
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
     int varIndex = -1;
     Cost worstUnaryCost = 0;
     double best = MAX_VAL - MIN_VAL;
@@ -158,30 +134,6 @@ int Solver::getVarMinDomainDivMaxDegree()
     return varIndex;   
 }
 
-
-
-int Solver::getVarMinDomainDivMaxWDegreeLastConflict()
-{
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
-    int varIndex = -1;
-    Cost worstUnaryCost = 0;
-    double best = MAX_VAL - MIN_VAL;
-    
-    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-        // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) 10 / (wcsp->getWeightedDegree(*iter) + 1);
-        if (      (varIndex  < 0)
-               || (heuristic < best - 1./100001.)
-               || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)
-            ) {
-            best = heuristic;
-            varIndex = *iter;
-            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        }
-    }
-    return varIndex;
-}
-
 int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 {
     if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
@@ -194,6 +146,43 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
         double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - 1./100001.
             || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+    return varIndex;
+}
+
+int Solver::getVarMaxWeightedDegree()
+{
+    int varIndex = -1;
+    Cost worstUnaryCost = 0;
+    double best = -1;
+    
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        double heuristic = wcsp->getWeightedDegree(*iter);
+        if (varIndex  < 0 || heuristic > best + 1./100001.
+            || (heuristic > best - 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+    return varIndex;
+}
+
+int Solver::getVarMaxWeightedDegreeLastConflict()
+{
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
+    int varIndex = -1;
+    Cost worstUnaryCost = 0;
+    double best = -1;
+    
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        double heuristic = wcsp->getWeightedDegree(*iter);
+        if (varIndex  < 0 || heuristic > best + 1./100001.
+            || (heuristic > best - 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -222,11 +211,6 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 //    }
 //    return varIndex;
 //}
-
-int Solver::getNextUnassignedVar()
-{
-    return (unassignedVars->empty())?-1:(*unassignedVars->begin());
-}
 
 /*
  * Choice points
@@ -280,9 +264,6 @@ void Solver::remove(int varIndex, Value value)
     wcsp->remove(varIndex, value);
     wcsp->propagate();
 }
-
-
-
 
 void Solver::binaryChoicePoint(int varIndex, Value value)
 {
@@ -371,43 +352,6 @@ int cmpValueCost(const void *p1, const void *p2)
     else return 0;
 }
 
-
-void Solver::singletonConsistency()
-{
-    bool deadend;
-    bool done = false;
-    while(!done) {
-    	done = true;
-	    for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
-			  int size = wcsp->getDomainSize(varIndex);
-			  ValueCost sorted[size]; 
-			  wcsp->iniSingleton();
-			  wcsp->getEnumDomainAndCost(varIndex, sorted);
-			  qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-			  int ndel = 1;
-			  for (int a = 0; ndel && a < size; a++) {
-					deadend = false;
-			        try {
-			            store->store();
-			            assign(varIndex, sorted[a].value);
-			        } catch (Contradiction) {
-			            wcsp->whenContradiction();
-			            deadend = true;
-			            done = false;  
-			        }
-			        store->restore();
-					wcsp->updateSingleton();
-					//cout << "(" << varIndex << "," << a <<  ")  : intersection : " <<  ndel << endl;
-					if(deadend) { remove(varIndex, sorted[a].value); cout << "."; flush(cout); }
-		      }
-			  wcsp->removeSingleton();
-	    }
-    }
-    cout << "Done Singleton Consistency" << endl;
-}
-
-
-
 void Solver::narySortedChoicePoint(int varIndex)
 {
     assert(wcsp->enumerated(varIndex));
@@ -448,6 +392,43 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
         store->restore();
     }
     nbBacktracks++;
+}
+
+void Solver::singletonConsistency()
+{
+    bool deadend;
+    bool done = false;
+    while(!done) {
+    	done = true;
+	    for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
+			  int size = wcsp->getDomainSize(varIndex);
+			  ValueCost sorted[size]; 
+			  wcsp->iniSingleton();
+			  wcsp->getEnumDomainAndCost(varIndex, sorted);
+			  qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+			  for (int a = 0; a < size; a++) {
+					deadend = false;
+			        try {
+			            store->store();
+			            assign(varIndex, sorted[a].value);
+			        } catch (Contradiction) {
+			            wcsp->whenContradiction();
+			            deadend = true;
+			            done = false;  
+			        }
+			        store->restore();
+					wcsp->updateSingleton();
+					//cout << "(" << varIndex << "," << a <<  ")" << endl;
+					if(deadend) { 
+					  remove(varIndex, sorted[a].value); 
+					  cout << "."; flush(cout);
+// WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+					}
+		      }
+			  wcsp->removeSingleton();
+	    }
+    }
+    cout << "Done Singleton Consistency" << endl;
 }
 
 /*
@@ -512,12 +493,11 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve()
 {		
-	int varIndex;
-	if(ToulBar2::lastWConflict) varIndex = getVarMinDomainDivMaxWDegreeLastConflict();
+	int varIndex = -1;
+	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMaxWeightedDegreeLastConflict();
 	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
+	else if(ToulBar2::weightedDegree) varIndex = getVarMaxWeightedDegree();
 	else varIndex = getVarMinDomainDivMaxDegree();
-//  if(ToulBar2::vac) varIndex = getVarVACHeuristic();
-    
     if (varIndex >= 0) {
         if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
@@ -536,8 +516,11 @@ void Solver::recursiveSolve()
 /* returns true if a limit has occured during the search */
 void Solver::recursiveSolveLDS(int discrepancy)
 {
-//    int varIndex = getNextUnassignedVar();
-    int varIndex = (ToulBar2::lastConflict)?getVarMinDomainDivMaxDegreeLastConflict():getVarMinDomainDivMaxDegree();
+	int varIndex = -1;
+	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMaxWeightedDegreeLastConflict();
+	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
+	else if(ToulBar2::weightedDegree) varIndex = getVarMaxWeightedDegree();
+	else varIndex = getVarMinDomainDivMaxDegree();
     if (varIndex >= 0) {
         if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {

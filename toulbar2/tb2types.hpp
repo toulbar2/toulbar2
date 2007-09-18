@@ -89,7 +89,7 @@ public:
     static bool FDAComplexity;
     static bool FDAC;
     static bool lastConflict;
-    static bool lastWConflict;
+    static bool weightedDegree;
     static bool lds;
     static bool limited;
     static externalevent setvalue;
@@ -109,9 +109,8 @@ public:
     static int pedigreeCorrectionMode;
     static int vac;
     static Cost costThreshold;
+    static Cost costMultiplier;
     static Cost relaxThreshold;
-    static Cost costConstant;
-    static bool makeScaleCosts;
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;
 };

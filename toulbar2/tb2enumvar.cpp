@@ -601,7 +601,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	return true;
 }
 
-
+/* min-sum diffusion algorithm */
 bool EnumeratedVariable::averaging()
 {
 	Cost Top = wcsp->getUb();
