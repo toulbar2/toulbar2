@@ -74,7 +74,6 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
-		// BUG: incompatible with ternary projection ???
 		//if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
 		res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= 0);

@@ -23,8 +23,8 @@ class Solver
     int lastConflictVar;
         
     // Heuristics and search methods
-	int getVarMaxWeightedDegreeLastConflict();
-	int getVarMaxWeightedDegree();
+	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+	int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
