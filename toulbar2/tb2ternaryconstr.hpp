@@ -88,7 +88,7 @@ public:
         int iy = y->toIndex(vy);
         int iz = z->toIndex(vz);
         Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
-        assert(res >= 0);
+        assert(res >= MIN_COST);
         return res;
     }
 
@@ -99,7 +99,7 @@ public:
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
       
         Cost res = costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]];
-        assert(res >= 0);
+        assert(res >= MIN_COST);
         return res;
     }
 
@@ -113,7 +113,7 @@ public:
         if (xy->connected()) res += xy->getCost(x,y,vindex[0],vindex[1]);
         if (xz->connected()) res += xz->getCost(x,z,vindex[0],vindex[2]);
         if (yz->connected()) res += yz->getCost(y,z,vindex[1],vindex[2]);
-        assert(res >= 0);
+        assert(res >= MIN_COST);
         return res;
     }
 
@@ -237,7 +237,7 @@ public:
     Value ysupport = supportX[xindex].first;
     Value zsupport = supportX[xindex].second;
     if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || 
-        getCostWithBinaries(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > 0) {
+        getCostWithBinaries(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST) {
             x->queueEAC2();
     }
   }
@@ -256,7 +256,7 @@ public:
             case 0: return isEAC(x,a,y,z,supportX); break;
             case 1: return isEAC(y,a,x,z,supportY); break;
             case 2: return isEAC(z,a,x,y,supportZ); break;
-            default: abort();
+            default: exit(EXIT_FAILURE);
     }
     return true;
   }
@@ -391,7 +391,7 @@ public:
 			if(ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }	
 		}
 		if(count == 3) return getCost(vals[0], vals[1], vals[2]);
-		else return 0;
+		else return MIN_COST;
 	}    
 	
 

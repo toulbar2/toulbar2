@@ -7,9 +7,6 @@
 #define TOULBAR2_HPP_
 
 #include "tb2types.hpp"
-#include <set>
-
-
 
 class WeightedCSP {
 public:
@@ -21,11 +18,6 @@ public:
     
     virtual Cost getLb() const = 0;
     virtual Cost getUb() const =0;
-
-    // avoid cost overflow
-    virtual Cost add(const Cost a, const Cost b) const =0;
-    // avoid weakning hard costs
-    virtual Cost sub(const Cost a, const Cost b) const =0;
 
     virtual Cost Prob2Cost(TProb p)const =0;
     virtual TProb Cost2LogLike(Cost c) const =0;

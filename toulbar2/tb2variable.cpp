@@ -15,8 +15,8 @@
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : 
         WCSPLink(w,w->numberOfVariables()), name(n),
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
-        constrs(&w->getStore()->storeConstraint), deltaCost(0, &w->getStore()->storeCost),
-        maxCost(0, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
+        constrs(&w->getStore()->storeConstraint), deltaCost(MIN_COST, &w->getStore()->storeCost),
+        maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
         NCBucket(-1, &w->getStore()->storeValue)
 //        elimOrder(-1, &w->getStore()->storeValue)
 {
@@ -104,7 +104,7 @@ int Variable::getTrueDegree()
 
 double Variable::getWeightedDegree()
 {
-    /*Long res = 0;*/
+    //Long res = 0;
     double res = 0;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
         //res += (*iter).constr->getConflictWeight();
@@ -156,17 +156,17 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 {
     assert(canbe(a));
     maxCostValue = a;
-    assert(cost >= 0);
+    assert(cost >= MIN_COST);
     if (maxCost != cost) {
         maxCost = cost;
-        int newbucket = min(cost2log2(cost), wcsp->getNCBucketSize() - 1);
+        int newbucket = min(cost2log2gub(cost), wcsp->getNCBucketSize() - 1);
         changeNCBucket(newbucket);
     }
 }
 
 void Variable::extendAll(Cost cost)
 {
-    assert(cost > 0);
+    assert(cost > MIN_COST);
     deltaCost += cost;          // Warning! Possible overflow???
     queueNC();
 }
@@ -220,8 +220,6 @@ TernaryConstraint* Variable::getConstr( Variable* x, Variable* y )
 // returns a ternary constraint if the current variable is linked to one
 TernaryConstraint* Variable::existTernary()
 {
-	if(!wcsp->isternary) return NULL;
-
 	TernaryConstraint* ctr;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
     	if ((*iter).constr->arity() == 3) {

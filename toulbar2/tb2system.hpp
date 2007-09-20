@@ -81,6 +81,8 @@ inline int cost2log2(int x)
         }
         return (l2);
 }
+inline int cost2log2glb(int x) {return cost2log2(x);}
+inline int cost2log2gub(int x) {return cost2log2(x);}
 #endif
 
 #ifdef LONGLONG_COST
@@ -101,6 +103,8 @@ inline int cost2log2(Long x)
         }
         return (l2);
 }
+inline int cost2log2glb(Long x) {return cost2log2(x);}
+inline int cost2log2gub(Long x) {return cost2log2(x);}
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */

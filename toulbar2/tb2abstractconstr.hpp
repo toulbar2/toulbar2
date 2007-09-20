@@ -58,7 +58,7 @@ public:
     Variable *getVarDiffFrom( Variable* v ) const  {
 		if(v == x) return y;
 		else if(v == y) return x;
-		else abort();
+		else exit(EXIT_FAILURE);
 	}
 		    
     int getIndex(Variable* var) const 
@@ -139,7 +139,7 @@ public:
 		switch(varCtrIndex) { case 0: return x; break;
 						      case 1: return y; break;
 						      case 2: return z; break;
-						      default: abort(); }
+						      default: exit(EXIT_FAILURE); }
 	}
 
     Variable *getVarDiffFrom( Variable* v1, Variable* v2 ) const 
@@ -150,7 +150,7 @@ public:
 		else if ((x == v2) && (z == v1)) return y;
 		else if ((y == v1) && (z == v2)) return x;
 		else if ((y == v2) && (z == v1)) return x;
-		else abort();
+		else exit(EXIT_FAILURE);
 	}
 
     int getIndex(Variable* var) const 
@@ -169,7 +169,7 @@ public:
             case 0: return min(y->wcspIndex,z->wcspIndex); break;
             case 1: return min(x->wcspIndex,z->wcspIndex); break;
             case 2: return min(x->wcspIndex,y->wcspIndex); break;
-            default: abort();
+            default: exit(EXIT_FAILURE);
         }
 	}
     int getSmallestVarIndexInScope() 
@@ -189,15 +189,6 @@ public:
 
 
 };
-
-
-
-
-
-
-
-
-#include <map>
 
 class AbstractNaryConstraint : public Constraint
 {
@@ -276,7 +267,7 @@ public:
         }
     }
 
-	virtual Cost eval( string& t ) { return -1; }
+	virtual Cost eval( string& t ) { return -UNIT_COST; }
 	virtual void insertTuple( string t, Cost c, EnumeratedVariable** scope_in ) { }
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) 

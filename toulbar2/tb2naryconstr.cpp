@@ -10,7 +10,10 @@ NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp, EnumeratedVariable** scop
 
     for(i=0;i<arity_in;i++) {
     	int domsize = scope_in[i]->getDomainInitSize();
-        if(domsize + CHAR_FIRST > 125) { cout << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; abort(); }
+        if(domsize + CHAR_FIRST > 125) {
+		  cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; 
+		  exit(EXIT_FAILURE);
+		}
     } 	           
 	
 	Cost Top = wcsp->getUb();
@@ -107,7 +110,7 @@ void NaryConstraint::projectNaryBinary()
 			Value xval = *iterx;
 			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
 	  		Cost c = eval(t);
-	  		if(c > 0) x->project(xval, c);	
+	  		if(c > MIN_COST) x->project(xval, c);	
 	    }
 	    x->findSupport();    
 	} 
@@ -155,7 +158,7 @@ void NaryConstraint::assign(int varIndex) {
 }
 
 Cost NaryConstraint::eval( string s ) {
-	if(default_cost >= wcsp->getUb()) default_cost = wcsp->getUb(); 
+	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
 	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
@@ -174,7 +177,7 @@ Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
 	}
 	Cost cost;
 	if(count == arity_) cost = eval( string(cht) );
-	else cost = 0;
+	else cost = MIN_COST;
 	
 	delete [] cht;
 	return cost;
@@ -230,13 +233,13 @@ void NaryConstraint::changeDefCost( Cost df )
 	if(df > Top) df = Top;
 	TUPLES* pfnew = new TUPLES;
 	
-	Cost maxCost = 0;
+	Cost maxCost = MIN_COST;
 	
 	string t;
 	Cost c;	
 	firstlex();
     while(nextlex(t,c)) {
-    	if(c > maxCost) maxCost = c;
+    	LUB(&maxCost,c);
 	    if(c != df) (*pfnew)[t] = c;
 	}
 	if(df == Top) default_cost = maxCost;
@@ -510,7 +513,7 @@ void NaryConstraint::project( EnumeratedVariable* x, bool addUnaryCtr )
 			end = (it == fproj.end());
 			bool sameprefix = false;
 			
-			Cost cnext = -1;
+			Cost cnext = -UNIT_COST;
 			if(!end) { 
 				tnext = it->first;
 				cnext = it->second;
@@ -803,24 +806,3 @@ void NaryConstraint::dump(ostream& os)
         os << c << endl; 
     } 
 }
-
-
-
-
-
-/* *************************************************************
- * NaryConstraintHybrid
- * ************************************************************* */
-
-
-NaryConstraintHybrid::NaryConstraintHybrid( WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval )
-			: NaryConstraintCommon(wcsp, scope_in, arity_in, defval)
-{
-}	
-
-
-
-
-
-
-

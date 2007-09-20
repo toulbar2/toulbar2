@@ -11,12 +11,21 @@
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
 
+#ifdef PARETOPAIR_COST
+void initCosts(Cost c)
+{
+    if (!ToulBar2::FDAC) {cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl; ToulBar2::FDAC = true;}
+    if (ToulBar2::vac) {cerr << "VAC not implemented on Paretopair." << endl; ToulBar2::vac = false; ToulBar2::minsumDiffusion = false;}
+	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {cerr << "Variable elimination not implemented on Paretopair." << endl; ToulBar2::elimDegree = -1; ToulBar2::elimDegree_preprocessing = -1;}
+}
+#endif
+
 bool localSearch(char *filename, Cost *upperbound)
 {
     string keyword;
     char *fich = "resincop";
     char line[1024];
-    Cost tmpUB=-1;
+    Cost tmpUB=MIN_COST;
     int varIndex;
     int value;
     map<int, int> solution;
@@ -41,7 +50,7 @@ bool localSearch(char *filename, Cost *upperbound)
             if (keyword == "essai") {
                 file >> keyword; // skip ":"
                 file >> tmpUB;
-                if (tmpUB>=0 && tmpUB < *upperbound) *upperbound = tmpUB;
+                if (tmpUB>=MIN_COST && tmpUB < *upperbound) *upperbound = tmpUB;
                 if (ToulBar2::writeSolution && *upperbound == bestcost) {
                     ofstream sol("sol");
                     if (file) {
@@ -121,6 +130,7 @@ int main(int argc, char **argv)
         cerr << "                   = 2 p1 p2 p3...: allele probability distribution given explicitely in the command line" << endl;
         cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
 #ifndef MENDELSOFT
+        cerr << "   a : find all solutions" << endl;
         cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
         cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
         cerr << "   q : weighted degree variable ordering heuristic" << endl;
@@ -162,12 +172,11 @@ int main(int argc, char **argv)
 		  ToulBar2::pedigreeCorrectionMode = 0;
 		  if((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
         }
-        if (strchr(argv[i],'S')) ToulBar2::singletonConsistency = true;
-        
+		if (strchr(argv[i],'a')) ToulBar2::allSolutions = true;        
         if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
         if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
-        if (strchr(argv[i],'q')) { ToulBar2::weightedDegree = true; }
         if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
+        if (strchr(argv[i],'q')) { ToulBar2::weightedDegree = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
         	ToulBar2::elimDegree = 3;
         	int ndegree = atoi(&ch[1]);
@@ -179,25 +188,31 @@ int main(int argc, char **argv)
         	if(ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
         }
         if ( (ch = strchr(argv[i],'M')) ) {
+        	if (!ToulBar2::vac) ToulBar2::vac = 1; 
          	ToulBar2::minsumDiffusion = 1000;
         	int nit = atoi(&ch[1]);
         	if(nit > 0) ToulBar2::minsumDiffusion = nit;
         }
+        if ((ch = strchr(argv[i],'A'))) { 
+        	int depth = atoi(&ch[1]);
+        	if(depth >= 1) ToulBar2::vac = depth;
+        	}
         if ( (ch = strchr(argv[i],'T')) ) {
-        	Cost ct = atol(&ch[1]);
-        	if(ct >= 1) ToulBar2::costThreshold = ct;
+        	Cost ct = string2Cost(&ch[1]);
+        	if(ct > UNIT_COST) ToulBar2::costThreshold = ct;
         }
         if ( (ch = strchr(argv[i],'R')) ) {
-        	Cost ct = atol(&ch[1]);
-        	if(ct >= 1) ToulBar2::relaxThreshold = ct;
+        	Cost ct = string2Cost(&ch[1]);
+        	if(ct > UNIT_COST) ToulBar2::relaxThreshold = ct;
         }
         if ( (ch = strchr(argv[i],'C')) ) {
-        	Cost co = atol(&ch[1]);
-        	if(co > 0) ToulBar2::costMultiplier = co;
+        	Cost co = string2Cost(&ch[1]);
+        	if(co > MIN_COST) ToulBar2::costMultiplier = co;
         }
-      
+        if (strchr(argv[i],'S')) ToulBar2::singletonConsistency = true;      
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
+        if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
         if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
         if (strchr(argv[i],'f')) ToulBar2::FDAC = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
@@ -216,29 +231,24 @@ int main(int argc, char **argv)
 										 									       // otherwise:    read probability distribution from command line 
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
-        if ((ch = strchr(argv[i],'A'))) { 
-        	ToulBar2::vac = 1; 
-        	int depth = atoi(&ch[1]);
-        	if(depth > 1) ToulBar2::vac = depth;
-        	}
-        if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
     }
     
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
-    if (c <= 0) c = MAX_COST;
+    if (c <= MIN_COST) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
         if (localSearch(argv[1],&c)) {
             cout << "Initial upperbound: " << c << endl;
             
         } else cerr << "INCOP solver ./narycsp not found!" << endl;
     }
-    if (c==0) {
+    if (c==MIN_COST) {
         cout << "Initial upperbound equal to zero!" << endl;
         cout << "No solution found by initial propagation!" << endl;
         cout << "end." << endl;
         return 0;
     }
 
+    initCosts(c);
     Solver solver(STORE_SIZE, c);
     
     bool randomproblem = false;

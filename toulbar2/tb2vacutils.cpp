@@ -8,13 +8,13 @@
 
 
 VACVariable::VACVariable (WCSP *wcsp, string n, Value iinf, Value isup) : EnumeratedVariable(wcsp, n, iinf, isup)
-				,vac(wcsp->vac), myThreshold(0, &wcsp->getStore()->storeCost) 
+				,vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 
 {
   init();
 }
 
 VACVariable::VACVariable (WCSP *wcsp, string n, Value *d, int dsize) : EnumeratedVariable(wcsp, n, d, dsize)
-				,vac(wcsp->vac), myThreshold(0, &wcsp->getStore()->storeCost) 																	   
+				,vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 																	   
 {
   init();
 }
@@ -26,7 +26,7 @@ void VACVariable::init () {
   for (unsigned int a = 0; a < getDomainInitSize(); a++) {
   	mark.push_back(0);
   	k_timeStamp.push_back(0);
-  	k.push_back(0);
+  	k.push_back(MIN_COST);
   	killer.push_back(0);
   }
   linkVACQueue.content.var = this;
@@ -67,13 +67,13 @@ bool VACVariable::removeVAC ( Value v )
 
 Cost VACVariable::getVACCost( Value v ) {
   Cost c = getCost(v);
-  if(isNull(c)) return 0;
+  if(isNull(c)) return MIN_COST;
   else return c;
 }
 
 
 void VACVariable::decreaseCost(Value v, Cost c) {	
-  assert(c > 0);
+  assert(c > MIN_COST);
   Cost cini = getCost(v);  
   if (wcsp->getLb() + cini < wcsp->getUb()) {
     costs[toIndex(v)] -= c;
@@ -86,10 +86,10 @@ void VACVariable::VACproject (Value v, const Cost c) {
   costs[toIndex(v)] += c;
   Cost newCost = getVACCost(v);
   
-  if ((v == maxCostValue) || (newCost > maxCost) || (SCUT(wcsp->getLb() + newCost,wcsp->getUb()))) {
+  if ((v == maxCostValue) || (newCost > maxCost) || CUT(wcsp->getLb() + newCost,wcsp->getUb())) {
     queueNC();
   }
-  if (oldCost == 0) {
+  if (oldCost == MIN_COST) {
     queueNC();
     queueDAC();
     queueEAC1();
@@ -102,21 +102,37 @@ void VACVariable::VACproject (Value v, const Cost c) {
     Value newSupport = getInf();
     Cost minCost = getCost(newSupport);
     EnumeratedVariable::iterator iter = begin();
-    for (++iter; minCost > 0 && iter != end(); ++iter) {
+    for (++iter; minCost > MIN_COST && iter != end(); ++iter) {
         Cost cost = getCost(*iter);
         if (cost < minCost) {
             minCost = cost;
             newSupport = *iter;
         }
     }
-	setSupport(newSupport);
 	assert(canbe(newSupport));
+	//	cout << "setsupport " << wcspIndex << " " << newSupport << endl;
+	setSupport(newSupport);
   } 
 }
 
 void VACVariable::VACextend (Value v, const Cost c) {
   decreaseCost(v,c);
   if (v == maxCostValue) queueNC();
+  if(cannotbe(getSupport()) || getCost(getSupport())) { 
+    Value newSupport = getInf();
+    Cost minCost = getCost(newSupport);
+    EnumeratedVariable::iterator iter = begin();
+    for (++iter; minCost > MIN_COST && iter != end(); ++iter) {
+        Cost cost = getCost(*iter);
+        if (cost < minCost) {
+            minCost = cost;
+            newSupport = *iter;
+        }
+    }
+	assert(canbe(newSupport));
+	//	cout << "setsupport " << wcspIndex << " " << newSupport << endl;
+	setSupport(newSupport);
+  } 
 }
 
 
@@ -126,7 +142,7 @@ Cost VACVariable::getThreshold () { return myThreshold; }
 
 bool VACVariable::isNull (Cost c) 
 {
-	if(myThreshold) {
+	if(myThreshold != MIN_COST) {
 		if(myThreshold > vac->getThreshold()) return c < myThreshold;
 		else return c < vac->getThreshold();
 	}
@@ -192,7 +208,7 @@ void VACVariable::removeFast (Value value) {
 
  
 void VACVariable::project (Value value, Cost cost) {
-  assert(cost >= 0);
+  assert(cost >= MIN_COST);
   Cost oldcost = getCost(value);
   Cost newcost = oldcost + cost;
   if ((isNull(oldcost)) && (!isNull(newcost))) {
@@ -231,7 +247,79 @@ void VACVariable::decrease(Value newSup) {
 }
 
 
-/**
+/******************************
+ * min-sum diffusion algorithm
+ */
+
+bool VACVariable::averaging()
+{
+	Cost Top = wcsp->getUb();
+	bool change = false;
+	EnumeratedVariable* x;
+	//EnumeratedVariable* y;
+	Constraint* ctr = NULL;
+	ConstraintList::iterator itc = getConstrs()->begin();
+	if(itc != getConstrs()->end())	ctr = (*itc).constr;
+	while(ctr) {
+		if(ctr->arity() == 2) {
+			BinaryConstraint* bctr = (BinaryConstraint*) ctr;
+			x = (EnumeratedVariable*) bctr->getVarDiffFrom( (Variable*) this );
+			for (iterator it = begin(); it != end(); ++it) {
+				Cost cu = getCost(*it);
+				Cost cmin = Top;
+				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+					Cost cbin = bctr->getCost(this,x,*it,*itx);
+					if(cmin > cbin) cmin = cbin;
+				}
+				long double mean = to_double(cmin + cu) / 2.;	
+				long double extc = to_double(cu) - mean;					 
+				if(abs(extc) >= 1) {
+				  Cost costi = (Long) extc;
+					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+						bctr->addcost(this,x,*it,*itx,costi);				
+					}
+					if(mean > to_double(cu)) project(*it, -costi); 
+					else          extend(*it,   costi);
+					change = true;
+				}
+			}
+		} /*else if(ctr->arity() == 3) {
+			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+			x = (EnumeratedVariable*) tctr->getVar( 0 );
+			if(x == this) x = (EnumeratedVariable*) tctr->getVar( 1 );
+		    y = (EnumeratedVariable*) tctr->getVarDiffFrom((Variable*) this, (Variable*)x);
+
+			for (iterator it = begin(); it != end(); ++it) {
+				Cost cu = getCost(*it);
+				Cost cmin = Top;
+				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+				for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+					Cost ctern = tctr->getCost(this,x,y,*it,*itx,*ity);
+					if(cmin > ctern) cmin = ctern;
+				}}
+				float mean = (float)(cmin + cu) / 2.;	
+				float extc = (float)cu - mean;					 
+				if(abs(extc) >= 1) {
+					int costi =  (int) extc;
+					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+					for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+						tctr->addcost(this,x,y,*it,*itx,*ity,costi);				
+					}}
+					if(mean > cu) project(*it, -costi); 
+					else          extend(*it,   costi);
+					change = true;
+				}
+			}
+		}*/
+		++itc;
+		if(itc != getConstrs()->end()) ctr = (*itc).constr;
+		else ctr = NULL;
+	}
+	return change;
+}
+
+
+/************************************************************
  * VACConstraint:
  *   A class that stores information about a binary constraint
  */
@@ -239,11 +327,11 @@ void VACVariable::decrease(Value newSup) {
 VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, xx, yy, tab, storeCost) 
 {
    for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {
-	   	kX.push_back(0);
+	   	kX.push_back(MIN_COST);
 	   	kX_timeStamp.push_back(0);
    }
    for (unsigned int b = 0; b < yy->getDomainInitSize(); b++) {
-	   	kY.push_back(0);
+	   	kY.push_back(MIN_COST);
 	   	kY_timeStamp.push_back(0);
    }
 }
@@ -251,11 +339,11 @@ VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVari
 VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) 
 {
    for (int a = 0; a < wcsp->maxdomainsize; a++) {
-	   	kX.push_back(0);
+	   	kX.push_back(MIN_COST);
 	   	kX_timeStamp.push_back(0);
    }
    for (int b = 0; b < wcsp->maxdomainsize; b++) {
-	   	kY.push_back(0);
+	   	kY.push_back(MIN_COST);
 	   	kY_timeStamp.push_back(0);
    }
 }
@@ -263,7 +351,6 @@ VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : B
 VACConstraint::~VACConstraint () 
 {
 }
-
 
 void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
   int index = x->toIndex(v);
@@ -283,21 +370,19 @@ void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
 
 Cost VACConstraint::getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {
   Cost c = getCost(xx, yy, v, w);
-  if(xx->isNull(c) || (yy->isNull(c))) return 0;
+  if(xx->isNull(c) || (yy->isNull(c))) return MIN_COST;
   else return c;
 }
 
-
 Cost VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {
   if(var == (VACVariable*) getVar(0)) {
-  	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return 0;
+  	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return MIN_COST;
   	else return kX[var->toIndex(v)];
   }  else  {
-  	if(kY_timeStamp[var->toIndex(v)] < timeStamp) return 0;
+  	if(kY_timeStamp[var->toIndex(v)] < timeStamp) return MIN_COST;
   	else return kY[var->toIndex(v)];
   }
 }
-
 
 void VACConstraint::setK (VACVariable* var, Value v, Cost c, long timeStamp) {
   if(var == getVar(0)) {
@@ -309,8 +394,6 @@ void VACConstraint::setK (VACVariable* var, Value v, Cost c, long timeStamp) {
   }		
 }
 
-
-
 bool VACConstraint::revise (VACVariable* var, Value v) {
   bool wipeout = false;
   VACVariable* xi = (VACVariable*) getVar(0);
@@ -321,9 +404,9 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
   Cost cost, minCost = wcsp->getUb();
 
   if(xj->canbe(sup)) {	
-	  if(xj->getVACCost(sup)) { wipeout = xj->removeVAC(sup);  }
+	  if(xj->getVACCost(sup) != MIN_COST) { wipeout = xj->removeVAC(sup);  }
 	  else {
-		  if (!getVACCost(xi,xj,v,sup)) {
+		  if (getVACCost(xi,xj,v,sup) == MIN_COST) {
 		    return false;
 		  }
 	  }
@@ -332,10 +415,10 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
    
   for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
 	  Value w = *it;	
-	  if(xj->getVACCost(w)) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
-	      if (!cost) {		
+	      if (cost == MIN_COST) {		
 	      	setSupport(xi,v,w);
 	        return false;
 	      } else if (cost < minCost) {
@@ -347,10 +430,10 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
   }
   for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
 	  Value w = *it;	
-	  if(xj->getVACCost(w)) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
-	      if (!cost) {		
+	      if (cost == MIN_COST) {		
 	      	setSupport(xi,v,w);
 	        return false;
 	      } else if (cost < minCost) {
@@ -364,4 +447,3 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
   setSupport(xi,v,minsup);
   return true;
 }
-

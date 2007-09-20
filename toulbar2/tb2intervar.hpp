@@ -39,7 +39,7 @@ public:
     Cost getCost(Value value) const {
         if (value == inf) return getInfCost();
         else if (value == sup) return getSupCost();
-        else return 0;
+        else return MIN_COST;
     }
 
     void propagateNC();    

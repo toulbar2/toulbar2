@@ -71,17 +71,17 @@ public:
 	virtual void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void getScope( TSCOPE& scope_inv ) {}
-	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return 0; }
-	virtual Cost getDefCost() { return 0; }
+	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return MIN_COST; }
+	virtual Cost getDefCost() { return MIN_COST; }
 	virtual void setDefCost( Cost df ) {}       
 
     virtual bool universal() {
-        if (getDefCost() > 0) return false;
+        if (getDefCost() > MIN_COST) return false;
         string tuple;
         Cost cost;
         first();
         while (next(tuple,cost)) {
-            if (cost > 0) return false;
+            if (cost > MIN_COST) return false;
         }
         return true;
     }

@@ -14,7 +14,7 @@ void Pedigree::iniProb( WCSP* wcsp ) {
    ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
    if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
 	  cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
-	  abort();
+	  exit(EXIT_FAILURE);
    }
 	
    int nballeles = alleles.size()-1;
@@ -70,7 +70,7 @@ void Pedigree::iniProb( WCSP* wcsp ) {
   }	
   if(TopProb > to_double(MAX_COST)) {
       cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
-      abort();
+      exit(EXIT_FAILURE);
   }
   wcsp->updateUb((Cost) ((Long) TopProb));
 }
@@ -187,7 +187,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     file >> individual;
     if (!file) {
       cerr << "Wrong data after individual " << individual << endl;
-      abort();
+      exit(EXIT_FAILURE);
     }
     assert(individual != 0);
     if (individuals.count(individual)==0) {
@@ -200,7 +200,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     file >> pedigree[individuals[individual]].father;
     if (!file) {
       cerr << "Wrong data after individual " << individual << endl;
-      abort();
+      exit(EXIT_FAILURE);
     }
     if (pedigree[individuals[individual]].father > 0 && individuals.count(pedigree[individuals[individual]].father)==0) {
       individuals[pedigree[individuals[individual]].father] = nbindividuals;
@@ -213,7 +213,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     file >> pedigree[individuals[individual]].mother;
     if (!file) {
       cerr << "Wrong data after individual " << individual << endl;
-      abort();
+      exit(EXIT_FAILURE);
     }
     if (pedigree[individuals[individual]].mother > 0 && individuals.count(pedigree[individuals[individual]].mother)==0) {
       individuals[pedigree[individuals[individual]].mother] = nbindividuals;
@@ -240,14 +240,14 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     file >> pedigree[individuals[individual]].sex;
     if (!file) {
       cerr << "Wrong data after individual " << individual << endl;
-      abort();
+      exit(EXIT_FAILURE);
     }
 
     file >> pedigree[individuals[individual]].genotype.allele1;    
-    if (!file) { cerr << "Wrong data after individual " << individual << endl; abort(); }
+    if (!file) { cerr << "Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
 
     file >> pedigree[individuals[individual]].genotype.allele2;
-    if (!file) { cerr << "Wrong data after individual " << individual << endl; abort(); }
+    if (!file) { cerr << "Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
     
     int allele1 = pedigree[individuals[individual]].genotype.allele1;
     int allele2 = pedigree[individuals[individual]].genotype.allele2;

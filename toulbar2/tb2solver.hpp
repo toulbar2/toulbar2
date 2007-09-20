@@ -28,7 +28,6 @@ class Solver
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
-    int getVarVACHeuristic();
     void increase(int varIndex, Value value);
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);

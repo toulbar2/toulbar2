@@ -15,8 +15,6 @@ typedef struct {
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
-
-
 #define MAX_ARITY 100
 
 void WCSP::read_wcsp(const char *fileName)
@@ -42,7 +40,7 @@ void WCSP::read_wcsp(const char *fileName)
     string funcname;
     Value funcparam1;
     vector<TemporaryUnaryConstraint> unaryconstrs;
-    Cost inclowerbound = 0;
+    Cost inclowerbound = MIN_COST;
 
    
     
@@ -68,7 +66,6 @@ void WCSP::read_wcsp(const char *fileName)
 	if(top < MAX_COST / K)	top = top * K;  
 	updateUb(top);
 
-
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
@@ -85,7 +82,7 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
-        if(arity > MAX_ARITY)  { cout << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; abort(); }       
+        if(arity > MAX_ARITY)  { cerr << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
         if (!file) {
             cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
             break;
@@ -99,7 +96,7 @@ void WCSP::read_wcsp(const char *fileName)
             file >> defval;
 		    file >> ntuples;
     
-		    if((defval != 0) || (ntuples > 0))           
+		    if((defval != MIN_COST) || (ntuples > 0))           
 		    { 
 	            int naryIndex = postNaryConstraint(scopeIndex,arity,defval* K);
                 
@@ -128,7 +125,7 @@ void WCSP::read_wcsp(const char *fileName)
                exit(EXIT_FAILURE);
             }
             file >> defval;
-            if (defval >= 0) {
+            if (defval >= MIN_COST) {
                 assert(vars[i]->enumerated());
                 assert(vars[j]->enumerated());
                 assert(vars[k]->enumerated());
@@ -157,12 +154,12 @@ void WCSP::read_wcsp(const char *fileName)
 	                    for (b = 0; b < y->getDomainInitSize(); b++) {
 		                    for (c = 0; c < z->getDomainInitSize(); c++) {
 		             			Cost co = costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c];
-		                        if(co) addCost(co);
+		                        histogram(co);
 		                    }
 	                    }
 	                }               	
                 }                
-                if((defval != 0) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
+                if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
 		} else if (arity == 2) {
             file >> i;
@@ -172,7 +169,7 @@ void WCSP::read_wcsp(const char *fileName)
                exit(EXIT_FAILURE);
             }
             file >> defval;
-            if (defval >= 0) {
+            if (defval >= MIN_COST) {
                 assert(vars[i]->enumerated());
                 assert(vars[j]->enumerated());
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
@@ -196,11 +193,11 @@ void WCSP::read_wcsp(const char *fileName)
 	                for (a = 0; a < x->getDomainInitSize(); a++) {
 	                    for (b = 0; b < y->getDomainInitSize(); b++) {
 	             			Cost c = costs[a * y->getDomainInitSize() + b];
-	                        if(c) addCost(c);
+	                        histogram(c);
 	                    }
 	                }               	
                 }
-                if((defval != 0) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
+                if((defval != MIN_COST) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
             } else {
                 file >> funcname;
                 if (funcname == ">=") {
@@ -226,7 +223,7 @@ void WCSP::read_wcsp(const char *fileName)
             }
         } else if (arity == 1) {
             file >> i;
-            if (ToulBar2::verbose >= 3) cout << "read unary constraint " << c << " on " << i << endl;
+            if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
             assert(vars[i]->enumerated());
             EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
             file >> defval;
@@ -244,7 +241,7 @@ void WCSP::read_wcsp(const char *fileName)
             if(ToulBar2::vac) {
                 for (a = 0; a < x->getDomainInitSize(); a++) {
          			Cost c = unaryconstr.costs[a];
-                    if(c) addCost(c);
+                    histogram(c);
                 }               	
             }
             unaryconstrs.push_back(unaryconstr);
@@ -252,7 +249,7 @@ void WCSP::read_wcsp(const char *fileName)
         } else if (arity == 0) {
             file >> defval;
             file >> ntuples;
-            if (ToulBar2::verbose >= 3) cout << "read global lower bound contribution " << c << " of " << defval << endl;
+            if (ToulBar2::verbose >= 3) cout << "read global lower bound contribution " << ic << " of " << defval << endl;
         	if (ntuples != 0) {
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
                 exit(EXIT_FAILURE);
@@ -266,38 +263,14 @@ void WCSP::read_wcsp(const char *fileName)
     increaseLb(getLb() + inclowerbound);
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+            if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
         }
         unaryconstrs[u].var->findSupport();
     }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
-    if(ToulBar2::vac) {
-    	int cumulus = 0;
-    	tScale::iterator it = scaleCost.begin();
-    	while(it != scaleCost.end()) {
-    		cumulus += it->second;
-    		if(cumulus > 50) {
-	    		scaleVAC.push_front(it->first);
-	    		cumulus = 0;
-    		}
-			++it;
-    	}    	
-	    if (ToulBar2::verbose >= 1) {
-	    	cout << "Costs Scale: ";
-	    	list<Cost>::iterator itl = scaleVAC.begin();
-	    	while(itl != scaleVAC.end()) { cout << *itl << " "; ++itl; }
-	    	cout << endl;
-	    }
-    }
-}
-
-void WCSP::addCost( Cost c )
-{
-    tScale::iterator it = scaleCost.find(c);
-    if(it == scaleCost.end()) scaleCost[c] = 0;
-    else it->second++;	
+    histogram();
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed) 

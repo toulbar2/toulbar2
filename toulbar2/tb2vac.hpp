@@ -14,6 +14,8 @@
 
 class tVACStat;
 
+typedef map<Cost,int> tScale;
+
 
 /**
  * The class that enforces VAC
@@ -30,9 +32,11 @@ private:
   int inconsistentVariable;				    // is used also to check after enforcePass1() if the network is VAC
 
 
-  Cost itThreshold;					// threshold iterative descent 
+  Cost itThreshold;					        // threshold iterative descent 
   int breakCycles; 
- 
+  tScale scaleCost;
+  list<Cost> scaleVAC;
+
   
   Cost minlambda;
     
@@ -52,7 +56,7 @@ private:
 
   map<int,tVACStat*> heapAccess;
   vector<tVACStat*>   heap;	  	
-  Long sumlb;
+  Cost sumlb;
   Long nlb;
 
 public:
@@ -75,7 +79,8 @@ public:
   void iniThreshold();
   Cost getThreshold();
   void nextScaleCost();
-
+  void histogram( Cost c );
+  void histogram();
 
   set<int> singletonI;	  
   set<int> singleton;	  
@@ -85,11 +90,17 @@ public:
   void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
 
   void afterPreprocessing();
-  
+  void iniSingleton();
+  void updateSingleton();
+  void removeSingleton();
+
   Cost getVarCostStat( int i );
   Long getVarTimesStat( int i );
   void updateStat(Cost lambda);
   void printStat(bool ini = false);
+  void printTightMatrix();
+
+  void minsumDiffusion();
 };
 
 

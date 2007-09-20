@@ -38,7 +38,7 @@ void EnumeratedVariable::init()
         exit(EXIT_FAILURE);
     }
 
-    costs = vector<StoreCost>(getDomainInitSize(), StoreCost(0, &wcsp->getStore()->storeCost));
+    costs = vector<StoreCost>(getDomainInitSize(), StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
     linkACQueue.content.var = this;
     linkACQueue.content.timeStamp = -1;
     linkDACQueue.content.var = this;
@@ -120,63 +120,64 @@ void EnumeratedVariable::queueEAC2()
 
 void EnumeratedVariable::project(Value value, Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
-    if (value == maxCostValue || newcost > maxCost) queueNC();
-    if (oldcost == 0 && cost > 0) {
+    if (value == maxCostValue || LUBTEST(maxCost, newcost)) queueNC();
+    if (DACTEST(oldcost, cost)) {
 //        cout << "insert in DAC and EAC1 of " << getName() << endl;
         queueDAC();
         queueEAC1();
     }
-    if (SCUT(newcost + wcsp->getLb(),wcsp->getUb())) removeFast(value);     // Avoid any unary cost overflow
+    if (CUT(newcost + wcsp->getLb(), wcsp->getUb())) removeFast(value);     // Avoid any unary cost overflow
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost >= MIN_COST);
     Value value = getInf();
+    Cost oldcost = getCost(value);
     project(value, cost);
-    if (support == value) findSupport();
+    if (support == value || SUPPORTTEST(oldcost, cost)) findSupport();
 }
 
 void EnumeratedVariable::projectSupCost(Cost cost)
 {
-    assert(cost >= 0);
+    assert(cost >= MIN_COST);
     Value value = getSup();
+    Cost oldcost = getCost(value);
     project(value, cost);
-    if (support == value) findSupport();
+    if (support == value || SUPPORTTEST(oldcost, cost)) findSupport();
 }
 
 void EnumeratedVariable::extend(Value value, Cost cost)
 {
-    assert(cost >= 0);
-    assert(costs[toIndex(value)] >= cost);
+    assert(cost >= MIN_COST);
+    assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
     assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
-    if (value == maxCostValue) queueNC();
+    if (value == maxCostValue || PARTIALORDER) queueNC();
 }
 
 void EnumeratedVariable::findSupport()
 {
-    if (cannotbe(support) || getCost(support) > 0) {
+    if (cannotbe(support) || getCost(support) > MIN_COST) {
         Value newSupport = getInf();
         Cost minCost = getCost(newSupport);
         iterator iter = begin();
-        for (++iter; minCost > 0 && iter != end(); ++iter) {
+        for (++iter; minCost > MIN_COST && iter != end(); ++iter) {
             Cost cost = getCost(*iter);
-            if (cost < minCost) {
-                minCost = cost;
+            if (GLB(&minCost, cost)) {
                 newSupport = *iter;
             }
         }
-        if (minCost > 0) {
+        if (minCost > MIN_COST) {
             extendAll(minCost);
             if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
             wcsp->increaseLb(wcsp->getLb() + minCost);
         }
-        assert(canbe(newSupport) && getCost(newSupport) == 0);
+        assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
         support = newSupport;
     }
 }
@@ -185,32 +186,40 @@ void EnumeratedVariable::propagateNC()
 {
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup()+1;
-    Cost maxcost = -1;
+    Cost maxcost = MIN_COST;
+    bool supportBroken = false;
     // Warning! the first value must be visited because it may be removed
     for (iterator iter = begin(); iter != end(); ++iter) {
         Cost cost = getCost(*iter);
-        if (SCUT(cost + wcsp->getLb(),wcsp->getUb())) {
+        if (CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+            if (SUPPORTTEST(cost)) supportBroken = true;
             removeFast(*iter);
-        } else if (cost > maxcost) {
+        } else if (LUB(&maxcost, cost) || cannotbe(maxcostvalue)) {
             maxcostvalue = *iter;
-            maxcost = cost;
         }
     }
-    setMaxUnaryCost(maxcostvalue, getCost(maxcostvalue));
+    assert(getCost(maxcostvalue) == maxcost || !LUBTEST(maxcost, getCost(maxcostvalue)));
+    setMaxUnaryCost(maxcostvalue, maxcost);
+    if (supportBroken) findSupport();
 }
 
 bool EnumeratedVariable::verifyNC()
 {
-    bool supported = false;
+    bool supported = true;
+    Cost minCost = MIN_COST;
     for (iterator iter = begin(); iter != end(); ++iter) {
-        if (SCUT(getCost(*iter) + wcsp->getLb(),wcsp->getUb())) {
+        Cost cost = getCost(*iter);
+        if (CUT(cost + wcsp->getLb(), wcsp->getUb())) {
             cout << *this << " not NC!" << endl;
             return false;
         }
-        if (getCost(*iter) == 0) supported = true;
+        GLB(&minCost, cost);
     }
-    if (!supported) cout << *this << " not NC*!" << endl;
-    if (cannotbe(support) || getCost(support)>0) {
+    if (minCost > MIN_COST) {
+        cout << *this << " not NC*!" << endl;
+        supported = false;
+    }
+    if (cannotbe(support) || (getCost(support)>MIN_COST && !SUPPORTTEST(getCost(support)) )) {
         cout << *this << " has an unvalid NC support!" << endl;
         supported = false;
     }
@@ -241,7 +250,7 @@ void EnumeratedVariable::fillEAC2(bool self)
 
 bool EnumeratedVariable::isEAC(Value a)
 {
-    if (getCost(a)==0) {
+    if (getCost(a)==MIN_COST) {
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
 #ifndef NDEBUG
@@ -300,7 +309,7 @@ void EnumeratedVariable::propagateEAC()
             }
 #ifndef NDEBUG
             // check if lb has effectively been increased
-            if (wcsp->isternary && wcsp->getLb() == beforeLb)
+            if (wcsp->getLb() == beforeLb)
                 if (ToulBar2::verbose) cout << "EAC failed on " << getName() << endl;
 #endif
         }
@@ -318,6 +327,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
             else {
                 inf = newInf;
                 queueInc();
+                if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
         }
@@ -334,8 +344,8 @@ void EnumeratedVariable::increase(Value newInf)
             if (newInf == sup) assign(newInf);
             else {
                 inf = newInf;
-                if (newInf > maxCostValue) queueNC();           // diff with increaseFast
-                if (newInf > support) findSupport();            // diff with increaseFast
+                if (newInf > maxCostValue || PARTIALORDER) queueNC();           // diff with increaseFast
+                if (newInf > support || PARTIALORDER) findSupport();            // diff with increaseFast
                 queueDAC();                                     // diff with increaseFast
                 queueEAC1();                                     // diff with increaseFast
                 queueInc();
@@ -356,6 +366,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
             else {
                 sup = newSup;
                 queueDec();
+                if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
@@ -372,8 +383,8 @@ void EnumeratedVariable::decrease(Value newSup)
             if (inf == newSup) assign(newSup);
             else {
                 sup = newSup;
-                if (newSup < maxCostValue) queueNC();           // diff with decreaseFast
-                if (newSup < support) findSupport();            // diff with decreaseFast
+                if (newSup < maxCostValue || PARTIALORDER) queueNC();           // diff with decreaseFast
+                if (newSup < support || PARTIALORDER) findSupport();            // diff with decreaseFast
                 queueDAC();                                     // diff with decreaseFast
                 queueEAC1();                                     // diff with decreaseFast
                 queueDec();
@@ -391,6 +402,7 @@ void EnumeratedVariable::removeFast(Value value)
     else if (canbe(value)) {
         domain.erase(value);
         queueAC();
+        if (PARTIALORDER) queueDAC();
         if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value);
     }
 }
@@ -402,8 +414,8 @@ void EnumeratedVariable::remove(Value value)
     else if (value == sup) decrease(value - 1);
     else if (canbe(value)) {
         domain.erase(value);
-        if (value == maxCostValue) queueNC();
-        if (value == support) findSupport();
+        if (value == maxCostValue || PARTIALORDER) queueNC();
+        if (value == support || PARTIALORDER) findSupport();
         queueDAC();
         queueEAC1();
         queueAC();
@@ -420,7 +432,7 @@ void EnumeratedVariable::assignWhenEliminated(Value newValue)
         sup = newValue;
         support = newValue;
         maxCostValue = newValue;
-        maxCost = 0;
+        maxCost = MIN_COST;
 }
 
 void EnumeratedVariable::assign(Value newValue)
@@ -429,14 +441,14 @@ void EnumeratedVariable::assign(Value newValue)
     if (unassigned() || getValue() != newValue) {
         if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
-        maxCostValue = newValue;
-        maxCost = 0;
         inf = newValue;
         sup = newValue;
         support = newValue;
+        maxCostValue = newValue;
+        maxCost = MIN_COST;
    
         Cost cost = getCost(newValue);
-        if (cost > 0) {
+        if (cost > MIN_COST) {
             deltaCost += cost;
             if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
             wcsp->increaseLb(wcsp->getLb() + cost);
@@ -472,7 +484,7 @@ void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
                Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1);
                if (curcost < mincost) mincost = curcost;
            }
-           if (mincost > 0) {
+           if (mincost > MIN_COST) {
 		       if (x->getSupport() == *iter1) supportBroken = true;
                x->project(*iter1, mincost);
            }
@@ -601,76 +613,6 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	return true;
 }
 
-/* min-sum diffusion algorithm */
-bool EnumeratedVariable::averaging()
-{
-	Cost Top = wcsp->getUb();
-	bool change = false;
-	EnumeratedVariable* x;
-	//EnumeratedVariable* y;
-	Constraint* ctr = NULL;
-	ConstraintList::iterator itc = getConstrs()->begin();
-	if(itc != getConstrs()->end())	ctr = (*itc).constr;
-	while(ctr) {
-		if(ctr->arity() == 2) {
-			BinaryConstraint* bctr = (BinaryConstraint*) ctr;
-			x = (EnumeratedVariable*) bctr->getVarDiffFrom( (Variable*) this );
-			for (iterator it = begin(); it != end(); ++it) {
-				Cost cu = getCost(*it);
-				Cost cmin = Top;
-				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
-					Cost cbin = bctr->getCost(this,x,*it,*itx);
-					if(cmin > cbin) cmin = cbin;
-				}
-				long double mean = (long double)(cmin + cu) / 2.;	
-				long double extc = (long double)cu - mean;					 
-				if(abs(extc) >= 1) {
-					Cost costi =  (Cost) extc;
-					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
-						bctr->addcost(this,x,*it,*itx,costi);				
-					}
-					if(mean > cu) project(*it, -costi); 
-					else          extend(*it,   costi);
-					change = true;
-				}
-			}
-		} /*else if(ctr->arity() == 3) {
-			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-			x = (EnumeratedVariable*) tctr->getVar( 0 );
-			if(x == this) x = (EnumeratedVariable*) tctr->getVar( 1 );
-		    y = (EnumeratedVariable*) tctr->getVarDiffFrom((Variable*) this, (Variable*)x);
-
-			for (iterator it = begin(); it != end(); ++it) {
-				Cost cu = getCost(*it);
-				Cost cmin = Top;
-				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
-				for (iterator ity = y->begin(); ity != y->end(); ++ity) {
-					Cost ctern = tctr->getCost(this,x,y,*it,*itx,*ity);
-					if(cmin > ctern) cmin = ctern;
-				}}
-				float mean = (float)(cmin + cu) / 2.;	
-				float extc = (float)cu - mean;					 
-				if(abs(extc) >= 1) {
-					int costi =  (int) extc;
-					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
-					for (iterator ity = y->begin(); ity != y->end(); ++ity) {
-						tctr->addcost(this,x,y,*it,*itx,*ity,costi);				
-					}}
-					if(mean > cu) project(*it, -costi); 
-					else          extend(*it,   costi);
-					change = true;
-				}
-			}
-		}*/
-		++itc;
-		if(itc != getConstrs()->end()) ctr = (*itc).constr;
-		else ctr = NULL;
-	}
-	return change;
-}
-
-
-
 void EnumeratedVariable::eliminate()
 {
     if (ToulBar2::elimDegree_preprocessing_ >= 0 && 
@@ -707,10 +649,6 @@ void EnumeratedVariable::eliminate()
 	}
 	assert(getDegree() == 0);
 	if (ToulBar2::verbose >= 2) cout << "Eliminate " << getName() << endl;
-	assert(getCost(support) == 0); // it is ensured by previous calls to findSupport
+	assert(getCost(support) == MIN_COST); // it is ensured by previous calls to findSupport
 	assign(support); // warning! dummy assigned value
 }
-
-
-
-

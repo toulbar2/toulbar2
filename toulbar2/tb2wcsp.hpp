@@ -10,30 +10,10 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 
-#include <map>
-#include <list>
-
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
 class VACExtension;
-
-
-inline bool CUT(Cost lb, Cost ub)  { 
-	if(lb % ToulBar2::costMultiplier) return lb + ToulBar2::costMultiplier >= ub;
-	else return lb >= ub;
-}
-
-inline bool SCUT(Cost lb, Cost ub)  { 
-	return lb >= ub;
-}
-
-inline bool NOCUT(Cost lb, Cost ub)  { 
-	return lb < ub;
-}
-
-typedef map<Cost,int> tScale;
-
 
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
@@ -42,6 +22,7 @@ class WCSP : public WeightedCSP {
     StoreCost lb;
     Cost ub;
     vector<Variable *> vars;
+    vector<Constraint *> constrs;
     int NCBucketSize;
     vector< VariableList > NCBuckets;         // vector of backtrackable lists
     Queue NC;                                 // non backtrackable list
@@ -50,6 +31,7 @@ class WCSP : public WeightedCSP {
     Queue DAC;                                // non backtrackable list
     Queue EAC1;                               // non backtrackable list
     Queue EAC2;                               // non backtrackable list
+    Queue Eliminate;                          // non backtrackable list
     bool objectiveChanged;
     Long nbNodes;                             // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
@@ -61,45 +43,33 @@ class WCSP : public WeightedCSP {
     
 public:
 
-    vector<Constraint *> constrs;
-
     WCSP(Store *s, Cost upperBound);
-
-    Queue Eliminate;                          // non backtrackable list
     
     virtual ~WCSP();
     
+
+    // -----------------------------------------------------------
     // General API for weighted CSP global constraint
     
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
     
     Cost getLb() const {return lb;}
-    Cost getUb() const { return ub; }
-
-    // avoid cost overflow
-    Cost add(const Cost a, const Cost b) const {return (a + b >= getUb())?getUb():(a+b);}
-    // avoid weakning hard costs
-    Cost sub(const Cost a, const Cost b) const {assert(b <= a); return (a >= getUb())?a:(a-b);}
-
-	// Functions for dealing with probabilities
-	// warning: NormFactor has to be initiailized
-	Cost Prob2Cost(TProb p) const;
-	TProb Cost2LogLike(Cost c) const;
-	TProb Cost2Prob(Cost c) const;
-
+    Cost getUb() const {return ub;}
 
     void updateUb(Cost newUb) {
-        ub = min(ub,newUb);
-		if (vars.size()==0) NCBucketSize = cost2log2(ub) + 1;
+        if (newUb < ub) {
+            ub = newUb;
+    		if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
+        }
     }
     
 	void enforceUb() {
-       if (CUT(lb, ub)) THROWCONTRADICTION;
+       if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, ub)) THROWCONTRADICTION;
        objectiveChanged=true;
     }
     void increaseLb(Cost newLb) {
        if (newLb > lb) {
-           if (CUT(newLb, ub)) THROWCONTRADICTION;
+           if (CUT(((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb, ub)) THROWCONTRADICTION;
            lb = newLb;
            objectiveChanged=true;
            if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
@@ -107,7 +77,7 @@ public:
     }
     void decreaseUb(Cost newUb) {
        if (newUb < ub) {
-           if (CUT(lb, newUb)) THROWCONTRADICTION;
+           if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, newUb)) THROWCONTRADICTION;
            ub = newUb;
            objectiveChanged=true;
        }
@@ -115,8 +85,6 @@ public:
  
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     
-    Variable   *getVar(int varIndex) const {return vars[varIndex];}
-    Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
     string getName(int varIndex) const {return vars[varIndex]->getName();}
     Value getInf(int varIndex) const {return vars[varIndex]->getInf();}
     Value getSup(int varIndex) const {return vars[varIndex]->getSup();}
@@ -186,11 +154,17 @@ public:
     void read_wcsp(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed);
 
+    void print(ostream& os);
+    void dump(ostream& os);
+    friend ostream& operator<<(ostream& os, WCSP &wcsp);
 
 
+    // -----------------------------------------------------------
     // Specific API for Variable and Constraint classes
 
     Store *getStore() {return storeData;}
+    Variable   *getVar(int varIndex) const {return vars[varIndex];}
+    Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
 
     void link(Variable *x) {vars.push_back(x);}
     void link(Constraint *c) {constrs.push_back(c);}
@@ -226,9 +200,9 @@ public:
     void preprocessing();
 
 
+    // -----------------------------------------------------------
+    // Data and methods for Variable Elimination
 
-
-    // Functions and data for Variable Elimination
 	typedef struct {
 		EnumeratedVariable* x;
 		EnumeratedVariable* y;
@@ -238,7 +212,6 @@ public:
 		TernaryConstraint*  xyz;
 	} elimInfo;
 
-	bool isternary;
 	int maxdomainsize;	                              						   
 
 	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
@@ -250,9 +223,6 @@ public:
 	int getElimOrder() { return (int) elimOrder; } 
 	void elimination() { elimOrder = elimOrder + 1; }   
 	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
-	TernaryConstraint* newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
-	NaryConstraint*    newNaryConstr( TSCOPE& scope );
-	void deleteTmpConstraint( Constraint* ctr );
 
 	void eliminate();
 	void restoreSolution(); 
@@ -260,29 +230,28 @@ public:
 	Constraint* sum( Constraint* ctr1, Constraint* ctr2  );
 	void project( Constraint* &ctr_inout, EnumeratedVariable* var  );
 	void variableElimination( EnumeratedVariable* var );
-    BinaryConstraint* getArbitraryBinaryCtr();
-    TernaryConstraint* getArbitraryTernaryCtr();
-    NaryConstraint* getArbitraryNaryCtr();
+
 
     // -----------------------------------------------------------
-    VACExtension*  vac;                        // all the stuff to (possibly) enforce VAC
+    // Data and methods for Virtual Arc Consistency
 
-    tScale         scaleCost;
-    list<Cost>     scaleVAC;
-    void           addCost( Cost c );
+    VACExtension*  vac;
 
-    void 		   iniSingleton();
-    void		   updateSingleton();
-    void		   removeSingleton();
-  
-    // -----------------------------------------------------------
-    
-    
+    void histogram( Cost c );
+    void histogram();
+    void iniSingleton();
+    void updateSingleton();
+    void removeSingleton();
     void printVACStat(); 
-    void printTightMatrtix();
-    void print(ostream& os);
-    void dump(ostream& os);
-    friend ostream& operator<<(ostream& os, WCSP &wcsp);
+
+
+    // -----------------------------------------------------------
+    // Functions for dealing with probabilities
+    // Warning: ToulBar2::NormFactor has to be initialized
+
+    Cost Prob2Cost(TProb p) const;
+    TProb Cost2Prob(Cost c) const;
+    TProb Cost2LogLike(Cost c) const;    
 };
 
 #endif /*TB2WCSP_HPP_*/

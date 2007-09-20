@@ -38,9 +38,10 @@ protected:
     bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
     {
         // hard binary constraint costs are not changed
-        if (NOCUT(cost + wcsp->getLb(),wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+        if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+        Cost oldcost = x->getCost(value);
         x->project(value, cost);
-        return (x->getSupport() == value);
+        return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
     }
     
     void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
@@ -75,8 +76,8 @@ public:
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
 		//if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
-		res -= deltaCostsX[ix] + deltaCostsY[iy];
-        assert(res >= 0);
+        res -= deltaCostsX[ix] + deltaCostsY[iy];
+        assert(res >= MIN_COST);
         return res;
     }
     
@@ -87,7 +88,7 @@ public:
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
 		//if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
 		res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
-        assert(res >= 0);
+        assert(res >= MIN_COST);
         return res;
     }
 
@@ -95,20 +96,25 @@ public:
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
-        assert(res >= 0);
+        assert(res >= MIN_COST);
         return res;
     }
 
 
    void addcost( int vx, int vy, Cost mincost ) {
+            assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost));
    	        int ix = x->toIndex(vx);
             int iy = y->toIndex(vy);
    	       	costs[ix * sizeY + iy] += mincost;
    }
 
    void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
-      if (xin==x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
-      else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
+      assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
+      if (xin==x) {
+        costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
+      } else {
+        costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
+      }
    }
 
    void setCost( Cost c ) {   	
@@ -150,11 +156,11 @@ public:
     }
  
     void clearCosts() {
-        for (unsigned int i=0; i<sizeX; i++) deltaCostsX[i] = 0;
-        for (unsigned int j=0; j<sizeY; j++) deltaCostsY[j] = 0;
+        for (unsigned int i=0; i<sizeX; i++) deltaCostsX[i] = MIN_COST;
+        for (unsigned int j=0; j<sizeY; j++) deltaCostsY[j] = MIN_COST;
         for (unsigned int i=0; i<sizeX; i++) {
           for (unsigned int j=0; j<sizeY; j++) {
-            costs[i * sizeY + j] = 0;
+            costs[i * sizeY + j] = MIN_COST;
           }
         }
     }
@@ -171,12 +177,11 @@ public:
 			if(ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }		
 		}
 		if(count == 2) return getCost(vals[0], vals[1]);
-		else return 0;
+		else return MIN_COST;
 	}    
     
     Cost getDefCost() { return wcsp->getUb(); }
 	void setDefCost( Cost df ) {}
-    
     
 	Value getSupport(EnumeratedVariable* var, Value v) {
 		if(var == x) return supportX[x->toIndex(v)];
@@ -186,8 +191,8 @@ public:
 	void  setSupport(EnumeratedVariable* var, Value v, Value s) {	
 		if(var == x) supportX[x->toIndex(v)] = s; 
 		else  		 supportY[y->toIndex(v)] = s; 
-	}   
-	
+	}       
+   
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
     EnumeratedVariable::iterator itvx;
@@ -278,35 +283,27 @@ public:
 //            if(connected()) findFullSupportX();
             x->queueAC(); 
             y->queueDAC();
-            if (wcsp->isternary) {
-                x->queueEAC1();
-                y->queueEAC1();
-            } else {
-                if(connected()) {
-                    int yindex = y->toIndex(y->getSupport());
-                    if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
-                        x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], y->getSupport()) > 0) {
-                        y->queueEAC1();
-                    }
-                }
-            }
+            x->queueEAC1();
+//                if(connected()) {
+//                    int yindex = y->toIndex(y->getSupport());
+//                    if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
+//                        x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST) {
+//                        y->queueEAC1();
+//                    }
+//                }
         } else {
 //            findSupportX();             // must do AC before DAC
 //            if(connected()) findFullSupportY();
             y->queueAC(); 
             x->queueDAC();
-            if (wcsp->isternary) {
-                x->queueEAC1();
-                y->queueEAC1();
-            } else {
-                if(connected()) {
-                    int xindex = x->toIndex(x->getSupport());
-                    if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
-                        y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(), supportX[xindex]) > 0) {
-                        x->queueEAC1();
-                    }
-                }
-            }
+            y->queueEAC1();
+//                if(connected()) {
+//                    int xindex = x->toIndex(x->getSupport());
+//                    if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
+//                        y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST) {
+//                        x->queueEAC1();
+//                    }
+//                }
         }
     }
     void remove(int varIndex) {
@@ -337,7 +334,7 @@ public:
       if (varIndex==0) {
 	   assert(y->canbe(y->getSupport()));
 	   int yindex = y->toIndex(y->getSupport());
-	   if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex],y->getSupport()) > 0) {
+	   if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex],y->getSupport()) > MIN_COST) {
 	       y->queueEAC2();
 	   }
       }
@@ -345,7 +342,7 @@ public:
       if (varIndex==1) {
 	   assert(x->canbe(x->getSupport()));
 	   int xindex = x->toIndex(x->getSupport());
-	   if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(x->getSupport(),supportX[xindex]) > 0) {
+	   if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(),supportX[xindex]) > MIN_COST) {
 	       x->queueEAC2();
 	   }
       }
@@ -353,12 +350,12 @@ public:
   }
   
   bool isEAC(int varIndex, Value a) {
-    //if (varIndex==getDACScopeIndex()) return true;
+	//    if (varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
         int xindex = x->toIndex(a);
-        if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > 0 || getCost(a, supportX[xindex]) > 0) {
+        if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                if (y->getCost(*iterY) == 0 && getCost(a,*iterY) == 0) {
+                if (y->getCost(*iterY) == MIN_COST && getCost(a,*iterY) == MIN_COST) {
                     supportX[xindex] = *iterY;
                     return true;
                 }
@@ -367,9 +364,9 @@ public:
         }
     } else {
         int yindex = y->toIndex(a);
-        if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > 0 || getCost(supportY[yindex], a) > 0) {
+        if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
             for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-                if (x->getCost(*iterX) == 0 && getCost(*iterX, a) == 0) {
+                if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {
                     supportY[yindex] = *iterX;
                     return true;
                 }
@@ -381,7 +378,7 @@ public:
   }
   
     void findFullSupportEAC(int varIndex) {
-        //if (varIndex==getDACScopeIndex()) return;
+	  //        if (varIndex==getDACScopeIndex()) return;
         if (varIndex == 0) findFullSupportX();
         else findFullSupportY();
     } 
@@ -393,8 +390,7 @@ public:
 	   double sum = 0;
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-				Cost c = getCost(*iterX, *iterY);
-                sum += to_double(c);
+                sum += to_double(getCost(*iterX, *iterY));
 				count++;
 	       }
 	    }

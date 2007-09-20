@@ -29,8 +29,8 @@ ICC = icc
 CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
-OFLAGS = -O3 -DNDEBUG
-# -O2
+OFLAGS = -O3 -DNDEBUG -g
+# -g -O2
 
 ICCFLAGS = -O3 -ipo -static -DNDEBUG
 
@@ -47,7 +47,7 @@ BUILD = $(CC) -shared
 	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
 toulbar2: $(OBJS)
-	$(CC) $(OBJS) -o $@ $(PFLAGS) -lgmp
+	$(CC) $(OBJS) -o $@ $(PFLAGS)
 
 toulbar2i: $(SRCS)
 	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)

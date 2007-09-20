@@ -47,19 +47,19 @@ public:
   bool decreaseVAC(Value supInf);
 
   Cost 	getMaxK( long timeStamp ) {
-  	if(maxk_timeStamp < timeStamp) return 0;
+  	if(maxk_timeStamp < timeStamp) return MIN_COST;
   	else return maxk; 
   } 
 
   Cost 	getK( Value v, long timeStamp ) {
-  	if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
+  	if(k_timeStamp[toIndex(v)] < timeStamp) return MIN_COST;
   	else return k[toIndex(v)]; 
   } 
   void 	setK( Value v, Cost c, long timeStamp ) { 
   	k[toIndex(v)] = c; 
   	k_timeStamp[toIndex(v)] = timeStamp; 
   	if(maxk_timeStamp < timeStamp) {
-  		maxk = 0;
+  		maxk = MIN_COST;
   		maxk_timeStamp = timeStamp;
   	}
   }
@@ -107,6 +107,8 @@ public:
   void VACproject(Value v, const Cost c);
   void VACextend (Value v, const Cost c);
  
+  bool averaging();	
+
   friend ostream& operator<< (ostream& os, VACVariable &v) {
     return os;
   }

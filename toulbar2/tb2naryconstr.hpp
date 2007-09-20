@@ -6,10 +6,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-#include <map>
 #include <set>
-#include <list>
-
 
 class NaryConstraintCommon : public AbstractNaryConstraint
 {
@@ -111,50 +108,5 @@ public:
     void dump(ostream& os);
     
 };
-
-
-
-class ValueNode {
-	Value v;
-	StoreCost  c;
-	list<ValueNode*> sons;
-	
-	ValueNode(WCSP *wcsp) : c(0, &wcsp->getStore()->storeCost) {}	
-};
-
-
-class NaryConstraintHybrid : public NaryConstraintCommon
-{
-
-public:
-	
-	NaryConstraintHybrid( WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval );
-		
-	TernaryConstraint* xyz;
-	vector<ValueNode*> tuples;
-		
-	void propagate() {
-        for(int i=0;connected() && i<arity_;i++) {         
-            if (getVar(i)->assigned()) assign(i);
-        }
-    };
-    
-    void increase(int index) {}
-    void decrease(int index) {}
-    void remove(int index) {}
-    void projectFromZero(int index) {}
-    void fillEAC2(int index) {}
-    bool isEAC(int index, Value a) {return true;}
-    void findFullSupport(int index) {}
-	
-	
-};
-
-
-
-
-
-
-
 
 #endif /*TB2NARYCONSTR_HPP_*/

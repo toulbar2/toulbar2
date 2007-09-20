@@ -95,8 +95,6 @@ public:
     void elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
 
-	bool averaging();	
-
     class iterator;
     friend class iterator;
     class iterator {        // : public Variable::iterator {

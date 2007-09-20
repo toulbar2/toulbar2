@@ -8,8 +8,6 @@
 
 #include "tb2wcsp.hpp"
 
-#include <map>
-
 class Genotype {
 public:
   int allele1;

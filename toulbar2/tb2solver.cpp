@@ -118,7 +118,7 @@ int Solver::getNextUnassignedVar()
 int Solver::getVarMinDomainDivMaxDegree()
 {
     int varIndex = -1;
-    Cost worstUnaryCost = 0;
+    Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
@@ -138,7 +138,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 {
     if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
     int varIndex = -1;
-    Cost worstUnaryCost = 0;
+    Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
@@ -161,7 +161,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
     
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
 	  double size = wcsp->getDomainSize(*iter);
-	  double heuristic = size / (wcsp->getWeightedDegree(*iter) + ((double) wcsp->getMaxUnaryCost(*iter) / size));
+	  double heuristic = size / (wcsp->getWeightedDegree(*iter) + to_double(wcsp->getMaxUnaryCost(*iter)));
 	  if (varIndex  < 0 || heuristic < best) {
 		best = heuristic;
 		varIndex = *iter;
@@ -178,7 +178,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
     
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
 	  double size = wcsp->getDomainSize(*iter);
-	  double heuristic = size / (wcsp->getWeightedDegree(*iter) + ((double) wcsp->getMaxUnaryCost(*iter) / size));
+	  double heuristic = size / (wcsp->getWeightedDegree(*iter) + to_double(wcsp->getMaxUnaryCost(*iter)));
 	  if (varIndex  < 0 || heuristic < best) {
 		best = heuristic;
 		varIndex = *iter;
@@ -192,7 +192,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 //{
 //    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
 //    int varIndex = -1;
-//    Cost worstUnaryCost = 0;
+//    Cost worstUnaryCost = MIN_COST;
 //    double best = MAX_VAL - MIN_VAL;
 //    
 //    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
@@ -445,11 +445,10 @@ void Solver::newSolution()
     }
     assert(allVarsAssigned);
 #endif
-    //    wcsp->updateUb(wcsp->getLb()+1); // to generate all optimal solutions (warning! in the solver output, substract one to any solution cost to get the exact cost)
-    wcsp->updateUb(wcsp->getLb());
+    if (!ToulBar2::allSolutions) wcsp->updateUb(wcsp->getLb());
     
-    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getUb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-	else cout << "New solution: " <<  wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+	else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
     wcsp->restoreSolution();
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
@@ -545,7 +544,7 @@ bool Solver::solve()
            
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
-        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
+        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
 

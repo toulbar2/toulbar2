@@ -35,7 +35,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 	string s(tuple);
 	while(nogoods>0) {
 		for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST; 
-		Cost c = randomCost(0, costMax);
+		Cost c = randomCost(MIN_COST, costMax);
 		nctr->setTuple(s, c, scopeVars);
 		nogoods--;
 	}	  	
@@ -59,14 +59,14 @@ void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMi
 	for (a = 0; a < mx; a++)
 	    for (b = 0; b < my; b++) 
  		    for (c = 0; c < mz; c++) 
-		        costs.push_back(0);
+		        costs.push_back(MIN_COST);
 
     while(nogoods>0) {
       dice = myrand() % total_nogoods;
       for(a=0;a<mx;a++)
 	  for(b=0;b<my;b++)
 	  for(c=0;c<mz;c++) {
-	     if(costs[my*mz*a + b*mz + c] == 0) {
+	     if(costs[my*mz*a + b*mz + c] == MIN_COST) {
 		    if(dice == 0) {
 		    	costs[my*mz*a + b*mz + c] = randomCost(costMin, costMax);
 			    nogoods--;
@@ -95,13 +95,13 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
     vector<Cost> costs;
 	for (a = 0; a < mx; a++)
 	    for (b = 0; b < my; b++) 
-	        costs.push_back(0);
+	        costs.push_back(MIN_COST);
 
     while(nogoods>0) {
       dice = myrand() % total_nogoods;
       for(a=0;a<mx;a++)
 	  for(b=0;b<my;b++) {
-	     if(costs[my*a+b] == 0) {
+	     if(costs[my*a+b] == MIN_COST) {
 		    if(dice == 0) {
 		    	costs[my*a+b] = randomCost(costMin, costMax);
 			    nogoods--;
@@ -227,7 +227,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 	  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
 	  	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
 	  	{
-	  		x->project(a, rand() % 3 ); 
+	  		x->project(a, randomCost(MIN_COST, MEDIUM_COST)); 
 	  	}
   	}
     
