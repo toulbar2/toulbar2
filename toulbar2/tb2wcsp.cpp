@@ -880,7 +880,6 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		    while(ctr1->next(tuple1,cost1)) {
 				ctr2->first();
 			    while(ctr2->next(tuple2,cost2)) {
-				  //			    	if(cost1 + cost2 < Top) nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2); ????????
 			    	nary->insertSum(tuple1,cost1,ctr1,tuple2,cost2,ctr2,true);
 			    }
 			}

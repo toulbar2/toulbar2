@@ -354,6 +354,7 @@ VACConstraint::~VACConstraint ()
 
 void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
   int index = x->toIndex(v);
+  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] += c; 
   else			   deltaCostsY[index] += c; 
   x->VACproject(v, c);
@@ -361,6 +362,7 @@ void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
 
 void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   int index = x->toIndex(v);
+  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] -= c;
   else		       deltaCostsY[index] -= c;
   x->VACextend(v, c);
