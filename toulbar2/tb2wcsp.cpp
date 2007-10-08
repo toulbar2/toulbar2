@@ -241,11 +241,19 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
      return ctr->wcspIndex;
 }
 
-
-
-void WCSP::postSupxyc(int xIndex, int yIndex, Value cste)
+void WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
 {
-    new Supxyc(this, vars[xIndex], vars[yIndex], cste, &storeData->storeCost, &storeData->storeValue);
+    new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);  
+}
+
+void WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
+{
+    new Supxyc(this, vars[xIndex], vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
+}
+
+void WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
+{
+    new Disjunction(this, vars[xIndex], vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
 }
 
 void WCSP::sortConstraints()
@@ -687,7 +695,7 @@ void WCSP::propagate()
         propagateIncDec();
         if (!ToulBar2::FDAC && !CSP(getLb(),getUb())) propagateEAC();
         assert(IncDec.empty());
-        propagateDAC();
+		propagateDAC();
         assert(IncDec.empty());
         propagateAC();
         assert(IncDec.empty());

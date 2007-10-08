@@ -78,7 +78,7 @@ void Solver::read_solution(const char *filename)
         int value = 0;
         file >> value;
         if (wcsp->unassigned(i)) {
-            wcsp->assign(i, value);
+		  assign(i, value);
         } else {
             if (wcsp->getValue(i) != value) THROWCONTRADICTION;
         }

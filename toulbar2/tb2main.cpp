@@ -194,9 +194,10 @@ int main(int argc, char **argv)
         	if(nit > 0) ToulBar2::minsumDiffusion = nit;
         }
         if ((ch = strchr(argv[i],'A'))) { 
-        	int depth = atoi(&ch[1]);
-        	if(depth >= 1) ToulBar2::vac = depth;
-        	}
+		  ToulBar2::vac = 1;
+		  int depth = atoi(&ch[1]);
+		  if(depth >= 1) ToulBar2::vac = depth;
+		}
         if ( (ch = strchr(argv[i],'T')) ) {
         	Cost ct = string2Cost(&ch[1]);
         	if(ct > UNIT_COST) ToulBar2::costThreshold = ct;

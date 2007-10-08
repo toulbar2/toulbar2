@@ -17,7 +17,7 @@
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) : 
         Variable(w, n, iinf, isup), 
-        domain(iinf, isup, &w->getStore()->storeDomain),
+        domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
         support(iinf, &w->getStore()->storeValue)
 {
     init();
@@ -25,7 +25,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) : 
         Variable(w, n, min(d,dsize), max(d, dsize)), 
-        domain(d, dsize, &w->getStore()->storeDomain),
+        domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
         support(min(d,dsize), &w->getStore()->storeValue)
 {
     init();
@@ -154,10 +154,17 @@ void EnumeratedVariable::projectSupCost(Cost cost)
 void EnumeratedVariable::extend(Value value, Cost cost)
 {
     assert(cost >= MIN_COST);
-    assert(CUT(costs[toIndex(value)], cost));
+	//    assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
     assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
     if (value == maxCostValue || PARTIALORDER) queueNC();
+}
+
+void EnumeratedVariable::extendAll(Cost cost)
+{
+  //    assert(cost > MIN_COST);
+    deltaCost += cost;          // Warning! Possible overflow???
+    queueNC();
 }
 
 void EnumeratedVariable::findSupport()

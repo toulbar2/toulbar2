@@ -118,7 +118,7 @@ void VACVariable::VACproject (Value v, const Cost c) {
 void VACVariable::VACextend (Value v, const Cost c) {
   decreaseCost(v,c);
   if (v == maxCostValue) queueNC();
-  if(cannotbe(getSupport()) || getCost(getSupport())) { 
+  if(cannotbe(getSupport()) || getCost(getSupport())>MIN_COST) { 
     Value newSupport = getInf();
     Cost minCost = getCost(newSupport);
     EnumeratedVariable::iterator iter = begin();

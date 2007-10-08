@@ -39,6 +39,7 @@ void WCSP::read_wcsp(const char *fileName)
     int arity;
     string funcname;
     Value funcparam1;
+	Value funcparam2;
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = MIN_COST;
 
@@ -164,6 +165,7 @@ void WCSP::read_wcsp(const char *fileName)
 		} else if (arity == 2) {
             file >> i;
             file >> j;
+			if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
         	if (i == j) {
     	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
@@ -174,7 +176,6 @@ void WCSP::read_wcsp(const char *fileName)
                 assert(vars[j]->enumerated());
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
                 EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
-                if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
                 file >> ntuples;
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
@@ -202,20 +203,31 @@ void WCSP::read_wcsp(const char *fileName)
                 file >> funcname;
                 if (funcname == ">=") {
                     file >> funcparam1;
-                    postSupxyc(i,j,funcparam1);
+                    file >> funcparam2;
+                    postSupxyc(i,j,funcparam1,funcparam2);
                 } else if (funcname == ">") {
                     file >> funcparam1;
-                    postSupxyc(i,j,funcparam1 + 1);
+                    file >> funcparam2;
+                    postSupxyc(i,j,funcparam1 + 1,funcparam2);
                 } else if (funcname == "<=") {
                     file >> funcparam1;
-                    postSupxyc(j,i, -funcparam1);
+                    file >> funcparam2;
+                    postSupxyc(j,i, -funcparam1,funcparam2);
                 } else if (funcname == "<") {
                     file >> funcparam1;
-                    postSupxyc(j,i, -funcparam1 + 1);
+                    file >> funcparam2;
+                    postSupxyc(j,i, -funcparam1 + 1,funcparam2);
                 } else if (funcname == "=") {
                     file >> funcparam1;
-                    postSupxyc(i,j,funcparam1);
-                    postSupxyc(j,i,-funcparam1);
+                    file >> funcparam2;
+                    postSupxyc(i,j,funcparam1,funcparam2);
+                    postSupxyc(j,i,-funcparam1,funcparam2);
+                } else if (funcname == "disj") {
+				  Cost funcparam3;
+				  file >> funcparam1;
+				  file >> funcparam2;
+				  file >> funcparam3;
+				  postDisjunction(i,j,funcparam1,funcparam2,funcparam3);
                 } else {
                     cerr << "Error: function " << funcname << " not implemented!" << endl;
                     exit(EXIT_FAILURE);
@@ -224,28 +236,47 @@ void WCSP::read_wcsp(const char *fileName)
         } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
-            assert(vars[i]->enumerated());
-            EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
-            file >> defval;
-            file >> ntuples;
-            TemporaryUnaryConstraint unaryconstr;
-            unaryconstr.var = x;
-            for (a = 0; a < x->getDomainInitSize(); a++) {
+			if (vars[i]->enumerated()) {
+			  EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
+			  file >> defval;
+			  file >> ntuples;
+			  TemporaryUnaryConstraint unaryconstr;
+			  unaryconstr.var = x;
+			  for (a = 0; a < x->getDomainInitSize(); a++) {
                 unaryconstr.costs.push_back(defval*K);
-            }
-            for (k = 0; k < ntuples; k++) {
+			  }
+			  for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
                 unaryconstr.costs[a] = cost*K;
-            }
-            if(ToulBar2::vac) {
+			  }
+			  if(ToulBar2::vac) {
                 for (a = 0; a < x->getDomainInitSize(); a++) {
-         			Cost c = unaryconstr.costs[a];
-                    histogram(c);
+				  Cost c = unaryconstr.costs[a];
+				  histogram(c);
                 }               	
-            }
-            unaryconstrs.push_back(unaryconstr);
-            x->queueNC();
+			  }
+			  unaryconstrs.push_back(unaryconstr);
+			  x->queueNC();
+			} else {
+			  file >> defval;
+			  if (defval == MIN_COST) {
+				cerr << "Error: unary cost function with zero penalty cost!" << endl;
+				exit(EXIT_FAILURE);
+			  }
+			  file >> ntuples;
+			  Value *dom = new Value[ntuples];
+			  for (k = 0; k < ntuples; k++) {
+                file >> dom[k];
+                file >> cost;
+				if (cost != MIN_COST) {
+				  cerr << "Error: unary cost function with non-zero cost tuple!" << endl;
+				  exit(EXIT_FAILURE);
+				}
+			  }			  
+			  postUnary(i,dom,ntuples,defval);
+			  delete [] dom;
+			}
         } else if (arity == 0) {
             file >> defval;
             file >> ntuples;
@@ -257,6 +288,10 @@ void WCSP::read_wcsp(const char *fileName)
             inclowerbound += defval*K;
         } 
     }
+	file >> funcname;
+	if (file) {
+	  cerr << "Warning: EOF not reached after reading all the constraints (initial number of constraints too small?)" << endl;
+	}
     sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading

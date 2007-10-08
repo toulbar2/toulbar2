@@ -74,7 +74,9 @@ public:
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
     virtual int postNaryConstraint(int* scope, int arity, Cost defval) =0;
-    virtual void postSupxyc(int xIndex, int yIndex, Value cste) =0;
+    virtual void postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
+    virtual void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
+    virtual void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
     virtual void read_random(int n, int m, vector<int>& p, int seed) =0;

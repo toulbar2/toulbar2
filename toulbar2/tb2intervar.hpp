@@ -30,8 +30,8 @@ public:
     void remove(Value newValue) {if (newValue==inf) increase(newValue+1); else if (newValue==sup) decrease(newValue-1);}
     void assign(Value newValue);
 
-    Cost getInfCost() const {return infCost - deltaCost;}
-    Cost getSupCost() const {return supCost - deltaCost;}
+  Cost getInfCost() const {return infCost;}
+  Cost getSupCost() const {return supCost;}
     void projectInfCost(Cost cost);
     void projectSupCost(Cost cost);
 

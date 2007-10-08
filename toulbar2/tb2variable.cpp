@@ -15,7 +15,7 @@
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : 
         WCSPLink(w,w->numberOfVariables()), name(n),
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
-        constrs(&w->getStore()->storeConstraint), deltaCost(MIN_COST, &w->getStore()->storeCost),
+        constrs(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
         NCBucket(-1, &w->getStore()->storeValue)
 //        elimOrder(-1, &w->getStore()->storeValue)
@@ -164,18 +164,15 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
     }
 }
 
-void Variable::extendAll(Cost cost)
-{
-    assert(cost > MIN_COST);
-    deltaCost += cost;          // Warning! Possible overflow???
-    queueNC();
-}
-
 void Variable::propagateIncDec(int incdec)
 {
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-        if (incdec & INCREASE_EVENT) (*iter).constr->increase((*iter).scopeIndex);
-        if (incdec & DECREASE_EVENT) (*iter).constr->decrease((*iter).scopeIndex);
+        if (incdec & INCREASE_EVENT) {
+		  (*iter).constr->increase((*iter).scopeIndex);
+		}
+        if ((*iter).constr->connected() && (incdec & DECREASE_EVENT)) {
+		  (*iter).constr->decrease((*iter).scopeIndex);
+		}
     }
 }
 

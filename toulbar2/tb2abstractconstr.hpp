@@ -12,6 +12,61 @@
 #include "tb2wcsp.hpp"
 
 
+template<class T1>
+class AbstractUnaryConstraint : public Constraint
+{
+protected:
+    T1 *x;
+    DLink<ConstraintLink> *linkX;
+    
+public:
+    AbstractUnaryConstraint(WCSP *wcspin, T1 *xx) : Constraint(wcspin), x(xx), linkX(NULL) {
+        linkX = xx->link(this,0);
+    }
+
+    virtual ~AbstractUnaryConstraint() {delete linkX;}
+
+    bool connected() {return !linkX->removed;}
+    bool deconnected() {return linkX->removed;}
+    void deconnect() {
+        if (connected()) {
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            x->deconnect(linkX);
+        }
+    }
+    void reconnect() {
+        if (deconnected()) {
+            x->getConstrs()->push_back(linkX, true); 
+        }
+    }
+
+    int arity() const {return 1;}
+    
+    Variable *getVar(int varCtrIndex) const {return x;}
+
+    Variable *getVarDiffFrom( Variable* v ) const  {
+		if(v != x) return x;
+		else exit(EXIT_FAILURE);
+	}
+		    
+    int getIndex(Variable* var) const 
+    {
+    	if(var == x) return 0;
+    	return -1;
+    }
+
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 1); return x->wcspIndex;}
+    int getSmallestVarIndexInScope() {return x->wcspIndex;}
+    int getDACScopeIndex() {return 0;}
+    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<1);}
+
+	void getScope( TSCOPE& scope_inv ) {
+		scope_inv.clear();
+		scope_inv[ x->wcspIndex ] = 0;
+	}	
+};
+
+
 template<class T1, class T2>
 class AbstractBinaryConstraint : public Constraint
 {

@@ -448,11 +448,12 @@ void VACExtension::afterPreprocessing()
 	int discarded = 0;
 	for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
 		Constraint* c = wcsp->getCtr(i);
-        if (c->connected()) c->computeTightness();
-        if(c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
+        if (c->connected()) {
+		  if(c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
         	c->deconnect();
         	discarded++;
-        }
+		  }
+		}
     }
     if(discarded) cout << "WARNING num of discarded ctrs: " << discarded << endl;
 }

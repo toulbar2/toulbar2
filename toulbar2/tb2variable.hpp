@@ -27,8 +27,6 @@ protected:
     StoreValue sup;
 
     ConstraintList constrs;
-
-    StoreCost deltaCost;
     
     // incremental NC data
     StoreCost maxCost;
@@ -102,7 +100,6 @@ public:
     Cost getMaxCost() const {return maxCost;}
     Value getMaxCostValue() const {return maxCostValue;}
     
-    virtual void extendAll(Cost cost);
     virtual void propagateNC() =0;    
     virtual bool verifyNC() =0;
     virtual bool isEAC() {return true;}

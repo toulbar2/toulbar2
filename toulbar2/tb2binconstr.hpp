@@ -307,11 +307,11 @@ public:
         }
     }
     void remove(int varIndex) {
-        if (getDACScopeIndex()==0) {
+	    if (getDACScopeIndex()==0) {
             if (varIndex == 0) findSupportY();
-        } else {
+			} else {
             if (varIndex == 1) findSupportX();
-        }
+			}
     }
     void projectFromZero(int varIndex) {
         if (getDACScopeIndex()==0) {

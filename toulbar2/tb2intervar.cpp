@@ -41,12 +41,6 @@ void IntervalVariable::projectInfCost(Cost cost)
     Cost newcost = oldcost + cost;
     if (getInf() == maxCostValue || newcost > maxCost) queueNC();
     if (CUT(newcost + wcsp->getLb(),wcsp->getUb())) increaseFast(getInf() + 1);     // Avoid any unary cost overflow
-    if (getSup() == getInf() + 1 && getInfCost() > MIN_COST && getSupCost() > MIN_COST) {
-        Cost minCost = min(getInfCost(),getSupCost());
-        extendAll(minCost);
-        if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
-        wcsp->increaseLb(wcsp->getLb() + minCost);
-    }
 }
 
 void IntervalVariable::projectSupCost(Cost cost)
@@ -57,12 +51,6 @@ void IntervalVariable::projectSupCost(Cost cost)
     Cost newcost = oldcost + cost;
     if (getSup() == maxCostValue || newcost > maxCost) queueNC();
     if (newcost + wcsp->getLb() >= wcsp->getUb()) decreaseFast(getSup() - 1);     // Avoid any unary cost overflow
-    if (getSup() == getInf() + 1 && getInfCost() > MIN_COST && getSupCost() > MIN_COST) {
-        Cost minCost = min(getInfCost(),getSupCost());
-        extendAll(minCost);
-        if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
-        wcsp->increaseLb(wcsp->getLb() + minCost);
-    }
 }
 
 void IntervalVariable::propagateNC()
@@ -79,7 +67,6 @@ void IntervalVariable::propagateNC()
 
 bool IntervalVariable::verifyNC()
 {
-    bool supported = false;
     if (CUT(getInfCost() + wcsp->getLb(),wcsp->getUb())) {
         cout << *this << " has inf cost not NC!" << endl;
         return false;
@@ -88,9 +75,7 @@ bool IntervalVariable::verifyNC()
         cout << *this << " has sup cost not NC!" << endl;
         return false;
     }
-    supported = (getDomainSize() > 2 || getInfCost() == MIN_COST || getSupCost() == MIN_COST);
-    if (!supported) cout << *this << " not NC*!" << endl;
-    return supported;
+	return true;
 }
 
 void IntervalVariable::increaseFast(Value newInf)
@@ -102,7 +87,7 @@ void IntervalVariable::increaseFast(Value newInf)
             if (newInf == sup) assign(newInf);
             else {
                 inf = newInf;
-                infCost = deltaCost;
+                infCost = MIN_COST;
                 queueInc();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
@@ -119,7 +104,7 @@ void IntervalVariable::increase(Value newInf)
             if (newInf == sup) assign(newInf);
             else {
                 inf = newInf;
-                infCost = deltaCost;
+                infCost = MIN_COST;
                 if (newInf > maxCostValue) queueNC();           // single diff with increaseFast
                 queueInc();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
@@ -137,7 +122,7 @@ void IntervalVariable::decreaseFast(Value newSup)
             if (inf == newSup) assign(newSup);
             else {
                 sup = newSup;
-                supCost = deltaCost;
+                supCost = MIN_COST;
                 queueDec();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
@@ -154,7 +139,7 @@ void IntervalVariable::decrease(Value newSup)
             if (inf == newSup) assign(newSup);
             else {
                 sup = newSup;
-                supCost = deltaCost;
+                supCost = MIN_COST;
                 if (newSup < maxCostValue) queueNC();           // single diff with decreaseFast
                 queueDec();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
@@ -171,14 +156,8 @@ void IntervalVariable::assign(Value newValue)
         changeNCBucket(-1);
         maxCostValue = newValue;
         maxCost = MIN_COST;
-        Cost cost = ((newValue==inf)?getInfCost():((newValue==sup)?getSupCost():MIN_COST));
         inf = newValue;
         sup = newValue;
-        if (cost > MIN_COST) {
-            deltaCost += cost;
-            if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-            wcsp->increaseLb(wcsp->getLb() + cost);
-        }
         if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);

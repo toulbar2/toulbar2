@@ -14,6 +14,7 @@ class EnumeratedVariable : public Variable
 protected:
     Domain domain;
     vector<StoreCost> costs;
+    StoreCost deltaCost;
     StoreValue support;     // Warning! the unary support has to be backtrackable 
 
     DLink<VariableWithTimeStamp> linkACQueue;
@@ -60,6 +61,7 @@ public:
 
     virtual void project(Value value, Cost cost);
     virtual void extend(Value value, Cost cost);
+    virtual void extendAll(Cost cost);
     Value getSupport() const {return support;}
     void setSupport(Value val) {support = val;}    
     Cost getCost(const Value value) const {
