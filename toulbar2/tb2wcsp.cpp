@@ -1096,7 +1096,7 @@ void WCSP::histogram() {if (vac) vac->histogram();}
 void WCSP::iniSingleton() {if (vac) vac->iniSingleton();}
 void WCSP::updateSingleton() {if (vac) vac->updateSingleton();}
 void WCSP::removeSingleton() {if (vac) vac->removeSingleton();}
-void WCSP::printVACStat() {if (vac) vac->printStat();}
+void WCSP::printVACStat() {/*if (vac) vac->printStat();*/}
 
 
 // -----------------------------------------------------------

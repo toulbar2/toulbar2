@@ -28,6 +28,7 @@ typedef adjacency_list< vecS, vecS, undirectedS, no_property,
 typedef graph_traits < Graph >::vertex_descriptor Vertex;
 typedef graph_traits < Graph >::edge_descriptor Edge;
 
+#ifdef BOOST
 static void addConstraint(Constraint *c, Graph& g)
 {
     property_map<Graph, edge_weight_t>::type weight = get(edge_weight, g);
@@ -40,7 +41,9 @@ static void addConstraint(Constraint *c, Graph& g)
         }
     }
 }
+#endif
 
+#ifdef BOOST
 int WCSP::connectedComponents()
 {
     Graph G;
@@ -68,7 +71,9 @@ int WCSP::connectedComponents()
     
     return res;
 }
- 
+#endif
+
+#ifdef BOOST 
 int WCSP::biConnectedComponents()
 {
     Graph G;
@@ -85,7 +90,10 @@ int WCSP::biConnectedComponents()
 
     return num;
 }
-    
+#endif
+
+
+#ifdef BOOST     
 int WCSP::diameter()
 {
   Graph G;
@@ -128,9 +136,12 @@ int WCSP::diameter()
 
   return maxd;
 }
+#endif
 
 inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->wcspIndex); }
-       
+
+
+#ifdef BOOST       
 void WCSP::minimumDegreeOrdering()
 {
   Graph G;
@@ -181,3 +192,5 @@ void WCSP::minimumDegreeOrdering()
     elimConstrs[i]->propagate();
   }
 }
+#endif
+

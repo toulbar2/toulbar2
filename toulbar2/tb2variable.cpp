@@ -58,6 +58,18 @@ int cmpConstraint(const void *p1, const void *p2)
     else return 0;
 }
 
+int cmpConstraint2(const void *p1, const void *p2)
+{
+    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
+    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    double v1 = c1->content.constr->getTightness();
+    double v2 = c2->content.constr->getTightness();
+    if (v1 < v2) return 1;
+    else if (v1 > v2) return -1;
+    else return 0;
+}
+
+
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();

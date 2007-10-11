@@ -123,7 +123,7 @@ void VACExtension::reset()
      VariableList* varlist = wcsp->getNCBucket(bucket);  
      for (VariableList::iterator iter = varlist->begin(); iter != varlist->end();) {
         x = (VACVariable*) *iter;
-        if (x->unassigned() && x->getMaxCost() >= x->getThreshold())  x->queueVAC();
+        if (x->unassigned() && (x->getMaxCost() >= itThreshold))  x->queueVAC();
         ++iter;         
      }
   }
@@ -448,7 +448,7 @@ void VACExtension::afterPreprocessing()
 	int discarded = 0;
 	for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
 		Constraint* c = wcsp->getCtr(i);
-        if (c->connected()) {
+        if (c->connected() && (c->arity() <= 3)) {
 		  if(c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
         	c->deconnect();
         	discarded++;

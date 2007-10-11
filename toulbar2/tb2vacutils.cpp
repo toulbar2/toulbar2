@@ -413,7 +413,6 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
 		  }
 	  }
   }
-  assert(!wipeout);
    
   for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
 	  Value w = *it;	
@@ -428,7 +427,6 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
 	          minsup = w;
 	      }
 	  }
-	  assert(!wipeout);
   }
   for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
 	  Value w = *it;	
@@ -443,7 +441,6 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
 	          minsup = w;
 	      }
 	  }
-	  assert(!wipeout);
   }
   
   setSupport(xi,v,minsup);

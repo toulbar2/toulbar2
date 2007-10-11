@@ -1,6 +1,8 @@
 #!/bin/sh
 
-timelimit=100
+timelimit=1800
+K=10
+
 
 rm -f outall
 
@@ -16,14 +18,15 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
 
     if [[ -e $ubfile ]] ; then
 	ub=`cat $ubfile`
+	ub=`expr $ub \* $K`
 	echo -n $ub > out
     fi
     
     echo -n $file " "
     echo -n $file " " >> outall
    
-
-    (/usr/bin/time -f "%U user %S sys" /tmp/toulbar2 $file.wcsp $2 >> outsolver) 2> usedtime
+    ulimit -t $timelimit > /dev/null
+    (/usr/bin/time -f "%U user %S sys" ./toulbar2 $file.wcsp $2C$K >> outsolver) 2> usedtime
 
     cat outsolver | awk 'BEGIN{opt="-";nodes=0;} /^Initial upperbound: /{if(ubini<0) ubini=$3;} /^Optimum: /{opt=$2; nodes=$7;}  /^No solution /{opt=ubini; nodes=$7;}  END{printf(" %s %d ",opt,nodes); }' >> out ; cat out
 
