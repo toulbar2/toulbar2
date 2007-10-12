@@ -79,6 +79,8 @@ Cost ToulBar2::relaxThreshold = MIN_COST;
 
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
+BEP *ToulBar2::bep = NULL;
+
 int WCSP::wcspCounter = 0;
 
 
@@ -248,12 +250,17 @@ void WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
 
 void WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 {
-    new Supxyc(this, vars[xIndex], vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
+    new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
 }
 
 void WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
 {
-    new Disjunction(this, vars[xIndex], vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
+    new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
+}
+
+void WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
+{
+    new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
 }
 
 void WCSP::sortConstraints()

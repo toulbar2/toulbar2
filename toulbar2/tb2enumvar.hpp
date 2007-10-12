@@ -99,7 +99,7 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator {        // : public Variable::iterator {
+    class iterator {
         EnumeratedVariable *var;
         Domain::iterator diter;
     public:

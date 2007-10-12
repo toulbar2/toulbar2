@@ -35,22 +35,18 @@ void IntervalVariable::print(ostream& os)
 
 void IntervalVariable::projectInfCost(Cost cost)
 {
-    assert(cost >= MIN_COST);
-    Cost oldcost = getInfCost();
     infCost += cost;
-    Cost newcost = oldcost + cost;
-    if (getInf() == maxCostValue || newcost > maxCost) queueNC();
-    if (CUT(newcost + wcsp->getLb(),wcsp->getUb())) increaseFast(getInf() + 1);     // Avoid any unary cost overflow
+	assert(infCost >= MIN_COST);
+    if (getInf() == maxCostValue || infCost > maxCost) queueNC();
+    if (CUT(infCost + wcsp->getLb(),wcsp->getUb())) increaseFast(getInf() + 1);
 }
 
 void IntervalVariable::projectSupCost(Cost cost)
 {
-    assert(cost >= MIN_COST);
-    Cost oldcost = getSupCost();
     supCost += cost;
-    Cost newcost = oldcost + cost;
-    if (getSup() == maxCostValue || newcost > maxCost) queueNC();
-    if (newcost + wcsp->getLb() >= wcsp->getUb()) decreaseFast(getSup() - 1);     // Avoid any unary cost overflow
+	assert(supCost >= MIN_COST);
+    if (getSup() == maxCostValue || supCost > maxCost) queueNC();
+    if (CUT(supCost + wcsp->getLb(), wcsp->getUb())) decreaseFast(getSup() - 1);
 }
 
 void IntervalVariable::propagateNC()
@@ -158,6 +154,8 @@ void IntervalVariable::assign(Value newValue)
         maxCost = MIN_COST;
         inf = newValue;
         sup = newValue;
+		infCost = MIN_COST;
+		supCost = MIN_COST;
         if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);

@@ -6,6 +6,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2bep.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
 
@@ -24,6 +25,10 @@ void WCSP::read_wcsp(const char *fileName)
       else ToulBar2::pedigree->read_bayesian(fileName, this);
       return;
     }
+	if (ToulBar2::bep) {
+	  ToulBar2::bep->read(fileName, this);
+	  return;
+	}
     string pbname;
     int nbvar,nbval,nbconstr;
     Cost top;
@@ -228,6 +233,18 @@ void WCSP::read_wcsp(const char *fileName)
 				  file >> funcparam2;
 				  file >> funcparam3;
 				  postDisjunction(i,j,funcparam1,funcparam2,funcparam3);
+                } else if (funcname == "sdisj") {
+				  Value funcparam3;
+				  Value funcparam4;
+				  Cost funcparam5;
+				  Cost funcparam6;
+				  file >> funcparam1;
+				  file >> funcparam2;
+				  file >> funcparam3;
+				  file >> funcparam4;
+				  file >> funcparam5;
+				  file >> funcparam6;
+				  postSpecialDisjunction(i,j,funcparam1,funcparam2,funcparam3,funcparam4,funcparam5,funcparam6);
                 } else {
                     cerr << "Error: function " << funcname << " not implemented!" << endl;
                     exit(EXIT_FAILURE);

@@ -28,6 +28,7 @@ class Solver
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
+    int getMostUrgent();
     void increase(int varIndex, Value value);
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);
@@ -42,6 +43,8 @@ class Solver
     void newSolution();
     void recursiveSolve();
     void recursiveSolveLDS(int discrepancy);
+    Value postponeRule(int varIndex);
+    void scheduleOrPostpone(int varIndex);
     
 public:
     Solver(int storeSize, Cost initUpperBound);

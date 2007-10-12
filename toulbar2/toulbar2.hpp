@@ -77,6 +77,7 @@ public:
     virtual void postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
+    virtual void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
     virtual void read_random(int n, int m, vector<int>& p, int seed) =0;

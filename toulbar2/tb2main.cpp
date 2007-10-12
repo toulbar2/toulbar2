@@ -4,6 +4,7 @@
 
 #include "tb2solver.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2bep.hpp"
 #include <string.h>
 
 // used for debugging purpose.
@@ -99,6 +100,7 @@ int main(int argc, char **argv)
         cerr << "Available problem formats (specified by the filename extension):" << endl;
         cerr << "   *.wcsp : wcsp format" << endl;
         cerr << "   *.pre  : pedigree format" << endl << endl;
+        cerr << "   bEpInstance* or *.bep  : BEP format" << endl << endl;
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
 		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %" << endl; 
@@ -286,6 +288,7 @@ int main(int argc, char **argv)
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
     if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
+    if (strstr(argv[1],".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
     try {
         if(randomproblem)    solver.read_random(n,m,p,seed);

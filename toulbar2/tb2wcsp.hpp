@@ -148,6 +148,7 @@ public:
     void postUnary(int xIndex, Value *d, int dsize, Cost penalty);
     void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
     void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
+    void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval);

@@ -115,6 +115,7 @@ typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
 typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX } ElimOrderType;
 
 class Pedigree;
+class BEP;
 
 class ToulBar2
 {
@@ -163,6 +164,7 @@ public:
     static Cost relaxThreshold;
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;
+    static BEP *bep;
 };
 
 /*

@@ -126,7 +126,6 @@ void EnumeratedVariable::project(Value value, Cost cost)
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || LUBTEST(maxCost, newcost)) queueNC();
     if (DACTEST(oldcost, cost)) {
-//        cout << "insert in DAC and EAC1 of " << getName() << endl;
         queueDAC();
         queueEAC1();
     }
@@ -154,7 +153,7 @@ void EnumeratedVariable::projectSupCost(Cost cost)
 void EnumeratedVariable::extend(Value value, Cost cost)
 {
     assert(cost >= MIN_COST);
-	//    assert(CUT(costs[toIndex(value)], cost));
+	assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
     assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
     if (value == maxCostValue || PARTIALORDER) queueNC();
@@ -162,7 +161,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
 
 void EnumeratedVariable::extendAll(Cost cost)
 {
-  //    assert(cost > MIN_COST);
+    assert(cost > MIN_COST);
     deltaCost += cost;          // Warning! Possible overflow???
     queueNC();
 }

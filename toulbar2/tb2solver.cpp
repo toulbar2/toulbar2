@@ -6,7 +6,7 @@
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
 #include "tb2pedigree.hpp"
-
+#include "tb2bep.hpp"
 
 extern void setvalue(int wcspId, int varIndex, Value value);
 
@@ -208,6 +208,23 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 //    return varIndex;
 //}
 
+int Solver::getMostUrgent()
+{
+    int varIndex = -1;
+	Value best = MAX_VAL;
+    Cost worstUnaryCost = MIN_COST;
+    
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (varIndex < 0 || wcsp->getInf(*iter) < best ||
+			(wcsp->getInf(*iter) == best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+		  best = wcsp->getInf(*iter);
+		  worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+		  varIndex = *iter;
+        }
+	}
+    return varIndex;   
+}
+
 /*
  * Choice points
  * 
@@ -333,6 +350,45 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         lastConflictVar = -1;
         recursiveSolveLDS(0);
     }
+}
+
+Value Solver::postponeRule(int varIndex)
+{
+  assert(ToulBar2::bep);
+  Value best = ToulBar2::bep->latest[varIndex] + 1;
+    
+  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+	if (*iter != varIndex) {
+	  Value time = wcsp->getInf(*iter) + ToulBar2::bep->duration[*iter] + ToulBar2::bep->delay[*iter * ToulBar2::bep->size + varIndex];
+	  if (time < best) {
+		best = time;
+	  }
+	}
+  }
+  return best;
+}
+  
+void Solver::scheduleOrPostpone(int varIndex)
+{
+    assert(wcsp->unassigned(varIndex));
+	Value xinf = wcsp->getInf(varIndex);
+	Value postponeValue = postponeRule(varIndex);
+	postponeValue = max(postponeValue, xinf+1);
+	assert(postponeValue <= ToulBar2::bep->latest[varIndex]+1);
+	bool reverse = (wcsp->getUnaryCost(varIndex,xinf) > MIN_COST)?true:false;
+    try {
+        store->store();
+        if (reverse) increase(varIndex, postponeValue);
+		else assign(varIndex, xinf);
+        recursiveSolve();
+    } catch (Contradiction) {
+        wcsp->whenContradiction();
+    }
+    store->restore();
+    nbBacktracks++;
+	if (reverse) assign(varIndex, xinf);
+	else increase(varIndex, postponeValue);
+    recursiveSolve();
 }
 
 int cmpValueCost(const void *p1, const void *p2)
@@ -462,6 +518,7 @@ void Solver::newSolution()
             }
         }
         cout << endl;
+		if (ToulBar2::bep) ToulBar2::bep->printSolution((WCSP *) wcsp);
     }
     if (ToulBar2::pedigree) {
       ToulBar2::pedigree->printCorrection((WCSP *) wcsp);
@@ -489,12 +546,14 @@ void Solver::newSolution()
 void Solver::recursiveSolve()
 {		
 	int varIndex = -1;
-	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
+	if (ToulBar2::bep) varIndex = getMostUrgent();
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
 	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
 	else if(ToulBar2::weightedDegree) varIndex = getVarMinDomainDivMaxWeightedDegree();
 	else varIndex = getVarMinDomainDivMaxDegree();
     if (varIndex >= 0) {
-        if (wcsp->enumerated(varIndex)) {
+	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
+        else if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
 			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
 			  binaryChoicePoint(varIndex, wcsp->getSupport(varIndex));
@@ -512,12 +571,14 @@ void Solver::recursiveSolve()
 void Solver::recursiveSolveLDS(int discrepancy)
 {
 	int varIndex = -1;
-	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
+	if (ToulBar2::bep) varIndex = getMostUrgent();
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
 	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
 	else if(ToulBar2::weightedDegree) varIndex = getVarMinDomainDivMaxWeightedDegree();
 	else varIndex = getVarMinDomainDivMaxDegree();
     if (varIndex >= 0) {
-        if (wcsp->enumerated(varIndex)) {
+	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
+        else if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
 			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
 			  binaryChoicePointLDS(varIndex, wcsp->getSupport(varIndex), discrepancy);
