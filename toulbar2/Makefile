@@ -26,11 +26,12 @@ ICC = icc
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/Ilog/solver60/include -I/usr/local/Ilog/concert20/include
 #ILOGLIBS = -L/usr/local/Ilog/solver60/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -L/usr/local/Ilog/concert20/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -lsolverfloat -lsolver -lconcert
 
-CFLAGS = -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
+CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
-OFLAGS = -O3 -DNDEBUG -g
-# -g -O2
+OFLAGS = -O3 -DNDEBUG
+# -O3 -DNDEBUG
+# -O2
 
 ICCFLAGS = -O3 -ipo -static -DNDEBUG
 
