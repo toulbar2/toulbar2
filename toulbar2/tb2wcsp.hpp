@@ -152,7 +152,6 @@ public:
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval);
-	int postNaryConstraint(EnumeratedVariable** scopeVars, int arity, Cost defval);    
     
     void read_wcsp(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed);
@@ -217,15 +216,24 @@ public:
 
 	int maxdomainsize;	                              						   
 
+	void initElimConstrs();
+
 	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
 	vector<elimInfo> elimInfos; 
 	vector<Constraint*>  elimConstrs;
 
-
-	void initElimConstrs();
+	StoreInt elimBinOrder;    	 				        
+	StoreInt elimTernOrder;    	 				        
+	vector<Constraint*>  elimBinConstrs;
+	vector<Constraint*>  elimTernConstrs;
+	
 	int getElimOrder() { return (int) elimOrder; } 
-	void elimination() { elimOrder = elimOrder + 1; }   
+	void elimOrderInc() { elimOrder = elimOrder + 1; }   
+	void elimBinOrderInc() { elimBinOrder = elimBinOrder + 1; }   
+	void elimTernOrderInc() { elimTernOrder = elimTernOrder + 1; }   
+	
 	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
+	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
 
 	void eliminate();
 	void restoreSolution(); 

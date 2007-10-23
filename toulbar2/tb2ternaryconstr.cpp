@@ -4,7 +4,7 @@
 
 #include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
-
+#include "tb2vac.hpp"
 
 /*
  * Constructors and misc.
@@ -58,17 +58,20 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCo
     supportX = vector< pair<Value,Value> >(maxdom);
     supportY = vector< pair<Value,Value> >(maxdom);
     supportZ = vector< pair<Value,Value> >(maxdom);
-
+	linkX = new DLink<ConstraintLink>;
+    linkY = new DLink<ConstraintLink>;    
+    linkZ = new DLink<ConstraintLink>;    
+    
     costs = vector<StoreCost>(maxdom*maxdom*maxdom,StoreCost(MIN_COST,storeCost));
     
     for (unsigned int a = 0; a < maxdom; a++) 
        for (unsigned int b = 0; b < maxdom; b++) 
            for (unsigned int c = 0; c < maxdom; c++) 
                costs[a * maxdom * maxdom + b * maxdom + c] = MIN_COST;
- 
-    xy = NULL;
-    xz = NULL;
-    yz = NULL ;
+ 	xy = NULL;
+ 	xz = NULL;
+ 	yz = NULL;
+ 	
 }
 
 

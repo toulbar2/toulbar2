@@ -67,15 +67,22 @@ void VACExtension::histogram( Cost c )
 void VACExtension::histogram()
 {
   int cumulus = 0;
-  tScale::iterator it = scaleCost.begin();
-  while(it != scaleCost.end()) {
-	cumulus += it->second;
-	if(cumulus > 50) {
-	  scaleVAC.push_front(it->first);
-	  cumulus = 0;
-	}
-	++it;
-  }    	
+  int packetsize = 50;
+  bool toomany = true;
+  while(toomany) {
+      scaleVAC.clear();
+	  tScale::iterator it = scaleCost.begin();
+	  while(it != scaleCost.end()) {
+		cumulus += it->second;
+		if(cumulus > packetsize) {
+		  scaleVAC.push_front(it->first);
+		  cumulus = 0;
+		}
+		++it;
+	  }
+	  toomany = scaleVAC.size() > 20;     	
+	  if(toomany) packetsize *= 2;
+  }
   if (ToulBar2::verbose >= 1) {
 	cout << "Costs Scale: ";
 	list<Cost>::iterator itl = scaleVAC.begin();

@@ -19,18 +19,20 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 {
 	int i;
 	int arity = indexs.size();
-	EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];  
+	EnumeratedVariable** scopeVars = new EnumeratedVariable * [arity];  
+	int* scopeIndexs = new int [arity];  
 	char* tuple = new char [arity+1];  
 	Cost Top = wcsp.getUb();
 	if(costMax < Top) Top = costMax;
 
 	for(i = 0; i<arity; i++) {
-		scopeVars[i] = (EnumeratedVariable*) wcsp.getVar( indexs[i] );
+		scopeIndexs[i] = indexs[i];
+		scopeVars[i] = (EnumeratedVariable*) wcsp.getVar(indexs[i]);
 		tuple[i] = 0 + CHAR_FIRST;
 	}
 	tuple[arity] = '\0';
 
-	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeVars, arity, Top) );
+	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeIndexs, arity, Top) );
 
 	string s(tuple);
 	while(nogoods>0) {
@@ -39,6 +41,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 		nctr->setTuple(s, c, scopeVars);
 		nogoods--;
 	}	  	
+	delete [] scopeIndexs;	
 	delete [] scopeVars;	
 	delete [] tuple;
 }

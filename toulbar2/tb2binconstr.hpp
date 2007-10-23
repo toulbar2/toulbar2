@@ -139,8 +139,10 @@ public:
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx);  	iy = y->toIndex(*itery);
-        	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
-			else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
+        	if(costs[ix * sizeY + iy] < wcsp->getUb()) {
+	        	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
+				else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
+        	}
 	    }}
     }
     
@@ -150,8 +152,8 @@ public:
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
-        	if(xy->x == x) costs[ix * sizeY + iy] += xy->getCost(*iterx,*itery);
-			else	       costs[ix * sizeY + iy] += xy->getCost(*itery,*iterx);
+        	if(costs[ix * sizeY + iy] < wcsp->getUb()) 
+        		costs[ix * sizeY + iy] += xy->getCost(x,y,*iterx,*itery);
 	    }}
     }
  

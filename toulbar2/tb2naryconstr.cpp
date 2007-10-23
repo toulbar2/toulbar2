@@ -1,9 +1,13 @@
 
 #include "tb2naryconstr.hpp"
-#include "tb2wcsp.hpp"
 #include "tb2vac.hpp"
 	
-NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
+	
+	
+	
+	
+	
+NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
 			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	int i;
@@ -20,150 +24,18 @@ NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp, EnumeratedVariable** scop
 	default_cost = defval;
 	if(default_cost > Top) default_cost = Top;
 	store_top = default_cost < Top;
+  
+    xy = NULL;
+    xyz = NULL;  
 }
 
 
 
-NaryConstraintCommon::NaryConstraintCommon(WCSP *wcsp)
+NaryConstraint::NaryConstraint(WCSP *wcsp)
 			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
 {
 }
 
-
-
-NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
-			: NaryConstraintCommon(wcsp, scope_in, arity_in, defval)
-{
-	if (!ToulBar2::vac) xy = new BinaryConstraint(wcsp, &wcsp->getStore()->storeCost );
-	else 				xy = new VACConstraint(wcsp, &wcsp->getStore()->storeCost );
-    propagate();
-	pf = new TUPLES;
-	filters = NULL;
-}
-
-
-NaryConstraint::NaryConstraint(WCSP *wcsp)
-			: NaryConstraintCommon(wcsp)
-{
-	xy = NULL;
-	pf = new TUPLES;
-}
-
-
-NaryConstraint::~NaryConstraint()
-{
-	if(pf) delete pf;
-}
-
-
-
-
-// USED ONLY DURING SEARCH to project the nary constraint 
-// to the binary constraint xy, when all variables but 2 are assigned 
-void NaryConstraint::projectNaryBinary()
-{
-	int indexs[2];
-	EnumeratedVariable* unassigned[2];
-	char* tbuf = new char [arity_ + 1]; 
-	string t;
-
-	int i,nunassigned = 0;
-	for(i=0;i<arity_;i++) {
-		EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 		
-		if(getVar(i)->unassigned()) { 
-			unassigned[nunassigned] = var; 
-			indexs[nunassigned] = i;
-			tbuf[i] = CHAR_FIRST;
-			nunassigned++;
-		} else tbuf[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
-	}
-	assert(	nunassigned <= 2 );
-	tbuf[arity_] =  '\0';
-	t = tbuf;
-	delete [] tbuf;
-	
-	EnumeratedVariable* x = unassigned[0];
-	EnumeratedVariable* y = NULL;
-
-	if(nunassigned == 2) {
-		y = unassigned[1];
-		xy->fillElimConstr(x,y);	
-		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {	
-			Value xval = *iterx;
-			Value yval = *itery;
-			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
-			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
-			xy->setcost(xval,yval,eval(t));
-	    }}
-	    BinaryConstraint* ctr = x->getConstr(y);   			
-		if(ctr) {
-			ctr->reconnect();
-			ctr->addCosts(xy);
-			ctr->propagate();
-		} else {
-			xy->reconnect();
-			xy->propagate();
-		}
-	} else if(nunassigned == 1) {
-		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-			Value xval = *iterx;
-			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
-	  		Cost c = eval(t);
-	  		if(c > MIN_COST) x->project(xval, c);	
-	    }
-	    x->findSupport();    
-	} 
-	else {
-		Cost c = eval(t);
-		wcsp->increaseLb(wcsp->getLb() + c);
-	}	  	 
-}
-
-
-void NaryConstraint::resetFilters()
-{
-	if(filters) {
-		delete filters;
-		filters = NULL;
-	}
-}
-
-void NaryConstraint::fillFilters()
-{
-	if(filters == NULL) {
-		filters = new set<Constraint*>;
-		for(int i=0;i<arity();i++) {
-			EnumeratedVariable* v = (EnumeratedVariable*) getVar(i);
-	   		for (ConstraintList::iterator iter=v->getConstrs()->begin(); iter != v->getConstrs()->end(); ++iter) {
-	                Constraint* ctr = (*iter).constr;
-	                if(scopeIncluded(ctr)) filters->insert( ctr );
-	        }		
-		}
-	}
-}
-
-// USED ONLY DURING SEARCH 
-void NaryConstraint::assign(int varIndex) {
-
-    if (connected(varIndex)) {
-        deconnect(varIndex);	
-	    nonassigned = nonassigned - 1;
-	   
-	   if(nonassigned <= 2) {
-			deconnect();
-			projectNaryBinary();
-	   }
-    }
-}
-
-Cost NaryConstraint::eval( string s ) {
-	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
-	TUPLES& f = *pf;
-	TUPLES::iterator  it = f.find(s);
-	if(it != f.end()) return it->second;
-	else return default_cost;  
-}
 
 Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
 {
@@ -182,6 +54,105 @@ Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
 	delete [] cht;
 	return cost;
 }    
+
+// USED ONLY DURING SEARCH 
+void NaryConstraint::assign(int varIndex) {
+    if (connected(varIndex)) {
+        deconnect(varIndex);	
+	    nonassigned = nonassigned - 1;
+	   
+	   if(nonassigned <= 3) {
+	   	    //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
+			deconnect();
+			projectNaryBinary();
+	   }
+    }
+}
+
+// USED ONLY DURING SEARCH to project the nary constraint 
+void NaryConstraint::projectNaryBinary()
+{
+	int indexs[3];
+	EnumeratedVariable* unassigned[3] = {NULL,NULL,NULL};
+	char* tbuf = new char [arity_ + 1]; 
+	string t;
+
+	int i,nunassigned = 0;
+	for(i=0;i<arity_;i++) {
+		EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 		
+		if(getVar(i)->unassigned()) { 
+			unassigned[nunassigned] = var; 
+			indexs[nunassigned] = i;
+			tbuf[i] = CHAR_FIRST;
+			nunassigned++;
+		} else tbuf[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+	}
+	tbuf[arity_] =  '\0';
+	t = tbuf;
+	delete [] tbuf;
+	
+	EnumeratedVariable* x = unassigned[0];
+	EnumeratedVariable* y = unassigned[1];
+	EnumeratedVariable* z = unassigned[2];
+
+	if(nunassigned == 3) {
+		xyz = wcsp->newTernaryConstr(x,y,z);
+		wcsp->elimTernOrderInc();
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {	
+	    for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {	
+			Value xval = *iterx;
+			Value yval = *itery;
+			Value zval = *iterz;
+			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
+			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
+			t[indexs[2]] =  z->toIndex(zval) + CHAR_FIRST;					
+			xyz->setcost(x,y,z,xval,yval,zval,eval(t));
+	    }}}
+	    TernaryConstraint* ctr = x->getConstr(y,z);   			
+		if(ctr) {
+			assert( ctr != xyz );
+			ctr->addCosts(xyz);
+			xyz = ctr;
+		} else {
+			xyz->fillElimConstrBinaries();			
+			xyz->reconnect();
+		}
+		xyz->propagate();
+	}
+	else if(nunassigned == 2) {
+		xy = wcsp->newBinaryConstr(x,y);	
+		wcsp->elimBinOrderInc();
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {	
+			Value xval = *iterx;
+			Value yval = *itery;
+			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
+			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
+			xy->setcost(xval,yval,eval(t));
+	    }}
+	    BinaryConstraint* ctr = x->getConstr(y);   			
+		if(ctr) {
+			ctr->addCosts(xy);
+			xy = ctr;
+		}
+		xy->reconnect();
+		xy->propagate();
+		
+	} else if(nunassigned == 1) {
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+			Value xval = *iterx;
+			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
+	  		Cost c = eval(t);
+	  		if(c > MIN_COST) x->project(xval, c);	
+	    }
+	    x->findSupport();    
+	} 
+	else {
+		Cost c = eval(t);
+		wcsp->increaseLb(wcsp->getLb() + c);
+	}	  	 
+}
 
 void NaryConstraint::firstlex()
 {
@@ -227,7 +198,77 @@ bool NaryConstraint::nextlex( string& t, Cost& c)
 	return true;
 }
 
-void NaryConstraint::changeDefCost( Cost df )
+
+
+
+
+// ********************* NaryConstraintMap *********************
+// _____________________________________________________________
+
+
+
+NaryConstraintMap::NaryConstraintMap(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
+			: NaryConstraint(wcsp, scope_in, arity_in, defval)
+{
+	pf = new TUPLES;
+	filters = NULL;
+    //propagate();
+}
+
+
+NaryConstraintMap::NaryConstraintMap(WCSP *wcsp)
+			: NaryConstraint(wcsp)
+{
+	xy = NULL;
+	pf = new TUPLES;
+}
+
+
+NaryConstraintMap::~NaryConstraintMap()
+{
+	if(pf) delete pf;
+}
+
+
+
+
+
+
+void NaryConstraintMap::resetFilters()
+{
+	if(filters) {
+		delete filters;
+		filters = NULL;
+	}
+}
+
+void NaryConstraintMap::fillFilters()
+{
+	if(filters == NULL) {
+		filters = new set<Constraint*>;
+		for(int i=0;i<arity();i++) {
+			EnumeratedVariable* v = (EnumeratedVariable*) getVar(i);
+	   		for (ConstraintList::iterator iter=v->getConstrs()->begin(); iter != v->getConstrs()->end(); ++iter) {
+	                Constraint* ctr = (*iter).constr;
+	                if(scopeIncluded(ctr)) filters->insert( ctr );
+	        }		
+		}
+	}
+}
+
+
+
+Cost NaryConstraintMap::eval( string s ) {
+	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
+	TUPLES& f = *pf;
+	TUPLES::iterator  it = f.find(s);
+	if(it != f.end()) return it->second;
+	else return default_cost;  
+}
+
+
+
+void NaryConstraintMap::changeDefCost( Cost df )
 {
 	Cost Top = wcsp->getUb();
 	if(df > Top) df = Top;
@@ -252,7 +293,7 @@ void NaryConstraint::changeDefCost( Cost df )
 
 
 
-bool NaryConstraint::consistent( string& t ) {
+bool NaryConstraintMap::consistent( string& t ) {
 	int a = arity();
 	bool ok = true;
 	for(int i=0;i<a && ok;i++) {
@@ -263,12 +304,12 @@ bool NaryConstraint::consistent( string& t ) {
 }
 
 
-void NaryConstraint::first() 
+void NaryConstraintMap::first() 
 { 
 	tuple_it = pf->begin();
 }
 
-bool NaryConstraint::next( string& t, Cost& c)
+bool NaryConstraintMap::next( string& t, Cost& c)
 {
 	bool ok = false;
 	while(!ok && (tuple_it != pf->end())) {
@@ -281,7 +322,7 @@ bool NaryConstraint::next( string& t, Cost& c)
 	else return true;	
 }
 
-void NaryConstraint::permute( EnumeratedVariable** scope_in )
+void NaryConstraintMap::permute( EnumeratedVariable** scope_in )
 {
 	TUPLES* pf_old = pf;
 	pf = new TUPLES;
@@ -315,7 +356,7 @@ void NaryConstraint::permute( EnumeratedVariable** scope_in )
 
 // for adding a tuple in f
 // scope_in contains the order of the values in string tin 
-void NaryConstraint::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+void NaryConstraintMap::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
 {
 	string t(tin);
 	if(scope_in) {
@@ -327,7 +368,7 @@ void NaryConstraint::setTuple( string& tin, Cost c, EnumeratedVariable** scope_i
 	(*pf)[t] = c;
 }
 
-void NaryConstraint::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+void NaryConstraintMap::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
 {
 	string t(tin);
 	if(scope_in) {
@@ -340,7 +381,7 @@ void NaryConstraint::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope
 }
 
 
-void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters )
+void NaryConstraintMap::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters )
 {
 	Cost Top = wcsp->getUb();
 	if(c1 >= Top) return;
@@ -389,7 +430,7 @@ void NaryConstraint::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2
 }  
 
 
-void NaryConstraint::sum( NaryConstraint* nary )
+void NaryConstraintMap::sum( NaryConstraintMap* nary )
 {
 	deconnect();
 	
@@ -453,7 +494,7 @@ void NaryConstraint::sum( NaryConstraint* nary )
 // Projection of variable x of the nary constraint 
 // complexity O(2|f|)
 // this function is independent of the search 
-void NaryConstraint::project( EnumeratedVariable* x, bool addUnaryCtr )
+void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 {
 	int xindex = getIndex(x);
 	if(xindex < 0) return;
@@ -545,7 +586,7 @@ void NaryConstraint::project( EnumeratedVariable* x, bool addUnaryCtr )
 
 // Projects out all variables except x,y,z
 // and gives the reusult at fproj
-void NaryConstraint::projectxyz( EnumeratedVariable* x,
+void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 								 EnumeratedVariable* y,
 								 EnumeratedVariable* z, 
 								 TUPLES& fproj)
@@ -613,7 +654,7 @@ void NaryConstraint::projectxyz( EnumeratedVariable* x,
 
 // Projects out all variables except x,y,z
 // and gives the reusult at fproj
-void NaryConstraint::projectxy( EnumeratedVariable* x,
+void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 								EnumeratedVariable* y,
 								TUPLES& fproj)
 {
@@ -675,7 +716,7 @@ void NaryConstraint::projectxy( EnumeratedVariable* x,
 }
 
 
-void NaryConstraint::preproject3()
+void NaryConstraintMap::preproject3()
 {
 	for(int i = 0; i < arity_ - 2; i++) {
 	   EnumeratedVariable* x = scope[i];
@@ -710,7 +751,7 @@ void NaryConstraint::preproject3()
 }
 
 
-void NaryConstraint::preprojectall2()
+void NaryConstraintMap::preprojectall2()
 {
   for(int i = 0; i < arity_; i++) {
   for(int j = i+1; j < arity_; j++) {
@@ -743,13 +784,12 @@ void NaryConstraint::preprojectall2()
 }	
 
 
-void NaryConstraint::print(ostream& os)
+void NaryConstraintMap::print(ostream& os)
 {
 	TUPLES& f = *pf;
 	os << endl << this << " f(";
 	
 	int unassigned_ = 0;
-	 
 	long totaltuples = 1;
 	for(int i = 0; i < arity_;i++) {
 		if(scope[i]->unassigned()) unassigned_++;
@@ -765,11 +805,11 @@ void NaryConstraint::print(ostream& os)
 
 	assert(nonassigned == unassigned_);
 
-	TSCOPE::iterator it = scope_inv.begin();
+	/*TSCOPE::iterator it = scope_inv.begin();
 	while(it != scope_inv.end()) {
 		os << "(" << it->first << ",idx: " << it->second << ") ";
 		++it;
-	}
+	}*/
 	os << endl;
 
 
@@ -787,7 +827,7 @@ void NaryConstraint::print(ostream& os)
 	}
 }
 
-void NaryConstraint::dump(ostream& os)
+void NaryConstraintMap::dump(ostream& os)
 {
 	int i; 
 	TUPLES& f = *pf;
@@ -806,3 +846,293 @@ void NaryConstraint::dump(ostream& os)
         os << c << endl; 
     } 
 }
+
+
+
+
+
+TrieNode::TrieNode() {
+  ptrs = NULL; 
+  letters = NULL; 
+  word = NULL; 
+  c = 0;
+}
+
+
+void TrieNode::iniLeaf(char *suffix) {
+    leaf = true;
+    word = new char[strlen(suffix)+1];
+    if (word == 0) exit(-1);
+    strcpy(word,suffix);
+}
+
+void TrieNode::iniNonLeaf(char ch) {
+    ptrs = new TrieNode*;
+    letters = new char[2];
+    if (ptrs == 0 || letters == 0) exit(1);
+    leaf = false;
+    endOfWord = false;
+    *ptrs = 0;
+    *letters = ch;
+    *(letters+1) = '\0';
+}
+
+
+
+
+Trie::Trie(char* word, Cost c) : notFound(-1) {
+    root = new TrieNode(); 
+    root->iniNonLeaf(*word);
+    TrieNode* lf = createLeaf(*word,word+1,root); // to avoid later tests;
+    lf->c = c;
+}
+
+void Trie::printTrie(int depth, TrieNode *p, char *prefix) {
+    register int i;             // assumption: the root is not a leaf
+    if (p->leaf) {              // and it is not null;
+         TrieNode *lf = (TrieNode*) p;
+         for (i = 1; i <= depth; i++) cout << "   ";
+         cout << " >>" << prefix << "|" << lf->word << "   cost: " << lf->c << endl;
+         
+    }
+    else {
+         for (i = strlen(p->letters)-1; i >= 0; i--)
+             if (p->ptrs[i] != 0) {             // add the letter
+                 prefix[depth] = p->letters[i]; // corresponding to
+                 prefix[depth+1] = '\0';        // position i to prefix;
+                 printTrie(depth+1,p->ptrs[i],prefix);
+             }
+         if (p->endOfWord) {
+              prefix[depth] = '\0';
+              for (i = 1; i <= depth+1; i++) cout << "   ";
+              cout << ">>>" << prefix << "\n";
+         }
+    }
+}
+
+int Trie::position(TrieNode *p, char ch) {
+    unsigned int i;
+    for (i = 0; i < strlen(p->letters) && p->letters[i] != ch; i++);
+    if (i < strlen(p->letters)) return i;
+    else return notFound;
+}
+
+TrieNode* Trie::find(const char *word) {
+    TrieNode *p = root;
+    int pos;
+    while (true)
+        if (p->leaf) {                      			   // node p is a leaf
+            if (strcmp(word,p->word) == 0)  return p;     // suffix of word should be found;
+            else return NULL;
+        }
+        else if (*word == '\0')              			   // the end of word has
+             if (p->endOfWord) return p;    			   // the endOfWord marker
+             else return NULL;              			   // in node p set to true;
+        else if ((pos = position(p,*word)) != notFound &&
+                 p->ptrs[pos] != 0) {        			   // continue
+             p = p->ptrs[pos];               			   // path, if possible,
+             word++;
+        }
+        else return NULL;                   			   // otherwise failure;
+}
+
+void Trie::addCell(char ch, TrieNode *p, int stop) {
+    int i, len = strlen(p->letters);
+    char *s = p->letters;
+    TrieNode **tmp = p->ptrs;
+    p->letters = new char[len+2];
+    p->ptrs    = new TrieNode*[len+1];
+    if (p->letters == 0 || p->ptrs == 0) { exit(1); }
+    for (i = 0; i < len+1; i++) p->ptrs[i] = 0;
+    if (stop < len)                // if ch does not follow all letters in p,
+         for (i = len; i >= stop+1; i--) { // copy from tmp letters > ch;
+             p->ptrs[i]    = tmp[i-1];
+             p->letters[i] = s[i-1];
+         }
+    p->letters[stop] = ch;
+    for (i = stop-1; i >= 0; i--) {           // and letters < ch;
+        p->ptrs[i]    = tmp[i];
+        p->letters[i] = s[i];
+    }
+    p->letters[len+1] = '\0';
+    delete [] s;
+}
+
+TrieNode* Trie::createLeaf(char ch, char *suffix, TrieNode *p) {
+    int pos = position(p,ch);
+    if (pos == notFound) {
+        for (pos = 0; (pos < (int)strlen(p->letters)) && (p->letters[pos] < ch); pos++);
+        addCell(ch,p,pos);
+    }
+    TrieNode* tn = new TrieNode();
+    p->ptrs[pos] = (TrieNode*) tn; 
+    tn->iniLeaf(suffix);
+    return tn;
+}
+
+void Trie::insert(char *word, Cost c) {
+    TrieNode *p = root;
+    TrieNode *lf, *newlf;
+    int offset;
+    unsigned int pos;
+    char *hold = word;
+    while (true) {
+        if (*word == '\0') {            								// if the end of word reached,
+             if (p->endOfWord) cout << "Duplicate entry1 " << hold << endl;
+             else p->endOfWord = true;  								// set endOfWord to true;
+             return;
+        }                               								// if position in p indicated
+        pos = position(p,*word);
+        if ((int)pos == notFound) {          								 // by the first letter of word
+             newlf = createLeaf(*word,word+1,p);								 // does not exist, create
+  			 newlf->c = c;
+             return;                    								 // a leaf and store in it the
+        }                               								 // unprocessed suffix of word;
+        else if ((int)pos != notFound && p->ptrs[pos]->leaf) {  
+             lf = (TrieNode*) p->ptrs[pos];      						 // hold this leaf;
+             if (strcmp(lf->word,word+1) == 0) {
+                 cout << "Duplicate entry2 " << hold << endl;
+                 return;
+             }
+             offset = 0;
+             do {
+                 pos = position(p,word[offset]);						 // word == "ABC", leaf = "ABCDEF" => leaf = "DEF";
+                 if ((int)strlen(word) == offset+1) {
+                      p->ptrs[pos] = new TrieNode();												                                
+                      p->ptrs[pos]->iniNonLeaf(word[offset]);
+                      p->ptrs[pos]->endOfWord = true;
+                      newlf = createLeaf(lf->word[offset],lf->word + offset+1,p->ptrs[pos]);
+					  newlf->c = c;
+                      return;
+                 }                 															// word == "ABCDE", leaf = "ABC" => leaf = "DEF";
+                 else if ((int)strlen(lf->word) == offset) {
+                      p->ptrs[pos] = new TrieNode();												                                
+                      p->ptrs[pos]->iniNonLeaf(word[offset+1]);
+                      p->ptrs[pos]->endOfWord = true;
+                      newlf = createLeaf(word[offset+1],word+offset+2,p->ptrs[pos]);
+					  newlf->c = c;
+                      return;
+                 }
+                 p->ptrs[pos] = new TrieNode();												                                
+                 p->ptrs[pos]->iniNonLeaf(word[offset+1]);
+                 p = p->ptrs[pos];
+                 offset++;
+             } while (word[offset] == lf->word[offset-1]);
+             offset--;
+															             // word = "ABCDEF", leaf = "ABCPQR" => leaf('D') = "EF", leaf('P') = "QR";
+															             // check whether there is a suffix left:
+															             // word = "ABCD", leaf = "ABCPQR" => leaf('D') = null, leaf('P') = "QR";
+             char *s = "";
+             if ((int)strlen(word) > offset+2) s = word+offset+2;
+             newlf = createLeaf(word[offset+1],s,p);
+             newlf->c = c;
+															             // check whether there is a suffix left:
+															             // word = "ABCDEF", leaf = "ABCP" => leaf('D') = "EF", leaf('P') = null;
+             if ((int)strlen(lf->word) > offset+1) s = lf->word+offset+1; else s = "";
+             newlf = createLeaf(lf->word[offset],s,p);
+             newlf->c = lf->c;
+			 
+             delete [] lf->word;
+             delete lf;
+             return;
+        }
+        else {
+             p = p->ptrs[pos];
+             word++;
+        }
+    }
+}
+
+void Trie::printTrie()
+{
+	*prefix = '\0'; 
+	printTrie(0,root,prefix); 
+	cout << "__________________________" << endl;
+}
+
+
+
+
+NaryConstrie::NaryConstrie(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
+			: NaryConstraint(wcsp, scope_in, arity_in, defval)
+{
+	f = NULL;
+}
+
+
+NaryConstrie::NaryConstrie(WCSP *wcsp)
+			: NaryConstraint(wcsp)
+{
+	f = NULL;
+}
+
+
+
+NaryConstrie::~NaryConstrie()
+{
+	if(f) delete f;
+}
+
+// for adding a tuple in f
+// scope_in contains the order of the values in string tin 
+void NaryConstrie::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+{
+	string t(tin);
+	if(scope_in) {  for(int i = 0; i < arity_; i++) t[getIndex(scope_in[i])] = tin[i];  }
+	char tch[80];
+	strcpy(tch,t.c_str());
+    if(!f) { f = new Trie( tch, c ); } 
+    else f->insert(tch, c);	
+}
+
+
+Cost NaryConstrie::eval( string s ) {
+	Cost c = default_cost;
+	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
+	if(f) {
+		TrieNode* tn = f->find(s.c_str());
+		if(tn) c = tn->c;
+	}
+	return c;
+}
+
+
+
+/*void NaryConstrie::assign(int varIndex) {
+	int i;
+    if (connected(varIndex)) {
+        deconnect(varIndex);	
+	    nonassigned = nonassigned - 1;
+	   
+	   if(nonassigned == 0) {
+			char* t = new char [arity_ + 1];			
+			for(i = 0; i < arity_;i++) t[i] = CHAR_FIRST + scope[i]->toIndex(scope[i]->getValue());
+			t[i] = '\0';
+			deconnect();
+	   	    wcsp->increaseLb(wcsp->getLb() + eval(string(t)));
+			delete [] t;
+	   }
+    }
+}*/
+
+
+void NaryConstrie::print(ostream& os) {
+	int unassigned_ = 0;
+	long totaltuples = 1;
+	os << endl << this << " f(";
+	for(int i = 0; i < arity_;i++) {
+		if(scope[i]->unassigned()) unassigned_++;
+		os << scope[i]->wcspIndex;
+		if(i < arity_-1) os << ",";
+		totaltuples = totaltuples * scope[i]->getDomainInitSize();
+	}
+	os << ")    ";
+	os << "   default_cost: " << default_cost;
+	os << "   arity: " << arity();
+	os << "   unassigned: " << (int) nonassigned << "/" << unassigned_ << "         ";
+
+	if(f) f->printTrie();
+}
+
+
+

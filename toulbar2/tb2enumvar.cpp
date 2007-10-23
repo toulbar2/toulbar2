@@ -481,7 +481,8 @@ void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
        // to be done before propagation
        WCSP::elimInfo ei = {this, x, NULL, ctr, NULL, NULL};
        wcsp->elimInfos[wcsp->getElimOrder()] = ei;
-       wcsp->elimination();
+       wcsp->elimConstrs[wcsp->getElimOrder()] = ctr;
+       wcsp->elimOrderInc();
 
        bool supportBroken = false;
        for (iterator iter1 = x->begin(); iter1 != x->end(); ++iter1) {
@@ -512,6 +513,7 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	    
 	 BinaryConstraint* yz = y->getConstr(z);
      BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
+	 	 wcsp->elimBinOrderInc(); 
 
 	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
@@ -530,7 +532,7 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 if(yz) {
 		 yz->addCosts( yznew );
 	 	 yz->reconnect();
-	 } else { 
+	 } else {
 		 yz = yznew;
 	 	 yz->reconnect();
 	 }	
@@ -538,7 +540,8 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 // to be done before propagation
 	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL};
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
-	 wcsp->elimination();
+	 wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
+	 wcsp->elimOrderInc();
      yz->propagate(); 
 }
 
@@ -614,7 +617,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	// to be done before propagation
 	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
 	wcsp->elimInfos[wcsp->getElimOrder()] = ei;
-	wcsp->elimination();
+	wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
+	wcsp->elimOrderInc();
     yz->propagate(); 
 	return true;
 }

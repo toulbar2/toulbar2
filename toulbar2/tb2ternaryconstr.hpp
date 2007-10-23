@@ -117,6 +117,18 @@ public:
         return res;
     }
 
+   void addCosts( TernaryConstraint* xyz ) {
+		int ix, iy, iz;
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+		for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+        	ix = x->toIndex(*iterx); iy = y->toIndex(*itery); iz = z->toIndex(*iterz);
+        	if(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] < wcsp->getUb())
+        		costs[ix*sizeY*sizeZ + iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
+	    }}}
+    }
+
+
     void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, vector<Cost>& costsin ) {
 		assert(costsin.size() == costs.size());
 
@@ -136,7 +148,8 @@ public:
 	        vindex[ getIndex(yin) ] = vyin;
 	        vindex[ getIndex(zin) ] = vzin;
 	        
-			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
+			if(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]]  < wcsp->getUb())
+				costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
 	    }}}
     }
 
@@ -394,6 +407,41 @@ public:
 		else return MIN_COST;
 	}    
 	
+
+    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin)
+	{
+		x = xin;
+		y = yin;
+		z = zin;
+		sizeX = x->getDomainInitSize();
+		sizeY = y->getDomainInitSize();
+		sizeZ = z->getDomainInitSize();
+		linkX->removed = true;
+		linkY->removed = true;
+		linkZ->removed = true;
+		linkX->content.constr = this;
+		linkY->content.constr = this; 
+		linkZ->content.constr = this; 
+		linkX->content.scopeIndex = 0;
+		linkY->content.scopeIndex = 1;
+		linkZ->content.scopeIndex = 2;
+        if (x->wcspIndex < y->wcspIndex && x->wcspIndex < z->wcspIndex) dacvar = 0;
+        else if (y->wcspIndex < x->wcspIndex && y->wcspIndex < z->wcspIndex) dacvar = 1;
+        else dacvar = 2;
+	}
+   
+    void fillElimConstrBinaries()
+	{
+        BinaryConstraint* xy_ = x->getConstr(y); 
+		if(xy_)  xy = xy_;  else { xy = wcsp->newBinaryConstr(x,y); wcsp->elimBinOrderInc(); }
+
+        BinaryConstraint* xz_ = x->getConstr(z); 
+		if(xz_)  xz = xz_;  else { xz = wcsp->newBinaryConstr(x,z); wcsp->elimBinOrderInc(); }
+
+        BinaryConstraint* yz_ = y->getConstr(z); 
+		if(yz_)  yz = yz_;  else { yz = wcsp->newBinaryConstr(y,z); wcsp->elimBinOrderInc(); }
+	}
+
 
     void print(ostream& os);
     void dump(ostream& os);

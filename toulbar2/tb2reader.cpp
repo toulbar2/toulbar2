@@ -18,6 +18,8 @@ typedef struct {
 
 #define MAX_ARITY 100
 
+
+
 void WCSP::read_wcsp(const char *fileName)
 {
     if (ToulBar2::pedigree) {
@@ -105,8 +107,8 @@ void WCSP::read_wcsp(const char *fileName)
 		    if((defval != MIN_COST) || (ntuples > 0))           
 		    { 
 	            int naryIndex = postNaryConstraint(scopeIndex,arity,defval* K);
-                
                 NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
+
 	            char buf[MAX_ARITY];
 	            for (t = 0; t < ntuples; t++) {
 					for(i=0;i<arity;i++) {
@@ -119,8 +121,8 @@ void WCSP::read_wcsp(const char *fileName)
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
-	            nary->changeDefCost( top );
-	            nary->preprojectall2();
+	            //nary->changeDefCost( top );
+	            //nary->preprojectall2();
 		    }
         } else if (arity == 3) {
             file >> i;
@@ -323,6 +325,7 @@ void WCSP::read_wcsp(const char *fileName)
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
     histogram();
+    
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
