@@ -37,7 +37,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 	string s(tuple);
 	while(nogoods>0) {
 		for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST; 
-		Cost c = randomCost(MIN_COST, costMax);
+		Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
 		nctr->setTuple(s, c, scopeVars);
 		nogoods--;
 	}	  	
@@ -71,7 +71,7 @@ void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMi
 	  for(c=0;c<mz;c++) {
 	     if(costs[my*mz*a + b*mz + c] == MIN_COST) {
 		    if(dice == 0) {
-		    	costs[my*mz*a + b*mz + c] = randomCost(costMin, costMax);
+		    	costs[my*mz*a + b*mz + c] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
 			    nogoods--;
 			    total_nogoods--;
 			    a=mx;b=my;c=mz;
@@ -106,7 +106,7 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
 	  for(b=0;b<my;b++) {
 	     if(costs[my*a+b] == MIN_COST) {
 		    if(dice == 0) {
-		    	costs[my*a+b] = randomCost(costMin, costMax);
+		    	costs[my*a+b] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
 			    nogoods--;
 			    total_nogoods--;
 			    a=mx;b=my;
@@ -230,7 +230,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 	  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
 	  	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
 	  	{
-	  		x->project(a, randomCost(MIN_COST, MEDIUM_COST)); 
+	  		x->project(a, ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST)); 
 	  	}
   	}
     
