@@ -405,7 +405,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
 	    for (int n=m; n<=nballeles; n++) { /* n = second allele of mother */
             for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
                 for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-	               costs3.push_back(((i==k && j==m) || (i==k && j==n) || (i==l && j==m) || (i==l && j==n) || (i==m && j==k) || (i==m && j==l) || (i==n && j==k) || (i==n && j==l))?0:wcsp->getUb());
+	               costs3.push_back(((i==k && j==m) || (i==k && j==n) || (i==l && j==m) || (i==l && j==n) || (i==m && j==k) || (i==m && j==l) || (i==n && j==k) || (i==n && j==l))?0:wcsp->getUb()*MEDIUM_COST);
                 }
             }
         }
@@ -419,7 +419,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
      for (int l=k; l<=nballeles; l++) { /* l = second allele of father or mother */
         for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
             for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-	           costs2.push_back((i==k || i==l || j==k || j==l)?0:wcsp->getUb());
+	           costs2.push_back((i==k || i==l || j==k || j==l)?0:wcsp->getUb()*MEDIUM_COST);
 	        }
         }
      }

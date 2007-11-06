@@ -111,11 +111,11 @@ struct ParetoPair {
 //  	}
 };
 
-const ParetoPair PARETOPAIR_MAX = ParetoPair(INT_MAX/2, INT_MAX/2);
 const ParetoPair PARETOPAIR_MIN = ParetoPair(0,0);
 const ParetoPair PARETOPAIR_1 = ParetoPair(1,1);
 const ParetoPair PARETOPAIR_3 = ParetoPair(3,3);
 const ParetoPair PARETOPAIR_100 = ParetoPair(100,100);
+const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX/2)/3, (INT_MAX/2)/3);
 
 inline double to_double(const ParetoPair r) {cerr << "to_double not implemented on Paretopair"; exit(EXIT_FAILURE);}
 inline Long ceil(const ParetoPair r) {exit(EXIT_FAILURE);return 0;}

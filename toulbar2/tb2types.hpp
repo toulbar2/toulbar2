@@ -19,17 +19,17 @@ typedef int Value;
 
 const Value MAX_VAL = (INT_MAX / 2);
 const Value MIN_VAL = -(INT_MAX / 2);
-const Value MAX_DOMAIN_SIZE  = 1000;
+const Value MAX_DOMAIN_SIZE  = 2000;
 
 #ifdef INT_COST
 const bool PARTIALORDER = false;
 typedef int Cost;
 const Cost MIN_COST = 0;
 const Cost UNIT_COST = 1;
-const Cost MAX_COST = (INT_MAX / 2);
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
+const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST);
 inline Cost MIN(Cost a, Cost b) {return min(a,b);}
 inline Cost MAX(Cost a, Cost b) {return max(a,b);}
 inline Cost GLB(Cost a, Cost b) {return MIN(a,b);}
@@ -51,10 +51,10 @@ const bool PARTIALORDER = false;
 typedef Long Cost;
 const Cost MIN_COST = 0;
 const Cost UNIT_COST = 1;
-const Cost MAX_COST = (LONGLONG_MAX / 2);
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
+const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST);
 inline Cost MIN(Cost a, Cost b) {return min(a,b);}
 inline Cost MAX(Cost a, Cost b) {return max(a,b);}
 inline Cost GLB(Cost a, Cost b) {return MIN(a,b);}
@@ -77,10 +77,10 @@ const bool PARTIALORDER = true;
 typedef ParetoPair Cost;
 const Cost MIN_COST = PARETOPAIR_MIN;
 const Cost UNIT_COST = PARETOPAIR_1;
-const Cost MAX_COST = PARETOPAIR_MAX;
 const Cost SMALL_COST = PARETOPAIR_1;
 const Cost MEDIUM_COST = PARETOPAIR_3;
 const Cost LARGE_COST = PARETOPAIR_100;
+const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
 #ifdef DOUBLE_PROB
