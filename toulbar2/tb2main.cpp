@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 #ifdef MENDELSOFT
     ToulBar2::pedigree = new Pedigree;
 #else
-    if(!strchr(argv[1],'.')) {
+    if(!strchr(argv[1],'.') && !strstr(argv[1],"bEpInstance")) {
     	int pn[10];
     	int narities = 0;
     	if(strstr(argv[1],"bin"))  { randomproblem = true; sscanf(argv[1], "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
