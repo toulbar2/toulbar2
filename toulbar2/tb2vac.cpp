@@ -30,6 +30,8 @@ VACExtension::VACExtension (WCSP *w) : wcsp(w), VAC2(&w->getStore()->storeVariab
   queueR = new stack< pair<int, int> >;
   minlambda = MAX_COST;
   sumlb = MIN_COST;
+  sumvars = 0;
+  sumk = 0;
   nlb = 0;
   varAssign = -1;
 }
@@ -398,6 +400,12 @@ bool VACExtension::enforcePass3 () {
 	    return false;
   }
 
+  // update general stats
+  nlb++;
+  sumlb += lambda;
+  sumvars += queueR->size();
+  maxk = MIN_COST;
+
   while (!queueR->empty()) {
     j = queueR->top().first;
     w = queueR->top().second;
@@ -407,6 +415,9 @@ bool VACExtension::enforcePass3 () {
     xi = (VACVariable *) wcsp->getVar(i);
     cij = (VACConstraint *) xi->getConstr(xj);
     assert(cij);
+    
+    int xjk = xj->getK(w,nbIterations);
+	if(maxk < xjk) maxk = xjk;
 
     for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
 	  Value v = *iti;	
@@ -418,6 +429,8 @@ bool VACExtension::enforcePass3 () {
     }
     cij->VACproject(xj, w, lambda * xj->getK(w, nbIterations));
   }
+  sumk += maxk;
+
   xi0->extendAll(lambda);
   wcsp->increaseLb(wcsp->getLb() + lambda);
   //  xi0->findSupport();
@@ -426,10 +439,7 @@ bool VACExtension::enforcePass3 () {
 
 void VACExtension::updateStat(Cost lambda)
 {
-  sumlb += lambda;
-  nlb++;
   //tVACStat* v = heapAccess[inconsistentVariable];	
-
   if(varAssign >= 0) {
 	  tVACStat* v = heapAccess[varAssign];	
 	  v->sumlb += lambda;
@@ -529,7 +539,7 @@ void VACExtension::dequeueVAC2(DLink<Variable *> *link) {
 void VACExtension::printStat(bool ini)
 {
 	long double mean = to_double(sumlb) / (long double) nlb;
-	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << endl; 
+	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << "     cyclesize: " << (double)sumvars/(double)nlb << "     meank: " << (double)sumk/(double)nlb << endl; 
 	if(ini) cout << "Lb after VAC: " << wcsp->getLb() << endl; 
 	
 	//sort(heap.begin(), heap.end(), cmp_function);
@@ -541,6 +551,11 @@ void VACExtension::printStat(bool ini)
 		++it;
 	}
 	cout << endl;*/
+	
+	sumk = 0;
+	sumvars = 0;
+	sumlb = 0;
+	nlb = 0;
 }
 
 

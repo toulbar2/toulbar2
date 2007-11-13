@@ -45,10 +45,10 @@ void Solver::read_wcsp(const char *fileName)
     ToulBar2::setvalue = setvalue;
 }
 
-void Solver::read_random(int n, int m, vector<int>& p, int seed)
+void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular)
 {
     ToulBar2::setvalue = NULL;
-    wcsp->read_random(n,m,p,seed);
+    wcsp->read_random(n,m,p,seed, forceSubModular);
     unassignedVars = new BTList<Value>(&store->storeDomain);
     allVars = new DLink<Value>[wcsp->numberOfVariables()];
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {

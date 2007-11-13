@@ -84,6 +84,50 @@ void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMi
 }
 
 
+void naryRandom::generateSubModularBinCtr( int i, int j, Cost costMin, Cost costMax )
+{
+ 	int a,b;
+ 	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
+    EnumeratedVariable* y = (EnumeratedVariable*) wcsp.getVar(j);
+	int mx = x->getDomainInitSize();
+	int my = y->getDomainInitSize();
+
+    vector<Cost> costs;
+	for (a = 0; a < mx; a++)
+	    for (b = 0; b < my; b++) 
+	        costs.push_back(MIN_COST);
+
+    // row generation
+	for (a = 0; a < mx; a++) {
+		if(rand() % 2) {
+			Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
+		    for (b = 0; b < my; b++) costs[my*a+b] += c;
+		}
+	} 
+    // col generation
+ 	for (b = 0; b < my; b++) {
+		if(rand() % 2) {
+			Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
+			for (a = 0; a < mx; a++) costs[my*a+b] += c;
+			
+		}
+	}
+	
+    // rectangle generation
+    int nrect = rand() % mx;
+    while(nrect) {
+		Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
+    	int lx = rand() % (mx-1);
+    	int ly = rand() % (my-1);
+		for (a = 0; a < lx; a++)
+		    for (b = 0; b < ly; b++) {
+		    	costs[my*(mx-a-1) + b] += c;
+		    }
+		nrect--;
+    }
+
+	wcsp.postBinaryConstraint(i,j,costs);
+}
 
 
 void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost costMax )
@@ -160,7 +204,7 @@ int naryRandom::inc( vector<int>& index, int i )
 }
 
 
-void naryRandom::Input( int in_n, int in_m, vector<int>& p )
+void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular )
 {
   n = in_n;	
   m = in_m;
@@ -210,7 +254,9 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p )
 					    scopes.insert( toIndex(indexs) );
 					    if(arity > 1) { 
 						    switch(arity) {
-						    	case 2:  generateBinCtr(indexs[0],indexs[1],nogoods); break;
+						    	case 2:  if(!forceSubModular) generateBinCtr(indexs[0],indexs[1],nogoods); 
+						    			 else generateSubModularBinCtr(indexs[0],indexs[1],1,100);
+						    			 break;
 						    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
 						    	default: generateNaryCtr(indexs,nogoods);
 						    }

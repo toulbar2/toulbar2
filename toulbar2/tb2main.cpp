@@ -255,6 +255,8 @@ int main(int argc, char **argv)
     Solver solver(STORE_SIZE, c);
     
     bool randomproblem = false;
+	bool forceSubModular = false;
+
     int n = 10;
     int m = 2;
     int seed = 3;
@@ -266,6 +268,7 @@ int main(int argc, char **argv)
     	int pn[10];
     	int narities = 0;
     	if(strstr(argv[1],"bin"))  { randomproblem = true; sscanf(argv[1], "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
+    	if(strstr(argv[1],"binsub"))  { forceSubModular = true; randomproblem = true; sscanf(argv[1], "binsub-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
     	if(strstr(argv[1],"tern")) { randomproblem = true; sscanf(argv[1], "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed); narities = 3; }
     	if(strstr(argv[1],"nary")) {  
     		randomproblem = true; 
@@ -291,7 +294,7 @@ int main(int argc, char **argv)
     if (strstr(argv[1],".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
     try {
-        if(randomproblem)    solver.read_random(n,m,p,seed);
+        if(randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
         else 		         solver.read_wcsp(argv[1]);
         
         if (certificate) solver.read_solution("sol");

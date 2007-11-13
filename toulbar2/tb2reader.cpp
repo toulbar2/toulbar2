@@ -344,10 +344,10 @@ void WCSP::read_wcsp(const char *fileName)
     
 }
 
-void WCSP::read_random(int n, int m, vector<int>& p, int seed) 
+void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular ) 
 {
 	naryRandom randwcsp(this,seed);
-    randwcsp.Input(n,m,p);	    
+    randwcsp.Input(n,m,p,forceSubModular);	    
  
  	unsigned int nbconstr = numberOfConstraints();
     sortVariables();

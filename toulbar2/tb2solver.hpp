@@ -51,7 +51,7 @@ public:
     ~Solver();
     
     void read_wcsp(const char *fileName);
-    void read_random(int n, int m, vector<int>& p, int seed);
+    void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
     
     bool solve();
     

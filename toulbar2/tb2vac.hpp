@@ -58,7 +58,9 @@ private:
   vector<tVACStat*>   heap;	  	
   Cost sumlb;
   Long nlb;
-
+  Long sumvars;
+  Long sumk;
+  
 public:
 
   VACExtension (WCSP *w);

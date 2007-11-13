@@ -154,6 +154,72 @@ void NaryConstraint::projectNaryBinary()
 	}	  	 
 }
 
+
+void NaryConstraint::projectFromZero(int index)
+{
+   return;
+   	
+   int i;	
+   int nsup = 0;	
+   Cost minc = MAX_COST;
+   Cost c;
+   EnumeratedVariable* var = (EnumeratedVariable*) getVar(index);
+   for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+   		c = var->getCost(*iter);
+   		if(c == 0) { if(nsup) return; nsup++; }
+   		else if(c < minc) minc = c; 
+   			
+   }	  	
+   for(i=0;i<arity_;i++) {
+   		if(i != index) {
+			var = (EnumeratedVariable*) getVar(i); 		
+			if(getVar(i)->unassigned()) { 
+	   			nsup = 0;
+				for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+			   		c = var->getCost(*iter);
+			   		if(c == 0) { if(nsup) return; nsup++; }
+			   		else if(c < minc) minc = c; 
+				}
+			}
+   		}
+   }
+   int a = arity();
+   char* cht = new char [a + 1];
+   cht[a] = '\0';
+   for(i=0;i<a;i++) {
+		var = (EnumeratedVariable*) getVar(i); 
+		cht[i] = var->toIndex(var->getSup()) + CHAR_FIRST;
+   }
+   string t(cht);
+   delete [] cht;
+   c = eval(t); 
+   if(c < minc) minc = c; 	   		
+   if(c) starrule(t,minc); 
+}
+
+
+
+ void NaryConstraint::starrule(string& t, Cost minc) {
+       int i;	
+ 	   for(i=0;i<arity_;i++) {
+			EnumeratedVariable* var = (EnumeratedVariable*) getVar(i); 		
+			if(getVar(i)->unassigned()) { 
+	   			for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+			   		Cost c = var->getCost(*iter);
+			   		if(c) var->extend(*iter, minc);
+				}
+			}
+			
+	   }
+	   setTuple( t, eval(t) - minc );
+	   wcsp->increaseLb(wcsp->getLb() + minc);
+	   
+	   cout << minc << " "; flush(cout);
+    }	    
+    
+
+
+
 void NaryConstraint::firstlex()
 {
 	it_values.clear();
