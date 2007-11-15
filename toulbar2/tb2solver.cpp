@@ -408,7 +408,8 @@ void Solver::narySortedChoicePoint(int varIndex)
 {
     assert(wcsp->enumerated(varIndex));
     int size = wcsp->getDomainSize(varIndex);
-    ValueCost sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+    //ValueCost sorted[size];								
+    ValueCost* sorted = new ValueCost [size];								
     wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
     for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {
@@ -421,6 +422,7 @@ void Solver::narySortedChoicePoint(int varIndex)
         }
         store->restore();
     }
+	delete [] sorted;
     nbBacktracks++;
 }
 
@@ -429,8 +431,8 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 {
     assert(wcsp->enumerated(varIndex));
     int size = wcsp->getDomainSize(varIndex);
-    ValueCost sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
-    wcsp->getEnumDomainAndCost(varIndex, sorted);
+    ValueCost* sorted = new ValueCost [size]; 
+	wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
     if (discrepancy < size-1) ToulBar2::limited = true;
     for (int v = min(size-1, discrepancy); wcsp->getLb() < wcsp->getUb() && v >= 0; v--) {
@@ -443,6 +445,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
         }
         store->restore();
     }
+	delete [] sorted;
     nbBacktracks++;
 }
 
@@ -454,7 +457,7 @@ void Solver::singletonConsistency()
     	done = true;
 	    for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
 			  int size = wcsp->getDomainSize(varIndex);
-			  ValueCost sorted[size]; 
+		      ValueCost* sorted = new ValueCost [size]; 
 			  wcsp->iniSingleton();
 			  wcsp->getEnumDomainAndCost(varIndex, sorted);
 			  qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
@@ -478,6 +481,7 @@ void Solver::singletonConsistency()
 					}
 		      }
 			  wcsp->removeSingleton();
+			  delete [] sorted;
 	    }
     }
     cout << "Done Singleton Consistency" << endl;

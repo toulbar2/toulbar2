@@ -793,7 +793,7 @@ void Individual::print(ostream& os)
 
 void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduced)
 {
-    assert(not(corrected && reduced));
+    assert(!(corrected && reduced));
     
     // open the file
     ofstream file(fileName);

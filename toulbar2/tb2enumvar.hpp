@@ -157,6 +157,10 @@ public:
         } else return iterator(this, domain.upper_bound(v));
     }
     
+    
+    void permuteDomain();
+    
+    
     void print(ostream& os);
 };
 

@@ -3,19 +3,36 @@
  * 
  */
 
+//#define WINDOWS
+#define LINUX
+
+
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
 typedef long long Long;
 #ifndef LONGLONG_MAX
-const Long LONGLONG_MAX = LONG_LONG_MAX;
+	#ifdef LINUX
+	const Long LONGLONG_MAX = LONG_LONG_MAX;
+	#endif
+	#ifdef WINDOWS
+	const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFF;
+	#endif
 #endif
 
 typedef long double Double;
 
-inline void mysrand(long seed) {return srand48(seed);}
-inline int myrand() { return lrand48();  }
-inline Long myrandl() {return (Long) ((Long)lrand48()/**LONGLONG_MAX*/);}
+#ifdef LINUX
+	inline void mysrand(long seed) {return srand48(seed);}
+	inline int myrand() { return lrand48();  }
+	inline Long myrandl() {return (Long) ((Long)lrand48()/**LONGLONG_MAX*/);}
+#endif
+#ifdef WINDOWS
+	inline void mysrand(long seed) {return srand(seed);}
+	inline int myrand() { return rand();  }
+	inline Long myrandl() {return (Long) ((Long)rand()/**LONGLONG_MAX*/);}
+#endif
+
 
 #ifdef DOUBLE_PROB
 inline double Pow(double x, double y) {return pow(x,y);}
@@ -25,10 +42,18 @@ inline double Log1p(double x) {return log1p(x);}
 #endif
 
 #ifdef LONGDOUBLE_PROB
-inline Double Pow(Double x, Double y) {return powl(x,y);}
-inline Double Log10(Double x) {return log10l(x);}
-inline Double Log(Double x) {return logl(x);}
-inline Double Log1p(Double x) {return log1pl(x);}
+	#ifdef LINUX
+		inline Double Pow(Double x, Double y) {return powl(x,y);}
+		inline Double Log10(Double x) {return log10l(x);}
+		inline Double Log(Double x) {return logl(x);}
+		inline Double Log1p(Double x) {return log1pl(x);}
+	#endif
+	#ifdef WINDOWS
+		inline Double Pow(Double x, Double y) {return pow(x,y);}
+		inline Double Log10(Double x) {return log(x);}
+		inline Double Log(Double x) {return log(x);}
+		inline Double Log1p(Double x) {return log(x);}
+	#endif
 #endif
 
 #ifdef INT_COST
@@ -90,7 +115,14 @@ inline double to_double(const Long cost) {return (double) cost;}
 inline Long ceil(const Long e) {return e;}
 inline Long floor(const Long e) {return e;}
 inline Long randomCost(Long min, Long max) { return  min + (myrandl() % (max - min + 1)); }
-inline Long string2Cost(char *ptr) {return atoll(ptr);}
+
+#ifdef LINUX
+	inline Long string2Cost(char *ptr) {return atoll(ptr);}
+#endif
+#ifdef WINDOWS
+	inline Long string2Cost(char *ptr) {return atol(ptr);}
+#endif
+
 
 inline int cost2log2(Long x)
 {

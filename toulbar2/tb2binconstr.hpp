@@ -406,6 +406,8 @@ public:
 		else return NULL;
 	}
 
+	void permute(EnumeratedVariable *xin, Value a, Value b);
+
     void print(ostream& os);
     void dump(ostream& os);
 };

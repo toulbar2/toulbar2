@@ -24,19 +24,19 @@ public:
     unsigned int getDomainSize() const {
         return sup - inf + 1;
     }
-    
+	
     void increase(Value newInf);
     void decrease(Value newSup);
     void remove(Value newValue) {if (newValue==inf) increase(newValue+1); else if (newValue==sup) decrease(newValue-1);}
     void assign(Value newValue);
 
-  Cost getInfCost() const {return infCost;}
-  Cost getSupCost() const {return supCost;}
+    Cost getInfCost() const {return infCost;}
+    Cost getSupCost() const {return supCost;}
     void projectInfCost(Cost cost);
     void projectSupCost(Cost cost);
 
     // this method can be applied to interval or enumerated domain
-    Cost getCost(Value value) const {
+    Cost getCost(const Value value) const {
         if (value == inf) return getInfCost();
         else if (value == sup) return getSupCost();
         else return MIN_COST;

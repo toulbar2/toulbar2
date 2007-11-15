@@ -204,3 +204,24 @@ bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
     }
     return true;
 }
+
+
+void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)
+{
+	EnumeratedVariable *yin = y;
+	if(xin != x) yin = x; 
+	
+	vector<Cost> aux;
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  aux.push_back( getCost(xin, yin, a, *ity) );	
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  setcost(xin, yin, a, *ity, getCost(xin, yin, b, *ity));	
+    
+	vector<Cost>::iterator itc = aux.begin(); 
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity) { 
+    	setcost(xin, yin, b, *ity, *itc);
+    	++itc;
+    }
+}
+
+
+
+

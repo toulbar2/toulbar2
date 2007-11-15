@@ -525,7 +525,7 @@ void WCSP::dump(ostream& os)
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->enumerated()) {
             int size = vars[i]->getDomainSize();
-            ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+            ValueCost domcost[MAX_DOMAIN_SIZE]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "1 " << i << " " << getUb() << " " << size << endl;
             for (int v=0; v<size; v++) {
