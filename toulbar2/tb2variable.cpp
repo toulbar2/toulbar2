@@ -73,7 +73,7 @@ int cmpConstraint2(const void *p1, const void *p2)
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();
-    DLink<ConstraintLink> *sorted[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+    DLink<ConstraintLink> **sorted = new DLink<ConstraintLink> * [size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
     int i=0;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         sorted[i++] = iter.getElt();
@@ -83,6 +83,7 @@ void Variable::sortConstraints()
         constrs.erase(sorted[i],true);
         constrs.push_back(sorted[i],true);
     }
+	delete [] sorted;
 }
 
 void Variable::deconnect(DLink<ConstraintLink> *link)

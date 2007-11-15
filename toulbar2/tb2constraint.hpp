@@ -7,6 +7,7 @@
 #define TB2CONSTRAINT_HPP_
 
 #include "tb2types.hpp"
+#include <algorithm>
 
 class Constraint : public WCSPLink
 {
