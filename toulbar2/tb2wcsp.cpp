@@ -107,7 +107,6 @@ WCSP::WCSP(Store *s, Cost upperBound) :
 		elimTernOrder(0, &s->storeValue)
 { 
     instance = wcspCounter++;
-
     if (ToulBar2::vac) {
 	  vac = new VACExtension(this);
 	} else {
@@ -241,7 +240,6 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
         if(!ToulBar2::vac)  bctr = new BinaryConstraint(this, &storeData->storeCost); 
 	    else 			    bctr = new VACConstraint(this, &storeData->storeCost); 
 	    elimBinConstrs.push_back(bctr);
-
 	    elimInfos.push_back(ei);
 	    elimConstrs.push_back(NULL);
     }
@@ -343,14 +341,16 @@ void WCSP::processTernary()
 
 void WCSP::preprocessing()
 {
-    if (ToulBar2::preprocessTernary) {
-        cout << "Preproject ternary constraints to binary constraints" << endl;
-        processTernary();
-    }
-
     Eliminate.clear();  
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
 	    initElimConstrs();
+
+	    if (ToulBar2::preprocessTernary) {
+	        cout << "Process ternary groups of variables." << endl;
+	        ternaryCompletion();
+	        //processTernary();
+	    }
+
         if (ToulBar2::elimDegree_preprocessing >= 0) {
             cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
             ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
@@ -370,8 +370,9 @@ void WCSP::preprocessing()
             cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
         }
     }
-
+    
 	propagate();
+	
 	
 #ifdef BOOST
     if (getenv("TB2GRAPH")) {
@@ -388,6 +389,8 @@ void WCSP::preprocessing()
     	cout << "Preprocessing "; vac->printStat(true); 
     	vac->afterPreprocessing();
     	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
+    
+	    ToulBar2::FDAC = false;
     	propagate();
     }
 }
@@ -1123,6 +1126,124 @@ void WCSP::variableElimination( EnumeratedVariable* var )
 }
 
 
+bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz )
+{
+	if((xIndex == yIndex) || (xIndex == zIndex) || (yIndex == zIndex)) return false;
+	EnumeratedVariable* x =  (EnumeratedVariable *) vars[xIndex];
+	EnumeratedVariable* y =  (EnumeratedVariable *) vars[yIndex];
+	EnumeratedVariable* z =  (EnumeratedVariable *) vars[zIndex];
+	TernaryConstraint* tctr = x->getConstr(y,z);    		
+	if(tctr) return false;
+
+	bool added = false;
+	vector<Cost> costs;
+	Cost ub = getUb();
+ 	Cost minc = ub;
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+  	    Value va = x->toValue(a);
+		Cost costa = x->getCost(va);
+        for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+   	   	    Value vb = y->toValue(b);
+			Cost costb = y->getCost(vb);
+            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+	   	   	    Value vc = z->toValue(c);
+				Cost costc = z->getCost(vc);
+            	Cost ctuple = ub;
+            	if(x->canbe(va) && y->canbe(vb) && z->canbe(vc)) {
+	            	ctuple = costa + costb + costc + xy->getCost(x,y,va,vb) + xz->getCost(x,z,va,vc) + yz->getCost(y,z,vb,vc);
+            	}
+			    if(ctuple < minc) minc = ctuple;
+			    costs.push_back(ctuple);            			 
+			}
+        }
+    }
+
+	if(minc > 0) {
+		tctr = new TernaryConstraint(this, &storeData->storeCost); 
+	    elimTernConstrs.push_back(tctr);
+	    elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
+	    elimInfos.push_back(ei);
+	    elimConstrs.push_back(NULL);
+		tctr = newTernaryConstr(x,y,z);
+		tctr->fillElimConstrBinaries();			
+		tctr->reconnect();		
+		elimTernOrderInc();
+
+		vector<Cost>::iterator it = costs.begin();
+	    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+   	   	    Value va = x->toValue(a);
+			Cost costa = x->getCost(va);
+		    if(x->canbe(va)) x->extend(va,costa);
+	        for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+	   	   	    Value vb = y->toValue(b);
+				Cost costb = y->getCost(vb);
+				if(y->canbe(vb)) y->extend(vb, costb );
+			    for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+		   	   	    Value vc = z->toValue(c);
+					Cost costc = z->getCost(vc);
+				    if(z->canbe(vc)) z->extend(vc, costc);
+    	        	if(x->canbe(va) && y->canbe(vb)) {
+			            Cost costab = xy->getCost(x,y,va,vb);
+			            xy->addcost(x,y,va,vb,-costab); 
+    	        	}			 
+    	        	if(y->canbe(vb) && z->canbe(vc)) {
+			            Cost costbc = yz->getCost(y,z,vb,vc);
+		  	   	        yz->addcost(y,z,vb,vc,-costbc); 
+    	        	}
+    	        	if(x->canbe(va) && z->canbe(vc)) {
+			            Cost costac = xz->getCost(x,z,va,vc);
+		  	   	        xz->addcost(x,z,va,vc,-costac); 			 
+    	        	}			 							     
+					tctr->setcost(x,y,z,va,vb,vc,*it-minc);
+					++it;
+				}
+	        }
+	    }
+		tctr->projectTernary();
+		increaseLb(getLb() + minc);
+	    if (ToulBar2::verbose >= 1) cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  newLb: " << getLb() << endl;
+		added = true;
+	}
+	return added;
+}
+
+void WCSP::ternaryCompletion()
+{
+	  int ntern = 0;
+	  for (unsigned int i=0; i<vars.size(); i++) {
+	  	EnumeratedVariable* x = (EnumeratedVariable*) vars[i];
+        for (ConstraintList::iterator it=x->getConstrs()->begin(); it != x->getConstrs()->end(); ++it) {
+            Constraint* ctr = (*it).constr;
+            if(ctr->arity() == 2) {
+            	BinaryConstraint* bctr = (BinaryConstraint*) ctr; 
+            	EnumeratedVariable* y = (EnumeratedVariable*)bctr->getVarDiffFrom(x);
+		        for (ConstraintList::iterator it2=y->getConstrs()->begin(); it2 != y->getConstrs()->end(); ++it2) {
+			        Constraint* ctr2 = (*it2).constr;
+			        if(ctr!=ctr2 && ctr2->arity()==2) {
+ 	  	         		BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2; 
+		            	EnumeratedVariable* z = (EnumeratedVariable*)bctr2->getVarDiffFrom(y);	
+				        for (ConstraintList::iterator it3=z->getConstrs()->begin(); it3 != z->getConstrs()->end(); ++it3) {
+					        Constraint* ctr3 = (*it3).constr;
+					        if(ctr2!=ctr3 && ctr3->arity()==2) {
+		 	  	         		BinaryConstraint* bctr3 = (BinaryConstraint*) ctr3; 
+				            	EnumeratedVariable* xx = (EnumeratedVariable*)bctr3->getVarDiffFrom(z);	
+				            	if(x == xx) {		
+				            		bool added = kconsistency(x->wcspIndex,y->wcspIndex,z->wcspIndex,bctr,bctr2,bctr3);
+									if(added) ntern++;
+				            	}
+					        } 
+				        }
+			        }
+		        }
+            }
+            
+        }
+     }
+     cout << "total ctrs: " << numberOfConnectedConstraints() << endl;
+	 cout << "added " << ntern << " ternary ctrs." << endl;
+}
+
+
 // -----------------------------------------------------------
 // Methods for Virtual Arc Consistency
 
@@ -1132,6 +1253,7 @@ void WCSP::iniSingleton() {if (vac) vac->iniSingleton();}
 void WCSP::updateSingleton() {if (vac) vac->updateSingleton();}
 void WCSP::removeSingleton() {if (vac) vac->removeSingleton();}
 void WCSP::printVACStat() {if (vac) vac->printStat();}
+int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -1;}
 
 
 // -----------------------------------------------------------

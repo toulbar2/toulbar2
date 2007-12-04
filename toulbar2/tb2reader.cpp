@@ -323,6 +323,7 @@ void WCSP::read_wcsp(const char *fileName)
             inclowerbound += defval*K;
         } 
     }
+    
 	file >> funcname;
 	if (file) {
 	  cerr << "Warning: EOF not reached after reading all the constraints (initial number of constraints too small?)" << endl;

@@ -242,6 +242,8 @@ public:
 	void project( Constraint* &ctr_inout, EnumeratedVariable* var  );
 	void variableElimination( EnumeratedVariable* var );
 
+	void ternaryCompletion();
+	bool  kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz );
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency
@@ -253,8 +255,8 @@ public:
     void iniSingleton();
     void updateSingleton();
     void removeSingleton();
-    void printVACStat(); 
-
+    void printVACStat();
+	int  getVACHeuristic();
 
     // -----------------------------------------------------------
     // Functions for dealing with probabilities

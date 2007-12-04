@@ -47,9 +47,12 @@ private:
   bool enforcePass1( VACVariable *xj, VACConstraint* cij);  // revise and k updates
   bool checkPass1 () const;
   void enforcePass2 ();        			   // find minimal set to enforce hard AC
-  bool enforcePass3 ();
-  bool enforcePass3VACint ();  			   // project costs to increase c0
+  bool enforcePass3 ();					   // project costs to increase c0
   void enforcePass3VACDecomposition ();    // enforce VAC decomposition pass 3 (substract cost and decrease top)
+
+
+  void enforcePass2more ();        
+  bool enforcePass3more ();			
 
 
   void reset();  						 
@@ -60,6 +63,9 @@ private:
   Long nlb;
   Long sumvars;
   Long sumk;
+  
+  EnumeratedVariable* nearIncVar;
+  Cost 				  atThreshold;
   
 public:
 
@@ -96,6 +102,8 @@ public:
   void updateSingleton();
   void removeSingleton();
 
+  int  getHeuristic();
+  int  getVarACDom( int i );
   Cost getVarCostStat( int i );
   Long getVarTimesStat( int i );
   void updateStat(Cost lambda);

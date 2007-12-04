@@ -136,6 +136,9 @@ int Solver::getVarMinDomainDivMaxDegree()
 
 int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 {
+	int varIndexVAC = wcsp->getVACHeuristic();
+	if(varIndexVAC != -1) return varIndexVAC;
+	
     if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;

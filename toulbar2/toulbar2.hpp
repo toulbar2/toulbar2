@@ -88,7 +88,7 @@ public:
 	virtual void iniSingleton() = 0;
 	virtual	void updateSingleton() = 0;
 	virtual void removeSingleton() = 0;
-
+	virtual int  getVACHeuristic() = 0;
 	virtual void printVACStat() = 0;    
     virtual void print(ostream& os) =0;
     virtual void dump(ostream& os) =0;
