@@ -190,11 +190,11 @@ bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost minCost = GETCOST(*iterX, y->getInf());
-		if (getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
+		if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
         EnumeratedVariable::iterator iterY = y->begin();
         for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
             Cost cost = GETCOST(*iterX, *iterY);
-			if (getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
+			if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
             GLB(&minCost, cost);
         }
         if (minCost > MIN_COST) {

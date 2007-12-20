@@ -284,8 +284,8 @@ public:
 //            findSupportY();             // must do AC before DAC
 //            if(connected()) findFullSupportX();
             x->queueAC(); 
-            y->queueDAC();
             x->queueEAC1();
+            if (ToulBar2::LcLevel>=LC_DAC) y->queueDAC(); else y->queueAC();
 //                if(connected()) {
 //                    int yindex = y->toIndex(y->getSupport());
 //                    if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
@@ -297,8 +297,8 @@ public:
 //            findSupportX();             // must do AC before DAC
 //            if(connected()) findFullSupportY();
             y->queueAC(); 
-            x->queueDAC();
             y->queueEAC1();
+            if (ToulBar2::LcLevel>=LC_DAC) x->queueDAC(); else x->queueAC();
 //                if(connected()) {
 //                    int xindex = x->toIndex(x->getSupport());
 //                    if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
@@ -309,18 +309,23 @@ public:
         }
     }
     void remove(int varIndex) {
-	    if (getDACScopeIndex()==0) {
-            if (varIndex == 0) findSupportY();
-			} else {
-            if (varIndex == 1) findSupportX();
-			}
+	  if (ToulBar2::LcLevel==LC_AC) {
+		if (varIndex == 0) findSupportY();
+		else findSupportX();
+	  } else {
+		if (getDACScopeIndex()==0) {
+		  if (varIndex == 0) findSupportY();
+		} else {
+		  if (varIndex == 1) findSupportX();
+		}
+	  }
     }
     void projectFromZero(int varIndex) {
-        if (getDACScopeIndex()==0) {
-            if (varIndex == 1) findFullSupportX();
-        } else {
-            if (varIndex == 0) findFullSupportY();
-        }
+	  if (getDACScopeIndex()==0) {
+		if (varIndex == 1) findFullSupportX();
+	  } else {
+		if (varIndex == 0) findFullSupportY();
+	  }
     } 
     //Trick! instead of doing remove(index) now, let AC queue do the job. 
     //So several incdec events on the same constraint can be merged into one AC event
@@ -385,7 +390,13 @@ public:
         else findFullSupportY();
     } 
     
-    bool verify() {return verifyX() && verifyY();}
+    bool verify() {
+	  if (ToulBar2::LcLevel==LC_DAC) {
+		if (getDACScopeIndex()==0) return verifyX(); else return verifyY();
+	  } else {
+		return verifyX() && verifyY();
+	  }
+	}
     
 	double computeTightness() {
 	   int count = 0;

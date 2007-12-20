@@ -28,14 +28,14 @@ bool ToulBar2::allSolutions = false;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernaryHeuristic  = false;
-bool ToulBar2::FDAComplexity = false;
-bool ToulBar2::FDAC = false;
+bool ToulBar2::QueueComplexity = false;
 bool ToulBar2::dichotomicBranching = false;
 bool ToulBar2::lds = false;
 bool ToulBar2::limited = false;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
+LcLevelType ToulBar2::LcLevel = LC_EDAC;
 
 #ifdef MENDELSOFT
 bool ToulBar2::binaryBranching = true;
@@ -119,6 +119,8 @@ WCSP::~WCSP()
 {
     for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
     for (unsigned int i=0; i<constrs.size(); i++) delete constrs[i];
+    for (unsigned int i=0; i<elimBinConstrs.size(); i++) delete elimBinConstrs[i];
+    for (unsigned int i=0; i<elimTernConstrs.size(); i++) delete elimTernConstrs[i];
 }
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
@@ -233,15 +235,10 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
 	 BinaryConstraint* bctr;
      TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost); 
      elimTernConstrs.push_back(tctr);
-     elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
-     elimInfos.push_back(ei);
-     elimConstrs.push_back(NULL);
      for(int j=0;j<3;j++) {	
         if(!ToulBar2::vac)  bctr = new BinaryConstraint(this, &storeData->storeCost); 
 	    else 			    bctr = new VACConstraint(this, &storeData->storeCost); 
 	    elimBinConstrs.push_back(bctr);
-	    elimInfos.push_back(ei);
-	    elimConstrs.push_back(NULL);
     }
 
      EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];
@@ -359,8 +356,8 @@ void WCSP::preprocessing()
 		    for (unsigned int i=0; i<constrs.size(); i++) 
 		    	if(constrs[i]->connected() && (constrs[i]->arity() > 3)) {
 		    		NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
-		    		nary->preprojectall2(); 
-		    		nary->preproject3(); 
+//  		    		nary->preprojectall2(); 
+//  		    		nary->preproject3(); 
 		    	}
 
         }
@@ -390,7 +387,6 @@ void WCSP::preprocessing()
     	vac->afterPreprocessing();
     	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
     
-	    ToulBar2::FDAC = false;
     	propagate();
     }
 }
@@ -425,7 +421,8 @@ unsigned int WCSP::numberOfConnectedConstraints() const
 {
     int res = 0; 
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res++;
-    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) res++;
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res++;
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res++;
     return res;
 }
 
@@ -485,7 +482,8 @@ void WCSP::print(ostream& os)
     if (ToulBar2::verbose >= 4) {
         os << "Constraints:" << endl;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) os << *constrs[i];
-        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) os << *elimConstrs[i];
+        for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) os << *elimBinConstrs[i];
+        for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) os << *elimTernConstrs[i];
     }
 }
 
@@ -524,7 +522,8 @@ void WCSP::dump(ostream& os)
     }
     os << endl;
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->dump(os);
-    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) elimConstrs[i]->dump(os);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->dump(os);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->dump(os);
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->enumerated()) {
             int size = vars[i]->getDomainSize();
@@ -588,14 +587,23 @@ bool WCSP::verify()
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
-        if (!ToulBar2::FDAC && vars[i]->unassigned() && CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
+        if (ToulBar2::LcLevel==LC_EDAC && 
+			vars[i]->unassigned() && CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
             cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }
     }
-    for (unsigned int i=0; i<constrs.size(); i++) {
-        if (constrs[i]->connected() &&  !constrs[i]->verify()) return false;
-    }
+    if (ToulBar2::LcLevel >= LC_AC) {
+	  for (unsigned int i=0; i<constrs.size(); i++) {
+        if (constrs[i]->connected() && !constrs[i]->verify()) return false;
+	  }
+	  for (int i=0; i<elimBinOrder; i++) {
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->verify()) return false;
+	  }
+	  for (int i=0; i<elimTernOrder; i++) {
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->verify()) return false;
+	  }
+	}
     return true;
 }
 
@@ -652,7 +660,7 @@ void WCSP::propagateAC()
 {
     if (ToulBar2::verbose >= 2) cout << "ACQueue size: " << AC.getSize() << endl;
     while (!AC.empty()) {
-        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?AC.pop_min():AC.pop());
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::QueueComplexity)?AC.pop_min():AC.pop());
         if (x->unassigned()) x->propagateAC();
         // Warning! propagateIncDec() necessary to transform inc/dec event into remove event
         propagateIncDec();          // always examine inc/dec events before remove events
@@ -663,7 +671,7 @@ void WCSP::propagateDAC()
 {
     if (ToulBar2::verbose >= 2) cout << "DACQueue size: " << DAC.getSize() << endl;
     while (!DAC.empty()) {
-        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?DAC.pop_max():DAC.pop());
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::QueueComplexity)?DAC.pop_max():DAC.pop());
         if (x->unassigned()) x->propagateDAC();
         propagateIncDec();          // always examine inc/dec events before projectFromZero events
     }
@@ -674,7 +682,7 @@ void WCSP::fillEAC2()
   assert(EAC2.empty());
   if (ToulBar2::verbose >= 2) cout << "EAC1Queue size: " << EAC1.getSize() << endl;
   while(!EAC1.empty()) {
-    EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?EAC1.pop_min():EAC1.pop());
+    EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::QueueComplexity)?EAC1.pop_min():EAC1.pop());
     if (x->unassigned()) x->fillEAC2(true);
   }
 }
@@ -684,7 +692,7 @@ void WCSP::propagateEAC()
     fillEAC2();
     if (ToulBar2::verbose >= 2) cout << "EAC2Queue size: " << EAC2.getSize() << endl;
     while (!EAC2.empty()) {
-        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::FDAComplexity)?EAC2.pop_min():EAC2.pop());
+        EnumeratedVariable *x = (EnumeratedVariable *) ((ToulBar2::QueueComplexity)?EAC2.pop_min():EAC2.pop());
         if (x->unassigned()) x->propagateEAC();
         propagateIncDec();          // always examine inc/dec events before projectFromZero events
     }
@@ -712,20 +720,19 @@ void WCSP::propagate()
    do {
      do {
       eliminate();
-      while (objectiveChanged || !NC.empty() || !IncDec.empty() || !AC.empty() || !DAC.empty()
-             || (!ToulBar2::FDAC && !CSP(getLb(),getUb()) && !EAC1.empty())) {
+      while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) && !AC.empty()) || (ToulBar2::LcLevel>=LC_DAC && !DAC.empty()) || (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb()) && !EAC1.empty())) {
         propagateIncDec();
-        if (!ToulBar2::FDAC && !CSP(getLb(),getUb())) propagateEAC();
+        if (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb())) propagateEAC();
         assert(IncDec.empty());
-		propagateDAC();
+		if (ToulBar2::LcLevel>=LC_DAC) propagateDAC();
         assert(IncDec.empty());
-        propagateAC();
+        if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) propagateAC();
         assert(IncDec.empty());
         propagateNC();
       }
     } while (!Eliminate.empty());
 
-    if (ToulBar2::FDAC || CSP(getLb(),getUb())) EAC1.clear();
+    if (ToulBar2::LcLevel<LC_EDAC|| CSP(getLb(),getUb())) EAC1.clear();
     if (ToulBar2::vac) { 
 	    assert(verify());
     	if(vac->firstTime()) {
@@ -734,7 +741,6 @@ void WCSP::propagate()
     	}
     	vac->propagate(); 
     }
-    
    } while (ToulBar2::vac && !vac->isVAC());
  
   //revise(NULL);
@@ -743,8 +749,8 @@ void WCSP::propagate()
   assert(!objectiveChanged);
   assert(NC.empty());
   assert(IncDec.empty());
-  assert(AC.empty());
-  assert(DAC.empty());
+  if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) assert(AC.empty()); else AC.clear();
+  if (ToulBar2::LcLevel>=LC_DAC) assert(DAC.empty()); else DAC.clear();
   assert(EAC1.empty());
   assert(EAC2.empty());
   assert(Eliminate.empty());
@@ -824,7 +830,6 @@ void WCSP::initElimConstrs()
        if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost); 
 	   else 			    xy = new VACConstraint(this, &storeData->storeCost); 
 	   elimBinConstrs.push_back(xy);
-	   
 	   elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
 	   elimInfos.push_back(ei);
 	   elimConstrs.push_back(NULL);	   
@@ -1161,9 +1166,6 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
 	if(minc > 0) {
 		tctr = new TernaryConstraint(this, &storeData->storeCost); 
 	    elimTernConstrs.push_back(tctr);
-	    elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
-	    elimInfos.push_back(ei);
-	    elimConstrs.push_back(NULL);
 		tctr = newTernaryConstr(x,y,z);
 		tctr->fillElimConstrBinaries();			
 		tctr->reconnect();		

@@ -399,7 +399,7 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
         for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
                 Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
-                if (getIndex(x)==getDACScopeIndex()) cost += y->getCost(*iterY) + z->getCost(*iterZ);
+                if (ToulBar2::LcLevel>=LC_DAC && getIndex(x)==getDACScopeIndex()) cost += y->getCost(*iterY) + z->getCost(*iterZ);
                 GLB(&minCost, cost);
             }
         }

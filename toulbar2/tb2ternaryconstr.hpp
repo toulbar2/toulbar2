@@ -214,9 +214,9 @@ public:
     
     void remove(int varIndex) {
         switch(varIndex) {
-            case 0: if (getDACScopeIndex()!=1) findSupportY(); if(connected()&&(getDACScopeIndex()!=2)) findSupportZ(); break;
-            case 1: if (getDACScopeIndex()!=0) findSupportX(); if(connected()&&(getDACScopeIndex()!=2)) findSupportZ(); break;
-            case 2: if (getDACScopeIndex()!=0) findSupportX(); if(connected()&&(getDACScopeIndex()!=1)) findSupportY(); break;
+            case 0: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1) findSupportY(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 1: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 2: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1)) findSupportY(); break;
         }
     }
 
@@ -283,7 +283,18 @@ public:
         }
     }
             
-    bool verify() {return verifyX() && verifyY() && verifyZ();}
+    bool verify() {
+	  if (ToulBar2::LcLevel==LC_DAC) {
+        switch(getDACScopeIndex()) {
+            case 0: return verifyX(); break;
+            case 1: return verifyY(); break;
+            case 2: return verifyZ(); break;
+		    default: return false;
+        }
+	  } else {
+		return verifyX() && verifyY() && verifyZ();
+	  }
+	}
 	  
     void projectTernaryBinary( BinaryConstraint* yzin );
 

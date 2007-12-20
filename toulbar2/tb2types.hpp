@@ -117,6 +117,8 @@ typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MA
 class Pedigree;
 class BEP;
 
+typedef enum {LC_NC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_MAX } LcLevelType;
+
 class ToulBar2
 {
 protected:
@@ -137,8 +139,7 @@ public:
     static int minsumDiffusion;
     static bool preprocessTernary;
     static bool preprocessTernaryHeuristic;
-    static bool FDAComplexity;
-    static bool FDAC;
+    static bool QueueComplexity;
     static bool lastConflict;
     static bool weightedDegree;
     static bool lds;
@@ -165,6 +166,7 @@ public:
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;
     static BEP *bep;
+    static LcLevelType LcLevel;
 };
 
 /*

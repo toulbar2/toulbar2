@@ -228,9 +228,14 @@ public:
 	vector<Constraint*>  elimTernConstrs;
 	
 	int getElimOrder() { return (int) elimOrder; } 
+	int getElimBinOrder() { return (int) elimBinOrder; } 
+	int getElimTernOrder() { return (int) elimTernOrder; } 
 	void elimOrderInc() { elimOrder = elimOrder + 1; }   
 	void elimBinOrderInc() { elimBinOrder = elimBinOrder + 1; }   
 	void elimTernOrderInc() { elimTernOrder = elimTernOrder + 1; }   
+    Constraint *getElimCtr(int elimIndex) const {return elimConstrs[elimIndex];}
+    Constraint *getElimBinCtr(int elimBinIndex) const {return elimBinConstrs[elimBinIndex];}
+    Constraint *getElimTernCtr(int elimTernIndex) const {return elimTernConstrs[elimTernIndex];}
 	
 	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
 	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );

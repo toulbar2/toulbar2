@@ -15,7 +15,7 @@ ostream myCout(cout.rdbuf());
 #ifdef PARETOPAIR_COST
 void initCosts(Cost c)
 {
-    if (!ToulBar2::FDAC) {cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl; ToulBar2::FDAC = true;}
+    if (ToulBar2::LcLevel > LC_FDAC) {cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl; ToulBar2::LcLevel = LC_FDAC;}
     if (ToulBar2::vac) {cerr << "VAC not implemented on Paretopair." << endl; ToulBar2::vac = false; ToulBar2::minsumDiffusion = false;}
 	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {cerr << "Variable elimination not implemented on Paretopair." << endl; ToulBar2::elimDegree = -1; ToulBar2::elimDegree_preprocessing = -1;}
 }
@@ -139,13 +139,13 @@ int main(int argc, char **argv)
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
         cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
         cerr << "   p[integer] : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
-        cerr << "   t : preprocessing only: project ternary constraints on binary constraints" << endl;
+        cerr << "   t : preprocessing only: project ternary constraints on binary constraints and apply 3-consistency" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
 #ifdef BOOST
         cerr << "   m : preprocessing only: minimum degree re-ordering of variables" << endl;
 #endif
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
-        cerr << "   f : FDAC soft local consistency propagation instead of EDAC" << endl;
+        cerr << "   k : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4)" << endl;
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
@@ -216,10 +216,14 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
-        if (strchr(argv[i],'o')) ToulBar2::FDAComplexity = true;
-        if (strchr(argv[i],'f')) ToulBar2::FDAC = true;
+        if (strchr(argv[i],'o')) ToulBar2::QueueComplexity = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
         if (strchr(argv[i],'i')) localsearch = true;
+        if ( (ch = strchr(argv[i],'k')) ) {
+        	ToulBar2::LcLevel = LC_EDAC;
+        	LcLevelType lclevel = (LcLevelType) atoi(&ch[1]);
+        	if((lclevel >= LC_NC) && (lclevel < LC_MAX)) ToulBar2::LcLevel = lclevel;
+        }
         if (strchr(argv[i],'z')) saveproblem = true;
         if (strchr(argv[i],'x')) certificate = true;
         if (strchr(argv[i],'g')) ToulBar2::generation = true;
