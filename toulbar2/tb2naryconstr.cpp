@@ -157,7 +157,7 @@ void NaryConstraint::projectNaryBinary()
 
 void NaryConstraint::projectFromZero(int index)
 {
-   return;
+  return; // TO BE REMOVED !!!
    	
    int i;	
    int nsup = 0;	
@@ -166,7 +166,7 @@ void NaryConstraint::projectFromZero(int index)
    EnumeratedVariable* var = (EnumeratedVariable*) getVar(index);
    for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
    		c = var->getCost(*iter);
-   		if(c == 0) { if(nsup) return; nsup++; }
+   		if(c == MIN_COST) { if(nsup) return; nsup++; }
    		else if(c < minc) minc = c; 
    			
    }	  	
@@ -177,7 +177,7 @@ void NaryConstraint::projectFromZero(int index)
 	   			nsup = 0;
 				for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
 			   		c = var->getCost(*iter);
-			   		if(c == 0) { if(nsup) return; nsup++; }
+			   		if(c == MIN_COST) { if(nsup) return; nsup++; }
 			   		else if(c < minc) minc = c; 
 				}
 			}
@@ -194,7 +194,7 @@ void NaryConstraint::projectFromZero(int index)
    delete [] cht;
    c = eval(t); 
    if(c < minc) minc = c; 	   		
-   if(c) starrule(t,minc); 
+   if(c > MIN_COST) starrule(t,minc); 
 }
 
 
@@ -206,7 +206,7 @@ void NaryConstraint::projectFromZero(int index)
 			if(getVar(i)->unassigned()) { 
 	   			for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
 			   		Cost c = var->getCost(*iter);
-			   		if(c) var->extend(*iter, minc);
+			   		if(c > MIN_COST) var->extend(*iter, minc);
 				}
 			}
 			

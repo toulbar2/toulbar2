@@ -278,6 +278,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
 	  	{
 	  		x->project(a, ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST)); 
 	  	}
+		x->findSupport();
   	}
  
  	if(forceSubModular) {

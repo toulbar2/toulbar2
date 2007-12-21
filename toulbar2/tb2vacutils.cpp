@@ -118,7 +118,7 @@ void VACVariable::VACproject (Value v, const Cost c) {
 void VACVariable::VACextend (Value v, const Cost c) {
   decreaseCost(v,c);
   if (v == maxCostValue) queueNC();
-  if(cannotbe(getSupport()) || getCost(getSupport())>MIN_COST) { 
+  if(cannotbe(getSupport()) || getCost(getSupport())>MIN_COST) { // TO BE REMOVED ???
     Value newSupport = getInf();
     Cost minCost = getCost(newSupport);
     EnumeratedVariable::iterator iter = begin();
@@ -357,6 +357,7 @@ void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] += c; 
   else			   deltaCostsY[index] += c; 
+  //  cout << "VACproject cost " << c << " to variable " << x->getName() << " value " << v << " from constraint " << getVar(0)->getName() << "," << getVar(1)->getName() << endl;
   x->VACproject(v, c);
 }
 
@@ -365,9 +366,8 @@ void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] -= c;
   else		       deltaCostsY[index] -= c;
+  //  cout << "VACextend cost " << c << " from variable " << x->getName() << " value " << v << " to constraint " << getVar(0)->getName() << "," << getVar(1)->getName() << endl;
   x->VACextend(v, c);
-  x->queueAC();
-  y->queueDAC();
 }
 
 Cost VACConstraint::getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {

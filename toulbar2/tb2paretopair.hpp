@@ -38,6 +38,16 @@ struct ParetoPair {
         q = (q  - r.q); 
         return *this;
     }
+    ParetoPair &operator*=(const ParetoPair &r) {
+        p = (p  * r.p);
+        q = (q  * r.q); 
+        return *this;
+    }
+    ParetoPair &operator/=(const ParetoPair &r) {
+        p = (p  / r.p);
+        q = (q  / r.q); 
+        return *this;
+    }
     const ParetoPair operator-() const {return ParetoPair(-p,-q);}
 
   friend const ParetoPair operator+(const ParetoPair& left, const ParetoPair& right) {

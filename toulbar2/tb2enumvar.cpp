@@ -193,9 +193,7 @@ void EnumeratedVariable::propagateNC()
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup()+1;
     Cost maxcost = MIN_COST;
-    Cost mincost = MAX_COST;
     bool supportBroken = false;
-    int nsup = 0;
     // Warning! the first value must be visited because it may be removed
     for (iterator iter = begin(); iter != end(); ++iter) {
         Cost cost = getCost(*iter);
@@ -205,10 +203,7 @@ void EnumeratedVariable::propagateNC()
         } else if (LUB(&maxcost, cost) || cannotbe(maxcostvalue)) {
             maxcostvalue = *iter;
         }
-        if(cost == 0) nsup++;
-        else if(cost < mincost) mincost = cost;
     }
-    if(nsup == 1) { }
     assert(getCost(maxcostvalue) == maxcost || !LUBTEST(maxcost, getCost(maxcostvalue)));
     setMaxUnaryCost(maxcostvalue, maxcost);
     if (supportBroken) findSupport();

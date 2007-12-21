@@ -50,11 +50,6 @@ private:
   bool enforcePass3 ();					   // project costs to increase c0
   void enforcePass3VACDecomposition ();    // enforce VAC decomposition pass 3 (substract cost and decrease top)
 
-
-  void enforcePass2more ();        
-  bool enforcePass3more ();			
-
-
   void reset();  						 
 
   map<int,tVACStat*> heapAccess;
@@ -62,7 +57,7 @@ private:
   Cost sumlb;
   Long nlb;
   Long sumvars;
-  Long sumk;
+  Cost sumk;
   
   EnumeratedVariable* nearIncVar;
   Cost 				  atThreshold;

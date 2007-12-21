@@ -402,7 +402,7 @@ void SpecialDisjunction::propagate()
 	  // BAC* propagation (increase unary costs of domain bounds)
 	  if (x->unassigned() && y->getInf() < yinfty) {
 		Value xinf = x->getInf();
-		Cost cost = -deltaCost;
+		Cost cost = -((Cost) deltaCost);
 		if (xinf < y->getInf() + csty && xinf > min(y->getSup(),yinfty-1) - cstx) cost += costy;
 		if (xinf == deltaValueXinf) {
 		  Cost delta = cost - deltaCostXinf;
@@ -418,7 +418,7 @@ void SpecialDisjunction::propagate()
 	  }
 	  if (x->unassigned() && y->getInf() < yinfty) {
 		Value xsup = x->getSup();
-		Cost cost = -deltaCost;
+		Cost cost = -((Cost) deltaCost);
 		if (xsup==xinfty) cost += costx;
 		else if (xsup < y->getInf() + csty && xsup > min(y->getSup(),yinfty-1) - cstx) cost += costy;
 		if (xsup == deltaValueXsup) {
@@ -435,7 +435,7 @@ void SpecialDisjunction::propagate()
 	  }
 	  if (y->unassigned() && x->getInf() < xinfty) {
 		Value yinf = y->getInf();
-		Cost cost = -deltaCost;
+		Cost cost = -((Cost) deltaCost);
 		if (yinf < x->getInf() + cstx && yinf > min(x->getSup(),xinfty-1) - csty) cost += costx;
 		if (yinf == deltaValueYinf) {
 		  Cost delta = cost - deltaCostYinf;
@@ -451,7 +451,7 @@ void SpecialDisjunction::propagate()
 	  }
 	  if (y->unassigned() && x->getInf() < xinfty) {
 		Value ysup = y->getSup();
-		Cost cost = -deltaCost;
+		Cost cost = -((Cost) deltaCost);
 		if (ysup==yinfty) cost += costy;
 		else if (ysup < x->getInf() + cstx && ysup > min(x->getSup(),xinfty-1) - csty) cost += costx;
 		if (ysup == deltaValueYsup) {
