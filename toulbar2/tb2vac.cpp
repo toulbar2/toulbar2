@@ -346,7 +346,8 @@ void VACExtension::enforcePass2 () {
 		Cost costij = cij->getVACCost(xi,xj,v, w);
 		if (costij > MIN_COST) {
           Cost tmpK = xi->getK(v, nbIterations);
-		  if (xj->getKiller(w) == i) tmpK += xj->getK(w, nbIterations);
+		  if (xj->getKiller(w) == i && xj->isMarked(w, nbIterations)) 
+		    tmpK += xj->getK(w, nbIterations);
 		  if (!CUT(wcsp->getLb() + costij,wcsp->getUb())) {
 			if( (costij/tmpK) < minlambda) minlambda = costij/tmpK;
 		  }
