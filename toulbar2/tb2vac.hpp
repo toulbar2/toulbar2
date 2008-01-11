@@ -58,6 +58,7 @@ private:
   Long nlb;
   Long sumvars;
   Cost sumk;
+  int theMaxK;
   
   EnumeratedVariable* nearIncVar;
   Cost 				  atThreshold;
