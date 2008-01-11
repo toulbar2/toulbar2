@@ -32,6 +32,7 @@ VACExtension::VACExtension (WCSP *w) : wcsp(w), VAC2(&w->getStore()->storeVariab
   sumlb = MIN_COST;
   sumvars = 0;
   sumk = MIN_COST;
+  theMaxK = 0;
   nlb = 0;
   varAssign = -1;
 }
@@ -448,10 +449,13 @@ bool VACExtension::enforcePass3 () {
 
     for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
 	  Value v = *iti;	
-      if ((!CUT(wcsp->getLb() + cij->getCost(xi,xj,v,w), wcsp->getUb())) && 
-      	  (cij->getCost(xi,xj, v, w) < lambda * xj->getK(w, nbIterations))) {
-		      Cost ecost = lambda * xj->getK(w, nbIterations); // - cij->getCost(xi,xj,v, w);
-		      cij->VACextend(xi, v, ecost);
+ //     cout <<  "Cout binaire vrai: " << cij->getCost(xi,xj,v,w) << " (VAC) " << cij->getVACCost(xi,xj,v,w) << endl;
+ //     cout <<  "K binaire: " << cij->getK(xi,v, nbIterations) << endl;
+
+	if (cij->getK(xi,v, nbIterations) != 0) {
+		Cost ecost = lambda * cij->getK(xi,v, nbIterations); 
+		cij->setK(xi, v, 0, nbIterations);
+			  cij->VACextend(xi, v, ecost);
 			  xi->queueAC();
 			  xj->queueAC();
       }
@@ -459,6 +463,7 @@ bool VACExtension::enforcePass3 () {
     cij->VACproject(xj, w, lambda * xj->getK(w, nbIterations));
   }
   sumk += maxk;
+  if (maxk>theMaxK) theMaxK = maxk;
 
   xi0->extendAll(lambda);
   wcsp->increaseLb(wcsp->getLb() + lambda);
@@ -568,7 +573,7 @@ void VACExtension::dequeueVAC2(DLink<Variable *> *link) {
 void VACExtension::printStat(bool ini)
 {
 	long double mean = to_double(sumlb) / (long double) nlb;
-	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << "     cyclesize: " << (double)sumvars/(double)nlb << "     meank: " << to_double(sumk)/(double)nlb << endl; 
+	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << "     cyclesize: " << (double)sumvars/(double)nlb << "     k: " << to_double(sumk)/(double)nlb << " (mean), " << theMaxK << " (max)" << endl; 
 	if(ini) cout << "Lb after VAC: " << wcsp->getLb() << endl; 
 	
 	//sort(heap.begin(), heap.end(), cmp_function);
@@ -582,6 +587,7 @@ void VACExtension::printStat(bool ini)
 	cout << endl;*/
 	
 	sumk = MIN_COST;
+	theMaxK = 0;
 	sumvars = 0;
 	sumlb = 0;
 	nlb = 0;
