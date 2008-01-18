@@ -324,9 +324,9 @@ void VACExtension::enforcePass2 () {
   for (EnumeratedVariable::iterator iti0 = xi0->begin(); iti0 != xi0->end(); ++iti0) {
 	v = *iti0;
     xi0->addToK(v, UNIT_COST, nbIterations);
-    xi0->setMark(v, nbIterations);
 	Cost cost = xi0->getVACCost(v);
 	if (cost > MIN_COST && cost < minlambda) minlambda = cost;
+	else     xi0->setMark(v, nbIterations);
   }
 
   while (!queueP->empty()) {

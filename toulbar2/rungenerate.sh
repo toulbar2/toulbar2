@@ -19,9 +19,15 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt
     randomfile=nary-$n-$m-$tight-$bctr-$tctr-$nary-$nary-$seed 
+<<<<<<< rungenerate.sh
+    ./toulbar2 $randomfile z > /dev/null
+    ./toulbar2 problem.wcsp $1 | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
+    ./toolbar  problem.wcsp    | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
+=======
     toulbar2 $randomfile z > /dev/null
     toulbar2 problem.wcsp $1 | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     toolbar  problem.wcsp    | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
+>>>>>>> 1.4
     ub1=`cat toulbar2_opt`
     ub2=`cat toolbar_opt`
     if [[ $ub1 != $ub2 ]] ; then

@@ -29,7 +29,7 @@ ICC = icc
 CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
-OFLAGS = -O3 -DNDEBUG
+#OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
 # -O2
 
@@ -44,7 +44,7 @@ LIBFLAGS =
 
 BUILD = $(CC) -shared
 
-%.o : %.cpp
+%.o : %.cpp %.hpp
 	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
 toulbar2: $(OBJS)
