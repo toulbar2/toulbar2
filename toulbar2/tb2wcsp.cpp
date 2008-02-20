@@ -25,31 +25,22 @@ int  ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
 bool ToulBar2::allSolutions = false;
-int  ToulBar2::elimDegree_ = -1;
-int  ToulBar2::elimDegree_preprocessing_  = -1;
-bool ToulBar2::preprocessTernaryHeuristic  = false;
-bool ToulBar2::QueueComplexity = false;
-bool ToulBar2::dichotomicBranching = false;
-bool ToulBar2::lds = false;
-bool ToulBar2::limited = false;
-unsigned int ToulBar2::dichotomicBranchingSize = 10;
-bool ToulBar2::generation = false;
-int ToulBar2::minsumDiffusion = 0;
-LcLevelType ToulBar2::LcLevel = LC_EDAC;
-
-#ifdef MENDELSOFT
-bool ToulBar2::binaryBranching = true;
 int  ToulBar2::elimDegree = 3;
 int  ToulBar2::elimDegree_preprocessing  = -1;
+int  ToulBar2::elimDegree_ = -1;
+int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
+bool ToulBar2::preprocessTernaryHeuristic  = false;
+LcLevelType ToulBar2::LcLevel = LC_EDAC;
+bool ToulBar2::QueueComplexity = false;
+bool ToulBar2::binaryBranching = true;
 bool ToulBar2::lastConflict = true;
-#else
-bool ToulBar2::binaryBranching = false;
-int  ToulBar2::elimDegree = -1;
-int  ToulBar2::elimDegree_preprocessing  = -1;
-bool ToulBar2::preprocessTernary  = false;
-bool ToulBar2::lastConflict = false;
-#endif
+bool ToulBar2::dichotomicBranching = true;
+unsigned int ToulBar2::dichotomicBranchingSize = 10;
+bool ToulBar2::lds = false;
+bool ToulBar2::limited = false;
+bool ToulBar2::generation = false;
+int ToulBar2::minsumDiffusion = 0;
 
 bool ToulBar2::weightedDegree = false;
 bool ToulBar2::singletonConsistency = false;
@@ -353,12 +344,12 @@ void WCSP::preprocessing()
             ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
             propagate();
 
-		    for (unsigned int i=0; i<constrs.size(); i++) 
-		    	if(constrs[i]->connected() && (constrs[i]->arity() > 3)) {
-		    		NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
+//  		    for (unsigned int i=0; i<constrs.size(); i++) 
+//  		    	if(constrs[i]->connected() && (constrs[i]->arity() > 3)) {
+//  		    		NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
 //  		    		nary->preprojectall2(); 
 //  		    		nary->preproject3(); 
-		    	}
+//  		    	}
 
         }
         ToulBar2::elimDegree_preprocessing_ = -1;

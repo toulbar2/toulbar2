@@ -29,7 +29,7 @@ ICC = icc
 CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
-#OFLAGS = -O3 -DNDEBUG
+OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
 # -O2
 
@@ -43,6 +43,9 @@ LIBFLAGS =
 # -fPIC
 
 BUILD = $(CC) -shared
+
+%.o : %.cpp
+	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
 %.o : %.cpp %.hpp
 	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)

@@ -115,42 +115,43 @@ int main(int argc, char **argv)
 #endif
         cerr << "Initial upperbound is optional (default value: " << MAX_COST << ")" << endl;
         cerr << endl;
-        cerr << "Available options:" << endl;
+        cerr << "Available options (use symbol \":\" before an option letter to remove a default option):" << endl;
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
-		cerr << "   w [genotypingErrorCorrectionMode] : write last solution found" << endl;
-		cerr << "     for pedigree problems only:" << endl;
+        cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
+		cerr << "   w[mode] : write last solution found" << endl;
+		cerr << "     and for pedigree problems:" << endl;
 		cerr << "               mode=0: save pedigree with erroneous genotypings removed" << endl;
 		cerr << "               mode=1: save pedigree with erroneous genotypings corrected" << endl;
 		cerr << "               mode=2: save pedigree with erroneous genotypings corrected and missing genotypes of informative individuals inferred" << endl;
         cerr << "   y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE" << endl;
+		cerr << "        y must be the last option in the command line followed by three arguments:" << endl;
         cerr << "               genotypingErrorRate is a prior uniform probability of genotyping errors (default value: " << ToulBar2::errorg << ")" << endl;
         cerr << "               probabilityPrecision is a conversion factor (a power of ten) for representing fixed point numbers (default value: " << ToulBar2::resolution << ")" << endl;
         cerr << "               genotypePriorMode selects the prior mode for allele probability distribution (default value: " << ToulBar2::foundersprob_class << ")" << endl;
         cerr << "                   = 0 : uniform allele probability distribution" << endl;
         cerr << "                   = 1 : allele probability distribution read from pedigree data" << endl;
         cerr << "                   = 2 p1 p2 p3...: allele probability distribution given explicitely in the command line" << endl;
-        cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
 #ifndef MENDELSOFT
         cerr << "   a : find all solutions" << endl;
-        cerr << "   b : binary branching always (default: binary branching for interval domain and n-ary branching for enumerated domain)" << endl;
-        cerr << "   c : binary branching with conflict-directed variable ordering heuristic" << endl;
+        cerr << "   b : binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)" << endl;
+        cerr << "   c : binary branching with conflict-directed variable ordering heuristic (default option)" << endl;
         cerr << "   q : weighted degree variable ordering heuristic" << endl;
-        cerr << "   d : dichotomic branching instead of binary branching when current domain size is greater than " << ToulBar2::dichotomicBranchingSize << endl;
-        cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 2)" << endl;
-        cerr << "   p[integer] : preprocessing only: variable elimination of small degree (less than or equal to 9)" << endl;
+        cerr << "   d : dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default option)" << endl;
+        cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 3)" << " (default option)" << endl;
+        cerr << "   p[integer] : preprocessing only: variable elimination of degree less than or equal to the given value" << endl;
         cerr << "   t : preprocessing only: project ternary constraints on binary constraints and apply 3-consistency" << endl;
         cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
 #ifdef BOOST
         cerr << "   m : preprocessing only: minimum degree re-ordering of variables" << endl;
 #endif
         cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
-        cerr << "   k : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4)" << endl;
+        cerr << "   k[integer] : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4)" << endl;
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
         cerr << "   x : load a solution from a file" << endl;
-        cerr << "   M[integer] : min-sum diffusion on preprocessing" << endl;
+        cerr << "   M[integer] : Min Sum Diffusion on preprocessing" << endl;
         cerr << "   A[integer] : enforce VAC at search nodes with depth less than a given threshold" << endl;
         cerr << "   T[integer] : threshold cost value for VAC" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
@@ -175,12 +176,12 @@ int main(int argc, char **argv)
 		  if((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
         }
 		if (strchr(argv[i],'a')) ToulBar2::allSolutions = true;        
-        if (strchr(argv[i],'b')) ToulBar2::binaryBranching = true;
-        if (strchr(argv[i],'c')) { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }
-        if (strchr(argv[i],'d')) { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }
+        if ((ch = strchr(argv[i],'b'))) {if (ch[-1]==':') { ToulBar2::binaryBranching = false; } else { ToulBar2::binaryBranching = true; }}
+        if ((ch = strchr(argv[i],'c'))) {if (ch[-1]==':') { ToulBar2::lastConflict = false; } else { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }}
+        if ((ch = strchr(argv[i],'d'))) {if (ch[-1]==':') { ToulBar2::dichotomicBranching = false; } else  { ToulBar2::binaryBranching = true; ToulBar2::dichotomicBranching = true; }}
         if (strchr(argv[i],'q')) { ToulBar2::weightedDegree = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
-        	ToulBar2::elimDegree = 3;
+        	if (ch[-1]==':') ToulBar2::elimDegree = -1; else ToulBar2::elimDegree = 3;
         	int ndegree = atoi(&ch[1]);
         	if((ndegree > 0) && (ndegree <= 3)) ToulBar2::elimDegree = ndegree;
         }
