@@ -20,11 +20,13 @@ void Pedigree::iniProb( WCSP* wcsp ) {
    int nballeles = alleles.size()-1;
 
    TopProb = 0.;
-   
-   int ngenotyped = genotypes.size();
-   while(ngenotyped) {
-   		TopProb += -Log10(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
-   		ngenotyped--;
+
+   if(nballeles > 1) {   
+	   int ngenotyped = genotypes.size();
+	   while(ngenotyped) {
+	   		TopProb += -Log10(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
+	   		ngenotyped--;
+	   }
    }
   
    for (vector<Individual>::iterator iter = pedigree.begin(); iter != pedigree.end(); ++iter) {
