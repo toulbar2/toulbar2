@@ -335,7 +335,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   for (unsigned int i=0; i<genotypes.size(); i++) {
     typeAscendants(genotypes[i]);
   }
-  cout << nbtyped << " individuals found with a genotyped descendant.." << endl;
+  cout << nbtyped << " informative individuals found (either genotyped or having a genotyped descendant)." << endl;
 
 
   gencorrects.clear();
