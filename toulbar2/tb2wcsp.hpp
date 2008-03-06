@@ -82,6 +82,9 @@ public:
            objectiveChanged=true;
        }
     }     
+    
+    void setUb(Cost newUb) { ub = newUb; }
+    void setLb(Cost newLb) { lb = newLb; }
  
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     

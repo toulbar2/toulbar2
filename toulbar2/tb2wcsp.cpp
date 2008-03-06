@@ -13,6 +13,7 @@
 #include "tb2arithmetic.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 
 
 /*
@@ -74,7 +75,7 @@ BEP *ToulBar2::bep = NULL;
 
 int WCSP::wcspCounter = 0;
 
-
+char* ToulBar2::varOrder = NULL;
 
 /*
  * WCSP constructors
@@ -116,7 +117,8 @@ WCSP::~WCSP()
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
 {
-    WeightedCSP * W = new WCSP(s, upperBound);
+    //WeightedCSP * W = new WCSP(s, upperBound);
+    WeightedCSP * W = new ClusteredWCSP(s, upperBound);
     return W;
 }
 

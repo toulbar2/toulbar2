@@ -239,6 +239,13 @@ int main(int argc, char **argv)
 										 									       // otherwise:    read probability distribution from command line 
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
+        if ( (ch = strchr(argv[i],'O')) ) {
+        	char buf[80];
+        	sprintf(buf,"%s",&ch[1]);
+        	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+	       	sprintf(ToulBar2::varOrder, "%s",buf);
+    	}
+        
     }
     
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;

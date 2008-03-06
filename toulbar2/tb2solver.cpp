@@ -7,6 +7,7 @@
 #include "tb2domain.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2bep.hpp"
+#include "tb2clusters.hpp"
 
 extern void setvalue(int wcspId, int varIndex, Value value);
 
@@ -43,6 +44,12 @@ void Solver::read_wcsp(const char *fileName)
         if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
     }
     ToulBar2::setvalue = setvalue;
+    
+    if ( ToulBar2::varOrder ) {
+    	ClusteredWCSP* wcsp = (ClusteredWCSP*) getWCSP();
+    	wcsp->build_from_order();
+    }
+ 
 }
 
 void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular)

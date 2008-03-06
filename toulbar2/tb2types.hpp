@@ -167,6 +167,8 @@ public:
     static bool singletonConsistency;
     static BEP *bep;
     static LcLevelType LcLevel;
+    
+    static char* varOrder;
 };
 
 /*
