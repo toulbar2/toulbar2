@@ -237,7 +237,6 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
      EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];
      for(int i = 0; i < arity; i++) scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
      NaryConstraint *ctr = new NaryConstraintMap(this,scopeVars,arity,defval);  
-     //NaryConstraint *ctr = new NaryConstrie(this,scopeVars,arity,defval);  
      delete [] scopeVars;
 
 

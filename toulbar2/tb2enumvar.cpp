@@ -179,9 +179,8 @@ void EnumeratedVariable::findSupport()
             }
         }
         if (minCost > MIN_COST) {
-            extendAll(minCost);
-            if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+minCost << endl;
-            wcsp->increaseLb(wcsp->getLb() + minCost);
+		  extendAll(minCost);
+		  projectLB(minCost);
         }
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
         support = newSupport;
@@ -456,8 +455,7 @@ void EnumeratedVariable::assign(Value newValue)
         Cost cost = getCost(newValue);
         if (cost > MIN_COST) {
             deltaCost += cost;
-            if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-            wcsp->increaseLb(wcsp->getLb() + cost);
+            projectLB(cost);
         }
 
 	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
@@ -665,9 +663,8 @@ void EnumeratedVariable::eliminate()
 
 
 
-void EnumeratedVariable::permuteDomain()
+void EnumeratedVariable::permuteDomain(int nperm)
 {
-	int nperm = 10;
 	while(nperm) {
 		Value a = rand() % getDomainInitSize();
 		Value b = rand() % getDomainInitSize();

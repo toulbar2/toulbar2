@@ -32,11 +32,13 @@ protected:
     template <GetCostMember getBinaryCost> void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
             vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
             vector<Value> &supportY, vector<StoreCost> &deltaCostsY);
-    template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY);
+    template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX);
     template <GetCostMember getBinaryCost> bool verify(EnumeratedVariable *x, EnumeratedVariable *y);
+
     // return true if unary support of x is broken
     bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
     {
+		assert(ToulBar2::verbose < 1 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
         // hard binary constraint costs are not changed
         if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
         Cost oldcost = x->getCost(value);
@@ -46,7 +48,7 @@ protected:
     
     void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
     {
-        assert( ToulBar2::verbose < 4 || ((cout << "extend " << x->getName() << " (" << value << ") to C" << getVar(0)->getName() << "," << getVar(1)->getName() << " += " << cost << endl), true) );
+		assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
         deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
         x->extend(value, cost);
     }
@@ -55,8 +57,8 @@ protected:
     void findSupportY() {findSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY);}
     void findFullSupportX() {findFullSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
     void findFullSupportY() {findFullSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY,supportX,deltaCostsX);}
-    void projectX() {projection<&BinaryConstraint::getCost>(x,y,y->getValue());}
-    void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x,x->getValue());}
+    void projectX() {projection<&BinaryConstraint::getCost>(x,y,y->getValue(),deltaCostsX);}
+    void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x,x->getValue(),deltaCostsY);}
     bool verifyX() {return verify<&BinaryConstraint::getCost>(x,y);}
     bool verifyY() {return verify<&BinaryConstraint::getCostReverse>(y,x);}
     bool projectX(Value value, Cost cost) {return project(x,value,cost,deltaCostsX);}
@@ -91,15 +93,6 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
-
-    Cost getCostNoDelta(Value vx, Value vy) {
-        int ix = x->toIndex(vx);
-        int iy = y->toIndex(vy);
-        Cost res = costs[ix * sizeY + iy];
-        assert(res >= MIN_COST);
-        return res;
-    }
-
 
    void addcost( int vx, int vy, Cost mincost ) {
             assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost));
@@ -279,33 +272,14 @@ public:
             assign(1);
             return;
         }
-        // delay true propagation in order to not interfer with ternary findFullSupportEAC
         if (getDACScopeIndex()==0) {
-//            findSupportY();             // must do AC before DAC
-//            if(connected()) findFullSupportX();
             x->queueAC(); 
             x->queueEAC1();
             if (ToulBar2::LcLevel>=LC_DAC) y->queueDAC(); else y->queueAC();
-//                if(connected()) {
-//                    int yindex = y->toIndex(y->getSupport());
-//                    if (y->cannotbe(y->getSupport()) || x->cannotbe(supportY[yindex]) ||
-//                        x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST) {
-//                        y->queueEAC1();
-//                    }
-//                }
         } else {
-//            findSupportX();             // must do AC before DAC
-//            if(connected()) findFullSupportY();
             y->queueAC(); 
             y->queueEAC1();
             if (ToulBar2::LcLevel>=LC_DAC) x->queueDAC(); else x->queueAC();
-//                if(connected()) {
-//                    int xindex = x->toIndex(x->getSupport());
-//                    if (x->cannotbe(x->getSupport()) || y->cannotbe(supportX[xindex]) ||
-//                        y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST) {
-//                        x->queueEAC1();
-//                    }
-//                }
         }
     }
     void remove(int varIndex) {

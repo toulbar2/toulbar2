@@ -38,10 +38,6 @@ protected:
     DLink<VariableWithTimeStamp> linkIncDecQueue;
     DLink<VariableWithTimeStamp> linkEliminateQueue;
 
-
-//	StoreInt elimOrder;  // added to retrieve the order in which variables are eliminated
-//	                     // used when Toulbar2::elimLevel > 0  
-
     void setMaxUnaryCost(Value a, Cost cost);
     void changeNCBucket(int newBucket);
     void conflict();
@@ -87,7 +83,8 @@ public:
     TernaryConstraint* existTernary(); 
 	double strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1, TernaryConstraint* &tctr2  );    
     void deconnect(DLink<ConstraintLink> *link);
-//	bool eliminated() { return elimOrder >= 0; } 
+
+    void projectLB(Cost cost);
 
     virtual Cost getInfCost() const =0;
     virtual Cost getSupCost() const =0;

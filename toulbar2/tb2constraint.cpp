@@ -21,7 +21,11 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
     tight = -1;
 }
 
-
+void Constraint::projectLB(Cost cost)
+{
+  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+  wcsp->increaseLb(wcsp->getLb() + cost);  
+}
 
 void Constraint::sumScopeIncluded( Constraint* ctr ) 
 {

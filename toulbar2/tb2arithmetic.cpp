@@ -130,8 +130,7 @@ void Unary::propagate()
 	if (itinf == permitted.end() || itsup == permitted.end()) {
 	  // IC0 propagatation (increase global lower bound)
 	  deconnect();
-	  if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+penalty << endl;
-	  wcsp->increaseLb(wcsp->getLb() + penalty);
+	  projectLB(penalty);
 	} else {
 	  // propagate hard constraint
 	  if (CUT(wcsp->getLb()+penalty, wcsp->getUb())) {
@@ -189,8 +188,7 @@ void Supxyc::propagate()
         Cost cost = y->getInf() + cst - x->getSup() - deltaCost;
         if (cost > MIN_COST) {
             deltaCost += cost;
-            if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-            wcsp->increaseLb(wcsp->getLb() + cost);
+			projectLB(cost);
         }
         
         // BAC* propagation (increase unary costs of domain bounds for unassigned variables)
@@ -272,7 +270,6 @@ void Disjunction::propagate()
   } else if (x->getSup() < y->getInf() + csty && y->getSup() < x->getInf() + cstx) {
 	// IC0 propagatation (increase global lower bound if always unsatisfied)
 	deconnect();
-	if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+penalty << endl;
 	if (x->unassigned()) {
 	  if (x->getInf() == deltaValueXinf) x->projectInfCost(-penalty);
 	  if (x->getSup() == deltaValueXsup) x->projectSupCost(-penalty);
@@ -281,7 +278,7 @@ void Disjunction::propagate()
 	  if (y->getInf() == deltaValueYinf) y->projectInfCost(-penalty);
 	  if (y->getSup() == deltaValueYsup) y->projectSupCost(-penalty);
 	}
-	wcsp->increaseLb(wcsp->getLb() + penalty);
+	projectLB(penalty);
   } else {
 	// propagate hard constraint
 	if (CUT(wcsp->getLb()+penalty, wcsp->getUb())) {
@@ -376,8 +373,7 @@ void SpecialDisjunction::propagate()
 		Cost cost = min(costx,costy) - deltaCost;
 		if (cost > MIN_COST) {
 		  deltaCost += cost;
-		  if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-		  wcsp->increaseLb(wcsp->getLb() + cost);
+		  projectLB(cost);
 		}
 	  }
 	  // propagate hard constraint

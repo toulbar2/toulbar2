@@ -16,9 +16,6 @@ typedef struct {
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
-#define MAX_ARITY 100
-
-
 
 void WCSP::read_wcsp(const char *fileName)
 {

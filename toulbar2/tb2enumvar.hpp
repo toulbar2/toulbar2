@@ -158,7 +158,7 @@ public:
     }
     
     
-    void permuteDomain();
+    void permuteDomain(int numberOfPermutations);
     
     
     void print(ostream& os);

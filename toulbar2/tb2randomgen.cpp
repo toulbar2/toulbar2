@@ -284,7 +284,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
  	if(forceSubModular) {
 	    for(i=0;i<n;i++) {
 		  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
-		  	x->permuteDomain();
+		  	x->permuteDomain(10);
 	    }
  	}   
 }

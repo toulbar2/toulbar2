@@ -150,7 +150,7 @@ void NaryConstraint::projectNaryBinary()
 	} 
 	else {
 		Cost c = eval(t);
-		wcsp->increaseLb(wcsp->getLb() + c);
+		projectLB(c);
 	}	  	 
 }
 
@@ -212,7 +212,7 @@ void NaryConstraint::projectFromZero(int index)
 			
 	   }
 	   setTuple( t, eval(t) - minc );
-	   wcsp->increaseLb(wcsp->getLb() + minc);
+	   projectLB(minc);
 	   
 	   cout << minc << " "; flush(cout);
     }	    
@@ -1175,7 +1175,7 @@ Cost NaryConstrie::eval( string s ) {
 			for(i = 0; i < arity_;i++) t[i] = CHAR_FIRST + scope[i]->toIndex(scope[i]->getValue());
 			t[i] = '\0';
 			deconnect();
-	   	    wcsp->increaseLb(wcsp->getLb() + eval(string(t)));
+	   	    projectLB(eval(string(t)));
 			delete [] t;
 	   }
     }

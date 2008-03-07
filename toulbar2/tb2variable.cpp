@@ -18,7 +18,6 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
         constrs(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
         NCBucket(-1, &w->getStore()->storeValue)
-//        elimOrder(-1, &w->getStore()->storeValue)
 {
     if (w->getStore()->getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -58,7 +57,7 @@ int cmpConstraint(const void *p1, const void *p2)
     else return 0;
 }
 
-int cmpConstraint2(const void *p1, const void *p2)
+int cmpConstraintTightness(const void *p1, const void *p2)
 {
     DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
     DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
@@ -175,6 +174,12 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
         int newbucket = min(cost2log2gub(cost), wcsp->getNCBucketSize() - 1);
         changeNCBucket(newbucket);
     }
+}
+
+void Variable::projectLB(Cost cost)
+{
+  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+  wcsp->increaseLb(wcsp->getLb() + cost);
 }
 
 void Variable::propagateIncDec(int incdec)

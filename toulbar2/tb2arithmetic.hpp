@@ -34,8 +34,7 @@ public:
         assert(connected());
         deconnect();  // Warning! deconnection has to be done before the projection
         if (permitted.find(x->getValue()) == permitted.end()) {
-		  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+penalty << endl;
-		  wcsp->increaseLb(wcsp->getLb() + penalty);
+		  projectLB(penalty);
 		}
     }
         
@@ -156,14 +155,11 @@ public:
         if (x->assigned() && y->assigned()) {
 		  deconnect();
 		  if (x->getValue() >= xinfty && y->getValue() >= yinfty && costx + costy > deltaCost) {
-			if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + costx + costy - deltaCost << endl;
-			wcsp->increaseLb(wcsp->getLb() + costx + costy - deltaCost);
+			projectLB(costx + costy - deltaCost);
 		  } else if (x->getValue() >= xinfty && y->getValue() < yinfty && costx > deltaCost) {
-			if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + costx - deltaCost << endl;
-			wcsp->increaseLb(wcsp->getLb() + costx - deltaCost);		  
+			projectLB(costx - deltaCost);		  
 		  } else if (y->getValue() >= yinfty && x->getValue() < xinfty && costy > deltaCost) {
-			if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + costy - deltaCost << endl;
-			wcsp->increaseLb(wcsp->getLb() + costy - deltaCost);
+			projectLB(costy - deltaCost);
 		  } else if (x->getValue() < xinfty && y->getValue() < yinfty && x->getValue() < y->getValue() + csty && y->getValue() < x->getValue() + cstx) {
 			THROWCONTRADICTION;
 		  }
@@ -182,8 +178,7 @@ public:
 			Cost cost = costx - deltaCost;
 			if (cost > MIN_COST) {
 			  deltaCost += cost;
-			  if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-			  wcsp->increaseLb(wcsp->getLb() + cost);
+			  projectLB(cost);
 			}
 			if (y->getSup() < yinfty) {
 			  deconnect();
@@ -207,8 +202,7 @@ public:
 			Cost cost = costy - deltaCost;
 			if (cost > MIN_COST) {
 			  deltaCost += cost;
-			  if (ToulBar2::verbose >= 2) cout << this << " lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-			  wcsp->increaseLb(wcsp->getLb() + cost);
+			  projectLB(cost);
 			}
 			if (x->getSup() < xinfty) {
 			  deconnect();

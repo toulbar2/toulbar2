@@ -151,11 +151,7 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
                 }
             }
             if (minCost > MIN_COST) {
-                // hard ternary constraint costs are not changed
-                if (!CUT(minCost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
-                if (x->getSupport() == *iterX || SUPPORTTEST(x->getCost(*iterX), minCost)) supportBroken = true;
-                if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
-                x->project(*iterX, minCost);
+                supportBroken |= project(x, *iterX, minCost, deltaCostsX);
                 if (deconnected()) return;
             }
             supportX[xindex] = support;
@@ -306,12 +302,7 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                         }
                     }
                 }
-                
-                // hard ternary constraint costs are not changed
-                if (!CUT(minCost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[xindex] += minCost;  // Warning! Possible overflow???
-                if (x->getSupport() == *iterX || SUPPORTTEST(x->getCost(*iterX), minCost)) supportBroken = true;
-                if (ToulBar2::verbose >= 2) cout << "ternary projection of " << minCost << " from C" << x->getName() << "," << y->getName()<< "," << z->getName() << "(" << *iterX << "," << support.first << "," << support.second << ")" << endl;
-                x->project(*iterX, minCost);
+                supportBroken |= project(x, *iterX, minCost, deltaCostsX);
                 if (deconnected()) return;
             }
             
@@ -351,16 +342,7 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
         }
         if (mincost > MIN_COST) {
             flag = true;
-            yzin->addcost(*itery,*iterz,mincost);   // project mincost to binary
-            if (ToulBar2::verbose >= 2) cout << "ternary projection of " << mincost << " from C" << xx->getName() << "," << yy->getName() << "," << zz->getName() << " to C" << yy->getName() << "," << zz->getName() << "(" << *itery << "," << *iterz << ")" << endl;
-
-			//BUG: connected() incompatible with preproject ternary ???            
-			//if (connected() && mincost + wcsp->getLb() < wcsp->getUb()) {  
-            // substract mincost from ternary constraint
-                for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
-                    addcost(xx, yy, zz, *iterx, *itery, *iterz, -mincost);                            
-                }
-			//}               
+            project(yzin,yy,zz,xx,*itery,*iterz,mincost);
         }
     }}
     

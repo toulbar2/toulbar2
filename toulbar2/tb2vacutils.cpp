@@ -353,20 +353,20 @@ VACConstraint::~VACConstraint ()
 }
 
 void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
+  assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << v << "), " << c << ")" << endl), true));
   int index = x->toIndex(v);
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] += c; 
   else			   deltaCostsY[index] += c; 
-  //  cout << "VACproject cost " << c << " to variable " << x->getName() << " value " << v << " from constraint " << getVar(0)->getName() << "," << getVar(1)->getName() << endl;
   x->VACproject(v, c);
 }
 
 void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
+  assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << v << "), " << c << ")" << endl), true));
   int index = x->toIndex(v);
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] -= c;
   else		       deltaCostsY[index] -= c;
-  //  cout << "VACextend cost " << c << " from variable " << x->getName() << " value " << v << " to constraint " << getVar(0)->getName() << "," << getVar(1)->getName() << endl;
   x->VACextend(v, c);
 }
 

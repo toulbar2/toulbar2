@@ -466,8 +466,7 @@ bool VACExtension::enforcePass3 () {
   if (maxk>theMaxK) theMaxK = maxk;
 
   xi0->extendAll(lambda);
-  wcsp->increaseLb(wcsp->getLb() + lambda);
-  //  xi0->findSupport();
+  xi0->projectLB(lambda);
   return true;
 }
 

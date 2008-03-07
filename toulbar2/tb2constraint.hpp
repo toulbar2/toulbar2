@@ -57,6 +57,8 @@ public:
     virtual bool isEAC(int index, Value a) {return true;}
     virtual void findFullSupportEAC(int index) {}
 
+    void projectLB(Cost cost);
+
     virtual bool verify() {return true;};
     
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
