@@ -10,6 +10,7 @@
 #include "tb2queue.hpp"
 #include "tb2domain.hpp"
 
+#include <list>
 /*
  * Main class
  * 
@@ -107,6 +108,52 @@ public:
     void queueEliminate();
 
     void propagateIncDec(int incdec);
+    
+    /**********************************************************************/
+    //   added for tree decomposition stuff	
+
+	class clusterItem { 
+		public:
+
+		int cluster;                     // cluster in which the variable appears
+		int idSep;                       // index of the separator variables to access delta costs 
+
+		clusterItem( int c, int iSep ) {	
+			cluster = c;	
+			idSep = iSep;
+		}
+	};
+
+	int cluster;
+	void setCluster( int c ) { cluster = c; }
+
+	list<clusterItem>  clusters;          // list of all clusters in which the variable appears 
+	
+	void addCluster( int c, int iSep ) {
+		clusters.push_back( clusterItem( c, iSep ) );
+	}
+
+	list<clusterItem>::iterator itclusters;
+
+	bool beginClusters(int& c, int& iS) {
+		itclusters = clusters.begin();
+		if(itclusters != clusters.end()) {
+			c = (*itclusters).cluster;
+			iS = (*itclusters).idSep;
+			return true;
+		}
+		return false;
+	}
+
+	bool nextClusters(int& c, int& iS) {
+		++itclusters;
+		if(itclusters != clusters.end()) {
+			c = (*itclusters).cluster;
+			iS = (*itclusters).idSep;
+			return true;
+		}
+		return false;
+	}
 
 /*
     class iterator;

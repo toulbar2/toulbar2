@@ -160,7 +160,10 @@ public:
 	}
 	
 	
-	
+    //   added for tree decomposition stuff	
+	int  cluster;
+	int  getCluster()      {return cluster;}
+	void setCluster(int i) {cluster = i;}
 	
 	
 	

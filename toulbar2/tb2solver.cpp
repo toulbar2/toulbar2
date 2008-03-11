@@ -46,8 +46,7 @@ void Solver::read_wcsp(const char *fileName)
     ToulBar2::setvalue = setvalue;
     
     if ( ToulBar2::varOrder ) {
-    	ClusteredWCSP* wcsp = (ClusteredWCSP*) getWCSP();
-    	wcsp->build_from_order();
+    	wcsp->buildTreeDecomposition();
     }
  
 }

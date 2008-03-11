@@ -11,7 +11,6 @@
 #include <list>
 
 class Cluster;
-class ClusteredWCSP;
 
 typedef set<int>	       TVars;
 typedef list<Constraint*>  TCtrs;
@@ -43,26 +42,37 @@ class NaryNogood : public NaryConstrie
 class Cluster {
 
  private:
-	  ClusteredWCSP*	wcsp;
-	  list<TAssign*>    assignments;
-	  TVars				vars;
-	  TCtrs			    ctrs;
-	  TClusters         edges;
-	  StoreCost         lb;	
-	  Cost				lb_opt;
-	  Cost				ub;
+  	  TreeDecomposition*  td;
+	  WCSP*				  wcsp;
+	  list<TAssign*>      assignments;
+	  TVars				  vars;
+	  TCtrs			      ctrs;
+	  TClusters           edges;
+	  StoreCost           lb;	
+	  Cost				  lb_opt;
+	  Cost				  ub;
+	  
+	  vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
+	  										  // inicialized with iniDelta()
+	  
+	  int				  parent;
+	  TVars				  sep;                // separator vars with parent cluster
+      TClusters    	      ancestors;  	      // set of ancestors	
 
  public:
-	  Cluster (ClusteredWCSP *w);
-	  Cluster ( Cluster& c );
+	  Cluster (TreeDecomposition* tdin);
 	  ~Cluster();
 
-	  int id;											// the id corresponds to the vector index of the cluster in ClusteredWCSP
+	  int id;								  // the id corresponds to the vector index of the cluster in ClusteredWCSP
 	
 	  int getId() { return id; }
 
       // ----------------------------------------- Interface Functions
-	  ClusteredWCSP* getWCSP() { return wcsp; }
+	  WCSP* 		getWCSP() { return wcsp; }
+
+	  bool 			isVar( int i );
+	  bool 			isSepVar( int i );
+
 
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
@@ -73,16 +83,29 @@ class Cluster {
 	  void			setLb_opt(Cost c)  {lb_opt = c; }
 	  int			getNbVars() { return vars.size(); }
 	  TVars&		getVars() { return vars; }	
+	  TCtrs&		getCtrs() { return ctrs; }	
 	  TClusters&	getEdges() { return edges; }
 	  void 			addVar( Variable* x );
 	  void 			addVars( TVars& vars );
-	  bool 			isVar( int i );
 	  void 			addEdge( Cluster* c );
 	  void 			addEdges( TClusters& cls );
 	  void 			removeEdge( Cluster* c );
+	  void 			addCtrs( TCtrs& ctrsin );
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
+	  
+	  void 			iniDelta();
+	  
 	  void 		    updateUb();
+	  
+	  
+	  
+	  void 			setParent(int p);
+	  Cluster*		getParent();
+	  TVars&		getSep();
+	  TClusters&	getAncestors();
+	  Cluster*		nextSep( Variable* v ); 
+	  bool			isAncestor( Cluster* c2 );
       // ----------------------------------------------------------
 
 	  Cost 			eval(TAssign* a);
@@ -96,6 +119,10 @@ class Cluster {
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
+	  TVars::iterator beginSep() { return sep.begin(); }
+	  TVars::iterator endSep()   { return sep.end(); }
+	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
+	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() { return edges.begin(); }
 	  TClusters::iterator endEdges()   { return edges.end(); }
 
@@ -104,23 +131,45 @@ class Cluster {
 
 
 
-class ClusteredWCSP : public WCSP {
+class TreeDecomposition  {
 private:
-	vector<Cluster*> 		clusters; 
+	WCSP*			  wcsp;	
+	vector<Cluster*>  clusters; 
+	int        		  currentCluster;
+	list<Cluster*> 	  roots;
 
 public:
 
-	ClusteredWCSP(Store *s, Cost upperBound);
+	TreeDecomposition(WCSP* wcsp_in);
+
+    WCSP* 		getWCSP() { return wcsp; }
 	
-	void build_from_order();	     			// builds the tree cluster of clusters from a given order
+	Cluster*	getCluster( int i ) { return clusters[i]; }
+	Cluster*   	var2Cluster( int v );	
+	
+	
+	
+	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
 	bool fusion();                   		    // one fusion step
+
+	int  makeRooted( int icluster );
+	void makeRootedRec( Cluster* c,  TClusters& visited );
+	
+	int height( Cluster* r, Cluster* father );
+	int height( Cluster* r );
+
 
 
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );
 	void sum( TVars& v1, TVars& v2, TVars& vout ); 
 	bool included( TVars& v1, TVars& v2 ); 	
+
+	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
+	
+	void print( Cluster* c = NULL);
+	
 };
 
 

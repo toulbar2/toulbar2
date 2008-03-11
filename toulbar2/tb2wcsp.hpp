@@ -14,6 +14,7 @@ class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
 class VACExtension;
+class TreeDecomposition;
 
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
@@ -265,6 +266,12 @@ public:
     void removeSingleton();
     void printVACStat();
 	int  getVACHeuristic();
+
+    // -----------------------------------------------------------
+    // Data and methods for Tree Decomposition
+
+    TreeDecomposition* td;
+	void buildTreeDecomposition();
 
     // -----------------------------------------------------------
     // Functions for dealing with probabilities

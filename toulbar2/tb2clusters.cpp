@@ -58,7 +58,7 @@ void NaryNogood::assign(int varIndex) {
 /************************************************************************************************/
 // Cluster
 
-Cluster::Cluster(ClusteredWCSP *w) : wcsp(w), lb(MIN_COST, &w->getStore()->storeCost)		 
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost)		 
 {
 	lb     = MIN_COST;
 	lb_opt = MIN_COST;
@@ -68,15 +68,6 @@ Cluster::Cluster(ClusteredWCSP *w) : wcsp(w), lb(MIN_COST, &w->getStore()->store
 Cluster::~Cluster() {
 }
 
-Cluster::Cluster( Cluster& c ) : lb(MIN_COST, & ((WCSP*)c.getWCSP())->getStore()->storeCost)
-{
-    wcsp = c.wcsp;
-	vars = c.vars;
-	ctrs = c.ctrs;
-	ub = c.getUb();
-	lb = c.getLb();
-	assignments = c.assignments;
-}
 
 
 void Cluster::addVar( Variable* x ) { vars.insert(x->wcspIndex); }
@@ -99,8 +90,13 @@ void Cluster::addEdges( TClusters& cls )
 			   inserter(edges, edges.begin()) );			 	  
 }
 
-void Cluster::removeEdge( Cluster* c ) 
-{
+void Cluster::addCtrs( TCtrs& ctrsin ) {
+	set_union( ctrs.begin(), ctrs.end(),
+			   ctrsin.begin(), ctrsin.end(),
+			   inserter(ctrs, ctrs.begin()) );			 	  
+}
+
+void Cluster::removeEdge( Cluster* c )  {
 	TClusters::iterator it = edges.find(c); 
 	if(it != edges.end()) edges.erase(it);
 }	
@@ -114,6 +110,39 @@ bool Cluster::isVar( int i ) {
 	TVars::iterator it = vars.find(i);
 	return it != vars.end();
 }
+
+bool Cluster::isSepVar( int i ) {
+	TVars::iterator it = sep.find(i);
+	return it != sep.end();
+}
+
+
+void 	    Cluster::setParent(int p) { parent = p; }
+Cluster*    Cluster::getParent() { return td->getCluster( parent ); }
+TVars&	    Cluster::getSep() { return sep; }
+TClusters&	Cluster::getAncestors() { return ancestors; }
+
+bool Cluster::isAncestor( Cluster* c ) {
+	return ancestors.find( c ) != ancestors.end(); 
+}
+
+Cluster* Cluster::nextSep( Variable* v ) { 
+	Cluster* c = getParent();
+	if(!c) return NULL;
+	if(c->isVar( v->wcspIndex ) ) return c;
+	else return NULL;
+} 
+
+void Cluster::iniDelta() {
+	delta.clear();
+	TVars::iterator it = beginSep();
+	while(it != endSep()) {
+		EnumeratedVariable* var = (EnumeratedVariable*) wcsp->getVar(*it);
+	    delta.push_back( vector<StoreCost>(var->getDomainInitSize(), StoreCost(MIN_COST, &wcsp->getStore()->storeCost)) );
+		++it;
+	}
+}
+
 
 void Cluster::updateUb( ) {
 	TAssign& a =  * new TAssign;
@@ -201,11 +230,11 @@ void Cluster::print() {
 /* ClusteredWCSP																		 */
 /*****************************************************************************************/
 
-ClusteredWCSP::ClusteredWCSP(Store *s, Cost upperBound) : WCSP(s,upperBound) {
+TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in) {
 }
 
 
-void ClusteredWCSP::fusions()
+void TreeDecomposition::fusions()
 {
 	while(fusion()) {}
 
@@ -234,11 +263,11 @@ void ClusteredWCSP::fusions()
 	cout << "Tree decomposition width: " << treewidth << endl; 
 }
 
-bool ClusteredWCSP::fusion()
+bool TreeDecomposition::fusion()
 {
 	list<Cluster*> lclusters;
 
-	for(unsigned int i = 0; i < numberOfVariables(); i++) {
+	for(unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
 		Cluster* c = clusters[i];
 		if(c)	lclusters.push_back( c );
 	}
@@ -252,8 +281,9 @@ bool ClusteredWCSP::fusion()
 			Cluster* cj = *itj;
 			if(included(c->getVars(), cj->getVars())) {
 				c->addVars(cj->getVars());
-				c->removeEdge(cj);
+				c->addCtrs(cj->getCtrs());
 				c->addEdges(cj->getEdges());
+				c->removeEdge(cj);
 				clusters[ cj->getId() ] = NULL;
 				return true;
 			}
@@ -267,7 +297,7 @@ bool ClusteredWCSP::fusion()
 
 
 
-void ClusteredWCSP::build_from_order()
+void TreeDecomposition::buildFromOrder()
 {
 	vector<int> order;
 
@@ -276,27 +306,32 @@ void ClusteredWCSP::build_from_order()
         cerr << "Could not open file " << ToulBar2::varOrder << endl;
         exit(EXIT_FAILURE);
     }	
-    
-
     while(file) {
     	int ix;
     	file >> ix;
     	if(file) order.push_back(ix);
     } 
 	 
+	if(clusters.size() > 0) {
+		for(unsigned int i=0;i<clusters.size();i++) {
+			Cluster* c = clusters[i];
+			if(c) delete c;
+		}
+	} 
 	clusters.clear();
-	for(unsigned int i=0;i<numberOfVariables();i++) {
+
+	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
 		Cluster* c = new Cluster( this );
 		c->id = i;
-		c->addVar( getVar( order[i] ) );
+		c->addVar( wcsp->getVar( order[i] ) );
 		clusters.push_back( c );
 	}
 	
 	
 	set<Constraint*> usedctrs;
 	
-	for(unsigned int i=0;i<numberOfVariables();i++) {
-		Variable* x = getVar( order[i] );
+	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
+		Variable* x = wcsp->getVar( order[i] );
 		Cluster* c  = clusters[i];
     
 	    ConstraintList* xctrs = x->getConstrs();		
@@ -310,14 +345,14 @@ void ClusteredWCSP::build_from_order()
             }
 	    }
 	    
-		for(unsigned int j=i+1;j<numberOfVariables();j++) 
+		for(unsigned int j=i+1;j<wcsp->numberOfVariables();j++) 
 		{
 			if(c->isVar(order[j])) {
 				Cluster* cj  = clusters[j];
 				TVars::iterator it = c->beginVars();
 				while(it != c->endVars()) { 
 					int ivar = *it;
-					if(ivar != order[i]) cj->addVar( getVar(ivar) ); 
+					if(ivar != order[i]) cj->addVar( wcsp->getVar(ivar) ); 
 					++it; 
 				}
 				c->addEdge( cj );
@@ -329,34 +364,136 @@ void ClusteredWCSP::build_from_order()
 	}	
 
 	fusions();
+	int h = makeRooted(0);
+	cout << "tree height: " << h << endl;
 }
 
 
 
 
 
+void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
+{
+	TClusters::iterator itj =  c->beginEdges();
+	while(itj != c->endEdges()) {
+		Cluster* cj = *itj;
+		cj->removeEdge(c);
+		cj->setParent(c->getId());
+		visited.insert(cj);
+		intersection(c->getVars(), cj->getVars(), cj->getSep());
+		makeRootedRec( cj, visited );
+		clusterSum(c->getAncestors(), cj->getAncestors(), c->getAncestors());
+		++itj;	
+	}	
+}
+
+int TreeDecomposition::makeRooted( int icluster )
+{
+	for(unsigned int i = 0; i < clusters.size(); i++) {
+		Cluster* c = clusters[i];
+		c->getAncestors().clear();
+		c->getSep().clear();
+			
+		TClusters::iterator itj =  c->beginEdges();
+		while(itj != c->endEdges()) {
+			Cluster* cj = *itj;
+			cj->addEdge(c);
+			++itj;	
+		}
+	}
+	Cluster* root = clusters[icluster];
+	roots.clear();
+	roots.push_back(root);
+
+	TClusters visited;
+	root->setParent( NOCLUSTER );
+	visited.insert(root);
+	makeRootedRec(root, visited);
+
+
+	for(unsigned int i = 0; i < clusters.size(); i++) {
+		Cluster* c = clusters[i];
+
+		TCtrs::iterator itctr = c->beginCtrs();
+		while(itctr != c->endCtrs()) {
+			Constraint* ctr = *itctr;
+			ctr->setCluster(c->getId());
+			++itctr;
+		}
+		c->iniDelta();
+
+		int ids = 0;
+		TVars::iterator itv = c->beginVars();
+		while(itv != c->endVars()) {
+			Variable* var = wcsp->getVar(*itv);
+			if(!c->isSepVar( var->wcspIndex )) var->setCluster(c->getId());
+			else { var->addCluster(c->getId(), ids);
+				   ids++;
+			}
+			++itv;
+		}
+	}
+
+
+	if(visited.size() < clusters.size()) {
+		// it was a forest and not a tree
+	}
+	
+	print();
+	
+	return height(root);
+}
 
 
 
-void ClusteredWCSP::intersection( TVars& v1, TVars& v2, TVars& vout ) {	
+int TreeDecomposition::height( Cluster* r, Cluster* father )
+{
+	int maxh = 0;
+	TClusters::iterator it = r->beginEdges();
+	while(it != r->endEdges()) {
+		Cluster* adjr = *it;
+		if(adjr != father) {
+			int h = height(adjr,r);
+			if(h > maxh) maxh = h;
+		}
+		++it;
+	}
+	return maxh + 1;
+}
+
+
+int TreeDecomposition::height( Cluster* r )
+{
+	int maxh = 0;
+	TClusters::iterator it = r->beginEdges();
+	while(it != r->endEdges()) {
+		int h = height(*it,r);
+		if(h > maxh) maxh = h;
+		++it;
+	}
+	return maxh + 1;		
+}
+
+
+void TreeDecomposition::intersection( TVars& v1, TVars& v2, TVars& vout ) {	
 	set_intersection( v1.begin(), v1.end(),
 			  	   	  v2.begin(), v2.end(),
 				  	  inserter(vout, vout.begin()) );			 	  
 }
 
-void ClusteredWCSP::difference( TVars& v1, TVars& v2, TVars& vout ) {	
+void TreeDecomposition::difference( TVars& v1, TVars& v2, TVars& vout ) {	
 	set_difference( v1.begin(), v1.end(),
 			  	   	v2.begin(), v2.end(),
 				  	inserter(vout, vout.begin()) );			 	  
 }
 
-void ClusteredWCSP::sum( TVars& v1, TVars& v2, TVars& vout ) {	
+void TreeDecomposition::sum( TVars& v1, TVars& v2, TVars& vout ) {	
 	set_union( v1.begin(), v1.end(),
 			   v2.begin(), v2.end(),
 			   inserter(vout, vout.begin()) );			 	  
 }
 
-bool ClusteredWCSP::included( TVars& v1, TVars& v2 ) {	
+bool TreeDecomposition::included( TVars& v1, TVars& v2 ) {	
 	TVars vout;
 	set_union( v1.begin(), v1.end(),
 			   v2.begin(), v2.end(),
@@ -364,9 +501,49 @@ bool ClusteredWCSP::included( TVars& v1, TVars& v2 ) {
 	return vout.size() == v1.size() || vout.size() == v2.size(); 
 }
 
+void TreeDecomposition::clusterSum( TClusters& v1, TClusters& v2, TClusters& vout ) {	
+	set_union( v1.begin(), v1.end(),
+			   v2.begin(), v2.end(),
+			   inserter(vout, vout.begin()) );			 	  
+}
 
 
+void TreeDecomposition::print( Cluster* c )
+{
+	if(!c) {
+		if(roots.empty()) return;
+		c = * roots.begin();
+		cout << "Root ";
+	}
+	
+	cout << "cluster " << c->getId();
+	cout << "    vars {";
+	
+	TVars::iterator it = c->beginVars();
+	while(it != c->endVars()) {
+		cout << *it;
+		++it;
+		if(it != c->endVars()) cout << ",";
+	} 
+	cout << "}   sep {";
+	
+	TVars::iterator its = c->beginSep();
+	while(its != c->endSep()) {
+		cout << *its;
+		++its;
+		if(its != c->endSep()) cout << ",";
+	}
+	
+	cout << "}" << endl;
 
+
+	TClusters::iterator ita = c->beginEdges();
+	while(ita != c->endEdges()) {
+		print( *ita );
+		++ita;
+	}
+
+}
 
 /*****************************************************************************************/
 /* Clustered SOLVER																		 */

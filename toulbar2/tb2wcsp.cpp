@@ -99,11 +99,12 @@ WCSP::WCSP(Store *s, Cost upperBound) :
 		elimTernOrder(0, &s->storeValue)
 { 
     instance = wcspCounter++;
-    if (ToulBar2::vac) {
-	  vac = new VACExtension(this);
-	} else {
-	  vac = NULL;
-	}
+    if (ToulBar2::vac) vac = new VACExtension(this);
+	else vac = NULL;
+	
+    if (ToulBar2::varOrder) td = new TreeDecomposition(this);
+    else td = NULL;
+
 }
 
 
@@ -117,8 +118,7 @@ WCSP::~WCSP()
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
 {
-    //WeightedCSP * W = new WCSP(s, upperBound);
-    WeightedCSP * W = new ClusteredWCSP(s, upperBound);
+    WeightedCSP * W = new WCSP(s, upperBound);
     return W;
 }
 
@@ -1248,6 +1248,12 @@ void WCSP::updateSingleton() {if (vac) vac->updateSingleton();}
 void WCSP::removeSingleton() {if (vac) vac->removeSingleton();}
 void WCSP::printVACStat() {if (vac) vac->printStat();}
 int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -1;}
+
+void WCSP::buildTreeDecomposition() {
+	if(td) td->buildFromOrder();
+}
+
+
 
 
 // -----------------------------------------------------------
