@@ -119,7 +119,7 @@ typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MA
 class Pedigree;
 class BEP;
 
-typedef enum {LC_NC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_MAX } LcLevelType;
+typedef enum {LC_NC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_THEMAX } LcLevelType;
 
 class ToulBar2
 {

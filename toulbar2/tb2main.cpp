@@ -223,7 +223,7 @@ int main(int argc, char **argv)
         if ( (ch = strchr(argv[i],'k')) ) {
         	ToulBar2::LcLevel = LC_EDAC;
         	LcLevelType lclevel = (LcLevelType) atoi(&ch[1]);
-        	if((lclevel >= LC_NC) && (lclevel < LC_MAX)) ToulBar2::LcLevel = lclevel;
+        	if((lclevel >= LC_NC) && (lclevel < LC_THEMAX)) ToulBar2::LcLevel = lclevel;
         }
         if (strchr(argv[i],'z')) saveproblem = true;
         if (strchr(argv[i],'x')) certificate = true;
