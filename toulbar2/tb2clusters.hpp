@@ -47,7 +47,7 @@ class Cluster {
 	  list<TAssign*>      assignments;
 	  TVars				  vars;
 	  TCtrs			      ctrs;
-	  TClusters           edges;
+	  TClusters           edges;              // adjacent clusters 
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
 	  Cost				  ub;
@@ -55,7 +55,7 @@ class Cluster {
 	  vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
 	  										  // inicialized with iniDelta()
 	  
-	  int				  parent;
+	  Cluster*			  parent;             // parent cluster
 	  TVars				  sep;                // separator vars with parent cluster
       TClusters    	      ancestors;  	      // set of ancestors	
 
@@ -86,6 +86,7 @@ class Cluster {
 	  TCtrs&		getCtrs() { return ctrs; }	
 	  TClusters&	getEdges() { return edges; }
 	  void 			addVar( Variable* x );
+	  void 			removeVar( Variable* x );
 	  void 			addVars( TVars& vars );
 	  void 			addEdge( Cluster* c );
 	  void 			addEdges( TClusters& cls );
@@ -93,14 +94,10 @@ class Cluster {
 	  void 			addCtrs( TCtrs& ctrsin );
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
-	  
 	  void 			iniDelta();
-	  
 	  void 		    updateUb();
 	  
-	  
-	  
-	  void 			setParent(int p);
+	  void 			setParent(Cluster* p);
 	  Cluster*		getParent();
 	  TVars&		getSep();
 	  TClusters&	getAncestors();
@@ -110,12 +107,9 @@ class Cluster {
 
 	  Cost 			eval(TAssign* a);
 	  void 			set();                              // sets the WCSP to the cluster problem, deconnecting the rest
-
 	  void 			activate();
 	  void 			deactivate();
-
 	  void 			increaseLb( Cost newlb );
-
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
@@ -151,7 +145,7 @@ public:
 	
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
-	bool fusion();                   		    // one fusion step
+	bool fusion();          		            // one fusion step
 
 	int  makeRooted( int icluster );
 	void makeRootedRec( Cluster* c,  TClusters& visited );

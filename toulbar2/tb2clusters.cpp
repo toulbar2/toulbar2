@@ -71,6 +71,7 @@ Cluster::~Cluster() {
 
 
 void Cluster::addVar( Variable* x ) { vars.insert(x->wcspIndex); }
+void Cluster::removeVar( Variable* x ) { vars.erase(x->wcspIndex); }
 
 void Cluster::addVars( TVars& morevars ) { 
 	set_union( vars.begin(), vars.end(),
@@ -81,7 +82,7 @@ void Cluster::addVars( TVars& morevars ) {
 
 void Cluster::addCtr( Constraint* c ) { ctrs.push_back(c); }
 
-void Cluster::addEdge( Cluster* c ) { edges.insert( c ); }
+void Cluster::addEdge( Cluster* c ) { edges.insert(c); }
 
 void Cluster::addEdges( TClusters& cls ) 
 {
@@ -117,8 +118,8 @@ bool Cluster::isSepVar( int i ) {
 }
 
 
-void 	    Cluster::setParent(int p) { parent = p; }
-Cluster*    Cluster::getParent() { return td->getCluster( parent ); }
+void 	    Cluster::setParent(Cluster* p) { parent = p; }
+Cluster*    Cluster::getParent() { return parent; }
 TVars&	    Cluster::getSep() { return sep; }
 TClusters&	Cluster::getAncestors() { return ancestors; }
 
@@ -223,7 +224,38 @@ void Cluster::set() {
 }
 
 void Cluster::print() {
-	cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
+	//cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
+	
+	cout << "cluster " << getId();
+	cout << "    vars {";
+	
+	TVars::iterator it = beginVars();
+	while(it != endVars()) {
+		cout << *it;
+		++it;
+		if(it != endVars()) cout << ",";
+	} 
+	cout << "}   sep {";
+
+	TVars::iterator its = beginSep();
+	while(its != endSep()) {
+		cout << *its;
+		++its;
+		if(its != endSep()) cout << ",";
+	}
+	
+	cout << "}";
+
+
+	cout << "    edges {";
+	TClusters::iterator itc = beginEdges();
+	while(itc != endEdges()) {
+		cout << (*itc)->getId();
+		++itc;
+		if(itc != endEdges()) cout << ",";
+	}
+	cout << "}" << endl;
+
 }
 
 /*****************************************************************************************/
@@ -236,63 +268,61 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in) {
 
 void TreeDecomposition::fusions()
 {
-	while(fusion()) {}
+	while(fusion());
 
-
-	list<Cluster*> lclusters;
+ 	int treewidth = 0;	
+	set<Cluster*> sclu;
 	for(unsigned int i=0; i < clusters.size(); i++) {
-		if(clusters[i])	lclusters.push_back( clusters[i] );
+		if(clusters[i])	{
+			Cluster* c = clusters[i];
+			sclu.insert( c );
+	   	    if(c->getNbVars() > treewidth) treewidth = c->getNbVars();
+  
+		}
 	}
-
-	clusters.clear();
-		
-	int treewidth = 0;
 	
 	int i = 0;
-	list<Cluster*>::iterator it = lclusters.begin();
-	while(it != lclusters.end()) {
+	clusters.clear();
+	set<Cluster*>::iterator it = sclu.begin();
+	while(it != sclu.end()) {
 		Cluster* c = *it;
-		clusters.push_back( c );
-		c->id = i; 
+		c->id = i++;
+		clusters.push_back(*it);
 		++it;
-		i++;
-		
-		if(c->getNbVars() > treewidth) treewidth = c->getNbVars();
 	}
-	
-	cout << "Tree decomposition width: " << treewidth << endl; 
+
+	cout << "Tree decomposition width: " << treewidth - 1 << endl;
 }
 
-bool TreeDecomposition::fusion()
+bool TreeDecomposition::fusion( )
 {
-	list<Cluster*> lclusters;
-
-	for(unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+	bool done = false;
+	for(unsigned int i=0; i < clusters.size(); i++) {
+		if(!clusters[i]) continue;
 		Cluster* c = clusters[i];
-		if(c)	lclusters.push_back( c );
-	}
-	
-	list<Cluster*>::iterator it = lclusters.begin();
-	while(it != lclusters.end()) {
-		Cluster* c = *it;
-	
-		TClusters::iterator itj =  c->beginEdges();
-		while(itj != c->endEdges()) {
-			Cluster* cj = *itj;
-			if(included(c->getVars(), cj->getVars())) {
+		TClusters::iterator it =  c->beginEdges();
+		while(it != c->endEdges()) {
+			Cluster* cj = *it;
+			if((c->getId() < cj->getId()) && included(c->getVars(), cj->getVars())) {
 				c->addVars(cj->getVars());
 				c->addCtrs(cj->getCtrs());
 				c->addEdges(cj->getEdges());
-				c->removeEdge(cj);
+				TClusters::iterator itk =  cj->beginEdges();
+				while(itk != cj->endEdges()) {
+					Cluster* ck = *itk;
+					ck->removeEdge(cj);
+					ck->addEdge(c);
+					++itk;
+				}
+				c->removeEdge(c);
 				clusters[ cj->getId() ] = NULL;
-				return true;
+				delete cj;
+				done = true;
 			}
-			++itj;	
+			++it;	
 		}
-		++it;
 	}
-
-	return false;
+	return done;
 }
 
 
@@ -351,21 +381,22 @@ void TreeDecomposition::buildFromOrder()
 				Cluster* cj  = clusters[j];
 				TVars::iterator it = c->beginVars();
 				while(it != c->endVars()) { 
-					int ivar = *it;
-					if(ivar != order[i]) cj->addVar( wcsp->getVar(ivar) ); 
+					cj->addVar( wcsp->getVar(*it) ); 
 					++it; 
 				}
+				cj->removeVar(x);
 				c->addEdge( cj );
+				cj->addEdge( c );
 				break;
 			}
 		} 
 		
 		   
 	}	
-
 	fusions();
 	int h = makeRooted(0);
 	cout << "tree height: " << h << endl;
+	print();
 }
 
 
@@ -378,7 +409,7 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 	while(itj != c->endEdges()) {
 		Cluster* cj = *itj;
 		cj->removeEdge(c);
-		cj->setParent(c->getId());
+		cj->setParent(c);
 		visited.insert(cj);
 		intersection(c->getVars(), cj->getVars(), cj->getSep());
 		makeRootedRec( cj, visited );
@@ -389,24 +420,18 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 
 int TreeDecomposition::makeRooted( int icluster )
 {
-	for(unsigned int i = 0; i < clusters.size(); i++) {
-		Cluster* c = clusters[i];
-		c->getAncestors().clear();
-		c->getSep().clear();
-			
-		TClusters::iterator itj =  c->beginEdges();
-		while(itj != c->endEdges()) {
-			Cluster* cj = *itj;
-			cj->addEdge(c);
-			++itj;	
-		}
-	}
 	Cluster* root = clusters[icluster];
 	roots.clear();
 	roots.push_back(root);
 
+	for(unsigned int i = 0; i < clusters.size(); i++) {
+		Cluster* c = clusters[i];
+		c->getAncestors().clear();
+		c->getSep().clear();
+	}
+
 	TClusters visited;
-	root->setParent( NOCLUSTER );
+	root->setParent( NULL );
 	visited.insert(root);
 	makeRootedRec(root, visited);
 
@@ -438,9 +463,7 @@ int TreeDecomposition::makeRooted( int icluster )
 	if(visited.size() < clusters.size()) {
 		// it was a forest and not a tree
 	}
-	
-	print();
-	
+
 	return height(root);
 }
 
@@ -513,29 +536,10 @@ void TreeDecomposition::print( Cluster* c )
 	if(!c) {
 		if(roots.empty()) return;
 		c = * roots.begin();
-		cout << "Root ";
 	}
-	
-	cout << "cluster " << c->getId();
-	cout << "    vars {";
-	
-	TVars::iterator it = c->beginVars();
-	while(it != c->endVars()) {
-		cout << *it;
-		++it;
-		if(it != c->endVars()) cout << ",";
-	} 
-	cout << "}   sep {";
-	
-	TVars::iterator its = c->beginSep();
-	while(its != c->endSep()) {
-		cout << *its;
-		++its;
-		if(its != c->endSep()) cout << ",";
-	}
-	
-	cout << "}" << endl;
 
+    c->print();	
+	
 
 	TClusters::iterator ita = c->beginEdges();
 	while(ita != c->endEdges()) {
