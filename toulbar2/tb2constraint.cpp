@@ -4,6 +4,7 @@
 
 #include "tb2constraint.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Constructor
@@ -24,6 +25,9 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
 void Constraint::projectLB(Cost cost)
 {
   if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+  if (wcsp->vac) {
+	wcsp->td->getCluster(getCluster())->increaseLb(wcsp->td->getCluster(getCluster())->getLb() + cost);
+  }
   wcsp->increaseLb(wcsp->getLb() + cost);  
 }
 

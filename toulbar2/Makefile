@@ -29,7 +29,7 @@ ICC = icc
 CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
 # -g3 -ftrapv -ansi -pedantic
 
-OFLAGS = -O3 -DNDEBUG
+#OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
 # -O2
 

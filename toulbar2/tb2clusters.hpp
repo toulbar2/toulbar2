@@ -47,7 +47,7 @@ class Cluster {
 	  list<TAssign*>      assignments;
 	  TVars				  vars;
 	  TCtrs			      ctrs;
-	  TClusters           edges;              // adjacent clusters 
+	  TClusters           edges;
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
 	  Cost				  ub;
@@ -55,7 +55,7 @@ class Cluster {
 	  vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
 	  										  // inicialized with iniDelta()
 	  
-	  Cluster*			  parent;             // parent cluster
+	  int				  parent;
 	  TVars				  sep;                // separator vars with parent cluster
       TClusters    	      ancestors;  	      // set of ancestors	
 
@@ -77,6 +77,7 @@ class Cluster {
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
 	  Cost			getLb()  { return lb; }
+	  Cost			getLbRec();
 	  Cost			getLb_opt()  { return lb_opt; }
 	  void			setUb(Cost c)  {ub = c; }
 	  void			setLb(Cost c)  {lb = c; }
@@ -86,7 +87,6 @@ class Cluster {
 	  TCtrs&		getCtrs() { return ctrs; }	
 	  TClusters&	getEdges() { return edges; }
 	  void 			addVar( Variable* x );
-	  void 			removeVar( Variable* x );
 	  void 			addVars( TVars& vars );
 	  void 			addEdge( Cluster* c );
 	  void 			addEdges( TClusters& cls );
@@ -94,10 +94,14 @@ class Cluster {
 	  void 			addCtrs( TCtrs& ctrsin );
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
+	  
 	  void 			iniDelta();
+	  
 	  void 		    updateUb();
 	  
-	  void 			setParent(Cluster* p);
+	  
+	  
+	  void 			setParent(int p);
 	  Cluster*		getParent();
 	  TVars&		getSep();
 	  TClusters&	getAncestors();
@@ -107,9 +111,12 @@ class Cluster {
 
 	  Cost 			eval(TAssign* a);
 	  void 			set();                              // sets the WCSP to the cluster problem, deconnecting the rest
+
 	  void 			activate();
 	  void 			deactivate();
+
 	  void 			increaseLb( Cost newlb );
+
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
@@ -128,8 +135,8 @@ class Cluster {
 class TreeDecomposition  {
 private:
 	WCSP*			  wcsp;	
+    Cluster*    	  currentCluster;
 	vector<Cluster*>  clusters; 
-	int        		  currentCluster;
 	list<Cluster*> 	  roots;
 
 public:
@@ -141,15 +148,19 @@ public:
 	Cluster*	getCluster( int i ) { return clusters[i]; }
 	Cluster*   	var2Cluster( int v );	
 	
-	
+  void setCurrentCluster(Cluster *c) {currentCluster = c;}
+  Cluster* getCurrentCluster() {return currentCluster;}
+  bool isInCurrentClusterSubTree(Cluster* c, Cluster* rec);
+  bool isInCurrentClusterSubTree(int idc) {return isInCurrentClusterSubTree(clusters[idc], currentCluster);}
 	
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
-	bool fusion();          		            // one fusion step
+	bool fusion();                   		    // one fusion step
 
 	int  makeRooted( int icluster );
 	void makeRootedRec( Cluster* c,  TClusters& visited );
-	
+  Cluster* getRoot() {return roots.front();}
+
 	int height( Cluster* r, Cluster* father );
 	int height( Cluster* r );
 
