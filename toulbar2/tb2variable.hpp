@@ -126,6 +126,7 @@ public:
 
 	int cluster;
 	void setCluster( int c ) { cluster = c; }
+    int  getCluster()      {return cluster;}
 
 	list<clusterItem>  clusters;          // list of all clusters in which the variable appears 
 	

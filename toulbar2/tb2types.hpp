@@ -203,6 +203,8 @@ class EnumeratedVariable;
 class Constraint;
 class WCSP;
 class Solver;
+class Cluster;
+class TreeDecomposition;
 
 struct ValueCost
 {

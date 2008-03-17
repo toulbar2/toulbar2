@@ -27,6 +27,8 @@ public:
     virtual void enforceUb() =0;
     virtual void increaseLb(Cost newLb) =0;
     virtual void decreaseUb(Cost newUb) =0;
+    virtual void setLb(Cost newLb) =0;
+    virtual void setUb(Cost newUb) =0;
 
     virtual bool enumerated(int varIndex) const =0;
     
@@ -86,6 +88,7 @@ public:
     virtual void restoreSolution() =0;
 
 	virtual void buildTreeDecomposition() = 0;
+    virtual TreeDecomposition* getTreeDec() = 0;
 
 	virtual void iniSingleton() = 0;
 	virtual	void updateSingleton() = 0;

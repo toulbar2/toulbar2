@@ -638,7 +638,10 @@ bool Solver::solve()
                 else discrepancy++;
             } while (ToulBar2::limited);
         } else {
-            recursiveSolve();
+		  if (wcsp->getTreeDec()) {
+			wcsp->getTreeDec()->setCurrentCluster(wcsp->getTreeDec()->getRoot());
+			recursiveSolve(wcsp->getTreeDec()->getRoot(),  wcsp->getUb());
+		  } else recursiveSolve();
         }
     } catch (Contradiction) {
         wcsp->whenContradiction();

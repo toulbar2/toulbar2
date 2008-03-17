@@ -632,7 +632,9 @@ void WCSP::propagateNC()
             for (VariableList::iterator iter = NCBuckets[bucket].begin(); iter != NCBuckets[bucket].end();) {
                 Variable *x = *iter;
                 ++iter; // Warning! the iterator could be moved to another place by propagateNC
-                if (x->unassigned() && CUT(x->getMaxCost() + getLb(), getUb())) x->propagateNC();
+                if (x->unassigned() && CUT(x->getMaxCost() + getLb(), getUb())) {
+				  if (!td || td->isInCurrentClusterSubTree(x->getCluster()))  x->propagateNC();
+				}
             }
         }
     }
