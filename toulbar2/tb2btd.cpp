@@ -77,6 +77,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 
 Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value value)
 {
+    //cout << "Binary choice point " << endl;	
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
@@ -99,6 +100,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value v
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
+
     store->restore();
     nbBacktracks++;
     try {
@@ -122,23 +124,26 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value v
 
 Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 {		
+  cout << "recursive solve     cluster: " << cluster->getId() << "     ub: " << cub << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
   int varIndex = -1;
   if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
   else varIndex = getVarMinDomainDivMaxDegree(cluster);
   if (varIndex < 0) {
 	Cost lb = cluster->getLbRec();
 	for (TClusters::iterator iter = cluster->beginEdges(); lb < cub && iter!= cluster->endEdges(); ++iter) {
-	  Cost lbSon = (*iter)->getLbRec();
+	  Cluster* c = *iter;
+	  Cost lbSon = c->getLbRec();
 	  Cost ubSon = cub - lb + lbSon;
-	  wcsp->getTreeDec()->setCurrentCluster(*iter);
+	  wcsp->getTreeDec()->setCurrentCluster(c);
 	  wcsp->setLb(lbSon);
 	  wcsp->setUb(ubSon);
 	  wcsp->enforceUb();
 	  wcsp->propagate();
-	  lb += recursiveSolve(*iter, ubSon) - lbSon;
+	  lb += recursiveSolve(c, ubSon) - lbSon;
 	}
 	return lb;
-  } else {
+  } 
+  else {
 	if (wcsp->enumerated(varIndex)) {
 	  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
 	  cub = binaryChoicePoint(cluster, cub, varIndex, wcsp->getSupport(varIndex));

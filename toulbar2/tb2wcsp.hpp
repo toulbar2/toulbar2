@@ -272,7 +272,7 @@ public:
 
     TreeDecomposition* td;
 	void buildTreeDecomposition();
-    TreeDecomposition* getTreeDec();
+    TreeDecomposition* getTreeDec()  { return td; }
 
     // -----------------------------------------------------------
     // Functions for dealing with probabilities

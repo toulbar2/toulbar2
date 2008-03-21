@@ -120,10 +120,10 @@ bool Cluster::isSepVar( int i ) {
 void 	    Cluster::setParent(int p) { parent = p; }
 Cluster*    Cluster::getParent() { return td->getCluster( parent ); }
 TVars&	    Cluster::getSep() { return sep; }
-TClusters&	Cluster::getAncestors() { return ancestors; }
+TClusters&	Cluster::getDescendants() { return descendants; }
 
-bool Cluster::isAncestor( Cluster* c ) {
-	return ancestors.find( c ) != ancestors.end(); 
+bool Cluster::isDescendant( Cluster* c ) {
+	return descendants.find( c ) != descendants.end(); 
 }
 
 Cluster* Cluster::nextSep( Variable* v ) { 
@@ -174,6 +174,15 @@ Cost Cluster::getLbRec() {
   return res; 
 }
 
+Cost Cluster::getLbRec() {
+  Cost res = lb; 
+  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	res += (*iter)->getLbRec();
+  } 
+  return res; 
+}
+
+  
 void Cluster::activate() {
 }
 
@@ -239,6 +248,7 @@ void Cluster::print() {
 
 TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in) {
 }
+
 
 
 void TreeDecomposition::fusions()
@@ -389,7 +399,7 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 		visited.insert(cj);
 		intersection(c->getVars(), cj->getVars(), cj->getSep());
 		makeRootedRec( cj, visited );
-		clusterSum(c->getAncestors(), cj->getAncestors(), c->getAncestors());
+		clusterSum(c->getDescendants(), cj->getDescendants(), c->getDescendants());
 		++itj;	
 	}	
 }
@@ -398,7 +408,7 @@ int TreeDecomposition::makeRooted( int icluster )
 {
 	for(unsigned int i = 0; i < clusters.size(); i++) {
 		Cluster* c = clusters[i];
-		c->getAncestors().clear();
+		c->getDescendants().clear();
 		c->getSep().clear();
 			
 		TClusters::iterator itj =  c->beginEdges();

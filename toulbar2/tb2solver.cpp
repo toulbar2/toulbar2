@@ -638,10 +638,13 @@ bool Solver::solve()
                 else discrepancy++;
             } while (ToulBar2::limited);
         } else {
-		  if (wcsp->getTreeDec()) {
-			wcsp->getTreeDec()->setCurrentCluster(wcsp->getTreeDec()->getRoot());
-			recursiveSolve(wcsp->getTreeDec()->getRoot(),  wcsp->getUb());
-		  } else recursiveSolve();
+        	TreeDecomposition* td = wcsp->getTreeDec();
+        	if(td) {
+        		Cost ub_old = wcsp->getUb();
+        		Cost res = recursiveSolve(td->getRoot(), ub_old);
+        		wcsp->setUb( min(res, ub_old) );
+        	}	
+        	else recursiveSolve();
         }
     } catch (Contradiction) {
         wcsp->whenContradiction();

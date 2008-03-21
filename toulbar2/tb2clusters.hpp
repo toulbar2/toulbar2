@@ -57,7 +57,7 @@ class Cluster {
 	  
 	  int				  parent;
 	  TVars				  sep;                // separator vars with parent cluster
-      TClusters    	      ancestors;  	      // set of ancestors	
+      TClusters    	      descendants;  	 // set of descendants	
 
  public:
 	  Cluster (TreeDecomposition* tdin);
@@ -73,6 +73,7 @@ class Cluster {
 	  bool 			isVar( int i );
 	  bool 			isSepVar( int i );
 
+	  Cost	        getLbRec();
 
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
@@ -104,9 +105,9 @@ class Cluster {
 	  void 			setParent(int p);
 	  Cluster*		getParent();
 	  TVars&		getSep();
-	  TClusters&	getAncestors();
+	  TClusters&	getDescendants();
 	  Cluster*		nextSep( Variable* v ); 
-	  bool			isAncestor( Cluster* c2 );
+	  bool			isDescendant( Cluster* c2 );
       // ----------------------------------------------------------
 
 	  Cost 			eval(TAssign* a);
@@ -163,8 +164,6 @@ public:
 
 	int height( Cluster* r, Cluster* father );
 	int height( Cluster* r );
-
-
 
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );

@@ -577,7 +577,10 @@ ostream& operator<<(ostream& os, WeightedCSP &wcsp)
 bool WCSP::verify()
 {
     for (unsigned int i=0; i<vars.size(); i++) {
-        if (vars[i]->unassigned() && !vars[i]->verifyNC()) return false;
+	    if(vars[i]->unassigned()) { 
+		    if (td) { if(td->isInCurrentClusterSubTree(vars[i]->getCluster()))  if(!vars[i]->verifyNC()) return false; }
+			else if(!vars[i]->verifyNC()) return false;
+	    }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         if (ToulBar2::LcLevel==LC_EDAC && 
 			vars[i]->unassigned() && CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
@@ -633,7 +636,8 @@ void WCSP::propagateNC()
                 Variable *x = *iter;
                 ++iter; // Warning! the iterator could be moved to another place by propagateNC
                 if (x->unassigned() && CUT(x->getMaxCost() + getLb(), getUb())) {
-				  if (!td || td->isInCurrentClusterSubTree(x->getCluster()))  x->propagateNC();
+				  if (td) { if(td->isInCurrentClusterSubTree(x->getCluster()))  x->propagateNC(); }
+				  else x->propagateNC();
 				}
             }
         }
