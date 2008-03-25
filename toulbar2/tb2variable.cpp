@@ -6,6 +6,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Constructors and misc.
@@ -178,7 +179,12 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 
 void Variable::projectLB(Cost cost)
 {
-  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
+  if (wcsp->td) {
+	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")";
+	wcsp->td->getCluster(getCluster())->increaseLb(wcsp->td->getCluster(getCluster())->getLb() + cost);
+  }
+  if (ToulBar2::verbose >= 2) cout << endl;
   wcsp->increaseLb(wcsp->getLb() + cost);
 }
 

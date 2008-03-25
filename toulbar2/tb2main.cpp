@@ -167,6 +167,13 @@ int main(int argc, char **argv)
     ToulBar2::verbose = 0;
    
     for (int i=2; i<argc; i++) {
+        if ( (ch = strchr(argv[i],'O')) ) {
+        	char buf[80];
+        	sprintf(buf,"%s",&ch[1]);
+        	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+	       	sprintf(ToulBar2::varOrder, "%s",buf);
+			continue; // skip current argument in order to not search for other options inside filename
+    	}
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
         if ( (ch = strchr(argv[i],'w')) ) {
@@ -239,13 +246,6 @@ int main(int argc, char **argv)
 										 									       // otherwise:    read probability distribution from command line 
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
-        if ( (ch = strchr(argv[i],'O')) ) {
-        	char buf[80];
-        	sprintf(buf,"%s",&ch[1]);
-        	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
-	       	sprintf(ToulBar2::varOrder, "%s",buf);
-    	}
-        
     }
     
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;

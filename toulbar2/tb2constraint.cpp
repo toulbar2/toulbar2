@@ -24,10 +24,12 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
 
 void Constraint::projectLB(Cost cost)
 {
-  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-  if (wcsp->vac) {
+  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
+  if (wcsp->td) {
+	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")";
 	wcsp->td->getCluster(getCluster())->increaseLb(wcsp->td->getCluster(getCluster())->getLb() + cost);
   }
+  if (ToulBar2::verbose >= 2) cout << endl;
   wcsp->increaseLb(wcsp->getLb() + cost);  
 }
 
