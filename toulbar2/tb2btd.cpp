@@ -77,7 +77,6 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 
 Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value value)
 {
-    //cout << "Binary choice point " << endl;	
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));

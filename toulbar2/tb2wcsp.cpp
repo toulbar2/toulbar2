@@ -102,9 +102,7 @@ WCSP::WCSP(Store *s, Cost upperBound) :
     if (ToulBar2::vac) vac = new VACExtension(this);
 	else vac = NULL;
 	
-    if (ToulBar2::varOrder) td = new TreeDecomposition(this);
-    else td = NULL;
-
+    td = NULL;
 }
 
 
@@ -1256,7 +1254,9 @@ void WCSP::printVACStat() {if (vac) vac->printStat();}
 int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -1;}
 
 void WCSP::buildTreeDecomposition() {
-	if(td) td->buildFromOrder();
+    td = new TreeDecomposition(this);
+    td->buildFromOrder();
+    td->getRoot()->increaseLb(getLb());
 }
 
 

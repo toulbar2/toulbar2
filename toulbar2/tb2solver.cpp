@@ -44,11 +44,6 @@ void Solver::read_wcsp(const char *fileName)
         if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
     }
     ToulBar2::setvalue = setvalue;
-    
-    if ( ToulBar2::varOrder ) {
-    	wcsp->buildTreeDecomposition();
-    }
- 
 }
 
 void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular)
@@ -622,6 +617,10 @@ bool Solver::solve()
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
 
+	    if ( ToulBar2::varOrder ) {
+	    	wcsp->buildTreeDecomposition();
+	    }
+	   
         if (ToulBar2::lds) {
             int discrepancy = 0;
             do {
