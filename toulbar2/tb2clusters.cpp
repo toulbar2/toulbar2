@@ -236,16 +236,17 @@ void Cluster::print() {
 	//cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
 	
 	cout << "cluster " << getId();
-	cout << "    vars {";
+//  	cout << " vars {";
 	
-	TVars::iterator it = beginVars();
-	while(it != endVars()) {
-		cout << *it;
-		++it;
-		if(it != endVars()) cout << ",";
-	} 
-	cout << "}   sep {";
+//  	TVars::iterator it = beginVars();
+//  	while(it != endVars()) {
+//  		cout << *it;
+//  		++it;
+//  		if(it != endVars()) cout << ",";
+//  	} 
+//  	cout << "}";
 
+	cout << " vars {";
 	TVars::iterator its = beginSep();
 	while(its != endSep()) {
 		cout << *its;
@@ -255,32 +256,34 @@ void Cluster::print() {
 	
 	cout << "}";
 
-	cout << "    proper {";
+	cout << " U {";
 	TVars::iterator itp = beginVars();
 	while(itp != endVars()) {
-		if (!isSepVar(*itp)) cout << *itp;
+		if (!isSepVar(*itp)) cout << *itp << ",";
 		++itp;
-		if(itp != endVars()) cout << ",";
 	} 
-	cout << "}";
+	cout << "\b}";
 
-	cout << "    edges {";
-	TClusters::iterator itc = beginEdges();
-	while(itc != endEdges()) {
+	if (!edges.empty()) {
+	  cout << " sons {";
+	  TClusters::iterator itc = beginEdges();
+	  while(itc != endEdges()) {
 		cout << (*itc)->getId();
 		++itc;
 		if(itc != endEdges()) cout << ",";
+	  }
+	  cout << "}";
 	}
-	cout << "}";
 
-	cout << "    descendants {";
-	TClusters::iterator itd = beginDescendants();
-	while(itd != endDescendants()) {
-		cout << (*itd)->getId();
-		++itd;
-		if(itd != endDescendants()) cout << ",";
-	}
-	cout << "}" << endl;
+//  	cout << " descendants {";
+//  	TClusters::iterator itd = beginDescendants();
+//  	while(itd != endDescendants()) {
+//  		cout << (*itd)->getId();
+//  		++itd;
+//  		if(itd != endDescendants()) cout << ",";
+//  	}
+//  	cout << "}";
+	cout << endl;
 }
 
 /*****************************************************************************************/
@@ -557,19 +560,20 @@ void TreeDecomposition::clusterSum( TClusters& v1, TClusters& v2, TClusters& vou
 }
 
 
-void TreeDecomposition::print( Cluster* c )
+void TreeDecomposition::print( Cluster* c, int recnum )
 {
 	if(!c) {
 		if(roots.empty()) return;
 		c = * roots.begin();
 	}
 
+	for (int i=0; i<recnum; i++) cout << "  ";
     c->print();	
 	
 
 	TClusters::iterator ita = c->beginEdges();
 	while(ita != c->endEdges()) {
-		print( *ita );
+		print( *ita, recnum+1 );
 		++ita;
 	}
 

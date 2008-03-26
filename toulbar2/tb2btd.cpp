@@ -154,6 +154,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 	  }
 	  store->restore();
 	}
+	if (cluster == wcsp->getTreeDec()->getRoot() && lb < cub) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;
 	return lb;
   } 

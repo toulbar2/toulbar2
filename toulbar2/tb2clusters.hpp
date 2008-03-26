@@ -166,7 +166,7 @@ public:
 
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
 	
-	void print( Cluster* c = NULL);
+	void print( Cluster* c = NULL, int recnum = 0);
 	
 };
 
