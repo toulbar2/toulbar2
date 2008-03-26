@@ -130,7 +130,7 @@ class TreeDecomposition  {
 private:
 	WCSP*			  wcsp;	
 	vector<Cluster*>  clusters; 
-	Cluster*   		  currentCluster;
+	StoreInt   		  currentCluster;
 	list<Cluster*> 	  roots;
 
 public:
@@ -142,9 +142,9 @@ public:
 	Cluster*	getCluster( int i ) { return clusters[i]; }
 	Cluster*   	var2Cluster( int v );	
 	
-	void setCurrentCluster(Cluster *c) {currentCluster = c;}
-    Cluster* getCurrentCluster() {return currentCluster;}
-    bool isInCurrentClusterSubTree(int idc) {if(currentCluster) return currentCluster->isDescendant(getCluster(idc)); else return false;}
+	void setCurrentCluster(Cluster *c) {currentCluster = c->getId();}
+    Cluster* getCurrentCluster() {return getCluster(currentCluster);}
+    bool isInCurrentClusterSubTree(int idc) {return getCurrentCluster()->isDescendant(getCluster(idc));}
 	
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called

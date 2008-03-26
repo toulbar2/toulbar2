@@ -240,7 +240,9 @@ void Solver::increase(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
+		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+		cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->increase(varIndex, value);
     wcsp->propagate();
@@ -252,7 +254,9 @@ void Solver::decrease(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
+		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+		cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->decrease(varIndex, value);
     wcsp->propagate();
@@ -264,7 +268,9 @@ void Solver::assign(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
+		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+		cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
     }
     wcsp->assign(varIndex, value);
     wcsp->propagate();
@@ -276,7 +282,9 @@ void Solver::remove(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum() << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+        cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
+		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+		cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
     }
     wcsp->remove(varIndex, value);
     wcsp->propagate();

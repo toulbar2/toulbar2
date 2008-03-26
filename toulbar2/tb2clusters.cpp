@@ -271,10 +271,9 @@ void Cluster::print() {
 /* ClusteredWCSP																		 */
 /*****************************************************************************************/
 
-TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in) {
+TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in), 
+  currentCluster(-1, &wcsp_in->getStore()->storeValue) {
 }
-
-
 
 void TreeDecomposition::fusions()
 {

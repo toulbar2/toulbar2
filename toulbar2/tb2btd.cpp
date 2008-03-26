@@ -89,6 +89,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value v
     }
     try {
         store->store();
+		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
 		assert(wcsp->getLb() == cluster->getLbRec());
 		wcsp->setUb(cub);
         lastConflictVar = varIndex;
@@ -101,11 +102,11 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost cub, int varIndex, Value v
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-
     store->restore();
     nbBacktracks++;
     try {
         store->store();
+		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
 		assert(wcsp->getLb() == cluster->getLbRec());
 		wcsp->setUb(cub);
 		if (dichotomic) {
@@ -141,10 +142,17 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 	  wcsp->getTreeDec()->setCurrentCluster(c);
 	  wcsp->setLb(lbSon);
 	  wcsp->setUb(ubSon);
-	  assert(ubSon > lbSon);
-	  wcsp->enforceUb();
-	  wcsp->propagate();
-	  lb += recursiveSolve(c, ubSon) - lbSon;
+	  try {
+        store->store();
+		assert(ubSon > lbSon);
+		wcsp->enforceUb();
+		wcsp->propagate();
+		lb += recursiveSolve(c, ubSon) - lbSon;
+	  } catch (Contradiction) {
+		wcsp->whenContradiction();
+		lb = cub;
+	  }
+	  store->restore();
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;
 	return lb;
