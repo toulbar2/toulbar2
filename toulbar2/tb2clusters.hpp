@@ -120,6 +120,8 @@ class Cluster {
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() { return edges.begin(); }
 	  TClusters::iterator endEdges()   { return edges.end(); }
+	  TClusters::iterator beginDescendants() { return descendants.begin(); }
+	  TClusters::iterator endDescendants()   { return descendants.end(); }
 
 	  void print();	  
 };

@@ -255,6 +255,14 @@ void Cluster::print() {
 	
 	cout << "}";
 
+	cout << "    proper {";
+	TVars::iterator itp = beginVars();
+	while(itp != endVars()) {
+		if (!isSepVar(*itp)) cout << *itp;
+		++itp;
+		if(itp != endVars()) cout << ",";
+	} 
+	cout << "}";
 
 	cout << "    edges {";
 	TClusters::iterator itc = beginEdges();
@@ -263,8 +271,16 @@ void Cluster::print() {
 		++itc;
 		if(itc != endEdges()) cout << ",";
 	}
-	cout << "}" << endl;
+	cout << "}";
 
+	cout << "    descendants {";
+	TClusters::iterator itd = beginDescendants();
+	while(itd != endDescendants()) {
+		cout << (*itd)->getId();
+		++itd;
+		if(itd != endDescendants()) cout << ",";
+	}
+	cout << "}" << endl;
 }
 
 /*****************************************************************************************/
@@ -415,6 +431,7 @@ void TreeDecomposition::buildFromOrder()
 void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 {
 	TClusters::iterator itj =  c->beginEdges();
+	c->getDescendants().insert(c);
 	while(itj != c->endEdges()) {
 		Cluster* cj = *itj;
 		cj->removeEdge(c);
