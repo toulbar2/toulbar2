@@ -10,7 +10,7 @@
 #include "tb2queue.hpp"
 #include "tb2domain.hpp"
 
-#include <list>
+#include <set>
 /*
  * Main class
  * 
@@ -111,49 +111,30 @@ public:
     
     /**********************************************************************/
     //   added for tree decomposition stuff	
-
-	class clusterItem { 
-		public:
-
-		int cluster;                     // cluster in which the variable appears
-		int idSep;                       // index of the separator variables to access delta costs 
-
-		clusterItem( int c, int iSep ) {	
-			cluster = c;	
-			idSep = iSep;
-		}
-	};
-
 	int cluster;
 	void setCluster( int c ) { cluster = c; }
-    int  getCluster()      {return cluster;}
+    int  getCluster()        { return cluster; }
 
-	list<clusterItem>  clusters;          // list of all clusters in which the variable appears 
+	typedef set< pair<int,int> >   TSepLink;   // set of pairs <cluster in wihch the variable appears,
+											   //  			    position of the variable in the delta structure>	
+	TSepLink clusters;           
 	
-	void addCluster( int c, int iSep ) {
-		clusters.push_back( clusterItem( c, iSep ) );
+	void addCluster( int c, int pos ) {
+		clusters.insert( pair<int,int>(c,pos) );
 	}
+ 
+ 	TSepLink::iterator itclusters;
+ 
+	void beginCluster() { itclusters = clusters.begin(); }
 
-	list<clusterItem>::iterator itclusters;
-
-	bool beginClusters(int& c, int& iS) {
-		itclusters = clusters.begin();
+	bool nextCluster(int& c, int& pos) { 
 		if(itclusters != clusters.end()) {
-			c = (*itclusters).cluster;
-			iS = (*itclusters).idSep;
+			c = (*itclusters).first;
+			pos = (*itclusters).second;
+			++itclusters; 
 			return true;
 		}
-		return false;
-	}
-
-	bool nextClusters(int& c, int& iS) {
-		++itclusters;
-		if(itclusters != clusters.end()) {
-			c = (*itclusters).cluster;
-			iS = (*itclusters).idSep;
-			return true;
-		}
-		return false;
+		else return false;		 
 	}
 
 /*

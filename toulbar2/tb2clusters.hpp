@@ -10,34 +10,53 @@
 #include <set>
 #include <list>
 
+
 class Cluster;
+class Nogood;
 
 typedef set<int>	       TVars;
-typedef list<Constraint*>  TCtrs;
+typedef set<Constraint*>   TCtrs;
 typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
+typedef pair <Cost,bool>   TPair;
 
-#define NOCLUSTER -1
 
 
-class NaryNogood : public NaryConstrie
+class Separator 
 {
   private:
 
-    TVars implication;
-	void use(); 
-	Cost lb;
+	Cluster*					  cluster;
+	TVars   					  vars;
+    vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
+	  										// inicialized with iniDelta()
+
+    map<string, TPair>  nogoods;
 
   public:
 
-	NaryNogood(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
-	NaryNogood(WCSP *wcsp);
-	void assign(int varIndex);
-	TVars& getImplication() { return implication; }
+	Separator();
+
+    void setup(Cluster* cluster_in);
+
+	TVars& 			 getVars() { return vars; }    
+    
+    void addDelta( int posvar, Value value, Cost cost ) { delta[posvar][value] += cost; }
+
+
+    void set( Cost c, bool opt );
+    Cost get();
+    
+    TVars::iterator  begin() { return vars.begin(); } 
+    TVars::iterator  end()   { return vars.end(); } 
+    bool  is(int i) { return vars.find(i) != vars.end(); } 
+
 };
 
 
+
+#define NOCLUSTER -1
 
 class Cluster {
 
@@ -48,15 +67,14 @@ class Cluster {
 	  TVars				  vars;
 	  TCtrs			      ctrs;
 	  TClusters           edges;              // adjacent clusters 
+	  Separator 		  sep;
+
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
 	  Cost				  ub;
 	  
-	  vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
-	  										  // inicialized with iniDelta()
 	  
 	  Cluster*			  parent;             // parent cluster
-	  TVars				  sep;                // separator vars with parent cluster
       TClusters    	      descendants;  	 // set of descendants	
 
  public:
@@ -74,6 +92,7 @@ class Cluster {
 	  bool 			isSepVar( int i );
 
 	  Cost	        getLbRec();
+	  Cost	        getLbRecNoGoods();
 
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
@@ -95,7 +114,6 @@ class Cluster {
 	  void 			addCtrs( TCtrs& ctrsin );
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
-	  void 			iniDelta();
 	  void 		    updateUb();
 	  
 	  void 			setParent(Cluster* p);
@@ -111,6 +129,10 @@ class Cluster {
 	  void 			activate();
 	  void 			deactivate();
 	  void 			increaseLb( Cost newlb );
+
+	  void setup() { sep.setup(this); }
+
+	  void addDelta( int posvar, Value value, Cost cost ) { sep.addDelta(posvar,value,cost); }
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
@@ -159,12 +181,14 @@ public:
 	int height( Cluster* r, Cluster* father );
 	int height( Cluster* r );
 
+	bool verify();
+
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );
 	void sum( TVars& v1, TVars& v2, TVars& vout ); 
 	bool included( TVars& v1, TVars& v2 ); 	
-
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
+	
 	
 	void print( Cluster* c = NULL, int recnum = 0);
 	

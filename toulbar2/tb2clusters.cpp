@@ -10,55 +10,70 @@
 /************************************************************************************************/
 // NaryNogood
 
-NaryNogood::NaryNogood(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
-			: NaryConstrie(wcsp, scope_in, arity_in, 0)
+Separator::Separator() 
 {
-	lb = 0;
+	cluster = NULL;
 }
 
-
-NaryNogood::NaryNogood(WCSP *wcsp)
-			: NaryConstrie(wcsp)
-{
-	lb = 0;
+void Separator::setup(Cluster* cluster_in) {
+	cluster = cluster_in;
+	delta.clear();
+	TVars::iterator it = vars.begin();
+	while(it != vars.end()) {
+		EnumeratedVariable* var = (EnumeratedVariable*) cluster->getWCSP()->getVar(*it);
+	    delta.push_back( vector<StoreCost>(var->getDomainInitSize(), StoreCost(MIN_COST, &cluster->getWCSP()->getStore()->storeCost)) );
+		++it;
+	}
 }
 
-void NaryNogood::use() {
+void Separator::set( Cost c, bool opt ) { 
+	int arity = vars.size();
+	char* t = new char [arity+1];			
 	int i = 0;
-	char* t = new char [arity_ + 1];			
-	for(i = 0; i < arity_;i++) t[i] = CHAR_FIRST + scope[i]->toIndex(scope[i]->getValue());
+	TVars::iterator it = vars.begin();
+	while(it != vars.end()) {
+		EnumeratedVariable* var = (EnumeratedVariable*) cluster->getWCSP()->getVar(*it);
+		t[i] = var->getValue();
+		++it;
+		i++;
+	}
 	t[i] = '\0';
-	deconnect();
-    wcsp->increaseLb(wcsp->getLb() + eval(string(t)));
+	nogoods[string(t)] = TPair(c,opt); 
 	delete [] t;
-}
+}    
 
-
-void NaryNogood::assign(int varIndex) {
+Cost Separator::get() {
+	int arity = vars.size();
+	char* t = new char [arity+1];			
 	int i = 0;
-	if (connected(varIndex)) {
-        deconnect(varIndex);	
-	    nonassigned = nonassigned - 1;	   
-	    if(nonassigned == 0) {
-			TVars::iterator it = implication.begin();
-			bool allunassigned = true;
-			while(allunassigned  && (it != implication.end())) {
-				allunassigned = allunassigned && scope[i]->unassigned();
-				++it;
-				i++;
-			}
+	Cost res = 0;
+	TVars::iterator it = vars.begin();
+	while(it != vars.end()) {
+		EnumeratedVariable* var = (EnumeratedVariable*) cluster->getWCSP()->getVar(*it);
+		t[i] = var->getValue();				// build the tuple
+		res -= delta[i][var->getValue()];   // delta structrue
 
-			if(allunassigned) use();
-	    }
-    }
+		++it;
+		i++;
+	}
+	t[i] = '\0';
+	TPair p = nogoods[string(t)];
+	res += p.first;
+	delete [] t;
+	return res;
 }
+
+
+
+
+
 
 
 
 /************************************************************************************************/
 // Cluster
 
-Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost)		 
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost)	 
 {
 	lb     = MIN_COST;
 	lb_opt = MIN_COST;
@@ -80,7 +95,7 @@ void Cluster::addVars( TVars& morevars ) {
 }
 
 
-void Cluster::addCtr( Constraint* c ) { ctrs.push_back(c); }
+void Cluster::addCtr( Constraint* c ) { ctrs.insert(c); }
 
 void Cluster::addEdge( Cluster* c ) { edges.insert(c); }
 
@@ -113,14 +128,13 @@ bool Cluster::isVar( int i ) {
 }
 
 bool Cluster::isSepVar( int i ) {
-	TVars::iterator it = sep.find(i);
-	return it != sep.end();
+	return sep.is(i);
 }
 
 
 void 	    Cluster::setParent(Cluster* p) { parent = p; }
 Cluster*    Cluster::getParent() { return parent; }
-TVars&	    Cluster::getSep() { return sep; }
+TVars&	    Cluster::getSep() { return sep.getVars(); }
 TClusters&	Cluster::getDescendants() { return descendants; }
 
 bool Cluster::isDescendant( Cluster* c ) {
@@ -133,16 +147,6 @@ Cluster* Cluster::nextSep( Variable* v ) {
 	if(c->isVar( v->wcspIndex ) ) return c;
 	else return NULL;
 } 
-
-void Cluster::iniDelta() {
-	delta.clear();
-	TVars::iterator it = beginSep();
-	while(it != endSep()) {
-		EnumeratedVariable* var = (EnumeratedVariable*) wcsp->getVar(*it);
-	    delta.push_back( vector<StoreCost>(var->getDomainInitSize(), StoreCost(MIN_COST, &wcsp->getStore()->storeCost)) );
-		++it;
-	}
-}
 
 
 void Cluster::updateUb( ) {
@@ -174,6 +178,14 @@ Cost Cluster::getLbRec() {
 	res += (*iter)->getLbRec();
   } 
   return res; 
+}
+
+Cost Cluster::getLbRecNoGoods() {
+  Cost res = lb; 
+  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	res += (*iter)->getLbRec();
+  } 
+  return res;	
 }
 
   
@@ -425,6 +437,8 @@ void TreeDecomposition::buildFromOrder()
 	int h = makeRooted(0);
 	cout << "tree height: " << h << endl;
 	print();
+
+	//assert(verify());
 }
 
 
@@ -474,18 +488,17 @@ int TreeDecomposition::makeRooted( int icluster )
 			ctr->setCluster(c->getId());
 			++itctr;
 		}
-		c->iniDelta();
 
-		int ids = 0;
+		int posx = 0;
 		TVars::iterator itv = c->beginVars();
 		while(itv != c->endVars()) {
 			Variable* var = wcsp->getVar(*itv);
 			if(!c->isSepVar( var->wcspIndex )) var->setCluster(c->getId());
-			else { var->addCluster(c->getId(), ids);
-				   ids++;
-			}
+			else var->addCluster(c->getId(), posx++);  // we add the cluster and also the position of the variable for the delta stucture
 			++itv;
 		}
+		
+		c->setup();
 	}
 
 
@@ -525,6 +538,30 @@ int TreeDecomposition::height( Cluster* r )
 	}
 	return maxh + 1;		
 }
+
+
+bool TreeDecomposition::verify()
+{
+	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
+		Variable* x = wcsp->getVar( i );
+		Cluster* ci  = clusters[x->getCluster()];
+    
+    	if( ! (ci->isVar(x->wcspIndex) && !ci->isSepVar(x->wcspIndex)) ) return false;
+    
+	    ConstraintList* xctrs = x->getConstrs();		
+	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
+            Constraint* ctr = (*it).constr;
+			/*Cluster* cj  = clusters[ctr->getCluster()];
+            int arity = ctr->arity();
+            for(i=0;i<arity;i++) {
+        		Variable* x = ctr->getVar(i);
+        		    	
+            }*/
+	    }
+	}
+	return true;
+}
+
 
 
 void TreeDecomposition::intersection( TVars& v1, TVars& v2, TVars& vout ) {	

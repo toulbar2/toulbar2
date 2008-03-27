@@ -36,23 +36,9 @@ protected:
     template <GetCostMember getBinaryCost> bool verify(EnumeratedVariable *x, EnumeratedVariable *y);
 
     // return true if unary support of x is broken
-    bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
-    {
-		assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
-        // hard binary constraint costs are not changed
-        if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
-        Cost oldcost = x->getCost(value);
-        x->project(value, cost);
-        return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
-    }
-    
-    void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
-    {
-		assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
-        deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
-        x->extend(value, cost);
-    }
-    
+    bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
+    void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
+  
     void findSupportX() {findSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX);}
     void findSupportY() {findSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY);}
     void findFullSupportX() {findFullSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
