@@ -81,26 +81,14 @@ void BinaryConstraint::dump(ostream& os)
 bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,cost);
+
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
     Cost oldcost = x->getCost(value);
     x->project(value, cost);
-    
-    TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) {
-    	Cluster* ci = td->getCluster( cluster );
-    	Cluster* cj = td->getCluster( x->getCluster() );
-        if(! ci->isDescendant( cj ) ) {
-        	int ckid,posx;
-        	x->beginCluster();        	
-        	while( x->nextCluster(ckid,posx) ) {
-        		Cluster* ck = td->getCluster( ckid );
-        		if(ci->isDescendant(ck)) {
-        			ck->addDelta(posx, value, cost);
-        		}
-        	}
-	    }
-    }
     
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
 }
@@ -109,6 +97,10 @@ bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, ve
 void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,-cost);
+
     deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
     x->extend(value, cost);
 }

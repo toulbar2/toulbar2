@@ -30,37 +30,44 @@ void Separator::set( Cost c, bool opt ) {
 	int arity = vars.size();
 	char* t = new char [arity+1];			
 	int i = 0;
+	Cost deltares = 0;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
-		EnumeratedVariable* var = (EnumeratedVariable*) cluster->getWCSP()->getVar(*it);
-		t[i] = var->getValue();
+	    assert(cluster->getWCSP()->assigned(*it));
+	    Value val = cluster->getWCSP()->getValue(*it);
+		t[i] = val;
+	    deltares += delta[i][val];   // delta structrue
 		++it;
 		i++;
 	}
 	t[i] = '\0';
-	nogoods[string(t)] = TPair(c,opt); 
+	assert(!opt || c + deltares >= 0);
+	if (ToulBar2::verbose >= 1) cout << "Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
+	nogoods[string(t)] = TPair(max(0, c + deltares), opt); 
 	delete [] t;
 }    
 
-Cost Separator::get() {
+Cost Separator::get( bool& opt ) {
 	int arity = vars.size();
 	char* t = new char [arity+1];			
 	int i = 0;
 	Cost res = 0;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
-		EnumeratedVariable* var = (EnumeratedVariable*) cluster->getWCSP()->getVar(*it);
-		t[i] = var->getValue();				// build the tuple
-		res -= delta[i][var->getValue()];   // delta structrue
-
-		++it;
-		i++;
+	  assert(cluster->getWCSP()->assigned(*it));
+	  Value val = cluster->getWCSP()->getValue(*it);
+	  t[i] = (char) val;	  // build the tuple
+	  res -= delta[i][val];   // delta structrue
+	  ++it;
+	  i++;
 	}
 	t[i] = '\0';
 	TPair p = nogoods[string(t)];
+	if (ToulBar2::verbose >= 1) cout << "Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
 	res += p.first;
+    opt = p.second;
 	delete [] t;
-	return res;
+	return max(0,res);
 }
 
 
@@ -181,11 +188,20 @@ Cost Cluster::getLbRec() {
 }
 
 Cost Cluster::getLbRecNoGoods() {
-  Cost res = lb; 
+  Cost res = lb;
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
-	res += (*iter)->getLbRec();
+	Cost propalb = (*iter)->getLbRec();
+    bool dummy_opt;
+	Cost nogood = (*iter)->nogoodGet(dummy_opt);
+	res += max(propalb, nogood);
   } 
   return res;	
+}
+
+Cost Cluster::getLbRecNoGood(bool& opt) {
+  Cost propalb = getLbRec();
+  Cost nogood = nogoodGet(opt);
+  return max(propalb, nogood);
 }
 
   
@@ -248,20 +264,14 @@ void Cluster::print() {
 	//cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
 	
 	cout << "cluster " << getId();
-//  	cout << " vars {";
-	
-//  	TVars::iterator it = beginVars();
-//  	while(it != endVars()) {
-//  		cout << *it;
-//  		++it;
-//  		if(it != endVars()) cout << ",";
-//  	} 
-//  	cout << "}";
 
 	cout << " vars {";
 	TVars::iterator itp = beginVars();
 	while(itp != endVars()) {
-		if (!isSepVar(*itp)) cout << *itp << ",";
+		if (!isSepVar(*itp)) {
+		  cout << *itp << ",";
+		  assert(wcsp->getVar(*itp)->getCluster() == getId());
+		}
 		++itp;
 	} 
 	cout << "\b}";
@@ -287,25 +297,25 @@ void Cluster::print() {
 	  cout << "}";
 	}
 
-	/*cout << " ctrs {";
-	TCtrs::iterator itctr = beginCtrs();
-	while(itctr != endCtrs()) {
-		Constraint* ctr = *itctr;
-		cout << "( "; 
-		for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
-		cout << ")"; 
-		++itctr;
-	}
-	cout << "}";
+//  	cout << " ctrs {";
+//  	TCtrs::iterator itctr = beginCtrs();
+//  	while(itctr != endCtrs()) {
+//  	  Constraint* ctr = *itctr;
+//  	  cout << "( "; 
+//  	  for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
+//  	  cout << ")"; 
+//  	  ++itctr;
+//  	}
+//  	cout << "}";
 
-  	cout << " descendants {";
-  	TClusters::iterator itd = beginDescendants();
-  	while(itd != endDescendants()) {
-  		cout << (*itd)->getId();
-  		++itd;
-  		if(itd != endDescendants()) cout << ",";
-  	}
-  	cout << "}";*/
+//    	cout << " descendants {";
+//    	TClusters::iterator itd = beginDescendants();
+//    	while(itd != endDescendants()) {
+//  	  cout << (*itd)->getId();
+//  	  ++itd;
+//  	  if(itd != endDescendants()) cout << ",";
+//    	}
+//    	cout << "}";
 	cout << endl;
 }
 
@@ -449,7 +459,7 @@ void TreeDecomposition::buildFromOrder()
 	cout << "tree height: " << h << endl;
 	print();
 
-	//assert(verify());
+	assert(verify());
 }
 
 
@@ -559,16 +569,16 @@ bool TreeDecomposition::verify()
     
     	if( ! (ci->isVar(x->wcspIndex) && !ci->isSepVar(x->wcspIndex)) ) return false;
     
-	    ConstraintList* xctrs = x->getConstrs();		
-	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
-            /*Constraint* ctr = (*it).constr;
-			Cluster* cj  = clusters[ctr->getCluster()];
-            int arity = ctr->arity();
-            for(i=0;i<arity;i++) {
-        		Variable* x = ctr->getVar(i);
+//  	    ConstraintList* xctrs = x->getConstrs();		
+//  	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
+//              Constraint* ctr = (*it).constr;
+//  			Cluster* cj  = clusters[ctr->getCluster()];
+//              int arity = ctr->arity();
+//              for(i=0;i<arity;i++) {
+//          		Variable* x = ctr->getVar(i);
         		    	
-            }*/
-	    }
+//              }
+//  	    }
 	}
 	return true;
 }
@@ -607,20 +617,36 @@ void TreeDecomposition::clusterSum( TClusters& v1, TClusters& v2, TClusters& vou
 			   inserter(vout, vout.begin()) );			 	  
 }
 
+void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, Cost cost)
+{
+  Cluster* cy = getCluster( cyid );
+  Cluster* cx = getCluster( x->getCluster() );
+  if(! cy->isDescendant( cx ) ) {
+	int ckid,posx;
+	x->beginCluster();        	
+	while( x->nextCluster(ckid,posx) ) {
+	  Cluster* ck = getCluster( ckid );
+	  if(ck->isDescendant(cy)) {
+		if (ToulBar2::verbose >= 1) cout << "add delta " << cost << " to " << x->wcspIndex << "," << value << " on cluster " << ck->getId() << endl;
+		ck->addDelta(posx, value, cost);
+	  }
+	}
+  }
+}
 
 void TreeDecomposition::print( Cluster* c, int recnum )
 {
 	if(!c) {
-		/*for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
-			Variable* x = wcsp->getVar(i);
-			x->beginCluster();
-			int c,posx;
-			cout << x->wcspIndex << " appears in sep {";
-			while(x->nextCluster(c,posx)) {
-				cout << c << " ";
-			}
-			cout << "}" << endl;
-		}*/ 
+//  		for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
+//  			Variable* x = wcsp->getVar(i);
+//  			x->beginCluster();
+//  			int c,posx;
+//  			cout << x->wcspIndex << " appears in sep {";
+//  			while(x->nextCluster(c,posx)) {
+//  				cout << c << " ";
+//  			}
+//  			cout << "}" << endl;
+//  		} 
 		if(roots.empty()) return;
 		c = * roots.begin();
 	}

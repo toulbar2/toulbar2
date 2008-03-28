@@ -133,26 +133,32 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
   if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
   else varIndex = getVarMinDomainDivMaxDegree(cluster);
   if (varIndex < 0) {
-	Cost lb = cluster->getLbRec();
+	Cost lb = cluster->getLbRecNoGoods();
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " lb= " << lb << endl;
 	for (TClusters::iterator iter = cluster->beginEdges(); lb < cub && iter!= cluster->endEdges(); ++iter) {
 	  Cluster* c = *iter;
-	  Cost lbSon = c->getLbRec();
-	  Cost ubSon = cub - lb + lbSon;
-	  wcsp->getTreeDec()->setCurrentCluster(c);
-	  wcsp->setLb(lbSon);
-	  wcsp->setUb(ubSon);
-	  try {
-        store->store();
-		assert(ubSon > lbSon);
-		wcsp->enforceUb();
-		wcsp->propagate();
-		lb += recursiveSolve(c, ubSon) - lbSon;
-	  } catch (Contradiction) {
-		wcsp->whenContradiction();
-		lb = cub;
+	  bool opt = false;
+	  Cost lbSon = c->getLbRecNoGood(opt);
+	  if (!opt) {
+		Cost ubSon = cub - lb + lbSon;
+		wcsp->getTreeDec()->setCurrentCluster(c);
+		wcsp->setLb(lbSon);
+		wcsp->setUb(ubSon);
+		try {
+		  store->store();
+		  assert(ubSon > lbSon);
+		  wcsp->enforceUb();
+		  wcsp->propagate();
+		  Cost newlbSon = recursiveSolve(c, ubSon);
+		  c->nogoodRec(newlbSon, (newlbSon < ubSon));
+		  lb += newlbSon - lbSon;
+		} catch (Contradiction) {
+		  wcsp->whenContradiction();
+		  c->nogoodRec(ubSon, false);
+		  lb = cub;
+		}
+		store->restore();
 	  }
-	  store->restore();
 	}
 	if (cluster == wcsp->getTreeDec()->getRoot() && lb < cub) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;

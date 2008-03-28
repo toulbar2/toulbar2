@@ -46,7 +46,7 @@ class Separator
 
 
     void set( Cost c, bool opt );
-    Cost get();
+    Cost get( bool& opt );
     
     TVars::iterator  begin() { return vars.begin(); } 
     TVars::iterator  end()   { return vars.end(); } 
@@ -93,6 +93,7 @@ class Cluster {
 
 	  Cost	        getLbRec();
 	  Cost	        getLbRecNoGoods();
+	  Cost	        getLbRecNoGood(bool& opt);
 
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
@@ -136,6 +137,7 @@ class Cluster {
 	  
 	  void addDelta( int posvar, Value value, Cost cost ) { sep.addDelta(posvar,value,cost); }
 	  void nogoodRec( Cost c, bool opt ) { sep.set(c,opt); }	
+      Cost nogoodGet( bool& opt ) { return sep.get(opt); }	
 
 
 	  TVars::iterator beginVars() { return vars.begin(); }
@@ -193,7 +195,8 @@ public:
 	bool included( TVars& v1, TVars& v2 ); 	
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
 	
-	
+    void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
+
 	void print( Cluster* c = NULL, int recnum = 0);
 	
 };
