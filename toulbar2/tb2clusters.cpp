@@ -203,7 +203,7 @@ Cost Cluster::eval( TAssign* a  ) {
 	Cost ubold = wcsp->getUb();
 	wcsp->getStore()->store();
 	wcsp->setLb(0);
-	set();
+	setWCSP();
 	bool valid = true;
 	TAssign::iterator it = a->begin();
 	while(it != a->end()) {
@@ -226,7 +226,7 @@ Cost Cluster::eval( TAssign* a  ) {
 }
 
 
-void Cluster::set() {
+void Cluster::setWCSP() {
 	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
 		if(!isVar(i)) {	
 			EnumeratedVariable* x = (EnumeratedVariable*) wcsp->getVar(i);	
@@ -259,22 +259,22 @@ void Cluster::print() {
 //  	cout << "}";
 
 	cout << " vars {";
-	TVars::iterator its = beginSep();
-	while(its != endSep()) {
-		cout << *its;
-		++its;
-		if(its != endSep()) cout << ",";
-	}
-	
-	cout << "}";
-
-	cout << " U {";
 	TVars::iterator itp = beginVars();
 	while(itp != endVars()) {
 		if (!isSepVar(*itp)) cout << *itp << ",";
 		++itp;
 	} 
 	cout << "\b}";
+
+	cout << " U sep {";
+	TVars::iterator its = beginSep();
+	while(its != endSep()) {
+		cout << *its;
+		++its;
+		if(its != endSep()) cout << ",";
+	}
+	cout << "}";
+
 
 	if (!edges.empty()) {
 	  cout << " sons {";
@@ -287,14 +287,25 @@ void Cluster::print() {
 	  cout << "}";
 	}
 
-//  	cout << " descendants {";
-//  	TClusters::iterator itd = beginDescendants();
-//  	while(itd != endDescendants()) {
-//  		cout << (*itd)->getId();
-//  		++itd;
-//  		if(itd != endDescendants()) cout << ",";
-//  	}
-//  	cout << "}";
+	/*cout << " ctrs {";
+	TCtrs::iterator itctr = beginCtrs();
+	while(itctr != endCtrs()) {
+		Constraint* ctr = *itctr;
+		cout << "( "; 
+		for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
+		cout << ")"; 
+		++itctr;
+	}
+	cout << "}";
+
+  	cout << " descendants {";
+  	TClusters::iterator itd = beginDescendants();
+  	while(itd != endDescendants()) {
+  		cout << (*itd)->getId();
+  		++itd;
+  		if(itd != endDescendants()) cout << ",";
+  	}
+  	cout << "}";*/
 	cout << endl;
 }
 
@@ -550,8 +561,8 @@ bool TreeDecomposition::verify()
     
 	    ConstraintList* xctrs = x->getConstrs();		
 	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
-            Constraint* ctr = (*it).constr;
-			/*Cluster* cj  = clusters[ctr->getCluster()];
+            /*Constraint* ctr = (*it).constr;
+			Cluster* cj  = clusters[ctr->getCluster()];
             int arity = ctr->arity();
             for(i=0;i<arity;i++) {
         		Variable* x = ctr->getVar(i);
@@ -600,6 +611,16 @@ void TreeDecomposition::clusterSum( TClusters& v1, TClusters& v2, TClusters& vou
 void TreeDecomposition::print( Cluster* c, int recnum )
 {
 	if(!c) {
+		/*for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
+			Variable* x = wcsp->getVar(i);
+			x->beginCluster();
+			int c,posx;
+			cout << x->wcspIndex << " appears in sep {";
+			while(x->nextCluster(c,posx)) {
+				cout << c << " ";
+			}
+			cout << "}" << endl;
+		}*/ 
 		if(roots.empty()) return;
 		c = * roots.begin();
 	}

@@ -122,17 +122,21 @@ class Cluster {
 	  TClusters&	getDescendants();
 	  Cluster*		nextSep( Variable* v ); 
 	  bool			isDescendant( Cluster* c2 );
+	  
+	  
       // ----------------------------------------------------------
-
 	  Cost 			eval(TAssign* a);
-	  void 			set();                              // sets the WCSP to the cluster problem, deconnecting the rest
+	  void 			setWCSP();                              // sets the WCSP to the cluster problem, deconnecting the rest
 	  void 			activate();
 	  void 			deactivate();
 	  void 			increaseLb( Cost newlb );
 
 	  void setup() { sep.setup(this); }
 
+	  
 	  void addDelta( int posvar, Value value, Cost cost ) { sep.addDelta(posvar,value,cost); }
+	  void nogoodRec( Cost c, bool opt ) { sep.set(c,opt); }	
+
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
