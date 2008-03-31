@@ -31,10 +31,12 @@ void Separator::set( Cost c, bool opt ) {
 	char* t = new char [arity+1];			
 	int i = 0;
 	Cost deltares = 0;
+	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
 	    assert(cluster->getWCSP()->assigned(*it));
 	    Value val = cluster->getWCSP()->getValue(*it);
+		if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
 		t[i] = val;
 	    deltares += delta[i][val];   // delta structrue
 		++it;
@@ -42,7 +44,7 @@ void Separator::set( Cost c, bool opt ) {
 	}
 	t[i] = '\0';
 	assert(!opt || c + deltares >= 0);
-	if (ToulBar2::verbose >= 1) cout << "Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
+	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
 	nogoods[string(t)] = TPair(max(0, c + deltares), opt); 
 	delete [] t;
 }    
@@ -52,10 +54,12 @@ Cost Separator::get( bool& opt ) {
 	char* t = new char [arity+1];			
 	int i = 0;
 	Cost res = 0;
+	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
 	  assert(cluster->getWCSP()->assigned(*it));
 	  Value val = cluster->getWCSP()->getValue(*it);
+	  if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
 	  t[i] = (char) val;	  // build the tuple
 	  res -= delta[i][val];   // delta structrue
 	  ++it;
@@ -63,7 +67,8 @@ Cost Separator::get( bool& opt ) {
 	}
 	t[i] = '\0';
 	TPair p = nogoods[string(t)];
-	if (ToulBar2::verbose >= 1) cout << "Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
+	if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
+	assert(!p.second || res + p.first >= 0);
 	res += p.first;
     opt = p.second;
 	delete [] t;
@@ -627,7 +632,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
 	while( x->nextCluster(ckid,posx) ) {
 	  Cluster* ck = getCluster( ckid );
 	  if(ck->isDescendant(cy)) {
-		if (ToulBar2::verbose >= 1) cout << "add delta " << cost << " to " << x->wcspIndex << "," << value << " on cluster " << ck->getId() << endl;
+		if (ToulBar2::verbose >= 1) cout << "add delta " << cost << " to var " << x->wcspIndex << " (cluster " << cx->getId() << ") value " << value << " from subtree " << ck->getId() << " (cluster " << cyid << ")" << endl;
 		ck->addDelta(posx, value, cost);
 	  }
 	}

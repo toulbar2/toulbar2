@@ -1256,7 +1256,6 @@ int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     td->buildFromOrder();
-    td->getRoot()->increaseLb(getLb());
 }
 
 

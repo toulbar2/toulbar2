@@ -142,7 +142,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 	  if (!opt) {
 		Cost ubSon = cub - lb + lbSon;
 		wcsp->getTreeDec()->setCurrentCluster(c);
-		wcsp->setLb(lbSon);
+		wcsp->setLb(c->getLbRec());
 		wcsp->setUb(ubSon);
 		try {
 		  store->store();
@@ -151,6 +151,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 		  wcsp->propagate();
 		  Cost newlbSon = recursiveSolve(c, ubSon);
 		  c->nogoodRec(newlbSon, (newlbSon < ubSon));
+		  assert(newlbSon >= lbSon);
 		  lb += newlbSon - lbSon;
 		} catch (Contradiction) {
 		  wcsp->whenContradiction();

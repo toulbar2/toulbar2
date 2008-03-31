@@ -648,6 +648,7 @@ bool Solver::solve()
         	TreeDecomposition* td = wcsp->getTreeDec();
         	if(td) {
 			    td->setCurrentCluster(td->getRoot());
+				td->getRoot()->setLb(wcsp->getLb());
         		Cost ub_old = wcsp->getUb();
         		Cost res = recursiveSolve(td->getRoot(), ub_old);
         		wcsp->setUb( min(res, ub_old) );
