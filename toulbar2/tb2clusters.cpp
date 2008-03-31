@@ -31,7 +31,7 @@ void Separator::set( Cost c, bool opt ) {
 	char* t = new char [arity+1];			
 	t[arity] = '\0';
 	int i = 0;
-	Cost deltares = 0;
+	Cost deltares = MIN_COST;
 	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
@@ -43,9 +43,9 @@ void Separator::set( Cost c, bool opt ) {
 		++it;
 		i++;
 	}
-	assert(!opt || c + deltares >= 0);
+	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
-	nogoods[string(t)] = TPair(max(0, c + deltares), opt); 
+	nogoods[string(t)] = TPair(max(MIN_COST, c + deltares), opt); 
 	delete [] t;
 }    
 
@@ -54,7 +54,7 @@ Cost Separator::get( bool& opt ) {
 	char* t = new char [arity+1];			
 	t[arity] = '\0';
 	int i = 0;
-	Cost res = 0;
+	Cost res = MIN_COST;
 	opt = false;
 	
 	if (ToulBar2::verbose >= 1) cout << "( ";
@@ -72,14 +72,14 @@ Cost Separator::get( bool& opt ) {
 	if(itng != nogoods.end()) {
 		TPair p = itng->second;
 		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
-		assert(!p.second || res + p.first >= 0);
+		assert(!p.second || res + p.first >= MIN_COST);
 		res += p.first;
 	    opt = p.second;
 		delete [] t;
-		return max(0,res);
+		return max(MIN_COST,res);
 	} else {
 		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND " << endl;
-		return 0;
+		return MIN_COST;
 	}
 }
 
@@ -231,7 +231,7 @@ void Cluster::deactivate() {
 Cost Cluster::eval( TAssign* a  ) {
 	Cost ubold = wcsp->getUb();
 	wcsp->getStore()->store();
-	wcsp->setLb(0);
+	wcsp->setLb(MIN_COST);
 	setWCSP();
 	bool valid = true;
 	TAssign::iterator it = a->begin();
