@@ -20,7 +20,7 @@ typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
 typedef pair <Cost,bool>   TPair;
-
+typedef map<string, TPair> TNoGoods;
 
 
 class Separator 
@@ -32,7 +32,7 @@ class Separator
     vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
 	  										// inicialized with iniDelta()
 
-    map<string, TPair>  nogoods;
+    TNoGoods  					  nogoods;
 
   public:
 

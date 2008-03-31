@@ -29,6 +29,7 @@ void Separator::setup(Cluster* cluster_in) {
 void Separator::set( Cost c, bool opt ) { 
 	int arity = vars.size();
 	char* t = new char [arity+1];			
+	t[arity] = '\0';
 	int i = 0;
 	Cost deltares = 0;
 	if (ToulBar2::verbose >= 1) cout << "( ";
@@ -37,12 +38,11 @@ void Separator::set( Cost c, bool opt ) {
 	    assert(cluster->getWCSP()->assigned(*it));
 	    Value val = cluster->getWCSP()->getValue(*it);
 		if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
-		t[i] = val;
+		t[i] = val + CHAR_FIRST;
 	    deltares += delta[i][val];   // delta structrue
 		++it;
 		i++;
 	}
-	t[i] = '\0';
 	assert(!opt || c + deltares >= 0);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
 	nogoods[string(t)] = TPair(max(0, c + deltares), opt); 
@@ -52,27 +52,35 @@ void Separator::set( Cost c, bool opt ) {
 Cost Separator::get( bool& opt ) {
 	int arity = vars.size();
 	char* t = new char [arity+1];			
+	t[arity] = '\0';
 	int i = 0;
 	Cost res = 0;
+	opt = false;
+	
 	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
 	  assert(cluster->getWCSP()->assigned(*it));
 	  Value val = cluster->getWCSP()->getValue(*it);
 	  if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
-	  t[i] = (char) val;	  // build the tuple
-	  res -= delta[i][val];   // delta structrue
+	  t[i] = val + CHAR_FIRST;	 // build the tuple
+	  res -= delta[i][val];      // delta structure
 	  ++it;
 	  i++;
 	}
-	t[i] = '\0';
-	TPair p = nogoods[string(t)];
-	if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
-	assert(!p.second || res + p.first >= 0);
-	res += p.first;
-    opt = p.second;
-	delete [] t;
-	return max(0,res);
+	TNoGoods::iterator itng = nogoods.find(string(t));
+	if(itng != nogoods.end()) {
+		TPair p = itng->second;
+		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
+		assert(!p.second || res + p.first >= 0);
+		res += p.first;
+	    opt = p.second;
+		delete [] t;
+		return max(0,res);
+	} else {
+		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND " << endl;
+		return 0;
+	}
 }
 
 
@@ -275,7 +283,7 @@ void Cluster::print() {
 	while(itp != endVars()) {
 		if (!isSepVar(*itp)) {
 		  cout << *itp << ",";
-		  assert(wcsp->getVar(*itp)->getCluster() == getId());
+		  //assert(wcsp->getVar(*itp)->getCluster() == getId());
 		}
 		++itp;
 	} 
@@ -366,9 +374,12 @@ bool TreeDecomposition::fusion( )
 	for(unsigned int i=0; i < clusters.size(); i++) {
 		if(!clusters[i]) continue;
 		Cluster* c = clusters[i];
+		if (ToulBar2::verbose >= 3) { cout << "fusion testing "; c->print(); }
+		
 		TClusters::iterator it =  c->beginEdges();
 		while(it != c->endEdges()) {
 			Cluster* cj = *it;
+			assert(cj == clusters[cj->getId()]);			
 			if((c->getId() < cj->getId()) && included(c->getVars(), cj->getVars())) {
 				c->addVars(cj->getVars());
 				c->addCtrs(cj->getCtrs());
@@ -383,7 +394,8 @@ bool TreeDecomposition::fusion( )
 				c->removeEdge(c);
 				clusters[ cj->getId() ] = NULL;
 				delete cj;
-				done = true;
+				if (ToulBar2::verbose >= 1) { cout << "fusion ci " <<  c->getId() << ",  cj " <<  cj->getId() << endl; c->print(); }
+				return true;
 			}
 			++it;	
 		}
@@ -459,6 +471,15 @@ void TreeDecomposition::buildFromOrder()
 		
 		   
 	}	
+	if (ToulBar2::verbose >= 1) { 
+		cout << "----- Before fusions process: " << endl;
+		for(unsigned int i=0; i < clusters.size(); i++) {
+			if(!clusters[i]) continue;
+			Cluster* c = clusters[i];
+			c->print(); 
+		}
+		cout << "----- fusions process starting... " << endl;
+	}
 	fusions();
 	int h = makeRooted(0);
 	cout << "tree height: " << h << endl;
@@ -530,6 +551,7 @@ int TreeDecomposition::makeRooted( int icluster )
 
 	if(visited.size() < clusters.size()) {
 		// it was a forest and not a tree
+		assert(false);
 	}
 
 	return height(root);
