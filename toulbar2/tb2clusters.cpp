@@ -10,10 +10,49 @@
 /************************************************************************************************/
 // NaryNogood
 
-Separator::Separator() 
+Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
+			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	cluster = NULL;
+    for(int i=0;i<arity_in;i++) {
+    	int domsize = scope_in[i]->getDomainInitSize();
+    	vars.insert(  scope_in[i]->wcspIndex );
+        if(domsize + CHAR_FIRST > 125) {
+		  cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; 
+		  exit(EXIT_FAILURE);
+		}
+    } 	           
 }
+
+
+
+Separator::Separator(WCSP *wcsp)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
+{
+}
+
+
+void Separator::assign(int varIndex) {
+    if (connected(varIndex)) {
+        deconnect(varIndex);	
+	    nonassigned = nonassigned - 1;
+	   
+	   if(nonassigned == 0) {
+			Cost res; 
+			bool opt;
+			get(res,opt);
+			if(opt) {
+				if (ToulBar2::verbose >= 1) cout << "nogood used in advance" << endl; 
+				cluster->deactivate();
+				WCSP* wcsp = cluster->getWCSP();
+				Cost lb = wcsp->getLb() + res - cluster->getLbRec();
+				wcsp->increaseLb(lb);
+			}
+	   }
+    }
+}
+
+
 
 void Separator::setup(Cluster* cluster_in) {
 	cluster = cluster_in;
@@ -49,12 +88,12 @@ void Separator::set( Cost c, bool opt ) {
 	delete [] t;
 }    
 
-Cost Separator::get( bool& opt ) {
+bool Separator::get( Cost& res, bool& opt ) {
 	int arity = vars.size();
 	char* t = new char [arity+1];			
 	t[arity] = '\0';
 	int i = 0;
-	Cost res = MIN_COST;
+	res = MIN_COST;
 	opt = false;
 	
 	if (ToulBar2::verbose >= 1) cout << "( ";
@@ -76,10 +115,11 @@ Cost Separator::get( bool& opt ) {
 		res += p.first;
 	    opt = p.second;
 		delete [] t;
-		return max(MIN_COST,res);
+		res = max(MIN_COST,res);
+		return true;
 	} else {
 		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND " << endl;
-		return MIN_COST;
+		return false;
 	}
 }
 
@@ -93,11 +133,12 @@ Cost Separator::get( bool& opt ) {
 /************************************************************************************************/
 // Cluster
 
-Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost)	 
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost), active( 1, &wcsp->getStore()->storeValue )	 
 {
 	lb     = MIN_COST;
 	lb_opt = MIN_COST;
 	ub	   = wcsp->getUb();
+	sep    = NULL;
 }
 
 Cluster::~Cluster() {
@@ -148,13 +189,13 @@ bool Cluster::isVar( int i ) {
 }
 
 bool Cluster::isSepVar( int i ) {
-	return sep.is(i);
+	if(!sep) return false;
+	return sep->is(i);
 }
 
 
 void 	    Cluster::setParent(Cluster* p) { parent = p; }
 Cluster*    Cluster::getParent() { return parent; }
-TVars&	    Cluster::getSep() { return sep.getVars(); }
 TClusters&	Cluster::getDescendants() { return descendants; }
 
 bool Cluster::isDescendant( Cluster* c ) {
@@ -186,9 +227,6 @@ void Cluster::updateUb( ) {
 
 void Cluster::increaseLb( Cost newlb ) {
 	lb = newlb;
-	if(newlb > lb_opt) {
-		deactivate();
-	}
 }
 
 
@@ -205,7 +243,8 @@ Cost Cluster::getLbRecNoGoods() {
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
 	Cost propalb = (*iter)->getLbRec();
     bool dummy_opt;
-	Cost nogood = (*iter)->nogoodGet(dummy_opt);
+	Cost nogood = MIN_COST;
+	nogood = (*iter)->nogoodGet(dummy_opt);
 	res += max(propalb, nogood);
   } 
   return res;	
@@ -213,17 +252,26 @@ Cost Cluster::getLbRecNoGoods() {
 
 Cost Cluster::getLbRecNoGood(bool& opt) {
   Cost propalb = getLbRec();
-  Cost nogood = nogoodGet(opt);
+  Cost nogood = MIN_COST;
+  if(isActive()) nogood = nogoodGet(opt);
   return max(propalb, nogood);
 }
 
   
 void Cluster::activate() {
+  active = 1;
+  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	(*iter)->activate();  	
+  }
 }
 
 
 
 void Cluster::deactivate() {
+  active = 0;
+  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	(*iter)->deactivate();  	
+  }
 }
 
 
@@ -289,15 +337,16 @@ void Cluster::print() {
 	} 
 	cout << "\b}";
 
-	cout << " U sep {";
-	TVars::iterator its = beginSep();
-	while(its != endSep()) {
-		cout << *its;
-		++its;
-		if(its != endSep()) cout << ",";
+	if(sep) {
+		cout << " U sep {";
+		TVars::iterator its = beginSep();
+		while(its != endSep()) {
+			cout << *its;
+			++its;
+			if(its != endSep()) cout << ",";
+		}
+		cout << "}";
 	}
-	cout << "}";
-
 
 	if (!edges.empty()) {
 	  cout << " sons {";
@@ -339,6 +388,15 @@ void Cluster::print() {
 TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in), 
   currentCluster(-1, &wcsp_in->getStore()->storeValue) {
 }
+
+bool TreeDecomposition::isInCurrentClusterSubTree(int idc) 
+{
+	Cluster* ci = getCurrentCluster();
+	Cluster* cj = getCluster(idc);
+	if(!ci->isActive() || !cj->isActive()) return false;
+	else return ci->isDescendant(cj);
+}
+
 
 void TreeDecomposition::fusions()
 {
@@ -485,6 +543,8 @@ void TreeDecomposition::buildFromOrder()
 	cout << "tree height: " << h << endl;
 	print();
 
+	
+
 	assert(verify());
 }
 
@@ -501,7 +561,24 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 		cj->removeEdge(c);
 		cj->setParent(c);
 		visited.insert(cj);
-		intersection(c->getVars(), cj->getVars(), cj->getSep());
+
+		TVars cjsep;
+		intersection(c->getVars(), cj->getVars(), cjsep);
+
+		//------- Add the constraint separator
+		int i = 0;	
+		int arity = cjsep.size();
+	    EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];
+		TVars::iterator it = cjsep.begin();
+		while(it != cjsep.end()) {
+			scopeVars[i] = (EnumeratedVariable *) wcsp->getVar(*it);
+			++it;
+			i++;
+		}
+    	cj->setSep( new Separator(wcsp,scopeVars,arity) );  
+		delete [] scopeVars;
+		//------- 
+	
 		makeRootedRec( cj, visited );
 		clusterSum(c->getDescendants(), cj->getDescendants(), c->getDescendants());
 		++itj;	
@@ -517,7 +594,6 @@ int TreeDecomposition::makeRooted( int icluster )
 	for(unsigned int i = 0; i < clusters.size(); i++) {
 		Cluster* c = clusters[i];
 		c->getDescendants().clear();
-		c->getSep().clear();
 	}
 
 	TClusters visited;

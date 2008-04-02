@@ -23,7 +23,7 @@ typedef pair <Cost,bool>   TPair;
 typedef map<string, TPair> TNoGoods;
 
 
-class Separator 
+class Separator : public AbstractNaryConstraint
 {
   private:
 
@@ -32,11 +32,16 @@ class Separator
     vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
 	  										// inicialized with iniDelta()
 
+	StoreInt nonassigned;       			// nonassigned variables during search, must be backtrackable (storeint) !
+
     TNoGoods  					  nogoods;
 
   public:
 
-	Separator();
+	Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
+	Separator(WCSP *wcsp);
+
+	void assign(int varIndex);
 
     void setup(Cluster* cluster_in);
 
@@ -44,14 +49,26 @@ class Separator
     
     void addDelta( int posvar, Value value, Cost cost ) { delta[posvar][value] += cost; }
 
-
     void set( Cost c, bool opt );
-    Cost get( bool& opt );
-    
+    bool get( Cost& res, bool& opt );
+        
     TVars::iterator  begin() { return vars.begin(); } 
     TVars::iterator  end()   { return vars.end(); } 
     bool  is(int i) { return vars.find(i) != vars.end(); } 
 
+
+	// Obliged to include these methods; if not abstract class problem
+    double computeTightness() { return 0; }
+    bool   verify() {return true;}
+    void   increase(int index) {}
+    void   decrease(int index) {}
+    void   remove(int index) {}
+    void   projectFromZero(int index) {}
+    void   fillEAC2(int index) {}
+    bool   isEAC(int index, Value a) {return true;}
+    void   findFullSupport(int index) {}	
+    void   propagate() {}
+    void   print(ostream& os) {}
 };
 
 
@@ -67,12 +84,13 @@ class Cluster {
 	  TVars				  vars;
 	  TCtrs			      ctrs;
 	  TClusters           edges;              // adjacent clusters 
-	  Separator 		  sep;
+	  Separator* 		  sep;
 
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
 	  Cost				  ub;
 	  
+	  StoreInt			  active;
 	  
 	  Cluster*			  parent;             // parent cluster
       TClusters    	      descendants;  	 // set of descendants	
@@ -90,6 +108,7 @@ class Cluster {
 
 	  bool 			isVar( int i );
 	  bool 			isSepVar( int i );
+	  bool			isActive() { int a = active; return a == 1; }
 
 	  Cost	        getLbRec();
 	  Cost	        getLbRecNoGoods();
@@ -106,6 +125,7 @@ class Cluster {
 	  TVars&		getVars() { return vars; }	
 	  TCtrs&		getCtrs() { return ctrs; }	
 	  TClusters&	getEdges() { return edges; }
+	  void 			setSep( Separator* sepin ) { sep = sepin; } 
 	  void 			addVar( Variable* x );
 	  void 			removeVar( Variable* x );
 	  void 			addVars( TVars& vars );
@@ -119,7 +139,6 @@ class Cluster {
 	  
 	  void 			setParent(Cluster* p);
 	  Cluster*		getParent();
-	  TVars&		getSep();
 	  TClusters&	getDescendants();
 	  Cluster*		nextSep( Variable* v ); 
 	  bool			isDescendant( Cluster* c2 );
@@ -132,18 +151,18 @@ class Cluster {
 	  void 			deactivate();
 	  void 			increaseLb( Cost newlb );
 
-	  void setup() { sep.setup(this); }
+	  void setup() { if(sep) sep->setup(this); }
 
 	  
-	  void addDelta( int posvar, Value value, Cost cost ) { sep.addDelta(posvar,value,cost); }
-	  void nogoodRec( Cost c, bool opt ) { sep.set(c,opt); }	
-      Cost nogoodGet( bool& opt ) { return sep.get(opt); }	
+	  void addDelta( int posvar, Value value, Cost cost ) { if(sep) sep->addDelta(posvar,value,cost); }
+	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
+      Cost nogoodGet( bool& opt ) { Cost c; sep->get(c,opt); return c; }	
 
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
-	  TVars::iterator beginSep() { return sep.begin(); }
-	  TVars::iterator endSep()   { return sep.end(); }
+	  TVars::iterator beginSep() { return sep->begin(); }
+	  TVars::iterator endSep()   { return sep->end(); }
 	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() { return edges.begin(); }
@@ -174,7 +193,8 @@ public:
 	
 	void setCurrentCluster(Cluster *c) {currentCluster = c->getId();}
     Cluster* getCurrentCluster() {return getCluster(currentCluster);}
-    bool isInCurrentClusterSubTree(int idc) {return getCurrentCluster()->isDescendant(getCluster(idc));}
+
+    bool isInCurrentClusterSubTree(int idc); 
 	
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
@@ -197,8 +217,9 @@ public:
 	
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
 
+	void desactivate( Cluster* c );
+
 	void print( Cluster* c = NULL, int recnum = 0);
-	
 };
 
 
