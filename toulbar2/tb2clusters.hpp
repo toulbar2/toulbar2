@@ -35,6 +35,8 @@ class Separator : public AbstractNaryConstraint
 	StoreInt nonassigned;       			// nonassigned variables during search, must be backtrackable (storeint) !
 
     TNoGoods  					  nogoods;
+   
+    DLink<Separator *>            linkSep;
 
   public:
 
@@ -42,6 +44,7 @@ class Separator : public AbstractNaryConstraint
 	Separator(WCSP *wcsp);
 
 	void assign(int varIndex);
+    void propagate();
 
     void setup(Cluster* cluster_in);
 
@@ -63,11 +66,6 @@ class Separator : public AbstractNaryConstraint
     void   increase(int index) {}
     void   decrease(int index) {}
     void   remove(int index) {}
-    void   projectFromZero(int index) {}
-    void   fillEAC2(int index) {}
-    bool   isEAC(int index, Value a) {return true;}
-    void   findFullSupport(int index) {}	
-    void   propagate() {}
     void   print(ostream& os) {}
 };
 
@@ -156,7 +154,7 @@ class Cluster {
 	  
 	  void addDelta( int posvar, Value value, Cost cost ) { if(sep) sep->addDelta(posvar,value,cost); }
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
-      Cost nogoodGet( bool& opt ) { Cost c; sep->get(c,opt); return c; }	
+      Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
 
 
 	  TVars::iterator beginVars() { return vars.begin(); }

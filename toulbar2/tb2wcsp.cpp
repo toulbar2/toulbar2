@@ -90,6 +90,7 @@ WCSP::WCSP(Store *s, Cost upperBound) :
         ub(upperBound),
         NCBucketSize(cost2log2gub(upperBound) + 1),
         NCBuckets(NCBucketSize, VariableList(&s->storeVariable)),
+		PendingSeparator(&s->storeSeparator),
         objectiveChanged(false),
         nbNodes(0),
         lastConflictConstr(NULL),
@@ -694,6 +695,13 @@ void WCSP::propagateEAC()
     }
 }
 
+void WCSP::propagateSeparator()
+{
+    if (ToulBar2::verbose >= 2) cout << "PendingSeparator size: " << PendingSeparator.getSize() << endl;
+    for (SeparatorList::iterator iter=PendingSeparator.begin(); iter != PendingSeparator.end(); ++iter) {
+	  (*iter)->propagate();
+	}
+}
 
 
 void WCSP::eliminate()
@@ -714,31 +722,35 @@ void WCSP::propagate()
    if (ToulBar2::vac) vac->iniThreshold();
    
    do {
-     do {
-      eliminate();
-      while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) && !AC.empty()) || (ToulBar2::LcLevel>=LC_DAC && !DAC.empty()) || (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb()) && !EAC1.empty())) {
-        propagateIncDec();
-        if (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb())) propagateEAC();
-        assert(IncDec.empty());
-		if (ToulBar2::LcLevel>=LC_DAC) propagateDAC();
-        assert(IncDec.empty());
-        if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) propagateAC();
-        assert(IncDec.empty());
-        propagateNC();
-      }
-    } while (!Eliminate.empty());
+	 do {
+	   do {
+		 eliminate();
+		 while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) && !AC.empty()) || (ToulBar2::LcLevel>=LC_DAC && !DAC.empty()) || (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb()) && !EAC1.empty())) {
+		   propagateIncDec();
+		   if (ToulBar2::LcLevel==LC_EDAC && !CSP(getLb(),getUb())) propagateEAC();
+		   assert(IncDec.empty());
+		   if (ToulBar2::LcLevel>=LC_DAC) propagateDAC();
+		   assert(IncDec.empty());
+		   if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) propagateAC();
+		   assert(IncDec.empty());
+		   propagateNC();
+		 }
+	   } while (!Eliminate.empty());
 
-    if (ToulBar2::LcLevel<LC_EDAC|| CSP(getLb(),getUb())) EAC1.clear();
-    if (ToulBar2::vac) { 
-	    assert(verify());
-    	if(vac->firstTime()) {
-    		vac->init(); 
-    		cout << "Lb before VAC: " << getLb() << endl;
-    	}
-    	vac->propagate(); 
-    }
-   } while (ToulBar2::vac && !vac->isVAC());
- 
+	   if (ToulBar2::LcLevel<LC_EDAC|| CSP(getLb(),getUb())) EAC1.clear();
+	   if (ToulBar2::vac) { 
+		 assert(verify());
+		 if(vac->firstTime()) {
+		   vac->init(); 
+		   cout << "Lb before VAC: " << getLb() << endl;
+		 }
+		 vac->propagate(); 
+	   }
+	 } while (ToulBar2::vac && !vac->isVAC());
+	 // TO BE DONE AFTER NORMAL PROPAGATION
+	 propagateSeparator();
+   } while (objectiveChanged);
+
   //revise(NULL);
 
   assert(verify());

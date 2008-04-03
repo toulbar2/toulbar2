@@ -12,6 +12,7 @@ template <class T> class BTList;
 template <class T> class DLink;
 class Constraint;
 class Variable;
+class Separator;
 class ConstraintLink;
 
 /*
@@ -186,10 +187,12 @@ public:
     StoreStack<Cost, Cost> storeCost;
     StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink> *> storeConstraint;
     StoreStack<BTList<Variable *>, DLink<Variable *> *> storeVariable;
+    StoreStack<BTList<Separator *>, DLink<Separator *> *> storeSeparator;
     
     Store(int pow) : depth(0),
         storeValue("Value",pow), storeDomain("Domain",pow), storeCost("Cost",pow), 
-        storeConstraint("Constraint",pow), storeVariable("Variable",pow) {}
+        storeConstraint("Constraint",pow), storeVariable("Variable",pow), 
+		storeSeparator("Separator",pow) {}
 
     int getDepth() const {return depth;}
     
@@ -200,6 +203,7 @@ public:
         storeDomain.store();
         storeConstraint.store();
         storeVariable.store();
+        storeSeparator.store();
     }
     
     void restore() {
@@ -209,6 +213,7 @@ public:
         storeDomain.restore();
         storeConstraint.restore();
         storeVariable.restore();
+        storeSeparator.restore();
     }
     
     void restore(int newDepth) {

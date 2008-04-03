@@ -11,7 +11,7 @@
 // NaryNogood
 
 Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
-			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
+  : AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	cluster = NULL;
     for(int i=0;i<arity_in;i++) {
@@ -21,7 +21,8 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
 		  cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; 
 		  exit(EXIT_FAILURE);
 		}
-    } 	           
+    } 	
+    linkSep.content = this;           
 }
 
 
@@ -33,29 +34,43 @@ Separator::Separator(WCSP *wcsp)
 
 
 void Separator::assign(int varIndex) {
-    if (connected(varIndex)) {
-        deconnect(varIndex);	
-	    nonassigned = nonassigned - 1;
-	   
-	   if(nonassigned == 0) {
-			Cost res; 
-			bool opt;
-			get(res,opt);
-			if(opt) {
-				if (ToulBar2::verbose >= 1) cout << "nogood used in advance" << endl; 
-				cluster->deactivate();
-				WCSP* wcsp = cluster->getWCSP();
-				Cost lb = wcsp->getLb() + res - cluster->getLbRec();
-				wcsp->increaseLb(lb);
-			}
-	   }
-    }
+  if (connected(varIndex)) {
+	deconnect(varIndex);	
+	nonassigned = nonassigned - 1;
+	assert(nonassigned >= 0);
+	if(nonassigned == 0 && cluster->isActive()) {
+	  wcsp->queueSeparator(&linkSep);
+	}
+  }
+}
+
+
+void Separator::propagate() {
+  for(int i=0;connected() && i<arity_;i++) {         
+	if (getVar(i)->assigned()) assign(i);
+  }
+  if(nonassigned == 0 && cluster->isActive()) {
+	wcsp->unqueueSeparator(&linkSep);
+	Cost res; 
+	bool opt;
+	get(res,opt);
+	if(opt) {
+	  Cost lbpropa = cluster->getLbRec();
+	  Cost lb = res - lbpropa;
+	  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl; 
+	  assert(lb >= MIN_COST);
+	  cluster->deactivate();
+	  cluster->getParent()->increaseLb(cluster->getParent()->getLb()+lbpropa);
+	  if (lb>MIN_COST) projectLB(lb);
+	}
+  }
 }
 
 
 
 void Separator::setup(Cluster* cluster_in) {
 	cluster = cluster_in;
+	AbstractNaryConstraint::cluster = cluster_in->getParent()->getId();
 	delta.clear();
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
@@ -84,6 +99,7 @@ void Separator::set( Cost c, bool opt ) {
 	}
 	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
+	assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
 	nogoods[string(t)] = TPair(max(MIN_COST, c + deltares), opt); 
 	delete [] t;
 }    
@@ -110,7 +126,7 @@ bool Separator::get( Cost& res, bool& opt ) {
 	TNoGoods::iterator itng = nogoods.find(string(t));
 	if(itng != nogoods.end()) {
 		TPair p = itng->second;
-		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << endl;
+		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
 		assert(!p.second || res + p.first >= MIN_COST);
 		res += p.first;
 	    opt = p.second;
@@ -118,7 +134,8 @@ bool Separator::get( Cost& res, bool& opt ) {
 		res = max(MIN_COST,res);
 		return true;
 	} else {
-		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND " << endl;
+	    res = MIN_COST;
+		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluser " <<  cluster->getId() << endl;
 		return false;
 	}
 }
@@ -231,16 +248,19 @@ void Cluster::increaseLb( Cost newlb ) {
 
 
 Cost Cluster::getLbRec() {
+  assert(isActive());
   Cost res = lb; 
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
-	res += (*iter)->getLbRec();
+	if((*iter)->isActive()) res += (*iter)->getLbRec();
   } 
   return res; 
 }
 
 Cost Cluster::getLbRecNoGoods() {
+  assert(isActive());
   Cost res = lb;
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	if(!(*iter)->isActive()) continue;
 	Cost propalb = (*iter)->getLbRec();
     bool dummy_opt;
 	Cost nogood = MIN_COST;
@@ -251,9 +271,10 @@ Cost Cluster::getLbRecNoGoods() {
 }
 
 Cost Cluster::getLbRecNoGood(bool& opt) {
+  assert(isActive());
   Cost propalb = getLbRec();
   Cost nogood = MIN_COST;
-  if(isActive()) nogood = nogoodGet(opt);
+  nogood = nogoodGet(opt);
   return max(propalb, nogood);
 }
 
@@ -393,7 +414,8 @@ bool TreeDecomposition::isInCurrentClusterSubTree(int idc)
 {
 	Cluster* ci = getCurrentCluster();
 	Cluster* cj = getCluster(idc);
-	if(!ci->isActive() || !cj->isActive()) return false;
+	assert(ci->isActive());
+	if(!cj->isActive()) return false;
 	else return ci->isDescendant(cj);
 }
 

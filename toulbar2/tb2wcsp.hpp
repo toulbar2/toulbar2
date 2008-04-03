@@ -33,6 +33,7 @@ class WCSP : public WeightedCSP {
     Queue EAC1;                               // non backtrackable list
     Queue EAC2;                               // non backtrackable list
     Queue Eliminate;                          // non backtrackable list
+    SeparatorList PendingSeparator;
     bool objectiveChanged;
     Long nbNodes;                             // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
@@ -192,7 +193,9 @@ public:
     void queueEAC1(DLink<VariableWithTimeStamp> *link) {EAC1.push(link, nbNodes);}
     void queueEAC2(DLink<VariableWithTimeStamp> *link) {EAC2.push(link, nbNodes);}
     void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }  
-    
+    void queueSeparator(DLink<Separator *> *link) { PendingSeparator.push_back(link, true); }
+    void unqueueSeparator(DLink<Separator *> *link) { PendingSeparator.erase(link, true); }
+
     void propagateNC();
     void propagateIncDec();
     void propagateAC();
@@ -200,6 +203,7 @@ public:
     void fillEAC2();
     Queue *getQueueEAC1() {return &EAC1;}
     void propagateEAC();
+    void propagateSeparator();
 
     void sortVariables();
     void sortConstraints();

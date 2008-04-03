@@ -137,6 +137,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost cub)
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " lb= " << lb << endl;
 	for (TClusters::iterator iter = cluster->beginEdges(); lb < cub && iter!= cluster->endEdges(); ++iter) {
 	  Cluster* c = *iter;
+	  if (!c->isActive()) continue;
 	  bool opt = false;
 	  Cost lbSon = c->getLbRecNoGood(opt);
 	  if (!opt) {

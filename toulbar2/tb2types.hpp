@@ -6,8 +6,8 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
-#define INT_COST
-//#define LONGLONG_COST
+//#define INT_COST
+#define LONGLONG_COST
 //#define PARETOPAIR_COST
 
 //#define DOUBLE_PROB
@@ -204,6 +204,7 @@ class Constraint;
 class WCSP;
 class Solver;
 class Cluster;
+class Separator;
 class TreeDecomposition;
 
 struct ValueCost
