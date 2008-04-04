@@ -34,6 +34,8 @@ class Separator : public AbstractNaryConstraint
 
 	StoreInt nonassigned;       			// nonassigned variables during search, must be backtrackable (storeint) !
     StoreInt isUsed;
+    StoreCost lbPrevious;
+    StoreInt optPrevious;
 
     TNoGoods  					  nogoods;
    

@@ -122,7 +122,7 @@ public:
             }
             
             index = y - 1;
-            base = (long) pointers[y];
+            base = (int) pointers[y];
         }
     }
 };

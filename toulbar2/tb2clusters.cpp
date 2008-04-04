@@ -11,7 +11,7 @@
 // NaryNogood
 
 Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
-  : AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue), isUsed(false, &wcsp->getStore()->storeValue)
+  : AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue), isUsed(false, &wcsp->getStore()->storeValue), lbPrevious(MIN_COST, &wcsp->getStore()->storeCost), optPrevious(false, &wcsp->getStore()->storeValue)
 {
 	cluster = NULL;
 	char* tbuf = new char [arity_in+1];
@@ -34,7 +34,7 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
 
 
 Separator::Separator(WCSP *wcsp)
-			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue), isUsed(0, &wcsp->getStore()->storeValue)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue), isUsed(0, &wcsp->getStore()->storeValue), lbPrevious(MIN_COST, &wcsp->getStore()->storeCost), optPrevious(false, &wcsp->getStore()->storeValue)
 {
 }
 
@@ -55,23 +55,37 @@ void Separator::propagate() {
   for(int i=0;connected() && i<arity_;i++) {         
 	if (getVar(i)->assigned()) assign(i);
   }
-  if(nonassigned == 0 && cluster->isActive() && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
+  if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
 	Cost res = MIN_COST; 
 	bool opt = false;
 	get(res,opt);
-	Cost lbpropa = cluster->getLbRec();
-	Cost lb = res - lbpropa;
-	if(opt || lb>MIN_COST) {
-	  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl; 
-	  assert(lb >= MIN_COST);
-	  unqueueSep();
-	  // atomic operations:
-	  isUsed = true;
-	  cluster->deactivate();
-	  cluster->getParent()->increaseLb(cluster->getParent()->getLb()+lbpropa);
-	  if (lb>MIN_COST) projectLB(lb);
-	  // end of atomic operations.
-	}
+	if (cluster->isActive()) {
+	  Cost lbpropa = cluster->getLbRec();
+	  Cost lb = res - lbpropa;
+	  if(opt || lb>MIN_COST) {
+		if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl; 
+		assert(lb >= MIN_COST);
+		if (opt) unqueueSep();
+		// atomic operations:
+		isUsed = true;
+		cluster->deactivate();
+		cluster->getParent()->increaseLb(cluster->getParent()->getLb()+lbpropa);
+		if (lb>MIN_COST) projectLB(lb); // project into global lb and into parent cluster
+		lbPrevious = res;
+		optPrevious = opt;
+		// end of atomic operations.
+	  }
+	} else if (isUsed) {
+	  if (res > lbPrevious || (opt==true && optPrevious==false)) {
+		if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbPrevious=" << lbPrevious << " ,optPrevious=" << optPrevious << " ,res=" << res << " ,opt=" << opt << ")" << endl; 
+		if (opt) unqueueSep();
+		// atomic operations:
+		if (res > lbPrevious) projectLB(res - lbPrevious); // project into global lb and into parent cluster
+		lbPrevious = res;
+		optPrevious = opt;
+		// end of atomic operations.		
+	  }
+	} else assert(false);
   }
 }
 
@@ -104,7 +118,7 @@ void Separator::set( Cost c, bool opt ) {
 		i++;
 	}
 	assert(!opt || c + deltares >= MIN_COST);
-	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << " on cluster " << cluster->getId() << endl;
+	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
 	assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
 	nogoods[t] = TPair(max(MIN_COST, c + deltares), opt); 
 }    
@@ -128,7 +142,7 @@ bool Separator::get( Cost& res, bool& opt ) {
 	TNoGoods::iterator itng = nogoods.find(t);
 	if(itng != nogoods.end()) {
 		TPair p = itng->second;
-		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << res << "," << p.second << " on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
+		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << res << " (opt=" << p.second << ") on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
 		assert(!p.second || res + p.first >= MIN_COST);
 		res += p.first;
 	    opt = p.second;
@@ -486,8 +500,8 @@ bool TreeDecomposition::fusion( )
 				}
 				c->removeEdge(c);
 				clusters[ cj->getId() ] = NULL;
-				delete cj;
 				if (ToulBar2::verbose >= 1) { cout << "fusion ci " <<  c->getId() << ",  cj " <<  cj->getId() << endl; c->print(); }
+				delete cj;
 				return true;
 			}
 			++it;	
