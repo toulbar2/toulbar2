@@ -577,7 +577,7 @@ bool WCSP::verify()
 {
     for (unsigned int i=0; i<vars.size(); i++) {
 	    if(vars[i]->unassigned()) { 
-		    if (td) { if(td->isInCurrentClusterSubTree(vars[i]->getCluster()))  if(!vars[i]->verifyNC()) return false; }
+		    if (td) { if(td->isActiveAndInCurrentClusterSubTree(vars[i]->getCluster()))  if(!vars[i]->verifyNC()) return false; }
 			else if(!vars[i]->verifyNC()) return false;
 	    }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
@@ -635,7 +635,7 @@ void WCSP::propagateNC()
                 Variable *x = *iter;
                 ++iter; // Warning! the iterator could be moved to another place by propagateNC
                 if (x->unassigned() && CUT(x->getMaxCost() + getLb(), getUb())) {
-				  if (td) { if(td->isInCurrentClusterSubTree(x->getCluster()))  x->propagateNC(); }
+				  if (td) { if(td->isActiveAndInCurrentClusterSubTree(x->getCluster()))  x->propagateNC(); }
 				  else x->propagateNC();
 				}
             }
@@ -703,6 +703,13 @@ void WCSP::propagateSeparator()
 	}
 }
 
+//  void WCSP::clearPendingSeparator(int clusterid)
+//  {
+//    if (ToulBar2::verbose >= 2) cout << "clear PendingSeparator (size: " << PendingSeparator.getSize() << ")" << endl;
+//    for (SeparatorList::iterator iter=PendingSeparator.begin(); iter != PendingSeparator.end(); ++iter) {
+//  	(*iter)->unqueueSep();
+//    }
+//  }
 
 void WCSP::eliminate()
 {

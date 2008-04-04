@@ -11,10 +11,13 @@
 // NaryNogood
 
 Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
-  : AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
+  : AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue), isUsed(false, &wcsp->getStore()->storeValue)
 {
 	cluster = NULL;
+	char* tbuf = new char [arity_in+1];
+	tbuf[arity_in] = '\0';
     for(int i=0;i<arity_in;i++) {
+    	tbuf[i] = CHAR_FIRST;
     	int domsize = scope_in[i]->getDomainInitSize();
     	vars.insert(  scope_in[i]->wcspIndex );
         if(domsize + CHAR_FIRST > 125) {
@@ -22,13 +25,16 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
 		  exit(EXIT_FAILURE);
 		}
     } 	
+	t = string(tbuf);
+	delete [] tbuf; 
+	
     linkSep.content = this;           
 }
 
 
 
 Separator::Separator(WCSP *wcsp)
-			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue), isUsed(0, &wcsp->getStore()->storeValue)
 {
 }
 
@@ -39,7 +45,7 @@ void Separator::assign(int varIndex) {
 	nonassigned = nonassigned - 1;
 	assert(nonassigned >= 0);
 	if(nonassigned == 0 && cluster->isActive()) {
-	  wcsp->queueSeparator(&linkSep);
+	  queueSep();
 	}
   }
 }
@@ -49,19 +55,22 @@ void Separator::propagate() {
   for(int i=0;connected() && i<arity_;i++) {         
 	if (getVar(i)->assigned()) assign(i);
   }
-  if(nonassigned == 0 && cluster->isActive()) {
-	wcsp->unqueueSeparator(&linkSep);
-	Cost res; 
-	bool opt;
+  if(nonassigned == 0 && cluster->isActive() && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
+	Cost res = MIN_COST; 
+	bool opt = false;
 	get(res,opt);
-	if(opt) {
-	  Cost lbpropa = cluster->getLbRec();
-	  Cost lb = res - lbpropa;
+	Cost lbpropa = cluster->getLbRec();
+	Cost lb = res - lbpropa;
+	if(opt || lb>MIN_COST) {
 	  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl; 
 	  assert(lb >= MIN_COST);
+	  unqueueSep();
+	  // atomic operations:
+	  isUsed = true;
 	  cluster->deactivate();
 	  cluster->getParent()->increaseLb(cluster->getParent()->getLb()+lbpropa);
 	  if (lb>MIN_COST) projectLB(lb);
+	  // end of atomic operations.
 	}
   }
 }
@@ -81,9 +90,6 @@ void Separator::setup(Cluster* cluster_in) {
 }
 
 void Separator::set( Cost c, bool opt ) { 
-	int arity = vars.size();
-	char* t = new char [arity+1];			
-	t[arity] = '\0';
 	int i = 0;
 	Cost deltares = MIN_COST;
 	if (ToulBar2::verbose >= 1) cout << "( ";
@@ -98,16 +104,12 @@ void Separator::set( Cost c, bool opt ) {
 		i++;
 	}
 	assert(!opt || c + deltares >= MIN_COST);
-	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + " << deltares << " on cluster " << cluster->getId() << endl;
+	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << " on cluster " << cluster->getId() << endl;
 	assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
-	nogoods[string(t)] = TPair(max(MIN_COST, c + deltares), opt); 
-	delete [] t;
+	nogoods[t] = TPair(max(MIN_COST, c + deltares), opt); 
 }    
 
 bool Separator::get( Cost& res, bool& opt ) {
-	int arity = vars.size();
-	char* t = new char [arity+1];			
-	t[arity] = '\0';
 	int i = 0;
 	res = MIN_COST;
 	opt = false;
@@ -123,14 +125,13 @@ bool Separator::get( Cost& res, bool& opt ) {
 	  ++it;
 	  i++;
 	}
-	TNoGoods::iterator itng = nogoods.find(string(t));
+	TNoGoods::iterator itng = nogoods.find(t);
 	if(itng != nogoods.end()) {
 		TPair p = itng->second;
-		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << res << "," << p.first << "," << p.second << " on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
+		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << res << "," << p.second << " on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
 		assert(!p.second || res + p.first >= MIN_COST);
 		res += p.first;
 	    opt = p.second;
-		delete [] t;
 		res = max(MIN_COST,res);
 		return true;
 	} else {
@@ -150,7 +151,7 @@ bool Separator::get( Cost& res, bool& opt ) {
 /************************************************************************************************/
 // Cluster
 
-Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost), active( 1, &wcsp->getStore()->storeValue )	 
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(MIN_COST, &wcsp->getStore()->storeCost), active( true, &wcsp->getStore()->storeValue )	 
 {
 	lb     = MIN_COST;
 	lb_opt = MIN_COST;
@@ -279,19 +280,23 @@ Cost Cluster::getLbRecNoGood(bool& opt) {
 }
 
   
-void Cluster::activate() {
-  active = 1;
+void Cluster::reactivate() {
+  assert(!isActive());
+  active = true;
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
-	(*iter)->activate();  	
+	assert(!(*iter)->isActive());
+	if (!(*iter)->sep->used()) (*iter)->reactivate();  	
   }
 }
 
 
-
 void Cluster::deactivate() {
-  active = 0;
-  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
-	(*iter)->deactivate();  	
+  if (isActive()) {
+	if (ToulBar2::verbose >= 1) cout << "deactive cluster " << getId() << endl;
+	active = false;
+	for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+	  (*iter)->deactivate();  	
+	}
   }
 }
 
@@ -411,6 +416,14 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in),
 }
 
 bool TreeDecomposition::isInCurrentClusterSubTree(int idc) 
+{
+	Cluster* ci = getCurrentCluster();
+	Cluster* cj = getCluster(idc);
+	assert(ci->isActive());
+	return ci->isDescendant(cj);
+}
+
+bool TreeDecomposition::isActiveAndInCurrentClusterSubTree(int idc) 
 {
 	Cluster* ci = getCurrentCluster();
 	Cluster* cj = getCluster(idc);

@@ -33,18 +33,27 @@ class Separator : public AbstractNaryConstraint
 	  										// inicialized with iniDelta()
 
 	StoreInt nonassigned;       			// nonassigned variables during search, must be backtrackable (storeint) !
+    StoreInt isUsed;
 
     TNoGoods  					  nogoods;
    
     DLink<Separator *>            linkSep;
 
+	string t; // buffer for a tuple                   
+	
+	
   public:
 
 	Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
 	Separator(WCSP *wcsp);
 
+    void queueSep() { wcsp->queueSeparator(&linkSep); }
+    void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
+
 	void assign(int varIndex);
     void propagate();
+
+    bool used() { return isUsed; }
 
     void setup(Cluster* cluster_in);
 
@@ -82,7 +91,6 @@ class Cluster {
 	  TVars				  vars;
 	  TCtrs			      ctrs;
 	  TClusters           edges;              // adjacent clusters 
-	  Separator* 		  sep;
 
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
@@ -94,6 +102,8 @@ class Cluster {
       TClusters    	      descendants;  	 // set of descendants	
 
  public:
+	  Separator* 		  sep;
+
 	  Cluster (TreeDecomposition* tdin);
 	  ~Cluster();
 
@@ -145,7 +155,7 @@ class Cluster {
       // ----------------------------------------------------------
 	  Cost 			eval(TAssign* a);
 	  void 			setWCSP();                              // sets the WCSP to the cluster problem, deconnecting the rest
-	  void 			activate();
+	  void 			reactivate();
 	  void 			deactivate();
 	  void 			increaseLb( Cost newlb );
 
@@ -193,6 +203,7 @@ public:
     Cluster* getCurrentCluster() {return getCluster(currentCluster);}
 
     bool isInCurrentClusterSubTree(int idc); 
+    bool isActiveAndInCurrentClusterSubTree(int idc); 
 	
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
@@ -214,8 +225,6 @@ public:
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
 	
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
-
-	void desactivate( Cluster* c );
 
 	void print( Cluster* c = NULL, int recnum = 0);
 };

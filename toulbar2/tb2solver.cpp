@@ -650,7 +650,7 @@ bool Solver::solve()
 			    td->setCurrentCluster(td->getRoot());
 				td->getRoot()->setLb(wcsp->getLb());
         		Cost ub_old = wcsp->getUb();
-        		Cost res = recursiveSolve(td->getRoot(), ub_old);
+        		Cost res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old);
         		wcsp->setUb( min(res, ub_old) );
         	}	
         	else recursiveSolve();
