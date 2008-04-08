@@ -28,33 +28,39 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
 	t = string(tbuf);
 	delete [] tbuf; 
 	
-    linkSep.content = this;           
+    linkSep.content = this;
+    
+    // initial "delayed" propagation
+	for(int i=0;connected() && i<arity_;i++) {         
+	  if (getVar(i)->assigned()) assign(i);
+	}              
 }
 
 
-
 Separator::Separator(WCSP *wcsp)
-			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue), isUsed(0, &wcsp->getStore()->storeValue), lbPrevious(MIN_COST, &wcsp->getStore()->storeCost), optPrevious(false, &wcsp->getStore()->storeValue)
+			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue), isUsed(false, &wcsp->getStore()->storeValue), lbPrevious(MIN_COST, &wcsp->getStore()->storeCost), optPrevious(false, &wcsp->getStore()->storeValue)
 {
 }
 
 
-void Separator::assign(int varIndex) {
+void Separator::assign(int varIndex)
+{
   if (connected(varIndex)) {
 	deconnect(varIndex);	
 	nonassigned = nonassigned - 1;
 	assert(nonassigned >= 0);
-	if(nonassigned == 0 && cluster->isActive()) {
+	if(nonassigned == 0) {
+	  assert(cluster->isActive());
 	  queueSep();
 	}
   }
 }
 
 
-void Separator::propagate() {
-  for(int i=0;connected() && i<arity_;i++) {         
-	if (getVar(i)->assigned()) assign(i);
-  }
+void Separator::propagate()
+{
+
+
   if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
 	Cost res = MIN_COST; 
 	bool opt = false;
@@ -75,7 +81,7 @@ void Separator::propagate() {
 		optPrevious = opt;
 		// end of atomic operations.
 	  }
-	} else if (isUsed) {
+	} else if (isUsed && cluster->getParent()->isActive()) {
 	  if (res > lbPrevious || (opt==true && optPrevious==false)) {
 		if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbPrevious=" << lbPrevious << " ,optPrevious=" << optPrevious << " ,res=" << res << " ,opt=" << opt << ")" << endl; 
 		if (opt) unqueueSep();
@@ -85,7 +91,7 @@ void Separator::propagate() {
 		optPrevious = opt;
 		// end of atomic operations.		
 	  }
-	} else assert(false);
+	}
   }
 }
 
@@ -171,6 +177,7 @@ Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), lb(
 	lb_opt = MIN_COST;
 	ub	   = wcsp->getUb();
 	sep    = NULL;
+	parent = NULL;
 }
 
 Cluster::~Cluster() {
@@ -231,7 +238,7 @@ Cluster*    Cluster::getParent() { return parent; }
 TClusters&	Cluster::getDescendants() { return descendants; }
 
 bool Cluster::isDescendant( Cluster* c ) {
-	return descendants.find( c ) != descendants.end(); 
+	return quickdescendants[c->getId()];
 }
 
 Cluster* Cluster::nextSep( Variable* v ) { 
@@ -535,14 +542,26 @@ void TreeDecomposition::buildFromOrder()
 	} 
 	clusters.clear();
 
+	set<Constraint*> handleTernaries;
+
+    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+    	Constraint* ctr = wcsp->getCtr(i);
+    	if (ctr->connected()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+    			if(tctr->xy->connected()) { handleTernaries.insert(tctr); }
+    			if(tctr->xz->connected()) { handleTernaries.insert(tctr); }
+    			if(tctr->yz->connected()) { handleTernaries.insert(tctr); }    			
+    		} 
+    	}
+    }
+
 	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
 		Cluster* c = new Cluster( this );
 		c->id = i;
 		c->addVar( wcsp->getVar( order[i] ) );
 		clusters.push_back( c );
 	}
-	
-	
 	set<Constraint*> usedctrs;
 	
 	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
@@ -575,8 +594,6 @@ void TreeDecomposition::buildFromOrder()
 				break;
 			}
 		} 
-		
-		   
 	}	
 	if (ToulBar2::verbose >= 1) { 
 		cout << "----- Before fusions process: " << endl;
@@ -588,7 +605,23 @@ void TreeDecomposition::buildFromOrder()
 		cout << "----- fusions process starting... " << endl;
 	}
 	fusions();
-	int h = makeRooted(0);
+
+	for(unsigned int i = 0; i < clusters.size(); i++) {
+		Cluster* c = clusters[i];
+		c->getDescendants().clear();
+	}
+
+
+	set<Constraint*>::iterator itr = handleTernaries.begin();
+	while(itr != handleTernaries.end()) {
+		TernaryConstraint* tctr = (TernaryConstraint*) *itr;
+		tctr->xy->setCluster( tctr->getCluster() );
+		tctr->xz->setCluster( tctr->getCluster() );
+		tctr->yz->setCluster( tctr->getCluster() );
+		++itr;
+	} 
+
+	int h = makeRooted();
 	cout << "tree height: " << h << endl;
 	print();
 
@@ -634,49 +667,63 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 	}	
 }
 
-int TreeDecomposition::makeRooted( int icluster )
+int TreeDecomposition::makeRooted()
 {
-	Cluster* root = clusters[icluster];
+	TClusters visited;
 	roots.clear();
-	roots.push_back(root);
-
-	for(unsigned int i = 0; i < clusters.size(); i++) {
-		Cluster* c = clusters[i];
-		c->getDescendants().clear();
+	Cluster* root;
+ 
+	while(visited.size() < clusters.size()) {
+		root = getBiggerCluster(visited);
+		roots.push_back(root);
+		visited.insert(root);
+		makeRootedRec(root, visited);
 	}
 
-	TClusters visited;
-	root->setParent( NULL );
-	visited.insert(root);
-	makeRootedRec(root, visited);
+	if(roots.size() > 1) {
+		root = new Cluster( this );
+		root->id = clusters.size();
+		clusters.push_back( root );
 
-
+	    for (list<Cluster*>::iterator iter = roots.begin(); iter!= roots.end(); ++iter) {
+			Cluster* oneroot = *iter;
+			root->addEdge(oneroot);
+			oneroot->setParent(root);
+			root->getDescendants().insert( root );
+			clusterSum(root->getDescendants(), oneroot->getDescendants(), root->getDescendants());
+	    }
+	    roots.clear();
+	    roots.push_back( root );
+	}
+	
+	
 	for(unsigned int i = 0; i < clusters.size(); i++) {
 		Cluster* c = clusters[i];
-
+	
+		c->quickdescendants.clear();
+		for(unsigned int j = 0; j < clusters.size(); j++) {
+			c->quickdescendants.push_back( c->descendants.find( clusters[j] ) != c->descendants.end() );
+		}
+		
 		TCtrs::iterator itctr = c->beginCtrs();
 		while(itctr != c->endCtrs()) {
 			Constraint* ctr = *itctr;
 			ctr->setCluster(c->getId());
 			++itctr;
 		}
-
+		if(c->sep) c->sep->setSep();
 		int posx = 0;
 		TVars::iterator itv = c->beginVars();
 		while(itv != c->endVars()) {
 			Variable* var = wcsp->getVar(*itv);
 			if(!c->isSepVar( var->wcspIndex )) var->setCluster(c->getId());
-			else var->addCluster(c->getId(), posx++);  // we add the cluster and also the position of the variable for the delta stucture
+			else {
+				var->setSep();
+				var->addCluster(c->getId(), posx++);  // we add the cluster and also the position of the variable for the delta stucture
+			}
 			++itv;
 		}
-		
 		c->setup();
-	}
-
-
-	if(visited.size() < clusters.size()) {
-		// it was a forest and not a tree
-		assert(false);
 	}
 
 	return height(root);
@@ -785,6 +832,32 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
 	}
   }
 }
+
+
+
+Cluster* TreeDecomposition::getBiggerCluster( TClusters& visited ) {
+	Cluster* cmax = NULL;
+	int maxsize = 0;
+	
+	for(unsigned int i = 0; i < clusters.size(); i++) {
+		Cluster* c = clusters[i];
+		if(visited.find(c) == visited.end()) {
+			if(c->getNbVars() > maxsize) {
+				maxsize = c->getNbVars();
+				cmax = c;
+			}
+		}
+	}
+	return cmax;
+}
+
+
+
+
+
+
+
+
 
 void TreeDecomposition::print( Cluster* c, int recnum )
 {

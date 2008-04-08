@@ -34,6 +34,7 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
     linkIncDecQueue.content.incdec = NOTHING_EVENT;
     linkEliminateQueue.content.var = this;
     linkEliminateQueue.content.timeStamp = -1;
+    isSep_ = false;
 }
 
 DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
@@ -206,6 +207,8 @@ BinaryConstraint* Variable::getConstr( Variable* x )
 	BinaryConstraint* ctr2;
 	TernaryConstraint* ctr3;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+		if((*iter).constr->isSep()) continue;
+		
     	if ((*iter).constr->arity() == 2) {
     		ctr2 = (BinaryConstraint*) (*iter).constr;
   			if(ctr2->getIndex(x) >= 0) return ctr2;
@@ -229,6 +232,8 @@ TernaryConstraint* Variable::getConstr( Variable* x, Variable* y )
 {
 	TernaryConstraint* ctr;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    	if((*iter).constr->isSep()) continue;
+    	
     	if ((*iter).constr->arity() == 3) {
     		ctr = (TernaryConstraint*) (*iter).constr;
     		if((ctr->getIndex(x)  >= 0) && (ctr->getIndex(y)  >= 0)) return ctr;    		
@@ -243,6 +248,7 @@ TernaryConstraint* Variable::existTernary()
 {
 	TernaryConstraint* ctr;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+		if((*iter).constr->isSep()) continue;
     	if ((*iter).constr->arity() == 3) {
     		ctr = (TernaryConstraint*) (*iter).constr;
 			return ctr;    		
@@ -260,6 +266,7 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
 	TernaryConstraint *tctr1 = NULL; 
 	
  	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+  	   if((*iter).constr->isSep()) continue;
  	   if((*iter).constr->arity() == 2) {
 	 	  BinaryConstraint* bctr = (BinaryConstraint*) (*iter).constr;
 	 	  double bintight = bctr->getTightness();

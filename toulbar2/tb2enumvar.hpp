@@ -94,7 +94,7 @@ public:
 
     void eliminate();
     void elimVar( BinaryConstraint* xy );
-    void elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
+    bool elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
 
     class iterator;

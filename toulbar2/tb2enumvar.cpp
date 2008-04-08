@@ -7,7 +7,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
-
+#include "tb2clusters.hpp"
 
 /*
  * Constructors and misc.
@@ -500,7 +500,7 @@ void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 
 // eliminates the current (this) variable that participates
 // in two binary constraints (its links ara xylink and xzlink)
-void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink )
+bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink )
 {
   	 assert(getDegree() == 2);
      xylink.constr->deconnect(); 	            
@@ -509,9 +509,15 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
 	 EnumeratedVariable *z = (EnumeratedVariable *) wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
 	    
+	 if(y->isSep() && z->isSep()) return false;  
+	    
+	    
 	 BinaryConstraint* yz = y->getConstr(z);
+
+	 	
+
      BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
-	 	 wcsp->elimBinOrderInc(); 
+ 	 wcsp->elimBinOrderInc(); 
 
 	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
@@ -534,13 +540,14 @@ void EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 		 yz = yznew;
 	 	 yz->reconnect();
 	 }	
-
 	 // to be done before propagation
 	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL};
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	 wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
 	 wcsp->elimOrderInc();
+	 if(wcsp->getTreeDec()) yz->setCluster( getCluster() );
      yz->propagate(); 
+     return true;
 }
 
 // eliminates the current (this) variable that participates
@@ -611,7 +618,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	 }}
 
 	if(!yz->connected()) yz->reconnect();
-	
+
+
 	// to be done before propagation
 	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
 	wcsp->elimInfos[wcsp->getElimOrder()] = ei;
@@ -623,6 +631,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 
 void EnumeratedVariable::eliminate()
 {
+	if(isSep_) return;
+	
     if (ToulBar2::elimDegree_preprocessing_ >= 0 && 
         (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) || 
          getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
@@ -648,7 +658,7 @@ void EnumeratedVariable::eliminate()
 				xzlink = *constrs.rbegin();
 			    if(xzlink.constr->arity() > 2) return;
 
-				elimVar(xylink,xzlink);		
+				if(!elimVar(xylink,xzlink)) return;		
 			} else {
 				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;	
 				elimVar( xy );

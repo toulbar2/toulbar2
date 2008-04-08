@@ -15,11 +15,13 @@ Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflict
 {
     w->link(this);
     tight = -1;
+    isSep_ = false;
 }
 
 Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), conflictWeight(1)
 {
     tight = -1;
+    isSep_ = false;
 }
 
 void Constraint::projectLB(Cost cost)

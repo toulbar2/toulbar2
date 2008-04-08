@@ -101,7 +101,6 @@ class Cluster {
 	  StoreInt			  active;
 	  
 	  Cluster*			  parent;             // parent cluster
-      TClusters    	      descendants;  	 // set of descendants	
 
  public:
 	  Separator* 		  sep;
@@ -153,6 +152,8 @@ class Cluster {
 	  Cluster*		nextSep( Variable* v ); 
 	  bool			isDescendant( Cluster* c2 );
 	  
+      TClusters     descendants;  	   // set of descendants	
+	  vector<bool>  quickdescendants;	
 	  
       // ----------------------------------------------------------
 	  Cost 			eval(TAssign* a);
@@ -211,7 +212,7 @@ public:
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
 	bool fusion();          		            // one fusion step
 
-	int      makeRooted( int icluster );
+	int      makeRooted();
 	void     makeRootedRec( Cluster* c,  TClusters& visited );
 	Cluster* getRoot() {return roots.front();}
 	 
@@ -227,6 +228,8 @@ public:
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
 	
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
+
+	Cluster* getBiggerCluster( TClusters& visited );
 
 	void print( Cluster* c = NULL, int recnum = 0);
 };

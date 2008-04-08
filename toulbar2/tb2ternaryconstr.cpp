@@ -5,6 +5,7 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Constructors and misc.
@@ -125,6 +126,46 @@ void TernaryConstraint::dump(ostream& os)
  * Propagation methods
  * 
  */
+bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+{
+	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    // hard binary constraint costs are not changed
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,cost);
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+    Cost oldcost = x->getCost(value);
+    x->project(value, cost);
+    return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
+}
+
+void  TernaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+{
+	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,-cost);
+    deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
+    x->extend(value, cost);
+}
+
+
+void TernaryConstraint::project(BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
+	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+    for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+        addcost(x,y,z,valx,valy,*iterZ,-cost);
+    }
+    xy->addcost(x,y,valx,valy,cost);
+}
+
+void TernaryConstraint::extend(BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
+	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+    for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+        addcost(x,y,z,valx,valy,*iterZ,cost);
+    }
+    assert(xy->connected());
+    xy->addcost(x,y,valx,valy,-cost);
+}
+
+
 
 void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
@@ -345,6 +386,10 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
             project(yzin,yy,zz,xx,*itery,*iterz,mincost);
         }
     }}
+ 
+	if(wcsp->getTreeDec()) {
+		yzin->setCluster( getCluster() );
+	}
     
     if (flag) {
         yzin->reconnect();
