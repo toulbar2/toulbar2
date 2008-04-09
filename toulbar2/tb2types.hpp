@@ -163,6 +163,7 @@ public:
     static int pedigreeCorrectionMode;
     static int vac;
     static Cost costThreshold;
+    static Cost costThresholdPre;
     static Cost costMultiplier;
     static Cost relaxThreshold;
     static ElimOrderType elimOrderType;

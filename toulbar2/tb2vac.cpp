@@ -117,7 +117,10 @@ void VACExtension::nextScaleCost() {
 		++it;
 	}
 	if(!done)  c  = itThreshold / (UNIT_COST+UNIT_COST);
-	if(c < ToulBar2::costThreshold) c = MIN_COST;
+	
+    if (wcsp->getStore()->getDepth() == 0) {
+	       if(c < ToulBar2::costThresholdPre) c = MIN_COST;
+    } else if(c < ToulBar2::costThreshold) c = MIN_COST;
 	
 	itThreshold = c;	
 }

@@ -66,6 +66,7 @@ int ToulBar2::pedigreeCorrectionMode = 0;
 
 int  ToulBar2::vac = 0;
 Cost ToulBar2::costThreshold = UNIT_COST;
+Cost ToulBar2::costThresholdPre = UNIT_COST;
 Cost ToulBar2::costMultiplier = UNIT_COST;
 Cost ToulBar2::relaxThreshold = MIN_COST;
 
@@ -1133,6 +1134,10 @@ void WCSP::variableElimination( EnumeratedVariable* var )
 			c1  = (*it1).constr;
 			c2  = (*it2).constr;
 			csum = sum(c1,c2);
+			
+			if(getTreeDec()) {
+				csum->setCluster( var->getCluster() );
+			}
 		}
 	   	project(csum, var);
 	}

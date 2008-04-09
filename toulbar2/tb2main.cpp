@@ -154,6 +154,7 @@ int main(int argc, char **argv)
         cerr << "   M[integer] : Min Sum Diffusion on preprocessing" << endl;
         cerr << "   A[integer] : enforce VAC at search nodes with depth less than a given threshold" << endl;
         cerr << "   T[integer] : threshold cost value for VAC" << endl;
+        cerr << "   P[integer] : threshold cost value for VAC during the preprocessing phase" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
         cerr << "   R[integer] : threshold mean cost value for relaxing constraints" << endl;
         cerr << "   S : singleton consistency on preprocessing" << endl;
@@ -211,6 +212,10 @@ int main(int argc, char **argv)
         if ( (ch = strchr(argv[i],'T')) ) {
         	Cost ct = string2Cost(&ch[1]);
         	if(ct > UNIT_COST) ToulBar2::costThreshold = ct;
+        }
+        if ( (ch = strchr(argv[i],'P')) ) {
+        	Cost ct = string2Cost(&ch[1]);
+        	if(ct > UNIT_COST) ToulBar2::costThresholdPre = ct;
         }
         if ( (ch = strchr(argv[i],'R')) ) {
         	Cost ct = string2Cost(&ch[1]);
