@@ -533,6 +533,11 @@ void TreeDecomposition::buildFromOrder()
     	file >> ix;
     	if(file) order.push_back(ix);
     } 
+
+	if(order.size() != wcsp->numberOfVariables()) {
+		cout << "Order file " << ToulBar2::varOrder << " has incorrect number of variables." << endl;
+		exit(1);
+	}
 	 
 	if(clusters.size() > 0) {
 		for(unsigned int i=0;i<clusters.size();i++) {
@@ -541,20 +546,6 @@ void TreeDecomposition::buildFromOrder()
 		}
 	} 
 	clusters.clear();
-
-	set<Constraint*> handleTernaries;
-
-    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
-    	Constraint* ctr = wcsp->getCtr(i);
-    	if (ctr->connected()) {
-    		if(ctr->arity() == 3) {
-    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-    			if(tctr->xy->connected()) { handleTernaries.insert(tctr); }
-    			if(tctr->xz->connected()) { handleTernaries.insert(tctr); }
-    			if(tctr->yz->connected()) { handleTernaries.insert(tctr); }    			
-    		} 
-    	}
-    }
 
 	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
 		Cluster* c = new Cluster( this );
@@ -611,20 +602,21 @@ void TreeDecomposition::buildFromOrder()
 		c->getDescendants().clear();
 	}
 
-
-	set<Constraint*>::iterator itr = handleTernaries.begin();
-	while(itr != handleTernaries.end()) {
-		TernaryConstraint* tctr = (TernaryConstraint*) *itr;
-		tctr->xy->setCluster( tctr->getCluster() );
-		tctr->xz->setCluster( tctr->getCluster() );
-		tctr->yz->setCluster( tctr->getCluster() );
-		++itr;
-	} 
-
 	int h = makeRooted();
 	cout << "tree height: " << h << endl;
 	print();
 
+    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+    	Constraint* ctr = wcsp->getCtr(i);
+    	if (ctr->connected() && !ctr->isSep()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+				tctr->xy->setCluster( tctr->getCluster() );
+				tctr->xz->setCluster( tctr->getCluster() );
+				tctr->yz->setCluster( tctr->getCluster() );
+    		} 
+    	}
+    }
 	
 
 	assert(verify());
@@ -764,9 +756,13 @@ bool TreeDecomposition::verify()
 {
 	for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
 		Variable* x = wcsp->getVar( i );
+		if(x->assigned()) continue;
+		
 		Cluster* ci  = clusters[x->getCluster()];
-    
-    	if( ! (ci->isVar(x->wcspIndex) && !ci->isSepVar(x->wcspIndex)) ) return false;
+    	if(!ci->isVar(x->wcspIndex) || ci->isSepVar(x->wcspIndex)) {
+			cout << "cluster: " << ci->getId() << " , var " << x->wcspIndex << endl;
+    		return false;
+    	}
     
 //  	    ConstraintList* xctrs = x->getConstrs();		
 //  	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {

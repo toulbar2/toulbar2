@@ -61,7 +61,10 @@ class Separator : public AbstractNaryConstraint
 
 	TVars& 			 getVars() { return vars; }    
     
-    void addDelta( int posvar, Value value, Cost cost ) { delta[posvar][value] += cost; }
+    void addDelta( unsigned int posvar, Value value, Cost cost ) {
+    	assert( posvar < vars.size() ); 
+    	delta[posvar][value] += cost; 
+    }
 
     void set( Cost c, bool opt );
     bool get( Cost& res, bool& opt );
@@ -199,7 +202,7 @@ public:
 
     WCSP* 		getWCSP() { return wcsp; }
 	
-	Cluster*	getCluster( int i ) { return clusters[i]; }
+	Cluster*	getCluster( unsigned int i ) { assert( 0 <= i && i < clusters.size() ); return clusters[i]; }
 	Cluster*   	var2Cluster( int v );	
 	
 	void setCurrentCluster(Cluster *c) {currentCluster = c->getId();}

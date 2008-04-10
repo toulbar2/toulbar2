@@ -264,7 +264,8 @@ public:
   }
 
     void findFullSupportEAC(int varIndex) {
-//          if (varIndex==getDACScopeIndex()) return;
+//      if (varIndex==getDACScopeIndex()) return;
+		assert( !wcsp->getTreeDec() || ( cluster == xy->getCluster() &&  cluster == xz->getCluster() &&  cluster == yz->getCluster()) );
         switch(varIndex) {
             case 0: findFullSupportX(); break;
             case 1: findFullSupportY(); break;
@@ -432,14 +433,38 @@ public:
    
     void fillElimConstrBinaries()
 	{
-        BinaryConstraint* xy_ = x->getConstr(y); 
-		if(xy_)  xy = xy_;  else { xy = wcsp->newBinaryConstr(x,y); wcsp->elimBinOrderInc(); }
+		TreeDecomposition* td = wcsp->getTreeDec();
+ 
+        BinaryConstraint* xy_ = NULL;
+        BinaryConstraint* xz_ = NULL;
+        BinaryConstraint* yz_ = NULL;
+         
+        xy_ = x->getConstr(y); 
+        if(!xy_ || (xy_ && td && getCluster() != xy_->getCluster()) ) {
+			xy = wcsp->newBinaryConstr(x,y); 
+			if(td) xy->setCluster( getCluster() );
+			wcsp->elimBinOrderInc(); 
+			if (ToulBar2::verbose > 1) cout << "    new binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
+        } 
+        else xy = xy_; 
 
-        BinaryConstraint* xz_ = x->getConstr(z); 
-		if(xz_)  xz = xz_;  else { xz = wcsp->newBinaryConstr(x,z); wcsp->elimBinOrderInc(); }
+        xz_ = x->getConstr(z); 
+        if(!xz_ || (xz_ && td && getCluster() != xz_->getCluster()) ) {
+			xz = wcsp->newBinaryConstr(x,z); 
+			if(td) xz->setCluster( getCluster() );
+			wcsp->elimBinOrderInc(); 
+			if (ToulBar2::verbose > 1) cout << "    new binary (" << x->wcspIndex << "," << z->wcspIndex << ")" << endl;
+        } 
+        else xz = xz_; 
 
-        BinaryConstraint* yz_ = y->getConstr(z); 
-		if(yz_)  yz = yz_;  else { yz = wcsp->newBinaryConstr(y,z); wcsp->elimBinOrderInc(); }
+        yz_ = y->getConstr(z); 
+        if(!yz_ || (yz_ && td && getCluster() != yz_->getCluster()) ) {
+			yz = wcsp->newBinaryConstr(y,z); 
+			if(td) yz->setCluster( getCluster() );
+			wcsp->elimBinOrderInc(); 
+			if (ToulBar2::verbose > 1) cout << "    new binary (" << y->wcspIndex << "," << z->wcspIndex << ")" << endl;
+        } 
+        else yz = yz_; 
 	}
 
 

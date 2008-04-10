@@ -1059,7 +1059,8 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 						 for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 							   	t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
 					   	   		t[4] =  '\0';
-						   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(string(t)) + var->getCost(*itv);
+					   	   		string strt(t);
+						   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(strt) + var->getCost(*itv);
 						   	 	if(c < mincost) mincost = c;
 						 }
 					  } 	 	

@@ -103,12 +103,12 @@ int Variable::getTrueDegree()
 {
     TSCOPE scope1,scope2,scope3;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    	if((*iter).constr->isSep()) continue;
+    	
 		(*iter).constr->getScope(scope2);
-
      	set_union( scope1.begin(), scope1.end(),
 	  		   	   scope2.begin(), scope2.end(),
 			  	   inserter(scope3, scope3.begin()) );		
-		
 		scope1 = scope3;  
 		scope3.clear();   
     }
@@ -121,6 +121,7 @@ double Variable::getWeightedDegree()
     //Long res = 0;
     double res = 0;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    	if((*iter).constr->isSep()) continue;
         //res += (*iter).constr->getConflictWeight();
         res += (*iter).constr->getTightness();
     }

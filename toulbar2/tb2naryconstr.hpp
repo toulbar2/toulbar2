@@ -23,25 +23,25 @@ class NaryConstraint : public AbstractNaryConstraint
 	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
 	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
 
+	string tuple;
 
 	vector<EnumeratedVariable::iterator> it_values;
 	void firstlex();
     bool nextlex( string& t, Cost& c);
-
-
-
-				
+	
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstraint(WCSP *wcsp);
 	
 	
 	virtual void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
-    virtual Cost eval( string s ) = 0; 
+    virtual Cost eval( string& s ) = 0; 
 	Cost evalsubstr( string& s, Constraint* ctr );
 	
 	void assign(int varIndex);
-	void projectNaryBinary();
 	
+	void projectNary();
+	void projectNaryTernary(TernaryConstraint* xyz);	
+	void projectNaryBinary(BinaryConstraint* xy);	
 	
     void propagate() {
         for(int i=0;connected() && i<arity_;i++) {         
@@ -91,7 +91,7 @@ public:
 
 
 	bool consistent( string& t );
-    Cost eval( string s );
+    Cost eval( string& s );
 	
 	Cost getDefCost() { return default_cost; }
 	void setDefCost( Cost df ) { default_cost = df; }
@@ -189,7 +189,7 @@ class NaryConstrie : public NaryConstraint
 
     void project( EnumeratedVariable* x, bool addUnaryCtr = true ) {};
 
-    Cost eval( string s );
+    Cost eval( string& s );
 
     void print(ostream& os);
 
