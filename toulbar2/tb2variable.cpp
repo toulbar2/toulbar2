@@ -35,6 +35,8 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
     linkEliminateQueue.content.var = this;
     linkEliminateQueue.content.timeStamp = -1;
     isSep_ = false;
+    cluster = -1;
+   
 }
 
 DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
@@ -257,6 +259,10 @@ TernaryConstraint* Variable::existTernary()
     }
 	return NULL;
 }
+
+
+
+
 
 
 

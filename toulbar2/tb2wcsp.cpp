@@ -837,12 +837,24 @@ void WCSP::restoreSolution()
 // Methods for Variable Elimination
 
 // Creates n fake empty constraints and puts them in the pool 'elimConstrs'
+
+void WCSP::initElimConstr() {
+    BinaryConstraint* xy = NULL;
+    if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost); 
+    else 			    xy = new VACConstraint(this, &storeData->storeCost); 
+    elimBinConstrs.push_back(xy);
+    elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
+    elimInfos.push_back(ei);
+    elimConstrs.push_back(NULL);	  
+}  
+
+
 void WCSP::initElimConstrs()
 {
 	unsigned int i;
     BinaryConstraint* xy = NULL;
         
-    for (i=0; i<vars.size(); i++) {	
+    for (i=0; i<vars.size()*vars.size(); i++) {	
        if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost); 
 	   else 			    xy = new VACConstraint(this, &storeData->storeCost); 
 	   elimBinConstrs.push_back(xy);

@@ -64,7 +64,8 @@ void NaryConstraint::assign(int varIndex) {
         deconnect(varIndex);	
 	    nonassigned = nonassigned - 1;
 	   
-	   if(nonassigned <= 3) {
+	   //if(nonassigned <= 3) {
+	   if(nonassigned <= 2) {
 	   	    //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
 			deconnect();
 			projectNary();
@@ -85,7 +86,8 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 
 	if(!ctr || (ctr && cluster != ctr->getCluster())) {
 		if(td) xyz->setCluster( cluster );
-		xyz->fillElimConstrBinaries();			
+		if(ctr) xyz->setDuplicate();	
+		xyz->fillElimConstrBinaries();
 		xyz->reconnect();
 	} else {
 		ctr->addCosts(xyz);
@@ -111,7 +113,11 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 		xy = ctr;
 	}
 	else {
-		if(td) xy->setCluster( getCluster() );
+		if(td) {
+			xy->setDuplicate();
+			xy->setCluster( getCluster() );
+		}
+		
 		xy->reconnect();
 	}
 	xy->propagate();
@@ -160,6 +166,8 @@ void NaryConstraint::projectNary()
 			xyz->setcost(x,y,z,xval,yval,zval,eval(t));
 	    }}}
 	    projectNaryTernary(xyz);
+	    
+	    
 	}
 	else if(nunassigned == 2) {
 		xy = wcsp->newBinaryConstr(x,y);	

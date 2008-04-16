@@ -249,6 +249,7 @@ void EnumeratedVariable::fillEAC2(bool self)
 {
   if (self) queueEAC2();
   for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+	if ((*iter).constr->isDuplicate()) continue;
     (*iter).constr->fillEAC2((*iter).scopeIndex);
   }
 }
@@ -257,6 +258,8 @@ bool EnumeratedVariable::isEAC(Value a)
 {
     if (getCost(a)==MIN_COST) {
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+			if ((*iter).constr->isDuplicate()) continue;
+
             if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
 #ifndef NDEBUG
                 if (ToulBar2::verbose >=4) {
@@ -301,8 +304,10 @@ void EnumeratedVariable::propagateEAC()
     if (!isEAC()) {
 #ifndef NDEBUG
         Cost beforeLb = wcsp->getLb();
+        assert(verify());
 #endif
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+			if ((*iter).constr->isDuplicate()) continue;
         	(*iter).constr->findFullSupportEAC((*iter).scopeIndex);
         }
         fillEAC2(false);
@@ -468,14 +473,17 @@ void EnumeratedVariable::assign(Value newValue)
 
 // eliminates the current (this) variable that participates
 // in a single binary constraint ctr
-void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
+bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 {
        assert(getDegree() == 1);
-       // deconnect first to be sure the current var is not involved in future propagation	
-       ctr->deconnect();
 
        EnumeratedVariable *x = (EnumeratedVariable *) ctr->getVarDiffFrom(this);
 
+	   TreeDecomposition* td = wcsp->getTreeDec();
+       if(td && cluster != ctr->getCluster()) return false;
+
+       // deconnect first to be sure the current var is not involved in future propagation	
+       ctr->deconnect();
        // to be done before propagation
        WCSP::elimInfo ei = {this, x, NULL, ctr, NULL, NULL};
        wcsp->elimInfos[wcsp->getElimOrder()] = ei;
@@ -490,11 +498,14 @@ void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
                if (curcost < mincost) mincost = curcost;
            }
            if (mincost > MIN_COST) {
+			   if(td) td->addDelta(cluster,x,*iter1,mincost);
 		       if (x->getSupport() == *iter1) supportBroken = true;
                x->project(*iter1, mincost);
            }
        }
       if (supportBroken) {  x->findSupport();  }
+      
+      return true;
 }
 
 
@@ -502,19 +513,21 @@ void EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 // in two binary constraints (its links ara xylink and xzlink)
 bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink )
 {
+	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
+	 EnumeratedVariable *z = (EnumeratedVariable *) wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
+
+     TreeDecomposition* td = wcsp->getTreeDec();
+     if(td) {
+ 		if(y->isSep() &&  z->isSep()) return false;
+     	if((cluster != xylink.constr->getCluster()) ||
+     	   (cluster != xzlink.constr->getCluster()))	 return false;
+     }
+
   	 assert(getDegree() == 2);
      xylink.constr->deconnect(); 	            
 	 xzlink.constr->deconnect();
-
-	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
-	 EnumeratedVariable *z = (EnumeratedVariable *) wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
-	    
-	 if(y->isSep() && z->isSep()) return false;  
-	    
 	    
 	 BinaryConstraint* yz = y->getConstr(z);
-
-	 	
 
      BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
  	 wcsp->elimBinOrderInc(); 
@@ -534,18 +547,25 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 }}
  
 	 if(yz) {
-		 yz->addCosts( yznew );
-	 	 yz->reconnect();
+ 	 	 if(td && yz->getCluster() != cluster) {
+			 yz = yznew;
+		 	 yz->reconnect();
+		     yz->setDuplicate();
+ 	 	 } else {
+	 		 yz->addCosts( yznew );
+		 	 yz->reconnect();
+ 	 	 }
 	 } else {
 		 yz = yznew;
 	 	 yz->reconnect();
 	 }	
+
+	 if(td) yz->setCluster( getCluster() );
 	 // to be done before propagation
 	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL};
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	 wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
 	 wcsp->elimOrderInc();
-	 if(wcsp->getTreeDec()) yz->setCluster( getCluster() );
      yz->propagate(); 
      return true;
 }
@@ -574,6 +594,10 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
  	}
 
 	if(n3links > 1) return false;
+
+    if(wcsp->getTreeDec()) {
+    	if(cluster != xyz->getCluster()) return false;
+    }
 
 	for(int i=0; i<n2links; i++) {		
 		int idvar = links[i].constr->getSmallestVarIndexInScope(links[i].scopeIndex);
@@ -632,6 +656,9 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 void EnumeratedVariable::eliminate()
 {
 	if(isSep_) return;
+
+	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );  
+
 	
     if (ToulBar2::elimDegree_preprocessing_ >= 0 && 
         (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) || 
@@ -661,7 +688,8 @@ void EnumeratedVariable::eliminate()
 				if(!elimVar(xylink,xzlink)) return;		
 			} else {
 				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;	
-				elimVar( xy );
+				if(!elimVar( xy )) return;
+				return;
 			}		
 		}
 	}
@@ -690,3 +718,109 @@ void EnumeratedVariable::permuteDomain(int nperm)
 	 	nperm--;
 	}
 }
+
+
+
+bool EnumeratedVariable::verify() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+	if(!td) return true;
+ 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+ 	   Constraint* ctr1 = (*iter).constr;	
+	   if(ctr1->isSep()) continue;
+	   if(ctr1->arity() > 3) continue;
+       for(ConstraintList::iterator iter2=iter; iter2 != constrs.end(); ++iter2) {
+	 	  Constraint* ctr2 = (*iter2).constr;	
+	 	  if(ctr1 == ctr2) continue;
+		  if(ctr2->isSep()) continue;
+		  if(ctr2->arity() > 3) continue;
+		  if(ctr1->arity() == 3 && ctr2->arity() == 2) {
+		  	TernaryConstraint* tctr1 = (TernaryConstraint*) ctr1;
+		  	BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
+			if( (tctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&		  	
+				(tctr1->getIndex( bctr2->getVar(1) ) >= 0 ) ) {
+		  			if(tctr1->getCluster() != bctr2->getCluster()) {
+		  				bool t1 = tctr1->xy != bctr2;
+		  				bool t2 = tctr1->xz != bctr2;
+		  				bool t3 = tctr1->yz != bctr2;
+		  				bool t4 = !tctr1->isDuplicate() || tctr1->xy->isDuplicate() || tctr1->xz->isDuplicate() || tctr1->yz->isDuplicate();
+						if (!t1 || !t2 || !t3 || !t4) {
+							cout << "isDuplicate problem: " << tctr1->isDuplicate() << " , " << tctr1->xy->isDuplicate() << " , " << tctr1->xz->isDuplicate() << " , " << tctr1->yz->isDuplicate() << endl;
+							cout << *tctr1;
+							cout << *tctr1->xy;
+							cout << *tctr1->xz;
+							cout << *tctr1->yz;
+							assert(false);
+						}
+		  			} else {
+		  				bool t1 = tctr1->xy == bctr2 || tctr1->xz == bctr2 || tctr1->yz == bctr2;
+						if (!t1) {
+							cout << "isDuplicate problem: " << tctr1->isDuplicate() << " , " << bctr2->isDuplicate() << endl;
+							cout << *tctr1;
+							cout << *tctr1->xy;
+							cout << *tctr1->xz;
+							cout << *tctr1->yz;
+							assert(false);
+						}
+		  			}
+				}
+		  }
+		  if(ctr1->arity() == 2 && ctr2->arity() == 3) {
+		  	BinaryConstraint* bctr1 =  (BinaryConstraint*) ctr1;
+		  	TernaryConstraint* tctr2 = (TernaryConstraint*) ctr2;
+			if( (tctr2->getIndex( bctr1->getVar(0) ) >= 0 ) &&		  	
+				(tctr2->getIndex( bctr1->getVar(1) ) >= 0 ) ) {
+		  			if(bctr1->getCluster() != tctr2->getCluster()) {
+		  				bool t1 = tctr2->xy != bctr1;
+		  				bool t2 = tctr2->xz != bctr1;
+		  				bool t3 = tctr2->yz != bctr1;
+		  				bool t4 = !tctr2->isDuplicate() || tctr2->xy->isDuplicate() || tctr2->xz->isDuplicate() || tctr2->yz->isDuplicate();
+						if (!t1 || !t2 || !t3 || !t4) {
+							cout << "isDuplicate problem: " << tctr2->isDuplicate() << " , " << bctr1->isDuplicate() << endl;
+							cout << *tctr2;
+							cout << *bctr1;
+							assert(false);
+						}
+		  			} else {
+		  				bool t1 = tctr2->xy == bctr1 || tctr2->xz == bctr1 || tctr2->yz == bctr1;
+						if (!t1) {
+							cout << "isDuplicate problem: " << tctr2->isDuplicate() << " , " << bctr1->isDuplicate() << endl;
+							cout << *tctr2;
+							cout << *bctr1;
+							assert(false);
+						}
+		  			}
+				}
+		  }
+		  if(ctr1->arity() == 3 && ctr2->arity() == 3) {
+		  	TernaryConstraint* tctr1 = (TernaryConstraint*) ctr1;
+		  	TernaryConstraint* tctr2 = (TernaryConstraint*) ctr2;
+		  	BinaryConstraint* bctr1 = tctr1->commonBinary(tctr2);
+		  	BinaryConstraint* bctr2 = tctr2->commonBinary(tctr1);
+			if(bctr1) {		  	
+			  	if(bctr1 != bctr2) {
+			  		assert( tctr1->getCluster() != tctr2->getCluster() );
+			  		assert( bctr1->getCluster() != bctr2->getCluster() );
+			  		assert( (tctr1->isDuplicate() && bctr1->isDuplicate()) ||
+			  				(tctr2->isDuplicate() && bctr2->isDuplicate()) );
+			  	} else {
+			  		assert( tctr1->getCluster() == tctr2->getCluster() );
+			  		assert( bctr1->getCluster() == bctr2->getCluster() );
+			  	}
+			}
+		  }
+		  if(ctr1->arity() == 2 && ctr2->arity() == 2) {
+		  	BinaryConstraint* bctr1 = (BinaryConstraint*) ctr1;
+		  	BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
+			if( (bctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&		  	
+				(bctr1->getIndex( bctr2->getVar(1) ) >= 0 ) ) {
+					assert(bctr1->isDuplicate() || bctr2->isDuplicate()); 		
+				}  
+		  }
+       }
+ 	}	
+ 	return true;
+}
+
+
+
+

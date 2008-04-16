@@ -419,6 +419,8 @@ bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable
     return true;
 }
 
+
+
 bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -436,4 +438,25 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
         }
     }
     return true;
+}
+
+
+
+bool TernaryConstraint::verify() {
+  TreeDecomposition* td = wcsp->getTreeDec();
+  
+  if(td) {
+	  if ( cluster != xy->getCluster() || cluster != xz->getCluster() ||  cluster != yz->getCluster())  return false;
+  }
+
+  if (ToulBar2::LcLevel==LC_DAC) {
+    switch(getDACScopeIndex()) {
+        case 0: return verifyX(); break;
+        case 1: return verifyY(); break;
+        case 2: return verifyZ(); break;
+	    default: return false;
+    }
+  } else {
+	return verifyX() && verifyY() && verifyZ();
+  }
 }

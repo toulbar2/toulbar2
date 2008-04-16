@@ -16,12 +16,16 @@ Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflict
     w->link(this);
     tight = -1;
     isSep_ = false;
+    isDuplicate_ = false;
+    cluster = -1;
 }
 
 Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), conflictWeight(1)
 {
     tight = -1;
     isSep_ = false;
+    isDuplicate_ = false;
+    cluster = -1;
 }
 
 void Constraint::projectLB(Cost cost)

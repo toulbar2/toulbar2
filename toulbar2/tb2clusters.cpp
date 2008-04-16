@@ -606,6 +606,7 @@ void TreeDecomposition::buildFromOrder()
 	cout << "tree height: " << h << endl;
 	print();
 
+
     for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
     	Constraint* ctr = wcsp->getCtr(i);
     	if (ctr->connected() && !ctr->isSep()) {
@@ -618,7 +619,20 @@ void TreeDecomposition::buildFromOrder()
     	}
     }
 	
-
+    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+    	Constraint* ctr = wcsp->getCtr(i);
+    	if (ctr->connected() && !ctr->isSep()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+    			tctr->setDuplicates();
+    			
+    			
+				assert(tctr->xy->getCluster() == tctr->getCluster() &&
+					   tctr->xz->getCluster() == tctr->getCluster() &&
+					   tctr->yz->getCluster() == tctr->getCluster() );
+    		} 
+    	}
+    }
 	assert(verify());
 }
 

@@ -82,6 +82,7 @@ public:
     void propagateAC();
     void propagateDAC();
     void findSupport();
+    bool verify();
 
     void queueEAC1();
     void queueEAC2();
@@ -93,7 +94,7 @@ public:
     virtual void queueVAC2() {}
 
     void eliminate();
-    void elimVar( BinaryConstraint* xy );
+    bool elimVar( BinaryConstraint* xy );
     bool elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
 

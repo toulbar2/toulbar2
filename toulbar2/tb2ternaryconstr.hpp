@@ -273,19 +273,9 @@ public:
         }
     }
             
-    bool verify() {
-	  if (ToulBar2::LcLevel==LC_DAC) {
-        switch(getDACScopeIndex()) {
-            case 0: return verifyX(); break;
-            case 1: return verifyY(); break;
-            case 2: return verifyZ(); break;
-		    default: return false;
-        }
-	  } else {
-		return verifyX() && verifyY() && verifyZ();
-	  }
-	}
-	  
+    bool verify();
+    
+
     void projectTernaryBinary( BinaryConstraint* yzin );
 
 	void projectTernary() {
@@ -440,31 +430,100 @@ public:
         BinaryConstraint* yz_ = NULL;
          
         xy_ = x->getConstr(y); 
-        if(!xy_ || (xy_ && td && getCluster() != xy_->getCluster()) ) {
+        if(!xy_ || (xy_ && td && (getCluster() != xy_->getCluster())) ) {
 			xy = wcsp->newBinaryConstr(x,y); 
-			if(td) xy->setCluster( getCluster() );
+
+			if(td) {
+				if(xy_ && (getCluster() != xy_->getCluster())) {
+					xy->setDuplicate();
+					setDuplicate();
+				}
+			}
+
 			wcsp->elimBinOrderInc(); 
-			if (ToulBar2::verbose > 1) cout << "    new binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
+			if (ToulBar2::verbose >= 1) {
+				cout << "    new binary (" << x->wcspIndex << "," << y->wcspIndex << ") ";
+                if(xy->isDuplicate()) cout << " duplicate " << endl;
+                else cout << endl;		
+			}
+
+			if(td) xy->setCluster( getCluster() );
+
         } 
         else xy = xy_; 
 
+
+
         xz_ = x->getConstr(z); 
-        if(!xz_ || (xz_ && td && getCluster() != xz_->getCluster()) ) {
+        if(!xz_|| (xz_ && td && getCluster() != xz_->getCluster()) ) {
 			xz = wcsp->newBinaryConstr(x,z); 
-			if(td) xz->setCluster( getCluster() );
+			if(td) {
+				if(xz_ && (getCluster() != xz_->getCluster())) {
+					xz->setDuplicate();
+					setDuplicate();
+				}
+			}
 			wcsp->elimBinOrderInc(); 
-			if (ToulBar2::verbose > 1) cout << "    new binary (" << x->wcspIndex << "," << z->wcspIndex << ")" << endl;
+			if (ToulBar2::verbose >= 1) {
+				cout << "    new binary (" << x->wcspIndex << "," << z->wcspIndex << ") ";
+                if(xz->isDuplicate()) cout << " duplicate " << endl;
+                else cout << endl;		
+			}
+    
+    		if(td) xz->setCluster( getCluster() );
         } 
         else xz = xz_; 
 
         yz_ = y->getConstr(z); 
         if(!yz_ || (yz_ && td && getCluster() != yz_->getCluster()) ) {
 			yz = wcsp->newBinaryConstr(y,z); 
-			if(td) yz->setCluster( getCluster() );
+			if(td) {
+				if(yz_ && (getCluster() != yz_->getCluster())) {
+					yz->setDuplicate();
+					setDuplicate();
+				}
+			}
 			wcsp->elimBinOrderInc(); 
-			if (ToulBar2::verbose > 1) cout << "    new binary (" << y->wcspIndex << "," << z->wcspIndex << ")" << endl;
+			if (ToulBar2::verbose > 1) {
+				cout << "    new binary (" << y->wcspIndex << "," << z->wcspIndex << ") ";
+                if(yz->isDuplicate()) cout << " duplicate " << endl;
+                else cout << endl;		
+			}
+
+			if(td) yz->setCluster( getCluster() );
+
         } 
         else yz = yz_; 
+
+
+	}
+
+	void setDuplicates() {
+
+		if(xy->getCluster() != cluster) {
+			wcsp->initElimConstr();
+			xy = wcsp->newBinaryConstr(x,y); 
+			xy->setDuplicate();
+			xy->setCluster( cluster );
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
+		if(xz->getCluster() != cluster) {
+			wcsp->initElimConstr();
+			xz = wcsp->newBinaryConstr(x,z); 
+			xz->setDuplicate();
+			xz->setCluster( getCluster() );
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
+		if(yz->getCluster() != cluster) {
+			wcsp->initElimConstr();
+			yz = wcsp->newBinaryConstr(y,z); 
+			yz->setDuplicate();
+			yz->setCluster( getCluster() );
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
 	}
 
 

@@ -168,6 +168,11 @@ public:
     bool isSep_;
 	void setSep() 		   {isSep_ = true;}
 	bool isSep() 		   {return isSep_;}
+
+
+    bool isDuplicate_;
+	void setDuplicate()	   {isDuplicate_ = true; if (ToulBar2::verbose >= 1) { cout << *this << " set duplicate" << endl; }}
+	bool isDuplicate() 	   {return isDuplicate_;}
 	
 	
 	

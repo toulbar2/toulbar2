@@ -224,6 +224,7 @@ public:
 
 	int maxdomainsize;	                              						   
 
+	void initElimConstr();
 	void initElimConstrs();
 
 	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
