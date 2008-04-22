@@ -494,7 +494,9 @@ bool TreeDecomposition::fusion( )
 		while(it != c->endEdges()) {
 			Cluster* cj = *it;
 			assert(cj == clusters[cj->getId()]);			
-			if((c->getId() < cj->getId()) && included(c->getVars(), cj->getVars())) {
+			if((c->getId() < cj->getId()) && included(c->getVars(), cj->getVars()) ||
+			   (c->getId() < cj->getId()) && (cj->getCtrs().size() == 0) ) {
+			   	
 				c->addVars(cj->getVars());
 				c->addCtrs(cj->getCtrs());
 				c->addEdges(cj->getEdges());
@@ -644,6 +646,7 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 {
 	TClusters::iterator itj =  c->beginEdges();
 	c->getDescendants().insert(c);
+
 	while(itj != c->endEdges()) {
 		Cluster* cj = *itj;
 		cj->removeEdge(c);

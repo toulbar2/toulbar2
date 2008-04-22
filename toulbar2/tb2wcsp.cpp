@@ -452,7 +452,12 @@ void WCSP::degreeDistribution()
 
 void WCSP::printNCBuckets()
 {
+	int lastbucket = 0;
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
+    	if(NCBuckets[bucket].begin() != NCBuckets[bucket].end()) lastbucket = bucket;
+    }
+
+    for (int bucket = 0; bucket < lastbucket; bucket++) {
         cout << "NC " << bucket << ":";
         for (VariableList::iterator iter = NCBuckets[bucket].begin (); iter != NCBuckets[bucket].end(); ++iter) {
            cout << " " << (*iter)->getName() << "," << (*iter)->getMaxCostValue() << "," << (*iter)->getMaxCost();

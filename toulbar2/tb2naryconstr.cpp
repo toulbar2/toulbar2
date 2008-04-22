@@ -64,7 +64,6 @@ void NaryConstraint::assign(int varIndex) {
         deconnect(varIndex);	
 	    nonassigned = nonassigned - 1;
 	   
-	   //if(nonassigned <= 3) {
 	   if(nonassigned <= 2) {
 	   	    //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
 			deconnect();
@@ -114,10 +113,9 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 	}
 	else {
 		if(td) {
-			xy->setDuplicate();
+			if(ctr) xy->setDuplicate();
 			xy->setCluster( getCluster() );
 		}
-		
 		xy->reconnect();
 	}
 	xy->propagate();
@@ -163,11 +161,10 @@ void NaryConstraint::projectNary()
 			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
 			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
 			t[indexs[2]] =  z->toIndex(zval) + CHAR_FIRST;					
-			xyz->setcost(x,y,z,xval,yval,zval,eval(t));
+			Cost curcost = eval(t);
+			xyz->setcost(x,y,z,xval,yval,zval,curcost);
 	    }}}
 	    projectNaryTernary(xyz);
-	    
-	    
 	}
 	else if(nunassigned == 2) {
 		xy = wcsp->newBinaryConstr(x,y);	
@@ -178,7 +175,8 @@ void NaryConstraint::projectNary()
 			Value yval = *itery;
 			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;			
 			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
-			xy->setcost(xval,yval,eval(t));
+			Cost curcost = eval(t);
+			xy->setcost(xval,yval,curcost);
 	    }}
 		projectNaryBinary(xy);
 	} 
@@ -261,8 +259,6 @@ void NaryConstraint::projectFromZero(int index)
    }
    setTuple( t, eval(t) - minc );
    projectLB(minc);
-   
-   cout << minc << " "; flush(cout);
 }	    
     
 
@@ -370,11 +366,10 @@ void NaryConstraintMap::fillFilters()
 
 
 Cost NaryConstraintMap::eval( string& s ) {
-	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
 	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
-	else return default_cost;  
+	else return default_cost;
 }
 
 
@@ -1199,7 +1194,6 @@ void NaryConstrie::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in 
 
 Cost NaryConstrie::eval( string& s ) {
 	Cost c = default_cost;
-	if(CUT(default_cost, wcsp->getUb())) default_cost = wcsp->getUb(); 
 	if(f) {
 		TrieNode* tn = f->find(s.c_str());
 		if(tn) c = tn->c;
