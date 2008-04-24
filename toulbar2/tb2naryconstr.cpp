@@ -40,6 +40,9 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 NaryConstraint::NaryConstraint(WCSP *wcsp)
 			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
 {
+	arity_ = 0;
+    xy = NULL;
+    xyz = NULL;  
 }
 
 
@@ -108,6 +111,7 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
     BinaryConstraint* ctr = x->getConstr(y);   			
 	if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster()))) 
 	{
+		if (ToulBar2::verbose >= 2) cout << " exists -> fusion" << endl;
 		ctr->addCosts(xy);
 		xy = ctr;
 	}
@@ -119,6 +123,8 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 		xy->reconnect();
 	}
 	xy->propagate();
+	
+	if (ToulBar2::verbose >= 2) cout << " and the result: " << *xy << endl;
 }
 
 
@@ -177,6 +183,7 @@ void NaryConstraint::projectNary()
 			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
 			Cost curcost = eval(t);
 			xy->setcost(xval,yval,curcost);
+			if (ToulBar2::verbose >= 5) cout << t << " " << curcost << endl;
 	    }}
 		projectNaryBinary(xy);
 	} 

@@ -118,10 +118,8 @@ public:
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx);  	iy = y->toIndex(*itery);
-        	if(costs[ix * sizeY + iy] < wcsp->getUb()) {
-	        	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
-				else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
-        	}
+        	if(xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
+			else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
 	    }}
     }
     
@@ -131,8 +129,11 @@ public:
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
-        	if(costs[ix * sizeY + iy] < wcsp->getUb()) 
-        		costs[ix * sizeY + iy] += xy->getCost(x,y,*iterx,*itery);
+        	Cost c = costs[ix * sizeY + iy];
+        	//if(costs[ix * sizeY + iy] < wcsp->getUb())  strange BUG WITH THIS LINE USING BTD in a particular instance
+        	{
+	        	costs[ix * sizeY + iy] = c + xy->getCost(x,y,*iterx,*itery);
+        	}
 	    }}
     }
  

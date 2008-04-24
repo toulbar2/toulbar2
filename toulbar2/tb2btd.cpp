@@ -70,6 +70,10 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
   return varIndex;
 }
 
+
+
+
+
 /*
  * Choice points
  * 
@@ -171,7 +175,14 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 		store->restore();
 	  }
 	}
-	if (cluster == wcsp->getTreeDec()->getRoot() && lb < cub) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+	if (lb < cub) {
+		TreeDecomposition* td = wcsp->getTreeDec();
+		cluster->solutionRec(lb);
+		if(cluster == td->getRoot()) {
+			cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+			td->newSolution();
+		}
+	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;
 	return lb;
   } 

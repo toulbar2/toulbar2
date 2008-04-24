@@ -782,19 +782,17 @@ void WCSP::propagate()
 void WCSP::restoreSolution()
 {
 	int elimo = getElimOrder();
-	for(int i = elimo-1; i>=0; i--)
-	{
+	for(int i = elimo-1; i>=0; i--) {
 		elimInfo ei = elimInfos[i];
 		EnumeratedVariable* x = (EnumeratedVariable*) ei.x;
 		EnumeratedVariable* y = (EnumeratedVariable*) ei.y;
 		EnumeratedVariable* z = (EnumeratedVariable*) ei.z;
+        if(x->unassigned()) continue;
+		if(y && y->unassigned()) continue;
+		if(z && z->unassigned()) continue;
 		BinaryConstraint* xy = ei.xy;
 		BinaryConstraint* xz = ei.xz;
 		TernaryConstraint* xyz = ei.xyz;
-		//   if (xy) cout << "xy=" << *xy << endl;
-		//   if (xz) cout << "xz=" << *xz << endl;
-		//   if (xyz) cout << "xyz=" << *xyz << endl;
-    
 		Value vy = -1;
 		Value vz = -1;
 			
@@ -803,30 +801,23 @@ void WCSP::restoreSolution()
 	
 		int minv = -1;		    
 	    Cost mincost = MAX_COST;
-	
-	    for (unsigned int vxi = 0; vxi < x->getDomainInitSize(); vxi++)
-	    {
+	    for (unsigned int vxi = 0; vxi < x->getDomainInitSize(); vxi++) {
 	    	Value vx = x->toValue(vxi);
 	    	if(!x->canbeAfterElim(vx)) continue; 
 	    	Cost cxy = MIN_COST;
 	    	Cost cxz = MIN_COST;
 	    	Cost cxyz = MIN_COST;
 	    	
-	    	if(xy) {
-	    		if(xy->getIndex(y) == 0) cxy = xy->getCost(vy, vx);
-	    		else cxy = xy->getCost(vx, vy);
+	    	if(xy) {  if(xy->getIndex(y) == 0) cxy = xy->getCost(vy, vx);
+	    		      else cxy = xy->getCost(vx, vy);
 	    	}
-
-	    	if(xz) {
-	    		if(xz->getIndex(z) == 0) cxz = xz->getCost(vz, vx);
-	    		else cxz = xz->getCost(vx, vz);
+	    	if(xz) {  if(xz->getIndex(z) == 0) cxz = xz->getCost(vz, vx);
+	    			  else cxz = xz->getCost(vx, vz);
 	    	}
-
 			if(xyz) cxyz = xyz->getCost(x,y,z, vx, vy, vz); 
 
 	    	Cost c = x->getCost(vx) + cxy + cxz + cxyz;
 			//cout << "test " << vx << "," << x->getCost(vx) << "," << cxy << "," << cxz << "," << cxyz << endl;
-	    	    	
 	    	if(c < mincost)	{
 	    		mincost = c;
 	    		minv = vx; 
@@ -859,7 +850,7 @@ void WCSP::initElimConstrs()
 	unsigned int i;
     BinaryConstraint* xy = NULL;
         
-    for (i=0; i<vars.size()*vars.size(); i++) {	
+    for (i=0; i<vars.size(); i++) {	
        if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost); 
 	   else 			    xy = new VACConstraint(this, &storeData->storeCost); 
 	   elimBinConstrs.push_back(xy);

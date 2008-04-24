@@ -19,8 +19,11 @@ typedef set<Constraint*>   TCtrs;
 typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
-typedef pair <Cost,bool>   TPair;
-typedef map<string, TPair> TNoGoods;
+typedef pair <Cost,bool>     TPairNG;
+typedef pair <Cost,string>   TPairSol;
+
+typedef map<string, TPairNG>  TNoGoods;
+typedef map<string, TPairSol> TSols;
 
 
 class Separator : public AbstractNaryConstraint
@@ -38,10 +41,13 @@ class Separator : public AbstractNaryConstraint
     StoreInt optPrevious;
 
     TNoGoods  					  nogoods;
+
+    TSols  						  solutions;
    
     DLink<Separator *>            linkSep;
 
-	string t; // buffer for a tuple                   
+	string t;    // buffer for a separator tuple                   
+	string s;    // buffer for a solution tuple                   
 	
 	
   public:
@@ -68,6 +74,9 @@ class Separator : public AbstractNaryConstraint
 
     void set( Cost c, bool opt );
     bool get( Cost& res, bool& opt );
+
+	void solRec( Cost ub );
+	bool solGet( TAssign& a, string& sol ); 
         
     TVars::iterator  begin() { return vars.begin(); } 
     TVars::iterator  end()   { return vars.end(); } 
@@ -148,6 +157,8 @@ class Cluster {
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
 	  void 		    updateUb();
+
+  	  void 		    getSolution( TAssign& sol );
 	  
 	  void 			setParent(Cluster* p);
 	  Cluster*		getParent();
@@ -172,6 +183,7 @@ class Cluster {
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
       Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
 
+	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
@@ -214,6 +226,8 @@ public:
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
 	bool fusion();          		            // one fusion step
+
+    void newSolution();
 
 	int      makeRooted();
 	void     makeRootedRec( Cluster* c,  TClusters& visited );

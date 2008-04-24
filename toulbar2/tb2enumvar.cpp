@@ -482,6 +482,8 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 	   TreeDecomposition* td = wcsp->getTreeDec();
        if(td && cluster != ctr->getCluster()) return false;
 
+	   if (ToulBar2::verbose >= 2) cout << "   elim linked to one binary " << ctr << endl;
+
        // deconnect first to be sure the current var is not involved in future propagation	
        ctr->deconnect();
        // to be done before propagation
@@ -694,7 +696,7 @@ void EnumeratedVariable::eliminate()
 		}
 	}
 	assert(getDegree() == 0);
-	if (ToulBar2::verbose >= 2) cout << "Eliminate " << getName() << endl;
+	if (ToulBar2::verbose >= 2) cout << "Eliminate End of var " << getName() << endl;
 	assert(getCost(support) == MIN_COST); // it is ensured by previous calls to findSupport
 	assign(support); // warning! dummy assigned value
 }
