@@ -59,8 +59,6 @@ void Separator::assign(int varIndex)
 
 void Separator::propagate()
 {
-
-
   if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
 	Cost res = MIN_COST; 
 	bool opt = false;
@@ -129,9 +127,6 @@ void Separator::setup(Cluster* cluster_in) {
 void Separator::set( Cost c, bool opt ) { 
 	int i = 0;
 	WCSP* wcsp = cluster->getWCSP();
-	
-	wcsp->restoreSolution();
-	
 	Cost deltares = MIN_COST;
 	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
@@ -146,7 +141,7 @@ void Separator::set( Cost c, bool opt ) {
 	}
 	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
-	assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
+	//assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
 	nogoods[t] = TPairNG(max(MIN_COST, c + deltares), opt); 
 }    
 
@@ -209,6 +204,7 @@ bool Separator::solGet(TAssign& a, string& sol)
 void Separator::solRec(Cost ub) 
 {
 	WCSP* wcsp = cluster->getWCSP();
+
 	int i = 0;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
@@ -224,6 +220,9 @@ void Separator::solRec(Cost ub)
 		p = itsol->second;
 	    //assert(p.first < ub);
 	}
+
+	wcsp->restoreSolution(cluster);
+	
 	i = 0;
     it = cluster->beginVars();
 	while(it != cluster->endVars()) {
@@ -235,14 +234,50 @@ void Separator::solRec(Cost ub)
 		}	
 		++it;	
 	}
+
 	solutions[t] = TPairSol(ub,s);
 	
-	if (ToulBar2::verbose >= 1) cout << "recording solution  sep:" << t << "  vars: " << s << " cost: " << ub << endl; 
+	if (ToulBar2::verbose >= 1) cout << "recording solution  " << " cost: " << ub << endl; 
 }
 
 
+void Separator::resetOpt() 
+{
+	TNoGoods::iterator it = nogoods.begin();
+	while(it != nogoods.end()) {
+		(it->second).second = false;
+		++it;
+	}
+}
 
 
+void Separator::print(ostream& os) {
+{
+	os << this << " nogoods(";
+	long totaltuples = 1;
+	for(int i = 0; i < arity_;i++) {
+		os << scope[i]->wcspIndex;
+		if(i < arity_-1) os << ",";
+		totaltuples = totaltuples * scope[i]->getDomainInitSize();
+	}
+	os << ")    ";
+	os << " |nogoods| = " << nogoods.size() << " / " << totaltuples;
+	if (ToulBar2::verbose >= 4) {
+		os << "nogoods: {";
+		TNoGoods::iterator  it = nogoods.begin();
+		while(it != nogoods.end()) {
+			TPairNG p = it->second;
+			os << "<" << it->first << "," << p.first << ">";
+			if(it != nogoods.end()) os << " "; 
+			it++;
+		} 
+		os << "} " << endl;
+	}
+	os << endl;
+}
+	
+	
+}
 
 /************************************************************************************************/
 // Cluster
@@ -275,6 +310,19 @@ void Cluster::addCtr( Constraint* c ) { ctrs.insert(c); }
 
 void Cluster::addEdge( Cluster* c ) { edges.insert(c); }
 
+TClusters::iterator Cluster::removeEdge( TClusters::iterator it ) { 
+	TClusters::iterator itaux = it;
+	++it;
+	edges.erase(itaux);
+	return it;
+}
+
+void Cluster::removeEdge( Cluster* c )  {
+	TClusters::iterator it = edges.find(c); 
+	if(it != edges.end()) edges.erase(it);
+}	
+
+
 void Cluster::addEdges( TClusters& cls ) 
 {
 	set_union( edges.begin(), edges.end(),
@@ -288,10 +336,6 @@ void Cluster::addCtrs( TCtrs& ctrsin ) {
 			   inserter(ctrs, ctrs.begin()) );			 	  
 }
 
-void Cluster::removeEdge( Cluster* c )  {
-	TClusters::iterator it = edges.find(c); 
-	if(it != edges.end()) edges.erase(it);
-}	
 
 void Cluster::addAssign( TAssign* a ) { 
 	assignments.push_back(a); 
@@ -316,6 +360,24 @@ TClusters&	Cluster::getDescendants() { return descendants; }
 bool Cluster::isDescendant( Cluster* c ) {
 	return quickdescendants[c->getId()];
 }
+
+
+
+void Cluster::deconnectSep() {
+	if(!sep) return;
+	TVars::iterator its = beginSep();
+	while(its != endSep()) {
+		Variable *x = wcsp->getVar(*its);
+	    ConstraintList* xctrs = x->getConstrs();		
+	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
+            Constraint* ctr = (*it).constr;
+			ctr->deconnect();
+	    }
+		++its;
+	}
+}
+
+
 
 Cluster* Cluster::nextSep( Variable* v ) { 
 	Cluster* c = getParent();
@@ -451,7 +513,6 @@ void Cluster::setWCSP() {
 void Cluster::getSolution( TAssign& sol )
 {
 	TVars::iterator it;
-	
 	if(parent == NULL) {
 		if(vars.size() == 0) {
 			
@@ -463,7 +524,6 @@ void Cluster::getSolution( TAssign& sol )
 			}			
 		}
 	}
-
 	string s;
 	if(sep) {
 		sep->solGet(sol, s);
@@ -477,16 +537,19 @@ void Cluster::getSolution( TAssign& sol )
 			++it;	
 		}
 	} 
-	
-	
     for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
 		Cluster* cluster = *iter;
 		cluster->getSolution(sol);
     } 
-
-
 }
 
+bool Cluster::isEdge( Cluster* c ) {
+    for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+		Cluster* cluster = *iter;
+    	if(c == cluster) return true;
+    }
+    return false;
+}
 
 
 void Cluster::print() {
@@ -498,7 +561,8 @@ void Cluster::print() {
 	TVars::iterator itp = beginVars();
 	while(itp != endVars()) {
 		if (!isSepVar(*itp)) {
-		  cout << *itp << ",";
+		  //cout << *itp << ",";
+		  cout << *itp << "C" << wcsp->getVar(*itp)->getCluster() << ",";
 		  //assert(wcsp->getVar(*itp)->getCluster() == getId());
 		}
 		++itp;
@@ -527,25 +591,25 @@ void Cluster::print() {
 	  cout << "}";
 	}
 
-//  	cout << " ctrs {";
-//  	TCtrs::iterator itctr = beginCtrs();
-//  	while(itctr != endCtrs()) {
-//  	  Constraint* ctr = *itctr;
-//  	  cout << "( "; 
-//  	  for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
-//  	  cout << ")"; 
-//  	  ++itctr;
-//  	}
-//  	cout << "}";
+  	cout << " ctrs {";
+  	TCtrs::iterator itctr = beginCtrs();
+  	while(itctr != endCtrs()) {
+  	  Constraint* ctr = *itctr;
+  	  cout << "( "; 
+  	  for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
+  	  cout << ">C" << ctr->getCluster() << ")"; 
+  	  ++itctr;
+  	}
+  	cout << "}";
 
-//    	cout << " descendants {";
-//    	TClusters::iterator itd = beginDescendants();
-//    	while(itd != endDescendants()) {
-//  	  cout << (*itd)->getId();
-//  	  ++itd;
-//  	  if(itd != endDescendants()) cout << ",";
-//    	}
-//    	cout << "}";
+    	cout << " descendants {";
+    	TClusters::iterator itd = beginDescendants();
+    	while(itd != endDescendants()) {
+  	  cout << (*itd)->getId();
+  	  ++itd;
+  	  if(itd != endDescendants()) cout << ",";
+    	}
+    	cout << "}";
 	cout << endl;
 }
 
@@ -725,13 +789,15 @@ void TreeDecomposition::buildFromOrder()
 		c->getDescendants().clear();
 	}
 
+
+	
 	int h = makeRooted();
 	cout << "tree height: " << h << endl;
-	print();
 
 
     for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
     	Constraint* ctr = wcsp->getCtr(i);
+   		ctr->assignCluster();
     	if (ctr->connected() && !ctr->isSep()) {
     		if(ctr->arity() == 3) {
     			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
@@ -754,37 +820,67 @@ void TreeDecomposition::buildFromOrder()
     		} 
     	}
     }
+
+	print();
+	cout << endl;
+
 	assert(verify());
+}
+
+void TreeDecomposition::makeDescendants( Cluster* c )
+{
+	c->getDescendants().insert(c);
+	TClusters::iterator itj = c->beginEdges();
+	while(itj != c->endEdges()) {
+		Cluster* cj = *itj;
+		++itj;	
+		makeDescendants(cj);		
+		clusterSum(c->getDescendants(), cj->getDescendants(), c->getDescendants());
+	}
 }
 
 
 
-
-
-void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
+bool TreeDecomposition::reduceHeight( Cluster* c )
 {
+	bool changed = false;
 	Cluster* cparent = c->getParent();
-	c->getDescendants().insert(c);
 	TClusters::iterator itj;
-
+	
 	if(cparent) {
 		itj =  c->beginEdges();
 		while(itj != c->endEdges()) {
 			Cluster* cj = *itj;
-	
+			++itj;	
+		
 			TVars cjsep;
    	    	intersection(c->getVars(), cj->getVars(), cjsep);
-			
+
 			if(included(cjsep, cparent->getVars())) {
-				// CLUSTER HAS TO BE PLACES UPSTAIRS
-				//assert(false);
+				// replacing the cluster higher in the tree
+				c->removeEdge(cj);
+				cparent->addEdge(cj);
+				cj->setParent(cparent);
+				changed = true;
 			}
-			
-			++itj;	
 		}
 	}
 
 	itj =  c->beginEdges();
+	while(itj != c->endEdges()) {
+		Cluster* cj = *itj;
+		cj->removeEdge(c);
+		++itj;	
+		changed = changed || reduceHeight(cj); 		
+	}
+	
+	return false;
+}
+
+
+void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
+{
+	TClusters::iterator itj =  c->beginEdges();
 	while(itj != c->endEdges()) {
 		Cluster* cj = *itj;
 		cj->removeEdge(c);
@@ -809,7 +905,6 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 		//------- 
 	
 		makeRootedRec( cj, visited );
-		clusterSum(c->getDescendants(), cj->getDescendants(), c->getDescendants());
 		++itj;	
 	}	
 }
@@ -825,7 +920,11 @@ int TreeDecomposition::makeRooted()
 		roots.push_back(root);
 		visited.insert(root);
 		makeRootedRec(root, visited);
+		while(reduceHeight(root));
+		makeDescendants(root);
 	}
+
+
 
 	// if it is a forest
 	if(roots.size() > 1) {
@@ -836,8 +935,7 @@ int TreeDecomposition::makeRooted()
 	    for (list<Cluster*>::iterator iter = roots.begin(); iter!= roots.end(); ++iter) {
 			Cluster* oneroot = *iter;
 			
-			
-	 	    EnumeratedVariable** scopeVars = new EnumeratedVariable* [0];
+	 	    EnumeratedVariable** scopeVars = new EnumeratedVariable* [1];
 	    	oneroot->setSep( new Separator(wcsp,scopeVars,0) );  
 
 			root->addEdge(oneroot);
@@ -1014,7 +1112,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
 	while( x->nextCluster(ckid,posx) ) {
 	  Cluster* ck = getCluster( ckid );
 	  if(ck->isDescendant(cy)) {
-		if (ToulBar2::verbose >= 1) cout << "add delta " << cost << " to var " << x->wcspIndex << " (cluster " << cx->getId() << ") value " << value << " from subtree " << ck->getId() << " (cluster " << cyid << ")" << endl;
+		if (ToulBar2::verbose >= 2) cout << "add delta " << cost << " to var " << x->wcspIndex << " (cluster " << cx->getId() << ") value " << value << " from subtree " << ck->getId() << " (cluster " << cyid << ")" << endl;
 		ck->addDelta(posx, value, cost);
 	  }
 	}
@@ -1037,12 +1135,6 @@ Cluster* TreeDecomposition::getBiggerCluster( TClusters& visited ) {
 	}
 	return cmax;
 }
-
-
-
-
-
-
 
 
 
@@ -1072,14 +1164,6 @@ void TreeDecomposition::print( Cluster* c, int recnum )
 		print( *ita, recnum+1 );
 		++ita;
 	}
-
 }
 
-/*****************************************************************************************/
-/* Clustered SOLVER																		 */
-/*****************************************************************************************/
 
-
-
-ClusteredSolver::ClusteredSolver(int storeSize, Cost initUpperBound) : Solver(storeSize, initUpperBound) {
-}

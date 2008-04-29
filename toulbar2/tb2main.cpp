@@ -175,6 +175,12 @@ int main(int argc, char **argv)
 	       	sprintf(ToulBar2::varOrder, "%s",buf);
 			continue; // skip current argument in order to not search for other options inside filename
     	}
+        if ( (ch = strchr(argv[i],'B')) ) {
+        	int mode = atoi(&ch[1]);
+        	if(mode > 0) ToulBar2::btdMode = mode;
+        }
+
+    	
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
         if ( (ch = strchr(argv[i],'w')) ) {

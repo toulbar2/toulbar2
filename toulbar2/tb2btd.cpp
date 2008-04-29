@@ -79,7 +79,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
  * 
  */
 
-Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value)
+Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value, Cluster* onlyson)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
@@ -102,7 +102,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
     	  if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
     	} else assign(varIndex, value);
         lastConflictVar = -1;
-        Cost res = recursiveSolve(cluster, lbgood, cub);
+        Cost res = recursiveSolve(cluster, lbgood, cub, onlyson);
 		cub = min(res,cub);
     } catch (Contradiction) {
         wcsp->whenContradiction();
@@ -118,7 +118,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		if (dichotomic) {
 		  if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
 		} else remove(varIndex, value);
-		Cost res = recursiveSolve(cluster, lbgood, cub);
+		Cost res = recursiveSolve(cluster, lbgood, cub, onlyson);
 		cub = min(res,cub);
     } catch (Contradiction) {
 	  wcsp->whenContradiction();
@@ -132,8 +132,10 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
  * 
  */
 
-Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
+Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *onlyson)
 {		
+  TreeDecomposition* td = wcsp->getTreeDec();
+
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
   int varIndex = -1;
   if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
@@ -143,6 +145,8 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " lb= " << lb << endl;
 	for (TClusters::iterator iter = cluster->beginEdges(); lb < cub && iter!= cluster->endEdges(); ++iter) {
 	  Cluster* c = *iter;
+	  if(onlyson) { if(c != onlyson) continue; }	
+
 	  bool opt = false;
 	  Cost lbSon = MIN_COST;
 	  bool good = false;
@@ -155,7 +159,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	  }
 	  if (!opt) {
 		Cost ubSon = cub - lb + lbSon;
-		wcsp->getTreeDec()->setCurrentCluster(c);
+		td->setCurrentCluster(c);
 		wcsp->setUb(ubSon);
 		wcsp->setLb((good)?c->getLbRec():lbSon);
 		try {
@@ -163,7 +167,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 		  assert(ubSon > lbSon);
 		  wcsp->enforceUb();
 		  wcsp->propagate();
-		  Cost newlbSon = recursiveSolve(c, lbSon, ubSon);
+		  Cost newlbSon = recursiveSolve(c, lbSon, ubSon, onlyson);
 		  c->nogoodRec(newlbSon, (newlbSon < ubSon));
 		  assert(newlbSon > lbSon || (newlbSon == lbSon && newlbSon < ubSon));
 		  lb += newlbSon - lbSon;
@@ -176,7 +180,6 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	  }
 	}
 	if (lb < cub) {
-		TreeDecomposition* td = wcsp->getTreeDec();
 		cluster->solutionRec(lb);
 		if(cluster == td->getRoot()) {
 			cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
@@ -189,11 +192,80 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
   else {
 	if (wcsp->enumerated(varIndex)) {
 	  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getSupport(varIndex));
+	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getSupport(varIndex), onlyson);
 	} else {
-	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getInf(varIndex));
+	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getInf(varIndex), onlyson);
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << cub << endl;
 	return cub;
   }
 }
+
+
+
+
+Cost Solver::recursiveSolveRDS(Cluster *cluster)
+{	
+	TreeDecomposition* td = wcsp->getTreeDec();
+	TClusters::iterator it = cluster->beginEdges();
+	while(it != cluster->endEdges()) {
+		recursiveSolveRDS(*it);
+ 		++it;
+	}
+	Cost res; 
+    Cost cub = wcsp->getUb();
+	try {
+	  store->store();
+	  cluster->deconnectSep();	
+	  td->setCurrentCluster(cluster);
+	  cluster->setLb(wcsp->getLb());
+	  res = recursiveSolve(cluster, wcsp->getLb(), cub);
+	} catch (Contradiction) {
+	  wcsp->whenContradiction();
+	}
+	cub = min(res,cub);
+	cluster->setLb_opt(cub);	
+	store->restore();	
+	
+	return cub;
+}
+
+
+
+
+
+void Solver::solveClusters2by2(Cluster *c, Cost cub)
+{	
+	TreeDecomposition* td = wcsp->getTreeDec();
+
+	TClusters::iterator it = c->beginEdges();
+	while(it != c->endEdges()) {
+		Cluster* ci = *it;
+ 		++it;
+		if(ci->sepSize() == 0) continue;
+	    
+		try {
+		  store->store();
+          c->deconnectSep();
+          wcsp->propagate();
+		  c->setLb(MIN_COST);
+		  wcsp->setLb(MIN_COST);
+		  td->setCurrentCluster(c);
+		  cout << "--- Solving clusters " << c->id << " " << ci->id << " ..." << endl;
+		  Cost res = recursiveSolve(c, MIN_COST, cub, ci);
+		  ci->printStats();
+		  cout << "---  done ... cost = " << res << endl;
+		} catch (Contradiction) {
+		  wcsp->whenContradiction();
+		}
+		store->restore();	
+		ci->resetOpt();
+	}
+	
+	it = c->beginEdges();
+	while(it != c->endEdges()) {
+		solveClusters2by2(*it, cub);
+		++it;
+	}
+}
+

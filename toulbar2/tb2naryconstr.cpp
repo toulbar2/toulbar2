@@ -67,7 +67,7 @@ void NaryConstraint::assign(int varIndex) {
         deconnect(varIndex);	
 	    nonassigned = nonassigned - 1;
 	   
-	   if(nonassigned <= 2) {
+	   if(nonassigned <= 3) {
 	   	    //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
 			deconnect();
 			projectNary();
@@ -79,24 +79,29 @@ void NaryConstraint::assign(int varIndex) {
 void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 {
 	TreeDecomposition* td = wcsp->getTreeDec();
+	if(td) xyz->setCluster( cluster );
 	EnumeratedVariable* x = (EnumeratedVariable*) xyz->getVar(0);
 	EnumeratedVariable* y = (EnumeratedVariable*) xyz->getVar(1);
 	EnumeratedVariable* z = (EnumeratedVariable*) xyz->getVar(2);
     TernaryConstraint* ctr = x->getConstr(y,z);   			
-
-	if (ToulBar2::verbose >= 1) cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")" << endl; 
-
+	if(ctr && (ctr->getCluster() != getCluster())) {
+     	TernaryConstraint* ctr_ = x->getConstr(y,z,td->getCluster(getCluster()));
+     	if(ctr_) ctr = ctr_;   			
+	}
+	if (ToulBar2::verbose >= 1) {
+		cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
+		if(td) cout << "   cluster nary: " << getCluster() << endl; else cout << endl; 
+		if(ctr) cout << "ctr exists" << endl;
+	}
 	if(!ctr || (ctr && cluster != ctr->getCluster())) {
-		if(td) xyz->setCluster( cluster );
-		if(ctr) xyz->setDuplicate();	
-		xyz->fillElimConstrBinaries();
-		xyz->reconnect();
-	} else {
+ 		 xyz->fillElimConstrBinaries(); 
+		 xyz->reconnect(); 
+		 if(ctr) xyz->setDuplicate(); 
+    } else {
 		ctr->addCosts(xyz);
 		xyz = ctr;
-	}
+	}	
 	xyz->propagate();
-
 	assert( xyz->getCluster() == xyz->xy->getCluster() &&  xyz->getCluster() == xyz->xz->getCluster() &&  xyz->getCluster() == xyz->yz->getCluster() );
 }
 

@@ -651,7 +651,16 @@ bool Solver::solve()
 			    td->setCurrentCluster(td->getRoot());
 				td->getRoot()->setLb(wcsp->getLb());
         		Cost ub_old = wcsp->getUb();
-        	    if(ub_old) res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old);
+				
+				if(ub_old) {
+					switch(ToulBar2::btdMode) {
+						case 0: res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); break;
+						case 1: solveClusters2by2(td->getRoot(), ub_old);
+								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); break;
+								break;
+						default:;
+					}
+				}
         		wcsp->setUb( min(res, ub_old) );
         	}	
         	else recursiveSolve();

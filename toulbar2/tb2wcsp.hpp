@@ -250,7 +250,7 @@ public:
 	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
 
 	void eliminate();
-	void restoreSolution(); 
+	void restoreSolution( Cluster* c = NULL ); 
     
 	Constraint* sum( Constraint* ctr1, Constraint* ctr2  );
 	void project( Constraint* &ctr_inout, EnumeratedVariable* var  );

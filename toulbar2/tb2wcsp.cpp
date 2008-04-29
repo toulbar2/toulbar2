@@ -77,6 +77,7 @@ BEP *ToulBar2::bep = NULL;
 int WCSP::wcspCounter = 0;
 
 char* ToulBar2::varOrder = NULL;
+int   ToulBar2::btdMode = 0;
 
 /*
  * WCSP constructors
@@ -779,7 +780,7 @@ void WCSP::propagate()
 }
 
 
-void WCSP::restoreSolution()
+void WCSP::restoreSolution( Cluster* c )
 {
 	int elimo = getElimOrder();
 	for(int i = elimo-1; i>=0; i--) {
@@ -787,9 +788,11 @@ void WCSP::restoreSolution()
 		EnumeratedVariable* x = (EnumeratedVariable*) ei.x;
 		EnumeratedVariable* y = (EnumeratedVariable*) ei.y;
 		EnumeratedVariable* z = (EnumeratedVariable*) ei.z;
-        if(x->unassigned()) continue;
-		if(y && y->unassigned()) continue;
-		if(z && z->unassigned()) continue;
+        if(c) { 
+	        if(x && (!c->isVar(x->wcspIndex) || x->unassigned())) continue;
+			if(y && (!c->isVar(y->wcspIndex) || y->unassigned())) continue;
+			if(z && (!c->isVar(z->wcspIndex) || z->unassigned())) continue;
+        }
 		BinaryConstraint* xy = ei.xy;
 		BinaryConstraint* xz = ei.xz;
 		TernaryConstraint* xyz = ei.xyz;
@@ -869,6 +872,7 @@ BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariab
 	int newIndex = (int) elimBinOrder;
 	BinaryConstraint* ctr = (BinaryConstraint*) elimBinConstrs[newIndex]; 
 	ctr->fillElimConstr(x,y);
+	ctr->isDuplicate_ = false;
 	return ctr;
 }
 
@@ -877,6 +881,7 @@ TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVari
 	int newIndex = (int) elimTernOrder;
 	TernaryConstraint* ctr = (TernaryConstraint*) elimTernConstrs[newIndex]; 
 	ctr->fillElimConstr(x,y,z);
+	ctr->isDuplicate_ = false;
 	return ctr;
 }
 

@@ -85,7 +85,7 @@ public:
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false) =0;
     
     virtual int getElimOrder() =0;
-    virtual void restoreSolution() =0;
+    virtual void restoreSolution( Cluster* c = NULL ) =0;
 
 	virtual void buildTreeDecomposition() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;

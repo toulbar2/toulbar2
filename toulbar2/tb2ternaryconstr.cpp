@@ -96,7 +96,10 @@ double TernaryConstraint::computeTightness()
 
 void TernaryConstraint::print(ostream& os)
 {
-    os << this << " TernaryConstraint(" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
+    os << this << " TernaryConstraint(" << x->getName() << "," << y->getName() << "," << z->getName() << ")";
+    if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
+    else cout << endl;
+    
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -420,6 +423,117 @@ bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable
 }
 
 
+void TernaryConstraint::fillxy() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+    BinaryConstraint* xy_ = NULL;
+    xy_ = x->getConstr(y); 
+    if(td && xy_ && (getCluster() != xy_->getCluster())) {  
+    	BinaryConstraint* xy__ =  x->getConstr(y, td->getCluster(getCluster()));
+    	if(xy__) xy_ = xy__; // we have found another constraint of the same cluster
+    }
+    if(!xy_ || (xy_ && td && (getCluster() != xy_->getCluster())) ) {
+		xy = wcsp->newBinaryConstr(x,y); 
+		xy->setCluster( getCluster() );
+		if(td && xy_ && (getCluster() != xy_->getCluster())) xy->setDuplicate();
+		wcsp->elimBinOrderInc(); 
+    } else xy = xy_; 
+	if(xy->isDuplicate()) setDuplicate();
+}
+
+void TernaryConstraint::fillxz() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+    BinaryConstraint* xz_ = NULL;
+    xz_ = x->getConstr(z); 
+    if(td && xz_ && (getCluster() != xz_->getCluster())) {
+    	BinaryConstraint* xz__ =  x->getConstr(z, td->getCluster(getCluster()));
+    	if(xz__) xz_ = xz__; // we have found another constraint of the same cluster
+    }
+    if(!xz_|| (xz_ && td && getCluster() != xz_->getCluster()) ) {
+		xz = wcsp->newBinaryConstr(x,z); 
+		xy->setCluster( getCluster() );
+		if(td && xz_ && (getCluster() != xz_->getCluster())) xz->setDuplicate();
+		wcsp->elimBinOrderInc(); 
+		if(td) xz->setCluster( getCluster() );
+    } else xz = xz_; 
+	if(xz->isDuplicate()) setDuplicate();
+}
+
+void TernaryConstraint::fillyz() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+    BinaryConstraint* yz_ = NULL;
+    yz_ = y->getConstr(z); 
+    if(td && yz_ && (getCluster() != yz_->getCluster())) {
+    	BinaryConstraint* yz__ =  y->getConstr(z, td->getCluster(getCluster()));
+    	if(yz__) yz_ = yz__; 
+    }
+    if(!yz_ || (yz_ && td && getCluster() != yz_->getCluster()) ) {
+		yz = wcsp->newBinaryConstr(y,z); 
+		yz->setCluster( getCluster() );
+		if(td && yz_ && (getCluster() != yz_->getCluster())) yz->setDuplicate();
+		wcsp->elimBinOrderInc(); 
+    } else yz = yz_; 
+	if(yz->isDuplicate()) setDuplicate();
+}
+
+void TernaryConstraint::fillElimConstrBinaries()
+{
+	fillxy();
+	fillxz();
+	fillyz();
+	
+    if (ToulBar2::verbose > 1) cout << " fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
+	
+	
+}
+
+
+
+void TernaryConstraint::setDuplicates() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+	if(xy->getCluster() != cluster) {
+		BinaryConstraint* xy_ =  x->getConstr(y, td->getCluster(getCluster()));
+		if(xy_) {
+			if(xy_->isDuplicate()) setDuplicate();
+			xy = xy_;
+		} else { 
+			wcsp->initElimConstr();
+			xy = wcsp->newBinaryConstr(x,y); 
+			xy->setCluster( cluster );
+			xy->setDuplicate();
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
+	}
+	if(xz->getCluster() != cluster) {
+		BinaryConstraint* xz_ =  x->getConstr(z, td->getCluster(getCluster()));
+		if(xz_) {
+			xz = xz_;
+			if(xz_->isDuplicate()) setDuplicate();
+		} else { 
+			wcsp->initElimConstr();
+			xz = wcsp->newBinaryConstr(x,z); 
+			xz->setCluster( getCluster() );
+			xz->setDuplicate();
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
+	}
+	if(yz->getCluster() != cluster) {
+		BinaryConstraint* yz_ =  y->getConstr(z, td->getCluster(getCluster()));
+		if(yz_) {
+			yz = yz_;
+			if(yz_->isDuplicate()) setDuplicate();
+		} else { 
+			wcsp->initElimConstr();
+			yz = wcsp->newBinaryConstr(y,z); 
+			yz->setCluster( getCluster() );
+			yz->setDuplicate();
+			wcsp->elimBinOrderInc(); 
+			setDuplicate();
+		}
+	}
+}
+
 
 bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z)
 {
@@ -439,6 +553,8 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
     }
     return true;
 }
+
+
 
 
 

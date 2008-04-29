@@ -172,6 +172,7 @@ public:
     static LcLevelType LcLevel;
     
     static char* varOrder;
+    static int btdMode;
 };
 
 /*

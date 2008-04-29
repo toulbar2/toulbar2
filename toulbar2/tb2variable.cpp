@@ -230,6 +230,40 @@ BinaryConstraint* Variable::getConstr( Variable* x )
     return NULL;
 }     
 
+
+BinaryConstraint* Variable::getConstr( Variable* x, Cluster* c )
+{
+	BinaryConstraint* res;
+	BinaryConstraint* ctr2;
+	TernaryConstraint* ctr3;
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+		if((*iter).constr->isSep()) continue;
+		
+    	if ((*iter).constr->arity() == 2) {
+    		ctr2 = (BinaryConstraint*) (*iter).constr;
+  			if(ctr2->getIndex(x) >= 0) {
+  				res = ctr2;
+  				if(res->getCluster() == c->getId()) return res;
+  			}
+    	}
+    	else if ((*iter).constr->arity() == 3) {
+    		ctr3 = (TernaryConstraint*) (*iter).constr;
+  			int idx = ctr3->getIndex(x);
+  			if(idx >= 0) {
+	  			int idt = (*iter).scopeIndex;
+  				if((0 != idx) && (0 != idt)) res = ctr3->yz;
+  				else if((1 != idx) && (1 != idt)) res = ctr3->xz;
+  				else res = ctr3->xy;
+  				
+  				if(res && res->getCluster() == c->getId()) return res;
+  			}
+    	}
+    }
+    return NULL;
+}     
+
+
+
 // Looks for the ternary constraint that links this variable with x and y
 TernaryConstraint* Variable::getConstr( Variable* x, Variable* y )
 {
@@ -244,6 +278,23 @@ TernaryConstraint* Variable::getConstr( Variable* x, Variable* y )
     }
 	return NULL;
 }
+
+TernaryConstraint* Variable::getConstr( Variable* x, Variable* y,  Cluster* c  )
+{
+	TernaryConstraint* ctr = NULL;
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    	if((*iter).constr->isSep()) continue;
+    	
+    	if ((*iter).constr->arity() == 3) {
+    		ctr = (TernaryConstraint*) (*iter).constr;
+    		if((ctr->getIndex(x)  >= 0) && (ctr->getIndex(y)  >= 0)) {
+  				if(ctr->getCluster() == c->getId()) return ctr;
+    		}
+    	}
+    }
+	return NULL;
+}
+
 
 
 // returns a ternary constraint if the current variable is linked to one

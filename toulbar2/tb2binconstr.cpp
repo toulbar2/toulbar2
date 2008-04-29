@@ -52,7 +52,9 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost
 
 void BinaryConstraint::print(ostream& os)
 {
-    os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")" << endl;
+    os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
+    if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
+    else cout << endl;
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {

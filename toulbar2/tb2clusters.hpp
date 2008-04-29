@@ -41,9 +41,7 @@ class Separator : public AbstractNaryConstraint
     StoreInt optPrevious;
 
     TNoGoods  					  nogoods;
-
     TSols  						  solutions;
-   
     DLink<Separator *>            linkSep;
 
 	string t;    // buffer for a separator tuple                   
@@ -77,6 +75,8 @@ class Separator : public AbstractNaryConstraint
 
 	void solRec( Cost ub );
 	bool solGet( TAssign& a, string& sol ); 
+
+	void resetOpt();
         
     TVars::iterator  begin() { return vars.begin(); } 
     TVars::iterator  end()   { return vars.end(); } 
@@ -89,7 +89,8 @@ class Separator : public AbstractNaryConstraint
     void   increase(int index) {}
     void   decrease(int index) {}
     void   remove(int index) {}
-    void   print(ostream& os) {}
+    
+    void   print(ostream& os);
 };
 
 
@@ -111,7 +112,6 @@ class Cluster {
 	  Cost				  ub;
 	  
 	  StoreInt			  active;
-	  
 	  Cluster*			  parent;             // parent cluster
 
  public:
@@ -157,6 +157,11 @@ class Cluster {
 	  void 			addCtr( Constraint* c );
 	  void 			addAssign( TAssign* a );
 	  void 		    updateUb();
+	  
+
+	  TClusters::iterator removeEdge( TClusters::iterator it );
+	  
+
 
   	  void 		    getSolution( TAssign& sol );
 	  
@@ -165,10 +170,18 @@ class Cluster {
 	  TClusters&	getDescendants();
 	  Cluster*		nextSep( Variable* v ); 
 	  bool			isDescendant( Cluster* c2 );
+	  bool  	    isEdge( Cluster* c );
+
+	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
+
 	  
       TClusters     descendants;  	   // set of descendants	
 	  vector<bool>  quickdescendants;	
 	  
+   	  void deconnectSep();
+
+	  	
+	
       // ----------------------------------------------------------
 	  Cost 			eval(TAssign* a);
 	  void 			setWCSP();                              // sets the WCSP to the cluster problem, deconnecting the rest
@@ -182,7 +195,8 @@ class Cluster {
 	  void addDelta( int posvar, Value value, Cost cost ) { if(sep) sep->addDelta(posvar,value,cost); }
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
       Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
-
+      void resetOpt() { if(sep) sep->resetOpt(); }
+	  
 	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
 
 	  TVars::iterator beginVars() { return vars.begin(); }
@@ -197,6 +211,8 @@ class Cluster {
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
 
 	  void print();	  
+	  void printStats() { if(!sep) return; sep->print(cout); }
+	  	
 };
 
 
@@ -229,6 +245,9 @@ public:
 
     void newSolution();
 
+	bool reduceHeight( Cluster* c );
+	void makeDescendants( Cluster* c );
+	
 	int      makeRooted();
 	void     makeRootedRec( Cluster* c,  TClusters& visited );
 	Cluster* getRoot() {return roots.front();}
@@ -246,23 +265,17 @@ public:
 	
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
 
-	Cluster* getBiggerCluster( TClusters& visited );
+	Cluster* getBiggerCluster( TClusters& visited );	
+	
+	
+	TClusters c1edges;
+	TClusters c2edges;
+
 
 	void print( Cluster* c = NULL, int recnum = 0);
 };
 
 
-
-class ClusteredSolver : public Solver {	
-public:
-
-	ClusteredSolver(int storeSize, Cost initUpperBound);
-
-
-private:
-
-
-};
 
 
 

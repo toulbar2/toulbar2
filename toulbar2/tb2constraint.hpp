@@ -164,6 +164,7 @@ public:
 	int  cluster;
 	int  getCluster()      {return cluster;}
 	void setCluster(int i) {cluster = i;}
+	void assignCluster();
 
     bool isSep_;
 	void setSep() 		   {isSep_ = true;}

@@ -49,8 +49,13 @@ class Solver
   int getNextUnassignedVar(Cluster *cluster);
   int getVarMinDomainDivMaxDegree(Cluster *cluster);
   int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
-  Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
-  Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
+
+  Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value, Cluster* onlyson = NULL);
+  Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *onlyson = NULL);
+  Cost recursiveSolveRDS(Cluster *cluster);
+  Cost solveClusters(Cluster *c1, Cluster *c2);
+  void solveClusters2by2(Cluster *c, Cost cub);
+  
 
 public:
     Solver(int storeSize, Cost initUpperBound);

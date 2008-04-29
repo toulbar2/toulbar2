@@ -68,3 +68,17 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 	
 	delete [] scopethis;
 }
+
+
+void Constraint::assignCluster() {
+	TreeDecomposition* td = wcsp->getTreeDec();
+	if(!td) return;
+	Cluster* lowest = td->getRoot();
+	for(int i=0;i<arity();i++) {
+		Variable* x = getVar(i);
+		Cluster* c = td->getCluster( x->getCluster() );
+		if(lowest->isDescendant(c)) lowest = c;
+	}
+	cluster = lowest->getId();
+}
+
