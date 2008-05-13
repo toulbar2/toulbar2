@@ -72,16 +72,22 @@ class Separator : public AbstractNaryConstraint
 
     void set( Cost c, bool opt );
     bool get( Cost& res, bool& opt );
+    Cost getRDS();
 
 	void solRec( Cost ub );
 	bool solGet( TAssign& a, string& sol ); 
 
 	void resetOpt();
+    
+    void setCluster(int id);
         
     TVars::iterator  begin() { return vars.begin(); } 
     TVars::iterator  end()   { return vars.end(); } 
     bool  is(int i) { return vars.find(i) != vars.end(); } 
-
+    TNoGoods::iterator  beginNG() { return nogoods.begin(); } 
+    TNoGoods::iterator  endNG()   { return nogoods.end(); } 
+ 
+    int 			getNbVars() { return vars.size();  }
 
 	// Obliged to include these methods; if not abstract class problem
     double computeTightness() { return 0; }
@@ -106,6 +112,9 @@ class Cluster {
 	  TVars				  vars;
 	  TCtrs			      ctrs;
 	  TClusters           edges;              // adjacent clusters 
+
+	  TVars				  varsTree;
+
 
 	  StoreCost           lb;	
 	  Cost				  lb_opt;
@@ -132,18 +141,19 @@ class Cluster {
 	  bool			isActive() { int a = active; return a == 1; }
 
 	  Cost	        getLbRec();
-	  Cost	        getLbRecNoGoods();
+	  Cost	        getLbRecRDS();
+	  Cost	        getLbRecNoGoodsRDS();
 	  Cost	        getLbRecNoGood(bool& opt);
 
 	  Cost		    getOpt() { return lb_opt; }
 	  Cost			getUb()  { return ub; }
 	  Cost			getLb()  { return lb; }
-	  Cost			getLb_opt()  { return lb_opt; }
 	  void			setUb(Cost c)  {ub = c; }
 	  void			setLb(Cost c)  {lb = c; }
 	  void			setLb_opt(Cost c)  {lb_opt = c; }
 	  int			getNbVars() { return vars.size(); }
 	  TVars&		getVars() { return vars; }	
+	  TVars&		getVarsTree() { return varsTree; }	
 	  TCtrs&		getCtrs() { return ctrs; }	
 	  TClusters&	getEdges() { return edges; }
 	  void 			setSep( Separator* sepin ) { sep = sepin; } 
@@ -174,11 +184,15 @@ class Cluster {
 
 	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
 
+	  void			setClusterSep( int i ) { if(sep) sep->setCluster(i); }
+
+	  Cost 			sampling();
+
 	  
       TClusters     descendants;  	   // set of descendants	
 	  vector<bool>  quickdescendants;	
 	  
-   	  void deconnectSep();
+   	  void deconnectSep( bool bassign = false, int dir = 0 );
 
 	  	
 	
@@ -199,10 +213,17 @@ class Cluster {
 	  
 	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
 
+	  int getNbSepVars() { if(sep) return sep->getNbVars(); else return 0; }
+
+
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
+	  TVars::iterator beginVarsTree() { return varsTree.begin(); }
+	  TVars::iterator endVarsTree()   { return varsTree.end(); }
 	  TVars::iterator beginSep() { return sep->begin(); }
 	  TVars::iterator endSep()   { return sep->end(); }
+	  TNoGoods::iterator beginNG() { return sep->beginNG(); }
+	  TNoGoods::iterator endNG()   { return sep->endNG(); }
 	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() { return edges.begin(); }
@@ -212,7 +233,15 @@ class Cluster {
 
 	  void print();	  
 	  void printStats() { if(!sep) return; sep->print(cout); }
-	  	
+
+	  void printStatsRec() { 
+	  		TClusters::iterator it = beginEdges();
+			while(it != endEdges()) {
+				(*it)->sep->print(cout);
+				(*it)->printStatsRec();
+				++it;
+			}
+	  }
 };
 
 
@@ -230,6 +259,7 @@ public:
 
     WCSP* 		getWCSP() { return wcsp; }
 	
+	int			getNbOfClusters() { return clusters.size(); }
 	Cluster*	getCluster( unsigned int i ) { assert( 0 <= i && i < clusters.size() ); return clusters[i]; }
 	Cluster*   	var2Cluster( int v );	
 	
@@ -242,7 +272,10 @@ public:
 	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
 	void fusions();                  			// fusions all redundant clusters after build_from_order is called
 	bool fusion();          		            // one fusion step
-
+	void fusion( Cluster* ci, Cluster* cj );
+	void fusionRec( Cluster* c, Cluster* noc );
+	
+	
     void newSolution();
 
 	bool reduceHeight( Cluster* c );
@@ -255,24 +288,29 @@ public:
 	int height( Cluster* r, Cluster* father );
 	int height( Cluster* r );
 
-	bool verify();
 
+	void resetOptRec( Cluster* c );
+
+	bool verify();
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );
 	void sum( TVars& v1, TVars& v2, TVars& vout ); 
 	bool included( TVars& v1, TVars& v2 ); 	
-	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );	
-	
+	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );		
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
+    
+    Cluster* rdsroot;
 
 	Cluster* getBiggerCluster( TClusters& visited );	
 	
+	Cost getLbRecNoGoodsRDS() { 
+		Cluster* c = getCluster(currentCluster);
+		return c->getLbRecNoGoodsRDS(); 
+	}
 	
-	TClusters c1edges;
-	TClusters c2edges;
-
-
 	void print( Cluster* c = NULL, int recnum = 0);
+    void printStats( Cluster* c = NULL ); 
+
 };
 
 

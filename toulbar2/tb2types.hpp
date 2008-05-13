@@ -173,6 +173,8 @@ public:
     
     static char* varOrder;
     static int btdMode;
+    static int btdSubTree;
+    static int btdRootCluster;
 };
 
 /*

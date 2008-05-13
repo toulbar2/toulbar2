@@ -646,6 +646,7 @@ bool Solver::solve()
             } while (ToulBar2::limited);
         } else {
         	TreeDecomposition* td = wcsp->getTreeDec();
+        	Cluster* start = NULL;
         	if(td) {
         	    Cost res = 0;
 			    td->setCurrentCluster(td->getRoot());
@@ -654,10 +655,25 @@ bool Solver::solve()
 				
 				if(ub_old) {
 					switch(ToulBar2::btdMode) {
-						case 0: res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); break;
-						case 1: solveClusters2by2(td->getRoot(), ub_old);
-								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); break;
+						case 0:	res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
 								break;
+						case 1: solveClusters(); 
+								cout << endl << "Solving whole problem..." << endl;
+								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
+								break;
+						case 2: start = td->getRoot();
+								if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
+							    td->setCurrentCluster(start);
+								start->setLb(wcsp->getLb());
+								solveClustersSubTree(start, ub_old);
+								res = start->getOpt();
+								break;
+
+						case 3: solveClusters2by2(td->getRoot(), ub_old); 
+								cout << endl << "Solving whole problem..." << endl;
+								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
+								break;
+						case 4: solveClustersUb(); break;
 						default:;
 					}
 				}
@@ -668,7 +684,8 @@ bool Solver::solve()
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-//    store->restore();         // see above for store->store()
+    
+//  store->restore();         // see above for store->store()
 
    	if(ToulBar2::vac) wcsp->printVACStat();
 

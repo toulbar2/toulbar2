@@ -111,7 +111,7 @@ public:
     
     /**********************************************************************/
     //   added for tree decomposition stuff	
-	int cluster;
+	StoreInt cluster;
 	void setCluster( int c ) { cluster = c; }
     int  getCluster()        { return cluster; }
 

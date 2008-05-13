@@ -156,8 +156,12 @@ int main(int argc, char **argv)
         cerr << "   T[integer] : threshold cost value for VAC" << endl;
         cerr << "   P[integer] : threshold cost value for VAC during the preprocessing phase" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
-        cerr << "   R[integer] : threshold mean cost value for relaxing constraints" << endl;
-        cerr << "   S : singleton consistency on preprocessing" << endl;
+        cerr << "   S : singleton consistency on preprocessing" << endl << endl;
+
+        cerr << "   B[integer] : btd mode:  0 usual ... 2 pseudotree rds" << endl;
+        cerr << "   R[integer] : choice for root cluster" << endl;
+        cerr << "   I[integer] : choice solving only a particular subtree" << endl;
+
 #endif
         cerr << endl;
         exit(0);
@@ -179,6 +183,14 @@ int main(int argc, char **argv)
         	int mode = atoi(&ch[1]);
         	if(mode > 0) ToulBar2::btdMode = mode;
         }
+        if ( (ch = strchr(argv[i],'R')) ) {
+        	int root = atoi(&ch[1]);
+        	if(root > 0) ToulBar2::btdRootCluster = root;
+        }
+        if ((ch = strchr(argv[i],'I'))) {  		  
+			int subcluster = atoi(&ch[1]);
+		    if(subcluster >= 1) ToulBar2::btdSubTree = subcluster;
+		}
 
     	
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
@@ -223,10 +235,10 @@ int main(int argc, char **argv)
         	Cost ct = string2Cost(&ch[1]);
         	if(ct > UNIT_COST) ToulBar2::costThresholdPre = ct;
         }
-        if ( (ch = strchr(argv[i],'R')) ) {
+        /*if ( (ch = strchr(argv[i],'R')) ) {
         	Cost ct = string2Cost(&ch[1]);
         	if(ct > UNIT_COST) ToulBar2::relaxThreshold = ct;
-        }
+        }*/
         if ( (ch = strchr(argv[i],'C')) ) {
         	Cost co = string2Cost(&ch[1]);
         	if(co > MIN_COST) ToulBar2::costMultiplier = co;

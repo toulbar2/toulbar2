@@ -78,6 +78,8 @@ int WCSP::wcspCounter = 0;
 
 char* ToulBar2::varOrder = NULL;
 int   ToulBar2::btdMode = 0;
+int   ToulBar2::btdSubTree = -1;
+int   ToulBar2::btdRootCluster = -1;
 
 /*
  * WCSP constructors
