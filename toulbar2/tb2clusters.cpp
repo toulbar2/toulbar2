@@ -445,7 +445,19 @@ void Cluster::deconnectSep(bool bassign, int dir) {
 	}
 }
 
-
+void Cluster::resetNGSep() {
+	if(!sep) return;
+	TVars::iterator its = beginSep();
+	while(its != endSep()) {
+		Variable *x = wcsp->getVar(*its);
+	    ConstraintList* xctrs = x->getConstrs();		
+	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
+            Constraint* ctr = (*it).constr;
+           	if(ctr->isSep()) ((Separator*) ctr)->resetOpt();
+	    }
+		++its;
+	}
+}
 
 
 Cluster* Cluster::nextSep( Variable* v ) { 
@@ -508,7 +520,7 @@ Cost Cluster::getLbRecNoGoodsRDS() {
 	Cost rds = c->sep->getRDS();
 	res += max(propalb, rds);
   } 
-  return res;	
+  return max(res,((sep)?sep->getRDS():MIN_COST));	
 }
 
 Cost Cluster::getLbRecNoGood(bool& opt) {

@@ -210,7 +210,8 @@ class Cluster {
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
       Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
       void resetOpt() { if(sep) sep->resetOpt(); }
-	  
+      void resetNGSep();
+
 	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
 
 	  int getNbSepVars() { if(sep) return sep->getNbVars(); else return 0; }

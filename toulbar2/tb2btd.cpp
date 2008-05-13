@@ -251,7 +251,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
   //else varIndex = getVarSup(cluster);  // experimental
   
   if (varIndex < 0) {
-	Cost lb = max(lbgood, wcsp->getLb());
+	Cost lb = wcsp->getLb();
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " lb= " << lb << endl;
 	for (TClusters::iterator iter = cluster->beginEdges(); lb < cub && iter!= cluster->endEdges(); ++iter) {
 	  Cluster* c = *iter;
@@ -475,11 +475,11 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 	  if(c != td->getRoot()) {
 	      c->deconnectSep(true);
 		  c->setLb(MIN_COST);
+		  wcsp->setUb(cub - wcsp->getLb());
 		  wcsp->setLb(MIN_COST);
+	  } else {
+		wcsp->setUb(cub);
 	  }
-	  
-	  
-	  wcsp->setUb(cub);
 	  td->setCurrentCluster(c);
 	  td->rdsroot = c;
 	  
@@ -501,5 +501,6 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
 	}
-	store->restore();	
+	store->restore();
+    c->resetNGSep();
 }
