@@ -88,6 +88,7 @@ public:
     virtual void restoreSolution( Cluster* c = NULL ) =0;
 
 	virtual void buildTreeDecomposition() = 0;
+    virtual void setDACOrderTreeDecomp() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;
 
 	virtual void iniSingleton() = 0;

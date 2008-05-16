@@ -1296,7 +1296,38 @@ int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     td->buildFromOrder();
+    setDACOrderTreeDecomp();
 }
+
+void WCSP::setDACOrderTreeDecomp() {
+    /*for (unsigned int i=0; i<numberOfConstraints(); i++) {
+	    Constraint* ctr = getCtr(i);
+	    if(ctr->connected()) {
+	    	Variable* higher = NULL;
+	    	for(int j=0;j<ctr->arity();j++) {
+	    		Variable* x = ctr->getVar(j);
+	    		if(!higher || td->isDescendant(x,higher)) higher = x;
+	    	}
+	    	ctr->setDACScopeIndex( ctr->getIndex(higher) );
+	    	ctr->propagate();
+	    }
+  	}	
+    for (int i=0; i<elimOrder; i++) 
+	   if (elimConstrs[i]->connected()) {
+		    Constraint* ctr = elimConstrs[i];
+	    	Variable* higher = NULL;
+	    	for(int j=0;j<ctr->arity();j++) {
+	    		Variable* x = ctr->getVar(j);
+	    		if(!higher || td->isDescendant(x,higher)) higher = x;
+	    	}
+		    ctr->setDACScopeIndex( ctr->getIndex(higher) );
+		    ctr->propagate();
+	   }*/	
+	  
+	  
+  //propagate();	  
+}
+
 
 
 

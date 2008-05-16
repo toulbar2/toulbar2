@@ -48,7 +48,12 @@ class Separator : public AbstractNaryConstraint
 	string s;    // buffer for a solution tuple                   
 	
 	
+	
+	
+	
   public:
+    TNoGoods    forwardNG;  //experimental
+
 
 	Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
 	Separator(WCSP *wcsp);
@@ -114,6 +119,7 @@ class Cluster {
 	  TClusters           edges;              // adjacent clusters 
 
 	  TVars				  varsTree;
+	  TVars				  varsNotSep;
 
 
 	  StoreCost           lb;	
@@ -203,8 +209,7 @@ class Cluster {
 	  void 			deactivate();
 	  void 			increaseLb( Cost newlb );
 
-	  void setup() { if(sep) sep->setup(this); }
-
+	  void setup(); 
 	  
 	  void addDelta( int posvar, Value value, Cost cost ) { if(sep) sep->addDelta(posvar,value,cost); }
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
@@ -213,14 +218,16 @@ class Cluster {
       void resetNGSep();
 
 	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
-
 	  int getNbSepVars() { if(sep) return sep->getNbVars(); else return 0; }
 
+	  void forwardNoGood();
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
 	  TVars::iterator beginVarsTree() { return varsTree.begin(); }
 	  TVars::iterator endVarsTree()   { return varsTree.end(); }
+	  TVars::iterator beginVarsNotSep() { return varsNotSep.begin(); }
+	  TVars::iterator endVarsNotSep()   { return varsNotSep.end(); }
 	  TVars::iterator beginSep() { return sep->begin(); }
 	  TVars::iterator endSep()   { return sep->end(); }
 	  TNoGoods::iterator beginNG() { return sep->beginNG(); }
@@ -300,6 +307,8 @@ public:
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );		
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
     
+    bool isDescendant( Variable* x, Variable* y );
+   
     Cluster* rdsroot;
 
 	Cluster* getBiggerCluster( TClusters& visited );	

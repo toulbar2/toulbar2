@@ -167,8 +167,7 @@ Cost Separator::getRDS() {
 		  if(wcsp->assigned(*it)) { 
 		  	 val = wcsp->getValue(*it);
 			 del = delta[i][val];      
-		  } 
-		  else {
+		  } else {
 		  	allassigned = false;
 		  	for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
 						val = *itx;
@@ -180,22 +179,7 @@ Cost Separator::getRDS() {
 		  i++;
 	}
 	Cost res = cluster->getOpt() - sumdelta;
-	if(res < MIN_COST) res = MIN_COST;
-	
-	if(allassigned) {
-		TNoGoods::iterator itng = nogoods.find(t);
-		if(itng != nogoods.end()) {
-			Cost resng = MIN_COST;
-			TPairNG p = itng->second;
-			if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << res << " (opt=" << p.second << ") on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
-			assert(!p.second || resng + p.first >= MIN_COST);
-			resng += p.first;
-			resng = max(MIN_COST,resng);
-			res += resng;
-		} else {
-			if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluser " <<  cluster->getId() << endl;
-		}
-	} 
+	if(allassigned || res < MIN_COST) res = MIN_COST;
 	return res;
 }
 
@@ -553,6 +537,34 @@ void Cluster::deactivate() {
 }
 
 
+void Cluster::forwardNoGood() 
+{
+	for (TClusters::iterator itc = beginEdges(); itc!= endEdges(); ++itc) {
+	  	Cluster* c = *itc;
+		string photo("");
+		for (TVars::iterator itv = c->beginSep(); itv!= c->endSep(); ++itv) {
+			EnumeratedVariable* x = (EnumeratedVariable*) wcsp->getVar(*itv);
+			for(unsigned int v = 0; v < x->getDomainInitSize(); v++) {        
+				char buff[10];
+				if(x->unassigned() && x->canbe( x->toValue(v) )) {
+					sprintf(buff,"%10d",x->getCost( x->toValue(v) ));
+				} else {
+					sprintf(buff,"%10d",-1);
+				}
+				photo = photo + string(buff);
+			}
+		}        	
+		Separator* s = c->sep;
+		TNoGoods::iterator itp = s->forwardNG.find(photo);
+		if(itp != s->forwardNG.end()) {
+			s->forwardNG[photo] = TPairNG(itp->second.first+1, false);
+			cout << "Hit!" << endl;
+		}
+		else s->forwardNG[photo] = TPairNG(0, false); 		  		
+	}
+}
+
+
 
 Cost Cluster::eval( TAssign* a  ) {
 	Cost ubold = wcsp->getUb();
@@ -690,6 +702,23 @@ bool Cluster::isEdge( Cluster* c ) {
     return false;
 }
 
+void Cluster::setup()
+{ 
+  	if(sep) sep->setup(this); 
+  	
+    TVars::iterator it = beginVars();
+	while(it != endVars()) {
+		bool notsep = true;
+	    for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+			Cluster* c = *iter;
+			if(c->isSepVar(*it)) notsep = false;
+	    }
+		if(notsep) varsNotSep.insert(*it);
+		++it;	
+	}			
+  	
+
+}
 
 
 
@@ -778,6 +807,12 @@ bool TreeDecomposition::isActiveAndInCurrentClusterSubTree(int idc)
 	assert(ci->isActive());
 	if(!cj->isActive()) return false;
 	else return ci->isDescendant(cj);
+}
+
+bool TreeDecomposition::isDescendant( Variable* x, Variable* y ) {
+	Cluster* cx = getCluster( x->getCluster() );
+	Cluster* cy = getCluster( y->getCluster() );
+	return cx->isDescendant(cy);
 }
 
 
@@ -912,14 +947,15 @@ void TreeDecomposition::buildFromOrder()
 
  	ifstream file(ToulBar2::varOrder);
     if (!file) {
-        cerr << "Could not open file " << ToulBar2::varOrder << endl;
-        exit(EXIT_FAILURE);
-    }	
-    while(file) {
-    	int ix;
-    	file >> ix;
-    	if(file) order.push_back(ix);
-    } 
+        cout << "No order file specified... taking index order." << endl;
+		for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
+    } else {    	
+	    while(file) {
+	    	int ix;
+	    	file >> ix;
+	    	if(file) order.push_back(ix);
+	    } 
+    }
 
 	if(order.size() != wcsp->numberOfVariables()) {
 		cout << "Order file " << ToulBar2::varOrder << " has incorrect number of variables." << endl;
@@ -988,13 +1024,9 @@ void TreeDecomposition::buildFromOrder()
 		Cluster* c = clusters[i];
 		c->getDescendants().clear();
 	}
-
-
 	
 	int h = makeRooted();
 	cout << "tree height: " << h << endl;
-
-
 
     for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
     	Constraint* ctr = wcsp->getCtr(i);
@@ -1021,10 +1053,9 @@ void TreeDecomposition::buildFromOrder()
     		} 
     	}
     }
-
+    
 	print();
 	cout << endl;
-
 	assert(verify());
 }
 
@@ -1181,6 +1212,7 @@ int TreeDecomposition::makeRooted()
 		c->setup();
 	}
 	rdsroot = NULL;
+	
 	return height(root);
 }
 
@@ -1199,6 +1231,8 @@ int TreeDecomposition::height( Cluster* r, Cluster* father )
 	}
 	return maxh + 1;
 }
+
+
 
 
 int TreeDecomposition::height( Cluster* r )

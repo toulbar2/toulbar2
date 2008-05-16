@@ -277,6 +277,7 @@ public:
 
     TreeDecomposition* td;
 	void buildTreeDecomposition();
+	void setDACOrderTreeDecomp();
     TreeDecomposition* getTreeDec()  { return td; }
 
     // -----------------------------------------------------------

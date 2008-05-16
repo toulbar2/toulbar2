@@ -102,22 +102,23 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 int Solver::getVarFreedom(Cluster *cluster)
 {
   if (unassignedVars->empty()) return -1;
-	
   if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar)) return lastConflictVar;
   
   int varIndex = -1;
-  Cost worstUnaryCost = MIN_COST;
+  Cost worst = MIN_COST;
   double best = MAX_VAL - MIN_VAL;
     
-  for (TVars::iterator iter = cluster->beginVarsTree(); iter!= cluster->endVarsTree(); ++iter) {
+  //for (TVars::iterator iter = cluster->beginVarsTree(); iter!= cluster->endVarsTree(); ++iter) {
+  for (TVars::iterator iter = cluster->beginVarsNotSep(); iter!= cluster->endVarsNotSep(); ++iter) {
+	//EnumeratedVariable* x = (EnumeratedVariable*) ((WCSP*)wcsp)->getVar(*iter);
 	if (wcsp->unassigned(*iter)) {
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - 1./100001.
-            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worst)) {
             best = heuristic;
             varIndex = *iter;
-            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+            worst = wcsp->getMaxUnaryCost(*iter);
         }
     }
   }
@@ -153,7 +154,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		if(!freedom && ToulBar2::btdMode == 2) {
 			Cost rds = td->getLbRecNoGoodsRDS();
 			lbgood = max(rds,lbgood);
-			if(CUT(lbgood, cub)) THROWCONTRADICTION;
+			if(CUT(rds, cub)) THROWCONTRADICTION;
 		}
         lastConflictVar = varIndex;
         if (dichotomic) {
@@ -178,7 +179,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		if(!freedom && ToulBar2::btdMode == 2) {
 			Cost rds = td->getLbRecNoGoodsRDS();
 			lbgood = max(rds,lbgood);
-			if(CUT(lbgood, cub)) THROWCONTRADICTION;
+			if(CUT(rds, cub)) THROWCONTRADICTION;
 		}
 		if (dichotomic) {
 		  if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
@@ -210,8 +211,10 @@ Cost Solver::recursiveSolveFreedom(Cluster *cluster, Cost lbgood, Cost cub)
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] freedom recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
   int varIndex = -1;
   varIndex = getVarFreedom(cluster);
-  int nassign = wcsp->numberOfVariables() - wcsp->numberOfUnassignedVariables() - cluster->getNbSepVars();
-  if (varIndex < 0 || nassign > 7) {
+  //int nassign = wcsp->numberOfVariables() - wcsp->numberOfUnassignedVariables() - cluster->getNbSepVars();
+  //if (varIndex < 0 || nassign > 10) {
+  if (varIndex < 0) {
+  	cluster->forwardNoGood();
 	Cost lb = wcsp->getLb();
 	if (lb < cub) {
 		if(cluster == td->getRoot()) {
@@ -475,11 +478,10 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 	  if(c != td->getRoot()) {
 	      c->deconnectSep(true);
 		  c->setLb(MIN_COST);
-		  wcsp->setUb(cub - wcsp->getLb());
+		  cub = cub - td->getRoot()->getLb();
 		  wcsp->setLb(MIN_COST);
-	  } else {
-		wcsp->setUb(cub);
-	  }
+	  } 
+	  wcsp->setUb(cub);
 	  td->setCurrentCluster(c);
 	  td->rdsroot = c;
 	  
@@ -491,7 +493,7 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 	  cout << "--- Solving freedom cluster subtree " << c->id << " ... "; flush(cout);
 	  lbfreedom = recursiveSolveFreedom(c, MIN_COST, cub);	  
   	  store->restore();	
-	  cout << "lbfreedom = " << lbfreedom << endl; */
+	  cout << "lbfreedom = " << lbfreedom << endl;*/
 
 	  cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
 	  Cost res = recursiveSolve(c, lbfreedom, cub);

@@ -175,13 +175,18 @@ int main(int argc, char **argv)
         if ( (ch = strchr(argv[i],'O')) ) {
         	char buf[80];
         	sprintf(buf,"%s",&ch[1]);
+        	if(ToulBar2::varOrder) delete [] ToulBar2::varOrder;
         	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
 	       	sprintf(ToulBar2::varOrder, "%s",buf);
 			continue; // skip current argument in order to not search for other options inside filename
     	}
         if ( (ch = strchr(argv[i],'B')) ) {
+        	char buf[80];
         	int mode = atoi(&ch[1]);
         	if(mode > 0) ToulBar2::btdMode = mode;
+        	sprintf(buf,"%s","default");
+        	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+	       	sprintf(ToulBar2::varOrder, "%s",buf);
         }
         if ( (ch = strchr(argv[i],'R')) ) {
         	int root = atoi(&ch[1]);
