@@ -23,6 +23,7 @@ Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nb
 {
     store = new Store(storeSize);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
+    nsolutions = 0;
 }
 
 Solver::~Solver()
@@ -523,9 +524,16 @@ void Solver::newSolution()
 	else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
     wcsp->restoreSolution();
     if (ToulBar2::showSolutions) {
+    	
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
+
+        if(ToulBar2::allSolutions) {
+        	nsolutions++;
+        	cout << nsolutions << " solution: ";
+        }
+
         for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-            cout << " ";
+	        cout << " ";
             if (ToulBar2::pedigree) {
                 cout <<  wcsp->getName(i) << ":";
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
@@ -646,32 +654,29 @@ bool Solver::solve()
             } while (ToulBar2::limited);
         } else {
         	TreeDecomposition* td = wcsp->getTreeDec();
-        	Cluster* start = NULL;
         	if(td) {
-        	    Cost res = 0;
-			    td->setCurrentCluster(td->getRoot());
-				td->getRoot()->setLb(wcsp->getLb());
+	    	    Cost res = 0;
+		    	Cluster* start = td->getRoot();
+    	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
+        	    td->setCurrentCluster(start);
+				start->setLb(wcsp->getLb());
         		Cost ub_old = wcsp->getUb();
 				
 				if(ub_old) {
 					switch(ToulBar2::btdMode) {
-						case 0:	res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
+						case 0:	res = recursiveSolve(start, wcsp->getLb(), ub_old); 
 								break;
 						case 1: solveClusters(); 
 								cout << endl << "Solving whole problem..." << endl;
-								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
+								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
 								break;
-						case 2: start = td->getRoot();
-								if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
-							    td->setCurrentCluster(start);
-								start->setLb(wcsp->getLb());
-								solveClustersSubTree(start, ub_old);
+						case 2: solveClustersSubTree(start, ub_old);
 								res = start->getOpt();
 								break;
 
-						case 3: solveClusters2by2(td->getRoot(), ub_old); 
+						case 3: solveClusters2by2(start, ub_old); 
 								cout << endl << "Solving whole problem..." << endl;
-								res = recursiveSolve(td->getRoot(), wcsp->getLb(), ub_old); 
+								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
 								break;
 						case 4: solveClustersUb(); break;
 						default:;

@@ -63,6 +63,7 @@ class Solver
   void solveClustersUb();
   void solveClustersSubTree(Cluster *c, Cost cub);
     
+  int nsolutions;
 
 public:
     Solver(int storeSize, Cost initUpperBound);
