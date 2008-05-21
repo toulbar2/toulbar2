@@ -176,6 +176,8 @@ public:
     static int btdMode;
     static int btdSubTree;
     static int btdRootCluster;
+
+	static bool xmlflag;
 };
 
 /*

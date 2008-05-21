@@ -603,8 +603,26 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
+#ifdef XMLFLAG
 
+#include "./xmlcsp/xmlcsp.h"
+void WCSP::read_XML(const char *fileName)
+{
+	 MyCallback cb;
+	 cb.wcsp = this;	
+ 	 cb.fname = string(fileName);
+  	 cb.convertWCSP = true;
+	 try {
+	    XMLParser_libxml2<> parser(cb);
+	    parser.setPreferredExpressionRepresentation(INFIX_C);
+	    parser.parse(fileName); 
+	  } catch (exception &e) {
+	    cout.flush();
+	    cerr << "\n\tUnexpected exception in XML parsing\n";
+	    cerr << "\t" << e.what() << endl;
+	    exit(1);
+	  }
+}
 
-
-
+#endif
 

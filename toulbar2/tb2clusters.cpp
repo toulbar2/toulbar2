@@ -846,7 +846,7 @@ void TreeDecomposition::fusions()
 	cout << "Tree decomposition width: " << treewidth - 1 << endl;
 }
 
-
+// fusion process to minimize tree height when the seprators are included
 void TreeDecomposition::fusionRec( Cluster* c, Cluster* noc ) {
 	    TClusters::iterator it =  c->beginEdges();
 		while(it != c->endEdges()) {
@@ -872,7 +872,9 @@ void TreeDecomposition::fusionRec( Cluster* c, Cluster* noc ) {
 			bool bf1 = (varinter.size() > 2) && (varsum.size() <= c->getVars().size() + dif);
 			bool bf2 = (varinter.size() > 2) && (varsum.size() <= cj->getVars().size() + dif);
 			bool bf3 = (varinter.size() > 100);
-			if(bf1 || bf2 || bf3) fusion(c,cj);
+			if(bf1 || bf2 || bf3) {
+				//fusion(c,cj);
+			}
 		}
 }
 

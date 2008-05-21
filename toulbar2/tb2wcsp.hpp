@@ -162,6 +162,10 @@ public:
     void read_uai2008(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
 
+	#ifdef XMLFLAG
+	void read_XML(const char *fileName);
+    #endif
+
     void print(ostream& os);
     void dump(ostream& os);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
