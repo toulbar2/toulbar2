@@ -159,6 +159,7 @@ public:
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval);
     
     void read_wcsp(const char *fileName);
+    void read_uai2008(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
 
     void print(ostream& os);

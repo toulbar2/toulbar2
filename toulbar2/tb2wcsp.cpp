@@ -54,6 +54,7 @@ externalcostevent ToulBar2::setminobj = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
 
 bool ToulBar2::bayesian = false;
+bool ToulBar2::uai = false;
 int ToulBar2::resolution = 7;
 TProb ToulBar2::errorg = 0.05;
 TProb ToulBar2::NormFactor = 1;

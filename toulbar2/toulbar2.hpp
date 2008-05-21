@@ -82,6 +82,7 @@ public:
     virtual void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
     
     virtual void read_wcsp(const char *fileName) =0;
+    virtual void read_uai2008(const char *fileName) =0;
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false) =0;
     
     virtual int getElimOrder() =0;

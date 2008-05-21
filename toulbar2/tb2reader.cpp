@@ -9,6 +9,7 @@
 #include "tb2bep.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
+#include <list>
 
 
 typedef struct {
@@ -24,7 +25,11 @@ void WCSP::read_wcsp(const char *fileName)
       else ToulBar2::pedigree->read_bayesian(fileName, this);
       return;
     }
-	if (ToulBar2::bep) {
+    else if (ToulBar2::uai) {
+	    read_uai2008(fileName);
+	    return;
+    }
+    else if (ToulBar2::bep) {
 	  ToulBar2::bep->read(fileName, this);
 	  return;
 	}
@@ -340,8 +345,8 @@ void WCSP::read_wcsp(const char *fileName)
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
     }   
     histogram();
-    
 }
+
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular ) 
 {
@@ -356,3 +361,250 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " constraints." << endl;
     }  
 }
+
+
+
+
+void WCSP::read_uai2008(const char *fileName)
+{
+    ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
+    if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
+	   cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
+	   exit(EXIT_FAILURE);
+    }
+
+	
+	string uaitype;
+	ifstream file(fileName);
+  	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
+
+    Cost top = MAX_COST-1;
+	Cost K = ToulBar2::costMultiplier;    
+	if(top < MAX_COST / K)	top = top * K;
+	else top = MAX_COST-1;
+
+    TProb TopProb = to_double(top - 1);
+    updateUb((Cost) ((Long) TopProb));   
+	
+
+
+    int nbvar,nbval,nbconstr;
+    int i,j,k,ic;
+    string varname;
+    int domsize;
+    EnumeratedVariable *x;
+    EnumeratedVariable *y;
+    EnumeratedVariable *z;
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    Cost cost;
+    int ntuples;
+    int arity;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+	                
+	list<int> lctrs;
+
+	file >> uaitype;
+	
+	if (ToulBar2::verbose >= 3) cout << "Reading " << uaitype << "  file." << endl;
+	
+	
+	//bool markov = uaitype == string("MARKOV");
+	//bool bayes = uaitype == string("BAYES");
+
+    
+
+    file >> nbvar;
+    // read variable domain sizes
+    for (i = 0; i < nbvar; i++) {
+        string varname;
+        varname = to_string(i);
+        file >> domsize;
+        if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
+        int theindex = -1;
+        if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
+        else theindex = makeIntervalVariable(varname,0,-domsize-1);
+        assert(theindex == i);   
+    }
+
+    file >> nbconstr;
+    // read each constraint
+    for (ic = 0; ic < nbconstr; ic++) {
+        file >> arity;
+
+        if(arity > MAX_ARITY)  { cerr << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
+        if (!file) {
+            cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
+            break;
+        }
+        if (arity > 3) {
+        	int scopeIndex[MAX_ARITY];
+			for(i=0;i<arity;i++) {
+	            file >> j;
+	            scopeIndex[i] = j;
+			}     	
+            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MIN_COST) );
+        } 
+        else if (arity == 3) {
+            file >> i;
+            file >> j;
+            file >> k;
+        	if ((i == j) || (i == k) || (k == j)) {
+    	       cerr << "Error: ternary constraint!" << endl;
+               exit(EXIT_FAILURE);
+            }
+            x = (EnumeratedVariable *) vars[i];
+            y = (EnumeratedVariable *) vars[j];
+            z = (EnumeratedVariable *) vars[k];
+            if (ToulBar2::verbose >= 3) cout << "read ternary constraint " << ic << " on " << i << "," << j << "," << k << endl;
+            vector<Cost> costs;
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                for (b = 0; b < y->getDomainInitSize(); b++) {
+                    for (c = 0; c < z->getDomainInitSize(); c++) {
+                        costs.push_back(MIN_COST);
+					}
+                }
+            }
+			lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
+		} 
+		else if (arity == 2) {
+            file >> i;
+            file >> j;
+			if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
+        	if (i == j) {
+    	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
+               exit(EXIT_FAILURE);
+            }
+            x = (EnumeratedVariable *) vars[i];
+            y = (EnumeratedVariable *) vars[j];
+            vector<Cost> costs;
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                for (b = 0; b < y->getDomainInitSize(); b++) {
+                    costs.push_back(MIN_COST);
+                }
+            }
+            lctrs.push_back( postBinaryConstraint(i,j,costs) );          
+        } 
+        else if (arity == 1) {
+            file >> i;
+            if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
+		    x = (EnumeratedVariable *) vars[i];
+			TemporaryUnaryConstraint unaryconstr;
+			unaryconstr.var = x;
+	    	unaryconstrs.push_back(unaryconstr);
+		    x->queueNC();
+            lctrs.push_back(-1);            
+        } 
+    }
+    
+	int iunaryctr = 0;
+	int ictr = 0;
+	Constraint*	ctr = NULL;
+	TernaryConstraint* tctr = NULL;
+	BinaryConstraint* bctr = NULL;
+	NaryConstraint* nctr = NULL;
+	string s;
+
+					
+	list<int>::iterator it = lctrs.begin();
+	while(it !=  lctrs.end()) {
+	
+		if(*it < 0) ctr = NULL;
+		else		ctr = getCtr(*it);
+		
+		file >> ntuples;
+
+		TProb num;
+		vector<TProb> costsProb;
+		vector<Cost> costs;
+	
+		for (k = 0; k < ntuples; k++) {
+	        file >> num;
+	        costsProb.push_back( num );
+	    }
+		for (k = 0; k < ntuples; k++) {
+			num = costsProb[k];
+	        costs.push_back(  Prob2Cost(num) );
+	    }
+			
+		int arity = (ctr)?ctr->arity():1;
+		switch(arity) {
+			case 1: 	unaryconstrs[iunaryctr].costs.clear();
+						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
+						      unaryconstrs[iunaryctr].costs.push_back(costs[a]);
+						}			
+						iunaryctr++; 
+						break;	
+	
+			case 2: bctr = (BinaryConstraint*) ctr;
+					x = (EnumeratedVariable*) bctr->getVar(0);
+            		y = (EnumeratedVariable*) bctr->getVar(1);
+            		bctr->addCosts( x,y, costs );
+					ictr++;
+					break;
+
+			case 3: tctr = (TernaryConstraint*) ctr;
+					x = (EnumeratedVariable*) tctr->getVar(0);
+            		y = (EnumeratedVariable*) tctr->getVar(1);
+            		z = (EnumeratedVariable*) tctr->getVar(2);
+		    		tctr->addCosts( x,y,z, costs );
+        			ictr++;
+					break;
+			 
+			case 4: nctr = (NaryConstraint*) ctr;
+					j = 0;
+					nctr->firstlex();
+					while(nctr->nextlex(s,cost)) {
+						nctr->setTuple(s, costs[j]);
+						j++;
+					}
+					ictr++; 
+					break;
+					
+			default: break;
+			
+		}
+		++it;
+	}
+
+    sortVariables();
+    sortConstraints();
+    // apply basic initial propagation AFTER complete network loading
+    
+    for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+        for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
+            if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+        }
+        unaryconstrs[u].var->findSupport();
+    }
+    if (ToulBar2::verbose >= 0) {
+        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
+    }   
+ 
+ 	int nevi = 0;	
+ 	ifstream fevid((string(fileName) + string(".evid")).c_str());
+  	if (!fevid) { cerr << "Could not open evidence file for " << fileName << endl; exit(EXIT_FAILURE); }
+	fevid >> nevi;
+ 	while(nevi) {
+ 		if(!fevid) {
+			cerr << "Error: incorrect number of evidences." << endl;
+            exit(EXIT_FAILURE);
+ 		}
+ 		fevid >> i;
+ 		fevid >> j;
+ 		getVar(i)->assign(j);
+ 		nevi--;
+ 	}
+ 	
+ 
+    histogram();
+}
+
+
+
+
+
+
+
+

@@ -153,6 +153,7 @@ public:
     static externalcostevent setminobj;
     static Pedigree *pedigree;
     static bool bayesian;
+    static bool uai;
     static int resolution;
     static TProb errorg;
     static TProb NormFactor;

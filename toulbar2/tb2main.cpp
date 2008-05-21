@@ -330,6 +330,7 @@ int main(int argc, char **argv)
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
+    if (strstr(argv[1],".uai")) { ToulBar2::uai = true; ToulBar2::bayesian = true; }
     if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
     if (strstr(argv[1],".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
