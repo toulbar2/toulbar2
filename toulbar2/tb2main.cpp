@@ -275,7 +275,13 @@ int main(int argc, char **argv)
             while (argc > pos) { sscanf(argv[pos++],"%f",&f); ToulBar2::allelefreqdistrib.push_back(f); }                                                                           
         }
     }
-    
+
+    if (ToulBar2::elimDegree_preprocessing > 0 && (ToulBar2::showSolutions || ToulBar2::writeSolution)) {
+	  cout << "Warning! Cannot show/save solutions if general variable elimination used in preprocessing." << endl;
+	  ToulBar2::showSolutions = false;
+	  ToulBar2::writeSolution = false;
+	}
+
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
     if (localsearch && !strstr(argv[1],".pre")) {
