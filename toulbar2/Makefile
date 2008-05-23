@@ -1,7 +1,11 @@
 SRCSFULL = $(wildcard tb2*.cpp)
 
 # Remove the first character in the following line if compile with BOOST Graph library
-#BOOST = -DBOOST
+# BOOST = -DBOOST
+
+# Same thing for XML
+#XML = XMLFLAG
+#XMLI = -I/usr/include/libxml2 -DXMLFLAG
 
 ifeq ($(BOOST),-DBOOST)
 SRCS = $(SRCSFULL)
@@ -13,7 +17,6 @@ OBJS = $(SRCS:.cpp=.o)
 
 LIBSRCS1 = $(SRCS:tb2main.cpp=)
 LIBSRCS = $(LIBSRCS1:tb2solver.cpp=)
-
 LIBOBJS = $(LIBSRCS:.cpp=.o)
 
 CC = g++
@@ -26,21 +29,27 @@ ICC = icc
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/Ilog/solver60/include -I/usr/local/Ilog/concert20/include
 #ILOGLIBS = -L/usr/local/Ilog/solver60/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -L/usr/local/Ilog/concert20/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -lsolverfloat -lsolver -lconcert
 
-CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST)
+CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST) $(XMLI)
 # -g3 -ftrapv -ansi -pedantic
+# -DNARYCHAR
 
-#OFLAGS = -O3 -DNDEBUG
+OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
 # -O2
 
-ICCFLAGS = -O3 -ipo -static -DNDEBUG
+ICCFLAGS = 
+#-O3 -ipo -static -DNDEBUG
 
 PFLAGS = 
 # -pg -g3
 # -static -static-libgcc
 
+ifeq ($(XML),XMLFLAG)
+LIBFLAGS = -lxml2
+else
 LIBFLAGS = 
 # -fPIC
+endif
 
 BUILD = $(CC) -shared
 
