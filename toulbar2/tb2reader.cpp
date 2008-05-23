@@ -29,6 +29,10 @@ void WCSP::read_wcsp(const char *fileName)
 	    read_uai2008(fileName);
 	    return;
     }
+    else if (ToulBar2::xmlflag) {
+	    read_XML(fileName);
+	    return;
+    }
     else if (ToulBar2::bep) {
 	  ToulBar2::bep->read(fileName, this);
 	  return;
@@ -604,25 +608,31 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 #ifdef XMLFLAG
-
 #include "./xmlcsp/xmlcsp.h"
+#endif
+
 void WCSP::read_XML(const char *fileName)
 {
-	 MyCallback cb;
-	 cb.wcsp = this;	
- 	 cb.fname = string(fileName);
-  	 cb.convertWCSP = true;
-	 try {
-	    XMLParser_libxml2<> parser(cb);
-	    parser.setPreferredExpressionRepresentation(INFIX_C);
-	    parser.parse(fileName); 
-	  } catch (exception &e) {
-	    cout.flush();
-	    cerr << "\n\tUnexpected exception in XML parsing\n";
-	    cerr << "\t" << e.what() << endl;
+	 #ifdef XMLFLAG
+		 MyCallback cb;
+		 cb.wcsp = this;	
+	 	 cb.fname = string(fileName);
+	  	 cb.convertWCSP = true;
+		 try {
+		    XMLParser_libxml2<> parser(cb);
+		    parser.setPreferredExpressionRepresentation(INFIX_C);
+		    parser.parse(fileName); 
+		  } catch (exception &e) {
+		    cout.flush();
+		    cerr << "\n\tUnexpected exception in XML parsing\n";
+		    cerr << "\t" << e.what() << endl;
+		    exit(1);
+		  }
+	#else	
+		cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n" << endl;			   
 	    exit(1);
-	  }
+	#endif
+	
 }
 
-#endif
 

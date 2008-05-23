@@ -1203,6 +1203,17 @@ void NaryConstrie::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in 
     else f->insert(tch, c);	
 }
 
+void NaryConstrie::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in ) {
+	string t(tin);
+	Cost csum = eval(t) + c;
+	if(scope_in) {  for(int i = 0; i < arity_; i++) t[getIndex(scope_in[i])] = tin[i];  }
+	char tch[80];
+	strcpy(tch,t.c_str());
+    if(!f) { f = new Trie( tch, csum ); } 
+    else f->insert(tch, csum);	
+		
+}
+
 
 Cost NaryConstrie::eval( string& s ) {
 	Cost c = default_cost;

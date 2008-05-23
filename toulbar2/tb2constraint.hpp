@@ -73,6 +73,8 @@ public:
 
 	virtual void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
+	virtual void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in = NULL) {}
+
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return MIN_COST; }
 	virtual Cost getDefCost() { return MIN_COST; }

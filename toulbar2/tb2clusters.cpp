@@ -547,9 +547,9 @@ void Cluster::forwardNoGood()
 			for(unsigned int v = 0; v < x->getDomainInitSize(); v++) {        
 				char buff[10];
 				if(x->unassigned() && x->canbe( x->toValue(v) )) {
-					sprintf(buff,"%10d",x->getCost( x->toValue(v) ));
+					//sprintf(buff,"%10d",x->getCost( x->toValue(v) ));
 				} else {
-					sprintf(buff,"%10d",-1);
+					//sprintf(buff,"%10d",-1);
 				}
 				photo = photo + string(buff);
 			}
@@ -1082,34 +1082,31 @@ bool TreeDecomposition::reduceHeight( Cluster* c )
 	bool changed = false;
 	Cluster* cparent = c->getParent();
 	TClusters::iterator itj;
-	
 	if(cparent) {
 		itj =  c->beginEdges();
 		while(itj != c->endEdges()) {
 			Cluster* cj = *itj;
 			++itj;	
-		
 			TVars cjsep;
    	    	intersection(c->getVars(), cj->getVars(), cjsep);
-
 			if(included(cjsep, cparent->getVars())) {
 				// replacing the cluster higher in the tree
 				c->removeEdge(cj);
 				cparent->addEdge(cj);
 				cj->setParent(cparent);
 				changed = true;
+				return true;
 			}
 		}
 	}
-
 	itj =  c->beginEdges();
 	while(itj != c->endEdges()) {
 		Cluster* cj = *itj;
 		cj->removeEdge(c);
 		++itj;	
 		changed = changed || reduceHeight(cj); 		
+		if(changed) return true;
 	}
-	
 	return false;
 }
 

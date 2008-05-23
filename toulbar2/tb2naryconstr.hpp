@@ -32,8 +32,21 @@ class NaryConstraint : public AbstractNaryConstraint
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstraint(WCSP *wcsp);
 	
-	
 	virtual void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
+	virtual void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
+	
+	virtual void addtoTuple( int* tin, Cost c, EnumeratedVariable** scope_in = NULL ) 
+	{
+		char* buf = new char [arity_];
+		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
+		buf[arity_] = '\0';
+		string str = string(buf); 
+		addtoTuple( str, c, scope_in );
+		delete [] buf;
+	}
+
+	
+	
     virtual Cost eval( string& s ) = 0; 
 	Cost evalsubstr( string& s, Constraint* ctr );
 	
@@ -186,6 +199,7 @@ class NaryConstrie : public NaryConstraint
 	virtual ~NaryConstrie();
 	
 	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 
     void project( EnumeratedVariable* x, bool addUnaryCtr = true ) {};
 
