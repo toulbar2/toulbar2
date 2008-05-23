@@ -752,6 +752,8 @@ void Pedigree::printCorrection(WCSP *wcsp)
   int ncorrections = 0;
   int ncorrectok = 0;
   	
+  int nbcorrection = 0;
+
   cout << "Correction:";
   for (unsigned int i=0; i<genotypes.size(); i++) {
     int sol = wcsp->getValue(pedigree[individuals[genotypes[i]]].varindex);
@@ -762,6 +764,7 @@ void Pedigree::printCorrection(WCSP *wcsp)
     if (!((allele1>0 && allele2>0 && ((a1==allele1 && a2==allele2) || (a1==allele2 && a2==allele1)))
 		|| ((allele1==0 || allele2==0) && (a1==allele1 || a1==allele2 || a2==allele1 || a2==allele2)))) {
       cout << " " << genotypes[i];
+	  nbcorrection++;
 
 	  if(errorinfo) {
 	      map<int,int>::iterator it = gencorrects.find(genotypes[i]);
@@ -774,6 +777,7 @@ void Pedigree::printCorrection(WCSP *wcsp)
       ncorrections++;
     }
   }
+  cout << " (" << nbcorrection << ")";
   cout << endl;   
   if(errorinfo) {
   	cout << "Info errorfile: ";
