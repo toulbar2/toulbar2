@@ -729,7 +729,10 @@ void WCSP::eliminate()
 	while(!Eliminate.empty())
 	{
 	    EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop();
-	    if (x->unassigned()) x->eliminate();
+	    if (x->unassigned()) {
+		  if (td) {if (td->isInCurrentClusterSubTree(x->getCluster())) x->eliminate();}
+		  else x->eliminate();
+		}
 	}
 }
 
