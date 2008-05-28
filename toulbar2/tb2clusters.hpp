@@ -211,7 +211,7 @@ class Cluster {
 
 	  void setup(); 
 	  
-	  void addDelta( int posvar, Value value, Cost cost ) { if(sep) sep->addDelta(posvar,value,cost); }
+	  void addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
 	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
       Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
       void resetOpt() { if(sep) sep->resetOpt(); }
@@ -262,6 +262,7 @@ private:
 	list<Cluster*> 	  roots;
 
 public:
+	vector<StoreInt>  deltaModified; 
 
 	TreeDecomposition(WCSP* wcsp_in);
 

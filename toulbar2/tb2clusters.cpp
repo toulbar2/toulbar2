@@ -35,9 +35,13 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
     linkSep.content = this;
     
     // initial "delayed" propagation
-	for(int i=0;connected() && i<arity_;i++) {         
-	  if (getVar(i)->assigned()) assign(i);
-	}           
+	if (arity_ == 0) {
+	  queueSep();
+	} else {
+	  for(int i=0;i<arity_;i++) {         
+		if (getVar(i)->assigned()) assign(i);
+	  }           
+	}
 }
 
 
@@ -156,30 +160,30 @@ void Separator::set( Cost c, bool opt ) {
 
 Cost Separator::getRDS() {
 	int i = 0;
-	bool allassigned = true;	
 	WCSP* wcsp = cluster->getWCSP();
 	Cost sumdelta = MIN_COST;	
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
 		  EnumeratedVariable* x = (EnumeratedVariable*) wcsp->getVar(*it);
-		  Cost del = MIN_COST; 
-		  Value val;
-		  if(wcsp->assigned(*it)) { 
-		  	 val = wcsp->getValue(*it);
-			 del = delta[i][val];      
-		  } else {
-		  	allassigned = false;
-		  	for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
-						val = *itx;
-						if(del < delta[i][val]) del = delta[i][val];
-		  	}
-	      }      
-		  sumdelta += del;
+		  if (wcsp->td->deltaModified[x->wcspIndex]) {
+			Cost del = MIN_COST; 
+			Value val;
+			if(x->assigned()) { 
+			  val = x->getValue();
+			  del = delta[i][val];      
+			} else {
+			  for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
+				val = *itx;
+				if(del < delta[i][val]) del = delta[i][val];
+			  }
+			}      
+			sumdelta += del;
+		  }
 		  ++it;
 		  i++;
 	}
 	Cost res = cluster->getOpt() - sumdelta;
-	if(allassigned || res < MIN_COST) res = MIN_COST;
+  	if(res < MIN_COST) res = MIN_COST;
 	return res;
 }
 
@@ -419,8 +423,9 @@ void Cluster::deconnectSep(bool bassign, int dir) {
 	    ConstraintList* xctrs = x->getConstrs();		
 	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
             Constraint* ctr = (*it).constr;
-           	if(bassign || ctr->isSep()) { ctr->deconnect(); continue; }
             Cluster* ctrc = td->getCluster(ctr->getCluster());
+			if (ctr->isSep() && isDescendant(ctrc) && ctrc != this) { continue; }
+           	if(bassign || ctr->isSep()) { ctr->deconnect(); continue; }
             if(!dir) { if(isDescendant(ctrc)) ctr->deconnect();  }          
             else     { if(!isDescendant(ctrc)) ctr->deconnect(); }  
 	    }
@@ -790,6 +795,7 @@ void Cluster::print() {
 
 TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) : wcsp(wcsp_in), 
   currentCluster(-1, &wcsp_in->getStore()->storeValue) {
+  deltaModified = vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false, &wcsp_in->getStore()->storeValue));
 }
 
 bool TreeDecomposition::isInCurrentClusterSubTree(int idc) 
@@ -1173,7 +1179,7 @@ int TreeDecomposition::makeRooted()
 			
 	 	    EnumeratedVariable** scopeVars = new EnumeratedVariable* [1];
 	    	oneroot->setSep( new Separator(wcsp,scopeVars,0) );  
-
+			if (oneroot->getVars().size() <= 1 && oneroot->getDescendants().size() == 1) oneroot->sep->unqueueSep();
 			root->addEdge(oneroot);
 			oneroot->setParent(root);
 			root->getDescendants().insert( root );
@@ -1373,6 +1379,8 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
   Cluster* cx = getCluster( x->getCluster() );
   if(! cy->isDescendant( cx ) ) {
 	int ckid,posx;
+	assert(x->clusters.size() > 0);
+	if (cost>MIN_COST && !deltaModified[x->wcspIndex]) deltaModified[x->wcspIndex] = true;	  
 	x->beginCluster();        	
 	while( x->nextCluster(ckid,posx) ) {
 	  Cluster* ck = getCluster( ckid );
@@ -1383,7 +1391,6 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
 	}
   }
 }
-
 
 
 Cluster* TreeDecomposition::getBiggerCluster( TClusters& visited ) {
