@@ -496,12 +496,16 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 	  cout << "lbfreedom = " << lbfreedom << endl;*/
 
 	  cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
+	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
 	  Cost res = recursiveSolve(c, lbfreedom, cub);
 	  c->setLb_opt(res);
+	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 	  c->printStatsRec();
 	  cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
+	  c->setLb_opt(cub);
+	  if (c->sepSize() == 0) c->nogoodRec(cub, false);
 	}
 	store->restore();
     c->resetNGSep();
