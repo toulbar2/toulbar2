@@ -377,6 +377,7 @@ void WCSP::read_uai2008(const char *fileName)
 	   exit(EXIT_FAILURE);
     }
 	
+	//    Cost inclowerbound = MIN_COST;
 	string uaitype;
 	ifstream file(fileName);
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
@@ -534,6 +535,8 @@ void WCSP::read_uai2008(const char *fileName)
 			
 		int arity = (ctr)?ctr->arity():1;
 		switch(arity) {
+//  		    case 0:  inclowerbound = costs[0];
+//  		             break;
 			case 1: 	unaryconstrs[iunaryctr].costs.clear();
 						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
 						      unaryconstrs[iunaryctr].costs.push_back(costs[a]);
@@ -556,7 +559,7 @@ void WCSP::read_uai2008(const char *fileName)
         			ictr++;
 					break;
 			 
-			case 4: nctr = (NaryConstraint*) ctr;
+			default: nctr = (NaryConstraint*) ctr;
 					j = 0;
 					nctr->firstlex();
 					while(nctr->nextlex(s,cost)) {
@@ -569,8 +572,6 @@ void WCSP::read_uai2008(const char *fileName)
 		            //((NaryConstraintMap*) nctr)->preprojectall2();
 
 					break;
-					
-			default: break;
 			
 		}
 		++it;
@@ -579,7 +580,8 @@ void WCSP::read_uai2008(const char *fileName)
     sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
-    
+	//    increaseLb(getLb() + inclowerbound);
+
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
             if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
