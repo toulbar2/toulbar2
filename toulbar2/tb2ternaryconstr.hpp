@@ -366,19 +366,11 @@ public:
     bool nextlex( string& t, Cost& c) { return next(t,c); } 
 
 
-	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in = NULL) {
-		Value v0,v1,v2;
-		if(!scope_in) {
-			v0 = x->toValue(t[0]-CHAR_FIRST);
-			v1 = y->toValue(t[1]-CHAR_FIRST);
-			v2 = z->toValue(t[2]-CHAR_FIRST);
-			setcost( x, y, z, v0, v1, v2, c );		
-		} else {
-			v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
-			v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
-			v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
-			setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
-		}
+	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {
+		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
+		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
+		Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
+		setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
 
 	void setTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {
@@ -386,6 +378,13 @@ public:
 		Value v1 = scope_in[1]->toValue(t[1]);
 		Value v2 = scope_in[2]->toValue(t[2]);
 		setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
+	}
+
+	void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {
+		Value v0 = scope_in[0]->toValue(t[0]);
+		Value v1 = scope_in[1]->toValue(t[1]);
+		Value v2 = scope_in[2]->toValue(t[2]);
+		addcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
 
 	void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {

@@ -220,24 +220,24 @@ public:
 		setcost( scope_in[0], scope_in[1], v0, v1, c );				
 	}
 
-	void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in = NULL )  {
-		Value v0,v1;
-		if(!scope_in) {
-			v0 = x->toValue(t[0]);
-			v1 = y->toValue(t[1]);
-			addcost( x, y, v0, v1, c );		
-		} else {
-			v0 = scope_in[0]->toValue(t[0]);
-			v1 = scope_in[1]->toValue(t[1]);
-			addcost( scope_in[0], scope_in[1], v0, v1, c );		
-		}
-	}
-	
 	void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
 		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
 		addcost( scope_in[0], scope_in[1], v0, v1, c );				
 	}
+
+	void setTuple( int* t, Cost c, EnumeratedVariable** scope_in )  {
+		Value v0 = scope_in[0]->toValue(t[0]);
+		Value v1 = scope_in[1]->toValue(t[1]);
+		setcost( scope_in[0], scope_in[1], v0, v1, c );				
+	}
+
+	void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in )  {
+		Value v0 = scope_in[0]->toValue(t[0]);
+		Value v1 = scope_in[1]->toValue(t[1]);
+		addcost( scope_in[0], scope_in[1], v0, v1, c );		
+	}
+	
    
     void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin)
 	{

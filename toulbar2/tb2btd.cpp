@@ -294,9 +294,9 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
 	}
 	if (lb < cub) {
 		cluster->solutionRec(lb);
-		if(cluster == td->getRoot() || cluster == td->rdsroot) {
-			cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-			if(cluster == td->getRoot())  td->newSolution();
+		if(cluster == td->getRoot() /*|| cluster == td->rdsroot*/) {
+			if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;		    
+			td->newSolution(lb);
 		}
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;

@@ -285,7 +285,7 @@ public:
 	void fusionRec( Cluster* c, Cluster* noc );
 	
 	
-    void newSolution();
+    void newSolution( Cost lb );
 
 	bool reduceHeight( Cluster* c );
 	void makeDescendants( Cluster* c );

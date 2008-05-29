@@ -519,9 +519,25 @@ void Solver::newSolution()
     assert(allVarsAssigned);
 #endif
     if (!ToulBar2::allSolutions) wcsp->updateUb(wcsp->getLb());
-    
-    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-	else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+  
+  	if(!ToulBar2::xmlflag && !ToulBar2::uai) {  
+	    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+  	}
+  	else {
+  		if(ToulBar2::uai) {
+  			cout << "o " << wcsp->Cost2Prob( wcsp->getLb() ) << " ";
+  			((WCSP*)wcsp)->solution_UAI();
+  		}
+  		else if(ToulBar2::xmlflag) {
+  			cout << "o " << wcsp->getLb() << " ";
+  			((WCSP*)wcsp)->solution_XML();
+  		}
+  			
+  	}
+  	
+  
+  
     wcsp->restoreSolution();
     if (ToulBar2::showSolutions) {
     	
@@ -632,6 +648,10 @@ bool Solver::solve()
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
+
+	    if ( ToulBar2::varOrder ) {
+	    	wcsp->buildTreeDecomposition();
+	    }
 	   
         if (ToulBar2::lds) {
             int discrepancy = 0;
@@ -649,9 +669,8 @@ bool Solver::solve()
                 else discrepancy++;
             } while (ToulBar2::limited);
         } else {
-		    if ( ToulBar2::varOrder ) {
-			    wcsp->buildTreeDecomposition();
-			    TreeDecomposition* td = wcsp->getTreeDec();
+        	TreeDecomposition* td = wcsp->getTreeDec();
+        	if(td) {
 	    	    Cost res = 0;
 		    	Cluster* start = td->getRoot();
     	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
@@ -692,11 +711,18 @@ bool Solver::solve()
    	if(ToulBar2::vac) wcsp->printVACStat();
 
     if (wcsp->getUb() < initialUpperBound) {
-        if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
-		else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
+    	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
+	        if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+			else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
+    	} else {
+    		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
+    		else if(ToulBar2::uai) ((WCSP*)wcsp)->solution_UAI(true); 
+    	}
         return true;
     } else {
-        cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+    	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
+ 	       cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+    	}
         return false;
     }
     

@@ -131,8 +131,8 @@ void WCSP::read_wcsp(const char *fileName)
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
-	            //nary->changeDefCost( top );
-	            //nary->preprojectall2();
+	            ((NaryConstraintMap*) nary)->changeDefCost( top );
+	            ((NaryConstraintMap*) nary)->preprojectall2();
 		    }
         } else if (arity == 3) {
             file >> i;
@@ -376,7 +376,6 @@ void WCSP::read_uai2008(const char *fileName)
 	   cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 	   exit(EXIT_FAILURE);
     }
-
 	
 	string uaitype;
 	ifstream file(fileName);
@@ -387,12 +386,12 @@ void WCSP::read_uai2008(const char *fileName)
 	if(top < MAX_COST / K)	top = top * K;
 	else top = MAX_COST-1;
 
-    TProb TopProb = to_double(top - 1);
+    TProb TopProb = to_double(top)/2.1;
     updateUb((Cost) ((Long) TopProb));   
 	
 
-
-    int nbvar,nbval,nbconstr;
+    int nbval = 0;
+    int nbvar,nbconstr;
     int i,j,k,ic;
     string varname;
     int domsize;
@@ -426,6 +425,7 @@ void WCSP::read_uai2008(const char *fileName)
         varname = to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
+	    if(domsize > nbval) nbval = domsize; 
         int theindex = -1;
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
@@ -520,8 +520,8 @@ void WCSP::read_uai2008(const char *fileName)
 		file >> ntuples;
 
 		TProb num;
+		vector<Cost>  costs;
 		vector<TProb> costsProb;
-		vector<Cost> costs;
 	
 		for (k = 0; k < ntuples; k++) {
 	        file >> num;
@@ -564,6 +564,10 @@ void WCSP::read_uai2008(const char *fileName)
 						j++;
 					}
 					ictr++; 
+
+		            //((NaryConstraintMap*) nctr)->changeDefCost( getUb() );
+		            //((NaryConstraintMap*) nctr)->preprojectall2();
+
 					break;
 					
 			default: break;
@@ -587,6 +591,7 @@ void WCSP::read_uai2008(const char *fileName)
     }   
  
  	int nevi = 0;	
+	ofstream eviout("evidences");	
  	ifstream fevid((string(fileName) + string(".evid")).c_str());
   	if (!fevid) { cerr << "Could not open evidence file for " << fileName << endl; exit(EXIT_FAILURE); }
 	fevid >> nevi;
@@ -599,6 +604,8 @@ void WCSP::read_uai2008(const char *fileName)
  		fevid >> j;
  		getVar(i)->assign(j);
  		nevi--;
+
+ 		eviout << i << " ";
  	}
  	
  
@@ -607,19 +614,62 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
+
+void WCSP::solution_UAI(bool opt)
+{
+ 	if (!ToulBar2::uai) return;
+
+	if(opt) cout << "s " << Cost2LogLike(getUb()) << " ";
+
+	//ofstream fsol;
+	ifstream sol;
+	sol.open("sol");	
+	//if(!sol) { cout << "cannot open solution file to translate" << endl; exit(1); }
+	//fsol.open("solution");	
+	//fsol << "SOL ";
+
+	int i;
+	set<int> evid;
+
+ 	ifstream fevid("evidences");
+  	if (!fevid) { cerr << "Could not open custom evidence file" << endl; exit(EXIT_FAILURE); }
+ 	while(!fevid.eof()) {
+ 		fevid >> i;
+		evid.insert( i );
+ 	}
+	
+	cout << vars.size() - evid.size() << " ";
+
+    for (unsigned int i=0; i<vars.size(); i++) {
+		int value;
+    	sol >> value;
+    	if(evid.find(i) == evid.end()) cout << value << " ";
+    }
+	cout << endl;
+		    
+	//fsol << endl;	
+	//fsol.close();
+	sol.close();
+}
+
+
+
+
+
 #ifdef XMLFLAG
 #include "./xmlcsp/xmlcsp.h"
 #endif
 
+
 void WCSP::read_XML(const char *fileName)
 {
 	 #ifdef XMLFLAG
-		 MyCallback cb;
-		 cb.wcsp = this;	
-	 	 cb.fname = string(fileName);
-	  	 cb.convertWCSP = true;
+		 MyCallback xmlCallBack; 
+		 xmlCallBack.wcsp = this;	
+	 	 xmlCallBack.fname = string(fileName);
+	  	 xmlCallBack.convertWCSP = true;
 		 try {
-		    XMLParser_libxml2<> parser(cb);
+		    XMLParser_libxml2<> parser( xmlCallBack );
 		    parser.setPreferredExpressionRepresentation(INFIX_C);
 		    parser.parse(fileName); 
 		  } catch (exception &e) {
@@ -632,7 +682,40 @@ void WCSP::read_XML(const char *fileName)
 		cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n" << endl;			   
 	    exit(1);
 	#endif
-	
 }
+
+
+void WCSP::solution_XML(bool opt)
+  {
+	 #ifdef XMLFLAG
+	 	if (!ToulBar2::xmlflag) return;
+	
+		if(opt)  cout << "s " << getUb() << endl;	
+
+		//ofstream fsol;
+		ifstream sol;
+		sol.open("sol");	
+		//if(!sol) { cout << "cannot open solution file to translate" << endl; exit(1); }
+		//fsol.open("solution");	
+		//fsol << "SOL ";
+
+
+		cout << "v "; 
+	    for (unsigned int i=0; i<vars.size(); i++) {
+			int value;
+	    	sol >> value;
+			int index = ((EnumeratedVariable*) getVar(i))->toIndex(value);	    	
+		  	cout << Doms[varsDom[i]][ index ] << " ";
+	    }
+		cout << endl;
+			    
+		//fsol << endl;	
+		//fsol.close();
+		sol.close();
+	#endif
+  }
+
+
+
 
 

@@ -33,9 +33,20 @@ class NaryConstraint : public AbstractNaryConstraint
 	NaryConstraint(WCSP *wcsp);
 	
 	virtual void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
+
 	virtual void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
 	
-	virtual void addtoTuple( int* tin, Cost c, EnumeratedVariable** scope_in = NULL ) 
+	virtual void setTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
+	{
+		char* buf = new char [arity_];
+		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
+		buf[arity_] = '\0';
+		string str = string(buf); 
+		setTuple( str, c, scope_in );
+		delete [] buf;
+	}
+
+	virtual void addtoTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
 	{
 		char* buf = new char [arity_];
 		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 

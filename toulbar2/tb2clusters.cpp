@@ -248,6 +248,7 @@ void Separator::solRec(Cost ub)
 {
 	WCSP* wcsp = cluster->getWCSP();
 
+
 	int i = 0;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
@@ -671,7 +672,6 @@ void Cluster::getSolution( TAssign& sol )
 	TVars::iterator it;
 	if(parent == NULL) {
 		if(vars.size() == 0) {
-			
 		} else {
 		    it = beginVars();
 			while(it != endVars()) {
@@ -1279,10 +1279,10 @@ bool TreeDecomposition::verify()
 	return true;
 }
 
-void TreeDecomposition::newSolution() 
+void TreeDecomposition::newSolution( Cost lb ) 
 {
 	TAssign a;
-	
+		
 	Cluster* root = getRoot();
     wcsp->restoreSolution(root);
 	root->getSolution( a );	
@@ -1312,6 +1312,13 @@ void TreeDecomposition::newSolution()
 		}
 		cout << endl;
     }
+    
+	
+	if(ToulBar2::xmlflag) {
+		cout << "o " << lb << endl;
+		wcsp->solution_XML();
+	}
+	    
     
     if (ToulBar2::writeSolution) {
         ofstream file("sol");

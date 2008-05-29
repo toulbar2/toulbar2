@@ -161,7 +161,17 @@ public:
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
+
+
+	#ifdef XMLFLAG					// structures for solution translation
+	map<int,int> varsDom;           // we don't have to parse the XML file again
+	vector< vector<int> > Doms;
+	#endif
+	
 	void read_XML(const char *fileName);
+	void solution_XML( bool opt = false );
+	void solution_UAI(bool opt = false );
+
 
     void print(ostream& os);
     void dump(ostream& os);

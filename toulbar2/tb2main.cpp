@@ -167,6 +167,10 @@ int main(int argc, char **argv)
         exit(0);
     } 
     
+    string strext;
+	string strfile(argv[1]);
+    unsigned int pos = strfile.find_last_of(".");
+    if(pos < strfile.size()) strext = strfile.substr(pos,strfile.size());
     
     char* ch;
     ToulBar2::verbose = 0;
@@ -284,7 +288,7 @@ int main(int argc, char **argv)
 
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
-    if (localsearch && !strstr(argv[1],".pre")) {
+    if (localsearch && !strstr(strext.c_str(),".pre")) {
         if (localSearch(argv[1],&c)) {
             cout << "Initial upperbound: " << c << endl;
             
@@ -336,10 +340,10 @@ int main(int argc, char **argv)
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
-    if (strstr(argv[1],".xml")) { ToulBar2::xmlflag = true; }
-    if (strstr(argv[1],".uai")) { ToulBar2::uai = true; ToulBar2::bayesian = true; }
-    if (strstr(argv[1],".pre")) ToulBar2::pedigree = new Pedigree;
-    if (strstr(argv[1],".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
+    if (strstr(strext.c_str(),".xml")) { ToulBar2::xmlflag = true; ToulBar2::writeSolution = true; }
+    if (strstr(strext.c_str(),".uai")) { ToulBar2::uai = true; ToulBar2::bayesian = true; ToulBar2::writeSolution = true; }
+    if (strstr(strext.c_str(),".pre")) ToulBar2::pedigree = new Pedigree;
+    if (strstr(strext.c_str(),".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
     try {
         if(randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
@@ -351,7 +355,7 @@ int main(int argc, char **argv)
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;
     }
-    cout << "end." << endl;    
+    if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "end." << endl;    
 
 
     // for the competition it was necessary to write a file with the optimal sol  
