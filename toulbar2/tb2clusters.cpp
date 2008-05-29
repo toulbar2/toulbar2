@@ -1048,9 +1048,45 @@ void TreeDecomposition::buildFromOrder()
     		} 
     	}
     }
+    for (int i=0; i<wcsp->elimBinOrder; i++) if (wcsp->elimBinConstrs[i]->connected()) {
+    	Constraint* ctr = wcsp->elimBinConstrs[i];
+   		ctr->assignCluster();
+    	if (ctr->connected() && !ctr->isSep()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+				tctr->xy->setCluster( tctr->getCluster() );
+				tctr->xz->setCluster( tctr->getCluster() );
+				tctr->yz->setCluster( tctr->getCluster() );
+    		} 
+    	}
+    }
+    for (int i=0; i<wcsp->elimTernOrder; i++) if (wcsp->elimTernConstrs[i]->connected()) {
+    	Constraint* ctr = wcsp->elimTernConstrs[i];
+   		ctr->assignCluster();
+    	if (ctr->connected() && !ctr->isSep()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+				tctr->xy->setCluster( tctr->getCluster() );
+				tctr->xz->setCluster( tctr->getCluster() );
+				tctr->yz->setCluster( tctr->getCluster() );
+    		} 
+    	}
+    }
 	
     for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
     	Constraint* ctr = wcsp->getCtr(i);
+    	if (ctr->connected() && !ctr->isSep()) {
+    		if(ctr->arity() == 3) {
+    			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+    			tctr->setDuplicates();
+				assert(tctr->xy->getCluster() == tctr->getCluster() &&
+					   tctr->xz->getCluster() == tctr->getCluster() &&
+					   tctr->yz->getCluster() == tctr->getCluster() );
+    		} 
+    	}
+    }
+    for (int i=0; i<wcsp->elimTernOrder; i++) if (wcsp->elimTernConstrs[i]->connected()) {
+    	Constraint* ctr = wcsp->elimTernConstrs[i];
     	if (ctr->connected() && !ctr->isSep()) {
     		if(ctr->arity() == 3) {
     			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
