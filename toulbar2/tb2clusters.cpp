@@ -280,7 +280,7 @@ void Separator::solRec(Cost ub)
 
 	solutions[t] = TPairSol(ub,s);
 	
-	if (ToulBar2::verbose >= 1) cout << "recording solution  " << " cost: " << ub << endl; 
+	if (ToulBar2::verbose >= 1) cout << "recording solution  " << " cost: " << ub << " sol: " << s <<  " sep: " << t << endl; 
 }
 
 
@@ -1284,7 +1284,24 @@ void TreeDecomposition::newSolution()
 	TAssign a;
 	
 	Cluster* root = getRoot();
+    wcsp->restoreSolution(root);
 	root->getSolution( a );	
+
+	if (ToulBar2::elimDegree>0 && root->getVars().size() == 0) {
+	  // recorded solutions in clusters containing a single variable eliminated in preprocessing may be wrong due to variable elimination in preprocessing; must be recovered after complete assignment and restoreSolution
+	  for (unsigned int i=0; i< wcsp->numberOfVariables(); i++) {
+		if (wcsp->enumerated(i)) {
+		  EnumeratedVariable *x = (EnumeratedVariable *) wcsp->getVar(i);
+		  x->assignWhenEliminated( a[i] );
+		}
+	  }
+	  wcsp->restoreSolution();
+	  for (unsigned int i=0; i< wcsp->numberOfVariables(); i++) {
+		if (wcsp->enumerated(i)) {
+		  a[i] = wcsp->getValue(i);
+		}
+	  }
+	}
 
     if (ToulBar2::showSolutions) {
 		TAssign::iterator it = a.begin();

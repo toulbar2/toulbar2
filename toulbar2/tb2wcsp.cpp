@@ -796,11 +796,11 @@ void WCSP::restoreSolution( Cluster* c )
 		EnumeratedVariable* x = (EnumeratedVariable*) ei.x;
 		EnumeratedVariable* y = (EnumeratedVariable*) ei.y;
 		EnumeratedVariable* z = (EnumeratedVariable*) ei.z;
-        if(c) { 
-	        if(x && (!c->isVar(x->wcspIndex) || x->unassigned())) continue;
-			if(y && (!c->isVar(y->wcspIndex) || y->unassigned())) continue;
-			if(z && (!c->isVar(z->wcspIndex) || z->unassigned())) continue;
-        }
+		assert(x);
+		assert(x->assigned());
+		if(c && !c->isVar(x->wcspIndex)) continue;
+		if (y && y->unassigned()) continue;
+		if (z && z->unassigned()) continue;
 		BinaryConstraint* xy = ei.xy;
 		BinaryConstraint* xz = ei.xz;
 		TernaryConstraint* xyz = ei.xyz;
@@ -1318,6 +1318,9 @@ void WCSP::setDACOrderTreeDecomp() {
 	    	ctr->propagate();
 	    }
   	}	
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res++;
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res++;
+
     for (int i=0; i<elimOrder; i++) 
 	   if (elimConstrs[i]->connected()) {
 		    Constraint* ctr = elimConstrs[i];

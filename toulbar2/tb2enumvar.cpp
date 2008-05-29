@@ -437,7 +437,7 @@ void EnumeratedVariable::remove(Value value)
 // variable elimination is tuned on
 void EnumeratedVariable::assignWhenEliminated(Value newValue)
 {
-        assert(NCBucket == -1);
+//          assert(NCBucket == -1); // may be not already assigned in BTD newsolution 
         inf = newValue;
         sup = newValue;
         support = newValue;

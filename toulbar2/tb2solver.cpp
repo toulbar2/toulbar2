@@ -632,10 +632,6 @@ bool Solver::solve()
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
-
-	    if ( ToulBar2::varOrder ) {
-	    	wcsp->buildTreeDecomposition();
-	    }
 	   
         if (ToulBar2::lds) {
             int discrepancy = 0;
@@ -653,8 +649,9 @@ bool Solver::solve()
                 else discrepancy++;
             } while (ToulBar2::limited);
         } else {
-        	TreeDecomposition* td = wcsp->getTreeDec();
-        	if(td) {
+		    if ( ToulBar2::varOrder ) {
+			    wcsp->buildTreeDecomposition();
+			    TreeDecomposition* td = wcsp->getTreeDec();
 	    	    Cost res = 0;
 		    	Cluster* start = td->getRoot();
     	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
