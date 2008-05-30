@@ -177,7 +177,8 @@ public:
     static int btdSubTree;
     static int btdRootCluster;
 
-	static bool xmlflag;
+	static bool    xmlflag;
+	static TProb   markov_log;
 	static string  evidence_file;
 };
 

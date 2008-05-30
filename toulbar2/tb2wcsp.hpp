@@ -170,7 +170,7 @@ public:
 	
 	void read_XML(const char *fileName);
 	void solution_XML( bool opt = false );
-	void solution_UAI(bool opt = false );
+	void solution_UAI(Cost res);
 
 
     void print(ostream& os);

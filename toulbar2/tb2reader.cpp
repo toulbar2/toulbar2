@@ -382,13 +382,16 @@ void WCSP::read_uai2008(const char *fileName)
 	ifstream file(fileName);
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
+	Cost inclowerbound = MIN_COST;
     Cost top = MAX_COST-1;
 	Cost K = ToulBar2::costMultiplier;    
 	if(top < MAX_COST / K)	top = top * K;
 	else top = MAX_COST-1;
 
-    TProb TopProb = to_double(top)/2.1;
+    TProb TopProb = to_double(top)/2.3;
     updateUb((Cost) ((Long) TopProb));   
+
+    Cost MaxCost = (Cost) ((Long) (TopProb * 2.));
 	
 
     int nbval = 0;
@@ -414,7 +417,7 @@ void WCSP::read_uai2008(const char *fileName)
 	if (ToulBar2::verbose >= 3) cout << "Reading " << uaitype << "  file." << endl;
 	
 	
-	//bool markov = uaitype == string("MARKOV");
+	bool markov = uaitype == string("MARKOV");
 	//bool bayes = uaitype == string("BAYES");
 
     
@@ -433,6 +436,7 @@ void WCSP::read_uai2008(const char *fileName)
         assert(theindex == i);   
     }
 
+
     file >> nbconstr;
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
@@ -444,12 +448,16 @@ void WCSP::read_uai2008(const char *fileName)
             break;
         }
         if (arity > 3) {
-        	int scopeIndex[MAX_ARITY];
+        	int scopeIndex[MAX_ARITY];        	
+            if (ToulBar2::verbose >= 3) cout << "read nary constraint on ";
+
 			for(i=0;i<arity;i++) {
 	            file >> j;
 	            scopeIndex[i] = j;
+	            if (ToulBar2::verbose >= 3) cout << j << " ";
 			}     	
-            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MIN_COST) );
+			if (ToulBar2::verbose >= 3) cout << endl;
+            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MaxCost) );
         } 
         else if (arity == 3) {
             file >> i;
@@ -500,7 +508,10 @@ void WCSP::read_uai2008(const char *fileName)
 	    	unaryconstrs.push_back(unaryconstr);
 		    x->queueNC();
             lctrs.push_back(-1);            
-        } 
+        } else if(arity == 0) {
+            lctrs.push_back(-2);            
+        }
+        
     }
     
 	int iunaryctr = 0;
@@ -511,37 +522,47 @@ void WCSP::read_uai2008(const char *fileName)
 	NaryConstraint* nctr = NULL;
 	string s;
 
+	ToulBar2::markov_log = 0;   // for the MARKOV Case   
 					
 	list<int>::iterator it = lctrs.begin();
 	while(it !=  lctrs.end()) {
 	
-		if(*it < 0) ctr = NULL;
-		else		ctr = getCtr(*it);
+		int arity;
+		if(*it == -1) { ctr = NULL; arity = 1; }
+		else if(*it == -2) { ctr = NULL; arity = 0; }
+		else { ctr = getCtr(*it); arity = ctr->arity(); }
 		
 		file >> ntuples;
 
-		TProb num;
+		TProb p;
 		vector<Cost>  costs;
 		vector<TProb> costsProb;
 	
+		TProb maxp = MIN_COST;	
 		for (k = 0; k < ntuples; k++) {
-	        file >> num;
-	        costsProb.push_back( num );
+	        file >> p;
+	        costsProb.push_back( p );
+	        if(p > maxp) maxp = p;
 	    }
+	    
 		for (k = 0; k < ntuples; k++) {
-			num = costsProb[k];
-	        costs.push_back(  Prob2Cost(num) );
+			p = costsProb[k];
+	        if(markov) costs.push_back(  Prob2Cost(p / maxp) );
+	        else 	   costs.push_back(  Prob2Cost(p) );
 	    }
+		
+		if(markov) ToulBar2::markov_log += log10( maxp );	
 			
-		int arity = (ctr)?ctr->arity():1;
 		switch(arity) {
-//  		    case 0:  inclowerbound = costs[0];
-//  		             break;
+			case 0:     inclowerbound += costs[0];
+						break;
+							
 			case 1: 	unaryconstrs[iunaryctr].costs.clear();
 						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
 						      unaryconstrs[iunaryctr].costs.push_back(costs[a]);
 						}			
 						iunaryctr++; 
+						if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;							
 						break;	
 	
 			case 2: bctr = (BinaryConstraint*) ctr;
@@ -549,6 +570,7 @@ void WCSP::read_uai2008(const char *fileName)
             		y = (EnumeratedVariable*) bctr->getVar(1);
             		bctr->addCosts( x,y, costs );
 					ictr++;
+					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;							
 					break;
 
 			case 3: tctr = (TernaryConstraint*) ctr;
@@ -557,6 +579,7 @@ void WCSP::read_uai2008(const char *fileName)
             		z = (EnumeratedVariable*) tctr->getVar(2);
 		    		tctr->addCosts( x,y,z, costs );
         			ictr++;
+					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;							
 					break;
 			 
 			default: nctr = (NaryConstraint*) ctr;
@@ -567,10 +590,9 @@ void WCSP::read_uai2008(const char *fileName)
 						j++;
 					}
 					ictr++; 
-
-		            //((NaryConstraintMap*) nctr)->changeDefCost( getUb() );
 		            //((NaryConstraintMap*) nctr)->preprojectall2();
-
+		            //((NaryConstraintMap*) nctr)->preproject3();
+				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;							
 					break;
 			
 		}
@@ -593,23 +615,29 @@ void WCSP::read_uai2008(const char *fileName)
     }   
  
  	int nevi = 0;	
-	ofstream eviout("evidences");	
- 	ifstream fevid((string(fileName) + string(".evid")).c_str());
-  	if (!fevid) { cerr << "Could not open evidence file for " << fileName << endl; exit(EXIT_FAILURE); }
-	fevid >> nevi;
- 	while(nevi) {
- 		if(!fevid) {
-			cerr << "Error: incorrect number of evidences." << endl;
-            exit(EXIT_FAILURE);
- 		}
- 		fevid >> i;
- 		fevid >> j;
- 		getVar(i)->assign(j);
- 		nevi--;
-
- 		eviout << i << " ";
- 	}
+	ifstream fevid(ToulBar2::evidence_file.c_str());
+  	if (!fevid) 
+  	{ 
+  		string strevid(string(fileName) + string(".evid"));
+  		fevid.open(strevid.c_str());
+  		cerr << "No evidence file specified. Trying " << strevid << endl;
+		if(!fevid) cerr << "No evidence file. " << endl;			 
+  	}
+  	if(fevid) {
+		fevid >> nevi;
+	 	while(nevi) {
+	 		if(!fevid) {
+				cerr << "Error: incorrect number of evidences." << endl;
+	            exit(EXIT_FAILURE);
+	 		}
+	 		fevid >> i;
+	 		fevid >> j;
+	 		getVar(i)->assign(j);
+	 		nevi--;
+	 	}
+  	}
  	
+    increaseLb(getLb() + inclowerbound);
  
     histogram();
 }
@@ -617,40 +645,21 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
-void WCSP::solution_UAI(bool opt)
+void WCSP::solution_UAI(Cost res)
 {
  	if (!ToulBar2::uai) return;
-
-	if(opt) cout << "s " << Cost2LogLike(getUb()) << " ";
-
-	//ofstream fsol;
+	cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << " ";
 	ifstream sol;
 	sol.open("sol");	
-	//if(!sol) { cout << "cannot open solution file to translate" << endl; exit(1); }
-	//fsol.open("solution");	
-	//fsol << "SOL ";
-
-	int i;
-	set<int> evid;
-
- 	ifstream fevid("evidences");
-  	if (!fevid) { cerr << "Could not open custom evidence file" << endl; exit(EXIT_FAILURE); }
- 	while(!fevid.eof()) {
- 		fevid >> i;
-		evid.insert( i );
- 	}
-	
-	cout << vars.size() - evid.size() << " ";
-
-    for (unsigned int i=0; i<vars.size(); i++) {
-		int value;
-    	sol >> value;
-    	if(evid.find(i) == evid.end()) cout << value << " ";
-    }
+	if(sol) { 	
+		cout << vars.size() << " ";
+	    for (unsigned int i=0; i<vars.size(); i++) {
+			int value;
+	    	sol >> value;
+	    	cout << value << " ";
+	    }
+	}
 	cout << endl;
-		    
-	//fsol << endl;	
-	//fsol.close();
 	sol.close();
 }
 

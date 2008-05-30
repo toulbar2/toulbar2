@@ -526,8 +526,7 @@ void Solver::newSolution()
   	}
   	else {
   		if(ToulBar2::uai) {
-  			cout << "s " <<  wcsp->Cost2LogLike( wcsp->getLb() ) << " ";
-  			((WCSP*)wcsp)->solution_UAI();
+  			((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
   		}
   		else if(ToulBar2::xmlflag) {
   			cout << "o " << wcsp->getLb() << " ";
@@ -716,7 +715,7 @@ bool Solver::solve()
 			else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl; 
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
-    		else if(ToulBar2::uai) ((WCSP*)wcsp)->solution_UAI(true); 
+    		else if(ToulBar2::uai) ((WCSP*)wcsp)->solution_UAI(wcsp->getUb()); 
     	}
         return true;
     } else {

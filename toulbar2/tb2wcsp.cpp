@@ -57,6 +57,7 @@ Pedigree *ToulBar2::pedigree = NULL;
 bool    ToulBar2::bayesian = false;
 bool    ToulBar2::uai = false;
 string  ToulBar2::evidence_file;
+TProb   ToulBar2::markov_log = 0;
 bool    ToulBar2::xmlflag = false;
 
 int ToulBar2::resolution = 7;
