@@ -1353,7 +1353,12 @@ void TreeDecomposition::newSolution( Cost lb )
 	if(ToulBar2::xmlflag) {
 		cout << "o " << lb << endl;
 		wcsp->solution_XML();
+	} 
+	else if(ToulBar2::uai) {
+		cout << "s " << wcsp->Cost2LogLike(lb) << " ";
+		wcsp->solution_UAI();		
 	}
+	
 	    
     
     if (ToulBar2::writeSolution) {

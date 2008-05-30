@@ -171,11 +171,22 @@ int main(int argc, char **argv)
 	string strfile(argv[1]);
     unsigned int pos = strfile.find_last_of(".");
     if(pos < strfile.size()) strext = strfile.substr(pos,strfile.size());
+
+	int iniarg = 2;
+    if (strstr(strext.c_str(),".xml")) { ToulBar2::xmlflag = true; ToulBar2::writeSolution = true; }
+    if (strstr(strext.c_str(),".uai")) { 
+    	ToulBar2::uai = true; ToulBar2::bayesian = true; ToulBar2::writeSolution = true; 
+		if(argc > 2 && strstr(argv[2],".evid")) {
+			ToulBar2::evidence_file = string(argv[2]);
+			iniarg = 3;
+		}
+    }
+
     
     char* ch;
     ToulBar2::verbose = 0;
    
-    for (int i=2; i<argc; i++) {
+    for (int i=iniarg; i<argc; i++) {
         if ( (ch = strchr(argv[i],'O')) ) {
         	char buf[80];
         	sprintf(buf,"%s",&ch[1]);
@@ -340,8 +351,6 @@ int main(int argc, char **argv)
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
-    if (strstr(strext.c_str(),".xml")) { ToulBar2::xmlflag = true; ToulBar2::writeSolution = true; }
-    if (strstr(strext.c_str(),".uai")) { ToulBar2::uai = true; ToulBar2::bayesian = true; ToulBar2::writeSolution = true; }
     if (strstr(strext.c_str(),".pre")) ToulBar2::pedigree = new Pedigree;
     if (strstr(strext.c_str(),".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif

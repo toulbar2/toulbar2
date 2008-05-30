@@ -178,6 +178,7 @@ public:
     static int btdRootCluster;
 
 	static bool xmlflag;
+	static string  evidence_file;
 };
 
 /*
