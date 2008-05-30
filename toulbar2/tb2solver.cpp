@@ -526,7 +526,7 @@ void Solver::newSolution()
   	}
   	else {
   		if(ToulBar2::uai) {
-  			cout << "o " << wcsp->Cost2Prob( wcsp->getLb() ) << " ";
+  			cout << "s " <<  wcsp->Cost2LogLike( wcsp->getLb() ) << " ";
   			((WCSP*)wcsp)->solution_UAI();
   		}
   		else if(ToulBar2::xmlflag) {
