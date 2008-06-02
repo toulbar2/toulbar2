@@ -849,7 +849,7 @@ void TreeDecomposition::fusions()
 		clusters.push_back(*it);
 		++it;
 	}
-	cout << "Tree decomposition width: " << treewidth - 1 << endl;
+	if (ToulBar2::verbose >= 1) cout << "Tree decomposition width: " << treewidth - 1 << endl;
 }
 
 // fusion process to minimize tree height when the seprators are included
@@ -955,7 +955,7 @@ void TreeDecomposition::buildFromOrder()
 
  	ifstream file(ToulBar2::varOrder);
     if (!file) {
-        cout << "No order file specified... taking index order." << endl;
+        if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
 		for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
     } else {    	
 	    while(file) {
@@ -1034,7 +1034,7 @@ void TreeDecomposition::buildFromOrder()
 	}
 	
 	int h = makeRooted();
-	cout << "tree height: " << h << endl;
+	if (ToulBar2::verbose >= 1) cout << "tree height: " << h << endl;
 
     for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
     	Constraint* ctr = wcsp->getCtr(i);
@@ -1098,8 +1098,10 @@ void TreeDecomposition::buildFromOrder()
     	}
     }
     
-	print();
-	cout << endl;
+	if (ToulBar2::verbose >= 1) {
+	  print();
+	  cout << endl;
+	}
 	assert(verify());
 }
 
@@ -1348,18 +1350,7 @@ void TreeDecomposition::newSolution( Cost lb )
 		}
 		cout << endl;
     }
-    
-	
-	if(ToulBar2::xmlflag) {
-		cout << "o " << lb << endl;
-		wcsp->solution_XML();
-	} 
-	else if(ToulBar2::uai) {
-		wcsp->solution_UAI(lb);		
-	}
-	
 	    
-    
     if (ToulBar2::writeSolution) {
         ofstream file("sol");
         if (!file) {
@@ -1374,6 +1365,15 @@ void TreeDecomposition::newSolution( Cost lb )
 		}
 		file << endl;
     }
+	
+	if(ToulBar2::xmlflag) {
+		cout << "o " << lb << endl;
+		wcsp->solution_XML();
+	} 
+	else if(ToulBar2::uai) {
+		wcsp->solution_UAI(lb);		
+	}
+	
     
 	
 }

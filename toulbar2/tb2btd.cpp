@@ -495,13 +495,13 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
   	  store->restore();	
 	  cout << "lbfreedom = " << lbfreedom << endl;*/
 
-	  cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
+	  if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
 	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
 	  Cost res = recursiveSolve(c, lbfreedom, cub);
 	  c->setLb_opt(res);
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
-	  c->printStatsRec();
-	  cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
+	  if (ToulBar2::verbose >= 1) c->printStatsRec();
+	  if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
 	  c->setLb_opt(cub);

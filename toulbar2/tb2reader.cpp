@@ -701,7 +701,7 @@ void WCSP::solution_XML(bool opt)
 	 #ifdef XMLFLAG
 	 	if (!ToulBar2::xmlflag) return;
 	
-		if(opt)  cout << "s " << getUb() << endl;	
+		if(opt)  cout << "s OPTIMUM FOUND" << endl;	
 
 		//ofstream fsol;
 		ifstream sol;

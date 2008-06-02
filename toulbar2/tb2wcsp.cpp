@@ -357,7 +357,7 @@ void WCSP::preprocessing()
 	    }
 
         if (ToulBar2::elimDegree_preprocessing >= 0) {
-            cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
+            if (ToulBar2::verbose >= 1) cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl; 
             ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
             propagate();
 
@@ -372,7 +372,7 @@ void WCSP::preprocessing()
         ToulBar2::elimDegree_preprocessing_ = -1;
         if(ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
-            cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
+            if (ToulBar2::verbose >= 1) cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl; 		
         }
     }
     

@@ -525,12 +525,9 @@ void Solver::newSolution()
 		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {
-  		if(ToulBar2::uai) {
-  			((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
-  		}
-  		else if(ToulBar2::xmlflag) {
-  			cout << "o " << wcsp->getLb() << " ";
-  			((WCSP*)wcsp)->solution_XML();
+  		if(ToulBar2::xmlflag) {
+		  cout << "o " << wcsp->getLb() << endl; //" ";
+		  //	((WCSP*)wcsp)->solution_XML();
   		}
   			
   	}
@@ -580,6 +577,9 @@ void Solver::newSolution()
 	        file << endl;
 //        }
     }
+                if(ToulBar2::uai) {
+                        ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
+                }
 }
 
 void Solver::recursiveSolve()
@@ -644,7 +644,7 @@ bool Solver::solve()
            
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
-        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
+        if (ToulBar2::verbose >= 1) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
 
