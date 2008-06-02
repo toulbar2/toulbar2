@@ -13,7 +13,11 @@ else
 SRCS = $(SRCSFULL:tb2boostgraph.cpp=)
 endif
 
+ifeq ($(XML),XMLFLAG)
+OBJS = $(SRCS:.cpp=.o) -lxml2 -lz -lm -lpthread
+else
 OBJS = $(SRCS:.cpp=.o)
+endif
 
 LIBSRCS1 = $(SRCS:tb2main.cpp=)
 LIBSRCS = $(LIBSRCS1:tb2solver.cpp=)
@@ -40,16 +44,8 @@ OFLAGS = -O3 -DNDEBUG
 ICCFLAGS = 
 #-O3 -ipo -static -DNDEBUG
 
-PFLAGS = 
+PFLAGS =
 # -pg -g3
-# -static -static-libgcc
-
-ifeq ($(XML),XMLFLAG)
-LIBFLAGS = -lxml2
-else
-LIBFLAGS = 
-# -fPIC
-endif
 
 BUILD = $(CC) -shared
 
@@ -61,6 +57,7 @@ BUILD = $(CC) -shared
 
 toulbar2: $(OBJS)
 	$(CC) $(OBJS) -o $@ $(PFLAGS)
+#	$(CC) $(OBJS) -o $@ $(PFLAGS) -static -static-libgcc
 
 toulbar2i: $(SRCS)
 	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)
