@@ -390,8 +390,8 @@ void NaryConstraintMap::changeDefCost( Cost df )
 {
 	Cost Top = wcsp->getUb();
 	if(df > Top) df = Top;
+	if(default_cost >= df) return;
 	TUPLES* pfnew = new TUPLES;
-	
 	Cost maxCost = MIN_COST;
 	
 	string t;
