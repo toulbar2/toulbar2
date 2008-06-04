@@ -295,7 +295,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
 	if (lb < cub) {
 		cluster->solutionRec(lb);
 		if(cluster == td->getRoot() /*|| cluster == td->rdsroot*/) {
-			if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;		    
+			if(ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;		    
 			td->newSolution(lb);
 		}
 	}
@@ -495,13 +495,13 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
   	  store->restore();	
 	  cout << "lbfreedom = " << lbfreedom << endl;*/
 
-	  if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
+	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
 	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
 	  Cost res = recursiveSolve(c, lbfreedom, cub);
 	  c->setLb_opt(res);
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 	  if (ToulBar2::verbose >= 1) c->printStatsRec();
-	  if(!ToulBar2::xmlflag && !ToulBar2::uai) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
+	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
 	  c->setLb_opt(cub);

@@ -99,7 +99,7 @@ const int MAX_ARITY = 1000;
 typedef map<int,int> TSCOPE;
 
 #ifdef NARYCHAR
-#define CHAR_FIRST 'A'
+#define CHAR_FIRST '0'
 #else
 #define CHAR_FIRST 1
 #endif
@@ -180,6 +180,8 @@ public:
 	static bool    xmlflag;
 	static TProb   markov_log;
 	static string  evidence_file;
+
+    static double startCpuTime;
 };
 
 /*

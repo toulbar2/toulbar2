@@ -10,6 +10,9 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
+/* return CPU time in seconds */
+double cpuTime();
+
 typedef long long Long;
 
 #ifndef LONGLONG_MAX

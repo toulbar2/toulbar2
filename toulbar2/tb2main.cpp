@@ -1,6 +1,18 @@
 /*
  * **************** Main function ***********************************
  */
+#include <unistd.h> 
+#include <sys/time.h>
+#include <sys/times.h>
+
+double cpuTime()
+{
+  static struct tms buf;
+
+  times(&buf);
+  double res = ((double) (buf.tms_utime+buf.tms_stime+buf.tms_cutime+buf.tms_cstime)) / ((double) sysconf(_SC_CLK_TCK));
+  return (res>0)?res:0;
+}
 
 #include "tb2solver.hpp"
 #include "tb2pedigree.hpp"
@@ -357,6 +369,8 @@ int main(int argc, char **argv)
     try {
         if(randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
         else 		         solver.read_wcsp(argv[1]);
+
+		ToulBar2::startCpuTime = cpuTime();
         
         if (certificate) solver.read_solution("sol");
         else if (saveproblem) solver.dump_wcsp("problem.wcsp");

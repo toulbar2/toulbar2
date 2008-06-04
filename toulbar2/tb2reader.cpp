@@ -648,6 +648,7 @@ void WCSP::read_uai2008(const char *fileName)
 void WCSP::solution_UAI(Cost res)
 {
  	if (!ToulBar2::uai) return;
+    cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
 	cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << " ";
 	ifstream sol;
 	sol.open("sol");	
