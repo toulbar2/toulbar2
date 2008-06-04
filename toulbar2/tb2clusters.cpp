@@ -85,6 +85,7 @@ void Separator::propagate()
 		// atomic operations:
 		isUsed = true;
 		cluster->deactivate();
+		assert(cluster->getParent()->getId() == Constraint::cluster);
 		cluster->getParent()->increaseLb(cluster->getParent()->getLb()+lbpropa);
 		if (lb>MIN_COST) projectLB(lb); // project into global lb and into parent cluster
 		lbPrevious = res;
@@ -738,7 +739,7 @@ void Cluster::print() {
 		if (!isSepVar(*itp)) {
 		  cout << *itp << ",";
 		  //cout << *itp << "C" << wcsp->getVar(*itp)->getCluster() << ",";
-		  //assert(wcsp->getVar(*itp)->getCluster() == getId());
+		  assert(wcsp->getVar(*itp)->getCluster()==-1 || wcsp->getVar(*itp)->getCluster() == getId());
 		}
 		++itp;
 	} 
@@ -997,7 +998,7 @@ void TreeDecomposition::buildFromOrder()
             if(!used) {
             	usedctrs.insert( ctr );
             	c->addCtr(ctr);
-            	for(int k=0; k < ctr->arity(); k++) c->addVar( ctr->getVar(k) );
+            	for(int k=0; k < ctr->arity(); k++) if (ctr->getVar(k)->unassigned()) c->addVar( ctr->getVar(k) );
             }
 	    }
 	    

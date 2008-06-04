@@ -74,7 +74,7 @@ void Constraint::assignCluster() {
 	TreeDecomposition* td = wcsp->getTreeDec();
 	if(!td) return;
 	Cluster* lowest = td->getRoot();
-	for(int i=0;i<arity();i++) {
+	for(int i=0;i<arity();i++) if (getVar(i)->unassigned()) {
 		Variable* x = getVar(i);
 		Cluster* c = td->getCluster( x->getCluster() );
 		if(lowest->isDescendant(c)) lowest = c;
