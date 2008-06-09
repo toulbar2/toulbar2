@@ -114,7 +114,7 @@ void WCSP::read_wcsp(const char *fileName)
 		    if((defval != MIN_COST) || (ntuples > 0))           
 		    { 
 			    Cost tmpcost = defval*K;
-			    if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+				if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
 	            int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
                 NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
@@ -127,12 +127,12 @@ void WCSP::read_wcsp(const char *fileName)
 					buf[i] = '\0';
 				    file >> cost;
 				    cost = cost * K;
-					if (CUT(cost, getUb())) cost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
-	            ((NaryConstraintMap*) nary)->changeDefCost( top );
-	            ((NaryConstraintMap*) nary)->preprojectall2();
+	            //((NaryConstraintMap*) nary)->changeDefCost( top );
+	            //((NaryConstraintMap*) nary)->preprojectall2();
 		    }
         } else if (arity == 3) {
             file >> i;
@@ -157,7 +157,7 @@ void WCSP::read_wcsp(const char *fileName)
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 	                    for (c = 0; c < z->getDomainInitSize(); c++) {
 						    Cost tmpcost = defval*K;
-							if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+							if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
 	                        costs.push_back(tmpcost);
 						}
                     }
@@ -168,7 +168,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> c;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
                 }
                 if(ToulBar2::vac) {
@@ -202,7 +202,7 @@ void WCSP::read_wcsp(const char *fileName)
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 					    Cost tmpcost = defval*K;
-						if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+						if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
                         costs.push_back(tmpcost);
                     }
                 }
@@ -211,7 +211,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() + b] = tmpcost;
                 }
                 
@@ -281,14 +281,14 @@ void WCSP::read_wcsp(const char *fileName)
 			  unaryconstr.var = x;
 			  for (a = 0; a < x->getDomainInitSize(); a++) {
 				Cost tmpcost = defval*K;
-				if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+     			if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs.push_back(tmpcost);
 			  }
 			  for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
 				Cost tmpcost = cost*K;
-				if (CUT(tmpcost, getUb())) tmpcost *= MEDIUM_COST;
+ 	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs[a] = tmpcost;
 			  }
 			  if(ToulBar2::vac) {
@@ -388,7 +388,7 @@ void WCSP::read_uai2008(const char *fileName)
 	if(top < MAX_COST / K)	top = top * K;
 	else top = MAX_COST-1;
 
-    TProb TopProb = to_double(top)/2.3;
+    TProb TopProb = to_double(top)/2.5;
     updateUb((Cost) ((Long) TopProb));   
 
     Cost MaxCost = (Cost) ((Long) (TopProb * 2.));
@@ -544,12 +544,23 @@ void WCSP::read_uai2008(const char *fileName)
 	        costsProb.push_back( p );
 	        if(p > maxp) maxp = p;
 	    }
-	    
+
+		Cost minc = MAX_COST;	
 		for (k = 0; k < ntuples; k++) {
 			p = costsProb[k];
-	        if(markov) costs.push_back(  Prob2Cost(p / maxp) );
-	        else 	   costs.push_back(  Prob2Cost(p) );
-	    }
+	        	if(markov) p = Prob2Cost(p / maxp);
+	        	else 	   p = Prob2Cost(p);
+		
+			costs.push_back(p);
+			if(minc > p) minc = p;
+	        }
+
+		if(minc > MIN_COST) {	    
+			for (k = 0; k < ntuples; k++) {
+				costs[k] -= minc;
+			}
+		    inclowerbound += minc;
+		}
 		
 		if(markov) ToulBar2::markov_log += log10( maxp );	
 			
