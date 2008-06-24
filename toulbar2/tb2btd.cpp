@@ -151,7 +151,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		assert(freedom || wcsp->getLb() == cluster->getLbRec());
 		wcsp->setUb(cub);
 		if (CUT(lbgood, cub)) THROWCONTRADICTION;
-		if(!freedom && ToulBar2::btdMode == 2) {
+		if(!freedom && ToulBar2::btdMode >= 2) {
 			Cost rds = td->getLbRecNoGoodsRDS();
 			lbgood = max(rds,lbgood);
 			if(CUT(rds, cub)) THROWCONTRADICTION;
@@ -176,7 +176,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		assert(freedom || wcsp->getLb() == cluster->getLbRec());
 		wcsp->setUb(cub);
 		if (CUT(lbgood, cub)) THROWCONTRADICTION;
-		if(!freedom && ToulBar2::btdMode == 2) {
+		if(!freedom && ToulBar2::btdMode >= 2) {
 			Cost rds = td->getLbRecNoGoodsRDS();
 			lbgood = max(rds,lbgood);
 			if(CUT(rds, cub)) THROWCONTRADICTION;
@@ -235,14 +235,7 @@ Cost Solver::recursiveSolveFreedom(Cluster *cluster, Cost lbgood, Cost cub)
   }
 }
 
-
-
-
-
-
-
-
-
+// main BTD recursive algorithm
 Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *onlyson)
 {		
   TreeDecomposition* td = wcsp->getTreeDec();
@@ -280,7 +273,12 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
 		  assert(ubSon > lbSon);
 		  wcsp->enforceUb();
 		  wcsp->propagate();
-		  Cost newlbSon = recursiveSolve(c, lbSon, ubSon, onlyson);
+		  Cost bestlb = lbSon;
+		  if(ToulBar2::btdMode >= 2) {
+			Cost rdslb = td->getLbRecNoGoodsRDS();
+			bestlb = max(rdslb,bestlb);
+		  }
+		  Cost newlbSon = recursiveSolve(c, bestlb, ubSon, onlyson);
 		  c->nogoodRec(newlbSon, (newlbSon < ubSon));
 		  assert(newlbSon > lbSon || (newlbSon == lbSon && newlbSon < ubSon));
 		  lb += newlbSon - lbSon;
@@ -294,9 +292,25 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
 	}
 	if (lb < cub) {
 		cluster->solutionRec(lb);
-		if(cluster == td->getRoot() /*|| cluster == td->rdsroot*/) {
+		if(cluster == td->getRoot() || cluster == td->rdsroot) {
 			if(ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;		    
-			td->newSolution(lb);
+			if(cluster == td->getRoot()) td->newSolution(lb);
+			else {
+			  assert(cluster == td->rdsroot);
+			  // remember best values for value ordering heuristic
+			  wcsp->restoreSolution(cluster);
+			  TAssign a;
+			  cluster->getSolution( a );
+			  if (ToulBar2::showSolutions) {
+				TAssign::iterator it = a.begin();
+				while(it != a.end()) {
+				  Value v = it->second;
+				  cout << it->first << ":" << v << " ";
+				  ++it;
+				}
+				cout << endl;
+			  }
+			}
 		}
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;
@@ -305,7 +319,10 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub, Cluster *on
   else {
 	if (wcsp->enumerated(varIndex)) {
 	  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getSupport(varIndex), onlyson);
+	  // reuse previous solution found by RDS if available
+	  Value bestval = wcsp->getBestValue(varIndex);
+	  //	  cout << wcsp->getName(varIndex) << " " << bestval << " " << wcsp->canbe(varIndex, bestval) << " " << wcsp->getSupport(varIndex) << endl;
+	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex), onlyson);
 	} else {
 	  cub = binaryChoicePoint(cluster, lbgood, cub, varIndex, wcsp->getInf(varIndex), onlyson);
 	}
@@ -461,7 +478,7 @@ void Solver::solveClustersUb()
 	}
 }
 
-
+// BTD-RDS
 void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 {	
 	TreeDecomposition* td = wcsp->getTreeDec();
@@ -497,7 +514,8 @@ void Solver::solveClustersSubTree(Cluster *c, Cost cub)
 
 	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "--- Solving cluster subtree " << c->id << " ..." << endl;
 	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
-	  Cost res = recursiveSolve(c, lbfreedom, cub);
+	  Cost rdslb = td->getLbRecNoGoodsRDS();
+	  Cost res = recursiveSolve(c, rdslb, cub);
 	  c->setLb_opt(res);
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 	  if (ToulBar2::verbose >= 1) c->printStatsRec();

@@ -23,6 +23,7 @@ class WCSP : public WeightedCSP {
     StoreCost lb;
     Cost ub;
     vector<Variable *> vars;
+    vector<Value> bestValues; // hint for value ordering heuritic (ONLY used by RDS)
     vector<Constraint *> constrs;
     int NCBucketSize;
     vector< VariableList > NCBuckets;         // vector of backtrackable lists
@@ -112,6 +113,8 @@ public:
     Cost getMaxUnaryCost(int varIndex) const {return vars[varIndex]->getMaxCost();}
     Value getMaxUnaryCostValue(int varIndex) const {return vars[varIndex]->getMaxCostValue();}
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
+    Value getBestValue(int varIndex) const {return bestValues[varIndex];}
+    void setBestValue(int varIndex, Value v) {bestValues[varIndex] = v;}
     
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
     int getTrueDegree(int varIndex) const {return vars[varIndex]->getTrueDegree();}
@@ -185,7 +188,7 @@ public:
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
     Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
 
-    void link(Variable *x) {vars.push_back(x);}
+    void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getInf());}
     void link(Constraint *c) {constrs.push_back(c);}
 
 	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }

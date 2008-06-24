@@ -105,37 +105,34 @@ class Separator : public AbstractNaryConstraint
 };
 
 
-
-#define NOCLUSTER -1
-
 class Cluster {
 
  private:
   	  TreeDecomposition*  td;
 	  WCSP*				  wcsp;
-	  list<TAssign*>      assignments;
-	  TVars				  vars;
-	  TCtrs			      ctrs;
-	  TClusters           edges;              // adjacent clusters 
+  list<TAssign*>      assignments; // NOT USED!!!
+  TVars				  vars; // contains all variables inside a cluster including separator variables
+  TCtrs			      ctrs; // intermediate usage by bucket elimination
+  TClusters           edges; // adjacent clusters (undirected , including parent cluster)
 
-	  TVars				  varsTree;
-	  TVars				  varsNotSep;
+  TVars				  varsTree; // all variables in cluster subtree NOT USED!!!
+  TVars				  varsNotSep; // NOT USED!!!
 
 
-	  StoreCost           lb;	
-	  Cost				  lb_opt;
-	  Cost				  ub;
+  StoreCost           lb; // current cluster lower bound deduced by propagation
+  Cost				  lb_opt; // global cluster lower bound found by RDS
+  Cost				  ub; // current cluster upper bound (NOT USED!!!)
 	  
-	  StoreInt			  active;
-	  Cluster*			  parent;             // parent cluster
+  StoreInt			  active; // unactive if a nogood including this cluster has been used in propagation
+  Cluster*			  parent;             // parent cluster
 
  public:
-	  Separator* 		  sep;
+  Separator* 		  sep; // associated separator with parent cluster
 
 	  Cluster (TreeDecomposition* tdin);
 	  ~Cluster();
 
-	  int id;								  // the id corresponds to the vector index of the cluster in ClusteredWCSP
+	  int id; // the id corresponds to the vector index of the cluster in ClusteredWCSP
 	
 	  int getId() { return id; }
 
@@ -258,11 +255,11 @@ class TreeDecomposition  {
 private:
 	WCSP*			  wcsp;	
 	vector<Cluster*>  clusters; 
-	StoreInt   		  currentCluster;
-	list<Cluster*> 	  roots;
+  StoreInt   		  currentCluster; // used to restrict local propagation (NC) and boosting by variable elimination to the current cluster's subtree
+  list<Cluster*> 	  roots; // intermediate list used by makeRooted method, only one root at the end
 
 public:
-	vector<StoreInt>  deltaModified; 
+  vector<StoreInt>  deltaModified; // accelerator avoiding unecessary checks to delta structure if it is empty (Boolean value)
 
 	TreeDecomposition(WCSP* wcsp_in);
 
@@ -283,11 +280,15 @@ public:
 	bool fusion();          		            // one fusion step
 	void fusion( Cluster* ci, Cluster* cj );
 	void fusionRec( Cluster* c, Cluster* noc );
+    void rdsFusions(vector<int> &order);
 	
-	
+    void splitClusters( Cluster* c,  Cluster* father, unsigned int maxsize );
+    TVars boostingVarElim( Cluster* c,  Cluster* father,  Cluster* grandfather, unsigned int maxsize );
+    void mergeClusters( Cluster* c,  Cluster* father, unsigned int maxsepsize );
+
     void newSolution( Cost lb );
 
-	bool reduceHeight( Cluster* c );
+	bool reduceHeight( Cluster* c, Cluster *father );
 	void makeDescendants( Cluster* c );
 	
 	int      makeRooted();
@@ -304,7 +305,7 @@ public:
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );
 	void sum( TVars& v1, TVars& v2, TVars& vout ); 
-	bool included( TVars& v1, TVars& v2 ); 	
+  bool included( TVars& v1, TVars& v2 ); 	// true if v1 is included in v2
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );		
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
     

@@ -65,6 +65,10 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
 void Solver::read_solution(const char *filename)
 {
     currentSolver = this;
+
+	if (ToulBar2::btdMode>=2) wcsp->propagate();
+
+	int depth = store->getDepth();
     store->store();
 
     // open the file
@@ -81,12 +85,15 @@ void Solver::read_solution(const char *filename)
         file >> value;
         if (wcsp->unassigned(i)) {
 		  assign(i, value);
+		  wcsp->setBestValue(i, value);
         } else {
             if (wcsp->getValue(i) != value) THROWCONTRADICTION;
         }
         i++;
     }
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+1);
+    store->restore(depth);
 }
 
 void Solver::dump_wcsp(const char *fileName)
@@ -644,7 +651,7 @@ bool Solver::solve()
            
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
-        if (ToulBar2::verbose >= 1) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
+        if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
         if (ToulBar2::singletonConsistency) singletonConsistency();
 
@@ -679,27 +686,26 @@ bool Solver::solve()
 				
 				if(ub_old) {
 					switch(ToulBar2::btdMode) {
-						case 0:	res = recursiveSolve(start, wcsp->getLb(), ub_old); 
+						case 0:case 1:	res = recursiveSolve(start, wcsp->getLb(), ub_old); 
 								break;
-						case 1: solveClusters(); 
-								cout << endl << "Solving whole problem..." << endl;
-								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
-								break;
-						case 2: solveClustersSubTree(start, ub_old);
+//  						case 1: solveClusters(); 
+//  								cout << endl << "Solving whole problem..." << endl;
+//  								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
+//  								break;
+						case 2:case 3: solveClustersSubTree(start, ub_old);
 								res = start->getOpt();
 								break;
 
-						case 3: solveClusters2by2(start, ub_old); 
-								cout << endl << "Solving whole problem..." << endl;
-								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
-								break;
-						case 4: solveClustersUb(); break;
+//  						case 3: solveClusters2by2(start, ub_old); 
+//  								cout << endl << "Solving whole problem..." << endl;
+//  								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
+//  								break;
+//  						case 4: solveClustersUb(); break;
 						default:;
 					}
 				}
         		wcsp->setUb( min(res, ub_old) );
-        	}	
-        	else recursiveSolve();
+        	} else recursiveSolve();
         }
     } catch (Contradiction) {
         wcsp->whenContradiction();

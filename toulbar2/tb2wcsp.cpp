@@ -22,7 +22,7 @@
  * 
  */
  
-double ToulBar2::version  = 0.6;
+double ToulBar2::version  = 0.7;
 int  ToulBar2::verbose  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
@@ -69,6 +69,7 @@ int ToulBar2::foundersprob_class = 0;    // 0: 			equal frequencies
 vector<TProb> ToulBar2::allelefreqdistrib;
 bool ToulBar2::consecutiveAllele = false;
 int ToulBar2::pedigreeCorrectionMode = 0;
+int ToulBar2::pedigreePenalty = 0;
 
 int  ToulBar2::vac = 0;
 Cost ToulBar2::costThreshold = UNIT_COST;
@@ -89,8 +90,9 @@ int   ToulBar2::btdRootCluster = -1;
 
 double ToulBar2::startCpuTime = 0;
 
-
-
+int ToulBar2::splitClusterMaxSize = 0;
+bool ToulBar2::boostingBTD = false;
+int ToulBar2::maxSeparatorSize = -1;
 
 /*
  * WCSP constructors

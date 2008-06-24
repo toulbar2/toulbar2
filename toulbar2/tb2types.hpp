@@ -162,6 +162,7 @@ public:
     static bool consecutiveAllele;
     static bool generation;
     static int pedigreeCorrectionMode;
+    static int pedigreePenalty;
     static int vac;
     static Cost costThreshold;
     static Cost costThresholdPre;
@@ -182,6 +183,10 @@ public:
 	static string  evidence_file;
 
     static double startCpuTime;
+
+    static int splitClusterMaxSize;
+    static bool boostingBTD;
+    static int maxSeparatorSize;
 };
 
 /*

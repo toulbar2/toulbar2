@@ -131,6 +131,7 @@ int main(int argc, char **argv)
         cerr << "   v : verbosity (repeat this option to increase the verbosity level)" << endl;
         cerr << "   s : show each solution found" << endl;
         cerr << "   g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
+        cerr << "   u[integer] : add a penalty weight (must use option y also) on genotyped individuals depending on the number of their genotyped children in order to penalize genotyping removals if the number of genotyped children is strictly greater than a given threshold" << endl;
 		cerr << "   w[mode] : write last solution found" << endl;
 		cerr << "     and for pedigree problems:" << endl;
 		cerr << "               mode=0: save pedigree with erroneous genotypings removed" << endl;
@@ -170,10 +171,12 @@ int main(int argc, char **argv)
         cerr << "   C[integer] : multiply all costs by this number" << endl;
         cerr << "   S : singleton consistency on preprocessing" << endl << endl;
 
-        cerr << "   B[integer] : btd mode:  0 usual ... 2 pseudotree rds" << endl;
+        cerr << "   B[integer] : (0) DFS, (1) BTD, (2) BTD-RDS, (3) RDS" << endl;
         cerr << "   R[integer] : choice for root cluster" << endl;
         cerr << "   I[integer] : choice solving only a particular subtree" << endl;
-
+        cerr << "   j[integer] : split larger clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
+        cerr << "   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option e)" << endl;
+        cerr << "   r[integer] : limit on maximum cluster separator size" << endl;
 #endif
         cerr << endl;
         exit(0);
@@ -210,10 +213,12 @@ int main(int argc, char **argv)
         if ( (ch = strchr(argv[i],'B')) ) {
         	char buf[80];
         	int mode = atoi(&ch[1]);
-        	if(mode > 0) ToulBar2::btdMode = mode;
-        	sprintf(buf,"%s","default");
-        	ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
-	       	sprintf(ToulBar2::varOrder, "%s",buf);
+        	if(mode > 0) {
+			  ToulBar2::btdMode = mode;
+			  sprintf(buf,"%s","default");
+			  ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+			  sprintf(ToulBar2::varOrder, "%s",buf);
+			}
         }
         if ( (ch = strchr(argv[i],'R')) ) {
         	int root = atoi(&ch[1]);
@@ -223,8 +228,17 @@ int main(int argc, char **argv)
 			int subcluster = atoi(&ch[1]);
 		    if(subcluster >= 1) ToulBar2::btdSubTree = subcluster;
 		}
-
-    	
+        if ( (ch = strchr(argv[i],'j')) ) {
+        	int cmaxsize = atoi(&ch[1]);
+        	if(cmaxsize >= 1) ToulBar2::splitClusterMaxSize = cmaxsize;
+        }
+        if ( (ch = strchr(argv[i],'E')) ) {
+		  ToulBar2::boostingBTD = true;
+		}
+        if ( (ch = strchr(argv[i],'r')) ) {
+        	int sepmaxsize = atoi(&ch[1]);
+        	if(sepmaxsize >= -1) ToulBar2::maxSeparatorSize = sepmaxsize;
+        }
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
         if ( (ch = strchr(argv[i],'w')) ) {
@@ -233,6 +247,11 @@ int main(int argc, char **argv)
 		  ToulBar2::pedigreeCorrectionMode = 0;
 		  if((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
         }
+        if ( (ch = strchr(argv[i],'u')) ) {
+		  ToulBar2::pedigreePenalty = 1;
+		  int penaltyThreshold = atoi(&ch[1]);
+		  if(penaltyThreshold >= 1) ToulBar2::pedigreePenalty = penaltyThreshold;
+		}
 		if (strchr(argv[i],'a')) ToulBar2::allSolutions = true;        
         if ((ch = strchr(argv[i],'b'))) {if (ch[-1]==':') { ToulBar2::binaryBranching = false; } else { ToulBar2::binaryBranching = true; }}
         if ((ch = strchr(argv[i],'c'))) {if (ch[-1]==':') { ToulBar2::lastConflict = false; } else { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }}
@@ -373,8 +392,8 @@ int main(int argc, char **argv)
 		ToulBar2::startCpuTime = cpuTime();
         
         if (certificate) solver.read_solution("sol");
-        else if (saveproblem) solver.dump_wcsp("problem.wcsp");
-        else solver.solve();
+        if (saveproblem) solver.dump_wcsp("problem.wcsp");
+        else if (!certificate || ToulBar2::btdMode>=2) solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;
     }

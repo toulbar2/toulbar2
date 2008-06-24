@@ -54,6 +54,8 @@ public:
     virtual Cost getMaxUnaryCost(int varIndex) const =0;
     virtual Value getMaxUnaryCostValue(int varIndex) const =0;
     virtual Value getSupport(int varIndex) const =0;
+    virtual Value getBestValue(int varIndex) const =0;
+    virtual void setBestValue(int varIndex, Value v) =0;
     
     virtual int getDegree(int varIndex) const =0;
     virtual double getWeightedDegree(int varIndex) const =0;
