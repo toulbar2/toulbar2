@@ -97,8 +97,10 @@ Individual::Individual(int ind)
     sex = MALE;
     genotype.allele1 = 0;
     genotype.allele2 = 0;
+    genotype.fixed = false;
     typed = false;
     generation = -1;
+	nbtyped = 0;
 }
 
 void Pedigree::typeAscendants(int individual)
@@ -109,9 +111,9 @@ void Pedigree::typeAscendants(int individual)
         if (!pedigree[index].typed) {
             pedigree[index].typed = true;
             nbtyped++;
-            typeAscendants(pedigree[index].father);
-            typeAscendants(pedigree[index].mother);
-        }
+			typeAscendants(pedigree[index].father);
+			typeAscendants(pedigree[index].mother);
+		}
     }
 }
 
@@ -245,12 +247,24 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
       exit(EXIT_FAILURE);
     }
 
-    file >> pedigree[individuals[individual]].genotype.allele1;    
+	int allele = 0;
+    file >> allele;   
     if (!file) { cerr << "Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
+	if (allele < 0) {
+	  pedigree[individuals[individual]].genotype.fixed = true;
+	  allele = -allele;
+	}
+	pedigree[individuals[individual]].genotype.allele1 = allele;
 
-    file >> pedigree[individuals[individual]].genotype.allele2;
+	allele = 0;
+    file >> allele;   
     if (!file) { cerr << "Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
-    
+	if (allele < 0) {
+	  pedigree[individuals[individual]].genotype.fixed = true;
+	  allele = -allele;
+	}
+    pedigree[individuals[individual]].genotype.allele2 = allele;
+
     int allele1 = pedigree[individuals[individual]].genotype.allele1;
     int allele2 = pedigree[individuals[individual]].genotype.allele2;
     
@@ -334,6 +348,14 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   
   for (unsigned int i=0; i<genotypes.size(); i++) {
     typeAscendants(genotypes[i]);
+	if (genotypes[i]>=0 && pedigree[individuals[genotypes[i]]].father > 0 &&
+		pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotype.allele1>0 &&
+		pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotype.allele2>0) 
+	  pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].nbtyped++;
+	if (genotypes[i]>=0 && pedigree[individuals[genotypes[i]]].mother > 0 &&
+		pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotype.allele1>0 &&
+		pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotype.allele2>0) 
+	  pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].nbtyped++;
   }
   cout << nbtyped << " informative individuals found (either genotyped or having a genotyped descendant)." << endl;
 
@@ -444,8 +466,10 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
     file >> mother;
     file >> sex;
     file >> allele1;
+	if (allele1 < 0) allele1 = -allele1;
     allele1 = alleles[allele1];
     file >> allele2;
+	if (allele2 < 0) allele2 = -allele2;
     allele2 = alleles[allele2];
     if (!pedigree[individuals[individual]].typed) continue;
     
@@ -460,7 +484,7 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
 		       || ((allele1==0 || allele2==0) && (i==allele1 || i==allele2 || j==allele1 || j==allele2))) {
 	           unaryconstr.costs.push_back(0);
 	       } else {
-	           unaryconstr.costs.push_back(1);
+	           unaryconstr.costs.push_back((pedigree[individuals[individual]].genotype.fixed)?wcsp->getUb():1);
 	       }
 	   }
       }
@@ -622,8 +646,10 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
     file >> mother;
     file >> sex;
     file >> allele1;
+	if (allele1 < 0) allele1 = -allele1;
     allele1 = alleles[allele1];
     file >> allele2;
+	if (allele2 < 0) allele2 = -allele2;
     allele2 = alleles[allele2];
     if (!pedigree[individuals[individual]].typed) continue;
     
@@ -641,16 +667,22 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 		     bool theone = (i==allele1 && j==allele2) || (i==allele2 && j==allele1); 
 		     bool posible = (i==allele1 || i==allele2 || j==allele1 || j==allele2);
 		     
+			 bool fixed = pedigree[individuals[individual]].genotype.fixed;
+
 		     TProb p = 0;
+			 Cost penalty = 0;
 		     if (typed) {
 		     	if(theone) p = 1. - ToulBar2::errorg;
-		        else	   p = ToulBar2::errorg / (TProb)(domsize-1);
+		        else	   {p = ToulBar2::errorg / (TProb)(domsize-1);
+				            penalty = pedigree[individuals[individual]].nbtyped; }
 		  	 }
 		  	 else if(halftyped) {
 		  	 	if(posible) p = (1. - ToulBar2::errorg) / (TProb)nballeles;
-		  	 	else p = ToulBar2::errorg / (TProb)(domsize - nballeles);
+		  	 	else {p = ToulBar2::errorg / (TProb)(domsize - nballeles);
+                      penalty = pedigree[individuals[individual]].nbtyped; }
   	  	 	 }	
- 	  	 	 unaryconstr.costs.push_back( wcsp->Prob2Cost(p) );	
+			 if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogLike(-((penalty>0)?wcsp->Prob2Cost(penalty):MIN_COST)):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(penalty):MIN_COST) << " cost" << endl;
+ 	  	 	 unaryconstr.costs.push_back((typed && fixed && !theone)?wcsp->getUb():(wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty>0 && penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(penalty):MIN_COST)) );	
 		  }
 	    }
 	    unaryconstrs.push_back(unaryconstr);
@@ -754,6 +786,8 @@ void Pedigree::printCorrection(WCSP *wcsp)
   	
   int nbcorrection = 0;
 
+  TProb penalty = 0.;
+
   cout << "Correction:";
   for (unsigned int i=0; i<genotypes.size(); i++) {
     int sol = wcsp->getValue(pedigree[individuals[genotypes[i]]].varindex);
@@ -766,6 +800,11 @@ void Pedigree::printCorrection(WCSP *wcsp)
       cout << " " << genotypes[i];
 	  nbcorrection++;
 
+	  if (ToulBar2::pedigreePenalty>0 && pedigree[individuals[genotypes[i]]].nbtyped>ToulBar2::pedigreePenalty) {
+		cout << "*";
+		penalty -= Log10(pedigree[individuals[genotypes[i]]].nbtyped);
+	  }
+
 	  if(errorinfo) {
 	      map<int,int>::iterator it = gencorrects.find(genotypes[i]);
 	      if(it != gencorrects.end()) {
@@ -777,7 +816,11 @@ void Pedigree::printCorrection(WCSP *wcsp)
       ncorrections++;
     }
   }
-  cout << " (" << nbcorrection << ")";
+  cout << " (" << nbcorrection;
+  if (ToulBar2::pedigreePenalty>0) {
+	cout << " " << wcsp->Cost2LogLike(wcsp->getLb()) - penalty << " " << penalty;
+  }
+  cout << ")";
   cout << endl;   
   if(errorinfo) {
   	cout << "Info errorfile: ";

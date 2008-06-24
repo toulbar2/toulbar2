@@ -12,6 +12,7 @@ class Genotype {
 public:
   int allele1;
   int allele2;
+  bool fixed;
 };
 
 typedef enum {MALE=1, FEMALE=2} Sex;
@@ -26,7 +27,8 @@ public:
   Genotype genotype;
   bool typed; // true if one of its descendant children (or itself) is typed
   int generation;
-  
+  int nbtyped; // number of genotyped children
+
   Individual(int ind);
 
   void print(ostream& os);
