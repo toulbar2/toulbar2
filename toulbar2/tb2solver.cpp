@@ -677,34 +677,24 @@ bool Solver::solve()
         } else {
         	TreeDecomposition* td = wcsp->getTreeDec();
         	if(td) {
-	    	    Cost res = 0;
+	    	    Cost ub = wcsp->getUb();
 		    	Cluster* start = td->getRoot();
     	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
         	    td->setCurrentCluster(start);
 				start->setLb(wcsp->getLb());
-        		Cost ub_old = wcsp->getUb();
-				
-				if(ub_old) {
-					switch(ToulBar2::btdMode) {
-						case 0:case 1:	res = recursiveSolve(start, wcsp->getLb(), ub_old); 
-								break;
-//  						case 1: solveClusters(); 
-//  								cout << endl << "Solving whole problem..." << endl;
-//  								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
-//  								break;
-						case 2:case 3: solveClustersSubTree(start, ub_old);
-								res = start->getOpt();
-								break;
-
-//  						case 3: solveClusters2by2(start, ub_old); 
-//  								cout << endl << "Solving whole problem..." << endl;
-//  								res = recursiveSolve(start, wcsp->getLb(), ub_old); 
-//  								break;
-//  						case 4: solveClustersUb(); break;
-						default:;
-					}
+				switch(ToulBar2::btdMode) {
+				case 0:case 1:
+				  ub = recursiveSolve(start, wcsp->getLb(), ub); 
+				  break;
+				case 2:case 3:
+				  russianDollSearch(start, ub);
+				  ub = start->getLbRDS();
+				  break;
+				default:
+				  cerr << "Unknown search method B" << ToulBar2::btdMode << endl;
+				  exit(EXIT_FAILURE);
 				}
-        		wcsp->setUb( min(res, ub_old) );
+        		wcsp->setUb(ub);
         	} else recursiveSolve();
         }
     } catch (Contradiction) {

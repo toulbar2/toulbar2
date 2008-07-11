@@ -1,3 +1,7 @@
+/** \file tb2clusters.hpp
+ *  \brief Cluster Tree Decomposition data-structures.
+ * 
+ */
  
 #ifndef TB2CLUSTERS_HPP_
 #define TB2CLUSTERS_HPP_
@@ -12,15 +16,14 @@
 
 
 class Cluster;
-class Nogood;
 
 typedef set<int>	       TVars;
 typedef set<Constraint*>   TCtrs;
 typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
-typedef pair <Cost,bool>     TPairNG;
-typedef pair <Cost,string>   TPairSol;
+typedef pair<Cost,bool>     TPairNG;
+typedef pair<Cost,string>   TPairSol;
 
 typedef map<string, TPairNG>  TNoGoods;
 typedef map<string, TPairSol> TSols;
@@ -29,72 +32,56 @@ typedef map<string, TPairSol> TSols;
 class Separator : public AbstractNaryConstraint
 {
   private:
-
 	Cluster*					  cluster;
 	TVars   					  vars;
     vector< vector<StoreCost> >   delta;    // structure to record the costs that leave the cluster
-	  										// inicialized with iniDelta()
-
-	StoreInt nonassigned;       			// nonassigned variables during search, must be backtrackable (storeint) !
+	StoreInt nonassigned;       			// number of non assigned variables during search
     StoreInt isUsed;
     StoreCost lbPrevious;
     StoreInt optPrevious;
 
     TNoGoods  					  nogoods;
     TSols  						  solutions;
-    DLink<Separator *>            linkSep;
+    DLink<Separator *>            linkSep; // link to insert the separator in PendingSeparator list
 
-	string t;    // buffer for a separator tuple                   
-	string s;    // buffer for a solution tuple                   
-	
-	
-	
-	
+	string t;    // temporary buffer for a separator tuple                   
+	string s;    // temporary buffer for a solution tuple                   
 	
   public:
-    TNoGoods    forwardNG;  //experimental
-
-
 	Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
 	Separator(WCSP *wcsp);
 
-    void queueSep() { wcsp->queueSeparator(&linkSep); }
-    void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
-
-	void assign(int varIndex);
-    void propagate();
-
-    bool used() { return isUsed; }
-
     void setup(Cluster* cluster_in);
 
-	TVars& 			 getVars() { return vars; }    
+	TVars& getVars() { return vars; }    
+    int getNbVars() { return vars.size();  }
+    bool  is(int i) { return vars.find(i) != vars.end(); } 
+    TVars::iterator  begin() { return vars.begin(); } 
+    TVars::iterator  end()   { return vars.end(); } 
+
+    void set( Cost c, bool opt );
+    bool get( Cost& res, bool& opt );
+
+	void solRec( Cost ub );
+	bool solGet( TAssign& a, string& sol ); 
+
+	void resetOpt(); 
+
+    void queueSep() { wcsp->queueSeparator(&linkSep); }
+    void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
     
     void addDelta( unsigned int posvar, Value value, Cost cost ) {
     	assert( posvar < vars.size() ); 
     	delta[posvar][value] += cost; 
     }
+    Cost getCurrentDelta(); // separator variables may be unassigned
 
-    void set( Cost c, bool opt );
-    bool get( Cost& res, bool& opt );
-    Cost getRDS();
+    bool used() { return isUsed; }
 
-	void solRec( Cost ub );
-	bool solGet( TAssign& a, string& sol ); 
+	void assign(int varIndex);
+    void propagate();
 
-	void resetOpt();
-    
-    void setCluster(int id);
-        
-    TVars::iterator  begin() { return vars.begin(); } 
-    TVars::iterator  end()   { return vars.end(); } 
-    bool  is(int i) { return vars.find(i) != vars.end(); } 
-    TNoGoods::iterator  beginNG() { return nogoods.begin(); } 
-    TNoGoods::iterator  endNG()   { return nogoods.end(); } 
- 
-    int 			getNbVars() { return vars.size();  }
-
-	// Obliged to include these methods; if not abstract class problem
+	// NaryConstraint methods not used by Separator class
     double computeTightness() { return 0; }
     bool   verify() {return true;}
     void   increase(int index) {}
@@ -105,130 +92,98 @@ class Separator : public AbstractNaryConstraint
 };
 
 
-class Cluster {
-
+class Cluster
+{
  private:
-  	  TreeDecomposition*  td;
-	  WCSP*				  wcsp;
-  list<TAssign*>      assignments; // NOT USED!!!
+  TreeDecomposition*  td;
+  WCSP*				  wcsp;
+  int                 id; // corresponding to the vector index of the cluster in the tree decomposition
   TVars				  vars; // contains all variables inside a cluster including separator variables
-  TCtrs			      ctrs; // intermediate usage by bucket elimination
-  TClusters           edges; // adjacent clusters (undirected , including parent cluster)
+  TCtrs			      ctrs; // intermediate usage by bucket elimination (DO NOT USE)
+  TClusters           edges; // adjacent clusters (includes parent cluster before makeRooted is done)
 
-  TVars				  varsTree; // all variables in cluster subtree NOT USED!!!
-  TVars				  varsNotSep; // NOT USED!!!
+  Cluster*			  parent; // parent cluster
+  TClusters           descendants; // set of cluster descendants (including itself)
+  TVars               varsTree; // set of variables in cluster descendants (including itself)
+  vector<bool>        quickdescendants;
 
-
+  Separator* 	      sep; // associated separator with parent cluster
   StoreCost           lb; // current cluster lower bound deduced by propagation
-  Cost				  lb_opt; // global cluster lower bound found by RDS
-  Cost				  ub; // current cluster upper bound (NOT USED!!!)
-	  
-  StoreInt			  active; // unactive if a nogood including this cluster has been used in propagation
-  Cluster*			  parent;             // parent cluster
+  Cost				  lbRDS; // global cluster lower bound found by RDS
+  StoreInt			  active; // unactive if a nogood including this cluster has been used by propagation
 
  public:
-  Separator* 		  sep; // associated separator with parent cluster
-
 	  Cluster (TreeDecomposition* tdin);
 	  ~Cluster();
 
-	  int id; // the id corresponds to the vector index of the cluster in ClusteredWCSP
-	
-	  int getId() { return id; }
+	  void          setup(); 
 
-      // ----------------------------------------- Interface Functions
+	  int           getId() { return id; }
+	  void          setId(int iid) { id=iid; }
+
 	  WCSP* 		getWCSP() { return wcsp; }
 
-	  bool 			isVar( int i );
-	  bool 			isSepVar( int i );
-	  bool			isActive() { int a = active; return a == 1; }
+      Separator*    getSep() { return sep; }
+	  void 			setSep( Separator* sepin ) { sep = sepin; }
+	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
+      void          deconnectSep(); // deconnect all the constraints on separator variables and assigns separator variables to their support value
+      bool 			isSepVar( int i ) { if(!sep) return false; return sep->is(i); }
 
-	  Cost	        getLbRec();
-	  Cost	        getLbRecRDS();
-	  Cost	        getLbRecNoGoodsRDS();
-	  Cost	        getLbRecNoGood(bool& opt);
-
-	  Cost		    getOpt() { return lb_opt; }
-	  Cost			getUb()  { return ub; }
-	  Cost			getLb()  { return lb; }
-	  void			setUb(Cost c)  {ub = c; }
-	  void			setLb(Cost c)  {lb = c; }
-	  void			setLb_opt(Cost c)  {lb_opt = c; }
+      bool 			isVar( int i ) { TVars::iterator it = vars.find(i); return it != vars.end(); }
 	  int			getNbVars() { return vars.size(); }
 	  TVars&		getVars() { return vars; }	
 	  TVars&		getVarsTree() { return varsTree; }	
-	  TCtrs&		getCtrs() { return ctrs; }	
-	  TClusters&	getEdges() { return edges; }
-	  void 			setSep( Separator* sepin ) { sep = sepin; } 
+	  void 			addVars( TVars& vars );
 	  void 			addVar( Variable* x );
 	  void 			removeVar( Variable* x );
-	  void 			addVars( TVars& vars );
-	  void 			addEdge( Cluster* c );
+
+	  void 			setParent(Cluster* p) { parent = p; }
+	  Cluster*		getParent() { return parent; }
+	  TClusters&	getEdges() { return edges; }
 	  void 			addEdges( TClusters& cls );
+	  void 			addEdge( Cluster* c );
 	  void 			removeEdge( Cluster* c );
+	  TClusters::iterator removeEdge( TClusters::iterator it );
+
+	  TClusters&	getDescendants() { return descendants; }
+	  bool  	    isEdge( Cluster* c );
+      void          accelerateDescendants(); 
+	  bool			isDescendant( Cluster* c ) { return quickdescendants[c->getId()]; }
+
+	  TCtrs&		getCtrs() { return ctrs; }	
 	  void 			addCtrs( TCtrs& ctrsin );
 	  void 			addCtr( Constraint* c );
-	  void 			addAssign( TAssign* a );
-	  void 		    updateUb();
-	  
 
-	  TClusters::iterator removeEdge( TClusters::iterator it );
-	  
-
-
-  	  void 		    getSolution( TAssign& sol );
-	  
-	  void 			setParent(Cluster* p);
-	  Cluster*		getParent();
-	  TClusters&	getDescendants();
-	  Cluster*		nextSep( Variable* v ); 
-	  bool			isDescendant( Cluster* c2 );
-	  bool  	    isEdge( Cluster* c );
-
-	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
-
-	  void			setClusterSep( int i ) { if(sep) sep->setCluster(i); }
-
-	  Cost 			sampling();
-
-	  
-      TClusters     descendants;  	   // set of descendants	
-	  vector<bool>  quickdescendants;	
-	  
-   	  void deconnectSep( bool bassign = false, int dir = 0 );
-
-	  	
-	
-      // ----------------------------------------------------------
-	  Cost 			eval(TAssign* a);
-	  void 			setWCSP();                              // sets the WCSP to the cluster problem, deconnecting the rest
-	  void 			reactivate();
+	  bool			isActive() { int a = active; return a == 1; }
 	  void 			deactivate();
-	  void 			increaseLb( Cost newlb );
+	  void 			reactivate();
 
-	  void setup(); 
+	  Cost			getLb()  { return lb; }
+	  void			setLb(Cost c)  { lb = c; }
+      void 			increaseLb( Cost addToLb ) { lb += addToLb; }
+	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return max(lbRDS - delta, MIN_COST); }
+	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
+	  Cost	        getLbRec();
+	  Cost	        getLbRecRDS();
 	  
-	  void addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
-	  void nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
-      Cost nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
-      void resetOpt() { if(sep) sep->resetOpt(); }
-      void resetNGSep();
+	  void          addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
 
-	  void solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
-	  int getNbSepVars() { if(sep) return sep->getNbVars(); else return 0; }
+	  void          nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }	
+      Cost          nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }	
 
-	  void forwardNoGood();
+      void          resetOptRec(Cluster *rootCluster);
+
+	  void          solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
+      void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
+
+	  void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
 	  TVars::iterator beginVarsTree() { return varsTree.begin(); }
 	  TVars::iterator endVarsTree()   { return varsTree.end(); }
-	  TVars::iterator beginVarsNotSep() { return varsNotSep.begin(); }
-	  TVars::iterator endVarsNotSep()   { return varsNotSep.end(); }
 	  TVars::iterator beginSep() { return sep->begin(); }
 	  TVars::iterator endSep()   { return sep->end(); }
-	  TNoGoods::iterator beginNG() { return sep->beginNG(); }
-	  TNoGoods::iterator endNG()   { return sep->endNG(); }
 	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() { return edges.begin(); }
@@ -250,16 +205,18 @@ class Cluster {
 };
 
 
-
 class TreeDecomposition  {
 private:
-	WCSP*			  wcsp;	
-	vector<Cluster*>  clusters; 
-  StoreInt   		  currentCluster; // used to restrict local propagation (NC) and boosting by variable elimination to the current cluster's subtree
-  list<Cluster*> 	  roots; // intermediate list used by makeRooted method, only one root at the end
+    WCSP*			  wcsp;	
+    vector<Cluster*>  clusters; 
+    list<Cluster*> 	  roots; // intermediate list used by makeRooted method, only one root at the end
+
+    Cluster*          rootRDS; // root cluster of the current RDS iteration
+
+    StoreInt   		  currentCluster; // used to restrict local propagation (NC) and boosting by variable elimination to the current cluster's subtree
+    vector<StoreInt>  deltaModified; // accelerator avoiding unecessary checks to delta structure if it is empty (Boolean value)
 
 public:
-  vector<StoreInt>  deltaModified; // accelerator avoiding unecessary checks to delta structure if it is empty (Boolean value)
 
 	TreeDecomposition(WCSP* wcsp_in);
 
@@ -275,59 +232,54 @@ public:
     bool isInCurrentClusterSubTree(int idc); 
     bool isActiveAndInCurrentClusterSubTree(int idc); 
 	
-	void buildFromOrder();	     			    // builds the tree cluster of clusters from a given order
-	void fusions();                  			// fusions all redundant clusters after build_from_order is called
-	bool fusion();          		            // one fusion step
+    //main function to build a cluster tree/path decomposition:
+    // - builds a bucket for each variable following a given variable elimination order
+    // - builds a tree/path decomposition from the buckets
+    // - associate constraints to clusters, with special treatment for ternary constraints (duplicate flag)
+	void buildFromOrder();	     			
+	void treeFusions();                  	// merges all redundant clusters
+	bool treeFusion();          		    // one fusion step
+    void pathFusions(vector<int> &order);   // builds a path decomposition of clusters from a given order
+
 	void fusion( Cluster* ci, Cluster* cj );
-	void fusionRec( Cluster* c, Cluster* noc );
-    void rdsFusions(vector<int> &order);
-	
-    void splitClusters( Cluster* c,  Cluster* father, unsigned int maxsize );
-    TVars boostingVarElim( Cluster* c,  Cluster* father,  Cluster* grandfather, unsigned int maxsize );
-    void mergeClusters( Cluster* c,  Cluster* father, unsigned int maxsepsize );
-
-    void newSolution( Cost lb );
-
 	bool reduceHeight( Cluster* c, Cluster *father );
+    void splitClusterRec( Cluster* c,  Cluster* father, unsigned int maxsize );
+    TVars boostingVarElimRec( Cluster* c,  Cluster* father,  Cluster* grandfather, unsigned int maxsize );
+    void mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize );
+	void heuristicFusionRec( Cluster* c, Cluster* noc );
+
 	void makeDescendants( Cluster* c );
+    bool isDescendant( Variable* x, Variable* y ) { return getCluster(x->getCluster())->isDescendant(getCluster(y->getCluster())); }
 	
-	int      makeRooted();
+    int      makeRooted(); // defines a rooted cluster tree decomposition from an undirected one
 	void     makeRootedRec( Cluster* c,  TClusters& visited );
+	Cluster* getBiggerCluster( TClusters& visited );	
 	Cluster* getRoot() {return roots.front();}
+	Cluster* getRootRDS() {return rootRDS; }
+	void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }
 	 
-	int height( Cluster* r, Cluster* father );
 	int height( Cluster* r );
+	int height( Cluster* r, Cluster* father );
 
-
-	void resetOptRec( Cluster* c );
-
-	bool verify();
 	void intersection( TVars& v1, TVars& v2, TVars& vout );
 	void difference( TVars& v1, TVars& v2, TVars& vout );
 	void sum( TVars& v1, TVars& v2, TVars& vout ); 
-  bool included( TVars& v1, TVars& v2 ); 	// true if v1 is included in v2
-	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );		
-    void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
-    
-    bool isDescendant( Variable* x, Variable* y );
-   
-    Cluster* rdsroot;
+    bool included( TVars& v1, TVars& v2 ); 	// true if v1 is included in v2
+	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );
 
-	Cluster* getBiggerCluster( TClusters& visited );	
-	
-	Cost getLbRecNoGoodsRDS() { 
+    bool isDeltaModified(int varIndex) { return deltaModified[varIndex]; }
+	Cost getLbRecRDS() { 
 		Cluster* c = getCluster(currentCluster);
-		return c->getLbRecNoGoodsRDS(); 
+		Cost res = c->getLbRecRDS(); 
+		return max(res,c->getLbRDS());	
 	}
+    void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
+    void newSolution( Cost lb );
+
+	bool verify();
 	
 	void print( Cluster* c = NULL, int recnum = 0);
-    void printStats( Cluster* c = NULL ); 
-
+    void printStats( Cluster* c = NULL );
 };
-
-
-
-
-
 
 #endif 

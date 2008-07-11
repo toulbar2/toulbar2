@@ -196,13 +196,13 @@ void VACVariable::remove (Value value) {
   if (canbe(value)) {
     queueVAC2();
   }
-  vac->singleton.insert(100*wcspIndex + value);
+  if (ToulBar2::singletonConsistency) vac->singleton.insert(100*wcspIndex + value);
   EnumeratedVariable::remove(value);
 }
 
 
 void VACVariable::removeFast (Value value) {
-  vac->singleton.insert(100*wcspIndex + value);
+  if (ToulBar2::singletonConsistency) vac->singleton.insert(100*wcspIndex + value);
   EnumeratedVariable::removeFast(value);
 }
 
@@ -234,7 +234,7 @@ void VACVariable::increase(Value newInf) {
   if ((newInf > inf) && (newInf < sup)) {
     queueVAC2();
   }
-  //for(int i=inf;i<=newInf;i++) vac->singleton.insert(100*wcspIndex + i);
+  if (ToulBar2::singletonConsistency) for(int i=inf;i<=newInf;i++) vac->singleton.insert(100*wcspIndex + i);
   EnumeratedVariable::increase(newInf);
 }
 
@@ -242,7 +242,7 @@ void VACVariable::decrease(Value newSup) {
   if ((newSup < sup) && (newSup > inf)) {
     queueVAC2();
   }
-  //for(int i=sup;i>=newSup;i--) vac->singleton.insert(100*wcspIndex + i);
+  if (ToulBar2::singletonConsistency) for(int i=sup;i>=newSup;i--) vac->singleton.insert(100*wcspIndex + i);
   EnumeratedVariable::decrease(newSup);
 }
 

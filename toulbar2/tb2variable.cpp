@@ -185,10 +185,10 @@ void Variable::projectLB(Cost cost)
   if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
   if (wcsp->td) {
 	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")";
-	wcsp->td->getCluster(getCluster())->increaseLb(wcsp->td->getCluster(getCluster())->getLb() + cost);
+	wcsp->td->getCluster(getCluster())->increaseLb(cost);
   }
   if (ToulBar2::verbose >= 2) cout << endl;
-  wcsp->increaseLb(wcsp->getLb() + cost);
+  wcsp->increaseLb(cost);
 }
 
 void Variable::propagateIncDec(int incdec)

@@ -40,7 +40,9 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 		Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
 		nctr->setTuple(s, c, scopeVars);
 		nogoods--;
-	}	  	
+	}
+	nctr->propagate();
+
 	delete [] scopeIndexs;	
 	delete [] scopeVars;	
 	delete [] tuple;

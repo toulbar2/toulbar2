@@ -25,7 +25,7 @@ public:
 
     virtual void updateUb(Cost newUb) =0;
     virtual void enforceUb() =0;
-    virtual void increaseLb(Cost newLb) =0;
+    virtual void increaseLb(Cost addLb) =0;
     virtual void decreaseUb(Cost newUb) =0;
     virtual void setLb(Cost newLb) =0;
     virtual void setUb(Cost newUb) =0;

@@ -1254,7 +1254,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
 	        }
 	    }
 		tctr->projectTernary();
-		increaseLb(getLb() + minc);
+		increaseLb(minc);
 	    if (ToulBar2::verbose >= 1) cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  newLb: " << getLb() << endl;
 		added = true;
 	}
@@ -1309,6 +1309,10 @@ void WCSP::removeSingleton() {if (vac) vac->removeSingleton();}
 void WCSP::printVACStat() {if (vac) vac->printStat();}
 int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -1;}
 
+
+// -----------------------------------------------------------
+// Methods for Cluster Tree Decomposition
+
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     td->buildFromOrder();
@@ -1346,9 +1350,6 @@ void WCSP::setDACOrderTreeDecomp() {
 	  
   //propagate();	  
 }
-
-
-
 
 
 // -----------------------------------------------------------

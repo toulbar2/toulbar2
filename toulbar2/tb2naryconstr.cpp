@@ -331,7 +331,7 @@ NaryConstraintMap::NaryConstraintMap(WCSP *wcsp, EnumeratedVariable** scope_in, 
 {
 	pf = new TUPLES;
 	filters = NULL;
-    //propagate();
+    // Cannot propagate here because cost tuples are not known yet
 }
 
 

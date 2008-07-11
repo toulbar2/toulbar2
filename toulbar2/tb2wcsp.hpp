@@ -58,25 +58,19 @@ public:
     
     Cost getLb() const {return lb;}
     Cost getUb() const {return ub;}
+    
+    void setUb(Cost newUb) { ub = newUb; }
+    void setLb(Cost newLb) { lb = newLb; }
 
     void updateUb(Cost newUb) {
         if (newUb < ub) {
             ub = newUb;
     		if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
         }
-    }
-    
+    } 
 	void enforceUb() {
        if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, ub)) THROWCONTRADICTION;
        objectiveChanged=true;
-    }
-    void increaseLb(Cost newLb) {
-       if (newLb > lb) {
-           if (CUT(((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb, ub)) THROWCONTRADICTION;
-           lb = newLb;
-           objectiveChanged=true;
-           if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
-       }
     }
     void decreaseUb(Cost newUb) {
        if (newUb < ub) {
@@ -85,9 +79,17 @@ public:
            objectiveChanged=true;
        }
     }     
-    
-    void setUb(Cost newUb) { ub = newUb; }
-    void setLb(Cost newLb) { lb = newLb; }
+
+    // warning! parameter addLb increments current lower bound
+    void increaseLb(Cost addLb) {
+       if (addLb > MIN_COST) {
+		   Cost newLb = lb + addLb;
+           if (CUT(((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb, ub)) THROWCONTRADICTION;
+           lb = newLb;
+           objectiveChanged=true;
+           if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
+       }
+    }
  
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
     
@@ -159,7 +161,7 @@ public:
     void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
-    int postNaryConstraint(int* scopeIndex, int arity, Cost defval);
+    int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
     
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
@@ -188,7 +190,7 @@ public:
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
     Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
 
-    void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getInf());}
+  void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getInf());} //Sup()+1);}
     void link(Constraint *c) {constrs.push_back(c);}
 
 	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }
@@ -288,7 +290,7 @@ public:
 	int  getVACHeuristic();
 
     // -----------------------------------------------------------
-    // Data and methods for Tree Decomposition
+    // Data and methods for Cluster Tree Decomposition
 
     TreeDecomposition* td;
 	void buildTreeDecomposition();

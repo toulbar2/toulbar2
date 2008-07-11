@@ -171,12 +171,12 @@ int main(int argc, char **argv)
         cerr << "   C[integer] : multiply all costs by this number" << endl;
         cerr << "   S : singleton consistency on preprocessing" << endl << endl;
 
-        cerr << "   B[integer] : (0) DFS, (1) BTD, (2) BTD-RDS, (3) RDS" << endl;
+        cerr << "   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition (default value: 0)" << endl;
+        cerr << "   j[integer] : split larger clusters into a chain of smaller embedded clusters with a number of proper variables less than this number (B3j1 for pure RDS)" << endl;
+        cerr << "   r[integer] : limit on maximum cluster separator size" << endl;
+        cerr << "   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option e)" << endl;
         cerr << "   R[integer] : choice for root cluster" << endl;
         cerr << "   I[integer] : choice solving only a particular subtree" << endl;
-        cerr << "   j[integer] : split larger clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
-        cerr << "   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option e)" << endl;
-        cerr << "   r[integer] : limit on maximum cluster separator size" << endl;
 #endif
         cerr << endl;
         exit(0);
@@ -326,6 +326,14 @@ int main(int argc, char **argv)
 	  cout << "Warning! Cannot show/save solutions if general variable elimination used in preprocessing." << endl;
 	  ToulBar2::showSolutions = false;
 	  ToulBar2::writeSolution = false;
+	}
+	if (ToulBar2::allSolutions && ToulBar2::btdMode >= 1) {
+	  cout << "Warning! Cannot find all solutions with BTD-like search methods." << endl;
+	  ToulBar2::allSolutions = false;
+	}
+	if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
+	  cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
+	  ToulBar2::lds = false;
 	}
 
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;

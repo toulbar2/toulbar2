@@ -131,8 +131,11 @@ void WCSP::read_wcsp(const char *fileName)
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
+				
 	            //((NaryConstraintMap*) nary)->changeDefCost( top );
 	            //((NaryConstraintMap*) nary)->preprojectall2();
+				nary->propagate();
+
 		    }
         } else if (arity == 3) {
             file >> i;
@@ -337,7 +340,7 @@ void WCSP::read_wcsp(const char *fileName)
     sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
-    increaseLb(getLb() + inclowerbound);
+    increaseLb(inclowerbound);
     
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
@@ -548,11 +551,11 @@ void WCSP::read_uai2008(const char *fileName)
 		Cost minc = MAX_COST;	
 		for (k = 0; k < ntuples; k++) {
 			p = costsProb[k];
-	        	if(markov) p = Prob2Cost(p / maxp);
-	        	else 	   p = Prob2Cost(p);
-		
-			costs.push_back(p);
-			if(minc > p) minc = p;
+			Cost cost;
+	        if(markov) cost = Prob2Cost(p / maxp);
+	        else 	   cost = Prob2Cost(p);
+			costs.push_back(cost);
+			if(cost < minc) minc = cost;
 	        }
 
 		if(minc > MIN_COST) {	    
@@ -603,7 +606,7 @@ void WCSP::read_uai2008(const char *fileName)
 					ictr++; 
 		            //((NaryConstraintMap*) nctr)->preprojectall2();
 		            //((NaryConstraintMap*) nctr)->preproject3();
-				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;							
+				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;						nctr->propagate();
 					break;
 			
 		}
@@ -613,7 +616,7 @@ void WCSP::read_uai2008(const char *fileName)
     sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
-	//    increaseLb(getLb() + inclowerbound);
+	//    increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
@@ -648,7 +651,7 @@ void WCSP::read_uai2008(const char *fileName)
 	 	}
   	}
  	
-    increaseLb(getLb() + inclowerbound);
+    increaseLb(inclowerbound);
  
     histogram();
 }
