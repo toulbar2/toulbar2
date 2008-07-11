@@ -3,6 +3,7 @@
  */
  
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 #include <list>
 #include <algorithm>
 
@@ -129,6 +130,7 @@ void VACExtension::nextScaleCost() {
 void VACExtension::reset()
 {
   VACVariable* x;
+  TreeDecomposition* td = wcsp->getTreeDec();
   clear();	
   while (!queueP->empty()) queueP->pop();
   while (!queueR->empty()) queueR->pop();
@@ -138,16 +140,18 @@ void VACExtension::reset()
      VariableList* varlist = wcsp->getNCBucket(bucket);  
      for (VariableList::iterator iter = varlist->begin(); iter != varlist->end();) {
         x = (VACVariable*) *iter;
-        if (x->unassigned() && (x->getMaxCost() >= itThreshold))  x->queueVAC();
+        if (x->unassigned() && (x->getMaxCost() >= itThreshold)) {
+		  if (td) { if(td->isActiveAndInCurrentClusterSubTree(x->getCluster())) x->queueVAC(); }
+		  else x->queueVAC();
+		}
         ++iter;         
      }
   }
   for (BTQueue::iterator it = VAC2.begin(); it != VAC2.end(); ++it) {
     x = (VACVariable*) (*it);
-    x->queueVAC();
+    if (td) { if(td->isActiveAndInCurrentClusterSubTree(x->getCluster())) x->queueVAC(); }
+	else x->queueVAC();
   }
-  
-  
 }
 
 
@@ -257,7 +261,7 @@ void VACExtension::enforcePass1 () {
     //list<Constraint*> l;
     for (ConstraintList::iterator itc = xj->getConstrs()->begin(); itc != xj->getConstrs()->end(); ++itc) {
       cij = (VACConstraint *) (*itc).constr;
-  	  if(cij->arity() == 2) {
+  	  if(cij->arity() == 2 && !cij->isSep()) {
 	 	  xi = (VACVariable *)cij->getVarDiffFrom(xj);	
 	      //if(xj->getMaxK(nbIterations) > 2) l.push_back(cij); else 
 	      if(enforcePass1(xj,cij)) return;
@@ -278,12 +282,14 @@ bool VACExtension::checkPass1 () const {
   VACConstraint *cij;
   VACVariable *xi, *xj;
   bool supportFound;
-  
+  TreeDecomposition* td = wcsp->getTreeDec();
+
   for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
     xi = (VACVariable *) wcsp->getVar(i);
+	if (td && !td->isActiveAndInCurrentClusterSubTree(xi->getCluster())) continue;
     for (ConstraintList::iterator iter = xi->getConstrs()->begin(); iter != xj->getConstrs()->end(); ++iter) {
       cij = (VACConstraint *) (*iter).constr;
-      if(cij->arity() == 2) {
+      if(cij->arity() == 2 && !cij->isSep()) {
 	      xj = (VACVariable *) cij->getVarDiffFrom(xi);
 		  for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
 			  Value v = *iti;	
@@ -501,7 +507,7 @@ void VACExtension::afterPreprocessing()
 	int discarded = 0;
 	for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
 		Constraint* c = wcsp->getCtr(i);
-        if (c->connected() && (c->arity() <= 3)) {
+        if (c->connected() && (c->arity() <= 3) && !c->isSep()) {
 		  if(c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
         	c->deconnect();
         	discarded++;

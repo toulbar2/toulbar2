@@ -4,6 +4,7 @@
  
 #include "tb2vacutils.hpp"
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 
 
 
@@ -167,7 +168,7 @@ void VACVariable::extendAll(Cost cost) {
   if (ToulBar2::vac) {
     for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
 	   Constraint *c = (*iter).constr;
-       if(c->arity() == 2) {
+       if(c->arity() == 2 && !c->isSep()) {
 		   xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
 	       xj->queueVAC2();
        }
@@ -182,7 +183,7 @@ void VACVariable::assign(Value newValue) {
   if (ToulBar2::vac) {
     for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
 	   Constraint *c = (*iter).constr;
-       if(c->arity() == 2) {
+       if(c->arity() == 2 && !c->isSep()) {
 	       VACVariable *xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
 	       xj->queueVAC2();
        }
@@ -222,7 +223,7 @@ void VACVariable::extend (Value value, Cost cost) {
   queueVAC2();
   for (ConstraintList::iterator iter = getConstrs()->begin(); iter != getConstrs()->end(); ++iter) {
 	Constraint *c = (*iter).constr;
-	if(c->arity() == 2) {
+	if(c->arity() == 2 && !c->isSep()) {
 	  xj = (VACVariable *) c->getVar(1 - (*iter).scopeIndex);
 	  xj->queueVAC2();
 	}
@@ -261,7 +262,7 @@ bool VACVariable::averaging()
 	ConstraintList::iterator itc = getConstrs()->begin();
 	if(itc != getConstrs()->end())	ctr = (*itc).constr;
 	while(ctr) {
-		if(ctr->arity() == 2) {
+		if(ctr->arity() == 2 && !ctr->isSep()) {
 			BinaryConstraint* bctr = (BinaryConstraint*) ctr;
 			x = (EnumeratedVariable*) bctr->getVarDiffFrom( (Variable*) this );
 			for (iterator it = begin(); it != end(); ++it) {
@@ -283,7 +284,7 @@ bool VACVariable::averaging()
 					change = true;
 				}
 			}
-		} /*else if(ctr->arity() == 3) {
+		} /*else if(ctr->arity() == 3 && !ctr->isSep()) {
 			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
 			x = (EnumeratedVariable*) tctr->getVar( 0 );
 			if(x == this) x = (EnumeratedVariable*) tctr->getVar( 1 );
@@ -354,6 +355,10 @@ VACConstraint::~VACConstraint ()
 
 void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
   assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << v << "), " << c << ")" << endl), true));
+    
+  TreeDecomposition* td = wcsp->getTreeDec();
+  if(td) td->addDelta(cluster,x,v,c);
+
   int index = x->toIndex(v);
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] += c; 
@@ -363,6 +368,10 @@ void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
 
 void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << v << "), " << c << ")" << endl), true));
+
+  TreeDecomposition* td = wcsp->getTreeDec();
+  if(td) td->addDelta(cluster,x,v,-c);
+
   int index = x->toIndex(v);
   // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] -= c;
