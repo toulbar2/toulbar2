@@ -211,10 +211,16 @@ bool Separator::get( Cost& res, bool& opt ) {
 		assert(!p.second || res + p.first >= MIN_COST);
 		res += p.first;
 	    opt = p.second;
-		res = max(MIN_COST,res);
+		if (ToulBar2::btdMode >= 2) {
+		  Cost lbrds = cluster->getLbRDS();
+		  assert(!opt || res >= lbrds);
+		  res = max(lbrds, res);
+		} else {
+		  res = max(MIN_COST,res);
+		}
 		return true;
 	} else {
-	    res = MIN_COST;
+	    res = (ToulBar2::btdMode >= 2)?cluster->getLbRDS():MIN_COST;
 		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluser " <<  cluster->getId() << endl;
 		return false;
 	}
