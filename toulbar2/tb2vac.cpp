@@ -32,7 +32,7 @@ VACExtension::VACExtension (WCSP *w) : wcsp(w), VAC2(&w->getStore()->storeVariab
   minlambda = MAX_COST;
   sumlb = MIN_COST;
   sumvars = 0;
-  sumk = MIN_COST;
+  sumk = 0;
   theMaxK = 0;
   nlb = 0;
   varAssign = -1;
@@ -332,7 +332,7 @@ void VACExtension::enforcePass2 () {
   	
   for (EnumeratedVariable::iterator iti0 = xi0->begin(); iti0 != xi0->end(); ++iti0) {
 	v = *iti0;
-    xi0->addToK(v, UNIT_COST, nbIterations);
+    xi0->addToK(v, 1, nbIterations);
 	Cost cost = xi0->getVACCost(v);
 	if (cost > MIN_COST && cost < minlambda) minlambda = cost;
 	else     xi0->setMark(v, nbIterations);
@@ -355,15 +355,15 @@ void VACExtension::enforcePass2 () {
 		Value w = *itj;
 		Cost costij = cij->getVACCost(xi,xj,v, w);
 		if (costij > MIN_COST) {
-          Cost tmpK = xi->getK(v, nbIterations);
+          int tmpK = xi->getK(v, nbIterations);
 		  if (xj->getKiller(w) == i && xj->isMarked(w, nbIterations)) 
 		    tmpK += xj->getK(w, nbIterations);
 		  if (!CUT(wcsp->getLb() + costij,wcsp->getUb())) {
 			if( (costij/tmpK) < minlambda) minlambda = costij/tmpK;
 		  }
 		} else {
-          Cost tmpK = xi->getK(v, nbIterations) - cij->getK(xj,w, nbIterations);
-          if (tmpK > MIN_COST) {
+          int tmpK = xi->getK(v, nbIterations) - cij->getK(xj,w, nbIterations);
+          if (tmpK > 0) {
             xj->addToK(w,tmpK,nbIterations);
             cij->setK(xj, w, xi->getK(v, nbIterations), nbIterations);
             if(xj->getVACCost(w) == MIN_COST) xj->setMark(w, nbIterations);
@@ -402,7 +402,7 @@ bool VACExtension::enforcePass3 () {
   int minvar = -1;
   int minval = -1;
   Cost minc = MAX_COST;
-  Cost maxk = MIN_COST;
+  int maxk = 0;
     	  
   if(!util) {
 	    while (!queueR->empty()) { 
@@ -415,7 +415,7 @@ bool VACExtension::enforcePass3 () {
 		    queueR->pop();
 		    for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
 				Value v = *iti;
-			    if(xi->getK(v, nbIterations) != MIN_COST) { 
+			    if(xi->getK(v, nbIterations) != 0) { 
 			    	if(xi->getVACCost(v) != MIN_COST) {
 				    	if(minc > xi->getCost(v)) {
 				    		minc = xi->getCost(v);
@@ -441,7 +441,7 @@ bool VACExtension::enforcePass3 () {
   nlb++;
   sumlb += lambda;
   sumvars += queueR->size();
-  maxk = MIN_COST;
+  maxk = 0;
 
   while (!queueR->empty()) {
     j = queueR->top().first;
@@ -453,20 +453,17 @@ bool VACExtension::enforcePass3 () {
     cij = (VACConstraint *) xi->getConstr(xj);
     assert(cij);
     
-    Cost xjk = xj->getK(w,nbIterations);
+    int xjk = xj->getK(w,nbIterations);
 	if(maxk < xjk) maxk = xjk;
 
     for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
 	  Value v = *iti;	
- //     cout <<  "Cout binaire vrai: " << cij->getCost(xi,xj,v,w) << " (VAC) " << cij->getVACCost(xi,xj,v,w) << endl;
- //     cout <<  "K binaire: " << cij->getK(xi,v, nbIterations) << endl;
-
-	if (cij->getK(xi,v, nbIterations) != 0) {
+	  if (cij->getK(xi,v, nbIterations) != 0) {
 		Cost ecost = lambda * cij->getK(xi,v, nbIterations); 
 		cij->setK(xi, v, 0, nbIterations);
-			  cij->VACextend(xi, v, ecost);
-			  xi->queueAC();
-			  xj->queueAC();
+		cij->VACextend(xi, v, ecost);
+		xi->queueAC();
+		xj->queueAC();
       }
     }
     cij->VACproject(xj, w, lambda * xj->getK(w, nbIterations));
@@ -581,7 +578,7 @@ void VACExtension::dequeueVAC2(DLink<Variable *> *link) {
 void VACExtension::printStat(bool ini)
 {
 	long double mean = to_double(sumlb) / (long double) nlb;
-	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << "     cyclesize: " << (double)sumvars/(double)nlb << "     k: " << to_double(sumk)/(double)nlb << " (mean), " << theMaxK << " (max)" << endl; 
+	cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb << "     cyclesize: " << (double)sumvars/(double)nlb << "     k: " << (double)sumk/(double)nlb << " (mean), " << theMaxK << " (max)" << endl; 
 	if(ini) cout << "Lb after VAC: " << wcsp->getLb() << endl; 
 	
 	//sort(heap.begin(), heap.end(), cmp_function);
@@ -594,10 +591,10 @@ void VACExtension::printStat(bool ini)
 	}
 	cout << endl;*/
 	
-	sumk = MIN_COST;
+	sumk = 0;
 	theMaxK = 0;
 	sumvars = 0;
-	sumlb = 0;
+	sumlb = MIN_COST;
 	nlb = 0;
 }
 

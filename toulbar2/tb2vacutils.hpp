@@ -18,10 +18,10 @@ private:
 
   vector<Long>  mark;
   vector<Long>  k_timeStamp;
-  vector<Cost>  k;
+  vector<int>  k;
   vector<int>   killer; 	  
 
-  Cost  maxk;
+  int  maxk;
   Long  maxk_timeStamp;
 
 
@@ -46,25 +46,25 @@ public:
   bool increaseVAC(Value newInf);
   bool decreaseVAC(Value supInf);
 
-  Cost 	getMaxK( long timeStamp ) {
-  	if(maxk_timeStamp < timeStamp) return MIN_COST;
+  int 	getMaxK( long timeStamp ) {
+  	if(maxk_timeStamp < timeStamp) return 0;
   	else return maxk; 
   } 
 
-  Cost 	getK( Value v, long timeStamp ) {
-  	if(k_timeStamp[toIndex(v)] < timeStamp) return MIN_COST;
+  int 	getK( Value v, long timeStamp ) {
+  	if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
   	else return k[toIndex(v)]; 
   } 
-  void 	setK( Value v, Cost c, long timeStamp ) { 
+  void 	setK( Value v, int c, long timeStamp ) { 
   	k[toIndex(v)] = c; 
   	k_timeStamp[toIndex(v)] = timeStamp; 
   	if(maxk_timeStamp < timeStamp) {
-  		maxk = MIN_COST;
+  		maxk = 0;
   		maxk_timeStamp = timeStamp;
   	}
   }
 
-  void	addToK(Value v, Cost c, long timeStamp ) {
+  void	addToK(Value v, int c, long timeStamp ) {
   	 if(k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
   	 else k[toIndex(v)] += c; 
   	 if(maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
@@ -83,7 +83,6 @@ public:
 
 
   Cost getVACCost (Value v);
-  void setCost (Value v, const Cost c);
 
   void setThreshold (Cost c); 
   Cost getThreshold (); 
@@ -122,8 +121,8 @@ class VACConstraint : public BinaryConstraint {
 
 private:
   
-  vector<Cost>  kX;
-  vector<Cost>  kY;
+  vector<int>  kX;
+  vector<int>  kY;
   vector<Long>  kX_timeStamp;
   vector<Long>  kY_timeStamp;
     
@@ -136,8 +135,8 @@ public:
   VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
   ~VACConstraint ();
 
-  Cost getK (VACVariable* var, Value v, long timeStamp);
-  void setK (VACVariable* var, Value v, Cost c, long timeStamp);
+  int getK (VACVariable* var, Value v, long timeStamp);
+  void setK (VACVariable* var, Value v, int c, long timeStamp);
 
   Cost getVACCost (VACVariable *xx, VACVariable *yy, Value v, Value w);
   void VACproject(VACVariable* x, Value v, Cost c);

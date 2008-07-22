@@ -18,6 +18,7 @@ void initCosts(Cost c)
     if (ToulBar2::LcLevel > LC_FDAC) {cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl; ToulBar2::LcLevel = LC_FDAC;}
     if (ToulBar2::vac) {cerr << "VAC not implemented on Paretopair." << endl; ToulBar2::vac = false; ToulBar2::minsumDiffusion = false;}
 	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {cerr << "Variable elimination not implemented on Paretopair." << endl; ToulBar2::elimDegree = -1; ToulBar2::elimDegree_preprocessing = -1;}
+    if (ToulBar2::btdMode>=1) {cerr << "BTD-like methods not implemented on Paretopair." << endl; ToulBar2::btdMode = 0; ToulBar2::varOrder = NULL;}
 }
 #endif
 

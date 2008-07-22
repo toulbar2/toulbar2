@@ -154,8 +154,8 @@ void Separator::set( Cost c, bool opt ) {
 	}
 	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
-	//assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= max(MIN_COST, c + deltares));
-	nogoods[t] = TPairNG(max(MIN_COST, c + deltares), opt); 
+	//assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= MAX(MIN_COST, c + deltares));
+	nogoods[t] = TPairNG(MAX(MIN_COST, c + deltares), opt); 
 }    
 
 Cost Separator::getCurrentDelta() {
@@ -214,9 +214,9 @@ bool Separator::get( Cost& res, bool& opt ) {
 		if (ToulBar2::btdMode >= 2) {
 		  Cost lbrds = cluster->getLbRDS();
 		  assert(!opt || res >= lbrds);
-		  res = max(lbrds, res);
+		  res = MAX(lbrds, res);
 		} else {
-		  res = max(MIN_COST,res);
+		  res = MAX(MIN_COST,res);
 		}
 		return true;
 	} else {
@@ -424,7 +424,7 @@ Cost Cluster::getLbRecRDS() {
 	if((*iter)->isActive()) {
 		Cost propa = (*iter)->getLbRecRDS();
 		Cost rds = (*iter)->getLbRDS();
-		res += max(propa,rds);
+		res += MAX(propa,rds);
 	}
   } 
   return res; 

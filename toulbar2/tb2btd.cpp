@@ -5,8 +5,6 @@
 
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2bep.hpp"
 #include "tb2clusters.hpp"
 
 /*
@@ -97,7 +95,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		if (CUT(lbgood, cub)) THROWCONTRADICTION;
 		if(ToulBar2::btdMode >= 2) {
 			Cost rds = td->getLbRecRDS();
-			lbgood = max(rds,lbgood);
+			lbgood = MAX(rds,lbgood);
 			if(CUT(rds, cub)) THROWCONTRADICTION;
 		}
         lastConflictVar = varIndex;
@@ -106,7 +104,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
     	} else assign(varIndex, value);
         lastConflictVar = -1;
         Cost res = recursiveSolve(cluster, lbgood, cub);
-		cub = min(res,cub);
+		cub = MIN(res,cub);
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
@@ -120,14 +118,14 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 		if (CUT(lbgood, cub)) THROWCONTRADICTION;
 		if(ToulBar2::btdMode >= 2) {
 			Cost rds = td->getLbRecRDS();
-			lbgood = max(rds,lbgood);
+			lbgood = MAX(rds,lbgood);
 			if(CUT(rds, cub)) THROWCONTRADICTION;
 		}
 		if (dichotomic) {
 		  if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
 		} else remove(varIndex, value);
 		Cost res = recursiveSolve(cluster, lbgood, cub);
-		cub = min(res,cub);
+		cub = MIN(res,cub);
     } catch (Contradiction) {
 	  wcsp->whenContradiction();
     }
@@ -183,7 +181,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 		  Cost bestlb = lbSon;
 		  if(ToulBar2::btdMode >= 2) {
 			Cost rdslb = td->getLbRecRDS();
-			bestlb = max(rdslb,bestlb);
+			bestlb = MAX(rdslb,bestlb);
 		  }
 		  Cost newlbSon = recursiveSolve(c, bestlb, ubSon);
 		  c->nogoodRec(newlbSon, (newlbSon < ubSon));

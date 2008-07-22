@@ -681,8 +681,8 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 		  	 	else {p = ToulBar2::errorg / (TProb)(domsize - nballeles);
                       penalty = pedigree[individuals[individual]].nbtyped; }
   	  	 	 }	
-			 if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogLike(-((penalty>0)?wcsp->Prob2Cost(penalty):MIN_COST)):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(penalty):MIN_COST) << " cost" << endl;
- 	  	 	 unaryconstr.costs.push_back((typed && fixed && !theone)?wcsp->getUb():(wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty>0 && penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(penalty):MIN_COST)) );	
+			 if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogLike(-((penalty>0)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST)):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST) << " cost" << endl;
+ 	  	 	 unaryconstr.costs.push_back((typed && fixed && !theone)?wcsp->getUb():(wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty>0 && penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST)) );	
 		  }
 	    }
 	    unaryconstrs.push_back(unaryconstr);

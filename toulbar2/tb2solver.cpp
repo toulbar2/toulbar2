@@ -92,7 +92,7 @@ void Solver::read_solution(const char *filename)
         i++;
     }
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
-	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+1);
+	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     store->restore(depth);
 }
 

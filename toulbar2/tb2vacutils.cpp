@@ -27,7 +27,7 @@ void VACVariable::init () {
   for (unsigned int a = 0; a < getDomainInitSize(); a++) {
   	mark.push_back(0);
   	k_timeStamp.push_back(0);
-  	k.push_back(MIN_COST);
+  	k.push_back(0);
   	killer.push_back(0);
   }
   linkVACQueue.content.var = this;
@@ -328,11 +328,11 @@ bool VACVariable::averaging()
 VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, xx, yy, tab, storeCost) 
 {
    for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {
-	   	kX.push_back(MIN_COST);
+	   	kX.push_back(0);
 	   	kX_timeStamp.push_back(0);
    }
    for (unsigned int b = 0; b < yy->getDomainInitSize(); b++) {
-	   	kY.push_back(MIN_COST);
+	   	kY.push_back(0);
 	   	kY_timeStamp.push_back(0);
    }
 }
@@ -340,11 +340,11 @@ VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVari
 VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) 
 {
    for (int a = 0; a < wcsp->maxdomainsize; a++) {
-	   	kX.push_back(MIN_COST);
+	   	kX.push_back(0);
 	   	kX_timeStamp.push_back(0);
    }
    for (int b = 0; b < wcsp->maxdomainsize; b++) {
-	   	kY.push_back(MIN_COST);
+	   	kY.push_back(0);
 	   	kY_timeStamp.push_back(0);
    }
 }
@@ -385,17 +385,17 @@ Cost VACConstraint::getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value 
   else return c;
 }
 
-Cost VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {
+int VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {
   if(var == (VACVariable*) getVar(0)) {
-  	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return MIN_COST;
+  	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return 0;
   	else return kX[var->toIndex(v)];
   }  else  {
-  	if(kY_timeStamp[var->toIndex(v)] < timeStamp) return MIN_COST;
+  	if(kY_timeStamp[var->toIndex(v)] < timeStamp) return 0;
   	else return kY[var->toIndex(v)];
   }
 }
 
-void VACConstraint::setK (VACVariable* var, Value v, Cost c, long timeStamp) {
+void VACConstraint::setK (VACVariable* var, Value v, int c, long timeStamp) {
   if(var == getVar(0)) {
   	kX[var->toIndex(v)] = c;
   	kX_timeStamp[var->toIndex(v)] = timeStamp;

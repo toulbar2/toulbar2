@@ -973,7 +973,7 @@ TrieNode::TrieNode() {
   ptrs = NULL; 
   letters = NULL; 
   word = NULL; 
-  c = 0;
+  c = MIN_COST;
 }
 
 

@@ -161,7 +161,7 @@ class Cluster
 	  Cost			getLb()  { return lb; }
 	  void			setLb(Cost c)  { lb = c; }
       void 			increaseLb( Cost addToLb ) { lb += addToLb; }
-	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return max(lbRDS - delta, MIN_COST); }
+	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return MAX(lbRDS - delta, MIN_COST); }
 	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
 	  Cost	        getLbRec();
 	  Cost	        getLbRecRDS();
@@ -271,7 +271,7 @@ public:
 	Cost getLbRecRDS() { 
 		Cluster* c = getCluster(currentCluster);
 		Cost res = c->getLbRecRDS(); 
-		return max(res,c->getLbRDS());	
+		return MAX(res,c->getLbRDS());	
 	}
     void addDelta(int c, EnumeratedVariable *x, Value value, Cost cost);
     void newSolution( Cost lb );

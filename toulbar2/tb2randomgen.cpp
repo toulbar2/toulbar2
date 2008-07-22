@@ -257,7 +257,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
 					    if(arity > 1) { 
 						    switch(arity) {
 						    	case 2:  if(!forceSubModular) generateBinCtr(indexs[0],indexs[1],nogoods); 
-						    			 else generateSubModularBinCtr(indexs[0],indexs[1],1,5);
+						    			 else generateSubModularBinCtr(indexs[0],indexs[1],SMALL_COST,MEDIUM_COST);
 						    			 break;
 						    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
 						    	default: generateNaryCtr(indexs,nogoods);

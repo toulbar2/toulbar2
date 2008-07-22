@@ -114,7 +114,7 @@ void WCSP::read_wcsp(const char *fileName)
 		    if((defval != MIN_COST) || (ntuples > 0))           
 		    { 
 			    Cost tmpcost = defval*K;
-				if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+				if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
 	            int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
                 NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
@@ -127,7 +127,7 @@ void WCSP::read_wcsp(const char *fileName)
 					buf[i] = '\0';
 				    file >> cost;
 				    cost = cost * K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
 					string tup = buf;
 					nary->setTuple(tup, cost, NULL);
 	            }
@@ -160,7 +160,7 @@ void WCSP::read_wcsp(const char *fileName)
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 	                    for (c = 0; c < z->getDomainInitSize(); c++) {
 						    Cost tmpcost = defval*K;
-							if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+							if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
 	                        costs.push_back(tmpcost);
 						}
                     }
@@ -171,7 +171,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> c;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
                 }
                 if(ToulBar2::vac) {
@@ -205,7 +205,7 @@ void WCSP::read_wcsp(const char *fileName)
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 					    Cost tmpcost = defval*K;
-						if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+						if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                         costs.push_back(tmpcost);
                     }
                 }
@@ -214,7 +214,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() + b] = tmpcost;
                 }
                 
@@ -284,14 +284,14 @@ void WCSP::read_wcsp(const char *fileName)
 			  unaryconstr.var = x;
 			  for (a = 0; a < x->getDomainInitSize(); a++) {
 				Cost tmpcost = defval*K;
-     			if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+     			if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs.push_back(tmpcost);
 			  }
 			  for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
 				Cost tmpcost = cost*K;
- 	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < 3*getUb())) tmpcost *= MEDIUM_COST;
+ 	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs[a] = tmpcost;
 			  }
 			  if(ToulBar2::vac) {
@@ -386,16 +386,7 @@ void WCSP::read_uai2008(const char *fileName)
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
 	Cost inclowerbound = MIN_COST;
-    Cost top = MAX_COST-1;
-	Cost K = ToulBar2::costMultiplier;    
-	if(top < MAX_COST / K)	top = top * K;
-	else top = MAX_COST-1;
-
-    TProb TopProb = to_double(top)/2.5;
-    updateUb((Cost) ((Long) TopProb));   
-
-    Cost MaxCost = (Cost) ((Long) (TopProb * 2.));
-	
+    updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST );
 
     int nbval = 0;
     int nbvar,nbconstr;
@@ -460,7 +451,7 @@ void WCSP::read_uai2008(const char *fileName)
 	            if (ToulBar2::verbose >= 3) cout << j << " ";
 			}     	
 			if (ToulBar2::verbose >= 3) cout << endl;
-            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MaxCost) );
+            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MAX_COST) );
         } 
         else if (arity == 3) {
             file >> i;
@@ -541,7 +532,7 @@ void WCSP::read_uai2008(const char *fileName)
 		vector<Cost>  costs;
 		vector<TProb> costsProb;
 	
-		TProb maxp = MIN_COST;	
+		TProb maxp = 0.;	
 		for (k = 0; k < ntuples; k++) {
 	        file >> p;
 	        costsProb.push_back( p );

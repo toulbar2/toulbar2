@@ -1215,7 +1215,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         }
     }
 
-	if(minc > 0) {
+	if(minc > MIN_COST) {
 		tctr = new TernaryConstraint(this, &storeData->storeCost); 
 	    elimTernConstrs.push_back(tctr);
 		tctr = newTernaryConstr(x,y,z);
