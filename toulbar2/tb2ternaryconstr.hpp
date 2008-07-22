@@ -253,7 +253,7 @@ public:
   }
    
   bool isEAC(int varIndex, Value a) {
-//      if (varIndex==getDACScopeIndex()) return true;
+	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     switch(varIndex) {
             case 0: return isEAC(x,a,y,z,supportX); break;
             case 1: return isEAC(y,a,x,z,supportY); break;
@@ -264,7 +264,7 @@ public:
   }
 
     void findFullSupportEAC(int varIndex) {
-//      if (varIndex==getDACScopeIndex()) return;
+        if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return;
 		assert( !wcsp->getTreeDec() || ( cluster == xy->getCluster() &&  cluster == xz->getCluster() &&  cluster == yz->getCluster()) );
         switch(varIndex) {
             case 0: findFullSupportX(); break;

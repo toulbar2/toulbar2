@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 #ifdef BOOST
         cerr << "   m : preprocessing only: minimum degree re-ordering of variables" << endl;
 #endif
-        cerr << "   o : ensure optimal worst-case time complexity of DAC (can be costly in practice)" << endl;
+        cerr << "   o : ensure optimal worst-case time complexity of DAC and EAC (can be costly in practice)" << endl;
         cerr << "   k[integer] : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4)" << endl;
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;

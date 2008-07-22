@@ -331,7 +331,7 @@ public:
   }
   
   bool isEAC(int varIndex, Value a) {
-	//    if (varIndex==getDACScopeIndex()) return true;
+	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
         int xindex = x->toIndex(a);
         if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
@@ -359,9 +359,9 @@ public:
   }
   
     void findFullSupportEAC(int varIndex) {
-	  //        if (varIndex==getDACScopeIndex()) return;
-        if (varIndex == 0) findFullSupportX();
-        else findFullSupportY();
+	  if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return;
+	  if (varIndex == 0) findFullSupportX();
+	  else findFullSupportY();
     } 
     
     bool verify() {
