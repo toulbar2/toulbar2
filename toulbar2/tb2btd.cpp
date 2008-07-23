@@ -30,8 +30,8 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster *cluster)
   
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
-        // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,1);
         if (varIndex < 0 || heuristic < best - 1./100001.
             || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -55,8 +55,8 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
     
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
-        // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,1);
         if (varIndex < 0 || heuristic < best - 1./100001.
             || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -265,6 +265,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  wcsp->setUb(cub);
 	  td->setCurrentCluster(c);
 	  td->setRootRDS(c);
+	  lastConflictVar = -1;
 
 	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
 

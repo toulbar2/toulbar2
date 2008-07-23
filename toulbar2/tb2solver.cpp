@@ -129,10 +129,9 @@ int Solver::getVarMinDomainDivMaxDegree()
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
-    
+
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-        // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getDegree(*iter)+1);
         if (varIndex < 0 || heuristic < best - 1./100001.
             || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -155,7 +154,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
     
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (wcsp->getDegree(*iter) + 1);
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - 1./100001.
             || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -648,6 +647,7 @@ bool Solver::solve()
     Cost initialUpperBound = wcsp->getUb();
     nbBacktracks = 0;
     nbNodes = 0;
+	lastConflictVar = -1;
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->decreaseUb(initialUpperBound);

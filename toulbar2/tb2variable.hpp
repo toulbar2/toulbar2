@@ -133,6 +133,8 @@ public:
  
  	TSepLink::iterator itclusters;
  
+    int nbSeparators() { return clusters.size(); }
+
 	void beginCluster() { itclusters = clusters.begin(); }
 
 	bool nextCluster(int& c, int& pos) { 
