@@ -536,12 +536,15 @@ void Solver::newSolution()
 		  cout << "o " << wcsp->getLb() << endl; //" ";
 		  //	((WCSP*)wcsp)->solution_XML();
   		}
-  			
   	}
-  	
-  
-  
+
     wcsp->restoreSolution();
+	
+	// side-effect: remember last solution
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+	  wcsp->setBestValue(i, wcsp->getValue(i));
+	}
+
     if (ToulBar2::showSolutions) {
     	
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
@@ -584,9 +587,9 @@ void Solver::newSolution()
 	        file << endl;
 //        }
     }
-                if(ToulBar2::uai) {
-                        ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
-                }
+	if(ToulBar2::uai) {
+	  ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
+	}
 }
 
 void Solver::recursiveSolve()
@@ -602,9 +605,9 @@ void Solver::recursiveSolve()
         else if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
 			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-			  binaryChoicePoint(varIndex, wcsp->getSupport(varIndex));
-			  //			    assert(wcsp->canbe(varIndex, wcsp->getMaxUnaryCostValue(varIndex)));
-			  //			    binaryChoicePoint(varIndex, wcsp->getMaxUnaryCostValue(varIndex));
+			  // Reuse last solution found if available
+			  Value bestval = wcsp->getBestValue(varIndex);
+			  binaryChoicePoint(varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex));
             } else narySortedChoicePoint(varIndex);
         } else {
             binaryChoicePoint(varIndex, wcsp->getInf(varIndex));
@@ -627,9 +630,9 @@ void Solver::recursiveSolveLDS(int discrepancy)
         else if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
 			  assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-			  binaryChoicePointLDS(varIndex, wcsp->getSupport(varIndex), discrepancy);
-			  //			    assert(wcsp->canbe(varIndex, wcsp->getMaxUnaryCostValue(varIndex)));
-			  //			    binaryChoicePointLDS(varIndex, wcsp->getMaxUnaryCostValue(varIndex), discrepancy);
+			  // Reuse last solution found if available
+			  Value bestval = wcsp->getBestValue(varIndex);
+			  binaryChoicePointLDS(varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex), discrepancy);
             } else {
                 narySortedChoicePointLDS(varIndex, discrepancy);
             }

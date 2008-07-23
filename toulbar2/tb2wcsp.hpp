@@ -190,7 +190,7 @@ public:
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
     Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
 
-  void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getInf());} //Sup()+1);}
+    void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getSup()+1);}
     void link(Constraint *c) {constrs.push_back(c);}
 
 	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }
