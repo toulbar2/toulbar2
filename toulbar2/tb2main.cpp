@@ -324,6 +324,10 @@ int main(int argc, char **argv)
 	  cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
 	  ToulBar2::lds = false;
 	}
+	if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
+	  cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
+	  ToulBar2::binaryBranching = true;
+	}
 
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
