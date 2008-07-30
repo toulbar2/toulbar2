@@ -85,6 +85,7 @@ void Solver::read_solution(const char *filename)
         file >> value;
         if (wcsp->unassigned(i)) {
 		  assign(i, value);
+		  // side-effect: remember last solution
 		  wcsp->setBestValue(i, value);
         } else {
             if (wcsp->getValue(i) != value) THROWCONTRADICTION;
@@ -538,11 +539,6 @@ void Solver::newSolution()
   	}
 
     wcsp->restoreSolution();
-	
-	// side-effect: remember last solution
-    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-	  wcsp->setBestValue(i, wcsp->getValue(i));
-	}
 
     if (ToulBar2::showSolutions) {
     	
