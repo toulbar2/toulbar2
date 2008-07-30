@@ -265,6 +265,7 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                         }
                         assert(costfromy <= y->getCost(*iterY));
                         if (costfromy > MIN_COST) {
+						    assert(x->unassigned() && y->unassigned());
                             xy->reconnect();    // must be done before using the constraint
                             xy->extend(xy->getIndex(y), *iterY, costfromy);
                         }
@@ -285,7 +286,8 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                         }
                         assert(costfromz <= z->getCost(*iterZ));
                         if (costfromz > MIN_COST) {
-                            xz->reconnect();    // must be done before using the constraint
+                            assert(x->unassigned() && z->unassigned());
+						    xz->reconnect();    // must be done before using the constraint
                             xz->extend(xz->getIndex(z), *iterZ, costfromz);
                         }
                     }
@@ -395,7 +397,7 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
 	}
     
     if (flag) {
-        yzin->reconnect();
+        if (yy->unassigned() && zz->unassigned()) yzin->reconnect();
         yzin->propagate();
     }
 }
@@ -428,7 +430,7 @@ void TernaryConstraint::fillxy() {
     BinaryConstraint* xy_ = NULL;
     xy_ = x->getConstr(y); 
     if(td && xy_ && (getCluster() != xy_->getCluster())) {  
-    	BinaryConstraint* xy__ =  x->getConstr(y, td->getCluster(getCluster()));
+    	BinaryConstraint* xy__ =  x->getConstr(y, getCluster());
     	if(xy__) xy_ = xy__; // we have found another constraint of the same cluster
     }
     if(!xy_ || (xy_ && td && (getCluster() != xy_->getCluster())) ) {
@@ -445,7 +447,7 @@ void TernaryConstraint::fillxz() {
     BinaryConstraint* xz_ = NULL;
     xz_ = x->getConstr(z); 
     if(td && xz_ && (getCluster() != xz_->getCluster())) {
-    	BinaryConstraint* xz__ =  x->getConstr(z, td->getCluster(getCluster()));
+    	BinaryConstraint* xz__ =  x->getConstr(z, getCluster());
     	if(xz__) xz_ = xz__; // we have found another constraint of the same cluster
     }
     if(!xz_|| (xz_ && td && getCluster() != xz_->getCluster()) ) {
@@ -463,7 +465,7 @@ void TernaryConstraint::fillyz() {
     BinaryConstraint* yz_ = NULL;
     yz_ = y->getConstr(z); 
     if(td && yz_ && (getCluster() != yz_->getCluster())) {
-    	BinaryConstraint* yz__ =  y->getConstr(z, td->getCluster(getCluster()));
+    	BinaryConstraint* yz__ =  y->getConstr(z, getCluster());
     	if(yz__) yz_ = yz__; 
     }
     if(!yz_ || (yz_ && td && getCluster() != yz_->getCluster()) ) {
@@ -489,9 +491,9 @@ void TernaryConstraint::fillElimConstrBinaries()
 
 
 void TernaryConstraint::setDuplicates() {
-	TreeDecomposition* td = wcsp->getTreeDec();
+	assert(wcsp->getTreeDec());
 	if(xy->getCluster() != cluster) {
-		BinaryConstraint* xy_ =  x->getConstr(y, td->getCluster(getCluster()));
+		BinaryConstraint* xy_ =  x->getConstr(y, getCluster());
 		if(xy_) {
 			if(xy_->isDuplicate()) setDuplicate();
 			xy = xy_;
@@ -505,7 +507,7 @@ void TernaryConstraint::setDuplicates() {
 		}
 	}
 	if(xz->getCluster() != cluster) {
-		BinaryConstraint* xz_ =  x->getConstr(z, td->getCluster(getCluster()));
+		BinaryConstraint* xz_ =  x->getConstr(z, getCluster());
 		if(xz_) {
 			xz = xz_;
 			if(xz_->isDuplicate()) setDuplicate();
@@ -519,7 +521,7 @@ void TernaryConstraint::setDuplicates() {
 		}
 	}
 	if(yz->getCluster() != cluster) {
-		BinaryConstraint* yz_ =  y->getConstr(z, td->getCluster(getCluster()));
+		BinaryConstraint* yz_ =  y->getConstr(z, getCluster());
 		if(yz_) {
 			yz = yz_;
 			if(yz_->isDuplicate()) setDuplicate();
