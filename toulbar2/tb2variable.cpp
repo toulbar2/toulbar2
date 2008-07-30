@@ -230,7 +230,7 @@ BinaryConstraint* Variable::getConstr( Variable* x )
 }     
 
 
-BinaryConstraint* Variable::getConstr( Variable* x, Cluster* c )
+BinaryConstraint* Variable::getConstr( Variable* x, int cid )
 {
 	BinaryConstraint* res;
 	BinaryConstraint* ctr2;
@@ -242,7 +242,7 @@ BinaryConstraint* Variable::getConstr( Variable* x, Cluster* c )
     		ctr2 = (BinaryConstraint*) (*iter).constr;
   			if(ctr2->getIndex(x) >= 0) {
   				res = ctr2;
-  				if(res->getCluster() == c->getId()) return res;
+  				if(res->getCluster() == cid) return res;
   			}
     	}
     	else if ((*iter).constr->arity() == 3) {
@@ -254,7 +254,7 @@ BinaryConstraint* Variable::getConstr( Variable* x, Cluster* c )
   				else if((1 != idx) && (1 != idt)) res = ctr3->xz;
   				else res = ctr3->xy;
   				
-  				if(res && res->getCluster() == c->getId()) return res;
+  				if(res && res->getCluster() == cid) return res;
   			}
     	}
     }
@@ -278,7 +278,7 @@ TernaryConstraint* Variable::getConstr( Variable* x, Variable* y )
 	return NULL;
 }
 
-TernaryConstraint* Variable::getConstr( Variable* x, Variable* y,  Cluster* c  )
+TernaryConstraint* Variable::getConstr( Variable* x, Variable* y, int cid )
 {
 	TernaryConstraint* ctr = NULL;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
@@ -287,7 +287,7 @@ TernaryConstraint* Variable::getConstr( Variable* x, Variable* y,  Cluster* c  )
     	if ((*iter).constr->arity() == 3) {
     		ctr = (TernaryConstraint*) (*iter).constr;
     		if((ctr->getIndex(x)  >= 0) && (ctr->getIndex(y)  >= 0)) {
-  				if(ctr->getCluster() == c->getId()) return ctr;
+  				if(ctr->getCluster() == cid) return ctr;
     		}
     	}
     }

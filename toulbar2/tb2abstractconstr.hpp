@@ -11,6 +11,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
+// Warning! Constraint reconnect() may interfer with variable constraints list iterator used by EnumerateVariable assign method. Do not reconnect a constraint with assigned variables in project functions.
 
 template<class T1>
 class AbstractUnaryConstraint : public Constraint
@@ -36,6 +37,7 @@ public:
     }
     void reconnect() {
         if (deconnected()) {
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             x->getConstrs()->push_back(linkX, true); 
         }
     }
@@ -101,6 +103,7 @@ public:
     }
     void reconnect() {
         if (deconnected()) {
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             x->getConstrs()->push_back(linkX, true); 
             y->getConstrs()->push_back(linkY, true);
         }
@@ -181,6 +184,7 @@ public:
     }
     void reconnect() {
         if (deconnected()) {
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             x->getConstrs()->push_back(linkX, true); 
             y->getConstrs()->push_back(linkY, true);
             z->getConstrs()->push_back(linkZ, true);
@@ -316,6 +320,7 @@ public:
 
     void reconnect() {
         if (deconnected()) {
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             for(int i=0;i<arity_;i++) {
 	            scope[i]->getConstrs()->push_back(links[i], true); 
 	        }

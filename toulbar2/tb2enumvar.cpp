@@ -534,7 +534,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 BinaryConstraint* yz = y->getConstr(z);
 
      if(td && yz && (getCluster() != yz->getCluster())) {
-    	BinaryConstraint* yz_ =  y->getConstr(z, td->getCluster(getCluster()));
+    	BinaryConstraint* yz_ =  y->getConstr(z, getCluster());
     	if(yz_) {
     		yz = yz_; 
     		if (ToulBar2::verbose > 1) cout << "(" << y->wcspIndex << "," << z->wcspIndex << ") var elim binary is already duplicate and has same cluster" << endl;
@@ -755,23 +755,25 @@ bool EnumeratedVariable::verify() {
 		  				bool t1 = tctr1->xy != bctr2;
 		  				bool t2 = tctr1->xz != bctr2;
 		  				bool t3 = tctr1->yz != bctr2;
-		  				bool t4 = !tctr1->isDuplicate() || tctr1->xy->isDuplicate() || tctr1->xz->isDuplicate() || tctr1->yz->isDuplicate();
+		  				bool t4 = tctr1->isDuplicate() || (!tctr1->xy->isDuplicate() && !tctr1->xz->isDuplicate() && !tctr1->yz->isDuplicate());
 						if (!t1 || !t2 || !t3 || !t4) {
-							cout << "isDuplicate problem: " << tctr1->isDuplicate() << "," << tctr1->xy->isDuplicate() << " , " << tctr1->xz->isDuplicate() << " , " << tctr1->yz->isDuplicate() << endl;
+						  cout << "isDuplicate problem: " << tctr1->isDuplicate() << "," << tctr1->xy->isDuplicate() << "," << tctr1->xz->isDuplicate() << "," << tctr1->yz->isDuplicate() << " , " << bctr2->isDuplicate() << endl;
 							cout << *tctr1;
 							cout << *tctr1->xy;
 							cout << *tctr1->xz;
 							cout << *tctr1->yz;
+							cout << *bctr2;
 							assert(false);
 						}
 		  			} else {
 		  				bool t1 = tctr1->xy == bctr2 || tctr1->xz == bctr2 || tctr1->yz == bctr2;
 						if (!t1) {
-							cout << "isDuplicate problem: " << tctr1->isDuplicate() << "," << bctr2->isDuplicate() << endl;
+						  cout << "isDuplicate problem: " << tctr1->isDuplicate() << "," << bctr2->isDuplicate() << ")" << endl;
 							cout << *tctr1;
 							cout << *tctr1->xy;
 							cout << *tctr1->xz;
 							cout << *tctr1->yz;
+							cout << *bctr2;
 							assert(false);
 						}
 		  			}
@@ -786,10 +788,13 @@ bool EnumeratedVariable::verify() {
 		  				bool t1 = tctr2->xy != bctr1;
 		  				bool t2 = tctr2->xz != bctr1;
 		  				bool t3 = tctr2->yz != bctr1;
-		  				bool t4 = !tctr2->isDuplicate() || tctr2->xy->isDuplicate() || tctr2->xz->isDuplicate() || tctr2->yz->isDuplicate();
+		  				bool t4 = tctr2->isDuplicate() || (!tctr2->xy->isDuplicate() && !tctr2->xz->isDuplicate() && !tctr2->yz->isDuplicate());
 						if (!t1 || !t2 || !t3 || !t4) {
-							cout << "isDuplicate problem tern/bin: " << tctr2->isDuplicate() << "," << bctr1->isDuplicate() << endl;
+							cout << "isDuplicate problem tern/bin: " << tctr2->isDuplicate() << "," << tctr2->xy->isDuplicate() << "," << tctr2->xz->isDuplicate() << "," << tctr2->yz->isDuplicate() << " , " << bctr1->isDuplicate() << endl;
 							cout << *tctr2;
+							cout << *tctr2->xy;
+							cout << *tctr2->xz;
+							cout << *tctr2->yz;
 							cout << *bctr1;
 							assert(false);
 						}

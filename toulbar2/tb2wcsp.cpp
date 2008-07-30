@@ -604,7 +604,7 @@ bool WCSP::verify()
 	    }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         if (ToulBar2::LcLevel==LC_EDAC && 
-			vars[i]->unassigned() && CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
+			vars[i]->unassigned() && !CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
             cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }

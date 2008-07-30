@@ -115,8 +115,8 @@ public:
 	void setCluster( int c ) { cluster = c; }
     int  getCluster()        { return cluster; }
 
-	BinaryConstraint* getConstr( Variable* x, Cluster* c );
-    TernaryConstraint* getConstr( Variable* x, Variable* y,  Cluster* c  );
+	BinaryConstraint* getConstr( Variable* x, int cid );
+    TernaryConstraint* getConstr( Variable* x, Variable* y, int cid );
 
 
     bool isSep_;
