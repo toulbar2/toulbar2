@@ -161,6 +161,7 @@ int main(int argc, char **argv)
         cerr << "   S : singleton consistency on preprocessing" << endl << endl;
 
         cerr << "   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition (default value: 0)" << endl;
+		cerr << "   O[filename] : read variable elimination order from a file (if not specified, then use variable order in which variables appear in the problem file)" << endl;
         cerr << "   j[integer] : split larger clusters into a chain of smaller embedded clusters with a number of proper variables less than this number (B3j1 for pure RDS)" << endl;
         cerr << "   r[integer] : limit on maximum cluster separator size" << endl;
         cerr << "   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option e)" << endl;
@@ -327,6 +328,10 @@ int main(int argc, char **argv)
 	if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
 	  cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
 	  ToulBar2::binaryBranching = true;
+	}
+	if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) {
+	  cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
+	  ToulBar2::vac = 1;
 	}
 
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
