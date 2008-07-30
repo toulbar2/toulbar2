@@ -85,7 +85,7 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 	EnumeratedVariable* z = (EnumeratedVariable*) xyz->getVar(2);
     TernaryConstraint* ctr = x->getConstr(y,z);   			
 	if(ctr && (ctr->getCluster() != getCluster())) {
-     	TernaryConstraint* ctr_ = x->getConstr(y,z,td->getCluster(getCluster()));
+     	TernaryConstraint* ctr_ = x->getConstr(y,z,getCluster());
      	if(ctr_) ctr = ctr_;   			
 	}
 	if (ToulBar2::verbose >= 1) {
@@ -113,7 +113,10 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 
 	if (ToulBar2::verbose >= 1) cout << "project nary to binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl; 
 
-    BinaryConstraint* ctr = x->getConstr(y);   			
+    BinaryConstraint* ctr = NULL;
+	if (td) ctr = x->getConstr(y, getCluster()); 
+	if (!ctr) ctr = x->getConstr(y);
+
 	if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster()))) 
 	{
 		if (ToulBar2::verbose >= 2) cout << " exists -> fusion" << endl;
