@@ -128,8 +128,8 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 			if(ctr) xy->setDuplicate();
 			xy->setCluster( getCluster() );
 		}
-		xy->reconnect();
 	}
+	if (x->unassigned() && y->unassigned()) xy->reconnect();
 	xy->propagate();
 	
 	if (ToulBar2::verbose >= 2) cout << " and the result: " << *xy << endl;
@@ -163,6 +163,7 @@ void NaryConstraint::projectNary()
 	EnumeratedVariable* y = unassigned[1];
 	EnumeratedVariable* z = unassigned[2];
 
+	assert(nunassigned <= 3);
 	if(nunassigned == 3) {
 		xyz = wcsp->newTernaryConstr(x,y,z);
 		wcsp->elimTernOrderInc();

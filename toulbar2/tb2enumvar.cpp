@@ -566,7 +566,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 		     yz->setDuplicate();
  	 	 } else {
 	 		 yz->addCosts( yznew );
-		 	 yz->reconnect();
+		 	 if (y->unassigned() && z->unassigned()) yz->reconnect();
  	 	 }
 	 } else {
 		 yz = yznew;
@@ -652,10 +652,10 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	        if (curcost < mincost) mincost = curcost;
 	    }
 		yz->addcost(*itery,*iterz,mincost);
-	 }}
+	 }
+	}
 
-	if(!yz->connected()) yz->reconnect();
-
+	yz->reconnect();
 
 	// to be done before propagation
 	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};

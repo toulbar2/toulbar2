@@ -79,26 +79,13 @@ class NaryConstraint : public AbstractNaryConstraint
     bool   verify() {return true;}
     void   increase(int index) {}
     void   decrease(int index) {}
-
     void  remove(int index) {}
-    void  projectFromZero(int index);
  
     void starrule(string& t, Cost minc);	    
-    
+    void projectFromZero(int index);
 
-
-
-
-    void   fillEAC2(int index) {}
-    bool   isEAC(int index, Value a) {return true;}
-    void   findFullSupport(int index) {}	
-    
     virtual void print(ostream& os) {}
-    
 };
-
-
-
 
 
 class NaryConstraintMap : public NaryConstraint
