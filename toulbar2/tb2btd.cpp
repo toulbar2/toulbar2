@@ -260,8 +260,12 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	      c->deconnectSep();
 		  c->setLb(MIN_COST);
 		  wcsp->setLb(MIN_COST);
-		  cub = cub - td->getRoot()->getLb();
-	  } 
+		  td->setCurrentCluster(td->getRoot());
+		  Cost lbroot = td->getLbRecRDS();
+		  td->setCurrentCluster(c);
+		  Cost lbc = td->getLbRecRDS();
+		  cub = cub - lbroot + lbc;
+	  }
 	  wcsp->setUb(cub);
 	  td->setCurrentCluster(c);
 	  td->setRootRDS(c);
