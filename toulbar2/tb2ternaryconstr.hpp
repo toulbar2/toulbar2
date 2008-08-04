@@ -245,6 +245,7 @@ public:
   }
                 
   void fillEAC2(int varIndex) {
+	    assert(!isDuplicate());
         switch(varIndex) {
             case 0: fillEAC2(y,x,z,supportY); fillEAC2(z,x,y,supportZ); break;
             case 1: fillEAC2(x,y,z,supportX); fillEAC2(z,x,y,supportZ); break;
@@ -253,6 +254,7 @@ public:
   }
    
   bool isEAC(int varIndex, Value a) {
+	assert(!isDuplicate());
 	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     switch(varIndex) {
             case 0: return isEAC(x,a,y,z,supportX); break;
@@ -264,6 +266,7 @@ public:
   }
 
     void findFullSupportEAC(int varIndex) {
+	    assert(!isDuplicate());
         if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return;
 		assert( !wcsp->getTreeDec() || ( cluster == xy->getCluster() &&  cluster == xz->getCluster() &&  cluster == yz->getCluster()) );
         switch(varIndex) {

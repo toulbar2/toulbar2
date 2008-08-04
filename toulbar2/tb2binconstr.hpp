@@ -311,6 +311,7 @@ public:
     }
 
   void fillEAC2(int varIndex) {
+    assert(!isDuplicate());
     if (getDACScopeIndex()==0) {
       if (varIndex==0) {
 	   assert(y->canbe(y->getSupport()));
@@ -331,6 +332,7 @@ public:
   }
   
   bool isEAC(int varIndex, Value a) {
+	assert(!isDuplicate());
 	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
         int xindex = x->toIndex(a);
@@ -359,6 +361,7 @@ public:
   }
   
     void findFullSupportEAC(int varIndex) {
+	  assert(!isDuplicate());
 	  if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return;
 	  if (varIndex == 0) findFullSupportX();
 	  else findFullSupportY();
