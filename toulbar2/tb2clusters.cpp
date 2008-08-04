@@ -221,7 +221,7 @@ bool Separator::get( Cost& res, bool& opt ) {
 		return true;
 	} else {
 	    res = (ToulBar2::btdMode >= 2)?cluster->getLbRDS():MIN_COST;
-		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluser " <<  cluster->getId() << endl;
+		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluster " <<  cluster->getId() << endl;
 		return false;
 	}
 }
@@ -479,7 +479,6 @@ void Cluster::getSolution( TAssign& sol )
 			    assert(wcsp->assigned(*it));
 				sol[*it] = wcsp->getValue(*it);
 				//				cout << *it << " := " << sol[*it] << endl;
-				wcsp->setBestValue(*it, sol[*it]);
 				++it;	
 			}			
 		}
