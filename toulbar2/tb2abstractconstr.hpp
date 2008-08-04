@@ -38,6 +38,7 @@ public:
     void reconnect() {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+			assert(linkX->prev == NULL && linkX->next == NULL);
             x->getConstrs()->push_back(linkX, true); 
         }
     }
@@ -103,8 +104,10 @@ public:
     }
     void reconnect() {
         if (deconnected()) {
-            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
+			assert(linkX->prev == NULL && linkX->next == NULL);
             x->getConstrs()->push_back(linkX, true); 
+			assert(linkY->prev == NULL && linkY->next == NULL);
             y->getConstrs()->push_back(linkY, true);
         }
     }
@@ -185,8 +188,11 @@ public:
     void reconnect() {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+			assert(linkX->prev == NULL && linkX->next == NULL);
             x->getConstrs()->push_back(linkX, true); 
+			assert(linkY->prev == NULL && linkY->next == NULL);
             y->getConstrs()->push_back(linkY, true);
+			assert(linkZ->prev == NULL && linkZ->next == NULL);
             z->getConstrs()->push_back(linkZ, true);
         }
     }
@@ -322,6 +328,7 @@ public:
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             for(int i=0;i<arity_;i++) {
+			    assert(links[i]->prev == NULL && links[i]->next == NULL);
 	            scope[i]->getConstrs()->push_back(links[i], true); 
 	        }
         }

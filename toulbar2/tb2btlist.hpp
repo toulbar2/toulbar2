@@ -76,6 +76,7 @@ public:
         last->removed = true;
         if (last->prev != NULL) {
             last = last->prev;
+			last->next->prev = NULL;
             last->next = NULL;
         } else {
             head = NULL;
