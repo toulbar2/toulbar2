@@ -24,6 +24,7 @@
  
 double ToulBar2::version  = 0.7;
 int  ToulBar2::verbose  = 0;
+int  ToulBar2::debug  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
 bool ToulBar2::allSolutions = false;
@@ -428,9 +429,9 @@ bool WCSP::getEnumDomainAndCost(int varIndex, ValueCost *array)
 unsigned int WCSP::numberOfConnectedConstraints() const
 {
     int res = 0; 
-    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res++;
-    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res++;
-    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res++;
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep()) res++;
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) res++;
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) res++;
     return res;
 }
 
@@ -522,10 +523,10 @@ void WCSP::dump(ostream& os)
         }
         if (vars[i]->getSup()+1 > maxdomsize) maxdomsize = vars[i]->getSup()+1;
         if (vars[i]->enumerated()) xcosts++;
-        else if (vars[i]->getInfCost() > MIN_COST || vars[i]->getSupCost() > MIN_COST) {
-            cerr << "Cannot save interval variable " << vars[i]->getName() << " with bound unary costs!!!" << endl;
-            exit(EXIT_FAILURE);
-        }
+//          else if (vars[i]->getInfCost() > MIN_COST || vars[i]->getSupCost() > MIN_COST) {
+//              cerr << "Cannot save interval variable " << vars[i]->getName() << " with bound unary costs!!!" << endl;
+//              exit(EXIT_FAILURE);
+//          }
     }
     os << "wcsp " << numberOfVariables() << " " << maxdomsize << " " << numberOfConnectedConstraints()+xcosts << " " << getUb() << endl;
     for (unsigned int i=0; i<vars.size(); i++) {
@@ -534,9 +535,9 @@ void WCSP::dump(ostream& os)
         if (i < vars.size()-1) os << " ";
     }
     os << endl;
-    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->dump(os);
-    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->dump(os);
-    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->dump(os);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep()) constrs[i]->dump(os);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) elimBinConstrs[i]->dump(os);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) elimTernConstrs[i]->dump(os);
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->enumerated()) {
             int size = vars[i]->getDomainSize();
@@ -603,9 +604,10 @@ bool WCSP::verify()
 			else if(!vars[i]->verifyNC()) return false;
 	    }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
+		//isEAC may change current support for variables and constraints
         if (ToulBar2::LcLevel==LC_EDAC && 
 			vars[i]->unassigned() && !CSP(getLb(),getUb()) && !vars[i]->isEAC()) {
-            cout << "variable " << vars[i]->getName() << " not EAC!" << endl;
+            cout << "support of variable " << vars[i]->getName() << " not EAC!" << endl;
             return false;
         }
     }

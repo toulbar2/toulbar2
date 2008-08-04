@@ -248,6 +248,11 @@ void Solver::increase(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
+		if (ToulBar2::debug >= 1) {
+		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+		  ofstream pb(pbname.c_str());
+		  wcsp->dump(pb); 
+		}
         cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
 		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
 		cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
@@ -262,6 +267,11 @@ void Solver::decrease(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
+		if (ToulBar2::debug >= 1) {
+		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+		  ofstream pb(pbname.c_str());
+		  wcsp->dump(pb); 
+		}
         cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
 		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
 		cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
@@ -276,6 +286,11 @@ void Solver::assign(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
+		if (ToulBar2::debug >= 1) {
+		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+		  ofstream pb(pbname.c_str());
+		  wcsp->dump(pb); 
+		}
         cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
 		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
 		cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
@@ -290,6 +305,11 @@ void Solver::remove(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
+		if (ToulBar2::debug >= 1) {
+		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+		  ofstream pb(pbname.c_str());
+		  wcsp->dump(pb); 
+		}
         cout << "[" << store->getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
 		if (wcsp->getTreeDec()) cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
 		cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;

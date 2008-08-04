@@ -152,6 +152,7 @@ int main(int argc, char **argv)
         cerr << "   l : limited discrepancy search" << endl;
         cerr << "   i : initial upperbound found by INCOP local search solver" << endl;
         cerr << "   z : save current problem in wcsp format" << endl;
+        cerr << "   Z : debug mode (save problem at each node if verbosity option set!)" << endl;
         cerr << "   x : load a solution from a file" << endl;
         cerr << "   M[integer] : Min Sum Diffusion on preprocessing" << endl;
         cerr << "   A[integer] : enforce VAC at search nodes with depth less than a given threshold" << endl;
@@ -230,6 +231,7 @@ int main(int argc, char **argv)
         	if(sepmaxsize >= -1) ToulBar2::maxSeparatorSize = sepmaxsize;
         }
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
+        for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
         if ( (ch = strchr(argv[i],'w')) ) {
 		  ToulBar2::writeSolution = true;
@@ -398,7 +400,8 @@ int main(int argc, char **argv)
 		ToulBar2::startCpuTime = cpuTime();
         
         if (certificate) solver.read_solution("sol");
-        if (saveproblem) solver.dump_wcsp("problem.wcsp");
+		if (saveproblem && ToulBar2::btdMode) ToulBar2::debug = 1;
+        if (saveproblem && !ToulBar2::btdMode) solver.dump_wcsp("problem.wcsp");
         else if (!certificate || ToulBar2::btdMode>=2) solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;

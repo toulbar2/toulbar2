@@ -128,6 +128,7 @@ protected:
 public:
     static double version;
     static int verbose;
+    static int debug;
     static bool showSolutions;
     static bool writeSolution;
     static bool allSolutions;
