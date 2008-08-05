@@ -512,7 +512,7 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 
 
 // eliminates the current (this) variable that participates
-// in two binary constraints (its links ara xylink and xzlink)
+// in two binary constraints (its links are xylink and xzlink)
 bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink )
 {
 	 EnumeratedVariable *y = (EnumeratedVariable *) wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
@@ -655,7 +655,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	 }
 	}
 
-	yz->reconnect();
+	if (y->unassigned() && z->unassigned()) yz->reconnect();
 
 	// to be done before propagation
 	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
