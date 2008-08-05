@@ -23,6 +23,7 @@ class Variable : public WCSPLink
 {
 protected:
     string name;
+    int dac;
     
     StoreValue inf;
     StoreValue sup;
@@ -56,6 +57,8 @@ public:
     virtual bool enumerated() const =0;
     
     string getName() const {return name;}
+    int getDACOrder() const {return dac;}
+    void setDACOrder(int order) {dac = order;}
     Value getInf() const {return inf;}
     Value getSup() const {return sup;}
     Value getValue() const {assert(assigned()); return inf;}
@@ -83,7 +86,7 @@ public:
     TernaryConstraint* getConstr( Variable* x, Variable* y ); 
     TernaryConstraint* existTernary(); 
 	double strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1, TernaryConstraint* &tctr2  );    
-    void deconnect(DLink<ConstraintLink> *link);
+    void deconnect(DLink<ConstraintLink> *link, bool reuse = false);
 
     void projectLB(Cost cost);
 

@@ -251,7 +251,7 @@ public:
 		linkY->content.constr = this; 
 		linkX->content.scopeIndex = 0;
 		linkY->content.scopeIndex = 1;
-        if (xin->wcspIndex < yin->wcspIndex) dacvar = 0; else dacvar = 1;
+        setDACScopeIndex();
 	}
 
     bool project(int varIndex, Value value, Cost cost) {

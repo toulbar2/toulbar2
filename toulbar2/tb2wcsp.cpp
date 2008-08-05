@@ -224,13 +224,13 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		BinaryConstraint* yz = y->getConstr(z);
 	       
  	    if (!ToulBar2::vac) {
-			if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
-			if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
-			if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+			if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(true); }
+			if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(true); }
+			if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(true); }
  	    } else {
- 	    	if(!xy) { xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(); }
-			if(!xz) { xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(); }
-			if(!yz) { yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(); }
+ 	    	if(!xy) { xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(true); }
+			if(!xz) { xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(true); }
+			if(!yz) { yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(true); }
  	    }
 
 	    ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);  
@@ -541,7 +541,7 @@ void WCSP::dump(ostream& os)
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->enumerated()) {
             int size = vars[i]->getDomainSize();
-            ValueCost domcost[MAX_DOMAIN_SIZE]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+            ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "1 " << i << " " << getUb() << " " << size << endl;
             for (int v=0; v<size; v++) {
@@ -782,7 +782,7 @@ void WCSP::propagate()
 	   }
 	 } while (ToulBar2::vac && !vac->isVAC());
 	 // TO BE DONE AFTER NORMAL PROPAGATION
-	 propagateSeparator();
+	 if (td) propagateSeparator();
    } while (objectiveChanged);
 
   //revise(NULL);
@@ -912,8 +912,8 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	if(ctr1->order(ctr2) < 0) { Constraint* ctraux = ctr1; ctr1 = ctr2; ctr2 = ctraux; }
 	if (ToulBar2::verbose >= 1) cout << endl << "Sum of constraints: " << *ctr1 << " " << *ctr2 << endl;
 		
-	ctr1->deconnect();
-	ctr2->deconnect();
+	ctr1->deconnect(true);
+	ctr2->deconnect(true);
 		
 	TSCOPE scopeUinv;
 	TSCOPE scopeIinv;
@@ -1055,7 +1055,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 		if (ToulBar2::verbose >= 1) cout << endl << "   has result: " << *ctr_inout << endl;
 		return; 
 	}
-	ctr_inout->deconnect();
+	ctr_inout->deconnect(true);
 
 	int i,j;	
 	int ivars[3];
@@ -1318,39 +1318,66 @@ int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     td->buildFromOrder();
-    setDACOrderTreeDecomp();
+
+	vector<int> order;
+	td->getElimVarOrder(order);
+	TreeDecomposition* temptd = td;
+	td = NULL;
+    setDACOrder(order);
+	td = temptd;
 }
 
-void WCSP::setDACOrderTreeDecomp() {
-    /*for (unsigned int i=0; i<numberOfConstraints(); i++) {
-	    Constraint* ctr = getCtr(i);
-	    if(ctr->connected()) {
-	    	Variable* higher = NULL;
-	    	for(int j=0;j<ctr->arity();j++) {
-	    		Variable* x = ctr->getVar(j);
-	    		if(!higher || td->isDescendant(x,higher)) higher = x;
-	    	}
-	    	ctr->setDACScopeIndex( ctr->getIndex(higher) );
-	    	ctr->propagate();
-	    }
-  	}	
-    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res++;
-    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res++;
+void WCSP::setDACOrder(char *elimVarOrder)
+{
+  vector<int> order;
 
-    for (int i=0; i<elimOrder; i++) 
-	   if (elimConstrs[i]->connected()) {
-		    Constraint* ctr = elimConstrs[i];
-	    	Variable* higher = NULL;
-	    	for(int j=0;j<ctr->arity();j++) {
-	    		Variable* x = ctr->getVar(j);
-	    		if(!higher || td->isDescendant(x,higher)) higher = x;
-	    	}
-		    ctr->setDACScopeIndex( ctr->getIndex(higher) );
-		    ctr->propagate();
-	   }*/	
-	  
-	  
-  //propagate();	  
+  ifstream file(elimVarOrder);
+  if (!file) {
+	if (ToulBar2::verbose >= 1) {
+	  cout << "DAC variable ordering based on occurence order of variables in problem file." << endl;
+	}
+	return;
+  } else {    	
+	while(file) {
+	  int ix;
+	  file >> ix;
+	  if(file) order.push_back(ix);
+	} 
+  }
+  setDACOrder(order);
+}
+
+void WCSP::setDACOrder(vector<int> &order)
+{
+  if(order.size() != numberOfVariables()) {
+	cerr << "DAC order has incorrect number of variables." << endl;
+	exit(EXIT_FAILURE);
+  }
+
+  // set DAC order to the inverse of the elimination variable ordering
+  cout << "DAC order:";
+  for(int i=order.size()-1;i>=0;i--) {
+	cout << " " << getVar(order[i])->getName();
+	getVar(order[i])->setDACOrder(order.size()-1-i);
+  }
+  cout << endl;
+
+  for (unsigned int i=0; i<numberOfConstraints(); i++) {
+	Constraint* ctr = getCtr(i);
+	ctr->setDACScopeIndex();
+	if(ctr->connected()) ctr->propagate();
+  }
+  for (int i=0; i<elimBinOrder; i++) {
+	Constraint* ctr = elimBinConstrs[i];
+	ctr->setDACScopeIndex();
+	if (ctr->connected()) ctr->propagate();
+  }
+  for (int i=0; i<elimTernOrder; i++) {
+	Constraint* ctr = elimTernConstrs[i];
+	ctr->setDACScopeIndex();
+	if (ctr->connected()) ctr->propagate();
+  }
+  propagate();	  
 }
 
 

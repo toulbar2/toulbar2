@@ -183,14 +183,7 @@ void WCSP::minimumDegreeOrdering()
     assert(vars[i]->wcspIndex == (int) i);
   }
   // update DAC ordering
-  for (unsigned int i=0; i<constrs.size(); i++) {
-    constrs[i]->setDACScopeIndex(constrs[i]->getIndex(vars[constrs[i]->getSmallestVarIndexInScope()]));
-    if (constrs[i]->connected()) constrs[i]->propagate();
-  }
-  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) {
-    elimConstrs[i]->setDACScopeIndex(elimConstrs[i]->getIndex(vars[elimConstrs[i]->getSmallestVarIndexInScope()]));
-    elimConstrs[i]->propagate();
-  }
+  setDACOrder(inverse_perm);
 }
 #endif
 

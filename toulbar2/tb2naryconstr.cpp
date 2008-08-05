@@ -554,7 +554,7 @@ void NaryConstraintMap::insertSum( string& t1, Cost c1, Constraint* ctr1, string
 
 void NaryConstraintMap::sum( NaryConstraintMap* nary )
 {
-	deconnect();
+	deconnect(true);
 	
 	map<int,int> snew;
 	set_union( scope_inv.begin(), scope_inv.end(),

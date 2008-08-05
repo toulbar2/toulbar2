@@ -177,6 +177,7 @@ class Cluster
       void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
 
 	  void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
+      void          getElimVarOrder(vector<int> &elimVarOrder);
 
 	  TVars::iterator beginVars() { return vars.begin(); }
 	  TVars::iterator endVars()   { return vars.end(); }
@@ -237,6 +238,7 @@ public:
     // - builds a tree/path decomposition from the buckets
     // - associate constraints to clusters, with special treatment for ternary constraints (duplicate flag)
 	void buildFromOrder();	     			
+    void getElimVarOrder(vector<int> &elimVarOrder);
 	void treeFusions();                  	// merges all redundant clusters
 	bool treeFusion();          		    // one fusion step
     void pathFusions(vector<int> &order);   // builds a path decomposition of clusters from a given order

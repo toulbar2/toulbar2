@@ -45,11 +45,11 @@ Variable *Queue::pop_min()
     assert(!empty());
     iterator iter=begin();
     DLink<VariableWithTimeStamp> *elt = iter.getElt();
-    int pos = (*iter).var->wcspIndex;
+    int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
-        if ((*iter).var->wcspIndex < pos) {
+        if ((*iter).var->getDACOrder() < pos) {
             elt = iter.getElt();
-            pos = (*iter).var->wcspIndex;
+            pos = (*iter).var->getDACOrder();
         }
     }
     erase(elt, false);
@@ -63,11 +63,11 @@ Variable *Queue::pop_min(int *incdec)
     assert(!empty());
     iterator iter=begin();
     DLink<VariableWithTimeStamp> *elt = iter.getElt();
-    int pos = (*iter).var->wcspIndex;
+    int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
-        if ((*iter).var->wcspIndex < pos) {
+        if ((*iter).var->getDACOrder() < pos) {
             elt = iter.getElt();
-            pos = (*iter).var->wcspIndex;
+            pos = (*iter).var->getDACOrder();
         }
     }
     erase(elt, false);
@@ -82,11 +82,11 @@ Variable *Queue::pop_max()
     assert(!empty());
     iterator iter=begin();
     DLink<VariableWithTimeStamp> *elt = iter.getElt();
-    int pos = (*iter).var->wcspIndex;
+    int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
-        if ((*iter).var->wcspIndex > pos) {
+        if ((*iter).var->getDACOrder() > pos) {
             elt = iter.getElt();
-            pos = (*iter).var->wcspIndex;
+            pos = (*iter).var->getDACOrder();
         }
     }
     erase(elt, false);
@@ -100,11 +100,11 @@ Variable *Queue::pop_max(int *incdec)
     assert(!empty());
     iterator iter=begin();
     DLink<VariableWithTimeStamp> *elt = iter.getElt();
-    int pos = (*iter).var->wcspIndex;
+    int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
-        if ((*iter).var->wcspIndex > pos) {
+        if ((*iter).var->getDACOrder() > pos) {
             elt = iter.getElt();
-            pos = (*iter).var->wcspIndex;
+            pos = (*iter).var->getDACOrder();
         }
     }
     erase(elt, false);

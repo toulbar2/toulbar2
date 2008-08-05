@@ -293,9 +293,10 @@ public:
     // Data and methods for Cluster Tree Decomposition
 
     TreeDecomposition* td;
-	void buildTreeDecomposition();
-	void setDACOrderTreeDecomp();
     TreeDecomposition* getTreeDec()  { return td; }
+	void buildTreeDecomposition();
+	void setDACOrder(vector<int> &elimVarOrder);
+	void setDACOrder(char *elimVarOrder);
 
     // -----------------------------------------------------------
     // Functions for dealing with probabilities

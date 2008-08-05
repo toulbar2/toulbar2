@@ -26,7 +26,7 @@ public:
     // remove a constraint from the set of active constraints
     virtual bool connected() {cout << "dummy connected on (" << this << ")!" << endl;return true;}
     virtual bool deconnected() {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
-    virtual void deconnect() {cout << "dummy deconnect on (" << this << ")!" << endl;}
+    virtual void deconnect(bool reuse = false) {cout << "dummy deconnect on (" << this << ")!" << endl;}
     virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
 
     virtual int arity() const = 0;
@@ -43,8 +43,8 @@ public:
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
     virtual int getSmallestVarIndexInScope() = 0;
-    virtual int getDACScopeIndex() = 0;
-    virtual void setDACScopeIndex(int scopeIndex) {}
+    virtual int getDACScopeIndex() {cout << "dummy getDACScopeIndex on (" << this << ")!" << endl; return 0;}
+    virtual void setDACScopeIndex() {}
 
     virtual void propagate() = 0;
     virtual void increase(int index) {propagate();}

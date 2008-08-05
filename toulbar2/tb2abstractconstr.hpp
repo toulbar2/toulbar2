@@ -29,10 +29,10 @@ public:
 
     bool connected() {return !linkX->removed;}
     bool deconnected() {return linkX->removed;}
-    void deconnect() {
+    void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            x->deconnect(linkX);
+            x->deconnect(linkX, reuse);
         }
     }
     void reconnect() {
@@ -60,8 +60,6 @@ public:
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 1); return x->wcspIndex;}
     int getSmallestVarIndexInScope() {return x->wcspIndex;}
-    int getDACScopeIndex() {return 0;}
-    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<1);}
 
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -85,7 +83,7 @@ public:
         assert(xx != yy);
         linkX = xx->link(this,0);
         linkY = yy->link(this,1);
-        if (xx->wcspIndex < yy->wcspIndex) dacvar = 0; else dacvar = 1;
+        setDACScopeIndex();
     }
 
     AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), linkX(NULL), linkY(NULL) 
@@ -95,11 +93,11 @@ public:
 
     bool connected() {return !linkX->removed && !linkY->removed;}
     bool deconnected() {return linkX->removed || linkY->removed;}
-    void deconnect() {
+    void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            x->deconnect(linkX);
-            y->deconnect(linkY);
+            x->deconnect(linkX, reuse);
+            y->deconnect(linkY, reuse);
         }
     }
     void reconnect() {
@@ -132,8 +130,7 @@ public:
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
     int getSmallestVarIndexInScope() {return min(x->wcspIndex, y->wcspIndex);}
     int getDACScopeIndex() {return dacvar;}
-    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<2); dacvar=scopeIndex;}
-
+    void setDACScopeIndex() {if (x->getDACOrder() < y->getDACOrder()) dacvar = 0; else dacvar = 1;}
 
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -164,9 +161,7 @@ public:
         linkX = xx->link(this,0);
         linkY = yy->link(this,1);
         linkZ = zz->link(this,2);
-        if (xx->wcspIndex < yy->wcspIndex && xx->wcspIndex < zz->wcspIndex) dacvar = 0;
-        else if (yy->wcspIndex < xx->wcspIndex && yy->wcspIndex < zz->wcspIndex) dacvar = 1;
-        else dacvar = 2;
+		setDACScopeIndex();
     }
 	
 	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)  
@@ -177,12 +172,12 @@ public:
 
     bool connected() {return !linkX->removed && !linkY->removed && !linkZ->removed;}
     bool deconnected() {return linkX->removed || linkY->removed || linkZ->removed;}
-    void deconnect() {
+    void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            x->deconnect(linkX);
-            y->deconnect(linkY);
-            z->deconnect(linkZ);
+            x->deconnect(linkX, reuse);
+            y->deconnect(linkY, reuse);
+            z->deconnect(linkZ, reuse);
         }
     }
     void reconnect() {
@@ -243,8 +238,11 @@ public:
         return min(res, z->wcspIndex);
     }
     int getDACScopeIndex() {return dacvar;}
-    void setDACScopeIndex(int scopeIndex) {assert(scopeIndex>=0 && scopeIndex<3); dacvar=scopeIndex;}
-
+    void setDACScopeIndex() {
+        if (x->getDACOrder() < y->getDACOrder() && x->getDACOrder() < z->getDACOrder()) dacvar = 0;
+        else if (y->getDACOrder() < x->getDACOrder() && y->getDACOrder() < z->getDACOrder()) dacvar = 1;
+        else dacvar = 2;
+	}
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
 		scope_inv[ x->wcspIndex ] = 0;
@@ -313,14 +311,14 @@ public:
        return true;
     }
 
-    void deconnect(int varIndex) {
-        scope[varIndex]->deconnect( links[varIndex] );
+    void deconnect(int varIndex, bool reuse = false) {
+        scope[varIndex]->deconnect( links[varIndex], reuse );
     }
     
-    void deconnect() {
+    void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
-            for(int i=0;i<arity_;i++) deconnect(i);
+            for(int i=0;i<arity_;i++) deconnect(i, reuse);
         }
     }
 
@@ -358,18 +356,16 @@ public:
         }
         return indexmin;
     }
-
-    int getDACScopeIndex() {return -1;}
-    void setDACScopeIndex(int scopeIndex) {
+	void getScope( TSCOPE& scope_inv_in ) {
+		scope_inv_in = scope_inv;
+	}
+    // side-effect only: update scope_inv to current variable wcspIndex
+    void setDACScopeIndex() {
         scope_inv.clear();
         for(int i=0; i < arity_; i++) {
             scope_inv[ scope[i]->wcspIndex ] = i;
         }
     }
-   
-	void getScope( TSCOPE& scope_inv_in ) {
-		scope_inv_in = scope_inv;
-	}
 };
 
 

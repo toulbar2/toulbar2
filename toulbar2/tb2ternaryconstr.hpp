@@ -302,9 +302,9 @@ public:
         xz->clearCosts();
         yz->clearCosts();
 
-        xy->deconnect();
-        xz->deconnect();
-        yz->deconnect();         
+        xy->deconnect(true);
+        xz->deconnect(true);
+        yz->deconnect(true);         
 	}
 
 	BinaryConstraint* commonBinary( TernaryConstraint* t )
@@ -433,9 +433,7 @@ public:
 		linkX->content.scopeIndex = 0;
 		linkY->content.scopeIndex = 1;
 		linkZ->content.scopeIndex = 2;
-        if (x->wcspIndex < y->wcspIndex && x->wcspIndex < z->wcspIndex) dacvar = 0;
-        else if (y->wcspIndex < x->wcspIndex && y->wcspIndex < z->wcspIndex) dacvar = 1;
-        else dacvar = 2;
+		setDACScopeIndex();
 	}
   
   	void fillxy();

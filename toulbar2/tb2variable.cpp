@@ -14,7 +14,7 @@
  */
 
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : 
-        WCSPLink(w,w->numberOfVariables()), name(n),
+        WCSPLink(w,w->numberOfVariables()), name(n), dac(w->numberOfVariables()),
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
         constrs(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
@@ -88,10 +88,15 @@ void Variable::sortConstraints()
 	delete [] sorted;
 }
 
-void Variable::deconnect(DLink<ConstraintLink> *link)
+void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 {
     if (!link->removed) {
         getConstrs()->erase(link, true);
+		if (reuse) {
+		  assert(wcsp->getStore()->getDepth()==0 && unassigned());
+		  link->prev = NULL;
+		  link->next = NULL;
+		}
 
         if (getDegree() <= ToulBar2::elimDegree_ ||
             (ToulBar2::elimDegree_preprocessing_ >= 0 &&
@@ -380,7 +385,7 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
 
 
 ostream& operator<<(ostream& os, Variable &var) {
-    os << var.name;
+    os << var.name; // << " #" << var.dac;
     var.print(os);
     if (ToulBar2::verbose >= 3) {
         for (ConstraintList::iterator iter=var.constrs.begin(); iter != var.constrs.end(); ++iter) {

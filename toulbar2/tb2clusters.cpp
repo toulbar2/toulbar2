@@ -467,6 +467,19 @@ void Cluster::setWCSP2Cluster() {
 	}
 }
 
+void Cluster::getElimVarOrder(vector<int> &elimVarOrder)
+{
+  for (TClusters::reverse_iterator iter = edges.rbegin(); iter != edges.rend(); ++iter) {
+	Cluster* cluster = *iter;
+	cluster->getElimVarOrder(elimVarOrder);
+  } 
+  for (TVars::reverse_iterator itp = vars.rbegin(); itp != vars.rend(); ++itp) {
+	if (!isSepVar(*itp)) {
+	  elimVarOrder.push_back(*itp);
+	}
+  }
+}
+
 // side-effect: remember last solution
 void Cluster::getSolution( TAssign& sol )
 {
@@ -1318,6 +1331,11 @@ void TreeDecomposition::buildFromOrder()
 	  cout << endl;
 	}
 	assert(verify());
+}
+
+void TreeDecomposition::getElimVarOrder(vector<int> &elimVarOrder)
+{
+  getRoot()->getElimVarOrder(elimVarOrder);
 }
 
 void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, Cost cost)
