@@ -23,7 +23,8 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 		  exit(EXIT_FAILURE);
 		}
     } 	           
-	tuple = string(tbuf);
+	iterTuple = string(tbuf);
+	evalTuple = string(tbuf);
 	delete [] tbuf; 
 	
 	Cost Top = wcsp->getUb();
@@ -52,10 +53,12 @@ Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
 	
 	for(int i=0;i<arity();i++) {
 		int ind = ctr->getIndex( getVar(i) );
-		if(ind >= 0) { tuple[i] = s[ind]; count++; }	
+		if(ind >= 0) { evalTuple[i] = s[ind]; count++; }	
 	}
+	assert(count <= arity());
+
 	Cost cost;
-	if(count == arity_) cost = eval( tuple );
+	if(count == arity()) cost = eval( evalTuple );
 	else cost = MIN_COST;
 	
 	return cost;
@@ -299,9 +302,9 @@ bool NaryConstraint::nextlex( string& t, Cost& c)
 
 	for(i=0;i<a;i++) {
 		var = (EnumeratedVariable*) getVar(i); 
-		tuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
+		iterTuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
 	}
-	t = tuple;
+	t = iterTuple;
 	c = eval(t); 
 
 	// and now increment	
@@ -702,7 +705,9 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 		nonassigned = nonassigned - 1;
 	}
 	scope_inv.erase(x->wcspIndex);
-	arity_--;	
+	arity_--;
+	iterTuple.resize(arity_);
+	evalTuple.resize(arity_);
 }
 
 

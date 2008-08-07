@@ -23,7 +23,8 @@ class NaryConstraint : public AbstractNaryConstraint
 	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
 	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
 
-	string tuple;
+	string iterTuple;
+	string evalTuple;
 
 	vector<EnumeratedVariable::iterator> it_values;
 	void firstlex();

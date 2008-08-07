@@ -912,7 +912,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	if(ctr1->order(ctr2) < 0) { Constraint* ctraux = ctr1; ctr1 = ctr2; ctr2 = ctraux; }
 	if (ToulBar2::verbose >= 1) cout << endl << "Sum of constraints: " << *ctr1 << " " << *ctr2 << endl;
 		
-	ctr1->deconnect(true);
+	ctr1->deconnect();
 	ctr2->deconnect(true);
 		
 	TSCOPE scopeUinv;
@@ -940,6 +940,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	TSCOPE::iterator it = scopeIinv.begin();
 	while(it != scopeIinv.end()) {
 		int xi = it->first;
+		assert(xi == vars[xi]->wcspIndex);
 		scopeU[i] = (EnumeratedVariable*) vars[xi];
 		scopeI[i] = scopeU[i];
 		scopeUi[i] = vars[xi]->wcspIndex;
@@ -971,7 +972,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		NaryConstraintMap* nary = (NaryConstraintMap*) ctr;
 
 		nary->fillFilters();
-		
+
 		bool tupleXtuple = (ctr1->getDefCost() >= Top) && (ctr2->getDefCost() >= Top);
 
 		if(tupleXtuple) {
@@ -1055,7 +1056,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 		if (ToulBar2::verbose >= 1) cout << endl << "   has result: " << *ctr_inout << endl;
 		return; 
 	}
-	ctr_inout->deconnect(true);
+	ctr_inout->deconnect();
 
 	int i,j;	
 	int ivars[3];
