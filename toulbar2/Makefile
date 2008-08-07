@@ -5,7 +5,7 @@ SRCSFULL = $(wildcard tb2*.cpp)
 
 # Same thing for XML
 #XML = XMLFLAG
-#XMLI = -I/usr/include/libxml2 -DXMLFLAG
+#XMLI = -I/usr/include/libxml2 -DXMLFLAG -DMAXCSP
 
 ifeq ($(BOOST),-DBOOST)
 SRCS = $(SRCSFULL)

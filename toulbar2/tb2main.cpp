@@ -100,8 +100,16 @@ int main(int argc, char **argv)
 #ifndef MENDELSOFT
         cerr << "Available problem formats (specified by the filename extension):" << endl;
         cerr << "   *.wcsp : wcsp format" << endl;
+#ifdef XMLFLAG
+        cerr << "   *.xml : XML format XCSP 2.1";
+#ifdef MAXCSP
+        cerr << " (Max-CSP only)";
+#endif
+		cerr << endl;
+#endif
+        cerr << "   *.uai : Bayesian network (UAI-08) format followed by an optional evidence filename (MPE task)" << endl;
         cerr << "   *.pre  : pedigree format" << endl << endl;
-        cerr << "   bEpInstance* or *.bep  : BEP format" << endl << endl;
+        cerr << "   *.bep  : BEP (satellite scheduling) format" << endl << endl;
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
 		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %" << endl; 
