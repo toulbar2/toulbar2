@@ -397,10 +397,6 @@ public:
 		addcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );		
 	}
 
-    Cost getDefCost() { return wcsp->getUb(); }
-	void setDefCost( Cost df ) {}
-
-
 	Cost evalsubstr( string& s, Constraint* ctr )
 	{
 		Value vals[3];

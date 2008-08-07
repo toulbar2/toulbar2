@@ -103,11 +103,14 @@ void WCSP::read_wcsp(const char *fileName)
             break;
         }
         if (arity > 3) {
+		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary constraint " << ic << " on";
         	int scopeIndex[MAX_ARITY];
 			for(i=0;i<arity;i++) {
 	            file >> j;
+				if (ToulBar2::verbose >= 3) cout << " " << j;
 	            scopeIndex[i] = j;
-			}     	
+			}
+			if (ToulBar2::verbose >= 3) cout << endl;
             file >> defval;
 		    file >> ntuples;
     
@@ -126,12 +129,26 @@ void WCSP::read_wcsp(const char *fileName)
 					}
 					buf[i] = '\0';
 				    file >> cost;
-				    cost = cost * K;
+				    Cost tmpcost = cost * K;
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
 					string tup = buf;
-					nary->setTuple(tup, cost, NULL);
+					nary->setTuple(tup, tmpcost, NULL);
 	            }
 				
+				Cost minc = nary->getMinCost();
+				if (minc > MIN_COST) {
+				  Cost defcost = nary->getDefCost();
+				  if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
+				  string tuple;
+				  Cost cost;
+				  nary->first();
+				  while (nary->next(tuple,cost)) {
+					nary->setTuple(tuple, cost-minc, NULL);
+				  }
+				  if (ToulBar2::verbose >= 2) cout << "IC0 performed for constraint " << nary << " with initial minimum cost " << minc << endl;
+				  inclowerbound += minc;
+				}
+
 	            //((NaryConstraintMap*) nary)->changeDefCost( top );
 	            //((NaryConstraintMap*) nary)->preprojectall2();
 				nary->propagate();

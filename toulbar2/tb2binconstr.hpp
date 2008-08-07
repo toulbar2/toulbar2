@@ -162,9 +162,6 @@ public:
 		else return MIN_COST;
 	}    
     
-    Cost getDefCost() { return wcsp->getUb(); }
-	void setDefCost( Cost df ) {}
-    
 	Value getSupport(EnumeratedVariable* var, Value v) {
 		if(var == x) return supportX[x->toIndex(v)];
 		else  		 return supportY[y->toIndex(v)];

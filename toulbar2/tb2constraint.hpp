@@ -84,14 +84,24 @@ public:
 	virtual void setDefCost( Cost df ) {}       
 
     virtual bool universal() {
-        if (getDefCost() > MIN_COST) return false;
         string tuple;
         Cost cost;
-        first();
-        while (next(tuple,cost)) {
+        firstlex();
+        while (nextlex(tuple,cost)) {
             if (cost > MIN_COST) return false;
         }
         return true;
+    }
+
+    virtual Cost getMinCost() {
+	    Cost minc = MAX_COST;
+        string tuple;
+        Cost cost;
+        firstlex();
+        while (nextlex(tuple,cost)) {
+            if (cost < minc) minc = cost;
+        }
+        return minc;
     }
 	
 	void sumScopeIncluded( Constraint* ctr );
