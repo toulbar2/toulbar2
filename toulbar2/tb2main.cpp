@@ -408,8 +408,7 @@ int main(int argc, char **argv)
 		ToulBar2::startCpuTime = cpuTime();
         
         if (certificate) solver.read_solution("sol");
-		if (saveproblem && ToulBar2::btdMode) ToulBar2::debug = 1;
-        if (saveproblem && !ToulBar2::btdMode) solver.dump_wcsp("problem.wcsp");
+        if (saveproblem) solver.dump_wcsp("problem.wcsp");
         else if (!certificate || ToulBar2::btdMode>=2) solver.solve();
     } catch (Contradiction) {
         cout << "No solution found by initial propagation!" << endl;

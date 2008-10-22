@@ -102,6 +102,7 @@ void Separator::assign(int varIndex)
 
 void Separator::propagate()
 {
+  if (ToulBar2::debug >= 3) cout << this << " C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << endl;
   if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
 	Cost res = MIN_COST; 
 	bool opt = false;
@@ -155,6 +156,9 @@ void Separator::set( Cost c, bool opt ) {
 	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
 	//assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= MAX(MIN_COST, c + deltares));
+    if (ToulBar2::debug >= 2) {
+	  cout << "<" << cluster->getId() << "," << t << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
+	}
 	nogoods[t] = TPairNG(MAX(MIN_COST, c + deltares), opt); 
 }    
 
@@ -302,7 +306,7 @@ void Separator::resetOpt()
 void Separator::print(ostream& os) {
 {
 	os << this << " nogoods(";
-	long totaltuples = 1;
+	Double totaltuples = 1;
 	for(int i = 0; i < arity_;i++) {
 		os << scope[i]->wcspIndex;
 		if(i < arity_-1) os << ",";
@@ -386,8 +390,8 @@ void Cluster::deconnectSep() {
 	    ConstraintList* xctrs = x->getConstrs();		
 	    for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it) {
             Constraint* ctr = (*it).constr;
-            Cluster* ctrc = td->getCluster(ctr->getCluster());
-			if (!(ctr->isSep() && isDescendant(ctrc) && ctrc != this)) {
+            Cluster* ctrc = td->getCluster(ctr->getCluster()); // warning! return parent cluster if sep
+			if (!(ctr->isSep() && isDescendant(ctrc))) {
 			  // keep descendant separators connected
 			  ctr->deconnect();
 			}
@@ -1124,7 +1128,9 @@ int TreeDecomposition::makeRooted()
 			
 	 	    EnumeratedVariable** scopeVars = new EnumeratedVariable* [1];
 	    	oneroot->setSep( new Separator(wcsp,scopeVars,0) );  
-			if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) oneroot->getSep()->unqueueSep();
+			if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) {
+			  oneroot->getSep()->unqueueSep();
+			}
 			root->addEdge(oneroot);
 			oneroot->setParent(root);
 			root->getDescendants().insert( root );

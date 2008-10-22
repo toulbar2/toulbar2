@@ -279,7 +279,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  c->setLbRDS(res);
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 
-	  if (ToulBar2::verbose >= 1) c->printStatsRec();
+	  if (ToulBar2::debug || ToulBar2::verbose >= 1) c->printStatsRec();
 	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 
 	} catch (Contradiction) {

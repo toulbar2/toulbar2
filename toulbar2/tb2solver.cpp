@@ -248,7 +248,7 @@ void Solver::increase(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-		if (ToulBar2::debug >= 1) {
+		if (ToulBar2::debug >= 3) {
 		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
 		  ofstream pb(pbname.c_str());
 		  wcsp->dump(pb); 
@@ -267,7 +267,7 @@ void Solver::decrease(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-		if (ToulBar2::debug >= 1) {
+		if (ToulBar2::debug >= 3) {
 		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
 		  ofstream pb(pbname.c_str());
 		  wcsp->dump(pb); 
@@ -284,9 +284,15 @@ void Solver::assign(int varIndex, Value value)
 {
     wcsp->enforceUb();
     nbNodes++;
+	if (ToulBar2::debug && ((nbNodes % 128) == 0)) {
+	  cout << "\r" << store->getDepth();
+	  if (wcsp->getTreeDec()) cout << " C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+	  cout << "   ";
+	  cout.flush();
+	}
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-		if (ToulBar2::debug >= 1) {
+		if (ToulBar2::debug >= 3) {
 		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
 		  ofstream pb(pbname.c_str());
 		  wcsp->dump(pb); 
@@ -305,7 +311,7 @@ void Solver::remove(int varIndex, Value value)
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
-		if (ToulBar2::debug >= 1) {
+		if (ToulBar2::debug >= 3) {
 		  string pbname = "problem" + to_string(nbNodes) + ".wcsp";
 		  ofstream pb(pbname.c_str());
 		  wcsp->dump(pb); 
@@ -714,6 +720,7 @@ bool Solver::solve()
 				  exit(EXIT_FAILURE);
 				}
         		wcsp->setUb(ub);
+				if(ToulBar2::debug) start->printStatsRec();
         	} else recursiveSolve();
         }
     } catch (Contradiction) {
