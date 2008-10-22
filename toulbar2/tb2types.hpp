@@ -13,6 +13,9 @@
 //#define DOUBLE_PROB
 #define LONGDOUBLE_PROB
 
+// uncomment if using large enumerated domains with BTD or in nary cost functions
+#define WIDE_STRING
+
 #include "tb2utils.hpp"
 
 typedef int Value;

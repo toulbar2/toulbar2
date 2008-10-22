@@ -121,7 +121,7 @@ void WCSP::read_wcsp(const char *fileName)
 	            int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
                 NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
-	            char buf[MAX_ARITY];
+	            Char buf[MAX_ARITY];
 	            for (t = 0; t < ntuples; t++) {
 					for(i=0;i<arity;i++) {
 			            file >> j;			            
@@ -131,7 +131,7 @@ void WCSP::read_wcsp(const char *fileName)
 				    file >> cost;
 				    Cost tmpcost = cost * K;
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
-					string tup = buf;
+					String tup = buf;
 					nary->setTuple(tup, tmpcost, NULL);
 	            }
 				
@@ -139,7 +139,7 @@ void WCSP::read_wcsp(const char *fileName)
 				if (minc > MIN_COST) {
 				  Cost defcost = nary->getDefCost();
 				  if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
-				  string tuple;
+				  String tuple;
 				  Cost cost;
 				  nary->first();
 				  while (nary->next(tuple,cost)) {
@@ -531,7 +531,7 @@ void WCSP::read_uai2008(const char *fileName)
 	TernaryConstraint* tctr = NULL;
 	BinaryConstraint* bctr = NULL;
 	NaryConstraint* nctr = NULL;
-	string s;
+	String s;
 
 	ToulBar2::markov_log = 0;   // for the MARKOV Case   
 					

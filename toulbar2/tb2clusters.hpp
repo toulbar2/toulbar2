@@ -23,10 +23,10 @@ typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
 typedef pair<Cost,bool>     TPairNG;
-typedef pair<Cost,string>   TPairSol;
+typedef pair<Cost,String>   TPairSol;
 
-typedef map<string, TPairNG>  TNoGoods;
-typedef map<string, TPairSol> TSols;
+typedef map<String, TPairNG>  TNoGoods;
+typedef map<String, TPairSol> TSols;
 
 
 class Separator : public AbstractNaryConstraint
@@ -44,8 +44,8 @@ class Separator : public AbstractNaryConstraint
     TSols  						  solutions;
     DLink<Separator *>            linkSep; // link to insert the separator in PendingSeparator list
 
-	string t;    // temporary buffer for a separator tuple                   
-	string s;    // temporary buffer for a solution tuple                   
+	String t;    // temporary buffer for a separator tuple                   
+	String s;    // temporary buffer for a solution tuple                   
 	
   public:
 	Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
@@ -63,7 +63,7 @@ class Separator : public AbstractNaryConstraint
     bool get( Cost& res, bool& opt );
 
 	void solRec( Cost ub );
-	bool solGet( TAssign& a, string& sol ); 
+	bool solGet( TAssign& a, String& sol ); 
 
 	void resetOpt(); 
 
@@ -88,7 +88,7 @@ class Separator : public AbstractNaryConstraint
     void   decrease(int index) {}
     void   remove(int index) {}
     
-    void   print(ostream& os);
+    void   print(Ostream& os);
 };
 
 
@@ -193,12 +193,12 @@ class Cluster
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
 
 	  void print();	  
-	  void printStats() { if(!sep) return; sep->print(cout); }
+	  void printStats() { if(!sep) return; sep->print(Cout); }
 
 	  void printStatsRec() { 
 	  		TClusters::iterator it = beginEdges();
 			while(it != endEdges()) {
-				(*it)->sep->print(cout);
+				(*it)->sep->print(Cout);
 				(*it)->printStatsRec();
 				++it;
 			}

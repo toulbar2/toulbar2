@@ -13,6 +13,35 @@
 /* return CPU time in seconds */
 double cpuTime();
 
+#ifdef WIDE_STRING
+const int MAX_CHAR = WCHAR_MAX;
+typedef wchar_t Char;
+typedef wstring String;
+#define Cout wcout
+#define Ostream wostream
+#include <cwchar>
+#define Strcpy wcscpy
+#define Strncpy wcsncpy
+#define Strcat wcscat
+#define Strncat wcsncat
+#define Strcmp wcscmp
+#define Strncmp wcsncmp
+#define Strlen wcslen
+#else
+const int MAX_CHAR = CHAR_MAX;
+typedef char Char;
+typedef string String;
+#define Cout cout
+#define Ostream ostream
+#define Strcpy strcpy
+#define Strncpy strncpy
+#define Strcat strcat
+#define Strncat strncat
+#define Strcmp strcmp
+#define Strncmp strncmp
+#define Strlen strlen
+#endif
+
 typedef long long Long;
 
 #ifndef LONGLONG_MAX

@@ -332,8 +332,8 @@ public:
         }
     }
 
-	virtual Cost eval( string& t ) { return -UNIT_COST; }
-	virtual void insertTuple( string t, Cost c, EnumeratedVariable** scope_in ) { }
+	virtual Cost eval( String& t ) { return -UNIT_COST; }
+	virtual void insertTuple( String t, Cost c, EnumeratedVariable** scope_in ) { }
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
     {

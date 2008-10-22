@@ -960,7 +960,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 
 	Cost Top = getUb(); 
 	unsigned int vxi,vyi,vzi;
-	string tuple,tuple1,tuple2;
+	String tuple,tuple1,tuple2;
 	Cost cost,cost1,cost2;
 	int ctrIndex = -1; 
 	Constraint* ctr = NULL;
@@ -1072,7 +1072,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 	TernaryConstraint* tctr = NULL;
 	Cost Top = getUb(); 
 	int ctrIndex;
-	char t[5];
+	Char t[5];
 	vector<Cost> costs;
 
 	switch(arity-1)
@@ -1093,7 +1093,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 						 for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 							   	t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
 					   	   		t[4] =  '\0';
-					   	   		string strt(t);
+					   	   		String strt(t);
 						   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(strt) + var->getCost(*itv);
 						   	 	if(c < mincost) mincost = c;
 						 }

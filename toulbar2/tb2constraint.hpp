@@ -66,25 +66,25 @@ public:
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
 
 	virtual void firstlex() {}
-	virtual bool nextlex(string& t, Cost& c) { return false; }
+	virtual bool nextlex(String& t, Cost& c) { return false; }
  
     virtual void first() {}
-    virtual bool next( string& t, Cost& c) { return false; }
+    virtual bool next( String& t, Cost& c) { return false; }
 
-	virtual void setTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
-	virtual void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in ) {}
+	virtual void setTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
+	virtual void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
 
 	virtual void setTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {}
 
 
 	virtual void getScope( TSCOPE& scope_inv ) {}
-	virtual Cost evalsubstr( string& s, Constraint* ctr ) { return MIN_COST; }
+	virtual Cost evalsubstr( String& s, Constraint* ctr ) { return MIN_COST; }
 	virtual Cost getDefCost() { return MIN_COST; }
 	virtual void setDefCost( Cost df ) {}       
 
     virtual bool universal() {
-        string tuple;
+        String tuple;
         Cost cost;
         firstlex();
         while (nextlex(tuple,cost)) {
@@ -95,7 +95,7 @@ public:
 
     virtual Cost getMinCost() {
 	    Cost minc = MAX_COST;
-        string tuple;
+        String tuple;
         Cost cost;
         firstlex();
         while (nextlex(tuple,cost)) {

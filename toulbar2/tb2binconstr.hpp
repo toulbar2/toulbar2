@@ -148,7 +148,7 @@ public:
     }
 
 
-	Cost evalsubstr( string& s, Constraint* ctr )
+	Cost evalsubstr( String& s, Constraint* ctr )
 	{
 		Value vals[2];
 		int count = 0;
@@ -184,9 +184,9 @@ public:
     	yvar = y;
     }
    
-    bool next( string& t, Cost& c) 
+    bool next( String& t, Cost& c) 
     { 
-    	char tch[3];
+    	Char tch[3];
     	if(itvx != xvar->end()) {
     		int ix = xvar->toIndex(*itvx);
 	    	tch[0] = ix + CHAR_FIRST;
@@ -208,16 +208,16 @@ public:
     }
     
     void firstlex() { first(); }
-    bool nextlex( string& t, Cost& c) { return next(t,c); } 
+    bool nextlex( String& t, Cost& c) { return next(t,c); } 
     
 
-	void setTuple( string& t, Cost c, EnumeratedVariable** scope_in )  {
+	void setTuple( String& t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
 		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
 		setcost( scope_in[0], scope_in[1], v0, v1, c );				
 	}
 
-	void addtoTuple( string& t, Cost c, EnumeratedVariable** scope_in )  {
+	void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
 		Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
 		addcost( scope_in[0], scope_in[1], v0, v1, c );				

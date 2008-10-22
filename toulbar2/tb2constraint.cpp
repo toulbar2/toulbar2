@@ -47,7 +47,7 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 	
 	Cost Top = wcsp->getUb();
 	Cost c;
-	string t;
+	String t;
 
 	if(getDefCost() < Top) {      // enumeration case
 		firstlex();

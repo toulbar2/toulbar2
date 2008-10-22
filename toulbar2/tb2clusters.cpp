@@ -23,18 +23,18 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
     lbPrevious(MIN_COST, &wcsp->getStore()->storeCost), 
     optPrevious(false, &wcsp->getStore()->storeValue)
 {
-	char* tbuf = new char [arity_in+1];
+	Char* tbuf = new Char [arity_in+1];
 	tbuf[arity_in] = '\0';
     for(int i=0;i<arity_in;i++) {
     	tbuf[i] = CHAR_FIRST;
     	int domsize = scope_in[i]->getDomainInitSize();
     	vars.insert(  scope_in[i]->wcspIndex );
-        if(domsize + CHAR_FIRST > 125) {
+        if(domsize + CHAR_FIRST > MAX_CHAR) {
 		  cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; 
 		  exit(EXIT_FAILURE);
 		}
     } 	
-	t = string(tbuf);
+	t = String(tbuf);
 	delete [] tbuf; 
 	
     linkSep.content = this;
@@ -72,7 +72,7 @@ void Separator::setup(Cluster* cluster_in) {
 	int nvars = cluster->getNbVars();
 	if(!nvars) return;
 	
-	char* sbuf = new char [cluster->getNbVars()+1];
+	Char* sbuf = new Char [cluster->getNbVars()+1];
 	int i = 0;
 	int nproper = 0;
 	it = cluster->beginVars();
@@ -83,7 +83,7 @@ void Separator::setup(Cluster* cluster_in) {
 		i++;
 	}
 	sbuf[nproper] = '\0';
-	s = string(sbuf);
+	s = String(sbuf);
 	delete [] sbuf; 
 }
 
@@ -155,9 +155,9 @@ void Separator::set( Cost c, bool opt ) {
 	}
 	assert(!opt || c + deltares >= MIN_COST);
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
-	//assert(nogoods.find(string(t)) == nogoods.end() || nogoods[string(t)].second <= MAX(MIN_COST, c + deltares));
+	//assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
     if (ToulBar2::debug >= 2) {
-	  cout << "<" << cluster->getId() << "," << t << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
+	  Cout << "<" << cluster->getId() << "," << t << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
 	}
 	nogoods[t] = TPairNG(MAX(MIN_COST, c + deltares), opt); 
 }    
@@ -230,7 +230,7 @@ bool Separator::get( Cost& res, bool& opt ) {
 	}
 }
 
-bool Separator::solGet(TAssign& a, string& sol) 
+bool Separator::solGet(TAssign& a, String& sol) 
 {
 	int i = 0;
 	TVars::iterator it = vars.begin();
@@ -246,7 +246,7 @@ bool Separator::solGet(TAssign& a, string& sol)
 		p = itsol->second;
 		sol = p.second;
 
-		if (ToulBar2::verbose >= 1) cout << "asking  solution  sep:" << t << "  cost: " << p.first << endl; 
+		if (ToulBar2::verbose >= 1) Cout << "asking  solution  sep:" << t << "  cost: " << p.first << endl; 
 
 		return true;
 	}
@@ -291,7 +291,7 @@ void Separator::solRec(Cost ub)
 
 	solutions[t] = TPairSol(ub,s);
 	
-	if (ToulBar2::verbose >= 1) cout << "recording solution  " << " cost: " << ub << " sol: " << s <<  " sep: " << t << endl; 
+	if (ToulBar2::verbose >= 1) Cout << "recording solution  " << " cost: " << ub << " sol: " << s <<  " sep: " << t << endl; 
 }
 
 void Separator::resetOpt() 
@@ -303,7 +303,7 @@ void Separator::resetOpt()
 	}
 }
 
-void Separator::print(ostream& os) {
+void Separator::print(Ostream& os) {
 {
 	os << this << " nogoods(";
 	Double totaltuples = 1;
@@ -500,7 +500,7 @@ void Cluster::getSolution( TAssign& sol )
 			}			
 		}
 	}
-	string s;
+	String s;
 	if(sep) {
 		bool found = sep->solGet(sol, s);
 		assert(found);

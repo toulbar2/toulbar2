@@ -23,44 +23,44 @@ class NaryConstraint : public AbstractNaryConstraint
 	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
 	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
 
-	string iterTuple;
-	string evalTuple;
+	String iterTuple;
+	String evalTuple;
 
 	vector<EnumeratedVariable::iterator> it_values;
 	void firstlex();
-    bool nextlex( string& t, Cost& c);
+    bool nextlex( String& t, Cost& c);
 	
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstraint(WCSP *wcsp);
 	
-	virtual void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
+	virtual void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
 
-	virtual void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
+	virtual void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
 	
 	virtual void setTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
 	{
-		char* buf = new char [arity_];
+		Char* buf = new Char [arity_];
 		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
 		buf[arity_] = '\0';
-		string str = string(buf); 
+		String str = String(buf); 
 		setTuple( str, c, scope_in );
 		delete [] buf;
 	}
 
 	virtual void addtoTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
 	{
-		char* buf = new char [arity_];
+		Char* buf = new Char [arity_];
 		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
 		buf[arity_] = '\0';
-		string str = string(buf); 
+		String str = String(buf); 
 		addtoTuple( str, c, scope_in );
 		delete [] buf;
 	}
 
 	
 	
-    virtual Cost eval( string& s ) = 0; 
-	Cost evalsubstr( string& s, Constraint* ctr );
+    virtual Cost eval( String& s ) = 0; 
+	Cost evalsubstr( String& s, Constraint* ctr );
 	
 	void assign(int varIndex);
 	
@@ -82,16 +82,16 @@ class NaryConstraint : public AbstractNaryConstraint
     void   decrease(int index) {}
     void  remove(int index) {}
  
-    void starrule(string& t, Cost minc);	    
+    void starrule(String& t, Cost minc);	    
     void projectFromZero(int index);
 
-    virtual void print(ostream& os) {}
+    virtual void print(Ostream& os) {}
 };
 
 
 class NaryConstraintMap : public NaryConstraint
 {
-	typedef map<string,Cost> TUPLES;
+	typedef map<String,Cost> TUPLES;
     TUPLES* pf;
 
 
@@ -102,8 +102,8 @@ public:
 	virtual ~NaryConstraintMap();
 
 
-	bool consistent( string& t );
-    Cost eval( string& s );
+	bool consistent( String& t );
+    Cost eval( String& s );
 	
 	Cost getDefCost() { return default_cost; }
 	void setDefCost( Cost df ) { default_cost = df; }
@@ -121,11 +121,11 @@ public:
 	TUPLES::iterator  tuple_it;
 
 	void first();
-    bool next( string& t, Cost& c);
+    bool next( String& t, Cost& c);
     
-	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
-	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
-    void insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters = false );  
+	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+    void insertSum( String& t1, Cost c1, Constraint* ctr1, String t2, Cost c2, Constraint* ctr2, bool bFilters = false );  
 	void permute( EnumeratedVariable** scope_in );
 	
 	void projectxy( EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
@@ -134,8 +134,8 @@ public:
 	void preprojectall2();
 
 	void fillRandom();
-    void print(ostream& os);
-    void dump(ostream& os);
+    void print(Ostream& os);
+    void dump(Ostream& os);
     
 };
 
@@ -148,15 +148,15 @@ class TrieNode {
   public:
     TrieNode();
 
-	void iniLeaf(char *w);
-	void iniNonLeaf(char ch);
+	void iniLeaf(Char *w);
+	void iniNonLeaf(Char ch);
 
     Cost c;
 	
   private:
     bool leaf, endOfWord;
-    char *letters;
-    char *word;
+    Char *letters;
+    Char *word;
 
     TrieNode **ptrs;
     friend class Trie;
@@ -166,20 +166,20 @@ class TrieNode {
 class Trie {
   public:
     Trie() : notFound(-1) {}
-    Trie(char*, Cost c);
-    void insert(char*, Cost c);
-    TrieNode* find(const char*);
+    Trie(Char*, Cost c);
+    void insert(Char*, Cost c);
+    TrieNode* find(const Char*);
      
     void printTrie(); 
     
   private:
     TrieNode *root;
     const int notFound;
-    char prefix[80];
-    int  position(TrieNode*,char);
-    void addCell(char,TrieNode*,int);
-    TrieNode* createLeaf(char,char*,TrieNode*);
-    void printTrie(int,TrieNode*,char*);
+    Char prefix[80];
+    int  position(TrieNode*,Char);
+    void addCell(Char,TrieNode*,int);
+    TrieNode* createLeaf(Char,Char*,TrieNode*);
+    void printTrie(int,TrieNode*,Char*);
 };
 
 
@@ -197,14 +197,14 @@ class NaryConstrie : public NaryConstraint
 	NaryConstrie(WCSP *wcsp);
 	virtual ~NaryConstrie();
 	
-	void setTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
-	void addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 
     void project( EnumeratedVariable* x, bool addUnaryCtr = true ) {};
 
-    Cost eval( string& s );
+    Cost eval( String& s );
 
-    void print(ostream& os);
+    void print(Ostream& os);
 
 };
 

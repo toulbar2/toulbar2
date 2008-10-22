@@ -21,7 +21,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 	int arity = indexs.size();
 	EnumeratedVariable** scopeVars = new EnumeratedVariable * [arity];  
 	int* scopeIndexs = new int [arity];  
-	char* tuple = new char [arity+1];  
+	Char* tuple = new Char [arity+1];  
 	Cost Top = wcsp.getUb();
 	if(costMax < Top) Top = costMax;
 
@@ -34,7 +34,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 
 	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeIndexs, arity, Top) );
 
-	string s(tuple);
+	String s(tuple);
 	while(nogoods>0) {
 		for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST; 
 		Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);

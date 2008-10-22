@@ -12,19 +12,19 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 			: AbstractNaryConstraint(wcsp, scope_in, arity_in), nonassigned(arity_in, &wcsp->getStore()->storeValue)
 {
 	int i;
-	char* tbuf = new char [arity_in+1];
+	Char* tbuf = new Char [arity_in+1];
 	tbuf[arity_in] = '\0';
     
     for(i=0;i<arity_in;i++) {
     	int domsize = scope_in[i]->getDomainInitSize();
     	tbuf[i] = CHAR_FIRST;
-        if(domsize + CHAR_FIRST > 125) {
+        if(domsize + CHAR_FIRST > MAX_CHAR) {
 		  cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl; 
 		  exit(EXIT_FAILURE);
 		}
     } 	           
-	iterTuple = string(tbuf);
-	evalTuple = string(tbuf);
+	iterTuple = String(tbuf);
+	evalTuple = String(tbuf);
 	delete [] tbuf; 
 	
 	Cost Top = wcsp->getUb();
@@ -47,7 +47,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp)
 }
 
 
-Cost NaryConstraint::evalsubstr( string& s, Constraint* ctr )
+Cost NaryConstraint::evalsubstr( String& s, Constraint* ctr )
 {
 	int count = 0;
 	
@@ -145,8 +145,8 @@ void NaryConstraint::projectNary()
 {
 	int indexs[3];
 	EnumeratedVariable* unassigned[3] = {NULL,NULL,NULL};
-	char* tbuf = new char [arity_ + 1]; 
-	string t;
+	Char* tbuf = new Char [arity_ + 1]; 
+	String t;
 
 	int i,nunassigned = 0;
 	for(i=0;i<arity_;i++) {
@@ -195,7 +195,7 @@ void NaryConstraint::projectNary()
 			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
 			Cost curcost = eval(t);
 			xy->setcost(xval,yval,curcost);
-			if (ToulBar2::verbose >= 5) cout << t << " " << curcost << endl;
+			if (ToulBar2::verbose >= 5) Cout << t << " " << curcost << endl;
 	    }}
 		projectNaryBinary(xy);
 	} 
@@ -248,13 +248,13 @@ void NaryConstraint::projectFromZero(int index)
    		}
    }
    int a = arity();
-   char* cht = new char [a + 1];
+   Char* cht = new Char [a + 1];
    cht[a] = '\0';
    for(i=0;i<a;i++) {
 		var = (EnumeratedVariable*) getVar(i); 
 		cht[i] = var->toIndex(var->getSup()) + CHAR_FIRST;
    }
-   string t(cht);
+   String t(cht);
    delete [] cht;
    c = eval(t); 
    if(c < minc) minc = c; 	   		
@@ -263,7 +263,7 @@ void NaryConstraint::projectFromZero(int index)
 
 
 
- void NaryConstraint::starrule(string& t, Cost minc) 
+ void NaryConstraint::starrule(String& t, Cost minc) 
  {
    int i;	
    for(i=0;i<arity_;i++) {
@@ -293,7 +293,7 @@ void NaryConstraint::firstlex()
 	}
 }
 	
-bool NaryConstraint::nextlex( string& t, Cost& c)
+bool NaryConstraint::nextlex( String& t, Cost& c)
 {
 	int i;
 	int a = arity();
@@ -384,7 +384,7 @@ void NaryConstraintMap::fillFilters()
 
 
 
-Cost NaryConstraintMap::eval( string& s ) {
+Cost NaryConstraintMap::eval( String& s ) {
 	TUPLES& f = *pf;
 	TUPLES::iterator  it = f.find(s);
 	if(it != f.end()) return it->second;
@@ -401,7 +401,7 @@ void NaryConstraintMap::changeDefCost( Cost df )
 	TUPLES* pfnew = new TUPLES;
 	Cost maxCost = MIN_COST;
 	
-	string t;
+	String t;
 	Cost c;	
 	firstlex();
     while(nextlex(t,c)) {
@@ -418,7 +418,7 @@ void NaryConstraintMap::changeDefCost( Cost df )
 
 
 
-bool NaryConstraintMap::consistent( string& t ) {
+bool NaryConstraintMap::consistent( String& t ) {
 	int a = arity();
 	bool ok = true;
 	for(int i=0;i<a && ok;i++) {
@@ -434,7 +434,7 @@ void NaryConstraintMap::first()
 	tuple_it = pf->begin();
 }
 
-bool NaryConstraintMap::next( string& t, Cost& c)
+bool NaryConstraintMap::next( String& t, Cost& c)
 {
 	bool ok = false;
 	while(!ok && (tuple_it != pf->end())) {
@@ -454,7 +454,7 @@ void NaryConstraintMap::permute( EnumeratedVariable** scope_in )
 
 	TUPLES::iterator it = pf_old->begin(); 
 	while(it != pf_old->end()) {
-		string s(it->first); 
+		String s(it->first); 
 		setTuple(s, it->second, scope_in );
 		it++;
 	}
@@ -480,10 +480,10 @@ void NaryConstraintMap::permute( EnumeratedVariable** scope_in )
 
 
 // for adding a tuple in f
-// scope_in contains the order of the values in string tin 
-void NaryConstraintMap::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+// scope_in contains the order of the values in String tin 
+void NaryConstraintMap::setTuple( String& tin, Cost c, EnumeratedVariable** scope_in )
 {
-	string t(tin);
+	String t(tin);
 	if(scope_in) {
 		for(int i = 0; i < arity_; i++) {
 			int pos = getIndex(scope_in[i]);
@@ -493,9 +493,9 @@ void NaryConstraintMap::setTuple( string& tin, Cost c, EnumeratedVariable** scop
 	(*pf)[t] = c;
 }
 
-void NaryConstraintMap::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+void NaryConstraintMap::addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in )
 {
-	string t(tin);
+	String t(tin);
 	if(scope_in) {
 		for(int i = 0; i < arity_; i++) {
 			int pos = getIndex(scope_in[i]);
@@ -506,14 +506,14 @@ void NaryConstraintMap::addtoTuple( string& tin, Cost c, EnumeratedVariable** sc
 }
 
 
-void NaryConstraintMap::insertSum( string& t1, Cost c1, Constraint* ctr1, string t2, Cost c2, Constraint* ctr2, bool bFilters )
+void NaryConstraintMap::insertSum( String& t1, Cost c1, Constraint* ctr1, String t2, Cost c2, Constraint* ctr2, bool bFilters )
 {
 	Cost Top = wcsp->getUb();
 	if(c1 >= Top) return;
 	if(c2 >= Top) return;
 	Cost csum = c1 + c2;
 
-	char* t = new char [arity_+1];
+	Char* t = new Char [arity_+1];
 
 	for(int i = 0; i < arity_; i++) {
 		EnumeratedVariable* v = scope[i]; 
@@ -534,7 +534,7 @@ void NaryConstraintMap::insertSum( string& t1, Cost c1, Constraint* ctr1, string
 		if(csum >= Top) return;	
 	}  
 	t[arity_] = '\0';
-	string tstr(t);
+	String tstr(t);
 
 	if(bFilters && filters && (default_cost >= Top) ) {
 		set<Constraint*>::iterator it = filters->begin();
@@ -595,7 +595,7 @@ void NaryConstraintMap::sum( NaryConstraintMap* nary )
 	TUPLES& f = * new TUPLES;
 	pf = &f;
 
-	string t1,t2;
+	String t1,t2;
 	Cost c1,c2;   
 	while(it1 != f1.end()) {
 		t1 = it1->first;
@@ -624,7 +624,7 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 	int xindex = getIndex(x);
 	if(xindex < 0) return;
 	assert(x->getDegree() == 1);
-	string t,tnext,tproj;
+	String t,tnext,tproj;
 	Cost c;
 	Cost Top = wcsp->getUb();
 	TUPLES& f = *pf;	
@@ -640,8 +640,8 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 			c += x->getCost( x->toValue(t[xindex] - CHAR_FIRST) );
 			if(c > Top) c = Top;
 		}		
-		string tswap(t);
-		char a = tswap[arity_-1];
+		String tswap(t);
+		Char a = tswap[arity_-1];
 		tswap[arity_-1] = tswap[xindex];
 		tswap[xindex] = a;
 		fproj[tswap] = c;		
@@ -718,15 +718,15 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 								 EnumeratedVariable* z, 
 								 TUPLES& fproj)
 {
-	char   stxyz[4] = {CHAR_FIRST, CHAR_FIRST, CHAR_FIRST, '\0'};	
-	string txyz(stxyz);
-	string t;
+	Char   stxyz[4] = {CHAR_FIRST, CHAR_FIRST, CHAR_FIRST, '\0'};	
+	String txyz(stxyz);
+	String t;
 	
 	Cost c;
 	TUPLES& f = *pf;	
 	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	map<string,long> fcount;
+	map<String,long> fcount;
 	
 	// compute in one pass of all tuples the projection 
 	it = f.begin();
@@ -785,15 +785,15 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 								EnumeratedVariable* y,
 								TUPLES& fproj)
 {
-	char   stxy[3] = {CHAR_FIRST, CHAR_FIRST, '\0'};	
-	string txy(stxy);
-	string t;
+	Char   stxy[3] = {CHAR_FIRST, CHAR_FIRST, '\0'};	
+	String txy(stxy);
+	String t;
 	
 	Cost c;
 	TUPLES& f = *pf;	
 	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	map<string,long> fcount;
+	map<String,long> fcount;
 	
 	// compute in one pass of all tuples the projection 
 	it = f.begin();
@@ -853,7 +853,7 @@ void NaryConstraintMap::preproject3()
 	   TUPLES fproj;
 	   projectxyz(x,y,z,fproj); 
 
-	   string t;
+	   String t;
 	   vector<Cost> xyz;
   	   unsigned int a,b,c;
 	   unsigned int sizex = x->getDomainInitSize();
@@ -888,7 +888,7 @@ void NaryConstraintMap::preprojectall2()
 	   TUPLES fproj;
 	   projectxy(x,y,fproj); 
 
-	   string t;
+	   String t;
 	   vector<Cost> xy;
   	   unsigned int a,b;
 	   unsigned int sizex = x->getDomainInitSize();
@@ -911,7 +911,7 @@ void NaryConstraintMap::preprojectall2()
 }	
 
 
-void NaryConstraintMap::print(ostream& os)
+void NaryConstraintMap::print(Ostream& os)
 {
 	TUPLES& f = *pf;
 	os << endl << this << " f(";
@@ -944,7 +944,7 @@ void NaryConstraintMap::print(ostream& os)
 		os << "tuples: {";
 		TUPLES::iterator  it = f.begin();
 		while(it != f.end()) {
-			string t = it->first;
+			String t = it->first;
 			Cost c =  it->second;		
 			it++;
 			os << "<" << t << "," << c << ">";
@@ -954,7 +954,7 @@ void NaryConstraintMap::print(ostream& os)
 	}
 }
 
-void NaryConstraintMap::dump(ostream& os)
+void NaryConstraintMap::dump(Ostream& os)
 {
 	int i; 
 	TUPLES& f = *pf;
@@ -964,7 +964,7 @@ void NaryConstraintMap::dump(ostream& os)
     
     TUPLES::iterator  it = f.begin();
     while(it != f.end()) {
-        string t = it->first;
+        String t = it->first;
         Cost c =  it->second;       
         it++;
         for(unsigned int i=0;i<t.size();i++) {
@@ -986,16 +986,16 @@ TrieNode::TrieNode() {
 }
 
 
-void TrieNode::iniLeaf(char *suffix) {
+void TrieNode::iniLeaf(Char *suffix) {
     leaf = true;
-    word = new char[strlen(suffix)+1];
+    word = new Char[Strlen(suffix)+1];
     if (word == 0) exit(-1);
-    strcpy(word,suffix);
+    Strcpy(word,suffix);
 }
 
-void TrieNode::iniNonLeaf(char ch) {
+void TrieNode::iniNonLeaf(Char ch) {
     ptrs = new TrieNode*;
-    letters = new char[2];
+    letters = new Char[2];
     if (ptrs == 0 || letters == 0) exit(1);
     leaf = false;
     endOfWord = false;
@@ -1007,14 +1007,14 @@ void TrieNode::iniNonLeaf(char ch) {
 
 
 
-Trie::Trie(char* word, Cost c) : notFound(-1) {
+Trie::Trie(Char* word, Cost c) : notFound(-1) {
     root = new TrieNode(); 
     root->iniNonLeaf(*word);
     TrieNode* lf = createLeaf(*word,word+1,root); // to avoid later tests;
     lf->c = c;
 }
 
-void Trie::printTrie(int depth, TrieNode *p, char *prefix) {
+void Trie::printTrie(int depth, TrieNode *p, Char *prefix) {
     register int i;             // assumption: the root is not a leaf
     if (p->leaf) {              // and it is not null;
          TrieNode *lf = (TrieNode*) p;
@@ -1023,7 +1023,7 @@ void Trie::printTrie(int depth, TrieNode *p, char *prefix) {
          
     }
     else {
-         for (i = strlen(p->letters)-1; i >= 0; i--)
+         for (i = Strlen(p->letters)-1; i >= 0; i--)
              if (p->ptrs[i] != 0) {             // add the letter
                  prefix[depth] = p->letters[i]; // corresponding to
                  prefix[depth+1] = '\0';        // position i to prefix;
@@ -1037,19 +1037,19 @@ void Trie::printTrie(int depth, TrieNode *p, char *prefix) {
     }
 }
 
-int Trie::position(TrieNode *p, char ch) {
+int Trie::position(TrieNode *p, Char ch) {
     unsigned int i;
-    for (i = 0; i < strlen(p->letters) && p->letters[i] != ch; i++);
-    if (i < strlen(p->letters)) return i;
+    for (i = 0; i < Strlen(p->letters) && p->letters[i] != ch; i++);
+    if (i < Strlen(p->letters)) return i;
     else return notFound;
 }
 
-TrieNode* Trie::find(const char *word) {
+TrieNode* Trie::find(const Char *word) {
     TrieNode *p = root;
     int pos;
     while (true)
         if (p->leaf) {                      			   // node p is a leaf
-            if (strcmp(word,p->word) == 0)  return p;     // suffix of word should be found;
+            if (Strcmp(word,p->word) == 0)  return p;     // suffix of word should be found;
             else return NULL;
         }
         else if (*word == '\0')              			   // the end of word has
@@ -1063,11 +1063,11 @@ TrieNode* Trie::find(const char *word) {
         else return NULL;                   			   // otherwise failure;
 }
 
-void Trie::addCell(char ch, TrieNode *p, int stop) {
-    int i, len = strlen(p->letters);
-    char *s = p->letters;
+void Trie::addCell(Char ch, TrieNode *p, int stop) {
+    int i, len = Strlen(p->letters);
+    Char *s = p->letters;
     TrieNode **tmp = p->ptrs;
-    p->letters = new char[len+2];
+    p->letters = new Char[len+2];
     p->ptrs    = new TrieNode*[len+1];
     if (p->letters == 0 || p->ptrs == 0) { exit(1); }
     for (i = 0; i < len+1; i++) p->ptrs[i] = 0;
@@ -1085,10 +1085,10 @@ void Trie::addCell(char ch, TrieNode *p, int stop) {
     delete [] s;
 }
 
-TrieNode* Trie::createLeaf(char ch, char *suffix, TrieNode *p) {
+TrieNode* Trie::createLeaf(Char ch, Char *suffix, TrieNode *p) {
     int pos = position(p,ch);
     if (pos == notFound) {
-        for (pos = 0; (pos < (int)strlen(p->letters)) && (p->letters[pos] < ch); pos++);
+        for (pos = 0; (pos < (int)Strlen(p->letters)) && (p->letters[pos] < ch); pos++);
         addCell(ch,p,pos);
     }
     TrieNode* tn = new TrieNode();
@@ -1097,12 +1097,12 @@ TrieNode* Trie::createLeaf(char ch, char *suffix, TrieNode *p) {
     return tn;
 }
 
-void Trie::insert(char *word, Cost c) {
+void Trie::insert(Char *word, Cost c) {
     TrieNode *p = root;
     TrieNode *lf, *newlf;
     int offset;
     unsigned int pos;
-    char *hold = word;
+    Char *hold = word;
     while (true) {
         if (*word == '\0') {            								// if the end of word reached,
              if (p->endOfWord) cout << "Duplicate entry1 " << hold << endl;
@@ -1117,14 +1117,14 @@ void Trie::insert(char *word, Cost c) {
         }                               								 // unprocessed suffix of word;
         else if ((int)pos != notFound && p->ptrs[pos]->leaf) {  
              lf = (TrieNode*) p->ptrs[pos];      						 // hold this leaf;
-             if (strcmp(lf->word,word+1) == 0) {
+             if (Strcmp(lf->word,word+1) == 0) {
                  cout << "Duplicate entry2 " << hold << endl;
                  return;
              }
              offset = 0;
              do {
                  pos = position(p,word[offset]);						 // word == "ABC", leaf = "ABCDEF" => leaf = "DEF";
-                 if ((int)strlen(word) == offset+1) {
+                 if ((int)Strlen(word) == offset+1) {
                       p->ptrs[pos] = new TrieNode();												                                
                       p->ptrs[pos]->iniNonLeaf(word[offset]);
                       p->ptrs[pos]->endOfWord = true;
@@ -1132,7 +1132,7 @@ void Trie::insert(char *word, Cost c) {
 					  newlf->c = c;
                       return;
                  }                 															// word == "ABCDE", leaf = "ABC" => leaf = "DEF";
-                 else if ((int)strlen(lf->word) == offset) {
+                 else if ((int)Strlen(lf->word) == offset) {
                       p->ptrs[pos] = new TrieNode();												                                
                       p->ptrs[pos]->iniNonLeaf(word[offset+1]);
                       p->ptrs[pos]->endOfWord = true;
@@ -1149,13 +1149,15 @@ void Trie::insert(char *word, Cost c) {
 															             // word = "ABCDEF", leaf = "ABCPQR" => leaf('D') = "EF", leaf('P') = "QR";
 															             // check whether there is a suffix left:
 															             // word = "ABCD", leaf = "ABCPQR" => leaf('D') = null, leaf('P') = "QR";
-             char *s = "";
-             if ((int)strlen(word) > offset+2) s = word+offset+2;
+             Char emptystr[1];
+			 emptystr[0] = '\0';
+			 Char * s = &emptystr[0];
+             if ((int)Strlen(word) > offset+2) s = word+offset+2;
              newlf = createLeaf(word[offset+1],s,p);
              newlf->c = c;
 															             // check whether there is a suffix left:
 															             // word = "ABCDEF", leaf = "ABCP" => leaf('D') = "EF", leaf('P') = null;
-             if ((int)strlen(lf->word) > offset+1) s = lf->word+offset+1; else s = "";
+             if ((int)Strlen(lf->word) > offset+1) s = lf->word+offset+1; else s = &emptystr[0];
              newlf = createLeaf(lf->word[offset],s,p);
              newlf->c = lf->c;
 			 
@@ -1201,30 +1203,30 @@ NaryConstrie::~NaryConstrie()
 }
 
 // for adding a tuple in f
-// scope_in contains the order of the values in string tin 
-void NaryConstrie::setTuple( string& tin, Cost c, EnumeratedVariable** scope_in )
+// scope_in contains the order of the values in String tin 
+void NaryConstrie::setTuple( String& tin, Cost c, EnumeratedVariable** scope_in )
 {
-	string t(tin);
+	String t(tin);
 	if(scope_in) {  for(int i = 0; i < arity_; i++) t[getIndex(scope_in[i])] = tin[i];  }
-	char tch[80];
-	strcpy(tch,t.c_str());
+	Char tch[80];
+	Strcpy(tch,t.c_str());
     if(!f) { f = new Trie( tch, c ); } 
     else f->insert(tch, c);	
 }
 
-void NaryConstrie::addtoTuple( string& tin, Cost c, EnumeratedVariable** scope_in ) {
-	string t(tin);
+void NaryConstrie::addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in ) {
+	String t(tin);
 	Cost csum = eval(t) + c;
 	if(scope_in) {  for(int i = 0; i < arity_; i++) t[getIndex(scope_in[i])] = tin[i];  }
-	char tch[80];
-	strcpy(tch,t.c_str());
+	Char tch[80];
+	Strcpy(tch,t.c_str());
     if(!f) { f = new Trie( tch, csum ); } 
     else f->insert(tch, csum);	
 		
 }
 
 
-Cost NaryConstrie::eval( string& s ) {
+Cost NaryConstrie::eval( String& s ) {
 	Cost c = default_cost;
 	if(f) {
 		TrieNode* tn = f->find(s.c_str());
@@ -1242,18 +1244,18 @@ Cost NaryConstrie::eval( string& s ) {
 	    nonassigned = nonassigned - 1;
 	   
 	   if(nonassigned == 0) {
-			char* t = new char [arity_ + 1];			
+			Char* t = new Char [arity_ + 1];			
 			for(i = 0; i < arity_;i++) t[i] = CHAR_FIRST + scope[i]->toIndex(scope[i]->getValue());
 			t[i] = '\0';
 			deconnect();
-	   	    projectLB(eval(string(t)));
+	   	    projectLB(eval(String(t)));
 			delete [] t;
 	   }
     }
 }*/
 
 
-void NaryConstrie::print(ostream& os) {
+void NaryConstrie::print(Ostream& os) {
 	int unassigned_ = 0;
 	long totaltuples = 1;
 	os << endl << this << " f(";
