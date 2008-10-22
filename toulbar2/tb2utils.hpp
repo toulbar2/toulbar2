@@ -14,6 +14,11 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+
+// these includes are needed if compiled on new g++ versions (>4.0?)
+#include <climits>
+#include <cstdlib>
+#include <cstring>
 #endif
 
 #include <vector>

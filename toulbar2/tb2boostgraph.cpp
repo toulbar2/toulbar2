@@ -1,3 +1,5 @@
+
+#ifdef BOOST
 #include <boost/config.hpp>
 #include <boost/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -9,8 +11,6 @@
 #include <boost/graph/minimum_degree_ordering.hpp>
 
 using namespace boost;
-
-#include "tb2wcsp.hpp"
 
 namespace boost
 {
@@ -27,6 +27,9 @@ typedef adjacency_list< vecS, vecS, undirectedS, no_property,
                         property< edge_weight_t, int, property < edge_component_t, std::size_t > > > Graph;
 typedef graph_traits < Graph >::vertex_descriptor Vertex;
 typedef graph_traits < Graph >::edge_descriptor Edge;
+#endif
+
+#include "tb2wcsp.hpp"
 
 #ifdef BOOST
 static void addConstraint(Constraint *c, Graph& g)

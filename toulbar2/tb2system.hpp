@@ -17,7 +17,11 @@ typedef long long Long;
 
 #ifndef LONGLONG_MAX
 	#ifdef LINUX
-	const Long LONGLONG_MAX = LONG_LONG_MAX;
+     #ifdef LONG_LONG_MAX
+      const Long LONGLONG_MAX = LONG_LONG_MAX;
+     #else
+      const Long LONGLONG_MAX = LLONG_MAX;
+     #endif
 	#endif
 	#ifdef WINDOWS
 	const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFF;
