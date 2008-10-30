@@ -117,6 +117,9 @@ int main(int argc, char **argv)
 		cerr << "                                         the seed parameter is optional" << endl;
 		 
 		cerr << "or:                                                                               " << endl;            
+		cerr << "     binsub-{n}-{m}-{p1}-{p2}-{seed}     binary submodular cost functions (p1 unused)" << endl; 
+		cerr << "                                         (plus 10 permutations of two randomly-chosen values for each domain)" << endl; 
+		cerr << "or:                                                                               " << endl;            
 		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary constraints" << endl; 
         cerr << "or:                                                                               " << endl;            
 		cerr << "     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}   " << endl; 
