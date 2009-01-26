@@ -22,7 +22,7 @@
  * 
  */
  
-double ToulBar2::version  = 0.7;
+double ToulBar2::version  = 0.8;
 int  ToulBar2::verbose  = 0;
 int  ToulBar2::debug  = 0;
 bool ToulBar2::showSolutions  = false;
@@ -1356,12 +1356,12 @@ void WCSP::setDACOrder(vector<int> &order)
   }
 
   // set DAC order to the inverse of the elimination variable ordering
-  cout << "DAC order:";
+  if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << "DAC order:";
   for(int i=order.size()-1;i>=0;i--) {
-	cout << " " << getVar(order[i])->getName();
+	if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << " " << getVar(order[i])->getName();
 	getVar(order[i])->setDACOrder(order.size()-1-i);
   }
-  cout << endl;
+  if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << endl;
 
   for (unsigned int i=0; i<numberOfConstraints(); i++) {
 	Constraint* ctr = getCtr(i);

@@ -5,7 +5,8 @@ SRCSFULL = $(wildcard tb2*.cpp)
 
 # Same thing for XML
 #XML = XMLFLAG
-#XMLI = -I/usr/include/libxml2 -DXMLFLAG -DMAXCSP
+#XMLI = -I/usr/include/libxml2 -DXMLFLAG
+# -DXMLFLAG -DMAXCSP
 
 ifeq ($(BOOST),-DBOOST)
 SRCS = $(SRCSFULL)
@@ -14,7 +15,8 @@ SRCS = $(SRCSFULL:tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lxml2 -lz -lm -lpthread
+OBJS = $(SRCS:.cpp=.o) -lxml2
+# -lxml2 -lz -lm -lpthread
 else
 OBJS = $(SRCS:.cpp=.o)
 endif
@@ -39,7 +41,7 @@ CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST) $(XMLI)
 
 OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
-# -O2
+# -O2 -DNDEBUG
 
 ICCFLAGS = 
 #-O3 -ipo -static -DNDEBUG
