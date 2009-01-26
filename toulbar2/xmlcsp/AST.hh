@@ -34,6 +34,8 @@
 #include <map>
 #include <deque>
 #include <cctype>
+#include <cstdlib>
+#include <cstring>
 
 #include "XMLParser_constants.h"
 #include "C_AST.h"
@@ -223,7 +225,7 @@ namespace CSPXMLParser
    */
   class ASTSymb: public AST
   {
-  private:
+  protected:
     const NodeType cst;
   public:
     ASTSymb(NodeType c): cst(c)
@@ -253,7 +255,7 @@ namespace CSPXMLParser
 
     virtual void prefixExpression(ostream &s) const
     {
-      throw runtime_error("unimplemented");
+      infixExpression(s);
     }
 
     virtual void infixExpression(ostream &s) const
@@ -288,32 +290,7 @@ namespace CSPXMLParser
 
     virtual void postfixExpression(ostream &s) const
     {
-      switch(cst)
-      {
-      case SYMB_NIL:
-	s << "nil";
-	break;
-      case SYMB_EQ:
-	s << "==";
-	break;
-      case SYMB_NE:
-	s << "!=";
-	break;
-      case SYMB_GE:
-	s << ">=";
-	break;
-      case SYMB_GT:
-	s << ">";
-	break;
-      case SYMB_LE:
-	s << "<=";
-	break;
-      case SYMB_LT:
-	s << "<";
-	break;
-      default:
-	throw runtime_error("unimplemented");
-      }
+      infixExpression(s);
     }
 
     virtual void mathmlExpressionRec(ostream &s) const
@@ -337,13 +314,11 @@ namespace CSPXMLParser
    */
   class ASTVar : public AST
   {
-  private:
+  protected:
     string name;
     int id;
   public:
-    ASTVar(const string &name) {this->name=name; id=-1;}
-
-    ASTVar(const string &name, int id) {this->name=name; this->id=id;}
+    ASTVar(const string &name, int id=-1) {this->name=name; this->id=id;}
 
     const string &getName() const {return name;}
     int getId() const {return id;}
@@ -405,7 +380,7 @@ namespace CSPXMLParser
    */
   class ASTInteger : public AST
   {
-  private:
+  protected:
     int val;
   public:
     ASTInteger(int n)
@@ -470,7 +445,7 @@ namespace CSPXMLParser
    */
   class ASTBoolean : public AST
   {
-  private:
+  protected:
     bool val;
   public:
     ASTBoolean(bool v) 
@@ -536,7 +511,7 @@ namespace CSPXMLParser
    */
   class ASTList: public AST
   {
-  private:
+  protected:
     deque<AST *> list;
   public:
     ASTList() 
@@ -601,12 +576,24 @@ namespace CSPXMLParser
 
     virtual void prefixExpression(ostream &s) const
     {
-      throw runtime_error("unimplemented");
-    }
+      s << "[";
+      for(deque<AST *>::const_iterator it=list.begin();it!=list.end();++it)
+      {
+	s << ' ';
+	(*it)->prefixExpression(s);
+      }
+      s << " ]";
+   }
 
     virtual void infixExpression(ostream &s) const
     {
-      throw runtime_error("unimplemented");
+      s << "[";
+      for(deque<AST *>::const_iterator it=list.begin();it!=list.end();++it)
+      {
+	s << ' ';
+	(*it)->infixExpression(s);
+      }
+      s << " ]";
     }
 
     virtual void postfixExpression(ostream &s) const
@@ -633,8 +620,8 @@ namespace CSPXMLParser
       node->type=LIST;
       node->size=list.size();
 
-      for(int i=0;i<list.size();++i)
-	node->items[i]=list[i]->makeCTree();
+      for(unsigned int i=0;i<list.size();++i)
+		node->items[i]=list[i]->makeCTree();
 
       return reinterpret_cast<C_AST *>(node);
     }
@@ -647,7 +634,7 @@ namespace CSPXMLParser
    */
   class ASTDict: public AST
   {
-  private:
+  protected:
     map<string,AST *> dict;
   public:
     ASTDict() 
@@ -1473,6 +1460,52 @@ namespace CSPXMLParser
     return dynamic_cast<const ASTDict &>(*this)[key];
   }
 
+  /**
+   * this class is used by the parser whenever it needs to create an
+   * AST node.
+   */
+  class DefaultASTFactory
+  {
+  public:
+    typedef AST ASTType;
+
+    inline static ASTVar *mkVar(const string &name, int id=-1) 
+    {
+      return new ASTVar(name,id);
+    }
+
+    inline static ASTInteger *mkInteger(int val) 
+    {
+      return new ASTInteger(val);
+    }
+
+    inline static ASTInteger *mkInteger(const string &s) 
+    {
+      return new ASTInteger(s);
+    }
+
+    inline static ASTBoolean *mkBoolean(bool val) 
+    {
+      return new ASTBoolean(val);
+    }
+
+    inline static ASTSymb *mkSymb(NodeType c) 
+    {
+      return new ASTSymb(c);
+    }
+
+    inline static ASTList *mkList() 
+    {
+      return new ASTList();
+    }
+
+    inline static ASTDict *mkDict() 
+    {
+      return new ASTDict();
+    }
+
+
+  };
 
 } // namespace
 

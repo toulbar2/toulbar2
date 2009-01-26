@@ -53,6 +53,14 @@ public:
    */
   virtual void beginInstance(const string & name) {}
 
+  /**
+   * this callback is called just after beginInstance() and specifies
+   * the type of the instance
+   *
+   * @param instanceType: type of instance (CSP,WCSP,QCSP,...)
+   */
+  virtual void instanceType(InstanceType instanceType) {}
+
   /********************************************************************/
 
   /**
@@ -145,6 +153,18 @@ public:
 			     int arity, int nbTuples, RelType relType) {}
 
   /**
+   * this callback is called only for soft relations, just after
+   * beginRelation has been called
+   *
+   * @param name: identifier of the relation
+   * @param idRel: identifier assigned to the relation name (starting from 0)
+   * @param defaultCost: cost of any tuple not explicitely listed in
+   * the relation
+   */
+  virtual void relationDefaultCost(const string & name, int idRel,
+				   int defaultCost) {}
+
+  /**
    * add a single tuple to the current relation
    *
    * @param arity: the tuple arity
@@ -231,6 +251,25 @@ public:
    */
   virtual void beginConstraintsSection(int nbConstraints) {}
   
+  /**
+   * Only for WCSP instances, this callback is called immediately
+   * after the beginConstraintsSection() callback
+   *
+   * @param maximalCost: instanciations with a cost greater or equal
+   * to this cost are not acceptable solutions
+   */
+  virtual void constraintsMaximalCost(int maximalCost) {}
+
+  /**
+   * Only for WCSP instances, this callback is called immediately
+   * after the constraintsMaximalCost() callback
+   *
+   * @param initialCost: constant cost to add to the cost of any
+   * instanciation (sometimes defined as the cost of a 0-ary
+   * constraint)
+   */
+  virtual void constraintsInitialCost(int initialCost) {}
+
   /**
    * callback called at the beginning of the declaration of one constraint
    *

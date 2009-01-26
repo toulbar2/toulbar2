@@ -22,14 +22,13 @@
  * THE SOFTWARE.
  *=============================================================================
  */
- 
 #ifndef _XMLParser_libxml2_h_
 #define _XMLParser_libxml2_h_
 
 #include <iostream>
 #include <stdexcept>
 #include <cerrno>
-#include <limits>
+#include <climits>
 #include <libxml/parser.h>
 
 #include "XMLParser.hh"
@@ -611,6 +610,40 @@ namespace CSPXMLParser
     return it==end || it.firstByte()==0;
   }
 
+  class AttributeValue
+  {
+  protected:
+    bool exists;
+    const UTF8String val;
+
+  public:
+    typedef unsigned char Byte;
+
+    AttributeValue()
+    {
+      exists=false;
+    }
+
+    AttributeValue(const Byte *v): val(v)
+    {
+      exists=true;
+    }
+
+    operator const UTF8String()
+    {
+      return val;
+    }
+
+    template<typename T>
+    bool to(T &v)
+    {
+      if (exists)
+	return val.to(v);
+      else
+	return false;
+    }
+  };
+
 
   /**
    * represents the attribute list of a XML tag
@@ -648,13 +681,22 @@ namespace CSPXMLParser
       return n;
     }
 
-    UTF8String operator[](const char *name) const
+    bool exist(const char *name) const
     {
       for(int i=0;i<n;++i)
 	if (xmlStrEqual(list[2*i],reinterpret_cast<const Byte *>(name)))
-	  return UTF8String(list[2*i+1]);
+	  return true;
 
-      return UTF8String();
+      return false;
+    }
+
+    AttributeValue operator[](const char *name) const
+    {
+      for(int i=0;i<n;++i)
+	if (xmlStrEqual(list[2*i],reinterpret_cast<const Byte *>(name)))
+	  return AttributeValue(list[2*i+1]);
+
+      return AttributeValue();
     }
 
     inline UTF8String getName(int i) const
@@ -662,22 +704,24 @@ namespace CSPXMLParser
       return UTF8String(list[2*i]);
     }
 
-    inline UTF8String getValue(int i) const
+    inline AttributeValue getValue(int i) const
     {
-      return UTF8String(list[2*i+1]);
+      return AttributeValue(list[2*i+1]);
     }
 
   private:
     int n; // number of attributes
     const Byte **list; // list[2*i] is the name of the i-th attribute,
-    // list[2*i+1] is its value
+                       // list[2*i+1] is its value
   };
 
 
   /**
    * @brief the parser using the libxml2 library
    */
-  template<class Callback=CSPParserCallback>
+  template<class Callback=CSPParserCallback, 
+	   class ASTFactory=DefaultASTFactory,
+	   class CostRepresentation=DefaultCostRepresentation>
   class XMLParser_libxml2
   {
   public:
@@ -769,7 +813,8 @@ namespace CSPXMLParser
     }
   
   protected:
-    typedef XMLParser<Callback,UTF8String,AttributeList> Parser;
+    typedef XMLParser<Callback,ASTFactory,CostRepresentation,
+		      UTF8String,AttributeList> Parser;
 
     /*************************************************************************
      *

@@ -56,6 +56,7 @@
 #include <cassert>
 
 #include "ExpressionParser.hh"
+#include "CostRepresentation.hh"
 #include "CSPParserCallback.hh"
 
 /**
@@ -85,6 +86,8 @@ namespace CSPXMLParser
    *
    */
   template<class Callback, 
+	   class ASTFactory,
+	   class CostRepresentation,
 	   class XMLLibraryString, 
 	   class XMLLibraryAttributeList>
   class XMLParser
@@ -93,13 +96,16 @@ namespace CSPXMLParser
     // list of attributes and values for a tag
     typedef XMLLibraryAttributeList AttributeList;
     typedef XMLLibraryString XMLString;
+    typedef typename ASTFactory::ASTType AST;
 
   private:
     Callback *cb;
-    Syntax preferredSyntax; // preferred syntax for
-    // transmitting an expression to the solver
+    Syntax preferredSyntax; // preferred syntax for transmitting an
+			    // expression to the solver
 
-    ExpressionParser exprParser;
+    ExpressionParser<ASTFactory> exprParser;
+
+    InstanceType instanceType; // type of instance (CSP, WCSP, QCSP,...)
 
     /// stores some information on each symbol defined in the CSP instance
     struct SymbolInfo
@@ -398,7 +404,30 @@ namespace CSPXMLParser
 	if (!attributes["name"].to(name))
 	  name="?";
 
+	string type;
+	if (attributes["type"].to(type))
+	{
+	  if (type=="CSP")
+	  {
+	    this->parser->instanceType=CSP_INSTANCE;
+	  }
+	  else
+	    if (type=="WCSP")
+	    {
+	      this->parser->instanceType=WCSP_INSTANCE;
+	    }
+	    else
+	      throw runtime_error("this parser doesn't have support for type "
+				  +type);
+	}
+	else
+	{
+	  // CSP by default
+	  this->parser->instanceType=CSP_INSTANCE;
+	}
+
 	this->parser->getCallback()->beginInstance(name);
+	this->parser->getCallback()->instanceType(this->parser->instanceType);
       }
 
       virtual void text(const XMLString txt, bool last)
@@ -684,15 +713,26 @@ namespace CSPXMLParser
 
 	if (isSoft)
 	{
-	  if (!attributes["defaultCost"].to(defaultCost))
+	  XMLString dfltCost=attributes["defaultCost"];
+
+	  if (dfltCost.isNull())
 	    throw runtime_error("expected attribute defaultCost for tag "
 				"<relation>");
-	}
 
+	  if (dfltCost==XMLString("infinity"))
+	    CostRepresentation::assignInfinity(defaultCost);
+	  else
+	    dfltCost.to(defaultCost);
+	}
 
 	int idRel=this->parser->defineSymbol(name,RelationType);
 	this->parser->getCallback()->beginRelation(name,idRel,
 						   arity,nbTuples,relType);
+
+	if (isSoft)
+	{
+	  this->parser->getCallback()->relationDefaultCost(name,idRel,defaultCost);
+	}
 
 	if (tuple)
 	  delete[] tuple;
@@ -721,6 +761,7 @@ namespace CSPXMLParser
 	  {
 	    if (isSoft && i==1)
 	    {
+	      // ??? FIXME: currentCost and tuple[0] may be of different types
 	      currentCost=tuple[0];
 	      i=0;
 	    }
@@ -786,7 +827,7 @@ namespace CSPXMLParser
       int nb; // number of tuples read so far
 
       bool isSoft;
-      int currentCost,defaultCost;
+      typename CostRepresentation::Cost currentCost,defaultCost;
 
     };
 
@@ -863,7 +904,8 @@ namespace CSPXMLParser
 				   // formal parameters
 
       // this class may alter parametersInfo
-      friend class XMLParser<Callback,XMLString,XMLLibraryAttributeList>::ParametersTagAction;  
+      friend class XMLParser<Callback,ASTFactory,CostRepresentation,
+	    XMLString,XMLLibraryAttributeList>::ParametersTagAction;  
     };
 
 
@@ -929,7 +971,7 @@ namespace CSPXMLParser
 	  // create a new list and gather all parameters stored on the
 	  // operandStack
 
-	  ASTList *args=new ASTList;
+	  ASTList *args=ASTFactory::mkList();
 
 	  while(!this->parser->operandStack.empty())
 	  {
@@ -1002,7 +1044,7 @@ namespace CSPXMLParser
 
       virtual void beginTag(const AttributeList &attributes)
       {
-	this->parser->operandStack.push_back(new ASTSymb(symb));
+	this->parser->operandStack.push_back(ASTFactory::mkSymb(symb));
 
 	this->parser->stateStack.front().setAllAbridgedAllowed(false);
 	this->parser->stateStack.front().subtagAllowed=false;
@@ -1042,7 +1084,7 @@ namespace CSPXMLParser
 	if (!txt.to(val))
 	  throw runtime_error("invalid integer in <i> element");
 
-	this->parser->operandStack.push_back(new ASTInteger(val));
+	this->parser->operandStack.push_back(ASTFactory::mkInteger(val));
       }
 
       virtual void endTag()
@@ -1085,7 +1127,7 @@ namespace CSPXMLParser
       {
 	int id=this->parser->getSymbolId(name,VariableType);
 
-	this->parser->operandStack.push_back(new ASTVar(name,id));
+	this->parser->operandStack.push_back(ASTFactory::mkVar(name,id));
       }
     };
 
@@ -1115,7 +1157,7 @@ namespace CSPXMLParser
 	// create a new list and gather all items stored on the
 	// operandStack (but keep in mind that the
 
-	ASTList *list=new ASTList;
+	ASTList *list=ASTFactory::mkList();
 
 	while(!this->parser->operandStack.empty())
 	{
@@ -1168,7 +1210,7 @@ namespace CSPXMLParser
 	// create a new dictionary and gather all <key,values> stored
 	// on the operandStack
 
-	ASTDict *dict=new ASTDict;
+	ASTDict *dict=ASTFactory::mkDict();
 
 	deque<AST *> &stack=this->parser->operandStack;
 
@@ -1194,7 +1236,7 @@ namespace CSPXMLParser
 
 	  const vector<string> &keyOrder=*conventionalKeyOrder;
 
-	  int i;
+	  unsigned int i;
 	  for(i=0;i<stack.size()-base && i<keyOrder.size();++i)
 	  {
 	    if (stack[base+i]->getType()!=SYMB_NIL)
@@ -1525,6 +1567,20 @@ namespace CSPXMLParser
 			      "<constraints>");
 
 	this->parser->getCallback()->beginConstraintsSection(nbConstraints);
+
+	if (this->parser->instanceType==WCSP_INSTANCE)
+	{
+	  typename CostRepresentation::Cost maximalCost,initialCost;
+
+	  if (!attributes["maximalCost"].to(maximalCost))
+	    throw runtime_error("attribute maximalCost is required for tag "
+			      "<constraints> in WCSP instances");
+
+	  this->parser->getCallback()->constraintsMaximalCost(maximalCost);
+
+	  if (attributes["initialCost"].to(initialCost))
+	    this->parser->getCallback()->constraintsInitialCost(initialCost);
+	}
       }
 
       virtual void text(const XMLString txt, bool last)
@@ -1570,7 +1626,7 @@ namespace CSPXMLParser
 	if (reference.length()>7 && reference.substr(0,7)=="global:")
 	{
 	  // global constraints are case insensitive
-	  for(int i=0;i<reference.size();++i)
+	  for(unsigned int i=0;i<reference.size();++i)
 	    reference[i]=tolower(reference[i]);
 	}
 
@@ -1596,7 +1652,7 @@ namespace CSPXMLParser
 
 	  tokenizer.nextToken().to(var);
 	  int idVar=this->parser->getSymbolId(var,VariableType);
-	  scopeList.push_back(new ASTVar(var,idVar));
+	  scopeList.push_back(ASTFactory::mkVar(var,idVar));
 
 	  scopeInfo[var].id=idVar;
 	  //scopeInfo[var].type=...; ???
@@ -1653,7 +1709,7 @@ namespace CSPXMLParser
     private:
       ASTList scopeList;
       VariableInfo scopeInfo;
-      int initialOperandStackSize;
+      unsigned int initialOperandStackSize;
     };
 
     class ExtensionTagAction : public TagAction
@@ -1767,9 +1823,6 @@ namespace CSPXMLParser
 
       virtual void text(const XMLString txt, bool last)
       {
-	string var;
-	txt.to(var);
-	new ASTVar(var);
       }
 
       virtual void endTag()
@@ -1794,9 +1847,6 @@ namespace CSPXMLParser
 
       virtual void text(const XMLString txt, bool last)
       {
-	int val;
-	txt.to(val);
-	new ASTInteger(val);
       }
 
       virtual void endTag()
@@ -1816,7 +1866,7 @@ namespace CSPXMLParser
 	this->parser->stateStack.front().setAllAbridgedAllowed(false);
 	this->parser->stateStack.front().subtagAllowed=false;
 
-	this->parser->operandStack.push_back(new ASTBoolean(true));
+	this->parser->operandStack.push_back(ASTFactory::mkBoolean(true));
       }
 
       virtual void text(const XMLString txt, bool last)
@@ -1841,7 +1891,7 @@ namespace CSPXMLParser
 	this->parser->stateStack.front().setAllAbridgedAllowed(false);
 	this->parser->stateStack.front().subtagAllowed=false;
 
-	this->parser->operandStack.push_back(new ASTBoolean(false));
+	this->parser->operandStack.push_back(ASTFactory::mkBoolean(false));
       }
 
       virtual void text(const XMLString txt, bool last)
@@ -1911,28 +1961,13 @@ namespace CSPXMLParser
       //registerTagAction(tagList,new TrueTagAction(this));
       //registerTagAction(tagList,new FalseTagAction(this));
 
-      for(int i=0;i<UndefinedType;++i)
-	nextId[i]=0;
-
-      symbolDict["global:alldifferent"]=SymbolInfo(0,GlobalConstraintType);
-
-
       cumulative_dictOrder.push_back("origin");
       cumulative_dictOrder.push_back("duration");
       cumulative_dictOrder.push_back("end");
       cumulative_dictOrder.push_back("height");
 
-      symbolDict["global:cumulative"]=
-	SymbolInfo(4,GlobalConstraintType,&cumulative_dictOrder);
-
       weightedSum_dictOrder.push_back("coef");
       weightedSum_dictOrder.push_back("var");
-
-      symbolDict["global:weightedsum"]=
-	SymbolInfo(5,GlobalConstraintType,&weightedSum_dictOrder);
-
-      symbolDict["global:element"]=
-	SymbolInfo(6,GlobalConstraintType);
     }
 
     ~XMLParser()
@@ -1982,6 +2017,28 @@ namespace CSPXMLParser
     /**
      * callbacks from the XML parser
      */
+    void startDocument()
+    {
+      clearStacks();
+      symbolDict.clear();
+
+      // register global constraints
+      symbolDict["global:alldifferent"]=SymbolInfo(0,GlobalConstraintType);
+      symbolDict["global:cumulative"]=
+	SymbolInfo(4,GlobalConstraintType,&cumulative_dictOrder);
+      symbolDict["global:weightedsum"]=
+	SymbolInfo(5,GlobalConstraintType,&weightedSum_dictOrder);
+      symbolDict["global:element"]=
+	SymbolInfo(6,GlobalConstraintType);
+
+      for(int i=0;i<UndefinedType;++i)
+	nextId[i]=0;
+    }
+
+    void endDocument()
+    {
+    }
+
     void startElement(XMLString name, const AttributeList &attributes)
     {
       // consume the last tokens before we switch to the next element
@@ -2268,16 +2325,6 @@ namespace CSPXMLParser
 	actionStack.front()->text(chars.substr(beg,end),lastChunk);
     }
 
-    void startDocument()
-    {
-      clearStacks();
-    }
-
-
-    void endDocument()
-    {
-    }
-
   protected:
     void clearStacks()
     {
@@ -2287,7 +2334,7 @@ namespace CSPXMLParser
 
     void clearOperandStack()
     {
-      for(int i=0;i<operandStack.size();++i)
+      for(unsigned int i=0;i<operandStack.size();++i)
 	delete operandStack[i];
 
       operandStack.clear();

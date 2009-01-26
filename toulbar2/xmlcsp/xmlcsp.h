@@ -22,8 +22,8 @@ using namespace CSPXMLParser;
  * A simple demo to illustrate how to use the XML CSP parser 
  */
 
-#define MAXDOMS 500
-#define MAXDOMSIZE 2000
+#define MAXDOMS 100000
+#define MAXDOMSIZE MAX_DOMAIN_SIZE
 #define MAXDOMSIZEZERO 1000
 #define MAX_COST_XML 499999999
 
@@ -59,6 +59,7 @@ private:
   	list<int*> tuples;
   	RelType type;
   	int id;
+  	int defaultCost;
   } relation;
 
   typedef struct {
@@ -87,19 +88,13 @@ private:
   vector<int> nDoms;
   vector< vector<int> > DomsToIndex;
 
-
   int maxDomSize;	  
-  
-
 
   bool firstDomainValue;
   bool firstTuple;
   string constraintReference;
 
-
-
-
-
+  Cost initialLowerBound;
 
 public:
   virtual void beginInstance(const string & name)
@@ -112,6 +107,7 @@ public:
   	 maxDomSize = 0;
   	 
   	 wcsp->updateUb( MAX_COST_XML );  
+  	 initialLowerBound = MIN_COST;
   	 
   	 nvars = 0; 
   }
@@ -166,6 +162,7 @@ public:
 	r->id = idRel;
 	r->arity = arity;
 	r->type = relType; 
+	r->defaultCost = 0;
 	currentR = r;
 	rels[name] = r;
 
@@ -182,6 +179,12 @@ public:
     }
 
     firstTuple=true;
+  }
+
+ virtual void relationDefaultCost(const string & name, int idRel,
+                                   int defaultCost) 
+ {
+  currentR->defaultCost = defaultCost;
   }
 
 
@@ -262,7 +265,15 @@ public:
      constraintReference=reference;
   }
 
+  virtual void constraintsMaximalCost(int maximalCost)
+  {
+  	 wcsp->updateUb( maximalCost );  
+  }
 
+  virtual void constraintsInitialCost(int initialCost)
+  {
+  	initialLowerBound = initialCost;
+  }
 
   virtual void constraintParameters(const ASTList &args)
   {
@@ -365,7 +376,7 @@ void createWCSP()
     unsigned int a;
 	unsigned int b;
 	unsigned int c;
-	Cost inclowerbound = MIN_COST;
+	Cost inclowerbound = initialLowerBound;
     vector<TemporaryUnaryConstraint> unaryconstrs;
     TemporaryUnaryConstraint unaryconstr;
     int indexUnary = -1;
@@ -407,16 +418,18 @@ void createWCSP()
 			r = it->second;  				
 			int ntuples = r->tuples.size();
 			Cost defval;
-			Cost cost;
   	
 			if(r->type ==  REL_SUPPORT) {
 #ifdef MAXCSP
-			  defval =  1;
+			  defval =  UNIT_COST;
 #else
 			  defval =  MAX_COST_XML;
 #endif
+			} else if(r->type ==  REL_SOFT) {
+				defval = r->defaultCost;
+			} else {
+				defval = MIN_COST;
 			}
-			else defval = 0;
 
 			int ctrIndex = -1;
 			Constraint* ctr = NULL; 
@@ -430,15 +443,19 @@ void createWCSP()
 				  int pos = scopeOrder[ scopeIndex[i] ];
 				  values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ]; 
 				}			
-				if(r->type ==  REL_SUPPORT)  ctr->setTuple( values, MIN_COST, scopeVar);
-				else if(r->type ==  REL_CONFLICT) {
+				if(r->type ==  REL_SUPPORT)  {
+					ctr->setTuple( values, MIN_COST, scopeVar);
+				} else if(r->type ==  REL_CONFLICT) {
 #ifdef MAXCSP
-				  ctr->setTuple( values, 1, scopeVar);
+				  ctr->setTuple( values, UNIT_COST, scopeVar);
 #else
 				  ctr->setTuple( values, MAX_COST_XML, scopeVar);
 #endif
+				} else if(r->type ==  REL_SOFT) {
+					ctr->setTuple( values, t[arity], scopeVar);
+				} else {
+					ctr->setTuple( values, MAX_COST_XML, scopeVar);
 				}
-				else ctr->addtoTuple( values, t[arity], scopeVar);
 				
 				++itl;
 			  }
@@ -467,14 +484,19 @@ void createWCSP()
 				  values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ]; 
 				}
 				int pos = values[0] * y->getDomainInitSize() * z->getDomainInitSize() + values[1] * z->getDomainInitSize() + values[2];
-				if(r->type ==  REL_SUPPORT) 	costs[pos] = MIN_COST;
-				else if(r->type ==  REL_CONFLICT) {
+				if(r->type ==  REL_SUPPORT) {
+					costs[pos] = MIN_COST;
+				} else if(r->type ==  REL_CONFLICT) {
 #ifdef MAXCSP
-				  costs[pos] = 1;
+					costs[pos] = UNIT_COST;
 #else
-				  costs[pos] = MAX_COST_XML;
+					costs[pos] = MAX_COST_XML;
 #endif
-				} else costs[pos] = t[arity];
+				} else if(r->type ==  REL_SOFT) {
+					costs[pos] = t[arity];
+				} else {
+					costs[pos] = MAX_COST_XML;
+				}
 				++itl;
 			  }
 			  if((defval != MIN_COST) || (ntuples > 0)) ctrIndex = wcsp->postTernaryConstraint(i,j,k,costs);
@@ -499,14 +521,19 @@ void createWCSP()
 				  values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ]; 
 				}
 				int pos = values[0] * y->getDomainInitSize() + values[1];
-				if(r->type ==  REL_SUPPORT) 	costs[pos] = MIN_COST;
-				else if(r->type ==  REL_CONFLICT) {
+				if(r->type ==  REL_SUPPORT) {
+					costs[pos] = MIN_COST;
+				} else if(r->type ==  REL_CONFLICT) {
 #ifdef MAXCSP
-				  costs[pos] = 1;
+				  	costs[pos] = UNIT_COST;
 #else
-				  costs[pos] = MAX_COST_XML;
+				  	costs[pos] = MAX_COST_XML;
 #endif
-				} else costs[pos] = t[arity];
+				} else if(r->type ==  REL_SOFT) {
+					costs[pos] = t[arity];
+				} else {
+					costs[pos] = MAX_COST_XML;
+				}
 				++itl;
 			  }
 			  if((defval != MIN_COST) || (ntuples > 0)) ctrIndex = wcsp->postBinaryConstraint(i,j,costs);			    	
@@ -531,15 +558,19 @@ void createWCSP()
 					int pos = scopeOrder[ scopeIndex[i] ];
 					values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ]; 
 				  }
-				  if(r->type ==  REL_SUPPORT) 	  unaryconstr.costs[values[0]] = MIN_COST;
-				  else if(r->type ==  REL_CONFLICT) {
+				  if(r->type ==  REL_SUPPORT) {
+				  	unaryconstrs[indexUnary].costs[values[0]] = MIN_COST;
+				  } else if(r->type ==  REL_CONFLICT) {
 #ifdef MAXCSP
-					unaryconstr.costs[values[0]] = 1;						  
+					unaryconstrs[indexUnary].costs[values[0]] = UNIT_COST;						  
 #else
-					unaryconstr.costs[values[0]] = MAX_COST_XML;
+					unaryconstrs[indexUnary].costs[values[0]] = MAX_COST_XML;
 #endif
+				  } else if(r->type ==  REL_SOFT) {
+					unaryconstrs[indexUnary].costs[values[0]] = t[arity];
+				  } else {
+				  	unaryconstrs[indexUnary].costs[values[0]] = MAX_COST_XML;
 				  }
-				  else unaryconstrs[indexUnary].costs[values[0]] = t[arity];
 				  ++itl;
 				}
 			  }
@@ -548,41 +579,6 @@ void createWCSP()
 			} 
 			    
 			if(ctrIndex >=0) ctr = wcsp->getCtr(ctrIndex);
-					
-/*  			list<int*>::iterator  itl = r->tuples.begin();  */
-/*  			while(itl != r->tuples.end()) { */
-/*  			  int* t = *itl; */
-/*  			  for(i=0;i<r->arity;i++) {  */
-/*  				int pos = scopeOrder[ scopeIndex[i] ]; */
-/*  				values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ];  */
-/*  			  } */
-
-/*  			  if(arity > 3) {					 */
-/*  				if(r->type ==  REL_SUPPORT) 	  ctr->setTuple( values, MIN_COST, scopeVar); */
-/*  				else if(r->type ==  REL_CONFLICT) { */
-/*  #ifdef MAXCSP */
-/*  				  ctr->setTuple( values, 1, scopeVar); */
-/*  #else */
-/*  				  ctr->setTuple( values, MAX_COST_XML, scopeVar); */
-/*  #endif */
-/*  				} */
-/*  				else 							  ctr->addtoTuple( values, t[arity], scopeVar); */
-/*  			  } */
-/*  			  else if(arity == 1) { */
-/*  				if(r->type ==  REL_SUPPORT) 	  unaryconstr.costs[values[0]] = MIN_COST; */
-/*  				else if(r->type ==  REL_CONFLICT) { */
-/*  #ifdef MAXCSP */
-/*  				  unaryconstr.costs[values[0]] = 1;						   */
-/*  #else */
-/*  				  unaryconstr.costs[values[0]] = MAX_COST_XML; */
-/*  #endif */
-/*  				} */
-/*  				else unaryconstrs[indexUnary].costs[values[0]] = t[arity]; */
-/*  			  } */
-/*  			  ++itl; */
-/*  			} */
-
-
 			if ( ctr && ToulBar2::verbose >= 4) cout << *ctr << endl;	  			
 		  } 
 		  delete [] scopeVar;
@@ -606,7 +602,7 @@ void createWCSP()
 	wcsp->sortVariables();
 	wcsp->sortConstraints();
 	// apply basic initial propagation AFTER complete network loading
-	wcsp->increaseLb(wcsp->getLb() + inclowerbound);
+	wcsp->increaseLb(inclowerbound);
     
 	for (unsigned int u=0; u<unaryconstrs.size(); u++) {
 	  for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
@@ -621,6 +617,8 @@ void createWCSP()
     rels.clear();
     preds.clear();
     ctrs.clear();
+
+    wcsp->histogram();
 
   } 
 

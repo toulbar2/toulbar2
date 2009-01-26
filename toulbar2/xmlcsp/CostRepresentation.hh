@@ -22,40 +22,48 @@
  * THE SOFTWARE.
  *=============================================================================
  */
-#ifndef _XMLParser_constants_h_
-#define _XMLParser_constants_h_
+#ifndef _CostRepresentation_h_
+#define _CostRepresentation_h_
 
-/*
- * declarations shared by C and C++
- */
+#include <limits>
 
-/* different types of instance */
-typedef enum {CSP_INSTANCE,WCSP_INSTANCE,QCSP_INSTANCE} InstanceType;
+namespace CSPXMLParser
+{
+  using namespace std;
 
-/* different definitions of relations */
-typedef enum {REL_CONFLICT,REL_SUPPORT,REL_SOFT} RelType;
-
-/* different ways to represent an expression */
-typedef enum {TREE,PREFIX,INFIX_C,POSTFIX,MATHML} Syntax;
-
-/* different type of nodes in an AST (abstract syntax tree) */
-typedef enum 
+  class DefaultCostRepresentation
   {
-    VAR,
-    /* constants */
-    CST_BOOL,CST_INT,
-    /* data structures */
-    LIST,DICT,
-    /* operators */
-    F_NEG,F_ABS,F_ADD,F_SUB,F_MUL,F_DIV,F_MOD,F_POW,
-    F_IF,F_MIN,F_MAX,
-    F_EQ,F_NE,F_GE,F_GT,F_LE,F_LT,
-    F_NOT,F_AND,F_OR,F_XOR,F_IFF,
-    /* symbolic constants */
-    SYMB_NIL,SYMB_EQ,SYMB_NE,SYMB_GE,SYMB_GT,SYMB_LE,SYMB_LT,
+  public:
+    // type which holds a cost
+    typedef int Cost;
 
-    /* for internal use by the parser */
-    _DICTKEY
-  } NodeType;
+    static void assignInfinity(Cost &c)
+    {
+      c=numeric_limits<Cost>::max(); // max. value
+    }
 
+    static bool isInfinity(const Cost &c)
+    {
+      return c==numeric_limits<Cost>::max();
+    }
+  };
+
+  class AltCostRepresentation
+  {
+  public:
+    // type which holds a cost
+    typedef int Cost;
+
+    static void assignInfinity(Cost &c)
+    {
+      c=-1; // conventional value
+    }
+
+    static bool isInfinity(const Cost &c)
+    {
+      return c<0;
+    }
+  };
+
+} // namespace
 #endif

@@ -46,6 +46,7 @@ namespace CSPXMLParser
 {
   using namespace std;
 
+  template<class ASTFactory>
   class ExpressionParser
   {
   private:
@@ -115,12 +116,12 @@ namespace CSPXMLParser
 
     AST *infixParser(const string &expr)
     {
-      return new ASTVar("infix parser unimplemented");
+      return ASTFactory::mkVar("infix parser unimplemented");
     }
 
     AST *postfixParser(const string &expr)
     {
-      return new ASTVar("postfix parser unimplemented");
+      return ASTFactory::mkVar("postfix parser unimplemented");
     }
 
   private:
@@ -168,15 +169,15 @@ namespace CSPXMLParser
 	if (isalpha(f[0]))
 	{
 	  if (f=="true")
-	    node=new ASTBoolean(true);
+	    node=ASTFactory::mkBoolean(true);
 	  else
 	    if (f=="false")
-	      node=new ASTBoolean(false);
+	      node=ASTFactory::mkBoolean(false);
 	    else
 	    {
 	      // a variable
 	      if (varInfo==NULL)
-		node=new ASTVar(f);
+		node=ASTFactory::mkVar(f);
 	      else
 	      {
 		VariableInfo::const_iterator it=varInfo->find(f);
@@ -184,14 +185,14 @@ namespace CSPXMLParser
 		if(it==varInfo->end())
 		  throw runtime_error("undefined variable found in expression");
 
-		node=new ASTVar(f,(*it).second.id);
+		node=ASTFactory::mkVar(f,(*it).second.id);
 	      }
 	    }
 	}
 	else
 	{
 	  // an int
-	  node=new ASTInteger(f);
+	  node=ASTFactory::mkInteger(f);
 	}
       }
 
