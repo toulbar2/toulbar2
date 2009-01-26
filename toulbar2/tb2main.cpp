@@ -25,7 +25,7 @@ void initCosts(Cost c)
 bool localSearch(char *filename, Cost *upperbound)
 {
     string keyword;
-    char *fich = "resincop";
+    const char *fich = "resincop";
     char line[1024];
     Cost tmpUB=MIN_COST;
     int varIndex;

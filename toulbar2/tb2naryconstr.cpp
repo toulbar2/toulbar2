@@ -195,7 +195,10 @@ void NaryConstraint::projectNary()
 			t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;					
 			Cost curcost = eval(t);
 			xy->setcost(xval,yval,curcost);
-			if (ToulBar2::verbose >= 5) Cout << t << " " << curcost << endl;
+			if (ToulBar2::verbose >= 5) {
+				Cout << t;
+				cout << " " << curcost << endl;
+			}
 	    }}
 		projectNaryBinary(xy);
 	} 
@@ -911,7 +914,7 @@ void NaryConstraintMap::preprojectall2()
 }	
 
 
-void NaryConstraintMap::print(Ostream& os)
+void NaryConstraintMap::print(ostream& os)
 {
 	TUPLES& f = *pf;
 	os << endl << this << " f(";
@@ -947,14 +950,19 @@ void NaryConstraintMap::print(Ostream& os)
 			String t = it->first;
 			Cost c =  it->second;		
 			it++;
-			os << "<" << t << "," << c << ">";
+			os << "<";
+        	for(unsigned int i=0;i<t.size();i++) {
+        		os << t[i] - CHAR_FIRST;
+        		if (i<t.size()-1) os << " ";
+        	}
+			os << "," << c << ">";
 			if(it != f.end()) os << " "; 
 		} 
 		os << "} " << endl;
 	}
 }
 
-void NaryConstraintMap::dump(Ostream& os)
+void NaryConstraintMap::dump(ostream& os)
 {
 	int i; 
 	TUPLES& f = *pf;
@@ -1255,7 +1263,7 @@ Cost NaryConstrie::eval( String& s ) {
 }*/
 
 
-void NaryConstrie::print(Ostream& os) {
+void NaryConstrie::print(ostream& os) {
 	int unassigned_ = 0;
 	long totaltuples = 1;
 	os << endl << this << " f(";

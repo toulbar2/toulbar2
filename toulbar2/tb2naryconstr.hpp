@@ -39,7 +39,7 @@ class NaryConstraint : public AbstractNaryConstraint
 	
 	virtual void setTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
 	{
-		Char* buf = new Char [arity_];
+		Char* buf = new Char [arity_ + 1];
 		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
 		buf[arity_] = '\0';
 		String str = String(buf); 
@@ -49,7 +49,7 @@ class NaryConstraint : public AbstractNaryConstraint
 
 	virtual void addtoTuple( int* tin, Cost c, EnumeratedVariable** scope_in ) 
 	{
-		Char* buf = new Char [arity_];
+		Char* buf = new Char [arity_ + 1];
 		for(int i=0;i<arity_;i++) buf[i] = tin[i]+CHAR_FIRST; 
 		buf[arity_] = '\0';
 		String str = String(buf); 
@@ -85,7 +85,7 @@ class NaryConstraint : public AbstractNaryConstraint
     void starrule(String& t, Cost minc);	    
     void projectFromZero(int index);
 
-    virtual void print(Ostream& os) {}
+    virtual void print(ostream& os) {}
 };
 
 
@@ -134,8 +134,8 @@ public:
 	void preprojectall2();
 
 	void fillRandom();
-    void print(Ostream& os);
-    void dump(Ostream& os);
+    void print(ostream& os);
+    void dump(ostream& os);
     
 };
 
@@ -204,7 +204,7 @@ class NaryConstrie : public NaryConstraint
 
     Cost eval( String& s );
 
-    void print(Ostream& os);
+    void print(ostream& os);
 
 };
 

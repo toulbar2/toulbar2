@@ -88,7 +88,7 @@ class Separator : public AbstractNaryConstraint
     void   decrease(int index) {}
     void   remove(int index) {}
     
-    void   print(Ostream& os);
+    void   print(ostream& os);
 };
 
 
@@ -193,12 +193,12 @@ class Cluster
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
 
 	  void print();	  
-	  void printStats() { if(!sep) return; sep->print(Cout); }
+	  void printStats() { if(!sep) return; sep->print(cout); }
 
 	  void printStatsRec() { 
 	  		TClusters::iterator it = beginEdges();
 			while(it != endEdges()) {
-				(*it)->sep->print(Cout);
+				(*it)->sep->print(cout);
 				(*it)->printStatsRec();
 				++it;
 			}

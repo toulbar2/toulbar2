@@ -157,7 +157,9 @@ void Separator::set( Cost c, bool opt ) {
 	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
 	//assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
     if (ToulBar2::debug >= 2) {
-	  Cout << "<" << cluster->getId() << "," << t << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
+	  cout << "<" << cluster->getId() << ",";
+	  Cout << t;
+	  cout << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
 	}
 	nogoods[t] = TPairNG(MAX(MIN_COST, c + deltares), opt); 
 }    
@@ -246,7 +248,11 @@ bool Separator::solGet(TAssign& a, String& sol)
 		p = itsol->second;
 		sol = p.second;
 
-		if (ToulBar2::verbose >= 1) Cout << "asking  solution  sep:" << t << "  cost: " << p.first << endl; 
+		if (ToulBar2::verbose >= 1) {
+			cout << "asking  solution  sep:";
+			Cout << t;
+			cout << "  cost: " << p.first << endl;
+		}
 
 		return true;
 	}
@@ -291,7 +297,10 @@ void Separator::solRec(Cost ub)
 
 	solutions[t] = TPairSol(ub,s);
 	
-	if (ToulBar2::verbose >= 1) Cout << "recording solution  " << " cost: " << ub << " sol: " << s <<  " sep: " << t << endl; 
+	if (ToulBar2::verbose >= 1) {
+		cout << "recording solution  " << " cost: " << ub;
+		Cout << " sol: " << s <<  " sep: " << t << endl; 
+	}
 }
 
 void Separator::resetOpt() 
@@ -303,7 +312,7 @@ void Separator::resetOpt()
 	}
 }
 
-void Separator::print(Ostream& os) {
+void Separator::print(ostream& os) {
 {
 	os << this << " nogoods(";
 	Double totaltuples = 1;
@@ -319,7 +328,12 @@ void Separator::print(Ostream& os) {
 		TNoGoods::iterator  it = nogoods.begin();
 		while(it != nogoods.end()) {
 			TPairNG p = it->second;
-			os << "<" << it->first << "," << p.first << ">";
+			os << "<";
+        	for(unsigned int i=0;i<it->first.size();i++) {
+        		os << it->first[i] - CHAR_FIRST;
+        		if (i<it->first.size()-1) os << " ";
+        	}
+			os << "," << p.first << ">";
 			if(it != nogoods.end()) os << " "; 
 			it++;
 		} 
