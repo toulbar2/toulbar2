@@ -30,4 +30,5 @@
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 ALL (echo ""; id -un; echo %{sVv}; date; cat) | tee -a $CVSROOT/CVSROOT/commitlog > $CVSROOT/commit.mail
-DEFAULT /usr/lib/mulcyber/bin/emails.pl toulbar2  $CVSROOT/commit.mail
+# DEFAULT /usr/lib/mulcyber/bin/emails.pl toulbar2  $CVSROOT/commit.mail
+
