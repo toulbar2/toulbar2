@@ -3,6 +3,11 @@
  * 
  */
  
+// these includes are needed if compiled on new g++ versions (>4.0?)
+#include <climits>
+#include <cstdlib>
+#include <cstring>
+
 #include <ilsolver/ilosolver.h>
 #include <ilsolver/ilctrace.h>
 #include "toulbar2.hpp"

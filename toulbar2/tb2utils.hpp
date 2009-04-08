@@ -6,6 +6,11 @@
 #ifndef TB2UTILS_HPP_
 #define TB2UTILS_HPP_
 
+// these includes are needed if compiled on new g++ versions (>4.0?)
+#include <climits>
+#include <cstdlib>
+#include <cstring>
+
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
 #else
@@ -14,11 +19,6 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-
-// these includes are needed if compiled on new g++ versions (>4.0?)
-#include <climits>
-#include <cstdlib>
-#include <cstring>
 #endif
 
 #include <vector>
