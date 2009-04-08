@@ -22,25 +22,31 @@ OBJS = $(SRCS:.cpp=.o)
 endif
 
 LIBSRCS1 = $(SRCS:tb2main.cpp=)
-LIBSRCS = $(LIBSRCS1:tb2solver.cpp=)
+LIBSRCS2 = $(LIBSRCS1:tb2solver.cpp=)
+LIBSRCS = $(LIBSRCS2:tb2btd.cpp=)
 LIBOBJS = $(LIBSRCS:.cpp=.o)
 
 CC = g++
 ICC = icc
 
 # Library compatible with Ilog Solver:
-# In order to link ToulBar2 with Ilog Solver, uncomment the following two lines starting with ILOGFLAGS and ILOGLIBS
+# In order to link ToulBar2 with Ilog Solver, uncomment the following two lines starting with ILOGFLAGS and ILOGLIBS, and uncomment #define INT_COST (also adding comment to #define LONGLONG_COST) in tb2types.hpp
 # Then recompile libtb2.so (make clean;make libtb2.so) and finaly compile iloglue (make iloglue)
-# Usage: iloglue problem.wcsp [verbosity]
+# Usage: iloglue 16wqueens.wcsp [verbosity level]
+# Ilog Solver 6.0
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/Ilog/solver60/include -I/usr/local/Ilog/concert20/include
 #ILOGLIBS = -L/usr/local/Ilog/solver60/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -L/usr/local/Ilog/concert20/lib/i86_linux2_glibc2.3_gcc3.2/static_pic -lsolverfloat -lsolver -lconcert
+# Ilog Solver 6.5
+# (warning: compile libtb2.so and iloglue with -O optimization and not -O3)
+#ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/ILOG/solver65/include -I/usr/local/ILOG/concert25/include
+#ILOGLIBS = -L/usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3.4/static_pic -L/usr/local/ILOG/concert25/lib/x86-64_rhel4.0_3.4/static_pic -lsolverfloat -lsolver -lconcert
 
 CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST) $(XMLI)
 # -g3 -ftrapv -ansi -pedantic
 # -DNARYCHAR  # use this option to print nary constraints (including separators) correctly
 
 OFLAGS = -O3 -DNDEBUG
-# -O3 -DNDEBUG
+# -O -DNDEBUG
 # -O2 -DNDEBUG
 
 ICCFLAGS = 
