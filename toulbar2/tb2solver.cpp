@@ -678,7 +678,10 @@ bool Solver::solve()
         wcsp->preprocessing();            // preprocessing after initial propagation
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
 
-        if (ToulBar2::singletonConsistency) singletonConsistency();
+        if (ToulBar2::singletonConsistency) {
+		  singletonConsistency();
+		  wcsp->propagate();
+		}
 
 	    if ( ToulBar2::varOrder ) {
 	    	wcsp->buildTreeDecomposition();
