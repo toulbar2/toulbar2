@@ -94,11 +94,19 @@ public:
     }
 
     virtual Cost getMinCost() {
-	    Cost minc = MAX_COST;
+// 	    Cost minc = MAX_COST;
+//         String tuple;
+//         Cost cost;
+//         firstlex();
+//         while (nextlex(tuple,cost)) {
+//             if (cost < minc) minc = cost;
+//         }
+//         return minc;
+	    Cost minc = getDefCost();
         String tuple;
         Cost cost;
-        firstlex();
-        while (nextlex(tuple,cost)) {
+        first();
+        while (next(tuple,cost)) {
             if (cost < minc) minc = cost;
         }
         return minc;
