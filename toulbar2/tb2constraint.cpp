@@ -82,3 +82,30 @@ void Constraint::assignCluster() {
 	cluster = lowest->getId();
 }
 
+Cost Constraint::getMinCost()
+{
+// 	    Cost minc = MAX_COST;
+//         String tuple;
+//         Cost cost;
+//         firstlex();
+//         while (nextlex(tuple,cost)) {
+//             if (cost < minc) minc = cost;
+//         }
+//         return minc;
+
+  unsigned long long cartesianProduct = 1;
+  for (int i=0; i<arity(); i++) {
+	cartesianProduct *= getVar(i)->getDomainSize();
+  }
+  Cost minc = MAX_COST;
+  String tuple;
+  Cost cost;
+  unsigned long long nbtuples = 0;
+  first();
+  while (next(tuple,cost)) {
+	nbtuples++;
+	if (cost < minc) minc = cost;
+  }
+  if (nbtuples < cartesianProduct && getDefCost() < minc) minc = getDefCost();
+  return minc;
+}

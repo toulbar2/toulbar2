@@ -93,24 +93,7 @@ public:
         return true;
     }
 
-    virtual Cost getMinCost() {
-// 	    Cost minc = MAX_COST;
-//         String tuple;
-//         Cost cost;
-//         firstlex();
-//         while (nextlex(tuple,cost)) {
-//             if (cost < minc) minc = cost;
-//         }
-//         return minc;
-	    Cost minc = getDefCost();
-        String tuple;
-        Cost cost;
-        first();
-        while (next(tuple,cost)) {
-            if (cost < minc) minc = cost;
-        }
-        return minc;
-    }
+    virtual Cost getMinCost();
 	
 	void sumScopeIncluded( Constraint* ctr );
 	
