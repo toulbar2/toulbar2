@@ -41,12 +41,12 @@ ICC = icc
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/ILOG/solver65/include -I/usr/local/ILOG/concert25/include
 #ILOGLIBS = -L/usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3.4/static_pic -L/usr/local/ILOG/concert25/lib/x86-64_rhel4.0_3.4/static_pic -lsolverfloat -lsolver -lconcert
 
-CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY $(BOOST) $(XMLI)
-# -g3 -ftrapv -ansi -pedantic
+CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY -DNARYCHAR $(BOOST) $(XMLI)
+# -O1 -g3 -ftrapv -ansi -pedantic
 # -DNARYCHAR  # use this option to print nary constraints (including separators) correctly
 
 OFLAGS = -O3 -DNDEBUG
-# -O -DNDEBUG
+# -O1 -DNDEBUG
 # -O2 -DNDEBUG
 
 ICCFLAGS = 
