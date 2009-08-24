@@ -211,20 +211,22 @@ void EnumeratedVariable::propagateNC()
 bool EnumeratedVariable::verifyNC()
 {
     bool supported = true;
-    Cost minCost = MIN_COST;
+    Cost minCost = MAX_COST;
+    Value minCostValue = getSup()+1;
     for (iterator iter = begin(); iter != end(); ++iter) {
         Cost cost = getCost(*iter);
         if (CUT(cost + wcsp->getLb(), wcsp->getUb())) {
             cout << *this << " not NC!" << endl;
             return false;
         }
+		if (cost < minCost) minCostValue = *iter;
         GLB(&minCost, cost);
     }
     if (minCost > MIN_COST) {
         cout << *this << " not NC*!" << endl;
         supported = false;
     }
-    if (cannotbe(support) || (getCost(support)>MIN_COST && !SUPPORTTEST(getCost(support)) )) {
+    if (cannotbe(support) || (getCost(support)>MIN_COST && !SUPPORTTEST(getCost(support)))) { // || minCostValue != support) {
         cout << *this << " has an unvalid NC support!" << endl;
         supported = false;
     }
@@ -717,8 +719,8 @@ void EnumeratedVariable::eliminate()
 void EnumeratedVariable::permuteDomain(int nperm)
 {
 	while(nperm) {
-		Value a = rand() % getDomainInitSize();
-		Value b = rand() % getDomainInitSize();
+		Value a = myrand() % getDomainInitSize();
+		Value b = myrand() % getDomainInitSize();
 		if(canbe(a) && canbe(b)) {
 		 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
 		 	   Constraint* ctr = (*iter).constr;	
