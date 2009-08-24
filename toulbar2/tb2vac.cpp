@@ -131,7 +131,7 @@ void VACExtension::reset()
 {
   VACVariable* x;
   TreeDecomposition* td = wcsp->getTreeDec();
-  clear();	
+  clear(); 
   while (!queueP->empty()) queueP->pop();
   while (!queueR->empty()) queueR->pop();
   int bucket = cost2log2glb(ToulBar2::costThreshold);
@@ -174,7 +174,7 @@ bool VACExtension::propagate() {
   		return false; 
   	}
   }
-  
+
   Cost ub = wcsp->getUb();
   Cost lb = wcsp->getLb();
   minlambda = ub - lb;
@@ -185,25 +185,64 @@ bool VACExtension::propagate() {
   
   breakCycles = 0;	
  
+  vector< pair<VACVariable *, Value> > acSupport;
+  bool acSupportOK = false;
+
   while((!util || isvac) && itThreshold != MIN_COST) {
   	  nbIterations++;
 
-	  reset();  
+	  reset();
 	  wcsp->getStore()->store();
 	  enforcePass1();
-	  wcsp->getStore()->restore();
-
 	  isvac = isVAC();
+	  if (ToulBar2::vacValueHeuristic && isvac) {
+		acSupportOK = true;
+		acSupport.clear();
+		// fill SeekSupport with ALL variables if in preprocessing (i.e. before the search)
+		if (wcsp->getStore()->getDepth() == 0) {
+		  for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+			((VACVariable*) wcsp->getVar(i))->queueSeekSupport();
+		  }
+		}
+		// remember first arc consistent domain values in Bool(P) before restoring domains 
+		while (!SeekSupport.empty()) {
+		  VACVariable *x = (VACVariable*) SeekSupport.pop();
+		  pair<VACVariable *, Value> p;
+		  p.first = x;
+		  p.second = x->getSup() + 1;
+		  for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+			if (x->getCost(*iterX) == MIN_COST) {
+			  p.second = *iterX;
+			  break;
+			}
+		  }
+		  if (x->canbe(p.second)) acSupport.push_back(p);
+		}
+	  }
+	  wcsp->getStore()->restore();
 	  
 	  if(!isvac) {
 		    enforcePass2();
-		    if (ToulBar2::verbose > 0) cout << "VAC Lb: " << lb << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda <<  "      itThreshold: " << itThreshold  << endl;		      
+		    if (ToulBar2::verbose > 0) cout << "VAC Lb: " << wcsp->getLb() << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda <<  "      itThreshold: " << itThreshold  << endl;		      
 		    util = enforcePass3();
 	  }
 	  else {
 	  	nextScaleCost();
 	  	//if(nearIncVar) cout << "var: " << nearIncVar->wcspIndex << "  at Cost: " << atThreshold << endl;	  	
 	  }
+  }
+  if (ToulBar2::vacValueHeuristic && acSupportOK) {
+	// update current unary support if possible && needed
+	for (vector< pair<VACVariable *, Value> >::iterator iter=acSupport.begin(); iter != acSupport.end(); ++iter) {
+	  VACVariable *x = iter->first;
+	  if (x->canbe(iter->second)) {
+		assert(x->getCost(iter->second) == MIN_COST);
+		if (ToulBar2::verbose > 0 && x->getSupport() != iter->second) cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << " to " << iter->second << endl;
+		x->setSupport(iter->second);
+	  } else {
+		if (ToulBar2::verbose > 0) cout << "WARNING: BAD AC SUPPORT " << iter->second << " FOR VARIABLE " << *x << endl;
+	  }
+	}
   }
 
   updateStat(wcsp->getLb() - lb);
@@ -231,6 +270,7 @@ bool VACExtension::enforcePass1 (VACVariable *xj, VACConstraint *cij) {
          xi->setKiller(v,xj->wcspIndex);
          queueP->push(pair<int, int>(xi->wcspIndex, v));
          xi->queueVAC();
+         if (ToulBar2::vacValueHeuristic) xi->queueSeekSupport();
          if(wipeout) {
 	        inconsistentVariable = xi->wcspIndex;
 	        return true;
@@ -556,12 +596,18 @@ bool VACExtension::isNull (Cost c) const {
 
 void VACExtension::clear () {
   while (!VAC.empty()) VAC.pop();
+  if (ToulBar2::vacValueHeuristic) while (!SeekSupport.empty()) SeekSupport.pop();
 }
 
 
 void VACExtension::queueVAC(DLink<VariableWithTimeStamp> *link) {
   assert(ToulBar2::vac);
   VAC.push(link, wcsp->getNbNodes());
+}
+
+void VACExtension::queueSeekSupport(DLink<VariableWithTimeStamp> *link) {
+  assert(ToulBar2::vac);
+  SeekSupport.push(link, wcsp->getNbNodes());
 }
 
 void VACExtension::queueVAC2(DLink<Variable *> *link) {

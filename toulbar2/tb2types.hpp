@@ -174,6 +174,7 @@ public:
     static Cost relaxThreshold;
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;
+    static bool vacValueHeuristic;
     static BEP *bep;
     static LcLevelType LcLevel;
     

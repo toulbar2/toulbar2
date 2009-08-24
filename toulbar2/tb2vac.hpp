@@ -26,13 +26,14 @@ private:
 
 
   WCSP *wcsp;
-  Queue VAC;                                // non backtrackable list; the queue AC2001 used inside VAC
-  BTQueue VAC2;                             // backtrackable list; updated during AC and EDAC
-  Long nbIterations;						// updated at each pass, we will use it as timeStamp
-  int inconsistentVariable;				    // is used also to check after enforcePass1() if the network is VAC
+  Queue VAC;                                 // non backtrackable list; the queue AC2001 used inside VAC
+  Queue SeekSupport;                         // non backtrackable list; collect all variables with a value removed due to binary constraints during pass 1
+  BTQueue VAC2;                              // backtrackable list; updated during AC and EDAC
+  Long nbIterations;						 // updated at each pass, we will use it as timeStamp
+  int inconsistentVariable;				     // is used also to check after enforcePass1() if the network is VAC
 
 
-  Cost itThreshold;					        // threshold iterative descent 
+  Cost itThreshold;					         // threshold iterative descent 
   int breakCycles; 
   tScale scaleCost;
   list<Cost> scaleVAC;
@@ -76,6 +77,7 @@ public:
 
   void clear();						                  // empty VAC queue 
   void queueVAC(DLink<VariableWithTimeStamp> *link);  
+  void queueSeekSupport(DLink<VariableWithTimeStamp> *link);  
   void queueVAC2(DLink<Variable *> *link);
   void dequeueVAC2(DLink<Variable *> *link);
   

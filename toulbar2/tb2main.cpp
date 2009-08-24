@@ -171,6 +171,7 @@ int main(int argc, char **argv)
         cerr << "   P[integer] : threshold cost value for VAC during the preprocessing phase" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
         cerr << "   S : singleton consistency on preprocessing" << endl << endl;
+        cerr << "   V : VAC-based value ordering heuristic" << endl << endl;
 
         cerr << "   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition (default value: 0)" << endl;
 		cerr << "   O[filename] : read variable elimination order from a file (if not specified, then use variable order in which variables appear in the problem file)" << endl;
@@ -298,6 +299,7 @@ int main(int argc, char **argv)
         	if(co > MIN_COST) ToulBar2::costMultiplier = co;
         }
         if (strchr(argv[i],'S')) ToulBar2::singletonConsistency = true;      
+        if (strchr(argv[i],'V')) ToulBar2::vacValueHeuristic = true;      
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;

@@ -47,6 +47,7 @@ int ToulBar2::minsumDiffusion = 0;
 
 bool ToulBar2::weightedDegree = false;
 bool ToulBar2::singletonConsistency = false;
+bool ToulBar2::vacValueHeuristic = false;
 
 externalevent ToulBar2::setvalue = NULL;
 externalevent ToulBar2::setmin = NULL;

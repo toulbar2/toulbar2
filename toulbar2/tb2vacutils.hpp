@@ -30,6 +30,7 @@ private:
 
 
   DLink<VariableWithTimeStamp> linkVACQueue;
+  DLink<VariableWithTimeStamp> linkSeekSupport;
   DLink<Variable *> 		   linkVAC2Queue;
 
   void init ();
@@ -90,6 +91,7 @@ public:
    
    
   void queueVAC();
+  void queueSeekSupport();
   void queueVAC2();
   void dequeueVAC2();
   

@@ -32,6 +32,8 @@ void VACVariable::init () {
   }
   linkVACQueue.content.var = this;
   linkVACQueue.content.timeStamp = -1;
+  linkSeekSupport.content.var = this;
+  linkSeekSupport.content.timeStamp = -1;
   linkVAC2Queue.content = this;
 }
 
@@ -153,6 +155,10 @@ bool VACVariable::isNull (Cost c)
 
 void VACVariable::queueVAC() {
   wcsp->vac->queueVAC(&linkVACQueue);
+}
+
+void VACVariable::queueSeekSupport() {
+  wcsp->vac->queueSeekSupport(&linkSeekSupport);
 }
 
 void VACVariable::queueVAC2() {
