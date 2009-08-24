@@ -101,14 +101,14 @@ void naryRandom::generateSubModularBinCtr( int i, int j, Cost costMin, Cost cost
 
     // row generation
 	for (a = 0; a < mx; a++) {
-		if(rand() % 2) {
+		if(myrand() % 2) {
 			Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
 		    for (b = 0; b < my; b++) costs[my*a+b] += c;
 		}
 	} 
     // col generation
  	for (b = 0; b < my; b++) {
-		if(rand() % 2) {
+		if(myrand() % 2) {
 			Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
 			for (a = 0; a < mx; a++) costs[my*a+b] += c;
 			
@@ -116,11 +116,11 @@ void naryRandom::generateSubModularBinCtr( int i, int j, Cost costMin, Cost cost
 	}
 	
     // rectangle generation
-    int nrect = rand() % mx;
+    int nrect = myrand() % mx;
     while(nrect) {
 		Cost c = ToulBar2::costMultiplier * randomCost(costMin, costMax);
-    	int lx = rand() % (mx-1);
-    	int ly = rand() % (my-1);
+    	int lx = myrand() % (mx-1);
+    	int ly = myrand() % (my-1);
 		for (a = 0; a < lx; a++)
 		    for (b = 0; b < ly; b++) {
 		    	costs[my*(mx-a-1) + b] += c;
