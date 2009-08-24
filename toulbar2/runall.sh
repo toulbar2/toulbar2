@@ -35,7 +35,7 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     ulimit -t $timelimit > /dev/null
     (/usr/bin/time -f "%U user %S sys" ./toulbar2 $file.wcsp $ub $2 C$K >> outsolver) 2> usedtime
 
-    cat outsolver | awk 'BEGIN{opt="-";nodes=0;} /^Optimum: /{opt=$2; nodes=$7;} /^No solution /{opt='$ub'; nodes=$7;}  END{printf(" %s %d ",opt,nodes); }' >> out ; cat out
+    cat outsolver | awk 'BEGIN{opt="-";nodes=0;} /^Optimum: /{opt=$2; nodes=$7;} /^No solution /{opt="'$ub'"; nodes=$7;}  END{printf(" %s %d ",opt,nodes); }' >> out ; cat out
 
     cat usedtime | awk '/ user /{ printf("%.2f",0.0+$1+$3); }'
    
