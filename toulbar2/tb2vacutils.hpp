@@ -83,12 +83,15 @@ public:
   void  setKiller( Value v, int i ) { killer[toIndex(v)] = i; }
 
 
-  Cost getVACCost (Value v);
+  Cost getVACCost( Value v ) {
+	Cost c = getCost(v);
+	if(isNull(c)) return MIN_COST;
+	else return c;
+  }
 
-  void setThreshold (Cost c); 
-  Cost getThreshold (); 
-  bool isNull (Cost c); 
-   
+  void setThreshold (Cost c) { myThreshold = c; } 
+  Cost getThreshold () { return myThreshold; } 
+  bool isNull (Cost c);
    
   void queueVAC();
   void queueSeekSupport();
@@ -140,7 +143,11 @@ public:
   int getK (VACVariable* var, Value v, long timeStamp);
   void setK (VACVariable* var, Value v, int c, long timeStamp);
 
-  Cost getVACCost (VACVariable *xx, VACVariable *yy, Value v, Value w);
+  Cost getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {
+	Cost c = getCost(xx, yy, v, w);
+	if(xx->isNull(c) || (yy->isNull(c))) return MIN_COST;
+	else return c;
+  }
   void VACproject(VACVariable* x, Value v, Cost c);
   void VACextend (VACVariable* x, Value v, Cost c);
   

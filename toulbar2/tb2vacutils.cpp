@@ -68,13 +68,6 @@ bool VACVariable::removeVAC ( Value v )
 	return false;
 }
 
-Cost VACVariable::getVACCost( Value v ) {
-  Cost c = getCost(v);
-  if(isNull(c)) return MIN_COST;
-  else return c;
-}
-
-
 void VACVariable::decreaseCost(Value v, Cost c) {	
   assert(c > MIN_COST);
   Cost cini = getCost(v);  
@@ -137,11 +130,6 @@ void VACVariable::VACextend (Value v, const Cost c) {
 	setSupport(newSupport);
   } 
 }
-
-
-void VACVariable::setThreshold (Cost c) { myThreshold = c; } 
-Cost VACVariable::getThreshold () { return myThreshold; } 
-
 
 bool VACVariable::isNull (Cost c) 
 {
@@ -383,12 +371,6 @@ void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   if(!getIndex(x)) deltaCostsX[index] -= c;
   else		       deltaCostsY[index] -= c;
   x->VACextend(v, c);
-}
-
-Cost VACConstraint::getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {
-  Cost c = getCost(xx, yy, v, w);
-  if(xx->isNull(c) || (yy->isNull(c))) return MIN_COST;
-  else return c;
 }
 
 int VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {

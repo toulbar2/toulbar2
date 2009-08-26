@@ -105,9 +105,6 @@ void VACExtension::iniThreshold()
  	nearIncVar = NULL;
 }
 
-Cost VACExtension::getThreshold() { return itThreshold; }
-
-
 void VACExtension::nextScaleCost() {
 	Cost c = MAX_COST;
 	bool done = false;
@@ -585,13 +582,6 @@ void VACExtension::removeSingleton() {
 	++it; 
   }
   wcsp->propagate();
-}
-
-
-
-
-bool VACExtension::isNull (Cost c) const {
-  return (c < itThreshold);
 }
 
 void VACExtension::clear () {

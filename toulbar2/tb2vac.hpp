@@ -73,7 +73,7 @@ public:
   
   bool isVAC () const;         						  //  should have enforced pass 1 before, if c0 could increase by enforcing VAC
   bool propagate ();
-  bool isNull(Cost c) const;
+  bool isNull (Cost c) const { return (c < itThreshold); }
 
   void clear();						                  // empty VAC queue 
   void queueVAC(DLink<VariableWithTimeStamp> *link);  
@@ -83,7 +83,7 @@ public:
   
   void init();
   void iniThreshold();
-  Cost getThreshold();
+  Cost getThreshold() { return itThreshold; }
   void nextScaleCost();
   void histogram( Cost c );
   void histogram();
