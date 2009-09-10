@@ -68,6 +68,8 @@ public:
     
     bool solve();
     
+    bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
+
     void dump_wcsp(const char *fileName);
     void read_solution(const char *fileName);
     
@@ -75,5 +77,7 @@ public:
 
     WeightedCSP* getWCSP() { return wcsp; }
 };
+
+int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
 #endif /*TB2SOLVER_HPP_*/

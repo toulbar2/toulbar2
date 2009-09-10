@@ -1433,6 +1433,8 @@ void TreeDecomposition::newSolution( Cost lb )
 	else if(ToulBar2::uai) {
 		wcsp->solution_UAI(lb);		
 	}
+
+	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
 }
 
 void TreeDecomposition::intersection( TVars& v1, TVars& v2, TVars& vout ) {	

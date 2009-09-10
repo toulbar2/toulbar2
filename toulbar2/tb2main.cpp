@@ -170,7 +170,7 @@ int main(int argc, char **argv)
         cerr << "   T[integer] : threshold cost value for VAC" << endl;
         cerr << "   P[integer] : threshold cost value for VAC during the preprocessing phase" << endl;
         cerr << "   C[integer] : multiply all costs by this number" << endl;
-        cerr << "   S : singleton consistency on preprocessing" << endl << endl;
+        cerr << "   S : singleton consistency on preprocessing" << endl;
         cerr << "   V : VAC-based value ordering heuristic" << endl << endl;
 
         cerr << "   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition (default value: 0)" << endl;

@@ -155,6 +155,7 @@ public:
 
     void processTernary();
     
+    void postUnary(int xIndex, vector<Cost> &costs);
     void postUnary(int xIndex, Value *d, int dsize, Cost penalty);
     void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
     void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);

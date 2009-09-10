@@ -611,6 +611,8 @@ void Solver::newSolution()
 	if(ToulBar2::uai) {
 	  ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
 	}
+	
+	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
 }
 
 void Solver::recursiveSolve()
@@ -750,4 +752,124 @@ bool Solver::solve()
         return false;
     }
     
+}
+
+static bool IsASolution = false;
+static int *CurrentSolution = NULL;
+static WeightedCSP *CurrentWeightedCSP = NULL;
+
+void solution_symmax2sat(int wcspIndex)
+{
+  IsASolution = true;
+  for (unsigned int i=0; i<CurrentWeightedCSP->numberOfVariables(); i++) {
+	assert(CurrentWeightedCSP->assigned(i));
+	if (CurrentWeightedCSP->getValue(i) == 0) {
+	  CurrentSolution[i] = 1;
+	} else {
+	  CurrentSolution[i] = -1;
+	}
+  }
+}
+
+// Maximize h' W h where W is expressed by all its
+// non-zero half squared matrix costs (can be positive or negative, with posx <= posy)
+// notice that costs for posx <> posy are multiplied by 2 by this method
+
+// convention: h = 1 <=> x = 0 and h = -1 <=> x = 1 
+
+// warning! does not allow infinite costs (no forbidden assignments)
+
+// returns true if at least one solution has been found (array sol being filled with the best solution)
+bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol)
+{
+  if (n == 0 || m == 0) return true;
+  ToulBar2::setvalue = NULL;
+	
+  // create Boolean variables
+  for (int i=0; i<n; i++) {
+	wcsp->makeEnumeratedVariable(to_string(i), 0, 1);
+  }
+
+  vector<Cost> unaryCosts0(n, 0);
+  vector<Cost> unaryCosts1(n, 0);
+
+  // find total cost
+  double sumcost = 0.;
+  for (int e=0; e<m; e++) {
+	sumcost += 2. * abs(cost[e]);
+  }
+  double multiplier = MAX_COST / sumcost;
+  multiplier /= MEDIUM_COST;
+
+  // create weighted binary clauses
+  for (int e=0; e<m; e++) {
+	if (posx[e] != posy[e]) {
+	  vector<Cost> costs(4, 0);
+	  if (cost[e] > 0) {
+		costs[1] = (Cost) (multiplier * 2. * cost[e]);
+		costs[2] = costs[1];
+	  } else {
+		costs[0] = (Cost) (multiplier * -2. * cost[e]);
+		costs[3] = costs[0];
+	  }
+	  wcsp->postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
+	} else {
+	  if (cost[e] > 0) {
+		unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+	  } else {
+		unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+	  }
+	}
+  }
+
+  // create weighted unary clauses
+  for (int i=0; i<n; i++) {
+	if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
+	  vector<Cost> costs(2, 0);
+	  costs[0] = unaryCosts0[i];
+	  costs[1] = unaryCosts1[i];
+	  wcsp->postUnary(i, costs);
+    }
+  }   
+  
+  cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " constraints." << endl;
+
+  // special data structure to be initialized for variable ordering heuristics
+  unassignedVars = new BTList<Value>(&store->storeDomain);
+  allVars = new DLink<Value>[wcsp->numberOfVariables()];
+  for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+	allVars[i].content = i;
+	unassignedVars->push_back(&allVars[i], false);
+	if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
+  }
+  ToulBar2::setvalue = setvalue;
+
+  // solve with BTD using lexicographic elimination order, a path decomposition, and small separators of size ToulBar2::smallSeparatorSize
+
+  ToulBar2::btdMode = 3;
+  char buf[80];
+  sprintf(buf,"%s","default");
+  ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+  sprintf(ToulBar2::varOrder, "%s",buf);
+  ToulBar2::maxSeparatorSize = ToulBar2::smallSeparatorSize;
+
+  IsASolution = false;
+  CurrentSolution = sol;
+  CurrentWeightedCSP = wcsp;
+  ToulBar2::newsolution = solution_symmax2sat;
+  solve();
+  return IsASolution;
+}
+
+int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)
+{
+  // select verbosity during search
+  ToulBar2::verbose = 0;
+  //  ToulBar2::elimDegree = -1;
+  
+  initCosts(MAX_COST);
+  Solver solver(STORE_SIZE, MAX_COST);
+
+  ToulBar2::startCpuTime = cpuTime();
+  return solver.solve_symmax2sat(n , m, posx, posy, cost, sol);
 }

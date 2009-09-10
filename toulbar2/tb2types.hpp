@@ -116,6 +116,7 @@ typedef map<int,int> TSCOPE;
 
 typedef void (*externalevent)(int wcspId, int varIndex, Value value);
 typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
+typedef void (*externalsolution)(int wcspId);
 
 typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX } ElimOrderType;
 
@@ -155,6 +156,7 @@ public:
     static externalevent setmax;
     static externalevent removevalue;
     static externalcostevent setminobj;
+    static externalsolution newsolution;
     static Pedigree *pedigree;
     static bool bayesian;
     static bool uai;
@@ -192,6 +194,8 @@ public:
     static int splitClusterMaxSize;
     static bool boostingBTD;
     static int maxSeparatorSize;
+
+    static int smallSeparatorSize;
 };
 
 /*

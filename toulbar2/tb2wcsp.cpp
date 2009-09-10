@@ -54,6 +54,7 @@ externalevent ToulBar2::setmin = NULL;
 externalevent ToulBar2::setmax = NULL;
 externalevent ToulBar2::removevalue = NULL;
 externalcostevent ToulBar2::setminobj = NULL;
+externalsolution ToulBar2::newsolution = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
 
 bool    ToulBar2::bayesian = false;
@@ -95,6 +96,8 @@ double ToulBar2::startCpuTime = 0;
 int ToulBar2::splitClusterMaxSize = 0;
 bool ToulBar2::boostingBTD = false;
 int ToulBar2::maxSeparatorSize = -1;
+
+int ToulBar2::smallSeparatorSize = 4;
 
 /*
  * WCSP constructors
@@ -261,23 +264,39 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
     return ctr->wcspIndex;
 }
 
+void WCSP::postUnary(int xIndex, vector<Cost> &costs)
+{
+  assert(vars[xIndex]->enumerated());
+  for (unsigned int a = 0; a < ((EnumeratedVariable *) vars[xIndex])->getDomainInitSize(); a++) {
+	if (costs[a] > MIN_COST) ((EnumeratedVariable *) vars[xIndex])->project(a, costs[a]);
+  }
+  ((EnumeratedVariable *) vars[xIndex])->findSupport();
+}
+
 void WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
 {
+    assert(!vars[xIndex]->enumerated());
     new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);  
 }
 
 void WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 {
+    assert(!vars[xIndex]->enumerated());
+    assert(!vars[yIndex]->enumerated());
     new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
 }
 
 void WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
 {
+    assert(!vars[xIndex]->enumerated());
+    assert(!vars[yIndex]->enumerated());
     new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
 }
 
 void WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
 {
+    assert(!vars[xIndex]->enumerated());
+    assert(!vars[yIndex]->enumerated());
     new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
 }
 
