@@ -221,76 +221,77 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
   int maxa = p.size();
   
   for(arity=0; arity <= maxa; arity++) {
-	    if(arity < 2) numCtrs.push_back(0);
-	    else 	      numCtrs.push_back(p[arity-1]);
+	if(arity < 2) numCtrs.push_back(0);
+	else 	      numCtrs.push_back(p[arity-1]);
   }
-    
+  
+  if (forceSubModular) {
+	numCtrs[maxa] = (numCtrs[maxa-1] * numCtrs[maxa]) / 100;
+	maxa--;
+  }
+
   for(i=0;i<n;i++) {
   	string varname = to_string(i);
   	wcsp.makeEnumeratedVariable(varname,0,m-1);
   }
 
-
-
-  for(arity=maxa;arity>1;arity--)        
-  {
-  	  long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
-  	  //long totalarraysize = (long) pow( (double)n, arity);
-      long tCtrs = 1;
-	  set<long> scopes;
-	  for(i=0; i < arity; i++)  tCtrs *= (n - i);
-	  for(i=2; i <= arity; i++)  tCtrs /= i;	
+  for(arity=maxa;arity>1;arity--) {
+	long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
+	//long totalarraysize = (long) pow( (double)n, arity);
+	long tCtrs = 1;
+	set<long> scopes;
+	for(i=0; i < arity; i++)  tCtrs *= (n - i);
+	for(i=2; i <= arity; i++)  tCtrs /= i;	
 		
-	  if(numCtrs[arity] > tCtrs) { 
-	  	cout << numCtrs[arity] << "  " << arity << "ary constraints and the maximum is " << tCtrs << endl;
-	  	numCtrs[arity] = tCtrs;
-	  } 
+	if(numCtrs[arity] > tCtrs) { 
+	  cout << numCtrs[arity] << "  " << arity << "ary constraints and the maximum is " << tCtrs << endl;
+	  numCtrs[arity] = tCtrs;
+	} 
 	
-  	  while(numCtrs[arity]) {	
-		  bool oneadded = false;
-	      int dice = myrand() % tCtrs;
-		  ini(indexs,arity);
-		  do {  
-		  		 if(scopes.end() == scopes.find(toIndex(indexs))) {
-					 if(dice == 0) {
-					    scopes.insert( toIndex(indexs) );
-					    if(arity > 1) { 
-						    switch(arity) {
-						    	case 2:  if(!forceSubModular) generateBinCtr(indexs[0],indexs[1],nogoods); 
-						    			 else generateSubModularBinCtr(indexs[0],indexs[1],SMALL_COST,MEDIUM_COST);
-						    			 break;
-						    	case 3:  generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); break;
-						    	default: generateNaryCtr(indexs,nogoods);
-						    }
-					    }	
-					    tCtrs--;
-					    numCtrs[arity]--;
-					    oneadded = true;
-					 }
-					 dice--;
-		  		 }
-		  } while(inc(indexs) && !oneadded);
-  	   }
-    }
+	while(numCtrs[arity]) {	
+	  bool oneadded = false;
+	  int dice = myrand() % tCtrs;
+	  ini(indexs,arity);
+	  do {  
+		if(scopes.end() == scopes.find(toIndex(indexs))) {
+		  if(dice == 0) {
+			scopes.insert( toIndex(indexs) );
+			if(arity > 1) { 
+			  switch(arity) {
+			  case 2:  
+				if(!forceSubModular || numCtrs[arity] > numCtrs[maxa+1]) generateBinCtr(indexs[0],indexs[1],nogoods);
+				else  generateSubModularBinCtr(indexs[0],indexs[1],SMALL_COST,MEDIUM_COST);
+				break;
+			  case 3: 
+				generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods); 
+				break;
+			  default: generateNaryCtr(indexs,nogoods);
+			  }
+			}	
+			tCtrs--;
+			numCtrs[arity]--;
+			oneadded = true;
+		  }
+		  dice--;
+		}
+	  } while(inc(indexs) && !oneadded);
+	}
+  }
     
     
-    for(i=0;i<n;i++) {
-	  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
-	  	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
-	  	{
-	  		x->project(a, ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST)); 
-	  	}
-		x->findSupport();
-  	}
+  for(i=0;i<n;i++) {
+	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
+	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
+	  {
+		x->project(a, ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST)); 
+	  }
+	x->findSupport();
+  }
  
- 	if(forceSubModular) {
-	    for(i=0;i<n;i++) {
-		  	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
-		  	x->permuteDomain(10);
-	    }
- 	}   
+  if(forceSubModular) {
+	for(i=0;i<n;i++) {
+	  EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
+	  x->permuteDomain(10);
+	}
+  }   
 }
-	  
- 
-
-

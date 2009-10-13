@@ -113,14 +113,17 @@ int main(int argc, char **argv)
 
         cerr << "Alternatively one call the random problem generator: " << endl; 
 		cerr << "     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %" << endl; 
-		cerr << "                                         p2 is the num of binary constraints to include" << endl;
+		cerr << "                                         p2 is the num of binary cost functions to include" << endl;
 		cerr << "                                         the seed parameter is optional" << endl;
 		 
 		cerr << "or:                                                                               " << endl;            
-		cerr << "     binsub-{n}-{m}-{p1}-{p2}-{seed}     binary submodular cost functions (p1 unused)" << endl; 
+		cerr << "     binsub-{n}-{m}-{p1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl; 
+		cerr << "                                         p1 is the tightness in percentage % of random cost functions" << endl;
+		cerr << "                                         p2 is the num of binary cost functions to include" << endl;
+		cerr << "                                         p3 is the percentage % of submodular cost functions among p2 cost functions" << endl;
 		cerr << "                                         (plus 10 permutations of two randomly-chosen values for each domain)" << endl; 
 		cerr << "or:                                                                               " << endl;            
-		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary constraints" << endl; 
+		cerr << "     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions" << endl; 
         cerr << "or:                                                                               " << endl;            
 		cerr << "     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}   " << endl; 
         cerr << endl;
@@ -153,8 +156,8 @@ int main(int argc, char **argv)
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default option)" << endl;
         cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 3)" << " (default option)" << endl;
         cerr << "   p[integer] : preprocessing only: variable elimination of degree less than or equal to the given value" << endl;
-        cerr << "   t : preprocessing only: project ternary constraints on binary constraints and apply 3-consistency" << endl;
-        cerr << "   h : preprocessing only: project ternary constraints on binary constraints following a heuristic" << endl;
+        cerr << "   t : preprocessing only: project ternary cost functions on binary cost functions and apply 3-consistency" << endl;
+        cerr << "   h : preprocessing only: project ternary cost functions on binary cost functions following a heuristic" << endl;
 #ifdef BOOST
         cerr << "   m : preprocessing only: minimum degree re-ordering of variables" << endl;
 #endif
@@ -381,7 +384,7 @@ int main(int argc, char **argv)
     	int pn[10];
     	int narities = 0;
     	if(strstr(argv[1],"bin"))  { randomproblem = true; sscanf(argv[1], "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
-    	if(strstr(argv[1],"binsub"))  { forceSubModular = true; randomproblem = true; sscanf(argv[1], "binsub-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed); narities = 2; }  
+    	if(strstr(argv[1],"binsub"))  { forceSubModular = true; randomproblem = true; sscanf(argv[1], "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &seed); narities = 2; }  
     	if(strstr(argv[1],"tern")) { randomproblem = true; sscanf(argv[1], "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed); narities = 3; }
     	if(strstr(argv[1],"nary")) {  
     		randomproblem = true; 
@@ -401,6 +404,7 @@ int main(int argc, char **argv)
     	}
 		if(pn[0] > 100) { cout << pn[0] << " tightness is a percentage" << endl; pn[0] = 100; } 
 		for(int i=0;i<narities;i++) p.push_back( pn[i] ); 
+		if (forceSubModular) p.push_back( pn[narities] );
 		if(narities == 0) cout << "Random problem incorrect, use:   bin{n}-{m}-{%}-{n. of bin ctrs}  or  tern{n}-{m}-{%}-{num bin}-{num tern}" << endl;  
     } 
     if (strstr(strext.c_str(),".pre")) ToulBar2::pedigree = new Pedigree;
