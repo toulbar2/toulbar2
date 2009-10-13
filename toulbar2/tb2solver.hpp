@@ -23,6 +23,7 @@ class Solver
     int lastConflictVar;
         
     // Heuristics and search methods
+    void initVarHeuristic(); // to be called after reading the problem and before updating ToulBar2::setvalue
 	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
 	int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflict();

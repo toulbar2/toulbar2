@@ -33,17 +33,22 @@ Solver::~Solver()
     delete unassignedVars;
 }
 
-void Solver::read_wcsp(const char *fileName)
+void Solver::initVarHeuristic()
 {
-    ToulBar2::setvalue = NULL;
-    wcsp->read_wcsp(fileName);
     unassignedVars = new BTList<Value>(&store->storeDomain);
     allVars = new DLink<Value>[wcsp->numberOfVariables()];
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
         allVars[i].content = i;
         unassignedVars->push_back(&allVars[i], false);
         if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
-    }
+    }  
+}
+
+void Solver::read_wcsp(const char *fileName)
+{
+    ToulBar2::setvalue = NULL;
+    wcsp->read_wcsp(fileName);
+	initVarHeuristic();
     ToulBar2::setvalue = setvalue;
 }
 
@@ -51,16 +56,9 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
 {
     ToulBar2::setvalue = NULL;
     wcsp->read_random(n,m,p,seed, forceSubModular);
-    unassignedVars = new BTList<Value>(&store->storeDomain);
-    allVars = new DLink<Value>[wcsp->numberOfVariables()];
-    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-        allVars[i].content = i;
-        unassignedVars->push_back(&allVars[i], false);
-        if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
-    }
+	initVarHeuristic();
     ToulBar2::setvalue = setvalue;
 }
-
 
 void Solver::read_solution(const char *filename)
 {
@@ -835,16 +833,10 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " constraints." << endl;
 
   // special data structure to be initialized for variable ordering heuristics
-  unassignedVars = new BTList<Value>(&store->storeDomain);
-  allVars = new DLink<Value>[wcsp->numberOfVariables()];
-  for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-	allVars[i].content = i;
-	unassignedVars->push_back(&allVars[i], false);
-	if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
-  }
+  initVarHeuristic();
   ToulBar2::setvalue = setvalue;
 
-  // solve with BTD using lexicographic elimination order, a path decomposition, and small separators of size ToulBar2::smallSeparatorSize
+  // solve using BTD exploiting a lexicographic elimination order, a path decomposition, and only small separators of size ToulBar2::smallSeparatorSize
 
   ToulBar2::btdMode = 3;
   char buf[80];
