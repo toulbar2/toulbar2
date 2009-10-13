@@ -28,6 +28,16 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
     cluster = -1;
 }
 
+unsigned long long Constraint::getDomainSizeProduct()
+{
+  if (arity()==0) return 0;
+  unsigned long long cartesianProduct = 1;
+  for (int i=0; i<arity(); i++) {
+	cartesianProduct *= getVar(i)->getDomainSize();
+  }
+  return cartesianProduct;
+}
+
 void Constraint::projectLB(Cost cost)
 {
   if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
@@ -108,4 +118,26 @@ Cost Constraint::getMinCost()
   }
   if (nbtuples < cartesianProduct && getDefCost() < minc) minc = getDefCost();
   return minc;
+}
+
+bool Constraint::universal()
+{
+//   String tuple;
+//   Cost cost;
+//   firstlex();
+//   while (nextlex(tuple,cost)) {
+// 	if (cost > MIN_COST) return false;
+//   }
+//   return true;
+  
+  String tuple;
+  Cost cost;
+  unsigned long long nbtuples = 0;
+  first();
+  while (next(tuple,cost)) {
+	nbtuples++;
+	if (cost > MIN_COST) return false;
+  }
+  if (getDefCost() > MIN_COST && nbtuples < getDomainSizeProduct()) return false;
+  return true;
 }

@@ -65,6 +65,8 @@ public:
 
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
 
+    virtual unsigned long long getDomainSizeProduct();
+
 	virtual void firstlex() {}
 	virtual bool nextlex(String& t, Cost& c) { return false; }
  
@@ -83,15 +85,7 @@ public:
 	virtual Cost getDefCost() { return MIN_COST; }
 	virtual void setDefCost( Cost df ) {}       
 
-    virtual bool universal() {
-        String tuple;
-        Cost cost;
-        firstlex();
-        while (nextlex(tuple,cost)) {
-            if (cost > MIN_COST) return false;
-        }
-        return true;
-    }
+    virtual bool universal();
 
     virtual Cost getMinCost();
 	

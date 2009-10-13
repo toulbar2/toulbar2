@@ -66,16 +66,21 @@ Cost NaryConstraint::evalsubstr( String& s, Constraint* ctr )
 
 // USED ONLY DURING SEARCH 
 void NaryConstraint::assign(int varIndex) {
-    if (connected(varIndex)) {
-        deconnect(varIndex);	
-	    nonassigned = nonassigned - 1;
-	   
-	   if(nonassigned <= 3) {
-	   	    //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
-			deconnect();
-			projectNary();
-	   }
-    }
+  if (connected(varIndex)) {
+	deconnect(varIndex);	
+	nonassigned = nonassigned - 1;
+
+	if (size()<=4 && universal()) { // check if it is satisfied (clause)
+	  //	  cout << "nary cost function satisfied: " << this << endl;
+	  deconnect();
+	}
+
+	if(nonassigned <= 3) {
+	  //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
+	  deconnect();
+	  projectNary();
+	}
+  }
 }
 
 

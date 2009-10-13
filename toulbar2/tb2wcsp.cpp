@@ -399,6 +399,14 @@ void WCSP::preprocessing()
     
 	propagate();
 	
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && constrs[i]->universal()) {
+	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
+	  constrs[i]->deconnect(true);
+	}
+    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected() && elimConstrs[i]->universal()) {
+	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimConstrs[i];
+	  elimConstrs[i]->deconnect(true);
+	}
 	
 #ifdef BOOST
     if (getenv("TB2GRAPH")) {

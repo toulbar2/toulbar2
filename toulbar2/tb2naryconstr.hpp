@@ -33,6 +33,7 @@ class NaryConstraint : public AbstractNaryConstraint
 	NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstraint(WCSP *wcsp);
 	
+    virtual int size() = 0;
 	virtual void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
 
 	virtual void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
@@ -101,7 +102,7 @@ public:
 	NaryConstraintMap(WCSP *wcsp);
 	virtual ~NaryConstraintMap();
 
-
+    int size() {return pf->size();}
 	bool consistent( String& t );
     Cost eval( String& s );
 	
@@ -196,7 +197,9 @@ class NaryConstrie : public NaryConstraint
 	NaryConstrie(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	NaryConstrie(WCSP *wcsp);
 	virtual ~NaryConstrie();
-	
+	    
+    int size() {exit(EXIT_FAILURE);return 0;} // not implemented!!!
+
 	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 
