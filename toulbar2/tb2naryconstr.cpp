@@ -562,7 +562,7 @@ void NaryConstraintMap::insertSum( String& t1, Cost c1, Constraint* ctr1, String
 	delete [] t;
 }  
 
-
+// THIS CODE IS NEVER USED!!!
 void NaryConstraintMap::sum( NaryConstraintMap* nary )
 {
 	deconnect(true);
@@ -599,7 +599,6 @@ void NaryConstraintMap::sum( NaryConstraintMap* nary )
 	TUPLES& f1 = *pf;
 	TUPLES& f2 = *nary->pf;
 	TUPLES::iterator  it1 = f1.begin();
-	TUPLES::iterator  it2 = f2.begin();
 	TUPLES& f = * new TUPLES;
 	pf = &f;
 
@@ -608,6 +607,7 @@ void NaryConstraintMap::sum( NaryConstraintMap* nary )
 	while(it1 != f1.end()) {
 		t1 = it1->first;
 		c1 =  it1->second;
+		TUPLES::iterator  it2 = f2.begin();
 		while(it2 != f2.end()) {
 			t2 = it2->first;
 			c2 =  it2->second;	
