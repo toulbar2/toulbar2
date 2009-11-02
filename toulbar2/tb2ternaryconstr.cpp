@@ -381,7 +381,7 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
 
     for (EnumeratedVariable::iterator itery = yy->begin(); itery != yy->end(); ++itery) {
     for (EnumeratedVariable::iterator iterz = zz->begin(); iterz != zz->end(); ++iterz) {
-        Cost mincost = wcsp->getUb();
+        Cost mincost = MAX_COST;
         for (EnumeratedVariable::iterator iterx = xx->begin(); iterx != xx->end(); ++iterx) {
             Cost curcost = getCost(xx, yy, zz, *iterx, *itery, *iterz);                            
             GLB(&mincost, curcost);
