@@ -51,7 +51,7 @@ typedef long long Long;
      #endif
 	#endif
 	#ifdef WINDOWS
-	const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFF;
+	const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
 	#endif
 #endif
 
