@@ -266,8 +266,9 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'q')) { ToulBar2::weightedDegree = true; }
         if ( (ch = strchr(argv[i],'e')) ) {
         	if (ch[-1]==':') ToulBar2::elimDegree = -1; else ToulBar2::elimDegree = 3;
-        	int ndegree = atoi(&ch[1]);
-        	if((ndegree > 0) && (ndegree <= 3)) ToulBar2::elimDegree = ndegree;
+			char *tmpendchr = NULL;
+        	int ndegree = strtol(&ch[1], &tmpendchr, 10);
+        	if((tmpendchr != &ch[1]) && (ndegree >= 0) && (ndegree <= 3)) ToulBar2::elimDegree = ndegree;
         }
         if ( (ch = strchr(argv[i],'p')) ) { 
         	ToulBar2::elimDegree_preprocessing = 3; 
