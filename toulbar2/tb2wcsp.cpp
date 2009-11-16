@@ -14,6 +14,7 @@
 #include "tb2pedigree.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
+#include "ToulbarVersion.hpp"
 
 
 
@@ -22,7 +23,7 @@
  * 
  */
  
-double ToulBar2::version  = 0.8;
+string ToulBar2::version = Toulbar_VERSION;
 int  ToulBar2::verbose  = 0;
 int  ToulBar2::debug  = 0;
 bool ToulBar2::showSolutions  = false;

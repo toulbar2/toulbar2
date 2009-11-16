@@ -7,7 +7,7 @@
 #define TB2TYPES_HPP_
 
 //#define INT_COST
-#define LONGLONG_COST
+//#define LONGLONG_COST
 //#define PARETOPAIR_COST
 
 //#define DOUBLE_PROB
@@ -130,7 +130,7 @@ class ToulBar2
 protected:
     virtual ~ToulBar2() = 0;	// Trick to avoid any instantiation of ToulBar2
 public:
-    static double version;
+    static string version;
     static int verbose;
     static int debug;
     static bool showSolutions;

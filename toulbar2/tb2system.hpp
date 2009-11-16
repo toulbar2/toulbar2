@@ -4,7 +4,7 @@
  */
 
 //#define WINDOWS
-#define LINUX
+//#define LINUX
 
 
 #ifndef TB2SYSTEM_HPP_
