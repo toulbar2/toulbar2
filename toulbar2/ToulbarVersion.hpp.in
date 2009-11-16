@@ -1,0 +1,3 @@
+// the configured options and setting for toulbar version
+#define Toulbar_VERSION @Toulbar_VERSION@
+#define Toulbar_VERSION_MINOR @Toulbar_VERSION_MINOR@
