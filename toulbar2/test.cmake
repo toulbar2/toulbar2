@@ -35,15 +35,5 @@ add_test(Toulbar${TNAME} ${PROJECT_SOURCE_DIR}/${EXECUTABLE_OUTPUT_PATH}/toulbar
 ENDFOREACH(UTEST)
 
 
-
-#############
-
-add_test(ToulbarUsage ${EXECUTABLE_OUTPUT_PATH}/toulbar2 )
-	set_tests_properties (ToulbarUsage PROPERTIES PASS_REGULAR_EXPRESSION "toulbar2 version:*")
-
-	add_test(ToulbarRun ${EXECUTABLE_OUTPUT_PATH}/toulbar2  "${PROJECT_SOURCE_DIR}/test/example.wcsp" )
-	set_tests_properties (ToulbarRun PROPERTIES PASS_REGULAR_EXPRESSION "Optimum: 27 in *")
-
-
 ENABLE_TESTING()
 ###################"
