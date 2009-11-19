@@ -1,0 +1,10 @@
+cmake . ; make ; make package
+
+# cross compilation 
+
+sh clean;cmake -DWIN32=ON ; make package
+
+
+#howto tune compilation :
+
+ccmake .

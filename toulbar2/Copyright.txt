@@ -1,0 +1,2 @@
+Copyright.txt
+toulbar2 is under GNU GPL licence ...please send email to degivry@toulouse.inra.fr for further information
