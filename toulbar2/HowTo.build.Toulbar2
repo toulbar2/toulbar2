@@ -1,3 +1,16 @@
+# required package
+# depending of the flag activated in cmake
+# boost graph and libxml  may be required 
+#obviosely if you tag the ilog flag 
+#ilog library will be required.
+
+#for cross compilation under ubuntu
+#the following package are required
+
+sudo apt-get install mingw32 mingw32-binutils mingw32-runtime nsis
+
+# for default compilation under linux please use:
+
 cmake . ; make ; make package
 
 # cross compilation 
@@ -5,6 +18,19 @@ cmake . ; make ; make package
 sh clean;cmake -DWIN32=ON ; make package
 
 
-#howto tune compilation :
+# in advanced mode you can tune your compilation option using:
 
 ccmake .
+
+#howto generate doxygene doc file
+# package required are : doxygen latex2pdf graphviz
+
+make doc
+
+#howto run toublar2 validation bench
+# the wall set of foo.wcsp locate in the validation directory will be run
+# each instances need also a foo.ub containing upperbound 
+make test
+
+#or 
+ctest 
