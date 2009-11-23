@@ -252,7 +252,6 @@ IF(TOULBAR2)
 
 add_executable( toulbar2${EXE} ${source_files})
 TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
-#INSTALL(TARGETS toulbar2${EXE} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 install( TARGETS toulbar2${EXE} DESTINATION bin )
 
 
@@ -268,7 +267,6 @@ IF(MENDELSOFT)
 add_executable( mendelsoft${EXE} ${source_files})
 TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
 
-#INSTALL(TARGETS mendelsoft${EXE} DESTINATION  ${EXECUTABLE_OUTPUT_PATH})
 install( TARGETS mendelsoft${EXE} DESTINATION bin )
 
 
@@ -428,8 +426,7 @@ find_library( C NAME concert PATHS /usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3
 	TARGET_LINK_LIBRARIES( iloglue ${A} ${B} ${C} tb2int)
 add_dependencies( iloglue tb2int)
 
-#INSTALL(TARGETS ilogue DESTINATION  ${EXECUTABLE_OUTPUT_PATH})
-install( TARGETS ilogue DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+install( TARGETS ilogue DESTINATION bin )
 
 
 ENDIF(ILOG)
