@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 2.6)
 # source directory
 #do not change this variable ==> location of the toulbar2 source code
 set (My_Source src)
+set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" )
 
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
@@ -520,9 +521,11 @@ IF (BUILD_API_DOC)
 
 	SET (DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 	SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source})
-	SET (DOXYFILE_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
-	SET (DOXYFILE_LATEX_DIR ${DOXYFILE_OUTPUT_DIR}/latex)
-	SET (DOXYFILE_HTML_DIR ${DOXYFILE_OUTPUT_DIR}/html)
+	SET (DOXYFILE_OUTPUT_DIR ${My_doc}/dev)
+#	SET (DOXYFILE_LATEX_DIR ${DOXYFILE_OUTPUT_DIR}/latex)
+#	SET (DOXYFILE_HTML_DIR ${DOXYFILE_OUTPUT_DIR}/html)
+	SET (DOXYFILE_LATEX_DIR} latex)
+	SET (DOXYFILE_HTML_DIR html)
 
 
 	FIND_PACKAGE(Doxygen)
@@ -619,6 +622,12 @@ ENDIF (WIN32)
 	SET(CPACK_RPM_PACKAGE_VENDOR "Toulbar2 Development Team")
 	SET(CPACK_RPM_PACKAGE_LICENSE "GNU General Public License GPL")
 	SET(CPACK_RPM_PACKAGE_DESCRIPTION "Toulbar2, an environment of modelling and simulation")
+
+###########
+# doc install
+###########
+	#  INSTALL(FILES "${MINGW_BASE}/bin\\\\mingwm10.dll" DESTINATION bin)
+	 install(DIRECTORY ${My_doc} DESTINATION doc)
 
 # CPack NSIS configuration
 IF (CPACK_GENERATOR MATCHES "NSIS")
