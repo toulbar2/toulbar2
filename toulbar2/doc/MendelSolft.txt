@@ -1,0 +1,140 @@
+MIA
+MendelSoft
+Introduction
+=========
+MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.
+
+Another possibility is to find the most probable consistent correction with respect to a Bayesian formulation of the problem. In this case, the output of the software is a list of individuals for which predicted genotypes differ from their genotyping data and such that the corresponding joint probability for the whole problem is maximum.
+
+The problem, its formulation as a weighted constraint satisfaction problem, and some experimental results on simulated and real large animal pedigrees (up to 129516 individuals) are described in:
+
+M. Sanchez, S. de Givry, and T. Schiex
+Mendelian error detection in complex pedigrees using weighted constraint satisfaction techniques (preprint)
+In Constraints journal, special issue on bioinformatics, 13(1), 2008.
+
+S. de Givry, I. Palhiere, Z. Vitezica, and T. Schiex
+Mendelian error detection in complex pedigree using weighted constraint satisfaction techniques
+In ICLP-05 workshop on Constraint Based Methods for Bioinformatics, page 9p., Sitges, Spain, 2005.
+Compilation
+Input File Format
+MendelSoft input format is based on LINKAGE format (PEDFILE). The input must contain the following information for each individual:
+
+    * a pedigree number (locus)
+    * an individual identification number (different from zero), or id
+    * father's id number
+    * mother's id number
+    * sex
+    * first allele number
+    * second allele number 
+
+Father and mother id's are 0 for founders, or other members of the pedigree for whom information on parents is absent. Partial information is allowed (when only one parent is known). The sex field is coded 1 for males and 2 for females. The genotyping data consists of two unordered allele numbers (positive integers). These are codominant alleles at a single locus. An unknown genotype is coded as 0 0.
+
+NEW! If you assume there are no errors with a particular genotyping data, then the data can be made mandatory by using negative allele numbers.
+Running MendelSoft with a parsimony criterion
+Try the following simple pedigree available in the source code directory:
+
+mendelsoft simple.pre
+
+The software output will be:
+
+5 informative individuals found (either genotyped or having a genotyped descendant).
+Read pedigree with 5 individuals, 3 founders, 4 alleles, 4 genotypings and 3 generations.
+0 unassigned variables, 0 values in all current domains and 0 constraints.
+New solution: 1 (0 backtracks, 0 nodes, depth 0)
+Correction: 2 (1)
+Optimum: 1 in 0 backtracks and 0 nodes and 0 seconds.
+end.
+
+Check the last solution found in the output. Its cost corresponds to the minimum number of genotyping data to be removed in the pedigree in order to restore consistency (equal to 1 in this example). The following Correction output line gives a list of individual ids for which the removal of their genotyping data restores consistency, followed by the number of corrections in parenthesis.
+
+Use option w to save a consistent pedigree corresponding to the last correction found into a file called pedigree_corrected.pre in the current directory. Try the following command:
+
+mendelsoft simple.pre w
+
+and look at the output file pedigree_corrected.pre.
+
+Executing mendelsoft without any parameter gives a help message with available options. It is possible to speed up the search by giving an initial strict upper-bound on the maximum number of genotyping data to be removed. If this upper-bound is lower than or equal to the optimum, then mendelsoft will return no solution. Try the following command:
+
+mendelsoft simple.pre 1
+
+The software output will be:
+
+5 individuals found with a genotyped descendant..
+No solution found by initial propagation!
+end.
+
+Other pedigree examples can be found here.
+Running MendelSoft with a Bayesian formulation
+Use option y to find the most probable consistent correction. Try it on the simple pedigree problem:
+
+mendelsoft simple.pre wy
+
+The software output will be:
+
+5 informative individuals found (either genotyped or having a genotyped descendant).
+Read pedigree with 5 individuals, 3 founders, 4 alleles, 4 genotypings and 3 generations.
+Bayesian MPE (genotyping error rate: 0.05, genotype prior: 0, precision(1-10^-p): 7, normalization: 2.30258e+07, ub: 274677317)
+0 unassigned variables, 0 values in all current domains and 0 constraints.
+New solution: 136646016 log10like: -5.93446 prob: 1.16289e-06 (0 backtracks, 0 nodes, depth 0)
+Correction: 5 (1)
+Optimum: 136646016 log10like: -5.93446 prob: 1.16289e-06 in 0 backtracks and 0 nodes and 0 seconds.
+end.
+
+Look at the output file pedigree_corrected.pre, individual 5 has been corrected with a predicted genotype of 1/3, having a joint probability of 1.16289e-06. In comparison, the correction on individual 2 found by the previous parsimony approach has a joint probability of 5.81427e-07. Notice that the Bayesian formulation can be much slower to solve than the parsimony approach.
+
+It is possible to select the way of correcting the erroneous genotypings and also predicting the missing genotypes in the output file pedigree_corrected.pre, by adding a value (0,1, or 2) just after the option w:
+
+    * w0: remove erroneous genotypings in the output file (default case).
+    * w1: correct erroneous genotypings to their prediction (in conjunction with option y for the Bayesian formulation).
+    * w2: correct erroneous genotypings to their prediction and infer missing genotypes for informative individuals (non-informative individuals are not genotyped and have no genotyped descendant in the pedigree). 
+
+By default, we assume 5% of genotyping errors and equivalent allele frequencies. See the help message obtained by executing mendelsoft without any parameter to change these defaults. For instance, try the following command line, having only 1% of genotyping error uniform prior and an allele probability distribution equal to ( allele1: 0.4, allele2: 0.4, allele3: 0.1, allele4: 0.1 ):
+
+mendelsoft simple.pre wy 0.01 7 2 0.4 0.4 0.1 0.1
+
+Warning! On Windows computers, the maximum precision for probability encoding should be lower than 4. Try
+
+mendelsoft simple.pre wy 0.01 4 2 0.4 0.4 0.1 0.1
+
+Check genotype priors, deduced from the selected allele probability distribution, using verbose option v.
+
+NEW! You can penalize genotyping removals for individuals which have many genotyped children (only with a Bayesian formulation). Use option u followed by a threshold number of genotyped children. mendelsoft adds a penalty weight (logarithmically proportional to the number of genotyped children) on genotyping removals if the number of genotyped children for the corresponding individuals is strictly greater than the threshold. At each correction output line, the penalized likelihood is decomposed into the original likelihood and the total penalty term (given in parenthesis).
+Weighted Constraint Satisfaction Problems
+MendelSoft is directly derived from ToulBar2, an open source weighted constraint satisfaction solver. This is an on-going project and future versions will appear regularly. The algorithms used by the solver are described in:
+
+J. Larrosa, and T. Schiex
+In the quest of the best form of local consistency for Weighted CSP
+In Proc. of IJCAI-03, pages 239-244, Acapulco, Mexico, 2003.
+
+S. de Givry, M. Zytnicki, F. Heras, and J. Larrosa
+Existential arc consistency: Getting closer to full arc consistency in Weighted CSPs
+In Proc. of IJCAI-05, pages 84-89, Edinburgh, Scotland, 2005.
+
+J. Larrosa, E. Morancho, and D. Niso
+On the practical applicability of Bucket Elimination: Still-life as a case study
+Journal of Artificial Intelligence Research. 23 :421-440, 2005.
+
+C. Lecoutre, L. Sais, S. Tabary, and V. Vidal
+Last Conflict based Reasoning
+In Proc. of ECAI-06, pages 133-137, Trento, Italy, 2006.
+
+============
+compilation
+============
+Download the C++ source codes here: NEW! version 0.8a for Linux and version 0.8a for Windows.
+On Linux computers (it should work on other systems also), after downloading, extract the source codes (gzipped tar):
+Then, enter in the source code directory and compile all .cpp files together:
+
+cd toulbar2
+cmake .
+
+It will generate an executable called mendelsoft.
+
+On Windows computers, compile all the .cpp files together using Visual C++ with the following macro definitions:
+
+-DNDEBUG -DWCSPFORMATONLY -DMENDELSOFT -DLONGLONG_MAX=LONG_MAX
+
+For more information, see the SoftCSP web site.
+UBIA Toulouse 	Please report bugs or problems to: Simon de Givry
+Email: degivry _AT_ toulouse.inra.fr
+Last Update: August 17th 2009
