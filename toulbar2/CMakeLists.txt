@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 2.6)
 #do not change this variable ==> location of the toulbar2 source code
 set (My_Source src)
 set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" )
+set (doc_destination "share/doc")
 
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
@@ -21,8 +22,8 @@ project(Toulbar2)
 #############################"
 # init version NUMBER
 	set (Toulbar_NAME "toulbar2")
-	set (Toulbar_MAJOR  "2.0")
-	set (Toulbar_MINOR  "B")
+	set (Toulbar_MAJOR  "0")
+	set (Toulbar_MINOR  ".9")
 	set (Toulbar_VERSION  "\"${Toulbar_MAJOR}.${Toulbar_MINOR}\"")
 	set (Toulbar_COMPLETE "${Toulbar_MAJOR}${Toulbar_MINOR}")
 	set(Toulbar_NAME_COMPLETE "toulbar2-${Toulbar_COMPLETE}")
@@ -44,8 +45,8 @@ include(CMakeDependentOption)
 
 	OPTION(WIN32 "toulbar cros compilation flag [default: off]" OFF) 
 	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
-	OPTION(MENDELSOFT "use wide string in solver output [default:on]" ON)
-	OPTION(LIBTB2 "lib toulbar2 compilation [default: on]" ON) 
+	OPTION(MENDELSOFT "use wide string in solver output [default:on]" OFF)
+	OPTION(LIBTB2 "lib toulbar2 compilation [default: on]" OFF) 
 
 	OPTION(ILOG  "ilog solver binding [default: off]" OFF) 
 	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF) 
@@ -54,7 +55,11 @@ include(CMakeDependentOption)
 	OPTION(Boost "boost binding [default: off]" OFF) 
 	OPTION(WIDE_STRING  "use wide string in solver output [default:on]" ON)
 	OPTION(BUILD_API_DOC "build documentation with doxygen [default:on]" ON)
+	OPTION(verbose "verbose mode [default:on]" ON)
 
+if(verbose) 
+set (CMAKE_VERBOSE_MAKEFILE ON)
+endif(verbose)
 
 ##########################"
 # OPTION DEPENANCES 
@@ -476,7 +481,7 @@ ELSE(WIN32)
 IF(TOULBAR2)
 	set_property(
 			TARGET toulbar2
-			PROPERTY COMPILE_DEFINITIONS NARYCHAR WCSPFORMATONLY  ${COST} ${XMLFLAG} LINUX
+			PROPERTY COMPILE_DEFINITIONS NARYCHAR WCSPFORMATONLY  ${COST} ${XMLFLAG} LINUX 
 		    )
 ENDIF(TOULBAR2)
 
@@ -627,7 +632,8 @@ ENDIF (WIN32)
 # doc install
 ###########
 	#  INSTALL(FILES "${MINGW_BASE}/bin\\\\mingwm10.dll" DESTINATION bin)
-	 install(DIRECTORY ${My_doc} DESTINATION doc)
+	 install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE} PATTERN ".svn" EXCLUDE)
+
 
 # CPack NSIS configuration
 IF (CPACK_GENERATOR MATCHES "NSIS")
