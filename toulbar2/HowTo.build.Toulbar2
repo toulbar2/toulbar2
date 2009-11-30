@@ -4,6 +4,9 @@
 #obviosely if you tag the ilog flag 
 #ilog library will be required.
 
+#cmake package are now required
+sudo apt-get install cmake cmake-data cmake-curses-gui
+
 #for cross compilation under ubuntu
 #the following package are required
 
@@ -21,6 +24,8 @@ sh clean;cmake -DWIN32=ON ; make package
 # in advanced mode you can tune your compilation option using:
 
 ccmake .
+# if ccmake not available on your system please use:
+cmake -i .
 
 #howto generate doxygene doc file
 # package required are : doxygen latex2pdf graphviz
@@ -30,6 +35,9 @@ make doc
 #howto run toublar2 validation bench
 # the wall set of foo.wcsp locate in the validation directory will be run
 # each instances need also a foo.ub containing upperbound 
+# so for add a new test you just have to copy it int the validation directory
+# rebuild makefile using cmake . or make rebuild_cache and launch the test
+
 make test
 
 #or 
