@@ -27,6 +27,18 @@ ccmake .
 # if ccmake not available on your system please use:
 cmake -i .
 
+# 3 compilation option are available 
+# DEBUG MINSIZEREL RELEASE RELWITHDEBINFO
+# each option can be tune using the [t] pad under ccmake
+# ore cmake -i mode
+
+cmake -DCMAKE_BUILD_TYPE=RELEASE ==> compilation in release mode
+cmake -DCMAKE_BUILD_TYPE=DEBUG  ===> DEBUG mode 
+
+ps : iloglue compilation not compliant with -O3 option so 
+and (RELEASE ==> -O3 by default ) ==> iloglue does not support release mode
+
+
 #howto generate doxygene doc file
 # package required are : doxygen latex2pdf graphviz
 
