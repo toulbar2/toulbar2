@@ -377,7 +377,6 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 	add_library(
 			tb2int
-			SHARED
 			${LIBTB2FILEINT}
 		   )
 
@@ -395,14 +394,7 @@ ENDIF(LIBTB2INT)
 ###############################################
 IF(ILOG)
 #define INT_COST
-#define LONGLONG_COST
-#define PARETOPAIR_COST
-
-#//#define DOUBLE_PROB
-#define LONGDOUBLE_PROB
-#// uncomment if using large enumerated domains with BTD or in nary cost functions
-#define WIDE_STRING
-
+# compile option must be -O
 
 	file(
 			GLOB_RECURSE
@@ -430,9 +422,8 @@ find_library( C NAME concert PATHS /usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3
 
 	add_executable( iloglue ${ilog_file})
 	TARGET_LINK_LIBRARIES( iloglue ${A} ${B} ${C} tb2int)
-add_dependencies( iloglue tb2int)
-
-install( TARGETS ilogue DESTINATION bin )
+add_dependencies(iloglue tb2int)
+install( TARGETS iloglue DESTINATION bin )
 
 
 ENDIF(ILOG)
