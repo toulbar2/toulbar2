@@ -10,30 +10,11 @@ set (My_cmake_scritp "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of c
 set (My_Source src)	# source location 
 set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" ) # doxygen repository default ./doc/
 set (doc_destination "share/doc")   		#path of doc installation 
+set (My_validation "validation")
 
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
 set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
 
-
-#############################"
-# init version NUMBER
-############################
-	set (Toulbar_MAJOR  "0")
-	set (Toulbar_MINOR  ".9")
-
-###########################
-#Default profile for compilation
-###########################
-
-SET( CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel.")
-
-################
-# default OPTION for toulbar2 test  phase
-#############
-SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line.")
-SET(FOPT "test-opt.cmake" CACHE string "filename containing benchmark option") 
-SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
-SET(Default_regexp "end." CACHE string "default regex searched in test output")
 
 ################
 # PROJECT NAME
@@ -54,25 +35,51 @@ include(CMakeDependentOption)
 # cmake option definition
 #########################
 
-	OPTION(WIN32 "toulbar cros compilation flag [default: off]" OFF) 
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
 #	OPTION(MENDELSOFT "mendelsoft compilation and packaging option [default:off]" OFF)
+	OPTION(WIN32 "toulbar cros compilation flag [default: off]" OFF) 
+
 	OPTION(ALL_APP "application and toulbar2 solver compilation [default: off]" OFF) 
 	OPTION(MENDELSOFT_ONLY "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 	OPTION(TOULBAR2_ONLY  "toulbar2 solver compilation ONLY  [default: on]" ON) 
-	OPTION(LIBTB2 "lib toulbar2 compilation [default: on]" OFF) 
 
+	OPTION(LIBTB2 "lib toulbar2 compilation [default: on]" OFF) 
 	OPTION(ILOG  "ilog solver binding [default: off]" OFF) 
+
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF) 
 
 	OPTION(XML "use the xml input out format to build output [default: off]" OFF)
 	OPTION(Boost "boost binding [default: off]" OFF) 
 	OPTION(WIDE_STRING  "use wide string in solver output [default:on]" ON)
+
 	OPTION(BUILD_API_DOC "build documentation with doxygen [default:on]" ON)
-	OPTION(verbose "verbose mode [default:on]" ON)
 	OPTION(STATIC "STATIC compilation flag [default: on]" ON)
+	OPTION(verbose "verbose mode [default:on]" ON)
 
 
+
+#############################"
+# init version NUMBER
+############################
+	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
+	set (Toulbar_MINOR "9" CACHE STRING "Toulbar2 Framework minor release")
+ 
+###########################
+#Default profile for compilation
+###########################
+
+SET( CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel.")
+
+################
+# default OPTION for toulbar2 test  phase
+#############
+SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line.")
+SET(FOPT "test-opt.cmake" CACHE string "filename containing benchmark option") 
+SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
+SET(Default_regexp "end." CACHE string "default regex searched in test output")
+
+	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost XML FOPT CMAKE_INSTALL_PREFIX Default_test_timeout)
+	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
 #############"
 # static building
@@ -82,6 +89,7 @@ IF(STATIC)
 	set (CMAKE_CXX_FLAGS "-static -static-libgcc" )
 	MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml  option not compliant with static link)")
 	SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
+	
 ELSE()
 	SET(BUILD_SHARED_LIBS ON) #shared library building
 ENDIF(STATIC)
@@ -136,7 +144,7 @@ IF(MENDELSOFT_ONLY)
 #description used in the package building
 	SET (Toulbar_PACKAGE_DESCRIPTION 
 	"MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 
-        SET(Toular_PACKAGE_SUMMARY "${Toulbar_NAME}  is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
+        SET(Toular_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
 #############
 
 ENDIF(MENDELSOFT_ONLY)
@@ -153,7 +161,7 @@ IF(TOULBAR2_ONLY)
 #basename for packagin and versionning
         SET(Toulbar_NAME "toulbar2")
 #description used in the package building
-	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source solver for constraints network optimization, written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
+	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source solver for constraints network optimization written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
         SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
 
 ENDIF(TOULBAR2_ONLY)
@@ -210,9 +218,7 @@ INCLUDE(FindPkgConfig)
 # liste of file used for compilation are include in source_file.cmake 
 # new file news to be add in this list
 # you can also define your own list and add it to the wall list
-#  for example: 
-
-#SET (source_files ${source_files} ${my_file_2add})
+# for example: SET (source_files ${source_files} ${my_file_2add})
 
 include(${My_cmake_scritp}/source_files.cmake)
 
@@ -361,6 +367,11 @@ ENDIF (BUILD_API_DOC)
 # doc install
 ###########
          install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE} PATTERN ".svn" EXCLUDE)
+
+########
+# examples installation
+########
+         install(DIRECTORY ${My_validation} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE}/ PATTERN ".svn" EXCLUDE)
 
 ###################################################################################"
 #  PACKAGING 

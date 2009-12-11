@@ -1,29 +1,24 @@
+#INCLUDE(CTest)
+
+
     file ( GLOB_RECURSE
                         validation_file
                        validation/*.wcsp
                                     )
 
-    file ( GLOB_RECURSE
-			bench_opt
-                       validation/*.opt
-	)
-
-
-
 ###################"
 #################
 # test unitaire
 ###############
-SET(FOPT "test-opt.cmake")
-SET(Default_test_timeout 300)
-SET(Default_regexp "end.")
-SET(Default_test_option ) 
+SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
 
 	MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
 
 
 	STRING(REPLACE ".wcsp" ".ub" UBF ${UTEST})
+	STRING(REPLACE ".wcsp" ".enum" ENUM_file ${UTEST})
+	
 	GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH  )
 
 	IF (EXISTS ${UBF})
@@ -32,6 +27,13 @@ FOREACH (UTEST ${validation_file})
 	SET (UB ${TUB})
 	MATH(EXPR UBP "1+${TUB}")
 	ENDIF()
+
+	 IF (EXISTS ${ENUM_file})
+        FILE(READ ${ENUM_file} ENUM)
+	MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} founded ENUM variable loaded ")
+	
+        ENDIF()
+
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
@@ -40,7 +42,9 @@ FOREACH (UTEST ${validation_file})
 
 
 	ELSE()
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded ")
+	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded  ==>
+	default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
+
 	set (command_line_option ${Default_test_option} )
 	set (test_timeout ${Default_test_timeout})
 	set (test_regexp  ${Default_test_regexp})
@@ -61,7 +65,7 @@ if($verbose)
 endif($verbose)
 
 add_test(Toulbar${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2  ${UTEST} ${UBP} ${command_line_option})
-	set_tests_properties (Toulbar${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION ${test_regexp} TIMEOUT ${test_timeout})
+	set_tests_properties (Toulbar${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 
 
 ENDFOREACH(UTEST)
