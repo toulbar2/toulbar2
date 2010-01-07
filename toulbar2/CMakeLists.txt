@@ -28,11 +28,16 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 ################
 
 project("Toulbar2_framework")
+
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
 	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR} ")
 	MESSAGE(STATUS " MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 	MESSAGE(STATUS "#################################")
+
+#directory location of peo and narycsp  cf initial ub
+set (My_misc_bin "misc/bin/${CMAKE_SYSTEM_NAME}") 
+# cf. package.cmake for peo and narycsp install command
 
 include(CMakeDependentOption)
 
@@ -259,9 +264,11 @@ include(${My_cmake_scritp}/xmlcsp.cmake)
 
 IF(TOULBAR2)
 
+
 add_executable(toulbar2${EXE} ${source_files})
 TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
-install( TARGETS toulbar2${EXE} DESTINATION bin )
+INSTALL( TARGETS toulbar2${EXE} DESTINATION bin )
+
 
 ENDIF(TOULBAR2)
 
