@@ -2,7 +2,7 @@
 # depending of the flag activated in cmake
 # boost graph and libxml  may be required 
 #obviosely if you tag the ilog flag 
-#ilog library will be required.
+#ilog librares will be required.
 
 #cmake package are now required
 sudo apt-get install cmake cmake-data cmake-curses-gui
@@ -31,19 +31,20 @@ ccmake ..
 # if ccmake not available on your system please use:
 cmake -i ..
 
-# several compilation option are available 
-# for more info launch the ccmake .. command
+#Different compilation options are available:  RELEASE DEBUG MINSIZEREL RELWITHDEBINFO
+# each option can be tuned using the [t] pad under ccmake
+# or cmake -i mode
 
 # Release ==> -O3 -NDEBUG option remove assert 
 # Debug ==> -g option
 # each option can be tune using the [t] pad under ccmake
 # ore cmake -i mode
 
-cmake -DCMAKE_BUILD_TYPE=Release ==> compilation in release mode
-cmake -DCMAKE_BUILD_TYPE=Debug  ===> DEBUG mode 
+cmake -DCMAKE_BUILD_TYPE=RELEASE ==> compilation in release mode
+cmake -DCMAKE_BUILD_TYPE=DEBUG  ===> compilation in debug mode
 
-ps : iloglue compilation not compliant with -O3 option so 
-and (RELEASE ==> -O3 by default ) ==> iloglue does not support release mode
+#notice: iloglue compilation not compliant with -O3 option implied by release mode
+# ==> iloglue does not support release mode
 
 
 #howto run toublar2 validation bench
@@ -83,6 +84,14 @@ if you want to add a new c++ file in the toulbar2 target
 please edit ./cmake-Script/source_files.cmake
 
 #howto generate doxygene doc file
-# package required are : doxygen latex2pdf graphviz
+# required packages are : doxygen latex2pdf graphviz
 
 make doc ; # => html and pdf are create in doc/dev directory
+
+#howto generate a codeblock project file  : =>
+
+ cmake . -G"CodeBlocks - Unix Makefiles"
+
+# the command produces the Toulbar2_framework.cbp file, which can be open in Code::Blocks IDE.
+# obviously cmake allows to generate project file for various IDE environement (Kdevelop , eclipse ..)
+# for further information please read cmake man page (cmake --help)
