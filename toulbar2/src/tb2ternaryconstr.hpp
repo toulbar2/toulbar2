@@ -430,6 +430,7 @@ public:
 		linkY->content.scopeIndex = 1;
 		linkZ->content.scopeIndex = 2;
 		setDACScopeIndex();
+		resetConflictWeight();
 	}
   
   	void fillxy();

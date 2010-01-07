@@ -322,7 +322,7 @@ public:
         }
     }
 
-    void reconnect() {
+    virtual void reconnect() {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
             for(int i=0;i<arity_;i++) {

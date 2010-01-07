@@ -1,6 +1,6 @@
 /** \file tb2store.hpp
  *  \brief Generic storable data management.
- * 
+ *
  */
 
 #ifndef TB2STORE_HPP_
@@ -17,7 +17,7 @@ class ConstraintLink;
 
 /*
  * Storable stack
- * 
+ *
  */
 
 template <class T, class V>
@@ -33,9 +33,9 @@ class StoreStack
     // make it private because we don't want copy nor assignment
     StoreStack(const StoreStack &s);
     StoreStack& operator=(const StoreStack &s);
-    
+
 public:
-    StoreStack(string s, int powbckmemory) : name(s) {        
+    StoreStack(string s, int powbckmemory) : name(s) {
         if (pow(2.,powbckmemory) >= INT_MAX) {
             cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
             exit(EXIT_FAILURE);
@@ -50,7 +50,7 @@ public:
                  << " Bytes allocated for " << name << " stack." << endl;
         }
     }
-    
+
     ~StoreStack() {delete[] pointers; delete[] content;}
 
     void realloc() {
@@ -73,7 +73,7 @@ public:
              << " Bytes allocated for " << name << " stack." << endl;
       }
     }
-      
+
     void store(T *x, V y) {
         if (index > 0) {
             index++;
@@ -82,7 +82,7 @@ public:
             pointers[index] = x;
         }
     }
-    
+
     void store(T *x) {
         if (index > 0) {
             index++;
@@ -91,7 +91,7 @@ public:
             pointers[index] = x;
         }
     }
-    
+
     void store() {
 	   index++;
 	   if (index >= indexMax) realloc();
@@ -109,18 +109,21 @@ public:
         *adr[x] = val[x];
     }
 
+    void restore(BigInteger **adr, BigInteger *val, int x) {
+        *adr[x] = val[x];
+    }
     template <class Q> void restore(BTList<Q> **l, DLink<Q> **elt, int &x);
 
     void restore() {
         if (index > 0) {        // do nothing if already at depth = 0
             int x,y;
-            
+
             x = index + 1;
             y = base;
             while (--x != y) {
                 restore(pointers,content,x);
             }
-            
+
             index = y - 1;
             base = (long) pointers[y];
         }
@@ -130,7 +133,7 @@ public:
 /*
  * Storable basic types
  */
- 
+
 template <class T>
 class StoreBasic
 {
@@ -141,7 +144,7 @@ public:
     StoreBasic(T vv, StoreStack<T,T> *s) : v(vv), store(s) { }
 
     operator T() const {return v;}    // allows conversion from StoreBasic to T
-     
+
     StoreBasic(const StoreBasic &elt) : v(elt.v), store(elt.store) {}
 
     StoreBasic &operator=(const StoreBasic &elt) {      // Warning! assignment has to be backtrackable
@@ -151,7 +154,7 @@ public:
         }
         return *this;
     }
-    
+
     StoreBasic &operator=(const T vv) {
         store->store(&v);
         v = vv;
@@ -172,12 +175,13 @@ public:
 typedef StoreBasic<int> StoreInt;
 typedef StoreBasic<Value> StoreValue;
 typedef StoreBasic<Cost> StoreCost;
+typedef StoreBasic<BigInteger> StoreBigInteger;
 
 
 /*
  * Container for all storable stacks
  */
- 
+
 class Store
 {
     int depth;
@@ -188,14 +192,15 @@ public:
     StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink> *> storeConstraint;
     StoreStack<BTList<Variable *>, DLink<Variable *> *> storeVariable;
     StoreStack<BTList<Separator *>, DLink<Separator *> *> storeSeparator;
-    
+    StoreStack<BigInteger,BigInteger> storeBigInteger;
+
     Store(int pow) : depth(0),
-        storeValue("Value",pow), storeDomain("Domain",pow), storeCost("Cost",pow), 
-        storeConstraint("Constraint",pow), storeVariable("Variable",pow), 
-		storeSeparator("Separator",pow) {}
+        storeValue("Value",pow), storeDomain("Domain",pow), storeCost("Cost",pow),
+        storeConstraint("Constraint",pow), storeVariable("Variable",pow),
+		storeSeparator("Separator",pow) , storeBigInteger("BigInteger",pow){}
 
     int getDepth() const {return depth;}
-    
+
     void store() {
         depth++;
         storeCost.store();
@@ -204,8 +209,9 @@ public:
         storeConstraint.store();
         storeVariable.store();
         storeSeparator.store();
+        storeBigInteger.store();
     }
-    
+
     void restore() {
         depth--;
         storeCost.restore();
@@ -214,8 +220,9 @@ public:
         storeConstraint.restore();
         storeVariable.restore();
         storeSeparator.restore();
+        storeBigInteger.restore();
     }
-    
+
     void restore(int newDepth) {
         assert(depth >= newDepth);
         while (depth > newDepth) restore();

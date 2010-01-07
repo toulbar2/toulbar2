@@ -38,6 +38,11 @@ unsigned long long Constraint::getDomainSizeProduct()
   return cartesianProduct;
 }
 
+void Constraint::conflict()
+{
+    wcsp->conflict();
+}
+  
 void Constraint::projectLB(Cost cost)
 {
   if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;

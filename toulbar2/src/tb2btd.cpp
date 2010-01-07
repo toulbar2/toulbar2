@@ -1,6 +1,6 @@
 /*
  * **************** Backtrack and Russian Doll Search with Tree Decomposition *******************
- * 
+ *
  */
 
 #include "tb2solver.hpp"
@@ -9,7 +9,7 @@
 
 /*
  * Variable ordering heuristics
- * 
+ *
  */
 
 int Solver::getNextUnassignedVar(Cluster *cluster)
@@ -27,7 +27,7 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster *cluster)
   int varIndex = -1;
   Cost worstUnaryCost = MIN_COST;
   double best = MAX_VAL - MIN_VAL;
-  
+
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
 	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
@@ -40,19 +40,19 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster *cluster)
         }
 	}
   }
-  return varIndex;   
+  return varIndex;
 }
 
 int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 {
   if (unassignedVars->empty()) return -1;
-	
+
   if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar)) return lastConflictVar;
-  
+
   int varIndex = -1;
   Cost worstUnaryCost = MIN_COST;
   double best = MAX_VAL - MIN_VAL;
-    
+
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
 	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
@@ -71,7 +71,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 
 /*
  * Choice points
- * 
+ *
  */
 
 Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value)
@@ -133,16 +133,73 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 	return cub;
 }
 
+/*
+ * Choice points for solution counting
+ *
+ */
+
+BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value)
+{
+	Cost cub = 1;
+	Cost lbgood = 0;
+	BigInteger nbSol = 0, nb = 0;
+	TreeDecomposition* td = wcsp->getTreeDec();
+	assert(wcsp->unassigned(varIndex));
+	assert(wcsp->canbe(varIndex,value));
+	bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
+	Value middle = value;
+	bool increasing = true;
+	if (dichotomic) {
+		middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
+		if (value <= middle) increasing = true;
+		else increasing = false;
+	}
+	try {
+		store->store();
+		assert(td->getCurrentCluster() == cluster);
+
+		wcsp->setUb(cub);
+		if (CUT(lbgood, cub)) THROWCONTRADICTION;
+		lastConflictVar = varIndex;
+		if (dichotomic) {
+			if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+		} else assign(varIndex, value);
+		lastConflictVar = -1;
+		nb = sharpBTD(cluster);
+		nbSol += nb;
+	} catch (Contradiction) {
+		wcsp->whenContradiction();
+	}
+	store->restore();
+	nbBacktracks++;
+	try {
+		store->store();
+		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
+//		assert(wcsp->getLb() == cluster->getLbRec());
+		wcsp->setUb(cub);
+		if (CUT(lbgood, cub)) THROWCONTRADICTION;
+		if (dichotomic) {
+			if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
+		} else remove(varIndex, value);
+
+		nb = sharpBTD(cluster);
+		nbSol += nb;
+	} catch (Contradiction) {
+		wcsp->whenContradiction();
+	}
+	store->restore();
+	return nbSol;
+}
 
 /*
  * Backtrack with Tree Decomposition
- * 
+ *
  */
 
 // Maintains the best (monotonically increasing) lower bound of the cluster in parameter lbgood
 
 Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
-{		
+{
   TreeDecomposition* td = wcsp->getTreeDec();
 
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
@@ -150,7 +207,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
   int varIndex = -1;
   if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
   else varIndex = getVarMinDomainDivMaxDegree(cluster);
-  
+
   if (varIndex < 0) {
 	// Current cluster is completely assigned
 	Cost lb = wcsp->getLb();
@@ -199,7 +256,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	    // A new solution has been found for the current cluster
 		cluster->solutionRec(lb);
 		if(cluster == td->getRoot() || cluster == td->getRootRDS()) {
-			if(ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;		    
+			if(ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 			if(cluster == td->getRoot()) td->newSolution(lb);
 			else {
 			  assert(cluster == td->getRootRDS());
@@ -221,7 +278,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << lb << endl;
 	return lb;
-  } 
+  }
   else {
 	// Enumerates cluster proper variables
 	if (wcsp->enumerated(varIndex)) {
@@ -240,11 +297,11 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 
 /*
  * Russian Doll Search with Tree Decomposition
- * 
+ *
  */
 
 void Solver::russianDollSearch(Cluster *c, Cost cub)
-{	
+{
 	TreeDecomposition* td = wcsp->getTreeDec();
 
 	TClusters::iterator it = c->beginEdges();
@@ -255,7 +312,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 
 	try {
 	  store->store();
-	  
+
 	  if(c != td->getRoot()) {
 	      c->deconnectSep();
 		  c->setLb(MIN_COST);
@@ -289,4 +346,96 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	}
 	store->restore();
     c->resetOptRec(c);
+}
+
+
+/*
+ * Backtrack with Tree Decomposition for counting in CSP
+ *
+ */
+
+BigInteger Solver::sharpBTD(Cluster *cluster){
+
+	TreeDecomposition* td = wcsp->getTreeDec();
+	BigInteger NbSol = 0,nb = 0;
+	TCtrs totalList;
+	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************"<< endl;
+
+	int varIndex = -1;
+	if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
+	else varIndex = getVarMinDomainDivMaxDegree(cluster);
+
+	if (varIndex < 0) {
+		// Current cluster is completely assigned
+		Cost lb = wcsp->getLb();
+		if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " lb= " << lb << endl;
+		NbSol = 1*cluster->getCount();
+
+		if(ToulBar2::approximateCountingBTD && cluster->getParent()==NULL)
+			totalList = cluster->getCtrsTree();
+
+		for (TClusters::iterator iter = cluster->beginEdges(); NbSol>0 && iter!= cluster->endEdges(); ++iter) {
+			// Solves each cluster son
+			nb = 0;
+			Cluster* c = *iter;
+			if((nb = c->sgoodGet()) !=-1){
+				nbSGoodsUse++;
+			}
+			else
+			{
+				nb = 0;
+				td->setCurrentCluster(c);
+				try{
+					store->store();
+					if(ToulBar2::approximateCountingBTD){
+						if(c->getParent() != NULL && c->getParent()->getParent() == NULL && c->getNbVars()>1){
+							// for this son of root, we disconnect the constraints which isn't in intersection
+							double time= cpuTime();
+							TCtrs usefulCtrsList = c->getCtrsTree();
+							c->deconnectDiff(totalList, usefulCtrsList);
+
+							timeDeconnect+=cpuTime()-time;
+						}
+					}
+					wcsp->propagate();
+					nb = sharpBTD(c);
+					c->sgoodRec(0,nb);
+					nbSGoods++;
+				}
+				catch(Contradiction){
+					wcsp->whenContradiction();
+					c->sgoodRec(0,0);// no solution
+					nbSGoods++;
+				}
+				store->restore();
+
+			}
+			if(cluster->getParent()==NULL && ToulBar2::approximateCountingBTD){
+				// computation of upper bound of solutions number for each part
+				if(ubSol.find(c->getPart()) == ubSol.end()){
+					ubSol[c->getPart()] = 1;
+				}
+				ubSol[c->getPart()]*=nb;
+
+			}
+			NbSol *= nb;
+
+		}
+		return NbSol;
+	}
+	else{
+		// Enumerates cluster proper variables
+		if (wcsp->enumerated(varIndex)) {
+			assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
+			// Reuse last solution found if available
+			Value bestval = wcsp->getBestValue(varIndex);
+
+			NbSol = binaryChoicePointSBTD(cluster, varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex));
+		}
+		else {
+			NbSol = binaryChoicePointSBTD(cluster, varIndex, wcsp->getInf(varIndex));
+		}
+		if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << NbSol << endl;
+		return NbSol;
+	}
 }

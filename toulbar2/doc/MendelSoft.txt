@@ -1,22 +1,36 @@
-MIA
+
 MendelSoft
+
+Copyright© - INRA - 2009
+
+http://www.inra.fr/mia/T/MendelSoft/
+
 Introduction
-=========
+============
+
 MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.
 
 Another possibility is to find the most probable consistent correction with respect to a Bayesian formulation of the problem. In this case, the output of the software is a list of individuals for which predicted genotypes differ from their genotyping data and such that the corresponding joint probability for the whole problem is maximum.
 
 The problem, its formulation as a weighted constraint satisfaction problem, and some experimental results on simulated and real large animal pedigrees (up to 129516 individuals) are described in:
 
+Mendelian error detection in complex pedigrees using weighted constraint satisfaction techniques
 M. Sanchez, S. de Givry, and T. Schiex
-Mendelian error detection in complex pedigrees using weighted constraint satisfaction techniques (preprint)
-In Constraints journal, special issue on bioinformatics, 13(1), 2008.
+In Constraints journal, Special issue on Bioinformatics and Constraints, 13(1):130-154, 2008.
 
-S. de Givry, I. Palhiere, Z. Vitezica, and T. Schiex
 Mendelian error detection in complex pedigree using weighted constraint satisfaction techniques
-In ICLP-05 workshop on Constraint Based Methods for Bioinformatics, page 9p., Sitges, Spain, 2005.
+S. de Givry, I. Palhiere, Z. Vitezica, and T. Schiex
+In ICLP-05 workshop on Constraint Based Methods for Bioinformatics, Sitges, Spain, 2005.
+
 Compilation
+===========
+
+See HowTo.build.Toulbar2 file in the main directory.
+Option MENDELSOFT must be selected using ccmake.
+
 Input File Format
+=================
+
 MendelSoft input format is based on LINKAGE format (PEDFILE). The input must contain the following information for each individual:
 
     * a pedigree number (locus)
@@ -30,7 +44,10 @@ MendelSoft input format is based on LINKAGE format (PEDFILE). The input must con
 Father and mother id's are 0 for founders, or other members of the pedigree for whom information on parents is absent. Partial information is allowed (when only one parent is known). The sex field is coded 1 for males and 2 for females. The genotyping data consists of two unordered allele numbers (positive integers). These are codominant alleles at a single locus. An unknown genotype is coded as 0 0.
 
 NEW! If you assume there are no errors with a particular genotyping data, then the data can be made mandatory by using negative allele numbers.
+
 Running MendelSoft with a parsimony criterion
+=============================================
+
 Try the following simple pedigree available in the source code directory:
 
 mendelsoft simple.pre
@@ -64,7 +81,10 @@ No solution found by initial propagation!
 end.
 
 Other pedigree examples can be found here.
+
 Running MendelSoft with a Bayesian formulation
+==============================================
+
 Use option y to find the most probable consistent correction. Try it on the simple pedigree problem:
 
 mendelsoft simple.pre wy
@@ -99,8 +119,11 @@ mendelsoft simple.pre wy 0.01 4 2 0.4 0.4 0.1 0.1
 Check genotype priors, deduced from the selected allele probability distribution, using verbose option v.
 
 NEW! You can penalize genotyping removals for individuals which have many genotyped children (only with a Bayesian formulation). Use option u followed by a threshold number of genotyped children. mendelsoft adds a penalty weight (logarithmically proportional to the number of genotyped children) on genotyping removals if the number of genotyped children for the corresponding individuals is strictly greater than the threshold. At each correction output line, the penalized likelihood is decomposed into the original likelihood and the total penalty term (given in parenthesis).
+
 Weighted Constraint Satisfaction Problems
-MendelSoft is directly derived from ToulBar2, an open source weighted constraint satisfaction solver. This is an on-going project and future versions will appear regularly. The algorithms used by the solver are described in:
+=========================================
+
+MendelSoft is directly derived from toulBar2, an open source weighted constraint satisfaction solver. This is an on-going project and future versions will appear regularly. The algorithms used by the solver are described in:
 
 J. Larrosa, and T. Schiex
 In the quest of the best form of local consistency for Weighted CSP
@@ -118,23 +141,7 @@ C. Lecoutre, L. Sais, S. Tabary, and V. Vidal
 Last Conflict based Reasoning
 In Proc. of ECAI-06, pages 133-137, Trento, Italy, 2006.
 
-============
-compilation
-============
-Download the C++ source codes here: NEW! version 0.8a for Linux and version 0.8a for Windows.
-On Linux computers (it should work on other systems also), after downloading, extract the source codes (gzipped tar):
-Then, enter in the source code directory and compile all .cpp files together:
 
-cd toulbar2
-cmake .
-
-It will generate an executable called mendelsoft.
-
-On Windows computers, compile all the .cpp files together using Visual C++ with the following macro definitions:
-
--DNDEBUG -DWCSPFORMATONLY -DMENDELSOFT -DLONGLONG_MAX=LONG_MAX
-
-For more information, see the SoftCSP web site.
-UBIA Toulouse 	Please report bugs or problems to: Simon de Givry
-Email: degivry _AT_ toulouse.inra.fr
-Last Update: August 17th 2009
+Please report bugs or problems to Simon de Givry
+Email: degivry@toulouse.inra.fr
+Last Update: December 29th 2009

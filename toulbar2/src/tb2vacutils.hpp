@@ -98,12 +98,12 @@ public:
   void queueVAC2();
   void dequeueVAC2();
   
-  virtual void assign(Value newValue);
+  // virtual void assign(Value newValue);
   virtual void remove(Value value);
   virtual void removeFast(Value value);
-  virtual void extendAll(Cost cost);
-  virtual void project (Value value, Cost cost);
-  virtual void extend (Value value, Cost cost);
+  // virtual void extendAll(Cost cost);
+  // virtual void project (Value value, Cost cost);
+  // virtual void extend (Value value, Cost cost);
   virtual void increase (Value newInf);
   virtual void decrease (Value newSup);
 

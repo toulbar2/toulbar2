@@ -12,10 +12,10 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
-BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : 
+BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) :
         AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize())
 {
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST,storeCost));
@@ -25,9 +25,9 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     supportY = vector<Value>(sizeY,x->getInf());
 
 	costs = vector<StoreCost>(sizeX*sizeY,StoreCost(MIN_COST,storeCost));
-	
-    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
-         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
+
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
+         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
                 costs[a * sizeY + b] = tab[a * sizeY + b];
 
     propagate();
@@ -42,11 +42,11 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost
     supportX = vector<Value>(maxdomainsize,0);
     supportY = vector<Value>(maxdomainsize,0);
     linkX = new DLink<ConstraintLink>;
-    linkY = new DLink<ConstraintLink>;    
+    linkY = new DLink<ConstraintLink>;
 
-    costs = vector<StoreCost>(maxdomainsize*maxdomainsize,StoreCost(MIN_COST,storeCost));         	
-    for (unsigned int a = 0; a < maxdomainsize; a++) 
-         for (unsigned int b = 0; b < maxdomainsize; b++) 
+    costs = vector<StoreCost>(maxdomainsize*maxdomainsize,StoreCost(MIN_COST,storeCost));
+    for (unsigned int a = 0; a < maxdomainsize; a++)
+         for (unsigned int b = 0; b < maxdomainsize; b++)
                 costs[a * maxdomainsize + b] = MIN_COST;
 }
 
@@ -77,25 +77,27 @@ void BinaryConstraint::dump(ostream& os)
 
 /*
  * Propagation methods
- * 
+ *
  */
- 
+
 bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
     
-    TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) td->addDelta(cluster,x,value,cost);
-
     // hard binary constraint costs are not changed
-    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+    	TreeDecomposition* td = wcsp->getTreeDec();
+    	if(td) td->addDelta(cluster,x,value,cost);
+    	deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+    }
+    	
     Cost oldcost = x->getCost(value);
     x->project(value, cost);
-    
+
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
 }
- 
- 
+
+
 void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
@@ -113,7 +115,7 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
 	assert(connected());
-//    wcsp->revise(this);
+    wcsp->revise(this);
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -142,12 +144,12 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
 }
 
 template <GetCostMember getBinaryCost>
-void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
-        vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
+void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y,
+        vector<Value> &supportX, vector<StoreCost> &deltaCostsX,
         vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
 	assert(connected());
-//    wcsp->revise(this);	
+    wcsp->revise(this);
     if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -170,10 +172,10 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
                     if (GLBTEST(minCost, cost)) {
 						extend(y, *iterY, minCost - cost, deltaCostsY);
                         supportY[y->toIndex(*iterY)] = *iterX;
-                        if (ToulBar2::vac) {
-                            x->queueVAC2();
-                            y->queueVAC2();
-                        }
+//                         if (ToulBar2::vac) {
+//                             x->queueVAC2();
+//                             y->queueVAC2();
+//                         }
                      }
                 }
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);
@@ -191,7 +193,7 @@ template <GetCostMember getBinaryCost>
 void BinaryConstraint::projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
     bool supportBroken = false;
-//    wcsp->revise(this);
+    wcsp->revise(this);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost cost = GETCOST(*iterX, valueY);
         if (cost > MIN_COST) {
@@ -227,14 +229,14 @@ bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
 void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)
 {
 	EnumeratedVariable *yin = y;
-	if(xin != x) yin = x; 
-	
+	if(xin != x) yin = x;
+
 	vector<Cost> aux;
-    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  aux.push_back( getCost(xin, yin, a, *ity) );	
-    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  setcost(xin, yin, a, *ity, getCost(xin, yin, b, *ity));	
-    
-	vector<Cost>::iterator itc = aux.begin(); 
-    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity) { 
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  aux.push_back( getCost(xin, yin, a, *ity) );
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  setcost(xin, yin, a, *ity, getCost(xin, yin, b, *ity));
+
+	vector<Cost>::iterator itc = aux.begin();
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity) {
     	setcost(xin, yin, b, *ity, *itc);
     	++itc;
     }

@@ -1,8 +1,8 @@
 /** \file tb2wcsp.hpp
  *  \brief Global soft constraint representing a weighted CSP
- * 
+ *
  */
- 
+
 #ifndef TB2WCSP_HPP_
 #define TB2WCSP_HPP_
 
@@ -42,23 +42,35 @@ class WCSP : public WeightedCSP {
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
-    
-    
+
+
 public:
 
     WCSP(Store *s, Cost upperBound);
-    
+
     virtual ~WCSP();
-    
+
+
+ void cartProd(BigInteger& cartesianProduct) {
+    	for(vector<Variable*>::iterator it=vars.begin(); it!=vars.end();it++)
+    	{
+    		Variable * x = *it;
+    		mpz_mul_si(cartesianProduct.integer, cartesianProduct.integer, x->getDomainSize());
+    	}
+    }
 
     // -----------------------------------------------------------
     // General API for weighted CSP global constraint
-    
+
+
+
+
+
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
-    
+
     Cost getLb() const {return lb;}
     Cost getUb() const {return ub;}
-    
+
     void setUb(Cost newUb) { ub = newUb; }
     void setLb(Cost newLb) { lb = newLb; }
 
@@ -67,7 +79,7 @@ public:
             ub = newUb;
     		if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
         }
-    } 
+    }
 	void enforceUb() {
        if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, ub)) THROWCONTRADICTION;
        objectiveChanged=true;
@@ -78,7 +90,7 @@ public:
            ub = newUb;
            objectiveChanged=true;
        }
-    }     
+    }
 
     // warning! parameter addLb increments current lower bound
     void increaseLb(Cost addLb) {
@@ -90,9 +102,9 @@ public:
            if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
        }
     }
- 
+
     bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}
-    
+
     string getName(int varIndex) const {return vars[varIndex]->getName();}
     Value getInf(int varIndex) const {return vars[varIndex]->getInf();}
     Value getSup(int varIndex) const {return vars[varIndex]->getSup();}
@@ -105,22 +117,22 @@ public:
     bool unassigned(int varIndex) const {return vars[varIndex]->unassigned();}
     bool canbe(int varIndex, Value v) const {return vars[varIndex]->canbe(v);}
     bool cannotbe(int varIndex, Value v) const {return vars[varIndex]->cannotbe(v);}
-       
+
     void increase(int varIndex, Value newInf) {vars[varIndex]->increase(newInf);}
     void decrease(int varIndex, Value newSup) {vars[varIndex]->decrease(newSup);}
     void assign(int varIndex, Value newValue) {vars[varIndex]->assign(newValue);}
     void remove(int varIndex, Value remValue) {vars[varIndex]->remove(remValue);}
-        
+
     Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}
     Cost getMaxUnaryCost(int varIndex) const {return vars[varIndex]->getMaxCost();}
     Value getMaxUnaryCostValue(int varIndex) const {return vars[varIndex]->getMaxCostValue();}
     Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}
     Value getBestValue(int varIndex) const {return bestValues[varIndex];}
     void setBestValue(int varIndex, Value v) {bestValues[varIndex] = v;}
-    
+
     int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}
     int getTrueDegree(int varIndex) const {return vars[varIndex]->getTrueDegree();}
-    double getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
+    Long getWeightedDegree(int varIndex) const {return vars[varIndex]->getWeightedDegree();}
     void revise(Constraint *c) {lastConflictConstr = c;}
     void conflict() {
         if (lastConflictConstr) {
@@ -129,14 +141,14 @@ public:
             lastConflictConstr=NULL;
         }
     }
-    
+
     void whenContradiction();       // after a contradiction, reset propagation queues and increase nbNodes
     void propagate();               // propagate until a fix point and increase nbNodes
     bool verify();
 
     unsigned int numberOfVariables() const {return vars.size();}
     unsigned int numberOfUnassignedVariables() const {
-        int res = 0; 
+        int res = 0;
         for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) res++;
         return res;}
     unsigned int numberOfConstraints() const {return constrs.size();}
@@ -154,7 +166,7 @@ public:
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     void processTernary();
-    
+
     void postUnary(int xIndex, vector<Cost> &costs);
     void postUnary(int xIndex, Value *d, int dsize, Cost penalty);
     void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
@@ -163,7 +175,7 @@ public:
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
-    
+
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
@@ -173,7 +185,7 @@ public:
 	map<int,int> varsDom;           // we don't have to parse the XML file again
 	vector< vector<int> > Doms;
 	#endif
-	
+
 	void read_XML(const char *fileName);
 	void solution_XML( bool opt = false );
 	void solution_UAI(Cost res);
@@ -210,7 +222,7 @@ public:
     void queueDAC(DLink<VariableWithTimeStamp> *link) {DAC.push(link, nbNodes);}
     void queueEAC1(DLink<VariableWithTimeStamp> *link) {EAC1.push(link, nbNodes);}
     void queueEAC2(DLink<VariableWithTimeStamp> *link) {EAC2.push(link, nbNodes);}
-    void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }  
+    void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
     void queueSeparator(DLink<Separator *> *link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator *> *link) { PendingSeparator.erase(link, true); }
 
@@ -240,36 +252,37 @@ public:
 		TernaryConstraint*  xyz;
 	} elimInfo;
 
-	int maxdomainsize;	                              						   
+	int maxdomainsize;
 
 	void initElimConstr();
 	void initElimConstrs();
 
 	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
-	vector<elimInfo> elimInfos; 
+	vector<elimInfo> elimInfos;
 	vector<Constraint*>  elimConstrs;
 
-	StoreInt elimBinOrder;    	 				        
-	StoreInt elimTernOrder;    	 				        
+	StoreInt elimBinOrder;
+	StoreInt elimTernOrder;
 	vector<Constraint*>  elimBinConstrs;
 	vector<Constraint*>  elimTernConstrs;
-	
-	int getElimOrder() { return (int) elimOrder; } 
-	int getElimBinOrder() { return (int) elimBinOrder; } 
-	int getElimTernOrder() { return (int) elimTernOrder; } 
-	void elimOrderInc() { elimOrder = elimOrder + 1; }   
-	void elimBinOrderInc() { elimBinOrder = elimBinOrder + 1; }   
-	void elimTernOrderInc() { elimTernOrder = elimTernOrder + 1; }   
+    int maxDegree;
+
+	int getElimOrder() { return (int) elimOrder; }
+	int getElimBinOrder() { return (int) elimBinOrder; }
+	int getElimTernOrder() { return (int) elimTernOrder; }
+	void elimOrderInc() { elimOrder = elimOrder + 1; }
+	void elimBinOrderInc() { elimBinOrder = elimBinOrder + 1; }
+	void elimTernOrderInc() { elimTernOrder = elimTernOrder + 1; }
     Constraint *getElimCtr(int elimIndex) const {return elimConstrs[elimIndex];}
     Constraint *getElimBinCtr(int elimBinIndex) const {return elimBinConstrs[elimBinIndex];}
     Constraint *getElimTernCtr(int elimTernIndex) const {return elimTernConstrs[elimTernIndex];}
-	
+
 	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
 	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
 
 	void eliminate();
-	void restoreSolution( Cluster* c = NULL ); 
-    
+	void restoreSolution( Cluster* c = NULL );
+
 	Constraint* sum( Constraint* ctr1, Constraint* ctr2  );
 	void project( Constraint* &ctr_inout, EnumeratedVariable* var  );
 	void variableElimination( EnumeratedVariable* var );
@@ -305,7 +318,7 @@ public:
 
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
-    TProb Cost2LogLike(Cost c) const;    
+    TProb Cost2LogLike(Cost c) const;
 };
 
 #endif /*TB2WCSP_HPP_*/

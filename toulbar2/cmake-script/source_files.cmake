@@ -1,3 +1,9 @@
+
+# liste of file 
+# new file news to be add in this list
+# you can also define your own list and add it to the wall list
+#  for exmape : set ( ${WALLFILE} ${my_file_list_to_add})
+
         file(
                         GLOB
                         source_files
@@ -6,6 +12,7 @@
                         ${My_Source}/tb2bep.cpp
                         ${My_Source}/tb2binconstr.cpp
                         ${My_Source}/tb2btd.cpp
+                        ${My_Source}/tb2btlist.cpp
                         ${My_Source}/tb2btqueue.cpp
                         ${My_Source}/tb2clusters.cpp
                         ${My_Source}/tb2constraint.cpp
@@ -21,8 +28,8 @@
                         ${My_Source}/tb2solver.cpp
                         ${My_Source}/tb2system.cpp
                         ${My_Source}/tb2ternaryconstr.cpp
-                        ${My_Source}/tb2vacutils.cpp
                         ${My_Source}/tb2vac.cpp
+                        ${My_Source}/tb2vacutils.cpp
                         ${My_Source}/tb2variable.cpp
                         ${My_Source}/tb2wcsp.cpp
         )
@@ -43,6 +50,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2arithmetic.*pp 
                         ${My_Source}/tb2bep.*pp 
                         ${My_Source}/tb2binconstr.*pp 
+                        ${My_Source}/tb2btlist.*pp
                         ${My_Source}/tb2btqueue.*pp
                         ${My_Source}/tb2clusters.*pp
                         ${My_Source}/tb2constraint.*pp

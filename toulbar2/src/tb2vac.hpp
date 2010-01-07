@@ -91,9 +91,9 @@ public:
   set<int> singletonI;	  
   set<int> singleton;	  
   
-  int varAssign; 
-  Value valAssign;
-  void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
+  // int varAssign; 
+  // Value valAssign;
+  // void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
 
   void afterPreprocessing();
   void iniSingleton();
@@ -101,10 +101,10 @@ public:
   void removeSingleton();
 
   int  getHeuristic();
-  int  getVarACDom( int i );
-  Cost getVarCostStat( int i );
-  Long getVarTimesStat( int i );
-  void updateStat(Cost lambda);
+  // int  getVarACDom( int i );
+  // Cost getVarCostStat( int i );
+  // Long getVarTimesStat( int i );
+  // void updateStat(Cost lambda);
   void printStat(bool ini = false);
   void printTightMatrix();
 

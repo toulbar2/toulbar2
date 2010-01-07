@@ -1,0 +1,286 @@
+********************************
+* ToulBar2 Brief User Overview *
+********************************
+________________________________________________________________________________
+Solve a simple weighted constraint satisfaction problem (WCSP)
+with default options:
+
+../bin/Linux/toulbar2 ../validation/example.wcsp
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+New solution: 28 (0 backtracks, 8 nodes, depth 8)
+New solution: 27 (115 backtracks, 233 nodes, depth 6)
+Optimum: 27 in 225 backtracks and 446 nodes and 0.04 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP with an initial upperbound and save one of its optimal solution
+in filename "sol":
+
+../bin/Linux/toulbar2 ../validation/example.wcsp 28 w
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+New solution: 27 (110 backtracks, 226 nodes, depth 6)
+Optimum: 27 in 220 backtracks and 439 nodes and 0.03 seconds.
+end.
+
+cat sol
+# each value corresponds to one variable assignment in problem file order
+ 1 0 2 2 2 2 0 4 2 0 4 1 0 0 3 0 3 1 2 4 2 1 2 4 1
+
+________________________________________________________________________________
+Solve a WCSP using a limited discrepancy search strategy:
+
+../bin/Linux/toulbar2 ../validation/example.wcsp l
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+--- [0] LDS 0 ---
+New solution: 28 (0 backtracks, 8 nodes, depth 1)
+--- [0] LDS 1 ---
+--- [0] LDS 2 ---
+New solution: 27 (4 backtracks, 32 nodes, depth 3)
+--- [0] LDS 4 ---
+--- [0] LDS 8 ---
+--- [0] LDS 16 ---
+Optimum: 27 in 372 backtracks and 801 nodes and 0.03 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP using Depth-First Brand and Bound with Tree Decomposition (BTD)
+and a min-fill order:
+
+../misc/bin/linux/peo ../validation/example.wcsp 3 > example.order
+../bin/Linux/toulbar2 ../validation/example.wcsp B1 Oexample.order 
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+Tree decomposition width  : 8
+Tree decomposition height : 16
+Number of clusters        : 18
+
+Tree decomposition time: 0 seconds.
+DAC order: 2 0 3 6 9 14 16 19 20 24 5 1 23 11 12 8 7 15 21 18 17 13 4 10 22
+New solution: 27 (269 backtracks, 521 nodes, depth 0)
+Optimum: 27 in 269 backtracks and 521 nodes and 0.02 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP using Russian Doll Search exploiting BTD on small separators only:
+
+../bin/Linux/toulbar2 ../validation/example.wcsp B2r3 Oexample.order
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+Tree decomposition width  : 22
+Tree decomposition height : 24
+Number of clusters        : 4
+
+Tree decomposition time: 0.01 seconds.
+DAC order: 2 0 1 3 4 5 6 7 8 9 10 12 13 14 15 16 17 18 19 20 21 22 23 24 11
+--- Solving cluster subtree 0 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 1)
+---  done  cost = 0 (0 backtracks, 0 nodes, depth 1)
+
+--- Solving cluster subtree 1 ...
+New solution: 0 (0 backtracks, 1 nodes, depth 2)
+---  done  cost = 0 (1 backtracks, 1 nodes, depth 1)
+
+--- Solving cluster subtree 2 ...
+New solution: 11 (1 backtracks, 10 nodes, depth 10)
+New solution: 10 (58 backtracks, 121 nodes, depth 10)
+New solution: 9 (135 backtracks, 274 nodes, depth 8)
+---  done  cost = 9 (234 backtracks, 466 nodes, depth 1)
+
+--- Solving cluster subtree 3 ...
+New solution: 27 (234 backtracks, 466 nodes, depth 1)
+---  done  cost = 27 (234 backtracks, 466 nodes, depth 1)
+
+Optimum: 27 in 234 backtracks and 466 nodes and 0.03 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP using partial variable elimination followed by BTD:
+
+../bin/Linux/toulbar2 ../validation/example.wcsp mp3 B1 Oexample.order
+
+DAC order: 21 20 15 19 24 3 0 16 14 9 6 1 12 8 7 5 23 18 17 4 10 22 13 11 2
+Read 25 variables, with 5 values at most, and 63 constraints.
+Maximum degree of generic variable elimination: 3
+23 unassigned variables, 115 values in all current domains and 61 constraints.
+Tree decomposition width  : 8
+Tree decomposition height : 16
+Number of clusters        : 18
+
+Tree decomposition time: 0 seconds.
+DAC order: 2 11 20 19 24 3 0 16 14 9 6 5 1 23 12 8 7 15 21 18 17 4 10 22 13
+New solution: 27 (202 backtracks, 394 nodes, depth 0)
+Optimum: 27 in 202 backtracks and 394 nodes and 0.02 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and
+multiplying all costs by a constant 100 (usefull if initial costs are small):
+
+../bin/Linux/toulbar2 ../validation/example.wcsp AC100
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+Lb before VAC: 1800
+Preprocessing VAC mean lb/incr: 18.3448     total increments: 29     cyclesize: 14.8966     k: 2.37931 (mean), 6 (max)
+Lb after VAC: 2341
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+New solution: 2900 (0 backtracks, 8 nodes, depth 8)
+New solution: 2800 (4 backtracks, 12 nodes, depth 6)
+New solution: 2700 (26 backtracks, 54 nodes, depth 6)
+VAC mean lb/incr: 5     total increments: 39     cyclesize: 16.5128     k: 3.61538 (mean), 11 (max)
+Optimum: 2700 in 104 backtracks and 203 nodes and 0.02 seconds.
+end.
+
+________________________________________________________________________________
+Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and during search,
+multiplying all costs by a constant 100, speeding VAC convergence during search,
+and exploiting a dedicated value ordering heuristic:
+ 
+../bin/Linux/toulbar2 ../validation/example.wcsp VA1000C100T10
+
+Read 25 variables, with 5 values at most, and 63 constraints.
+Lb before VAC: 1800
+Preprocessing VAC mean lb/incr: 18.3448     total increments: 29     cyclesize: 14.8966     k: 2.37931 (mean), 6 (max)
+Lb after VAC: 2341
+24 unassigned variables, 120 values in all current domains and 62 constraints.
+New solution: 2800 (0 backtracks, 8 nodes, depth 8)
+New solution: 2700 (11 backtracks, 24 nodes, depth 6)
+VAC mean lb/incr: 10.25     total increments: 132     cyclesize: 16.1591     k: 2.97727 (mean), 9 (max)
+Optimum: 2700 in 47 backtracks and 89 nodes and 0.04 seconds.
+end.
+
+________________________________________________________________________________
+Count the number of solutions of a CSP (i.e. null optimum) with #BTD
+and default variable ordering:
+
+../bin/Linux/toulbar2 ../validation/enum/base2.wcsp aB1
+
+Read 10 variables, with 4 values at most, and 12 constraints.
+10 unassigned variables, 40 values in all current domains and 12 constraints.
+Tree decomposition width  : 3
+Tree decomposition height : 7
+Number of clusters        : 6
+
+Tree decomposition time: 0 seconds.
+DAC order: 0 1 2 6 7 8 9 3 4 5
+Number of solutions    : =  4704
+Number of #goods       :    100
+Number of used #goods  :    56
+Size of sep            :    3
+Time                   :    0.01 seconds
+... with 95 backtracks and 190 nodes
+end.
+
+________________________________________________________________________________
+Get a quick approximation of the number of solutions of a CSP with Approx_#BTD
+and default variable ordering:
+
+../bin/Linux/toulbar2 ../validation/enum/base2.wcsp aB1D
+
+Read 10 variables, with 4 values at most, and 12 constraints.
+10 unassigned variables, 40 values in all current domains and 12 constraints.
+
+part 1 : 9 variables and 8 constraints
+part 2 : 7 variables and 4 constraints
+--> number of parts : 2
+
+Tree decomposition width  : 2
+Tree decomposition height : 7
+Number of clusters        : 12
+
+Tree decomposition time: 0 seconds.
+
+Cartesian product 		   :    1.04858e+06
+Upper bound of number of solutions : <= 46656
+Number of solutions    : ~= 7381
+Number of #goods       :    43
+Number of used #goods  :    128
+Size of sep            :    2
+Time                   :    -2.0837e-19 seconds
+... with 125 backtracks and 250 nodes
+end.
+
+________________________________________________________________________________
+Get a help message on ToulBar2 options and see what are the default options:
+
+../bin/Linux/toulbar2
+
+*************************
+* ToulBar2 Help Message *
+*************************
+../bin/Linux/toulbar2 version 0.9
+
+Command line is:
+../bin/Linux/toulbar2 filename [upperbound] [options]
+
+Available problem formats (specified by the filename extension) are:
+   *.wcsp : Weighted CSP format (see SoftCSP web site)
+   *.uai : Bayesian network and Markov Random Field format (see UAI'08 evaluation workshop) followed by an optional evidence filename (perform MPE task)
+   *.pre  : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)
+   *.bep  : satellite scheduling format (CHOCO benchmark)
+
+Alternatively one can call the random problem generator: 
+     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %
+                                         p2 is the num of binary cost functions to include
+                                         the seed parameter is optional
+or:                                                                               
+     binsub-{n}-{m}-{p1}-{p2}-{p3}-{seed} binary random & submodular cost functions
+                                         p1 is the tightness in percentage % of random cost functions
+                                         p2 is the num of binary cost functions to include
+                                         p3 is the percentage % of submodular cost functions among p2 cost functions
+                                         (plus 10 permutations of two randomly-chosen values for each domain)
+or:                                                                               
+     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions
+or:                                                                               
+     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions
+
+An initial upperbound is optional (default value is 1537228672809129301)
+
+Available options are (WARNING! each letter is meaningful, do not use a "-" before each option, use symbol ":" before an option to remove a default option):
+   v : verbosity (repeat this option letter to increase the verbosity level)
+   s : show each solution found
+   w : write last solution found in filename "sol"
+   b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)
+   c : perform binary branching with last conflict backjumping variable ordering heuristic (default option)
+   q : weighted degree variable ordering heuristic (UNSTABLE)
+   d : dichotomic branching instead of binary branching when current domain size is strictly greater than 10 (default option)
+   e[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is 3)
+   p[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is -1)
+   t : preprocessing only: project ternary cost functions on binary cost functions and apply 3-consistency (can be very slow)
+   h : preprocessing only: project ternary cost functions on binary cost functions following a heuristic (to be used in conjunction with option "t")
+   m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options "p" and "O")
+   o : ensure optimal worst-case time complexity of DAC and EAC (can be costly in practice)
+   k[integer] : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4) (default value is 4)
+   l : limited discrepancy search
+   i : initial upperbound found by INCOP local search solver (filename "./misc/bin/linux/narycsp")
+   z : save current problem in wcsp format in filename "problem.wcsp"
+   Z : debug mode (save problem at each node if verbosity option set!)
+   x : load a solution from filename "sol"
+
+   M[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is 0)
+   A[integer] : enforce VAC at each search node with a search depth less than a given value (default value is 0)
+   T[integer] : threshold cost value for VAC (default value is 1)
+   P[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)
+   C[integer] : multiply all costs by this number (default value is 1)
+   S : preprocessing only: perform singleton consistency (only in conjunction with option "A")
+   V : VAC-based value ordering heuristic
+
+   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)
+   O[filename ] : read a variable elimination order from a file in order to build a tree decomposition (WARNING! DO NOT PUT A SPACE BETWEEN "O" AND FILENAME)
+                  (if not specified, then use the variable order in which variables appear in the problem file)
+   j[integer] : split large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number
+                (use options "B3j1" for pure RDS, use value 0 for no splitting) (default value is 0)
+   r[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is -1)
+   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option "e")
+   R[integer] : choice for a specific root cluster number
+   I[integer] : choice for solving only a particular rooted cluster subtree
+
+   a : find all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)
+   D : approximate satisfiable solution count with BTD

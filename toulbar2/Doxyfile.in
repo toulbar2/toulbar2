@@ -588,13 +588,15 @@ FILE_PATTERNS          =
 # should be searched for input files as well. Possible values are YES and NO. 
 # If left blank NO is used.
 
+RECURSIVE              = NO
 RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should 
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = _darcs src/ilog/* src/Xml/*
+EXCLUDE                = _darcs "@CMAKE_CURRENT_SOURCE_DIR@/src/ilog/" "@CMAKE_CURRENT_SOURCE_DIR@/src/xmlcsp/" \
+				 "@CMAKE_CURRENT_BINARY_DIR@/src/ilog/" "@CMAKE_CURRENT_BINARY_DIR@/src/xmlcsp/" 
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix filesystem feature) are excluded 

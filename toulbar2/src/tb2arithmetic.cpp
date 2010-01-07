@@ -124,6 +124,7 @@ void Unary::propagate()
     }
 
 	assert(connected());
+	wcsp->revise(this);
 	set<Value>::iterator itinf = permitted.lower_bound(x->getInf());
 	set<Value>::iterator itsup = permitted.upper_bound(x->getSup());
 	--itsup;
@@ -171,7 +172,7 @@ void Supxyc::propagate()
 	    print(cout);
         cout << " delta=" << deltaCost << " dxinf=" << deltaValueXinf << " dxcost=" << deltaCostXinf << " dysup=" << deltaValueYsup << " dycost=" << deltaCostYsup << endl;
     }
-
+	wcsp->revise(this);
     // deconnect the constraint if always satisfied
     if (x->getInf() >= y->getSup() + cst) {
 	    deconnect();
@@ -263,7 +264,7 @@ void Disjunction::propagate()
 	cout << " dxinf=" << deltaValueXinf << " dxsup=" << deltaValueXsup << " dyinf=" << deltaValueYinf << " dysup=" << deltaValueYsup << endl;
   }
   assert(connected());
-
+  wcsp->revise(this);
   // deconnect the constraint if always satisfied
   if (x->getInf() >= y->getSup() + csty || y->getInf() >= x->getSup() + cstx) {
 	deconnect();
@@ -351,6 +352,7 @@ void SpecialDisjunction::propagate()
 	print(cout);
 	cout << "deltaCost= " << deltaCost << " dxinf=" << deltaValueXinf << " dxsup=" << deltaValueXsup << " dyinf=" << deltaValueYinf << " dysup=" << deltaValueYsup << endl;
   }
+  wcsp->revise(this);
   if (x->getSup()>xinfty) x->decrease(xinfty);
   if (y->getSup()>yinfty) y->decrease(yinfty);
   if ((x->getSup() < xinfty && y->getSup() < yinfty && 

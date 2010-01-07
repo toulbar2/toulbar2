@@ -133,9 +133,12 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
     // hard binary constraint costs are not changed
-    TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) td->addDelta(cluster,x,value,cost);
-    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+	    TreeDecomposition* td = wcsp->getTreeDec();
+     	if(td) td->addDelta(cluster,x,value,cost);
+    	deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+    }
+    	
     Cost oldcost = x->getCost(value);
     x->project(value, cost);
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
@@ -176,7 +179,7 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
 {
     assert(getIndex(y) < getIndex(z));  // check that support.first/.second is consistent with y/z parameters
     assert(connected());
-//    wcsp->revise(this);
+    wcsp->revise(this);
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << "," << z->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -226,7 +229,7 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
             BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz)
 {
     assert(connected());
-//    wcsp->revise(this);   
+    wcsp->revise(this);   
     if (ToulBar2::verbose >= 3) cout << "findFullSupportEAC C" << x->getName() << "," << y->getName()<< "," << z->getName() << endl;
     bool supportBroken = false;
     bool supportReversed = (getIndex(y) > getIndex(z));

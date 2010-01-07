@@ -11,16 +11,23 @@ set (My_Source src)	# source location
 set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" ) # doxygen repository default ./doc/
 set (doc_destination "share/doc")   		#path of doc installation 
 set (My_validation "validation")
+set (My_misc_source misc/src/)
 
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
 set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
 
+#############################"
+# init version NUMBER
+############################
+	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
+	set (Toulbar_MINOR "9" CACHE STRING "Toulbar2 Framework minor release")
+ 
 
 ################
 # PROJECT NAME
 ################
 
-project("Toulbar2 framework")
+project("Toulbar2_framework")
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
 	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR} ")
@@ -37,9 +44,9 @@ include(CMakeDependentOption)
 
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
 #	OPTION(MENDELSOFT "mendelsoft compilation and packaging option [default:off]" OFF)
-	OPTION(WIN32 "toulbar cros compilation flag [default: off]" OFF) 
+	OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF) 
 
-	OPTION(ALL_APP "application and toulbar2 solver compilation [default: off]" OFF) 
+	OPTION(ALL_APP "dedicated applications and toulbar2 solver compilation [default: off]" OFF) 
 	OPTION(MENDELSOFT_ONLY "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 	OPTION(TOULBAR2_ONLY  "toulbar2 solver compilation ONLY  [default: on]" ON) 
 
@@ -48,27 +55,23 @@ include(CMakeDependentOption)
 
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF) 
 
-	OPTION(XML "use the xml input out format to build output [default: off]" OFF)
-	OPTION(Boost "boost binding [default: off]" OFF) 
-	OPTION(WIDE_STRING  "use wide string in solver output [default:on]" ON)
+	OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
+	OPTION(Boost "boost graph binding [default: off]" OFF) 
+	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
+	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
 
 	OPTION(BUILD_API_DOC "build documentation with doxygen [default:on]" ON)
-	OPTION(STATIC "STATIC compilation flag [default: on]" ON)
+	OPTION(STATIC "static compilation flag [default: on]" ON)
 	OPTION(verbose "verbose mode [default:on]" ON)
 
 
 
-#############################"
-# init version NUMBER
-############################
-	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
-	set (Toulbar_MINOR "9" CACHE STRING "Toulbar2 Framework minor release")
- 
 ###########################
 #Default profile for compilation
 ###########################
 
 SET( CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel.")
+SET(CMAKE_CXX_FLAGS "-Wall" )
 
 ################
 # default OPTION for toulbar2 test  phase
@@ -78,7 +81,7 @@ SET(FOPT "test-opt.cmake" CACHE string "filename containing benchmark option")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_regexp "end." CACHE string "default regex searched in test output")
 
-	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost XML FOPT CMAKE_INSTALL_PREFIX Default_test_timeout)
+	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost XML FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY)
 	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
 #############"
@@ -86,7 +89,7 @@ SET(Default_regexp "end." CACHE string "default regex searched in test output")
 #############
 
 IF(STATIC)
-	set (CMAKE_CXX_FLAGS "-static -static-libgcc" )
+	set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
 	MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml  option not compliant with static link)")
 	SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
 	
@@ -100,7 +103,7 @@ if(verbose)
 endif(verbose)
 
 ##########################
-# OPTION DEPENANCES 
+# OPTION DEPENDANCES 
 ##########################"
 	SET(Toulbar_NAME "toulbar2") # default project name
 
@@ -171,6 +174,20 @@ ENDIF(TOULBAR2_ONLY)
 ############################
 
 include(${My_cmake_scritp}/init-version.cmake)
+###########
+# find gmp 
+###########"
+
+MESSAGE(STATUS "search for GMP library")
+INCLUDE(FindPkgConfig)
+include(${My_cmake_scritp}/FindGmp.cmake)
+SET (all_depends  ${all_depends} ${GMP_LIBRARIES})
+INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
+if(GMP_INCLUDE_DIR)
+MESSAGE(STATUS "include gmp : ${GMP_INCLUDE_DIR} ")
+endif()
+
+
 
 ##############################
 	IF(ILOG)
@@ -201,7 +218,7 @@ IF(WIN32)
 ELSE(WIN32)
 
 	SET(COST LONGLONG_COST)
-	MESSAGE(STATUS "COST ==> long.")
+	MESSAGE(STATUS "COST ==>  long long")
 
 ENDIF(WIN32)
 

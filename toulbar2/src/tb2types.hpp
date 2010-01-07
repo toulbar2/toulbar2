@@ -1,6 +1,6 @@
 /** \file tb2types.hpp
  *  \brief Macros, types, and globals.
- * 
+ *
  */
 
 #ifndef TB2TYPES_HPP_
@@ -11,12 +11,13 @@
 //#define PARETOPAIR_COST
 
 //#define DOUBLE_PROB
-#define LONGDOUBLE_PROB
+//#define LONGDOUBLE_PROB
 
 // uncomment if using large enumerated domains with BTD or in nary cost functions
-#define WIDE_STRING
+//#define WIDE_STRING
 
 #include "tb2utils.hpp"
+#include "tb2integer.hpp"
 
 typedef int Value;
 
@@ -110,7 +111,7 @@ typedef map<int,int> TSCOPE;
 
 /*
  * Global variables encapsulated as static members
- * 
+ *
  */
 
 
@@ -136,12 +137,13 @@ public:
     static bool showSolutions;
     static bool writeSolution;
     static bool allSolutions;
+    static bool approximateCountingBTD;
     static bool binaryBranching;
     static bool dichotomicBranching;
     static unsigned int dichotomicBranchingSize;
-    static int  elimDegree; 
+    static int  elimDegree;
     static int  elimDegree_preprocessing;
-    static int  elimDegree_; 
+    static int  elimDegree_;
     static int  elimDegree_preprocessing_;
     static int minsumDiffusion;
     static bool preprocessTernary;
@@ -163,7 +165,7 @@ public:
     static int resolution;
     static TProb errorg;
     static TProb NormFactor;
-    static int foundersprob_class; 
+    static int foundersprob_class;
     static vector<TProb> allelefreqdistrib;
     static bool consecutiveAllele;
     static bool generation;
@@ -179,7 +181,7 @@ public:
     static bool vacValueHeuristic;
     static BEP *bep;
     static LcLevelType LcLevel;
-    
+
     static char* varOrder;
     static int btdMode;
     static int btdSubTree;
@@ -200,24 +202,24 @@ public:
 
 /*
  * Backtrack exception
- * 
+ *
  */
 
 #ifdef ILOGLUE
 extern IloSolver IlogSolver;
-#define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; IlogSolver.fail(0);})
+#define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0);})
 #else
 class Contradiction
 {
 public:
     Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
-#define THROWCONTRADICTION (/* conflict(), */ throw Contradiction())
+#define THROWCONTRADICTION ({if (ToulBar2::weightedDegree) conflict(); throw Contradiction();})
 #endif
 
 /*
  * Internal classes and basic data structures used everywhere
- * 
+ *
  */
 
 class Store;
@@ -238,13 +240,13 @@ struct ValueCost
 	Cost cost;
 };
 
-struct ConstraintLink 
+struct ConstraintLink
 {
     Constraint *constr;
     int scopeIndex;
 };
 
-class WCSPLink 
+class WCSPLink
 {
 public:
     WCSP * const wcsp;

@@ -152,6 +152,7 @@ public:
 
     void assign(int varIndex) {
         assert(connected());
+		wcsp->revise(this);
         if (x->assigned() && y->assigned()) {
 		  deconnect();
 		  if (x->getValue() >= xinfty && y->getValue() >= yinfty && costx + costy > deltaCost) {

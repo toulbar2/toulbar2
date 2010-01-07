@@ -2,7 +2,7 @@
 /*
  * ****** Variable with domain represented by an enumerated domain *******
  */
- 
+
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
@@ -11,20 +11,20 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 
-EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) : 
-        Variable(w, n, iinf, isup), 
+EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) :
+        Variable(w, n, iinf, isup),
         domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
         support(iinf, &w->getStore()->storeValue)
 {
     init();
 }
 
-EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) : 
-        Variable(w, n, min(d,dsize), max(d, dsize)), 
+EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) :
+        Variable(w, n, min(d,dsize), max(d, dsize)),
         domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
         support(min(d,dsize), &w->getStore()->storeValue)
 {
@@ -83,7 +83,7 @@ void EnumeratedVariable::print(ostream& os)
         os << " [" << inf << "," << sup << "]";
     }
     os << "/" << getDegree();
-//    os << "/" << getWeightedDegree();
+	if (ToulBar2::weightedDegree) os << "/" << getWeightedDegree();
     if (unassigned()) {
         os << " <";
         for (iterator iter=begin(); iter != end(); ++iter) {
@@ -95,7 +95,7 @@ void EnumeratedVariable::print(ostream& os)
 
 /*
  * Propagation methods
- * 
+ *
  */
 
 void EnumeratedVariable::queueAC()
@@ -265,7 +265,7 @@ bool EnumeratedVariable::isEAC(Value a)
             if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
 #ifndef NDEBUG
                 if (ToulBar2::verbose >=4) {
-                    cout << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl; 
+                    cout << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl;
                     if ((*iter).constr->arity()==3) {
                         TernaryConstraint *c = (TernaryConstraint *) (*iter).constr;
                         if (c->xy->connected()) cout << *c->xy;
@@ -284,7 +284,7 @@ bool EnumeratedVariable::isEAC(Value a)
         return true;
     }
 #ifndef NDEBUG
-    if (ToulBar2::verbose >=4) cout << getName() << "(" << a << ") is not EAC due to unary cost " << getCost(a) << endl; 
+    if (ToulBar2::verbose >=4) cout << getName() << "(" << a << ") is not EAC due to unary cost " << getCost(a) << endl;
 #endif
     return false;
 }
@@ -439,7 +439,7 @@ void EnumeratedVariable::remove(Value value)
 // variable elimination is tuned on
 void EnumeratedVariable::assignWhenEliminated(Value newValue)
 {
-//          assert(NCBucket == -1); // may be not already assigned in BTD newsolution 
+//          assert(NCBucket == -1); // may be not already assigned in BTD newsolution
         inf = newValue;
         sup = newValue;
         support = newValue;
@@ -458,7 +458,7 @@ void EnumeratedVariable::assign(Value newValue)
         support = newValue;
         maxCostValue = newValue;
         maxCost = MIN_COST;
-   
+
         Cost cost = getCost(newValue);
         if (cost > MIN_COST) {
             deltaCost += cost;
@@ -486,7 +486,7 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
 
 	   if (ToulBar2::verbose >= 2) cout << "   elim linked to one binary " << ctr << endl;
 
-       // deconnect first to be sure the current var is not involved in future propagation	
+       // deconnect first to be sure the current var is not involved in future propagation
        ctr->deconnect();
        // to be done before propagation
        WCSP::elimInfo ei = {this, x, NULL, ctr, NULL, NULL};
@@ -508,7 +508,7 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
            }
        }
       if (supportBroken) {  x->findSupport();  }
-      
+
       return true;
 }
 
@@ -525,27 +525,26 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
  		if(y->isSep() &&  z->isSep()) return false;
      	if((cluster != xylink.constr->getCluster()) ||
      	   (cluster != xzlink.constr->getCluster()) ||
-     	   (xylink.constr->getCluster() != xzlink.constr->getCluster()))     	   
+     	   (xylink.constr->getCluster() != xzlink.constr->getCluster()))
      	   return false;
      }
 
   	 assert(getDegree() == 2);
-     xylink.constr->deconnect(); 	            
+     xylink.constr->deconnect();
 	 xzlink.constr->deconnect();
-	    
+
 	 BinaryConstraint* yz = y->getConstr(z);
 
      if(td && yz && (getCluster() != yz->getCluster())) {
     	BinaryConstraint* yz_ =  y->getConstr(z, getCluster());
     	if(yz_) {
-    		yz = yz_; 
+    		yz = yz_;
     		if (ToulBar2::verbose > 1) cout << "(" << y->wcspIndex << "," << z->wcspIndex << ") var elim binary is already duplicate and has same cluster" << endl;
     	}
     }
-	 
 
-     BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z); 
- 	 wcsp->elimBinOrderInc(); 
+     BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z);
+ 	 wcsp->elimBinOrderInc();
 
 	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
@@ -555,12 +554,12 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	        Cost curcost = getCost(*iter) +
 						   getBinaryCost(xylink, *iter, *itery) +
 						   getBinaryCost(xzlink, *iter, *iterz);
-						   
+
 	        if (curcost < mincost) mincost = curcost;
 	    }
 		yznew->setcost(*itery,*iterz,mincost);
 	 }}
- 
+
 	 if(yz) {
  	 	 if(td && yz->getCluster() != cluster) {
 			 yz = yznew;
@@ -573,7 +572,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 } else {
 		 yz = yznew;
 	 	 yz->reconnect();
-	 }	
+	 }
 
 	 if(td) yz->setCluster( getCluster() );
 	 // to be done before propagation
@@ -581,7 +580,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	 wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
 	 wcsp->elimOrderInc();
-     yz->propagate(); 
+     yz->propagate();
      return true;
 }
 
@@ -595,7 +594,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	BinaryConstraint* yz = NULL;
 	if(xyz->xy->getIndex(this) < 0) yz = xyz->xy;
 	else if(xyz->xz->getIndex(this) < 0) yz = xyz->xz;
-	else if(xyz->yz->getIndex(this) < 0) yz = xyz->yz;	 
+	else if(xyz->yz->getIndex(this) < 0) yz = xyz->yz;
 	assert(yz != NULL);
 
 	int n2links = 0;
@@ -614,9 +613,9 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
     	if(cluster != xyz->getCluster()) return false;
     }
 
-	for(int i=0; i<n2links; i++) {		
+	for(int i=0; i<n2links; i++) {
 		int idvar = links[i].constr->getSmallestVarIndexInScope(links[i].scopeIndex);
-		if(xyz->getIndex( wcsp->getVar(idvar) ) < 0) return false; 
+		if(xyz->getIndex( wcsp->getVar(idvar) ) < 0) return false;
 	}
 
 	xyz->deconnect();
@@ -625,7 +624,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 
 	EnumeratedVariable* y = (EnumeratedVariable*) yz->getVar(0);
 	EnumeratedVariable* z = (EnumeratedVariable*) yz->getVar(1);
-    
+
 	bool flag_rev = false;
 	if(n2links > 0) {
         if (links[0].constr->getSmallestVarIndexInScope(links[0].scopeIndex) != y->wcspIndex) {
@@ -633,12 +632,12 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
             flag_rev = true;
         }
 	}
-		
+
 	for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
 	    Cost mincost = MAX_COST;
 	    for (iterator iter = begin(); iter != end(); ++iter) {
-	        Cost curcost = getCost(*iter) + xyz->getCost(this,y,z,*iter,*itery,*iterz); 
+	        Cost curcost = getCost(*iter) + xyz->getCost(this,y,z,*iter,*itery,*iterz);
 
 			if(!flag_rev) {
 		        if(n2links > 0) { assert(links[0].constr->getIndex(y) >= 0);
@@ -664,7 +663,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	wcsp->elimConstrs[wcsp->getElimOrder()] = yz;
 	wcsp->elimOrderInc();
-    yz->propagate(); 
+    yz->propagate();
 	return true;
 }
 
@@ -672,42 +671,60 @@ void EnumeratedVariable::eliminate()
 {
 	if(isSep_) return;
 
-	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );  
+	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );
 
-	
-    if (ToulBar2::elimDegree_preprocessing_ >= 0 && 
-        (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) || 
+
+    if (ToulBar2::elimDegree_preprocessing_ >= 0 &&
+        (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
          getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
-	  wcsp->variableElimination(this); 
+	  wcsp->variableElimination(this);
 	  return;
     }
- 	
-    if (getDegree() > ToulBar2::elimDegree_) return;
 
-    if(getDegree() > 0) {
-		TernaryConstraint* ternCtr = existTernary();
-				
-		if(ternCtr) { if(!elimVar(ternCtr)) return; }
-		else {
-			if(getDegree() > 2) return;
-	
-			ConstraintLink xylink = *constrs.begin();
-			ConstraintLink xzlink = {NULL,0};
+    if(ToulBar2::allSolutions && ToulBar2::btdMode==1){
+	    if (wcsp->getStore()->getDepth()==0) return; // tree decomposition not available yet!
+    	if (getDegree() > ToulBar2::elimDegree_) return;
+		assert(getDegree() == 0);
+		assert(wcsp->getTreeDec());
+    	assert(getDomainSize()>1);
+		wcsp->getTreeDec()->getCluster( cluster )->multCount(getDomainSize());
+		//		cout << "** "<< wcsp->getTreeDec()->getCluster( cluster )->getCount() << " **" << endl;
+	} else{
+    	if (getDegree() > ToulBar2::elimDegree_) return;
+    	// if (getDegree()==1 && CSP(wcsp->getLb(),wcsp->getUb()) && constrs->begin().constr->arity() >= 4) {
+    	// 	// special case: there is only one n-ary constraint on this variable
+    	// 	// and the current domain size is larger than the number of forbidden tuples
+    	// 	NaryConstraintMap *ctr = (NaryConstraintMap *) constrs->begin().constr;
+    	// 	if  (ctr->getDefCost()==0 && ctr->getpf()->size() < getDomainSize()) {
+		// 	  // TO BE DONE: find zero-cost unary support for this variable if it exists
+        //    // if not, cannot deconnect the constraint!
+		// 	  ctr->deconnect();
+    	// }
+    	if(getDegree() > 0) {
+    		TernaryConstraint* ternCtr = existTernary();
 
-			if(xylink.constr->arity() > 2) return;
-			
-			if(getDegree() == 2) {
-				xzlink = *constrs.rbegin();
-			    if(xzlink.constr->arity() > 2) return;
+    		if(ternCtr) { if(!elimVar(ternCtr)) return; }
+    		else {
+    			if(getDegree() > 2) return;
 
-				if(!elimVar(xylink,xzlink)) return;		
-			} else {
-				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;	
-				if(!elimVar( xy )) return;
-				return;
-			}		
-		}
-	}
+    			ConstraintLink xylink = *constrs.begin();
+    			ConstraintLink xzlink = {NULL,0};
+
+    			if(xylink.constr->arity() > 2) return;
+
+    			if(getDegree() == 2) {
+    				xzlink = *constrs.rbegin();
+    				if(xzlink.constr->arity() > 2) return;
+
+    				if(!elimVar(xylink,xzlink)) return;
+    			} else {
+    				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;
+    				if(!elimVar( xy )) return;
+    				return;
+    			}
+    		}
+    	}
+    }
 	assert(getDegree() == 0);
 	if (ToulBar2::verbose >= 2) cout << "Eliminate End of var " << getName() << endl;
 	assert(getCost(support) == MIN_COST); // it is ensured by previous calls to findSupport
@@ -723,7 +740,7 @@ void EnumeratedVariable::permuteDomain(int nperm)
 		Value b = myrand() % getDomainInitSize();
 		if(canbe(a) && canbe(b)) {
 		 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-		 	   Constraint* ctr = (*iter).constr;	
+		 	   Constraint* ctr = (*iter).constr;
 		 	   if(ctr->arity() == 2) {
 			 	   	BinaryConstraint* bctr = (BinaryConstraint*) ctr;
 			 	   	bctr->permute(this,a,b);
@@ -740,18 +757,18 @@ bool EnumeratedVariable::verify() {
 	TreeDecomposition* td = wcsp->getTreeDec();
 	if(!td) return true;
  	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
- 	   Constraint* ctr1 = (*iter).constr;	
+ 	   Constraint* ctr1 = (*iter).constr;
 	   if(ctr1->isSep()) continue;
 	   if(ctr1->arity() > 3) continue;
        for(ConstraintList::iterator iter2=iter; iter2 != constrs.end(); ++iter2) {
-	 	  Constraint* ctr2 = (*iter2).constr;	
+	 	  Constraint* ctr2 = (*iter2).constr;
 	 	  if(ctr1 == ctr2) continue;
 		  if(ctr2->isSep()) continue;
 		  if(ctr2->arity() > 3) continue;
 		  if(ctr1->arity() == 3 && ctr2->arity() == 2) {
 		  	TernaryConstraint* tctr1 = (TernaryConstraint*) ctr1;
 		  	BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
-			if( (tctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&		  	
+			if( (tctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&
 				(tctr1->getIndex( bctr2->getVar(1) ) >= 0 ) ) {
 		  			if(tctr1->getCluster() != bctr2->getCluster()) {
 		  				bool t1 = tctr1->xy != bctr2;
@@ -784,7 +801,7 @@ bool EnumeratedVariable::verify() {
 		  if(ctr1->arity() == 2 && ctr2->arity() == 3) {
 		  	BinaryConstraint* bctr1 =  (BinaryConstraint*) ctr1;
 		  	TernaryConstraint* tctr2 = (TernaryConstraint*) ctr2;
-			if( (tctr2->getIndex( bctr1->getVar(0) ) >= 0 ) &&		  	
+			if( (tctr2->getIndex( bctr1->getVar(0) ) >= 0 ) &&
 				(tctr2->getIndex( bctr1->getVar(1) ) >= 0 ) ) {
 		  			if(bctr1->getCluster() != tctr2->getCluster()) {
 		  				bool t1 = tctr2->xy != bctr1;
@@ -816,7 +833,7 @@ bool EnumeratedVariable::verify() {
 		  	TernaryConstraint* tctr2 = (TernaryConstraint*) ctr2;
 		  	BinaryConstraint* bctr1 = tctr1->commonBinary(tctr2);
 		  	BinaryConstraint* bctr2 = tctr2->commonBinary(tctr1);
-			if(bctr1) {		  	
+			if(bctr1) {
 			  	if(bctr1 != bctr2) {
 			  		bool t1 = tctr1->getCluster() != tctr2->getCluster();
 			  		bool t2 = bctr1->getCluster() != bctr2->getCluster();
@@ -839,13 +856,13 @@ bool EnumeratedVariable::verify() {
 		  if(ctr1->arity() == 2 && ctr2->arity() == 2) {
 		  	BinaryConstraint* bctr1 = (BinaryConstraint*) ctr1;
 		  	BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
-			if( (bctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&		  	
+			if( (bctr1->getIndex( bctr2->getVar(0) ) >= 0 ) &&
 				(bctr1->getIndex( bctr2->getVar(1) ) >= 0 ) ) {
-					assert(bctr1->isDuplicate() || bctr2->isDuplicate()); 		
-				}  
+					assert(bctr1->isDuplicate() || bctr2->isDuplicate());
+				}
 		  }
        }
- 	}	
+ 	}
  	return true;
 }
 

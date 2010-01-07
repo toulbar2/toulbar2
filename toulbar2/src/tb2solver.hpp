@@ -1,12 +1,13 @@
 /** \file tb2solver.hpp
  *  \brief Generic solver.
- * 
+ *
  */
- 
+
 #ifndef TB2SOLVER_HPP_
 #define TB2SOLVER_HPP_
 
 #include "toulbar2.hpp"
+
 template <class T> struct DLink;
 template <class T> class BTList;
 
@@ -21,7 +22,13 @@ class Solver
     DLink<Value> *allVars;
     BTList<Value> *unassignedVars;
     int lastConflictVar;
-        
+
+    BigInteger nbSol;
+    Long nbSGoods;				//number of #good which created
+    Long nbSGoodsUse;			//number of #good which used
+    map<int,BigInteger > ubSol;	// upper bound of solution number
+    double timeDeconnect;		// time for the disconnection
+
     // Heuristics and search methods
     void initVarHeuristic(); // to be called after reading the problem and before updating ToulBar2::setvalue
 	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
@@ -34,9 +41,10 @@ class Solver
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);
     void remove(int varIndex, Value value);
-   
+    void conflict() {}
+
     void singletonConsistency();
-   
+
     void binaryChoicePoint(int xIndex, Value value);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex);
@@ -52,28 +60,29 @@ class Solver
   int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
   int getVarFreedom(Cluster *cluster);
   int getVarSup(Cluster *cluster);
-  
 
   Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
   Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
   void russianDollSearch(Cluster *c, Cost cub);
-    
-  int nsolutions;
+
+  BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
+  BigInteger sharpBTD(Cluster *cluster);
+  void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
 public:
     Solver(int storeSize, Cost initUpperBound);
     ~Solver();
-    
+
     void read_wcsp(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
-    
+
     bool solve();
-    
+
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
     void dump_wcsp(const char *fileName);
     void read_solution(const char *fileName);
-    
+
     friend void setvalue(int wcspId, int varIndex, Value value);
 
     WeightedCSP* getWCSP() { return wcsp; }

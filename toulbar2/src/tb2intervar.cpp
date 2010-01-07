@@ -22,6 +22,7 @@ void IntervalVariable::print(ostream& os)
 {
     os << " [" << inf << "," << sup << "]";
     os << "/" << getDegree();
+	if (ToulBar2::weightedDegree) os << "/" << getWeightedDegree();
     if (unassigned()) {
         os << " < " << getInfCost() << "," << getSupCost() << " >";
     }

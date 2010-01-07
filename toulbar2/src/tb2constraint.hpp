@@ -12,7 +12,7 @@
 class Constraint : public WCSPLink
 {
     Long conflictWeight;
-    
+  
     // make it private because we don't want copy nor assignment
     Constraint(const Constraint &c);
     Constraint& operator=(const Constraint &c);
@@ -33,8 +33,10 @@ public:
     virtual Variable *getVar(int scopeIndex) const = 0;
     virtual int getIndex(Variable* var) const = 0;
 
+    void conflict();
     Long getConflictWeight() const {return conflictWeight;}
     void incConflictWeight() {conflictWeight++;}
+    void resetConflictWeight() {conflictWeight=1;}
     
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }

@@ -3,8 +3,8 @@
 # Usage:
 # ./runall.sh ../validation
 
-timelimit=1800
-K=1
+timelimit=3600
+K=10000
 
 rm -f outall
 

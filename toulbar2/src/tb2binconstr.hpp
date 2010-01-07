@@ -249,6 +249,7 @@ public:
 		linkX->content.scopeIndex = 0;
 		linkY->content.scopeIndex = 1;
         setDACScopeIndex();
+		resetConflictWeight();
 	}
 
     bool project(int varIndex, Value value, Cost cost) {

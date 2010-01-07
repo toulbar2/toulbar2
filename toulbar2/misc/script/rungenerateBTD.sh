@@ -3,12 +3,13 @@
 nerr=0
 ninstances=50
 nend=100
-bctr=1
+bctr=10
 tctr=1
 nary=1
 tight=30
 n=6
-m=2
+m=10
+K=100
 
 while (( $n < $nend )) ; do
   seed=0
@@ -18,8 +19,8 @@ while (( $n < $nend )) ; do
     rm -f toolbar_opt
     rm -f order
     randomfile=nary-$n-$m-$tight-$bctr-$tctr-$nary-$seed 
-    toulbar2 $randomfile z > /dev/null
-    toulbar2 problem.wcsp $1 w | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
+    toulbar2 $randomfile C$K z > /dev/null
+    ./bin/Linux/toulbar2 problem.wcsp $1 w | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     toolbar problem.wcsp  -csol  | awk 'BEGIN{opt="-";} /^Total cost /{opt=$4;}  END{printf("%d \n",opt); }' > toolbar_sol
     ub1=`cat toulbar2_opt`
@@ -37,7 +38,7 @@ while (( $n < $nend )) ; do
     seed=`expr $seed + 1`
   done	
   nary=`expr $nary + 1` 
-  bctr=`expr $bctr + 1`  
+  bctr=`expr $bctr + 10`  
   n=`expr $n + 4`
 done
 
