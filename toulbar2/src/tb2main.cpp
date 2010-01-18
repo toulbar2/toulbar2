@@ -6,6 +6,19 @@
 #include "tb2pedigree.hpp"
 #include "tb2bep.hpp"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+//* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
+#ifdef WINDOWS
+#define PATH_SEP_CHR '\\'
+#define PATH_DELIM ";"
+#else
+#define PATH_SEP_CHR '/'
+#define PATH_DELIM ":"
+#endif
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
@@ -22,11 +35,57 @@ void initCosts(Cost c)
 }
 #endif
 
-bool localSearch(char *filename, Cost *upperbound)
+
+/* return current binary path extract from or argv[0] or from the env var $path the env var $path */
+
+char* find_bindir(const char* bin_name, char* buffer, size_t buflen) {
+        struct stat st;
+        char* path, * tok;
+        if(!stat(bin_name, &st)) {
+                char* end = (char*) strrchr(bin_name, PATH_SEP_CHR);
+		 static char bin_path[256];
+                if(end) {
+                        *end=0;
+                        strncpy(buffer, bin_name, buflen);
+                        sprintf(bin_path,"%s%c", buffer,PATH_SEP_CHR);
+                } else {
+                        strcpy(buffer, ".");
+                    //path separator added to the path value
+                        sprintf(bin_path,"%s%c", buffer,PATH_SEP_CHR);
+                }
+                return(bin_path);
+        }
+        path = strdup(getenv("PATH"));
+        tok = strtok(path, PATH_DELIM);
+        while(tok) {
+                snprintf(buffer, buflen, "%s%c%s", tok, PATH_SEP_CHR, bin_name);
+                if(!stat(buffer, &st)) {
+                    static char bin_path[256];
+                    strncpy(buffer, tok, buflen);
+                    free(path);
+                    sprintf(bin_path,"%s%c", buffer,PATH_SEP_CHR);
+                    return bin_path;
+
+
+                }
+                tok = strtok(NULL, PATH_DELIM);
+        }
+        buffer[0]=0;
+        return NULL;
+}
+
+bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 {
     string keyword;
-    const char *fich = "resincop";
+// narcycsp file name
+    static char fich[512];
+    char * tname ;
+    tname=tmpnam (NULL);
+    strcpy(fich,tname);
+    cout << "incop narycsp output file :" << fich << endl;
+
     char line[1024];
+    //int pid = get_pid();
     Cost tmpUB=MIN_COST;
     int varIndex;
     int value;
@@ -34,10 +93,31 @@ bool localSearch(char *filename, Cost *upperbound)
     map<int, int> bestsol;
     Cost bestcost = MAX_COST;
     Cost solcost = MAX_COST;
+    // * get narycsp path into system variable call Narycsp_path
+    char* Narycsp_Path = getenv ("NARYCSP");
 
-    // run local search solver INCOP from Bertrand Neveu on wcsp format
-    sprintf(line,"./misc/bin/linux/narycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", fich, filename);
-    system(line);
+  // run local search solver INCOP from Bertrand Neveu on wcsp format
+    if (Narycsp_Path!=NULL)
+    {
+	printf ("env variable NARYCPS founded: narycsp path = %s \n",Narycsp_Path);
+   sprintf(line,"%s%cnarycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
+   // sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", Narycsp_Path,PATH_SEP_CHR, fich, filename);
+
+    } else {
+
+    printf ("narycsp default path : %s \n",CurrentBinaryPath);
+
+ sprintf(line,"%snarycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
+
+ // sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", CurrentBinaryPath,PATH_SEP_CHR, fich, filename);
+
+    }
+
+    if(system(line))
+    {
+        printf ("exec error from narcycsp call: %s\n",line);//erreur
+    }
+
 
     // open the file
     ifstream file(fich);
@@ -80,10 +160,15 @@ bool localSearch(char *filename, Cost *upperbound)
         }
     }
     file.close();
-    sprintf(line,"rm -f %s",fich);
-    system(line);
 
-    return true;
+/* deletion of tmp file created by narycsp system call */
+
+ if( remove(fich ) != 0 )
+    perror( "narycsp File: Error deleting file" );
+  else
+    puts( "narycsp tmp File successfully deleted" );
+
+      return true;
 }
 
 void help_msg(char *toulbar2filename)
@@ -181,7 +266,9 @@ void help_msg(char *toulbar2filename)
         cerr << "   l : limited discrepancy search";
 		if (ToulBar2::lds) cerr << " (default option)";
 		cerr << endl;
+#ifndef WINDOWS
         cerr << "   i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
+#endif
         cerr << "   z : save current problem in wcsp format in filename \"problem.wcsp\"" << endl;
         cerr << "   Z : debug mode (save problem at each node if verbosity option set!)" << endl;
         cerr << "   x : load a solution from filename \"sol\"" << endl << endl;
@@ -222,6 +309,11 @@ int main(int argc, char **argv)
     bool localsearch = false;
     bool saveproblem = false;
     bool certificate = false;
+    char buf [512];
+    char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
+    cout << "toulbar2 version : " << ToulBar2::version << " location :" << CurrentBinaryPath <<endl;
+//     cout << "Toulbar2 Path="<<CurrentBinaryPath<<'\n';
+
     if (argc <= 1) {
         cerr << "Missing a problem filename as first argument!" << endl;
         cerr << endl;
@@ -410,11 +502,18 @@ int main(int argc, char **argv)
 
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
+
     if (localsearch && !strstr(strext.c_str(),".pre")) {
-        if (localSearch(argv[1],&c)) {
+#ifndef WINDOWS
+    if (localSearch(argv[1],&c,CurrentBinaryPath)) {
             cout << "Initial upperbound: " << c << endl;
 
-        } else cerr << "INCOP solver ./narycsp not found!" << endl;
+        } else cerr << "INCOP solver narycsp not found in:"<<CurrentBinaryPath << endl;
+
+#else
+          cerr << "Initial upperbound: INCOP not compliant with Windows OS" << endl;
+
+#endif
     }
     if (c==MIN_COST) {
         cout << "Initial upperbound equal to zero!" << endl;
