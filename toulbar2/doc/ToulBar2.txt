@@ -1,11 +1,25 @@
 ********************************
 * ToulBar2 Brief User Overview *
 ********************************
+-------------------------------------------------
+-Howto change location fo autonarcsp binary
+-------------------------------------------------
+
+narycsp is external binary call from toulbar2 when -i option has been used.
+By default narycsp must be locate in the toulbar2 directory
+if you need to change this default path , you just have to init a NARYCSP variable containing the narycsp location.
+for   for csh user 
+        setenv NARYCSP "/foo/My/path/for/NARYCSP/"
+
+#       or for  bash user
+
+        export NARYCSP="/foo/My/path/for/NARYCSP/"
+
 ________________________________________________________________________________
 Solve a simple weighted constraint satisfaction problem (WCSP)
 with default options:
 
-../bin/Linux/toulbar2 ../validation/example.wcsp
+	toulbar2 ../validation/example.wcsp
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -18,7 +32,7 @@ ________________________________________________________________________________
 Solve a WCSP with an initial upperbound and save one of its optimal solution
 in filename "sol":
 
-../bin/Linux/toulbar2 ../validation/example.wcsp 28 w
+	toulbar2 ../validation/example.wcsp 28 w
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -33,7 +47,7 @@ cat sol
 ________________________________________________________________________________
 Solve a WCSP using a limited discrepancy search strategy:
 
-../bin/Linux/toulbar2 ../validation/example.wcsp l
+	toulbar2 ../validation/example.wcsp l
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -53,7 +67,8 @@ Solve a WCSP using Depth-First Brand and Bound with Tree Decomposition (BTD)
 and a min-fill order:
 
 ../misc/bin/linux/peo ../validation/example.wcsp 3 > example.order
-../bin/Linux/toulbar2 ../validation/example.wcsp B1 Oexample.order 
+
+	toulbar2 ../validation/example.wcsp B1 Oexample.order 
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -70,7 +85,7 @@ end.
 ________________________________________________________________________________
 Solve a WCSP using Russian Doll Search exploiting BTD on small separators only:
 
-../bin/Linux/toulbar2 ../validation/example.wcsp B2r3 Oexample.order
+	toulbar2 ../validation/example.wcsp B2r3 Oexample.order
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -104,7 +119,7 @@ end.
 ________________________________________________________________________________
 Solve a WCSP using partial variable elimination followed by BTD:
 
-../bin/Linux/toulbar2 ../validation/example.wcsp mp3 B1 Oexample.order
+	toulbar2 ../validation/example.wcsp mp3 B1 Oexample.order
 
 DAC order: 21 20 15 19 24 3 0 16 14 9 6 1 12 8 7 5 23 18 17 4 10 22 13 11 2
 Read 25 variables, with 5 values at most, and 63 constraints.
@@ -124,7 +139,7 @@ ________________________________________________________________________________
 Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and
 multiplying all costs by a constant 100 (usefull if initial costs are small):
 
-../bin/Linux/toulbar2 ../validation/example.wcsp AC100
+	toulbar2 ../validation/example.wcsp AC100
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 Lb before VAC: 1800
@@ -143,7 +158,7 @@ Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and during sea
 multiplying all costs by a constant 100, speeding VAC convergence during search,
 and exploiting a dedicated value ordering heuristic:
  
-../bin/Linux/toulbar2 ../validation/example.wcsp VA1000C100T10
+	toulbar2 ../validation/example.wcsp VA1000C100T10
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 Lb before VAC: 1800
@@ -160,7 +175,7 @@ ________________________________________________________________________________
 Count the number of solutions of a CSP (i.e. null optimum) with #BTD
 and default variable ordering:
 
-../bin/Linux/toulbar2 ../validation/enum/base2.wcsp aB1
+	toulbar2 ../validation/enum/base2.wcsp aB1
 
 Read 10 variables, with 4 values at most, and 12 constraints.
 10 unassigned variables, 40 values in all current domains and 12 constraints.
@@ -182,7 +197,7 @@ ________________________________________________________________________________
 Get a quick approximation of the number of solutions of a CSP with Approx_#BTD
 and default variable ordering:
 
-../bin/Linux/toulbar2 ../validation/enum/base2.wcsp aB1D
+	toulbar2 ../validation/enum/base2.wcsp aB1D
 
 Read 10 variables, with 4 values at most, and 12 constraints.
 10 unassigned variables, 40 values in all current domains and 12 constraints.
@@ -210,15 +225,15 @@ end.
 ________________________________________________________________________________
 Get a help message on ToulBar2 options and see what are the default options:
 
-../bin/Linux/toulbar2
+	toulbar2
 
 *************************
 * ToulBar2 Help Message *
 *************************
-../bin/Linux/toulbar2 version 0.9
+	toulbar2 version 0.9
 
 Command line is:
-../bin/Linux/toulbar2 filename [upperbound] [options]
+	toulbar2 filename [upperbound] [options]
 
 Available problem formats (specified by the filename extension) are:
    *.wcsp : Weighted CSP format (see SoftCSP web site)
