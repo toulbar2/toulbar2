@@ -10,7 +10,7 @@
 #by default under ubuntu 
 # the second varibale correspond to the prefix variable 
 
-        SET(CMAKE_FIND_ROOT_PATH /usr/i586-mingw32msvc ${CMAKE_CURRENT_SOURCE_DIR}/WINDOWS32)
+        SET(CMAKE_FIND_ROOT_PATH /usr/i586-mingw32msvc ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/win32)
 
 # search for programs in the build host directories
         SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

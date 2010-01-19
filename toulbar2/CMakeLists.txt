@@ -179,20 +179,6 @@ ENDIF(TOULBAR2_ONLY)
 ############################
 
 include(${My_cmake_scritp}/init-version.cmake)
-###########
-# find gmp 
-###########"
-
-MESSAGE(STATUS "search for GMP library")
-INCLUDE(FindPkgConfig)
-include(${My_cmake_scritp}/FindGmp.cmake)
-SET (all_depends  ${all_depends} ${GMP_LIBRARIES})
-INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
-if(GMP_INCLUDE_DIR)
-MESSAGE(STATUS "include gmp : ${GMP_INCLUDE_DIR} ")
-endif()
-
-
 
 ##############################
 	IF(ILOG)
@@ -200,6 +186,7 @@ endif()
 	ENDIF(ILOG)
 
 
+#########################
 IF(WIN32)
 # option used for cross compilation 
 	set ( EXE ".exe")
@@ -227,6 +214,15 @@ ELSE(WIN32)
 
 ENDIF(WIN32)
 
+###########
+# find gmp 
+###########"
+
+MESSAGE(STATUS "search for GMP library")
+INCLUDE(FindPkgConfig)
+include(${My_cmake_scritp}/FindGmp.cmake)
+SET (all_depends  ${all_depends} "gmp") 
+#INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
 #CMAKE_DEPENDENT_OPTION(ILOG "ILOGLUE COMPIATION" OFF  "LIBTB2INT" OFF)
 #########################
