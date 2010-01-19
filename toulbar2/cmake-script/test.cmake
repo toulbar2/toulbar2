@@ -66,7 +66,7 @@ if($verbose)
 	MESSAGE(STATUS "TNAME: ${TNAME}")
 endif($verbose)
 
-add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2  ${UTEST} ${UBP} ${command_line_option})
+add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${UBP} ${command_line_option})
 	set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 
 
