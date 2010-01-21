@@ -152,7 +152,7 @@ IF(MENDELSOFT_ONLY)
 #description used in the package building
 	SET (Toulbar_PACKAGE_DESCRIPTION 
 	"MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 
-        SET(Toular_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
 #############
 
 ENDIF(MENDELSOFT_ONLY)
