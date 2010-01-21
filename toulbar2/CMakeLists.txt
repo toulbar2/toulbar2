@@ -70,12 +70,15 @@ include(CMakeDependentOption)
 	OPTION(verbose "verbose mode [default:on]" ON)
 
 
-
 ###########################
 #Default profile for compilation
 ###########################
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET( CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel.")
 SET(CMAKE_CXX_FLAGS "-Wall" )
 
 ################
