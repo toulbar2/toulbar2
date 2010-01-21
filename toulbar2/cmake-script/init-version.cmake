@@ -5,7 +5,7 @@
         set (Toulbar_COMPLETE "${Toulbar_MAJOR}.${Toulbar_MINOR}")
 
         IF(CMAKE_BUILD_TYPE)
-        set(Toulbar_NAME_COMPLETE "${Toulbar_NAME}${Toulbar_COMPLETE}-${CMAKE_BUILD_TYPE}")
+        set(Toulbar_NAME_COMPLETE "${Toulbar_NAME}.${Toulbar_COMPLETE}-${CMAKE_BUILD_TYPE}")
         ELSE(CMAKE_BUILD_TYPE)
         set(Toulbar_NAME_COMPLETE "${Toulbar_NAME}.${Toulbar_COMPLETE}")
         ENDIF(CMAKE_BUILD_TYPE)
