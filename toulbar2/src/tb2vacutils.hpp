@@ -14,24 +14,23 @@ public:
 
 private:
   
-  VACExtension* vac;	
+  VACExtension* vac;         /**< Ref. to the VAC data-structures */
 
-  vector<Long>  mark;
-  vector<Long>  k_timeStamp;
-  vector<int>  k;
-  vector<int>   killer; 	  
+  vector<Long>  mark;        /**< The boolean M used to mark values whose deletion is needed to wipe-out */
+  vector<Long>  k_timeStamp; /**< timestamp for the counter k (one per value) */
+  vector<int>   k;           /**< Number of cost requests per value for all cost functions */
+  vector<int>   killer;      /**< The killer of each value : the other variable index (binary case)*/
 
-  int  maxk;
-  Long  maxk_timeStamp;
+  int  maxk;                 /**< The Max number of cost requests seen on this variable, used for stats */
+  Long maxk_timeStamp;       /**< timestamp for maxk */
 
 
-  StoreCost 	myThreshold;
+  StoreCost myThreshold; /** The local thresold used to break loops */
   //Cost 	        myThreshold;
-
 
   DLink<VariableWithTimeStamp> linkVACQueue;
   DLink<VariableWithTimeStamp> linkSeekSupport;
-  DLink<Variable *> 		   linkVAC2Queue;
+  DLink<Variable *>            linkVAC2Queue;
 
   void init ();
 
@@ -74,9 +73,8 @@ public:
   	 k_timeStamp[toIndex(v)] = timeStamp; 
   }
 
-	
 
-  bool  isMarked( Value v, long timeStamp ) { return (k_timeStamp[toIndex(v)] >= timeStamp); }
+  bool  isMarked( Value v, long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
   void  setMark( Value v, long timeStamp )  { mark[toIndex(v)] = timeStamp; }
   
   int   getKiller( Value v ) { return killer[toIndex(v)]; }
@@ -108,10 +106,10 @@ public:
   virtual void decrease (Value newSup);
 
   void decreaseCost(Value v, Cost c);
-  void VACproject(Value v, const Cost c);
-  void VACextend (Value v, const Cost c);
+  void VACproject(Value v, const Cost c); /**< Increases unary cost and may queue for NC enforcing */
+  void VACextend(Value v, const Cost c);  /**< Decreases unary cost and may queue for NC enforcing */
  
-  bool averaging();	
+  bool averaging();  /**< For Min-Sum diffusion */
 
   friend ostream& operator<< (ostream& os, VACVariable &v) {
     return os;
@@ -126,13 +124,10 @@ class VACConstraint : public BinaryConstraint {
 
 private:
   
-  vector<int>  kX;
-  vector<int>  kY;
+  vector<int>  kX;             /**< The k_XY(X,v) counters: nb. of cost request on X,v by this cost function */
+  vector<int>  kY;             /**< The k_XY(Y,v) counters: nb. of cost request on Y,v by this cost function */
   vector<Long>  kX_timeStamp;
   vector<Long>  kY_timeStamp;
-    
-  void init (int sizeX, int sizeY);     // allocate memory
-
 
 public:
 
@@ -148,17 +143,15 @@ public:
 	if(xx->isNull(c) || (yy->isNull(c))) return MIN_COST;
 	else return c;
   }
-  void VACproject(VACVariable* x, Value v, Cost c);
-  void VACextend (VACVariable* x, Value v, Cost c);
+  void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
+  void VACextend (VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
   
-  bool revise (VACVariable* var, Value v);
+  bool revise (VACVariable* var, Value v);  /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
   friend ostream& operator<< (ostream& os, VACConstraint &c) {
     return os;
   }
 };
-
-
 
 
 #endif /*TB2VACUTILS_HPP_*/
