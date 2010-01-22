@@ -24,7 +24,6 @@ bool cmp_function( tVACStat* v1, tVACStat* v2 )
 
 
 
-
 VACExtension::VACExtension (WCSP *w) : wcsp(w), VAC2(&w->getStore()->storeVariable), nbIterations(0), inconsistentVariable(-1)
  {
   queueP = new stack< pair<int, int> >;
@@ -85,9 +84,10 @@ void VACExtension::histogram()
 		}
 		++it;
 	  }
-	  toomany = scaleVAC.size() > 20;     	
+	  toomany = scaleVAC.size() > 20;
 	  if(toomany) packetsize *= 2;
   }
+  
   if (ToulBar2::verbose >= 1) {
 	cout << "Costs Scale: ";
 	list<Cost>::iterator itl = scaleVAC.begin();
@@ -115,12 +115,12 @@ void VACExtension::nextScaleCost() {
 		++it;
 	}
 	if(!done)  c  = itThreshold / (UNIT_COST+UNIT_COST);
-	
+
     if (wcsp->getStore()->getDepth() == 0) {
 	       if(c < ToulBar2::costThresholdPre) c = MIN_COST;
     } else if(c < ToulBar2::costThreshold) c = MIN_COST;
-	
-	itThreshold = c;	
+
+	itThreshold = c;
 }
 
 // do not need to revise all variables because we assume soft AC already done
@@ -218,7 +218,7 @@ bool VACExtension::propagate() {
 	  
 	  if(!isvac) {
 		    enforcePass2();
-		    if (ToulBar2::verbose > 0) cout << "VAC Lb: " << wcsp->getLb() << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda <<  "      itThreshold: " << itThreshold  << endl;		      
+		    if (ToulBar2::verbose > 0) cout << "VAC Lb: " << wcsp->getLb() << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda <<  "      itThreshold: " << itThreshold  << endl;
 		    util = enforcePass3();
 	  }
 	  else {
@@ -256,7 +256,7 @@ int VACExtension::getHeuristic() {
 bool VACExtension::enforcePass1 (VACVariable *xj, VACConstraint *cij) {
   bool wipeout = false;
   VACVariable *xi;
-  xi = (VACVariable *)cij->getVarDiffFrom(xj);	
+  xi = (VACVariable *)cij->getVarDiffFrom(xj);
   for (EnumeratedVariable::iterator it = xi->begin(); it != xi->end(); ++it) {
 	  Value v = *it;
 	  if(xi->getVACCost(v) != MIN_COST) { xi->removeVAC(v); } // xi->queueVAC(); }
@@ -363,14 +363,15 @@ void VACExtension::enforcePass2 () {
   
   assert(i0 >= 0);
   xi0 = (VACVariable *) wcsp->getVar(i0);
-  
-  	
+        
   for (EnumeratedVariable::iterator iti0 = xi0->begin(); iti0 != xi0->end(); ++iti0) {
-	v = *iti0;
-    xi0->addToK(v, 1, nbIterations);
-	Cost cost = xi0->getVACCost(v);
-	if (cost > MIN_COST && cost < minlambda) minlambda = cost;
-	else     xi0->setMark(v, nbIterations);
+        v = *iti0;
+        xi0->addToK(v, 1, nbIterations);
+        Cost cost = xi0->getVACCost(v);
+        if (cost > MIN_COST) {
+           if (cost < minlambda) minlambda = cost;
+        }
+        else xi0->setMark(v, nbIterations);
   }
 
   while (!queueP->empty()) {
@@ -383,28 +384,28 @@ void VACExtension::enforcePass2 () {
       xj = (VACVariable *) wcsp->getVar(j);
       queueR->push(pair<int, int>(i, v));
       cij = (VACConstraint *) xi->getConstr(xj);
-	  assert(cij);	
+          assert(cij);  
       //if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
       
-	  for (EnumeratedVariable::iterator itj = xj->begin(); itj != xj->end(); ++itj) {
-		Value w = *itj;
-		Cost costij = cij->getVACCost(xi,xj,v, w);
-		if (costij > MIN_COST) {
+          for (EnumeratedVariable::iterator itj = xj->begin(); itj != xj->end(); ++itj) {
+                Value w = *itj;
+                Cost costij = cij->getVACCost(xi,xj,v, w);
+                if (costij > MIN_COST) {
           int tmpK = xi->getK(v, nbIterations);
-		  if (xj->getKiller(w) == i && xj->isMarked(w, nbIterations)) 
-		    tmpK += xj->getK(w, nbIterations);
-		  if (!CUT(wcsp->getLb() + costij,wcsp->getUb())) {
-			if( (costij/tmpK) < minlambda) minlambda = costij/tmpK;
-		  }
-		} else {
+                  if (xj->getKiller(w) == i && xj->isMarked(w, nbIterations)) 
+                    tmpK += xj->getK(w, nbIterations);
+                  if (!CUT(wcsp->getLb() + costij,wcsp->getUb())) {
+                        if( (costij/tmpK) < minlambda) minlambda = costij/tmpK;
+                  }
+                } else {
           int tmpK = xi->getK(v, nbIterations) - cij->getK(xj,w, nbIterations);
           if (tmpK > 0) {
             xj->addToK(w,tmpK,nbIterations);
             cij->setK(xj, w, xi->getK(v, nbIterations), nbIterations);
             if(xj->getVACCost(w) == MIN_COST) xj->setMark(w, nbIterations);
             else if (!CUT(wcsp->getLb() + xj->getVACCost(w),wcsp->getUb())) {
-              tmplambda = xj->getVACCost(w) / xj->getK(w, nbIterations);  	
-			  if(tmplambda < minlambda) minlambda = tmplambda;
+              tmplambda = xj->getVACCost(w) / xj->getK(w, nbIterations);        
+                          if(tmplambda < minlambda) minlambda = tmplambda;
             }
           }  
         }
@@ -424,7 +425,7 @@ bool VACExtension::enforcePass3 () {
 	  Cost lb = wcsp->getLb();
 	  util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
   }*/
-  Cost lambda = minlambda;	
+  Cost lambda = minlambda;
 
   //if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
   int i, j;
@@ -433,12 +434,12 @@ bool VACExtension::enforcePass3 () {
   int i0 = inconsistentVariable;
   VACVariable *xi0 = (VACVariable *) wcsp->getVar(i0);
   Value w;
-	  
+  
   int minvar = -1;
   int minval = -1;
   Cost minc = MAX_COST;
   int maxk = 0;
-    	  
+
   if(!util) {
 	    while (!queueR->empty()) { 
 		    j = queueR->top().first;
