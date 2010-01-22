@@ -15,7 +15,7 @@ VACVariable::VACVariable (WCSP *wcsp, string n, Value iinf, Value isup) : Enumer
 }
 
 VACVariable::VACVariable (WCSP *wcsp, string n, Value *d, int dsize) : EnumeratedVariable(wcsp, n, d, dsize)
-				,vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 																	   
+				,vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
 {
   init();
 }
@@ -135,13 +135,8 @@ void VACVariable::VACextend (Value v, const Cost c) {
 
 bool VACVariable::isNull (Cost c) 
 {
-	if(myThreshold != MIN_COST) {
-		if(myThreshold > vac->getThreshold()) return c < myThreshold;
-		else return c < vac->getThreshold();
-	}
-	else return vac->isNull(c);
+  return (vac->isNull(c) || (c < myThreshold));
 }
-
 
 void VACVariable::queueVAC() {
   wcsp->vac->queueVAC(&linkVACQueue);
@@ -356,9 +351,9 @@ void VACConstraint::VACproject (VACVariable* x, Value v, Cost c) {
   if(td) td->addDelta(cluster,x,v,c);
 
   int index = x->toIndex(v);
-  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
-  if(!getIndex(x)) deltaCostsX[index] += c; 
-  else			   deltaCostsY[index] += c; 
+  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBTRACTING TOP???
+  if(!getIndex(x)) deltaCostsX[index] += c;
+  else             deltaCostsY[index] += c;
   x->VACproject(v, c);
 }
 
@@ -369,9 +364,9 @@ void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   if(td) td->addDelta(cluster,x,v,-c);
 
   int index = x->toIndex(v);
-  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBSTRACTING TOP???
+  // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBTRACTING TOP???
   if(!getIndex(x)) deltaCostsX[index] -= c;
-  else		       deltaCostsY[index] -= c;
+  else             deltaCostsY[index] -= c;
   x->VACextend(v, c);
 }
 
@@ -404,7 +399,7 @@ bool VACConstraint::revise (VACVariable* var, Value v) {
   if(var != xi) {  xi = (VACVariable*)getVar(1); xj = (VACVariable*)getVar(0); }	
   Cost cost, minCost = wcsp->getUb();
 
-  if(xj->canbe(sup)) {	
+  if(xj->canbe(sup)) {
 	  if(xj->getVACCost(sup) != MIN_COST) { wipeout = xj->removeVAC(sup);  }
 	  else {
 		  if (getVACCost(xi,xj,v,sup) == MIN_COST) {
