@@ -668,6 +668,8 @@ bool Solver::solve()
 		}
 
 	    if (ToulBar2::btdMode) {
+	    	if(wcsp->numberOfUnassignedVariables() == 0)
+	    		ToulBar2::approximateCountingBTD = 0;
 	    	wcsp->buildTreeDecomposition();
 	    }
 

@@ -315,7 +315,7 @@ void WCSP::sortVariables()
 {
   switch (ToulBar2::elimOrderType) {
   case ELIM_NONE: break;
-  case MIN_DEGREE: 
+  case MIN_DEGREE:
 	if (ToulBar2::varOrder) {
 	  ifstream file(ToulBar2::varOrder);
 	  if (!file) {
@@ -347,7 +347,7 @@ void WCSP::sortVariables()
 		  assert(vars[i]->wcspIndex == (int) i);
 		}
 		// update DAC ordering
-		setDACOrder(order);	
+		setDACOrder(order);
 	  }
 	} else {
 #ifdef BOOST
@@ -1393,7 +1393,7 @@ int  WCSP::getVACHeuristic() {if (vac) return vac->getHeuristic(); else return -
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     double time = cpuTime();
-    if(ToulBar2::approximateCountingBTD)
+    if(ToulBar2::approximateCountingBTD )
     	td->buildFromOrderForApprox();
     else
     	td->buildFromOrder();

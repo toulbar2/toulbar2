@@ -12,7 +12,7 @@
 class Constraint : public WCSPLink
 {
     Long conflictWeight;
-  
+
     // make it private because we don't want copy nor assignment
     Constraint(const Constraint &c);
     Constraint& operator=(const Constraint &c);
@@ -20,7 +20,7 @@ class Constraint : public WCSPLink
 public:
     Constraint(WCSP *wcsp);
     Constraint(WCSP *wcsp, int elimCtrIndex);
-        
+
     virtual ~Constraint() {}
 
     // remove a constraint from the set of active constraints
@@ -37,11 +37,11 @@ public:
     Long getConflictWeight() const {return conflictWeight;}
     void incConflictWeight() {conflictWeight++;}
     void resetConflictWeight() {conflictWeight=1;}
-    
+
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }
     virtual double  computeTightness() = 0;
-    
+
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
     virtual int getSmallestVarIndexInScope() = 0;
@@ -62,7 +62,7 @@ public:
     void projectLB(Cost cost);
 
     virtual bool verify() {return true;};
-    
+
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
 
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
@@ -71,7 +71,7 @@ public:
 
 	virtual void firstlex() {}
 	virtual bool nextlex(String& t, Cost& c) { return false; }
- 
+
     virtual void first() {}
     virtual bool next( String& t, Cost& c) { return false; }
 
@@ -85,42 +85,42 @@ public:
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( String& s, Constraint* ctr ) { return MIN_COST; }
 	virtual Cost getDefCost() { return MIN_COST; }
-	virtual void setDefCost( Cost df ) {}       
+	virtual void setDefCost( Cost df ) {}
 
     virtual bool universal();
 
     virtual Cost getMinCost();
-	
+
 	void sumScopeIncluded( Constraint* ctr );
-	
+
 
 	bool scopeIncluded( Constraint* ctr )
 	{
 		bool isincluded = true;
 		int a_in = ctr->arity();
-		if(a_in >= arity()) return false;		
-		for(int i=0;isincluded && i<a_in;i++) isincluded = isincluded && (getIndex( ctr->getVar(i) ) >= 0);   
+		if(a_in >= arity()) return false;
+		for(int i=0;isincluded && i<a_in;i++) isincluded = isincluded && (getIndex( ctr->getVar(i) ) >= 0);
 		return isincluded;
 	}
 
-	
-	void scopeCommon( TSCOPE& scope_out, Constraint* ctr ) 
+
+	void scopeCommon( TSCOPE& scope_out, Constraint* ctr )
 	{
 		TSCOPE scope1,scope2;
 		getScope( scope1 );
 		ctr->getScope( scope2 );
-		
+
 		TSCOPE::iterator it1 = scope1.begin();
 		TSCOPE::iterator it2 = scope2.begin();
 		while(it1 != scope1.end()) { it1->second = 0; ++it1; }
 		while(it2 != scope2.end()) { it2->second = 0; ++it2; }
 		set_intersection( scope1.begin(), scope1.end(),
 				  	   	  scope2.begin(), scope2.end(),
-					  	  inserter(scope_out, scope_out.begin()) );			 	  
+					  	  inserter(scope_out, scope_out.begin()) );
 	}
-	
-		
-	void scopeUnion( TSCOPE& scope_out, Constraint* ctr ) 
+
+
+	void scopeUnion( TSCOPE& scope_out, Constraint* ctr )
 	{
 		TSCOPE scope1,scope2;
 		getScope( scope1 ); ctr->getScope( scope2 );
@@ -130,9 +130,9 @@ public:
 
 		set_union( scope1.begin(), scope1.end(),
 		  	   	   scope2.begin(), scope2.end(),
-			  	   inserter(scope_out, scope_out.begin()) );		
+			  	   inserter(scope_out, scope_out.begin()) );
 	}
-		
+
 	void scopeDifference( TSCOPE& scope_out, Constraint* ctr )
 	{
 		TSCOPE scope1,scope2;
@@ -140,13 +140,13 @@ public:
 		ctr->getScope( scope2 );
 		set_difference( scope1.begin(), scope1.end(),
 			  	   	    scope2.begin(), scope2.end(),
-				  	    inserter(scope_out, scope_out.begin()) );				
+				  	    inserter(scope_out, scope_out.begin()) );
 	}
-	
+
 	int order( Constraint* ctr )
 	{
 		if(arity() < ctr->arity()) return 1;
-		else if (arity()  > ctr->arity()) return -1;	
+		else if (arity()  > ctr->arity()) return -1;
 		TSCOPE scope1,scope2;
 		getScope( scope1 );
 		ctr->getScope( scope2 );
@@ -157,12 +157,12 @@ public:
 			else if (it1->first > it2->first) return -1;
 			++it1;
 			++it2;
-		}	
+		}
 		return 0;
 	}
-	
-	
-    //   added for tree decomposition stuff	
+
+
+    //   added for tree decomposition stuff
 	int  cluster;
 	int  getCluster()      {return cluster;}
 	void setCluster(int i) {cluster = i;}
@@ -176,9 +176,9 @@ public:
     bool isDuplicate_;
 	void setDuplicate()	   {isDuplicate_ = true; if (ToulBar2::verbose >= 1) { cout << *this << " set duplicate" << endl; }}
 	bool isDuplicate() 	   {return isDuplicate_;}
-	
-	
-	
+
+	virtual set<Constraint*> subConstraint(){set<Constraint*> s; return s;};
+
     friend ostream& operator<<(ostream& os, Constraint &c) {
         c.print(os);
         return os;

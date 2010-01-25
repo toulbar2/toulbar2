@@ -1,6 +1,6 @@
 /** \file tb2utils.hpp
  *  \brief Miscelaneous usefull functions.
- * 
+ *
  */
 
 #ifndef TB2UTILS_HPP_
@@ -24,7 +24,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
-
+#include <set>
 using namespace std;
 
 template<class T>

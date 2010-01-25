@@ -11,6 +11,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
+#include <set>
+
 // Warning! Constraint reconnect() may interfer with variable constraints list iterator used by EnumerateVariable assign method. Do not reconnect a constraint with assigned variables in project functions.
 
 template<class T1>
@@ -19,7 +21,7 @@ class AbstractUnaryConstraint : public Constraint
 protected:
     T1 *x;
     DLink<ConstraintLink> *linkX;
-    
+
 public:
     AbstractUnaryConstraint(WCSP *wcspin, T1 *xx) : Constraint(wcspin), x(xx), linkX(NULL) {
         linkX = xx->link(this,0);
@@ -31,28 +33,28 @@ public:
     bool deconnected() {return linkX->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
-            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
             x->deconnect(linkX, reuse);
         }
     }
     void reconnect() {
         if (deconnected()) {
-            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
 			assert(linkX->prev == NULL && linkX->next == NULL);
-            x->getConstrs()->push_back(linkX, true); 
+            x->getConstrs()->push_back(linkX, true);
         }
     }
 
     int arity() const {return 1;}
-    
+
     Variable *getVar(int varCtrIndex) const {return x;}
 
     Variable *getVarDiffFrom( Variable* v ) const  {
 		if(v != x) return x;
 		else exit(EXIT_FAILURE);
 	}
-		    
-    int getIndex(Variable* var) const 
+
+    int getIndex(Variable* var) const
     {
     	if(var == x) return 0;
     	return -1;
@@ -64,7 +66,12 @@ public:
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
 		scope_inv[ x->wcspIndex ] = 0;
-	}	
+	}
+
+	set<Constraint *> subConstraint(){
+		set <Constraint *> subcstr;
+		return subcstr;
+	}
 };
 
 
@@ -77,7 +84,7 @@ protected:
     DLink<ConstraintLink> *linkX;
     DLink<ConstraintLink> *linkY;
     int dacvar;
-    
+
 public:
     AbstractBinaryConstraint(WCSP *wcspin, T1 *xx, T2 *yy) : Constraint(wcspin), x(xx), y(yy), linkX(NULL), linkY(NULL) {
         assert(xx != yy);
@@ -86,7 +93,7 @@ public:
         setDACScopeIndex();
     }
 
-    AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), linkX(NULL), linkY(NULL) 
+    AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), linkX(NULL), linkY(NULL)
     { }
 
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
@@ -95,7 +102,7 @@ public:
     bool deconnected() {return linkX->removed || linkY->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
-            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
             x->deconnect(linkX, reuse);
             y->deconnect(linkY, reuse);
         }
@@ -104,14 +111,14 @@ public:
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
 			assert(linkX->prev == NULL && linkX->next == NULL);
-            x->getConstrs()->push_back(linkX, true); 
+            x->getConstrs()->push_back(linkX, true);
 			assert(linkY->prev == NULL && linkY->next == NULL);
             y->getConstrs()->push_back(linkY, true);
         }
     }
 
     int arity() const {return 2;}
-    
+
     Variable *getVar(int varCtrIndex) const {return (varCtrIndex == 0)?x:y;}
 
     Variable *getVarDiffFrom( Variable* v ) const  {
@@ -119,8 +126,8 @@ public:
 		else if(v == y) return x;
 		else exit(EXIT_FAILURE);
 	}
-		    
-    int getIndex(Variable* var) const 
+
+    int getIndex(Variable* var) const
     {
     	if(var == x) return 0;
     	else if(var == y) return 1;
@@ -136,8 +143,12 @@ public:
 		scope_inv.clear();
 		scope_inv[ x->wcspIndex ] = 0;
 		scope_inv[ y->wcspIndex ] = 1;
-	}	
+	}
 
+	set<Constraint *> subConstraint(){
+		set <Constraint *> subcstr;
+		return subcstr;
+	}
 };
 
 
@@ -152,7 +163,7 @@ protected:
     DLink<ConstraintLink> *linkY;
     DLink<ConstraintLink> *linkZ;
     int dacvar;
-    
+
 public:
     AbstractTernaryConstraint(WCSP *wcsp, T1 *xx, T2 *yy, T2 *zz) : Constraint(wcsp), x(xx), y(yy), z(zz), linkX(NULL), linkY(NULL), linkZ(NULL) {
         assert(xx != yy);
@@ -163,18 +174,18 @@ public:
         linkZ = zz->link(this,2);
 		setDACScopeIndex();
     }
-	
-	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)  
+
+	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,0), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)
     { }
-    
-    
+
+
     virtual ~AbstractTernaryConstraint() {delete linkX; delete linkY; delete linkZ;}
 
     bool connected() {return !linkX->removed && !linkY->removed && !linkZ->removed;}
     bool deconnected() {return linkX->removed || linkY->removed || linkZ->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
-            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
             x->deconnect(linkX, reuse);
             y->deconnect(linkY, reuse);
             z->deconnect(linkZ, reuse);
@@ -182,9 +193,9 @@ public:
     }
     void reconnect() {
         if (deconnected()) {
-            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
 			assert(linkX->prev == NULL && linkX->next == NULL);
-            x->getConstrs()->push_back(linkX, true); 
+            x->getConstrs()->push_back(linkX, true);
 			assert(linkY->prev == NULL && linkY->next == NULL);
             y->getConstrs()->push_back(linkY, true);
 			assert(linkZ->prev == NULL && linkZ->next == NULL);
@@ -193,8 +204,8 @@ public:
     }
 
     int arity() const {return 3;}
-    
-    Variable *getVar(int varCtrIndex) const 
+
+    Variable *getVar(int varCtrIndex) const
 	{
 		switch(varCtrIndex) { case 0: return x; break;
 						      case 1: return y; break;
@@ -202,7 +213,7 @@ public:
 						      default: exit(EXIT_FAILURE); }
 	}
 
-    Variable *getVarDiffFrom( Variable* v1, Variable* v2 ) const 
+    Variable *getVarDiffFrom( Variable* v1, Variable* v2 ) const
 	{
 		if      ((x == v1) && (y == v2)) return z;
 		else if ((x == v2) && (y == v1)) return z;
@@ -213,7 +224,7 @@ public:
 		else exit(EXIT_FAILURE);
 	}
 
-    int getIndex(Variable* var) const 
+    int getIndex(Variable* var) const
     {
     	if(var == x) return 0;
     	else if(var == y) return 1;
@@ -222,7 +233,7 @@ public:
     }
 
 
-    int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex)
 	{
         assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 3);
 		switch (forbiddenScopeIndex) {
@@ -232,7 +243,7 @@ public:
             default: exit(EXIT_FAILURE);
         }
 	}
-    int getSmallestVarIndexInScope() 
+    int getSmallestVarIndexInScope()
     {
         int res = min(x->wcspIndex,y->wcspIndex);
         return min(res, z->wcspIndex);
@@ -248,28 +259,44 @@ public:
 		scope_inv[ x->wcspIndex ] = 0;
 		scope_inv[ y->wcspIndex ] = 1;
 		scope_inv[ z->wcspIndex ] = 2;
-	}	
+	}
 
+	set<Constraint *> subConstraint(){
+		set <Constraint *> subcstr;
+		set<int> scope;
+		for(int k=0; k < arity(); k++) {
+			scope.insert(getVar(k)->wcspIndex);
+		}
+		for(set<int>::iterator itx = scope.begin(); itx != scope.end(); ++itx){
+			ConstraintList* xctrs = (wcsp->getVar(*itx))->getConstrs();
+			for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it){
+				Constraint * ctr = (*it).constr;
+				if(ctr->arity() == 2 && scopeIncluded(ctr))subcstr.insert(ctr);
+			}
+		}
+
+		return subcstr;
+	}
 
 };
 
 class AbstractNaryConstraint : public Constraint
 {
 protected:
-	
+
 	int arity_;
-	
+
 	EnumeratedVariable** scope;
     TSCOPE scope_inv;
-	
+
     DLink<ConstraintLink>** links;
-    
+
 public:
-    AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in) 
+    AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in)
     {
     	scope = new EnumeratedVariable* [arity_];
     	links = new DLink<ConstraintLink>* [arity_];
-    	
+
 		for(int i=0; i < arity_; i++) {
 			EnumeratedVariable* var = scope_in[i];
 			scope_inv[ var->wcspIndex ] = i;
@@ -277,8 +304,8 @@ public:
 			links[i] = var->link(this,i);
 		}
     }
-    
-    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp) 
+
+    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp)
     {
     }
 
@@ -286,12 +313,12 @@ public:
 
     int arity() const {return arity_;}
 
-    Variable *getVar(int varCtrIndex) const { 
-    	assert(varCtrIndex < arity_); 
+    Variable *getVar(int varCtrIndex) const {
+    	assert(varCtrIndex < arity_);
     	return scope[varCtrIndex];
     }
 
-	int getIndex(Variable* var) const { 
+	int getIndex(Variable* var) const {
 		int index = var->wcspIndex;
 		map<int,int>::const_iterator it = scope_inv.find(index);
 		if(it == scope_inv.end()) return -1;
@@ -305,7 +332,7 @@ public:
        for(int i=0;i<arity_;i++) if(!links[i]->removed) return true;
        return false;
 	}
-	
+
     bool deconnected() {
        for(int i=0;i<arity_;i++) if(!links[i]->removed) return false;
        return true;
@@ -314,20 +341,20 @@ public:
     void deconnect(int varIndex, bool reuse = false) {
         scope[varIndex]->deconnect( links[varIndex], reuse );
     }
-    
+
     void deconnect(bool reuse = false) {
         if (connected()) {
-            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
             for(int i=0;i<arity_;i++) deconnect(i, reuse);
         }
     }
 
     virtual void reconnect() {
         if (deconnected()) {
-            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl; 
+            if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
             for(int i=0;i<arity_;i++) {
 			    assert(links[i]->prev == NULL && links[i]->next == NULL);
-	            scope[i]->getConstrs()->push_back(links[i], true); 
+	            scope[i]->getConstrs()->push_back(links[i], true);
 	        }
         }
     }
@@ -335,7 +362,7 @@ public:
 	virtual Cost eval( String& t ) { return -UNIT_COST; }
 	virtual void insertTuple( String t, Cost c, EnumeratedVariable** scope_in ) { }
 
-    int getSmallestVarIndexInScope(int forbiddenScopeIndex) 
+    int getSmallestVarIndexInScope(int forbiddenScopeIndex)
     {
         assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < arity_);
         int indexmin = INT_MAX;
@@ -346,7 +373,7 @@ public:
         }
         return indexmin;
 	}
-    int getSmallestVarIndexInScope() 
+    int getSmallestVarIndexInScope()
     {
         int indexmin = INT_MAX;
         for(int i=0; i < arity_; i++) {
@@ -365,6 +392,23 @@ public:
         for(int i=0; i < arity_; i++) {
             scope_inv[ scope[i]->wcspIndex ] = i;
         }
+    }
+
+    set<Constraint *> subConstraint(){
+    	set <Constraint *> subcstr;
+    	set<int> scope;
+    	for(int k=0; k < arity(); k++) {
+    		scope.insert(getVar(k)->wcspIndex);
+    	}
+    	for(set<int>::iterator itx = scope.begin(); itx != scope.end(); ++itx){
+    		ConstraintList* xctrs = (wcsp->getVar(*itx))->getConstrs();
+    		for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it){
+    			Constraint * ctr = (*it).constr;
+    			if(ctr->arity() < arity() && scopeIncluded(ctr)) subcstr.insert(ctr);
+    		}
+    	}
+
+    	return subcstr;
     }
 };
 

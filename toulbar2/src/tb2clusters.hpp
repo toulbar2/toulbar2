@@ -99,7 +99,7 @@ class Separator : public AbstractNaryConstraint
     void   increase(int index) {}
     void   decrease(int index) {}
     void   remove(int index) {}
-
+    //set<Constraint*> subConstraint(){TCtrs s; return s;}
     void   print(ostream& os);
 };
 
@@ -299,6 +299,7 @@ public:
 	void sum( TVars& v1, TVars& v2, TVars& vout );
     bool included( TVars& v1, TVars& v2 ); 	// true if v1 is included in v2
 	void clusterSum( TClusters& v1, TClusters& v2, TClusters& vout );
+	void ctrSum( TCtrs& v1, TCtrs& v2, TCtrs& vout );
 
     bool isDeltaModified(int varIndex) { return deltaModified[varIndex]; }
 	Cost getLbRecRDS() {

@@ -8,7 +8,7 @@
 
 /*
  * Constructor
- * 
+ *
  */
 
 Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflictWeight(1)
@@ -42,7 +42,7 @@ void Constraint::conflict()
 {
     wcsp->conflict();
 }
-  
+
 void Constraint::projectLB(Cost cost)
 {
   if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
@@ -51,15 +51,15 @@ void Constraint::projectLB(Cost cost)
 	wcsp->td->getCluster(getCluster())->increaseLb(cost);
   }
   if (ToulBar2::verbose >= 2) cout << endl;
-  wcsp->increaseLb(cost);  
+  wcsp->increaseLb(cost);
 }
 
-void Constraint::sumScopeIncluded( Constraint* ctr ) 
+void Constraint::sumScopeIncluded( Constraint* ctr )
 {
 	int ar = arity();
 	EnumeratedVariable** scopethis = new EnumeratedVariable * [arity()];
 	for(int i=0;i<ar;i++) scopethis[i] = (EnumeratedVariable*) getVar(i);
-	
+
 	Cost Top = wcsp->getUb();
 	Cost c;
 	String t;
@@ -71,8 +71,8 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 			if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
 			else setTuple( t, Top, scopethis);
 		}
-		setDefCost(Top);		
-	} else {				
+		setDefCost(Top);
+	} else {
 		first();
 		while( next(t,c) ) {
 			Cost cplus = ctr->evalsubstr(t, this);
@@ -80,7 +80,7 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 			else setTuple( t, Top, scopethis);
 		}
 	}
-	
+
 	delete [] scopethis;
 }
 
@@ -134,7 +134,7 @@ bool Constraint::universal()
 // 	if (cost > MIN_COST) return false;
 //   }
 //   return true;
-  
+
   String tuple;
   Cost cost;
   unsigned long long nbtuples = 0;
@@ -146,3 +146,5 @@ bool Constraint::universal()
   if (getDefCost() > MIN_COST && nbtuples < getDomainSizeProduct()) return false;
   return true;
 }
+
+

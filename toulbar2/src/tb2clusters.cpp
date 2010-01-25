@@ -1306,8 +1306,8 @@ void TreeDecomposition::buildFromOrder()
 	if (ToulBar2::elimOrderType==ELIM_NONE && ToulBar2::varOrder) file.open(ToulBar2::varOrder);
     if ((ToulBar2::elimOrderType != ELIM_NONE) || !ToulBar2::varOrder || !file) {
         if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
-		//		for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
-		for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
+        if (ToulBar2::elimOrderType == ELIM_NONE) for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
+               else for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
     } else {
 	    while(file) {
 	    	int ix;
@@ -1381,11 +1381,12 @@ void TreeDecomposition::buildFromOrderForApprox()
 	set<Constraint*> totalusedctrs;	// constraints already in a part
 	vector<int> degreeinusedctr;	// number of constraints not adding for each variable
 //	int nbcstr = 0;					//
+	double time;
 
 	if (!filein) {
 		if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
-		//		for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
-		for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
+        if (ToulBar2::elimOrderType==ELIM_NONE) for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
+               else for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
 	}
 	else {
 		while(filein) {
@@ -1412,7 +1413,7 @@ void TreeDecomposition::buildFromOrderForApprox()
 //		degree.push_back(x->getTrueDegree());
 		degreeinusedctr.push_back(x->getDegree());
 	}
-
+	time =cpuTime();
 	while (totalusedctrs.size() < wcsp->numberOfConnectedConstraints() )//&& nbparties<4)
 			{
 				set<Constraint*> currentusedctrs;						// liste des contraintes contenues dans la partie courante
@@ -1447,6 +1448,8 @@ void TreeDecomposition::buildFromOrderForApprox()
 				}
 
 
+				if(sizepart == 1) cout << endl;
+				cout << "part " << sizepart << " : " << currentRevElimOrder.size() << " variables and " << currentusedctrs.size() << " constraints (really added)\n";
 				if(ToulBar2::debug >=1 ||ToulBar2::verbose >=3)//affichage
 				{
 					cout << "\tVariables : ";
@@ -1456,24 +1459,24 @@ void TreeDecomposition::buildFromOrderForApprox()
 					cout << endl;
 					cout << "\tContraintes : ";
 					for(set<Constraint *>::iterator it=currentusedctrs.begin(); it != currentusedctrs.end();it++) {
-						cout << "( ";
+						cout << "[";
 						for(int k=0; k < (*it)->arity(); k++) {
-							cout << (*it)->getVar(k)->wcspIndex << " " ;
+							cout << (*it)->getVar(k)->wcspIndex;
+							if(k!= (*it)->arity()-1) cout << " ";
 						}
-						cout << ") ";
+						cout << "] ";
 					}
 					cout << endl;
 
 
 				}
-				if(sizepart == 1) cout << endl;
-				cout << "part " << sizepart << " : " << currentRevElimOrder.size() << " variables and " << currentusedctrs.size() << " constraints\n";
 
 				insert(sizepart,currentRevElimOrder,currentusedctrs);
 				firstComponent = false;
 			}
-
-	cout << "--> number of parts : " << sizepart << endl << endl;
+	time = time - cpuTime();
+	cout << "--> number of parts : " << sizepart <<endl;
+	cout << "--> time : " << time << " seconds. "<< endl << endl;
 	buildFromOrderNext(order);
 
 }
@@ -1590,7 +1593,8 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constraint*> &totalusedctrs, TVars &inusedvars, TVars &currentusedvars, vector<Variable *> &currentRevElimOrder,set<Constraint*> &currentusedctrs){
 	vector<TVars>  listeVars(wcsp->numberOfVariables());	// liste des voisins d'ordre superieur de chaque variable
 	int nbcstr = 0;
-
+	int nbsubctr = 0;
+	double time, timetot = 0;
 	while (inusedvars.size() > 0)
 	{
 		int maxsize = -1;
@@ -1632,9 +1636,16 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constrai
 						{ //all edges of the ctr are in the sub graph => the cstr is added in this current part
 							if( included(sc,listeVars[maxvar->wcspIndex]) )
 							{
+								set<Constraint*> subctr;
 								nbcstr++;
 								currentusedctrs.insert(ctr);
 								totalusedctrs.insert(ctr);
+								time== cpuTime();
+								subctr = ctr->subConstraint();
+								ctrSum(totalusedctrs, subctr, totalusedctrs);
+								ctrSum(currentusedctrs, subctr, currentusedctrs);
+								time = time -cpuTime();
+								timetot += time;
 								sum(currentusedvars, sc, currentusedvars);
 								currentusedvars.insert(maxvar->wcspIndex);
 
@@ -1821,6 +1832,12 @@ bool TreeDecomposition::included( TVars& v1, TVars& v2 ) {
 }
 
 void TreeDecomposition::clusterSum( TClusters& v1, TClusters& v2, TClusters& vout ) {
+	set_union( v1.begin(), v1.end(),
+			   v2.begin(), v2.end(),
+			   inserter(vout, vout.begin()) );
+}
+
+void TreeDecomposition::ctrSum( TCtrs& v1, TCtrs& v2, TCtrs& vout ) {
 	set_union( v1.begin(), v1.end(),
 			   v2.begin(), v2.end(),
 			   inserter(vout, vout.begin()) );
