@@ -4,7 +4,16 @@
 #obviosely if you tag the ilog flag 
 #ilog librares will be required.
 
-#cmake package are now required
+# library : gmp is required
+
+sudo apt-get install libgmp3-dev
+
+# if you want to cross compile toulbar2 please upload static GMP library and header file for MinGW
+# at the following url : http://cs.nyu.edu/exact/core/gmp/
+# location of static gmp lib for windows must be update in cmake-script/FindGmp.cmake
+# by default locate is ./lib/win32/
+
+#cmake package are also required
 sudo apt-get install cmake cmake-data cmake-curses-gui
 
 #for cross compilation under ubuntu
