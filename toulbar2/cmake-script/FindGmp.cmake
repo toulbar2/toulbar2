@@ -7,8 +7,8 @@
 
 if(WIN32)
 
-set(GMP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/win32/gmp/include)
-set(GMP_LIBRARY  ${CMAKE_CURRENT_SOURCE_DIR}/win32/gmp/lib/)
+set(GMP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/win32/gmp/include)
+set(GMP_LIBRARY  ${CMAKE_CURRENT_SOURCE_DIR}/lib/win32/gmp/lib/)
 
 #set(GMP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gmp/gmp-4.3.2/include)
 #set(GMP_LIBRARY  ${CMAKE_CURRENT_SOURCE_DIR}/gmp/gmp-4.3.2/lib/)

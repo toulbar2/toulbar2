@@ -1,0 +1,1027 @@
+This is gmp.info, produced by makeinfo version 4.2 from gmp.texi.
+
+This manual describes how to install and use the GNU multiple precision
+arithmetic library, version 4.1.
+
+   Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+2001, 2002 Free Software Foundation, Inc.
+
+   Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License, Version
+1.1 or any later version published by the Free Software Foundation;
+with no Invariant Sections, with the Front-Cover Texts being "A GNU
+Manual", and with the Back-Cover Texts being "You have freedom to copy
+and modify this GNU Manual, like GNU software".  A copy of the license
+is included in *Note GNU Free Documentation License::.
+INFO-DIR-SECTION GNU libraries
+START-INFO-DIR-ENTRY
+* gmp: (gmp).                   GNU Multiple Precision Arithmetic Library.
+END-INFO-DIR-ENTRY
+
+
+File: gmp.info,  Node: Assembler Loop Unrolling,  Prev: Assembler Software Pipelining,  Up: Assembler Coding
+
+Loop Unrolling
+--------------
+
+   Loop unrolling consists of replicating code so that several limbs are
+processed in each loop.  At a minimum this reduces loop overheads by a
+corresponding factor, but it can also allow better register usage, for
+example alternately using one register combination and then another.
+Judicious use of `m4' macros can help avoid lots of duplication in the
+source code.
+
+   Unrolling is commonly done to a power of 2 multiple so the number of
+unrolled loops and the number of remaining limbs can be calculated with
+a shift and mask.  But other multiples can be used too, just by
+subtracting each N limbs processed from a counter and waiting for less
+than N remaining (or offsetting the counter by N so it goes negative
+when there's less than N remaining).
+
+   The limbs not a multiple of the unrolling can be handled in various
+ways, for example
+
+   * A simple loop at the end (or the start) to process the excess.
+     Care will be wanted that it isn't too much slower than the
+     unrolled part.
+
+   * A set of binary tests, for example after an 8-limb unrolling, test
+     for 4 more limbs to process, then a further 2 more or not, and
+     finally 1 more or not.  This will probably take more code space
+     than a simple loop.
+
+   * A `switch' statement, providing separate code for each possible
+     excess, for example an 8-limb unrolling would have separate code
+     for 0 remaining, 1 remaining, etc, up to 7 remaining.  This might
+     take a lot of code, but may be the best way to optimize all cases
+     in combination with a deep pipelined loop.
+
+   * A computed jump into the middle of the loop, thus making the first
+     iteration handle the excess.  This should make times smoothly
+     increase with size, which is attractive, but setups for the jump
+     and adjustments for pointers can be tricky and could become quite
+     difficult in combination with deep pipelining.
+
+   One way to write the setups and finishups for a pipelined unrolled
+loop is simply to duplicate the loop at the start and the end, then
+delete instructions at the start which have no valid antecedents, and
+delete instructions at the end whose results are unwanted.  Sizes not a
+multiple of the unrolling can then be handled as desired.
+
+
+File: gmp.info,  Node: Internals,  Next: Contributors,  Prev: Algorithms,  Up: Top
+
+Internals
+*********
+
+   *This chapter is provided only for informational purposes and the
+various internals described here may change in future GMP releases.
+Applications expecting to be compatible with future releases should use
+only the documented interfaces described in previous chapters.*
+
+* Menu:
+
+* Integer Internals::
+* Rational Internals::
+* Float Internals::
+* Raw Output Internals::
+* C++ Interface Internals::
+
+
+File: gmp.info,  Node: Integer Internals,  Next: Rational Internals,  Prev: Internals,  Up: Internals
+
+Integer Internals
+=================
+
+   `mpz_t' variables represent integers using sign and magnitude, in
+space dynamically allocated and reallocated.  The fields are as follows.
+
+`_mp_size'
+     The number of limbs, or the negative of that when representing a
+     negative integer.  Zero is represented by `_mp_size' set to zero,
+     in which case the `_mp_d' data is unused.
+
+`_mp_d'
+     A pointer to an array of limbs which is the magnitude.  These are
+     stored "little endian" as per the `mpn' functions, so `_mp_d[0]'
+     is the least significant limb and `_mp_d[ABS(_mp_size)-1]' is the
+     most significant.  Whenever `_mp_size' is non-zero, the most
+     significant limb is non-zero.
+
+     Currently there's always at least one limb allocated, so for
+     instance `mpz_set_ui' never needs to reallocate, and `mpz_get_ui'
+     can fetch `_mp_d[0]' unconditionally (though its value is then
+     only wanted if `_mp_size' is non-zero).
+
+`_mp_alloc'
+     `_mp_alloc' is the number of limbs currently allocated at `_mp_d',
+     and naturally `_mp_alloc >= ABS(_mp_size)'.  When an `mpz' routine
+     is about to (or might be about to) increase `_mp_size', it checks
+     `_mp_alloc' to see whether there's enough space, and reallocates
+     if not.  `MPZ_REALLOC' is generally used for this.
+
+   The various bitwise logical functions like `mpz_and' behave as if
+negative values were twos complement.  But sign and magnitude is always
+used internally, and necessary adjustments are made during the
+calculations.  Sometimes this isn't pretty, but sign and magnitude are
+best for other routines.
+
+   Some internal temporary variables are setup with `MPZ_TMP_INIT' and
+these have `_mp_d' space obtained from `TMP_ALLOC' rather than the
+memory allocation functions.  Care is taken to ensure that these are
+big enough that no reallocation is necessary (since it would have
+unpredictable consequences).
+
+
+File: gmp.info,  Node: Rational Internals,  Next: Float Internals,  Prev: Integer Internals,  Up: Internals
+
+Rational Internals
+==================
+
+   `mpq_t' variables represent rationals using an `mpz_t' numerator and
+denominator (*note Integer Internals::).
+
+   The canonical form adopted is denominator positive (and non-zero),
+no common factors between numerator and denominator, and zero uniquely
+represented as 0/1.
+
+   It's believed that casting out common factors at each stage of a
+calculation is best in general.  A GCD is an O(N^2) operation so it's
+better to do a few small ones immediately than to delay and have to do
+a big one later.  Knowing the numerator and denominator have no common
+factors can be used for example in `mpq_mul' to make only two cross
+GCDs necessary, not four.
+
+   This general approach to common factors is badly sub-optimal in the
+presence of simple factorizations or little prospect for cancellation,
+but GMP has no way to know when this will occur.  As per *Note
+Efficiency::, that's left to applications.  The `mpq_t' framework might
+still suit, with `mpq_numref' and `mpq_denref' for direct access to the
+numerator and denominator, or of course `mpz_t' variables can be used
+directly.
+
+
+File: gmp.info,  Node: Float Internals,  Next: Raw Output Internals,  Prev: Rational Internals,  Up: Internals
+
+Float Internals
+===============
+
+   Efficient calculation is the primary aim of GMP floats and the use
+of whole limbs and simple rounding facilitates this.
+
+   `mpf_t' floats have a variable precision mantissa and a single
+machine word signed exponent.  The mantissa is represented using sign
+and magnitude.
+
+        most                   least
+     significant            significant
+        limb                   limb
+     
+                                 _mp_d
+      |---- _mp_exp --->           |
+       _____ _____ _____ _____ _____
+      |_____|_____|_____|_____|_____|
+                        . <------------ radix point
+     
+       <-------- _mp_size --------->
+
+The fields are as follows.
+
+`_mp_size'
+     The number of limbs currently in use, or the negative of that when
+     representing a negative value.  Zero is represented by `_mp_size'
+     and `_mp_exp' both set to zero, and in that case the `_mp_d' data
+     is unused.  (In the future `_mp_exp' might be undefined when
+     representing zero.)
+
+`_mp_prec'
+     The precision of the mantissa, in limbs.  In any calculation the
+     aim is to produce `_mp_prec' limbs of result (the most significant
+     being non-zero).
+
+`_mp_d'
+     A pointer to the array of limbs which is the absolute value of the
+     mantissa.  These are stored "little endian" as per the `mpn'
+     functions, so `_mp_d[0]' is the least significant limb and
+     `_mp_d[ABS(_mp_size)-1]' the most significant.
+
+     The most significant limb is always non-zero, but there are no
+     other restrictions on its value, in particular the highest 1 bit
+     can be anywhere within the limb.
+
+     `_mp_prec+1' limbs are allocated to `_mp_d', the extra limb being
+     for convenience (see below).  There are no reallocations during a
+     calculation, only in a change of precision with `mpf_set_prec'.
+
+`_mp_exp'
+     The exponent, in limbs, determining the location of the implied
+     radix point.  Zero means the radix point is just above the most
+     significant limb.  Positive values mean a radix point offset
+     towards the lower limbs and hence a value >= 1, as for example in
+     the diagram above.  Negative exponents mean a radix point further
+     above the highest limb.
+
+     Naturally the exponent can be any value, it doesn't have to fall
+     within the limbs as the diagram shows, it can be a long way above
+     or a long way below.  Limbs other than those included in the
+     `{_mp_d,_mp_size}' data are treated as zero.
+
+
+The following various points should be noted.
+
+Low Zeros
+     The least significant limbs `_mp_d[0]' etc can be zero, though
+     such low zeros can always be ignored.  Routines likely to produce
+     low zeros check and avoid them to save time in subsequent
+     calculations, but for most routines they're quite unlikely and
+     aren't checked.
+
+Mantissa Size Range
+     The `_mp_size' count of limbs in use can be less than `_mp_prec' if
+     the value can be represented in less.  This means low precision
+     values or small integers stored in a high precision `mpf_t' can
+     still be operated on efficiently.
+
+     `_mp_size' can also be greater than `_mp_prec'.  Firstly a value is
+     allowed to use all of the `_mp_prec+1' limbs available at `_mp_d',
+     and secondly when `mpf_set_prec_raw' lowers `_mp_prec' it leaves
+     `_mp_size' unchanged and so the size can be arbitrarily bigger than
+     `_mp_prec'.
+
+Rounding
+     All rounding is done on limb boundaries.  Calculating `_mp_prec'
+     limbs with the high non-zero will ensure the application requested
+     minimum precision is obtained.
+
+     The use of simple "trunc" rounding towards zero is efficient,
+     since there's no need to examine extra limbs and increment or
+     decrement.
+
+Bit Shifts
+     Since the exponent is in limbs, there are no bit shifts in basic
+     operations like `mpf_add' and `mpf_mul'.  When differing exponents
+     are encountered all that's needed is to adjust pointers to line up
+     the relevant limbs.
+
+     Of course `mpf_mul_2exp' and `mpf_div_2exp' will require bit
+     shifts, but the choice is between an exponent in limbs which
+     requires shifts there, or one in bits which requires them almost
+     everywhere else.
+
+Use of `_mp_prec+1' Limbs
+     The extra limb on `_mp_d' (`_mp_prec+1' rather than just
+     `_mp_prec') helps when an `mpf' routine might get a carry from its
+     operation.  `mpf_add' for instance will do an `mpn_add' of
+     `_mp_prec' limbs.  If there's no carry then that's the result, but
+     if there is a carry then it's stored in the extra limb of space and
+     `_mp_size' becomes `_mp_prec+1'.
+
+     Whenever `_mp_prec+1' limbs are held in a variable, the low limb
+     is not needed for the intended precision, only the `_mp_prec' high
+     limbs.  But zeroing it out or moving the rest down is unnecessary.
+     Subsequent routines reading the value will simply take the high
+     limbs they need, and this will be `_mp_prec' if their target has
+     that same precision.  This is no more than a pointer adjustment,
+     and must be checked anyway since the destination precision can be
+     different from the sources.
+
+     Copy functions like `mpf_set' will retain a full `_mp_prec+1' limbs
+     if available.  This ensures that a variable which has `_mp_size'
+     equal to `_mp_prec+1' will get its full exact value copied.
+     Strictly speaking this is unnecessary since only `_mp_prec' limbs
+     are needed for the application's requested precision, but it's
+     considered that an `mpf_set' from one variable into another of the
+     same precision ought to produce an exact copy.
+
+Application Precisions
+     `__GMPF_BITS_TO_PREC' converts an application requested precision
+     to an `_mp_prec'.  The value in bits is rounded up to a whole limb
+     then an extra limb is added since the most significant limb of
+     `_mp_d' is only non-zero and therefore might contain only one bit.
+
+     `__GMPF_PREC_TO_BITS' does the reverse conversion, and removes the
+     extra limb from `_mp_prec' before converting to bits.  The net
+     effect of reading back with `mpf_get_prec' is simply the precision
+     rounded up to a multiple of `mp_bits_per_limb'.
+
+     Note that the extra limb added here for the high only being
+     non-zero is in addition to the extra limb allocated to `_mp_d'.
+     For example with a 32-bit limb, an application request for 250
+     bits will be rounded up to 8 limbs, then an extra added for the
+     high being only non-zero, giving an `_mp_prec' of 9.  `_mp_d' then
+     gets 10 limbs allocated.  Reading back with `mpf_get_prec' will
+     take `_mp_prec' subtract 1 limb and multiply by 32, giving 256
+     bits.
+
+     Strictly speaking, the fact the high limb has at least one bit
+     means that a float with, say, 3 limbs of 32-bits each will be
+     holding at least 65 bits, but for the purposes of `mpf_t' it's
+     considered simply to be 64 bits, a nice multiple of the limb size.
+
+
+File: gmp.info,  Node: Raw Output Internals,  Next: C++ Interface Internals,  Prev: Float Internals,  Up: Internals
+
+Raw Output Internals
+====================
+
+`mpz_out_raw' uses the following format.
+
+     +------+------------------------+
+     | size |       data bytes       |
+     +------+------------------------+
+
+   The size is 4 bytes written most significant byte first, being the
+number of subsequent data bytes, or the twos complement negative of
+that when a negative integer is represented.  The data bytes are the
+absolute value of the integer, written most significant byte first.
+
+   The most significant data byte is always non-zero, so the output is
+the same on all systems, irrespective of limb size.
+
+   In GMP 1, leading zero bytes were written to pad the data bytes to a
+multiple of the limb size.  `mpz_inp_raw' will still accept this, for
+compatibility.
+
+   The use of "big endian" for both the size and data fields is
+deliberate, it makes the data easy to read in a hex dump of a file.
+Unfortunately it also means that the limb data must be reversed when
+reading or writing, so neither a big endian nor little endian system
+can just read and write `_mp_d'.
+
+
+File: gmp.info,  Node: C++ Interface Internals,  Prev: Raw Output Internals,  Up: Internals
+
+C++ Interface Internals
+=======================
+
+   A system of expression templates is used to ensure something like
+`a=b+c' turns into a simple call to `mpz_add' etc.  For `mpf_class' and
+`mpfr_class' the scheme also ensures the precision of the final
+destination is used for any temporaries within a statement like
+`f=w*x+y*z'.  These are important features which a naive implementation
+cannot provide.
+
+   A simplified description of the scheme follows.  The true scheme is
+complicated by the fact that expressions have different return types.
+For detailed information, refer to the source code.
+
+   To perform an operation, say, addition, we first define a "function
+object" evaluating it,
+
+     struct __gmp_binary_plus
+     {
+       static void eval(mpf_t f, mpf_t g, mpf_t h) { mpf_add(f, g, h); }
+     };
+
+And an "additive expression" object,
+
+     __gmp_expr<__gmp_binary_expr<mpf_class, mpf_class, __gmp_binary_plus> >
+     operator+(const mpf_class &f, const mpf_class &g)
+     {
+       return __gmp_expr
+         <__gmp_binary_expr<mpf_class, mpf_class, __gmp_binary_plus> >(f, g);
+     }
+
+   The seemingly redundant `__gmp_expr<__gmp_binary_expr<...>>' is used
+to encapsulate any possible kind of expression into a single template
+type.  In fact even `mpf_class' etc are `typedef' specializations of
+`__gmp_expr'.
+
+   Next we define assignment of `__gmp_expr' to `mpf_class'.
+
+     template <class T>
+     mpf_class & mpf_class::operator=(const __gmp_expr<T> &expr)
+     {
+       expr.eval(this->get_mpf_t(), this->precision());
+       return *this;
+     }
+     
+     template <class Op>
+     void __gmp_expr<__gmp_binary_expr<mpf_class, mpf_class, Op> >::eval
+     (mpf_t f, unsigned long int precision)
+     {
+       Op::eval(f, expr.val1.get_mpf_t(), expr.val2.get_mpf_t());
+     }
+
+   where `expr.val1' and `expr.val2' are references to the expression's
+operands (here `expr' is the `__gmp_binary_expr' stored within the
+`__gmp_expr').
+
+   This way, the expression is actually evaluated only at the time of
+assignment, when the required precision (that of `f') is known.
+Furthermore the target `mpf_t' is now available, thus we can call
+`mpf_add' directly with `f' as the output argument.
+
+   Compound expressions are handled by defining operators taking
+subexpressions as their arguments, like this:
+
+     template <class T, class U>
+     __gmp_expr
+     <__gmp_binary_expr<__gmp_expr<T>, __gmp_expr<U>, __gmp_binary_plus> >
+     operator+(const __gmp_expr<T> &expr1, const __gmp_expr<U> &expr2)
+     {
+       return __gmp_expr
+         <__gmp_binary_expr<__gmp_expr<T>, __gmp_expr<U>, __gmp_binary_plus> >
+         (expr1, expr2);
+     }
+
+   And the corresponding specializations of `__gmp_expr::eval':
+
+     template <class T, class U, class Op>
+     void __gmp_expr
+     <__gmp_binary_expr<__gmp_expr<T>, __gmp_expr<U>, Op> >::eval
+     (mpf_t f, unsigned long int precision)
+     {
+       // declare two temporaries
+       mpf_class temp1(expr.val1, precision), temp2(expr.val2, precision);
+       Op::eval(f, temp1.get_mpf_t(), temp2.get_mpf_t());
+     }
+
+   The expression is thus recursively evaluated to any level of
+complexity and all subexpressions are evaluated to the precision of `f'.
+
+
+File: gmp.info,  Node: Contributors,  Next: References,  Prev: Internals,  Up: Top
+
+Contributors
+************
+
+   Torbjorn Granlund wrote the original GMP library and is still
+developing and maintaining it.  Several other individuals and
+organizations have contributed to GMP in various ways.  Here is a list
+in chronological order:
+
+   Gunnar Sjoedin and Hans Riesel helped with mathematical problems in
+early versions of the library.
+
+   Richard Stallman contributed to the interface design and revised the
+first version of this manual.
+
+   Brian Beuning and Doug Lea helped with testing of early versions of
+the library and made creative suggestions.
+
+   John Amanatides of York University in Canada contributed the function
+`mpz_probab_prime_p'.
+
+   Paul Zimmermann of Inria sparked the development of GMP 2, with his
+comparisons between bignum packages.
+
+   Ken Weber (Kent State University, Universidade Federal do Rio Grande
+do Sul) contributed `mpz_gcd', `mpz_divexact', `mpn_gcd', and
+`mpn_bdivmod', partially supported by CNPq (Brazil) grant 301314194-2.
+
+   Per Bothner of Cygnus Support helped to set up GMP to use Cygnus'
+configure.  He has also made valuable suggestions and tested numerous
+intermediary releases.
+
+   Joachim Hollman was involved in the design of the `mpf' interface,
+and in the `mpz' design revisions for version 2.
+
+   Bennet Yee contributed the initial versions of `mpz_jacobi' and
+`mpz_legendre'.
+
+   Andreas Schwab contributed the files `mpn/m68k/lshift.S' and
+`mpn/m68k/rshift.S' (now in `.asm' form).
+
+   The development of floating point functions of GNU MP 2, were
+supported in part by the ESPRIT-BRA (Basic Research Activities) 6846
+project POSSO (POlynomial System SOlving).
+
+   GNU MP 2 was finished and released by SWOX AB, SWEDEN, in
+cooperation with the IDA Center for Computing Sciences, USA.
+
+   Robert Harley of Inria, France and David Seal of ARM, England,
+suggested clever improvements for population count.
+
+   Robert Harley also wrote highly optimized Karatsuba and 3-way Toom
+multiplication functions for GMP 3.  He also contributed the ARM
+assembly code.
+
+   Torsten Ekedahl of the Mathematical department of Stockholm
+University provided significant inspiration during several phases of
+the GMP development.  His mathematical expertise helped improve several
+algorithms.
+
+   Paul Zimmermann wrote the Divide and Conquer division code, the REDC
+code, the REDC-based mpz_powm code, the FFT multiply code, and the
+Karatsuba square root.  The ECMNET project Paul is organizing was a
+driving force behind many of the optimizations in GMP 3.
+
+   Linus Nordberg wrote the new configure system based on autoconf and
+implemented the new random functions.
+
+   Kent Boortz made the Macintosh port.
+
+   Kevin Ryde worked on a number of things: optimized x86 code, m4 asm
+macros, parameter tuning, speed measuring, the configure system,
+function inlining, divisibility tests, bit scanning, Jacobi symbols,
+Fibonacci and Lucas number functions, printf and scanf functions, perl
+interface, demo expression parser, the algorithms chapter in the
+manual, `gmpasm-mode.el', and various miscellaneous improvements
+elsewhere.
+
+   Steve Root helped write the optimized alpha 21264 assembly code.
+
+   Gerardo Ballabio wrote the `gmpxx.h' C++ class interface and the C++
+`istream' input routines.
+
+   GNU MP 4.0 was finished and released by Torbjorn Granlund and Kevin
+Ryde.  Torbjorn's work was partially funded by the IDA Center for
+Computing Sciences, USA.
+
+   (This list is chronological, not ordered after significance.  If you
+have contributed to GMP but are not listed above, please tell
+<tege@swox.com> about the omission!)
+
+   Thanks goes to Hans Thorsen for donating an SGI system for the GMP
+test system environment.
+
+
+File: gmp.info,  Node: References,  Next: GNU Free Documentation License,  Prev: Contributors,  Up: Top
+
+References
+**********
+
+Books
+=====
+
+   * Jonathan M. Borwein and Peter B. Borwein, "Pi and the AGM: A Study
+     in Analytic Number Theory and Computational Complexity", Wiley,
+     John & Sons, 1998.
+
+   * Henri Cohen, "A Course in Computational Algebraic Number Theory",
+     Graduate Texts in Mathematics number 138, Springer-Verlag, 1993.
+     `http://www.math.u-bordeaux.fr/~cohen'
+
+   * Donald E. Knuth, "The Art of Computer Programming", volume 2,
+     "Seminumerical Algorithms", 3rd edition, Addison-Wesley, 1998.
+     `http://www-cs-faculty.stanford.edu/~knuth/taocp.html'
+
+   * John D. Lipson, "Elements of Algebra and Algebraic Computing", The
+     Benjamin Cummings Publishing Company Inc, 1981.
+
+   * Alfred J. Menezes, Paul C. van Oorschot and Scott A. Vanstone,
+     "Handbook of Applied Cryptography",
+     `http://www.cacr.math.uwaterloo.ca/hac/'
+
+   * Richard M. Stallman, "Using and Porting GCC", Free Software
+     Foundation, 1999, available online
+     `http://www.gnu.org/software/gcc/onlinedocs/', and in the GCC
+     package `ftp://ftp.gnu.org/gnu/gcc/'
+
+Papers
+======
+
+   * Christoph Burnikel and Joachim Ziegler, "Fast Recursive Division",
+     Max-Planck-Institut fuer Informatik Research Report
+     MPI-I-98-1-022,
+     `http://data.mpi-sb.mpg.de/internet/reports.nsf/NumberView/1998-1-022'
+
+   * Torbjorn Granlund and Peter L. Montgomery, "Division by Invariant
+     Integers using Multiplication", in Proceedings of the SIGPLAN
+     PLDI'94 Conference, June 1994.  Also available
+     `ftp://ftp.cwi.nl/pub/pmontgom/divcnst.psa4.gz' (and .psl.gz).
+
+   * Peter L. Montgomery, "Modular Multiplication Without Trial
+     Division", in Mathematics of Computation, volume 44, number 170,
+     April 1985.
+
+   * Tudor Jebelean, "An algorithm for exact division", Journal of
+     Symbolic Computation, volume 15, 1993, pp. 169-180.  Research
+     report version available
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1992/92-35.ps.gz'
+
+   * Tudor Jebelean, "Exact Division with Karatsuba Complexity -
+     Extended Abstract", RISC-Linz technical report 96-31,
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1996/96-31.ps.gz'
+
+   * Tudor Jebelean, "Practical Integer Division with Karatsuba
+     Complexity", ISSAC 97, pp. 339-341.  Technical report available
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1996/96-29.ps.gz'
+
+   * Tudor Jebelean, "A Generalization of the Binary GCD Algorithm",
+     ISSAC 93, pp. 111-116.  Technical report version available
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1993/93-01.ps.gz'
+
+   * Tudor Jebelean, "A Double-Digit Lehmer-Euclid Algorithm for
+     Finding the GCD of Long Integers", Journal of Symbolic
+     Computation, volume 19, 1995, pp. 145-157.  Technical report
+     version also available
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1992/92-69.ps.gz'
+
+   * Werner Krandick and Tudor Jebelean, "Bidirectional Exact Integer
+     Division", Journal of Symbolic Computation, volume 21, 1996, pp.
+     441-455.  Early technical report version also available
+     `ftp://ftp.risc.uni-linz.ac.at/pub/techreports/1994/94-50.ps.gz'
+
+   * R. Moenck and A. Borodin, "Fast Modular Transforms via Division",
+     Proceedings of the 13th Annual IEEE Symposium on Switching and
+     Automata Theory, October 1972, pp. 90-96.  Reprinted as "Fast
+     Modular Transforms", Journal of Computer and System Sciences,
+     volume 8, number 3, June 1974, pp. 366-386.
+
+   * Arnold Scho"nhage and Volker Strassen, "Schnelle Multiplikation
+     grosser Zahlen", Computing 7, 1971, pp. 281-292.
+
+   * Kenneth Weber, "The accelerated integer GCD algorithm", ACM
+     Transactions on Mathematical Software, volume 21, number 1, March
+     1995, pp. 111-122.
+
+   * Paul Zimmermann, "Karatsuba Square Root", INRIA Research Report
+     3805, November 1999, `http://www.inria.fr/RRRT/RR-3805.html'
+
+   * Paul Zimmermann, "A Proof of GMP Fast Division and Square Root
+     Implementations",
+     `http://www.loria.fr/~zimmerma/papers/proof-div-sqrt.ps.gz'
+
+   * Dan Zuras, "On Squaring and Multiplying Large Integers", ARITH-11:
+     IEEE Symposium on Computer Arithmetic, 1993, pp. 260 to 271.
+     Reprinted as "More on Multiplying and Squaring Large Integers",
+     IEEE Transactions on Computers, volume 43, number 8, August 1994,
+     pp. 899-908.
+
+
+File: gmp.info,  Node: GNU Free Documentation License,  Next: Concept Index,  Prev: References,  Up: Top
+
+GNU Free Documentation License
+******************************
+
+                        Version 1.1, March 2000
+     Copyright (C) 2000 Free Software Foundation, Inc.
+     59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+     
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     written document "free" in the sense of freedom: to assure everyone
+     the effective freedom to copy and redistribute it, with or without
+     modifying it, either commercially or noncommercially.  Secondarily,
+     this License preserves for the author and publisher a way to get
+     credit for their work, while not being considered responsible for
+     modifications made by others.
+
+     This License is a kind of "copyleft", which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work that contains a
+     notice placed by the copyright holder saying it can be distributed
+     under the terms of this License.  The "Document", below, refers to
+     any such manual or work.  Any member of the public is a licensee,
+     and is addressed as "you".
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter
+     section of the Document that deals exclusively with the
+     relationship of the publishers or authors of the Document to the
+     Document's overall subject (or to related matters) and contains
+     nothing that could fall directly within that overall subject.
+     (For example, if the Document is in part a textbook of
+     mathematics, a Secondary Section may not explain any mathematics.)
+     The relationship could be a matter of historical connection with
+     the subject or with related matters, or of legal, commercial,
+     philosophical, ethical or political position regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, whose contents can be viewed and edited directly
+     and straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup has been designed
+     to thwart or discourage subsequent modification by readers is not
+     Transparent.  A copy that is not "Transparent" is called "Opaque".
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML designed for human modification.
+     Opaque formats include PostScript, PDF, proprietary formats that
+     can be read and edited only by proprietary word processors, SGML
+     or XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML produced by some word
+     processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies of the Document numbering more than
+     100, and the Document's license notice requires Cover Texts, you
+     must enclose the copies in covers that carry, clearly and legibly,
+     all these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a publicly-accessible
+     computer-network location containing a complete Transparent copy
+     of the Document, free of added material, which the general
+     network-using public has access to download anonymously at no
+     charge using public-standard network protocols.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has less than five).
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section entitled "History", and its title, and
+          add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. In any section entitled "Acknowledgments" or "Dedications",
+          preserve the section's title, and preserve in the section all
+          the substance and tone of each of the contributor
+          acknowledgments and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section as "Endorsements" or to
+          conflict in title with any Invariant Section.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section entitled "Endorsements", provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections entitled
+     "History" in the various original documents, forming one section
+     entitled "History"; likewise combine any sections entitled
+     "Acknowledgments", and any sections entitled "Dedications".  You
+     must delete all sections entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow
+     this License in all other respects regarding verbatim copying of
+     that document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, does not as a whole count as a
+     Modified Version of the Document, provided no compilation
+     copyright is claimed for the compilation.  Such a compilation is
+     called an "aggregate", and this License does not apply to the
+     other self-contained works thus compiled with the Document, on
+     account of their being thus compiled, if they are not themselves
+     derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one
+     quarter of the entire aggregate, the Document's Cover Texts may be
+     placed on covers that surround only the Document within the
+     aggregate.  Otherwise they must appear on covers around the whole
+     aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License provided that you also include the
+     original English version of this License.  In case of a
+     disagreement between the translation and the original English
+     version of this License, the original English version will prevail.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided for under this License.  Any other
+     attempt to copy, modify, sublicense or distribute the Document is
+     void, and will automatically terminate your rights under this
+     License.  However, parties who have received copies, or rights,
+     from you under this License will not have their licenses
+     terminated so long as such parties remain in full compliance.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     `http://www.gnu.org/copyleft/'.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+   To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.1
+       or any later version published by the Free Software Foundation;
+       with the Invariant Sections being LIST THEIR TITLES, with the
+       Front-Cover Texts being LIST, and with the Back-Cover Texts being LIST.
+       A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
+
+   If you have no Invariant Sections, write "with no Invariant Sections"
+instead of saying which ones are invariant.  If you have no Front-Cover
+Texts, write "no Front-Cover Texts" instead of "Front-Cover Texts being
+LIST"; likewise for Back-Cover Texts.
+
+   If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License, to
+permit their use in free software.
+
