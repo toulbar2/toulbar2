@@ -37,18 +37,23 @@ ENDIF (WIN32)
 	SET(CPACK_PACKAGE_CONTACT "${CONTACT}")
 	SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
 	SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
-#	SET(CPACK_PACKAGE_FILE_NAME "${Toulbar_NAME_COMPLETE}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
-#	SET(CPACK_PACKAGE_FILE_NAME "${Toulbar_NAME_COMPLETE}")
+
 	SET(CPACK_PACKAGE_FILE_NAME "${Toulbar_NAME_COMPLETE}-${CMAKE_SYSTEM_PROCESSOR}")
+
 	SET(CPACK_PACKAGE_VERSION_MAJOR "${Toulbar_VERSION_MAJOR}")
 	SET(CPACK_PACKAGE_VERSION_MINOR "${Toulbar_MINOR}")
 
 	SET(CPACK_PACKAGE_INSTALL_DIRECTORY ${Toulbar_NAME_COMPLETE})
-	SET(CPACK_PACKAGE_EXECUTABLES "toulbar2" "toulbar2" "iloglue" "ILOGLUE" "mendelsoft" "MENDELSOFTL")
+	#SET(CPACK_PACKAGE_EXECUTABLES "toulbar2" "toulbar2" "iloglue" "ILOGLUE" "mendelsoft" "MENDELSOFTL")
+	IF(MENDELSOLF_ONLY) 
+	SET(CPACK_PACKAGE_EXECUTABLES "mendelsoft"  "MENDELSOFT" )
+	ELSE()
+	SET(CPACK_PACKAGE_EXECUTABLES "toulbar2"  "TOULBAR2" )
+	ENDIF(MENDELSOLF_ONLY)
 
 # CPack source configuration
 	SET(CPACK_SOURCE_PACKAGE_FILE_NAME ${Toulbar_NAME_COMPLETE}-sources)
-	SET(CPACK_SOURCE_IGNORE_FILES "\\\\.swp$;/\\\\.gitignore;/build/;/\\\\.git/;/\\\\.svn/;/bachckup;/_CPack_Packages/;/CMakeFiles/;/old/;\\\\.sh$;\\\\.cmake$;\\\\.zip$;\\\\.gz$;\\\\.bz2$")
+	SET(CPACK_SOURCE_IGNORE_FILES "\\\\.swp$;/\\\\.gitignore;/build/;/\\\\.git/;/\\\\.svn/;/build;/bachckup;/_CPack_Packages/;/CMakeFiles/;/old/;\\\\.sh$;\\\\.zip$;\\\\.gz$;\\\\.bz2$")
 
 # CPack DEB configuration
 	SET(CPACK_DEBIAN_PACKAGE_NAME ${Toulbar_NAME})
@@ -85,8 +90,9 @@ IF (CPACK_GENERATOR MATCHES "NSIS")
 	SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 	FILE(TO_CMAKE_PATH "${MINGW_BASEPATH}" MINGW_BASE)
 	#  INSTALL(FILES "${MINGW_BASE}/bin\\\\mingwm10.dll" DESTINATION bin)
-	SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/misc/pixmaps\\\\logo.png")
-	SET(CPACK_NSIS_MENU_LINKS "${Toulbar2_SHARE_DIRS}/doc/toulbar2.chm" "Toulbar2" "https://mulcyber.toulouse.inra.fr/projects/toulbar2/" "${Toulbar_NAME} Web Site")
+	INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/misc/pixmaps/tb2.ico" DESTINATION bin)
+	SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/misc/pixmaps/tb2.ico")
+	SET(CPACK_NSIS_MENU_LINKS "${Toulbar2_SHARE_DIRS}/doc/ToulBar2.txt" "Toulbar2" "https://mulcyber.toulouse.inra.fr/projects/toulbar2/" "${Toulbar_NAME} Web Site")
 	SET(CPACK_CREATE_DESKTOP_LINKS ${Toulbar_NAME})
 	SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${Toulbar_NAME}.exe")
 	SET(CPACK_NSIS_DISPLAY_NAME "Toulbar2 - solver for weighted CSP")
@@ -98,4 +104,3 @@ IF (CPACK_GENERATOR MATCHES "NSIS")
 ENDIF (CPACK_GENERATOR MATCHES "NSIS")
 
 INCLUDE(CPack)
-
