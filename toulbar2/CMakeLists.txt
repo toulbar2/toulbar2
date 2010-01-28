@@ -199,8 +199,6 @@ IF(WIN32)
 	set(Boost OFF)
 	set(ILOG OFF)
 	set(LIBTB2 OFF)
-	set(MENDELSOFT ON)
-	set(TOULBAR2 ON)
 
 #############################"
 	MESSAGE(STATUS "WIN32 on  .")
