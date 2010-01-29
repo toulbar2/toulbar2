@@ -20,7 +20,7 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 # init version NUMBER
 ############################
 	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
-	set (Toulbar_MINOR "9.1" CACHE STRING "Toulbar2 Framework minor release")
+	set (Toulbar_MINOR "9.1.1" CACHE STRING "Toulbar2 Framework minor release")
  
 
 ################
@@ -188,6 +188,8 @@ include(${My_cmake_scritp}/init-version.cmake)
 	set(LIBTB2INT ON)
 	ENDIF(ILOG)
 
+	SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
+	SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 
 #########################
 IF(WIN32)
@@ -213,6 +215,10 @@ ELSE(WIN32)
 	SET(COST LONGLONG_COST)
 	MESSAGE(STATUS "COST ==>  long long")
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/bin/Linux/narycsp
+    ${EXECUTABLE_OUTPUT_PATH}/narycsp COPYONLY)
+
+
 ENDIF(WIN32)
 
 ###########
@@ -228,11 +234,8 @@ SET (all_depends  ${all_depends} "gmp")
 #CMAKE_DEPENDENT_OPTION(ILOG "ILOGLUE COMPIATION" OFF  "LIBTB2INT" OFF)
 #########################
 
-	SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
-	SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 
 INCLUDE(FindPkgConfig)
-
 
 # liste of file used for compilation are include in source_file.cmake 
 # new file news to be add in this list
@@ -265,6 +268,7 @@ IF(TOULBAR2)
 add_executable(toulbar2${EXE} ${source_files})
 TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
 INSTALL( TARGETS toulbar2${EXE} DESTINATION bin )
+
 
 
 ENDIF(TOULBAR2)
