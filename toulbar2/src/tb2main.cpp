@@ -311,7 +311,7 @@ int main(int argc, char **argv)
     bool certificate = false;
     char buf [512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
-    cout << "toulbar2 version : " << ToulBar2::version << " location :" << CurrentBinaryPath <<endl;
+    cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2010"<<endl;
 //     cout << "Toulbar2 Path="<<CurrentBinaryPath<<'\n';
 
     if (argc <= 1) {
