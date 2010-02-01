@@ -86,6 +86,7 @@ void Solver::read_solution(const char *filename)
 		  wcsp->setBestValue(i, value);
         } else {
             if (wcsp->getValue(i) != value) THROWCONTRADICTION;
+			else wcsp->setBestValue(i, value); // side-effect: remember last solution
         }
         i++;
     }
