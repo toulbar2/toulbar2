@@ -180,8 +180,8 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 
 
 // postBinaryConstraint looks for an existing constraint
-// (even not connected constraints). It also alocates
-// memory for a new constraints. For this two reasons it should
+// (even not connected constraints). It also allocates
+// memory for a new constraint. For this two reasons it should
 // ONLY be called when creating the initial wcsp
 int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 {
