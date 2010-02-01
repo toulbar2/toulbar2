@@ -90,7 +90,8 @@ int WCSP::biConnectedComponents()
     vector<Vertex> art_points;
     articulation_points(G, back_inserter(art_points));
     cout << "Articulation points: " << art_points.size() <<  endl;
-
+    for (unsigned int i=0; i<art_points.size(); i++) cout << " " << art_points[i];
+	cout << endl;
     return num;
 }
 #endif
