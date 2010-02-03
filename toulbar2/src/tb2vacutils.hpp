@@ -21,6 +21,7 @@ private:
   vector<int>   k;           /**< Number of cost requests per value for all cost functions */
   vector<int>   killer;      /**< The killer of each value : the other variable index (binary case)*/
 
+  int  killed;               /**< How many values did this variable killed ? HEUR */
   int  maxk;                 /**< The Max number of cost requests seen on this variable, used for stats */
   Long maxk_timeStamp;       /**< timestamp for maxk */
 
@@ -73,12 +74,12 @@ public:
   	 k_timeStamp[toIndex(v)] = timeStamp; 
   }
 
-
   bool  isMarked( Value v, long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
   void  setMark( Value v, long timeStamp )  { mark[toIndex(v)] = timeStamp; }
   
   int   getKiller( Value v ) { return killer[toIndex(v)]; }
   void  setKiller( Value v, int i ) { killer[toIndex(v)] = i; }
+  void  killedOne() { killed = killed+1; }
 
 
   Cost getVACCost( Value v ) {
@@ -88,7 +89,9 @@ public:
   }
 
   void setThreshold (Cost c) { myThreshold = c; } 
-  Cost getThreshold () { return myThreshold; } 
+  Cost getThreshold () { return myThreshold; }
+  
+  bool isSimplyNull(Cost c);
   bool isNull (Cost c);
    
   void queueVAC();
@@ -114,6 +117,7 @@ public:
   friend ostream& operator<< (ostream& os, VACVariable &v) {
     return os;
   }
+  void KilledOne();
 };
 
 
@@ -128,7 +132,9 @@ private:
   vector<int>  kY;             /**< The k_XY(Y,v) counters: nb. of cost request on Y,v by this cost function */
   vector<Long>  kX_timeStamp;
   vector<Long>  kY_timeStamp;
-
+  
+  StoreCost myThreshold; /** The local thresold used to break loops */
+  
 public:
 
   VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
@@ -138,9 +144,14 @@ public:
   int getK (VACVariable* var, Value v, long timeStamp);
   void setK (VACVariable* var, Value v, int c, long timeStamp);
 
+  void setThreshold (Cost c) { myThreshold = c; } 
+  Cost getThreshold () { return myThreshold; }
+
+  bool isNull (Cost c);
+  
   Cost getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {
 	Cost c = getCost(xx, yy, v, w);
-	if(xx->isNull(c) || (yy->isNull(c))) return MIN_COST;
+	if(isNull(c)) return MIN_COST;
 	else return c;
   }
   void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
