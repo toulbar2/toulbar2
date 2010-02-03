@@ -58,6 +58,10 @@ private:
   int sumk;
   int theMaxK;
   
+  int bneckVar;
+  VACConstraint *bneckCF;
+  Cost bneckCost;
+  
   EnumeratedVariable* nearIncVar; /**< A variable whose domain is reduced to 1 value during Pass1 -- Unused apparently */
   Cost atThreshold;               /**< The value of itThreshold when this single value variable appeared -- Unused apparently */ 
   
