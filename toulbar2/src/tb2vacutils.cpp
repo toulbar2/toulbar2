@@ -24,6 +24,7 @@ VACVariable::~VACVariable () {
 }
 
 void VACVariable::init () {
+  killed =0; // HEUR
   for (unsigned int a = 0; a < getDomainInitSize(); a++) {
   	mark.push_back(0);
   	k_timeStamp.push_back(0);
@@ -131,6 +132,11 @@ void VACVariable::VACextend (Value v, const Cost c) {
 // 	//	cout << "setsupport " << wcspIndex << " " << newSupport << endl;
 // 	setSupport(newSupport);
 //   } 
+}
+
+bool VACVariable::isSimplyNull(Cost c) 
+{
+  return (vac->isNull(c));
 }
 
 bool VACVariable::isNull (Cost c) 
@@ -316,7 +322,7 @@ bool VACVariable::averaging()
  *   A class that stores information about a binary constraint
  */
 
-VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, xx, yy, tab, storeCost) 
+VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) :  BinaryConstraint(wcsp, xx, yy, tab, storeCost), myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 
 {
    for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {
 	   	kX.push_back(0);
@@ -328,7 +334,7 @@ VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVari
    }
 }
 
-VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) 
+VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) , myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 
 {
    for (int a = 0; a < wcsp->maxdomainsize; a++) {
 	   	kX.push_back(0);
@@ -388,6 +394,12 @@ void VACConstraint::setK (VACVariable* var, Value v, int c, long timeStamp) {
     kY[var->toIndex(v)] = c;
    	kY_timeStamp[var->toIndex(v)] = timeStamp; 					   
   }		
+}
+
+bool VACConstraint::isNull (Cost c) 
+{
+  VACVariable* xi = (VACVariable*) getVar(0);
+  return (xi->isSimplyNull(c) || (c < myThreshold));
 }
 
 bool VACConstraint::revise (VACVariable* var, Value v) {
