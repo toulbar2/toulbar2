@@ -31,7 +31,7 @@ mkdir build ; cd build ; cmake .. ; make package
 
 # cross compilation ==> compile toulbar2 under for win32 plateform
 
-cmake -DWIN32=ON ; make package
+cmake .. -DWIN32=ON ; make package
 
 
 # in advanced mode you can tune your compilation option using:
@@ -49,8 +49,8 @@ cmake -i ..
 # each option can be tune using the [t] pad under ccmake
 # ore cmake -i mode
 
-cmake -DCMAKE_BUILD_TYPE=RELEASE ==> compilation in release mode
-cmake -DCMAKE_BUILD_TYPE=DEBUG  ===> compilation in debug mode
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE ==> compilation in release mode
+cmake .. -DCMAKE_BUILD_TYPE=DEBUG  ===> compilation in debug mode
 
 #notice: iloglue compilation not compliant with -O3 option implied by release mode
 # ==> iloglue does not support release mode
@@ -75,7 +75,7 @@ make test ; # alternative command:test
 
 # howto genearte mendelsoft
 
-make clean ; cmake ..-DMENDELSOFT_ONLY=ON ; make package
+make clean ; cmake .. -DMENDELSOFT_ONLY=ON ; make package
 
 
 #howto change define option in code preprocessing.
@@ -99,8 +99,17 @@ make doc ; # => html and pdf are create in doc/dev directory
 
 #howto generate a codeblock project file  : =>
 
- cmake . -G"CodeBlocks - Unix Makefiles"
+ cmake .. -G"CodeBlocks - Unix Makefiles"
 
 # the command produces the Toulbar2_framework.cbp file, which can be open in Code::Blocks IDE.
 # obviously cmake allows to generate project file for various IDE environement (Kdevelop , eclipse ..)
 # for further information please read cmake man page (cmake --help)
+
+
+#howto compile toulbar2 under Mac OSXX ?
+
+ mkdir build
+ cd build
+ cmake -G Xcode ..
+# open the xcode project file generated in the build directory
+# build and manage the source code in the xcode with no problem
