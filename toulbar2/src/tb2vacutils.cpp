@@ -25,6 +25,8 @@ VACVariable::~VACVariable () {
 
 void VACVariable::init () {
   killed =0; // HEUR
+  maxk_timeStamp = 0;
+  maxk = 0;
   for (unsigned int a = 0; a < getDomainInitSize(); a++) {
   	mark.push_back(0);
   	k_timeStamp.push_back(0);
