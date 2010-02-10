@@ -195,7 +195,7 @@ include(${My_cmake_scritp}/init-version.cmake)
 IF(WIN32)
 # option used for cross compilation 
 	set ( EXE ".exe")
-	set(COST IN_COST)
+	set(COST INT_COST)
 	set(LIBTB2INT OFF)
 	set(XML OFF)
 	set(Boost OFF)
