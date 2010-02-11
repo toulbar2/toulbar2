@@ -932,7 +932,7 @@ void NaryConstraintMap::print(ostream& os)
 	os << endl << this << " f(";
 
 	int unassigned_ = 0;
-	long totaltuples = 1;
+	Long totaltuples = 1;
 	for(int i = 0; i < arity_;i++) {
 		if(scope[i]->unassigned()) unassigned_++;
 		os << scope[i]->wcspIndex;
@@ -940,6 +940,7 @@ void NaryConstraintMap::print(ostream& os)
 		totaltuples = totaltuples * scope[i]->getDomainInitSize();
 	}
 	os << ")    ";
+	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
 	os << " |f| = " << f.size() << " / " << totaltuples;
 	os << "   default_cost: " << default_cost;
 	os << "   arity: " << arity();
@@ -1277,7 +1278,7 @@ Cost NaryConstrie::eval( String& s ) {
 
 void NaryConstrie::print(ostream& os) {
 	int unassigned_ = 0;
-	long totaltuples = 1;
+	Long totaltuples = 1;
 	os << endl << this << " f(";
 	for(int i = 0; i < arity_;i++) {
 		if(scope[i]->unassigned()) unassigned_++;

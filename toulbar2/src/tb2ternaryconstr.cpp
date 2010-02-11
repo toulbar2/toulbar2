@@ -97,6 +97,7 @@ double TernaryConstraint::computeTightness()
 void TernaryConstraint::print(ostream& os)
 {
     os << this << " TernaryConstraint(" << x->getName() << "," << y->getName() << "," << z->getName() << ")";
+	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
     if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
     else cout << endl;
     

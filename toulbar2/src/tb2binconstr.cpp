@@ -53,6 +53,7 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost
 void BinaryConstraint::print(ostream& os)
 {
     os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
+	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
     if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
     else cout << endl;
     if (ToulBar2::verbose >= 5) {

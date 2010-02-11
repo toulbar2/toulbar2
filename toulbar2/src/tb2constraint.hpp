@@ -36,6 +36,7 @@ public:
     void conflict();
     Long getConflictWeight() const {return conflictWeight;}
     void incConflictWeight() {conflictWeight++;}
+    void incConflictWeight(Long incval) {conflictWeight += incval;}
     void resetConflictWeight() {conflictWeight=1;}
 
 	double tight;
@@ -67,7 +68,7 @@ public:
 
     virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
 
-    virtual unsigned long long getDomainSizeProduct();
+    virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
 
 	virtual void firstlex() {}
 	virtual bool nextlex(String& t, Cost& c) { return false; }

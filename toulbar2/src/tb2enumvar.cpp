@@ -189,6 +189,7 @@ void EnumeratedVariable::findSupport()
 
 void EnumeratedVariable::propagateNC()
 {
+    wcsp->revise(NULL);
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup()+1;
     Cost maxcost = MIN_COST;

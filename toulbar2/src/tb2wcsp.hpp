@@ -95,6 +95,7 @@ public:
     // warning! parameter addLb increments current lower bound
     void increaseLb(Cost addLb) {
        if (addLb > MIN_COST) {
+		 //		   incWeightedDegree(addLb);
 		   Cost newLb = lb + addLb;
            if (CUT(((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb, ub)) THROWCONTRADICTION;
            lb = newLb;
@@ -141,6 +142,11 @@ public:
             lastConflictConstr=NULL;
         }
     }
+    void incWeightedDegree(Long incval) {
+	   if (lastConflictConstr) {
+         lastConflictConstr->incConflictWeight(incval);
+	   }
+	}
 
     void whenContradiction();       // after a contradiction, reset propagation queues and increase nbNodes
     void propagate();               // propagate until a fix point and increase nbNodes

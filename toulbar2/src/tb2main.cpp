@@ -576,7 +576,7 @@ int main(int argc, char **argv)
 
         if (certificate) solver.read_solution("sol");
         if (saveproblem) solver.dump_wcsp("problem.wcsp");
-        else if (!certificate || ToulBar2::btdMode>=2) {
+		else if (!certificate || ToulBar2::btdMode>=2) {
 		  if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb())) {
 			ToulBar2::LcLevel = LC_AC;
 		  }

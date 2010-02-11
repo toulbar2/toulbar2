@@ -28,11 +28,13 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
     cluster = -1;
 }
 
-unsigned long long Constraint::getDomainSizeProduct()
+Long Constraint::getDomainSizeProduct()
 {
   if (arity()==0) return 0;
-  unsigned long long cartesianProduct = 1;
+  Long cartesianProduct = 1;
   for (int i=0; i<arity(); i++) {
+	// trap overflow numbers
+	if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE) return LONGLONG_MAX;
 	cartesianProduct *= getVar(i)->getDomainSize();
   }
   return cartesianProduct;
@@ -108,20 +110,16 @@ Cost Constraint::getMinCost()
 //         }
 //         return minc;
 
-  unsigned long long cartesianProduct = 1;
-  for (int i=0; i<arity(); i++) {
-	cartesianProduct *= getVar(i)->getDomainSize();
-  }
   Cost minc = MAX_COST;
   String tuple;
   Cost cost;
-  unsigned long long nbtuples = 0;
+  Long nbtuples = 0;
   first();
   while (next(tuple,cost)) {
 	nbtuples++;
 	if (cost < minc) minc = cost;
   }
-  if (nbtuples < cartesianProduct && getDefCost() < minc) minc = getDefCost();
+  if (getDefCost() < minc && nbtuples < getDomainSizeProduct()) minc = getDefCost();
   return minc;
 }
 
@@ -137,7 +135,7 @@ bool Constraint::universal()
 
   String tuple;
   Cost cost;
-  unsigned long long nbtuples = 0;
+  Long nbtuples = 0;
   first();
   while (next(tuple,cost)) {
 	nbtuples++;
