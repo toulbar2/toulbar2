@@ -317,6 +317,7 @@ bool Separator::solGet(TAssign& a, String& sol)
 			cout << "asking  solution  sep:";
 			Cout << t;
 			cout << "  cost: " << p.first << endl;
+			Cout << "  sol: " << sol << endl;
 		}
 
 		return true;
@@ -616,6 +617,8 @@ void Cluster::getSolution( TAssign& sol )
 #ifndef NDEBUG
 		bool found = sep->solGet(sol, s);
 		assert(found);
+#else
+        sep->solGet(sol, s);
 #endif
 		int i = 0;
 	    it = beginVars();
@@ -1595,8 +1598,6 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constraint*> &totalusedctrs, TVars &inusedvars, TVars &currentusedvars, vector<Variable *> &currentRevElimOrder,set<Constraint*> &currentusedctrs){
 	vector<TVars>  listeVars(wcsp->numberOfVariables());	// liste des voisins d'ordre superieur de chaque variable
 	int nbcstr = 0;
-	// var not used removed by D.A
-	//int nbsubctr = 0;
 	double time, timetot = 0;
 	while (inusedvars.size() > 0)
 	{
@@ -1643,8 +1644,7 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constrai
 								nbcstr++;
 								currentusedctrs.insert(ctr);
 								totalusedctrs.insert(ctr);
-								// modif D.A change operator == by affection =
-								time= cpuTime();
+								time = cpuTime();
 								subctr = ctr->subConstraint();
 								ctrSum(totalusedctrs, subctr, totalusedctrs);
 								ctrSum(currentusedctrs, subctr, currentusedctrs);
