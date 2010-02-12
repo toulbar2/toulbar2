@@ -98,6 +98,7 @@ double ToulBar2::startCpuTime = 0;
 int ToulBar2::splitClusterMaxSize = 0;
 bool ToulBar2::boostingBTD = false;
 int ToulBar2::maxSeparatorSize = -1;
+int ToulBar2::minProperVarSize = 0;
 
 int ToulBar2::smallSeparatorSize = 4;
 

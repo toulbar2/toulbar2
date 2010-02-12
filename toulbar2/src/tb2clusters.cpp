@@ -1065,20 +1065,20 @@ TVars TreeDecomposition::boostingVarElimRec( Cluster* c,  Cluster* father,  Clus
   return addedVarBySons;
 }
 
-void TreeDecomposition::mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize )
+void TreeDecomposition::mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize, unsigned int minpropervar )
 {
   TClusters::iterator itj = c->beginEdges();
   while (itj != c->endEdges()) {
 	Cluster* cj = *itj;
 	++itj; // warning! must be done before going inside boostingVarElimRec as it can delete current cluster/iterator by the following removeEdge(c) operation
 	if (cj != father) {
-	  mergeClusterRec(cj, c, maxsepsize);
+	  mergeClusterRec(cj, c, maxsepsize, minpropervar);
 	}
   }
   if (father) {
 	TVars csep;
 	intersection(c->getVars(), father->getVars(), csep);
-	if (csep.size() > maxsepsize) {
+	if ((csep.size() > maxsepsize) || (c->getVars().size() - csep.size() < minpropervar)) {
 	  father->addVars(c->getVars());
 	  father->addEdges(c->getEdges());
 	  TClusters::iterator itk =  c->beginEdges();
@@ -1239,7 +1239,7 @@ int TreeDecomposition::makeRooted()
 		roots.push_back(root);
 		visited.insert(root);
 		while(reduceHeight(root,NULL));
-		if (ToulBar2::maxSeparatorSize>=0) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize);
+		if (ToulBar2::maxSeparatorSize>=0||ToulBar2::minProperVarSize>=2) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
 		if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1) boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
 		if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
 		while(reduceHeight(root,NULL));

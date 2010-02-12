@@ -278,7 +278,7 @@ public:
 	bool reduceHeight( Cluster* c, Cluster *father );
     void splitClusterRec( Cluster* c,  Cluster* father, unsigned int maxsize );
     TVars boostingVarElimRec( Cluster* c,  Cluster* father,  Cluster* grandfather, unsigned int maxsize );
-    void mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize );
+    void mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize, unsigned int minpropervar );
 	void heuristicFusionRec( Cluster* c, Cluster* noc );
 
 	void makeDescendants( Cluster* c );

@@ -196,6 +196,7 @@ public:
     static int splitClusterMaxSize;
     static bool boostingBTD;
     static int maxSeparatorSize;
+    static int minProperVarSize;
 
     static int smallSeparatorSize;
 };

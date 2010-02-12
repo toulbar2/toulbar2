@@ -143,7 +143,6 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
 	Cost cub = 1;
 	Cost lbgood = 0;
 	BigInteger nbSol = 0, nb = 0;
-	TreeDecomposition* td = wcsp->getTreeDec();
 	assert(wcsp->unassigned(varIndex));
 	assert(wcsp->canbe(varIndex,value));
 	bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
@@ -156,7 +155,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
 	}
 	try {
 		store->store();
-		assert(td->getCurrentCluster() == cluster);
+		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
 
 		wcsp->setUb(cub);
 		if (CUT(lbgood, cub)) THROWCONTRADICTION;

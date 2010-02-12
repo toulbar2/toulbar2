@@ -374,6 +374,10 @@ int main(int argc, char **argv)
         	int sepmaxsize = atoi(&ch[1]);
         	if(sepmaxsize >= -1) ToulBar2::maxSeparatorSize = sepmaxsize;
         }
+        if ( (ch = strchr(argv[i],'X')) ) {
+        	int minpvarsize = atoi(&ch[1]);
+        	if(minpvarsize >= 0) ToulBar2::minProperVarSize = minpvarsize;
+        }
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='v') ToulBar2::verbose++;
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
         if (strchr(argv[i],'s')) ToulBar2::showSolutions = true;
