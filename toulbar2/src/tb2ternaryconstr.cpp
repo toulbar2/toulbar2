@@ -133,10 +133,11 @@ void TernaryConstraint::dump(ostream& os)
 bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
 	    TreeDecomposition* td = wcsp->getTreeDec();
-     	if(td) td->addDelta(cluster,x,value,cost);
+	    if(td) td->addDelta(cluster,x,value,cost);
     	deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
     }
     	

@@ -130,7 +130,7 @@ public:
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
         	Cost c = costs[ix * sizeY + iy];
-        	//if(costs[ix * sizeY + iy] < wcsp->getUb())  strange BUG WITH THIS LINE USING BTD in a particular instance
+        	//if(costs[ix * sizeY + iy] < wcsp->getUb()) //BUG with BTD: ub is only local, deltaCosts should be considered
         	{
 	        	costs[ix * sizeY + iy] = c + xy->getCost(x,y,*iterx,*itery);
         	}

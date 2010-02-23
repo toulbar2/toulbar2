@@ -121,8 +121,8 @@ public:
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery); iz = z->toIndex(*iterz);
-        	if(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] < wcsp->getUb())
-        		costs[ix*sizeY*sizeZ + iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
+			// if(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] < wcsp->getUb()) // BUG with BTD (local ub, deltaCosts missing)
+        	costs[ix*sizeY*sizeZ + iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
 	    }}}
     }
 
@@ -146,8 +146,8 @@ public:
 	        vindex[ getIndex(yin) ] = vyin;
 	        vindex[ getIndex(zin) ] = vzin;
 	        
-			if(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]]  < wcsp->getUb())
-				costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
+			// if(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]]  < wcsp->getUb()) // BUG with BTD (local ub, deltaCosts missing)
+			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
 	    }}}
     }
 

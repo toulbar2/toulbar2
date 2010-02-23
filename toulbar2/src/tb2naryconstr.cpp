@@ -218,10 +218,10 @@ void NaryConstraint::projectNary()
 			t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
 	  		Cost c = eval(t);
 	  		if(c > MIN_COST) {
-				if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
+			    if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
 		  			TreeDecomposition* td = wcsp->getTreeDec();
     				if(td) td->addDelta(cluster,x,xval,c);
-				}
+			    }
 	  			x->project(xval, c);	
 	  		}
 	    }

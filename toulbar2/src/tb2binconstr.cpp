@@ -87,8 +87,8 @@ bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, ve
     
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
-    	TreeDecomposition* td = wcsp->getTreeDec();
-    	if(td) td->addDelta(cluster,x,value,cost);
+	    TreeDecomposition* td = wcsp->getTreeDec();
+	    if(td) td->addDelta(cluster,x,value,cost);
     	deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
     }
     	
