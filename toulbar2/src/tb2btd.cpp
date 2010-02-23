@@ -314,6 +314,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 
 	  if(c != td->getRoot()) {
 	      c->deconnectSep();
+		  assert(c->getLbRec() == MIN_COST);
 		  c->setLb(MIN_COST);
 		  wcsp->setLb(MIN_COST);
 		  td->setCurrentCluster(td->getRoot());

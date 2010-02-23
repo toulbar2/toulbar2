@@ -1399,9 +1399,15 @@ void WCSP::buildTreeDecomposition() {
     else
     	td->buildFromOrder();
     cout << "Tree decomposition time: " << cpuTime()-time << " seconds." << endl;
-	vector<int> order;
-	td->getElimVarOrder(order);
-    if (!ToulBar2::approximateCountingBTD) setDACOrder(order);
+    if (!ToulBar2::approximateCountingBTD) {
+	  vector<int> order;
+	  td->getElimVarOrder(order);
+	  // allows propagation to operate on the whole problem without modifying tree decomposition local lower bounds and delta costs 
+	  TreeDecomposition *tmptd = td;
+	  td = NULL;
+	  setDACOrder(order);
+	  td = tmptd;
+	}
 }
 
 void WCSP::setDACOrder(char *elimVarOrder)

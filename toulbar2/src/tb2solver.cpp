@@ -694,9 +694,10 @@ bool Solver::solve()
         	if(td) {
 	    	    Cost ub = wcsp->getUb();
 		    	Cluster* start = td->getRoot();
+				assert(start->getLbRec() == MIN_COST); // local lower bounds (and delta costs) must be zero!
     	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
         	    td->setCurrentCluster(start);
-				start->setLb(wcsp->getLb());
+				if (start==td->getRoot()) start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decompostion root cluster
 				switch(ToulBar2::btdMode) {
 				case 0:case 1:
 				  if(ToulBar2::allSolutions)

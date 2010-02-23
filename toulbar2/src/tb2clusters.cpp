@@ -1291,7 +1291,6 @@ int TreeDecomposition::makeRooted()
 		c->setup();
 	}
 	rootRDS = NULL;
-	setCurrentCluster(getRoot()); // allows propagation to operate on the whole problem
 
  	int treewidth = 0;
 	for(unsigned int i = 0; i < clusters.size(); i++) {
