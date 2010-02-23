@@ -290,6 +290,7 @@ void help_msg(char *toulbar2filename)
         cerr << "   j[integer] : split large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
         cerr << "                (use options \"B3j1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
         cerr << "   r[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
+        cerr << "   X[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
         cerr << "   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option \"e\")";
 		if (ToulBar2::boostingBTD) cerr << " (default option)";
 		cerr << endl;
