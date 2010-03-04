@@ -342,11 +342,13 @@ void WCSP::read_wcsp(const char *fileName)
             file >> defval;
             file >> ntuples;
             if (ToulBar2::verbose >= 3) cout << "read global lower bound contribution " << ic << " of " << defval << endl;
-        	if (ntuples != 0) {
+        	if (ntuples > 1) {
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
                 exit(EXIT_FAILURE);
             }
-            inclowerbound += defval*K;
+            if (ntuples == 1) file >> cost;
+              else cost = defval;
+            inclowerbound += cost*K;
         } 
     }
     
