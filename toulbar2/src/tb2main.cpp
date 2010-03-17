@@ -242,7 +242,7 @@ void help_msg(char *toulbar2filename)
         cerr << "   c : perform binary branching with last conflict backjumping variable ordering heuristic";
 		if (ToulBar2::lastConflict) cerr << " (default option)";
 		cerr << endl;
-        cerr << "   q : weighted degree variable ordering heuristic (UNSTABLE)";
+        cerr << "   q : weighted degree variable ordering heuristic";
 		if (ToulBar2::weightedDegree) cerr << " (default option)";
 		cerr << endl;
         cerr << "   d : dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
