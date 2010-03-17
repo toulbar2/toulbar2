@@ -305,7 +305,7 @@ public:
 		}
     }
 
-    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp)
+    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp), arity_(0)
     {
     }
 

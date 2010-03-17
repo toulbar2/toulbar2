@@ -760,7 +760,7 @@ bool Solver::solve()
     	}
         return true;
     } else {
-    	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
+	    if(ToulBar2::debug || (!ToulBar2::uai && !ToulBar2::xmlflag)) {
  	       cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	}
         return false;

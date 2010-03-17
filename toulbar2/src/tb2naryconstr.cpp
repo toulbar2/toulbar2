@@ -16,6 +16,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	tbuf[arity_in] = '\0';
 
     for(i=0;i<arity_in;i++) {
+	    conflictWeights.push_back(0);
     	int domsize = scope_in[i]->getDomainInitSize();
     	tbuf[i] = CHAR_FIRST;
         if(domsize + CHAR_FIRST > MAX_CHAR) {
@@ -31,9 +32,6 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 	default_cost = defval;
 	if(default_cost > Top) default_cost = Top;
 	store_top = default_cost < Top;
-
-    xy = NULL;
-    xyz = NULL;
 }
 
 
@@ -41,9 +39,6 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 NaryConstraint::NaryConstraint(WCSP *wcsp)
 			: AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeValue)
 {
-	arity_ = 0;
-    xy = NULL;
-    xyz = NULL;
 }
 
 
@@ -148,6 +143,7 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
 // USED ONLY DURING SEARCH to project the nary constraint
 void NaryConstraint::projectNary()
 {
+    wcsp->revise(this);
 	int indexs[3];
 	EnumeratedVariable* unassigned[3] = {NULL,NULL,NULL};
 	Char* tbuf = new Char [arity_ + 1];
@@ -174,7 +170,7 @@ void NaryConstraint::projectNary()
 
 	assert(nunassigned <= 3);
 	if(nunassigned == 3) {
-		xyz = wcsp->newTernaryConstr(x,y,z);
+	    TernaryConstraint* xyz = wcsp->newTernaryConstr(x,y,z,this);
 		wcsp->elimTernOrderInc();
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
@@ -193,7 +189,7 @@ void NaryConstraint::projectNary()
 	    //else cout << "ternary empty!" << endl;
 	}
 	else if(nunassigned == 2) {
-		xy = wcsp->newBinaryConstr(x,y);
+	    BinaryConstraint* xy = wcsp->newBinaryConstr(x,y,this);
 		wcsp->elimBinOrderInc();
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 	    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
@@ -360,8 +356,8 @@ NaryConstraintMap::NaryConstraintMap(WCSP *wcsp, EnumeratedVariable** scope_in, 
 NaryConstraintMap::NaryConstraintMap(WCSP *wcsp)
 			: NaryConstraint(wcsp)
 {
-	xy = NULL;
 	pf = new TUPLES;
+	filters = NULL;
 }
 
 
@@ -940,7 +936,12 @@ void NaryConstraintMap::print(ostream& os)
 		totaltuples = totaltuples * scope[i]->getDomainInitSize();
 	}
 	os << ")    ";
-	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
+	if (ToulBar2::weightedDegree) {
+	  os << "/" << getConflictWeight();
+	  for(int i = 0; i < arity_;i++) {
+		os << "," << conflictWeights[i];
+	  }
+	}
 	os << " |f| = " << f.size() << " / " << totaltuples;
 	os << "   default_cost: " << default_cost;
 	os << "   arity: " << arity();

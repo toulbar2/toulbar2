@@ -47,7 +47,7 @@ bool ToulBar2::limited = false;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 
-bool ToulBar2::weightedDegree = false;
+bool ToulBar2::weightedDegree = true;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
 
@@ -960,20 +960,20 @@ void WCSP::initElimConstrs()
 
 
 // Function that adds a new binary constraint from the pool of fake constraints
-BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y )
+BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1,  Constraint *from2 )
 {
 	int newIndex = (int) elimBinOrder;
 	BinaryConstraint* ctr = (BinaryConstraint*) elimBinConstrs[newIndex];
-	ctr->fillElimConstr(x,y);
+	ctr->fillElimConstr(x,y,from1,from2);
 	ctr->isDuplicate_ = false;
 	return ctr;
 }
 
-TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z )
+TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1 )
 {
 	int newIndex = (int) elimTernOrder;
 	TernaryConstraint* ctr = (TernaryConstraint*) elimTernConstrs[newIndex];
-	ctr->fillElimConstr(x,y,z);
+	ctr->fillElimConstr(x,y,z,from1);
 	ctr->isDuplicate_ = false;
 	return ctr;
 }
@@ -1438,12 +1438,12 @@ void WCSP::setDACOrder(vector<int> &order)
   }
 
   // set DAC order to the inverse of the elimination variable ordering
-  if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << "DAC order:";
+  if(!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << "DAC order:";
   for(int i=order.size()-1;i>=0;i--) {
-	if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << " " << getVar(order[i])->getName();
+	if(!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << " " << getVar(order[i])->getName();
 	getVar(order[i])->setDACOrder(order.size()-1-i);
   }
-  if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << endl;
+  if(!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << endl;
 
   for (unsigned int i=0; i<numberOfConstraints(); i++) {
 	Constraint* ctr = getCtr(i);

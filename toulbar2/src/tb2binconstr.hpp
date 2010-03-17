@@ -236,7 +236,7 @@ public:
 	}
 	
    
-    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin)
+  void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, Constraint *from1,  Constraint *from2 )
 	{
 		x = xin;
 		y = yin;
@@ -250,6 +250,7 @@ public:
 		linkY->content.scopeIndex = 1;
         setDACScopeIndex();
 		resetConflictWeight();
+		elimFrom(from1,from2);
 	}
 
     bool project(int varIndex, Value value, Cost cost) {

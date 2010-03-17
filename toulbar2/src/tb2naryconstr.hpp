@@ -13,12 +13,6 @@ class NaryConstraint : public AbstractNaryConstraint
 {
 	public:
 
-	BinaryConstraint* xy;      	// xy is an empty constraint that is created at start time for
-								// projecting the nary constraint when all variables but 2 are assigned
-
-	TernaryConstraint* xyz;
-
-
 	Cost default_cost;          // default cost returned when tuple t is not found in TUPLES (used by function eval(t)
 	bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
 	StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
@@ -27,6 +21,26 @@ class NaryConstraint : public AbstractNaryConstraint
 	String evalTuple;
 
 	vector<EnumeratedVariable::iterator> it_values;
+
+    vector<Long> conflictWeights;
+    Long getConflictWeight() const {return Constraint::getConflictWeight();} 
+    Long getConflictWeight(int varIndex) const {assert(varIndex>=0);assert(varIndex<arity());return conflictWeights[varIndex]+Constraint::getConflictWeight();} 
+    void incConflictWeight(Constraint *from) {
+	  //assert(fromElim1==NULL);
+	  //assert(fromElim2==NULL);
+	  if (from==this) {
+		Constraint::incConflictWeight(1);
+	  } else if (deconnected()) {
+        for (int i=0; i<from->arity(); i++) {
+		  int index = getIndex(from->getVar(i));
+		  if (index>=0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one deriived from an n-ary constraint with a scope which does not include parameter constraint from
+            assert(index < arity());
+		    conflictWeights[index]++;
+		  }
+        }
+      }
+    }
+
 	void firstlex();
     bool nextlex( String& t, Cost& c);
 

@@ -439,7 +439,7 @@ void TernaryConstraint::fillxy() {
     	if(xy__) xy_ = xy__; // we have found another constraint of the same cluster
     }
     if(!xy_ || (xy_ && td && (getCluster() != xy_->getCluster())) ) {
-		xy = wcsp->newBinaryConstr(x,y); 
+	    xy = wcsp->newBinaryConstr(x,y,this); 
 		xy->setCluster( getCluster() );
 		if(td && xy_ && (getCluster() != xy_->getCluster())) xy->setDuplicate();
 		wcsp->elimBinOrderInc(); 
@@ -456,7 +456,7 @@ void TernaryConstraint::fillxz() {
     	if(xz__) xz_ = xz__; // we have found another constraint of the same cluster
     }
     if(!xz_|| (xz_ && td && getCluster() != xz_->getCluster()) ) {
-		xz = wcsp->newBinaryConstr(x,z); 
+	    xz = wcsp->newBinaryConstr(x,z,this); 
 		xy->setCluster( getCluster() );
 		if(td && xz_ && (getCluster() != xz_->getCluster())) xz->setDuplicate();
 		wcsp->elimBinOrderInc(); 
@@ -474,7 +474,7 @@ void TernaryConstraint::fillyz() {
     	if(yz__) yz_ = yz__; 
     }
     if(!yz_ || (yz_ && td && getCluster() != yz_->getCluster()) ) {
-		yz = wcsp->newBinaryConstr(y,z); 
+	    yz = wcsp->newBinaryConstr(y,z,this); 
 		yz->setCluster( getCluster() );
 		if(td && yz_ && (getCluster() != yz_->getCluster())) yz->setDuplicate();
 		wcsp->elimBinOrderInc(); 

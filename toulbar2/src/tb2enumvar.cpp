@@ -544,7 +544,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
     	}
     }
 
-     BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z);
+     BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z,xylink.constr,xzlink.constr);
  	 wcsp->elimBinOrderInc();
 
 	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {

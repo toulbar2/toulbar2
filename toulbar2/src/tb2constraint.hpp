@@ -12,6 +12,8 @@
 class Constraint : public WCSPLink
 {
     Long conflictWeight;
+    Constraint *fromElim1; // remember the original constraint(s) from which this constraint is derived
+    Constraint *fromElim2; // it can be from variable elimination during search or n-ary constraint projection
 
     // make it private because we don't want copy nor assignment
     Constraint(const Constraint &c);
@@ -34,10 +36,12 @@ public:
     virtual int getIndex(Variable* var) const = 0;
 
     void conflict();
-    Long getConflictWeight() const {return conflictWeight;}
-    void incConflictWeight() {conflictWeight++;}
+    virtual Long getConflictWeight() const {return conflictWeight;}
+    virtual Long getConflictWeight(int varIndex) const {return conflictWeight;}
+    virtual void incConflictWeight(Constraint *from) {if (from==this || deconnected()) conflictWeight++; if (fromElim1) fromElim1->incConflictWeight(from); if (fromElim2) fromElim2->incConflictWeight(from);}
     void incConflictWeight(Long incval) {conflictWeight += incval;}
     void resetConflictWeight() {conflictWeight=1;}
+    void elimFrom(Constraint *from1, Constraint *from2 = NULL) {fromElim1 = from1; fromElim2 = from2;}
 
 	double tight;
     double getTightness() { if(tight < 0) computeTightness(); return tight; }

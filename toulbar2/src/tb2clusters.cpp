@@ -727,7 +727,6 @@ void Cluster::cartProduct(BigInteger& prodCart)
 	for(TVars::iterator it = varsTree.begin(); it!= varsTree.end();it++)
 	{
 		Variable * x = (Variable *) wcsp->getVar(*it);
-		if(ToulBar2::verbose==10) cout << *it << " a " << x->getDomainSize() << " valeurs dans son domaine" << endl;
 		prodCart*=x->getDomainSize();
 	}
 }
@@ -1078,6 +1077,7 @@ void TreeDecomposition::mergeClusterRec( Cluster* c,  Cluster* father, unsigned 
   if (father) {
 	TVars csep;
 	intersection(c->getVars(), father->getVars(), csep);
+	assert(csep.size()>0);
 	if ((csep.size() > maxsepsize) || (c->getVars().size() - csep.size() < minpropervar)) {
 	  father->addVars(c->getVars());
 	  father->addEdges(c->getEdges());

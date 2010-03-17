@@ -317,6 +317,19 @@ public:
 
     double computeTightness();
 
+    // add weights from auxilliary binary constraints if they are deconnected (otherwise their weight will be taken into account in the list of active constraints for variable varIndex)
+    // use weights minus one due to default initialization of conflictWeight to 1
+    Long getConflictWeight(int varIndex) const {
+	   switch(varIndex) {
+	   case 0: return Constraint::getConflictWeight() + ((xy->deconnected())?(xy->getConflictWeight(xy->getIndex(x))-1):0) + ((xz->deconnected())?(xz->getConflictWeight(xz->getIndex(x))-1):0); break;
+	   case 1: return Constraint::getConflictWeight() + ((xy->deconnected())?(xy->getConflictWeight(xy->getIndex(y))-1):0) + ((yz->deconnected())?(yz->getConflictWeight(yz->getIndex(y))-1):0); break;
+	   case 2: return Constraint::getConflictWeight() + ((xz->deconnected())?(xz->getConflictWeight(xz->getIndex(z))-1):0) + ((yz->deconnected())?(yz->getConflictWeight(yz->getIndex(z))-1):0); break;
+       }
+	   return  Constraint::getConflictWeight();
+	}
+    Long getConflictWeight() const {
+	  return Constraint::getConflictWeight() + ((xy->deconnected())?(xy->getConflictWeight()-1):0) + ((xz->deconnected())?(xz->getConflictWeight()-1):0) + ((yz->deconnected())?(yz->getConflictWeight()-1):0);
+	}
 
     EnumeratedVariable* xvar;
     EnumeratedVariable* yvar;
@@ -412,7 +425,7 @@ public:
 	}    
 	
 
-    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin)
+  void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Constraint *from1)
 	{
 		x = xin;
 		y = yin;
@@ -431,6 +444,7 @@ public:
 		linkZ->content.scopeIndex = 2;
 		setDACScopeIndex();
 		resetConflictWeight();
+		elimFrom(from1);
 	}
   
   	void fillxy();

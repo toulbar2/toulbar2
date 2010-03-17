@@ -138,7 +138,7 @@ public:
     void conflict() {
         if (lastConflictConstr) {
             if (ToulBar2::verbose>=2) cout << "Last conflict on " << *lastConflictConstr << endl;
-            lastConflictConstr->incConflictWeight();
+            lastConflictConstr->incConflictWeight(lastConflictConstr);
             lastConflictConstr=NULL;
         }
     }
@@ -283,8 +283,8 @@ public:
     Constraint *getElimBinCtr(int elimBinIndex) const {return elimBinConstrs[elimBinIndex];}
     Constraint *getElimTernCtr(int elimTernIndex) const {return elimTernConstrs[elimTernIndex];}
 
-	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y );
-	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z );
+	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1 = NULL,  Constraint *from2 = NULL );
+	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1 = NULL );
 
 	void eliminate();
 	void restoreSolution( Cluster* c = NULL );

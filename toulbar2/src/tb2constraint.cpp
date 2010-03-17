@@ -11,7 +11,7 @@
  *
  */
 
-Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflictWeight(1)
+Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflictWeight(1), fromElim1(NULL), fromElim2(NULL)
 {
     w->link(this);
     tight = -1;
@@ -20,7 +20,7 @@ Constraint::Constraint(WCSP *w) : WCSPLink(w,w->numberOfConstraints()), conflict
     cluster = -1;
 }
 
-Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), conflictWeight(1)
+Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), conflictWeight(1), fromElim1(NULL), fromElim2(NULL)
 {
     tight = -1;
     isSep_ = false;
