@@ -405,7 +405,7 @@ void WCSP::read_uai2008(const char *fileName)
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
 	Cost inclowerbound = MIN_COST;
-    updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST );
+    updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST );
 
     int nbval = 0;
     int nbvar,nbconstr;
