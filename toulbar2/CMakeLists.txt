@@ -20,7 +20,7 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 # init version NUMBER
 ############################
 	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
-	set (Toulbar_MINOR "9.1.1" CACHE STRING "Toulbar2 Framework minor release")
+	set (Toulbar_MINOR "9.1.2" CACHE STRING "Toulbar2 Framework minor release")
  
 
 ################
@@ -89,7 +89,7 @@ SET(FOPT "test-opt.cmake" CACHE string "filename containing benchmark option")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_regexp "end." CACHE string "default regex searched in test output")
 
-	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost XML FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY)
+	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY)
 	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
 #############"
