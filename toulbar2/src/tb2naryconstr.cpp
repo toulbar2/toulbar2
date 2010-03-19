@@ -1010,7 +1010,7 @@ void NaryConstraintMap::dump(ostream& os, bool original)
 	  for(unsigned int i=0;i<tuple.size();i++) {
 		if (scope[i]->unassigned()) os << scope[i]->toCurrentIndex(tuple[i] - CHAR_FIRST) << " ";
 	  }
-	  os << cost << endl;
+	  os << ((original)?cost:min(wcsp->getUb(),cost)) << endl;
 	}
   }
 }

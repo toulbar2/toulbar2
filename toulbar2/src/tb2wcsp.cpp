@@ -639,7 +639,7 @@ void WCSP::dump(ostream& os, bool original)
             getEnumDomainAndCost(i, domcost);
             os << "1 " << ((original)?i:vars[i]->getCurrentVarId()) << " " << getUb() << " " << size << endl;
             for (int v=0; v<size; v++) {
-			  os << ((original)?(domcost[v].value):v) << " " << domcost[v].cost << endl;
+			  os << ((original)?(domcost[v].value):v) << " " << ((original)?domcost[v].cost:min(getUb(), domcost[v].cost)) << endl;
             }
         }
     }
