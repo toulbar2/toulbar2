@@ -396,7 +396,7 @@ public:
 	void permute(EnumeratedVariable *xin, Value a, Value b);
 
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2BINCONSTR_HPP_*/

@@ -70,7 +70,7 @@ public:
 
     virtual void print(ostream& os) {os << this << " Unknown constraint!";}
 
-    virtual void dump(ostream& os) {os << this << " Unknown constraint!";}
+    virtual void dump(ostream& os, bool original = true) {os << this << " Unknown constraint!";}
 
     virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
 

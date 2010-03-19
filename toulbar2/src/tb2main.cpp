@@ -20,7 +20,7 @@
 #define PATH_DELIM ":"
 #endif
 
-// used for debugging purpose.
+// USED FOR DEBUGGING PURPOSE
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
@@ -269,7 +269,7 @@ void help_msg(char *toulbar2filename)
 #ifndef WINDOWS
         cerr << "   i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
 #endif
-        cerr << "   z : save current problem in wcsp format in filename \"problem.wcsp\"" << endl;
+        cerr << "   z : save problem in wcsp format in filename \"problem.wcsp\" (repeat this option letter to save the current problem after preprocessing)" << endl;
         cerr << "   Z : debug mode (save problem at each node if verbosity option set!)" << endl;
         cerr << "   x : load a solution from filename \"sol\"" << endl << endl;
         cerr << "   M[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
@@ -308,7 +308,6 @@ void help_msg(char *toulbar2filename)
 int main(int argc, char **argv)
 {
     bool localsearch = false;
-    bool saveproblem = false;
     bool certificate = false;
     char buf [512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
@@ -450,7 +449,7 @@ int main(int argc, char **argv)
         	LcLevelType lclevel = (LcLevelType) atoi(&ch[1]);
         	if((lclevel >= LC_NC) && (lclevel < LC_THEMAX)) ToulBar2::LcLevel = lclevel;
         }
-        if (strchr(argv[i],'z')) saveproblem = true;
+        for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='z') ToulBar2::dumpWCSP++;
         if (strchr(argv[i],'x')) certificate = true;
         if (strchr(argv[i],'g')) ToulBar2::generation = true;
         if (strchr(argv[i],'y')) {
@@ -580,7 +579,7 @@ int main(int argc, char **argv)
 		ToulBar2::startCpuTime = cpuTime();
 
         if (certificate) solver.read_solution("sol");
-        if (saveproblem) solver.dump_wcsp("problem.wcsp");
+        if (ToulBar2::dumpWCSP==1) solver.dump_wcsp("problem.wcsp");
 		else if (!certificate || ToulBar2::btdMode>=2) {
 		  if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb())) {
 			ToulBar2::LcLevel = LC_AC;

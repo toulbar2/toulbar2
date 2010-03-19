@@ -114,16 +114,19 @@ void TernaryConstraint::print(ostream& os)
     }
 }
 
-void TernaryConstraint::dump(ostream& os)
+void TernaryConstraint::dump(ostream& os, bool original)
 {
-    os << "3 " << x->wcspIndex << " " << y->wcspIndex << " " << z->wcspIndex << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() * z->getDomainSize() << endl;
-    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-           for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-             os << *iterX << " " << *iterY << " " << *iterZ << " " << getCost(*iterX, *iterY, *iterZ) << endl;
-           }
-        }
-    }
+  os << "3 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " " << ((original)?(z->wcspIndex):z->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() * z->getDomainSize() << endl;
+  int i=0;
+  for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
+	int j=0;
+	for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
+	  int k=0;
+	  for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
+		os << ((original)?(*iterX):i) << " " << ((original)?(*iterY):j) << " " << ((original)?(*iterZ):k) << " " << getCost(*iterX, *iterY, *iterZ) << endl;
+	  }
+	}
+  }
 }
 
 /*

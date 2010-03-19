@@ -42,6 +42,7 @@ public:
     unsigned int toIndex(Value v) const {return domain.toIndex(v);}
     Value toValue(int idx) const {return domain.toValue(idx);}
 #endif
+    unsigned int toCurrentIndex(Value v) {return domain.toCurrentIndex(v);} // return value position in current domain
     unsigned int getDomainSize() const {
         if (assigned()) return 1; 
         else return domain.getSize();

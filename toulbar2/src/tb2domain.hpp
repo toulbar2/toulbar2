@@ -34,7 +34,18 @@ public:
     int getInitSize() const {return initSize;}
     int toIndex(Value v) const {return v - distanceToZero;}
     Value toValue(int idx) const {return idx + distanceToZero;}
-    
+    int toCurrentIndex(Value v) {
+	  assert(canbe(v));
+	  int pos=0; 
+	  for (iterator iter = begin(); iter != end(); ++iter) {
+		if (*iter == v) return pos;
+		pos++;
+	  }
+	  cerr << "Bad (removed) value given as argument of toCurrentIndex function!" << endl;
+	  exit(EXIT_FAILURE);
+	  return -1;
+	}
+
     bool canbe(Value v) const {return !all[toIndex(v)].removed;}
     bool cannotbe(Value v) const {return all[toIndex(v)].removed;}
 

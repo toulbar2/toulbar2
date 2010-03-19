@@ -455,7 +455,7 @@ public:
 
 
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2TERNARYCONSTR_HPP_*/

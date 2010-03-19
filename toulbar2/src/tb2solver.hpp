@@ -80,7 +80,7 @@ public:
 
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
-    void dump_wcsp(const char *fileName);
+    void dump_wcsp(const char *fileName, bool original = true);
     void read_solution(const char *fileName);
 
     friend void setvalue(int wcspId, int varIndex, Value value);

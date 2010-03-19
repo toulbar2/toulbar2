@@ -113,6 +113,7 @@ public:
     unsigned int getDomainSize(int varIndex) const {return vars[varIndex]->getDomainSize();}
     bool getEnumDomain(int varIndex, Value *array);
     bool getEnumDomainAndCost(int varIndex, ValueCost *array);
+    void updateCurrentVarsId(); // set position for each variable in the current list of unassigned variables
 
     bool assigned(int varIndex) const {return vars[varIndex]->assigned();}
     bool unassigned(int varIndex) const {return vars[varIndex]->unassigned();}
@@ -198,7 +199,7 @@ public:
 
 
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
     friend ostream& operator<<(ostream& os, WCSP &wcsp);
 
 

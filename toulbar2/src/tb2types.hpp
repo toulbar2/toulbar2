@@ -137,6 +137,7 @@ public:
     static bool showSolutions;
     static bool writeSolution;
     static bool allSolutions;
+    static int  dumpWCSP;
     static bool approximateCountingBTD;
     static bool binaryBranching;
     static bool dichotomicBranching;

@@ -66,14 +66,16 @@ void BinaryConstraint::print(ostream& os)
     }
 }
 
-void BinaryConstraint::dump(ostream& os)
+void BinaryConstraint::dump(ostream& os, bool original)
 {
-    os << "2 " << x->wcspIndex << " " << y->wcspIndex << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
-    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-            os << *iterX << " " << *iterY << " " << getCost(*iterX, *iterY) << endl;
-        }
-    }
+  os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
+  int i=0;
+  for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
+	int j=0;
+	for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
+	  os << ((original)?(*iterX):i) << " " << ((original)?(*iterY):j) << " " << getCost(*iterX, *iterY) << endl;
+	}
+  }
 }
 
 /*

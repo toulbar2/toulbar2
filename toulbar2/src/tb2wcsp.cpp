@@ -29,6 +29,7 @@ int  ToulBar2::debug  = 0;
 bool ToulBar2::showSolutions  = false;
 bool ToulBar2::writeSolution  = false;
 bool ToulBar2::allSolutions = false;
+int  ToulBar2::dumpWCSP = 0;
 bool ToulBar2::approximateCountingBTD = false;
 int  ToulBar2::elimDegree = 3;
 int  ToulBar2::elimDegree_preprocessing  = -1;
@@ -360,8 +361,16 @@ void WCSP::sortVariables()
   }
 }
 
-
-
+void WCSP::updateCurrentVarsId()
+{
+  int pos =0;
+  for (unsigned int i=0; i<vars.size(); i++) {
+	if (vars[i]->unassigned()) {
+	  vars[i]->setCurrentVarId(pos);
+	  pos++;
+	}
+  }
+}
 
 void WCSP::processTernary()
 {
@@ -586,9 +595,10 @@ void printClique(ostream& os, int arity, Constraint *ctr) {
 }
 
 // Warning! make the assumption that all initial domains start at zero!!!
-void WCSP::dump(ostream& os)
+void WCSP::dump(ostream& os, bool original)
 {
     Value maxdomsize = 0;
+    unsigned int maxdomsizeUI = 0;
     Value xcosts = 0;
     if (getLb() > MIN_COST) xcosts++;
     for (unsigned int i=0; i<vars.size(); i++) {
@@ -596,31 +606,40 @@ void WCSP::dump(ostream& os)
             cerr << "Cannot save domain of variable " << vars[i]->getName() << " with negative values!!!" << endl;
             exit(EXIT_FAILURE);
         }
-        if (vars[i]->getSup()+1 > maxdomsize) maxdomsize = vars[i]->getSup()+1;
-        if (vars[i]->enumerated()) xcosts++;
+        if (original) {if (vars[i]->getSup()+1 > maxdomsize) maxdomsize = vars[i]->getSup()+1;}
+		else {if (vars[i]->unassigned() && vars[i]->getDomainSize() > maxdomsizeUI) maxdomsizeUI = vars[i]->getDomainSize();}
+        if (vars[i]->enumerated() && (original || vars[i]->unassigned())) xcosts++;
 //          else if (vars[i]->getInfCost() > MIN_COST || vars[i]->getSupCost() > MIN_COST) {
 //              cerr << "Cannot save interval variable " << vars[i]->getName() << " with bound unary costs!!!" << endl;
 //              exit(EXIT_FAILURE);
 //          }
     }
-    os << "wcsp " << numberOfVariables() << " " << maxdomsize << " " << numberOfConnectedConstraints()+xcosts << " " << getUb() << endl;
+    os << "wcsp " << ((original)?numberOfVariables():numberOfUnassignedVariables()) << " " << ((original)?maxdomsize:maxdomsizeUI) << " " << numberOfConnectedConstraints()+xcosts << " " << getUb() << endl;
+	unsigned int nbvar = 0;
     for (unsigned int i=0; i<vars.size(); i++) {
+	  if (original) {
         if (!vars[i]->enumerated()) os << "-";
         os << vars[i]->getSup()+1;
         if (i < vars.size()-1) os << " ";
+	  } else if (vars[i]->unassigned()) {
+		nbvar++;
+        if (!vars[i]->enumerated()) os << "-";
+        os << vars[i]->getDomainSize();
+        if (nbvar < numberOfUnassignedVariables()) os << " ";
+	  }
     }
-    os << endl;
-    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep()) constrs[i]->dump(os);
-    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) elimBinConstrs[i]->dump(os);
-    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) elimTernConstrs[i]->dump(os);
+    if (((original)?numberOfVariables():numberOfUnassignedVariables())>0) os << endl;
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep()) constrs[i]->dump(os,original);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) elimBinConstrs[i]->dump(os,original);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) elimTernConstrs[i]->dump(os,original);
     for (unsigned int i=0; i<vars.size(); i++) {
-        if (vars[i]->enumerated()) {
+        if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
-            os << "1 " << i << " " << getUb() << " " << size << endl;
+            os << "1 " << ((original)?i:vars[i]->getCurrentVarId()) << " " << getUb() << " " << size << endl;
             for (int v=0; v<size; v++) {
-                os << domcost[v].value << " " << domcost[v].cost << endl;
+			  os << ((original)?(domcost[v].value):v) << " " << domcost[v].cost << endl;
             }
         }
     }

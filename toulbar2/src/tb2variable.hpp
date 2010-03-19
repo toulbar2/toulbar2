@@ -24,6 +24,9 @@ class Variable : public WCSPLink
 protected:
     string name;
     int dac;
+
+    Long timestamp;
+    int pos; // current position in the list of unassigned variables
     
     StoreValue inf;
     StoreValue sup;
@@ -63,6 +66,8 @@ public:
     Value getSup() const {return sup;}
     Value getValue() const {assert(assigned()); return inf;}
     virtual unsigned int getDomainSize() const =0;
+    int getCurrentVarId();
+    void setCurrentVarId(int idx);
 
     bool assigned() const {return inf == sup;}
     bool unassigned() const {return inf != sup;}

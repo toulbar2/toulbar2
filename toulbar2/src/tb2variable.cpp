@@ -15,6 +15,7 @@
 
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : 
         WCSPLink(w,w->numberOfVariables()), name(n), dac(w->numberOfVariables()),
+		timestamp(-1), pos(-1),
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
         constrs(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
@@ -47,6 +48,21 @@ DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
     elt->content = e;
     constrs.push_back(elt,true);
     return elt;
+}
+
+int Variable::getCurrentVarId()
+{
+  if (assigned()) return -1; 
+  if (wcsp->getNbNodes() > timestamp) wcsp->updateCurrentVarsId();
+  assert(pos>=0);
+  assert(wcsp->getNbNodes() == timestamp);
+  return pos;
+}
+
+void Variable::setCurrentVarId(int idx)
+{
+  pos=idx; 
+  timestamp=wcsp->getNbNodes();
 }
 
 int cmpConstraint(const void *p1, const void *p2)

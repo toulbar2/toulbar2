@@ -156,7 +156,7 @@ public:
 
 	void fillRandom();
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 
 };
 

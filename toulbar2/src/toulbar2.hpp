@@ -104,7 +104,7 @@ public:
 	virtual int  getVACHeuristic() = 0;
 	virtual void printVACStat() = 0;
     virtual void print(ostream& os) =0;
-    virtual void dump(ostream& os) =0;
+    virtual void dump(ostream& os, bool original = true) =0;
 };
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);

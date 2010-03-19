@@ -28,9 +28,9 @@ void Unary::print(ostream& os)
   os  << " } (" << penalty << ")" << endl;
 }
 
-void Unary::dump(ostream& os)
+void Unary::dump(ostream& os, bool original)
 {
-  os << "1 " << x->wcspIndex << " " << penalty << " " << permitted.size() << endl;
+  os << "1 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << penalty << " " << permitted.size() << endl;
   for (set<Value>::iterator it=permitted.begin(); it != permitted.end(); ++it) {
 	os << *it << " 0" << endl;
   }
@@ -54,9 +54,9 @@ void Supxyc::print(ostream& os)
   os << this << " " << x->getName() << " >= " << y->getName() << " + " << cst << " (" << deltamax << ")" << endl;
 }
 
-void Supxyc::dump(ostream& os)
+void Supxyc::dump(ostream& os, bool original)
 {
-  os << "2 " << x->wcspIndex << " " << y->wcspIndex << " -1 >= " << cst << " " << deltamax << endl;
+  os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 >= " << cst << " " << deltamax << endl;
 }
 
 Disjunction::Disjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy,
@@ -77,9 +77,9 @@ void Disjunction::print(ostream& os)
   os << this << " " << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << " ("  << penalty<< ")" << endl;
 }
 
-void Disjunction::dump(ostream& os)
+void Disjunction::dump(ostream& os, bool original)
 {
-  os << "2 " << x->wcspIndex << " " << y->wcspIndex << " -1 disj " << cstx << " " << csty << " " << penalty << endl;
+  os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 disj " << cstx << " " << csty << " " << penalty << endl;
 }
 
 SpecialDisjunction::SpecialDisjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, 
@@ -106,9 +106,9 @@ void SpecialDisjunction::print(ostream& os)
   os << this << " " << x->getName() << " < " << xinfty << " and " << y->getName() << " < " << yinfty << " and (" << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << ") ("  << costx << "," << costy << ")" << endl;
 }
 
-void SpecialDisjunction::dump(ostream& os)
+void SpecialDisjunction::dump(ostream& os, bool original)
 {
-  os << "2 " << x->wcspIndex << " " << y->wcspIndex << " -1 sdisj " << cstx << " " << csty << " " << xinfty << " " << yinfty << " " << costx << " " << costy << endl;
+  os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 sdisj " << cstx << " " << csty << " " << xinfty << " " << yinfty << " " << costx << " " << costy << endl;
 }
 
 /*

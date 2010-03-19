@@ -976,12 +976,12 @@ void NaryConstraintMap::print(ostream& os)
 	}
 }
 
-void NaryConstraintMap::dump(ostream& os)
+void NaryConstraintMap::dump(ostream& os, bool original)
 {
-	int i;
+  if (original) {
 	TUPLES& f = *pf;
     os << arity_;
-    for(i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+    for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
     os << " " << default_cost << " " << f.size() << endl;
 
     TUPLES::iterator  it = f.begin();
@@ -994,10 +994,26 @@ void NaryConstraintMap::dump(ostream& os)
         }
         os << c << endl;
     }
+  } else {
+	os << nonassigned;
+    for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+	String tuple;
+	Cost cost;
+	Long nbtuples = 0;
+	first();
+	while (next(tuple,cost)) {
+	  nbtuples++;
+	}
+    os << " " << default_cost << " " << nbtuples << endl;
+	first();
+	while (next(tuple,cost)) {
+	  for(unsigned int i=0;i<tuple.size();i++) {
+		if (scope[i]->unassigned()) os << scope[i]->toCurrentIndex(tuple[i] - CHAR_FIRST) << " ";
+	  }
+	  os << cost << endl;
+	}
+  }
 }
-
-
-
 
 
 TrieNode::TrieNode() {

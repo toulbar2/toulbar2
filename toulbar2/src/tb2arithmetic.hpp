@@ -43,7 +43,7 @@ public:
     double  computeTightness() { return (double) permitted.size() / x->getDomainSize(); }
     
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic: soft(x >= y + cst) : max( (y + cst - x <= deltamax)?(y + cst - x):top , 0 )
@@ -78,7 +78,7 @@ public:
     double  computeTightness() { return 0; }
     
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic: soft(penalty, x >= y + csty or y >= x + cstx) : (x >= y + csty || y >= x + cstx)?0:penalty
@@ -108,7 +108,7 @@ public:
     double  computeTightness() { return 0; }
     
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic:
@@ -224,7 +224,7 @@ public:
     double  computeTightness() { return 0; }
     
     void print(ostream& os);
-    void dump(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2ARITHMETIC_HPP_*/

@@ -95,10 +95,10 @@ void Solver::read_solution(const char *filename)
     store->restore(depth);
 }
 
-void Solver::dump_wcsp(const char *fileName)
+void Solver::dump_wcsp(const char *fileName, bool original)
 {
     ofstream pb(fileName);
-    if (pb) wcsp->dump(pb);
+    if (pb) wcsp->dump(pb, original);
 }
 
 /*
@@ -667,6 +667,8 @@ bool Solver::solve()
 		  singletonConsistency();
 		  wcsp->propagate();
 		}
+
+		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
 
 	    if (ToulBar2::btdMode) {
 	    	if(wcsp->numberOfUnassignedVariables() == 0)
