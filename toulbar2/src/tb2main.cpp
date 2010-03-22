@@ -504,6 +504,8 @@ int main(int argc, char **argv)
 	  ToulBar2::vac = 1;
 	}
 
+	ToulBar2::startCpuTime = cpuTime();
+
 	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
 
@@ -575,8 +577,6 @@ int main(int argc, char **argv)
     try {
         if(randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
         else 		         solver.read_wcsp(argv[1]);
-
-		ToulBar2::startCpuTime = cpuTime();
 
         if (certificate) solver.read_solution("sol");
         if (ToulBar2::dumpWCSP==1) solver.dump_wcsp("problem.wcsp");
