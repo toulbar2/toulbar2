@@ -18,6 +18,7 @@ class Solver
     Store *store;
     Long nbNodes;
     Long nbBacktracks;
+    Long nbBacktracksLimit;
     WeightedCSP *wcsp;
     DLink<Value> *allVars;
     BTList<Value> *unassignedVars;
@@ -31,9 +32,13 @@ class Solver
 
     // Heuristics and search methods
     void initVarHeuristic(); // to be called after reading the problem and before updating ToulBar2::setvalue
+    int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
 	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+	int getVarMinDomainDivMaxWeightedDegreeRandomized();
 	int getVarMinDomainDivMaxWeightedDegree();
+    int getVarMinDomainDivMaxDegreeLastConflictRandomized();
     int getVarMinDomainDivMaxDegreeLastConflict();
+    int getVarMinDomainDivMaxDegreeRandomized();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
@@ -55,19 +60,23 @@ class Solver
     Value postponeRule(int varIndex);
     void scheduleOrPostpone(int varIndex);
 
-  int getNextUnassignedVar(Cluster *cluster);
-  int getVarMinDomainDivMaxDegree(Cluster *cluster);
-  int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
-  int getVarFreedom(Cluster *cluster);
-  int getVarSup(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *cluster);
+	int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
+	int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
+	int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
+    int getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster *cluster);
+    int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
+    int getVarMinDomainDivMaxDegreeRandomized(Cluster *cluster);
+    int getVarMinDomainDivMaxDegree(Cluster *cluster);
+    int getNextUnassignedVar(Cluster *cluster);
 
-  Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
-  Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
-  void russianDollSearch(Cluster *c, Cost cub);
+    Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
+    Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
+    void russianDollSearch(Cluster *c, Cost cub);
 
-  BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
-  BigInteger sharpBTD(Cluster *cluster);
-  void approximate(BigInteger& nbsol, TreeDecomposition* td);
+    BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
+    BigInteger sharpBTD(Cluster *cluster);
+    void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
 public:
     Solver(int storeSize, Cost initUpperBound);
@@ -86,6 +95,12 @@ public:
     friend void setvalue(int wcspId, int varIndex, Value value);
 
     WeightedCSP* getWCSP() { return wcsp; }
+};
+
+class NbBacktracksOut
+{
+public:
+    NbBacktracksOut() {if (ToulBar2::verbose >= 2) cout << "... limit on the number of backtracks reached!" << endl;}
 };
 
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);

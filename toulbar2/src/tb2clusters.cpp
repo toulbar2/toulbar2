@@ -1749,7 +1749,9 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
 }
 
 void TreeDecomposition::newSolution( Cost lb )
-{
+{   
+    wcsp->setUb(lb);
+
 	TAssign a;
 
 	Cluster* root = getRoot();

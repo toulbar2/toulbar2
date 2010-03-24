@@ -45,6 +45,7 @@ bool ToulBar2::dichotomicBranching = true;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::lds = false;
 bool ToulBar2::limited = false;
+bool ToulBar2::restart = false;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 

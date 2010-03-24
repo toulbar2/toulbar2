@@ -266,6 +266,9 @@ void help_msg(char *toulbar2filename)
         cerr << "   l : limited discrepancy search";
 		if (ToulBar2::lds) cerr << " (default option)";
 		cerr << endl;
+        cerr << "   L : randomized search with restart";
+		if (ToulBar2::restart) cerr << " (default option)";
+		cerr << endl;
 #ifndef WINDOWS
         cerr << "   i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
 #endif
@@ -443,6 +446,14 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
         if (strchr(argv[i],'o')) ToulBar2::QueueComplexity = true;
         if (strchr(argv[i],'l')) ToulBar2::lds = true;
+        if ( (ch = strchr(argv[i],'L')) ) {
+		  if (ch[-1]==':') ToulBar2::restart = false;
+		  else {
+			ToulBar2::restart = true;
+			int seed = atoi(&ch[1]);
+        	if(seed > 0) mysrand(seed);
+		  }
+        }
         if (strchr(argv[i],'i')) localsearch = true;
         if ( (ch = strchr(argv[i],'k')) ) {
         	ToulBar2::LcLevel = LC_EDAC;

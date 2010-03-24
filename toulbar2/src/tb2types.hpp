@@ -154,6 +154,7 @@ public:
     static bool weightedDegree;
     static bool lds;
     static bool limited;
+    static bool restart;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;

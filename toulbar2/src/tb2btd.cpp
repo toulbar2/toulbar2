@@ -43,6 +43,36 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster *cluster)
   return varIndex;
 }
 
+int Solver::getVarMinDomainDivMaxDegreeRandomized(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+  int ties[cluster->getNbVars()];
+  int nbties = 0;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+		}
+	}
+  }
+  if (nbties>1) return ties[myrand()%nbties];
+  else return varIndex;
+}
+
 int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
 {
   if (unassignedVars->empty()) return -1;
@@ -66,6 +96,149 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster)
     }
   }
   return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+
+  if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar)) return lastConflictVar;
+
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+  int ties[cluster->getNbVars()];
+  int nbties = 0;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+		}
+    }
+  }
+  if (nbties>1) return ties[myrand()%nbties];
+  else return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegree(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+        if (varIndex < 0 || heuristic < best - 1./100001.
+            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+	}
+  }
+  return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+  int ties[cluster->getNbVars()];
+  int nbties = 0;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+		}
+	}
+  }
+  if (nbties>1) return ties[myrand()%nbties];
+  else return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+
+  if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar)) return lastConflictVar;
+
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+        if (varIndex < 0 || heuristic < best - 1./100001.
+            || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+  }
+  return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *cluster)
+{
+  if (unassignedVars->empty()) return -1;
+
+  if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar)) return lastConflictVar;
+
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+  int ties[cluster->getNbVars()];
+  int nbties = 0;
+
+  for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
+	if (wcsp->unassigned(*iter)) {
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		  ties[nbties] = *iter;
+		  nbties++;
+		}
+    }
+  }
+  if (nbties>1) return ties[myrand()%nbties];
+  else return varIndex;
 }
 
 
@@ -110,6 +283,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
     }
     store->restore();
     nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
     try {
         store->store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -171,6 +345,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
 	}
 	store->restore();
 	nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	try {
 		store->store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -204,8 +379,10 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
 
   int varIndex = -1;
-  if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
-  else varIndex = getVarMinDomainDivMaxDegree(cluster);
+  if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+  else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
+  else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
+  else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
 
   if (varIndex < 0) {
 	// Current cluster is completely assigned
@@ -362,8 +539,10 @@ BigInteger Solver::sharpBTD(Cluster *cluster){
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************"<< endl;
 
 	int varIndex = -1;
-	if (ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict(cluster);
-	else varIndex = getVarMinDomainDivMaxDegree(cluster);
+	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
+	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
 
 	if (varIndex < 0) {
 		// Current cluster is completely assigned

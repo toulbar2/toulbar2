@@ -11,6 +11,7 @@
 
 extern void setvalue(int wcspId, int varIndex, Value value);
 
+
 /*
  * Solver constructors
  *
@@ -18,7 +19,7 @@ extern void setvalue(int wcspId, int varIndex, Value value);
 
 Solver *Solver::currentSolver = NULL;
 
-Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), wcsp(NULL),
+Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(-1), wcsp(NULL),
                                                      unassignedVars(NULL), lastConflictVar(-1), nbSol(0.), nbSGoods(0), nbSGoodsUse(0)
 {
     store = new Store(storeSize);
@@ -141,6 +142,32 @@ int Solver::getVarMinDomainDivMaxDegree()
     return varIndex;
 }
 
+int Solver::getVarMinDomainDivMaxDegreeRandomized()
+{
+    int varIndex = -1;
+    Cost worstUnaryCost = MIN_COST;
+    double best = MAX_VAL - MIN_VAL;
+	int ties[unassignedVars->getSize()];
+	int nbties = 0;
+
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getDegree(*iter)+1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+		}
+    }
+    if (nbties>1) return ties[myrand()%nbties];
+    else return varIndex;
+}
+
 int Solver::getVarMinDomainDivMaxDegreeLastConflict()
 {
     if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
@@ -163,6 +190,36 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
     return varIndex;
 }
 
+int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
+{
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
+	// int varIndexVAC = wcsp->getVACHeuristic();
+	// if(varIndexVAC != -1) return varIndexVAC;
+    int varIndex = -1;
+    Cost worstUnaryCost = MIN_COST;
+    double best = MAX_VAL - MIN_VAL;
+	int ties[unassignedVars->getSize()];
+	int nbties = 0;
+
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        // remove following "+1" when isolated variables are automatically assigned
+        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getDegree(*iter) + 1);
+        if (varIndex < 0 || heuristic < best - 1./1000001.
+            || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+			nbties = 1;
+			ties[0] = varIndex;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+	   }
+    }
+    if (nbties>1) return ties[myrand()%nbties];
+    else return varIndex;
+}
+
 int Solver::getVarMinDomainDivMaxWeightedDegree()
 {
     int varIndex = -1;
@@ -179,6 +236,32 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
 	  }
     }
     return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
+{
+    int varIndex = -1;
+    Cost worstUnaryCost = MIN_COST;
+    double best = MAX_VAL - MIN_VAL;
+	int ties[unassignedVars->getSize()];
+	int nbties = 0;
+
+    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+	  double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getWeightedDegree(*iter)+1);
+	  if (varIndex < 0 || heuristic < best - 1./1000001.
+		  || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+		best = heuristic;
+		varIndex = *iter;
+		nbties = 1;
+		ties[0] = varIndex;
+		worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+	  } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+	   }
+    }
+	if (nbties>1) return ties[myrand()%nbties];
+    else return varIndex;
 }
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
@@ -199,6 +282,34 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
        }
    }
    return varIndex;
+}
+
+int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
+{
+   if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
+   int varIndex = -1;
+   Cost worstUnaryCost = MIN_COST;
+   double best = MAX_VAL - MIN_VAL;
+   int ties[unassignedVars->getSize()];
+   int nbties = 0;
+
+   for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+       // remove following "+1" when isolated variables are automatically assigned
+	 double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getWeightedDegree(*iter) + 1);
+       if (varIndex < 0 || heuristic < best - 1./1000001.
+           || (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+           best = heuristic;
+           varIndex = *iter;
+		   nbties = 1;
+		   ties[0] = varIndex;
+           worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+       } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+		 ties[nbties] = *iter;
+		 nbties++;
+	   }
+   }
+   if (nbties>1) return ties[myrand()%nbties];
+   else return varIndex;
 }
 
 int Solver::getMostUrgent()
@@ -330,6 +441,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     }
     store->restore();
     nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 
     if (dichotomic) {
       if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
@@ -364,6 +476,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         }
         store->restore();
         nbBacktracks++;
+		if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
           if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
         } else assign(varIndex, value);
@@ -413,6 +526,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     }
     store->restore();
     nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	if (reverse) assign(varIndex, xinf);
 	else increase(varIndex, postponeValue);
     recursiveSolve();
@@ -451,6 +565,7 @@ void Solver::narySortedChoicePoint(int varIndex)
     }
 	delete [] sorted;
     nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
 
 /* returns true if a limit has occured during the search */
@@ -474,6 +589,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     }
 	delete [] sorted;
     nbBacktracks++;
+	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
 
 void Solver::singletonConsistency()
@@ -600,10 +716,10 @@ void Solver::recursiveSolve()
 {
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
-	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
-	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
-	else if(ToulBar2::weightedDegree) varIndex = getVarMinDomainDivMaxWeightedDegree();
-	else varIndex = getVarMinDomainDivMaxDegree();
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
+	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
+	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -625,10 +741,10 @@ void Solver::recursiveSolveLDS(int discrepancy)
 {
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
-	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflict();
-	else if(ToulBar2::lastConflict) varIndex = getVarMinDomainDivMaxDegreeLastConflict();
-	else if(ToulBar2::weightedDegree) varIndex = getVarMinDomainDivMaxWeightedDegree();
-	else varIndex = getVarMinDomainDivMaxDegree();
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
+	else if(ToulBar2::lastConflict) varIndex =  ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
+	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -644,6 +760,21 @@ void Solver::recursiveSolveLDS(int discrepancy)
             binaryChoicePointLDS(varIndex, wcsp->getInf(varIndex), discrepancy);
         }
     } else newSolution();
+}
+
+static Cost UpperBound = MAX_COST;
+static WeightedCSP *CurrentWeightedCSP = NULL;
+
+void solution_restart(int wcspIndex)
+{
+  assert(CurrentWeightedCSP->getIndex() == wcspIndex);
+  if (CurrentWeightedCSP->getUb() < UpperBound) UpperBound = CurrentWeightedCSP->getUb();
+}
+
+Long luby(Long r) {
+  int j = cost2log2(r+1);
+  if (r+1 == (1L << j)) return (1L << (j-1));
+  else return luby(r - (1L << j) + 1);
 }
 
 bool Solver::solve()
@@ -676,49 +807,76 @@ bool Solver::solve()
 	    	wcsp->buildTreeDecomposition();
 	    }
 
-        if (ToulBar2::lds) {
-            int discrepancy = 0;
-            do {
-                cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " ---" << endl;
-                ToulBar2::limited = false;
-                try {
-                    store->store();
-                    recursiveSolveLDS(discrepancy);
-                } catch (Contradiction) {
-                    wcsp->whenContradiction();
-                }
-                store->restore();
-                if (discrepancy > 0) discrepancy *= 2;
-                else discrepancy++;
-            } while (ToulBar2::limited);
-        } else {
-        	TreeDecomposition* td = wcsp->getTreeDec();
-        	if(td) {
-	    	    Cost ub = wcsp->getUb();
-		    	Cluster* start = td->getRoot();
+		if (ToulBar2::restart) {
+		  nbBacktracksLimit = 1;
+		  CurrentWeightedCSP = wcsp;
+		  UpperBound = wcsp->getUb();
+		  ToulBar2::newsolution = solution_restart;
+		}
+		bool nbbacktracksout = false;
+		int nbrestart = 0;
+		Long currentNbBacktracksLimit = 1;
+		Long nbBacktracksLimitTop = 1;
+		int storedepth = store->getDepth();
+		do {
+		  if (ToulBar2::restart) {
+			nbbacktracksout = false;
+			nbrestart++;
+			//			currentNbBacktracksLimit = luby(nbrestart);
+			currentNbBacktracksLimit *= 2;
+			if (currentNbBacktracksLimit > nbBacktracksLimitTop) {
+			  nbBacktracksLimitTop = currentNbBacktracksLimit;
+			  currentNbBacktracksLimit = 1;
+			}
+			nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
+            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ******" << endl;
+			wcsp->setUb(UpperBound);
+			store->store();
+		  }
+		  try {
+			if (ToulBar2::lds) {
+			  int discrepancy = 0;
+			  do {
+				cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " ---" << endl;
+				ToulBar2::limited = false;
+				try {
+				  store->store();
+				  recursiveSolveLDS(discrepancy);
+				} catch (Contradiction) {
+				  wcsp->whenContradiction();
+				}
+				store->restore();
+				if (discrepancy > 0) discrepancy *= 2;
+				else discrepancy++;
+			  } while (ToulBar2::limited);
+			} else {
+			  TreeDecomposition* td = wcsp->getTreeDec();
+			  if(td) {
+				Cost ub = wcsp->getUb();
+				Cluster* start = td->getRoot();
 				assert(start->getLbRec() == MIN_COST); // local lower bounds (and delta costs) must be zero!
-    	    	if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
-        	    td->setCurrentCluster(start);
+				if(ToulBar2::btdSubTree >= 0) start = td->getCluster(ToulBar2::btdSubTree);
+				td->setCurrentCluster(start);
 				if (start==td->getRoot()) start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decompostion root cluster
 				switch(ToulBar2::btdMode) {
 				case 0:case 1:
 				  if(ToulBar2::allSolutions)
-				  {
+					{
 					  timeDeconnect = 0.;
 					  nbSol=sharpBTD(start);
 					  if(ToulBar2::approximateCountingBTD && nbSol>0. && td->getRoot()->getNbVars()==0)
-					  { //if there are several parts
+						{ //if there are several parts
 						  approximate(nbSol,td);
-					  }
+						}
 					  // computation of maximal separator size
 					  for(int i=0;i<td->getNbOfClusters();i++)
-					  {
+						{
 						  if(td->getCluster(i)->sepSize()>tailleSep)
-							  tailleSep=td->getCluster(i)->sepSize();
-					  }
-				  }
+							tailleSep=td->getCluster(i)->sepSize();
+						}
+					}
 				  else
-					  ub = recursiveSolve(start, wcsp->getLb(), ub);
+					ub = recursiveSolve(start, wcsp->getLb(), ub);
 				  break;
 				case 2:case 3:
 				  russianDollSearch(start, ub);
@@ -728,10 +886,15 @@ bool Solver::solve()
 				  cerr << "Unknown search method B" << ToulBar2::btdMode << endl;
 				  exit(EXIT_FAILURE);
 				}
-        		wcsp->setUb(ub);
+				wcsp->setUb(ub);
 				if(ToulBar2::debug) start->printStatsRec();
-        	} else recursiveSolve();
-        }
+			  } else recursiveSolve();
+			}
+		  } catch (NbBacktracksOut) {
+			nbbacktracksout = true;
+			store->restore(storedepth);
+		  }
+		} while (nbbacktracksout);
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
@@ -809,7 +972,6 @@ void Solver::approximate(BigInteger &nbsol, TreeDecomposition* td)
 
 static bool IsASolution = false;
 static int *CurrentSolution = NULL;
-static WeightedCSP *CurrentWeightedCSP = NULL;
 
 void solution_symmax2sat(int wcspIndex)
 {
