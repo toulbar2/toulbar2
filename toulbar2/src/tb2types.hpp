@@ -152,9 +152,9 @@ public:
     static bool QueueComplexity;
     static bool lastConflict;
     static bool weightedDegree;
-    static bool lds;
+    static int  lds;
     static bool limited;
-    static bool restart;
+    static Long restart;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;

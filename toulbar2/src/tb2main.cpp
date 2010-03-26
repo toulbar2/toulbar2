@@ -445,13 +445,20 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
         if (strchr(argv[i],'o')) ToulBar2::QueueComplexity = true;
-        if (strchr(argv[i],'l')) ToulBar2::lds = true;
-        if ( (ch = strchr(argv[i],'L')) ) {
-		  if (ch[-1]==':') ToulBar2::restart = false;
+        if ( (ch = strchr(argv[i],'l')) ) {
+		  if (ch[-1]==':') ToulBar2::lds = 0;
 		  else {
-			ToulBar2::restart = true;
-			int seed = atoi(&ch[1]);
-        	if(seed > 0) mysrand(seed);
+			ToulBar2::lds = 4;
+			int maxlds = atoi(&ch[1]);
+        	if(maxlds > 0) ToulBar2::lds = maxlds;
+		  }
+        }
+        if ( (ch = strchr(argv[i],'L')) ) {
+		  if (ch[-1]==':') ToulBar2::restart = 0;
+		  else {
+			ToulBar2::restart = 10000;
+			Long maxbt = atoll(&ch[1]);
+        	if(maxbt > 0) ToulBar2::restart = maxbt;
 		  }
         }
         if (strchr(argv[i],'i')) localsearch = true;

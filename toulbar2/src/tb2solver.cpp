@@ -764,10 +764,13 @@ void Solver::recursiveSolveLDS(int discrepancy)
 
 static Cost UpperBound = MAX_COST;
 static WeightedCSP *CurrentWeightedCSP = NULL;
+static bool IsASolution = false;
+static int *CurrentSolution = NULL;
 
 void solution_restart(int wcspIndex)
 {
   assert(CurrentWeightedCSP->getIndex() == wcspIndex);
+  IsASolution = true;
   if (CurrentWeightedCSP->getUb() < UpperBound) UpperBound = CurrentWeightedCSP->getUb();
 }
 
@@ -823,25 +826,33 @@ bool Solver::solve()
 			nbbacktracksout = false;
 			nbrestart++;
 			//			currentNbBacktracksLimit = luby(nbrestart);
-			currentNbBacktracksLimit *= 2;
-			if (currentNbBacktracksLimit > nbBacktracksLimitTop) {
+			currentNbBacktracksLimit *= 4;
+			if (currentNbBacktracksLimit > nbBacktracksLimitTop || IsASolution) {
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
 			  currentNbBacktracksLimit = 1;
 			}
-			nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
-            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ******" << endl;
+			if (!IsASolution && nbNodes > ToulBar2::restart) {
+			  nbBacktracksLimit = LONGLONG_MAX;
+			  ToulBar2::restart = 0;
+			  cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
+			} else {
+			  nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
+			  cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
+			  store->store();
+			}
+			IsASolution = false;
 			wcsp->setUb(UpperBound);
-			store->store();
 		  }
 		  try {
 			if (ToulBar2::lds) {
 			  int discrepancy = 0;
 			  do {
-				cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " ---" << endl;
+				if (discrepancy > ToulBar2::lds) cout << "--- [" << store->getDepth() << "] Search with no discrepancy limit --- (" << nbNodes << " nodes)" << endl;
+				else cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << " nodes)" << endl;
 				ToulBar2::limited = false;
 				try {
 				  store->store();
-				  recursiveSolveLDS(discrepancy);
+				  if (discrepancy > ToulBar2::lds) recursiveSolve(); else recursiveSolveLDS(discrepancy);
 				} catch (Contradiction) {
 				  wcsp->whenContradiction();
 				}
@@ -969,9 +980,6 @@ void Solver::approximate(BigInteger &nbsol, TreeDecomposition* td)
 	cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
 
 }
-
-static bool IsASolution = false;
-static int *CurrentSolution = NULL;
 
 void solution_symmax2sat(int wcspIndex)
 {
