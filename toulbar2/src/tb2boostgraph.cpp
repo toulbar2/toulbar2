@@ -52,8 +52,8 @@ int WCSP::connectedComponents()
     Graph G;
     for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->universal()) addConstraint(constrs[i], G);
-    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected() && !elimConstrs[i]->universal()) addConstraint(elimConstrs[i], G);
-
+	for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+	for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
     vector<int> component(num_vertices(G));
     int num = connected_components(G, &component[0]);
     vector<int> cctruesize(num, 0);
@@ -82,7 +82,8 @@ int WCSP::biConnectedComponents()
     Graph G;
     for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
+	for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+	for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
     property_map < Graph, edge_component_t >::type component = get(edge_component, G);
 
     int num = biconnected_components(G, component);
@@ -103,7 +104,8 @@ int WCSP::diameter()
   Graph G;
   for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
 
   typedef int *int_ptr;
   int **D;
@@ -151,7 +153,8 @@ void WCSP::minimumDegreeOrdering()
   Graph G;
   for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-  for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) addConstraint(elimConstrs[i], G);
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
   
   int delta = 0;
   int n = num_vertices(G);

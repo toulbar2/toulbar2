@@ -36,7 +36,7 @@ int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
-bool ToulBar2::preprocessTernaryHeuristic  = false;
+int ToulBar2::preprocessNary  = 0;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
 bool ToulBar2::binaryBranching = true;
@@ -375,37 +375,37 @@ void WCSP::updateCurrentVarsId()
 
 void WCSP::processTernary()
 {
-	double maxtight = 0;
-	Variable* var;
-	TernaryConstraint *tctr1max = NULL, *tctr2max = NULL;
+	// double maxtight = 0;
+	// Variable* var;
+	// TernaryConstraint *tctr1max = NULL, *tctr2max = NULL;
 
-    if (ToulBar2::preprocessTernaryHeuristic) {
+    // if (ToulBar2::preprocessTernaryHeuristic) {
 
-        for (unsigned int i=0; i<vars.size(); i++) {
-    		TernaryConstraint *tctr1, *tctr2;
-            double tight = vars[i]->strongLinkedby(var,tctr1,tctr2);
-            if(tight > maxtight) { maxtight = tight; tctr1max = tctr1; tctr2max = tctr2; }
-    		if(tctr1 && tctr2 && (tctr1 != tctr2)) {
-    			tctr1->extendTernary();
-    			tctr2->extendTernary();
-    			BinaryConstraint* b = tctr1->commonBinary(tctr2);
-    			if(b->connected())
-    			{
-	    			tctr1->projectTernaryBinary(b);
-	    			tctr2->projectTernaryBinary(b);
-	    			b->propagate();
-    			}
-    		}
-        }
+    //     for (unsigned int i=0; i<vars.size(); i++) {
+    // 		TernaryConstraint *tctr1, *tctr2;
+    //         double tight = vars[i]->strongLinkedby(var,tctr1,tctr2);
+    //         if(tight > maxtight) { maxtight = tight; tctr1max = tctr1; tctr2max = tctr2; }
+    // 		if(tctr1 && tctr2 && (tctr1 != tctr2)) {
+    // 			tctr1->extendTernary();
+    // 			tctr2->extendTernary();
+    // 			BinaryConstraint* b = tctr1->commonBinary(tctr2);
+    // 			if(b->connected())
+    // 			{
+	//     			tctr1->projectTernaryBinary(b);
+	//     			tctr2->projectTernaryBinary(b);
+	//     			b->propagate();
+    // 			}
+    // 		}
+    //     }
 
-        if(ToulBar2::verbose > 0) {
-            cout << "Strongest part has mean cost: " << maxtight;
-            if(var) cout << "  Variable: " << var->wcspIndex;
-            if(tctr1max) cout << ", 1. ternary with tight: " << tctr1max->getTightness();
-            if(tctr2max) cout << ", 2. ternary with tight: " << tctr2max->getTightness();
-            cout << endl;
-        }
-    }
+    //     if(ToulBar2::verbose > 0) {
+    //         cout << "Strongest part has mean cost: " << maxtight;
+    //         if(var) cout << "  Variable: " << var->wcspIndex;
+    //         if(tctr1max) cout << ", 1. ternary with tight: " << tctr1max->getTightness();
+    //         if(tctr2max) cout << ", 2. ternary with tight: " << tctr2max->getTightness();
+    //         cout << endl;
+    //     }
+    // }
 
     for (unsigned int i=0; i<constrs.size(); i++)
     	if(constrs[i]->arity() == 3)
@@ -436,15 +436,8 @@ void WCSP::preprocessing()
 			maxDegree = -1;
             propagate();
 			if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
+		}
 
-//  		    for (unsigned int i=0; i<constrs.size(); i++)
-//  		    	if(constrs[i]->connected() && (constrs[i]->arity() > 3)) {
-//  		    		NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
-//  		    		nary->preprojectall2();
-//  		    		nary->preproject3();
-//  		    	}
-
-        }
         ToulBar2::elimDegree_preprocessing_ = -1;
         if(ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
@@ -454,13 +447,29 @@ void WCSP::preprocessing()
 
 	propagate();
 
-    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && constrs[i]->universal()) {
+	if (ToulBar2::preprocessNary > 0) {
+	  for (unsigned int i=0; i<constrs.size(); i++) {
+		if(constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity() <= ToulBar2::preprocessNary)) {
+		  NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
+		  //		  nary->changeDefCost( getUb() );
+		  nary->preprojectall2();
+		  nary->preproject3();
+		}
+	  }
+	  propagate();
+	}
+
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->universal()) {
 	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
 	  constrs[i]->deconnect(true);
 	}
-    for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected() && elimConstrs[i]->universal()) {
-	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimConstrs[i];
-	  elimConstrs[i]->deconnect(true);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->universal()) {
+	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimBinConstrs[i];
+	  elimBinConstrs[i]->deconnect(true);
+	}
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep() && elimTernConstrs[i]->universal()) {
+	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimTernConstrs[i];
+	  elimTernConstrs[i]->deconnect(true);
 	}
 
 	if (!Eliminate.empty()) propagate();
@@ -650,7 +659,8 @@ void WCSP::dump(ostream& os, bool original)
         ofstream pb("problem.graph");
         int res = 0;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res+=(constrs[i]->arity()*(constrs[i]->arity()-1)/2);
-        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) res+=(elimConstrs[i]->arity()*(elimConstrs[i]->arity()-1)/2);
+        for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res+=(elimBinConstrs[i]->arity()*(elimBinConstrs[i]->arity()-1)/2);
+        for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res+=(elimTernConstrs[i]->arity()*(elimTernConstrs[i]->arity()-1)/2);
         pb << res << " " << numberOfVariables() << endl;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {
 //            pb << constrs[i]->getVar(0)->wcspIndex + 1;
@@ -660,13 +670,21 @@ void WCSP::dump(ostream& os, bool original)
 //            pb << endl;
             printClique(pb, constrs[i]->arity(), constrs[i]);
         }
-        for (int i=0; i<elimOrder; i++) if (elimConstrs[i]->connected()) {
-//            pb << elimConstrs[i]->getVar(0)->wcspIndex + 1;
-//            for (int j=1; j<elimConstrs[i]->arity(); j++) {
-//                pb << " " << elimConstrs[i]->getVar(j)->wcspIndex + 1;
+        for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {
+//            pb << elimBinConstrs[i]->getVar(0)->wcspIndex + 1;
+//            for (int j=1; j<elimBinConstrs[i]->arity(); j++) {
+//                pb << " " << elimBinConstrs[i]->getVar(j)->wcspIndex + 1;
 //            }
 //            pb << endl;
-            printClique(pb, elimConstrs[i]->arity(), elimConstrs[i]);
+            printClique(pb, elimBinConstrs[i]->arity(), elimBinConstrs[i]);
+        }
+        for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {
+//            pb << elimTernConstrs[i]->getVar(0)->wcspIndex + 1;
+//            for (int j=1; j<elimTernConstrs[i]->arity(); j++) {
+//                pb << " " << elimTernConstrs[i]->getVar(j)->wcspIndex + 1;
+//            }
+//            pb << endl;
+            printClique(pb, elimTernConstrs[i]->arity(), elimTernConstrs[i]);
         }
     }
 
@@ -948,7 +966,7 @@ void WCSP::restoreSolution( Cluster* c )
 // -----------------------------------------------------------
 // Methods for Variable Elimination
 
-// Creates n fake empty constraints and puts them in the pool 'elimConstrs'
+// Creates n fake empty constraints and puts them in the pool 'elimBinConstrs'
 
 void WCSP::initElimConstr() {
     BinaryConstraint* xy = NULL;
@@ -957,23 +975,14 @@ void WCSP::initElimConstr() {
     elimBinConstrs.push_back(xy);
     elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
     elimInfos.push_back(ei);
-    elimConstrs.push_back(NULL);
 }
 
 
 void WCSP::initElimConstrs()
 {
 	unsigned int i;
-    BinaryConstraint* xy = NULL;
 
-    for (i=0; i<vars.size(); i++) {
-       if(!ToulBar2::vac)  xy = new BinaryConstraint(this, &storeData->storeCost);
-	   else 			    xy = new VACConstraint(this, &storeData->storeCost);
-	   elimBinConstrs.push_back(xy);
-	   elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
-	   elimInfos.push_back(ei);
-	   elimConstrs.push_back(NULL);
-    }
+    for (i=0; i<vars.size(); i++) initElimConstr();
 
     for (i=0; i<vars.size(); i++) vars[i]->queueEliminate();
 }

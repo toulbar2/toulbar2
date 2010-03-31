@@ -250,12 +250,10 @@ void help_msg(char *toulbar2filename)
 		cerr << endl;
         cerr << "   e[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
         cerr << "   p[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
-        cerr << "   t : preprocessing only: project ternary cost functions on binary cost functions and apply 3-consistency (can be very slow)";
+        cerr << "   t : preprocessing only: project ternary cost functions on binary cost functions and apply partial 3-consistency (can be very slow)";
 		if (ToulBar2::preprocessTernary) cerr << " (default option)";
 		cerr << endl;
-        cerr << "   h : preprocessing only: project ternary cost functions on binary cost functions following a heuristic (to be used in conjunction with option \"t\")";
-		if (ToulBar2::preprocessTernaryHeuristic) cerr << " (default option)";
-		cerr << endl;
+        cerr << "   h : preprocessing only: project n-ary cost functions on all binary (and some ternary) cost functions only if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
         cerr << "   m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"p\" and \"O\")";
 		if (ToulBar2::elimOrderType != ELIM_NONE) cerr << " (default option)";
 		cerr << endl;
@@ -442,7 +440,14 @@ int main(int argc, char **argv)
         if (strchr(argv[i],'S')) ToulBar2::singletonConsistency = true;
         if (strchr(argv[i],'V')) ToulBar2::vacValueHeuristic = true;
         if (strchr(argv[i],'t')) ToulBar2::preprocessTernary = true;
-        if (strchr(argv[i],'h')) { ToulBar2::preprocessTernary = true; ToulBar2::preprocessTernaryHeuristic = true; }
+        if ( (ch = strchr(argv[i],'h')) ) {
+		  if (ch[-1]==':') ToulBar2::preprocessNary = 0;
+		  else {
+			ToulBar2::preprocessNary = 20;
+			int maxnary = atoi(&ch[1]);
+        	if(maxnary > 0) ToulBar2::preprocessNary = maxnary;
+		  }
+        }
         if (strchr(argv[i],'m')) ToulBar2::elimOrderType = MIN_DEGREE;
         if (strchr(argv[i],'o')) ToulBar2::QueueComplexity = true;
         if ( (ch = strchr(argv[i],'l')) ) {

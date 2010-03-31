@@ -266,7 +266,6 @@ public:
 
 	StoreInt elimOrder;    	 				        // used to count the order in which variables are eliminated
 	vector<elimInfo> elimInfos;
-	vector<Constraint*>  elimConstrs;
 
 	StoreInt elimBinOrder;
 	StoreInt elimTernOrder;
@@ -280,7 +279,6 @@ public:
 	void elimOrderInc() { elimOrder = elimOrder + 1; }
 	void elimBinOrderInc() { elimBinOrder = elimBinOrder + 1; }
 	void elimTernOrderInc() { elimTernOrder = elimTernOrder + 1; }
-    Constraint *getElimCtr(int elimIndex) const {return elimConstrs[elimIndex];}
     Constraint *getElimBinCtr(int elimBinIndex) const {return elimBinConstrs[elimBinIndex];}
     Constraint *getElimTernCtr(int elimTernIndex) const {return elimTernConstrs[elimTernIndex];}
 
