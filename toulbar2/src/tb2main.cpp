@@ -529,7 +529,7 @@ int main(int argc, char **argv)
 
 	ToulBar2::startCpuTime = cpuTime();
 
-	Cost c = (argc >= 3)?string2Cost(argv[2]):MAX_COST;
+	Cost c = (argc >= iniarg+1)?string2Cost(argv[iniarg]):MAX_COST;
     if (c <= MIN_COST) c = MAX_COST;
 
     if (localsearch && !strstr(strext.c_str(),".pre")) {
