@@ -410,17 +410,14 @@ void NaryConstraintMap::changeDefCost( Cost df )
 	if(df > Top) df = Top;
 	if(default_cost >= df) return;
 	TUPLES* pfnew = new TUPLES;
-	Cost maxCost = MIN_COST;
 
 	String t;
 	Cost c;
 	firstlex();
     while(nextlex(t,c)) {
-    	LUB(&maxCost,c);
-	    if(c != df) (*pfnew)[t] = c;
+	    if(c < df) (*pfnew)[t] = c;
 	}
-	if(df == Top) default_cost = maxCost;
-	else default_cost = df;
+	default_cost = df;
 
 	delete pf;
 	pf = pfnew;
@@ -729,6 +726,8 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 								 EnumeratedVariable* z,
 								 TUPLES& fproj)
 {
+    assert(CUT(default_cost,wcsp->getUb()));
+
 	Char   stxyz[4] = {CHAR_FIRST, CHAR_FIRST, CHAR_FIRST, '\0'};
 	String txyz(stxyz);
 	String t;
@@ -737,7 +736,7 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 	TUPLES& f = *pf;
 	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	map<String,long> fcount;
+	//	map<String,long> fcount;
 
 	// compute in one pass of all tuples the projection
 	it = f.begin();
@@ -751,29 +750,30 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 		itproj = fproj.find(txyz);
 		if(itproj != fproj.end()) {
 			if(c < itproj->second) fproj[txyz] = c;
-			fcount[txyz]++;
+			//			fcount[txyz]++;
 		} else {
 			fproj[txyz] = c;
-			fcount[txyz] = 1;
+			//			fcount[txyz] = 1;
 		}
 		it++;
 	}
-	// compute all possible combinations of tuples that does not include xyz
-	long allpossible = 1;
-	for(int i = 0; i < arity_; i++) {
-		if((i != getIndex(x)) && (i != getIndex(y)) && (i != getIndex(z)))
-			allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
-	}
 
-	// if a tuples appears less times than the total possible number
-	// then if the default cost is smaller we have to update the minimum
-	it = fproj.begin();
-	while(it != fproj.end()) {
-		t = it->first;
-		c = it->second;
-		if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
-		it++;
-	}
+	// // compute all possible combinations of tuples that does not include xyz
+	// long long allpossible = 1;
+	// for(int i = 0; i < arity_; i++) {
+	// 	if((i != getIndex(x)) && (i != getIndex(y)) && (i != getIndex(z)))
+	// 		allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
+	// }
+	// // if a tuples appears less times than the total possible number
+	// // then if the default cost is smaller we have to update the minimum
+	// it = fproj.begin();
+	// while(it != fproj.end()) {
+	// 	t = it->first;
+	// 	c = it->second;
+	// 	if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
+	// 	it++;
+	// }
+
 	// finially we substract the projection to the initial function
 	it = f.begin();
 	while(it != f.end()) {
@@ -796,6 +796,8 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 								EnumeratedVariable* y,
 								TUPLES& fproj)
 {
+    assert(CUT(default_cost,wcsp->getUb()));
+
 	Char   stxy[3] = {CHAR_FIRST, CHAR_FIRST, '\0'};
 	String txy(stxy);
 	String t;
@@ -804,7 +806,7 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 	TUPLES& f = *pf;
 	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	map<String,long> fcount;
+	//	map<String,long> fcount;
 
 	// compute in one pass of all tuples the projection
 	it = f.begin();
@@ -817,29 +819,30 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 		itproj = fproj.find(txy);
 		if(itproj != fproj.end()) {
 			if(c < itproj->second) fproj[txy] = c;
-			fcount[txy]++;
+			//			fcount[txy]++;
 		} else {
 			fproj[txy] = c;
-			fcount[txy] = 1;
+			//			fcount[txy] = 1;
 		}
 		it++;
 	}
-	// compute all possible combinations of tuples that does not include xyz
-	long allpossible = 1;
-	for(int i = 0; i < arity_; i++) {
-		if((i != getIndex(x)) && (i != getIndex(y)))
-			allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
-	}
 
-	// if a tuples appears less times than the total possible number
-	// then if the default cost is smaller we have to update the minimum
-	it = fproj.begin();
-	while(it != fproj.end()) {
-		t = it->first;
-		c = it->second;
-		if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
-		it++;
-	}
+	// // compute all possible combinations of tuples that does not include xyz
+	// long long allpossible = 1;
+	// for(int i = 0; i < arity_; i++) {
+	// 	if((i != getIndex(x)) && (i != getIndex(y)))
+	// 		allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
+	// }
+	// // if a tuples appears less times than the total possible number
+	// // then if the default cost is smaller we have to update the minimum
+	// it = fproj.begin();
+	// while(it != fproj.end()) {
+	// 	t = it->first;
+	// 	c = it->second;
+	// 	if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
+	// 	it++;
+	// }
+
 	// finially we substract the projection to the initial function
 	it = f.begin();
 	while(it != f.end()) {
