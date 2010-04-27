@@ -81,6 +81,16 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "-Wall" )
 
+##########################################
+## Compile Options on recent 64 bytes Macs. 
+# thanks to alex rudnick 
+##########################################
+IF(APPLE)
+  SET(CMAKE_CXX_FLAGS "-Wall -m64" )
+  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64" )
+  SET(STATIC off)
+ENDIF(APPLE)
+
 ################
 # default OPTION for toulbar2 test  phase
 #############
