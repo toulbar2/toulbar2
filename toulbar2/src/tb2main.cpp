@@ -308,6 +308,7 @@ void help_msg(char *toulbar2filename)
 
 int main(int argc, char **argv)
 {
+    int countvarlimit = 0;
     bool localsearch = false;
     bool certificate = false;
     char buf [512];
@@ -393,7 +394,10 @@ int main(int argc, char **argv)
 		  int penaltyThreshold = atoi(&ch[1]);
 		  if(penaltyThreshold >= 1) ToulBar2::pedigreePenalty = penaltyThreshold;
 		}
-		if (strchr(argv[i],'a')) ToulBar2::allSolutions = true;
+		if ((ch = strchr(argv[i],'a'))) {
+		  ToulBar2::allSolutions = true;
+		  countvarlimit = atoi(&ch[1]);
+		}
 		if (strchr(argv[i],'D')) {ToulBar2::approximateCountingBTD = true; ToulBar2::allSolutions = true; ToulBar2::btdMode = 1;}
         if ((ch = strchr(argv[i],'b'))) {if (ch[-1]==':') { ToulBar2::binaryBranching = false; } else { ToulBar2::binaryBranching = true; }}
         if ((ch = strchr(argv[i],'c'))) {if (ch[-1]==':') { ToulBar2::lastConflict = false; } else { ToulBar2::binaryBranching = true; ToulBar2::lastConflict = true; }}
@@ -606,6 +610,12 @@ int main(int argc, char **argv)
 		else if (!certificate || ToulBar2::btdMode>=2) {
 		  if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb())) {
 			ToulBar2::LcLevel = LC_AC;
+		  }
+		  if (countvarlimit > 0) {
+			solver.init();
+			for (unsigned int i=countvarlimit; i<solver.getWCSP()->numberOfVariables(); i++) {
+			  ToulBar2::setvalue(solver.getWCSP()->getIndex(), i, 0);
+			}
 		  }
 		  solver.solve();
 		}

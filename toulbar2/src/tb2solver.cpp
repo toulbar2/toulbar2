@@ -110,8 +110,9 @@ void Solver::dump_wcsp(const char *fileName, bool original)
 void setvalue(int wcspId, int varIndex, Value value)
 {
     assert(wcspId == 0);
-    assert(!Solver::currentSolver->allVars[varIndex].removed);
-    Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
+    if(!Solver::currentSolver->allVars[varIndex].removed) {
+	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
+	}
 }
 
 /*
@@ -651,8 +652,8 @@ void Solver::newSolution()
     if (!ToulBar2::allSolutions) wcsp->updateUb(wcsp->getLb());
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 
-  	if(!ToulBar2::xmlflag && !ToulBar2::uai) {
-	    if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+  	if(!ToulBar2::xmlflag && !ToulBar2::uai && (!ToulBar2::allSolutions || ToulBar2::debug)) {
+	  if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {

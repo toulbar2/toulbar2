@@ -85,6 +85,7 @@ public:
     void read_wcsp(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
 
+    void init() {currentSolver = this;}
     bool solve();
 
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
