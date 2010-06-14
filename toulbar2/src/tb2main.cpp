@@ -611,6 +611,7 @@ int main(int argc, char **argv)
 		  if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb())) {
 			ToulBar2::LcLevel = LC_AC;
 		  }
+		  // DFBB counting hidden feature: do not branch on variable indexes from countvarlimit to the last variable 
 		  if (countvarlimit > 0) {
 			solver.init();
 			for (unsigned int i=countvarlimit; i<solver.getWCSP()->numberOfVariables(); i++) {
