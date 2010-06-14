@@ -55,7 +55,7 @@ void WCSP::read_wcsp(const char *fileName)
 	Value funcparam2;
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = MIN_COST;
-
+	int maxarity = 0;
    
     
     // open the file
@@ -103,6 +103,7 @@ void WCSP::read_wcsp(const char *fileName)
             break;
         }
         if (arity > 3) {
+		    maxarity = max(maxarity,arity);
 		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary constraint " << ic << " on";
         	int scopeIndex[MAX_ARITY];
 			for(i=0;i<arity;i++) {
@@ -155,6 +156,7 @@ void WCSP::read_wcsp(const char *fileName)
 
 		    }
         } else if (arity == 3) {
+		    maxarity = max(maxarity,arity);
             file >> i;
             file >> j;
             file >> k;
@@ -204,6 +206,7 @@ void WCSP::read_wcsp(const char *fileName)
                 if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
 		} else if (arity == 2) {
+		    maxarity = max(maxarity,arity);
             file >> i;
             file >> j;
 			if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
@@ -291,6 +294,7 @@ void WCSP::read_wcsp(const char *fileName)
                 }
             }
         } else if (arity == 1) {
+		    maxarity = max(maxarity,arity);
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
 			if (vars[i]->enumerated()) {
@@ -368,7 +372,7 @@ void WCSP::read_wcsp(const char *fileName)
         unaryconstrs[u].var->findSupport();
     }
     if (ToulBar2::verbose >= 0) {
-        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
+	  cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints with maximum arity " << maxarity  << "." << endl;
     }   
     histogram();
 }
