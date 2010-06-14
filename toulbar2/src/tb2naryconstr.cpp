@@ -403,7 +403,7 @@ Cost NaryConstraintMap::eval( String& s ) {
 }
 
 
-
+// Set new default cost to min(Top,df), keep existing costs SMALLER than this default cost in a Map
 void NaryConstraintMap::changeDefCost( Cost df )
 {
 	Cost Top = wcsp->getUb();
@@ -720,7 +720,7 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 
 
 // Projects out all variables except x,y,z
-// and gives the reusult at fproj
+// and gives the result at fproj
 void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 								 EnumeratedVariable* y,
 								 EnumeratedVariable* z,
@@ -774,7 +774,7 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 	// 	it++;
 	// }
 
-	// finially we substract the projection to the initial function
+	// finially we substract the projection from the initial function
 	it = f.begin();
 	while(it != f.end()) {
 		t = it->first;
@@ -880,21 +880,21 @@ void NaryConstraintMap::preproject3()
 
 	   TUPLES::iterator it =  fproj.begin();
 	   while(it != fproj.end()) {
-		   t = it->first;
-		   a = t[0] - CHAR_FIRST;
-		   b = t[1] - CHAR_FIRST;
-		   c = t[2] - CHAR_FIRST;
-		   xyz[ a * sizey * sizez + b * sizez + c ]	= it->second;
-		   it++;
-		}
-		if(fproj.size() > 0) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
-        if (deconnected()) break;
+		 t = it->first;
+		 a = t[0] - CHAR_FIRST;
+		 b = t[1] - CHAR_FIRST;
+		 c = t[2] - CHAR_FIRST;
+		 xyz[ a * sizey * sizez + b * sizez + c ]	= it->second;
+		 it++;
+	   }
+	   if(fproj.size() > 0) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
+	   if (deconnected()) return;
 	}
 }
 
 
 void NaryConstraintMap::preprojectall2()
-{  
+{
   for(int i = 0; i < arity_; i++) {
   for(int j = i+1; j < arity_; j++) {
 	   EnumeratedVariable* x = scope[i];
@@ -918,11 +918,11 @@ void NaryConstraintMap::preprojectall2()
 		   t = it->first;
 		   a = t[0] - CHAR_FIRST;
 		   b = t[1] - CHAR_FIRST;
-		   xy[ a * sizey + b ] = it->second;
+		   xy[ a * sizey + b ]	= it->second;
 		   it++;
 		}
 		if(fproj.size() > 0) wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
-        if (deconnected()) { return; }        
+		if (deconnected()) return;
 	}}
 }
 
