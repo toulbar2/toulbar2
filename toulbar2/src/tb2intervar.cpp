@@ -79,27 +79,27 @@ void IntervalVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) THROWCONTRADICTION;
-        else {
-            if (newInf == sup) assign(newInf);
-            else {
+	    if (newInf > sup) {THROWCONTRADICTION;
+        } else {
+		    if (newInf == sup) {assign(newInf);
+            } else {
                 inf = newInf;
                 infCost = MIN_COST;
                 queueInc();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
         }
-      }
+    }
 }
 
 void IntervalVariable::increase(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) THROWCONTRADICTION;
-        else {
-            if (newInf == sup) assign(newInf);
-            else {
+	    if (newInf > sup) {THROWCONTRADICTION;
+        } else {
+		    if (newInf == sup) {assign(newInf);
+            } else {
                 inf = newInf;
                 infCost = MIN_COST;
                 if (newInf > maxCostValue) queueNC();           // single diff with increaseFast
@@ -107,34 +107,34 @@ void IntervalVariable::increase(Value newInf)
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
         }
-      }
+    }
 }
 
 void IntervalVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) THROWCONTRADICTION;
-        else {
-            if (inf == newSup) assign(newSup);
-            else {
+	    if (newSup < inf) {THROWCONTRADICTION;
+        } else {
+		    if (inf == newSup) {assign(newSup);
+            } else {
                 sup = newSup;
                 supCost = MIN_COST;
                 queueDec();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
-      }
+    }
 }
 
 void IntervalVariable::decrease(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) THROWCONTRADICTION;
-        else {
-            if (inf == newSup) assign(newSup);
-            else {
+	    if (newSup < inf) {THROWCONTRADICTION;
+        } else {
+		    if (inf == newSup) {assign(newSup);
+            } else {
                 sup = newSup;
                 supCost = MIN_COST;
                 if (newSup < maxCostValue) queueNC();           // single diff with decreaseFast
@@ -142,7 +142,7 @@ void IntervalVariable::decrease(Value newSup)
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
-      }
+    }
 }
 
 void IntervalVariable::assign(Value newValue)

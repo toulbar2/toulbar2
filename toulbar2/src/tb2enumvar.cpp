@@ -333,29 +333,29 @@ void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) THROWCONTRADICTION;
-        else {
+	     if (newInf > sup) {THROWCONTRADICTION;
+         } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) assign(newInf);
-            else {
+            if (newInf == sup) {assign(newInf);
+            } else {
                 inf = newInf;
                 queueInc();
                 if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
         }
-      }
+    }
 }
 
 void EnumeratedVariable::increase(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     if (newInf > inf) {
-        if (newInf > sup) THROWCONTRADICTION;
-        else {
+      if (newInf > sup) {THROWCONTRADICTION;
+	  } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) assign(newInf);
-            else {
+            if (newInf == sup) {assign(newInf);
+            } else {
                 inf = newInf;
                 if (newInf > maxCostValue || PARTIALORDER) queueNC();           // diff with increaseFast
                 if (newInf > support || PARTIALORDER) findSupport();            // diff with increaseFast
@@ -364,37 +364,37 @@ void EnumeratedVariable::increase(Value newInf)
                 queueInc();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
-        }
       }
+    }
 }
 
 void EnumeratedVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) THROWCONTRADICTION;
-        else {
+	    if (newSup < inf) {THROWCONTRADICTION;
+        } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) assign(newSup);
-            else {
+            if (inf == newSup) {assign(newSup);
+            } else {
                 sup = newSup;
                 queueDec();
                 if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
-      }
+    }
 }
 
 void EnumeratedVariable::decrease(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     if (newSup < sup) {
-        if (newSup < inf) THROWCONTRADICTION;
-        else {
+	    if (newSup < inf) {THROWCONTRADICTION;
+        } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) assign(newSup);
-            else {
+            if (inf == newSup) {assign(newSup);
+            } else {
                 sup = newSup;
                 if (newSup < maxCostValue || PARTIALORDER) queueNC();           // diff with decreaseFast
                 if (newSup < support || PARTIALORDER) findSupport();            // diff with decreaseFast
@@ -404,7 +404,7 @@ void EnumeratedVariable::decrease(Value newSup)
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
-      }
+    }
 }
 
 void EnumeratedVariable::removeFast(Value value)

@@ -217,7 +217,7 @@ class Contradiction
 public:
     Contradiction() {if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl;}
 };
-#define THROWCONTRADICTION ({if (ToulBar2::weightedDegree) conflict(); throw Contradiction();})
+#define THROWCONTRADICTION {if (ToulBar2::weightedDegree) conflict(); throw Contradiction();}
 #endif
 
 /*
