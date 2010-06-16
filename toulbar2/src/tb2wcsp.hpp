@@ -19,6 +19,7 @@ class TreeDecomposition;
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
     int instance; // instantiation occurence number
+    string name;
     Store *storeData;
     StoreCost lb;
     Cost ub;
@@ -67,6 +68,7 @@ public:
 
 
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
+    string getName() const {return name;}
 
     Cost getLb() const {return lb;}
     Cost getUb() const {return ub;}
@@ -81,12 +83,12 @@ public:
         }
     }
 	void enforceUb() {
-       if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, ub)) THROWCONTRADICTION;
+	   if (CUT((((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), ub)) THROWCONTRADICTION;
        objectiveChanged=true;
     }
     void decreaseUb(Cost newUb) {
        if (newUb < ub) {
-           if (CUT(((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb, newUb)) THROWCONTRADICTION;
+		   if (CUT((((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), newUb)) THROWCONTRADICTION;
            ub = newUb;
            objectiveChanged=true;
        }
@@ -97,7 +99,7 @@ public:
        if (addLb > MIN_COST) {
 		 //		   incWeightedDegree(addLb);
 		   Cost newLb = lb + addLb;
-           if (CUT(((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb, ub)) THROWCONTRADICTION;
+           if (CUT((((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb), ub)) THROWCONTRADICTION;
            lb = newLb;
            objectiveChanged=true;
            if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
