@@ -77,7 +77,7 @@ void Solver::read_solution(const char *filename)
     }
 
     int i = 0;
-    while (file) {
+    while (!file.eof()) {
         if ((unsigned int) i >= wcsp->numberOfVariables()) break;
         int value = 0;
         file >> value;
@@ -86,14 +86,61 @@ void Solver::read_solution(const char *filename)
 		  // side-effect: remember last solution
 		  wcsp->setBestValue(i, value);
         } else {
-            if (wcsp->getValue(i) != value) THROWCONTRADICTION;
-			else wcsp->setBestValue(i, value); // side-effect: remember last solution
+		    if (wcsp->getValue(i) != value) {
+			  THROWCONTRADICTION;
+			} else {
+			  wcsp->setBestValue(i, value); // side-effect: remember last solution
+			}
         }
         i++;
     }
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
 	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     store->restore(depth);
+}
+
+void Solver::parse_solution(const char *certificate)
+{
+    currentSolver = this;
+
+    if (ToulBar2::btdMode>=2) wcsp->propagate();
+
+	//  int depth = store->getDepth();
+	//    store->store();
+
+    certificate = index(certificate,',');
+    if (certificate) certificate++;
+    
+    int var;
+	Value value;
+	int items;
+    while ((certificate != NULL) && (certificate[0] != 0)) {
+
+        items = sscanf(certificate,"%d=%d",&var,&value);
+        
+        if ((items != 2) || ((unsigned int)var >= wcsp->numberOfVariables())) {
+             cerr << "Certificate " << certificate << " incorrect!" << endl;
+             exit(EXIT_FAILURE);
+        }
+        certificate = index(certificate,',');
+        if (certificate) certificate++;
+
+        if (wcsp->unassigned(var)) {
+          assign(var, value);
+          // side-effect: remember last solution
+          wcsp->setBestValue(var, value);
+        } else {
+		  if (wcsp->getValue(var) != value) {
+			THROWCONTRADICTION;
+		  } else {
+			wcsp->setBestValue(var, value); // side-effect: remember last solution
+		  }
+        }
+    }
+    cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+    
+    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
+//    store->restore(depth);
 }
 
 void Solver::dump_wcsp(const char *fileName, bool original)
@@ -803,13 +850,13 @@ bool Solver::solve()
 		  wcsp->propagate();
 		}
 
-		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
-
 	    if (ToulBar2::btdMode) {
 	    	if(wcsp->numberOfUnassignedVariables() == 0)
 	    		ToulBar2::approximateCountingBTD = 0;
 	    	wcsp->buildTreeDecomposition();
 	    }
+
+		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
 
 		if (ToulBar2::restart) {
 		  nbBacktracksLimit = 1;

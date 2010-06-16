@@ -219,6 +219,7 @@ class Cluster
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
 
 	  void print();
+      void dump();
 	  void printStats() { if(!sep) return; sep->print(cout); }
 
 	  void printStatsRec() {
@@ -314,6 +315,7 @@ public:
 
 	void print( Cluster* c = NULL, int recnum = 0);
     void printStats( Cluster* c = NULL );
+    void dump(Cluster* c = NULL);
 };
 
 #endif

@@ -722,6 +722,70 @@ void Cluster::print() {
 	cout << endl;
 }
 
+void Cluster::dump() {
+    //cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
+
+    char clusterVarsFilename[128];
+    char sepVarsFilename[128];
+    char sonsFilename[128];
+    char fatherFilename[128];
+    char sepSizeFilename[128];
+   
+    sprintf(clusterVarsFilename,"%s.info/%d.vars",getWCSP()->getName().c_str(),getId());
+    sprintf(sepVarsFilename,"%s.info/%d.sep",getWCSP()->getName().c_str(),getId());
+    sprintf(sonsFilename,"%s.info/%d.sons",getWCSP()->getName().c_str(),getId());
+    sprintf(fatherFilename,"%s.info/%d.father",getWCSP()->getName().c_str(),getId());
+    sprintf(sepSizeFilename,"%s.info/%d.sepsize",getWCSP()->getName().c_str(),getId());
+
+    ofstream clusterVarsFile(clusterVarsFilename);
+    ofstream sepVarsFile(sepVarsFilename);
+    ofstream sonsFile(sonsFilename);
+    ofstream fatherFile(fatherFilename);
+    ofstream sepSizeFile(sepSizeFilename);
+    
+    if (parent) { fatherFile << parent->getId(); }
+    else { fatherFile << "-1"; }
+    fatherFile.close();
+
+    long double separatorSize = 1.0;
+    
+    if(sep) {
+        TVars::iterator its = beginSep();
+        while(its != endSep()) {
+            clusterVarsFile << wcsp->getVar(*its)->getName() << " ";
+            sepVarsFile << wcsp->getVar(*its)->getName() << " ";
+            separatorSize *= (1.0 + wcsp->getVar(*its)->getSup()- wcsp->getVar(*its)->getInf());
+            ++its;
+        }
+    }
+    sepSizeFile << separatorSize;
+
+    TVars::iterator itp = beginVars();
+    while(itp != endVars()) {
+        if (!isSepVar(*itp)) {
+          clusterVarsFile << wcsp->getVar(*itp)->getName() << " ";
+          assert(wcsp->getVar(*itp)->getCluster()==-1 || wcsp->getVar(*itp)->getCluster() == getId());
+        }
+        ++itp;
+    }
+    
+    if (getNbVars() == 0)  clusterVarsFile << " ";
+
+    if (!edges.empty()) {
+      TClusters::iterator itc = beginEdges();
+      while(itc != endEdges()) {
+        sonsFile << (*itc)->getId();
+        ++itc;
+        if(itc != endEdges()) sonsFile << " ";
+      }
+    } 
+    
+    clusterVarsFile.close();
+    sepVarsFile.close();
+    sonsFile.close();
+    sepSizeFile.close();
+}
+
 void Cluster::cartProduct(BigInteger& prodCart)
 {
 	for(TVars::iterator it = varsTree.begin(); it!= varsTree.end();it++)
@@ -1585,8 +1649,10 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 	 }
 	if ((!ToulBar2::xmlflag && !ToulBar2::uai) || ToulBar2::verbose >= 1) {
 		cout << "Number of clusters        : " << clusters.size() << endl;
-		if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1)
-			print();
+		if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1) {
+		  if (ToulBar2::dumpWCSP) dump(); 
+		  else print();
+		}
 		cout << endl;
 	}
 	assert(verify());
@@ -1913,4 +1979,32 @@ void TreeDecomposition::print( Cluster* c, int recnum )
 		print( *ita, recnum+1 );
 		++ita;
 	}
+}
+
+void TreeDecomposition::dump(Cluster* c)
+{
+  if(!c) {
+    char tmpName[256];
+    sprintf(tmpName,"%s.info",getWCSP()->getName().c_str());
+    mkdir(tmpName,0777);
+    
+    sprintf(tmpName,"%s.info/root",getWCSP()->getName().c_str());
+
+    ofstream rootFile(tmpName);
+    if(roots.empty()) {
+      rootFile.close();
+      return;
+    }
+    c = * roots.begin();
+    rootFile << c->getId();
+    rootFile.close();
+  }
+  
+  c->dump();
+
+  TClusters::iterator ita = c->beginEdges();
+  while(ita != c->endEdges()) {
+      dump(*ita);
+      ++ita;
+  }
 }

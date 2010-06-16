@@ -311,6 +311,8 @@ int main(int argc, char **argv)
     int countvarlimit = 0;
     bool localsearch = false;
     bool certificate = false;
+    char *certificateFilename = NULL;
+    char *certificateString = NULL;
     char buf [512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
     cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2010"<<endl;
@@ -351,6 +353,18 @@ int main(int argc, char **argv)
 	       	sprintf(ToulBar2::varOrder, "%s",buf);
 			continue; // skip current argument in order to not search for other options inside filename
     	}
+    	if ((ch = strchr(argv[i],'x'))) {
+          certificate = true;
+          if (index(&ch[1],',') == NULL) {
+            certificateFilename = new char[256];
+            sprintf(certificateFilename,"sol%s",&ch[1]);
+          } 
+          else //inline certificate
+          {
+            certificateString = &ch[1];
+          }
+          continue; // skip current argument in order to not search for other options inside filename
+        }
         if ( (ch = strchr(argv[i],'B')) ) {
         	int mode = atoi(&ch[1]);
         	if(mode >= 0) {
@@ -477,7 +491,6 @@ int main(int argc, char **argv)
         	if((lclevel >= LC_NC) && (lclevel < LC_THEMAX)) ToulBar2::LcLevel = lclevel;
         }
         for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='z') ToulBar2::dumpWCSP++;
-        if (strchr(argv[i],'x')) certificate = true;
         if (strchr(argv[i],'g')) ToulBar2::generation = true;
         if (strchr(argv[i],'y')) {
         	ToulBar2::bayesian = true;
@@ -605,9 +618,12 @@ int main(int argc, char **argv)
         if(randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
         else 		         solver.read_wcsp(argv[1]);
 
-        if (certificate) solver.read_solution("sol");
+        if (certificate) {
+          if (certificateFilename!= NULL) solver.read_solution(certificateFilename);
+          else solver.parse_solution(certificateString);
+        }
         if (ToulBar2::dumpWCSP==1) solver.dump_wcsp("problem.wcsp");
-		else if (!certificate || ToulBar2::btdMode>=2) {
+		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2) {
 		  if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb())) {
 			ToulBar2::LcLevel = LC_AC;
 		  }

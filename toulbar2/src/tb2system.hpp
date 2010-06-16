@@ -182,4 +182,12 @@ inline int cost2log2glb(Long x) {return cost2log2(x);}
 inline int cost2log2gub(Long x) {return cost2log2(x);}
 #endif
 
+// function mkdir
+#ifdef LINUX
+#include <sys/stat.h>
+#else
+//#include <direct.h> // for WINDOWS?
+void mkdir(char *, int) {}
+#endif
+
 #endif /* TB2SYSTEM_HPP_ */

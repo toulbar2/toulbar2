@@ -15,6 +15,7 @@ public:
     virtual ~WeightedCSP() {}
 
     virtual int getIndex() const = 0;       // instantiation occurence number of current WCSP object
+    virtual string getName() const = 0;     // WCSP filename (without its extension)
 
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
 

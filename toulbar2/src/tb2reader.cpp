@@ -20,6 +20,7 @@ typedef struct {
 
 void WCSP::read_wcsp(const char *fileName)
 {
+    name = to_string(basename(fileName));
     if (ToulBar2::pedigree) {
       if (!ToulBar2::bayesian) ToulBar2::pedigree->read(fileName, this);
       else ToulBar2::pedigree->read_bayesian(fileName, this);
@@ -150,7 +151,7 @@ void WCSP::read_wcsp(const char *fileName)
 				  inclowerbound += minc;
 				}
 
-	            //((NaryConstraintMap*) nary)->changeDefCost( top );
+	            //((NaryConstraintMap*) nary)->keepAllowedTuples( top );
 	            //((NaryConstraintMap*) nary)->preprojectall2();
 				nary->propagate();
 
