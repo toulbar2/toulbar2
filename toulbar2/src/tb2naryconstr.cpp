@@ -404,11 +404,9 @@ Cost NaryConstraintMap::eval( String& s ) {
 
 
 // Set new default cost to min(Top,df), keep existing costs SMALLER than this default cost in a Map
-void NaryConstraintMap::changeDefCost( Cost df )
+void NaryConstraintMap::keepAllowedTuples( Cost df )
 {
-	Cost Top = wcsp->getUb();
-	if(df > Top) df = Top;
-	if(default_cost >= df) return;
+    assert( CUT(wcsp->getUb(), df) );
 	TUPLES* pfnew = new TUPLES;
 
 	String t;
@@ -731,18 +729,12 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 	Char   stxyz[4] = {CHAR_FIRST, CHAR_FIRST, CHAR_FIRST, '\0'};
 	String txyz(stxyz);
 	String t;
-
 	Cost c;
-	TUPLES& f = *pf;
-	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	//	map<String,long> fcount;
 
 	// compute in one pass of all tuples the projection
-	it = f.begin();
-	while(it != f.end()) {
-		t = it->first;
-		c = it->second;
+	first();
+	while(next(t,c)) {
 		txyz[0] = t[ getIndex(x) ];
 		txyz[1] = t[ getIndex(y) ];
 		txyz[2] = t[ getIndex(z) ];
@@ -750,41 +742,20 @@ void NaryConstraintMap::projectxyz( EnumeratedVariable* x,
 		itproj = fproj.find(txyz);
 		if(itproj != fproj.end()) {
 			if(c < itproj->second) fproj[txyz] = c;
-			//			fcount[txyz]++;
 		} else {
 			fproj[txyz] = c;
-			//			fcount[txyz] = 1;
 		}
-		it++;
 	}
 
-	// // compute all possible combinations of tuples that does not include xyz
-	// long long allpossible = 1;
-	// for(int i = 0; i < arity_; i++) {
-	// 	if((i != getIndex(x)) && (i != getIndex(y)) && (i != getIndex(z)))
-	// 		allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
-	// }
-	// // if a tuples appears less times than the total possible number
-	// // then if the default cost is smaller we have to update the minimum
-	// it = fproj.begin();
-	// while(it != fproj.end()) {
-	// 	t = it->first;
-	// 	c = it->second;
-	// 	if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
-	// 	it++;
-	// }
-
 	// finially we substract the projection from the initial function
-	it = f.begin();
-	while(it != f.end()) {
-		t = it->first;
+	first();
+	while(next(t,c)) {
 		txyz[0] = t[ getIndex(x) ];
 		txyz[1] = t[ getIndex(y) ];
 		txyz[2] = t[ getIndex(z) ];
 		itproj = fproj.find(txyz);
-		if(itproj != fproj.end()) { f[t] -= itproj->second; }
+		if(itproj != fproj.end()) { assert(CUT(c, itproj->second)); (*pf)[t] -= itproj->second; }
 		else assert(false);
-		it++;
 	}
 }
 
@@ -801,64 +772,40 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 	Char   stxy[3] = {CHAR_FIRST, CHAR_FIRST, '\0'};
 	String txy(stxy);
 	String t;
-
 	Cost c;
-	TUPLES& f = *pf;
-	TUPLES::iterator  it;
 	TUPLES::iterator  itproj;
-	//	map<String,long> fcount;
 
 	// compute in one pass of all tuples the projection
-	it = f.begin();
-	while(it != f.end()) {
-		t = it->first;
-		c = it->second;
+	first();
+	while(next(t,c)) {
 		txy[0] = t[ getIndex(x) ];
 		txy[1] = t[ getIndex(y) ];
 
 		itproj = fproj.find(txy);
 		if(itproj != fproj.end()) {
 			if(c < itproj->second) fproj[txy] = c;
-			//			fcount[txy]++;
 		} else {
 			fproj[txy] = c;
-			//			fcount[txy] = 1;
 		}
-		it++;
 	}
 
-	// // compute all possible combinations of tuples that does not include xyz
-	// long long allpossible = 1;
-	// for(int i = 0; i < arity_; i++) {
-	// 	if((i != getIndex(x)) && (i != getIndex(y)))
-	// 		allpossible *= ((EnumeratedVariable*) getVar(i))->getDomainInitSize();
-	// }
-	// // if a tuples appears less times than the total possible number
-	// // then if the default cost is smaller we have to update the minimum
-	// it = fproj.begin();
-	// while(it != fproj.end()) {
-	// 	t = it->first;
-	// 	c = it->second;
-	// 	if((fcount[t] < allpossible) && (default_cost < c)) fproj.erase(t);
-	// 	it++;
-	// }
-
 	// finally we substract the projection from the initial function
-	it = f.begin();
-	while(it != f.end()) {
-		t = it->first;
+	first();
+	while(next(t,c)) {
 		txy[0] = t[ getIndex(x) ];
 		txy[1] = t[ getIndex(y) ];
 		itproj = fproj.find(txy);
-		if(itproj != fproj.end()) { f[t] -= itproj->second; }
+		if(itproj != fproj.end()) { assert(CUT(c, itproj->second)); (*pf)[t] -= itproj->second; }
 		else assert(false);
-		it++;
 	}
 }
 
 
 void NaryConstraintMap::preproject3()
 {
+    assert(connected());
+    assert(CUT(default_cost,wcsp->getUb()));
+
 	for(int i = 0; i < arity_ - 2; i++) {
 	   EnumeratedVariable* x = scope[i];
 	   EnumeratedVariable* y = scope[i+1];
@@ -887,7 +834,7 @@ void NaryConstraintMap::preproject3()
 		 xyz[ a * sizey * sizez + b * sizez + c ]	= it->second;
 		 it++;
 	   }
-	   if(fproj.size() > 0) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
+	   if(fproj.size() > 0 || default_cost > MIN_COST) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
 	   if (deconnected()) return;
 	}
 }
@@ -895,6 +842,9 @@ void NaryConstraintMap::preproject3()
 
 void NaryConstraintMap::preprojectall2()
 {
+  assert(connected());
+  assert(CUT(default_cost,wcsp->getUb()));
+
   for(int i = 0; i < arity_; i++) {
   for(int j = i+1; j < arity_; j++) {
 	   EnumeratedVariable* x = scope[i];
@@ -921,8 +871,8 @@ void NaryConstraintMap::preprojectall2()
 		   xy[ a * sizey + b ]	= it->second;
 		   it++;
 		}
-		if(fproj.size() > 0) wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
-		if (deconnected()) return;
+	   if(fproj.size() > 0 || default_cost > MIN_COST) wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
+	   if (deconnected()) return;
 	}}
 }
 

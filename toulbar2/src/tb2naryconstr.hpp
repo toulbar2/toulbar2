@@ -128,7 +128,7 @@ public:
 
 	Cost getDefCost() { return default_cost; }
 	void setDefCost( Cost df ) { default_cost = df; }
-	void changeDefCost( Cost df );
+	void keepAllowedTuples( Cost df );
 
 
 
