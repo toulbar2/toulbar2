@@ -43,6 +43,7 @@ ICC = icc
 
 CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY -DNARYCHAR $(BOOST) $(XMLI)
 # -O1 -g3 -ftrapv -ansi -pedantic
+# -O1 -g3 -ftrapv -ansi -pedantic -Wall -Wno-long-long
 # -DNARYCHAR  # use this option to print nary constraints (including separators) correctly
 
 OFLAGS = -O3 -DNDEBUG
