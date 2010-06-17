@@ -533,7 +533,11 @@ int main(int argc, char **argv)
 	}
 	if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
 	  cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
-	  ToulBar2::lds = false;
+	  ToulBar2::lds = 0;
+	}
+	if (ToulBar2::restart && ToulBar2::btdMode >= 1) {
+	  cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
+	  ToulBar2::restart = 0;
 	}
 	if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
 	  cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
