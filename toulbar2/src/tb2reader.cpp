@@ -40,6 +40,7 @@ void WCSP::read_wcsp(const char *fileName)
 	}
     string pbname;
     int nbvar,nbval,nbconstr;
+	int nbvaltrue = 0;
     Cost top;
     int i,j,k,t, ic;
     string varname;
@@ -87,6 +88,7 @@ void WCSP::read_wcsp(const char *fileName)
         string varname;
         varname = to_string(i);
         file >> domsize;
+		if(domsize > nbvaltrue) nbvaltrue = domsize; 
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
         int theindex = -1;
          
@@ -373,7 +375,7 @@ void WCSP::read_wcsp(const char *fileName)
         unaryconstrs[u].var->findSupport();
     }
     if (ToulBar2::verbose >= 0) {
-	  cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints with maximum arity " << maxarity  << "." << endl;
+	  cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " constraints, with maximum arity " << maxarity  << "." << endl;
     }   
     histogram();
 }

@@ -272,7 +272,7 @@ void help_msg(char *toulbar2filename)
 #endif
         cerr << "   z : save problem in wcsp format in filename \"problem.wcsp\" (repeat this option letter to save the current problem after preprocessing)" << endl;
         cerr << "   Z : debug mode (save problem at each node if verbosity option set!)" << endl;
-        cerr << "   x : load a solution from filename \"sol\"" << endl << endl;
+        cerr << "   x[(filename)|(,i=a)*] : load a solution/certificate from a filename (by default \"sol\") or assign variable of index i to value a (multiple assignments are separated by a comma and no space)" << endl << endl;
         cerr << "   M[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
         cerr << "   A[integer] : enforce VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
         cerr << "   T[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;

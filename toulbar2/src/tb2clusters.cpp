@@ -1650,11 +1650,11 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 	if ((!ToulBar2::xmlflag && !ToulBar2::uai) || ToulBar2::verbose >= 1) {
 		cout << "Number of clusters        : " << clusters.size() << endl;
 		if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1) {
-		  if (ToulBar2::dumpWCSP) dump(); 
-		  else print();
+		  print();
 		}
 		cout << endl;
 	}
+	if (ToulBar2::dumpWCSP) dump();
 	assert(verify());
 
 }
