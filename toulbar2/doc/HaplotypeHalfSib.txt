@@ -1,0 +1,115 @@
+-----------------------------------------
+Haplotype inference in half-sib families
+-----------------------------------------
+by Aurelie Favier, INRA, Toulouse, France
+-----------------------------------------
+
+Input file format
+-----------------
+
+toulbar2 Haplotype Inference input files are the pedigree file and the map file. The pedigree file (*.pre) must contain the following information for each individual:
+
+ * a pedigree (family) number
+ * an individual identification number, or id
+ * father's id number
+ * mother's id number
+ * sex 
+ * first allele  number
+ * second allele number
+ * ...
+
+warning! only one family is allowed per file in the current toulbar2 version. if you have several families, then you have to create one pedigree file for each family.
+
+Father (must be the first individual in the file) and mother id's are 0 for founders, or other members of the pedigree for whom information on parents is absent. Partial information is allowed (when only one parent is known). The sex field is coded 1 for males and 2 for females. The genotyping data consists of two unordered allele numbers (positive integers). These are codominant alleles at a single locus. An unknown genotype is coded as 0 0.
+
+The map file (*.map) must contain the genetic position in Morgan for all the markers present in the pedigree file
+
+
+Example with 1 family, 4 individuals (1 sire and 3 offspring), and 5 markers
+----------------------------------------------------------------------------
+
+pedigree.pre:
+
+ 1  1  0  0  1      1 2 2 2 1 1 2 2 1 1
+ 1  2  1  0  1      2 1 2 2 1 1 2 1 1 2
+ 1  3  1  0  1      1 1 2 2 1 1 1 2 1 2
+ 1  4  1  0  1      2 2 2 2 1 1 2 1 1 1
+
+position.map:
+
+ 0.000 0.025 0.050 0.075 0.100
+
+Try the following command :
+
+ toulbar2 pedigree.pre positions.map H w
+
+The software output will be:
+
+ 4 informative individuals found (either genotyped or having a genotyped descendant).
+ Read 5 variables, with 2 values at most, and 4 constraints.
+ Reading and creating problem time :	 0
+ 0 unassigned variables, 0 values in all current domains and 0 constraints.
+ New solution: 0 log10like: -0.966877 logProb: -2.22632 (0 backtracks, 0 nodes, depth 0)
+
+ Optimum: 0 log10like: -0.966877 logProb: -2.22632 in 0 backtracks and 0 nodes, and 0 seconds.
+ end.
+
+and look at the output file haplotypes.
+
+ sire 1 
+ 1  1  2  2  1		      ( haplotype 1 )
+ 2  1  1  1  2		      ( haplotype 2 )
+ log10like	: -0.966877   ( the log-likelihood in base 10 )
+ logProb	: -2.22632    ( the log-likelihood )
+
+For large pedigrees with a lot of markers (e.g. ChrX? instances, see below), use the BTD search method instead of DFBB used by default in toulbar2. For that, add option B1:
+
+ toulbar2_09 pedigree.pre position.map Hw B1
+
+Use the v option to see the non-zero value of the matrix W. Try the following command :
+
+ toulbar2_09 pedigree.pre position.map Hw v
+
+The software output will be:
+
+ ../../../Toulbar/toulbar2_09.01/bin/Linux/toulbar2  version : 0.9.1.1, copyright (c) INRA 2010
+  4 informative individuals found (either genotyped or having a genotyped descendant).
+ sire is individual 1
+ sparse matrix : 
+ W0,2	 =	 -0.749141
+ W2,3	 =	  0.922272
+ W2,4	 =	  0.749141
+ W3,4	 =	  0.922272
+ constant K   =	 -8.91197 
+ Read 5 variables, with 2 values at most, and 4 constraints.
+ pedigree ub: 76971419
+ Reading and creating problem time :	 0
+ Variable elimination during search of degree <= 3
+ 0 unassigned variables, 0 values in all current domains and 0 constraints.
+ New solution: 0 log10like: -0.966877 logProb: -2.22632 (0 backtracks, 0 nodes, depth 0)
+
+ Optimum: 0 log10like: -0.966877 logProb: -2.22632 in 0 backtracks and 0 nodes, and 0 seconds.
+ end.
+
+
+Datasets
+--------
+
+pattern for each directory : numberOfDescendants_numberOfMarkers
+
+Human chromosome X
+http://carlit.toulouse.inra.fr/homes/afavier/Human_chrX.tar.gz
+
+For comparison between exact methods
+http://carlit.toulouse.inra.fr/homes/afavier/exact_methods.tar.gz
+
+For comparison between approximate methods
+http://carlit.toulouse.inra.fr/homes/afavier/approx_methods.tar.gz
+
+For comparison with and without linkage desequilibrium
+http://carlit.toulouse.inra.fr/homes/afavier/DL_vs_noDL.tar.gz
+
+
+-------------------------------------------------------------------------------------------------
+Aurelie Favier, INRA, Toulouse, France @ 2010
+aurelie.favier@toulouse.inra.fr
