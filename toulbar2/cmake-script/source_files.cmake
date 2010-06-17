@@ -21,6 +21,7 @@
                         ${My_Source}/tb2intervar.cpp
                         ${My_Source}/tb2main.cpp
                         ${My_Source}/tb2naryconstr.cpp
+                        ${My_Source}/tb2haplotype.cpp
                         ${My_Source}/tb2pedigree.cpp
                         ${My_Source}/tb2queue.cpp
                         ${My_Source}/tb2randomgen.cpp
@@ -58,6 +59,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2enumvar.*pp
                         ${My_Source}/tb2intervar.*pp
                         ${My_Source}/tb2naryconstr.*pp
+                        ${My_Source}/tb2haplotype.*pp
                         ${My_Source}/tb2pedigree.*pp
                         ${My_Source}/tb2queue.*pp
                         ${My_Source}/tb2randomgen.*pp
