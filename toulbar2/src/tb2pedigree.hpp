@@ -25,6 +25,7 @@ public:
   int mother;
   int sex;
   Genotype genotype;
+  vector<Genotype> genotypes;
   bool typed; // true if one of its descendant children (or itself) is typed
   int generation;
   int nbtyped; // number of genotyped children
@@ -33,7 +34,6 @@ public:
 
   void print(ostream& os);
 };
-
 
 class Pedigree {
   int locus;    				  // same locus for all the genotypes

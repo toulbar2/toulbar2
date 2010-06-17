@@ -7,7 +7,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
 
-
 void Pedigree::iniProb( WCSP* wcsp ) { 
    TProb TopProb = 0.;
 
@@ -77,12 +76,6 @@ void Pedigree::iniProb( WCSP* wcsp ) {
   wcsp->updateUb((Cost) ((Long) TopProb));
 }
 
-
-
-
-
-
-
 typedef struct {
     EnumeratedVariable *var;
     vector<Cost> costs;
@@ -101,6 +94,18 @@ Individual::Individual(int ind)
     typed = false;
     generation = -1;
 	nbtyped = 0;
+}
+
+void Individual::print(ostream& os)
+{
+	os << individual << " " << father << " " << mother << " " << sex;
+	if (genotypes.size()>0) {
+	  for (unsigned int i = 0; i < genotypes.size(); ++i)
+		cout << " " << genotypes[i].allele1 << " " << genotypes[i].allele2;
+	} else {
+	  os << " " << genotype.allele1 << " " << genotype.allele2;
+	}
+	cout << endl;
 }
 
 void Pedigree::typeAscendants(int individual)
@@ -833,11 +838,6 @@ void Pedigree::printCorrection(WCSP *wcsp)
 void Pedigree::printGenotype(ostream& os, Value value)
 {
     os << genoconvert[value].allele1 << "/" << genoconvert[value].allele2;
-}
-
-void Individual::print(ostream& os)
-{
-    os << individual << " " << father << " " << mother << " " << sex << " " << genotype.allele1 << " " << genotype.allele2 << endl;
 }
 
 void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduced)

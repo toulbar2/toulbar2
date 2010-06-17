@@ -122,6 +122,7 @@ typedef void (*externalsolution)(int wcspId);
 typedef enum {ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX } ElimOrderType;
 
 class Pedigree;
+class Haplotype;
 class BEP;
 
 typedef enum {LC_NC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_THEMAX } LcLevelType;
@@ -162,6 +163,8 @@ public:
     static externalcostevent setminobj;
     static externalsolution newsolution;
     static Pedigree *pedigree;
+    static Haplotype *haplotype;
+    static string map_file;
     static bool bayesian;
     static bool uai;
     static int resolution;

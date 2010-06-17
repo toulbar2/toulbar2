@@ -6,6 +6,7 @@
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
 
@@ -700,7 +701,8 @@ void Solver::newSolution()
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 
   	if(!ToulBar2::xmlflag && !ToulBar2::uai && (!ToulBar2::allSolutions || ToulBar2::debug)) {
-	  if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+  		if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {
@@ -725,7 +727,9 @@ void Solver::newSolution()
             if (ToulBar2::pedigree) {
                 cout <<  wcsp->getName(i) << ":";
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
-            } else {
+            } else if (ToulBar2::haplotype) {
+            	ToulBar2::haplotype->printHaplotype(cout,wcsp->getValue(i),i);
+			} else {
                 cout << wcsp->getValue(i);
             }
         }
@@ -740,7 +744,9 @@ void Solver::newSolution()
             ToulBar2::pedigree->save("pedigree_corrected.pre", (WCSP *) wcsp, true, false);
             ToulBar2::pedigree->printSol((WCSP*) wcsp);
             ToulBar2::pedigree->printCorrectSol((WCSP*) wcsp);
-        }
+        } else if (ToulBar2::haplotype) {
+		  ToulBar2::haplotype->printSol((WCSP*) wcsp);
+		}
 //        else {
 	        ofstream file("sol");
 	        if (!file) {
@@ -976,7 +982,8 @@ bool Solver::solve()
 
     if (wcsp->getUb() < initialUpperBound) {
     	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
-	        if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+	        if(ToulBar2::haplotype) cout <<  "\nOptimum: " <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes, and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+    		else if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);

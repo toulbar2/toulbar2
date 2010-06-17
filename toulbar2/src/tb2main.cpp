@@ -4,6 +4,7 @@
 
 #include "tb2solver.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
 #include <string.h>
 #include <stdio.h>
@@ -171,6 +172,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
       return true;
 }
 
+//  current unused option letters : 	f F G H J K n N Q U W Y
 void help_msg(char *toulbar2filename)
 {
         cerr << "*************************" << endl;
@@ -192,7 +194,8 @@ void help_msg(char *toulbar2filename)
 		cerr << endl;
 #endif
         cerr << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 evaluation workshop) followed by an optional evidence filename (perform MPE task)" << endl;
-        cerr << "   *.pre  : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
+        cerr << "   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
+        cerr << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
         cerr << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
 
         cerr << "Alternatively one can call the random problem generator: " << endl;
@@ -236,7 +239,7 @@ void help_msg(char *toulbar2filename)
         cerr << "                   = 2 p1 p2 p3...: allele probability distribution given explicitely in the command line" << endl << endl;
 #endif
 #ifndef MENDELSOFT
-        cerr << "   b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
+		cerr << "   b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 		if (ToulBar2::binaryBranching) cerr << " (default option)";
 		cerr << endl;
         cerr << "   c : perform binary branching with last conflict backjumping variable ordering heuristic";
@@ -339,7 +342,15 @@ int main(int argc, char **argv)
 			iniarg = 3;
 		}
     }
-
+    if (strstr(strext.c_str(),".pre")) {
+		if(argc > 2 && strstr(argv[2],".map")) {
+		  ToulBar2::haplotype = new Haplotype;
+		  ToulBar2::map_file = string(argv[2]);
+		  iniarg = 3;
+		} else {
+		  ToulBar2::pedigree = new Pedigree;
+		}
+    }
 
     char* ch;
     ToulBar2::verbose = 0;
@@ -582,9 +593,7 @@ int main(int argc, char **argv)
     int m = 2;
     int seed = 3;
     vector<int> p;
-#ifdef MENDELSOFT
-    ToulBar2::pedigree = new Pedigree;
-#else
+#ifndef MENDELSOFT
     if(!strchr(argv[1],'.') && !strstr(argv[1],"bEpInstance")) {
     	int pn[10];
     	int narities = 0;
@@ -615,7 +624,6 @@ int main(int argc, char **argv)
 		  exit(0);
 		}
     }
-    if (strstr(strext.c_str(),".pre")) ToulBar2::pedigree = new Pedigree;
     if (strstr(strext.c_str(),".bep") || strstr(argv[1],"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
     try {

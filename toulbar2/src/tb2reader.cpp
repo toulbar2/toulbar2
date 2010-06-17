@@ -6,6 +6,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
@@ -21,6 +22,10 @@ typedef struct {
 void WCSP::read_wcsp(const char *fileName)
 {
     name = to_string(basename(fileName));
+    if (ToulBar2::haplotype) {
+	  ToulBar2::haplotype->read(fileName, this);
+      return;
+	}
     if (ToulBar2::pedigree) {
       if (!ToulBar2::bayesian) ToulBar2::pedigree->read(fileName, this);
       else ToulBar2::pedigree->read_bayesian(fileName, this);
@@ -623,7 +628,8 @@ void WCSP::read_uai2008(const char *fileName)
 					ictr++; 
 		            //((NaryConstraintMap*) nctr)->preprojectall2();
 		            //((NaryConstraintMap*) nctr)->preproject3();
-				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;						nctr->propagate();
+				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
+					nctr->propagate();
 					break;
 			
 		}

@@ -5,6 +5,8 @@
 
 #include "tb2clusters.hpp"
 #include "tb2naryconstr.hpp"
+#include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 
 #include <list>
 #include <algorithm>
@@ -1871,6 +1873,12 @@ void TreeDecomposition::newSolution( Cost lb )
 	}
 	else if(ToulBar2::uai) {
 		wcsp->solution_UAI(lb);
+	}
+	else if(ToulBar2::pedigree){
+		ToulBar2::pedigree->printSol(wcsp);
+	}
+	else if(ToulBar2::haplotype){
+	  ToulBar2::haplotype->printSol(wcsp);
 	}
 
 	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());

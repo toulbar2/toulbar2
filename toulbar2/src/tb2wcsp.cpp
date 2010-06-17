@@ -12,6 +12,7 @@
 #include "tb2naryconstr.hpp"
 #include "tb2arithmetic.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
 #include "ToulbarVersion.hpp"
@@ -60,12 +61,14 @@ externalevent ToulBar2::removevalue = NULL;
 externalcostevent ToulBar2::setminobj = NULL;
 externalsolution ToulBar2::newsolution = NULL;
 Pedigree *ToulBar2::pedigree = NULL;
+Haplotype *ToulBar2::haplotype = NULL;
 
 bool    ToulBar2::bayesian = false;
 bool    ToulBar2::uai = false;
 string  ToulBar2::evidence_file;
 TProb   ToulBar2::markov_log = 0;
 bool    ToulBar2::xmlflag = false;
+string 	ToulBar2::map_file;
 
 int ToulBar2::resolution = 7;
 TProb ToulBar2::errorg = 0.05;
