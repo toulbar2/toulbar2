@@ -990,7 +990,6 @@ void WCSP::initElimConstrs()
     for (i=0; i<vars.size(); i++) vars[i]->queueEliminate();
 }
 
-
 // Function that adds a new binary constraint from the pool of fake constraints
 BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1,  Constraint *from2 )
 {
@@ -1001,6 +1000,8 @@ BinaryConstraint* WCSP::newBinaryConstr( EnumeratedVariable* x, EnumeratedVariab
 	return ctr;
 }
 
+// warning! you must create beforehand three binary constraints in fake pool (elimBinConstrs)
+// if they do not exist in the main pool (constrs)
 TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1 )
 {
 	int newIndex = (int) elimTernOrder;

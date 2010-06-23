@@ -896,6 +896,8 @@ bool Solver::solve()
 			}
 			IsASolution = false;
 			wcsp->setUb(UpperBound);
+			wcsp->enforceUb();
+			wcsp->propagate();
 		  }
 		  try {
 			if (ToulBar2::lds) {

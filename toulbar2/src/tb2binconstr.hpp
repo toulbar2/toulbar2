@@ -113,7 +113,7 @@ public:
 
 
    void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
-		assert(costsin.size() == costs.size());
+		assert(costsin.size() <= costs.size());
 		int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
