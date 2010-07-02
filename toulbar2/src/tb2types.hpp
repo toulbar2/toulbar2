@@ -125,7 +125,7 @@ class Pedigree;
 class Haplotype;
 class BEP;
 
-typedef enum {LC_NC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_THEMAX } LcLevelType;
+typedef enum {LC_NC = 0, LC_SNIC = 0, LC_AC = 1, LC_DAC = 2, LC_FDAC = 3, LC_EDAC = 4, LC_THEMAX } LcLevelType;
 
 class ToulBar2
 {
