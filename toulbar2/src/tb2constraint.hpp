@@ -64,6 +64,9 @@ public:
     virtual bool isEAC(int index, Value a) {return true;}
     virtual void findFullSupportEAC(int index) {}
 
+	virtual void linkCostProvidingPartition(int index, Variable* support) {}
+	virtual void showCostProvidingPartition(int index) {}
+
     void projectLB(Cost cost);
 
     virtual bool verify() {return true;};
