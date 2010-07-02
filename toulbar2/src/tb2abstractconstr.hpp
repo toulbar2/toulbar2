@@ -305,7 +305,7 @@ public:
 		}
     }
 
-    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp), arity_(0)
+    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp)
     {
     }
 
@@ -412,6 +412,7 @@ public:
     }
 };
 
+#define AbstractGlobalConstraint AbstractNaryConstraint
 
 
 #endif /*TB2ABSTRACTCONSTR_HPP_*/
