@@ -257,6 +257,45 @@ void EnumeratedVariable::fillEAC2(bool self)
   }
 }
 
+void EnumeratedVariable::setCostProvidingPartition() 
+{	
+	set<string> used;
+	// binary and ternary constraints are not under consideration
+	for (int scopeSize = 2;scopeSize<=3;scopeSize++) {
+		for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+			if ((*iter).constr->arity() == scopeSize) {
+				for (int i=0;i<(*iter).constr->arity();i++) {
+					Variable *var = (*iter).constr->getVar(i);
+					if (var != this) {
+						used.insert(var->getName());
+						(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
+					}
+				}
+			}
+		}
+	}
+	// Compute the largest arity
+	int maxArity = 4;
+	for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+		if ((*iter).constr->arity() > maxArity) maxArity = (*iter).constr->arity();
+	}
+
+	for (int scopeSize = maxArity;scopeSize>3;scopeSize--) {
+		for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+			if ((*iter).constr->arity() == scopeSize) {
+				for (int i=0;i<(*iter).constr->arity();i++) {
+					Variable *var = (*iter).constr->getVar(i);
+					if (var != this) {
+						used.insert(var->getName());
+						(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
+					}
+				}
+			}
+		}
+	}
+
+}
+
 bool EnumeratedVariable::isEAC(Value a)
 {
     if (getCost(a)==MIN_COST) {
