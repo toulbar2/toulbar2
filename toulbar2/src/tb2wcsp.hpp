@@ -16,6 +16,13 @@ class NaryConstraint;
 class VACExtension;
 class TreeDecomposition;
 
+class GlobalConstraint;
+class FlowBasedGlobalConstraint;
+class AllDiffConstraint;
+class GlobalCardinalityConstraint;
+class SameConstraint;
+class RegularConstraint;
+
 class WCSP : public WeightedCSP {
     static int wcspCounter; // count the number of instantiations of WCSP
     int instance; // instantiation occurence number
@@ -40,6 +47,8 @@ class WCSP : public WeightedCSP {
     Long nbNodes;                             // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
 
+	vector<GlobalConstraint*> globalconstrs;       // a list of all global constraints
+
 	// make it private because we don't want copy nor assignment
     WCSP(const WCSP &wcsp);
     WCSP& operator=(const WCSP &wcsp);
@@ -62,9 +71,6 @@ public:
 
     // -----------------------------------------------------------
     // General API for weighted CSP global constraint
-
-
-
 
 
     int getIndex() const {return instance;} // instantiation occurence number of current WCSP object
@@ -184,6 +190,8 @@ public:
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
+	void postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
+
 
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
