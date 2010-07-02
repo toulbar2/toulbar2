@@ -17,7 +17,12 @@
 #include "tb2clusters.hpp"
 #include "ToulbarVersion.hpp"
 
-
+#include "tb2globalconstr.hpp"
+#include "tb2flowbasedconstr.hpp"
+#include "tb2alldiffconstr.hpp"
+#include "tb2globalcardinalityconstr.hpp"
+#include "tb2sameconstr.hpp"
+#include "tb2regularconstr.hpp"
 
 /*
  * Global variables
@@ -271,6 +276,30 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
 
 
     return ctr->wcspIndex;
+}
+
+void  WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file)
+{
+    if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size()<< endl;
+	 GlobalConstraint* gc = NULL;
+     EnumeratedVariable** scopeVars = new EnumeratedVariable* [arity];
+     for(int i = 0; i < arity; i++) scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+
+	 if (gcname == "salldiff") {
+		 gc = new AllDiffConstraint(this, scopeVars, arity);
+	 } else if (gcname == "sgcc") {
+		 gc = new GlobalCardinalityConstraint(this, scopeVars, arity);
+	 } else if (gcname == "ssame") {
+		 gc = new SameConstraint(this, scopeVars, arity);
+	 } else if (gcname == "sregular") {
+		 gc = new RegularConstraint(this, scopeVars, arity);
+	 } else {
+		 cout << gcname << " undefined" << endl;
+		 exit(1);
+	 }
+	 if (gc != NULL) globalconstrs.push_back(gc);
+	 if (file != NULL) gc->read(file);
+
 }
 
 void WCSP::postUnary(int xIndex, vector<Cost> &costs)
@@ -870,6 +899,16 @@ void WCSP::propagate()
    revise(NULL);
    if (ToulBar2::vac) vac->iniThreshold();
 
+	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin();it !=
+			globalconstrs.end();it++) {
+		(*(it))->init();
+	}
+	for (unsigned int i=0; i<vars.size();i++) {
+		EnumeratedVariable* x = (EnumeratedVariable*) vars[i];
+		if (x->unassigned()) {
+			x->setCostProvidingPartition(); // For EAC propagation
+		}
+	}
    do {
 	 do {
 	   do {
@@ -882,6 +921,32 @@ void WCSP::propagate()
 		   assert(IncDec.empty());
 		   if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) propagateAC();
 		   assert(IncDec.empty());
+					int oldLb = getLb();
+					bool cont = true;
+					while (cont)
+					{
+						oldLb = getLb();
+						cont = false;
+						for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin();it !=
+								globalconstrs.end();it++) {
+							(*(it))->propagate();
+							if (ToulBar2::LcLevel == LC_SNIC)
+								if (!IncDec.empty()) 
+									cont = true; //For detecting value removal during SNIC enforcement
+							propagateIncDec();
+						}
+						if (ToulBar2::LcLevel == LC_SNIC)
+							if (!NC.empty() || objectiveChanged) 
+								cont = true; //For detecting value removal and upper bound change
+
+						propagateNC();
+						if (ToulBar2::LcLevel == LC_SNIC)
+							if (oldLb != getLb() || !AC.empty()) 
+							{
+								cont = true;
+								AC.clear();//For detecting value removal and lower bound change
+							}
+					}
 		   propagateNC();
 		 }
 	   } while (!Eliminate.empty());
@@ -900,6 +965,11 @@ void WCSP::propagate()
 	 if (td) propagateSeparator();
    } while (objectiveChanged);
   revise(NULL);
+
+	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin();it !=
+			globalconstrs.end();it++) {
+		(*(it))->end();
+	}
 
   assert(verify());
   assert(!objectiveChanged);
