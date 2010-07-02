@@ -21,7 +21,7 @@
 #define PATH_DELIM ":"
 #endif
 
-// USED FOR DEBUGGING PURPOSE
+// used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
@@ -263,7 +263,7 @@ void help_msg(char *toulbar2filename)
         cerr << "   o : ensure optimal worst-case time complexity of DAC and EAC (can be costly in practice)";
 		if (ToulBar2::QueueComplexity) cerr << " (default option)";
 		cerr << endl;
-        cerr << "   k[integer] : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
+        cerr << "   k[integer] : soft local consistency level (NC with Strong NIC for global constrains=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
         cerr << "   l : limited discrepancy search";
 		if (ToulBar2::lds) cerr << " (default option)";
 		cerr << endl;
