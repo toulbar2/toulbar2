@@ -91,7 +91,7 @@ public:
     bool isEAC(Value a);
     bool isEAC();
     void propagateEAC();
-
+	void setCostProvidingPartition();
     virtual void queueVAC2() {}
 
     void eliminate();
