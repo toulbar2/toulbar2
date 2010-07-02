@@ -105,14 +105,14 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
-        if(arity > MAX_ARITY)  { cerr << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
+        if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
+            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
         if (arity > 3) {
 		    maxarity = max(maxarity,arity);
-		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary constraint " << ic << " on";
+		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary cost function " << ic << " on";
         	int scopeIndex[MAX_ARITY];
 			for(i=0;i<arity;i++) {
 	            file >> j;
@@ -154,7 +154,7 @@ void WCSP::read_wcsp(const char *fileName)
 				  while (nary->next(tuple,cost)) {
 					nary->setTuple(tuple, cost-minc, NULL);
 				  }
-				  if (ToulBar2::verbose >= 2) cout << "IC0 performed for constraint " << nary << " with initial minimum cost " << minc << endl;
+				  if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
 				  inclowerbound += minc;
 				}
 
@@ -169,7 +169,7 @@ void WCSP::read_wcsp(const char *fileName)
             file >> j;
             file >> k;
         	if ((i == j) || (i == k) || (k == j)) {
-    	       cerr << "Error: ternary constraint!" << endl;
+    	       cerr << "Error: ternary cost function!" << endl;
                exit(EXIT_FAILURE);
             }
             file >> defval;
@@ -180,7 +180,7 @@ void WCSP::read_wcsp(const char *fileName)
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
                 EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
                 EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
-                if (ToulBar2::verbose >= 3) cout << "read ternary constraint " << ic << " on " << i << "," << j << "," << k << endl;
+                if (ToulBar2::verbose >= 3) cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
                 file >> ntuples;
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
@@ -217,9 +217,9 @@ void WCSP::read_wcsp(const char *fileName)
 		    maxarity = max(maxarity,arity);
             file >> i;
             file >> j;
-			if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
+			if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
         	if (i == j) {
-    	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
+    	       cerr << "Error: binary cost function with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
             file >> defval;
@@ -304,7 +304,7 @@ void WCSP::read_wcsp(const char *fileName)
         } else if (arity == 1) {
 		    maxarity = max(maxarity,arity);
             file >> i;
-            if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
+            if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
 			if (vars[i]->enumerated()) {
 			  EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
 			  file >> defval;
@@ -366,7 +366,7 @@ void WCSP::read_wcsp(const char *fileName)
     
 	file >> funcname;
 	if (file) {
-	  cerr << "Warning: EOF not reached after reading all the constraints (initial number of constraints too small?)" << endl;
+	  cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
 	}
     sortVariables();
     sortConstraints();
@@ -380,7 +380,7 @@ void WCSP::read_wcsp(const char *fileName)
         unaryconstrs[u].var->findSupport();
     }
     if (ToulBar2::verbose >= 0) {
-	  cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " constraints, with maximum arity " << maxarity  << "." << endl;
+	  cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
     }   
     histogram();
 }
@@ -396,7 +396,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
     sortConstraints();
     
     if (ToulBar2::verbose >= 0) {
-        cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " constraints." << endl;
+        cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " cost functions." << endl;
     }  
 }
 
@@ -467,14 +467,14 @@ void WCSP::read_uai2008(const char *fileName)
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
 
-        if(arity > MAX_ARITY)  { cerr << "Nary constraints of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
+        if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the constraints (initial number of constraints too large?)" << endl;
+            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
         if (arity > 3) {
         	int scopeIndex[MAX_ARITY];        	
-            if (ToulBar2::verbose >= 3) cout << "read nary constraint on ";
+            if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
 
 			for(i=0;i<arity;i++) {
 	            file >> j;
@@ -489,13 +489,13 @@ void WCSP::read_uai2008(const char *fileName)
             file >> j;
             file >> k;
         	if ((i == j) || (i == k) || (k == j)) {
-    	       cerr << "Error: ternary constraint!" << endl;
+    	       cerr << "Error: ternary cost function!" << endl;
                exit(EXIT_FAILURE);
             }
             x = (EnumeratedVariable *) vars[i];
             y = (EnumeratedVariable *) vars[j];
             z = (EnumeratedVariable *) vars[k];
-            if (ToulBar2::verbose >= 3) cout << "read ternary constraint " << ic << " on " << i << "," << j << "," << k << endl;
+            if (ToulBar2::verbose >= 3) cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
             vector<Cost> costs;
             for (a = 0; a < x->getDomainInitSize(); a++) {
                 for (b = 0; b < y->getDomainInitSize(); b++) {
@@ -509,9 +509,9 @@ void WCSP::read_uai2008(const char *fileName)
 		else if (arity == 2) {
             file >> i;
             file >> j;
-			if (ToulBar2::verbose >= 3) cout << "read binary constraint " << ic << " on " << i << "," << j << endl;
+			if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
         	if (i == j) {
-    	       cerr << "Error: binary constraint with only one variable in its scope!" << endl;
+    	       cerr << "Error: binary cost function with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
             x = (EnumeratedVariable *) vars[i];
@@ -526,7 +526,7 @@ void WCSP::read_uai2008(const char *fileName)
         } 
         else if (arity == 1) {
             file >> i;
-            if (ToulBar2::verbose >= 3) cout << "read unary constraint " << ic << " on " << i << endl;
+            if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
 		    x = (EnumeratedVariable *) vars[i];
 			TemporaryUnaryConstraint unaryconstr;
 			unaryconstr.var = x;
@@ -648,7 +648,7 @@ void WCSP::read_uai2008(const char *fileName)
         unaryconstrs[u].var->findSupport();
     }
     if (ToulBar2::verbose >= 0) {
-        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " constraints." << endl;
+        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions." << endl;
     }   
  
  	int nevi = 0;	
