@@ -121,6 +121,14 @@ void WCSP::read_wcsp(const char *fileName)
 			}
 			if (ToulBar2::verbose >= 3) cout << endl;
             file >> defval;
+		    //file >> ntuples;
+
+// ----- modified codes for global constraints -----
+			if (defval == -1) {
+				string gcname;
+				file >> gcname;
+				postGlobalConstraint(scopeIndex, arity, gcname, file);
+			} else { 
 		    file >> ntuples;
     
 		    if((defval != MIN_COST) || (ntuples > 0))           
@@ -163,6 +171,8 @@ void WCSP::read_wcsp(const char *fileName)
 				nary->propagate();
 
 		    }
+			}
+// ----- modified codes for global constraints -----
         } else if (arity == 3) {
 		    maxarity = max(maxarity,arity);
             file >> i;
@@ -213,6 +223,15 @@ void WCSP::read_wcsp(const char *fileName)
                 }                
                 if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             }
+			 else if (defval == -1) {
+				int scopeIndex[3];
+				scopeIndex[0] = i;
+				scopeIndex[1] = j;
+				scopeIndex[2] = k;
+				string gcname;
+				file >> gcname;
+				postGlobalConstraint(scopeIndex, arity, gcname, file);
+			}
 		} else if (arity == 2) {
 		    maxarity = max(maxarity,arity);
             file >> i;
