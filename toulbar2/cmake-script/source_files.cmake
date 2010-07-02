@@ -16,6 +16,13 @@
                         ${My_Source}/tb2btqueue.cpp
                         ${My_Source}/tb2clusters.cpp
                         ${My_Source}/tb2constraint.cpp
+                        ${My_Source}/tb2graph.cpp
+                        ${My_Source}/tb2globalconstr.cpp
+                        ${My_Source}/tb2flowbasedconstr.cpp
+                        ${My_Source}/tb2alldiffconstr.cpp
+                        ${My_Source}/tb2globalcardinalityconstr.cpp
+                        ${My_Source}/tb2sameconstr.cpp
+                        ${My_Source}/tb2regularconstr.cpp
                         ${My_Source}/tb2domain.cpp
                         ${My_Source}/tb2enumvar.cpp
                         ${My_Source}/tb2intervar.cpp
@@ -56,6 +63,13 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2btqueue.*pp
                         ${My_Source}/tb2clusters.*pp
                         ${My_Source}/tb2constraint.*pp
+                        ${My_Source}/tb2graph.*pp
+                        ${My_Source}/tb2globalconstr.*pp
+                        ${My_Source}/tb2flowbasedconstr.*pp
+                        ${My_Source}/tb2alldiffconstr.*pp
+                        ${My_Source}/tb2globalcardinalityconstr.*pp
+                        ${My_Source}/tb2sameconstr.*pp
+                        ${My_Source}/tb2regularconstr.*pp
                         ${My_Source}/tb2domain.*pp
                         ${My_Source}/tb2enumvar.*pp
                         ${My_Source}/tb2intervar.*pp
