@@ -38,6 +38,8 @@ class AllDiffConstraint : public FlowBasedGlobalConstraint
 		//void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
 		//void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
 
+        void print(ostream& os);
+        void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2ALLDIFFCONSTR_HPP_*/

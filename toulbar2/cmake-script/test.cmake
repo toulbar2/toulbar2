@@ -14,6 +14,9 @@ SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeou
 
 	MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
+	#reset ub end enum from the previous iteration
+        UNSET(UB) 
+	UNSET(ENUM)
 
 
 	STRING(REPLACE ".wcsp" ".ub" UBF ${UTEST})
@@ -26,12 +29,17 @@ FOREACH (UTEST ${validation_file})
 	STRING(REPLACE "\n" ""  TUB ${UB})
 	SET (UB ${TUB})
 	MATH(EXPR UBP "1+${TUB}")
+        SET (OpTub "-ub" ) 
+        SET (UBP "${OpTub}=${UBP}" )	
+	MESSAGE(STATUS "UB found ==> ${UBP} " )
+
 	ELSE()
-	 SET(UBP)
+	 UNSET(UBP)
 	ENDIF()
 
 	 IF (EXISTS ${ENUM_file})
-        FILE(READ ${ENUM_file} ENUM)
+        FILE(READ ${ENUM_file} TENUM)
+	STRING(REPLACE "\n" ""  ENUM ${TENUM})
 	MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} founded ENUM variable loaded ")
 	ELSE()
 	set(ENUM)
@@ -60,14 +68,19 @@ FOREACH (UTEST ${validation_file})
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
 	STRING(REPLACE ".wcsp" ""  TNAME ${TMP})
 
-if($verbose) 
-	MESSAGE(STATUS "UBF: ${UBF}")
-	MESSAGE(STATUS "UB: ${UB}")
-	MESSAGE(STATUS "TNAME: ${TNAME}")
-endif($verbose)
+	if($verbose) 
+		MESSAGE(STATUS "UBF: ${UBF}")
+		MESSAGE(STATUS "UB: ${UB}")
+		MESSAGE(STATUS "TNAME: ${TNAME}")
+	endif($verbose)
 
-add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${UBP} ${command_line_option})
-	set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
+	IF (EXISTS ${UBF}) # if ub file exist
+		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  "${UTEST}" "${UBP}" "${command_line_option}")
+		set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
+	ELSE()
+		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  "${UTEST}" "${command_line_option}")
+		set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
+	ENDIF()
 
 
 ENDFOREACH(UTEST)

@@ -80,6 +80,8 @@ public:
     BinaryConstraint* yz;
 
 	~TernaryConstraint() {}
+
+    bool extension() const {return true;}
     
     Cost getCost(Value vx, Value vy, Value vz) {
         int ix = x->toIndex(vx);

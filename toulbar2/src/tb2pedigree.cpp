@@ -105,7 +105,7 @@ void Individual::print(ostream& os)
 	} else {
 	  os << " " << genotype.allele1 << " " << genotype.allele2;
 	}
-	cout << endl;
+	os << endl;
 }
 
 void Pedigree::typeAscendants(int individual)

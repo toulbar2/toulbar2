@@ -42,7 +42,7 @@ int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
-int ToulBar2::preprocessNary  = 0;
+int ToulBar2::preprocessNary  = 20;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
 bool ToulBar2::binaryBranching = true;
@@ -481,7 +481,7 @@ void WCSP::preprocessing()
 
 	if (ToulBar2::preprocessNary > 0) {
 	  for (unsigned int i=0; i<constrs.size(); i++) {
-		if(constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity() <= ToulBar2::preprocessNary)) {
+		if(constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity() <= ToulBar2::preprocessNary) && constrs[i]->extension()) {
 		  NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
 		  nary->keepAllowedTuples( getUb() );
 		  nary->preprojectall2();
@@ -1099,7 +1099,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	int arityI = scopeIinv.size();
 
 
-	if(arityU == ctr2->arity()) {
+	if(arityU == ctr2->arity() && ctr2->extension()) {
 		ctr2->sumScopeIncluded(ctr1);
 		ctr2->reconnect();
 		ctr2->propagate();
@@ -1145,6 +1145,7 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	if(arityU > 3) {
 		ctrIndex= postNaryConstraint(scopeUi, arityU, Top);
 		ctr =  constrs[ctrIndex];
+		assert(ctr->extension());
 		NaryConstraintMap* nary = (NaryConstraintMap*) ctr;
 
 		nary->fillFilters();

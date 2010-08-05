@@ -184,3 +184,38 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph &g) {
 	}
 
 }*/
+
+void GlobalCardinalityConstraint::dump(ostream& os, bool original)
+{
+  int nvalues = 0;
+
+  if (original) {
+    os << arity_;
+    for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+  } else {
+	os << nonassigned;
+    for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+  }
+  for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) nvalues++;
+  os << " -1 sgcc" << endl << ((mode==VAR)?"var":"dec") << " " << def << " " <<  nvalues << endl;
+  for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
+	os << i->first << " " << i->second.lower_bound << " " << i->second.upper_bound << endl;
+  }
+}
+
+void GlobalCardinalityConstraint::print(ostream& os)
+{
+  int nvalues = 0;
+
+  os << "sgcc(";
+  for(int i = 0; i < arity_;i++) {
+	os << scope[i]->wcspIndex;
+	if(i < arity_-1) os << ",";
+  }
+  for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) nvalues++;
+  os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "," << nvalues;
+  for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
+	os << "," << i->first << "," << i->second.lower_bound << "," << i->second.upper_bound;
+  }
+  os << "]";
+}

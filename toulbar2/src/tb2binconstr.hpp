@@ -58,6 +58,8 @@ public:
     BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
 
     ~BinaryConstraint() {}
+
+    bool extension() const {return true;}
     
     Cost getCost(Value vx, Value vy) {
         int ix = x->toIndex(vx);

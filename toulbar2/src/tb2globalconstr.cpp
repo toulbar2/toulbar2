@@ -56,7 +56,7 @@ Cost GlobalConstraint::eval(string s) {
 		for (unsigned int i=0;i<s.length();i++) tcost -= deltaCost[i][s[i]-CHAR_FIRST];
 		tcost -= projectedCost;
 	}
-	assert(cost >= 0);
+	assert(tcost >= 0);
 	return tcost;
 
 }

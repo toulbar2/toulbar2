@@ -181,10 +181,6 @@ public:
 	virtual void checkMinCost(int varindex);
 
 	bool verify() {return true;}
-
-	void print(ostream& os) {}
-	void dump(ostream& os) {}
-
 };
 
 

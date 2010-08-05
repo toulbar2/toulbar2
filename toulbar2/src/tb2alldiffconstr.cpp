@@ -123,8 +123,8 @@ void AllDiffConstraint::decompose() {
 			EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
 			EnumeratedVariable* y = (EnumeratedVariable*)getVar(j);
 			vector<Cost> costs;
-			for (Value  a = 0; a < x->getDomainInitSize(); a++) {
-				for (Value b = 0; b < y->getDomainInitSize(); b++) {
+			for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+				for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
 					if (a == b) {
 						costs.push_back(def);
 					} else {
@@ -133,8 +133,8 @@ void AllDiffConstraint::decompose() {
 				}
 			}
 			if(ToulBar2::vac) {
-				for (Value a = 0; a < x->getDomainInitSize(); a++) {
-					for (Value b = 0; b < y->getDomainInitSize(); b++) {
+				for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+					for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
 						Cost c = costs[a * y->getDomainInitSize() + b];
 						wcsp->histogram(c);
 					}
@@ -157,3 +157,23 @@ void AllDiffConstraint::decompose() {
 	}
 }
 
+void AllDiffConstraint::dump(ostream& os, bool original)
+{
+  if (original) {
+    os << arity_;
+    for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+  } else {
+	os << nonassigned;
+    for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+  }
+  os << " -1 salldiff" << endl << ((mode==VAR)?"var":"dec") << " " << def << endl;
+}
+
+void AllDiffConstraint::print(ostream& os) {
+  os << "salldiff(";
+  for(int i = 0; i < arity_;i++) {
+	os << scope[i]->wcspIndex;
+	if(i < arity_-1) os << ",";
+  }
+  os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "]";
+}

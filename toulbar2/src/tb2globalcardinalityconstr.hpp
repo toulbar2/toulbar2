@@ -33,6 +33,8 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 		Cost evalOriginal (string s);
 		void read(ifstream &file);
 
+        void print(ostream& os);
+        void dump(ostream& os, bool original = true);
 };
 
 

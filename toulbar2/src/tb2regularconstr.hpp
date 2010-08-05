@@ -81,5 +81,7 @@ class RegularConstraint : public FlowBasedGlobalConstraint
 		//bool isEAC(int index, Value a); 
 		//void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
 
+        void print(ostream& os);
+  //        void dump(ostream& os, bool original = true);
 };
 

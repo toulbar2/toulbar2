@@ -105,7 +105,6 @@ void WCSP::read_wcsp(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
-        if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
         if (!file) {
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
@@ -113,7 +112,7 @@ void WCSP::read_wcsp(const char *fileName)
         if (arity > 3) {
 		    maxarity = max(maxarity,arity);
 		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary cost function " << ic << " on";
-        	int scopeIndex[MAX_ARITY];
+        	int scopeIndex[arity]; // replace arity by MAX_ARITY in case of compilation problem
 			for(i=0;i<arity;i++) {
 	            file >> j;
 				if (ToulBar2::verbose >= 3) cout << " " << j;
@@ -121,28 +120,26 @@ void WCSP::read_wcsp(const char *fileName)
 			}
 			if (ToulBar2::verbose >= 3) cout << endl;
             file >> defval;
-		    //file >> ntuples;
-
-// ----- modified codes for global constraints -----
 			if (defval == -1) {
 				string gcname;
 				file >> gcname;
 				postGlobalConstraint(scopeIndex, arity, gcname, file);
 			} else { 
-		    file >> ntuples;
+			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); } 		 
+			  file >> ntuples;
     
-		    if((defval != MIN_COST) || (ntuples > 0))           
-		    { 
-			    Cost tmpcost = defval*K;
-				if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
-	            int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
-                NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
+			  if((defval != MIN_COST) || (ntuples > 0))           
+				{ 
+				  Cost tmpcost = defval*K;
+				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+				  int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
+				  NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
-	            Char buf[MAX_ARITY];
-	            for (t = 0; t < ntuples; t++) {
+				  Char buf[MAX_ARITY];
+				  for (t = 0; t < ntuples; t++) {
 					for(i=0;i<arity;i++) {
-			            file >> j;			            
-			            buf[i] = j + CHAR_FIRST;
+					  file >> j;			            
+					  buf[i] = j + CHAR_FIRST;
 					}
 					buf[i] = '\0';
 				    file >> cost;
@@ -150,29 +147,28 @@ void WCSP::read_wcsp(const char *fileName)
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
 					String tup = buf;
 					nary->setTuple(tup, tmpcost, NULL);
-	            }
-				
-				Cost minc = nary->getMinCost();
-				if (minc > MIN_COST) {
-				  Cost defcost = nary->getDefCost();
-				  if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
-				  String tuple;
-				  Cost cost;
-				  nary->first();
-				  while (nary->next(tuple,cost)) {
-					nary->setTuple(tuple, cost-minc, NULL);
 				  }
-				  if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
-				  inclowerbound += minc;
+				
+				  Cost minc = nary->getMinCost();
+				  if (minc > MIN_COST) {
+					Cost defcost = nary->getDefCost();
+					if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
+					String tuple;
+					Cost cost;
+					nary->first();
+					while (nary->next(tuple,cost)) {
+					  nary->setTuple(tuple, cost-minc, NULL);
+					}
+					if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
+					inclowerbound += minc;
+				  }
+
+				  //((NaryConstraintMap*) nary)->keepAllowedTuples( top );
+				  //((NaryConstraintMap*) nary)->preprojectall2();
+				  nary->propagate();
+
 				}
-
-	            //((NaryConstraintMap*) nary)->keepAllowedTuples( top );
-	            //((NaryConstraintMap*) nary)->preprojectall2();
-				nary->propagate();
-
-		    }
 			}
-// ----- modified codes for global constraints -----
         } else if (arity == 3) {
 		    maxarity = max(maxarity,arity);
             file >> i;
@@ -222,8 +218,7 @@ void WCSP::read_wcsp(const char *fileName)
 	                }               	
                 }                
                 if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
-            }
-			 else if (defval == -1) {
+            } else if (defval == -1) {
 				int scopeIndex[3];
 				scopeIndex[0] = i;
 				scopeIndex[1] = j;

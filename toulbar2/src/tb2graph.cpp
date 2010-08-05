@@ -233,7 +233,7 @@ pair<Cost, bool> Graph::augment(int s, int t, bool can_change) {
 	result.first = d[t];
 	result.second = p[t] != -1;
 
-	assert(!nevloop);
+	//	assert(!nevloop);
 	/*if (nevloop) {
 	  cout << "negative loop exists from " << s << " to " << t <<endl;
 	  print();

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance>
+<presentation maxConstraintArity="2" format="XCSP 2.1" type="WCSP"/>
+
+<domains nbDomains="1">
+<domain name="D0" nbValues="8">0..7</domain>
+</domains>
+
+<variables nbVariables="8">
+<variable name="V0" domain="D0"/>
+<variable name="V1" domain="D0"/>
+<variable name="V2" domain="D0"/>
+<variable name="V3" domain="D0"/>
+<variable name="V4" domain="D0"/>
+<variable name="V5" domain="D0"/>
+<variable name="V6" domain="D0"/>
+<variable name="V7" domain="D0"/>
+</variables>
+
+<relations nbRelations="15">
+<relation name="R0" arity="2" nbTuples="22" semantics="soft" defaultCost="0">9:0 0|0 1|1 0|1 1|1 2|2 1|2 2|2 3|3 2|3 3|3 4|4 3|4 4|4 5|5 4|5 5|5 6|6 5|6 6|6 7|7 6|7 7</relation>
+<relation name="R1" arity="2" nbTuples="20" semantics="soft" defaultCost="0">9:0 0|0 2|1 1|1 3|2 0|2 2|2 4|3 1|3 3|3 5|4 2|4 4|4 6|5 3|5 5|5 7|6 4|6 6|7 5|7 7</relation>
+<relation name="R2" arity="2" nbTuples="18" semantics="soft" defaultCost="0">9:0 0|0 3|1 1|1 4|2 2|2 5|3 0|3 3|3 6|4 1|4 4|4 7|5 2|5 5|6 3|6 6|7 4|7 7</relation>
+<relation name="R3" arity="2" nbTuples="16" semantics="soft" defaultCost="0">9:0 0|0 4|1 1|1 5|2 2|2 6|3 3|3 7|4 0|4 4|5 1|5 5|6 2|6 6|7 3|7 7</relation>
+<relation name="R4" arity="2" nbTuples="14" semantics="soft" defaultCost="0">9:0 0|0 5|1 1|1 6|2 2|2 7|3 3|4 4|5 0|5 5|6 1|6 6|7 2|7 7</relation>
+<relation name="R5" arity="2" nbTuples="12" semantics="soft" defaultCost="0">9:0 0|0 6|1 1|1 7|2 2|3 3|4 4|5 5|6 0|6 6|7 1|7 7</relation>
+<relation name="R6" arity="2" nbTuples="10" semantics="soft" defaultCost="0">9:0 0|0 7|1 1|2 2|3 3|4 4|5 5|6 6|7 0|7 7</relation>
+<relation name="R7" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|2|3|4|5|7</relation>
+<relation name="R8" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:1|2|3|4|5|6</relation>
+<relation name="R9" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|1|2|3|5|7</relation>
+<relation name="R10" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|2|4|5|6|7</relation>
+<relation name="R11" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:1|2|4|5|6|7</relation>
+<relation name="R12" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|1|2|3|4|6</relation>
+<relation name="R13" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|1|2|3|4|5</relation>
+<relation name="R14" arity="1" nbTuples="6" semantics="soft" defaultCost="0">1:0|3|4|5|6|7</relation>
+</relations>
+
+<constraints nbConstraints="36" maximalCost="9">
+<constraint name="C0" arity="2" scope="V0 V1" reference="R0"/>
+<constraint name="C1" arity="2" scope="V0 V2" reference="R1"/>
+<constraint name="C2" arity="2" scope="V0 V3" reference="R2"/>
+<constraint name="C3" arity="2" scope="V0 V4" reference="R3"/>
+<constraint name="C4" arity="2" scope="V0 V5" reference="R4"/>
+<constraint name="C5" arity="2" scope="V0 V6" reference="R5"/>
+<constraint name="C6" arity="2" scope="V0 V7" reference="R6"/>
+<constraint name="C7" arity="2" scope="V1 V2" reference="R0"/>
+<constraint name="C8" arity="2" scope="V1 V3" reference="R1"/>
+<constraint name="C9" arity="2" scope="V1 V4" reference="R2"/>
+<constraint name="C10" arity="2" scope="V1 V5" reference="R3"/>
+<constraint name="C11" arity="2" scope="V1 V6" reference="R4"/>
+<constraint name="C12" arity="2" scope="V1 V7" reference="R5"/>
+<constraint name="C13" arity="2" scope="V2 V3" reference="R0"/>
+<constraint name="C14" arity="2" scope="V2 V4" reference="R1"/>
+<constraint name="C15" arity="2" scope="V2 V5" reference="R2"/>
+<constraint name="C16" arity="2" scope="V2 V6" reference="R3"/>
+<constraint name="C17" arity="2" scope="V2 V7" reference="R4"/>
+<constraint name="C18" arity="2" scope="V3 V4" reference="R0"/>
+<constraint name="C19" arity="2" scope="V3 V5" reference="R1"/>
+<constraint name="C20" arity="2" scope="V3 V6" reference="R2"/>
+<constraint name="C21" arity="2" scope="V3 V7" reference="R3"/>
+<constraint name="C22" arity="2" scope="V4 V5" reference="R0"/>
+<constraint name="C23" arity="2" scope="V4 V6" reference="R1"/>
+<constraint name="C24" arity="2" scope="V4 V7" reference="R2"/>
+<constraint name="C25" arity="2" scope="V5 V6" reference="R0"/>
+<constraint name="C26" arity="2" scope="V5 V7" reference="R1"/>
+<constraint name="C27" arity="2" scope="V6 V7" reference="R0"/>
+<constraint name="C28" arity="1" scope="V0" reference="R7"/>
+<constraint name="C29" arity="1" scope="V1" reference="R8"/>
+<constraint name="C30" arity="1" scope="V2" reference="R9"/>
+<constraint name="C31" arity="1" scope="V3" reference="R10"/>
+<constraint name="C32" arity="1" scope="V4" reference="R11"/>
+<constraint name="C33" arity="1" scope="V5" reference="R12"/>
+<constraint name="C34" arity="1" scope="V6" reference="R13"/>
+<constraint name="C35" arity="1" scope="V7" reference="R14"/>
+</constraints>
+</instance>

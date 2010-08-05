@@ -121,6 +121,8 @@ public:
 	NaryConstraintMap(WCSP *wcsp);
 	virtual ~NaryConstraintMap();
 
+    bool extension() const {return true;}
+
 	TUPLES* getpf() {return pf;}
     int size() {return pf->size();}
 	bool consistent( String& t );
@@ -129,8 +131,6 @@ public:
 	Cost getDefCost() { return default_cost; }
 	void setDefCost( Cost df ) { default_cost = df; }
 	void keepAllowedTuples( Cost df );
-
-
 
     set<Constraint*>* filters;
 	void resetFilters();
