@@ -1,6 +1,6 @@
 # required package
 # depending of the flag activated in cmake
-# boost graph and libxml  may be required 
+# boost graph and libxml  may be required (warning! XML flag incompatible with STATIC compilation flag)
 #obviosely if you tag the ilog flag 
 #ilog librares will be required.
 

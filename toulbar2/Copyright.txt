@@ -1,7 +1,7 @@
 
 toulbar2 v0.9
 
-Copyright© - INRA - 2009
+Copyright© - INRA - 2010
 
 * All rights reserved.
 * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,17 @@ Copyright© - INRA - 2009
 
 References
 __________
+
+Soft global cost functions from K. L. Leung and J.H.M. Lee,
+The Chinese University of Hong Kong
+
+UAI evaluation 2010: ToulBar2, an open source exact cost function network solver
+D. Allouche, S. de Givry, T. Schiex
+Contributors: A. Favier (F), M. Sanchez (SP) , S. Bouveret (F), H. Fargier (F),
+F. Heras (SP), P. Jégou (F), J. Larrosa (SP), K. L. Leung (CN), S. N'diaye (F),
+E. Rollon (SP), C. Terrioux (F), G. Verfaillie (F), M. Zytnicki (F)
+
+http://www.inra.fr/mia/T/degivry/ToulBar2UAI10.pdf
 
 Max-CSP competition 2008: toulbar2 solver description.
 M. Sanchez, S. Bouveret, S. de Givry, F. Heras, P. Jégou, J. Larrosa, S. Ndiaye, E. Rollon, T. Schiex, C. Terrioux, G. Verfaillie, and M. Zytnicki.

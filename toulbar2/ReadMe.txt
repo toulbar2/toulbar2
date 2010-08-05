@@ -1,4 +1,6 @@
 
+NEW RELEASE v0.9.2 ADDING SOFT GLOBAL COST FUNCTIONS THANKS TO K. L. Leung, Hong-Kong.
+
 Toolbar was a generic solver for Weighted CSP, Max-SAT, and Bayesian Networks. Toulbar2 is a new C++ version that includes most algorithms of toolbar, some new ones, the ability to work in collaboration with ILOG Solver, and to deal with big (thousands of variables and/or large domains) problems. It is a free software under BSD license. A reference to what a WCSP is, and what the algorithms inside toulbar2 are can be found in:
 
 Soft NC, AC, DAC, FDAC
@@ -7,11 +9,21 @@ Soft NC, AC, DAC, FDAC
  In Proc. of IJCAI-03. Acapulco, Mexico, 2003
  http://www.lsi.upc.edu/~larrosa/PAPERS/PAPER-IJCAI03/Final/IJCAI03.ps
 
+GAC, FDGAC
+ Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction
+ J. H. M. Lee and K. L. Leung
+ In Proc. of IJCAI-09, Los Angeles, USA, 2010
+
 EDAC
  Existential arc consistency: Getting closer to full arc consistency in weighted csps
  S. de Givry, M. Zytnicki, F. Heras, and J. Larrosa
  In Proc. of IJCAI-05, Edinburgh, Scotland, 2005
  http://www.inra.fr/mia/T/degivry/Heras05.pdf
+
+EDGAC
+ A Stronger Consistency for Soft Global Constraints in Weighted Constraint Satisfaction
+ J. H. M. Lee and K. L. Leung
+ In Proc. of AAAI-10, Boston, MA, 2006 
 
 BTD
  Exploiting Tree Decomposition and Soft Local Consistency in Weighted CSP
@@ -43,11 +55,12 @@ BAC
  In Proc. of CP-09, Lisbon, Portugal, 2009
  http://www.inra.fr/mia/T/degivry/Favier09a.pdf
 
-
 See a short description of the toolbar/toulbar2 collaborative project at:
 http://www.inra.fr/mia/T/degivry/ToolBar.pdf
 and
 http://www.inra.fr/mia/T/degivry/Sanchez08b.pdf
+and
+http://www.inra.fr/mia/T/degivry/ToulBar2UAI10.pdf
 
 toolbar and toulbar2 are developped as open source programs and are accessible at INRA source forge:
 
