@@ -1816,6 +1816,8 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
   }
 }
 
+// warning! variables are not assigned to the current new solution
+// use assignment "a" instead
 void TreeDecomposition::newSolution( Cost lb )
 {   
     wcsp->setUb(lb);
@@ -1874,12 +1876,13 @@ void TreeDecomposition::newSolution( Cost lb )
 	else if(ToulBar2::uai) {
 		wcsp->solution_UAI(lb);
 	}
-	else if(ToulBar2::pedigree){
-		ToulBar2::pedigree->printSol(wcsp);
-	}
-	else if(ToulBar2::haplotype){
-	  ToulBar2::haplotype->printSol(wcsp);
-	}
+	// warning: cannot read solution from variable assignments
+	// else if(ToulBar2::pedigree){
+	// 	ToulBar2::pedigree->printSol(wcsp);
+	// }
+	// else if(ToulBar2::haplotype){
+	//   ToulBar2::haplotype->printSol(wcsp);
+	// }
 
 	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
 }

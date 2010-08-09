@@ -104,7 +104,7 @@ inline double to_double(const int cost) {return (double) cost;}
 inline int ceil(const int e) {return e;}
 inline int floor(const int e) {return e;}
 inline int randomCost(int min, int max) { return min + (myrand() % (max - min + 1)); }
-inline int string2Cost(char *ptr) {return atoi(ptr);}
+inline int string2Cost(const char *ptr) {return atoi(ptr);}
 
 //cost= 0 log2= -1
 //cost= 1 log2= 0
@@ -160,10 +160,10 @@ inline Long floor(const Long e) {return e;}
 inline Long randomCost(Long min, Long max) { return  min + (myrandl() % (max - min + 1)); }
 
 #ifdef LINUX
-	inline Long string2Cost(char *ptr) {return atoll(ptr);}
+	inline Long string2Cost(const char *ptr) {return atoll(ptr);}
 #endif
 #ifdef WINDOWS
-	inline Long string2Cost(char *ptr) {return atol(ptr);}
+	inline Long string2Cost(const char *ptr) {return atol(ptr);}
 #endif
 
 
