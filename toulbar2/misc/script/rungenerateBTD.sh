@@ -2,14 +2,14 @@
 
 nerr=0
 ninstances=100
-nend=10
+nend=30
 bctr=10
-tctr=1
-nary=1
-tight=40
-n=6
-d=5
-K=100
+tctr=3
+nary=5
+tight=80
+n=5
+d=3
+K=1
 
 while (( $n < $nend )) ; do
   seed=0
@@ -40,9 +40,9 @@ while (( $n < $nend )) ; do
     fi
     seed=`expr $seed + 1`
   done	
-  nary=`expr $nary + 1` 
+  nary=`expr $nary + 10` 
   tctr=`expr $tctr + 1`  
-  bctr=`expr $bctr + 10`  
+  bctr=`expr $bctr + 1`  
   n=`expr $n + 1`
 done
 

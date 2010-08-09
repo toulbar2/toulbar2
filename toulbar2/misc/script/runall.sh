@@ -3,8 +3,9 @@
 # Usage:
 # ./runall.sh ../validation
 
-timelimit=3600
-K=10000
+solver=./toulbar2
+timelimit=300
+K=1
 
 rm -f outall
 
@@ -33,7 +34,7 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     echo -n $file " " >> outall
 
     ulimit -t $timelimit > /dev/null
-    (/usr/bin/time -f "%U user %S sys" ./toulbar2 $file.wcsp $ub $2 C$K >> outsolver) 2> usedtime
+    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp $ub $2 C$K >> outsolver) 2> usedtime
 
     cat outsolver | awk 'BEGIN{opt="-";nodes=0;} /^Optimum: /{opt=$2; nodes=$7;} /^No solution /{opt="'$ub'"; nodes=$7;}  END{printf(" %s %d ",opt,nodes); }' >> out ; cat out
 
@@ -47,4 +48,4 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     echo " " ;
 done
 
-cat outall | awk -f evalresults.awk | sort
+cat outall | awk -f ./misc/script/evalresults.awk | sort
