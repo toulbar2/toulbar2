@@ -285,7 +285,7 @@ void EnumeratedVariable::setCostProvidingPartition()
 			if ((*iter).constr->arity() == scopeSize) {
 				for (int i=0;i<(*iter).constr->arity();i++) {
 					Variable *var = (*iter).constr->getVar(i);
-					if (var != this) {
+					if (var != this && (used.find(var->getName()) == used.end())) {
 						used.insert(var->getName());
 						(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
 					}
