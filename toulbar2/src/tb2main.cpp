@@ -718,7 +718,7 @@ int _tmain(int argc, TCHAR * argv[])
 	char *certificateString = NULL;
 	char buf [512];
 	char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
-	Cost c;
+	Cost ub = MAX_COST;
 	ToulBar2::verbose = 0;
 	ToulBar2::elimDegree = 3; 
 	char *random_desc = NULL ; // benchmarck decription set from command line;
@@ -1024,7 +1024,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_preprocessNary)
 			{
 				if(args.OptionArg() == NULL ) {
-					ToulBar2::preprocessNary = 20;
+					ToulBar2::preprocessNary = 10;
 				} else {
 					int maxnary = atoi(args.OptionArg());
 					if (maxnary > 0) ToulBar2::preprocessNary = maxnary;
@@ -1212,9 +1212,9 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_ub) {
 
 				if (args.OptionArg() != NULL) {
-					c = (args.OptionArg())?string2Cost(args.OptionArg()):MAX_COST;
+					ub = (args.OptionArg())?string2Cost(args.OptionArg()):MAX_COST;
 				}
-				cout <<" UB =" << c << " passed in  command line" << endl;
+				cout <<" UB =" << ub << " passed in  command line" << endl;
 			} 
 
 
@@ -1318,7 +1318,7 @@ int _tmain(int argc, TCHAR * argv[])
 				string ubs;
 				ubs=read_UB(glob.File(n));
 				if(ubs.c_str() != NULL ) {	
-					c  = string2Cost((char*) ubs.c_str() );
+				ub  = string2Cost((char*) ubs.c_str() );
 				} else { 
 					cerr << "error reading UB in " << glob.File(n) << endl;
 					exit (-1);
@@ -1416,7 +1416,7 @@ int _tmain(int argc, TCHAR * argv[])
 	/////////////////////////////////////////
 	// test on initial ub cost value;
 	/////////////////////////////////////////
-	if (c <= MIN_COST) c = MAX_COST;
+	if (ub <= MIN_COST) ub = MAX_COST;
 
 	if (ToulBar2::elimDegree_preprocessing > 0 && (ToulBar2::showSolutions || ToulBar2::writeSolution))
 	{
@@ -1481,9 +1481,9 @@ int _tmain(int argc, TCHAR * argv[])
 #ifndef WINDOWS
 		//if (localSearch(argv[1],&c,CurrentBinaryPath))
 
-		if (localSearch((char*)strfile.c_str(),&c,CurrentBinaryPath))
+		if (localSearch((char*)strfile.c_str(),&ub,CurrentBinaryPath))
 		{
-			cout << "Initial upperbound: " << c << endl;
+			cout << "Initial upperbound: " << ub << endl;
 
 		}
 		else cerr << "INCOP solver narycsp not found in:"<<CurrentBinaryPath << endl;
@@ -1493,7 +1493,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 #endif
 	}
-	if (c==MIN_COST)
+	if (ub==MIN_COST)
 	{
 		cout << "Initial upperbound equal to zero!" << endl;
 		cout << "No solution found by initial propagation!" << endl;
@@ -1501,8 +1501,8 @@ int _tmain(int argc, TCHAR * argv[])
 		return 0;
 	}
 
-	initCosts(c);
-	Solver solver(STORE_SIZE, c);
+	initCosts(ub);
+	Solver solver(STORE_SIZE, ub);
 
 	bool randomproblem = false;
 	bool forceSubModular = false;
