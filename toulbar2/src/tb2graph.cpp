@@ -294,7 +294,8 @@ pair<Cost, bool> Graph::augment(int s, int t, bool can_change) {
 void Graph::removeNegativeCycles(Cost &cost) {
 
 	int n = size();
-	int *pass = new int[n];
+	//	int *pass = new int[n];
+	int pass[n];
 
 	while (1) { 
 		for (int i=0;i<n;i++) {
@@ -385,8 +386,7 @@ void Graph::removeNegativeCycles(Cost &cost) {
 
 	}
 
-	delete pass;
-
+	//	delete [] pass;
 }
 
 void Graph::print() {
