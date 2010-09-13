@@ -85,9 +85,12 @@ void GlobalConstraint::assign(int varIndex) {
 void GlobalConstraint::project(int index, Value value, Cost cost) {
 	EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
 	if (deconnected()) return;
-    TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) td->addDelta(cluster,x,value,cost);
-    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) deltaCost[index][value] += cost;  // Warning! Possible overflow???
+    // hard binary constraint costs are not changed
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+	    TreeDecomposition* td = wcsp->getTreeDec();
+	    if(td) td->addDelta(cluster,x,value,cost);
+    	deltaCost[index][value] += cost;  // Warning! Possible overflow???
+    }
 	x->project(value, cost);
 }
 
