@@ -1445,7 +1445,6 @@ void TreeDecomposition::buildFromOrderForApprox()
 {
 
 	vector<int> order;
-	ifstream filein(ToulBar2::elimOrderType==ELIM_NONE?(ToulBar2::varOrder):NULL);
 	bool firstComponent = true;
 	int sizepart = 0;				//number of parts in the built partition
 	set<Constraint*> totalusedctrs;	// constraints already in a part
@@ -1453,7 +1452,9 @@ void TreeDecomposition::buildFromOrderForApprox()
 //	int nbcstr = 0;					//
 	double time;
 
-	if (!filein) {
+	ifstream filein;
+	if (ToulBar2::elimOrderType==ELIM_NONE && ToulBar2::varOrder) filein.open(ToulBar2::varOrder);
+    if ((ToulBar2::elimOrderType != ELIM_NONE) || !ToulBar2::varOrder || !filein) { 
 		if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
         if (ToulBar2::elimOrderType==ELIM_NONE) for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
                else for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
