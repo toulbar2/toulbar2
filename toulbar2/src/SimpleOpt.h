@@ -317,11 +317,10 @@ typedef enum _ESOArgType {
 #define SO_END_OF_OPTIONS   { -1, NULL, SO_NONE }
 
 #ifdef _DEBUG
-# ifdef _WIN32
+#if defined(_MSC_VER)
 #  include <crtdbg.h>
 #  define SO_ASSERT(b)  _ASSERTE(b)
 # else
-#  include <assert.h>
 #  define SO_ASSERT(b)  assert(b)
 # endif
 #else

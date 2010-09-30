@@ -11,6 +11,10 @@
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
 #include <list>
+#include <libgen.h>
+
+
+
 
 
 typedef struct {
@@ -21,7 +25,10 @@ typedef struct {
 
 void WCSP::read_wcsp(const char *fileName)
 {
-    name = to_string(basename(fileName));
+    char *Nfile2;
+    Nfile2 = strdup(fileName);
+    name = to_string(basename(Nfile2));
+
     if (ToulBar2::haplotype) {
 	  ToulBar2::haplotype->read(fileName, this);
       return;

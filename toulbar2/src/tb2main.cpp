@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "SimpleOpt.h"
-#include "SimpleGlob.h"
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef WINDOWS
@@ -29,7 +27,7 @@
 #define PATH_DELIM ":"
 #endif
 //*definition of  windows include for command line.
-#if defined(_MSC_VER)
+#if defined(_MSC_VER)||_WIN32
 # include <windows.h>
 # include <tchar.h>
 #else
@@ -39,6 +37,8 @@
 # define _tmain         main
 # define _ttoi      atoi
 #endif
+#include "SimpleOpt.h"
+#include "SimpleGlob.h"
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump

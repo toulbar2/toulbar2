@@ -3,10 +3,6 @@
  * 
  */
 
-//#define WINDOWS
-//#define LINUX
-
-
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
@@ -185,9 +181,10 @@ inline int cost2log2gub(Long x) {return cost2log2(x);}
 // function mkdir
 #ifdef LINUX
 #include <sys/stat.h>
-#else
-//#include <direct.h> // for WINDOWS?
-void mkdir(char *, int) {}
+#endif
+
+#ifdef WIN32
+#include <direct.h> // for WINDOWS?
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */

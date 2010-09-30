@@ -9,6 +9,7 @@
 #include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
+#include <strings.h>
 
 extern void setvalue(int wcspId, int varIndex, Value value);
 
@@ -109,22 +110,27 @@ void Solver::parse_solution(const char *certificate)
 	//  int depth = store->getDepth();
 	//    store->store();
 
-    certificate = index(certificate,',');
-    if (certificate) certificate++;
+    //certif2 = index(certif2,',');
+   char *certif2;
+   char sep[]=",";
+    certif2 = strdup(certificate);
+    certif2= strstr(certif2,sep);
+
+    if (certif2) certif2++;
     
     int var;
 	Value value;
 	int items;
-    while ((certificate != NULL) && (certificate[0] != 0)) {
+    while ((certif2 != NULL) && (certif2[0] != 0)) {
 
-        items = sscanf(certificate,"%d=%d",&var,&value);
+        items = sscanf(certif2,"%d=%d",&var,&value);
         
         if ((items != 2) || ((unsigned int)var >= wcsp->numberOfVariables())) {
-             cerr << "Certificate " << certificate << " incorrect!" << endl;
+             cerr << "Certificate " << certif2 << " incorrect!" << endl;
              exit(EXIT_FAILURE);
         }
-        certificate = index(certificate,',');
-        if (certificate) certificate++;
+        certif2 = strstr(certif2,sep);
+        if (certif2) certif2++;
 
         if (wcsp->unassigned(var)) {
           assign(var, value);

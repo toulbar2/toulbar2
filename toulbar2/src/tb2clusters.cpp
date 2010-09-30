@@ -1998,7 +1998,11 @@ void TreeDecomposition::dump(Cluster* c)
   if(!c) {
     char tmpName[256];
     sprintf(tmpName,"%s.info",getWCSP()->getName().c_str());
+#ifdef WIN32
+    mkdir(tmpName);
+#else
     mkdir(tmpName,0777);
+#endif
     
     sprintf(tmpName,"%s.info/root",getWCSP()->getName().c_str());
 

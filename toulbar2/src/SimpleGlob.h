@@ -190,11 +190,10 @@ enum SG_Error {
 
 // use assertions to test the input data
 #ifdef _DEBUG
-# ifdef _WIN32
+# ifdef _MSC_VER
 #  include <crtdbg.h>
 #  define SG_ASSERT(b)    _ASSERTE(b)
 # else
-#  include <assert.h>
 #  define SG_ASSERT(b)    assert(b)
 # endif
 #else
