@@ -191,7 +191,7 @@ public:
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
 	void postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
-
+    bool isGlobal() {return (globalconstrs.size() > 0);}
 
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
