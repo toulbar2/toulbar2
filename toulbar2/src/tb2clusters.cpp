@@ -1545,7 +1545,7 @@ void TreeDecomposition::buildFromOrderForApprox()
 				insert(sizepart,currentRevElimOrder,currentusedctrs);
 				firstComponent = false;
 			}
-	time = time - cpuTime();
+	time = cpuTime() - time;
 	cout << "--> number of parts : " << sizepart <<endl;
 	cout << "--> time : " << time << " seconds. "<< endl << endl;
 	buildFromOrderNext(order);
