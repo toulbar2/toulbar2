@@ -33,6 +33,7 @@ Solver::~Solver()
     delete store;
     delete wcsp;
     delete unassignedVars;
+	delete[] allVars;
 }
 
 void Solver::initVarHeuristic()
@@ -42,6 +43,7 @@ void Solver::initVarHeuristic()
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
         allVars[i].content = i;
         unassignedVars->push_back(&allVars[i], false);
+		//        if (wcsp->assigned(i) || i >=NbDecisionVariables) unassignedVars->erase(&allVars[i], false);
         if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
     }
 }
@@ -866,11 +868,10 @@ bool Solver::solve()
 		}
 
 	    if (ToulBar2::btdMode) {
-	    	if(wcsp->numberOfUnassignedVariables() == 0)
-	    		ToulBar2::approximateCountingBTD = 0;
-	    	wcsp->buildTreeDecomposition();
+		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
+		  wcsp->buildTreeDecomposition();
 	    }
-
+		
 		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
 
 		if (ToulBar2::restart) {
@@ -939,7 +940,8 @@ bool Solver::solve()
 				  if(ToulBar2::allSolutions)
 					{
 					  timeDeconnect = 0.;
-					  nbSol=sharpBTD(start);
+					  BigInteger cartesianProduct = 1;
+					  nbSol=(wcsp->numberOfConnectedConstraints() == 0)?(wcsp->cartProd(cartesianProduct),string2Cost(to_string(cartesianProduct).c_str())):sharpBTD(start);
 					  if(ToulBar2::approximateCountingBTD && nbSol>0. && td->getRoot()->getNbVars()==0)
 						{ //if there are several parts
 						  approximate(nbSol,td);
