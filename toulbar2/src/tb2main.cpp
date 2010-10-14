@@ -1435,6 +1435,10 @@ int _tmain(int argc, TCHAR * argv[])
 		ToulBar2::approximateCountingBTD = false;
 		ToulBar2::allSolutions = false;
 	}
+	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1)
+	{
+	  ub = 1;
+	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
 	{
 		cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
@@ -1576,6 +1580,10 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		if (randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
 		else 		         solver.read_wcsp((char*)strfile.c_str());
+		if (solver.getWCSP()->isGlobal() && ToulBar2::btdMode >= 1)	{
+		  cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
+		  ToulBar2::btdMode = 0;
+		}
 
 		if (certificate)
 		{
