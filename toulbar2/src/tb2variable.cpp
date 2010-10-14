@@ -201,13 +201,13 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 
 void Variable::projectLB(Cost cost)
 {
-  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost;
+  if (cost == 0) return;
+  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+  wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
   if (wcsp->td) {
-	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")";
+	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
 	wcsp->td->getCluster(getCluster())->increaseLb(cost);
   }
-  if (ToulBar2::verbose >= 2) cout << endl;
-  wcsp->increaseLb(cost);
 }
 
 void Variable::propagateIncDec(int incdec)
