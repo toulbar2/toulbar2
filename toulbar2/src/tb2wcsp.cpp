@@ -145,10 +145,10 @@ WCSP::WCSP(Store *s, Cost upperBound) :
 
 WCSP::~WCSP()
 {
-    for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
-	for (unsigned int i=0; i<constrs.size()-1; i++) delete constrs[i]; // Warning! The last constraint may be badly allocated due to an exception occuring in its constructor (because of propagate)
-    for (unsigned int i=0; i<elimBinConstrs.size(); i++) delete elimBinConstrs[i];
-    for (unsigned int i=0; i<elimTernConstrs.size(); i++) delete elimTernConstrs[i];
+  if (vars.size()) for (unsigned int i=0; i<vars.size(); i++) delete vars[i];
+  if (constrs.size()) for (unsigned int i=0; i<constrs.size()-1; i++) delete constrs[i]; // Warning! The last constraint may be badly allocated due to an exception occuring in its constructor (because of propagate) // If there is no constraint then (constrs.size()-1) overflow!
+  if (elimBinConstrs.size()) for (unsigned int i=0; i<elimBinConstrs.size(); i++) delete elimBinConstrs[i];
+  if (elimTernConstrs.size()) for (unsigned int i=0; i<elimTernConstrs.size(); i++) delete elimTernConstrs[i];
 }
 
 WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound)
