@@ -673,23 +673,27 @@ void VACExtension::minsumDiffusion()
     cout << "   max iterations " << maxit << endl;
     cout << "   C0 = " << wcsp->getLb() << endl;
     int ntimes = 0;
-    while(change && (ntimes < maxit) ) {
+    while(change && (ntimes < maxit)) {
       change = false;
       int nchanged = 0;
       for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) if (wcsp->unassigned(i)) {
         VACVariable * evar = (VACVariable *) wcsp->getVar(i); 
-        if(evar->averaging()) { change = true;  nchanged++; }
+        if(evar->averaging()) { change = true; nchanged++; evar->findSupport(); }
       }
       ntimes++;
       //cout << "it " << ntimes << "   changed: " << nchanged << endl;
     }
     cout << "   done iterations: " << ntimes << endl;
-    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) 
-      if (wcsp->getCtr(i)->connected()) wcsp->getCtr(i)->propagate();
-    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) if (wcsp->unassigned(i)) {
       EnumeratedVariable* evar = (EnumeratedVariable*) wcsp->getVar(i);
       evar->findSupport();
     }
+    for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) 
+      if (wcsp->getCtr(i)->connected()) wcsp->getCtr(i)->propagate();
+    for (int i=0; i<wcsp->getElimBinOrder(); i++)
+	  if (wcsp->getElimBinCtr(i)->connected() && !wcsp->getElimBinCtr(i)->isSep()) wcsp->getElimBinCtr(i)->propagate();
+    for (int i=0; i<wcsp->getElimTernOrder(); i++)
+	  if (wcsp->getElimTernCtr(i)->connected() && !wcsp->getElimTernCtr(i)->isSep()) wcsp->getElimTernCtr(i)->propagate();
     wcsp->propagate();
     cout << "   C0 = " << wcsp->getLb() << endl;
     printTightMatrix();

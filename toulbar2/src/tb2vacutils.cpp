@@ -256,7 +256,7 @@ bool VACVariable::averaging()
 	Cost Top = wcsp->getUb();
 	bool change = false;
 	EnumeratedVariable* x;
-	//EnumeratedVariable* y;
+	EnumeratedVariable* y;
 	Constraint* ctr = NULL;
 	ConstraintList::iterator itc = getConstrs()->begin();
 	if(itc != getConstrs()->end())	ctr = (*itc).constr;
@@ -269,48 +269,49 @@ bool VACVariable::averaging()
 				Cost cmin = Top;
 				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
 					Cost cbin = bctr->getCost(this,x,*it,*itx);
-					if(cmin > cbin) cmin = cbin;
+					if(cbin < cmin) cmin = cbin;
 				}
-				long double mean = to_double(cmin + cu) / 2.;	
-				long double extc = to_double(cu) - mean;					 
+				assert(cmin < Top);
+				Double mean = to_double(cmin + cu) / 2.;	
+				Double extc = to_double(cu) - mean;					 
 				if(abs(extc) >= 1) {
 				  Cost costi = (Long) extc;
-					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
-						bctr->addcost(this,x,*it,*itx,costi);				
-					}
-					if(mean > to_double(cu)) project(*it, -costi); 
-					else          extend(*it,   costi);
-					change = true;
+				  for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+					bctr->addcost(this,x,*it,*itx,costi);				
+				  }
+				  if(mean > to_double(cu)) project(*it, -costi); 
+				  else extend(*it, costi);
+				  change = true;
 				}
 			}
-		} /*else if(ctr->arity() == 3 && !ctr->isSep()) {
+		} else if(ctr->arity() == 3 && !ctr->isSep()) {
 			TernaryConstraint* tctr = (TernaryConstraint*) ctr;
 			x = (EnumeratedVariable*) tctr->getVar( 0 );
 			if(x == this) x = (EnumeratedVariable*) tctr->getVar( 1 );
 		    y = (EnumeratedVariable*) tctr->getVarDiffFrom((Variable*) this, (Variable*)x);
-
 			for (iterator it = begin(); it != end(); ++it) {
 				Cost cu = getCost(*it);
 				Cost cmin = Top;
 				for (iterator itx = x->begin(); itx != x->end(); ++itx) {
 				for (iterator ity = y->begin(); ity != y->end(); ++ity) {
 					Cost ctern = tctr->getCost(this,x,y,*it,*itx,*ity);
-					if(cmin > ctern) cmin = ctern;
+					if(ctern < cmin) cmin = ctern;
 				}}
-				float mean = (float)(cmin + cu) / 2.;	
-				float extc = (float)cu - mean;					 
+				assert(cmin < Top);
+				Double mean = to_double(cmin + cu) / 2.;
+				Double extc = to_double(cu) - mean;				 
 				if(abs(extc) >= 1) {
-					int costi =  (int) extc;
+					Cost costi = (Long) extc;
 					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
 					for (iterator ity = y->begin(); ity != y->end(); ++ity) {
 						tctr->addcost(this,x,y,*it,*itx,*ity,costi);				
 					}}
-					if(mean > cu) project(*it, -costi); 
-					else          extend(*it,   costi);
+					if(mean > to_double(cu)) project(*it, -costi); 
+					else extend(*it, costi);
 					change = true;
 				}
 			}
-		}*/
+		}
 		++itc;
 		if(itc != getConstrs()->end()) ctr = (*itc).constr;
 		else ctr = NULL;
