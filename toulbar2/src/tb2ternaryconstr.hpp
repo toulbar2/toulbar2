@@ -154,6 +154,7 @@ public:
     }
 
     void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, int vxi, int vyi, int vzi, Cost c ) {
+        assert(c >= MIN_COST || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
 
         int vindex[3];
 	    int vx = xin->toIndex(vxi);
