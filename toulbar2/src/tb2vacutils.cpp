@@ -311,6 +311,49 @@ bool VACVariable::averaging()
 					change = true;
 				}
 			}
+		} else if(ctr->arity() >= 4 && ctr->extension() && !ctr->isSep()) {
+			NaryConstraint* nctr = (NaryConstraint*) ctr;
+			for (iterator it = begin(); it != end(); ++it) {
+				Cost cu = getCost(*it);
+				Cost cmin = Top;
+				int tindex = nctr->getIndex(this);
+				String tuple;
+				Cost cost;
+				Long nbtuples = 0;
+				nctr->first();
+				while (nctr->next(tuple,cost)) {
+				  nbtuples++;
+				  if (toValue(tuple[tindex] - CHAR_FIRST)==(*it) && cost < cmin) cmin = cost;
+				}
+				if (nctr->getDefCost() < cmin && nbtuples < nctr->getDomainSizeProduct()) cmin = nctr->getDefCost();
+				//				assert(cmin < Top);
+				Double mean = to_double(cmin + cu) / 2.;
+				Double extc = to_double(cu) - mean;				 
+				if(abs(extc) >= 1) {
+					Cost costi = (Long) extc;
+					if(nctr->getDefCost() < Top) {
+					  nctr->firstlex();
+					  while( nctr->nextlex(tuple,cost) ) {
+						if (toValue(tuple[tindex] - CHAR_FIRST)==(*it)) {
+						  if(cost + costi < Top) nctr->addtoTuple(tuple, costi);
+						  else nctr->setTuple(tuple, Top);
+						}
+					  }
+					  nctr->setDefCost(Top);
+					} else {
+					  nctr->first();
+					  while( nctr->next(tuple,cost) ) {
+						if (toValue(tuple[tindex] - CHAR_FIRST)==(*it)) {
+						  if(cost + costi < Top) nctr->addtoTuple(tuple, costi);
+						  else nctr->setTuple(tuple, Top);
+						}
+					  }
+					}
+					if(mean > to_double(cu)) project(*it, -costi); 
+					else extend(*it, costi);
+					change = true;
+				}
+			}
 		}
 		++itc;
 		if(itc != getConstrs()->end()) ctr = (*itc).constr;
