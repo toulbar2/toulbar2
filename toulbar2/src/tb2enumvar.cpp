@@ -259,41 +259,40 @@ void EnumeratedVariable::fillEAC2(bool self)
 
 void EnumeratedVariable::setCostProvidingPartition() 
 {	
-	set<string> used;
-	// binary and ternary constraints are not under consideration
-	for (int scopeSize = 2;scopeSize<=3;scopeSize++) {
-		for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-			if ((*iter).constr->arity() == scopeSize) {
-				for (int i=0;i<(*iter).constr->arity();i++) {
-					Variable *var = (*iter).constr->getVar(i);
-					if (var != this) {
-						used.insert(var->getName());
-						(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
-					}
-				}
-			}
+  vector<bool> used(wcsp->numberOfVariables(), false);
+  //  set<int> used;
+  int maxArity = 4;
+  // binary and ternary constraints are not under consideration
+  for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+	int arity = (*iter).constr->arity();
+	maxArity = max(maxArity, arity);
+	if (arity <= 3) {
+	  for (int i=0;i<arity;i++) {
+		Variable *var = (*iter).constr->getVar(i);
+		if (var != this) {
+		  used[var->wcspIndex] = true;
+		  //		  used.insert(var->wcspIndex);
 		}
+	  }
 	}
-	// Compute the largest arity
-	int maxArity = 4;
+  }
+
+  for (int scopeSize = maxArity;scopeSize>3;scopeSize--) {
 	for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-		if ((*iter).constr->arity() > maxArity) maxArity = (*iter).constr->arity();
-	}
-
-	for (int scopeSize = maxArity;scopeSize>3;scopeSize--) {
-		for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-			if ((*iter).constr->arity() == scopeSize) {
-				for (int i=0;i<(*iter).constr->arity();i++) {
-					Variable *var = (*iter).constr->getVar(i);
-					if (var != this && (used.find(var->getName()) == used.end())) {
-						used.insert(var->getName());
-						(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
-					}
-				}
-			}
+	  int arity = (*iter).constr->arity();
+	  if (arity == scopeSize) {
+		for (int i=0;i<arity;i++) {
+		  Variable *var = (*iter).constr->getVar(i);
+		  if (var != this && !used[var->wcspIndex]) {
+			//		  if (var != this && (used.find(var->wcspIndex) == used.end())) {
+			used[var->wcspIndex] = true;
+			//			used.insert(var->wcspIndex);
+			(*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
+		  }
 		}
+	  }
 	}
-
+  }
 }
 
 bool EnumeratedVariable::isEAC(Value a)
