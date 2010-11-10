@@ -127,6 +127,8 @@ enum {
 	OPT_bep_ext,
 	OPT_ub_ext,
 	OPT_pre_ext,
+	OPT_wcnf_ext,
+	OPT_cnf_ext,
 
 // search option 
 	OPT_SEARCH_METHOD,
@@ -224,6 +226,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_bep_ext,                     (char*) "--bep_ext",                                  SO_REQ_SEP      },
 	{ OPT_ub_ext,                      (char*) "--ub_ext",                                   SO_REQ_SEP      },
 	{ OPT_pre_ext,                     (char*) "--pre_ext",                                  SO_REQ_SEP      },
+	{ OPT_wcnf_ext,                 (char*) "--wcnf_ext",                              SO_REQ_SEP      },
+	{ OPT_cnf_ext,                 (char*) "--cnf_ext",                              SO_REQ_SEP      },
 
 
 	{ OPT_SEARCH_METHOD,       		(char*) "-B",             			SO_REQ_SEP  	}, // -B [0,1,2] search method
@@ -576,6 +580,8 @@ void help_msg(char *toulbar2filename)
 #ifndef MENDELSOFT
 	cerr << "Available problem formats (specified by the filename extension) are:" << endl;
 	cerr << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
+	cerr << "   *.wcnf : Weighted Partial Max-SAT format" << endl;
+	cerr << "   *.cnf : (Max-)SAT format" << endl;
 #ifdef XMLFLAG
 	cerr << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
@@ -736,6 +742,8 @@ int _tmain(int argc, TCHAR * argv[])
 		file_extension_map["bep_ext"]=".bep";
 		file_extension_map["pre_ext"]=".pre";
 		file_extension_map["map_ext"]=".map";
+		file_extension_map["wcnf_ext"]=".wcnf";
+		file_extension_map["cnf_ext"]=".cnf";
 
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
@@ -1275,10 +1283,6 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 				cout <<  " loading wcsp file : "<< glob.File(n)  << endl;
 				strext = ".wcsp";
-				size_t found;
-				string f(glob.File(n));
-				found= f.rfind(strext);
-				if (found!=string::npos) strfile = glob.File(n);
 				strfile = glob.File(n);
 			}
 			// uai 
@@ -1305,10 +1309,21 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::xmlflag = true;
 				ToulBar2::writeSolution = true;
 				strext = ".xml";
-				size_t found;
-				string f(glob.File(n));
-				found= f.rfind(strext);
-				if (found!=string::npos) strfile = glob.File(n);
+				strfile = glob.File(n);
+			}
+
+			// wcnf or cnf file
+
+			if(check_file_ext(glob.File(n),file_extension_map["wcnf_ext"]) ) {
+				cout <<  " loading wcnf file :" << glob.File(n) << endl;
+				ToulBar2::wcnf = true;
+				strext = ".wcnf";
+				strfile = glob.File(n);
+			} else if(check_file_ext(glob.File(n),file_extension_map["cnf_ext"]) ) {
+				cout <<  " loading cnf file :" << glob.File(n) << endl;
+				ToulBar2::wcnf = true;
+				strext = ".cnf";
+				strfile = glob.File(n);
 			}
 
 			// upperbound file 
