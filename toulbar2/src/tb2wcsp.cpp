@@ -95,6 +95,7 @@ Cost ToulBar2::relaxThreshold = MIN_COST;
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
 BEP *ToulBar2::bep = NULL;
+bool ToulBar2::wcnf = false;
 
 int WCSP::wcspCounter = 0;
 
@@ -899,16 +900,18 @@ void WCSP::propagate()
    revise(NULL);
    if (ToulBar2::vac) vac->iniThreshold();
 
-	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin();it !=
-			globalconstrs.end();it++) {
-		(*(it))->init();
-	}
-	for (unsigned int i=0; i<vars.size();i++) {
-		EnumeratedVariable* x = (EnumeratedVariable*) vars[i];
-		if (x->unassigned()) {
-			x->setCostProvidingPartition(); // For EAC propagation
-		}
-	}
+   for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin();it !=
+		  globalconstrs.end();it++) {
+	 (*(it))->init();
+   }
+   if (isGlobal()) {
+	 for (unsigned int i=0; i<vars.size();i++) {
+	   EnumeratedVariable* x = (EnumeratedVariable*) vars[i];
+	   if (x->unassigned()) {
+		 x->setCostProvidingPartition(); // For EAC propagation
+	   }
+	 }
+   }
    do {
 	 do {
 	   do {

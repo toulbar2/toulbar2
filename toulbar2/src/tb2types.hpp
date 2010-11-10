@@ -186,6 +186,7 @@ public:
     static bool vacValueHeuristic;
     static BEP *bep;
     static LcLevelType LcLevel;
+    static bool wcnf;
 
     static char* varOrder;
     static int btdMode;

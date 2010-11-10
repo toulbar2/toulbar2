@@ -196,7 +196,7 @@ public:
     void read_wcsp(const char *fileName);
     void read_uai2008(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
-
+    void read_wcnf(const char *fileName);
 
 	#ifdef XMLFLAG					// structures for solution translation
 	map<int,int> varsDom;           // we don't have to parse the XML file again

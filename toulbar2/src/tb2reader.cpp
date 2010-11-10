@@ -32,22 +32,21 @@ void WCSP::read_wcsp(const char *fileName)
     if (ToulBar2::haplotype) {
 	  ToulBar2::haplotype->read(fileName, this);
       return;
-	}
-    if (ToulBar2::pedigree) {
+	} else if (ToulBar2::pedigree) {
       if (!ToulBar2::bayesian) ToulBar2::pedigree->read(fileName, this);
       else ToulBar2::pedigree->read_bayesian(fileName, this);
       return;
-    }
-    else if (ToulBar2::uai) {
+    } else if (ToulBar2::uai) {
 	    read_uai2008(fileName);
 	    return;
-    }
-    else if (ToulBar2::xmlflag) {
+    } else if (ToulBar2::xmlflag) {
 	    read_XML(fileName);
 	    return;
-    }
-    else if (ToulBar2::bep) {
+    } else if (ToulBar2::bep) {
 	  ToulBar2::bep->read(fileName, this);
+	  return;
+	} else if (ToulBar2::wcnf) {
+	  read_wcnf(fileName);
 	  return;
 	}
     string pbname;
@@ -785,7 +784,177 @@ void WCSP::solution_XML(bool opt)
 	#endif
   }
 
+void WCSP::read_wcnf(const char *fileName)
+{
+  ifstream file(fileName);
+  if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
+  Cost K = ToulBar2::costMultiplier;    
+  Cost inclowerbound = MIN_COST;
+  updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST );
+ 
+  int maxarity = 0;
+  vector<TemporaryUnaryConstraint> unaryconstrs;
 
+  int nbvar,nbclauses;
+  string dummy,sflag;
+  
+  file >> sflag;
+  while (sflag == "c") {
+	getline( file, dummy );
+	file >> sflag;
+  }
+  if (sflag != "p") {
+        cerr << "Wrong wcnf format in " << fileName << endl;
+        exit(EXIT_FAILURE);	
+  }
 
+  string format,strtop;
+  Cost top;
+  file >> format;
+  file >> nbvar;
+  file >> nbclauses;
+  if (format == "wcnf") {
+	getline( file, strtop );
+	if (string2Cost((char*) strtop.c_str())>0) {
+	  cout << "(Weighted) Partial Max-SAT input format" << endl;
+	  top = string2Cost((char*) strtop.c_str());
+	  if(top < MAX_COST / K)	top = top * K;
+	  else top = MAX_COST;
+	  updateUb(top);
+	} else {
+	  cout << "Weighted Max-SAT input format" << endl;
+	}
+  } else {
+	cout << "Max-SAT input format" << endl;
+	updateUb((nbclauses+1)*K);
+  }
+  
+  // create Boolean variables
+  for (int i = 0; i<nbvar; i++) {
+	string varname;
+	varname = to_string(i);
+	int theindex = makeEnumeratedVariable(varname,0,1);
+	assert(theindex == i);   
+  }
 
+  // Read each clause
+  for (int ic = 0; ic < nbclauses; ic++) {
+
+	int scopeIndex[MAX_ARITY];
+	Char buf[MAX_ARITY];
+	int arity = 0;
+	if (ToulBar2::verbose >= 3) cout << "read clause on ";
+	
+	int j = 0;
+	Cost cost = UNIT_COST;
+	if (format == "wcnf") file >> cost;
+	if(ToulBar2::vac) histogram(cost*K);
+	bool tautology = false;
+	do {
+	  file >> j;
+	  if (j != 0 && !tautology) {
+		scopeIndex[arity] = abs(j) - 1;
+		buf[arity] = ((j>0)?0:1) + CHAR_FIRST;
+		int k = 0;
+		while (k<arity) {
+		  if (scopeIndex[k]==scopeIndex[arity]) {
+			break;
+		  }
+		  k++;
+		}
+		if (k<arity) {
+		  if (buf[k]!=buf[arity]) {
+			tautology = true;
+			if (ToulBar2::verbose >= 3) cout << j << " is a tautology! skipped.";
+		  }
+		  continue;
+		}
+		arity++;
+		if (ToulBar2::verbose >= 3) cout << j << " ";
+	  }
+	} while (j != 0);
+	if (ToulBar2::verbose >= 3) cout << endl;
+	if (tautology) continue;
+	buf[arity] = '\0';
+	maxarity = max(maxarity,arity);
+	
+	if (arity > 3) {
+	  int index = postNaryConstraint(scopeIndex,arity,MIN_COST);
+	  NaryConstraint *nary = (NaryConstraint *) constrs[index];
+	  String tup = buf;
+	  nary->setTuple(tup, cost*K, NULL);
+	  nary->propagate();
+	} else if (arity == 3) {
+	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
+	  EnumeratedVariable *y = (EnumeratedVariable *) vars[scopeIndex[1]];
+	  EnumeratedVariable *z = (EnumeratedVariable *) vars[scopeIndex[2]];
+	  EnumeratedVariable *scope[3];
+	  scope[0] = x;
+	  scope[1] = y;
+	  scope[2] = z;
+	  vector<Cost> costs;
+	  for (int a = 0; a < 2; a++) {
+		for (int b = 0; b < 2; b++) {
+		  for (int c = 0; c < 2; c++) {
+			costs.push_back(MIN_COST);
+		  }
+		}
+	  }
+	  costs[(buf[0] - CHAR_FIRST)*4 + (buf[1] - CHAR_FIRST)*2 + (buf[2] - CHAR_FIRST)] = cost*K;
+	  postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
+	} else if (arity == 2) {
+	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
+	  EnumeratedVariable *y = (EnumeratedVariable *) vars[scopeIndex[1]];
+	  EnumeratedVariable *scope[2];
+	  scope[0] = x;
+	  scope[1] = y;
+	  vector<Cost> costs;
+	  for (int a = 0; a < 2; a++) {
+		for (int b = 0; b < 2; b++) {
+		  costs.push_back(MIN_COST);
+		}
+	  }
+	  costs[(buf[0] - CHAR_FIRST)*2 + (buf[1] - CHAR_FIRST)] = cost*K;
+	  postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
+	} else if (arity == 1) {
+	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
+	  TemporaryUnaryConstraint unaryconstr;
+	  unaryconstr.var = x;
+	  if ((buf[0] - CHAR_FIRST)==0) {
+		unaryconstr.costs.push_back(cost*K);
+		unaryconstr.costs.push_back(MIN_COST);
+	  } else {
+		unaryconstr.costs.push_back(MIN_COST);
+		unaryconstr.costs.push_back(cost*K);
+	  }
+	  unaryconstrs.push_back(unaryconstr);
+	  x->queueNC();
+	} else if (arity == 0) {
+	  inclowerbound += cost*K;
+	} else {
+	  cerr << "Wrong clause arity " << arity << " in " << fileName << endl;
+	  exit(EXIT_FAILURE);	
+	}
+  }
+
+  file >> dummy;
+  if (file) {
+	cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
+  }
+  sortVariables();
+  sortConstraints();
+  // apply basic initial propagation AFTER complete network loading
+  increaseLb(inclowerbound);
+  
+  for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+	for (int a = 0; a < 2; a++) {
+	  if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+	}
+	unaryconstrs[u].var->findSupport();
+  }
+  if (ToulBar2::verbose >= 0) {
+	cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
+  }   
+  histogram();  
+}
