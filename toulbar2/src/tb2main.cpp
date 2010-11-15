@@ -194,6 +194,7 @@ enum {
 	MENDEL_OPT_EQUAL_FREQ=103,
 	MENDEL_OPT_ESTIMAT_FREQ=104,
 	MENDEL_OPT_ALLOCATE_FREQ=105,
+
 	// random generator
 	OPT_random=1000
 };
@@ -656,6 +657,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
 #endif
 	cerr << "   -z=[integer] : save problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
+	cerr << "		write also the  graphviz dot file  and the degree distribution of the input problem " << endl;
 	cerr << "   -Z : debug mode (save problem at each node if verbosity option set!)" << endl;
 	cerr << "   -x=[(,i=a)*] : assign variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file \"sol\")" << endl << endl;
 	cerr << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
@@ -708,6 +710,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "      tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions" << endl;
 	cerr << " or:                                                                               " << endl;
 	cerr << "      nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
+	cerr << "---------------------------" << endl;
+	cerr << "			"<< endl;
+
 	cerr << endl;
 #endif
 }
@@ -833,6 +838,11 @@ int _tmain(int argc, TCHAR * argv[])
 				help_msg(argv[0]);
 				return 0;
 			}
+
+
+				
+
+
 
 			////////////////////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////////
@@ -1199,7 +1209,12 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if ( args.OptionId() == OPT_dumpWCSP) {
 				if (args.OptionArg() != NULL) { ToulBar2::dumpWCSP= atoi(args.OptionArg());} else ToulBar2::dumpWCSP=1;
-				cout <<" Dump level = " << ToulBar2::dumpWCSP << endl;
+				if(ToulBar2::dumpWCSP < 2 ) {
+				cout <<" Original Dump => -z = " << ToulBar2::dumpWCSP  << "  <=> dump basename = problem_original.wcsp and Graphviz flag on Degree Distribuftion flag on "  << endl;
+				} else {
+				cout <<" Dump after preprocessing => -z = " << ToulBar2::dumpWCSP << " <=> dump basename = problem ; Graphviz flag on cout Degree Distribuftion flag on "  << endl;
+
+				}
 
 
 			}
@@ -1284,6 +1299,7 @@ int _tmain(int argc, TCHAR * argv[])
 				cout <<  " loading wcsp file : "<< glob.File(n)  << endl;
 				strext = ".wcsp";
 				strfile = glob.File(n);
+				ToulBar2::InstanceBaseName=glob.File(n);
 			}
 			// uai 
 			if(check_file_ext(glob.File(n),file_extension_map["uai_ext"]) ) {
@@ -1333,7 +1349,7 @@ int _tmain(int argc, TCHAR * argv[])
 				string ubs;
 				ubs=read_UB(glob.File(n));
 				if(ubs.c_str() != NULL ) {	
-				ub  = string2Cost((char*) ubs.c_str() );
+					ub  = string2Cost((char*) ubs.c_str() );
 				} else { 
 					cerr << "error reading UB in " << glob.File(n) << endl;
 					exit (-1);
@@ -1452,7 +1468,7 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1)
 	{
-	  ub = 1;
+		ub = 1;
 	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
 	{
@@ -1596,8 +1612,8 @@ int _tmain(int argc, TCHAR * argv[])
 		if (randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
 		else 		         solver.read_wcsp((char*)strfile.c_str());
 		if (solver.getWCSP()->isGlobal() && ToulBar2::btdMode >= 1)	{
-		  cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
-		  ToulBar2::btdMode = 0;
+			cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
+			ToulBar2::btdMode = 0;
 		}
 
 		if (certificate)
@@ -1606,7 +1622,7 @@ int _tmain(int argc, TCHAR * argv[])
 			else solver.parse_solution(certificateString);
 		}
 		if (ToulBar2::dumpWCSP==1) {
-			solver.dump_wcsp("problem.wcsp");
+			solver.dump_wcsp("problem_original.wcsp");
 		}
 		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
 		{

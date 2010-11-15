@@ -112,6 +112,7 @@ int ToulBar2::maxSeparatorSize = -1;
 int ToulBar2::minProperVarSize = 0;
 
 int ToulBar2::smallSeparatorSize = 4;
+char* ToulBar2::InstanceBaseName= NULL;
 
 /*
  * WCSP constructors
@@ -507,14 +508,6 @@ void WCSP::preprocessing()
 
 	if (!Eliminate.empty()) propagate();
 
-#ifdef BOOST
-    if (getenv("TB2GRAPH")) {
-        cout << "Connected components: " << connectedComponents() << endl;
-        cout << "Biconnected components: " << biConnectedComponents() << endl;
-        cout << "Diameter : " << diameter() << endl;
-    }
-#endif
-    if (getenv("TB2DEGREE")) degreeDistribution();
 
     if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
 
@@ -562,38 +555,6 @@ unsigned int WCSP::numberOfConnectedConstraints() const
     return res;
 }
 
-void WCSP::degreeDistribution()
-{
-  int* degDistrib = new int [vars.size()];
-
-  for (unsigned int i=0; i<vars.size(); i++) degDistrib[i] = 0;
-  for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) degDistrib[getTrueDegree(i)]++;
-
-  unsigned int lastnonzero = 0;
-  for (unsigned int i=0; i<vars.size(); i++)
-      if(degDistrib[i]) lastnonzero = i;
-
-  ofstream file("problem.deg");
-  for (unsigned int i=0; i<=lastnonzero; i++) if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;
-  delete [] degDistrib;
-
-  int limit = atoi(getenv("TB2DEGREE"));
-  if (limit > 0) {
-      cout << "remove variables with degree > " << limit << endl;
-      for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i) && getTrueDegree(i) > limit) {
-            cout << "remove variable " << getName(i) << endl;
-            for (ConstraintList::iterator iter=vars[i]->getConstrs()->begin(); iter != vars[i]->getConstrs()->end(); ++iter) {
-                (*iter).constr->deconnect();
-            }
-            assign(i, getSupport(i));
-      }
-  }
-
-  ofstream pb("problem.wcsp");
-  dump(pb);
-  exit(0);
-}
-
 void WCSP::printNCBuckets()
 {
 	int lastbucket = 0;
@@ -632,7 +593,7 @@ void printClique(ostream& os, int arity, Constraint *ctr) {
     assert(arity >= 2);
     for (int i=0;i<arity-1;i++) {
         for (int j=i+1;j<arity;j++) {
-            os << ctr->getVar(i)->wcspIndex + 1 << " " << ctr->getVar(j)->wcspIndex + 1 << endl;
+            os << "v"<<ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 <<";" << endl;
         }
     }
 }
@@ -643,6 +604,15 @@ void WCSP::dump(ostream& os, bool original)
     Value maxdomsize = 0;
     unsigned int maxdomsizeUI = 0;
     Value xcosts = 0;
+// dump filename 
+    char Pb_basename[80];
+    char Pb_graph[80];
+    char Pb_degree[80];
+
+    strcpy (Pb_basename,"problem");
+    strcpy (Pb_graph, Pb_basename);
+    strcpy (Pb_degree,Pb_basename);
+
     if (getLb() > MIN_COST) xcosts++;
     for (unsigned int i=0; i<vars.size(); i++) {
         if (vars[i]->getInf() < 0) {
@@ -688,13 +658,22 @@ void WCSP::dump(ostream& os, bool original)
     }
     if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
-    if (getenv("TB2GRAPH")) {
-        ofstream pb("problem.graph");
+//####################" dump dot file ###############################""
+	cout << " Graph structure saved in problem.graph " << endl;
+	if(original)
+	{
+        strcat (Pb_graph,"_original.dot");
+	}else {
+        strcat (Pb_graph,".dot");
+	}
+        //ofstream pb("current_problem.graph");
+        ofstream pb(Pb_graph);
+	pb << " graph graphname {\n " << endl;
         int res = 0;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) res+=(constrs[i]->arity()*(constrs[i]->arity()-1)/2);
         for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) res+=(elimBinConstrs[i]->arity()*(elimBinConstrs[i]->arity()-1)/2);
         for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) res+=(elimTernConstrs[i]->arity()*(elimTernConstrs[i]->arity()-1)/2);
-        pb << res << " " << numberOfVariables() << endl;
+        pb << "// number of constraint = " << res << " number of variable=  " << numberOfVariables() << endl;
         for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {
 //            pb << constrs[i]->getVar(0)->wcspIndex + 1;
 //            for (int j=1; j<constrs[i]->arity(); j++) {
@@ -719,7 +698,39 @@ void WCSP::dump(ostream& os, bool original)
 //            pb << endl;
             printClique(pb, elimTernConstrs[i]->arity(), elimTernConstrs[i]);
         }
+	pb << "}" << endl;
+
+//####################" end dump dot file ###############################""
+//#######################dump degree distribution ###################
+#ifdef BOOST
+    if (getenv("TB2GRAPH")) {
+        cout << "Connected components: " << connectedComponents() << endl;
+        cout << "Biconnected components: " << biConnectedComponents() << endl;
+        cout << "Diameter : " << diameter() << endl;
     }
+#endif
+
+  int* degDistrib = new int [vars.size()];
+
+  for (unsigned int i=0; i<vars.size(); i++) degDistrib[i] = 0;
+  for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) degDistrib[getTrueDegree(i)]++;
+
+  unsigned int lastnonzero = 0;
+  for (unsigned int i=0; i<vars.size(); i++)
+      if(degDistrib[i]) lastnonzero = i;
+
+	if(original)
+	{
+        strcat (Pb_degree,"_original.degree"); // original distribution
+	}else {
+        strcat (Pb_degree,".degree"); // after preprocessing
+	}
+  ofstream file(Pb_degree);
+  for (unsigned int i=0; i<=lastnonzero; i++) if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;
+  delete [] degDistrib;
+
+//#######################dump degree distribution ###################
+
 
     if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
 }
