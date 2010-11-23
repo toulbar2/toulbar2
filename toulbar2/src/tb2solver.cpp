@@ -890,6 +890,7 @@ bool Solver::solve()
 			nbbacktracksout = false;
 			nbrestart++;
 			//			currentNbBacktracksLimit = luby(nbrestart);
+			//			currentNbBacktracksLimit = max(currentNbBacktracksLimit + 1, (Long) (1.2 * (Double) currentNbBacktracksLimit + 0.5));
 			currentNbBacktracksLimit *= 4;
 			if (currentNbBacktracksLimit > nbBacktracksLimitTop || IsASolution) {
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
