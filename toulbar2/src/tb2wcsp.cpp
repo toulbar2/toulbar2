@@ -112,7 +112,6 @@ int ToulBar2::maxSeparatorSize = -1;
 int ToulBar2::minProperVarSize = 0;
 
 int ToulBar2::smallSeparatorSize = 4;
-char* ToulBar2::InstanceBaseName= NULL;
 
 /*
  * WCSP constructors
