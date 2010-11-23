@@ -889,9 +889,9 @@ bool Solver::solve()
 		  if (ToulBar2::restart) {
 			nbbacktracksout = false;
 			nbrestart++;
-			//			currentNbBacktracksLimit = luby(nbrestart);
 			//			currentNbBacktracksLimit = max(currentNbBacktracksLimit + 1, (Long) (1.2 * (Double) currentNbBacktracksLimit + 0.5));
-			currentNbBacktracksLimit *= 4;
+			if (ToulBar2::lds) currentNbBacktracksLimit *= 4;
+			else currentNbBacktracksLimit = luby(nbrestart);
 			if (currentNbBacktracksLimit > nbBacktracksLimitTop || IsASolution) {
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
 			  currentNbBacktracksLimit = 1;
