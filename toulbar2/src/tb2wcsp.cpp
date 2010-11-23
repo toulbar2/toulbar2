@@ -485,9 +485,11 @@ void WCSP::preprocessing()
 	  for (unsigned int i=0; i<constrs.size(); i++) {
 		if(constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity() <= ToulBar2::preprocessNary) && constrs[i]->extension()) {
 		  NaryConstraintMap* nary = (NaryConstraintMap*) constrs[i];
-		  nary->keepAllowedTuples( getUb() );
-		  nary->preprojectall2();
-		  if (nary->connected()) nary->preproject3();
+		  if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
+			nary->keepAllowedTuples( getUb() );
+			nary->preprojectall2();
+			if (nary->connected()) nary->preproject3();
+		  }
 		}
 	  }
 	  propagate();
