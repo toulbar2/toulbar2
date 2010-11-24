@@ -1299,7 +1299,6 @@ int _tmain(int argc, TCHAR * argv[])
 				cout <<  " loading wcsp file : "<< glob.File(n)  << endl;
 				strext = ".wcsp";
 				strfile = glob.File(n);
-				ToulBar2::InstanceBaseName=glob.File(n);
 			}
 			// uai 
 			if(check_file_ext(glob.File(n),file_extension_map["uai_ext"]) ) {

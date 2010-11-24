@@ -205,9 +205,6 @@ public:
     static int minProperVarSize;
 
     static int smallSeparatorSize;
-    static char* InstanceBaseName;
-// add globvar for pb strucutre analysis
-
 };
 
 /*
