@@ -629,7 +629,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -q : weighted degree variable ordering heuristic";
-	if (ToulBar2::weightedDegree) cerr << " (default option)";
+	if (ToulBar2::weightedDegree) cerr << " (default option if #constr<" << ToulBar2::weightedDegree << "*#var)";
 	cerr << endl;
 	cerr << "   -d : dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
 	if (ToulBar2::dichotomicBranching) cerr << " (default option)";
@@ -941,10 +941,10 @@ int _tmain(int argc, TCHAR * argv[])
 			// weitghted Degree (var ordering )
 			if (args.OptionId() == OPT_weightedDegree ) {
 
-				ToulBar2::weightedDegree = true;
+				ToulBar2::weightedDegree = 1000;
 			}   else if ( args.OptionId() == NO_OPT_weightedDegree ) 
 			{
-				ToulBar2::weightedDegree = false;
+				ToulBar2::weightedDegree = 0;
 				cout << "ToulBar2::weightedDegree = false" << endl;
 			} 
 

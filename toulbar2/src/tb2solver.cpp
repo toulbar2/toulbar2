@@ -870,7 +870,10 @@ bool Solver::solve()
 	    if (ToulBar2::btdMode) {
 		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
 		  wcsp->buildTreeDecomposition();
-	    }
+	    } else if (ToulBar2::weightedDegree && (((Long) wcsp->numberOfConnectedConstraints()) >= ((Long) ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables())) {
+		  cout << "Weighted degree heuristic disabled (#constr=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << "*#var=" << ((Long)ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables() << ")" << endl;
+		  ToulBar2::weightedDegree = 0;
+		}
 		
 		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
 

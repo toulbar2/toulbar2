@@ -55,7 +55,7 @@ Long ToulBar2::restart = 0;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 
-bool ToulBar2::weightedDegree = true;
+int ToulBar2::weightedDegree = 10;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
 
@@ -660,7 +660,7 @@ void WCSP::dump(ostream& os, bool original)
     if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
 //####################" dump dot file ###############################""
-	cout << " Graph structure saved in problem.graph " << endl;
+	cout << " Graph structure saved in problem.dot " << endl;
 	if(original)
 	{
         strcat (Pb_graph,"_original.dot");

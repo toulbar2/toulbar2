@@ -152,7 +152,7 @@ public:
     static int preprocessNary;
     static bool QueueComplexity;
     static bool lastConflict;
-    static bool weightedDegree;
+    static int weightedDegree;
     static int  lds;
     static bool limited;
     static Long restart;
