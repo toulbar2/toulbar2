@@ -834,7 +834,8 @@ void WCSP::read_wcnf(const char *fileName)
   for (int i = 0; i<nbvar; i++) {
 	string varname;
 	varname = to_string(i);
-	int theindex = makeEnumeratedVariable(varname,0,1);
+	int theindex = -1;
+	theindex = makeEnumeratedVariable(varname,0,1);
 	assert(theindex == i);   
   }
 
