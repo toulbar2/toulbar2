@@ -696,6 +696,6 @@ void VACExtension::minsumDiffusion()
 	  if (wcsp->getElimTernCtr(i)->connected() && !wcsp->getElimTernCtr(i)->isSep()) wcsp->getElimTernCtr(i)->propagate();
     wcsp->propagate();
     cout << "   C0 = " << wcsp->getLb() << endl;
-    printTightMatrix();
+	//    printTightMatrix();
   }
 }
