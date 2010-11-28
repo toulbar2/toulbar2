@@ -42,6 +42,7 @@ int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
+bool ToulBar2::preprocessFunctional  = false;
 int ToulBar2::preprocessNary  = 10;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
@@ -215,7 +216,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
       }
     }
 
-    return ctr->wcspIndex;
+	return ctr->wcspIndex;
 }
 
 
@@ -276,10 +277,10 @@ int WCSP::postNaryConstraint(int* scopeIndex, int arity, Cost defval)
      delete [] scopeVars;
 
 
-    return ctr->wcspIndex;
+	 return ctr->wcspIndex;
 }
 
-void  WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file)
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file)
 {
     if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size()<< endl;
 	 GlobalConstraint* gc = NULL;
@@ -301,6 +302,7 @@ void  WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifs
 	 if (gc != NULL) globalconstrs.push_back(gc);
 	 if (file != NULL) gc->read(file);
 
+	 return gc->wcspIndex;
 }
 
 void WCSP::postUnary(int xIndex, vector<Cost> &costs)
@@ -312,31 +314,35 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs)
   ((EnumeratedVariable *) vars[xIndex])->findSupport();
 }
 
-void WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
+int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
 {
     assert(!vars[xIndex]->enumerated());
-    new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);
+    Unary *ctr = new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);
+	return ctr->wcspIndex;
 }
 
-void WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
+int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 {
     assert(!vars[xIndex]->enumerated());
     assert(!vars[yIndex]->enumerated());
-    new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
+    Supxyc *ctr = new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
+	return ctr->wcspIndex;
 }
 
-void WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
+int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
 {
     assert(!vars[xIndex]->enumerated());
     assert(!vars[yIndex]->enumerated());
-    new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
+    Disjunction *ctr = new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
+	return ctr->wcspIndex;
 }
 
-void WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
+int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
 {
     assert(!vars[xIndex]->enumerated());
     assert(!vars[yIndex]->enumerated());
-    new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
+    SpecialDisjunction *ctr = new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
+	return ctr->wcspIndex;
 }
 
 void WCSP::sortConstraints()
@@ -494,31 +500,71 @@ void WCSP::preprocessing()
 	  propagate();
 	}
 
-    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->universal()) {
-	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
-	  constrs[i]->deconnect(true);
-	}
-    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->universal()) {
-	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimBinConstrs[i];
-	  elimBinConstrs[i]->deconnect(true);
-	}
-    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep() && elimTernConstrs[i]->universal()) {
-	  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimTernConstrs[i];
-	  elimTernConstrs[i]->deconnect(true);
-	}
-
-	if (!Eliminate.empty()) propagate();
-
-
     if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
 
     if(ToulBar2::vac) {
     	cout << "Preprocessing "; vac->printStat(true);
-    	vac->afterPreprocessing();
+		//    	vac->afterPreprocessing();
     	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
-
     	propagate();
     }
+
+	// Merge functional (binary bijection only) variables in decision variables
+	bool merged = ToulBar2::preprocessFunctional;
+	while (merged) {
+	  merged = false;
+	  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->arity()==2 && constrs[i]->extension() && constrs[i]->getVar(0)->getDomainSize()==constrs[i]->getVar(1)->getDomainSize()) {
+		  BinaryConstraint *xy = (BinaryConstraint *) constrs[i];
+		  EnumeratedVariable *x = (EnumeratedVariable*) xy->getVar(0);
+		  EnumeratedVariable *y = (EnumeratedVariable*) xy->getVar(1);
+		  map<Value, Value> functional;
+		  if (xy->isFunctional(x,y,functional) && y->canbeMerged()) {
+			y->mergeTo(xy, functional);
+			merged = true;
+			propagate();
+		  } else if (xy->isFunctional(y,x,functional) && x->canbeMerged()) {
+			x->mergeTo(xy, functional);
+			merged = true;
+			propagate();
+		  }
+	  }
+	  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->getVar(0)->getDomainSize()==elimBinConstrs[i]->getVar(1)->getDomainSize()) {
+		  assert(elimBinConstrs[i]->arity()==2);
+		  assert(elimBinConstrs[i]->extension());
+		  BinaryConstraint *xy = (BinaryConstraint *) elimBinConstrs[i];
+		  EnumeratedVariable *x = (EnumeratedVariable*) xy->getVar(0);
+		  EnumeratedVariable *y = (EnumeratedVariable*) xy->getVar(1);
+		  map<Value, Value> functional;
+		  if (xy->isFunctional(x,y,functional) && y->canbeMerged()) {
+			y->mergeTo(xy, functional);
+			merged = true;
+			propagate();
+		  } else if (xy->isFunctional(y,x,functional) && x->canbeMerged()) {
+			x->mergeTo(xy, functional);
+			merged = true;
+			propagate();
+		  }
+	  }
+	}
+
+	// Deconnect empty cost functions
+	unsigned int nbunvar;
+	do {
+	  nbunvar = numberOfUnassignedVariables();
+	  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->universal()) {
+		  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
+		  constrs[i]->deconnect(true);
+		}
+	  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->universal()) {
+		  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimBinConstrs[i];
+		  elimBinConstrs[i]->deconnect(true);
+		}
+	  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep() && elimTernConstrs[i]->universal()) {
+		  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimTernConstrs[i];
+		  elimTernConstrs[i]->deconnect(true);
+		}
+	  if (!Eliminate.empty()) propagate();
+	} while (numberOfUnassignedVariables() < nbunvar);
 }
 
 Value WCSP::getDomainSizeSum()

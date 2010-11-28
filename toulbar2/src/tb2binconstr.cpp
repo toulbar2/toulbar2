@@ -245,6 +245,28 @@ void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)
     }
 }
 
-
-
-
+bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable* yin, map<Value, Value> &functional)
+{
+  assert(xin != yin);
+  assert(getIndex(xin) >= 0);
+  assert(getIndex(yin) >= 0);
+  bool isfunctional = true;
+  functional.clear();
+  for (EnumeratedVariable::iterator itx = xin->begin(); isfunctional && itx != xin->end(); ++itx) {
+	bool first = true;
+	for (EnumeratedVariable::iterator ity = yin->begin(); isfunctional && ity != yin->end(); ++ity) {
+	  if (!CUT(getCost(xin,yin,*itx,*ity) + wcsp->getLb(), wcsp->getUb())) {
+		if (first) {
+		  functional[*itx] = *ity;
+		  first = false;
+		} else {
+		  isfunctional = false;
+		}
+	  }
+	}
+	assert(!first); // assumes it is SAC already
+  }
+  if (isfunctional) return true;
+  functional.clear();
+  return false;
+}

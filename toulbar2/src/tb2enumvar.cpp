@@ -787,7 +787,127 @@ void EnumeratedVariable::permuteDomain(int nperm)
 	}
 }
 
+bool EnumeratedVariable::canbeMerged()
+{
+  for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+	Constraint* ctr = (*iter).constr;
+	if (!ctr->extension() || ctr->isSep()) return false;
+  }
+  return true;
+}
 
+// only in preprocessing
+void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functional)
+{
+  assert(wcsp->getStore()->getDepth()==0);
+  assert(unassigned());
+  EnumeratedVariable *x = (EnumeratedVariable *) xy->getVarDiffFrom(this);
+  assert(x->unassigned());
+  assert(x != this);
+  if (ToulBar2::verbose) {
+	cout << "Merge variable " << *this << " into variable " << *x << endl;
+	for (map<Value, Value>::iterator itermap = functional.begin(); itermap != functional.end(); ++itermap) {
+	  cout << (*itermap).first << "," << (*itermap).second << endl;
+	}
+  }
+  for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+	Constraint* ctr = (*iter).constr;
+	assert(ctr->extension());
+	assert(!ctr->isSep());
+	ctr->deconnect();
+	bool noduplicate = (ctr->getIndex(x) < 0);
+	int scopeIndex[ctr->arity()];
+	int scopeSize = 0;
+	for (int i=0;i<ctr->arity();i++) {
+	  if (ctr->getVar(i) == this) {
+		if (noduplicate) {
+		  scopeIndex[scopeSize++] = x->wcspIndex;
+		}
+	  } else {
+		scopeIndex[scopeSize++] = ctr->getVar(i)->wcspIndex;
+	  }
+	}
+	Constraint *newctr = NULL;
+	switch (scopeSize) {
+	case 0: {
+	  cerr << "Error: empty scope from " << *ctr << " when merging functional variable " << *this << " to variable " << *x << endl;
+	  exit(EXIT_FAILURE);
+	  break; }
+	case 1: {
+	  // extend current unary cost toward ctr if ctr=xy and project ctr to x
+	  assert(scopeIndex[0] == x->wcspIndex);
+	  assert(ctr->arity() == 2);
+	  assert(ctr->getIndex(x) >= 0);
+	  bool modified = false;
+	  for (iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+		assert(canbe(functional[*iterx]));
+		Cost cost = ((BinaryConstraint *)ctr)->getCost(x,this,*iterx,functional[*iterx]) + ((ctr==xy)?getCost(functional[*iterx]):MIN_COST);
+		if (cost > MIN_COST) {
+		  x->project(*iterx,cost);
+		  modified = true;
+		}
+	  }
+	  if (modified) x->findSupport();
+	  break; }
+	case 2: {
+	  assert(wcsp->unassigned(scopeIndex[0]));
+	  assert(wcsp->unassigned(scopeIndex[1]));
+	  vector<Cost> empty(wcsp->getDomainSize(scopeIndex[0])*wcsp->getDomainSize(scopeIndex[1]), MIN_COST);
+	  int res = wcsp->postBinaryConstraint(scopeIndex[0], scopeIndex[1], empty);
+	  newctr = wcsp->getCtr(res);
+	  assert(newctr->arity() == scopeSize);
+	  break; }
+	case 3: {
+	  assert(wcsp->unassigned(scopeIndex[0]));
+	  assert(wcsp->unassigned(scopeIndex[1]));
+	  assert(wcsp->unassigned(scopeIndex[2]));
+	  vector<Cost> empty(wcsp->getDomainSize(scopeIndex[0])*wcsp->getDomainSize(scopeIndex[1])*wcsp->getDomainSize(scopeIndex[2]), MIN_COST);
+	  int res = wcsp->postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], empty);
+	  newctr = wcsp->getCtr(res);
+	  assert(newctr->arity() == scopeSize);
+	  break; }
+	default: {
+	  int res = wcsp->postNaryConstraint(scopeIndex, scopeSize, MIN_COST);
+	  newctr = wcsp->getCtr(res);
+	  assert(newctr->arity() == scopeSize);
+	  break; }
+	}
+	if (newctr) {
+	  bool empty = true;
+	  String oldtuple(ctr->arity(),CHAR_FIRST);
+	  EnumeratedVariable* scopeNewCtr[newctr->arity()];
+	  for(int i=0;i<newctr->arity();i++) {
+		scopeNewCtr[i] = (EnumeratedVariable*) newctr->getVar(i);
+	  }
+	  String tuple;
+	  Cost cost;
+	  newctr->firstlex();
+	  while (newctr->nextlex(tuple,cost)) {
+		for(int i=0;i<ctr->arity();i++) {
+		  if (ctr->getVar(i) == this) {
+			assert(newctr->getIndex(x)>=0);
+			oldtuple[i] = toIndex(functional[x->toValue(tuple[newctr->getIndex(x)] - CHAR_FIRST)]) + CHAR_FIRST;
+		  } else {
+			assert(newctr->getIndex(ctr->getVar(i))>=0);
+			oldtuple[i] = tuple[newctr->getIndex(ctr->getVar(i))];
+		  }
+		}
+		cost = ctr->evalsubstr(oldtuple, ctr);
+		if (cost > MIN_COST) {
+		  empty = false;
+		  newctr->addtoTuple(tuple,cost,scopeNewCtr);
+		}
+	  }
+	  assert(newctr->connected());
+	  if (empty && newctr->universal()) newctr->deconnect(true); // never appends if empty cost functions removed previously
+	  else newctr->propagate();
+	}
+  }
+  assert(xy->deconnected());
+  assert(getDegree() == 0);
+  assert(getCost(support) == MIN_COST);
+  assign(support); // warning! dummy assigned value
+}
 
 bool EnumeratedVariable::verify() {
 	TreeDecomposition* td = wcsp->getTreeDec();

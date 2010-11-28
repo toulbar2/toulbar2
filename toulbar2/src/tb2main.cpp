@@ -172,6 +172,8 @@ enum {
 	NO_OPT_vacValueHeuristic,
 	OPT_preprocessTernary,
 	NO_OPT_preprocessTernary,
+	OPT_preprocessFunctional,
+	NO_OPT_preprocessFunctional,
 	OPT_preprocessNary,
 	NO_OPT_preprocessNary,
 	OPT_elimOrderType,
@@ -285,6 +287,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	//preprocessing
 	{ OPT_singletonConsistency,		(char*) "-S", 				SO_NONE			},
 	{ OPT_preprocessTernary,		(char*) "-t", 				SO_NONE		},
+	{ OPT_preprocessFunctional,		(char*) "-f", 				SO_NONE		},
 	{ OPT_preprocessNary,			(char*) "-h", 				SO_OPT		},
 	{ NO_OPT_preprocessNary,		(char*) "-h:", 				SO_NONE			},
 
@@ -638,6 +641,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
 	cerr << "   -t : preprocessing only: project ternary cost functions on binary cost functions and apply partial 3-consistency (can be very slow)";
 	if (ToulBar2::preprocessTernary) cerr << " (default option)";
+	cerr << endl;
+	cerr << "   -f : preprocessing only: variable elimination of functional variables (bijection only)";
+	if (ToulBar2::preprocessFunctional) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h : preprocessing only: project n-ary cost functions on all binary (and some ternary) cost functions only if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
 	cerr << "   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"p\" and \"O\")";
@@ -1037,6 +1043,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_singletonConsistency)  ToulBar2::singletonConsistency = true;
 			if ( args.OptionId() == OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = true;
 			if ( args.OptionId() == OPT_preprocessTernary) ToulBar2::preprocessTernary = true;
+			if ( args.OptionId() == OPT_preprocessFunctional) ToulBar2::preprocessFunctional = true;
 
 			// pre projection of nary constraint
 			if ( args.OptionId() == OPT_preprocessNary)
@@ -1505,6 +1512,12 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
 		ToulBar2::vac = 1;
+	}
+	if (ToulBar2::preprocessFunctional && (ToulBar2::showSolutions || ToulBar2::writeSolution))
+	{
+		cout << "Warning! Cannot show/save solutions if functional variable elimination used in preprocessing." << endl;
+		ToulBar2::showSolutions = false;
+		ToulBar2::writeSolution = false;
 	}
 
 	ToulBar2::startCpuTime = cpuTime();

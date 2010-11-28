@@ -396,6 +396,8 @@ public:
 	}
 
 	void permute(EnumeratedVariable *xin, Value a, Value b);
+  
+    bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value> &functional);
 
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
