@@ -27,9 +27,10 @@ public:
 
     virtual bool extension() const {return false;} // return true if the cost function is defined in extension (with explicit tuples)
 
-   // remove a constraint from the set of active constraints
     virtual bool connected() {cout << "dummy connected on (" << this << ")!" << endl;return true;}
     virtual bool deconnected() {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
+    // remove a constraint from the set of active constraints
+    // (reuse=true if the constraint is empty and canbe reuse immediately)
     virtual void deconnect(bool reuse = false) {cout << "dummy deconnect on (" << this << ")!" << endl;}
     virtual void reconnect() {cout << "dummy reconnect on (" << this << ")!" << endl;}
 
