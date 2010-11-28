@@ -183,14 +183,14 @@ public:
     void processTernary();
 
     void postUnary(int xIndex, vector<Cost> &costs);
-    void postUnary(int xIndex, Value *d, int dsize, Cost penalty);
-    void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
-    void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
-    void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
+    int postUnary(int xIndex, Value *d, int dsize, Cost penalty);
+    int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
+    int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
+    int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
     int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
-	void postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
+	int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
     bool isGlobal() {return (globalconstrs.size() > 0);}
 
     void read_wcsp(const char *fileName);
@@ -218,7 +218,17 @@ public:
 
     Store *getStore() {return storeData;}
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
-    Constraint *getCtr(int ctrIndex) const {return constrs[ctrIndex];}
+    Constraint *getCtr(int ctrIndex) const {
+		if (ctrIndex>=0) {
+		  return constrs[ctrIndex];
+		} else {
+		  if (-ctrIndex >= MAX_ELIM_BIN) {
+			return elimTernConstrs[-ctrIndex - MAX_ELIM_BIN];
+		  } else {
+			return elimBinConstrs[-ctrIndex];
+		  }
+		}
+	}
 
     void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getSup()+1);}
     void link(Constraint *c) {constrs.push_back(c);}

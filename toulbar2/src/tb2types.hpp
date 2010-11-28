@@ -98,6 +98,7 @@ typedef Double TProb;
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)
 
+const int MAX_ELIM_BIN = 1000000;
 const int MAX_ARITY = 1000;
 
 typedef map<int,int> TSCOPE;
@@ -149,6 +150,7 @@ public:
     static int  elimDegree_preprocessing_;
     static int minsumDiffusion;
     static bool preprocessTernary;
+    static bool preprocessFunctional;
     static int preprocessNary;
     static bool QueueComplexity;
     static bool lastConflict;

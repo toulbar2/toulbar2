@@ -82,11 +82,11 @@ public:
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
     virtual int postNaryConstraint(int* scope, int arity, Cost defval) =0;
-    virtual void postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
-    virtual void postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
-    virtual void postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
-    virtual void postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
-	virtual void postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file) =0;
+    virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
+    virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
+    virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
+    virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
+	virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file) =0;
     virtual bool isGlobal() =0;
 
     virtual void read_wcsp(const char *fileName) =0;
