@@ -1513,12 +1513,6 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
 		ToulBar2::vac = 1;
 	}
-	if (ToulBar2::preprocessFunctional && (ToulBar2::showSolutions || ToulBar2::writeSolution))
-	{
-		cout << "Warning! Cannot show/save solutions if functional variable elimination used in preprocessing." << endl;
-		ToulBar2::showSolutions = false;
-		ToulBar2::writeSolution = false;
-	}
 
 	ToulBar2::startCpuTime = cpuTime();
 

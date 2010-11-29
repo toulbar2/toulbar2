@@ -459,7 +459,7 @@ void WCSP::processTernary()
 void WCSP::preprocessing()
 {
     Eliminate.clear();
-    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional) {
 	    initElimConstrs();
 
 	    if (ToulBar2::preprocessTernary) {
