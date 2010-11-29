@@ -98,7 +98,7 @@ typedef Double TProb;
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)
 
-const int MAX_ELIM_BIN = 1000000;
+const int MAX_ELIM_BIN = 1000000000;
 const int MAX_ARITY = 1000;
 
 typedef map<int,int> TSCOPE;
