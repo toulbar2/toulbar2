@@ -486,6 +486,15 @@ void WCSP::preprocessing()
 
 	propagate();
 
+    if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
+
+    if(ToulBar2::vac) {
+    	cout << "Preprocessing "; vac->printStat(true);
+		//    	vac->afterPreprocessing();
+    	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
+    	propagate();
+    }
+
 	if (ToulBar2::preprocessNary > 0) {
 	  for (unsigned int i=0; i<constrs.size(); i++) {
 		if(constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity() <= ToulBar2::preprocessNary) && constrs[i]->extension()) {
@@ -499,15 +508,6 @@ void WCSP::preprocessing()
 	  }
 	  propagate();
 	}
-
-    if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
-
-    if(ToulBar2::vac) {
-    	cout << "Preprocessing "; vac->printStat(true);
-		//    	vac->afterPreprocessing();
-    	for (unsigned int i=0; i<vars.size(); i++) vars[i]->queueEliminate();
-    	propagate();
-    }
 
 	// Merge functional (binary bijection only) variables in decision variables
 	bool merged = ToulBar2::preprocessFunctional;
@@ -604,12 +604,12 @@ unsigned int WCSP::numberOfConnectedConstraints() const
 
 void WCSP::printNCBuckets()
 {
-	int lastbucket = 0;
+	int lastbucket = -1;
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
     	if(NCBuckets[bucket].begin() != NCBuckets[bucket].end()) lastbucket = bucket;
     }
 
-    for (int bucket = 0; bucket < lastbucket; bucket++) {
+    for (int bucket = 0; bucket <= lastbucket; bucket++) {
         cout << "NC " << bucket << ":";
         for (VariableList::iterator iter = NCBuckets[bucket].begin (); iter != NCBuckets[bucket].end(); ++iter) {
            cout << " " << (*iter)->getName() << "," << (*iter)->getMaxCostValue() << "," << (*iter)->getMaxCost();

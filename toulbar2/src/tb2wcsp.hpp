@@ -236,6 +236,7 @@ public:
 	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }
     int getNCBucketSize() const {return NCBucketSize;}
     void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt) {
+	    assert(newBucket < NCBucketSize);
         if (oldBucket >= 0) NCBuckets[oldBucket].erase(elt, true);
         if (newBucket >= 0) NCBuckets[newBucket].push_back(elt, true);
     }
