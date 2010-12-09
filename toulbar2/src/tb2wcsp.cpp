@@ -447,9 +447,16 @@ void WCSP::processTernary()
     // }
 
     for (unsigned int i=0; i<constrs.size(); i++)
-    	if(constrs[i]->arity() == 3)
+    	if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->extension() && constrs[i]->arity() == 3)
     	{
     		TernaryConstraint* t = (TernaryConstraint*) constrs[i];
+    		t->extendTernary();
+    		t->projectTernary();
+    	}
+	for (int i=0; i<elimTernOrder; i++) 
+	  if (elimTernConstrs[i]->connected())
+    	{
+		    TernaryConstraint* t = (TernaryConstraint*) elimTernConstrs[i];
     		t->extendTernary();
     		t->projectTernary();
     	}
@@ -462,12 +469,12 @@ void WCSP::preprocessing()
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional) {
 	    initElimConstrs();
 
-	    if (ToulBar2::preprocessTernary) {
-	        cout << "Process ternary groups of variables." << endl;
-	        processTernary();
-	        ternaryCompletion();
-	        processTernary();
-	    }
+	    // if (ToulBar2::preprocessTernary) {
+	    //     cout << "Process ternary groups of variables." << endl;
+	    //     processTernary();
+	    //     ternaryCompletion();
+	    //     processTernary();
+	    // }
 
         if (ToulBar2::elimDegree_preprocessing >= 0) {
             if (ToulBar2::verbose >= 1) cout << "Variable elimination in preprocessing of true degree <= " << ToulBar2::elimDegree_preprocessing << endl;
@@ -476,12 +483,6 @@ void WCSP::preprocessing()
             propagate();
 			if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
 		}
-
-        ToulBar2::elimDegree_preprocessing_ = -1;
-        if(ToulBar2::elimDegree >= 0) {
-            ToulBar2::elimDegree_ = ToulBar2::elimDegree;
-            if (ToulBar2::verbose >= 1) cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl;
-        }
     }
 
 	propagate();
@@ -547,6 +548,14 @@ void WCSP::preprocessing()
 	  }
 	}
 
+	if (ToulBar2::preprocessTernary) {
+	  cout << "Process ternary groups of variables." << endl;
+	  processTernary();
+	  ternaryCompletion();
+	  processTernary();
+	  propagate();
+	}
+
 	// Deconnect empty cost functions
 	unsigned int nbunvar;
 	do {
@@ -565,6 +574,14 @@ void WCSP::preprocessing()
 		}
 	  if (!Eliminate.empty()) propagate();
 	} while (numberOfUnassignedVariables() < nbunvar);
+
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional) {
+        ToulBar2::elimDegree_preprocessing_ = -1;
+        if(ToulBar2::elimDegree >= 0) {
+            ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+            if (ToulBar2::verbose >= 1) cout << "Variable elimination during search of degree <= " << ToulBar2::elimDegree << endl;
+        }
+    }
 }
 
 Value WCSP::getDomainSizeSum()

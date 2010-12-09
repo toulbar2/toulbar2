@@ -286,8 +286,8 @@ public:
 
 	void projectTernary() {
 		projectTernaryBinary(xy);
-		projectTernaryBinary(xz);
-		projectTernaryBinary(yz);
+		if (connected()) projectTernaryBinary(xz);
+		if (connected()) projectTernaryBinary(yz);
 	}
 
 	void extendTernary()
