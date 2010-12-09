@@ -198,6 +198,7 @@ enum {
 	MENDEL_OPT_ALLOCATE_FREQ=105,
 
 	// random generator
+	OPT_seed,
 	OPT_random=1000
 };
 
@@ -313,6 +314,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 
 
 	// random generator
+	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
 	{ OPT_random, 	 			 (char*) "-random", 			SO_REQ_SEP }, // init upper bound in cli
 
 
@@ -1249,6 +1251,9 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 			//////////RANDOM GENERATOR///////
+			if ( args.OptionId() == OPT_seed ) {
+			  mysrand(atol(args.OptionArg()));
+			}
 
 			if ( args.OptionId() == OPT_random) {
 
