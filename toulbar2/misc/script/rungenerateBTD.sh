@@ -18,12 +18,12 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt
     rm -f toolbar_sol
-    rm -f order
+    rm -f problem.order
     rm -f sol
     randomfile=nary-$n-$d-$tight-$bctr-$tctr-$nary-$seed 
-    toulbar2 $randomfile C$K z > /dev/null
-    ./misc/bin/Linux/peo problem.wcsp 1 > order
-    ./bin/Linux/toulbar2 problem.wcsp $1 w Oorder | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
+    toulbar2 $randomfile -C=$K -z=2 > /dev/null
+    ./misc/bin/Linux/peo problem.wcsp 1 > problem.order
+    ./bin/Linux/toulbar2 problem.wcsp $1 -w problem.order | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     toolbar problem.wcsp  -csol  | awk 'BEGIN{opt="-";} /^Total cost /{opt=$4;}  END{printf("%d \n",opt); }' > toolbar_sol
     ub1=`cat toulbar2_opt`
@@ -32,7 +32,7 @@ while (( $n < $nend )) ; do
     if [[ $ub1 != $ub2 ]] ; then
       echo "error found"
       mv problem.wcsp error$nerr.wcsp
-      mv order        o$nerr
+      mv problem.order        o$nerr
       nerr=`expr $nerr + 1`
     fi
     if [[ $ub1 != $ub3 ]] ; then
@@ -50,5 +50,7 @@ rm -f problem.wcsp
 rm -f toulbar2_opt
 rm -f toolbar_opt
 rm -f toolbar_sol
-rm -f order
+rm -f problem.order
 rm -f sol
+rm -f problem.dot
+rm -f problem.degree
