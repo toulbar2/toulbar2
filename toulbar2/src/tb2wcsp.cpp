@@ -466,7 +466,7 @@ void WCSP::processTernary()
 void WCSP::preprocessing()
 {
     Eliminate.clear();
-    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional) {
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
 	    initElimConstrs();
 
 	    // if (ToulBar2::preprocessTernary) {
@@ -482,6 +482,8 @@ void WCSP::preprocessing()
 			maxDegree = -1;
             propagate();
 			if(!ToulBar2::uai && !ToulBar2::xmlflag) cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
+		} else if (ToulBar2::elimDegree >= 0) {
+            ToulBar2::elimDegree_ = ToulBar2::elimDegree;
 		}
     }
 
@@ -511,7 +513,7 @@ void WCSP::preprocessing()
 	}
 
 	// Merge functional (binary bijection only) variables in decision variables
-	bool merged = ToulBar2::preprocessFunctional;
+	bool merged = (ToulBar2::preprocessFunctional > 0);
 	while (merged) {
 	  merged = false;
 	  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->arity()==2 && constrs[i]->extension() && (ToulBar2::preprocessFunctional==1 || constrs[i]->getVar(0)->getDomainSize()==constrs[i]->getVar(1)->getDomainSize())) {
@@ -575,7 +577,7 @@ void WCSP::preprocessing()
 	  if (!Eliminate.empty()) propagate();
 	} while (numberOfUnassignedVariables() < nbunvar);
 
-    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional) {
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
         ToulBar2::elimDegree_preprocessing_ = -1;
         if(ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
