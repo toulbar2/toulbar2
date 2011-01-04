@@ -42,7 +42,7 @@ int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
-bool ToulBar2::preprocessFunctional  = false;
+int ToulBar2::preprocessFunctional  = 0;
 int ToulBar2::preprocessNary  = 10;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
@@ -514,7 +514,7 @@ void WCSP::preprocessing()
 	bool merged = ToulBar2::preprocessFunctional;
 	while (merged) {
 	  merged = false;
-	  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->arity()==2 && constrs[i]->extension() && constrs[i]->getVar(0)->getDomainSize()==constrs[i]->getVar(1)->getDomainSize()) {
+	  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->arity()==2 && constrs[i]->extension() && (ToulBar2::preprocessFunctional==1 || constrs[i]->getVar(0)->getDomainSize()==constrs[i]->getVar(1)->getDomainSize())) {
 		  BinaryConstraint *xy = (BinaryConstraint *) constrs[i];
 		  EnumeratedVariable *x = (EnumeratedVariable*) xy->getVar(0);
 		  EnumeratedVariable *y = (EnumeratedVariable*) xy->getVar(1);

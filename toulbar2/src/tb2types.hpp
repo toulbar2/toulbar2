@@ -150,7 +150,7 @@ public:
     static int  elimDegree_preprocessing_;
     static int minsumDiffusion;
     static bool preprocessTernary;
-    static bool preprocessFunctional;
+    static int preprocessFunctional;
     static int preprocessNary;
     static bool QueueComplexity;
     static bool lastConflict;

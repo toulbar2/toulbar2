@@ -165,7 +165,7 @@ void Solver::dump_wcsp(const char *fileName, bool original)
 
 void setvalue(int wcspId, int varIndex, Value value)
 {
-    assert(wcspId == 0);
+//    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
     if(!Solver::currentSolver->allVars[varIndex].removed) {
 	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
 	}
@@ -1128,6 +1128,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   }
 
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " constraints." << endl;
+  // dump_wcsp("mydebug.wcsp", true);
 
   // special data structure to be initialized for variable ordering heuristics
   initVarHeuristic();
