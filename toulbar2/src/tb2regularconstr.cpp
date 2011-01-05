@@ -78,7 +78,7 @@ Cost RegularConstraint::eval( string s ) {
 		tempdomain[i].insert(s[i]-CHAR_FIRST);
 	}
 	buildGraphBasic(tgraph, false);
-	pair<int, bool> result = tgraph.augment(0, tgraph.size()-1, false);
+	pair<Cost, bool> result = tgraph.augment(0, tgraph.size()-1, false);
 	if (!result.second) result.first = wcsp->getUb();
 	return result.first - projectedCost;
 }
@@ -129,7 +129,7 @@ void RegularConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex) {
 				if (sym.size() != 0) {
 					for (set<int>::iterator v = tempdomain[i].begin();v !=
 							tempdomain[i].end();v++) {
-						int w = -deltaCost[i][*v];
+						Cost w = -deltaCost[i][*v];
 						if (sym.find(*v) == sym.end()) w += subdef;
 						g.addEdge(i*dfa.size()+start+1, (i+1)*dfa.size()+end+1, w, 1, *v);
 						if (needRebuildIndex) mapedge[i][*v].push_back(make_pair(i*dfa.size()+start+1, (i+1)*dfa.size()+end+1));
@@ -147,7 +147,7 @@ void RegularConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex) {
 				if (weight.empty()) {
 					for (set<int>::iterator v = tempdomain[i].begin();v !=
 							tempdomain[i].end();v++) {
-						int w = -deltaCost[i][*v];
+						Cost w = -deltaCost[i][*v];
 						g.addEdge(i*dfa.size()+start+1, (i+1)*dfa.size()+start+1, deldef + w, 1, *v);
 						if (needRebuildIndex) mapedge[i][*v].push_back(make_pair(i*dfa.size()+start+1, (i+1)*dfa.size()+start+1));
 					}
@@ -187,7 +187,7 @@ void RegularConstraint::findProjection(Graph &graph, Cost cost, int varindex, ma
 	computeShortestPath(graph, cost);	
 
 	for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-		int mincost = INF;
+		Cost mincost = INF;
 		vector<pair<int, int> > &edges = mapedge[varindex][*v];
 		for (vector<pair<int,int> >::iterator i = edges.begin();i !=
 				edges.end();i++) {
@@ -195,7 +195,7 @@ void RegularConstraint::findProjection(Graph &graph, Cost cost, int varindex, ma
 			vector<Cost> weight = graph.getWeight(edge.first, edge.second, *v);
 			if (weight.size() > 1) cout << "multiple edges?\n";
 			if (!weight.empty()) {
-				int t = weight[0] + fromSource[edge.first] + toSink[edge.second];
+				Cost t = weight[0] + fromSource[edge.first] + toSink[edge.second];
 				if (mincost > t) mincost = t;
 			} 
 		}
