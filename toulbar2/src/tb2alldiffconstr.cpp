@@ -77,7 +77,7 @@ void AllDiffConstraint::buildGraph(Graph &g) {
 			if (index != 0) {
 					g.addEdge(i+1, index, -deltaCost[i][*j]);
 				vector<Cost> weight = g.getWeight(index, graph.size()-1);
-				int count = 0;
+				Cost count = 0;
 				if (weight.size() != 0) {
 					if (mode == DEC) {
 						count = *max_element(weight.begin(), weight.end())+def;
