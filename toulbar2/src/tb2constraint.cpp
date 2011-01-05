@@ -70,10 +70,13 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 		firstlex();
 		while( nextlex(t,c) ) {
 			Cost cplus = ctr->evalsubstr(t, this);
-			if(c + cplus < Top) setTuple( t, c + cplus, scopethis);
-			else setTuple( t, Top, scopethis);
+			if(c + cplus < Top) {
+			  if (arity() > 3 && getDefCost() > MIN_COST) setTuple( t, c + cplus, scopethis);
+			  else addtoTuple( t, cplus, scopethis);
+			} else {
+			  setTuple( t, Top, scopethis);
+			}
 		}
-		setDefCost(Top);
 	} else {
 		first();
 		while( next(t,c) ) {
