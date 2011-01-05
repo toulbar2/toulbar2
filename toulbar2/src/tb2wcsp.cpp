@@ -1001,7 +1001,8 @@ void WCSP::propagate()
 		   assert(IncDec.empty());
 		   if (ToulBar2::LcLevel==LC_AC || ToulBar2::LcLevel>=LC_FDAC) propagateAC();
 		   assert(IncDec.empty());
-					int oldLb = getLb();
+
+		            Cost oldLb = getLb();
 					bool cont = true;
 					while (cont)
 					{
