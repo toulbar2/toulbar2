@@ -47,16 +47,16 @@ public:
   bool increaseVAC(Value newInf);
   bool decreaseVAC(Value supInf);
 
-  int 	getMaxK( long timeStamp ) {
+  int 	getMaxK( Long timeStamp ) {
   	if(maxk_timeStamp < timeStamp) return 0;
   	else return maxk; 
   } 
 
-  int 	getK( Value v, long timeStamp ) {
+  int 	getK( Value v, Long timeStamp ) {
   	if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
   	else return k[toIndex(v)]; 
   } 
-  void 	setK( Value v, int c, long timeStamp ) { 
+  void 	setK( Value v, int c, Long timeStamp ) { 
   	k[toIndex(v)] = c; 
   	k_timeStamp[toIndex(v)] = timeStamp; 
   	if(maxk_timeStamp < timeStamp) {
@@ -65,7 +65,7 @@ public:
   	}
   }
 
-  void	addToK(Value v, int c, long timeStamp ) {
+  void	addToK(Value v, int c, Long timeStamp ) {
   	 if(k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
   	 else k[toIndex(v)] += c; 
   	 if(maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
@@ -74,8 +74,8 @@ public:
   	 k_timeStamp[toIndex(v)] = timeStamp; 
   }
 
-  bool  isMarked( Value v, long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
-  void  setMark( Value v, long timeStamp )  { mark[toIndex(v)] = timeStamp; }
+  bool  isMarked( Value v, Long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
+  void  setMark( Value v, Long timeStamp )  { mark[toIndex(v)] = timeStamp; }
   
   int   getKiller( Value v ) { return killer[toIndex(v)]; }
   void  setKiller( Value v, int i ) { killer[toIndex(v)] = i; }
@@ -141,8 +141,8 @@ public:
   VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
   ~VACConstraint ();
 
-  int getK (VACVariable* var, Value v, long timeStamp);
-  void setK (VACVariable* var, Value v, int c, long timeStamp);
+  int getK (VACVariable* var, Value v, Long timeStamp);
+  void setK (VACVariable* var, Value v, int c, Long timeStamp);
 
   void setThreshold (Cost c) { myThreshold = c; } 
   Cost getThreshold () { return myThreshold; }
