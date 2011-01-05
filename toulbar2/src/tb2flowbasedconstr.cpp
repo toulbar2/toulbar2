@@ -281,7 +281,7 @@ void FlowBasedGlobalConstraint::findProjection(Graph &graph, Cost cost, int vari
 	EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
 	for (EnumeratedVariable::iterator j = x->begin(); j != x->end(); ++j) {
 		pair<int,int> edge = mapto(varindex, *j);
-		int tmp = cost;
+		Cost tmp = cost;
 		vector<Cost> weight = graph.getWeight(edge.first, edge.second);
 		if (!weight.empty()) {
 			if (zeroEdges[edge.first][edge.second]) {
