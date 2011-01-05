@@ -52,6 +52,8 @@ class NaryConstraint : public AbstractNaryConstraint
 
 	virtual void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL ) = 0;
 
+    virtual void setDefCost( Cost df ) = 0;
+
 	virtual void setTuple( int* tin, Cost c, EnumeratedVariable** scope_in )
 	{
 		Char* buf = new Char [arity_ + 1];
