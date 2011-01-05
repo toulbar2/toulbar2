@@ -17,7 +17,7 @@
 
 #define adj first
 #define weight second
-#define INF (INT_MAX >> 5)
+#define INF (MAX_COST >> 5)
 #define Free(pt) if(pt) {delete[] pt;pt=NULL;} 
 
 using namespace std;
@@ -26,12 +26,12 @@ class Graph {
 	private:
 		// structure for a element in a adjacent list
 		struct List_Node {
-			int adj;     //the ndoe connecting to  
-			Cost weight;  // th weight
-			int cap;     //the capacity 
+			int adj;     //the node connecting to  
+			Cost weight; // the weight
+			Cost cap;    //the capacity 
 			int tag;     // the label of the edge
 			List_Node () {}
-			List_Node (int a, Cost w, int c, int t) : adj(a), weight(w), cap(c), tag(t) {}
+			List_Node (int a, Cost w, Cost c, int t) : adj(a), weight(w), cap(c), tag(t) {}
 			bool operator<(const List_Node &a) const {return weight < a.weight;}  
 			bool operator== (const List_Node &a) const {
 				return adj == a.adj &&
@@ -69,7 +69,7 @@ class Graph {
 		// connect the node from u to v with weight w, capacity c and a tag tag
 		// if tag = -1, multiple edge allowed
 		// if tag != -1, multiple edge not allowed 
-		void addEdge(int u, int v, Cost w, int capacity = 1, int tag = -1);
+		void addEdge(int u, int v, Cost w, Cost capacity = 1, int tag = -1);
 		//void addEdge(int u, int v, Cost w, int c) {addEdge(u, v, w, c, -1);} 
 		//void addEdge(int u, int v, Cost w) {addEdge(u, v, w, 1, -1);} 
 
@@ -108,10 +108,10 @@ class Graph {
 		// add a flow of floe value flowval starting from u to v following the
 		// shorteat path
 		// if v and u is connected, the flow is also added to the edge (v,u)
-		void addFlow(int u, int v, int flowval);
+		void addFlow(int u, int v, Cost flowval);
 
 		// compute the cost of the maximum flow from s to t
-		pair<int, Cost> minCostFlow(int s, int t, int maxValue = INF);
+		pair<int, Cost> minCostFlow(int s, int t, Cost maxValue = INF);
 
 		// add the flow from s to t following the shortest path which capacity is
 		// bounded by the capacaity between s and t (if any)
@@ -183,7 +183,7 @@ class Graph {
 				return next_edge->weight;
 			}
 
-			int capacity() {
+			Cost capacity() {
 				return next_edge->cap;
 			}
 
