@@ -68,12 +68,12 @@ void GlobalConstraint::assign(int varIndex) {
 		nonassigned = nonassigned - 1;
 		if(nonassigned == 0) {
 			deconnect();
-			char* tbuf = new char [arity_ + 1]; 
+			Char* tbuf = new Char [arity_ + 1]; 
 			for(int i=0;i<arity_;i++) { 		
 				tbuf[i] = getVar(i)->getValue() + CHAR_FIRST;
 			}
 			tbuf[arity_] =  '\0';
-			string t = tbuf;
+			string t = to_string(tbuf);
 			delete [] tbuf;
 			projectLB(eval(t));
 		} else { 
@@ -227,9 +227,9 @@ void GlobalConstraint::propagateNIC() {
 
 	vector<int> rmv;
 	checkRemoved(rmv);
-	int mincost = getMinCost();
+	Cost mincost = getMinCost();
 	if (mincost-projectedCost > 0) {
-		int diff = mincost - projectedCost;
+		Cost diff = mincost - projectedCost;
 		projectedCost += diff;
 		wcsp->increaseLb(diff);
 	}
