@@ -945,7 +945,7 @@ bool Solver::solve()
 					{
 					  timeDeconnect = 0.;
 					  BigInteger cartesianProduct = 1;
-					  nbSol=(wcsp->numberOfConnectedConstraints() == 0)?(wcsp->cartProd(cartesianProduct),string2Cost(to_string(cartesianProduct).c_str())):sharpBTD(start);
+					  nbSol=(wcsp->numberOfConnectedConstraints() == 0)?(wcsp->cartProd(cartesianProduct),cartesianProduct):sharpBTD(start);
 					  if(ToulBar2::approximateCountingBTD && nbSol>0. && td->getRoot()->getNbVars()==0)
 						{ //if there are several parts
 						  approximate(nbSol,td);
@@ -1089,11 +1089,11 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   vector<Cost> unaryCosts1(n, 0);
 
   // find total cost
-  double sumcost = 0.;
+  Double sumcost = 0.;
   for (int e=0; e<m; e++) {
 	sumcost += 2. * abs(cost[e]);
   }
-  double multiplier = MAX_COST / sumcost;
+  Double multiplier = ((Double) MAX_COST) / sumcost;
   multiplier /= MEDIUM_COST;
 
   // create weighted binary clauses
