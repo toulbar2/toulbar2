@@ -330,12 +330,12 @@ bool VACVariable::averaging()
 				Double mean = to_double(cmin + cu) / 2.;
 				Double extc = to_double(cu) - mean;				 
 				if(abs(extc) >= 1) {
-					Cost costi = (Long) extc;
+					Cost costi = (Cost) extc;
 					if(nctr->getDefCost() < Top) {
 					  nctr->firstlex();
 					  while( nctr->nextlex(tuple,cost) ) {
 						if (toValue(tuple[tindex] - CHAR_FIRST)==(*it)) {
-						  if(cost + costi < Top) nctr->addtoTuple(tuple, costi);
+						  if(cost + costi < Top) nctr->setTuple(tuple, cost + costi);
 						  else nctr->setTuple(tuple, Top);
 						}
 					  }
@@ -422,7 +422,7 @@ void VACConstraint::VACextend(VACVariable* x, Value v, Cost c) {
   x->VACextend(v, c);
 }
 
-int VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {
+int VACConstraint::getK (VACVariable* var, Value v, Long timeStamp) {
   if(var == (VACVariable*) getVar(0)) {
   	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return 0;
   	else return kX[var->toIndex(v)];
@@ -432,7 +432,7 @@ int VACConstraint::getK (VACVariable* var, Value v, long timeStamp) {
   }
 }
 
-void VACConstraint::setK (VACVariable* var, Value v, int c, long timeStamp) {
+void VACConstraint::setK (VACVariable* var, Value v, int c, Long timeStamp) {
   if(var == getVar(0)) {
   	kX[var->toIndex(v)] = c;
   	kX_timeStamp[var->toIndex(v)] = timeStamp;
