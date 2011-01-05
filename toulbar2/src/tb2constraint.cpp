@@ -70,7 +70,7 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 		firstlex();
 		while( nextlex(t,c) ) {
 			Cost cplus = ctr->evalsubstr(t, this);
-			if(c + cplus < Top) addtoTuple( t, cplus, scopethis);
+			if(c + cplus < Top) setTuple( t, c + cplus, scopethis);
 			else setTuple( t, Top, scopethis);
 		}
 		setDefCost(Top);
