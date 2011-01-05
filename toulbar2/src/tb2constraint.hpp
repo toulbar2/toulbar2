@@ -96,7 +96,6 @@ public:
 	virtual void getScope( TSCOPE& scope_inv ) {}
 	virtual Cost evalsubstr( String& s, Constraint* ctr ) { return MIN_COST; }
 	virtual Cost getDefCost() { return MIN_COST; }
-	virtual void setDefCost( Cost df ) {}
 
     virtual bool universal();
 
