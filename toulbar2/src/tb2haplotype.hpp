@@ -40,7 +40,7 @@ class Haplotype {
 
   vector<Double> maplocus; // marker map
   map<int, vector<int> > transmission; //pair <individual id, transmission vector>
-  map< pair<int,int>,double,classcomp > W;
+  map< pair<int,int>,Double,classcomp > W;
   int sire;
   Double K;
   //Double multiplier; // for conversion in integer cost
@@ -75,9 +75,9 @@ public:
   void initTransmission();
   void sparse_matrix();
   Double haldane(Double x){return 0.5*(1-exp(-2.0*fabs(x)));}
-  double getK(){return K;}
-  double Cost2LogLike(Cost c)const{return (K - 4*to_double(c)/ ToulBar2::NormFactor)/log(10);}
-  double Cost2Prob(Cost c)const{return K - 4*to_double(c)/ ToulBar2::NormFactor;}
+  Double getK(){return K;}
+  Double Cost2LogLike(Cost c)const{return (K - 4*to_double(c)/ ToulBar2::NormFactor)/log(10);}
+  Double Cost2Prob(Cost c)const{return K - 4*to_double(c)/ ToulBar2::NormFactor;}
 };
 
 #endif /*TB2HAPLOTYPE_HPP_*/

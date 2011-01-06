@@ -130,7 +130,7 @@ void Haplotype::read_bayesian(const char *fileName, WCSP *wcsp )
 
 void Haplotype::readMap(const char *fileName){
 
-	double position;
+	Double position;
 	bool ok = true;
 	ifstream fmap (ToulBar2::map_file.c_str());
 	if (!fmap){
@@ -827,14 +827,14 @@ void Haplotype::buildWCSP_haplotype( const char *fileName, WCSP *wcsp )
 	  vector<Cost> unaryCosts1(nbloci, 0);
 
 	  // find total cost
-	  double sumcost = 0.;
+	  Double sumcost = 0.;
 
-	  for(map<pair<int,int>,double,classcomp >::iterator w = W.begin(); w != W.end(); ++w)
+	  for(map<pair<int,int>,Double,classcomp >::iterator w = W.begin(); w != W.end(); ++w)
 		  sumcost += abs(w->second);
 	  ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
-	  wcsp->updateUb(ToulBar2::NormFactor*sumcost);
-//	  double constante = 0.;
-	  for(map<pair<int,int>,double,classcomp >::iterator w = W.begin(); w != W.end(); ++w){
+	  wcsp->updateUb((Cost) (ToulBar2::NormFactor*sumcost));
+//	  Double constante = 0.;
+	  for(map<pair<int,int>,Double,classcomp >::iterator w = W.begin(); w != W.end(); ++w){
 		  if(w->first.first != w->first.second){
 			  vector<Cost> costs(4,0);
 			  if(w->second > 0){
@@ -1156,20 +1156,20 @@ void Haplotype::sparse_matrix()
 					}
 					else
 						if(!first && transmission.find(fils->individual)->second[locus] != 0){
-							double recombination_frac = haldane(maplocus[locus]-maplocus[locus_prec]);
-							double coef = 0.25*log((1-recombination_frac)/recombination_frac);
+							Double recombination_frac = haldane(maplocus[locus]-maplocus[locus_prec]);
+							Double coef = 0.25*log((1-recombination_frac)/recombination_frac);
 							K += log((1-recombination_frac)*recombination_frac);
 							if(transmission.find(fils->individual)->second[locus] == transmission.find(fils->individual)->second[locus_prec])
 							{
 								if(W.count(pair<int,int>(locus_prec,locus)) == 0)
-									W.insert(pair<pair<int,int>,double >(pair<int,int>(locus_prec,locus),coef ));
+									W.insert(pair<pair<int,int>,Double >(pair<int,int>(locus_prec,locus),coef ));
 								else
 									W.find(pair<int,int>(locus_prec,locus))->second+=coef;
 							}
 							else
 							{
 								if(W.count(pair<int,int>(locus_prec,locus)) == 0)
-									W.insert(pair<pair<int,int>,double >(pair<int,int>(locus_prec,locus),-coef ));
+									W.insert(pair<pair<int,int>,Double >(pair<int,int>(locus_prec,locus),-coef ));
 								else
 									W.find(pair<int,int>(locus_prec,locus))->second+=-coef;
 								locus_prec=locus;
@@ -1183,7 +1183,7 @@ void Haplotype::sparse_matrix()
 	//affichage
 	if(ToulBar2::verbose >= 1){
 		cout << "sparse matrix : \n";
-		for(map< pair<int,int>,double,classcomp >::iterator it = W.begin(); it != W.end(); ++it)
+		for(map< pair<int,int>,Double,classcomp >::iterator it = W.begin(); it != W.end(); ++it)
 			if((*it).second>=0)
 				cout << "W" <<(*it).first.first << "," << (*it).first.second << "\t =\t  " << (*it).second  << endl;
 			else
