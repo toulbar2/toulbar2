@@ -15,7 +15,7 @@ struct BigInteger {
   BigInteger() {
     mpz_init(integer);
   }
-  BigInteger(Double d_) {
+  BigInteger(double d_) {
 	    mpz_init(integer);
 	    mpz_set_d(integer, d_);
   }
@@ -121,9 +121,9 @@ struct BigInteger {
       }
       friend istream& operator>>(istream& is, BigInteger& i) {
         //
-        Double p;
+        double p;
         is >> p;
-        mpz_set_si(i.integer,p);
+        mpz_set_d(i.integer,p);
         return is;
       }
     };
