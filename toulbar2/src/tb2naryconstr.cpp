@@ -71,7 +71,7 @@ void NaryConstraint::assign(int varIndex) {
 	}
 
 	if(nonassigned <= 3) {
-	  //cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
+	  //	  cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
 	  deconnect();
 	  projectNary();
 	}
@@ -637,8 +637,8 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 	TUPLES fproj;
 	TUPLES::iterator  it;
 	// First part of the projection: complexity O(|f|) we swap positions between the projected variable and the last variable
-	it = f.begin();
-	while(it != f.end()) {
+	while(!f.empty()) {
+	    it = f.begin();
 		t = it->first;
 		c =  it->second;
 		if(addUnaryCtr) {
@@ -652,7 +652,6 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 		tswap[xindex] = a;
 		fproj[tswap] = c;
 		f.erase(t);
-		it++;
 	}
 
 	if(xindex < arity_-1) {
@@ -706,7 +705,7 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 			}
 		}
 	}
-	if(!x->assigned()) {
+	if(x->unassigned()) {
 		x->deconnect(links[arity_-1]);
 		nonassigned = nonassigned - 1;
 	}
@@ -844,9 +843,37 @@ void NaryConstraintMap::preprojectall2()
 {
   assert(connected());
   assert(CUT(default_cost,wcsp->getUb()));
+  //  cout << *this << endl;
+
+  list< pair<int,int> > listxy;
+  list< pair<int,int> > rndlistxy;
 
   for(int i = 0; i < arity_; i++) {
   for(int j = i+1; j < arity_; j++) {
+	pair<int,int> p = make_pair(i,j);
+	listxy.push_back(p);
+  }}
+
+  while (listxy.size() > 0) {
+	int pos = myrand() % listxy.size();
+	//	cout << pos;
+	list< pair<int,int> >::iterator it = listxy.begin();
+	while (pos > 0) {
+	  ++it;
+	  --pos;
+	}
+	//	cout << "," << (*it).first << "," << (*it).second << endl;
+	rndlistxy.push_back(*it);
+	listxy.erase(it);
+  }
+
+  for(int i = 0; i < arity_; i++) {
+    for(int j = i+1; j < arity_; j++) {
+  // for (list< pair<int,int> >::iterator it = rndlistxy.begin(); it != rndlistxy.end(); ++it) {
+  // 	   int i = (*it).first;
+  // 	   int j = (*it).second;
+	   //	   cout << "try " << i << "," << j << ".." << endl;
+
 	   EnumeratedVariable* x = scope[i];
 	   EnumeratedVariable* y = scope[j];
 
@@ -871,9 +898,14 @@ void NaryConstraintMap::preprojectall2()
 		   xy[ a * sizey + b ]	= it->second;
 		   it++;
 		}
-	   if(fproj.size() > 0 || default_cost > MIN_COST) wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
+	   if(fproj.size() > 0 || default_cost > MIN_COST){
+		 //int res = 
+		 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
+		 //		 if (!wcsp->getCtr(res)->universal()) cout << ".. succeed" << endl;
+	   }
 	   if (deconnected()) return;
-	}}
+	}
+  }
 }
 
 
