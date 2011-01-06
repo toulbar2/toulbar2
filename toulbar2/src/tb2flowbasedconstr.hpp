@@ -75,7 +75,7 @@ class FlowBasedGlobalConstraint : public GlobalConstraint
 		virtual void augmentStructure(Graph &graph, Cost &cost, int varindex, map<Value, Cost> &delta);
 
 		// compute the csot according to the original cost struture
-		virtual Cost evalOriginal (string s) {return MIN_COST;}
+		virtual Cost evalOriginal (String s) {return MIN_COST;}
 		virtual Cost getMinCost () {
 			return cost;
 		}

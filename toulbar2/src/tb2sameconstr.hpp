@@ -17,7 +17,7 @@ class SameConstraint : public FlowBasedGlobalConstraint
 
 		~SameConstraint() {}
 
-		Cost evalOriginal (string s);
+		Cost evalOriginal (String s);
 		/*void addToGroup(int gp, Variable *var) {
 			for (int i=0;i<arity_;i++) {
 				if (getVar(i) == var) {

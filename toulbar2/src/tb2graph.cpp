@@ -22,7 +22,7 @@ void Graph::clearEdge() {
 	}
 } 
 
-void Graph::addEdge(int u, int v, Cost w, int capacity, int tag) {
+void Graph::addEdge(int u, int v, Cost w, Cost capacity, int tag) {
 
 	if ((u < 0) || (u >= size())) return; 
 	if ((v < 0) || (v >= size())) return;
@@ -117,9 +117,9 @@ vector<Cost> Graph::getWeight(int u, int v, int tag) {
 
 }
 
-void Graph::addFlow(int u, int v, int flowval) {
+void Graph::addFlow(int u, int v, Cost flowval) {
 	vector<Cost> vec = getWeight(u,v);
-	int target = *min_element(vec.begin(), vec.end());
+	Cost target = *min_element(vec.begin(), vec.end());
 	for (vector<List_Node>::iterator i = adjlist[u].begin(); i !=
 			adjlist[u].end();i++) {
 		if ((i->adj == v) && (i->weight == target)) {
@@ -142,22 +142,22 @@ void Graph::addFlow(int u, int v, int flowval) {
 	}
 }
 
-pair<int, Cost> Graph::minCostFlow(int s, int t, int maxValue) {
+pair<int, Cost> Graph::minCostFlow(int s, int t, Cost maxValue) {
 
 	int n = size();
-	int flow = 0;
-	int cost = 0;
+	Cost flow = 0;
+	Cost cost = 0;
 	pair<Cost, bool> result;
 	bool stopped = false;
 
 	for (int i=0;i<gsize;i++) sort(adjlist[i].begin(), adjlist[i].end());
 	shortest_path(s);
 	for (int i=0;i<n;i++) potential[i] = d[i]; 
-	for (int i=0;i<maxValue && !stopped;i++) {
+	for (Cost i=0;i<maxValue && !stopped;i++) {
 		/*stopped = false;
 		shortest_path(s);
 		int u = t;
-		int minc = INT_MAX;
+		Cost minc = MAX_COST;
 		while (p[u] != u && !stopped) {
 			int v = p[u];	
 			if (v < 0) {
@@ -186,7 +186,7 @@ pair<int, Cost> Graph::minCostFlow(int s, int t, int maxValue) {
 		stopped = false;
 		shortest_path_with_potential(s);
 		int u = t;
-		int minc = INT_MAX;
+		Cost minc = MAX_COST;
 		while (p[u] != u && !stopped) {
 			int v = p[u];	
 			if (v < 0) {
@@ -352,12 +352,12 @@ void Graph::removeNegativeCycles(Cost &cost) {
 		reverse(path.begin(), path.end());
 		path.push_back(*(path.begin()));
 
-		int weight = 0, minc = INF;
+		Cost weight = 0, minc = INF;
 
 		for (vector<int>::iterator i = path.begin(); i != path.end()-1;i++) {
 			u = *i;  v = *(i+1);
 			Cost w = INF;
-			int c = INF;
+			Cost c = INF;
 			for (vector<List_Node>::iterator j = adjlist[u].begin(); j !=
 					adjlist[u].end();j++) {
 				if ((j->adj == v) && (j->weight < w)) {
@@ -472,7 +472,7 @@ void Graph::shortest_path_with_potential(int s) {
 		  Q[u] = false;*/
 		for (vector<List_Node>::iterator j = adjlist[u].begin(); j !=
 				adjlist[u].end(); j++) {
-			int weight = j->weight + potential[u] - potential[j->adj];
+			Cost weight = j->weight + potential[u] - potential[j->adj];
 			if ((d[u] + weight < d[j->adj])) {
 				d[j->adj] = d[u] + weight;
 				p[j->adj] = u;

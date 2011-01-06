@@ -47,7 +47,7 @@ void AllDiffConstraint::read(ifstream &file) {
 	}
 }
 
-Cost AllDiffConstraint::evalOriginal( string s ) {
+Cost AllDiffConstraint::evalOriginal( String s ) {
 	Cost tuple_cost = 0;
 	if (mode == DEC) {
 		for (unsigned int i=0;i<s.length();i++) {

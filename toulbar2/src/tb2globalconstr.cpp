@@ -49,7 +49,7 @@ void GlobalConstraint::init() {
 	initStructure();
 }
 
-Cost GlobalConstraint::eval(string s) {
+Cost GlobalConstraint::eval(String s) {
 
 	Cost tcost = evalOriginal(s);
 	if (tcost < wcsp->getUb()) {
@@ -68,13 +68,12 @@ void GlobalConstraint::assign(int varIndex) {
 		nonassigned = nonassigned - 1;
 		if(nonassigned == 0) {
 			deconnect();
-			Char* tbuf = new Char [arity_ + 1]; 
+			Char tbuf[arity_ + 1]; 
 			for(int i=0;i<arity_;i++) { 		
 				tbuf[i] = getVar(i)->getValue() + CHAR_FIRST;
 			}
 			tbuf[arity_] =  '\0';
-			string t = to_string(tbuf);
-			delete [] tbuf;
+			String t = String(tbuf);
 			projectLB(eval(t));
 		} else { 
 			pushAll();

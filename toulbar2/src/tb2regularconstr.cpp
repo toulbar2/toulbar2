@@ -72,7 +72,7 @@ void RegularConstraint::read(ifstream &file) {
 
 }
 
-Cost RegularConstraint::eval( string s ) {	
+Cost RegularConstraint::eval( String s ) {	
 	for (int i=0;i<arity_;i++) {
 		tempdomain[i].clear();
 		tempdomain[i].insert(s[i]-CHAR_FIRST);

@@ -65,12 +65,12 @@ class RegularConstraint : public FlowBasedGlobalConstraint
 		void buildGraph(Graph &g);
 		void buildGraphBasic(Graph &g, bool needRebuildIndex);
 		void computeShortestPath(Graph &g, Cost &cost);
-		Cost evalOriginal(string s) {return 0;}
+		Cost evalOriginal(String s) {return 0;}
 	public:
 		RegularConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
 		~RegularConstraint() {}
 		string getName() {return "regular constraint";}
-		Cost eval(string s);
+		Cost eval(String s);
 		void read(ifstream &file);
 		virtual Cost getMinCost () {
 			return constructFlow(graph);

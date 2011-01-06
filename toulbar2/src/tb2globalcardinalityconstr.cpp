@@ -67,7 +67,7 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 
 }
 
-Cost GlobalCardinalityConstraint::evalOriginal( string s ) {
+Cost GlobalCardinalityConstraint::evalOriginal( String s ) {
 
 	Cost excess = 0, shortage = 0; 
 	map<Value ,int> appear;
