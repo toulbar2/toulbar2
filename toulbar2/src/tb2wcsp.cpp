@@ -1168,7 +1168,8 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	assert( ctr1 != ctr2 );
 	if(ctr1->order(ctr2) < 0) { Constraint* ctraux = ctr1; ctr1 = ctr2; ctr2 = ctraux; }
 	if (ToulBar2::verbose >= 1) cout << endl << "Sum of constraints: " << *ctr1 << " " << *ctr2 << endl;
-
+	assert(ctr1->connected());
+	assert(ctr2->connected());
 	ctr1->deconnect();
 	ctr2->deconnect(true);
 
@@ -1219,13 +1220,13 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 	unsigned int vxi,vyi,vzi;
 	String tuple,tuple1,tuple2;
 	Cost cost,cost1,cost2;
-	int ctrIndex = -1;
+	int ctrIndex = -INT_MAX;
 	Constraint* ctr = NULL;
 	vector<Cost> costs;
 
 	if(arityU > 3) {
 		ctrIndex= postNaryConstraint(scopeUi, arityU, Top);
-		ctr =  constrs[ctrIndex];
+		ctr =  getCtr(ctrIndex);
 		assert(ctr->extension());
 		NaryConstraintMap* nary = (NaryConstraintMap*) ctr;
 
@@ -1287,11 +1288,11 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 		  }
 		ctrIndex= postBinaryConstraint( x->wcspIndex, y->wcspIndex, costs );
 	}
-	assert(ctrIndex >= 0);
+	assert(ctrIndex > -INT_MAX);
 	delete [] scopeU;
 	delete [] scopeUi;
 	delete [] scopeI;
-	ctr =  constrs[ctrIndex];
+	ctr =  getCtr(ctrIndex);
 	ctr->propagate();
 	if (ToulBar2::verbose >= 1) cout << endl << "Has result: " << *ctr << endl;
 	return ctr;
@@ -1302,13 +1303,19 @@ Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 
 void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 {
+	if(ctr_inout->getIndex(var) < 0) return;
 	unsigned int vxi,vyi,vzi;
 	int arity = ctr_inout->arity();
-	if(ctr_inout->getIndex(var) < 0) return;
+	int truearity = arity;
+	if (arity>=5) { // n-ary (n>=5) with only 4 unassigned variables is projected on a ternary!
+	  truearity=0;
+	  for(int i=0; i<arity; i++) if (ctr_inout->getVar(i)->unassigned()) truearity++;
+	  assert(truearity>=4);
+	}
 
 	if (ToulBar2::verbose >= 1) cout << endl << "Projection of var " << var->wcspIndex << " in ctr: " << *ctr_inout << endl;
 
-	if(arity-1 > 3) {
+	if(truearity-1 > 3) {
 		((NaryConstraint*)ctr_inout)->project(var);
 		ctr_inout->propagate();
 		if (ToulBar2::verbose >= 1) cout << endl << "   has result: " << *ctr_inout << endl;
@@ -1323,19 +1330,25 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 	j = 0;
 	for(i=0; i<arity; i++) {
 		EnumeratedVariable* v = (EnumeratedVariable*) ctr_inout->getVar(i);
-		if(v != var) { ivars[j] = v->wcspIndex; evars[j] = v; j++; }
+		if(v != var && (arity<=4 || v->unassigned())) { ivars[j] = v->wcspIndex; evars[j] = v; j++; }
 	}
 
 	Constraint* ctr = NULL;
 	TernaryConstraint* tctr = NULL;
 	Cost Top = getUb();
 	int ctrIndex;
-	Char t[5];
+	Char t[arity+1];
 	vector<Cost> costs;
 
-	switch(arity-1)
+	switch(truearity-1)
 	{
-		case 3:  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)
+	    case 3:  if (truearity==4 && arity>=5) {
+		           for(i=0; i<arity; i++) {
+					 if (ctr_inout->getVar(i)->assigned()) 
+					   t[ctr_inout->getIndex(ctr_inout->getVar(i))] = ((EnumeratedVariable*)ctr_inout->getVar(i))->toIndex(ctr_inout->getVar(i)->getValue()) + CHAR_FIRST;
+				   }
+	             }
+                 for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)
 				  for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++)
 				   for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {
 				   	  Value v0 = evars[0]->toValue(vxi);
@@ -1350,7 +1363,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 
 						 for(EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 							   	t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
-					   	   		t[4] =  '\0';
+					   	   		t[arity] =  '\0';
 					   	   		String strt(t);
 						   	 	Cost c = ((NaryConstraint*)ctr_inout)->eval(strt) + var->getCost(*itv);
 						   	 	if(c < mincost) mincost = c;
@@ -1359,7 +1372,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 				   	  costs.push_back(mincost);
 				   }
 			  	  ctrIndex = postTernaryConstraint(ivars[0],ivars[1],ivars[2],costs);
-				  ctr = constrs[ctrIndex];
+				  ctr = getCtr(ctrIndex);
 				  break;
 
 		case 2:   tctr = (TernaryConstraint*)ctr_inout;
@@ -1377,7 +1390,7 @@ void WCSP::project( Constraint* &ctr_inout, EnumeratedVariable* var  )
 				      costs.push_back(mincost);
 				   }
 				   ctrIndex = postBinaryConstraint(ivars[0],ivars[1],costs);
-				   ctr = constrs[ctrIndex];
+				   ctr = getCtr(ctrIndex);
 				break;
 
     	case 1: for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)  {
