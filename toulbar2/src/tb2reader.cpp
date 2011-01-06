@@ -134,7 +134,7 @@ void WCSP::read_wcsp(const char *fileName)
 			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); } 		 
 			  file >> ntuples;
     
-			  if((defval != MIN_COST) || (ntuples > 0))           
+			  if((defval != MIN_COST) || (ntuples > 0))
 				{ 
 				  Cost tmpcost = defval*K;
 				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
@@ -155,18 +155,20 @@ void WCSP::read_wcsp(const char *fileName)
 					nary->setTuple(tup, tmpcost, NULL);
 				  }
 				
-				  Cost minc = nary->getMinCost();
-				  if (minc > MIN_COST) {
-					Cost defcost = nary->getDefCost();
-					if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
-					String tuple;
-					Cost cost;
-					nary->first();
-					while (nary->next(tuple,cost)) {
-					  nary->setTuple(tuple, cost-minc, NULL);
+				  if (ToulBar2::preprocessNary>0) {
+					Cost minc = nary->getMinCost();
+					if (minc > MIN_COST) {
+					  Cost defcost = nary->getDefCost();
+					  if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
+					  String tuple;
+					  Cost cost;
+					  nary->first();
+					  while (nary->next(tuple,cost)) {
+						nary->setTuple(tuple, cost-minc, NULL);
+					  }
+					  if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
+					  inclowerbound += minc;
 					}
-					if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
-					inclowerbound += minc;
 				  }
 
 				  //((NaryConstraintMap*) nary)->keepAllowedTuples( top );
@@ -600,7 +602,7 @@ void WCSP::read_uai2008(const char *fileName)
 			if(cost < minc) minc = cost;
 	        }
 
-		if(minc > MIN_COST) {	    
+		if(ToulBar2::preprocessNary>0 && minc > MIN_COST) {	    
 			for (k = 0; k < ntuples; k++) {
 				costs[k] -= minc;
 			}
