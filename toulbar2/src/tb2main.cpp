@@ -158,7 +158,8 @@ enum {
 	OPT_elimDegree_preprocessing,
 	NO_OPT_elimDegree_preprocessing,
 	OPT_showSolutions,
-
+	OPT_costfuncSeparate,
+  
 	// VAC OPTION
 	OPT_minsumDiffusion,
 	OPT_vac,
@@ -274,6 +275,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_elimDegree,		 	(char*) "-e:", 				SO_NONE 		},
 	{ OPT_elimDegree_preprocessing, 	(char*) "-p", 				SO_OPT	 		},
 	{ NO_OPT_elimDegree_preprocessing,	(char*) "-p:", 				SO_NONE 		},
+	{ OPT_costfuncSeparate,		(char*) "-dec", 			SO_NONE 		},
 	////////////////////////
 
 	{ OPT_minsumDiffusion,	 		(char*) "-M", 				SO_REQ_SEP		},
@@ -646,6 +648,9 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::preprocessTernary) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
+	cerr << "   -dec : decompose cost functions (arity >=3) into smaller arity cost functions";
+	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
+	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary (and some ternary) cost functions only if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
 	cerr << "   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"p\" and \"O\")";
 	if (ToulBar2::elimOrderType != ELIM_NONE) cerr << " (default option)";
@@ -1061,6 +1066,12 @@ int _tmain(int argc, TCHAR * argv[])
 				cout << args.OptionText() <<" OFF ==> no elimination of functional variables"<< ";" << endl;  
 				ToulBar2::preprocessFunctional  = 0;
 
+			}
+
+			if (args.OptionId() == OPT_costfuncSeparate)
+			{
+				cout << "decomposition of cost functions\n";
+				ToulBar2::costfuncSeparate = true;
 			}
 
 			// pre projection of nary constraint

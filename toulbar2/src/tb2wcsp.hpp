@@ -303,8 +303,9 @@ public:
     Constraint *getElimBinCtr(int elimBinIndex) const {return elimBinConstrs[elimBinIndex];}
     Constraint *getElimTernCtr(int elimTernIndex) const {return elimTernConstrs[elimTernIndex];}
 
-	BinaryConstraint*  newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1 = NULL,  Constraint *from2 = NULL );
-	TernaryConstraint*  newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1 = NULL );
+	BinaryConstraint* newBinaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1 = NULL,  Constraint *from2 = NULL );
+	TernaryConstraint* newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1 = NULL );
+	TernaryConstraint* newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs );
 
 	void eliminate();
 	void restoreSolution( Cluster* c = NULL );

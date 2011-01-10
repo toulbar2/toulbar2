@@ -86,6 +86,24 @@ public:
     virtual void first() {}
     virtual bool next( String& t, Cost& c) { return false; }
 
+    virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta ) {}
+    virtual bool separability( EnumeratedVariable* alpha , EnumeratedVariable* beta) {return false;}
+    virtual void separate(EnumeratedVariable *a, EnumeratedVariable *c) {}
+    bool decompose();
+    Cost squareminus(Cost c1,Cost c2, Cost top) {
+    	Cost c;
+    	if(c1>= top && c2 >= top) c = top; //c = 0;
+    	else if(c1 >= top) c = 3*top;
+    	else if(c2 >= top) c = -3*top;
+    	else  c = c1-c2;
+    	return c;
+    }
+	bool universe (Cost c1, Cost c2, Cost top){
+		if(c1 >= top && c2 >= top) return true;
+		else return false;
+	}
+    bool verifySeparate(Constraint * ctr1, Constraint * ctr2);
+
 	virtual void setTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
 

@@ -381,6 +381,30 @@ public:
     	return false; 
     }
 
+    void first(EnumeratedVariable* alpha, EnumeratedVariable* beta){
+    	int pos_alpha = getIndex(alpha);
+    	int pos_beta = getIndex(beta);
+
+    	switch(pos_alpha){
+    	case 0 : itvz = x->begin(); zvar = x; break;
+    	case 1 : itvz = y->begin(); zvar = y; break;
+    	case 2 : itvz = z->begin(); zvar = z; break;
+    	}
+    	switch(pos_beta){
+    	case 0 : itvy = x->begin(); yvar = x; break;
+    	case 1 : itvy = y->begin(); yvar = y; break;
+    	case 2 : itvy = z->begin(); yvar = z; break;
+    	}
+    	switch(3-pos_alpha-pos_beta){
+    	case 0 : itvx = x->begin(); xvar = x; break;
+    	case 1 : itvx = y->begin(); xvar = y; break;
+    	case 2 : itvx = z->begin(); xvar = z; break;
+
+    	}
+    }
+	bool separability(EnumeratedVariable* alpha, EnumeratedVariable* beta);
+	void separate(EnumeratedVariable *a, EnumeratedVariable *c);
+
     void firstlex() { first(); }
     bool nextlex( String& t, Cost& c) { return next(t,c); } 
 

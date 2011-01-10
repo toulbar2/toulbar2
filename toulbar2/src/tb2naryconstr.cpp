@@ -393,7 +393,16 @@ void NaryConstraintMap::fillFilters()
 	}
 }
 
-
+Cost NaryConstraintMap::eval( String& tin, EnumeratedVariable** scope_in ) {
+	String t(tin);
+	if(scope_in) {
+			for(int i = 0; i < arity_; i++) {
+				int pos = getIndex(scope_in[i]);
+				t[pos] = tin[i];
+			}
+		}
+	return eval(t);
+}
 
 Cost NaryConstraintMap::eval( String& s ) {
 	TUPLES& f = *pf;
@@ -451,6 +460,317 @@ bool NaryConstraintMap::next( String& t, Cost& c)
 	}
 	if(!ok && tuple_it == pf->end()) return false;
 	else return true;
+}
+
+void NaryConstraintMap::first(EnumeratedVariable * vx, EnumeratedVariable * vz)
+{
+	it_values.clear();
+	EnumeratedVariable* var;
+	it_values.push_back( vx->begin() );
+	for(int i=0;i<arity_;i++) {
+		var = (EnumeratedVariable*) getVar(i);
+		if(var != vx && var != vz) it_values.push_back( var->begin() );
+	}
+	it_values.push_back( vz->begin() );
+}
+
+bool NaryConstraintMap::separability(EnumeratedVariable * vx, EnumeratedVariable * vz){
+	int a = arity(), i = a-1, k;
+	bool finished = false;
+	bool neweq = true;
+	bool sev = true; // false if vx and vz are not separable
+	Cost diff = 0;
+	Cost c1, c;
+	vector<int> ordre(a,-1);
+	EnumeratedVariable* var;
+	EnumeratedVariable ** scope_in;
+	String t1(iterTuple), t(iterTuple);
+
+	EnumeratedVariable::iterator itvzfirst = vz->begin();
+	EnumeratedVariable::iterator itvznext = itvzfirst;
+	if(itvznext !=vz->end()) ++itvznext;
+	scope_in = (EnumeratedVariable **) malloc ( a*sizeof(EnumeratedVariable *));
+	first(vx,vz);
+
+	scope_in[0] = vx; //.push_back( alpha );
+	ordre[a-1] = 0;
+	k = 1;
+	if(ToulBar2::verbose >= 1) cout << "[ " << vx->getName() << " ";
+	for (int j = 0; j < a; j++) {
+			var = (EnumeratedVariable*) getVar(j);
+			if(var != vx && var != vz) {
+				scope_in[k] = var;
+				ordre[k-1] = k;
+				if(ToulBar2::verbose >= 1) cout << var->getName() << " ";
+				++k;
+			}
+		}
+
+	scope_in[a-1] = vz;//.push_back( beta );
+	ordre[a-2] = a-1;
+	//if(it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
+	if(ToulBar2::verbose >= 1) cout << vz->getName() << " ] ? ";// << endl;
+
+	while( sev &&  itvznext != vz->end()){
+		first(vx,vz);
+		while(sev && it_values[ordre[0]] != scope_in[ordre[0]]->end()){
+			if(it_values[ordre[a-2]] == itvzfirst/*vz->begin()*/) ++it_values[ordre[a-2]];
+			//if(it_values[ordre[a-2]] != vz->end()){
+				for(int j = 0; j < a; j++) {
+					t[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST; // PROBLEME CAR it_values[ordre[a-2]] = vz->end()
+					t1[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
+				}
+				t1[a-1] = scope_in[a-1]->toIndex(*itvzfirst/*vz->begin()*/) + CHAR_FIRST;
+
+				// etude de la difference
+				c1 = eval(t1,scope_in);
+				c = eval(t,scope_in);
+				if(!universe(c, c1, wcsp->getUb())){
+
+					if(ToulBar2::verbose >= 3) {if(!neweq) cout << "= \n"; else cout << endl;}
+					if(ToulBar2::verbose >= 3){
+						cout << "C";
+						for(unsigned int j=0;j<t.size();j++) {
+							cout << t[j] - CHAR_FIRST << "." ;
+						}
+						cout << " - C";
+						for(unsigned int j=0;j<t1.size();j++) {
+							cout << t1[j] - CHAR_FIRST << "." ;
+						}
+						cout << " = " << c << " - " << c1;
+					}
+					if(neweq) {diff = squareminus(c,c1,wcsp->getUb()); neweq = false; }
+					else sev = (diff == squareminus(c,c1,wcsp->getUb()));
+					if(ToulBar2::verbose >= 3) cout << " = " << squareminus(c,c1,wcsp->getUb())  << endl;
+				}
+				else if(ToulBar2::verbose >= 3) cout << "universe\n";
+				finished = false;
+				i = a-1;
+				while(sev && !finished) {
+					var = scope_in[ordre[i]];
+					++it_values[ordre[i]];
+					finished = it_values[ordre[i]] != var->end();
+					if(!finished) {
+						//it_values[ordre[i]] = var->begin();
+						if(i>0) {
+							it_values[ordre[i]] = var->begin();
+							if(i == a-1) neweq = true;
+							i--;
+						}else finished = true;
+					}
+				}
+				if(it_values[ordre[a-2]] == itvzfirst/*vz->begin()*/ && it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
+			//}
+		}
+		++itvzfirst;
+		++itvznext;
+		if(ToulBar2::verbose >= 3) cout << "--\n";
+	}
+	free(scope_in);
+	return sev;
+
+}
+
+void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
+{
+	Cost cost,minCost = MAX_COST;
+	int a = arity();
+	String t(a,'0'),tX(a-1,'0'),tZ(a-1,'0');
+	int index, k;
+	EnumeratedVariable* var;
+	TernaryConstraint *existX, *existZ;
+	Constraint *naryz,  *naryx;
+	EnumeratedVariable * scope_in[a];
+	EnumeratedVariable * subscopeX[a-1];
+	EnumeratedVariable * subscopeZ[a-1];
+	int scopeX[a-1];
+	int scopeZ[a-1];
+
+	first(vx,vz);
+
+	// initialisation des scopes
+	scope_in[0] = vx;
+	scopeX[0] = atoi(vx->getName().c_str()); subscopeX[0] = vx;
+
+	k = 1;
+
+	for (int j = 0; j < a; j++) {
+		var = (EnumeratedVariable*) getVar(j);
+		if(var != vx && var != vz) {
+			scope_in[k] = var;
+
+			subscopeX[k] = var;
+			scopeX[k] = atoi(var->getName().c_str());
+
+			subscopeZ[k-1] = var;
+			scopeZ[k-1] = atoi(var->getName().c_str());
+
+			++k;
+		}
+	}
+
+	scope_in[a-1] = vz;
+
+	scopeZ[a-2] = atoi(vz->getName().c_str());subscopeZ[a-2] = vz;
+
+	// creation de la nouvelle contrainte
+	if(a == 4){
+		int size = subscopeX[0]->getDomainInitSize()*subscopeX[1]->getDomainInitSize()*subscopeX[2]->getDomainInitSize();
+		vector<Cost> costs(size,0);
+		existX = subscopeX[0]->getConstr(subscopeX[1],subscopeX[2]);
+		naryx = wcsp->newTernaryConstr(subscopeX[0],subscopeX[1],subscopeX[2],costs);
+	}
+	else{
+		index = wcsp->postNaryConstraint(scopeX,a-1,wcsp->getUb());
+		naryx = wcsp->getCtr(index);
+	}
+
+	minCost = MAX_COST;
+	int i;
+	if(ToulBar2::verbose >= 3) {
+		cout << "\n[ ";
+		for(int j = 0; j < a-1; j++)
+			cout << scopeX[j] << " ";
+		cout << " ]"  << endl;
+	}
+	while(it_values[0] != scope_in[0]->end()){
+		for(int j = 0; j < a-1; j++) {
+			t[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
+			tX[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
+		}
+		t[a-1] = scope_in[a-1]->toIndex(*it_values[a-1]) + CHAR_FIRST;
+
+		cost = eval(t, scope_in);
+		if(cost < minCost) minCost = cost;
+		int finished = false;
+		i = a-1;
+		while( !finished) {
+
+			++it_values[i];
+			finished = it_values[i] != scope_in[i]->end();
+			if(!finished) {
+				if(i == a-1) {
+					if(ToulBar2::verbose >= 3){
+						for(unsigned int j=0;j<tX.size();j++) {
+							cout << tX[j] - CHAR_FIRST<< " ";
+						}
+						cout << "  " << minCost << endl;
+					}
+					naryx->setTuple(tX, minCost,subscopeX);
+					minCost = MAX_COST;
+				}
+				if(i>0) {
+					it_values[i] = scope_in[i]->begin();
+					i--;
+				}else finished = true;
+			}
+		}
+
+	}
+
+
+	if(ToulBar2::verbose >= 3) cout << "-----------------------------------" << endl;
+	if(a == 4){
+
+		int size = subscopeZ[0]->getDomainInitSize()*subscopeZ[1]->getDomainInitSize()*subscopeZ[2]->getDomainInitSize();
+		vector<Cost> costs(size,0);
+		existZ = subscopeZ[0]->getConstr(subscopeZ[1],subscopeZ[2]);
+		naryz = wcsp->newTernaryConstr(subscopeZ[0],subscopeZ[1],subscopeZ[2],costs);
+	}
+	else {
+		index = wcsp->postNaryConstraint(scopeZ,a-1,wcsp->getUb());
+		naryz = wcsp->getCtr(index);
+	}
+
+	if(ToulBar2::verbose >= 3){
+		cout << "[ ";
+		for(int j = 0; j < a-1; j++)
+			cout << scopeZ[j] << " ";
+		cout << " ]"  << endl;
+	}
+	first(vx,vz);
+
+	Cost diffcost;
+	Cost cX;
+	while(it_values[1] != scope_in[1]->end()){
+		for(int j = 1; j < a; j++) {
+			t[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
+			tZ[j-1] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
+		}
+		//t[0] = scope_in[0]->toIndex(*it_values[0]) + CHAR_FIRST;
+		EnumeratedVariable::iterator it = scope_in[0]->begin();
+		do{
+			t[0] = scope_in[0]->toIndex(*it) + CHAR_FIRST;
+			cost = eval(t, scope_in);
+			cX = naryx->evalsubstr(t,naryx);
+			diffcost = squareminus(cost,cX, wcsp->getUb());
+			++it;
+			//cout << t[0]-CHAR_FIRST << endl;
+		}while(it != scope_in[0]->end() && cost >= wcsp->getUb() && cX >= wcsp->getUb());
+
+		cost = eval(t, scope_in);
+		Cost cX = naryx->evalsubstr(t,naryx);
+		diffcost = squareminus(cost,cX, wcsp->getUb());
+		if(ToulBar2::verbose >= 3){
+			for(unsigned int j=0;j<tZ.size();j++) {
+				cout << tZ[j] - CHAR_FIRST<< " ";
+			}
+
+			cout << "  " <<  diffcost << endl;
+		}
+		naryz->setTuple(tZ, diffcost,subscopeZ);
+		int finished = false;
+		i = a-1;
+		while( !finished) {
+
+			++it_values[i];
+			finished = it_values[i] != scope_in[i]->end();
+			if(!finished) {
+				if(i>1) {
+					it_values[i] = scope_in[i]->begin();
+					i--;
+				}else finished = true;
+			}
+		}
+
+	}
+
+	if(ToulBar2::verbose >= 3) cout << "-----------------------------------" << endl;
+	assert(verifySeparate(naryx,naryz));
+
+	if(!naryx->universal()){
+		if(ToulBar2::verbose == 1) {
+			cout << "\n[ ";
+			for(int j = 0; j < a-1; j++)
+				cout << scopeX[j] << " ";
+			cout << " ]"  << endl;
+		}
+		if(a == 4){
+			if(existX && !existX->universal()){
+				((TernaryConstraint*) naryx)->addCosts(existX);
+				existX->deconnect();
+			}
+		}
+		naryx->reconnect();
+		naryx->propagate();
+	} else naryx->deconnect();
+	if(!naryz->universal()){
+		if(ToulBar2::verbose == 1){
+			cout << "[ ";
+			for(int j = 0; j < a-1; j++)
+				cout << scopeZ[j] << " ";
+			cout << " ]"  << endl;
+		}
+		if(a == 4){
+			if(existZ && !existZ->universal()){
+				((TernaryConstraint*) naryz)->addCosts(existZ);
+				existZ->deconnect();
+			}
+		}
+		naryz->reconnect();
+		naryz->propagate();
+	} else naryz->deconnect();
+	deconnect();
 }
 
 void NaryConstraintMap::permute( EnumeratedVariable** scope_in )

@@ -43,6 +43,7 @@ int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
 bool ToulBar2::preprocessTernary  = false;
 int ToulBar2::preprocessFunctional  = 0;
+bool ToulBar2::costfuncSeparate = false;
 int ToulBar2::preprocessNary  = 10;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
@@ -451,14 +452,16 @@ void WCSP::processTernary()
     	{
     		TernaryConstraint* t = (TernaryConstraint*) constrs[i];
     		t->extendTernary();
-    		t->projectTernary();
+			t->decompose();
+    		if (t->connected()) t->projectTernary();
     	}
 	for (int i=0; i<elimTernOrder; i++) 
 	  if (elimTernConstrs[i]->connected())
     	{
 		    TernaryConstraint* t = (TernaryConstraint*) elimTernConstrs[i];
     		t->extendTernary();
-    		t->projectTernary();
+			t->decompose();
+    		if (t->connected()) t->projectTernary();
     	}
 }
 
@@ -487,6 +490,25 @@ void WCSP::preprocessing()
 		}
     }
 
+	int posConstrs = 0;
+	int posElimTernConstrs = 0;
+    if(ToulBar2::costfuncSeparate){
+    	double time = cpuTime();
+    	for (unsigned int i=0; i<constrs.size(); i++) {
+    		if(constrs[i]->connected() && !constrs[i]->isSep()) {
+			  constrs[i]->decompose();
+			}
+		}
+    	for (int i=0; i<elimTernOrder; i++) {
+    		if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+			  elimTernConstrs[i]->decompose();
+			}
+		}
+		posConstrs=constrs.size();
+		posElimTernConstrs=elimTernOrder;
+    	cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
+    }
+
 	propagate();
 
     if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
@@ -505,7 +527,7 @@ void WCSP::preprocessing()
 		  if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
 			nary->keepAllowedTuples( getUb() );
 			nary->preprojectall2();
-			if (nary->connected()) nary->preproject3();
+			//			if (nary->connected()) nary->preproject3();
 		  }
 		}
 	  }
@@ -553,8 +575,8 @@ void WCSP::preprocessing()
 	if (ToulBar2::preprocessTernary) {
 	  cout << "Process ternary groups of variables." << endl;
 	  processTernary();
-	  ternaryCompletion();
-	  processTernary();
+	  //	  ternaryCompletion();
+	  //	  processTernary();
 	  propagate();
 	}
 
@@ -574,6 +596,20 @@ void WCSP::preprocessing()
 		  if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimTernConstrs[i];
 		  elimTernConstrs[i]->deconnect(true);
 		}
+	  if(ToulBar2::costfuncSeparate) {
+    	for (unsigned int i=posConstrs; i<constrs.size(); i++) {
+		  if(constrs[i]->connected() && !constrs[i]->isSep()) {
+			constrs[i]->decompose();
+		  }
+		}
+    	for (int i=posElimTernConstrs; i<elimTernOrder; i++) {
+		  if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+			elimTernConstrs[i]->decompose();
+		  }
+		}
+		posConstrs=constrs.size();
+		posElimTernConstrs=elimTernOrder;
+	  }
 	  if (!Eliminate.empty()) propagate();
 	} while (numberOfUnassignedVariables() < nbunvar);
 
@@ -1162,6 +1198,34 @@ TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVari
 	return ctr;
 }
 
+TernaryConstraint* WCSP::newTernaryConstr( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs )
+{
+	unsigned int a,b;
+	vector<Cost> zerocostsxy;
+	vector<Cost> zerocostsxz;
+	vector<Cost> zerocostsyz;
+
+	for (a = 0; a < x->getDomainInitSize(); a++) { for (b = 0; b < y->getDomainInitSize(); b++) { zerocostsxy.push_back(MIN_COST); } }
+	for (a = 0; a < x->getDomainInitSize(); a++) { for (b = 0; b < z->getDomainInitSize(); b++) { zerocostsxz.push_back(MIN_COST); } }
+	for (a = 0; a < y->getDomainInitSize(); a++) { for (b = 0; b < z->getDomainInitSize(); b++) { zerocostsyz.push_back(MIN_COST); } }
+
+	BinaryConstraint* xy = x->getConstr(y);
+	BinaryConstraint* xz = x->getConstr(z);
+	BinaryConstraint* yz = y->getConstr(z);
+
+	if (!ToulBar2::vac) {
+		if(!xy) { xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(true); }
+		if(!xz) { xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(true); }
+		if(!yz) { yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(true); }
+	} else {
+		if(!xy) { xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost); xy->deconnect(true); }
+		if(!xz) { xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost); xz->deconnect(true); }
+		if(!yz) { yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost); yz->deconnect(true); }
+	}
+
+	TernaryConstraint *ctr = new TernaryConstraint(this,x,y,z, xy, xz, yz, costs, &storeData->storeCost);
+	return ctr;
+}
 
 Constraint* WCSP::sum( Constraint* ctr1, Constraint* ctr2  )
 {

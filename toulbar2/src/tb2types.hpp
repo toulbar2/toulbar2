@@ -151,6 +151,7 @@ public:
     static int minsumDiffusion;
     static bool preprocessTernary;
     static int preprocessFunctional;
+    static bool costfuncSeparate;
     static int preprocessNary;
     static bool QueueComplexity;
     static bool lastConflict;

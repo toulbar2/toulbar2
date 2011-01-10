@@ -375,6 +375,142 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
     }
 }
 
+bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable* vz)
+{
+    	Cost c1,c;
+    	Char tch[4];
+    	bool neweq = true; // true if we have  not a difference value
+    	bool sev = true; // false if vy and vz are not severable
+    	Cost diff = 0;
+    	first(vy,vz);
+    	EnumeratedVariable::iterator itvyfirst = yvar->begin();
+    	if(ToulBar2::verbose >= 1) cout << " [ " << zvar->getName()  << " " << xvar->getName() << " " << yvar->getName() << " ] ?"; // << endl;
+    	while (sev && itvyfirst != yvar->end()){
+    		itvx = xvar->begin();
+    		itvy = yvar->begin();
+    		itvz = zvar->begin();
+    		while(sev && itvx != xvar->end()) {
+    			int ix = xvar->toIndex(*itvx);
+    			tch[0] = ix + CHAR_FIRST;
+    			while(sev && itvy != yvar->end()) {
+    				int iy = yvar->toIndex(*itvy);
+    				tch[1] = iy + CHAR_FIRST;
+    				while(sev && itvy != itvyfirst && itvz != zvar->end()) {
+    					int iz = zvar->toIndex(*itvz);
+    					tch[2] = iz + CHAR_FIRST;
+    					tch[3] = '\0';
+
+    					c1 = getCost(xvar,yvar,zvar,*itvx, *(itvyfirst), *itvz);
+    					c = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz);
+
+    					if(!universe(c, c1, wcsp->getUb())){
+    						if(ToulBar2::verbose >= 3) {if(!neweq)  cout << "= \n"; else cout << endl;}
+    						if(ToulBar2::verbose >= 3) cout << " C" << tch[2]-CHAR_FIRST << "."  << tch[0]-CHAR_FIRST << "." << tch[1]-CHAR_FIRST << " -  C" << tch[2]-CHAR_FIRST << "." << tch[0]-48  << "."  << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
+
+    						if(neweq) {diff = squareminus(c,c1,wcsp->getUb()); neweq = false; }
+    						else sev = (diff == squareminus(c,c1,wcsp->getUb()));
+    						if(ToulBar2::verbose >= 3) cout << " = " << squareminus(c,c1,wcsp->getUb()) <<  endl;
+    					}
+    					else{
+    						if(ToulBar2::verbose >= 3) cout << "universe\n";
+    					}
+    					++itvz;
+    				}
+    				++itvy;
+    				itvz = zvar->begin();
+    				neweq = true;
+
+
+    			}
+    			++itvx;
+    			itvy = yvar->begin();
+    			neweq = true;
+    		}
+    		++itvyfirst;
+    		itvx = xvar->begin();
+    		neweq = true;
+    		if(ToulBar2::verbose >= 3) cout << "---\n";
+    	}
+    	return sev;
+}
+
+void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz) {
+	//assert(severability(vy,vz));
+	vector<Cost> costsZX, costsXY;
+	Cost cost,minCost = MAX_COST;
+	//string vx,vy,vz;
+	first(vy,vz);
+	string xv(xvar->getName()), yv(yvar->getName()), zv(zvar->getName());
+	if(ToulBar2::verbose == 1) cout << "\n";
+
+	if(ToulBar2::verbose >= 3) cout << "[ " << zvar->getName() << " " << xvar->getName() << " ]" << endl;
+	while(itvz != zvar->end()) {
+		while(itvx != xvar->end()) {
+			minCost = MAX_COST;
+			while(itvy != yvar->end()) {
+				cost = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz);
+				if(cost < minCost) minCost = cost;
+				if(minCost>= wcsp->getUb()) minCost = wcsp->getUb();
+				++itvy;
+			}
+			if(ToulBar2::verbose >= 3) cout << *itvx << " " << *itvz << " : " << minCost << endl;
+			costsZX.push_back(minCost);
+			++itvx;
+			itvy = yvar->begin();
+		}
+		++itvz;
+		itvx = xvar->begin();
+	}
+	BinaryConstraint* existZX = xvar->getConstr(zvar);
+	assert(existZX);
+	BinaryConstraint  *zx = new BinaryConstraint(wcsp,zvar, xvar,costsZX, &wcsp->getStore()->storeCost);
+	if(ToulBar2::verbose >= 3)cout << "-------------\n";
+	if(ToulBar2::verbose >= 3) cout << "[ " << xvar->getName() << " " << yvar->getName() << " ]" <<  endl;
+
+
+	first(vy,vz);
+	Cost costzx;
+	while(itvx != xvar->end()) {
+		while(itvy != yvar->end()) {
+			itvz = zvar->begin();
+			do {
+				cost = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz);
+				costzx = zx->getCost(*itvz,*itvx);
+				++itvz;
+			}while(itvz != zvar->end() && cost>= wcsp->getUb() && costzx >= wcsp->getUb() );
+			costsXY.push_back(squareminus(cost,costzx,wcsp->getUb()));
+			if(ToulBar2::verbose >= 3) cout << *itvx << " " << *itvy << " : " << squareminus(cost,costzx,wcsp->getUb()) << endl;
+			++itvy;
+		}
+		++itvx;
+		itvy = yvar->begin();
+	}
+	BinaryConstraint* existXY = xvar->getConstr(yvar);
+	assert(existXY);
+	BinaryConstraint * xy = new BinaryConstraint(wcsp,xvar, yvar,costsXY, &wcsp->getStore()->storeCost);
+
+	assert(verifySeparate(zx,xy));
+
+	// fusion with the existing constraint (xz)
+	if(!zx->universal()){
+		if(ToulBar2::verbose >= 1) cout << "[ " << zv << " " << xv << " ]" << endl;
+		existZX->addCosts(zx);
+		existZX->reconnect();
+		existZX->propagate();
+	}
+	zx->deconnect();
+
+	// fusion with the existing constraint (xy)
+	if(!xy->universal()){
+		if(ToulBar2::verbose >= 1) cout << "[ " << xv << " " << yv << " ]" <<  endl;
+		existXY->addCosts(xy);
+		existXY->reconnect();
+		existXY->propagate();
+	}
+	xy->deconnect();
+	deconnect();
+}
+
 void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
 {
     bool flag = false;

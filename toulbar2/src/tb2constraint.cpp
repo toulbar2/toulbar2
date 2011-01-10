@@ -148,4 +148,53 @@ bool Constraint::universal()
   return true;
 }
 
+bool Constraint::verifySeparate(Constraint * ctr1, Constraint * ctr2){
+	assert(scopeIncluded(ctr1));
+	assert(scopeIncluded(ctr2));
+	String tuple;
+	Cost cost, c1,c2;
+	firstlex();
+	if(ToulBar2::verbose >= 3) { cout << "[ ";
+	for(int i = 0; i< arity(); ++i)
+		cout << getVar(i)->getName() << " ";
+	cout << " ]\n" ;
+	}
+	while(nextlex(tuple,cost)){
+		c1 = ctr1->evalsubstr(tuple,this);
+		c2 = ctr2->evalsubstr(tuple,this);
+		if(ToulBar2::verbose >= 3){
+			for(int i = 0; i< arity(); ++i)
+				cout << tuple[i] - CHAR_FIRST << " ";
+			//cout << endl;
+			cout << " : " << cost << " =? " << c1 << " + " << c2 << " : " << c1 + c2 << endl;
+		}
+		if(cost < wcsp->getUb() && c1+c2 != cost) return false;
+		if(cost >= wcsp->getUb() && c1+c2 < wcsp->getUb()) return false;
+	}
+	return true;
+}
 
+bool Constraint::decompose()
+{
+  bool sep = false;
+  if(extension() && arity() >= 3 && !universal()) {
+	TSCOPE scopeinv;
+	getScope(scopeinv);
+	EnumeratedVariable * vx = NULL;
+	EnumeratedVariable * vz = NULL;
+	for(TSCOPE::reverse_iterator it1 = scopeinv.rbegin(); it1 != scopeinv.rend() && !sep; ++it1) {
+	  TSCOPE::reverse_iterator it2 = it1;
+	  for(++it2; it2 != scopeinv.rend() && !sep; ++it2) {
+		vx = (EnumeratedVariable *) wcsp->getVar((*it2).first);
+		vz = (EnumeratedVariable *) wcsp->getVar((*it1).first);
+		if(ToulBar2::verbose >= 1) cout << /*"\n" <<*/ vx->getName() << " and " << vz->getName() << " are separable in ";
+		sep = separability(vx,vz);
+		if(sep && ToulBar2::verbose >= 1) cout << " YES" << endl;
+		if(!sep && ToulBar2::verbose >= 1) cout << " NO" << endl;
+	  }
+	}
+	if(sep) separate(vx,vz);
+	if(ToulBar2::verbose >= 3) cout << "=====================================================" << endl;
+  }
+  return sep;
+}

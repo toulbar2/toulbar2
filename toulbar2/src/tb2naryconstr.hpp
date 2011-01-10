@@ -129,6 +129,7 @@ public:
     int size() {return pf->size();}
 	bool consistent( String& t );
     Cost eval( String& s );
+    Cost eval( String& s, EnumeratedVariable** scope_in );
 
 	Cost getDefCost() { return default_cost; }
 	void setDefCost( Cost df ) { default_cost = df; }
@@ -145,6 +146,10 @@ public:
 
 	void first();
     bool next( String& t, Cost& c);
+
+    void first(EnumeratedVariable* a, EnumeratedVariable* b);
+    bool separability(EnumeratedVariable* a, EnumeratedVariable* b);
+    void separate(EnumeratedVariable *a, EnumeratedVariable *c);
 
 	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
