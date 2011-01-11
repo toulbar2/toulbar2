@@ -384,7 +384,9 @@ public:
     void first(EnumeratedVariable* alpha, EnumeratedVariable* beta){
     	int pos_alpha = getIndex(alpha);
     	int pos_beta = getIndex(beta);
-
+		xvar = NULL;
+		yvar = NULL;
+		zvar = NULL;
     	switch(pos_alpha){
     	case 0 : itvz = x->begin(); zvar = x; break;
     	case 1 : itvz = y->begin(); zvar = y; break;
@@ -399,8 +401,10 @@ public:
     	case 0 : itvx = x->begin(); xvar = x; break;
     	case 1 : itvx = y->begin(); xvar = y; break;
     	case 2 : itvx = z->begin(); xvar = z; break;
-
     	}
+		assert(xvar != yvar);
+		assert(xvar != zvar);
+		assert(yvar != zvar);
     }
 	bool separability(EnumeratedVariable* alpha, EnumeratedVariable* beta);
 	void separate(EnumeratedVariable *a, EnumeratedVariable *c);

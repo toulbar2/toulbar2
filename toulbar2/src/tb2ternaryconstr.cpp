@@ -380,22 +380,22 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
     	Cost c1,c;
     	Char tch[4];
     	bool neweq = true; // true if we have  not a difference value
-    	bool sev = true; // false if vy and vz are not severable
+    	bool sep = true; // false if vy and vz are not separable
     	Cost diff = 0;
     	first(vy,vz);
     	EnumeratedVariable::iterator itvyfirst = yvar->begin();
     	if(ToulBar2::verbose >= 1) cout << " [ " << zvar->getName()  << " " << xvar->getName() << " " << yvar->getName() << " ] ?"; // << endl;
-    	while (sev && itvyfirst != yvar->end()){
+    	while (sep && itvyfirst != yvar->end()){
     		itvx = xvar->begin();
     		itvy = yvar->begin();
     		itvz = zvar->begin();
-    		while(sev && itvx != xvar->end()) {
+    		while(sep && itvx != xvar->end()) {
     			int ix = xvar->toIndex(*itvx);
     			tch[0] = ix + CHAR_FIRST;
-    			while(sev && itvy != yvar->end()) {
+    			while(sep && itvy != yvar->end()) {
     				int iy = yvar->toIndex(*itvy);
     				tch[1] = iy + CHAR_FIRST;
-    				while(sev && itvy != itvyfirst && itvz != zvar->end()) {
+    				while(sep && itvy != itvyfirst && itvz != zvar->end()) {
     					int iz = zvar->toIndex(*itvz);
     					tch[2] = iz + CHAR_FIRST;
     					tch[3] = '\0';
@@ -408,7 +408,7 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
     						if(ToulBar2::verbose >= 3) cout << " C" << tch[2]-CHAR_FIRST << "."  << tch[0]-CHAR_FIRST << "." << tch[1]-CHAR_FIRST << " -  C" << tch[2]-CHAR_FIRST << "." << tch[0]-48  << "."  << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
 
     						if(neweq) {diff = squareminus(c,c1,wcsp->getUb()); neweq = false; }
-    						else sev = (diff == squareminus(c,c1,wcsp->getUb()));
+    						else sep = (diff == squareminus(c,c1,wcsp->getUb()));
     						if(ToulBar2::verbose >= 3) cout << " = " << squareminus(c,c1,wcsp->getUb()) <<  endl;
     					}
     					else{
@@ -431,12 +431,14 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
     		neweq = true;
     		if(ToulBar2::verbose >= 3) cout << "---\n";
     	}
-    	return sev;
+    	return sep;
 }
 
-void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz) {
-	//assert(severability(vy,vz));
-	vector<Cost> costsZX, costsXY;
+void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
+{
+	//assert(separability(vy,vz));
+    vector<Cost> costsZX(zvar->getDomainInitSize() * xvar->getDomainInitSize(), MIN_COST);
+    vector<Cost> costsXY(xvar->getDomainInitSize() * yvar->getDomainInitSize(), MIN_COST);
 	Cost cost,minCost = MAX_COST;
 	//string vx,vy,vz;
 	first(vy,vz);
@@ -454,7 +456,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 				++itvy;
 			}
 			if(ToulBar2::verbose >= 3) cout << *itvx << " " << *itvz << " : " << minCost << endl;
-			costsZX.push_back(minCost);
+			costsZX[zvar->toIndex(*itvz)*xvar->getDomainInitSize()+xvar->toIndex(*itvx)] = minCost;
 			++itvx;
 			itvy = yvar->begin();
 		}
@@ -478,7 +480,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 				costzx = zx->getCost(*itvz,*itvx);
 				++itvz;
 			}while(itvz != zvar->end() && cost>= wcsp->getUb() && costzx >= wcsp->getUb() );
-			costsXY.push_back(squareminus(cost,costzx,wcsp->getUb()));
+			costsXY[xvar->toIndex(*itvx)*yvar->getDomainInitSize()+yvar->toIndex(*itvy)] = squareminus(cost,costzx,wcsp->getUb());
 			if(ToulBar2::verbose >= 3) cout << *itvx << " " << *itvy << " : " << squareminus(cost,costzx,wcsp->getUb()) << endl;
 			++itvy;
 		}
