@@ -130,7 +130,7 @@ public:
 
 
     void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, vector<Cost>& costsin ) {
-		assert(costsin.size() == costs.size());
+		assert(costsin.size() <= costs.size());
 
         int vindex[3];
         int sizeYin = yin->getDomainInitSize();

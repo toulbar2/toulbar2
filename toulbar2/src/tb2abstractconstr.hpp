@@ -93,7 +93,7 @@ public:
         setDACScopeIndex();
     }
 
-    AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,-wcspin->elimBinConstrs.size()), x(NULL), y(NULL), linkX(NULL), linkY(NULL)
+    AbstractBinaryConstraint(WCSP *wcspin) : Constraint(wcspin,-wcspin->elimBinConstrs.size()-1), x(NULL), y(NULL), linkX(NULL), linkY(NULL)
     { }
 
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
@@ -175,7 +175,7 @@ public:
 		setDACScopeIndex();
     }
 
-	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,-wcspin->elimTernConstrs.size()-MAX_ELIM_BIN), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)
+	AbstractTernaryConstraint(WCSP *wcspin) : Constraint(wcspin,-wcspin->elimTernConstrs.size()-MAX_ELIM_BIN-1), x(NULL), y(NULL), z(NULL), linkX(NULL), linkY(NULL), linkZ(NULL)
     { }
 
 

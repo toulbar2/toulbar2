@@ -222,10 +222,10 @@ public:
 		if (ctrIndex>=0) {
 		  return constrs[ctrIndex];
 		} else {
-		  if (-ctrIndex >= MAX_ELIM_BIN) {
-			return elimTernConstrs[-ctrIndex - MAX_ELIM_BIN];
+		  if (-ctrIndex-1 >= MAX_ELIM_BIN) {
+			return elimTernConstrs[-ctrIndex-1 - MAX_ELIM_BIN];
 		  } else {
-			return elimBinConstrs[-ctrIndex];
+			return elimBinConstrs[-ctrIndex-1];
 		  }
 		}
 	}
