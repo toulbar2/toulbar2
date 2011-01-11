@@ -452,7 +452,7 @@ void WCSP::processTernary()
     	{
     		TernaryConstraint* t = (TernaryConstraint*) constrs[i];
     		t->extendTernary();
-			t->decompose();
+			if(ToulBar2::costfuncSeparate) t->decompose();
     		if (t->connected()) t->projectTernary();
     	}
 	for (int i=0; i<elimTernOrder; i++) 
@@ -460,7 +460,7 @@ void WCSP::processTernary()
     	{
 		    TernaryConstraint* t = (TernaryConstraint*) elimTernConstrs[i];
     		t->extendTernary();
-			t->decompose();
+			if(ToulBar2::costfuncSeparate) t->decompose();
     		if (t->connected()) t->projectTernary();
     	}
 }
