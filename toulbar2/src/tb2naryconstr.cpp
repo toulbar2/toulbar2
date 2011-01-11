@@ -575,7 +575,7 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 	String t(a,'0'),tX(a-1,'0'),tZ(a-1,'0');
 	int index, k;
 	EnumeratedVariable* var;
-	TernaryConstraint *existX, *existZ;
+	TernaryConstraint *existX = NULL, *existZ = NULL;
 	Constraint *naryz,  *naryx;
 	EnumeratedVariable * scope_in[a];
 	EnumeratedVariable * subscopeX[a-1];
@@ -1113,8 +1113,12 @@ void NaryConstraintMap::projectxy( EnumeratedVariable* x,
 		txy[0] = t[ getIndex(x) ];
 		txy[1] = t[ getIndex(y) ];
 		itproj = fproj.find(txy);
-		if(itproj != fproj.end()) { assert(CUT(c, itproj->second)); (*pf)[t] -= itproj->second; }
-		else assert(false);
+		if(itproj != fproj.end()) { 
+		  assert(CUT(c, itproj->second));
+		  //		  if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
+			(*pf)[t] -= itproj->second; 
+			//		  }
+		} else assert(false);
 	}
 }
 
