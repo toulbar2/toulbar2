@@ -587,7 +587,8 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 
 	// initialisation des scopes
 	scope_in[0] = vx;
-	scopeX[0] = atoi(vx->getName().c_str()); subscopeX[0] = vx;
+	scopeX[0] = vx->wcspIndex;
+	subscopeX[0] = vx;
 
 	k = 1;
 
@@ -597,10 +598,10 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 			scope_in[k] = var;
 
 			subscopeX[k] = var;
-			scopeX[k] = atoi(var->getName().c_str());
+			scopeX[k] = var->wcspIndex;
 
 			subscopeZ[k-1] = var;
-			scopeZ[k-1] = atoi(var->getName().c_str());
+			scopeZ[k-1] = var->wcspIndex;
 
 			++k;
 		}
@@ -608,7 +609,8 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 
 	scope_in[a-1] = vz;
 
-	scopeZ[a-2] = atoi(vz->getName().c_str());subscopeZ[a-2] = vz;
+	scopeZ[a-2] = vz->wcspIndex;
+	subscopeZ[a-2] = vz;
 
 	// creation de la nouvelle contrainte
 	if(a == 4){
