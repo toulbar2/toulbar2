@@ -161,14 +161,18 @@ void  TernaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, v
 
 void TernaryConstraint::project(BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+	assert(cost >= MIN_COST);
     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+	  //	  if (!CUT(getCost(x,y,z,valx,valy,*iterZ) + wcsp->getLb(), wcsp->getUb())) {
         addcost(x,y,z,valx,valy,*iterZ,-cost);
+		//	  }
     }
     xy->addcost(x,y,valx,valy,cost);
 }
 
 void TernaryConstraint::extend(BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
 	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+	assert(cost >= MIN_COST);
     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
         addcost(x,y,z,valx,valy,*iterZ,cost);
     }
