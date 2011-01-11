@@ -177,7 +177,7 @@ bool Constraint::verifySeparate(Constraint * ctr1, Constraint * ctr2){
 bool Constraint::decompose()
 {
   bool sep = false;
-  if(extension() && arity() >= 3 && !universal()) {
+  if(extension() && !universal() && (arity() == 3 || (arity()>=4 && (getDefCost()>MIN_COST || ((NaryConstraint *) this)->size()>1)))) {
 	TSCOPE scopeinv;
 	getScope(scopeinv);
 	EnumeratedVariable * vx = NULL;
