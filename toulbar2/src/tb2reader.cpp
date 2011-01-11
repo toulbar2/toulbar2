@@ -170,11 +170,7 @@ void WCSP::read_wcsp(const char *fileName)
 					  inclowerbound += minc;
 					}
 				  }
-
-				  //((NaryConstraintMap*) nary)->keepAllowedTuples( top );
-				  //((NaryConstraintMap*) nary)->preprojectall2();
 				  nary->propagate();
-
 				}
 			}
         } else if (arity == 3) {
@@ -439,7 +435,7 @@ void WCSP::read_uai2008(const char *fileName)
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
 	Cost inclowerbound = MIN_COST;
-    updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST );
+    updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST );
 
     int nbval = 0;
     int nbvar,nbconstr;
@@ -504,7 +500,7 @@ void WCSP::read_uai2008(const char *fileName)
 	            if (ToulBar2::verbose >= 3) cout << j << " ";
 			}     	
 			if (ToulBar2::verbose >= 3) cout << endl;
-            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MAX_COST) );
+            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MIN_COST) );
         } 
         else if (arity == 3) {
             file >> i;
@@ -648,8 +644,6 @@ void WCSP::read_uai2008(const char *fileName)
 						j++;
 					}
 					ictr++; 
-		            //((NaryConstraintMap*) nctr)->preprojectall2();
-		            //((NaryConstraintMap*) nctr)->preproject3();
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 					nctr->propagate();
 					break;
