@@ -483,13 +483,12 @@ bool NaryConstraintMap::separability(EnumeratedVariable * vx, EnumeratedVariable
 	Cost c1, c;
 	vector<int> ordre(a,-1);
 	EnumeratedVariable* var;
-	EnumeratedVariable ** scope_in;
+	EnumeratedVariable *scope_in[a];
 	String t1(iterTuple), t(iterTuple);
 
 	EnumeratedVariable::iterator itvzfirst = vz->begin();
 	EnumeratedVariable::iterator itvznext = itvzfirst;
 	if(itvznext !=vz->end()) ++itvznext;
-	scope_in = (EnumeratedVariable **) malloc ( a*sizeof(EnumeratedVariable *));
 	first(vx,vz);
 
 	scope_in[0] = vx; //.push_back( alpha );
@@ -566,9 +565,7 @@ bool NaryConstraintMap::separability(EnumeratedVariable * vx, EnumeratedVariable
 		++itvznext;
 		if(ToulBar2::verbose >= 3) cout << "--\n";
 	}
-	free(scope_in);
 	return sev;
-
 }
 
 void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
