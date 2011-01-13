@@ -440,12 +440,11 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
 
 void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 {
+	Cost cost,minCost = MAX_COST;
 	//assert(separability(vy,vz));
+	first(vy,vz);
     vector<Cost> costsZX(zvar->getDomainInitSize() * xvar->getDomainInitSize(), MIN_COST);
     vector<Cost> costsXY(xvar->getDomainInitSize() * yvar->getDomainInitSize(), MIN_COST);
-	Cost cost,minCost = MAX_COST;
-	//string vx,vy,vz;
-	first(vy,vz);
 	string xv(xvar->getName()), yv(yvar->getName()), zv(zvar->getName());
 	if(ToulBar2::verbose == 1) cout << "\n";
 
@@ -472,7 +471,6 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 	BinaryConstraint  *zx = new BinaryConstraint(wcsp,zvar, xvar,costsZX, &wcsp->getStore()->storeCost);
 	if(ToulBar2::verbose >= 3)cout << "-------------\n";
 	if(ToulBar2::verbose >= 3) cout << "[ " << xvar->getName() << " " << yvar->getName() << " ]" <<  endl;
-
 
 	first(vy,vz);
 	Cost costzx;
@@ -528,6 +526,8 @@ void TernaryConstraint::projectTernaryBinary( BinaryConstraint* yzin )
     EnumeratedVariable* xx = xin;
     EnumeratedVariable* yy = (EnumeratedVariable*) yzin->getVar(0);
     EnumeratedVariable* zz = (EnumeratedVariable*) yzin->getVar(1);
+	//	cout << "PROJECT " << *this <<endl;
+	//	cout << "on " << yy->getName() << "," << zz->getName() << endl;
 
     for (EnumeratedVariable::iterator itery = yy->begin(); itery != yy->end(); ++itery) {
     for (EnumeratedVariable::iterator iterz = zz->begin(); iterz != zz->end(); ++iterz) {
