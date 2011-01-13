@@ -1162,43 +1162,59 @@ void NaryConstraintMap::preproject3()
 }
 
 
+inline bool cmp_pairvars(pair<EnumeratedVariable* ,EnumeratedVariable* > pv1, pair<EnumeratedVariable* ,EnumeratedVariable* > pv2) 
+{ 
+  return (pv1.first->wcspIndex < pv2.first->wcspIndex ||
+		  (pv1.first->wcspIndex == pv2.first->wcspIndex &&
+		   pv1.second->wcspIndex < pv2.second->wcspIndex));
+}
 void NaryConstraintMap::preprojectall2()
 {
   assert(connected());
   assert(CUT(default_cost,wcsp->getUb()));
-  //  cout << *this << endl;
+  //  cout << "PREPROJECT " << *this << endl;
 
-  list< pair<int,int> > listxy;
-  list< pair<int,int> > rndlistxy;
+  // vector< pair<EnumeratedVariable* ,EnumeratedVariable* > > listxy;
+  //  vector< pair<EnumeratedVariable* ,EnumeratedVariable* > > rndlistxy;
 
-  for(int i = 0; i < arity_; i++) {
-  for(int j = i+1; j < arity_; j++) {
-	pair<int,int> p = make_pair(i,j);
-	listxy.push_back(p);
-  }}
+  // for(int i = 0; i < arity_; i++) {
+  // for(int j = i+1; j < arity_; j++) {
+  // 	pair<EnumeratedVariable* ,EnumeratedVariable* > p = make_pair(((scope[i]->wcspIndex < scope[j]->wcspIndex)?scope[i]:scope[j]),
+  // 																  ((scope[i]->wcspIndex < scope[j]->wcspIndex)?scope[j]:scope[i]));
+  // 	listxy.push_back(p);
+  // }}
+  // stable_sort(listxy.begin(), listxy.end(), cmp_pairvars);
 
-  while (listxy.size() > 0) {
-	int pos = myrand() % listxy.size();
-	//	cout << pos;
-	list< pair<int,int> >::iterator it = listxy.begin();
-	while (pos > 0) {
-	  ++it;
-	  --pos;
-	}
-	//	cout << "," << (*it).first << "," << (*it).second << endl;
-	rndlistxy.push_back(*it);
-	listxy.erase(it);
-  }
+  // while (listxy.size() > 0) {
+  // 	int pos = myrand() % listxy.size();
+  // 	//	cout << pos;
+  // 	vector< pair<EnumeratedVariable* ,EnumeratedVariable* > >::iterator it = listxy.begin();
+  // 	while (pos > 0) {
+  // 	  ++it;
+  // 	  --pos;
+  // 	}
+  // 	//	cout << "," << (*it).first << "," << (*it).second << endl;
+  // 	rndlistxy.push_back(*it);
+  // 	listxy.erase(it);
+  // }
 
-  for(int i = 0; i < arity_; i++) {
-    for(int j = i+1; j < arity_; j++) {
-  // for (list< pair<int,int> >::iterator it = rndlistxy.begin(); it != rndlistxy.end(); ++it) {
-  // 	   int i = (*it).first;
-  // 	   int j = (*it).second;
-	   //	   cout << "try " << i << "," << j << ".." << endl;
+  // for(int i = 0; i < arity_; i++) {
+  //   for(int j = i+1; j < arity_; j++) {
+  // for (vector< pair<EnumeratedVariable* ,EnumeratedVariable* > >::iterator it = listxy.begin(); it != listxy.end(); ++it) {
+  // for (vector< pair<EnumeratedVariable* ,EnumeratedVariable* > >::iterator it = rndlistxy.begin(); it != rndlistxy.end(); ++it) {
 
-	   EnumeratedVariable* x = scope[i];
-	   EnumeratedVariable* y = scope[j];
+  TSCOPE scopeinv;
+  getScope(scopeinv);
+  for(TSCOPE::iterator it1 = scopeinv.begin(); it1 != scopeinv.end(); ++it1) {
+	TSCOPE::iterator it2 = it1;
+	for(++it2; it2 != scopeinv.end(); ++it2) {
+  	   // int i = (*it).first;
+  	   // int j = (*it).second;
+	   // EnumeratedVariable* x = (*it).first; //scope[i];
+	   // EnumeratedVariable* y = (*it).second; //scope[j];
+	   EnumeratedVariable* x = (EnumeratedVariable *) wcsp->getVar((*it1).first);
+	   EnumeratedVariable* y = (EnumeratedVariable *) wcsp->getVar((*it2).first);
+	   //	   cout << "try " << x->getName() << "," << y->getName() << ".." << endl;
 
 	   TUPLES fproj;
 	   projectxy(x,y,fproj);

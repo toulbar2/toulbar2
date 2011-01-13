@@ -285,9 +285,31 @@ public:
     void projectTernaryBinary( BinaryConstraint* yzin );
 
 	void projectTernary() {
+	  if (x->wcspIndex < y->wcspIndex && y->wcspIndex < z->wcspIndex) {
 		projectTernaryBinary(xy);
 		if (connected()) projectTernaryBinary(xz);
 		if (connected()) projectTernaryBinary(yz);
+	  } else if (x->wcspIndex < z->wcspIndex && z->wcspIndex < y->wcspIndex) {
+		projectTernaryBinary(xz);
+		if (connected()) projectTernaryBinary(xy);
+		if (connected()) projectTernaryBinary(yz);
+	  } else if (y->wcspIndex < x->wcspIndex && x->wcspIndex < z->wcspIndex) {
+		projectTernaryBinary(xy);
+		if (connected()) projectTernaryBinary(yz);
+		if (connected()) projectTernaryBinary(xz);
+	  } else if (y->wcspIndex < z->wcspIndex && z->wcspIndex < x->wcspIndex) {
+		projectTernaryBinary(yz);
+		if (connected()) projectTernaryBinary(xy);
+		if (connected()) projectTernaryBinary(xz);
+	  } else if (z->wcspIndex < x->wcspIndex && x->wcspIndex < y->wcspIndex) {
+		projectTernaryBinary(xz);
+		if (connected()) projectTernaryBinary(yz);
+		if (connected()) projectTernaryBinary(xy);
+	  } else if (z->wcspIndex < y->wcspIndex && y->wcspIndex < x->wcspIndex) {
+		projectTernaryBinary(yz);
+		if (connected()) projectTernaryBinary(xz);
+		if (connected()) projectTernaryBinary(xy);
+	  } else exit(EXIT_FAILURE);
 	}
 
 	void extendTernary()
