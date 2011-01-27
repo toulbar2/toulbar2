@@ -1,0 +1,320 @@
+<html>
+<head>
+<title>CpWcspFormats</title>
+</head>
+<body>
+<h1><img src="/awki.png"  align="left">
+<a href="/cgi-bin/awki.cgi/FullSearch?string=CpWcspFormats">CpWcspFormats</a></h1><hr>
+<h2>cp and wcsp file formats</h2>
+<p>
+<strong>NEW WCSP FORMAT WITH SOFT GLOBAL COST FUNCTIONS THANKS TO K. L. Leung, Hong-Kong.</strong>
+<p>
+<strong>Plan</strong>
+<ol>
+	<li> Introduction
+	<li> Description of the cp format
+	<li> Description of the wcsp format
+	<li> How to translate cp to wcsp format
+</ol>
+<hr>
+<h3>1. Introduction</h3>
+<pre>
+    
+</pre>
+The  cp  and wcsp  formats  are  used  to encode  Weighted  Constraint Satisfaction Problems  (WCSPs). The  CSP framework has  been augmented with so-called soft  constraints with which it is  possible to express preferences among  solutions. The  WCSP framework associates  costs to tuples  and the goal  is to  find a  complete assignment  with minimum cost. A reference to what a WCSP is can be found in:
+<pre>
+ In the quest of the best form of local consistency for Weighted CSP
+ Javier Larrosa and Thomas Schiex
+ In Proc. of the 18th IJCAI, Acapulco, Mexico, August 2003
+ <a href="http://www.inra.fr/bia/T/schiex/Export/ijcai03.pdf">http://www.inra.fr/bia/T/schiex/Export/ijcai03.pdf</a>
+</pre>
+<p>
+In order to encode WCSPs, two formats have been defined. The cp format is a high level format that  can be translated into the low level wcsp format.
+<hr>
+<h3>2. Description of the cp format</h3>
+<p>
+The goal of  this format is to simplify the description  of a WCSP.  A constraint is described either by a list of tuples with their costs or by a formula (any C-code expression which returns an integer).
+<p>
+The syntax of the cp format  is line oriented: each line defines a new variable or a  new constraint (except for comment  lines, problem name definition, and  constraints in extension with their  list of tuples). Any line  starting with  a '#' character is ignored  (it is  a comment line). Blank lines are ignored too.
+<p>
+The first non-comment line contains  the problem name and if necessary a global upper  bound of the problem (optional). If  there is no upper bound, then the sum of all  the maximum costs for each soft constraint plus one is  taken: ub = 1 + sum_{c  in constraints}(max_{t in tuples} (max(0,cost(c,t)))).  Negative  cost values  are used to  express hard constraints,  and   will  be  automatically  replaced   by  ub  during translation into the wcsp format.
+<p>
+Next lines define variables and  constraints. A variable is defined by its name and its domain, as  a list of integer values (can be positive or negative, not necessarily  consecutive or increasing numbers).  The name  of  a  variable  must  be  a sequence  of  letters,  digits,  or underscores, and it  may not begin with a  digit.  Case is significant in variable names;  a and A are distinct  variables.  The variables in the scope of a constraint should  be defined before they appear in the constraint.  A domain should contain at least one value.
+<p>
+A constraint can be defined  by a formula (constraint in intension) or by  a list of  tuples with  their costs  (constraint in  extension). A constraint in  intension is defined  by any expression  involving some already-defined variable names and  which returns an integer (positive or  negative   for  infinity)  when   it  is  evaluated  by   the  awk language. Note that awk uses the same syntax as the C language. During translation,  all the possible  tuples are  assigned to  the variables involved in the constraint before the expression is evaluated in order to get the  cost.  The cost value which occurs most  often is taken as the  default  cost  and  only  tuples with  different  costs  will  be
+generated.
+<p>
+Expressions should  be self-content and perform no  side effects. They may  call some awk  functions. A  special awk  library, whose  name is libcp.awk, is loaded before the evaluation of expressions. So the user can  add  his/her  own  functions  to  this  library.   Two  important predefined functions  are hard  and soft functions.   Function hard(e) returns -1  (infinite cost) if e  is equal to 0,  otherwise it returns zero. Function soft(v,  e) returns v if e is equal  to 0, otherwise it returns zero. Look at libcp.awk to see the other predefined functions. Moreover, the special variable ub  (global upper bound, equal to -1 if not defined) may be used inside the awk functions and expressions.
+<p>
+A constraint  in extension is defined  by a first  line which contains the  variable names in  its scope  and the  default cost  value.  Each following line defines a tuple (domain values assigned to variables in the same order as in the first line) and its corresponding cost value.
+<p>
+A typical  example is the  4-Queens problem.  Place 4 queens on  a 4x4 chessboard in such a way that no one queen could take another queen:
+<pre>
+ # problem name (and possibly global upper bound)
+ 4-QUEENS
+
+ # variables with their explicit domains
+ queen_row1 1 2 3 4
+ queen_row2 1 2 3 4
+ queen_row3 1 2 3 4
+ queen_row4 1 2 3 4
+
+ # constraints defined by a formula or by a list of tuples
+
+ hard( alldiff(queen_row1, queen_row2, queen_row3, queen_row4) )
+
+ hard( abs(queen_row1 - queen_row2) != 1 )
+ hard( abs(queen_row1 - queen_row3) != 2 )
+
+ # hard( abs(queen_row1 - queen_row4) != 3 )
+ # is equivalent to:
+ queen_row1 queen_row4 0
+ 1 4 -1
+ 4 1 -1
+
+ hard( abs(queen_row2 - queen_row3) != 1 )
+ hard( abs(queen_row2 - queen_row4) != 2 )
+ hard( abs(queen_row3 - queen_row4) != 1 )
+
+ &lt;end-of-file benchs/academics/4queens.cp&gt;
+</pre>
+<p>
+Note that  the alldiff  and abs functions  are already defined  in the original libcp.awk library.
+<p>
+<em>New format extension to share cost functions</em>
+<p>
+A constraint defined by a formula can share its cost function with other constraints.
+In order to do that, its formula must be encapsulated by "shared(formula)" function keyword. Each shared cost function implicitly received an occurence number starting from 1 and incremented at each new shared definition.
+Any constraint can reuse a previously defined cost function by using the "defined by" keyword following its constraint scope and followed by the desired occurence number.
+<p>
+E.g.:
+<pre>
+ shared(soft(1, x + y &lt; z))
+ u v w defined by 1
+</pre>
+<p>
+defines two Max-CSP soft constraints "x+y&lt;z" and "u+v&lt;w".
+<hr>
+<h3>3. Description of the wcsp format</h3>
+<p>
+The wcsp  format is a simple format  which should be easy  to parse by WCSP solvers.  It is composed of a list of numerical terms (except for the  first one  which defines  the problem  name) separated  by space, tabulation or  end of line (see  isspace and fscanf function  in the C language).  Instead of using  names for making reference to variables, variable  indexes are  employed.   The same  for  domain values.   All indexes start at  zero. All the constraints are  defined in extension, by  their  list  of  tuples.  A  default cost  value  is  defined  per constraint in order to reduce the size of the list. Only tuples with a different  cost value should  be given.  All the  cost values  must be
+positive.  The structure of the format is: first, the problem name and dimensions,  then  the definition  of  the  variables,  and last,  the definition of the constraints.
+<h4>a) Problem name and dimensions:</h4>
+<pre>
+ &lt;Problem name&gt;
+ &lt;Number of variables (N)&gt;
+ &lt;Maximum domain size&gt;
+ &lt;Number of constraints&gt;
+ &lt;Global upper bound of the problem (UB)&gt;
+</pre>
+<h4>b) Definition of the variables:</h4>
+<pre>
+ &lt;Domain size of variable with index 0&gt;
+ ...
+ &lt;Domain size of variable with index N - 1&gt;
+</pre>
+<h4>c) Definition of a constraint:</h4>
+<pre>
+ &lt;Arity of the constraint&gt;
+ &lt;Index of the first variable in the scope of the constraint&gt;
+ ...
+ &lt;Index of the last variable in the scope of the constraint&gt;
+ &lt;Default cost value&gt;
+ &lt;Number of tuples with a cost different than the default cost&gt;
+</pre>
+<p>
+and for every tuple:
+<pre>
+ &lt;Index of the value assigned to the first variable in the scope&gt;
+ ...
+ &lt;Index of the value assigned to the last variable in the scope&gt;
+ &lt;Cost of the tuple&gt;
+</pre>
+<p>
+There  can be  several constraints  with  the same  scope (the  solver should combine  them into one  constraint). The arity of  a constraint may  be equal  to zero.   In this  case, there  is no  tuples  and the default cost value  is added to the total solution  cost.  This can be used to represent a global lower bound of the problem.  The goal is to find an  assignment of all  the variables with minimum  cost, strictly lower than the global upper bound  UB. Tuples with a cost greater than or equal to UB are forbidden (hard constraint).
+<p>
+See the 4-Queens example in the next section.
+<p>
+<em>New format extension to share cost functions</em>
+<p>
+An n-ary (n&gt;=3) constraint can share its cost function with other constraints.
+In order to define a shared constraint, add a negative sign just before the corresponding &lt;Arity of the constraint&gt; field.
+Each shared constraint implicitly received an occurrence number starting from 1 and incremented at each new shared definition.
+Any constraint can reuse a previously defined cost function by replacing the &lt;Number of tuples with a cost different than the default cost&gt; field by the negation of the desired occurrence number.
+<h4><strong>New format extension to express soft global cost functions</strong></h4>
+<p>
+Several soft global cost functions are now available. In order to express them, use a negative default cost value (-1) after giving the function scope followed by the cost function name, a cost semantic keyword (<em>var</em> for variable-based costs , or <em>dec</em> for decomposition-based costs), and dedicated additional parameters, as defined below:
+<p>
+* All Different: <em>salldiff</em>  (<em>var</em> | <em>dec</em>)  <em>cost_per_violation</em>
+<p>
+* Global Cardinality:  <em>sgcc</em>  (<em>var | </em>dec<em>)   </em>cost_per_violation<em>  </em>nb_values<em>, followed for each value by: </em>value<em>  </em>lower_bound<em>  </em>upper_bound. 
+E.g. to express soft_gcc({x1,x2,x3,x4}) with each value v from 1 to 4 only appear at most v+1 and at least v-1 times by variable-based violation measure:
+<pre>
+ 4 1 2 3 4 -1 sgcc var 1 
+ 4
+ 1 0 2
+ 2 1 3
+ 3 2 4
+ 4 3 5
+</pre>
+* Same: <em>ssame</em>  <em>cost_per_violation</em>  <em>list_size1</em>  <em>list_size2</em>, followed for two lists of variable indexes (must be of equal size).
+<p>
+E.g. to express soft_same({x1,x2,x3,x4}, {x5,x6,x7,x8}):
+<pre>
+ test 8 4 1 999999 
+ 4 4 4 4 4 4 4 4
+ 8 0 1 2 3 4 5 6 7 -1 ssame 10
+ 4 4
+ 0 1 2 3
+ 4 5 6 7
+</pre>
+* Regular: <em>sregular</em>   (<em>var</em> | <em>edit</em>)  <em>cost_per_violation</em>, followed by DFA represented as follows:
+<pre>
+ <em>nb_state</em> // the number of states represented by numbers starting from 0
+ <em>nb_start</em> // number of initial states, followed by a list of starting states
+ ...
+ <em>nb_end</em>   // number of final states, followed by a list of ending states
+ ...
+ <em>nb_transition</em> //number of transitions followed by a list of transitions represented as <em>start_state</em> <em>symbol</em> <em>end_state</em>
+</pre>
+E.g. to express soft_regular({x1,x2,x3}) with DFA (3*)+(4*) and variable-based violation measure:
+<pre>
+ 3 1 2 3 -1 sregular var 10
+ 2	// Only two states: 0 and 1
+ 1 0      // Initial state: 1
+ 2 0 1    // Final state: 0, 1
+ 3	// Only three transitions
+ 0 3 0    // encounter 3 at state 0, go to state 0
+ 0 4 1    // encounter 4 at state 0, go to state 1
+ 1 4 1    // encounter 4 at state 1, go to state 1
+</pre>
+<p>
+<strong>Latin Square 4 x 4 crisp CSP Example</strong>
+<pre>
+ latin4 16 4 8 1
+ 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 
+ 4 0 1 2 3 -1 salldiff var 1
+ 4 4 5 6 7 -1 salldiff var 1
+ 4 8 9 10 11 -1 salldiff var 1
+ 4 12 13 14 15 -1 salldiff var 1
+ 4 0 4 8 12 -1 salldiff var 1
+ 4 1 5 9 13 -1 salldiff var 1
+ 4 2 6 10 14 -1 salldiff var 1
+ 4 3 7 11 15 -1 salldiff var 1
+</pre>
+<hr>
+<h3>4. How to translate cp to wcsp format</h3>
+<p>
+You need to have the following software installed on your computer:
+<pre>
+ gawk version <strong>3.1</strong> or later (<strong>previous versions or other awk programs will not work!</strong>)
+    GNU/Linux systems: <a href="http://www.gnu.org/software/gawk/gawk.html">http://www.gnu.org/software/gawk/gawk.html</a>
+       (sources) <a href="http://ftp.gnu.org/gnu/gawk/gawk-3.1.3.tar.gz">http://ftp.gnu.org/gnu/gawk/gawk-3.1.3.tar.gz</a>
+
+    Windows systems: <a href="http://gnuwin32.sourceforge.net/packages/gawk.htm">http://gnuwin32.sourceforge.net/packages/gawk.htm</a>
+       (binary) <a href="http://gnuwin32.sourceforge.net/downlinks/gawk-bin.php">http://gnuwin32.sourceforge.net/downlinks/gawk-bin.php</a>
+</pre>
+<p>
+Moreover, you need the following files in your working directory:
+<pre>
+ cp2wcsp.awk (in benchs/translators)
+ libcp.awk (in benchs/translators)
+</pre>
+<p>
+The command line usage is the following:
+<pre>
+ gawk -f cp2wcsp.awk problem.cp &gt; problem.wcsp
+</pre>
+<p>
+If libcp.awk  is placed in a  different directory, you  should set the AWKPATH environment variable: 
+<pre>
+ set AWKPATH = mydirectory
+</pre>
+<p>
+For a faster  evaluation of the constraint formulae,  mawk can be used instead   of    gawk <em>inside</em> the awk script  (see   <a href="ftp://ftp.whidbey.net/pub/brennan/">ftp://ftp.whidbey.net/pub/brennan/</a>   and <a href="http://gnuwin32.sourceforge.net/packages/mawk.htm">http://gnuwin32.sourceforge.net/packages/mawk.htm</a>).  If you  have mawk installed,  just  uncomment the  two  lines  using  mawk in  the  file cp2wcsp.awk.
+<p>
+The 4-Queens problem in cp format  is translated in the wcsp format by typing this command: 
+<pre>
+ awk -f cp2wcsp.awk ../academics/4queens.cp
+
+ 4-QUEENS 4 4 7 1
+ 4 4 4 4
+ 4 0 1 2 3 1 24
+ 0 1 2 3 0
+ 0 1 3 2 0
+ 0 2 1 3 0
+ 0 2 3 1 0
+ 0 3 1 2 0
+ 0 3 2 1 0
+ 1 0 2 3 0
+ 1 0 3 2 0
+ 1 2 0 3 0
+ 1 2 3 0 0
+ 1 3 0 2 0
+ 1 3 2 0 0
+ 2 0 1 3 0
+ 2 0 3 1 0
+ 2 1 0 3 0
+ 2 1 3 0 0
+ 2 3 0 1 0
+ 2 3 1 0 0
+ 3 0 1 2 0
+ 3 0 2 1 0
+ 3 1 0 2 0
+ 3 1 2 0 0
+ 3 2 0 1 0
+ 3 2 1 0 0
+ 2 0 1 0 6
+ 0 1 1
+ 1 0 1
+ 1 2 1
+ 2 1 1
+ 2 3 1
+ 3 2 1
+ 2 0 2 0 4
+ 0 2 1
+ 1 3 1
+ 2 0 1
+ 3 1 1
+ 2 0 3 0 2
+ 0 3 1
+ 3 0 1
+ 2 1 2 0 6
+ 0 1 1
+ 1 0 1
+ 1 2 1
+ 2 1 1
+ 2 3 1
+ 3 2 1
+ 2 1 3 0 4
+ 0 2 1
+ 1 3 1
+ 2 0 1
+ 3 1 1
+ 2 2 3 0 6
+ 0 1 1
+ 1 0 1
+ 1 2 1
+ 2 1 1
+ 2 3 1
+ 3 2 1
+ &lt;end-of-file benchs/academics/4queens.wcsp&gt;
+</pre>
+<p>
+The awk  script will choose  the best default  cost value in  order to minimize  the number  of  tuples  for every  constraint  defined by  a formula only.  Moreover, variables with  only one value per domain are constants which disappear after translation into the wcsp format. Also, negative  cost   values  are  replaced  by  the   global  upper  bound ub. Finally, the  awk script is able to detect  possible errors in the input file.
+<p>
+Any  comment  or contribution  to  these  formats  should be  sent  to <a href="mailto:simon.degivry@toulouse.inra.fr">simon.degivry@toulouse.inra.fr</a>
+<p>
+<em>return to <a href="/cgi-bin/awki.cgi/FileFormats">FileFormats</a></em>
+<hr>
+<a href="/cgi-bin/awki.cgi?edit=true&amp;page=CpWcspFormats">Edit CpWcspFormats</a>
+<a href="/cgi-bin/awki.cgi/SoftCSP">SoftCSP</a>
+<a href="/cgi-bin/awki.cgi/PageList">PageList</a>
+<a href="/cgi-bin/awki.cgi/RecentChanges">RecentChanges</a>
+<a href="/cgi-bin/awki.cgi/CpWcspFormats?history=true">PageHistory</a>
+<form action="/cgi-bin/awki.cgi/FullSearch" method="GET" align="right">
+<input type="text" name="string">
+<input type="submit" value="search">
+</form>
+</body>
+</html>
