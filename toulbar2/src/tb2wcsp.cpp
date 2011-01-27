@@ -41,9 +41,9 @@ int  ToulBar2::elimDegree = 3;
 int  ToulBar2::elimDegree_preprocessing  = -1;
 int  ToulBar2::elimDegree_ = -1;
 int  ToulBar2::elimDegree_preprocessing_  = -1;
-bool ToulBar2::preprocessTernary  = false;
-int ToulBar2::preprocessFunctional  = 0;
-bool ToulBar2::costfuncSeparate = false;
+bool ToulBar2::preprocessTernary  = true;
+int ToulBar2::preprocessFunctional  = 2;
+bool ToulBar2::costfuncSeparate = true;
 int ToulBar2::preprocessNary  = 10;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
@@ -573,7 +573,6 @@ void WCSP::preprocessing()
 	}
 
 	if (ToulBar2::preprocessTernary) {
-	  cout << "Process ternary groups of variables." << endl;
 	  processTernary();
 	  //	  ternaryCompletion();
 	  //	  processTernary();
