@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+const int maxdiscrepancy = 4;
+const Long maxrestarts =  10000;
+
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef WINDOWS
 #define PATH_SEP_CHR '\\'
@@ -81,13 +84,13 @@ string read_UB( char* ubfilename)
 	if (ubfile.is_open())
 	{
 		ubfile >> ubs;
-		cout << " UB read from "<< ubfilename<<"=" << ubs << endl;
+		cout << "UB read from "<< ubfilename<<"=" << ubs << endl;
 		ubfile.close();
 
 		return ubs;  
 
 	} else {
-		cout << "Unable to open file :" << ubfilename << endl;
+		cout << "Unable to open file:" << ubfilename << endl;
 		return NULL; 
 	}
 
@@ -159,6 +162,7 @@ enum {
 	NO_OPT_elimDegree_preprocessing,
 	OPT_showSolutions,
 	OPT_costfuncSeparate,
+	NO_OPT_costfuncSeparate,
   
 	// VAC OPTION
 	OPT_minsumDiffusion,
@@ -276,9 +280,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_elimDegree_preprocessing, 	(char*) "-p", 				SO_OPT	 		},
 	{ NO_OPT_elimDegree_preprocessing,	(char*) "-p:", 				SO_NONE 		},
 	{ OPT_costfuncSeparate,		(char*) "-dec", 			SO_NONE 		},
-	////////////////////////
-
-	{ OPT_minsumDiffusion,	 		(char*) "-M", 				SO_REQ_SEP		},
+	{ NO_OPT_costfuncSeparate,		(char*) "-dec:", 				SO_NONE			},
 	// vac option
 	{ OPT_vac,				(char*) "-A", 				SO_OPT			},
 	{ NO_OPT_vac,				(char*) "-A:", 				SO_NONE			},
@@ -288,8 +290,10 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_costMultiplier,	 		(char*) "-C", 				SO_REQ_SEP		},
 
 	//preprocessing
+	{ OPT_minsumDiffusion,	 		(char*) "-M", 				SO_REQ_SEP		},
 	{ OPT_singletonConsistency,		(char*) "-S", 				SO_NONE			},
 	{ OPT_preprocessTernary,		(char*) "-t", 				SO_NONE		},
+	{ NO_OPT_preprocessTernary,		(char*) "-t:", 				SO_NONE		},
 	{ OPT_preprocessFunctional,		(char*) "-f", 				SO_OPT		},
 	{ NO_OPT_preprocessFunctional,	(char*) "-f:", 		 	    SO_NONE		},
 	{ OPT_preprocessNary,			(char*) "-h", 				SO_OPT		},
@@ -388,7 +392,7 @@ static void Pedi_Args( CSimpleOpt &    args, int nMultiArgs)
 		nMultiArgs = _ttoi(rgpszArg[0]);
 
 		cout << endl;
-		cout << nMultiArgs << " Alleles probability will be read from command line " << endl;
+		cout << nMultiArgs << "Alleles probability will be read from command line " << endl;
 	}
 
 	// get the arguments to follow
@@ -475,7 +479,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	char * tname ;
 	tname=tmpnam (NULL);
 	strcpy(fich,tname);
-	cout << "incop narycsp output file :" << fich << endl;
+	cout << "incop narycsp output file:" << fich << endl;
 
 	char line[1024];
 	//int pid = get_pid();
@@ -500,7 +504,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	else
 	{
 
-		printf ("narycsp default path : %s \n",CurrentBinaryPath);
+		printf ("narycsp default path: %s \n",CurrentBinaryPath);
 
 		sprintf(line,"%snarycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
 
@@ -576,7 +580,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	return true;
 }
 
-//  current unused option letters : 	f F G H J K n N Q U W Y
+//  current unused option letters: 	f F G H J K n N Q U W Y
 void help_msg(char *toulbar2filename)
 {
 	cerr << "*************************" << endl;
@@ -589,7 +593,7 @@ void help_msg(char *toulbar2filename)
 #ifndef MENDELSOFT
 	cerr << "Available problem formats (specified by the filename extension) are:" << endl;
 	cerr << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
-	cerr << "   *.wcnf : Weighted Partial Max-SAT format" << endl;
+	cerr << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
 	cerr << "   *.cnf : (Max-)SAT format" << endl;
 #ifdef XMLFLAG
 	cerr << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
@@ -598,10 +602,11 @@ void help_msg(char *toulbar2filename)
 #endif
 	cerr << endl;
 #endif
-	cerr << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 evaluation workshop) followed by an optional evidence filename (perform MPE task)" << endl;
+	cerr << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (perform MPE task)" << endl;
 	cerr << "   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
 	cerr << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
 	cerr << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
+	cerr << "   *.order  : variable elimination order" << endl;
 	cerr << "   *.sol  : solution/certificate for the problem" << endl << endl;
 	cerr << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
@@ -644,25 +649,25 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
-	cerr << "   -t : preprocessing only: project ternary cost functions on binary cost functions and apply partial 3-consistency (can be very slow)";
+	cerr << "   -t : preprocessing only: project ternary cost functions on all binary cost functions";
 	if (ToulBar2::preprocessTernary) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
-	cerr << "   -dec : decompose cost functions (arity >=3) into smaller arity cost functions";
+	cerr << "   -dec : preprocessing only: decompose cost functions with arity >=3 into smaller arity cost functions";
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary (and some ternary) cost functions only if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
-	cerr << "   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"p\" and \"O\")";
+	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
+	cerr << "   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"-p\" and \"-O\")";
 	if (ToulBar2::elimOrderType != ELIM_NONE) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -o : ensure optimal worst-case time complexity of DAC and EAC (can be costly in practice)";
+	cerr << "   -o : ensure optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global constrains=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
-	cerr << "   -l : limited discrepancy search";
+	cerr << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
+	cerr << "   -l=[integer] : limited discrepancy search (discrepancy bound = " << maxdiscrepancy << " by default)";
 	if (ToulBar2::lds) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -L : randomized search with restart";
+	cerr << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = " << maxrestarts << " by default)";
 	if (ToulBar2::restart) cerr << " (default option)";
 	cerr << endl;
 #ifndef WINDOWS
@@ -670,14 +675,14 @@ void help_msg(char *toulbar2filename)
 #endif
 	cerr << "   -z=[integer] : save problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
 	cerr << "		write also the  graphviz dot file  and the degree distribution of the input problem " << endl;
-	cerr << "   -Z : debug mode (save problem at each node if verbosity option set!)" << endl;
+	cerr << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 	cerr << "   -x=[(,i=a)*] : assign variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file \"sol\")" << endl << endl;
 	cerr << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
 	cerr << "   -A=[integer] : enforce VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cerr << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
 	cerr << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
 	cerr << "   -C=[integer] : multiply all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
-	cerr << "   -S : preprocessing only: perform singleton consistency (only in conjunction with option \"A\")";
+	cerr << "   -S : preprocessing only: perform singleton consistency (only in conjunction with option \"-A\")";
 	if (ToulBar2::singletonConsistency) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -V : VAC-based value ordering heuristic";
@@ -691,7 +696,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "                (use options \"-B=3 -j=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
 	cerr << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
 	cerr << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
-	cerr << "   -E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option \"e\")";
+	cerr << "   -E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\")";
 	if (ToulBar2::boostingBTD) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -R=[integer] : choice for a specific root cluster number" << endl;
@@ -765,7 +770,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 	cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2010"<<endl;
-	cout << "Binary Path="<<CurrentBinaryPath<<endl;
+	assert(cout << "Binary Path="<<CurrentBinaryPath<<endl);
 
 	// --------------------------simple opt ----------------------
 
@@ -774,7 +779,6 @@ int _tmain(int argc, TCHAR * argv[])
 	CSimpleOpt args(argc, argv, g_rgOptions);
 
 
-	cout << "parameter of current session:" << endl ;
 	while (args.Next())
 	{
 
@@ -786,7 +790,7 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 				string force_extension = args.OptionText();
 				force_extension.erase(force_extension.begin(),force_extension.begin()+2);
-				cout << "old extension " << file_extension_map[force_extension] << " --> ";
+				cout << "Old extension " << file_extension_map[force_extension] << " --> ";
 				//			cout << " extension " << force_extension << " forced with " << args.OptionArg() << endl;
 				file_extension_map[force_extension]=args.OptionArg();
 
@@ -867,7 +871,7 @@ int _tmain(int argc, TCHAR * argv[])
 				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
 				ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
 				sprintf(ToulBar2::varOrder, "%s",buf);
-				cout << "variable order read from file = " << args.OptionArg() << endl;
+				cout << "variable order read from file " << args.OptionArg() << endl;
 			}
 
 			// filename of solution
@@ -875,11 +879,11 @@ int _tmain(int argc, TCHAR * argv[])
 				if (args.OptionArg()!= NULL)	{
 					certificate = true;
 					certificateString = args.OptionArg() ;
-					cout << "partial affection =  to be check ..." << certificateString << endl;
+					cout << "partial affection to be check ..." << certificateString << endl;
 				} else {
 					certificate = true;
 					certificateFilename = (char *) "sol";
-					cout << "Certification of Solution read in file : ./" << certificateFilename << endl;
+					cout << "certificate of solution read in file: ./" << certificateFilename << endl;
 
 				}
 			}
@@ -965,17 +969,17 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == NO_OPT_elimDegree )
 			{    
 				ToulBar2::elimDegree = -1; 
-				cout << "ToulBar2::elimDegree => off " << ToulBar2::elimDegree << "( default value 3 );" << endl;
+				cout << "elimDegree OFF " << ToulBar2::elimDegree << "( default value 3 )" << endl;
 
 			} else if ( args.OptionId() == OPT_elimDegree  and args.OptionArg() != NULL ) { 
 				int ndegree =-1;
 				ndegree = atol(args.OptionArg());
 				if ((ndegree >= 0) && (ndegree <= 3)) {ToulBar2::elimDegree = ndegree;} 
-				cout << "ToulBar2::elimDegree ==> on " << ToulBar2::elimDegree << " ( default value 3 );" << endl;
+				cout << "elimDegree ON " << ToulBar2::elimDegree << " ( default value 3 )" << endl;
 			} 
 			////////////////////////////////////////////
 
-			// p[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value 
+			// p[integer]: preprocessing only: general variable elimination of degree less than or equal to the given value 
 			// elimination degree in preprocessing
 			if ( args.OptionId() == OPT_elimDegree_preprocessing)
 			{
@@ -985,12 +989,12 @@ int _tmain(int argc, TCHAR * argv[])
 					ndegree = atoi(args.OptionArg());
 					if (ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
 				} else ToulBar2::elimDegree_preprocessing = 3; 
-				cout << "ToulBar2::elimDegree_preprocessing on => "  <<  ToulBar2::elimDegree_preprocessing << endl;
+				cout << "elimDegree_preprocessing ON: "  <<  ToulBar2::elimDegree_preprocessing << endl;
 
 			}   else if ( args.OptionId() == NO_OPT_elimDegree_preprocessing)
 			{
 				ToulBar2::elimDegree_preprocessing = -1;
-				cout << args.OptionText() <<" ==> elimDegree_preprocessing off : " << "ToulBar2::elimDegree_preprocessing off => "  << ToulBar2::elimDegree_preprocessing  << endl;
+				cout << " elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
 			}
 
 
@@ -1014,11 +1018,11 @@ int _tmain(int argc, TCHAR * argv[])
 					int depth =  atoi(args.OptionArg());
 					if (depth >= 1) ToulBar2::vac = depth;
 				}
-				cout << args.OptionText() <<"  ON ==> VAC propagation ;"<< endl;
+				cout <<"VAC propagation ON"<< endl;
 
 			} else if( args.OptionId() == NO_OPT_vac) 
 			{
-				cout << args.OptionText() <<" OFF ==> VAC propagation off"<< endl;
+				cout << "VAC propagation OFF"<< endl;
 
 				ToulBar2::vac = 0;
 			}
@@ -1049,6 +1053,10 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_singletonConsistency)  ToulBar2::singletonConsistency = true;
 			if ( args.OptionId() == OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = true;
 			if ( args.OptionId() == OPT_preprocessTernary) ToulBar2::preprocessTernary = true;
+			else if ( args.OptionId() == NO_OPT_preprocessTernary) {
+			  cout <<"preproject of ternary cost functions OFF" << endl;  
+			  ToulBar2::preprocessTernary = false;
+			}
 
 			// elimination of functional variables
 			if ( args.OptionId() == OPT_preprocessFunctional)
@@ -1059,19 +1067,23 @@ int _tmain(int argc, TCHAR * argv[])
 					int func = atoi(args.OptionArg());
 					if (func > 0) ToulBar2::preprocessFunctional = func;
 				}
-				cout << args.OptionText() <<" ON ==> elimination of functional variables "<< ToulBar2::preprocessFunctional << ";" << endl;  
+				cout << "elimination of functional variables ON "<< ToulBar2::preprocessFunctional << endl;  
 
 			} else if( args.OptionId() == NO_OPT_preprocessFunctional) 
 			{
-				cout << args.OptionText() <<" OFF ==> no elimination of functional variables"<< ";" << endl;  
+				cout <<"elimination of functional variables OFF" << endl;  
 				ToulBar2::preprocessFunctional  = 0;
 
 			}
 
 			if (args.OptionId() == OPT_costfuncSeparate)
 			{
-				cout << "decomposition of cost functions\n";
+			  cout << "decomposition of cost functions" << endl;
 				ToulBar2::costfuncSeparate = true;
+			} else if (args.OptionId() == NO_OPT_costfuncSeparate)
+			{
+			    cout << "decomposition of cost functions OFF" << endl;
+				ToulBar2::costfuncSeparate = false;
 			}
 
 			// pre projection of nary constraint
@@ -1083,11 +1095,11 @@ int _tmain(int argc, TCHAR * argv[])
 					int maxnary = atoi(args.OptionArg());
 					if (maxnary > 0) ToulBar2::preprocessNary = maxnary;
 				}
-				cout << args.OptionText() <<" ON ==> pre processing constrain with arity lower than "<< ToulBar2::preprocessNary << ";" << endl;  
+				cout <<"preproject cost functions with arity lower than "<< ToulBar2::preprocessNary << " ON" << endl;  
 
 			} else if( args.OptionId() == NO_OPT_preprocessNary) 
 			{
-				cout << args.OptionText() <<" OFF ==> no preprocess Nary constraint"<< ";" << endl;  
+				cout <<"preproject of n-ary cost functions OFF" << endl;  
 				ToulBar2::preprocessNary  = 0;
 			}
 
@@ -1100,18 +1112,18 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 				string comment ;
 				if(args.OptionArg() == NULL ) {
-					ToulBar2::lds = 4;
+				  ToulBar2::lds = maxdiscrepancy;
 					comment = " (default value) " ;
 				} else {
 					int maxlds =atoi(args.OptionArg());
 					if (maxlds > 0) ToulBar2::lds = maxlds;
 				}
-				cout << "LDS ON #iter = " << ToulBar2::lds << comment << ";" << endl ;
+				cout << "LDS ON #iter = " << ToulBar2::lds << comment << endl ;
 
 			} else if (args.OptionId() ==NO_OPT_lds) {
 
 				ToulBar2::lds = 0;
-				cout << "LDS OFF iter = " << ToulBar2::lds << ";" << endl ;
+				cout << "LDS OFF iter = " << ToulBar2::lds << endl ;
 			}
 
 
@@ -1121,15 +1133,15 @@ int _tmain(int argc, TCHAR * argv[])
 				string comment ;
 				if( args.OptionArg() == NULL ) {
 					comment = " (default value) " ;
-					ToulBar2::restart = 10000;
+					ToulBar2::restart = maxrestarts;
 				} else {
 					Long maxbt = atoll(args.OptionArg());
 					if (maxbt > 0) ToulBar2::restart = maxbt;
 				}
-				cout << " RESTART ON #iter = " << ToulBar2::restart << comment << ";" << endl;
+				cout << "restart ON #iter = " << ToulBar2::restart << comment << endl;
 			} else if (args.OptionId() ==NO_OPT_restart) 
 			{ 
-				cout << args.OptionText() <<" ==> restart off"<< ";" << endl;  
+				cout <<"restart OFF" << endl;  
 				ToulBar2::restart = 0; 
 			}
 
@@ -1158,7 +1170,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_generation) 
 			{
 				ToulBar2::generation = true;
-				cout << "-g flag ==> sort pedigree option On" <<  endl;
+				cout << "-g flag ==> sort pedigree option ON" <<  endl;
 
 			}
 
@@ -1188,12 +1200,12 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 				ToulBar2::bayesian = true;
 				cout << endl ;
-				cout << " <<< BAYESIAN MODE = ON >>>;" << endl;
+				cout << "<<< Bayesian mode ON >>>" << endl;
 
 				if(ToulBar2::verbose ) {
 					cout << endl ;
 					cout << "genotypingErrorRate = " << ToulBar2::errorg << " (default value)" <<  endl;
-					cout << "ToulBar2::resolution = " << ToulBar2::resolution << " (default value)" <<  endl;
+					cout << "resolution = " << ToulBar2::resolution << " (default value)" <<  endl;
 					cout << endl ;
 				}
 
@@ -1210,12 +1222,12 @@ int _tmain(int argc, TCHAR * argv[])
 			} else if ( args.OptionId() == MENDEL_OPT_ESTIMAT_FREQ && ToulBar2::bayesian) 
 			{
 				ToulBar2::foundersprob_class=1;
-				cout <<  args.OptionText() << " ON => probs depending on the frequencies found in the current pedigree probleme used" << endl;
+				cout << " => prob depending on the frequencies found in the current pedigree probleme used" << endl;
 
 
 			} else if ( args.OptionId() == MENDEL_OPT_ALLOCATE_FREQ && ToulBar2::bayesian) 
 			{
-				cout <<  args.OptionText() << " ON => probs frequencies read from command line" << endl;
+				cout << " => prob frequencies read from command line" << endl;
 				ToulBar2::foundersprob_class=2;
 				Pedi_Args(args,-1);
 			}
@@ -1224,40 +1236,40 @@ int _tmain(int argc, TCHAR * argv[])
 			/////				DEBUG and verbose LEVEL  management + DUMP 
 			////////////////////////////////////////////////////////////////////////////////////////
 			//verbose mode 
-			//   v : verbosity level
+			//   v: verbosity level
 			if ( args.OptionId() == OPT_verbose) {
 				if (args.OptionArg() != NULL) { ToulBar2::verbose= atoi(args.OptionArg()); }
 				else { ToulBar2::verbose=0; }
-				cout <<" Verbose level = " << ToulBar2::verbose << endl;
+				cout <<"verbose level = " << ToulBar2::verbose << endl;
 
 
 			}
 			if(ToulBar2::verbose >0 ) 
 			{
-				cout << "Command line successfull option :" << endl;
-				_tprintf(  _T(" Option, ID= %d, OPt Text=: '%s', Argument= '%s'\n"), args.OptionId(), args.OptionText(), args.OptionArg() ? args.OptionArg() : "");
+				cout << "Command line successfull option:" << endl;
+				_tprintf(  _T(" Option, ID= %d, OPt Text=: '%s', Argument= '%s'\n"), args.OptionId(), args.OptionText(), args.OptionArg() ? args.OptionArg(): "");
 			}
 
-			//  z : save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
+			//  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
 
 			if ( args.OptionId() == OPT_dumpWCSP) {
 				if (args.OptionArg() != NULL) { ToulBar2::dumpWCSP= atoi(args.OptionArg());} else ToulBar2::dumpWCSP=1;
-				if(ToulBar2::dumpWCSP < 2 ) {
-				cout <<" Original Dump => -z = " << ToulBar2::dumpWCSP  << "  <=> dump basename = problem_original.wcsp and Graphviz flag on Degree Distribuftion flag on "  << endl;
+				if(ToulBar2::dumpWCSP <= 1 ) {
+				cout <<"original problem dump in problem_original.wcsp (see also Graphviz and degree distribution)"  << endl;
 				} else {
-				cout <<" Dump after preprocessing => -z = " << ToulBar2::dumpWCSP << " <=> dump basename = problem ; Graphviz flag on cout Degree Distribuftion flag on "  << endl;
+				cout <<"dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)"  << endl;
 
 				}
 
 
 			}
-			//   Z : debug mode (save problem at each node if verbosity option set!)
+			//   Z: debug mode (save problem at each node if verbosity option set!)
 
 			//		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
 
 			if ( args.OptionId() == OPT_debug) {
 				if (args.OptionArg() != NULL) { ToulBar2::debug= atoi(args.OptionArg());} else ToulBar2::debug=1;
-				cout <<" Debug level = " << ToulBar2::debug << endl;
+				cout <<"debug level = " << ToulBar2::debug << endl;
 
 
 			}
@@ -1270,7 +1282,7 @@ int _tmain(int argc, TCHAR * argv[])
 				if (args.OptionArg() != NULL) {
 					ub = (args.OptionArg())?string2Cost(args.OptionArg()):MAX_COST;
 				}
-				cout <<" UB =" << ub << " passed in  command line" << endl;
+				cout <<"UB =" << ub << " passed in  command line" << endl;
 			} 
 
 
@@ -1292,7 +1304,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 		else
 		{
-			cout <<  ">>> ----command line ERROR >>>>  : "<< endl ;
+		  cout <<  "<<<< ERROR >>>>  : "<< endl ;
 			_tprintf(
 					_T("%s: '%s' (use --help to get command line help)\n"),
 					GetLastErrorText(args.LastError()), args.OptionText());
@@ -1332,7 +1344,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if(check_file_ext(glob.File(n),file_extension_map["wcsp_ext"]) ) 
 			{
-				cout <<  " loading wcsp file : "<< glob.File(n)  << endl;
+				cout <<  "loading wcsp file: "<< glob.File(n)  << endl;
 				strext = ".wcsp";
 				strfile = glob.File(n);
 			}
@@ -1340,7 +1352,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if(check_file_ext(glob.File(n),file_extension_map["uai_ext"]) ) {
 				strfile = glob.File(n);
 				strext = ".uai";
-				cout <<  " loading uai file :  "<< glob.File(n) << endl;
+				cout <<  "loading uai file:  "<< glob.File(n) << endl;
 				ToulBar2::uai = true;
 				ToulBar2::bayesian = true;
 				ToulBar2::writeSolution = true;
@@ -1348,14 +1360,14 @@ int _tmain(int argc, TCHAR * argv[])
 				{
 					ToulBar2::evidence_file = string(glob.File(n+1));
 				} else if ( glob.FileCount() == 1 ) {
-					cout << "Not evidence File specified in command line: ==> default evidence file used " << endl;
+					cout << "no evidence File specified in command line: ==> default evidence file used " << endl;
 
 				}
 			}
 			// xml file
 
 			if(check_file_ext(glob.File(n),file_extension_map["wcspXML_ext"]) ) {
-				cout <<  " loading xml file :" << glob.File(n) << endl;
+				cout <<  "loading xml file:" << glob.File(n) << endl;
 
 				ToulBar2::xmlflag = true;
 				ToulBar2::writeSolution = true;
@@ -1366,12 +1378,12 @@ int _tmain(int argc, TCHAR * argv[])
 			// wcnf or cnf file
 
 			if(check_file_ext(glob.File(n),file_extension_map["wcnf_ext"]) ) {
-				cout <<  " loading wcnf file :" << glob.File(n) << endl;
+				cout <<  "loading wcnf file:" << glob.File(n) << endl;
 				ToulBar2::wcnf = true;
 				strext = ".wcnf";
 				strfile = glob.File(n);
 			} else if(check_file_ext(glob.File(n),file_extension_map["cnf_ext"]) ) {
-				cout <<  " loading cnf file :" << glob.File(n) << endl;
+				cout <<  "loading cnf file:" << glob.File(n) << endl;
 				ToulBar2::wcnf = true;
 				strext = ".cnf";
 				strfile = glob.File(n);
@@ -1380,7 +1392,7 @@ int _tmain(int argc, TCHAR * argv[])
 			// upperbound file 
 
 			if(check_file_ext(glob.File(n),file_extension_map["ub_ext"]) ) {
-				cout <<  " loading Upper Bound (UB) from file : "<< glob.File(n)  << endl;
+				cout <<  "loading upper bound from file: "<< glob.File(n)  << endl;
 				string ubs;
 				ubs=read_UB(glob.File(n));
 				if(ubs.c_str() != NULL ) {	
@@ -1396,7 +1408,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 			// bep input file
 			if(check_file_ext(glob.File(n),file_extension_map["bep_ext"]) ) {
-				cout <<  " loading BEP file : "<< glob.File(n)  << endl;
+				cout <<  "loading BEP file: "<< glob.File(n)  << endl;
 				strext = ".bep";
 				strfile = glob.File(n);
 			}
@@ -1407,10 +1419,10 @@ int _tmain(int argc, TCHAR * argv[])
 			if(check_file_ext(glob.File(n),file_extension_map["map_ext"]) ) {
 				ToulBar2::map_file = string(glob.File(n));
 				ToulBar2::haplotype = new Haplotype;
-				cout << "loading map file : " << ToulBar2::map_file << endl;
+				cout << "loading map file: " << ToulBar2::map_file << endl;
 
 				if( glob.FileCount() <2) {
-					cerr << "pedigree file is missing (.pre) : " << endl;
+					cerr << "pedigree file is missing (.pre): " << endl;
 					exit(-1);
 
 
@@ -1421,7 +1433,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if(check_file_ext(glob.File(n),file_extension_map["pre_ext"]) ) {
 				strfile = glob.File(n);
 				strext = ".pre";
-				cout << "loading pre file : " << glob.File(n) << endl;
+				cout << "loading pre file: " << glob.File(n) << endl;
 				if( glob.FileCount() <2) ToulBar2::pedigree = new Pedigree;
 			}
 
@@ -1430,7 +1442,7 @@ int _tmain(int argc, TCHAR * argv[])
 			//if (strstr(glob.File(n),".order")) 
 			if(check_file_ext(glob.File(n),file_extension_map["order_ext"]) ) 
 			{
-				cout << "loading variable order in file : " << glob.File(n) << endl;	
+				cout << "loading variable order in file: " << glob.File(n) << endl;	
 				char buf[80];
 				sprintf(buf,"%s",glob.File(n));
 				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
@@ -1446,7 +1458,7 @@ int _tmain(int argc, TCHAR * argv[])
 					cerr << "\n COMMAND LINE ERROR bad partial affection , affection already define in command line ...-x argument " << endl ; 
 					exit(-1) ;
 				}
-				cout << "loading solution in file : " << glob.File(n) << endl;
+				cout << "loading solution in file: " << glob.File(n) << endl;
 
 				certificate = true;
 				certificateFilename = new char[256];
@@ -1459,9 +1471,6 @@ int _tmain(int argc, TCHAR * argv[])
 		}
 
 	}
-	cout << endl << " --- end of cmd parsing ---" << endl <<endl;
-
-
 
 	// ----------simple opt end ----------------------
 
