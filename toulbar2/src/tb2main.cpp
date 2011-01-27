@@ -653,7 +653,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::preprocessTernary) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
-	cerr << "   -dec : preprocessing only: decompose cost functions with arity >=3 into smaller arity cost functions";
+	cerr << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
