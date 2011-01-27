@@ -1,7 +1,7 @@
 SRCSFULL = $(wildcard tb2*.cpp)
 
 # Remove the first character in the following line if compile with BOOST Graph library
-# BOOST = -DBOOST
+BOOST = -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB
 
 # Same thing for XML
 #XML = XMLFLAG
@@ -18,7 +18,7 @@ ifeq ($(XML),XMLFLAG)
 OBJS = $(SRCS:.cpp=.o) -lxml2
 # -lxml2 -lz -lm -lpthread
 else
-OBJS = $(SRCS:.cpp=.o)
+OBJS = $(SRCS:.cpp=.o) -lgmp
 endif
 
 LIBSRCS1 = $(SRCS:tb2main.cpp=)
@@ -53,8 +53,7 @@ OFLAGS = -O3 -DNDEBUG
 ICCFLAGS = 
 #-O3 -ipo -static -DNDEBUG
 
-PFLAGS =
-# -pg -g3
+PFLAGS = -pg -g3
 
 BUILD = $(CC) -shared
 
