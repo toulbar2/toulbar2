@@ -32,7 +32,7 @@ ________________________________________________________________________________
 Solve a WCSP with an initial upperbound and save one of its optimal solution
 in filename "sol":
 
-	toulbar2 ../validation/example.wcsp 28 w
+	toulbar2 ../validation/example.wcsp -ub=28 -w
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -47,7 +47,7 @@ cat sol
 ________________________________________________________________________________
 Solve a WCSP using a limited discrepancy search strategy:
 
-	toulbar2 ../validation/example.wcsp l
+	toulbar2 ../validation/example.wcsp -l
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -66,9 +66,9 @@ ________________________________________________________________________________
 Solve a WCSP using Depth-First Brand and Bound with Tree Decomposition (BTD)
 and a min-fill order:
 
-../misc/bin/linux/peo ../validation/example.wcsp 3 > example.order
+    ../misc/bin/linux/peo ../validation/example.wcsp 3 > example.order
 
-	toulbar2 ../validation/example.wcsp B1 Oexample.order 
+	toulbar2 ../validation/example.wcsp -B=1 example.order 
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -85,7 +85,7 @@ end.
 ________________________________________________________________________________
 Solve a WCSP using Russian Doll Search exploiting BTD on small separators only:
 
-	toulbar2 ../validation/example.wcsp B2r3 Oexample.order
+	toulbar2 ../validation/example.wcsp -B=2 -r=3 example.order
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 24 unassigned variables, 120 values in all current domains and 62 constraints.
@@ -119,7 +119,7 @@ end.
 ________________________________________________________________________________
 Solve a WCSP using partial variable elimination followed by BTD:
 
-	toulbar2 ../validation/example.wcsp mp3 B1 Oexample.order
+	toulbar2 ../validation/example.wcsp -m -p=3 -B=1 example.order
 
 DAC order: 21 20 15 19 24 3 0 16 14 9 6 1 12 8 7 5 23 18 17 4 10 22 13 11 2
 Read 25 variables, with 5 values at most, and 63 constraints.
@@ -139,7 +139,7 @@ ________________________________________________________________________________
 Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and
 multiplying all costs by a constant 100 (usefull if initial costs are small):
 
-	toulbar2 ../validation/example.wcsp AC100
+	toulbar2 ../validation/example.wcsp -A -C=100
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 Lb before VAC: 1800
@@ -158,7 +158,7 @@ Solve a WCSP using Virtual Arc Consistency (VAC) in preprocessing and during sea
 multiplying all costs by a constant 100, speeding VAC convergence during search,
 and exploiting a dedicated value ordering heuristic:
  
-	toulbar2 ../validation/example.wcsp VA1000C100T10
+	toulbar2 ../validation/example.wcsp -V -A=1000 -C=100 -T=10
 
 Read 25 variables, with 5 values at most, and 63 constraints.
 Lb before VAC: 1800
@@ -175,7 +175,7 @@ ________________________________________________________________________________
 Count the number of solutions of a CSP (i.e. null optimum) with #BTD
 and default variable ordering:
 
-	toulbar2 ../validation/enum/base2.wcsp aB1
+	toulbar2 ../validation/enum/base2.wcsp -a -B=1
 
 Read 10 variables, with 4 values at most, and 12 constraints.
 10 unassigned variables, 40 values in all current domains and 12 constraints.
@@ -197,7 +197,7 @@ ________________________________________________________________________________
 Get a quick approximation of the number of solutions of a CSP with Approx_#BTD
 and default variable ordering:
 
-	toulbar2 ../validation/enum/base2.wcsp aB1D
+	toulbar2 ../validation/enum/base2.wcsp -a -B=1 -D
 
 Read 10 variables, with 4 values at most, and 12 constraints.
 10 unassigned variables, 40 values in all current domains and 12 constraints.
@@ -230,72 +230,68 @@ Get a help message on ToulBar2 options and see what are the default options:
 *************************
 * ToulBar2 Help Message *
 *************************
-	toulbar2 version 0.9
 
 Command line is:
-	toulbar2 filename [upperbound] [options]
+toulbar2_0_9_4/toulbar2 problem_filename [options]
 
 Available problem formats (specified by the filename extension) are:
    *.wcsp : Weighted CSP format (see SoftCSP web site)
-   *.uai : Bayesian network and Markov Random Field format (see UAI'08 evaluation workshop) followed by an optional evidence filename (perform MPE task)
-   *.pre  : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)
+   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)
+   *.cnf : (Max-)SAT format
+   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (perform MPE task)
+   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)
+   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)
    *.bep  : satellite scheduling format (CHOCO benchmark)
 
-Alternatively one can call the random problem generator: 
-     bin-{n}-{m}-{p1}-{p2}-{seed}        p1 is the tightness in percentage %
-                                         p2 is the num of binary cost functions to include
-                                         the seed parameter is optional
-or:                                                                               
-     binsub-{n}-{m}-{p1}-{p2}-{p3}-{seed} binary random & submodular cost functions
-                                         p1 is the tightness in percentage % of random cost functions
-                                         p2 is the num of binary cost functions to include
-                                         p3 is the percentage % of submodular cost functions among p2 cost functions
-                                         (plus 10 permutations of two randomly-chosen values for each domain)
-or:                                                                               
-     tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions
-or:                                                                               
-     nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions
+   *.order  : variable elimination order
+   *.sol  : solution/certificate for the problem
 
-An initial upperbound is optional (default value is 1537228672809129301)
+Warning! a New file extension can be enforced using --foo_ext=".myext" ex: --wcsp_ext='.test' --sol_ext='.sol2'  
 
-Available options are (WARNING! each letter is meaningful, do not use a "-" before each option, use symbol ":" before an option to remove a default option):
-   v : verbosity (repeat this option letter to increase the verbosity level)
-   s : show each solution found
-   w : write last solution found in filename "sol"
-   b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)
-   c : perform binary branching with last conflict backjumping variable ordering heuristic (default option)
-   q : weighted degree variable ordering heuristic (UNSTABLE)
-   d : dichotomic branching instead of binary branching when current domain size is strictly greater than 10 (default option)
-   e[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is 3)
-   p[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is -1)
-   t : preprocessing only: project ternary cost functions on binary cost functions and apply 3-consistency (can be very slow)
-   h : preprocessing only: project ternary cost functions on binary cost functions following a heuristic (to be used in conjunction with option "t")
-   m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options "p" and "O")
-   o : ensure optimal worst-case time complexity of DAC and EAC (can be costly in practice)
-   k[integer] : soft local consistency level (NC=0, AC=1, DAC=2, FDAC=3, EDAC=4) (default value is 4)
-   l : limited discrepancy search
-   i : initial upperbound found by INCOP local search solver (filename "./misc/bin/linux/narycsp")
-   z : save current problem in wcsp format in filename "problem.wcsp"
-   Z : debug mode (save problem at each node if verbosity option set!)
-   x : load a solution from filename "sol"
+Available options are (use symbol ":" after an option to remove a default option):
+   -ub=[integer] : initial problem upperbound (default value is 1537228672809129301)
+   -v=[integer] : verbosity level
+   -s : show each solution found
+   -w : write last solution found in filename "sol"
+   -b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)
+   -c : perform binary branching with last conflict backjumping variable ordering heuristic (default option)
+   -q : weighted degree variable ordering heuristic (default option if #constr<10*#var)
+   -d : dichotomic branching instead of binary branching when current domain size is strictly greater than 10 (default option)
+   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is 3)
+   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is -1)
+   -t : preprocessing only: project ternary cost functions on all binary cost functions (default option)
+   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is 2)
+   -dec : preprocessing only: decompose cost functions with arity >=3 into smaller arity cost functions (default option)
+   -h=[integer] : preprocessing only: project n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)
+   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options "-p" and "-O")
+   -o : ensure optimal worst-case time complexity of DAC and EAC (can be slower in practice)
+   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)
+   -l=[integer] : limited discrepancy search (discrepancy bound = 4 by default)
+   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = 10000 by default)
+   -i : initial upperbound found by INCOP local search solver (filename "./misc/bin/linux/narycsp")
+   -z=[integer] : save problem in wcsp format in filename "problem.wcsp" (1: original instance, 2: after preprocessing)
+		write also the  graphviz dot file  and the degree distribution of the input problem 
+   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)
+   -x=[(,i=a)*] : assign variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file "sol")
 
-   M[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is 0)
-   A[integer] : enforce VAC at each search node with a search depth less than a given value (default value is 0)
-   T[integer] : threshold cost value for VAC (default value is 1)
-   P[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)
-   C[integer] : multiply all costs by this number (default value is 1)
-   S : preprocessing only: perform singleton consistency (only in conjunction with option "A")
-   V : VAC-based value ordering heuristic
+   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is 0)
+   -A=[integer] : enforce VAC at each search node with a search depth less than a given value (default value is 0)
+   -T=[integer] : threshold cost value for VAC (default value is 1)
+   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)
+   -C=[integer] : multiply all costs by this number (default value is 1)
+   -S : preprocessing only: perform singleton consistency (only in conjunction with option "-A")
+   -V : VAC-based value ordering heuristic
 
-   B[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)
-   O[filename ] : read a variable elimination order from a file in order to build a tree decomposition (WARNING! DO NOT PUT A SPACE BETWEEN "O" AND FILENAME)
+   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)
+   -O=[filename] : read a variable elimination order from a file in order to build a tree decomposition
                   (if not specified, then use the variable order in which variables appear in the problem file)
-   j[integer] : split large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number
-                (use options "B3j1" for pure RDS, use value 0 for no splitting) (default value is 0)
-   r[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is -1)
-   E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option "e")
-   R[integer] : choice for a specific root cluster number
-   I[integer] : choice for solving only a particular rooted cluster subtree
+   -j=[integer] : split large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number
+                (use options "-B=3 -j=1" for pure RDS, use value 0 for no splitting) (default value is 0)
+   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is -1)
+   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is 0)
+   -E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option "-e")
+   -R=[integer] : choice for a specific root cluster number
+   -I=[integer] : choice for solving only a particular rooted cluster subtree
 
-   a : find all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)
-   D : approximate satisfiable solution count with BTD
+   -a : find all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)
+   -D : approximate satisfiable solution count with BTD
