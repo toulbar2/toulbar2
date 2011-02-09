@@ -36,6 +36,7 @@ Solver::~Solver()
 	delete[] allVars;
 }
 
+//static int NbDecisionVariables = 17;
 void Solver::initVarHeuristic()
 {
     unassignedVars = new BTList<Value>(&store->storeDomain);
@@ -44,7 +45,7 @@ void Solver::initVarHeuristic()
         allVars[i].content = i;
         unassignedVars->push_back(&allVars[i], false);
 		//        if (wcsp->assigned(i) || i >=NbDecisionVariables) unassignedVars->erase(&allVars[i], false);
-        if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
+		if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
     }
 }
 
