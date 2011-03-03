@@ -28,6 +28,8 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w,elimCtrIndex), co
     cluster = -1;
 }
 
+/// \return size of the cartesian product of all domains in the constraint scope.
+/// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long Constraint::getDomainSizeProduct()
 {
   if (arity()==0) return 0;
