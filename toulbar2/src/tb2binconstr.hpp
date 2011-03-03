@@ -83,6 +83,7 @@ public:
     }
 
    void addcost( int vx, int vy, Cost mincost ) {
+    		assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
             assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost));
    	        int ix = x->toIndex(vx);
             int iy = y->toIndex(vy);
@@ -90,6 +91,7 @@ public:
    }
 
    void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+      assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
       assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
       if (xin==x) {
         costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
@@ -105,16 +107,19 @@ public:
     }
 
    void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+	  assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
       if (xin==x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
       else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] = mincost;
    }
 
    void setcost( int vx, int vy, Cost mincost ) {
+	   assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
    	   costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
    }
 
 
    void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
+		assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
 		assert(costsin.size() <= costs.size());
 		int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -126,6 +131,7 @@ public:
     }
     
    void addCosts( BinaryConstraint* xy ) {
+		assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
 		assert( ((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)) );
 		int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -140,6 +146,7 @@ public:
     }
  
     void clearCosts() {
+		assert(ToulBar2::verbose < 4 || ((cout << "clear cost (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         for (unsigned int i=0; i<sizeX; i++) deltaCostsX[i] = MIN_COST;
         for (unsigned int j=0; j<sizeY; j++) deltaCostsY[j] = MIN_COST;
         for (unsigned int i=0; i<sizeX; i++) {
