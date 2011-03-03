@@ -34,9 +34,9 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
 }
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)
- 	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(wcsp->maxdomainsize), sizeY(wcsp->maxdomainsize)
+ 	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize())
 {
-	unsigned int maxdomainsize = wcsp->maxdomainsize;
+	unsigned int maxdomainsize = wcsp->getMaxDomainSize();
     deltaCostsX = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
     deltaCostsY = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
     supportX = vector<Value>(maxdomainsize,0);

@@ -382,11 +382,11 @@ VACConstraint::VACConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVari
 
 VACConstraint::VACConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) , myThreshold(MIN_COST, &wcsp->getStore()->storeCost) 
 {
-   for (int a = 0; a < wcsp->maxdomainsize; a++) {
+   for (int a = 0; a < wcsp->getMaxDomainSize(); a++) {
 	   	kX.push_back(0);
 	   	kX_timeStamp.push_back(0);
    }
-   for (int b = 0; b < wcsp->maxdomainsize; b++) {
+   for (int b = 0; b < wcsp->getMaxDomainSize(); b++) {
 	   	kY.push_back(0);
 	   	kY_timeStamp.push_back(0);
    }
