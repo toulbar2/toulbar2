@@ -46,6 +46,7 @@ class WCSP : public WeightedCSP {
     bool objectiveChanged;
     Long nbNodes;                             // used as a time-stamp by Queue methods
     Constraint *lastConflictConstr;
+	int maxdomainsize;
 
 	vector<GlobalConstraint*> globalconstrs;       // a list of all global constraints
 
@@ -161,6 +162,7 @@ public:
     void propagate();               // propagate until a fix point and increase nbNodes
     bool verify();
 
+	int getMaxDomainSize() { return maxdomainsize;}
     unsigned int numberOfVariables() const {return vars.size();}
     unsigned int numberOfUnassignedVariables() const {
         int res = 0;
@@ -279,8 +281,6 @@ public:
 		BinaryConstraint*   xz;
 		TernaryConstraint*  xyz;
 	} elimInfo;
-
-	int maxdomainsize;
 
 	void initElimConstr();
 	void initElimConstrs();
