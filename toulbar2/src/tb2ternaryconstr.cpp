@@ -50,9 +50,9 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 
 TernaryConstraint::TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) 
 					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp), 
-					  sizeX(wcsp->maxdomainsize), sizeY(wcsp->maxdomainsize), sizeZ(wcsp->maxdomainsize)
+					  sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize()), sizeZ(wcsp->getMaxDomainSize())
 {
-	unsigned int maxdom = wcsp->maxdomainsize;
+	unsigned int maxdom = wcsp->getMaxDomainSize();
     deltaCostsX = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
     deltaCostsY = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
     deltaCostsZ = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
@@ -305,6 +305,22 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                     }
                 }
                 // extend binary to ternary
+                if (yz->connected()) {
+                    for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                        Cost xycost = (xy->connected())?xy->getCost(x,y,*iterX,*iterY):MIN_COST;
+                        for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                            Cost yzcost = yz->getCost(y,z,*iterY,*iterZ);
+                            if (yzcost > MIN_COST) {
+                                Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
+                                if (LUBTEST(cost, minCost)) {
+                                    Cost xzcost = (xz->connected())?xz->getCost(x,z,*iterX,*iterZ):MIN_COST;
+                                    Cost remain = minCost - (cost + xycost + xzcost);
+                                    if (remain > MIN_COST) extend(yz,y,z,x,*iterY,*iterZ, remain);
+                                }
+                            }
+                        }
+                    }
+                }
                 if (xy->connected()) {
                     for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                         Cost xycost = xy->getCost(x,y,*iterX,*iterY);
@@ -314,8 +330,9 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                                 Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
                                 if (LUBTEST(cost, minCost)) {
                                     Cost xzcost = (xz->connected())?xz->getCost(x,z,*iterX,*iterZ):MIN_COST;
-                                    Cost yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):MIN_COST;
-                                    Cost remain = minCost - (cost + xzcost + yzcost);
+//                                    Cost yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):MIN_COST;
+//                                    Cost remain = minCost - (cost + xzcost + yzcost);
+                                    Cost remain = minCost - (cost + xzcost);
                                     LUB(&costfromxy, remain);
                                 }
                             }
@@ -334,8 +351,9 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                                 Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
                                 if (LUBTEST(cost, minCost)) {
-                                    Cost yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):MIN_COST;
-                                    Cost remain = minCost - (cost + yzcost);
+//                                    Cost yzcost = (yz->connected())?yz->getCost(y,z,*iterY,*iterZ):MIN_COST;
+//                                    Cost remain = minCost - (cost + yzcost);
+                                    Cost remain = minCost - cost;
                                     LUB(&costfromxz, remain);
                                 }
                             }
@@ -346,20 +364,20 @@ void TernaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariabl
                         }
                     }
                 }
-                if (yz->connected()) {
-                    for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                        for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-                            Cost yzcost = yz->getCost(y,z,*iterY,*iterZ);
-                            if (yzcost > MIN_COST) {
-                                Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
-                                if (LUBTEST(cost, minCost)) {
-                                    assert(yzcost >= minCost - cost);
-                                    extend(yz,y,z,x,*iterY,*iterZ,minCost - cost);
-                                }
-                            }
-                        }
-                    }
-                }
+//                if (yz->connected()) {
+//                    for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+//                        for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+//                            Cost yzcost = yz->getCost(y,z,*iterY,*iterZ);
+//                            if (yzcost > MIN_COST) {
+//                                Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
+//                                if (LUBTEST(cost, minCost)) {
+//                                    assert(yzcost >= minCost - cost);
+//                                    extend(yz,y,z,x,*iterY,*iterZ,minCost - cost);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);
                 if (deconnected()) return;
             }
