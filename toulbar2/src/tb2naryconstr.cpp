@@ -620,7 +620,7 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 		naryx = wcsp->newTernaryConstr(subscopeX[0],subscopeX[1],subscopeX[2],costs);
 	}
 	else{
-		index = wcsp->postNaryConstraint(scopeX,a-1,wcsp->getUb());
+		index = wcsp->postNaryConstraintBegin(scopeX,a-1,wcsp->getUb());
 		naryx = wcsp->getCtr(index);
 	}
 
@@ -677,7 +677,7 @@ void NaryConstraintMap::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 		naryz = wcsp->newTernaryConstr(subscopeZ[0],subscopeZ[1],subscopeZ[2],costs);
 	}
 	else {
-		index = wcsp->postNaryConstraint(scopeZ,a-1,wcsp->getUb());
+		index = wcsp->postNaryConstraintBegin(scopeZ,a-1,wcsp->getUb());
 		naryz = wcsp->getCtr(index);
 	}
 
