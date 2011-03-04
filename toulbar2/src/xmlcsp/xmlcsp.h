@@ -434,7 +434,7 @@ void createWCSP()
 			int ctrIndex = -1;
 			Constraint* ctr = NULL; 
 			if (arity > 3) {
-			  ctrIndex = wcsp->postNaryConstraint(scopeIndex,arity,defval);
+			  ctrIndex = wcsp->postNaryConstraintBegin(scopeIndex,arity,defval);
 			  ctr = wcsp->getCtr(ctrIndex);
 			  list<int*>::iterator  itl = r->tuples.begin(); 
 			  while(itl != r->tuples.end()) {
