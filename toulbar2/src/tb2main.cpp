@@ -142,7 +142,7 @@ enum {
 	OPT_boostingBTD,
 	OPT_minProperVarSize,
 	OPT_varOrder,
-	OPT_PARTIAL_AFFECTATION,
+	OPT_PARTIAL_ASSIGNMENT,
 	OpT_showSolutions,
 	OPT_writeSolution,
 	OPT_pedigreePenalty,
@@ -248,10 +248,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_maxSeparatorSize,     		(char*) "-r",             			SO_REQ_SEP  	},
 	{ OPT_maxSeparatorSize,     		(char*) "--maxSepSize",   			SO_REQ_CMB  	},
 
-	//////
 	{ OPT_minProperVarSize,     		(char*) "-X",             			SO_REQ_SEP 	},
-	{ OPT_PARTIAL_AFFECTATION,  		(char*) "-x",             			SO_OPT 	 	},
-	//	{ OPT_PARTIAL_AFFECTATION,  		(char*) "--paf",          			SO_REQ_CMB 	},
+	{ OPT_PARTIAL_ASSIGNMENT,  		(char*) "-x",             			SO_OPT 	 	},
 	{ OPT_boostingBTD,          		(char*) "-E",             			SO_NONE    	},
 	{ OPT_varOrder,		    		(char*) "-O",             			SO_REQ_SEP 	}, // filemane of variable order
 	{ OPT_showSolutions,         		(char*) "-s",             			SO_NONE    	},//print solution founded
@@ -650,7 +648,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
 	cerr << "   -t : preprocessing only: simulate restricted path consistency by adding ternary cost functions on triangles of binary cost functions";
-	if (ToulBar2::preprocessTernary) cerr << " (default option)";
+	if (ToulBar2::preprocessTernaryRPC) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
 	cerr << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
@@ -875,11 +873,11 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 
 			// filename of solution
-			if (args.OptionId() == OPT_PARTIAL_AFFECTATION) {
+			if (args.OptionId() == OPT_PARTIAL_ASSIGNMENT) {
 				if (args.OptionArg()!= NULL)	{
 					certificate = true;
 					certificateString = args.OptionArg() ;
-					cout << "partial affection to be check ..." << certificateString << endl;
+					cout << "partial assignment to be checked ..." << certificateString << endl;
 				} else {
 					certificate = true;
 					certificateFilename = (char *) "sol";
@@ -1052,10 +1050,10 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if ( args.OptionId() == OPT_singletonConsistency)  ToulBar2::singletonConsistency = true;
 			if ( args.OptionId() == OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = true;
-			if ( args.OptionId() == OPT_preprocessTernary) ToulBar2::preprocessTernary = true;
+			if ( args.OptionId() == OPT_preprocessTernary) ToulBar2::preprocessTernaryRPC = true;
 			else if ( args.OptionId() == NO_OPT_preprocessTernary) {
 			  cout <<"preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
-			  ToulBar2::preprocessTernary = false;
+			  ToulBar2::preprocessTernaryRPC = false;
 			}
 
 			// elimination of functional variables
@@ -1182,7 +1180,7 @@ int _tmain(int argc, TCHAR * argv[])
 					float f;
 					sscanf(args.OptionArg(),"%f",&f) ; 
 					ToulBar2::errorg=f;
-					cout << "New affectation for genotyping Error Rate = " << ToulBar2::errorg  <<  endl;
+					cout << "New assignment for genotyping Error Rate = " << ToulBar2::errorg  <<  endl;
 				}
 
 			}
@@ -1191,7 +1189,7 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 				if(args.OptionArg() != NULL) {
 					ToulBar2::resolution=atoi(args.OptionArg());
-					cout << "New affectation for precision = " << ToulBar2::resolution  <<  endl;
+					cout << "New assignment for precision = " << ToulBar2::resolution  <<  endl;
 				}
 
 			}
@@ -1450,12 +1448,12 @@ int _tmain(int argc, TCHAR * argv[])
 				sprintf(ToulBar2::varOrder, "%s",buf);
 			}
 
-			// read affection in file or filename of solution
+			// read assignment in file or filename of solution
 			if(check_file_ext(glob.File(n),file_extension_map["sol_ext"]) ) 
 			{
-				if ( certificateString) 
+				if (certificateString)
 				{ 
-					cerr << "\n COMMAND LINE ERROR bad partial affection , affection already define in command line ...-x argument " << endl ; 
+					cerr << "\n COMMAND LINE ERROR bad partial assignment, assignment already defined in command line ...-x argument " << endl ;
 					exit(-1) ;
 				}
 				cout << "loading solution in file: " << glob.File(n) << endl;
