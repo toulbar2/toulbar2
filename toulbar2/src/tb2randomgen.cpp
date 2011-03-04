@@ -32,7 +32,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
 	}
 	tuple[arity] = '\0';
 
-	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraint(scopeIndexs, arity, Top) );
+	Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top) );
 
 	String s(tuple);
 	while(nogoods>0) {

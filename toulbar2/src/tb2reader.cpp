@@ -138,7 +138,7 @@ void WCSP::read_wcsp(const char *fileName)
 				{ 
 				  Cost tmpcost = defval*K;
 				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
-				  int naryIndex = postNaryConstraint(scopeIndex,arity,tmpcost);
+				  int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost);
 				  NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
 				  Char buf[MAX_ARITY];
@@ -500,7 +500,7 @@ void WCSP::read_uai2008(const char *fileName)
 	            if (ToulBar2::verbose >= 3) cout << j << " ";
 			}     	
 			if (ToulBar2::verbose >= 3) cout << endl;
-            lctrs.push_back( postNaryConstraint(scopeIndex,arity,MIN_COST) );
+            lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST) );
         } 
         else if (arity == 3) {
             file >> i;
@@ -877,7 +877,7 @@ void WCSP::read_wcnf(const char *fileName)
 	maxarity = max(maxarity,arity);
 	
 	if (arity > 3) {
-	  int index = postNaryConstraint(scopeIndex,arity,MIN_COST);
+	  int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST);
 	  NaryConstraint *nary = (NaryConstraint *) constrs[index];
 	  String tup = buf;
 	  nary->setTuple(tup, cost*K, NULL);
