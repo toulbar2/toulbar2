@@ -29,6 +29,7 @@ public:
     void decrease(Value newSup);
     void remove(Value newValue) {if (newValue==inf) increase(newValue+1); else if (newValue==sup) decrease(newValue-1);}
     void assign(Value newValue);
+    void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
 
     Cost getInfCost() const {return infCost;}
     Cost getSupCost() const {return supCost;}

@@ -207,7 +207,7 @@ public:
 	static int elimDegree_;
 	static int elimDegree_preprocessing_;
 	static int minsumDiffusion;
-	static bool preprocessTernary;
+	static bool preprocessTernaryRPC;
 	static int preprocessFunctional;
 	static bool costfuncSeparate;
 	static int preprocessNary;

@@ -53,6 +53,11 @@ public:
     virtual void assign(int varIndex, Value newValue) =0;
     virtual void remove(int varIndex, Value remValue) =0;
 
+    /// assign a set of variables at once then propagate partially
+    /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
+    /// \param newValues vector of values to assign to corresponding variables
+    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) =0;
+
     virtual Cost getUnaryCost(int varIndex, Value v) const =0;
     virtual Cost getMaxUnaryCost(int varIndex) const =0;
     virtual Value getMaxUnaryCostValue(int varIndex) const =0;
@@ -81,7 +86,9 @@ public:
     virtual void postUnary(int xIndex, vector<Cost> &costs) =0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
-    virtual int postNaryConstraint(int* scope, int arity, Cost defval) =0;
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval) =0;
+    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) =0;
+    virtual void postNaryConstraintEnd(int ctrindex) =0;
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;

@@ -81,24 +81,32 @@ void Solver::read_solution(const char *filename)
         exit(EXIT_FAILURE);
     }
 
+	vector<int> variables;
+	vector<Value> values;
     int i = 0;
     while (!file.eof()) {
         if ((unsigned int) i >= wcsp->numberOfVariables()) break;
-        int value = 0;
+        Value value = 0;
         file >> value;
-        if (wcsp->unassigned(i)) {
-		  assign(i, value);
-		  // side-effect: remember last solution
-		  wcsp->setBestValue(i, value);
-        } else {
-		    if (wcsp->getValue(i) != value) {
-			  THROWCONTRADICTION;
-			} else {
-			  wcsp->setBestValue(i, value); // side-effect: remember last solution
-			}
-        }
+        variables.push_back(i);
+        values.push_back(value);
+        // side-effect: remember last solution
+        wcsp->setBestValue(i, value);
+//        if (wcsp->unassigned(i)) {
+//		  assign(i, value);
+//		  // side-effect: remember last solution
+//		  wcsp->setBestValue(i, value);
+//        } else {
+//		    if (wcsp->getValue(i) != value) {
+//			  THROWCONTRADICTION;
+//			} else {
+//			  wcsp->setBestValue(i, value); // side-effect: remember last solution
+//			}
+//        }
         i++;
     }
+    wcsp->assignLS(variables, values);
+    wcsp->propagate();
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
 	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     store->restore(depth);
@@ -121,13 +129,13 @@ void Solver::parse_solution(const char *certificate)
 
     if (certif2) certif2++;
     
+	vector<int> variables;
+	vector<Value> values;
     int var;
 	Value value;
 	int items;
     while ((certif2 != NULL) && (certif2[0] != 0)) {
-
         items = sscanf(certif2,"%d=%d",&var,&value);
-        
         if ((items != 2) || ((unsigned int)var >= wcsp->numberOfVariables())) {
              cerr << "Certificate " << certif2 << " incorrect!" << endl;
              exit(EXIT_FAILURE);
@@ -135,18 +143,25 @@ void Solver::parse_solution(const char *certificate)
         certif2 = strstr(certif2,sep);
         if (certif2) certif2++;
 
-        if (wcsp->unassigned(var)) {
-          assign(var, value);
-          // side-effect: remember last solution
-          wcsp->setBestValue(var, value);
-        } else {
-		  if (wcsp->getValue(var) != value) {
-			THROWCONTRADICTION;
-		  } else {
-			wcsp->setBestValue(var, value); // side-effect: remember last solution
-		  }
-        }
+        variables.push_back(var);
+        values.push_back(value);
+        // side-effect: remember last solution
+        wcsp->setBestValue(var, value);
+//        if (wcsp->unassigned(var)) {
+//          assign(var, value);
+//          // side-effect: remember last solution
+//          wcsp->setBestValue(var, value);
+//        } else {
+//		  if (wcsp->getValue(var) != value) {
+//			THROWCONTRADICTION;
+//		  } else {
+//			wcsp->setBestValue(var, value); // side-effect: remember last solution
+//		  }
+//        }
     }
+    wcsp->assignLS(variables, values);
+    wcsp->propagate();
+
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
     
     if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);

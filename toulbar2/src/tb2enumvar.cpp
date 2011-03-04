@@ -511,6 +511,30 @@ void EnumeratedVariable::assign(Value newValue)
     }
 }
 
+void EnumeratedVariable::assignLS(Value newValue, set<Constraint *>& delayedCtrs)
+{
+    if (ToulBar2::verbose >= 2) cout << "assignLS " << *this << " -> " << newValue << endl;
+    if (unassigned() || getValue() != newValue) {
+        if (cannotbe(newValue)) THROWCONTRADICTION;
+        changeNCBucket(-1);
+        inf = newValue;
+        sup = newValue;
+        support = newValue;
+        maxCostValue = newValue;
+        maxCost = MIN_COST;
+
+        Cost cost = getCost(newValue);
+        if (cost > MIN_COST) {
+            deltaCost += cost;
+            projectLB(cost);
+        }
+
+	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+        for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        	delayedCtrs.insert((*iter).constr);
+        }
+    }
+}
 
 // eliminates the current (this) variable that participates
 // in a single binary constraint ctr
@@ -868,7 +892,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 	  assert(newctr->arity() == scopeSize);
 	  break; }
 	default: {
-	  int res = wcsp->postNaryConstraint(scopeIndex, scopeSize, MIN_COST);
+	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
 	  newctr = wcsp->getCtr(res);
 	  assert(newctr->arity() == scopeSize);
 	  break; }

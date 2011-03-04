@@ -59,6 +59,7 @@ public:
     virtual void remove(Value value);
     virtual void assign(Value newValue);
     void assignWhenEliminated(Value newValue);
+    void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
 
     virtual void project(Value value, Cost cost);
     virtual void extend(Value value, Cost cost);

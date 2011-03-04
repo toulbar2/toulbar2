@@ -163,3 +163,23 @@ void IntervalVariable::assign(Value newValue)
         }
     }
 }
+
+/// assign a variable with delayed constraint propagation
+void IntervalVariable::assignLS(Value newValue, set<Constraint *>& delayedCtrs)
+{
+    if (ToulBar2::verbose >= 2) cout << "assignLS " << *this << " -> " << newValue << endl;
+    if (unassigned() || getValue() != newValue) {
+        if (cannotbe(newValue)) THROWCONTRADICTION;
+        changeNCBucket(-1);
+        maxCostValue = newValue;
+        maxCost = MIN_COST;
+        inf = newValue;
+        sup = newValue;
+		infCost = MIN_COST;
+		supCost = MIN_COST;
+        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+        for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        	delayedCtrs.insert((*iter).constr);
+        }
+    }
+}

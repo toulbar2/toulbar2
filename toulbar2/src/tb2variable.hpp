@@ -78,7 +78,8 @@ public:
     virtual void decrease(Value newSup) =0;
     virtual void remove(Value remValue) =0;
     virtual void assign(Value newValue) =0;
-    
+    virtual void assignLS(Value newValue, set<Constraint *>& delayedCtrs) =0;
+
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
     int getTrueDegree();

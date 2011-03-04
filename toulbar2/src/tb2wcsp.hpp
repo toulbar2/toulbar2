@@ -134,6 +134,17 @@ public:
     void assign(int varIndex, Value newValue) {vars[varIndex]->assign(newValue);}
     void remove(int varIndex, Value remValue) {vars[varIndex]->remove(remValue);}
 
+    /// assign a set of variables at once then propagate partially
+    /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
+    /// \param newValues vector of values to assign to corresponding variables
+    void assignLS(vector<int>& varIndexes, vector<Value>& newValues) {
+		assert(varIndexes.size()==newValues.size());
+		unsigned int size = varIndexes.size();
+    	set<Constraint *> ctrs;
+    	for (unsigned int i=0; i<size; i++) vars[varIndexes[i]]->assignLS(newValues[i], ctrs);
+    	for (set<Constraint *>::iterator it = ctrs.begin(); it != ctrs.end(); ++it) (*it)->propagate();
+    }
+
     Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}
     Cost getMaxUnaryCost(int varIndex) const {return vars[varIndex]->getMaxCost();}
     Value getMaxUnaryCostValue(int varIndex) const {return vars[varIndex]->getMaxCostValue();}
@@ -191,7 +202,9 @@ public:
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
 	int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
-    int postNaryConstraint(int* scopeIndex, int arity, Cost defval); // Warning! Must call naryctr->propagate() after giving cost tuples
+    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
+    void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
+    void postNaryConstraintEnd(int ctrindex) {getCtr(ctrindex)->propagate();}
 	int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
     bool isGlobal() {return (globalconstrs.size() > 0);}
 
