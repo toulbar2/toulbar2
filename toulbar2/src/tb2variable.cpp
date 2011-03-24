@@ -321,7 +321,7 @@ TernaryConstraint* Variable::existTernary()
 	TernaryConstraint* ctr;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
 		if((*iter).constr->isSep()) continue;
-    	if ((*iter).constr->arity() == 3) {
+		if ((*iter).constr->extension() && (*iter).constr->arity() == 3) {
     		ctr = (TernaryConstraint*) (*iter).constr;
 			return ctr;    		
     	}

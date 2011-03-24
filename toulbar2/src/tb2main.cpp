@@ -1657,6 +1657,10 @@ int _tmain(int argc, TCHAR * argv[])
 			cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
 			ToulBar2::btdMode = 0;
 		}
+		if (solver.getWCSP()->isGlobal() && ToulBar2::elimDegree_preprocessing >= 1)	{
+			cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
+			ToulBar2::elimDegree_preprocessing = -1;
+		}
 
 		if (certificate)
 		{

@@ -770,11 +770,11 @@ void EnumeratedVariable::eliminate()
     			ConstraintLink xylink = *constrs.begin();
     			ConstraintLink xzlink = {NULL,0};
 
-    			if(xylink.constr->arity() > 2) return;
+    			if(xylink.constr->arity() > 2 || !(xylink.constr->extension())) return;
 
     			if(getDegree() == 2) {
     				xzlink = *constrs.rbegin();
-    				if(xzlink.constr->arity() > 2) return;
+    				if(xzlink.constr->arity() > 2 || !(xzlink.constr->extension())) return;
 
     				if(!elimVar(xylink,xzlink)) return;
     			} else {
