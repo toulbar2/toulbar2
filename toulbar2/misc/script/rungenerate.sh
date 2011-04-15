@@ -7,7 +7,7 @@ bctr=30
 tctr=0
 nary=0
 tight=50
-n=10
+n=5
 d=2
 K=1
 
