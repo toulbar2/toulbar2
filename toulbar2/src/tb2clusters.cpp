@@ -1372,6 +1372,14 @@ void TreeDecomposition::buildFromOrder()
 {
 	vector<int> order;
 	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
+	if (!ToulBar2::varOrder) {
+	  int n = wcsp->numberOfVariables();
+	  for(int i=n-1;i>=n/2;--i) {
+		int tmp  = order[n-i-1];
+		order[n-i-1] = order[i];
+		order[i] = tmp;
+	  }
+	}
 
 	if(clusters.size() > 0) {
 		for(unsigned int i=0;i<clusters.size();i++) {
@@ -1435,6 +1443,14 @@ void TreeDecomposition::buildFromOrderForApprox()
 	double time;
 
 	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
+	if (!ToulBar2::varOrder) {
+	  int n = wcsp->numberOfVariables();
+	  for(int i=n-1;i>=n/2;--i) {
+		int tmp  = order[n-i-1];
+		order[n-i-1] = order[i];
+		order[i] = tmp;
+	  }
+	}
 
 	if(clusters.size() > 0) {
 		for(unsigned int i=0;i<clusters.size();i++) {
