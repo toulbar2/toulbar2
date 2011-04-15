@@ -21,7 +21,7 @@ while (( $n < $nend )) ; do
     rm -f problem.order
     rm -f sol
     randomfile=nary-$n-$d-$tight-$bctr-$tctr-$nary-$seed 
-    toulbar2 $randomfile -C=$K -z=2 > /dev/null
+    toulbar2 -random=$randomfile -C=$K -z=2 > /dev/null
     ./misc/bin/Linux/peo problem.wcsp 1 > problem.order
     ./bin/Linux/toulbar2 problem.wcsp $1 -w problem.order | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d ",opt); }'   > toulbar2_opt
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
