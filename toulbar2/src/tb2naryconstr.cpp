@@ -412,7 +412,7 @@ Cost NaryConstraintMap::eval( String& s ) {
 }
 
 
-// Set new default cost to min(Top,df), keep existing costs SMALLER than this default cost in a Map
+/// Set new default cost to df (df <= Top), keep existing costs SMALLER than this default cost in a Map
 void NaryConstraintMap::keepAllowedTuples( Cost df )
 {
     assert( CUT(wcsp->getUb(), df) );

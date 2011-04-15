@@ -156,6 +156,7 @@ enum {
 	NO_OPT_dichotomicBranching,
 	OPT_weightedDegree,
 	NO_OPT_weightedDegree,
+    OPT_nbDecisionVars,
 	OPT_elimDegree,
 	NO_OPT_elimDegree,
 	OPT_elimDegree_preprocessing,
@@ -181,8 +182,6 @@ enum {
 	NO_OPT_preprocessFunctional,
 	OPT_preprocessNary,
 	NO_OPT_preprocessNary,
-	OPT_elimOrderType,
-	NO_OPT_elimOrderType,
 	OPT_QueueComplexity,
 	NO_OPT_QueueComplexity,
 	OPT_lds,
@@ -272,6 +271,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_dichotomicBranching,		(char*) "-d:", 				SO_NONE 	},
 	{ OPT_weightedDegree,			(char*) "-q", 				SO_NONE 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
+	{ OPT_nbDecisionVars,				(char*) "-var", 				SO_REQ_SEP		},
 
 	{ OPT_elimDegree,			(char*) "-e", 				SO_OPT			},
 	{ NO_OPT_elimDegree,		 	(char*) "-e:", 				SO_NONE 		},
@@ -297,7 +297,6 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_preprocessNary,			(char*) "-h", 				SO_OPT		},
 	{ NO_OPT_preprocessNary,		(char*) "-h:", 				SO_NONE			},
 
-	{ OPT_elimOrderType,			(char*) "-m", 				SO_REQ_SEP		},
 	{ OPT_QueueComplexity,			(char*) "-o", 				SO_NONE			},
 	{ OPT_lds,				(char*) "-l", 				SO_OPT			},
 	{ NO_OPT_lds,	 			(char*) "-l:", 				SO_NONE			},
@@ -633,6 +632,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "           -problist [nbre of prob] p1 p2 p3... : allele probability distribution given explicitely in the command line" << endl << endl;
 #endif
 #ifndef MENDELSOFT
+	cerr << "   -var=[integer] : perform branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
 	cerr << "   -b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
 	cerr << endl;
@@ -655,9 +655,6 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
-	cerr << "   -m : preprocessing only: minimum degree (if compiled with BOOST)/user-specified re-ordering of variables (in conjunction with options \"-p\" and \"-O\")";
-	if (ToulBar2::elimOrderType != ELIM_NONE) cerr << " (default option)";
-	cerr << endl;
 	cerr << "   -o : ensure optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
@@ -737,7 +734,6 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 	setlocale( LC_ALL, "C" );
-	int countvarlimit = 0;
 	bool localsearch = false;
 	bool certificate = false;
 	char *certificateFilename = NULL;
@@ -916,11 +912,6 @@ int _tmain(int argc, TCHAR * argv[])
 			if (args.OptionId() == OPT_allSolutions)
 			{
 				ToulBar2::allSolutions = true;
-				if(args.OptionArg() !=NULL) {
-					countvarlimit = atoi(args.OptionArg());
-				} else countvarlimit = 0;
-				// no check for countvarlimit ....?
-
 			}
 
 
@@ -961,6 +952,12 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::weightedDegree = 0;
 				cout << "ToulBar2::weightedDegree = false" << endl;
 			} 
+
+			// LIMIT BRANCHING ON FIRST nbDecisionVars VARIABLES OPTION
+			if ( args.OptionId() == OPT_nbDecisionVars )
+			{
+				ToulBar2::nbDecisionVars = atoi(args.OptionArg());
+			}
 
 			//////////////////////////////////////////////////////
 
@@ -1101,8 +1098,6 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::preprocessNary  = 0;
 			}
 
-			// type of elimination order
-			if ( args.OptionId() == OPT_elimOrderType) ToulBar2::elimOrderType = MIN_DEGREE;
 			if ( args.OptionId() == OPT_QueueComplexity) ToulBar2::QueueComplexity = true;
 
 			// LDS 
@@ -1149,9 +1144,6 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 			// EDAC OPTION
-
-
-
 			if ( args.OptionId() == OPT_EDAC )
 			{
 				ToulBar2::LcLevel = LC_EDAC;
@@ -1497,11 +1489,6 @@ int _tmain(int argc, TCHAR * argv[])
 		ToulBar2::showSolutions = false;
 		ToulBar2::writeSolution = false;
 	}
-	if (ToulBar2::elimDegree_preprocessing > 2 && ToulBar2::varOrder && ToulBar2::elimOrderType == ELIM_NONE)
-	{
-		cout << "Warning! Re-order variables from file \"" << ToulBar2::varOrder << "\"" << endl;
-		ToulBar2::elimOrderType = MIN_DEGREE;
-	}
 	if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1)
 	{
 		cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
@@ -1675,15 +1662,6 @@ int _tmain(int argc, TCHAR * argv[])
 			if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb()))
 			{
 				ToulBar2::LcLevel = LC_AC;
-			}
-			// DFBB counting hidden feature: do not branch on variable indexes from countvarlimit to the last variable
-			if (countvarlimit > 0)
-			{
-				solver.init();
-				for (unsigned int i=countvarlimit; i<solver.getWCSP()->numberOfVariables(); i++)
-				{
-					ToulBar2::setvalue(solver.getWCSP()->getIndex(), i, 0);
-				}
 			}
 			solver.solve();
 		}

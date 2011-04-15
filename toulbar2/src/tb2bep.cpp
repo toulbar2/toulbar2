@@ -82,7 +82,6 @@ void BEP::read(const char *fileName, WCSP *wcsp)
 	  }
 	}
   }
-  wcsp->sortVariables();
   wcsp->sortConstraints();
   
   if (ToulBar2::verbose >= 0) {

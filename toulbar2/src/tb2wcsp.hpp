@@ -278,7 +278,8 @@ public:
     void propagateEAC();
     void propagateSeparator();
 
-    void sortVariables();
+    /// sort list of constraints for each variable
+    /// \warning side-effect: update DAC order according to existing variable elimination order
     void sortConstraints();
     void preprocessing();
 
@@ -349,8 +350,8 @@ public:
     TreeDecomposition* td;
     TreeDecomposition* getTreeDec()  { return td; }
 	void buildTreeDecomposition();
+    void elimOrderFile2Vector(char *elimVarOrder, vector<int> &order);
 	void setDACOrder(vector<int> &elimVarOrder);
-	void setDACOrder(char *elimVarOrder);
 
     // -----------------------------------------------------------
     // Functions for dealing with probabilities

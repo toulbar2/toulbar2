@@ -147,7 +147,8 @@ int WCSP::diameter()
 inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->wcspIndex); }
 
 
-#ifdef BOOST       
+#ifdef BOOST   
+/// \bug reordering of vars array is dubious!!! (invalidates further use of variable indexes)    
 void WCSP::minimumDegreeOrdering()
 {
   Graph G;

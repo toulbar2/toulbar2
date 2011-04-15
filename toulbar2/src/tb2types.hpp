@@ -214,6 +214,7 @@ public:
 	static bool QueueComplexity;
 	static bool lastConflict;
 	static int weightedDegree;
+    static int nbDecisionVars;
 	static int lds;
 	static bool limited;
 	static Long restart;

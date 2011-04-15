@@ -1371,25 +1371,7 @@ int TreeDecomposition::makeRooted()
 void TreeDecomposition::buildFromOrder()
 {
 	vector<int> order;
-
- 	ifstream file;
-	if (ToulBar2::elimOrderType==ELIM_NONE && ToulBar2::varOrder) file.open(ToulBar2::varOrder);
-    if ((ToulBar2::elimOrderType != ELIM_NONE) || !ToulBar2::varOrder || !file) {
-        if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
-        if (ToulBar2::elimOrderType == ELIM_NONE) for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
-               else for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
-    } else {
-	    while(file) {
-	    	int ix;
-	    	file >> ix;
-	    	if(file) order.push_back(ix);
-	    }
-    }
-
-	if(order.size() != wcsp->numberOfVariables()) {
-		cout << "Order file " << ToulBar2::varOrder << " has incorrect number of variables." << endl;
-		exit(1);
-	}
+	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
 
 	if(clusters.size() > 0) {
 		for(unsigned int i=0;i<clusters.size();i++) {
@@ -1452,25 +1434,7 @@ void TreeDecomposition::buildFromOrderForApprox()
 //	int nbcstr = 0;					//
 	double time;
 
-	ifstream filein;
-	if (ToulBar2::elimOrderType==ELIM_NONE && ToulBar2::varOrder) filein.open(ToulBar2::varOrder);
-    if ((ToulBar2::elimOrderType != ELIM_NONE) || !ToulBar2::varOrder || !filein) { 
-		if (ToulBar2::verbose >= 1) cout << "No order file specified... taking index order." << endl;
-        if (ToulBar2::elimOrderType==ELIM_NONE) for(unsigned int i=0;i<wcsp->numberOfVariables();i++) order.push_back(i);
-               else for(int i=wcsp->numberOfVariables()-1; i>=0; i--) order.push_back(i);
-	}
-	else {
-		while(filein) {
-			int ix;
-			filein >> ix;
-			if(filein) order.push_back(ix);
-		}
-	}
-
-	if(order.size() != wcsp->numberOfVariables()) {
-		cout << "Order file " << ToulBar2::varOrder << " has incorrect number of variables." << endl;
-		exit(1);
-	}
+	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
 
 	if(clusters.size() > 0) {
 		for(unsigned int i=0;i<clusters.size();i++) {

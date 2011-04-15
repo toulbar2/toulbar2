@@ -386,7 +386,6 @@ void WCSP::read_wcsp(const char *fileName)
 	if (file) {
 	  cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
 	}
-    sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
@@ -410,7 +409,6 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
     randwcsp.Input(n,m,p,forceSubModular);	    
  
  	unsigned int nbconstr = numberOfConstraints();
-    sortVariables();
     sortConstraints();
     
     if (ToulBar2::verbose >= 0) {
@@ -640,8 +638,9 @@ void WCSP::read_uai2008(const char *fileName)
 					j = 0;
 					nctr->firstlex();
 					while(nctr->nextlex(s,cost)) {
-						nctr->setTuple(s, costs[j]);
-						j++;
+					  //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
+					  nctr->setTuple(s, costs[j]);
+					  j++;
 					}
 					ictr++; 
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
@@ -652,7 +651,6 @@ void WCSP::read_uai2008(const char *fileName)
 		++it;
 	}
 
-    sortVariables();
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
 	//    increaseLb(inclowerbound);
@@ -939,7 +937,7 @@ void WCSP::read_wcnf(const char *fileName)
   if (file) {
 	cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
   }
-  sortVariables();
+
   sortConstraints();
   // apply basic initial propagation AFTER complete network loading
   increaseLb(inclowerbound);

@@ -36,7 +36,6 @@ Solver::~Solver()
 	delete[] allVars;
 }
 
-//static int NbDecisionVariables = 17;
 void Solver::initVarHeuristic()
 {
     unassignedVars = new BTList<Value>(&store->storeDomain);
@@ -44,25 +43,22 @@ void Solver::initVarHeuristic()
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
         allVars[i].content = i;
         unassignedVars->push_back(&allVars[i], false);
-		//        if (wcsp->assigned(i) || i >=NbDecisionVariables) unassignedVars->erase(&allVars[i], false);
-		if (wcsp->assigned(i)) unassignedVars->erase(&allVars[i], false);
+		if (wcsp->assigned(i) || (ToulBar2::nbDecisionVars > 0 && i >= (unsigned int ) ToulBar2::nbDecisionVars)) unassignedVars->erase(&allVars[i], false);
     }
+    // Now function setvalue can be called safely!
+	ToulBar2::setvalue = setvalue;
 }
 
 void Solver::read_wcsp(const char *fileName)
 {
     ToulBar2::setvalue = NULL;
     wcsp->read_wcsp(fileName);
-	initVarHeuristic();
-    ToulBar2::setvalue = setvalue;
 }
 
 void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular)
 {
     ToulBar2::setvalue = NULL;
     wcsp->read_random(n,m,p,seed, forceSubModular);
-	initVarHeuristic();
-    ToulBar2::setvalue = setvalue;
 }
 
 void Solver::read_solution(const char *filename)
@@ -182,6 +178,7 @@ void Solver::dump_wcsp(const char *fileName, bool original)
 void setvalue(int wcspId, int varIndex, Value value)
 {
 //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
+    assert(Solver::currentSolver != NULL);
     if(!Solver::currentSolver->allVars[varIndex].removed) {
 	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
 	}
@@ -867,6 +864,9 @@ bool Solver::solve()
 	lastConflictVar = -1;
 	int tailleSep = 0;
 
+    // special data structure to be initialized for variable ordering heuristics
+	initVarHeuristic();
+
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->decreaseUb(initialUpperBound);
@@ -1145,10 +1145,6 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
 
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " constraints." << endl;
   // dump_wcsp("mydebug.wcsp", true);
-
-  // special data structure to be initialized for variable ordering heuristics
-  initVarHeuristic();
-  ToulBar2::setvalue = setvalue;
 
   // solve using BTD exploiting a lexicographic elimination order, a path decomposition, and only small separators of size ToulBar2::smallSeparatorSize
 

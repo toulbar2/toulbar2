@@ -58,6 +58,7 @@ bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 
 int ToulBar2::weightedDegree = 10;
+int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
 
@@ -388,64 +389,16 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
 	return ctr->wcspIndex;
 }
 
-void WCSP::sortConstraints() {
-	for (unsigned int i = 0; i < vars.size(); i++) {
-		vars[i]->sortConstraints();
-	}
-}
-
-inline bool cmp_vars(Variable *v1, Variable *v2) {
-	return (v1->wcspIndex < v2->wcspIndex);
-}
-void WCSP::sortVariables() {
-	switch (ToulBar2::elimOrderType) {
-	case ELIM_NONE:
-		break;
-	case MIN_DEGREE:
-		if (ToulBar2::varOrder) {
-			ifstream file(ToulBar2::varOrder);
-			if (!file) {
-				cerr << "Sort variables based on wrong variable ordering file." << endl;
-				exit(EXIT_FAILURE);
-			} else {
-				int pos = vars.size();
-				while (file) {
-					int ix;
-					file >> ix;
-					if (file) {
-						if (ix >= 0 && ix < (int) vars.size()) {
-							pos--;
-							vars[ix]->wcspIndex = pos;
-						} else {
-							cerr << "Bad index in variable ordering file. " << ix << " <? " << vars.size() << " ("
-									<< pos << ")" << endl;
-							exit(EXIT_FAILURE);
-						}
-					}
-				}
-				if (pos != 0) {
-					cerr << "Wrong size of variable ordering file. " << vars.size() << " (" << pos << ")" << endl;
-					exit(EXIT_FAILURE);
-				}
-				stable_sort(vars.begin(), vars.end(), cmp_vars);
-				vector<int> order;
-				for (int i = (int) vars.size() - 1; i >= 0; i--) {
-					order.push_back(i);
-					assert(vars[i]->wcspIndex == (int) i);
-				}
-				// update DAC ordering
-				setDACOrder(order);
-			}
-		} else {
-#ifdef BOOST
-			minimumDegreeOrdering();
-#endif
-		}
-		break;
-	default:
-		cerr << "Elimination ordering not implemented!" << endl;
-		exit(EXIT_FAILURE);
-	}
+void WCSP::sortConstraints()
+{
+  if (ToulBar2::varOrder) {
+	vector<int> order;
+	elimOrderFile2Vector(ToulBar2::varOrder, order);
+	setDACOrder(order);
+  }
+  for (unsigned int i = 0; i < vars.size(); i++) {
+	vars[i]->sortConstraints();
+  }
 }
 
 void WCSP::updateCurrentVarsId() {
@@ -1219,14 +1172,13 @@ void WCSP::initElimConstr() {
 	elimInfos.push_back(ei);
 }
 
-void WCSP::initElimConstrs() {
-	unsigned int i;
+void WCSP::initElimConstrs()
+{
+	for (unsigned int i = 0; i < vars.size(); i++) initElimConstr();
 
-	for (i = 0; i < vars.size(); i++)
-		initElimConstr();
-
-	for (i = 0; i < vars.size(); i++)
-		vars[i]->queueEliminate();
+	vector<int> order;
+	elimOrderFile2Vector(ToulBar2::varOrder, order);
+	for (int i = vars.size()-1; i >= 0; --i) vars[order[i]]->queueEliminate();
 }
 
 // Function that adds a new binary constraint from the pool of fake constraints
@@ -1371,7 +1323,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2) {
 	Constraint* ctr = NULL;
 	vector<Cost> costs;
 
-	if (arityU > 3) {
+	if (arityU > 3) { // || isGlobal()) {
 		ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top);
 		ctr = getCtr(ctrIndex);
 		assert(ctr->extension());
@@ -1781,15 +1733,15 @@ void WCSP::buildTreeDecomposition() {
 	}
 }
 
-void WCSP::setDACOrder(char *elimVarOrder) {
-	vector<int> order;
-
-	ifstream file(elimVarOrder);
-	if (!file) {
+void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
+{
+	ifstream file;
+	if (elimVarOrder) file.open(elimVarOrder);
+	if (!elimVarOrder || !file) {
 		if (ToulBar2::verbose >= 1) {
-			cout << "DAC variable ordering based on occurence order of variables in problem file." << endl;
+			cout << "Variable elimination order file missing or unreadable... takes reverse problem file variable index order." << endl;
 		}
-		return;
+		for(int i=numberOfVariables()-1; i>=0; i--) order.push_back(i);
 	} else {
 		while (file) {
 			int ix;
@@ -1797,7 +1749,10 @@ void WCSP::setDACOrder(char *elimVarOrder) {
 			if (file) order.push_back(ix);
 		}
 	}
-	setDACOrder(order);
+	if (order.size() != numberOfVariables()) {
+		cerr << "Variable elimination order file has incorrect number of variables." << endl;
+		exit(EXIT_FAILURE);
+	}
 }
 
 void WCSP::setDACOrder(vector<int> &order) {

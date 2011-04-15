@@ -108,17 +108,17 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 {
     if (!link->removed) {
         getConstrs()->erase(link, true);
-		if (reuse) {
-		  assert(wcsp->getStore()->getDepth()==0 && unassigned());
-		  link->prev = NULL;
-		  link->next = NULL;
-		}
 
         if (getDegree() <= ToulBar2::elimDegree_ ||
             (ToulBar2::elimDegree_preprocessing_ >= 0 &&
              (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
               getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
     }
+	if (reuse) {
+	  assert(wcsp->getStore()->getDepth()==0);
+	  link->prev = NULL;
+	  link->next = NULL;
+	}
 }
 
 int Variable::getTrueDegree()
