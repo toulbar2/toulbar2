@@ -1741,6 +1741,7 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 		if (ToulBar2::verbose >= 1) {
 			cout << "Variable elimination order file missing or unreadable... takes reverse problem file variable index order." << endl;
 		}
+		//		for(unsigned int i=0;i<numberOfVariables();i++) order.push_back(i);
 		for(int i=numberOfVariables()-1; i>=0; i--) order.push_back(i);
 	} else {
 		while (file) {
