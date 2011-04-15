@@ -360,6 +360,9 @@ public:
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TProb Cost2LogLike(Cost c) const;
+    Cost LogLike2Cost(TProb p) const;
+    Cost SumLogLikeCost(Cost c1, Cost c2) const;
+    Double SumLogLikeCost(Double logc1, Cost c2) const;
 };
 
 #endif /*TB2WCSP_HPP_*/

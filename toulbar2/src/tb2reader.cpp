@@ -425,7 +425,9 @@ void WCSP::read_uai2008(const char *fileName)
     if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
 	   cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 	   exit(EXIT_FAILURE);
-    }
+    } else if (ToulBar2::verbose >= 1) {
+	  cout << "NormFactor= " << ToulBar2::NormFactor << endl;
+	}
 	
 	//    Cost inclowerbound = MIN_COST;
 	string uaitype;
@@ -499,6 +501,7 @@ void WCSP::read_uai2008(const char *fileName)
 			}     	
 			if (ToulBar2::verbose >= 3) cout << endl;
             lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST) );
+			assert(lctrs.back() >= 0);
         } 
         else if (arity == 3) {
             file >> i;
@@ -521,6 +524,7 @@ void WCSP::read_uai2008(const char *fileName)
                 }
             }
 			lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
+			assert(lctrs.back() >= 0);
 		} 
 		else if (arity == 2) {
             file >> i;
@@ -539,6 +543,7 @@ void WCSP::read_uai2008(const char *fileName)
                 }
             }
             lctrs.push_back( postBinaryConstraint(i,j,costs) );          
+			assert(lctrs.back() >= 0);
         } 
         else if (arity == 1) {
             file >> i;
@@ -571,7 +576,7 @@ void WCSP::read_uai2008(const char *fileName)
 		int arity;
 		if(*it == -1) { ctr = NULL; arity = 1; }
 		else if(*it == -2) { ctr = NULL; arity = 0; }
-		else { ctr = getCtr(*it); arity = ctr->arity(); }
+		else { assert(*it >= 0); ctr = getCtr(*it); arity = ctr->arity(); }
 		
 		file >> ntuples;
 
@@ -621,6 +626,7 @@ void WCSP::read_uai2008(const char *fileName)
 					x = (EnumeratedVariable*) bctr->getVar(0);
             		y = (EnumeratedVariable*) bctr->getVar(1);
             		bctr->addCosts( x,y, costs );
+					bctr->propagate();
 					ictr++;
 					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;							
 					break;
@@ -630,6 +636,7 @@ void WCSP::read_uai2008(const char *fileName)
             		y = (EnumeratedVariable*) tctr->getVar(1);
             		z = (EnumeratedVariable*) tctr->getVar(2);
 		    		tctr->addCosts( x,y,z, costs );
+					tctr->propagate();
         			ictr++;
 					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;							
 					break;
@@ -653,7 +660,7 @@ void WCSP::read_uai2008(const char *fileName)
 
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
-	//    increaseLb(inclowerbound);
+	increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
@@ -664,6 +671,7 @@ void WCSP::read_uai2008(const char *fileName)
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions." << endl;
     }   
+    histogram();
  
  	int nevi = 0;	
 	ifstream fevid(ToulBar2::evidence_file.c_str());
@@ -675,6 +683,8 @@ void WCSP::read_uai2008(const char *fileName)
 		if(!fevid) cerr << "No evidence file. " << endl;			 
   	}
   	if(fevid) {
+	    vector<int> variables;
+	    vector<Value> values;
 		fevid >> nevi;
 	 	while(nevi) {
 	 		if(!fevid) {
@@ -683,14 +693,13 @@ void WCSP::read_uai2008(const char *fileName)
 	 		}
 	 		fevid >> i;
 	 		fevid >> j;
-	 		getVar(i)->assign(j);
+			variables.push_back(i);
+			values.push_back(j);
 	 		nevi--;
 	 	}
+		assignLS(variables, values);
+		propagate();
   	}
- 	
-    increaseLb(inclowerbound);
- 
-    histogram();
 }
 
 

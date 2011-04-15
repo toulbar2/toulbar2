@@ -21,6 +21,7 @@
 #include <cmath>
 #endif
 
+#include <limits>
 #include <vector>
 #include <map>
 #include <sstream>

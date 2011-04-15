@@ -192,6 +192,7 @@ enum {
 	NO_OPT_localsearch,
 	OPT_EDAC,
 	OPT_ub,
+	OPT_Z,
 	// MEDELESOFT OPTION
 	OPT_generation=99,
 	MENDEL_OPT_genotypingErrorRate=100,
@@ -315,7 +316,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ESTIMAT_FREQ,		(char*) "-probdata", 			SO_NONE			}, //  probs depending on the frequencies found in the current pedigree problem
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
-
+	{ OPT_Z,  				 (char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
 
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
@@ -702,6 +703,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -D : approximate satisfiable solution count with BTD";
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
+	cerr << "   -logz : compute log10 of probability of evidence (i.e. log10 partition function or log10(Z)) for graphical models only (problem extension .uai)" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1264,7 +1266,8 @@ int _tmain(int argc, TCHAR * argv[])
 
 			}
 
-
+			// discrete integration for computing the partition function Z
+			if ( args.OptionId() == OPT_Z) ToulBar2::isZ = true;
 
 			// upper bound initialisation from command line
 			if ( args.OptionId() == OPT_ub) {
@@ -1536,6 +1539,16 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
 		ToulBar2::vac = 1;
 	}
+	if (ToulBar2::isZ && ToulBar2::elimDegree >= 0)
+	{
+	  cerr << "Warning! Variable elimination on the fly not implemented for Z." << endl;
+	  ToulBar2::elimDegree = -1;
+	}
+	if (ToulBar2::isZ && ToulBar2::preprocessFunctional > 0)
+	{
+	  cerr << "Warning! Functional variable elimination not implemented for Z." << endl;
+	  ToulBar2::preprocessFunctional = 0;
+	}
 
 	ToulBar2::startCpuTime = cpuTime();
 
@@ -1561,6 +1574,9 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		cout << "Initial upperbound equal to zero!" << endl;
 		cout << "No solution found by initial propagation!" << endl;
+	    if (ToulBar2::isZ) {
+		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
+	    }		
 		cout << "end." << endl;
 		return 0;
 	}
@@ -1669,6 +1685,9 @@ int _tmain(int argc, TCHAR * argv[])
 	catch (Contradiction)
 	{
 		cout << "No solution found by initial propagation!" << endl;
+	    if (ToulBar2::isZ) {
+		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
+	    }		
 	}
 	if (!ToulBar2::xmlflag && !ToulBar2::uai) cout << "end." << endl;
 

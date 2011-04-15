@@ -118,6 +118,10 @@ int ToulBar2::minProperVarSize = 0;
 
 int ToulBar2::smallSeparatorSize = 4;
 
+bool ToulBar2::isZ = false;
+Double ToulBar2::logZ = 0;
+Cost ToulBar2::negCost = 0;
+
 /*
  * WCSP constructors
  *
@@ -1442,6 +1446,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 	int ctrIndex;
 	Char t[arity + 1];
 	vector<Cost> costs;
+	Cost negcost = 0;
 
 	switch (truearity - 1) {
 	case 3:
@@ -1452,29 +1457,43 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 								+ CHAR_FIRST;
 			}
 		}
-		for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++)
-			for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++)
-				for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {
-					Value v0 = evars[0]->toValue(vxi);
-					Value v1 = evars[1]->toValue(vyi);
-					Value v2 = evars[2]->toValue(vzi);
-					Cost mincost = Top;
+		for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
+		  for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) {
+			for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {
+			  Value v0 = evars[0]->toValue(vxi);
+			  Value v1 = evars[1]->toValue(vyi);
+			  Value v2 = evars[2]->toValue(vzi);
+			  Cost mincost = Top;
+			  if (evars[0]->canbe(v0) && evars[1]->canbe(v1) && evars[2]->canbe(v2)) {
+				t[ctr_inout->getIndex(evars[0])] = vxi + CHAR_FIRST;
+				t[ctr_inout->getIndex(evars[1])] = vyi + CHAR_FIRST;
+				t[ctr_inout->getIndex(evars[2])] = vzi + CHAR_FIRST;
 
-					if (evars[0]->canbe(v0) && evars[1]->canbe(v1) && evars[2]->canbe(v2)) {
-						t[ctr_inout->getIndex(evars[0])] = vxi + CHAR_FIRST;
-						t[ctr_inout->getIndex(evars[1])] = vyi + CHAR_FIRST;
-						t[ctr_inout->getIndex(evars[2])] = vzi + CHAR_FIRST;
-
-						for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
-							t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
-							t[arity] = '\0';
-							String strt(t);
-							Cost c = ((NaryConstraint*) ctr_inout)->eval(strt) + var->getCost(*itv);
-							if (c < mincost) mincost = c;
-						}
-					}
-					costs.push_back(mincost);
+				for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
+				  t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
+				  t[arity] = '\0';
+				  String strt(t);
+				  Cost c = ((NaryConstraint*) ctr_inout)->eval(strt) + var->getCost(*itv);
+				  if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+				  else if (c < mincost) mincost = c;
 				}
+			  }
+			  if (ToulBar2::isZ && mincost < negcost) negcost = mincost;
+			  costs.push_back(mincost);
+			}
+		  }
+		}
+		assert(negcost <= 0);
+		if (negcost < 0) {
+		  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
+			for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) {
+			  for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {
+				costs[vxi * evars[1]->getDomainInitSize() * evars[2]->getDomainInitSize() + vyi * evars[2]->getDomainInitSize() + vzi] -= negcost;
+			  }
+			}
+		  }
+		  ToulBar2::negCost += negcost;
+		}
 		ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
 		ctr = getCtr(ctrIndex);
 		break;
@@ -1490,11 +1509,22 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 					for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 						Cost c = ((TernaryConstraint*) ctr_inout)->getCost(evars[0], evars[1], var, v0, v1, *itv)
 								+ var->getCost(*itv);
-						if (c < mincost) mincost = c;
+						if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+						else if (c < mincost) mincost = c;
 					}
 				}
+				if (ToulBar2::isZ && mincost < negcost) negcost = mincost;
 				costs.push_back(mincost);
 			}
+		assert(negcost <= 0);
+		if (negcost < 0) {
+		  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
+			for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) { 
+			  costs[vxi * evars[1]->getDomainInitSize() + vyi] -= negcost;
+			}
+		  }
+		  ToulBar2::negCost += negcost;
+		}
 		ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
 		ctr = getCtr(ctrIndex);
 		break;
@@ -1506,16 +1536,20 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 			if (evars[0]->canbe(v0)) {
 				for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 					Cost c = ((BinaryConstraint*) ctr_inout)->getCost(evars[0], var, v0, *itv) + var->getCost(*itv);
-					if (c < mincost) mincost = c;
+					if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+					else if (c < mincost) mincost = c;
 				}
 			}
+			if (ToulBar2::isZ && mincost < negcost) negcost = mincost;
 			costs.push_back(mincost);
 		}
+		assert(negcost <= 0);
 		for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
 			vxi = evars[0]->toIndex(*itv0);
-			if (costs[vxi] > MIN_COST) evars[0]->project(*itv0, costs[vxi]);
+			if (costs[vxi] - negcost > MIN_COST) evars[0]->project(*itv0, costs[vxi] - negcost);
 		}
 		evars[0]->findSupport();
+		if (negcost < 0) ToulBar2::negCost += negcost;
 		break;
 
 	default:
@@ -1554,14 +1588,29 @@ void WCSP::variableElimination(EnumeratedVariable* var) {
 			}
 		}
 		project(csum, var);
+	} else {
+	  if (ToulBar2::isZ) { // add all unary loglike into logZ
+		Double logz = -numeric_limits<Double>::infinity();
+		for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
+		  logz = SumLogLikeCost(logz, var->getCost(*itv));
+		}
+		ToulBar2::logZ += logz;
+	  }
 	}
 	assert(var->getDegree() == 0);
 
 	//elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
-	//elimInfos[wcsp->getElimOrder()] = ei;
+	//elimInfos[getElimOrder()] = ei;
 	//elimOrderInc();
 
+
 	var->assign(var->getSupport()); // warning! dummy assigned value
+
+	if (ToulBar2::isZ && numberOfUnassignedVariables()==0) { // add all unary loglike into logZ
+	  if (ToulBar2::verbose >= 1) cout << "add lowerbound " << Cost2LogLike(getLb() +  ToulBar2::negCost) << " to Log10(Z) " << ToulBar2::logZ <<  " + " << ToulBar2::markov_log << endl;
+	  ToulBar2::logZ += Cost2LogLike(getLb() +  ToulBar2::negCost);
+	  cout << "Log10(Z)= " <<  ToulBar2::logZ + ToulBar2::markov_log << endl;
+	}
 }
 
 bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz) {
@@ -1804,9 +1853,31 @@ Cost WCSP::Prob2Cost(TProb p) const {
 	return c;
 }
 
+Cost WCSP::LogLike2Cost(TProb p) const {
+	TProb res = -p * ToulBar2::NormFactor;
+	Cost c = (Cost) ((Long) res);
+	return c;	
+}
 TProb WCSP::Cost2LogLike(Cost c) const {
 	return -to_double(c) / ToulBar2::NormFactor;
 }
 TProb WCSP::Cost2Prob(Cost c) const {
 	return Pow((TProb) 10., -to_double(c) / ToulBar2::NormFactor);
+}
+Cost  WCSP::SumLogLikeCost(Cost c1, Cost c2) const {
+  if (c1 >= getUb()) return c2;
+  else if (c2 >= getUb()) return c1;
+  else {
+	if (c1 <= c2) return c1 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c2 - c1)))/logl(10));
+	else return c2 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c1 - c2)))/logl(10));
+  }
+}
+Double  WCSP::SumLogLikeCost(Double logc1, Cost c2) const {
+  Double logc2 = Cost2LogLike(c2);
+  if (logc1 == -numeric_limits<Double>::infinity()) return logc2;
+  else if (c2 >= getUb()) return logc1;
+  else {
+	if (logc1 >= logc2) return logc1 + (log1pl(exp10l(logc2 - logc1))/logl(10));
+	else return logc2 + (log1pl(exp10l(logc1 - logc2))/logl(10));
+  }
 }

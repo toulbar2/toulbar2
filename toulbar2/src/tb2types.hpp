@@ -267,6 +267,10 @@ public:
 	static int minProperVarSize;
 
 	static int smallSeparatorSize;
+
+	static bool isZ;
+	static Double logZ;
+    static Cost negCost;
 };
 
 /*

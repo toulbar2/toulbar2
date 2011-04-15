@@ -96,7 +96,7 @@ class NaryConstraint : public AbstractNaryConstraint
         }
     };
 
-    virtual void project( EnumeratedVariable* x, bool addUnaryCtr = true ) = 0;
+    virtual void project( EnumeratedVariable* x ) = 0;
 
     double computeTightness() { return 0; }
     bool   verify() {return true;}
@@ -139,7 +139,7 @@ public:
 	void resetFilters();
 	void fillFilters();
 
-	void project( EnumeratedVariable* x, bool addUnaryCtr = true );
+	void project( EnumeratedVariable* x );
 	void sum( NaryConstraintMap* nary );
 
 	TUPLES::iterator  tuple_it;
@@ -230,7 +230,7 @@ class NaryConstrie : public NaryConstraint
 	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 
-    void project( EnumeratedVariable* x, bool addUnaryCtr = true ) {};
+    void project( EnumeratedVariable* x ) {};
 
     Cost eval( String& s );
 

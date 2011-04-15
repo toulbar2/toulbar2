@@ -944,13 +944,14 @@ void NaryConstraintMap::sum( NaryConstraintMap* nary )
 // Projection of variable x of the nary constraint
 // complexity O(2|f|)
 // this function is independent of the search
-void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
+void NaryConstraintMap::project( EnumeratedVariable* x )
 {
 	int xindex = getIndex(x);
 	if(xindex < 0) return;
 	assert(x->getDegree() == 1);
 	String t,tnext,tproj;
 	Cost c;
+	Value val;
 	Cost Top = wcsp->getUb();
 	TUPLES& f = *pf;
 	TUPLES fproj;
@@ -960,11 +961,10 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 	    it = f.begin();
 		t = it->first;
 		c =  it->second;
-		if(addUnaryCtr) {
-			assert( x->getDegree() == 1);
-			c += x->getCost( x->toValue(t[xindex] - CHAR_FIRST) );
-			if(c > Top) c = Top;
-		}
+		assert( x->getDegree() == 1);
+		val = x->toValue(t[xindex] - CHAR_FIRST);
+		c += ((x->canbe(val))?(x->getCost( val )):Top);
+		if(c > Top) c = Top;
 		String tswap(t);
 		Char a = tswap[arity_-1];
 		tswap[arity_-1] = tswap[xindex];
@@ -988,15 +988,20 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 	}
 
 	// Second part of the projection: complexity O(|f|) as the projected variable is in the last position,
-	// it is sufficient to look for tuples with the same arity-1 posotions. If there are less than d (domain of
+	// it is sufficient to look for tuples with the same arity-1 prefix. If there are less than d (domain of
 	// the projected variable) tuples, we have also to perform the minimum with default_cost
 	// this is only true when the tuples are LEXICOGRAPHICALY ordered
+	Cost negcost = 0;
+	set<Value> markValue;
     it = fproj.begin();
 	if(it != fproj.end()) {
 		t = it->first;
 		c = it->second;
+		val = x->toValue(t[arity_-1] - CHAR_FIRST);
 		bool end = false;
-		unsigned int ntuples = 1;
+		unsigned int ntuples = ((x->canbe(val))?1:0);
+		markValue.clear();
+		markValue.insert(val);
 
 		while(!end) {
 			it++;
@@ -1011,18 +1016,42 @@ void NaryConstraintMap::project( EnumeratedVariable* x, bool addUnaryCtr )
 				//cout << "<" << t << "," << c << ">   <" << tnext << "," << cnext << ">       : " << t.compare(0,arity_-1,tnext,0,arity_-1) << endl;
 			}
 			if(!sameprefix) {
-				if(ntuples < x->getDomainInitSize())
-					if(default_cost < c) c = default_cost;
-
-				if(c != default_cost) f[ t.substr(0,arity_-1) ] = c;
+				if(ntuples < x->getDomainSize()) {
+				  for (EnumeratedVariable::iterator itv = x->begin(); itv != x->end(); ++itv) {
+					if (markValue.find(*itv) == markValue.end()) {
+					  if (ToulBar2::isZ) {
+						c = wcsp->SumLogLikeCost(c, default_cost + x->getCost(*itv));
+					  } else if(default_cost + x->getCost(*itv) < c) c = default_cost + x->getCost(*itv);
+					}
+				  }
+				}
+				if (ToulBar2::isZ && c < negcost) negcost = c;
+				if(c != default_cost || ToulBar2::isZ) f[ t.substr(0,arity_-1) ] = c;
 				t = tnext;
 				c = cnext;
-				ntuples = 1;
+				val = x->toValue(t[arity_-1] - CHAR_FIRST);
+				ntuples = ((x->canbe(val))?1:0);
+				markValue.clear();
+				markValue.insert(val);
 			} else {
-				ntuples++;
-				if(cnext < c) c = cnext;
+				val = x->toValue(t[arity_-1] - CHAR_FIRST);
+				markValue.insert(val);
+				if (x->canbe(val)) ntuples++;
+				if (ToulBar2::isZ) {
+				  c = wcsp->SumLogLikeCost(c, cnext);
+				} else if(cnext < c) c = cnext;
 			}
 		}
+	}
+	assert(negcost <= 0);
+	if (negcost < 0) {
+	  for (it = f.begin(); it != f.end(); ++it) {
+		t = (*it).first;
+		c = (*it).second;
+		f[t] = c - negcost;
+	  }
+	  default_cost -= negcost;
+	  ToulBar2::negCost += negcost;
 	}
 	if(x->unassigned()) {
 		x->deconnect(links[arity_-1]);

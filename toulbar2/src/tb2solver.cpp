@@ -780,7 +780,7 @@ void Solver::newSolution()
 	        file << endl;
 //        }
     }
-	if(ToulBar2::uai) {
+	if(ToulBar2::uai && !ToulBar2::isZ) {
 	  ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
 	}
 
@@ -871,6 +871,10 @@ bool Solver::solve()
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->decreaseUb(initialUpperBound);
 
+	    if (ToulBar2::isZ) {
+		  ToulBar2::logZ = 0.;
+		  ToulBar2::negCost = 0;
+	    }
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) {
@@ -1014,19 +1018,25 @@ bool Solver::solve()
    	if(ToulBar2::vac) wcsp->printVACStat();
 
     if (wcsp->getUb() < initialUpperBound) {
+	    // if (ToulBar2::isZ) {
+		//   cout << "Log10(Z)= " <<  ToulBar2::logZ + ToulBar2::markov_log << endl;
+	    // }
     	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
-	        if(ToulBar2::haplotype) cout <<  "\nOptimum: " <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes, and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+	        if(ToulBar2::haplotype) cout <<  "\nOptimum: " <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getUb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes, and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     		else if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			else cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
-    		else if(ToulBar2::uai) ((WCSP*)wcsp)->solution_UAI(wcsp->getUb());
+    		else if(ToulBar2::uai && !ToulBar2::isZ) ((WCSP*)wcsp)->solution_UAI(wcsp->getUb());
     	}
         return true;
     } else {
 	    if(ToulBar2::debug || (!ToulBar2::uai && !ToulBar2::xmlflag)) {
  	       cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	}
+	    if (ToulBar2::isZ) {
+		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
+	    }		
         return false;
     }
 
