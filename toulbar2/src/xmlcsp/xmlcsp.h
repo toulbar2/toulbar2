@@ -378,7 +378,6 @@ void createWCSP()
 	unsigned int c;
 	Cost inclowerbound = initialLowerBound;
     vector<TemporaryUnaryConstraint> unaryconstrs;
-    TemporaryUnaryConstraint unaryconstr;
     int indexUnary = -1;
   
 	list<ctr*>::iterator itc = ctrs.begin();
@@ -543,6 +542,7 @@ void createWCSP()
 			  EnumeratedVariable *x = (EnumeratedVariable *) wcsp->getVar(i);
 			  if (ToulBar2::verbose >= 3) cout << "read unary constraint on " << i << endl;
 			  if (x->enumerated()) {
+				TemporaryUnaryConstraint unaryconstr;
 				unaryconstr.var = x;
 				for (a = 0; a < x->getDomainInitSize(); a++) {
 				  unaryconstr.costs.push_back(defval);
@@ -599,7 +599,6 @@ void createWCSP()
 	  ++itr;
 	}
   	
-	wcsp->sortVariables();
 	wcsp->sortConstraints();
 	// apply basic initial propagation AFTER complete network loading
 	wcsp->increaseLb(inclowerbound);
