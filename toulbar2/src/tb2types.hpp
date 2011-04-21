@@ -269,7 +269,7 @@ public:
 	static int smallSeparatorSize;
 
 	static bool isZ;
-	static Double logZ;
+	static TProb logZ;
     static Cost negCost;
 };
 

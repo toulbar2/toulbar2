@@ -22,10 +22,6 @@ public:
     virtual Cost getLb() const = 0;
     virtual Cost getUb() const =0;
 
-    virtual Cost Prob2Cost(TProb p)const =0;
-    virtual TProb Cost2LogLike(Cost c) const =0;
-    virtual TProb Cost2Prob(Cost c) const =0;
-
     virtual void updateUb(Cost newUb) =0;
     virtual void enforceUb() =0;
     virtual void increaseLb(Cost addLb) =0;
@@ -115,6 +111,17 @@ public:
 	virtual void printVACStat() = 0;
     virtual void print(ostream& os) =0;
     virtual void dump(ostream& os, bool original = true) =0;
+
+    // -----------------------------------------------------------
+    // Functions for dealing with probabilities
+    // Warning: ToulBar2::NormFactor has to be initialized
+
+    virtual Cost Prob2Cost(TProb p) const =0;
+    virtual TProb Cost2Prob(Cost c) const =0;
+    virtual TProb Cost2LogLike(Cost c) const =0;
+    virtual Cost LogLike2Cost(TProb p) const =0;
+    virtual Cost SumLogLikeCost(Cost c1, Cost c2) const =0;
+    virtual TProb SumLogLikeCost(TProb logc1, Cost c2) const =0;
 };
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);

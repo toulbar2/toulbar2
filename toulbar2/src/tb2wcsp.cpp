@@ -119,7 +119,7 @@ int ToulBar2::minProperVarSize = 0;
 int ToulBar2::smallSeparatorSize = 4;
 
 bool ToulBar2::isZ = false;
-Double ToulBar2::logZ = 0;
+TProb ToulBar2::logZ = -numeric_limits<Double>::infinity();
 Cost ToulBar2::negCost = 0;
 
 /*
@@ -1589,12 +1589,13 @@ void WCSP::variableElimination(EnumeratedVariable* var) {
 		}
 		project(csum, var);
 	} else {
-	  if (ToulBar2::isZ) { // add all unary loglike into logZ
-		Double logz = -numeric_limits<Double>::infinity();
+	  if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
+		Cost clogz = getUb();
 		for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
-		  logz = SumLogLikeCost(logz, var->getCost(*itv));
+		  clogz = SumLogLikeCost(clogz, var->getCost(*itv));
 		}
-		ToulBar2::logZ += logz;
+		if (clogz < 0) ToulBar2::negCost += clogz;
+		else increaseLb(clogz);
 	  }
 	}
 	assert(var->getDegree() == 0);
@@ -1605,12 +1606,6 @@ void WCSP::variableElimination(EnumeratedVariable* var) {
 
 
 	var->assign(var->getSupport()); // warning! dummy assigned value
-
-	if (ToulBar2::isZ && numberOfUnassignedVariables()==0) { // add all unary loglike into logZ
-	  if (ToulBar2::verbose >= 1) cout << "add lowerbound " << Cost2LogLike(getLb() +  ToulBar2::negCost) << " to Log10(Z) " << ToulBar2::logZ <<  " + " << ToulBar2::markov_log << endl;
-	  ToulBar2::logZ += Cost2LogLike(getLb() +  ToulBar2::negCost);
-	  cout << "Log10(Z)= " <<  ToulBar2::logZ + ToulBar2::markov_log << endl;
-	}
 }
 
 bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz) {
@@ -1867,14 +1862,15 @@ TProb WCSP::Cost2Prob(Cost c) const {
 Cost  WCSP::SumLogLikeCost(Cost c1, Cost c2) const {
   if (c1 >= getUb()) return c2;
   else if (c2 >= getUb()) return c1;
+  else if (c1 == c2) return c1+LogLike2Cost(log10l(2));
   else {
-	if (c1 <= c2) return c1 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c2 - c1)))/logl(10));
+	if (c1 < c2) return c1 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c2 - c1)))/logl(10));
 	else return c2 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c1 - c2)))/logl(10));
   }
 }
-Double  WCSP::SumLogLikeCost(Double logc1, Cost c2) const {
-  Double logc2 = Cost2LogLike(c2);
-  if (logc1 == -numeric_limits<Double>::infinity()) return logc2;
+TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
+  TProb logc2 = Cost2LogLike(c2);
+  if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
   else if (c2 >= getUb()) return logc1;
   else {
 	if (logc1 >= logc2) return logc1 + (log1pl(exp10l(logc2 - logc1))/logl(10));

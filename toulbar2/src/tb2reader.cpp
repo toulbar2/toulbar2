@@ -572,7 +572,7 @@ void WCSP::read_uai2008(const char *fileName)
 					
 	list<int>::iterator it = lctrs.begin();
 	while(it !=  lctrs.end()) {
-	
+	    ictr++;
 		int arity;
 		if(*it == -1) { ctr = NULL; arity = 1; }
 		else if(*it == -2) { ctr = NULL; arity = 0; }
@@ -605,6 +605,7 @@ void WCSP::read_uai2008(const char *fileName)
 			for (k = 0; k < ntuples; k++) {
 				costs[k] -= minc;
 			}
+			if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
 		    inclowerbound += minc;
 		}
 		
@@ -627,7 +628,6 @@ void WCSP::read_uai2008(const char *fileName)
             		y = (EnumeratedVariable*) bctr->getVar(1);
             		bctr->addCosts( x,y, costs );
 					bctr->propagate();
-					ictr++;
 					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;							
 					break;
 
@@ -637,7 +637,6 @@ void WCSP::read_uai2008(const char *fileName)
             		z = (EnumeratedVariable*) tctr->getVar(2);
 		    		tctr->addCosts( x,y,z, costs );
 					tctr->propagate();
-        			ictr++;
 					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;							
 					break;
 			 
@@ -649,13 +648,15 @@ void WCSP::read_uai2008(const char *fileName)
 					  nctr->setTuple(s, costs[j]);
 					  j++;
 					}
-					ictr++; 
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 					nctr->propagate();
 					break;
 			
 		}
 		++it;
+	}
+	if (ToulBar2::verbose >= 1) {
+	  cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
 	}
 
     sortConstraints();

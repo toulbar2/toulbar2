@@ -718,8 +718,9 @@ void Solver::newSolution()
     }
     assert(allVarsAssigned);
 #endif
-    if (!ToulBar2::allSolutions) wcsp->updateUb(wcsp->getLb());
+    if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->updateUb(wcsp->getLb());
 	else if (!ToulBar2::btdMode) nbSol += 1.;
+	if (ToulBar2::isZ) ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + ToulBar2::negCost);
 
   	if(!ToulBar2::xmlflag && !ToulBar2::uai && (!ToulBar2::allSolutions || ToulBar2::debug)) {
   		if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
@@ -867,14 +868,15 @@ bool Solver::solve()
     // special data structure to be initialized for variable ordering heuristics
 	initVarHeuristic();
 
+	if (ToulBar2::isZ) {
+	  ToulBar2::logZ = -numeric_limits<Double>::infinity();
+	  ToulBar2::negCost = 0;
+	}
+
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->decreaseUb(initialUpperBound);
 
-	    if (ToulBar2::isZ) {
-		  ToulBar2::logZ = 0.;
-		  ToulBar2::negCost = 0;
-	    }
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) {
@@ -886,6 +888,8 @@ bool Solver::solve()
 		  singletonConsistency();
 		  wcsp->propagate();
 		}
+
+		if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << ToulBar2::negCost << endl;
 
 	    if (ToulBar2::btdMode) {
 		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
@@ -932,6 +936,7 @@ bool Solver::solve()
 			wcsp->setUb(UpperBound);
 			wcsp->enforceUb();
 			wcsp->propagate();
+			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<Double>::infinity();
 		  }
 		  try {
 			if (ToulBar2::lds) {
@@ -942,6 +947,7 @@ bool Solver::solve()
 				ToulBar2::limited = false;
 				try {
 				  store->store();
+				  if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<Double>::infinity();
 				  if (discrepancy > ToulBar2::lds) recursiveSolve(); else recursiveSolveLDS(discrepancy);
 				} catch (Contradiction) {
 				  wcsp->whenContradiction();
@@ -1000,27 +1006,27 @@ bool Solver::solve()
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-    if(ToulBar2::allSolutions)
-    {
-    	if(ToulBar2::approximateCountingBTD)
-    		cout << "Number of solutions    : ~= " << nbSol << endl;
-    	else
-    		cout << "Number of solutions    : =  " << nbSol << endl;
-    	cout << "Number of #goods       :    " << nbSGoods << endl;
-    	cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
-    	cout << "Size of sep            :    " << tailleSep << endl;
-    	cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-    	cout << "... with " <<nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
-    	return true;
+    if(ToulBar2::isZ) {
+	  cout << "Log10(Z)= " <<  (ToulBar2::logZ + ToulBar2::markov_log) << endl;
+	  return true;
     }
+	if(ToulBar2::allSolutions) {
+	  if(ToulBar2::approximateCountingBTD)
+		cout << "Number of solutions    : ~= " << nbSol << endl;
+	  else
+		cout << "Number of solutions    : =  " << nbSol << endl;
+	  cout << "Number of #goods       :    " << nbSGoods << endl;
+	  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
+	  cout << "Size of sep            :    " << tailleSep << endl;
+	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+	  cout << "... with " <<nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+	  return true;
+	}
 //  store->restore();         // see above for store->store()
 
    	if(ToulBar2::vac) wcsp->printVACStat();
 
     if (wcsp->getUb() < initialUpperBound) {
-	    // if (ToulBar2::isZ) {
-		//   cout << "Log10(Z)= " <<  ToulBar2::logZ + ToulBar2::markov_log << endl;
-	    // }
     	if(!ToulBar2::uai && !ToulBar2::xmlflag) {
 	        if(ToulBar2::haplotype) cout <<  "\nOptimum: " <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getUb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes, and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     		else if(!ToulBar2::bayesian) cout << "Optimum: " << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
@@ -1034,9 +1040,6 @@ bool Solver::solve()
 	    if(ToulBar2::debug || (!ToulBar2::uai && !ToulBar2::xmlflag)) {
  	       cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	}
-	    if (ToulBar2::isZ) {
-		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
-	    }		
         return false;
     }
 
