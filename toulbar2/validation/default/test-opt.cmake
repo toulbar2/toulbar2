@@ -1,5 +1,5 @@
-# argument in command line
-set (command_line_option "-B=0 -v -e:" )  
+# list of arguments use in command line for the current directory
+set (command_line_option -B=0 -v -e: )  
 # test timeout ( used for all wcsp founded in the directory
 set (test_timeout 100)
 #regexp to define successfull end.

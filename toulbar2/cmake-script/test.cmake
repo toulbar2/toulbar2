@@ -75,10 +75,10 @@ FOREACH (UTEST ${validation_file})
 	endif($verbose)
 
 	IF (EXISTS ${UBF}) # if ub file exist
-		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  "${UTEST}" "${UBP}" "${command_line_option}")
+		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${UBP} ${command_line_option})
 		set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 	ELSE()
-		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  "${UTEST}" "${command_line_option}")
+		add_test(Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${command_line_option})
 		set_tests_properties (Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 	ENDIF()
 
