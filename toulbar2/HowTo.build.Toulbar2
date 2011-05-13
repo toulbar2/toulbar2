@@ -105,6 +105,9 @@ make doc ; # => html and pdf are create in doc/dev directory
 # obviously cmake allows to generate project file for various IDE environement (Kdevelop , eclipse ..)
 # for further information please read cmake man page (cmake --help)
 
+#Howto use eclipse for developping toulbar2  : (follow the url)
+
+http://www.cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
 
 #howto compile toulbar2 under Mac OSXX ?
 
