@@ -371,6 +371,11 @@ MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...
 include(${My_cmake_scritp}/define_option.cmake)
 MESSAGE(STATUS "######## define_option passed#########################")
 
+#############
+# COVER TEST
+#########
+include(${My_cmake_scritp}/cover-test.cmake)
+
 ####################################################################################"
 #   Doc generation
 ###################################################################################"

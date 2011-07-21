@@ -116,3 +116,38 @@ http://www.cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
  cmake -G Xcode ..
 # open the xcode project file generated in the build directory
 # build and manage the source code in the xcode with no problem
+
+
+###########################
+# How to launch toulbar2 cover test
+##########################
+cd build;
+#==> launch all test
+ctest  ;
+# launch only phase 1 test
+ctest -R "Phase1"
+#launch Phase2 on 2 processor in parallel
+ctest -j=2 -R "Phase2" ;
+
+
+# ./validation and ./cover are directories dedicated to toulbar2 testing
+
+# validation Dir correspond to the phase1 : for each directory include in validation
+# you can test a given command line on the instances (*.wcsp file) include in the directory
+# the command line can be  overloaded in specifying the option in  the test-opt.cmake locate in the directory
+# this file include 3 variables : command_line_option , test_timeout, test_regexp
+# test timeout ( used for all wcsp founded in the director)
+#regexp to define successfull end. =>  set (test_regexp  "Optimum: ${UB}")   for each instance
+# will compare the toulbar2 output to the upper bound include in a ub file corresponding to the instances.
+
+
+#cover Dir include cover test : i.e you can test several command line option for the same instances
+# liste of command line option are specified in  the file cover/cover-option.cmake
+# the file include :  the set of instances  ==> list instances is a double entry list"
+# the current file must include:
+# one set named "instances"  (including the list of the array of option "each element include into
+# $instance set  allow to declare an set of option corresponding to the given element"
+# example if the set instances contain only : foo.wcsp  you must define a second set named foo.wcsp where you will"
+# define the list of option ( each element of the second list "foo.wcsp will be used for create a unit test"
+# on foo.wcsp with option declare on each tuple of the foo.wcsp (set)
+
