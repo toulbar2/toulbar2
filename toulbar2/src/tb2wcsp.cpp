@@ -1770,10 +1770,40 @@ void WCSP::buildTreeDecomposition() {
 		vector<int> order;
 		td->getElimVarOrder(order);
 		// allows propagation to operate on the whole problem without modifying tree decomposition local lower bounds and delta costs
+		// it is important for RDS-BTD which assumes zero cluster lower bounds and no delta cost moves
 		TreeDecomposition *tmptd = td;
 		td = NULL;
 		setDACOrder(order);
 		td = tmptd;
+		// new constraints may be produced by variable elimination that must be correctly assigned to a cluster
+		for (unsigned int i=0; i<numberOfConstraints(); i++) if (constrs[i]->getCluster()==-1) constrs[i]->assignCluster();
+		for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && elimBinConstrs[i]->getCluster()==-1) elimBinConstrs[i]->assignCluster();
+		for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getCluster()==-1) elimTernConstrs[i]->assignCluster();
+		// check if ternary constraint cluster assignments are valid
+		for (unsigned int i=0; i<numberOfConstraints(); i++) {
+		  Constraint* ctr = getCtr(i);
+		  if (ctr->connected() && !ctr->isSep()) {
+			if(ctr->arity() == 3) {
+			  TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+			  //			  tctr->setDuplicates();
+			  assert(tctr->xy->getCluster() == tctr->getCluster() &&
+					 tctr->xz->getCluster() == tctr->getCluster() &&
+					 tctr->yz->getCluster() == tctr->getCluster() );
+			}
+		  }
+		}
+		for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {
+			Constraint* ctr = elimTernConstrs[i];
+			if (ctr->connected() && !ctr->isSep()) {
+			  if(ctr->arity() == 3) {
+				TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+				//				tctr->setDuplicates();
+				assert(tctr->xy->getCluster() == tctr->getCluster() &&
+					   tctr->xz->getCluster() == tctr->getCluster() &&
+					   tctr->yz->getCluster() == tctr->getCluster() );
+			  }
+			}
+		  }
 	}
 }
 
