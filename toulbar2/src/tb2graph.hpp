@@ -48,7 +48,7 @@ class Graph {
 		int gsize;
 	public:
 		// constructor
-		Graph() : p(NULL), counter(NULL), d(NULL), potential(NULL), gsize(0) {} 
+        Graph() : adjlist(NULL), p(NULL), counter(NULL), d(NULL), potential(NULL), gsize(0) {} 
 		// copy constructor
 		Graph(const Graph &g);
 		// destructor 
