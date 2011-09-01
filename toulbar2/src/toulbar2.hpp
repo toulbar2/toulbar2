@@ -113,8 +113,8 @@ public:
     virtual void dump(ostream& os, bool original = true) =0;
 
     // -----------------------------------------------------------
-    // Functions for dealing with probabilities
-    // Warning: ToulBar2::NormFactor has to be initialized
+    // Functions dealing with probabilities
+    // warning: ToulBar2::NormFactor has to be initialized
 
     virtual Cost Prob2Cost(TProb p) const =0;
     virtual TProb Cost2Prob(Cost c) const =0;

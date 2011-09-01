@@ -1,6 +1,6 @@
 /** \file tb2arithmetic.hpp
  *  \brief Binary arithmetic soft constraints.
- *  Warning! Value and Cost must be the same.
+ *  \warning Value and Cost must be of the same type.
  *
  */
 
@@ -12,7 +12,7 @@
 
 #include <set>
 
-/** semantic: soft(penalty, x in SetOfValues) : (x in Set)?0:penalty
+/** semantic: \f$soft(penalty, x \in SetOfValues) : (x \in SetOfValues)?0:penalty\f$
  */
 class Unary : public AbstractUnaryConstraint<IntervalVariable>
 {
@@ -46,7 +46,7 @@ public:
     void dump(ostream& os, bool original = true);
 };
 
-/** semantic: soft(x >= y + cst) : max( (y + cst - x <= deltamax)?(y + cst - x):top , 0 )
+/** semantic: \f$soft(x \geq y + cst) : max( (y + cst - x \leq deltamax)?(y + cst - x):top , 0)\f$
  */
 class Supxyc : public AbstractBinaryConstraint<IntervalVariable,IntervalVariable>
 {
@@ -81,7 +81,7 @@ public:
     void dump(ostream& os, bool original = true);
 };
 
-/** semantic: soft(penalty, x >= y + csty or y >= x + cstx) : (x >= y + csty || y >= x + cstx)?0:penalty
+/** semantic: \f$soft(penalty, x \geq y + csty \vee y \geq x + cstx) : (x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  */
 class Disjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable>
 {
@@ -112,14 +112,16 @@ public:
 };
 
 /** semantic:
- * implicit hard constraint: x <= xinfty
- * implicit hard constraint: y <= yinfty
+ * implicit hard constraint: \f$x \leq xinfty\f$
+ *
+ * implicit hard constraint: \f$y \leq yinfty\f$
+ *
  * cost function definition:
- * (x<xinfty and y<yinfty and (x >= y + csty or y >= x + cstx)): cost = 0 (mutual exclusion between tasks x and y)
- * x>=xinfty and y>=yinfty: cost = costx + costy (both tasks x and y unselected)
- * x>=xinfty: cost = costx (task x unselected)
- * y>=yinfty: cost = costy (task y unselected)
- * else cost = top (task x and y must be selected but cannot be scheduled)
+ * - \f$(x<xinfty \wedge y<yinfty \wedge (x \geq y + csty \vee y \geq x + cstx)): cost = 0\f$ (mutual exclusion between tasks x and y)
+ * - \f$x=xinfty \wedge y=yinfty: cost = costx + costy\f$ (both tasks x and y unselected)
+ * - \f$x=xinfty: cost = costx\f$ (task x unselected)
+ * - \f$y=yinfty: cost = costy\f$ (task y unselected)
+ * - else \f$cost = UB\f$ (task x and y must be selected but cannot be scheduled)
  */
 class SpecialDisjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable>
 {

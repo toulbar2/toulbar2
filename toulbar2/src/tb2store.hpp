@@ -1,6 +1,7 @@
 /** \file tb2store.hpp
  *  \brief Generic storable data management.
  *
+ *	\defgroup backtrack Backtrack management
  *  Used by backtrack search methods.
  *  Allows to copy / restore the current state using Store::store and Store::restore methods.
  *  All storable data modifications are trailed into specific stacks.
@@ -14,7 +15,7 @@
  *  - Store::storeSeparator for backtrackable lists of separators (see tree decomposition methods)
  *  - Store::storeBigInteger for very large integers ::StoreBigInteger used in solution counting methods
  *
- *  Memory for each stack is dynamically allocated by part of \f$2^x\$ with \e x initialized to ::STORE_SIZE and increased when needed.
+ *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
  *  \warning ::StoreInt uses Store::storeValue stack.
  *  \warning maximum size of trailing stacks is limited by C++ integers

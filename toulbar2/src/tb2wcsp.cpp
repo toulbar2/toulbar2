@@ -1,7 +1,7 @@
 /*
- * ****** Global soft constraint representing a weighted CSP ********
+ * ****** Weighted constraint satisfaction problem modeling and local reasoning ********
  *
- * Contains also ToulBar2 global variable definitions
+ * Contains also ToulBar2 options expressed by global variable definitions
  */
 
 #include "tb2wcsp.hpp"
@@ -25,7 +25,7 @@
 #include "tb2regularconstr.hpp"
 
 /*
- * Global variables
+ * Global variables with their default value
  *
  */
 
@@ -156,7 +156,7 @@ WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound) {
 	return W;
 }
 
-/// create an enumerated variable with its domain bounds
+/// \brief create an enumerated variable with its domain bounds
 int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup) {
 	EnumeratedVariable *x;
 	if (!ToulBar2::vac) {
@@ -168,7 +168,7 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup) {
 	return x->wcspIndex;
 }
 
-/// create an enumerated variable with its domain values
+/// \brief create an enumerated variable with its domain values
 int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
 	EnumeratedVariable *x;
 	if (!ToulBar2::vac) {
@@ -180,13 +180,13 @@ int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
 	return x->wcspIndex;
 }
 
-/// create an interval variable with its domain bounds
+/// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
 	IntervalVariable *x = new IntervalVariable(this, n, iinf, isup);
 	return x->wcspIndex;
 }
 
-/// create a binary cost function from a vector of costs
+/// \brief create a binary cost function from a vector of costs
 /// \param xIndex index of enumerated variable x as returned by makeEnumeratedVariable
 /// \param yIndex index of enumerated variable y
 /// \param costs a flat vector of costs (y indexes moving first)
@@ -219,7 +219,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) {
 	return ctr->wcspIndex;
 }
 
-/// create a ternary cost function from a flat vector of costs (z indexes moving first)
+/// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
 int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) {
 	EnumeratedVariable* x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y = (EnumeratedVariable *) vars[yIndex];
@@ -287,7 +287,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 	return ctr->wcspIndex;
 }
 
-/// create a global cost function in extension using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
+/// \brief create a global cost function in extension using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
 /// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
 /// \param arity size of scopeIndex
 /// \param defval default cost for any tuple
@@ -312,10 +312,10 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
 	return ctr->wcspIndex;
 }
 
-/// set tuple with specific cost for global cost function in extension
+/// \brief set tuple with specific cost for global cost function in extension
 /// \param ctrindex index of cost function as returned by WCSP::postNaryConstraintBegin
 /// \param tuple array of values assigned to variables ordered by following the original scope order
-/// \param size of array
+/// \param arity size of array
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) {
@@ -326,7 +326,11 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
 	ctr->setTuple(indextuple, cost, NULL);
 }
 
-/// create a global cost function in intension with a particular semantic
+/// \brief create a global cost function in intension with a particular semantic
+/// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
+/// \param arity size of scopeIndex
+/// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
+/// \param file problem file (\see \ref wcspformat)
 int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file) {
 	if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
 	GlobalConstraint* gc = NULL;
@@ -352,6 +356,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstr
 	return gc->wcspIndex;
 }
 
+/// \brief add unary costs to enumerated variable \e xIndex
 void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 	assert(vars[xIndex]->enumerated());
 	for (unsigned int a = 0; a < ((EnumeratedVariable *) vars[xIndex])->getDomainInitSize(); a++) {
@@ -360,12 +365,14 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 	((EnumeratedVariable *) vars[xIndex])->findSupport();
 }
 
+/// \brief add unary costs to interval variable \e xIndex
 int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty) {
 	assert(!vars[xIndex]->enumerated());
 	Unary *ctr = new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);
 	return ctr->wcspIndex;
 }
 
+/// \brief create a soft constraint \f$x \geq y + cst\f$ with the associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):top , 0 )\f$
 int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
 	assert(!vars[xIndex]->enumerated());
 	assert(!vars[yIndex]->enumerated());
@@ -375,6 +382,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
 	return ctr->wcspIndex;
 }
 
+/// \brief soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
 int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) {
 	assert(!vars[xIndex]->enumerated());
 	assert(!vars[yIndex]->enumerated());
@@ -384,6 +392,7 @@ int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost p
 	return ctr->wcspIndex;
 }
 
+/// \brief special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
 int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) {
 	assert(!vars[xIndex]->enumerated());
 	assert(!vars[yIndex]->enumerated());
@@ -464,18 +473,23 @@ void WCSP::processTernary() {
 		}
 }
 
+/// \defgroup preprocessing Preprocessing techniques
+/// Depending on toulbar2 options, the sequence of preprocessing techniques applied before the search is:
+/// -# \e i-bounded variable elimination with user-defined \e i bound
+/// -# pairwise decomposition of cost functions (binary cost functions are implicitly decomposed by soft AC and empty cost function removals)
+/// -# MinSumDiffusion propagation (see VAC)
+/// -# projects\&substracts n-ary cost functions in extension on all the binary cost functions inside their scope (3 < n < max, see toulbar2 options)
+/// -# functional variable elimination (see \ref varelim)
+/// -# projects\&substracts ternary cost functions in extension on their three binary cost functions inside their scope (before that, extends the existing binary cost functions to the ternary cost function and applies pairwise decomposition)
+/// -# creates new ternary cost functions for all triangles (\e ie occurences of three binary cost functions \e xy, \e yz, \e zx)
+/// -# removes empty cost functions while repeating #1 and #2 until no new cost functions can be removed
+///
+/// \note the propagation loop is called after each preprocessing technique (see \ref WCSP::propagate)
+
 void WCSP::preprocessing() {
 	Eliminate.clear();
 	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
 		initElimConstrs();
-
-		// if (ToulBar2::preprocessTernary) {
-		//     cout << "Process ternary groups of variables." << endl;
-		//     processTernary();
-		//     ternaryCompletion();
-		//     processTernary();
-		// }
-
 		if (ToulBar2::elimDegree_preprocessing >= 0) {
 			if (ToulBar2::verbose >= 1) cout << "Variable elimination in preprocessing of true degree <= "
 					<< ToulBar2::elimDegree_preprocessing << endl;
@@ -687,6 +701,34 @@ void WCSP::printNCBuckets() {
 		cout << endl;
 	}
 }
+
+/** \defgroup verbosity Output messages and verbosity options
+ *
+ * Depending on verbosity level given as option "-v=level", \p toulbar2 will output:
+ * - (level=0, no verbosity) default output mode: shows version number, number of variables and cost functions read in the problem file,
+ *  number of unassigned variables and cost functions after preprocessing,
+ *  problem upper and lower bounds after preprocessing.
+ *  Outputs current best solution cost found,
+ *  ends by giving the optimum or "No solution".
+ *  Last output line should always be: "end."
+ * -# (level=1) shows also search choices ("["\e search_depth \e problem_lower_bound \e problem_upper_bound \e sum_of_current_domain_sizes"] Try" \e variable_index \e operator \e value)
+ *  with \e operator being assignment ("=="), value removal ("!="), domain splitting ("<=" or ">=", also showing EAC value in parenthesis)
+ * -# (level=2) shows also current domains (\e variable_index \e list_of_current_domain_values "/" \e number_of_cost_functions (see approximate degree in \ref varelim) "/" \e weighted_degree \e list_of_unary_costs "s:" \e support_value) before each search choice
+ *  and reports problem lower bound increases, NC bucket sort data (see \ref ncbucket), and basic operations on domains of variables
+ * -# (level=3) reports also basic arc EPT operations on cost functions (see \ref softac)
+ * -# (level=4) shows also current list of cost functions for each variable and reports more details on arc EPT operations (showing all changes in cost functions)
+ * -# (level=5) reports more details on cost functions defined in extension giving their content (cost table by first increasing values in the current domain of the last variable in the scope)
+ *
+ * For debugging purposes, another option "-Z=level" allows to monitor the search:
+ * -# (level 1) shows current search depth (number of search choices from the root of the search tree) and reports statistics on nogoods for BTD-like methods
+ * -# (level 2) idem
+ * -# (level 3) also saves current problem into a file before each search choice
+ *
+ * \note \p toulbar2, compiled in debug mode, can be more verbose and it checks a lot of assertions (pre/post conditions in the code)
+ *
+ * \note \p toulbar2 will output an help message giving available options if run without any parameters
+ *
+ */
 
 void WCSP::print(ostream& os) {
 	os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
@@ -922,6 +964,15 @@ void WCSP::whenContradiction() {
 	nbNodes++;
 }
 
+///\defgroup ncbucket NC bucket sort
+/// maintains a sorted list of variables having non-zero unary costs in order to make NC propagation incremental.\n
+/// - variables are sorted into buckets
+/// - each bucket is associated to a single interval of non-zero costs (using a power-of-two scaling, first bucket interval is [1,2[, second interval is [2,4[, etc.)
+/// - each variable is inserted into the bucket corresponding to its largest unary cost in its domain
+/// - variables having all unary costs equal to zero do not belong to any bucket
+///
+/// NC propagation will revise only variables in the buckets associated to costs sufficiently large wrt current objective bounds.
+
 void WCSP::propagateNC() {
 	if (ToulBar2::verbose >= 2) cout << "NCQueue size: " << NC.getSize() << endl;
 	while (!NC.empty()) {
@@ -1006,13 +1057,20 @@ void WCSP::propagateSeparator() {
 	}
 }
 
-//  void WCSP::clearPendingSeparator(int clusterid)
-//  {
-//    if (ToulBar2::verbose >= 2) cout << "clear PendingSeparator (size: " << PendingSeparator.getSize() << ")" << endl;
-//    for (SeparatorList::iterator iter=PendingSeparator.begin(); iter != PendingSeparator.end(); ++iter) {
-//  	(*iter)->unqueueSep();
-//    }
-//  }
+/// \defgroup varelim Variable elimination
+/// - \e i-bounded variable elimination eliminates all variables with a degree less than or equal to \e i.
+///		It can be done with arbitrary i-bound in preprocessing only and iff all their cost functions are in extension.
+/// - \e i-bounded variable elimination with i-bound less than or equal to two can be done during the search.
+/// - functional variable elimination eliminates all variables which have a bijective or functional binary hard constraint (\e ie ensuring a one-to-one or several-to-one value mapping) and iff all their cost functions are in extension.
+///		It can be done without limit on their degree, in preprocessing only.
+/// \note Variable elimination order used in preprocessing is either lexicographic or given by an external file *.order (see toulbar2 options)
+/// \note 2-bounded variable elimination during search is optimal in the sense that any elimination order should result in the same final graph
+/// \warning It is not possible to display/save solutions when bounded variable elimination is applied in preprocessing
+/// \warning toulbar2 maintains a list of current cost functions for each variable.
+///		It uses the size of these lists as an approximation of variable degrees.
+///		During the search, if variable \e x has three cost functions \e xy, \e xz, \e xyz, its true degree is two but its approximate degree is three.
+///		In toulbar2 options, it is the approximate degree which is given by the user for variable elimination during the search (thus, a value at most three).
+///		But it is the true degree which is given by the user for variable elimination in preprocessing.
 
 void WCSP::eliminate() {
 	while (!Eliminate.empty()) {
@@ -1024,6 +1082,34 @@ void WCSP::eliminate() {
 		}
 	}
 }
+
+/// \defgroup softac Soft arc consistency and problem reformulation
+/// Soft arc consistency is an incremental lower bound technique for optimization problems.
+/// Its goal is to move costs from high-order (typically arity two or three) cost functions towards the problem lower bound and unary cost functions.
+/// This is achieved by applying iteratively local equivalence-preserving problem transformations (EPTs) until some terminating conditions are met.
+/// \note \e eg an EPT can move costs between a binary cost function and a unary cost function such that the sum of the two functions remains the same for any complete assignment.
+/// \see <em> Arc consistency for Soft Constraints. </em> T. Schiex. Proc. of CP'2000. Singapour, 2000.
+/// \note Soft Arc Consistency in toulbar2 is limited to binary and ternary and some global cost functions (\e eg alldifferent, gcc, regular, same).
+///		Other n-ary cost functions are delayed for propagation until their number of unassigned variables is three or less.
+/// \see <em> Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction. </em> Jimmy Ho-Man Lee, Ka Lun Leung. Proc. of IJCAI 2009, pages 559-565. Pasadena, USA, 2009.
+
+/// \defgroup propagation Propagation loop
+/// Propagates soft local consistencies and bounded variable elimination until all the propagation queues are empty or a contradiction occurs.\n
+/// While (queues are not empty or current objective bounds have changed):
+/// -# queue for bounded variable elimination of degree at most two (except at preprocessing)
+/// -# BAC queue
+/// -# EAC queue
+/// -# DAC queue
+/// -# AC queue
+/// -# global cost function propagation (not incremental)
+/// -# NC queue
+/// -# returns to #1 until all the previous queues are empty
+/// -# VAC propagation (not incremental)
+/// -# returns to #1 until all the previous queues are empty
+/// -# exploits goods in pending separators for BTD-like methods
+///
+/// Queues are first-in / first-out lists of variables (avoiding multiple insertions).
+/// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
 void WCSP::propagate() {
 	revise(NULL);
@@ -1040,6 +1126,7 @@ void WCSP::propagate() {
 			}
 		}
 	}
+
 	do {
 		do {
 			do {
@@ -1066,7 +1153,6 @@ void WCSP::propagate() {
 							propagateIncDec();
 						}
 						if (ToulBar2::LcLevel == LC_SNIC) if (!NC.empty() || objectiveChanged) cont = true; //For detecting value removal and upper bound change
-
 						propagateNC();
 						if (ToulBar2::LcLevel == LC_SNIC) if (oldLb != getLb() || !AC.empty()) {
 							cont = true;

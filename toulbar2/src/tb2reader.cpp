@@ -13,15 +13,105 @@
 #include <list>
 #include <libgen.h>
 
-
-
-
-
 typedef struct {
     EnumeratedVariable *var;
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
+/**
+ * \defgroup wcspformat Weighted Constraint Satisfaction Problem file format (wcsp)
+ *
+ * It is a text format composed of a list of numerical and string terms separated by spaces.
+ * Instead of using names for making reference to variables, variable
+ * indexes are employed. The same for domain values. All indexes start at
+ * zero.
+ *
+ * Cost functions can be defined in intention (see below) or in extension, by their list of
+ * tuples. A default cost value is defined per function in order to
+ * reduce the size of the list. Only tuples with a different cost value
+ * should be given. All the cost values must be positive. The arity of a cost function in extension may be
+ * equal to zero. In this case, there is no tuples and the default cost
+ * value is added to the cost of any solution. This can be used to represent
+ * a global lower bound of the problem.
+ *
+ * The wcsp file format is composed of: first, the problem name and dimensions, then the
+ * variable domain sizes, and last, the cost functions.
+ *
+ * - Definition of problem name and problem dimensions
+ * \verbatim
+ <Problem name>
+ <Number of variables (N)>
+ <Maximum domain size>
+ <Number of cost functions>
+ <Initial global upper bound of the problem (UB)>
+ \endverbatim
+ * The goal is to find an assignment of all the variables with minimum total cost,
+ * strictly lower than UB.
+ * Tuples with a cost greater than or equal to UB are forbidden (hard constraint).
+ *
+ * - Definition of domain sizes
+ * \verbatim
+ <Domain size of variable with index 0>
+ ...
+ <Domain size of variable with index N - 1>
+ \endverbatim
+ * \note domain values range from zero to \e size-1
+ * \note a negative domain size is interpreted as a variable with an interval domain in \f$[0,-size-1]\f$
+ * - Definition of cost functions
+ *   - Definition of a cost function in extension
+ * \verbatim
+ <Arity of the cost function>
+ <Index of the first variable in the scope of the cost function>
+ ...
+ <Index of the last variable in the scope of the cost function>
+ <Default cost value>
+ <Number of tuples with a cost different than the default cost>
+ \endverbatim
+ * followed by for every tuple with a cost different than the default cost:
+ * \verbatim
+ <Index of the value assigned to the first variable in the scope>
+ ...
+ <Index of the value assigned to the last variable in the scope>
+ <Cost of the tuple>
+ \endverbatim
+ *   - Definition of a cost function in intension by giving its keyword name and K parameters (and replacing the default cost value by -1)
+ * \verbatim
+ <Arity of the cost function>
+ <Index of the first variable in the scope of the cost function>
+ ...
+ <Index of the last variable in the scope of the cost function>
+ -1
+ <keyword>
+ <parameter1>
+ ...
+ <parameterK>
+ \endverbatim
+ *
+ * Possible keywords followed by their specific parameters:
+ *     - ">=" \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
+ *     - ">" \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
+ *     - "<=" \e cst \e delta to express soft binary constraint \f$x \leq y + cst\f$ with associated cost function  \f$max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\f$
+ *     - "<" \e cst \e delta to express soft binary constraint \f$x < y + cst\f$ with associated cost function  \f$max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\f$
+ *     - "=" \e cst \e delta to express soft binary constraint \f$x = y + cst\f$ with associated cost function  \f$(|y + cst - x| \leq delta)?|y + cst - x|:UB\f$
+ *     - "disj" \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
+ *     - "sdisj" \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
+ *     - "salldiff" "var"|"dec" \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation
+ *     - "sgcc" "var"|"dec" \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
+ *     - "ssame" \e cost \e list_size1 \e list_size2 (\e variable_index)* (\e variable_index)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)
+ *     - "sregular" "var"|"edit" \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+ *
+ * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
+ *
+ * Examples:
+ * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
+ * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
+ * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
+ * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
+ * - soft_gcc({x1,x2,x3,x4} with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
+ * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
+ * - soft_regular({x1,x2,x3}) with DFA (3*)+(4*): \code 3 1 2 3 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
+ *
+ */
 
 void WCSP::read_wcsp(const char *fileName)
 {

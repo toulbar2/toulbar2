@@ -611,16 +611,16 @@ void help_msg(char *toulbar2filename)
 	cerr << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
 	cerr << "   -ub=[integer] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
 	cerr << "   -v=[integer] : verbosity level" << endl;
-	cerr << "   -s : show each solution found" << endl;
+	cerr << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
-	cerr << "   -w : write last solution found in filename \"sol\"" << endl;
+	cerr << "   -w : writes last solution found in filename \"sol\"" << endl;
 #else
-	cerr << "   -w=[mode] : write last solution found" << endl;
-	cerr << "               mode=0: save pedigree with erroneous genotypings removed" << endl;
-	cerr << "               mode=1: save pedigree with erroneous genotypings corrected" << endl;
-	cerr << "               mode=2: save pedigree with erroneous genotypings corrected and missing genotypes of informative individuals inferred" << endl;
-	cerr << "   -g : sort pedigree by increasing generation number and if equal by increasing individual number" << endl;
-	cerr << "   -u=[integer] : add a penalty weight (must use option y also) on genotyped individuals depending on the number of their genotyped children in order to penalize genotyping removals if the number of genotyped children is strictly greater than a given threshold" << endl;
+	cerr << "   -w=[mode] : writes last solution found" << endl;
+	cerr << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
+	cerr << "               mode=1: saves pedigree with erroneous genotypings corrected" << endl;
+	cerr << "               mode=2: saves pedigree with erroneous genotypings corrected and missing genotypes of informative individuals inferred" << endl;
+	cerr << "   -g : sorts pedigree by increasing generation number and if equal by increasing individual number" << endl;
+	cerr << "   -u=[integer] : adds a penalty weight (must use option y also) on genotyped individuals depending on the number of their genotyped children in order to penalize genotyping removals if the number of genotyped children is strictly greater than a given threshold" << endl;
 
 
 	cerr << "   -bayes : pedigree solved by Bayesian MPE . the following option can be tune" << endl;
@@ -633,30 +633,30 @@ void help_msg(char *toulbar2filename)
 	cerr << "           -problist [nbre of prob] p1 p2 p3... : allele probability distribution given explicitely in the command line" << endl << endl;
 #endif
 #ifndef MENDELSOFT
-	cerr << "   -var=[integer] : perform branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
-	cerr << "   -b : perform binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
+	cerr << "   -var=[integer] : search by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
+	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -c : perform binary branching with last conflict backjumping variable ordering heuristic";
+	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -q : weighted degree variable ordering heuristic";
 	if (ToulBar2::weightedDegree) cerr << " (default option if #constr<" << ToulBar2::weightedDegree << "*#var)";
 	cerr << endl;
-	cerr << "   -d : dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
+	cerr << "   -d : search using dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
 	if (ToulBar2::dichotomicBranching) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
-	cerr << "   -t : preprocessing only: simulate restricted path consistency by adding ternary cost functions on triangles of binary cost functions";
+	cerr << "   -t : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions";
 	if (ToulBar2::preprocessTernaryRPC) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
 	cerr << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -h=[integer] : preprocessing only: project n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
-	cerr << "   -o : ensure optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
+	cerr << "   -h=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
+	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
@@ -669,16 +669,16 @@ void help_msg(char *toulbar2filename)
 #ifndef WINDOWS
 	cerr << "   -i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
 #endif
-	cerr << "   -z=[integer] : save problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
-	cerr << "		write also the  graphviz dot file  and the degree distribution of the input problem " << endl;
+	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
+	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
 	cerr << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
-	cerr << "   -x=[(,i=a)*] : assign variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file \"sol\")" << endl << endl;
+	cerr << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file \"sol\")" << endl << endl;
 	cerr << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
-	cerr << "   -A=[integer] : enforce VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
+	cerr << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cerr << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
 	cerr << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
-	cerr << "   -C=[integer] : multiply all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
-	cerr << "   -S : preprocessing only: perform singleton consistency (only in conjunction with option \"-A\")";
+	cerr << "   -C=[integer] : multiplies all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
+	cerr << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
 	if (ToulBar2::singletonConsistency) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -V : VAC-based value ordering heuristic";
@@ -686,24 +686,24 @@ void help_msg(char *toulbar2filename)
 	cerr << endl << endl;
 
 	cerr << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-	cerr << "   -O=[filename] : read a variable elimination order from a file in order to build a tree decomposition" << endl;
+	cerr << "   -O=[filename] : reads a variable elimination order from a file in order to build a tree decomposition" << endl;
 	cerr << "                  (if not specified, then use the variable order in which variables appear in the problem file)" << endl;
-	cerr << "   -j=[integer] : split large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
+	cerr << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
 	cerr << "                (use options \"-B=3 -j=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
 	cerr << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
 	cerr << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
-	cerr << "   -E : merge leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\")";
+	cerr << "   -E : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\")";
 	if (ToulBar2::boostingBTD) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -R=[integer] : choice for a specific root cluster number" << endl;
 	cerr << "   -I=[integer] : choice for solving only a particular rooted cluster subtree" << endl << endl;
-	cerr << "   -a : find all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)";
+	cerr << "   -a : finds all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)";
 	if (ToulBar2::allSolutions) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -D : approximate satisfiable solution count with BTD";
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -logz : compute log10 of probability of evidence (i.e. log10 partition function or log10(Z)) for graphical models only (problem extension .uai)" << endl;
+	cerr << "   -logz : computes log10 of probability of evidence (i.e. log10 partition function or log10(Z)) for graphical models only (problem extension .uai)" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;

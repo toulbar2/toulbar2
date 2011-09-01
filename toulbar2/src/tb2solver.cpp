@@ -189,6 +189,10 @@ void setvalue(int wcspId, int varIndex, Value value)
  *
  */
 
+/// \defgroup heuristics Variable and value search ordering heuristics
+/// \see <em> Boosting Systematic Search by Weighting Constraints </em>. Frédéric Boussemart, Fred Hemery, Christophe Lecoutre, Lakhdar Sais. Proc. of ECAI 2004, pages 146-150. Valencia, Spain, 2004.
+/// \see <em> Last Conflict Based Reasoning </em>. Christophe Lecoutre, Lakhdar Sais, Sébastien Tabary, Vincent Vidal. Proc. of ECAI 2006, pages 133-137. Trentino, Italy, 2006.
+
 int Solver::getNextUnassignedVar()
 {
     return (unassignedVars->empty())?-1:(*unassignedVars->begin());
@@ -880,7 +884,7 @@ bool Solver::solve()
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) {
-		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " constraints." << endl;
+		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " cost functions." << endl;
 		  cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
 		}
 
@@ -1156,7 +1160,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
     }
   }
 
-  cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " constraints." << endl;
+  cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
   // dump_wcsp("mydebug.wcsp", true);
 
   // solve using BTD exploiting a lexicographic elimination order, a path decomposition, and only small separators of size ToulBar2::smallSeparatorSize
