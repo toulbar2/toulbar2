@@ -102,7 +102,7 @@ public:
 		if(c1 >= top && c2 >= top) return true;
 		else return false;
 	}
-    bool verifySeparate(Constraint * ctr1, Constraint * ctr2);
+	bool verifySeparate(Constraint * ctr1, Constraint * ctr2);
 
 	virtual void setTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
 	virtual void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
@@ -116,6 +116,7 @@ public:
 	virtual Cost getDefCost() { return MIN_COST; }
 
     virtual bool universal();
+    virtual bool ishard();
 
     virtual Cost getMinCost();
 

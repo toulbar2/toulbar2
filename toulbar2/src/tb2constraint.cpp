@@ -150,6 +150,17 @@ bool Constraint::universal()
   return true;
 }
 
+bool Constraint::ishard()
+{
+   String tuple;
+   Cost cost;
+   firstlex();
+   while (nextlex(tuple,cost)) {
+ 	if (cost > MIN_COST && !CUT(cost,wcsp->getUb())) return false;
+   }
+   return true;
+}
+
 bool Constraint::verifySeparate(Constraint * ctr1, Constraint * ctr2){
 	assert(scopeIncluded(ctr1));
 	assert(scopeIncluded(ctr2));
@@ -191,7 +202,13 @@ bool Constraint::decompose()
 		vz = (EnumeratedVariable *) wcsp->getVar((*it1).first);
 		if(ToulBar2::verbose >= 1) cout << /*"\n" <<*/ vx->getName() << " and " << vz->getName() << " are separable in ";
 		sep = separability(vx,vz);
-		if(sep && ToulBar2::verbose >= 1) cout << " YES" << endl;
+		if(sep && ToulBar2::verbose >= 1) {
+			cout << " YES";
+#ifndef NDEBUG
+			if (!ishard()) cout << " with finite costs";
+#endif
+			cout << endl;
+		}
 		if(!sep && ToulBar2::verbose >= 1) cout << " NO" << endl;
 	  }
 	}
