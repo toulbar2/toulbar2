@@ -27,7 +27,7 @@ Page
 
 Scale 
 {
-	{ ScaleValue 0.833333 }
+	{ ScaleValue 0.694444 }
 }
 
 # GRAPH NODES
@@ -50,9 +50,10 @@ SSDClassNode 4
 	{ Annotation "" }
 	{ Parent 0 }
 	{ Index "" }
-	{ Attributes 14 }
+	{ Attributes 30 }
 	{ Attribute "static int wcspCounter" }
 	{ Attribute "int instance" }
+	{ Attribute "string name" }
 	{ Attribute "StoreCost lb" }
 	{ Attribute "Cost ub" }
 	{ Attribute "vector<Variable *> vars" }
@@ -63,8 +64,23 @@ SSDClassNode 4
 	{ Attribute "Queue IncDec" }
 	{ Attribute "Queue AC" }
 	{ Attribute "Queue DAC" }
+	{ Attribute "Queue EAC1" }
+	{ Attribute "Queue EAC2" }
+	{ Attribute "Queue Eliminate" }
+	{ Attribute "SeparatorList PendingSeparator" }
 	{ Attribute "bool objectiveChanged" }
 	{ Attribute "long long nbNodes" }
+	{ Attribute "Constraint *lastConflictConstr" }
+	{ Attribute "int maxdomainsize" }
+	{ Attribute "vector<GlobalConstraint*> globalconstrs" }
+	{ Attribute "StoreInt elimOrder" }
+	{ Attribute "vector<elimInfo> elimInfos" }
+	{ Attribute "StoreInt elimBinOrder" }
+	{ Attribute "StoreInt elimTernOrder" }
+	{ Attribute "vector<Constraint *> elimBinConstrs" }
+	{ Attribute "vector<Cosntraint*> elimTernConstrs" }
+	{ Attribute "int maxDegree" }
+	{ Attribute "VACExtension *vac" }
 	{ Operations 0 }
 	{ Stereotype "<< - >>" }
 	{ Properties "{ - }" }
@@ -578,7 +594,7 @@ SSDDoubleClassBox 24
 {
 	{ View 1 }
 	{ Subject 9 }
-	{ Position 710 700 }
+	{ Position 930 730 }
 	{ Size 269 150 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -598,7 +614,7 @@ SSDDoubleClassBox 25
 {
 	{ View 1 }
 	{ Subject 10 }
-	{ Position 1010 710 }
+	{ Position 1230 740 }
 	{ Size 233 135 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -618,7 +634,7 @@ SSDDoubleClassBox 26
 {
 	{ View 1 }
 	{ Subject 11 }
-	{ Position 870 540 }
+	{ Position 1090 560 }
 	{ Size 270 105 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -718,7 +734,7 @@ SSDDoubleClassBox 33
 {
 	{ View 1 }
 	{ Subject 18 }
-	{ Position 550 70 }
+	{ Position 570 70 }
 	{ Size 251 135 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -762,9 +778,9 @@ Line 35
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 870 488 }
-	{ Point 870 453 }
-	{ NamePosition 856 470 }
+	{ Point 1090 508 }
+	{ Point 1090 483 }
+	{ NamePosition 1076 495 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -813,9 +829,9 @@ Line 52
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 785 625 }
-	{ Point 818 593 }
-	{ NamePosition 792 602 }
+	{ Point 1001 655 }
+	{ Point 1041 613 }
+	{ NamePosition 996 628 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -836,9 +852,9 @@ Line 53
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 954 643 }
-	{ Point 913 593 }
-	{ NamePosition 943 612 }
+	{ Point 1178 673 }
+	{ Point 1131 613 }
+	{ NamePosition 1161 649 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -859,9 +875,9 @@ C2R2Line 54
 	{ End1 Empty }
 	{ End2 BlackDiamond }
 	{ Points 2 }
-	{ Point 820 418 }
-	{ Point 697 387 }
-	{ NamePosition 761 393 }
+	{ Point 1040 462 }
+	{ Point 750 473 }
+	{ NamePosition 895 458 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -870,10 +886,10 @@ C2R2Line 54
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 802 424 }
-	{ T2Position 709 399 }
-	{ T3Position 808 406 }
-	{ T4Position 715 381 }
+	{ T1Position 1004 472 }
+	{ T2Position 786 481 }
+	{ T3Position 1004 454 }
+	{ T4Position 786 463 }
 	{ NameDirection None }
 }
 
@@ -887,9 +903,9 @@ C2R2Line 56
 	{ End1 Empty }
 	{ End2 BlackDiamond }
 	{ Points 2 }
-	{ Point 780 350 }
-	{ Point 697 350 }
-	{ NamePosition 738 340 }
+	{ Point 780 371 }
+	{ Point 750 387 }
+	{ NamePosition 759 371 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -898,10 +914,10 @@ C2R2Line 56
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 770 360 }
-	{ T2Position 707 360 }
-	{ T3Position 770 340 }
-	{ T4Position 707 340 }
+	{ T1Position 776 389 }
+	{ T2Position 766 393 }
+	{ T3Position 764 373 }
+	{ T4Position 754 377 }
 	{ NameDirection None }
 }
 
@@ -915,9 +931,9 @@ C2R2Line 57
 	{ End1 Empty }
 	{ End2 WhiteDiamond }
 	{ Points 2 }
-	{ Point 288 540 }
-	{ Point 735 540 }
-	{ NamePosition 511 530 }
+	{ Point 288 542 }
+	{ Point 955 557 }
+	{ NamePosition 621 540 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -926,10 +942,10 @@ C2R2Line 57
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 343 550 }
-	{ T2Position 680 550 }
-	{ T3Position 343 530 }
-	{ T4Position 680 530 }
+	{ T1Position 371 552 }
+	{ T2Position 872 565 }
+	{ T3Position 371 534 }
+	{ T4Position 872 547 }
 	{ NameDirection None }
 }
 
@@ -943,10 +959,10 @@ C2R2Line 58
 	{ End1 Empty }
 	{ End2 WhiteDiamond }
 	{ Points 3 }
-	{ Point 820 439 }
-	{ Point 320 530 }
+	{ Point 1040 465 }
+	{ Point 420 530 }
 	{ Point 288 530 }
-	{ NamePosition 568 475 }
+	{ NamePosition 729 488 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -955,10 +971,10 @@ C2R2Line 58
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 760 459 }
-	{ T2Position 298 540 }
-	{ T3Position 756 441 }
-	{ T4Position 298 520 }
+	{ T1Position 964 482 }
+	{ T2Position 304 540 }
+	{ T3Position 962 464 }
+	{ T4Position 304 520 }
 	{ NameDirection None }
 }
 
@@ -986,8 +1002,8 @@ SSDDoubleClassBox 7
 {
 	{ View 1 }
 	{ Subject 4 }
-	{ Position 550 350 }
-	{ Size 293 255 }
+	{ Position 570 480 }
+	{ Size 359 495 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1146,9 +1162,9 @@ C2R2Line 80
 	{ End1 Empty }
 	{ End2 BlackDiamond }
 	{ Points 2 }
-	{ Point 288 485 }
-	{ Point 404 425 }
-	{ NamePosition 339 447 }
+	{ Point 288 523 }
+	{ Point 391 508 }
+	{ NamePosition 337 506 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1157,10 +1173,10 @@ C2R2Line 80
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 307 486 }
-	{ T2Position 396 440 }
-	{ T3Position 295 470 }
-	{ T4Position 384 424 }
+	{ T1Position 302 531 }
+	{ T2Position 381 518 }
+	{ T3Position 298 513 }
+	{ T4Position 377 500 }
 	{ NameDirection None }
 }
 
@@ -1168,7 +1184,7 @@ SSDSingleClassBox 91
 {
 	{ View 1 }
 	{ Subject 8 }
-	{ Position 870 430 }
+	{ Position 1090 460 }
 	{ Size 100 45 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -1208,7 +1224,7 @@ SSDDoubleClassBox 93
 {
 	{ View 1 }
 	{ Subject 81 }
-	{ Position 450 600 }
+	{ Position 490 780 }
 	{ Size 117 75 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -1234,9 +1250,9 @@ Line 94
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 288 564 }
-	{ Point 392 587 }
-	{ NamePosition 343 566 }
+	{ Point 288 623 }
+	{ Point 442 743 }
+	{ NamePosition 373 676 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1257,9 +1273,9 @@ Line 95
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 820 450 }
-	{ Point 509 576 }
-	{ NamePosition 659 504 }
+	{ Point 1048 483 }
+	{ Point 549 749 }
+	{ NamePosition 792 608 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1304,7 +1320,7 @@ Line 97
 	{ End2 WhiteTriangle }
 	{ Points 2 }
 	{ Point 204 89 }
-	{ Point 766 199 }
+	{ Point 767 199 }
 	{ NamePosition 487 135 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -1320,7 +1336,7 @@ SSDSingleClassBox 98
 {
 	{ View 1 }
 	{ Subject 82 }
-	{ Position 550 180 }
+	{ Position 570 180 }
 	{ Size 102 45 }
 	{ Color "black" }
 	{ LineWidth 1 }
@@ -1346,9 +1362,9 @@ Line 99
 	{ End1 Empty }
 	{ End2 WhiteTriangle }
 	{ Points 2 }
-	{ Point 550 223 }
-	{ Point 550 203 }
-	{ NamePosition 536 213 }
+	{ Point 570 233 }
+	{ Point 570 203 }
+	{ NamePosition 556 218 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1370,8 +1386,8 @@ C2R2Line 100
 	{ End2 Empty }
 	{ Points 2 }
 	{ Point 780 104 }
-	{ Point 676 89 }
-	{ NamePosition 729 87 }
+	{ Point 696 90 }
+	{ NamePosition 740 88 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1380,10 +1396,10 @@ C2R2Line 100
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 766 112 }
-	{ T2Position 688 99 }
-	{ T3Position 768 94 }
-	{ T4Position 690 81 }
+	{ T1Position 768 112 }
+	{ T2Position 704 100 }
+	{ T3Position 772 94 }
+	{ T4Position 708 82 }
 	{ NameDirection None }
 }
 
@@ -1397,9 +1413,9 @@ C2R2Line 101
 	{ End1 Empty }
 	{ End2 Empty }
 	{ Points 2 }
-	{ Point 796 131 }
-	{ Point 694 223 }
-	{ NamePosition 735 170 }
+	{ Point 806 131 }
+	{ Point 737 232 }
+	{ NamePosition 760 176 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1408,10 +1424,10 @@ C2R2Line 101
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 793 149 }
-	{ T2Position 714 219 }
-	{ T3Position 775 135 }
-	{ T4Position 696 205 }
+	{ T1Position 809 148 }
+	{ T2Position 756 225 }
+	{ T3Position 787 138 }
+	{ T4Position 734 215 }
 	{ NameDirection None }
 }
 
@@ -1453,9 +1469,9 @@ C2R2Line 105
 	{ End1 Empty }
 	{ End2 Empty }
 	{ Points 2 }
-	{ Point 550 158 }
-	{ Point 550 138 }
-	{ NamePosition 536 148 }
+	{ Point 570 158 }
+	{ Point 570 138 }
+	{ NamePosition 556 148 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1464,10 +1480,10 @@ C2R2Line 105
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 564 148 }
-	{ T2Position 564 148 }
-	{ T3Position 536 148 }
-	{ T4Position 536 148 }
+	{ T1Position 584 148 }
+	{ T2Position 584 148 }
+	{ T3Position 556 148 }
+	{ T4Position 556 148 }
 	{ NameDirection None }
 }
 
@@ -1482,8 +1498,8 @@ C2R2Line 106
 	{ End2 Empty }
 	{ Points 2 }
 	{ Point 204 70 }
-	{ Point 425 70 }
-	{ NamePosition 314 60 }
+	{ Point 445 70 }
+	{ NamePosition 324 60 }
 	{ Color "black" }
 	{ LineWidth 1 }
 	{ LineStyle Solid }
@@ -1492,10 +1508,10 @@ C2R2Line 106
 	{ TextAlignment Center }
 	{ TextColor "black" }
 	{ NameUnderlined False }
-	{ T1Position 231 80 }
-	{ T2Position 398 80 }
-	{ T3Position 231 60 }
-	{ T4Position 398 60 }
+	{ T1Position 234 80 }
+	{ T2Position 415 80 }
+	{ T3Position 234 60 }
+	{ T4Position 415 60 }
 	{ NameDirection None }
 }
 
