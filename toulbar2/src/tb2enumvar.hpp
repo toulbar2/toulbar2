@@ -22,6 +22,9 @@ protected:
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
 
+    bool watchForIncrease;	///< \warning should be true if there exists a cost function on this variable watching for increase events
+    bool watchForDecrease;	///< \warning should be true if there exists a cost function on this variable watching for decrease events
+
     void init();
         
     virtual void increaseFast(Value newInf);        // Do not check for a support nor insert in NC and DAC queue

@@ -18,7 +18,7 @@
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) :
         Variable(w, n, iinf, isup),
         domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
-        support(iinf, &w->getStore()->storeValue)
+        support(iinf, &w->getStore()->storeValue), watchForIncrease(false), watchForDecrease(false)
 {
     init();
 }
@@ -26,7 +26,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) :
         Variable(w, n, min(d,dsize), max(d, dsize)),
         domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
-        support(min(d,dsize), &w->getStore()->storeValue)
+        support(min(d,dsize), &w->getStore()->storeValue), watchForIncrease(false), watchForDecrease(false)
 {
     init();
 }
@@ -377,7 +377,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
             if (newInf == sup) {assign(newInf);
             } else {
                 inf = newInf;
-                queueInc();
+                if (watchForIncrease) queueInc(); else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
@@ -399,7 +399,7 @@ void EnumeratedVariable::increase(Value newInf)
                 if (newInf > support || PARTIALORDER) findSupport();            // diff with increaseFast
                 queueDAC();                                     // diff with increaseFast
                 queueEAC1();                                     // diff with increaseFast
-                queueInc();
+                if (watchForIncrease) queueInc(); else queueAC();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
             }
       }
@@ -416,7 +416,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
             if (inf == newSup) {assign(newSup);
             } else {
                 sup = newSup;
-                queueDec();
+                if (watchForDecrease) queueDec(); else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
@@ -438,7 +438,7 @@ void EnumeratedVariable::decrease(Value newSup)
                 if (newSup < support || PARTIALORDER) findSupport();            // diff with decreaseFast
                 queueDAC();                                     // diff with decreaseFast
                 queueEAC1();                                     // diff with decreaseFast
-                queueDec();
+                if (watchForDecrease) queueDec(); else queueAC();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
             }
         }
