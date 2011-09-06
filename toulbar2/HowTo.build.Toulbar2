@@ -55,6 +55,14 @@ cmake .. -DCMAKE_BUILD_TYPE=DEBUG  ===> compilation in debug mode
 #notice: iloglue compilation not compliant with -O3 option implied by release mode
 # ==> iloglue does not support release mode
 
+# Howto generate toulbar2 source documentation
+# first install the following package required 
+
+sudo apt-get install texlive-latex-recommended  texlive-fonts-recommended doxygen 
+
+#  for generate documentation use the following command:
+
+cmake .. ; make doc
 
 #howto run toublar2 validation bench
 # the wall set of foo.wcsp locate in the validation directory will be run
