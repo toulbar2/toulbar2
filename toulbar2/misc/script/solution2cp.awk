@@ -1,22 +1,29 @@
 
-# Translate the solution found by toolbar in cp format
+# Translate the solution found by toulbar2 in cp format
 
-# Usage: toolbar -v problem.wcsp | awk -f solution2cp.awk problem.cp -
+# Usage: toulbar2 problem.wcsp -s | awk -f solution2cp.awk problem.cp -
 
 # Note: it can save the solution in a file whose name is problem.sol (see awk variable SAVESOLUTION)
 # SAVESOLUTION = 1 (default value) :  save the solution in a file
 # SAVESOLUTION = 0                 :  do not save the solution
 
+# Note bis: it can read a problem solution instead of the solver output
+# SOLVEROUTPUT = 1 (default value) :  read solutions from solver output
+# SOLVEROUTPUT = 0                 :  read from problem solution file
+
 # Verification of the solution cost: 
-# cat problem.sol problem.cp | awk -f cp2wcsp.awk | ../../toolbar/toolbar
+#  cat problem.sol problem.cp | gawk -f cp2wcsp.awk > problem.wcsp
+#  toulbar2 problem.wcsp
 # or a safer (solver independent) verification:
-# cat problem.sol problem.cp | awk -f cp2wcsp.awk | awk '/^0 / && NF == 3{cost+=$2} END{print "--- solution cost = " cost}'
+#  cat problem.sol problem.cp | gawk -f cp2wcsp.awk | awk '/^0 / && NF == 3{cost+=$2} END{print "--- solution cost = " cost}'
 
 BEGIN {
   SAVESOLUTION = 1;
+  SOLVEROUTPUT = 0;
   first = 1;
   tuplemode = 0;
   idx = 0;
+  oksol = 0;
 }
 
 # outside a constraint defined by a list of tuples
@@ -47,38 +54,45 @@ FNR == NR && first && !/^\#/ && NF >= 1 {
   first = 0;
 }
 
-FNR != NR && SAVESOLUTION && /^Filename = / {
-  if (match($3,".*[.]")) filename = substr($3,1,RLENGTH) "sol";
-  else filename = $3 ".sol";
-  print "--- output solution in file ",filename;
-  print $3 > filename;
+!SOLVEROUTPUT && FNR != NR && FNR==1 {
+	filename = FILENAME ".cp";
+	print "" > filename;
 }
 
-FNR != NR && SAVESOLUTION && /^Optimum: / {
+SOLVEROUTPUT && FNR != NR && SAVESOLUTION && /^loading wcsp file:/ {
+  if (match($4,".*[.]")) filename = substr($4,1,RLENGTH) "sol";
+  else filename = $4 ".sol";
+  print "--- output solution in file ",filename;
+  print $4 > filename;
+}
+
+SOLVEROUTPUT && FNR != NR && SAVESOLUTION && /^Optimum: / {
   print "# optimum = ",$2 >> filename;
 }
 
-FNR != NR && SAVESOLUTION && /^Best bound: / {
-  print "# solution cost = " $3 >> filename;
-}
-
-FNR != NR && $2 == "solution:" {
-  for (i=3; i<=NF; i++) {
-    $i = domains[i-3, $i];
+FNR != NR && (oksol || !SOLVEROUTPUT) {
+  for (i=1; i<=NF; i++) {
+    $i = domains[i-1, $i];
     if (SAVESOLUTION) {
-#      print "hard(",varname[i-3],"==",$i,")" >> filename;
-      print varname[i-3],$i >> filename;
+#      print "hard(",varname[i],"==",$i,")" >> filename;
+      print varname[i-1],$i >> filename;
     }
   }
+  oksol = 0;
 }
 
-FNR != NR {
-  print $0;
+SOLVEROUTPUT && FNR != NR && /New solution:/ {
+	if (SAVESOLUTION) print "#",$0 > filename;
+	oksol = 1;
+}
+
+SOLVEROUTPUT && FNR != NR {
+	print $0;
 }
 
 END {
   if (SAVESOLUTION) {
-    printf("#") >> filename;
+#    printf("#") >> filename;
     close(filename);
   }
 }

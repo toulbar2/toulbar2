@@ -14,6 +14,9 @@
 # For faster evaluations of the constraint formulae, 
 # install mawk and uncomment the two lines in the following code using mawk
 
+# Warning! do not recognize soft global constraints (salldiff, sgcc, ssame, sregular)
+
+# Warning! all variables in wcsp format will have an enumerated domain (no interval) 
 
 function perror(i,message) {
   print message;
