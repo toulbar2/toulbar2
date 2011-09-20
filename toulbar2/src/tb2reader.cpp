@@ -57,6 +57,7 @@ typedef struct {
  \endverbatim
  * \note domain values range from zero to \e size-1
  * \note a negative domain size is interpreted as a variable with an interval domain in \f$[0,-size-1]\f$
+ * \warning variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)
  * - Definition of cost functions
  *   - Definition of a cost function in extension
  * \verbatim

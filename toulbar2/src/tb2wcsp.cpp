@@ -374,32 +374,71 @@ int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty) {
 
 /// \brief create a soft constraint \f$x \geq y + cst\f$ with the associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):top , 0 )\f$
 int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
-	assert(!vars[xIndex]->enumerated());
-	assert(!vars[yIndex]->enumerated());
+  if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
 	Supxyc
 			*ctr =
 					new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
 	return ctr->wcspIndex;
+  } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
+	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
+	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
+	vector<Cost> costs;
+	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
+	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
+		costs.push_back(max( (b + cst - a <= delta)?((Cost)(b + cst - a)):getUb(), MIN_COST ));
+	  }
+	}
+	return postBinaryConstraint(xIndex, yIndex, costs);
+  } else {
+	cerr << "Cannot mix variables with interval and enumerated domains!!!" << endl;
+	exit(EXIT_FAILURE);
+  }
 }
 
 /// \brief soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
 int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) {
-	assert(!vars[xIndex]->enumerated());
-	assert(!vars[yIndex]->enumerated());
+  if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
 	Disjunction
 			*ctr =
 					new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
 	return ctr->wcspIndex;
+  } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
+	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
+	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
+	vector<Cost> costs;
+	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
+	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
+		costs.push_back(((a >= b + csty) || (b >= a + cstx))?MIN_COST:penalty);
+	  }
+	}
+	return postBinaryConstraint(xIndex, yIndex, costs);
+  } else {
+	cerr << "Cannot mix variables with interval and enumerated domains!!!" << endl;
+	exit(EXIT_FAILURE);
+  }
 }
 
 /// \brief special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
 int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) {
-	assert(!vars[xIndex]->enumerated());
-	assert(!vars[yIndex]->enumerated());
+  if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
 	SpecialDisjunction
 			*ctr =
 					new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
 	return ctr->wcspIndex;
+  } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
+	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
+	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
+	vector<Cost> costs;
+	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
+	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
+		costs.push_back((a <= xinfty && b <= yinfty && (a == xinfty || b == yinfty || (a >= b + csty || b >= a + cstx)))?(((a == xinfty)?costx:MIN_COST) + ((b == yinfty)?costy:MIN_COST)):getUb());
+	  }
+	}
+	return postBinaryConstraint(xIndex, yIndex, costs);
+  } else {
+	cerr << "Cannot mix variables with interval and enumerated domains!!!" << endl;
+	exit(EXIT_FAILURE);
+  }
 }
 
 void WCSP::sortConstraints()
