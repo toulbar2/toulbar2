@@ -104,8 +104,11 @@ void Constraint::assignCluster() {
 	cluster = lowest->getId();
 }
 
+/// \warning always returns 0 for cost functions in intention
 Cost Constraint::getMinCost()
 {
+  if (!extension()) return MIN_COST;
+
 // 	    Cost minc = MAX_COST;
 //         String tuple;
 //         Cost cost;
@@ -128,8 +131,11 @@ Cost Constraint::getMinCost()
   return minc;
 }
 
+/// \warning always returns false for cost functions in intention
 bool Constraint::universal()
 {
+  if (!extension()) return false;
+
 //   String tuple;
 //   Cost cost;
 //   firstlex();
@@ -150,8 +156,11 @@ bool Constraint::universal()
   return true;
 }
 
+/// \warning always returns false for cost functions in intention
 bool Constraint::ishard()
 {
+   if (!extension()) return false;
+
    String tuple;
    Cost cost;
    firstlex();
