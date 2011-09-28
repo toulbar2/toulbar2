@@ -75,6 +75,21 @@ typedef struct {
  <Index of the value assigned to the last variable in the scope>
  <Cost of the tuple>
  \endverbatim
+ * \note A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.
+ * \code
+ AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
+ 4 4 4 4
+ -2 0 1 0 4
+ 0 0 1
+ 1 1 1
+ 2 2 1
+ 3 3 1
+ 2 0 2 0 -1
+ 2 0 3 0 -1
+ 2 1 2 0 -1
+ 2 1 3 0 -1
+ 2 2 3 0 -1
+ \endcode
  *   - Definition of a cost function in intension by giving its keyword name and K parameters (and replacing the default cost value by -1)
  * \verbatim
  <Arity of the cost function>
@@ -87,7 +102,6 @@ typedef struct {
  ...
  <parameterK>
  \endverbatim
- *
  * Possible keywords followed by their specific parameters:
  *     - ">=" \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
  *     - ">" \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
@@ -102,6 +116,7 @@ typedef struct {
  *     - "sregular" "var"|"edit" \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
  *
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
+ * \warning  Cost functions defined in intention cannot be shared.
  *
  * Examples:
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
@@ -160,8 +175,11 @@ void WCSP::read_wcsp(const char *fileName)
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = MIN_COST;
 	int maxarity = 0;
-   
-    
+	vector< int > sharedSize;
+	vector< vector<Cost> > sharedCosts;
+	vector< vector<String> > sharedTuples;
+    vector<String> emptyTuples;
+
     // open the file
     ifstream file(fileName);
     if (!file) {
@@ -206,6 +224,8 @@ void WCSP::read_wcsp(const char *fileName)
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
+		bool shared = (arity < 0);
+		if (shared) arity = -arity;
         if (arity > 3) {
 		    maxarity = max(maxarity,arity);
 		    if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary cost function " << ic << " on";
@@ -224,7 +244,16 @@ void WCSP::read_wcsp(const char *fileName)
 			} else { 
 			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); } 		 
 			  file >> ntuples;
-    
+			  int reusedconstr = -1;
+			  bool reused = (ntuples < 0);
+			  if (reused) {
+				reusedconstr = -ntuples-1;
+				if (reusedconstr >= (int) sharedSize.size()) {
+				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+				  exit(EXIT_FAILURE);
+				}
+				ntuples = sharedSize[reusedconstr];
+			  }
 			  if((defval != MIN_COST) || (ntuples > 0))
 				{ 
 				  Cost tmpcost = defval*K;
@@ -233,17 +262,33 @@ void WCSP::read_wcsp(const char *fileName)
 				  NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
 				  Char buf[MAX_ARITY];
+				  vector<String> tuples;
+				  vector<Cost> costs;
 				  for (t = 0; t < ntuples; t++) {
-					for(i=0;i<arity;i++) {
-					  file >> j;			            
-					  buf[i] = j + CHAR_FIRST;
+					if (!reused) {
+					  for(i=0;i<arity;i++) {
+						file >> j;			            
+						buf[i] = j + CHAR_FIRST;
+					  }
+					  buf[i] = '\0';
+					  file >> cost;
+					  Cost tmpcost = cost * K;
+					  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+					  String tup = buf;
+					  if (shared) {
+						tuples.push_back(tup);
+						costs.push_back(tmpcost);
+					  }
+					  nary->setTuple(tup, tmpcost, NULL);
+					} else {
+					  nary->setTuple(sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t], NULL);
 					}
-					buf[i] = '\0';
-				    file >> cost;
-				    Cost tmpcost = cost * K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
-					String tup = buf;
-					nary->setTuple(tup, tmpcost, NULL);
+				  }
+				  if (shared) {
+					assert(ntuples == (int) costs.size());
+					sharedSize.push_back(costs.size());
+					sharedCosts.push_back(costs);
+					sharedTuples.push_back(tuples);
 				  }
 				
 				  if (ToulBar2::preprocessNary>0) {
@@ -283,6 +328,17 @@ void WCSP::read_wcsp(const char *fileName)
                 EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
                 if (ToulBar2::verbose >= 3) cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
                 file >> ntuples;
+				if (ntuples < 0) {
+				  int reusedconstr = -ntuples-1;
+				  if (reusedconstr >= (int) sharedSize.size()) {
+					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+					exit(EXIT_FAILURE);
+				  }
+				  ntuples = sharedSize[reusedconstr];
+				  assert(ntuples == (int) (x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
+				  if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,sharedCosts[reusedconstr]);
+				  continue;
+				}
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
@@ -302,6 +358,12 @@ void WCSP::read_wcsp(const char *fileName)
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
                 }
+				if (shared) {
+				  sharedSize.push_back(costs.size());
+				  sharedCosts.push_back(costs);
+				  sharedTuples.push_back(emptyTuples);
+				}
+
                 if(ToulBar2::vac) {
 	                for (a = 0; a < x->getDomainInitSize(); a++) {
 	                    for (b = 0; b < y->getDomainInitSize(); b++) {
@@ -338,6 +400,17 @@ void WCSP::read_wcsp(const char *fileName)
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
                 EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
                 file >> ntuples;
+				if (ntuples < 0) {
+				  int reusedconstr = -ntuples-1;
+				  if (reusedconstr >= (int) sharedSize.size()) {
+					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+					exit(EXIT_FAILURE);
+				  }
+				  ntuples = sharedSize[reusedconstr];
+				  assert(ntuples == (int) (x->getDomainInitSize() * y->getDomainInitSize()));
+				  if((defval != MIN_COST) || (ntuples > 0)) postBinaryConstraint(i,j,sharedCosts[reusedconstr]);
+				  continue;
+				}
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
@@ -354,6 +427,11 @@ void WCSP::read_wcsp(const char *fileName)
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() + b] = tmpcost;
                 }
+				if (shared) {
+				  sharedSize.push_back(costs.size());
+				  sharedCosts.push_back(costs);
+				  sharedTuples.push_back(emptyTuples);
+				}
                 
                 if(ToulBar2::vac) {
 	                for (a = 0; a < x->getDomainInitSize(); a++) {
@@ -420,6 +498,19 @@ void WCSP::read_wcsp(const char *fileName)
 			  file >> ntuples;
 			  TemporaryUnaryConstraint unaryconstr;
 			  unaryconstr.var = x;
+			  if (ntuples < 0) {
+				int reusedconstr = -ntuples-1;
+				if (reusedconstr >= (int) sharedSize.size()) {
+				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+				  exit(EXIT_FAILURE);
+				}
+				ntuples = sharedSize[reusedconstr];
+				assert(ntuples == (int) x->getDomainInitSize());
+				unaryconstr.costs = sharedCosts[reusedconstr];
+				unaryconstrs.push_back(unaryconstr);
+				x->queueNC();
+				continue;
+			  }
 			  for (a = 0; a < x->getDomainInitSize(); a++) {
 				Cost tmpcost = defval*K;
      			if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
@@ -432,6 +523,12 @@ void WCSP::read_wcsp(const char *fileName)
  	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs[a] = tmpcost;
 			  }
+			  if (shared) {
+				sharedSize.push_back(x->getDomainInitSize());
+				sharedCosts.push_back(unaryconstr.costs);
+				sharedTuples.push_back(emptyTuples);
+			  }
+
 			  if(ToulBar2::vac) {
                 for (a = 0; a < x->getDomainInitSize(); a++) {
 				  Cost c = unaryconstr.costs[a];
