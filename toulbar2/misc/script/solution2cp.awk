@@ -19,7 +19,7 @@
 
 BEGIN {
   SAVESOLUTION = 1;
-  SOLVEROUTPUT = 0;
+  SOLVEROUTPUT = 1;
   first = 1;
   tuplemode = 0;
   idx = 0;
@@ -70,12 +70,12 @@ SOLVEROUTPUT && FNR != NR && SAVESOLUTION && /^Optimum: / {
   print "# optimum = ",$2 >> filename;
 }
 
-FNR != NR && (oksol || !SOLVEROUTPUT) {
-  for (i=1; i<=NF; i++) {
-    $i = domains[i-1, $i];
+FNR != NR && (oksol || !SOLVEROUTPUT || /^[0-9]+ solution[:] /) {
+  for (i=($2=="solution:")?3:1; i<=NF; i++) {
+	$i = domains[i-(($2=="solution:")?3:1), $i];
     if (SAVESOLUTION) {
-#      print "hard(",varname[i],"==",$i,")" >> filename;
-      print varname[i-1],$i >> filename;
+#      print "hard(",varname[i-(($2=="solution:")?3:1)],"==",$i,")" >> filename;
+      print varname[i-(($2=="solution:")?3:1)],$i >> filename;
     }
   }
   oksol = 0;
