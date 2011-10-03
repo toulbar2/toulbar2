@@ -12,10 +12,18 @@
 # SOLVEROUTPUT = 0                 :  read from problem solution file
 
 # Verification of the solution cost: 
-#  cat problem.sol problem.cp | gawk -f cp2wcsp.awk > problem.wcsp
+#  gawk -f cp2wcsp.awk problem.sol problem.cp > problem.wcsp
 #  toulbar2 problem.wcsp
-# or a safer (solver independent) verification:
-#  cat problem.sol problem.cp | gawk -f cp2wcsp.awk | awk '/^0 / && NF == 3{cost+=$2} END{print "--- solution cost = " cost}'
+# or using a safer (solver independent) verification:
+#  gawk -f cp2wcsp.awk problem.sol problem.cp | awk '/^0 / && NF == 3{cost+=$2} END{print "# solution cost = " cost}'
+# (warning! these verifications work only if all the cost functions are defined by a formula, see e.g. golomb4.c
+#  and an initial upper bound is given in problem.cp)
+
+# Example:
+
+# awk -f cp2wcsp.awk celar6sub0.cp > ! celar6sub0.wcsp
+# toulbar2 celar6sub0.wcsp -s | awk -f ./solution2cp.awk celar6sub0.cp -
+# gawk -f cp2wcsp.awk celar6sub0.sol celar6sub0.cp | awk '/^0 / && NF == 3{cost+=$2} END{print "# solution cost = " cost}'
 
 BEGIN {
   SAVESOLUTION = 1;
@@ -27,17 +35,17 @@ BEGIN {
 }
 
 # outside a constraint defined by a list of tuples
-FNR == NR && !first && tuplemode && !/^\#/ && NF >= 1 && !/^ *((-)?[0-9]+ +)*((-)?[0-9]+) *$/ {
+FNR == NR && !first && tuplemode && !/^ *\#/ && NF >= 1 && !/^ *((-)?[0-9]+ +)*((-)?[0-9]+) *$/ {
     tuplemode = 0;
 }
 
 # a new constraint defined by a list of tuples
-FNR == NR && !first && !tuplemode && !/^\#/ && NF >= 2 && /^ *([a-zA-Z_][a-zA-Z0-9_]* +)+((-)?[0-9]+) *$/ && (NF >= 3 || ($1 in domainsize)) {
+FNR == NR && !first && !tuplemode && !/^ *\#/ && NF >= 2 && /^ *([a-zA-Z_][a-zA-Z0-9_]* +)+((-)?[0-9]+) *$/ && (NF >= 3 || ($1 in domainsize)) {
     tuplemode = 1;
 }
 
 # a new variable
-FNR == NR && !first && !tuplemode && !/^\#/ && NF >= 1 && /^ *([a-zA-Z_][a-zA-Z0-9_]*)( +(-)?[0-9]+)+ *$/ {
+FNR == NR && !first && !tuplemode && !/^ *\#/ && NF >= 1 && /^ *([a-zA-Z_][a-zA-Z0-9_]*)( +(-)?[0-9]+)+ *$/ {
   if (NF - 1 >= 2) { # constants are ignored
     var = $1;
     domainsize[var] = NF - 1;
@@ -50,7 +58,7 @@ FNR == NR && !first && !tuplemode && !/^\#/ && NF >= 1 && /^ *([a-zA-Z_][a-zA-Z0
 }
   
 # problem name and possibly global upper bound
-FNR == NR && first && !/^\#/ && NF >= 1 {
+FNR == NR && first && !/^ *\#/ && NF >= 1 {
   first = 0;
 }
 

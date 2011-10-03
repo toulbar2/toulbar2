@@ -17,6 +17,11 @@
 
 # Warning! all variables in wcsp format will have an enumerated domain (no interval) 
 
+# Example:
+
+# gawk -f ./cp2wcsp.awk golomb4.cp > golomb4.wcsp
+# toulbar2 golomb4.wcsp -s | awk -f ./solution2cp.awk golomb4.cp -
+
 function perror(i,message) {
 	print message;
 	print "line " NR ": " $0;
