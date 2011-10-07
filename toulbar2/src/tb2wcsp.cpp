@@ -463,6 +463,24 @@ void WCSP::updateCurrentVarsId() {
 	}
 }
 
+bool cmpTernaryConstraint(TernaryConstraint *c1, TernaryConstraint *c2)
+{
+    int v1 = c1->getVar(c1->getDACScopeIndex())->getDACOrder();
+    int v2 = c2->getVar(c2->getDACScopeIndex())->getDACOrder();
+    if (v1 < v2) return true;
+    else if (v1==v2) {
+    	v1 = min(c1->getVar((c1->getDACScopeIndex()+1)%3)->getDACOrder(),c1->getVar((c1->getDACScopeIndex()+2)%3)->getDACOrder());
+        v2 = min(c2->getVar((c2->getDACScopeIndex()+1)%3)->getDACOrder(),c2->getVar((c2->getDACScopeIndex()+2)%3)->getDACOrder());
+        if (v1 < v2) return true;
+        else if (v1==v2) {
+        	v1 = max(c1->getVar((c1->getDACScopeIndex()+1)%3)->getDACOrder(),c1->getVar((c1->getDACScopeIndex()+2)%3)->getDACOrder());
+            v2 = max(c2->getVar((c2->getDACScopeIndex()+1)%3)->getDACOrder(),c2->getVar((c2->getDACScopeIndex()+2)%3)->getDACOrder());
+        	return (v1 < v2);
+        }
+    }
+    return false;
+}
+
 void WCSP::processTernary() {
 	// double maxtight = 0;
 	// Variable* var;
@@ -496,20 +514,25 @@ void WCSP::processTernary() {
 	//     }
 	// }
 
+	vector<TernaryConstraint*> ternaries;
 	for (unsigned int i = 0; i < constrs.size(); i++)
 		if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->extension() && constrs[i]->arity() == 3) {
 			TernaryConstraint* t = (TernaryConstraint*) constrs[i];
-			t->extendTernary();
-			if (ToulBar2::costfuncSeparate) t->decompose();
-			if (t->connected()) t->projectTernary();
+			ternaries.push_back(t);
 		}
 	for (int i = 0; i < elimTernOrder; i++)
 		if (elimTernConstrs[i]->connected()) {
 			TernaryConstraint* t = (TernaryConstraint*) elimTernConstrs[i];
-			t->extendTernary();
-			if (ToulBar2::costfuncSeparate) t->decompose();
-			if (t->connected()) t->projectTernary();
+			ternaries.push_back(t);
 		}
+    sort(ternaries.begin(), ternaries.end(), cmpTernaryConstraint);
+	for (int i = ternaries.size()-1; i >= 0; i--) {
+		TernaryConstraint* t = ternaries[i];
+//		cout << "PROJECT&SUBTRACT tern(" << t->getVar(0)->getName() << "," << t->getVar(1)->getName() << "," << t->getVar(2)->getName() << ")" << endl;
+		t->extendTernary();
+		if (ToulBar2::costfuncSeparate) t->decompose();
+		if (t->connected()) t->projectTernary();
+	}
 }
 
 /// \defgroup preprocessing Preprocessing techniques
@@ -562,6 +585,26 @@ void WCSP::preprocessing() {
 	}
 
 	propagate();
+
+	// recompute current DAC order and its reverse
+	vector<int> elimorder(numberOfVariables(), -1);
+	vector<int> revelimorder(numberOfVariables(), -1);
+	for (unsigned int i = 0; i < numberOfVariables(); i++) {
+		revelimorder[getVar(i)->getDACOrder()] = i;
+		elimorder[numberOfVariables() - getVar(i)->getDACOrder() -1] = i;
+	}
+//	cout << "DAC:";
+//	for (int i = 0; i < numberOfVariables(); i++) {
+//		cout << " " << revelimorder[i];
+//	}
+//	cout << endl;
+//	cout << "REVDAC:";
+//	for (int i = 0; i < numberOfVariables(); i++) {
+//		cout << " " << elimorder[i];
+//	}
+//	cout << endl;
+	setDACOrder(revelimorder);
+	setDACOrder(elimorder);
 
 	if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
 	if (ToulBar2::vac) {
@@ -632,12 +675,17 @@ void WCSP::preprocessing() {
 			}
 	}
 
-	if (ToulBar2::preprocessNary > 0) {
-		processTernary();
-		propagate();
-	}
+
 	if (ToulBar2::preprocessTernaryRPC) {
 		ternaryCompletion();
+		setDACOrder(revelimorder);
+		processTernary();
+		propagate();
+		setDACOrder(elimorder);
+		processTernary();
+		propagate();
+	} else if (ToulBar2::preprocessNary > 0) {
+		processTernary();
 		propagate();
 	}
 
@@ -1955,6 +2003,7 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 	}
 }
 
+/// \param order variable elimination order (reverse of DAC order)
 void WCSP::setDACOrder(vector<int> &order) {
 	if (order.size() != numberOfVariables()) {
 		cerr << "DAC order has incorrect number of variables." << endl;

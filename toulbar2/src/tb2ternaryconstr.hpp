@@ -285,27 +285,27 @@ public:
     void projectTernaryBinary( BinaryConstraint* yzin );
 
 	void projectTernary() {
-	  if (x->wcspIndex < y->wcspIndex && y->wcspIndex < z->wcspIndex) {
+	  if (x->getDACOrder() < y->getDACOrder() && y->getDACOrder() < z->getDACOrder()) {
 		projectTernaryBinary(xy);
 		if (connected()) projectTernaryBinary(xz);
 		if (connected()) projectTernaryBinary(yz);
-	  } else if (x->wcspIndex < z->wcspIndex && z->wcspIndex < y->wcspIndex) {
+	  } else if (x->getDACOrder() < z->getDACOrder() && z->getDACOrder() < y->getDACOrder()) {
 		projectTernaryBinary(xz);
 		if (connected()) projectTernaryBinary(xy);
 		if (connected()) projectTernaryBinary(yz);
-	  } else if (y->wcspIndex < x->wcspIndex && x->wcspIndex < z->wcspIndex) {
+	  } else if (y->getDACOrder() < x->getDACOrder() && x->getDACOrder() < z->getDACOrder()) {
 		projectTernaryBinary(xy);
 		if (connected()) projectTernaryBinary(yz);
 		if (connected()) projectTernaryBinary(xz);
-	  } else if (y->wcspIndex < z->wcspIndex && z->wcspIndex < x->wcspIndex) {
+	  } else if (y->getDACOrder() < z->getDACOrder() && z->getDACOrder() < x->getDACOrder()) {
 		projectTernaryBinary(yz);
 		if (connected()) projectTernaryBinary(xy);
 		if (connected()) projectTernaryBinary(xz);
-	  } else if (z->wcspIndex < x->wcspIndex && x->wcspIndex < y->wcspIndex) {
+	  } else if (z->getDACOrder() < x->getDACOrder() && x->getDACOrder() < y->getDACOrder()) {
 		projectTernaryBinary(xz);
 		if (connected()) projectTernaryBinary(yz);
 		if (connected()) projectTernaryBinary(xy);
-	  } else if (z->wcspIndex < y->wcspIndex && y->wcspIndex < x->wcspIndex) {
+	  } else if (z->getDACOrder() < y->getDACOrder() && y->getDACOrder() < x->getDACOrder()) {
 		projectTernaryBinary(yz);
 		if (connected()) projectTernaryBinary(xz);
 		if (connected()) projectTernaryBinary(xy);
@@ -313,7 +313,7 @@ public:
 	}
 
 	void extendTernary()
-	{
+	{	// extend binary cost functions to the ternary cost function
 		Cost c; 
 		for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
@@ -329,7 +329,12 @@ public:
 
         xy->deconnect(true);
         xz->deconnect(true);
-        yz->deconnect(true);         
+        yz->deconnect(true);
+
+        // extend unary costs to the ternary cost function
+        for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) extend(x,*iterx, x->getCost(*iterx), deltaCostsX);
+		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) extend(y,*itery, y->getCost(*itery), deltaCostsY);
+		for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) extend(z,*iterz, z->getCost(*iterz), deltaCostsZ);
 	}
 
 	BinaryConstraint* commonBinary( TernaryConstraint* t )
