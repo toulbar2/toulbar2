@@ -55,7 +55,7 @@ class WCSP : public WeightedCSP {
 	Queue Eliminate;					///< Variable Elimination queue (non backtrackable list)
 	SeparatorList PendingSeparator;		///< List of pending separators for BTD-like methods (backtrackable list)
 	bool objectiveChanged;				///< flag if lb or ub has changed (NC propagation needs to be done)
-	Long nbNodes;                       ///< current number of search nodes, used as a time-stamp by Queue methods
+	Long nbNodes;                       ///< current number of calls to propagate method (roughly equal to number of search nodes), used as a time-stamp by Queue methods
 	Constraint *lastConflictConstr;		///< hook for last conflict variable heuristic
 	int maxdomainsize;					///< maximum initial domain size found in all variables
 	vector<GlobalConstraint*> globalconstrs;	///< a list of all original global constraints (also inserted in constrs)
