@@ -179,6 +179,17 @@ public:
 		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] = c;
     }
 
+	pair<Value,Value> getSupport(EnumeratedVariable* var, Value v) {
+		if(var == x) return supportX[x->toIndex(v)];
+		else if(var == y) return supportY[y->toIndex(v)];
+		else return supportZ[z->toIndex(v)];
+	}
+
+	void  setSupport(EnumeratedVariable* var, Value v, pair<Value,Value> s) {
+		if(var == x) supportX[x->toIndex(v)] = s;
+		else if (var == y) supportY[y->toIndex(v)] = s;
+		else supportZ[z->toIndex(v)] = s;
+	}
     
     void propagate() {
         if (x->assigned()) {

@@ -266,6 +266,7 @@ public:
 	int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
 	int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
 	void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
+	void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
 	void postNaryConstraintEnd(int ctrindex) {getCtr(ctrindex)->propagate();}
 	int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
 	bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global constraints defined in the problem

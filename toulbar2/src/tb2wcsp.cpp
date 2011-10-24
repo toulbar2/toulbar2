@@ -201,6 +201,15 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) {
 	EnumeratedVariable* x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y = (EnumeratedVariable *) vars[yIndex];
 
+    if(ToulBar2::vac) {
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+     			Cost c = costs[a * y->getDomainInitSize() + b];
+                histogram(c);
+            }
+        }
+    }
+
 	BinaryConstraint* ctr = x->getConstr(y);
 	if (ctr) {
 		ctr->reconnect();
@@ -212,7 +221,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) {
 					= new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
 		} else {
 			ctr
-					= new VACConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+					= new VACBinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
 		}
 	}
 
@@ -224,6 +233,17 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 	EnumeratedVariable* x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable* y = (EnumeratedVariable *) vars[yIndex];
 	EnumeratedVariable* z = (EnumeratedVariable *) vars[zIndex];
+
+	if(ToulBar2::vac) {
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+         			Cost co = costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c];
+                    histogram(co);
+                }
+            }
+        }
+    }
 
 	TernaryConstraint* ctr = x->getConstr(y, z);
 
@@ -268,15 +288,15 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 			}
 		} else {
 			if (!xy) {
-				xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+				xy = new VACBinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
 				xy->deconnect(true);
 			}
 			if (!xz) {
-				xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+				xz = new VACBinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
 				xz->deconnect(true);
 			}
 			if (!yz) {
-				yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+				yz = new VACBinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
 				yz->deconnect(true);
 			}
 		}
@@ -299,7 +319,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
 	elimTernConstrs.push_back(tctr);
 	for (int j = 0; j < 3; j++) {
 		if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
-		else bctr = new VACConstraint(this, &storeData->storeCost);
+		else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
 		elimBinConstrs.push_back(bctr);
 	}
 
@@ -312,18 +332,32 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
 	return ctr->wcspIndex;
 }
 
-/// \brief set tuple with specific cost for global cost function in extension
+/// \brief set one tuple with a specific cost for global cost function in extension
 /// \param ctrindex index of cost function as returned by WCSP::postNaryConstraintBegin
 /// \param tuple array of values assigned to variables ordered by following the original scope order
-/// \param arity size of array
+/// \param arity size of the array
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) {
+	if(ToulBar2::vac) histogram(cost);
 	Constraint *ctr = getCtr(ctrindex);
 	assert(ctr->extension()); // must be an NaryConstraint
 	int indextuple[arity];
 	for (int i=0; i<arity; i++) indextuple[i] = ((EnumeratedVariable *) ctr->getVar(i))->toIndex(tuple[i]);
 	ctr->setTuple(indextuple, cost, NULL);
+}
+
+/// \brief set one tuple with a specific cost for global cost function in extension
+/// \param ctrindex index of cost function as returned by WCSP::postNaryConstraintBegin
+/// \param tuple String encoding of values (indexes plus CHAR_FIRST) assigned to variables ordered by following the original scope order
+/// \param cost new cost for this tuple
+/// \warning valid only for global cost function in extension
+/// \warning string encoding of tuples is for advanced users only!
+void WCSP::postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost) {
+	if(ToulBar2::vac) histogram(cost);
+	Constraint *ctr = getCtr(ctrindex);
+	assert(ctr->extension()); // must be an NaryConstraint
+	ctr->setTuple(tuple, cost, NULL);
 }
 
 /// \brief create a global cost function in intension with a particular semantic
@@ -332,6 +366,7 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
 /// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
 /// \param file problem file (\see \ref wcspformat)
 int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file) {
+	assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 	if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
 	GlobalConstraint* gc = NULL;
 	EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
@@ -359,10 +394,19 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstr
 /// \brief add unary costs to enumerated variable \e xIndex
 void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 	assert(vars[xIndex]->enumerated());
-	for (unsigned int a = 0; a < ((EnumeratedVariable *) vars[xIndex])->getDomainInitSize(); a++) {
-		if (costs[a] > MIN_COST) ((EnumeratedVariable *) vars[xIndex])->project(a, costs[a]);
+	EnumeratedVariable* x = (EnumeratedVariable *) vars[xIndex];
+
+	if(ToulBar2::vac) {
+		for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+			Cost c = costs[a];
+			histogram(c);
+		}
 	}
-	((EnumeratedVariable *) vars[xIndex])->findSupport();
+	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+		if (costs[a] > MIN_COST) x->project(a, costs[a]);
+	}
+	x->findSupport();
+    x->queueNC();
 }
 
 /// \brief add unary costs to interval variable \e xIndex
@@ -606,16 +650,6 @@ void WCSP::preprocessing() {
 	setDACOrder(revelimorder);
 	setDACOrder(elimorder);
 
-	if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
-	if (ToulBar2::vac) {
-		cout << "Preprocessing ";
-		vac->printStat(true);
-		//    	vac->afterPreprocessing();
-		for (unsigned int i = 0; i < vars.size(); i++)
-			vars[i]->queueEliminate();
-		propagate();
-	}
-
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
 			if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
@@ -686,6 +720,16 @@ void WCSP::preprocessing() {
 		propagate();
 	} else if (ToulBar2::preprocessNary > 0) {
 		processTernary();
+		propagate();
+	}
+
+	if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
+	if (ToulBar2::vac) {
+		cout << "Preprocessing ";
+		vac->printStat(true);
+		//    	vac->afterPreprocessing();
+		for (unsigned int i = 0; i < vars.size(); i++)
+			vars[i]->queueEliminate();
 		propagate();
 	}
 
@@ -1343,7 +1387,7 @@ void WCSP::restoreSolution(Cluster* c) {
 void WCSP::initElimConstr() {
 	BinaryConstraint* xy = NULL;
 	if (!ToulBar2::vac) xy = new BinaryConstraint(this, &storeData->storeCost);
-	else xy = new VACConstraint(this, &storeData->storeCost);
+	else xy = new VACBinaryConstraint(this, &storeData->storeCost);
 	elimBinConstrs.push_back(xy);
 	elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL };
 	elimInfos.push_back(ei);
@@ -1419,15 +1463,15 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
 		}
 	} else {
 		if (!xy) {
-			xy = new VACConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+			xy = new VACBinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
 			xy->deconnect(true);
 		}
 		if (!xz) {
-			xz = new VACConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+			xz = new VACBinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
 			xz->deconnect(true);
 		}
 		if (!yz) {
-			yz = new VACConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+			yz = new VACBinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
 			yz->deconnect(true);
 		}
 	}

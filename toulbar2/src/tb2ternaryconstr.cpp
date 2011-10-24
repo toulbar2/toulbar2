@@ -520,7 +520,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 		existZX->reconnect();
 		existZX->propagate();
 	}
-	zx->deconnect();
+	zx->deconnect();	//  unsafe to delete zx due to x and z lists of cost functions
 
 	// fusion with the existing constraint (xy)
 	if(!xy->universal()){
@@ -529,7 +529,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
 		existXY->reconnect();
 		existXY->propagate();
 	}
-	xy->deconnect();
+	xy->deconnect();	//  unsafe to delete xy due to x and y lists of cost functions
 	deconnect();
 }
 

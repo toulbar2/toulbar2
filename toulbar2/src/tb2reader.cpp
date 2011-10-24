@@ -125,7 +125,7 @@ typedef struct {
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4} with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
- * - soft_regular({x1,x2,x3}) with DFA (3*)+(4*): \code 3 1 2 3 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
+ * - soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*): \code 4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
  *
  */
 
@@ -279,9 +279,9 @@ void WCSP::read_wcsp(const char *fileName)
 						tuples.push_back(tup);
 						costs.push_back(tmpcost);
 					  }
-					  nary->setTuple(tup, tmpcost, NULL);
+					  postNaryConstraintTuple(naryIndex, tup, tmpcost);
 					} else {
-					  nary->setTuple(sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t], NULL);
+					  postNaryConstraintTuple(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
 					}
 				  }
 				  if (shared) {
@@ -306,7 +306,7 @@ void WCSP::read_wcsp(const char *fileName)
 					  inclowerbound += minc;
 					}
 				  }
-				  nary->propagate();
+				  postNaryConstraintEnd(naryIndex);
 				}
 			}
         } else if (arity == 3) {
@@ -363,17 +363,6 @@ void WCSP::read_wcsp(const char *fileName)
 				  sharedCosts.push_back(costs);
 				  sharedTuples.push_back(emptyTuples);
 				}
-
-                if(ToulBar2::vac) {
-	                for (a = 0; a < x->getDomainInitSize(); a++) {
-	                    for (b = 0; b < y->getDomainInitSize(); b++) {
-		                    for (c = 0; c < z->getDomainInitSize(); c++) {
-		             			Cost co = costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c];
-		                        histogram(co);
-		                    }
-	                    }
-	                }               	
-                }                
                 if((defval != MIN_COST) || (ntuples > 0)) postTernaryConstraint(i,j,k,costs);
             } else if (defval == -1) {
 				int scopeIndex[3];
@@ -432,15 +421,6 @@ void WCSP::read_wcsp(const char *fileName)
 				  sharedCosts.push_back(costs);
 				  sharedTuples.push_back(emptyTuples);
 				}
-                
-                if(ToulBar2::vac) {
-	                for (a = 0; a < x->getDomainInitSize(); a++) {
-	                    for (b = 0; b < y->getDomainInitSize(); b++) {
-	             			Cost c = costs[a * y->getDomainInitSize() + b];
-	                        histogram(c);
-	                    }
-	                }               	
-                }
                 if((defval != MIN_COST) || (ntuples > 0)) postBinaryConstraint(i,j,costs);
             } else {
                 file >> funcname;
@@ -508,7 +488,6 @@ void WCSP::read_wcsp(const char *fileName)
 				assert(ntuples == (int) x->getDomainInitSize());
 				unaryconstr.costs = sharedCosts[reusedconstr];
 				unaryconstrs.push_back(unaryconstr);
-				x->queueNC();
 				continue;
 			  }
 			  for (a = 0; a < x->getDomainInitSize(); a++) {
@@ -528,15 +507,7 @@ void WCSP::read_wcsp(const char *fileName)
 				sharedCosts.push_back(unaryconstr.costs);
 				sharedTuples.push_back(emptyTuples);
 			  }
-
-			  if(ToulBar2::vac) {
-                for (a = 0; a < x->getDomainInitSize(); a++) {
-				  Cost c = unaryconstr.costs[a];
-				  histogram(c);
-                }               	
-			  }
 			  unaryconstrs.push_back(unaryconstr);
-			  x->queueNC();
 			} else {
 			  file >> defval;
 			  if (defval == MIN_COST) {
@@ -578,11 +549,9 @@ void WCSP::read_wcsp(const char *fileName)
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
     
+    // unary cost functions are delayed for compatibility issue (same lowerbound found) with old toolbar solver
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-        for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
-        }
-        unaryconstrs[u].var->findSupport();
+        postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     if (ToulBar2::verbose >= 0) {
 	  cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
@@ -740,7 +709,6 @@ void WCSP::read_uai2008(const char *fileName)
 			TemporaryUnaryConstraint unaryconstr;
 			unaryconstr.var = x;
 	    	unaryconstrs.push_back(unaryconstr);
-		    x->queueNC();
             lctrs.push_back(-1);            
         } else if(arity == 0) {
             lctrs.push_back(-2);            
@@ -833,11 +801,11 @@ void WCSP::read_uai2008(const char *fileName)
 					nctr->firstlex();
 					while(nctr->nextlex(s,cost)) {
 					  //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
-					  nctr->setTuple(s, costs[j]);
+					  postNaryConstraintTuple(nctr->wcspIndex, s, costs[j]);
 					  j++;
 					}
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
-					nctr->propagate();
+				    postNaryConstraintEnd(nctr->wcspIndex);
 					break;
 			
 		}
@@ -852,10 +820,7 @@ void WCSP::read_uai2008(const char *fileName)
 	increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-        for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
-        }
-        unaryconstrs[u].var->findSupport();
+        postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions." << endl;
@@ -1042,7 +1007,6 @@ void WCSP::read_wcnf(const char *fileName)
 	int j = 0;
 	Cost cost = UNIT_COST;
 	if (format == "wcnf") file >> cost;
-	if(ToulBar2::vac) histogram(cost*K);
 	bool tautology = false;
 	do {
 	  file >> j;
@@ -1074,10 +1038,9 @@ void WCSP::read_wcnf(const char *fileName)
 	
 	if (arity > 3) {
 	  int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST);
-	  NaryConstraint *nary = (NaryConstraint *) constrs[index];
 	  String tup = buf;
-	  nary->setTuple(tup, cost*K, NULL);
-	  nary->propagate();
+	  postNaryConstraintTuple(index, tup, cost*K);
+	  postNaryConstraintEnd(index);
 	} else if (arity == 3) {
 	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
 	  EnumeratedVariable *y = (EnumeratedVariable *) vars[scopeIndex[1]];
@@ -1122,7 +1085,6 @@ void WCSP::read_wcnf(const char *fileName)
 		unaryconstr.costs.push_back(cost*K);
 	  }
 	  unaryconstrs.push_back(unaryconstr);
-	  x->queueNC();
 	} else if (arity == 0) {
 	  inclowerbound += cost*K;
 	} else {
@@ -1141,10 +1103,7 @@ void WCSP::read_wcnf(const char *fileName)
   increaseLb(inclowerbound);
   
   for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-	for (int a = 0; a < 2; a++) {
-	  if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
-	}
-	unaryconstrs[u].var->findSupport();
+	postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
   }
   if (ToulBar2::verbose >= 0) {
 	cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
