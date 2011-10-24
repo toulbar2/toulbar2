@@ -42,7 +42,7 @@ private:
   stack< pair<int, Value> > *queueR;     /**< Minimal set of deletions needed to increase c0 (created in Pass2, used in Pass3) */
   
   void enforcePass1 ();     /**< Enforces instrumented hard AC (Phase 1) */
-  bool enforcePass1( VACVariable *xj, VACConstraint* cij);  /**< Revises /a xj wrt /a cij and updates /a k */
+  bool enforcePass1( VACVariable *xj, VACBinaryConstraint* cij);  /**< Revises /a xj wrt /a cij and updates /a k */
   bool checkPass1 () const; /**< Checks if Bool(P) is AC */
   void enforcePass2 ();     /**< Finds a minimal set of deletions needed for wipeout and computes k and lambda */
   bool enforcePass3 ();     /**< Project and extends costs to increase c0 according to the plan */
@@ -59,7 +59,7 @@ private:
   int theMaxK;
   
   int bneckVar;
-  VACConstraint *bneckCF;
+  VACBinaryConstraint *bneckCF;
   Cost bneckCost;
   
   EnumeratedVariable* nearIncVar; /**< A variable whose domain is reduced to 1 value during Pass1 -- Unused apparently */
