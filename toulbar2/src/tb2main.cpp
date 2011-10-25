@@ -1083,7 +1083,7 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::costfuncSeparate = false;
 			}
 
-			// pre projection of nary constraint
+			// pre projection of nary cost functions
 			if ( args.OptionId() == OPT_preprocessNary)
 			{
 				if(args.OptionArg() == NULL ) {
