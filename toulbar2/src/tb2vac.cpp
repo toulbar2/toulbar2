@@ -297,7 +297,7 @@ int VACExtension::getHeuristic()
 	return -1;
 }
 
-bool VACExtension::enforcePass1(VACVariable * xj, VACConstraint * cij)
+bool VACExtension::enforcePass1(VACVariable * xj, VACBinaryConstraint * cij)
 {
 	bool wipeout = false;
 	VACVariable *xi;
@@ -338,7 +338,7 @@ void VACExtension::enforcePass1()
 {
 	//  VACVariable* xi;
 	VACVariable *xj;
-	VACConstraint *cij;
+	VACBinaryConstraint *cij;
 	//if (ToulBar2::verbose > 1) cout << "VAC Enforce Pass 1" << endl; 
 
 	while (!VAC.empty()) {
@@ -347,7 +347,7 @@ void VACExtension::enforcePass1()
 		//list<Constraint*> l;
 		for (ConstraintList::iterator itc = xj->getConstrs()->begin();
 		     itc != xj->getConstrs()->end(); ++itc) {
-			cij = (VACConstraint *) (*itc).constr;
+			cij = (VACBinaryConstraint *) (*itc).constr;
 			if (cij->arity() == 2 && !cij->isSep()) {
 				//        xi = (VACVariable *)cij->getVarDiffFrom(xj);  
 				//if(xj->getMaxK(nbIterations) > 2) l.push_back(cij); else 
@@ -366,7 +366,7 @@ void VACExtension::enforcePass1()
 
 bool VACExtension::checkPass1() const
 {
-	VACConstraint *cij;
+	VACBinaryConstraint *cij;
 	VACVariable *xi, *xj;
 	bool supportFound;
 	TreeDecomposition *td = wcsp->getTreeDec();
@@ -379,7 +379,7 @@ bool VACExtension::checkPass1() const
 			continue;
 		for (ConstraintList::iterator iter = xi->getConstrs()->begin();
 		     iter != xj->getConstrs()->end(); ++iter) {
-			cij = (VACConstraint *) (*iter).constr;
+			cij = (VACBinaryConstraint *) (*iter).constr;
 			if (cij->arity() == 2 && !cij->isSep()) {
 				xj = (VACVariable *) cij->getVarDiffFrom(xi);
 				for (EnumeratedVariable::iterator iti =
@@ -422,7 +422,7 @@ void VACExtension::enforcePass2()
 	int i0 = inconsistentVariable;
 	int i, j;
 	VACVariable *xi0, *xi, *xj;
-	VACConstraint *cij;
+	VACBinaryConstraint *cij;
 	Cost tmplambda;
 	Value v;
 
@@ -453,7 +453,7 @@ void VACExtension::enforcePass2()
 			j = xi->getKiller(v);
 			xj = (VACVariable *) wcsp->getVar(j);
 			queueR->push(pair < int, int >(i, v));
-			cij = (VACConstraint *) xi->getConstr(xj);
+			cij = (VACBinaryConstraint *) xi->getConstr(xj);
 			assert(cij);
 			//if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
 
@@ -545,7 +545,7 @@ bool VACExtension::enforcePass3()
 	//if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
 	int i, j;
 	VACVariable *xi, *xj;
-	VACConstraint *cij;
+	VACBinaryConstraint *cij;
 	int i0 = inconsistentVariable;
 	VACVariable *xi0 = (VACVariable *) wcsp->getVar(i0);
 	Value w;
@@ -582,7 +582,7 @@ bool VACExtension::enforcePass3()
 		xj = (VACVariable *) wcsp->getVar(j);
 		i = xj->getKiller(w);
 		xi = (VACVariable *) wcsp->getVar(i);
-		cij = (VACConstraint *) xi->getConstr(xj);
+		cij = (VACBinaryConstraint *) xi->getConstr(xj);
 		assert(cij);
 
 		int xjk = xj->getK(w, nbIterations);

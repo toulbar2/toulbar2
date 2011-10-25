@@ -370,11 +370,11 @@ bool VACVariable::averaging()
 
 VACBinaryConstraint::VACBinaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) :  BinaryConstraint(wcsp, xx, yy, tab, storeCost), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
 {
-   for (int a = 0; a < xx->getDomainInitSize(); a++) {
+   for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {
 	   	kX.push_back(0);
 	   	kX_timeStamp.push_back(0);
    }
-   for (int b = 0; b < yy->getDomainInitSize(); b++) {
+   for (unsigned int b = 0; b < yy->getDomainInitSize(); b++) {
 	   	kY.push_back(0);
 	   	kY_timeStamp.push_back(0);
    }
