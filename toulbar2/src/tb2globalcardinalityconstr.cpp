@@ -1,8 +1,7 @@
 #include "tb2globalcardinalityconstr.hpp"
 #include "tb2wcsp.hpp"
 
-GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, 
-		int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
+GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
 	buildIndex();
 }
 
@@ -25,18 +24,32 @@ void GlobalCardinalityConstraint::buildIndex() {
 }
 
 void GlobalCardinalityConstraint::read(ifstream &file) {
-
+	// "var" => softvar
+	// "dec" => softdec
+	// "wdec" => sigmadec
 	string str;
 	int nvalues;
 	int sumlow = 0, sumhigh = 0;
 	file >> str;
-	if (strcmp(str.c_str(), "var") == 0) {
-		mode = VAR;
-	} else {
-		mode = VALUE;
+	//JP Start// alteration
+	mode = EMPTY;
+	if (strcmp(str.c_str(), "var") 	== 0) mode = VAR;
+	if (strcmp(str.c_str(), "dec") 	== 0) mode = VALUE;
+	if (strcmp(str.c_str(), "wdec") == 0) mode = WVALUE;
+	if (mode == EMPTY) {
+		cerr << "Error occur in reading gcc() : No violation measure" << endl;
+		exit(1);
 	}
+	//JP End//
 	file >> def; 
 	file >> nvalues;
+	//JP// creating weigths array
+	weights = new int*[nvalues];
+	for (int i = 0 ; i < nvalues ; i++) {
+		weights[i] = new int[2];
+		if (def != -1) { weights[i][0] = def; weights[i][1] = def;}
+	}
+	//JP End//
 	for (int i=0;i<nvalues;i++) {
 		int d, high, low;
 		file >> d >> low >> high;
@@ -44,6 +57,14 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 			cerr << "Error occur in reading gcc()" << endl;
 			exit(1);
 		}
+		//JP Start//
+		if (mode == WVALUE) {
+			int whigh, wlow;
+			file >> wlow >> whigh;
+			weights[d][0] = wlow;
+			weights[d][1] = whigh;
+		}
+		//JP End//
 		bound[d] = make_pair(high, low);
 		sumlow += low;
 		sumhigh += high;
@@ -69,28 +90,33 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 
 Cost GlobalCardinalityConstraint::evalOriginal( String s ) {
 
-	Cost excess = 0, shortage = 0; 
+	Cost excess = 0, shortage = 0, cost = 0; 
 	map<Value ,int> appear;
 	for (unsigned int i=0;i<s.length();i++) {
 		appear[s[i]-CHAR_FIRST]++; 	
 	}
-	for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=
-			bound.end();i++) {
+	for (map<Value, pair<int,int> >::iterator i = bound.begin(); i != bound.end();i++) {
 		if (appear[i->first] < i->second.lower_bound) {
-			shortage += i->second.lower_bound - appear[i->first];  
+			//JP Start// Alteration
+			Cost lshortage = i->second.lower_bound - appear[i->first];  
+			shortage += lshortage;
+			cost += lshortage*weights[i->first][0];
+			//JP End//
 		} 
 		if (appear[i->first] > i->second.upper_bound) {
-			excess += appear[i->first] - i->second.upper_bound;
+			//JP Start// Alteration
+			Cost lexcess = appear[i->first] - i->second.upper_bound;
+			excess += lexcess;
+			cost += lexcess*weights[i->first][1];
+			//JP End//
 		}
 	}
-	Cost cost = 0;
-	if (mode == VALUE) {
-		cost = (excess + shortage)*def;
-	} else {
+	//JP Start// Alteration
+	if (mode == VAR) {
 		cost = (excess>shortage)?excess*def:shortage*def;
 	}
+	//JP End//
 	return cost;
-
 }
 
 void GlobalCardinalityConstraint::buildGraph(Graph &g) {
@@ -130,8 +156,10 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 		}
 	} else {
 		for (map<Value, int>::iterator i = mapval.begin(); i != mapval.end();i++) {
-			if( bound[i->first].lower_bound > 0) g.addEdge(0, i->second, def, bound[i->first].lower_bound);
-			g.addEdge(i->second, t, def, arity_);
+			//JP Start// Alteration
+			if( bound[i->first].lower_bound > 0) g.addEdge(0, i->second, weights[i->first][0], bound[i->first].lower_bound);
+			g.addEdge(i->second, t, weights[i->first][1], arity_);
+			//JP End//
 		}
 	}
 
@@ -140,7 +168,6 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 Cost GlobalCardinalityConstraint::constructFlow(Graph &g) {
 
 	//cout << "use the one\n";
-
 	/*pair<int, bool> result;
 	int n = g.size();
 	int ss = n-1;
@@ -153,7 +180,6 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph &g) {
 		result = g.augment(ss, st, true, minc);
 		if (result.second) fcost += minc*result.first;
 	} while (result.second);*/
-
 	//checker(g, fcost);
 
 	pair<int, Cost> result = g.minCostFlow(g.size()-1, g.size()-2);
@@ -185,10 +211,8 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph &g) {
 
 }*/
 
-void GlobalCardinalityConstraint::dump(ostream& os, bool original)
-{
+void GlobalCardinalityConstraint::dump(ostream& os, bool original) {
   int nvalues = 0;
-
   if (original) {
     os << arity_;
     for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
@@ -197,14 +221,19 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original)
     for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
   }
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) nvalues++;
-  os << " -1 sgcc" << endl << ((mode==VAR)?"var":"dec") << " " << def << " " <<  nvalues << endl;
+  os << " -1 sgcc" << " ";
+  if (mode == VAR   ) os << "var";
+  if (mode == VALUE ) os << "dec";
+  if (mode == WVALUE) os << "wdec";
+  os << " " << def << " " <<  nvalues << endl;
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
-	os << i->first << " " << i->second.lower_bound << " " << i->second.upper_bound << endl;
+	os << i->first << " " << i->second.lower_bound << " " << i->second.upper_bound;
+	if (mode == WVALUE) os << " " << weights[i->first][0] << " " << weights[i->first][1];
+	os << endl;
   }
 }
 
-void GlobalCardinalityConstraint::print(ostream& os)
-{
+void GlobalCardinalityConstraint::print(ostream& os) {
   int nvalues = 0;
 
   os << "sgcc(";
@@ -213,9 +242,14 @@ void GlobalCardinalityConstraint::print(ostream& os)
 	if(i < arity_-1) os << ",";
   }
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) nvalues++;
-  os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "," << nvalues;
+  os << ")[" ;
+  if (mode == VAR   ) os << "var";
+  if (mode == VALUE ) os << "dec";
+  if (mode == WVALUE) os << "wdec";
+  os << "," << def << "," << nvalues;
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
 	os << "," << i->first << "," << i->second.lower_bound << "," << i->second.upper_bound;
+	if (mode == WVALUE) os << "," << weights[i->first][0] << "," << weights[i->first][1];
   }
   os << "]";
 }

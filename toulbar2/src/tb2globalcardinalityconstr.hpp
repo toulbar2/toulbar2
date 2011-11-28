@@ -15,7 +15,15 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 		pair<int,int> mapto(int varindex, Value val) {
 			return make_pair(varindex+1, mapval[val]);
 		}
+		//JP Start// This array stores the repestive weight of each bound
+		int** weights;
+		int nvalues;
+		//JP End//
 	public:
+		//JP Start// New type 
+		static const int EMPTY = -1;
+		static const int WVALUE = 2;
+		//JP End//
 		static const int VALUE = 1;
 		static const int VAR = 0;
 		GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int
