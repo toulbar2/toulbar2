@@ -223,7 +223,7 @@ void GlobalConstraint::propagateStrongNIC() {
 void GlobalConstraint::propagateNIC() {
 
 	if (deconnected()) return;
-
+	wcsp->revise(this);
 	vector<int> rmv;
 	checkRemoved(rmv);
 	Cost mincost = getMinCost();
@@ -316,10 +316,10 @@ void GlobalConstraint::findFullSupportEAC(int index) {
 	} 
 }
 
-void GlobalConstraint::findFullSupport(int varindex, vector<int> &support, bool isEAC) {
-
+void GlobalConstraint::findFullSupport(int varindex, vector<int> &support, bool isEAC)
+{
+	wcsp->revise(this);
 	EnumeratedVariable* var = (EnumeratedVariable*)getVar(varindex);
-
 	vector<map<Value, Cost> > deltas(support.size());
 	int count = 0;
 	for (vector<int>::iterator i = support.begin();i !=
@@ -413,8 +413,9 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int> &support, bool 
 
 }
 
-void GlobalConstraint::findSupport(int varindex) {	
-
+void GlobalConstraint::findSupport(int varindex)
+{	
+	wcsp->revise(this);
 	if (ToulBar2::verbose >= 3) cout << "findSupport for variable " << varindex << endl;
 	map<Value, Cost> delta;	
 	findProjection(varindex, delta);
