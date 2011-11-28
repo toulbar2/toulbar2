@@ -33,7 +33,7 @@ class NaryConstraint : public AbstractNaryConstraint
 	  } else if (deconnected()) {
         for (int i=0; i<from->arity(); i++) {
 		  int index = getIndex(from->getVar(i));
-		  if (index>=0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one deriived from an n-ary constraint with a scope which does not include parameter constraint from
+		  if (index>=0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
             assert(index < arity());
 		    conflictWeights[index]++;
 		  }

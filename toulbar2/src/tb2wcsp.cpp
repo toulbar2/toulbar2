@@ -392,6 +392,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstr
 }
 
 /// \brief add unary costs to enumerated variable \e xIndex
+/// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
 void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 	assert(vars[xIndex]->enumerated());
 	EnumeratedVariable* x = (EnumeratedVariable *) vars[xIndex];
