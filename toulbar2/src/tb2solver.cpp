@@ -800,6 +800,7 @@ void Solver::recursiveSolve()
 	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
 	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
 	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
+	//	varIndex = getNextUnassignedVar(); // enforces a static variable ordering
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
