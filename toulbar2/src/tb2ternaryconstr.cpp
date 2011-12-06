@@ -164,8 +164,9 @@ void TernaryConstraint::project(BinaryConstraint* xy, EnumeratedVariable *x, Enu
 	assert(cost >= MIN_COST);
     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
 	  //	  if (!CUT(getCost(x,y,z,valx,valy,*iterZ) + wcsp->getLb(), wcsp->getUb())) {
+	  if (!CUT(getCost(x,y,z,valx,valy,*iterZ), wcsp->getUb())) { // keeps forbidden costs into ternaries to get strong GAC3
         addcost(x,y,z,valx,valy,*iterZ,-cost);
-		//	  }
+	  }
     }
     xy->addcost(x,y,valx,valy,cost);
 }
