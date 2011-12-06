@@ -36,7 +36,7 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     ulimit -t $timelimit > /dev/null
     (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub $2 -C=$K >> outsolver) 2> usedtime
 
-    cat outsolver | awk -v UB=$ub -f runall.awk >> out ; cat out
+    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
 
     cat usedtime | awk '/ user /{ printf("%.2f",0.0+$1+$3); }'
    
