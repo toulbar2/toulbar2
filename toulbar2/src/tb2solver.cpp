@@ -884,6 +884,8 @@ bool Solver::solve()
 
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
+	cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) {
 		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " cost functions." << endl;
 		  cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
