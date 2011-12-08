@@ -24,13 +24,15 @@ hard(d2_4 == g4 - g2)
 hard(d3_4 == g4 - g3)
 
 # AllDifferent constraint on mark differences
-hard(alldiff(d1_2,d1_3,d1_4,d2_3,d2_4,d3_4))
+# equivalent to: hard(alldiff(d1_2,d1_3,d1_4,d2_3,d2_4,d3_4))
+# (but more compact representation and better soft constraint propagation)
+d1_2 d1_3 d1_4 d2_3 d2_4 d3_4 -1 salldiff var -1
 
 # first mark is fixed
 hard(g1 == 0)
 
 # breaking symmetries
-hard(g2 < d3_4)
+hard(d1_2 < d3_4)
 
 # optimization criterion: minimizes the last mark
 g4
