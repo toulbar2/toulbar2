@@ -1575,7 +1575,7 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Initial upperbound equal to zero!" << endl;
 		cout << "No solution found by initial propagation!" << endl;
 	    if (ToulBar2::isZ) {
-		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
+		  cout << "Log10(Z)= " <<  -numeric_limits<TProb>::infinity() << endl;
 	    }		
 		cout << "end." << endl;
 		return 0;
@@ -1686,7 +1686,7 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		cout << "No solution found by initial propagation!" << endl;
 	    if (ToulBar2::isZ) {
-		  cout << "Log10(Z)= " <<  -numeric_limits<Double>::infinity() << endl;
+		  cout << "Log10(Z)= " <<  -numeric_limits<TProb>::infinity() << endl;
 	    }		
 	}
 	if (!ToulBar2::xmlflag && !ToulBar2::uai) cout << "end." << endl;

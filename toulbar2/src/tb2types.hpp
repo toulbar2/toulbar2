@@ -4,13 +4,14 @@
  * The main types are:
  * - ::Value : domain value
  * - ::Cost : cost value (exact type depends on compilation flag)
- * - ::Long : large integer (long long int) to encode probabilities in fixed precision
- * - ::Double : large float (long double) to manipulate probabilities
+ * - ::Long : large integer (long long int)
+ * - ::TProb : probability value (exact type depends on compilation flag)
+ * - ::Double : large float (long double)
  * - ::String : string with extended character size (wide string) to encode tuples
  *
  * \note Compilation flag for Cost is: \c INT_COST (int), \c LONGLONG_COST (long long), or \c PARETOPAIR_COST (see ::ParetoPair)
  * \warning \c PARETOPAIR_COST is fragile.
- * \note Compilation flag for Double is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
+ * \note Compilation flag for TProb is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for String is: \c WIDE_STRING or nothing (usual C++ string)
  */
 

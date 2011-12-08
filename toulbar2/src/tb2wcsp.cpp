@@ -119,7 +119,7 @@ int ToulBar2::minProperVarSize = 0;
 int ToulBar2::smallSeparatorSize = 4;
 
 bool ToulBar2::isZ = false;
-TProb ToulBar2::logZ = -numeric_limits<Double>::infinity();
+TProb ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 Cost ToulBar2::negCost = 0;
 
 /*
@@ -2092,29 +2092,29 @@ Cost WCSP::Prob2Cost(TProb p) const {
 		cerr << "Overflow when converting probability to cost." << endl;
 		exit(EXIT_FAILURE);
 	}
-	Cost c = (Cost) ((Long) res);
+	Cost c = (Cost) res;
 	if (c > getUb()) return getUb();
 	return c;
 }
 
 Cost WCSP::LogLike2Cost(TProb p) const {
 	TProb res = -p * ToulBar2::NormFactor;
-	Cost c = (Cost) ((Long) res);
+	Cost c = (Cost) res;
 	return c;	
 }
 TProb WCSP::Cost2LogLike(Cost c) const {
 	return -to_double(c) / ToulBar2::NormFactor;
 }
 TProb WCSP::Cost2Prob(Cost c) const {
-	return Pow((TProb) 10., -to_double(c) / ToulBar2::NormFactor);
+  return Exp10(-to_double(c) / ToulBar2::NormFactor);
 }
 Cost  WCSP::SumLogLikeCost(Cost c1, Cost c2) const {
   if (c1 >= getUb()) return c2;
   else if (c2 >= getUb()) return c1;
-  else if (c1 == c2) return c1+LogLike2Cost(log10l(2));
+  else if (c1 == c2) return c1+LogLike2Cost(Log10(2.));
   else {
-	if (c1 < c2) return c1 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c2 - c1)))/logl(10));
-	else return c2 + LogLike2Cost(log1pl(exp10l(Cost2LogLike(c1 - c2)))/logl(10));
+	if (c1 < c2) return c1 + LogLike2Cost(Log1p(Exp10(Cost2LogLike(c2 - c1)))/Log(10.));
+	else return c2 + LogLike2Cost(Log1p(Exp10(Cost2LogLike(c1 - c2)))/Log(10.));
   }
 }
 TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
@@ -2122,7 +2122,7 @@ TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
   if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
   else if (c2 >= getUb()) return logc1;
   else {
-	if (logc1 >= logc2) return logc1 + (log1pl(exp10l(logc2 - logc1))/logl(10));
-	else return logc2 + (log1pl(exp10l(logc1 - logc2))/logl(10));
+	if (logc1 >= logc2) return logc1 + (Log1p(Exp10(logc2 - logc1))/Log(10.));
+	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
   }
 }

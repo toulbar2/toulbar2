@@ -874,7 +874,7 @@ bool Solver::solve()
 	initVarHeuristic();
 
 	if (ToulBar2::isZ) {
-	  ToulBar2::logZ = -numeric_limits<Double>::infinity();
+	  ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 	  ToulBar2::negCost = 0;
 	}
 
@@ -941,7 +941,7 @@ bool Solver::solve()
 			wcsp->setUb(UpperBound);
 			wcsp->enforceUb();
 			wcsp->propagate();
-			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<Double>::infinity();
+			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 		  }
 		  try {
 			if (ToulBar2::lds) {
@@ -952,7 +952,7 @@ bool Solver::solve()
 				ToulBar2::limited = false;
 				try {
 				  store->store();
-				  if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<Double>::infinity();
+				  if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 				  if (discrepancy > ToulBar2::lds) recursiveSolve(); else recursiveSolveLDS(discrepancy);
 				} catch (Contradiction) {
 				  wcsp->whenContradiction();
