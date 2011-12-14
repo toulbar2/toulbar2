@@ -514,6 +514,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
         wcsp->whenContradiction();
     }
     store->restore();
+    wcsp->enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 
@@ -549,6 +550,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
             wcsp->whenContradiction();
         }
         store->restore();
+        wcsp->enforceUb();
         nbBacktracks++;
 		if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
@@ -599,6 +601,7 @@ void Solver::scheduleOrPostpone(int varIndex)
         wcsp->whenContradiction();
     }
     store->restore();
+    wcsp->enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	if (reverse) assign(varIndex, xinf);
@@ -638,6 +641,7 @@ void Solver::narySortedChoicePoint(int varIndex)
         store->restore();
     }
 	delete [] sorted;
+    wcsp->enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
@@ -662,6 +666,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
         store->restore();
     }
 	delete [] sorted;
+    wcsp->enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
