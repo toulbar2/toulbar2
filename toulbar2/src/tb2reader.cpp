@@ -154,6 +154,9 @@ void WCSP::read_wcsp(const char *fileName)
 	} else if (ToulBar2::wcnf) {
 	  read_wcnf(fileName);
 	  return;
+	} else if (ToulBar2::qpbo) {
+	  read_qpbo(fileName);
+	  return;
 	}
     string pbname;
     int nbvar,nbval,nbconstr;
@@ -1109,4 +1112,106 @@ void WCSP::read_wcnf(const char *fileName)
 	cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
   }   
   histogram();  
+}
+
+/// \brief maximize h' W h where W is expressed by all its
+/// non-zero half squared matrix costs (can be positive or negative, with posx <= posy)
+/// \note Costs for posx <> posy are multiplied by 2 by this method
+/// \note h = 1 <=> x = 0 and h = -1 <=> x = 1
+/// \warning It does not allow infinite costs (no forbidden assignments)
+void WCSP::read_qpbo(const char *fileName)
+{
+  ifstream file(fileName);
+  if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
+
+  int n = 0;
+  file >> n;
+  int m = 0;
+  file >> m;
+  if (n == 0 || m == 0) return;
+  int e = 0;
+  int dummy;
+
+  vector<int> posx(m, 0);
+  vector<int> posy(m, 0);
+  vector<double> cost(m, 0.);
+  for (e=0; e<m; e++) {
+	file >> posx[e];
+	if (!file) {
+	  cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
+	  break;
+	}
+	if (posx[e]>=n) {
+	  cerr << "Warning: variable index too large!" << endl;
+	  break;
+	}
+	file >> posy[e];
+	if (posy[e]>=n) {
+	  cerr << "Warning: variable index too large!" << endl;
+	  break;
+	}
+	file >> cost[e];
+  }
+  file >> dummy;
+  if (file) {
+	cerr << "Warning: EOF not reached after reading all the cost sparse matrix (wrong number of nonzero costs too small?)" << endl;
+  }
+  m = e;
+
+  // create Boolean variables
+  for (int i=0; i<n; i++) {
+	makeEnumeratedVariable(to_string(i), 0, 1);
+  }
+
+  vector<Cost> unaryCosts0(n, 0);
+  vector<Cost> unaryCosts1(n, 0);
+
+  // find total cost
+  Double sumcost = 0.;
+  for (int e=0; e<m; e++) {
+	sumcost += 2. * abs(cost[e]);
+  }
+  Double multiplier = Pow(10., (Double) ToulBar2::resolution);
+  if (multiplier * sumcost >= (Double) MAX_COST) {
+	cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+	exit(EXIT_FAILURE);
+  }
+  updateUb((Cost) multiplier * sumcost  +1);
+
+  // create weighted binary clauses
+  for (int e=0; e<m; e++) {
+	if (posx[e] != posy[e]) {
+	  vector<Cost> costs(4, 0);
+	  if (cost[e] > 0) {
+		costs[1] = (Cost) (multiplier * 2. * cost[e]);
+		costs[2] = costs[1];
+	  } else {
+		costs[0] = (Cost) (multiplier * -2. * cost[e]);
+		costs[3] = costs[0];
+	  }
+	  postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
+	} else {
+	  if (cost[e] > 0) {
+		unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+	  } else {
+		unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+	  }
+	}
+  }
+
+  sortConstraints();
+
+  // create weighted unary clauses
+  for (int i=0; i<n; i++) {
+	if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
+	  vector<Cost> costs(2, 0);
+	  costs[0] = unaryCosts0[i];
+	  costs[1] = unaryCosts1[i];
+	  postUnary(i, costs);
+    }
+  }
+
+  histogram();  
+
+  cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }

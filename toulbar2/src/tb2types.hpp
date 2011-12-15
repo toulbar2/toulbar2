@@ -250,6 +250,7 @@ public:
 	static BEP *bep;
 	static LcLevelType LcLevel;
 	static bool wcnf;
+	static bool qpbo;
 
 	static char* varOrder;
 	static int btdMode;

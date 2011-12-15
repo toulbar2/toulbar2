@@ -132,6 +132,7 @@ enum {
 	OPT_pre_ext,
 	OPT_wcnf_ext,
 	OPT_cnf_ext,
+	OPT_qpbo_ext,
 
 // search option 
 	OPT_SEARCH_METHOD,
@@ -237,6 +238,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_pre_ext,                     (char*) "--pre_ext",                                  SO_REQ_SEP      },
 	{ OPT_wcnf_ext,                 (char*) "--wcnf_ext",                              SO_REQ_SEP      },
 	{ OPT_cnf_ext,                 (char*) "--cnf_ext",                              SO_REQ_SEP      },
+	{ OPT_qpbo_ext,                 (char*) "--qpbo_ext",                              SO_REQ_SEP      },
 
 
 	{ OPT_SEARCH_METHOD,       		(char*) "-B",             			SO_REQ_SEP  	}, // -B [0,1,2] search method
@@ -593,6 +595,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
 	cerr << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
 	cerr << "   *.cnf : (Max-)SAT format" << endl;
+	cerr << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
 #ifdef XMLFLAG
 	cerr << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
@@ -614,6 +617,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
 	cerr << "   -w : writes last solution found in filename \"sol\"" << endl;
+	cerr << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
 #else
 	cerr << "   -w=[mode] : writes last solution found" << endl;
 	cerr << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -762,6 +766,7 @@ int _tmain(int argc, TCHAR * argv[])
 		file_extension_map["map_ext"]=".map";
 		file_extension_map["wcnf_ext"]=".wcnf";
 		file_extension_map["cnf_ext"]=".cnf";
+		file_extension_map["qpbo_ext"]=".qpbo";
 
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
@@ -1379,6 +1384,15 @@ int _tmain(int argc, TCHAR * argv[])
 				cout <<  "loading cnf file:" << glob.File(n) << endl;
 				ToulBar2::wcnf = true;
 				strext = ".cnf";
+				strfile = glob.File(n);
+			}
+
+			// unconstrained quadratic programming file
+
+			if(check_file_ext(glob.File(n),file_extension_map["qpbo_ext"]) ) {
+				cout <<  "loading quadratic pseudo-Boolean optimization file:" << glob.File(n) << endl;
+				ToulBar2::qpbo = true;
+				strext = ".qpbo";
 				strfile = glob.File(n);
 			}
 

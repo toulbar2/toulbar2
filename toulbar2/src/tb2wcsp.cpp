@@ -101,6 +101,7 @@ ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
 
 BEP *ToulBar2::bep = NULL;
 bool ToulBar2::wcnf = false;
+bool ToulBar2::qpbo = false;
 
 int WCSP::wcspCounter = 0;
 

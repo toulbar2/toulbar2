@@ -1158,6 +1158,8 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
 	}
   }
 
+  sortConstraints();
+
   // create weighted unary clauses
   for (int i=0; i<n; i++) {
 	if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
@@ -1167,6 +1169,8 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
 	  wcsp->postUnary(i, costs);
     }
   }
+
+  histogram();  
 
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
   // dump_wcsp("mydebug.wcsp", true);
