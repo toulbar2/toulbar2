@@ -1,0 +1,29 @@
+
+Quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format
+
+********* WITH {1,-1} VARIABLES (AND NOT {0,1}!!!) *****************
+
+The goal is to maximize the product:
+
+X' * W * X = \sum_i=1 to N \sum_j=1 to N  W_ij * X_i * X_j  
+
+where W is a symmetric squared N*N matrix expressed by all its non-zero half squared matrix coefficients, X is a vector of N binary variables with domain values in {1,-1}, and X' is the transposed vector of X.
+
+Note: for two indices i != j, coefficient W_ij = W_ji (symmetric matrix) and appears twice in the previous sum.
+
+Note: coefficients can be positive or negative and are real float numbers. Infinite coefficients are forbidden.
+
+Warning! The encoding in Weighted CSP associates for each variable value the following index:
+value 1 has index 0 and value -1 has index 1 in the solutions found by toulbar2
+
+File text format:
+-----------------
+
+First line contains the number of variables N and the number of non-zero coefficients M.
+
+Followed by M lines where each text line contains three values separated by spaces:
+position index i (integer belonging to [1,N])
+position index j (integer belonging to [1,N])
+coefficient W_ij (float number != 0)
+
+such that i <= j
