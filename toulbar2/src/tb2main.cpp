@@ -595,7 +595,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
 	cerr << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
 	cerr << "   *.cnf : (Max-)SAT format" << endl;
-	cerr << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
+	cerr << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format WITH {1,-1} VARIABLES!" << endl;
 #ifdef XMLFLAG
 	cerr << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
@@ -770,7 +770,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-	cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2010"<<endl;
+	cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2012"<<endl;
 	assert(cout << "Binary Path="<<CurrentBinaryPath<<endl);
 
 	// --------------------------simple opt ----------------------

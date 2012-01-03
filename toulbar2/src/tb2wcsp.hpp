@@ -379,7 +379,8 @@ public:
 	// Data and methods for Virtual Arc Consistency
 
 	void histogram( Cost c );
-	void histogram();
+	/// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool_\theta of P)
+    void histogram();
 	void iniSingleton();
 	void updateSingleton();
 	void removeSingleton();

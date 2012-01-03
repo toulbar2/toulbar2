@@ -64,6 +64,8 @@ public:
     virtual int getDegree(int varIndex) const =0;
     virtual Long getWeightedDegree(int varIndex) const =0;
     virtual void preprocessing() =0;
+	virtual void sortConstraints() =0;
+	virtual void histogram() =0;
 
     virtual void whenContradiction() =0;       // after a contradiction, reset propagation queues
     virtual void propagate() =0;               // propagate until a fix point

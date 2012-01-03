@@ -1141,12 +1141,12 @@ void WCSP::read_qpbo(const char *fileName)
 	  cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
 	  break;
 	}
-	if (posx[e]>=n) {
+	if (posx[e]>n) {
 	  cerr << "Warning: variable index too large!" << endl;
 	  break;
 	}
 	file >> posy[e];
-	if (posy[e]>=n) {
+	if (posy[e]>n) {
 	  cerr << "Warning: variable index too large!" << endl;
 	  break;
 	}
