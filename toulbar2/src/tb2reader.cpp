@@ -1114,10 +1114,12 @@ void WCSP::read_wcnf(const char *fileName)
   histogram();  
 }
 
-/// \brief maximize h' W h where W is expressed by all its
-/// non-zero half squared matrix costs (can be positive or negative, with posx <= posy)
-/// \note Costs for posx <> posy are multiplied by 2 by this method
-/// \note h = 1 <=> x = 0 and h = -1 <=> x = 1
+/// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
+/// where W is expressed by its M non-zero half squared matrix costs (can be positive or negative float numbers)
+/// \note Costs for \f$ i \neq j \f$ are multiplied by 2 by this method (symmetric N*N squared matrix)
+/// \note If N is positive, then variable domain values are {0,1}
+/// \note If N is negative, then variable domain values are {1,-1} with value 1 having index 0 and value -1 having index 1 in the output solutions
+/// \note If M is positive then minimizes the quadratic function, else maximizes it
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char *fileName)
 {
@@ -1126,9 +1128,13 @@ void WCSP::read_qpbo(const char *fileName)
 
   int n = 0;
   file >> n;
+  bool booldom = (n >= 0); // n positive means variable domains {0,1} else {1,-1}
+  if (!booldom) n = -n;
   int m = 0;
   file >> m;
   if (n == 0 || m == 0) return;
+  bool minimize = (m >= 0); // m positive means minimize the quadratic function, else maximize it
+  if (!minimize) m = -m;
   int e = 0;
   int dummy;
 
@@ -1182,19 +1188,73 @@ void WCSP::read_qpbo(const char *fileName)
   for (int e=0; e<m; e++) {
 	if (posx[e] != posy[e]) {
 	  vector<Cost> costs(4, 0);
-	  if (cost[e] > 0) {
-		costs[1] = (Cost) (multiplier * 2. * cost[e]);
-		costs[2] = costs[1];
+	  if (booldom) {
+		if (cost[e] > 0) {
+		  if (minimize) {
+			costs[3] = (Cost) (multiplier * 2. * cost[e]);
+		  } else {
+			costs[0] = (Cost) (multiplier * 2. * cost[e]);
+			costs[1] = costs[0];
+			costs[2] = costs[0];
+		  }
+		} else {
+		  if (minimize) {
+			costs[0] = (Cost) (multiplier * -2. * cost[e]);
+			costs[1] = costs[0];
+			costs[2] = costs[0];
+		  } else {
+			costs[3] = (Cost) (multiplier * -2. * cost[e]);
+		  }
+		}
 	  } else {
-		costs[0] = (Cost) (multiplier * -2. * cost[e]);
-		costs[3] = costs[0];
+		if (cost[e] > 0) {
+		  if (minimize) {
+			costs[0] = (Cost) (multiplier * 2. * cost[e]);
+			costs[3] = costs[0];
+		  } else {
+			costs[1] = (Cost) (multiplier * 2. * cost[e]);
+			costs[2] = costs[1];
+		  }
+		} else {
+		  if (minimize) {
+			costs[1] = (Cost) (multiplier * -2. * cost[e]);
+			costs[2] = costs[1];
+		  } else {
+			costs[0] = (Cost) (multiplier * -2. * cost[e]);
+			costs[3] = costs[0];
+		  }
+		}
 	  }
 	  postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
 	} else {
-	  if (cost[e] > 0) {
-		unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+	  if (booldom) {
+		if (cost[e] > 0) {
+		  if (minimize) {
+			unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+		  } else {
+			unaryCosts0[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+		  }
+		} else {
+		  if (minimize) {
+			unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+		  } else {
+			unaryCosts1[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+		  }
+		}
 	  } else {
-		unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+		if (cost[e] > 0) {
+		  if (minimize) {
+			unaryCosts0[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+		  } else {
+			unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+		  }
+		} else {
+		  if (minimize) {
+			unaryCosts1[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+		  } else {
+			unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+		  }
+		}
 	  }
 	}
   }

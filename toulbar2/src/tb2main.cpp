@@ -595,7 +595,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
 	cerr << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
 	cerr << "   *.cnf : (Max-)SAT format" << endl;
-	cerr << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format WITH {1,-1} VARIABLES!" << endl;
+	cerr << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
 #ifdef XMLFLAG
 	cerr << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
