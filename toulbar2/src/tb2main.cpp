@@ -151,6 +151,8 @@ enum {
 	OPT_binaryBranching,
 	NO_OPT_binaryBranching,
 	OPT_approximateCountingBTD,
+	OPT_staticVarOrder,
+	NO_OPT_staticVarOrder,
 	OPT_lastConflict,
 	NO_OPT_lastConflict,
 	OPT_dichotomicBranching,
@@ -266,6 +268,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_binaryBranching,		(char*) "-b:",             		   	SO_NONE    	},
 	{ NO_OPT_binaryBranching,		(char*) "-no--b",             		SO_NONE    	},
 	{ NO_OPT_binaryBranching,		(char*) "-no--binaryBranching",             	SO_NONE    	},
+	{ OPT_staticVarOrder, 			(char*) "-static", 				SO_NONE 	},
+	{ NO_OPT_staticVarOrder, 		(char*) "-static:", 			SO_NONE 	},
 	{ OPT_lastConflict, 			(char*) "-c", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "-c:", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "-no--c", 				SO_NONE 	},
@@ -641,6 +645,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
 	cerr << endl;
+	cerr << "   -static : search using a static variable ordering heuristic (same order as DAC)";
+	if (ToulBar2::staticVarOrder) cerr << " (default option)";
+	cerr << endl;
 	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
@@ -934,6 +941,12 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if (args.OptionId() == OPT_binaryBranching	) { ToulBar2::binaryBranching = true; }
 			if (args.OptionId() == NO_OPT_binaryBranching   ) { ToulBar2::binaryBranching = false; } 
+
+			// static variable ordering
+
+			if (args.OptionId() == OPT_staticVarOrder ) { 
+				ToulBar2::staticVarOrder = true;
+			} else if (args.OptionId() == NO_OPT_staticVarOrder ) { ToulBar2::staticVarOrder = false; }
 
 			// last conflict
 
@@ -1532,6 +1545,11 @@ int _tmain(int argc, TCHAR * argv[])
 		{
 			ToulBar2::elimDegree = 0;
 		}
+	}
+	if (ToulBar2::staticVarOrder && ToulBar2::btdMode >= 1)
+	{
+		cout << "Warning! static variable ordering not compatible with BTD-like search methods." << endl;
+		ToulBar2::staticVarOrder = false;
 	}
 	if (ToulBar2::lds && ToulBar2::btdMode >= 1)
 	{

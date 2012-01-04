@@ -40,10 +40,13 @@ void Solver::initVarHeuristic()
 {
     unassignedVars = new BTList<Value>(&store->storeDomain);
     allVars = new DLink<Value>[wcsp->numberOfVariables()];
+    for (unsigned int j=0; j<wcsp->numberOfVariables(); j++) {
+	  unsigned int i = wcsp->getDACOrder(j);
+      allVars[i].content = j;
+	}
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-        allVars[i].content = i;
         unassignedVars->push_back(&allVars[i], false);
-		if (wcsp->assigned(i) || (ToulBar2::nbDecisionVars > 0 && i >= (unsigned int ) ToulBar2::nbDecisionVars)) unassignedVars->erase(&allVars[i], false);
+		if (wcsp->assigned(allVars[i].content) || (ToulBar2::nbDecisionVars > 0 && allVars[i].content >=  ToulBar2::nbDecisionVars)) unassignedVars->erase(&allVars[i], false);
     }
     // Now function setvalue can be called safely!
 	ToulBar2::setvalue = setvalue;
@@ -179,8 +182,9 @@ void setvalue(int wcspId, int varIndex, Value value)
 {
 //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
     assert(Solver::currentSolver != NULL);
-    if(!Solver::currentSolver->allVars[varIndex].removed) {
-	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[varIndex], true);
+	unsigned int i = Solver::currentSolver->getWCSP()->getDACOrder(varIndex);
+    if(!Solver::currentSolver->allVars[i].removed) {
+	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[i], true);
 	}
 }
 
@@ -801,11 +805,11 @@ void Solver::recursiveSolve()
 {
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
+	else if (ToulBar2::staticVarOrder) varIndex = getNextUnassignedVar();
 	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
 	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
 	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
 	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
-	//	varIndex = getNextUnassignedVar(); // enforces a static variable ordering
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -875,9 +879,6 @@ bool Solver::solve()
 	lastConflictVar = -1;
 	int tailleSep = 0;
 
-    // special data structure to be initialized for variable ordering heuristics
-	initVarHeuristic();
-
 	if (ToulBar2::isZ) {
 	  ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 	  ToulBar2::negCost = 0;
@@ -892,7 +893,7 @@ bool Solver::solve()
 	cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 
         if (ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) {
-		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " cost functions." << endl;
+		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions." << endl;
 		  cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
 		}
 
@@ -912,6 +913,9 @@ bool Solver::solve()
 		}
 		
 		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
+
+        // special data structure to be initialized for variable ordering heuristics
+	    initVarHeuristic();
 
 		if (ToulBar2::restart) {
 		  nbBacktracksLimit = 1;

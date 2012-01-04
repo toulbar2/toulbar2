@@ -213,6 +213,7 @@ public:
 	static bool costfuncSeparate;
 	static int preprocessNary;
 	static bool QueueComplexity;
+	static bool staticVarOrder;
 	static bool lastConflict;
 	static int weightedDegree;
     static int nbDecisionVars;

@@ -153,6 +153,7 @@ public:
 	unsigned int getDomainSize(int varIndex) const {return vars[varIndex]->getDomainSize();}	///< \brief current domain size
 	bool getEnumDomain(int varIndex, Value *array);
 	bool getEnumDomainAndCost(int varIndex, ValueCost *array);
+	int getDACOrder(int varIndex) const {return vars[varIndex]->getDACOrder();} ///< \brief index of the variable in the DAC variable ordering
 	void updateCurrentVarsId();	///< \brief determines the position of each variable in the current list of unassigned variables (see \ref WCSP::dump)
 
 	bool assigned(int varIndex) const {return vars[varIndex]->assigned();}

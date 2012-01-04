@@ -38,6 +38,7 @@ public:
     virtual unsigned int getDomainSize(int varIndex) const =0;
     virtual bool getEnumDomain(int varIndex, Value *array) =0;
     virtual bool getEnumDomainAndCost(int varIndex, ValueCost *array) =0;
+	virtual int getDACOrder(int varIndex) const =0;
 
     virtual bool assigned(int varIndex) const =0;
     virtual bool unassigned(int varIndex) const =0;

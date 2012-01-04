@@ -56,7 +56,7 @@ bool ToulBar2::limited = false;
 Long ToulBar2::restart = 0;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
-
+bool ToulBar2::staticVarOrder = false;
 int ToulBar2::weightedDegree = 10;
 int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
