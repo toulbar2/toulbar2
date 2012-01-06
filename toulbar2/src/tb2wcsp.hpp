@@ -60,6 +60,8 @@ class WCSP : public WeightedCSP {
 	int maxdomainsize;					///< maximum initial domain size found in all variables
 	vector<GlobalConstraint*> globalconstrs;	///< a list of all original global constraints (also inserted in constrs)
 
+	vector< vector<int> > listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
+
 	// make it private because we don't want copy nor assignment
 	WCSP(const WCSP &wcsp);
 	WCSP& operator=(const WCSP &wcsp);
@@ -396,6 +398,10 @@ public:
 	void buildTreeDecomposition();
 	void elimOrderFile2Vector(char *elimVarOrder, vector<int> &order);
 	void setDACOrder(vector<int> &elimVarOrder);
+
+	// dac order reordering when Berge acyclic gobal constraint are present in the wcsp
+	// 
+	void visit(int i, vector <int>&revdac, vector <bool>& marked, const vector< vector<int> >&listofsuccessors );
 
 	// -----------------------------------------------------------
 	// Functions dealing with probabilities

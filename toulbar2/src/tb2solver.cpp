@@ -805,7 +805,7 @@ void Solver::recursiveSolve()
 {
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
-	else if (ToulBar2::staticVarOrder) varIndex = getNextUnassignedVar();
+	else if (ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar();
 	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
 	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
 	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());

@@ -114,6 +114,7 @@ typedef struct {
  *     - "sgcc" "var"|"dec" \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
  *     - "ssame" \e cost \e list_size1 \e list_size2 (\e variable_index)* (\e variable_index)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)
  *     - "sregular" "var"|"edit" \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+ *     - "wregular" \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based   cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
  *
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
@@ -126,6 +127,7 @@ typedef struct {
  * - soft_gcc({x1,x2,x3,x4} with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
  * - soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*): \code 4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
+ * - wregular({x0,x1,x2,x3}) with DFA (a(ba)*c*): \code 4 0 1 2 3 -1 wregular 3 1 0 0 1 2 0 9 0 0 1 0 0 1 1 1 0 2 1 1 1 1 0 0 1 0 0 1 1 2 0 1 1 2 2 0 1 0 2 1 1 1 2 1
  *
  */
 
@@ -197,6 +199,8 @@ void WCSP::read_wcsp(const char *fileName)
     file >> nbconstr;
     file >> top;
     if (ToulBar2::verbose) cout << "Read problem: " << pbname << endl;
+    ToulBar2::nbvar= nbvar;
+	
     
     assert(vars.empty());
     assert(constrs.empty());
@@ -218,8 +222,12 @@ void WCSP::read_wcsp(const char *fileName)
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
         assert(theindex == i);   
+	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order;
     }
     
+    if (ToulBar2::verbose >=1) {
+	    cout << "initial Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions (wcsp header)"<<endl;
+    }   
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
@@ -243,7 +251,226 @@ void WCSP::read_wcsp(const char *fileName)
 			if (defval == -1) {
 				string gcname;
 				file >> gcname;
-				postGlobalConstraint(scopeIndex, arity, gcname, file);
+// test if wregular found
+				if( gcname == "wregular") 
+				{
+				int unsigned nb_total_states;
+				int unsigned nb_init_states;
+				int unsigned nb_final_states;
+				int unsigned current_var_number= numberOfVariables();
+				int unsigned q0; // first varaible of the berge decomposiotion (q0,x1,q1)..(q1,x2,q2...(qn,xn,qn)
+				ToulBar2::Berge_Dec=1; // flag berge acyclyc on ==> DAC order modification
+				q0 = current_var_number;
+				file >> nb_total_states;
+				file >> nb_init_states;
+				if ( ToulBar2::verbose > 1 ) 	{
+				cout << "DEBUG>> wregular found : inital number of variables before creation = " <<  numberOfVariables() <<endl;
+				cout << "DEBUG>> wregular Automatum Total number of states: " <<  nb_total_states <<endl;
+				cout << "DEBUG>> wregular Initial states number: " <<  nb_init_states <<endl;
+				}
+		  		if ( ToulBar2::verbose >2) 	{
+				cout << "DEBUG>> wregular add new variable from " << q0 <<" to "<<  current_var_number+arity+1 <<endl;
+				}
+// add variable q0
+
+					if(  current_var_number > 0 ) { 
+				 	int unsigned domsize  = nb_total_states-1;
+					string varname; // var name  used for variable declaration
+					varname=to_string(current_var_number);
+					if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular q0 index "<< q0 << " domain = " << domsize+1 << endl; 
+					int theindex = -1;
+					theindex=makeEnumeratedVariable(varname,0,domsize);			// add q0 variable
+					listofsuccessors.push_back(vector<int>()); // add the new variable in the topological order;
+					//assert(theindex=v+current_var_number);
+					if ( ToulBar2::verbose > 1 ) cout << "wregular add varname =" << varname <<"=> var index "<<  numberOfVariables() << " domain size = " << domsize+1 << endl;
+					} else { exit(EXIT_FAILURE); } 
+						
+
+//==================
+//inital stat reading ( pair states_index;associed cost ; 
+//==================
+//add unary constraint and cost table on initial states q0
+
+
+//################################################initial stat reading##############################################
+				if (nb_init_states > 0 ) {
+				vector<Cost>initial_states_costs(nb_total_states,top);
+					for (int unsigned k = 0; k < nb_init_states; k++) {
+						int unsigned t_index; 
+						Cost ucost;
+						file >> t_index;
+						file >> ucost;
+						initial_states_costs[t_index]=ucost;
+					}	
+							if ( ToulBar2::verbose > 1 ) 		  
+				{
+				cout << "DEBUG>> wregular q0 last cost = "<< initial_states_costs[initial_states_costs.size()-1] << endl;
+				
+				}
+								postUnary(q0,initial_states_costs);
+					if ( ToulBar2::verbose > 1 ) 		  
+				{
+				cout << "DEBUG>> wregular initial state (q0) vector size ( nbre value) = "<<  initial_states_costs.size() << endl;
+				cout << "DEBUG>> wregular var q0= "<< q0 <<" number of constraint wregular initialisation ==>" << numberOfConstraints()  << endl;
+				}
+				}
+				//###################################################
+				// UNaire
+//################################################initial stat reading##############################################
+
+//==================
+// final states list reading
+//==================
+
+				file >> nb_final_states;
+					if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular Final states number " <<  nb_final_states <<endl;
+				for( int v = 1 ; v < arity+1 ; v++ ) 
+				 {
+					// domaine declaration
+				 	int unsigned domsize ;
+					domsize=nb_total_states-1;
+					string varname = to_string(v+q0);
+					
+					int theindex = -1;
+					theindex=makeEnumeratedVariable(varname,0,domsize);	// add qi variable
+					listofsuccessors.push_back(vector<int>()); // add new variable in the topological order;
+					assert(theindex=v+current_var_number);
+					if ( ToulBar2::verbose > 1 ) 
+					cout << "DEBUG>> wregular add varname =" << varname <<"=> rank "<<  numberOfVariables() << " domain = " << domsize+1 << endl;
+				 }
+
+			if ( ToulBar2::verbose > 1 ) 	cout << "DEBUG>> wregular Final number of variables (after add q varibales): " << numberOfVariables() << endl;
+				// vector of cost containing final states ( initialisation with default cost = 0);
+				vector<Cost>final_states_costs(nb_total_states,top);
+				// cost of final states reading
+				if (nb_final_states >=0) {
+					
+					for (int unsigned k = 0; k <nb_final_states; k++) {
+						int unsigned t_index; 
+						Cost ucost;
+						file >> t_index;
+						file >> ucost;
+						if ( ToulBar2::verbose > 1 ) 
+						cout << "DEBUG>> wregular final state : add  cost "<< ucost << " on value " << t_index <<endl;
+
+		 				EnumeratedVariable* Qv  = (EnumeratedVariable *) vars[numberOfVariables()-1]; // get domaine size of last qi var
+					    	unsigned long DomVar=Qv->getDomainInitSize();
+	
+						if(t_index < DomVar){
+						final_states_costs[t_index]=ucost;
+						} else { 
+						cout <<"wregular tuple error " << t_index << "out of domain" << DomVar << endl; 
+						exit(EXIT_FAILURE); 
+						} 		  
+					}			  
+
+						int unsigned q_last = numberOfVariables() -1 ;
+						postUnary(q_last,final_states_costs);
+					
+						if ( ToulBar2::verbose > 1 )  {
+						cout << "DEBUG>> wregular final state vector size = "<<  final_states_costs.size() << endl;
+						cout << "DEBUG>> wregular last q varname = "<<  q_last <<endl;
+					}
+				}
+				//###################################################
+				// UNaire
+				//###################################################
+
+
+
+				//###################################################
+				if ( ToulBar2::verbose > 1 ) 
+				cout << "DEBUG>>wregular final number of Unary constraint Post after q0 and qi post : " << numberOfConstraints()  << endl;
+				//==================
+				// transition stat reading 
+				//==================
+				int nb_transition;
+				vector<unsigned int> VQi;
+				vector<unsigned int> VQj;
+				vector<unsigned int> VXi;
+				vector<Cost> transition_costs;
+				file >> nb_transition;
+				if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular transitions number :  " <<  nb_transition <<endl;
+				for( int s = 0 ; s < nb_transition ; s++)
+				{
+					int qi;
+					int xi;
+					int qj;
+					Cost transition_COST;
+					file >> qi;
+					file >> xi;
+					file >> qj;
+					file >> transition_COST;
+					VQi.push_back(qi);
+					VXi.push_back(xi);
+					VQj.push_back(qj);
+					transition_costs.push_back(transition_COST);
+
+					if ( ToulBar2::verbose > 1 ) {
+					cout << "DEBUG>> wregular read transition table qi =" << qi << " xi =" << xi << " qj =" << qj << " cost=" << transition_COST << endl;
+					cout << "DEBUG>> wregular scope xi " << scopeIndex[xi] <<endl;
+					}
+				}
+
+//##################################################
+// ajout ternaire
+			for ( int q = 0 ; q < arity ; q++) {
+				    int qi = q0+q;
+					int	 xi = scopeIndex[q] ;
+					int qj = qi+1;
+					if ( ToulBar2::verbose > 1 ) 
+					cout << "DEBUG>>wregular  post ternary on  qi =" << qi << " xi =" << xi << " qj =" << qj << endl;
+
+				// poiner on qi , xi , qj varibale 	
+			    EnumeratedVariable* Qi = (EnumeratedVariable *) vars[qi]; //current qi variable;
+			    EnumeratedVariable* Xi = (EnumeratedVariable *) vars[xi]; //current Xi variable;
+			    EnumeratedVariable* Qj = (EnumeratedVariable *) vars[qj]; //current qj variable;
+			    // domain definition 
+			    unsigned long DomQi=Qi->getDomainInitSize();
+			    unsigned long DomQj=Qi->getDomainInitSize();
+			    unsigned long DomXi=Xi->getDomainInitSize();
+				unsigned long Domsize = long (Qi->getDomainInitSize() * Xi->getDomainInitSize() * Qj->getDomainInitSize());
+				
+				vector<Cost>tmp_ternary_costs(Domsize,top);
+				
+				for( int s = 0 ; s < nb_transition ; s++)  {
+// verifier que Vxi appartient au domain de Xi  sinon passer a la transition suivante ( next () ;)
+					if((VXi[s]< DomXi ) ) {
+					unsigned long cindex= VQi[s]*DomXi*DomQj + VXi[s]*DomQj + VQj[s];
+				//	cout << "cindex = " << cindex << endl;
+				//	costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
+					
+					tmp_ternary_costs[cindex]=transition_costs[s];
+					}
+				}	
+				if(ToulBar2::verbose > 1) {
+					cout << "DEBUG>> wregular init cost vector for ternary rank= " << q << endl;
+					cout << "DEBUG>> wregular add ternary table qi =" << qi << " xi =" << xi << " qj =" << qj << endl; 
+					cout <<"DEBUG>> wregular Ternary const DOMAIN SIZE = " << Domsize <<" Dom qi ="<< DomQi << " Dom Xi=" << DomXi << " Dom Qj =" << DomQj <<" -------"<<endl;
+					cout << "DEBUG>> wregular initial COST SIZE = " << tmp_ternary_costs.size() << endl;
+					cout << "DEBUG>> wregular number of constraint before ternary cost function : " << numberOfConstraints()  << endl;
+				}
+				postTernaryConstraint(qi, xi, qj, tmp_ternary_costs);
+				
+				// topologic dav order management
+
+				 
+				listofsuccessors[qi].push_back(xi);
+				listofsuccessors[xi].push_back(qj);
+
+				if(ToulBar2::verbose > 1) {
+					cout << "DEBUG>> wregular number of constraint after ternary cost function " << numberOfConstraints()  << endl;
+				}
+
+			}
+			if ( ToulBar2::verbose >=1 ) cout << "DEBUG>> wregular Total number of constraints after wregular posting " << numberOfConstraints()  << endl;		
+			// current index of stat checking  
+			//##################################################
+
+			} else { //NOT wregular
+				postGlobalConstraint(scopeIndex, arity, gcname, file); 
+				}
+
 			} else { 
 			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); } 		 
 			  file >> ntuples;

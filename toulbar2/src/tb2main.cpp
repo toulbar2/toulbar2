@@ -151,15 +151,15 @@ enum {
 	OPT_binaryBranching,
 	NO_OPT_binaryBranching,
 	OPT_approximateCountingBTD,
-	OPT_staticVarOrder,
-	NO_OPT_staticVarOrder,
+	OPT_Static_variable_ordering,
+	NO_OPT_Static_variable_ordering,
 	OPT_lastConflict,
 	NO_OPT_lastConflict,
 	OPT_dichotomicBranching,
 	NO_OPT_dichotomicBranching,
 	OPT_weightedDegree,
 	NO_OPT_weightedDegree,
-    OPT_nbDecisionVars,
+   	OPT_nbDecisionVars,
 	OPT_elimDegree,
 	NO_OPT_elimDegree,
 	OPT_elimDegree_preprocessing,
@@ -167,6 +167,7 @@ enum {
 	OPT_showSolutions,
 	OPT_costfuncSeparate,
 	NO_OPT_costfuncSeparate,
+	
   
 	// VAC OPTION
 	OPT_minsumDiffusion,
@@ -268,8 +269,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_binaryBranching,		(char*) "-b:",             		   	SO_NONE    	},
 	{ NO_OPT_binaryBranching,		(char*) "-no--b",             		SO_NONE    	},
 	{ NO_OPT_binaryBranching,		(char*) "-no--binaryBranching",             	SO_NONE    	},
-	{ OPT_staticVarOrder, 			(char*) "-static", 				SO_NONE 	},
-	{ NO_OPT_staticVarOrder, 		(char*) "-static:", 			SO_NONE 	},
+	{ OPT_Static_variable_ordering,		(char*) "-svo", 			SO_NONE 		},
+	{ NO_OPT_Static_variable_ordering, 		(char*) "-svo:", 			SO_NONE 	},	
 	{ OPT_lastConflict, 			(char*) "-c", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "-c:", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "-no--c", 				SO_NONE 	},
@@ -278,14 +279,14 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_dichotomicBranching,		(char*) "-d:", 				SO_NONE 	},
 	{ OPT_weightedDegree,			(char*) "-q", 				SO_NONE 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
-	{ OPT_nbDecisionVars,				(char*) "-var", 				SO_REQ_SEP		},
+	{ OPT_nbDecisionVars,			(char*) "-var", 				SO_REQ_SEP		},
 
 	{ OPT_elimDegree,			(char*) "-e", 				SO_OPT			},
 	{ NO_OPT_elimDegree,		 	(char*) "-e:", 				SO_NONE 		},
 	{ OPT_elimDegree_preprocessing, 	(char*) "-p", 				SO_OPT	 		},
 	{ NO_OPT_elimDegree_preprocessing,	(char*) "-p:", 				SO_NONE 		},
-	{ OPT_costfuncSeparate,		(char*) "-dec", 			SO_NONE 		},
-	{ NO_OPT_costfuncSeparate,		(char*) "-dec:", 				SO_NONE			},
+	{ OPT_costfuncSeparate,			(char*) "-dec", 			SO_NONE 		},
+	{ NO_OPT_costfuncSeparate,		(char*) "-dec:",			SO_NONE			},
 	// vac option
 	{ OPT_vac,				(char*) "-A", 				SO_OPT			},
 	{ NO_OPT_vac,				(char*) "-A:", 				SO_NONE			},
@@ -645,8 +646,8 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -static : search using a static variable ordering heuristic (same order as DAC)";
-	if (ToulBar2::staticVarOrder) cerr << " (default option)";
+	cerr << "   -svo : search using a static variable ordering heuristic (same order as DAC)";
+	if (ToulBar2::Static_variable_ordering) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
@@ -944,10 +945,10 @@ int _tmain(int argc, TCHAR * argv[])
 
 			// static variable ordering
 
-			if (args.OptionId() == OPT_staticVarOrder ) { 
-				ToulBar2::staticVarOrder = true;
-			} else if (args.OptionId() == NO_OPT_staticVarOrder ) { ToulBar2::staticVarOrder = false; }
-
+			if (args.OptionId() == OPT_Static_variable_ordering) { 
+				ToulBar2::Static_variable_ordering = true;
+			} else if (args.OptionId() == NO_OPT_Static_variable_ordering) { ToulBar2::Static_variable_ordering= false; }
+			
 			// last conflict
 
 			if (args.OptionId() == OPT_lastConflict ) { 
@@ -1546,10 +1547,10 @@ int _tmain(int argc, TCHAR * argv[])
 			ToulBar2::elimDegree = 0;
 		}
 	}
-	if (ToulBar2::staticVarOrder && ToulBar2::btdMode >= 1)
+	if (ToulBar2::Static_variable_ordering && ToulBar2::btdMode >= 1)
 	{
 		cout << "Warning! static variable ordering not compatible with BTD-like search methods." << endl;
-		ToulBar2::staticVarOrder = false;
+		ToulBar2::Static_variable_ordering= false;
 	}
 	if (ToulBar2::lds && ToulBar2::btdMode >= 1)
 	{

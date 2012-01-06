@@ -56,7 +56,7 @@ bool ToulBar2::limited = false;
 Long ToulBar2::restart = 0;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
-bool ToulBar2::staticVarOrder = false;
+bool ToulBar2::Static_variable_ordering=false;
 int ToulBar2::weightedDegree = 10;
 int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
@@ -122,6 +122,8 @@ int ToulBar2::smallSeparatorSize = 4;
 bool ToulBar2::isZ = false;
 TProb ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 Cost ToulBar2::negCost = 0;
+int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
+int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
 /*
  * WCSP constructors
@@ -635,10 +637,44 @@ void WCSP::preprocessing() {
 	// recompute current DAC order and its reverse
 	vector<int> elimorder(numberOfVariables(), -1);
 	vector<int> revelimorder(numberOfVariables(), -1);
+	if(ToulBar2::Berge_Dec > 0 ) {
+	// flag pour indiquer si une variable a deja ete visitee initialement a faux
+	vector<bool> marked(numberOfVariables(), false);
+	vector<int> revdac;
+	// nouvel ordre DAC inversé
+//	for (unsigned int i = numberOfVariables()-1 ; i > 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+//	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+
+	//Mark native variable
+	for (unsigned int i = ToulBar2::nbvar-1; i > 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	//Mark q variable only 
+	for (unsigned int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+
+	// listofsuccessors.clear(); // appel a la methode clear de l'objet vector
+
+	if( ToulBar2::verbose >= 1 ) { cout << "MARKED:";
 	for (unsigned int i = 0; i < numberOfVariables(); i++) {
+		cout << i<< "=" << marked[i];
+	cout << endl;
+	}
+	}
+	cout << "BERGE DAC order:";
+	for (unsigned int i = 0; i < numberOfVariables(); i++) {
+		cout << " " << revdac[i];
+	}
+	cout << endl;
+	if( revdac.size() != numberOfVariables() ) { 
+	cout << "topoligac order error in setDAC order " << revdac.size() << "  not cover the set of variable "<< numberOfVariables() << endl;
+
+	}
+
+	setDACOrder(revdac);	
+	}
+ 
+		for (unsigned int i = 0; i < numberOfVariables(); i++) {
 		revelimorder[getVar(i)->getDACOrder()] = i;
 		elimorder[numberOfVariables() - getVar(i)->getDACOrder() -1] = i;
-	}
+		}	
 //	cout << "DAC:";
 //	for (int i = 0; i < numberOfVariables(); i++) {
 //		cout << " " << revelimorder[i];
@@ -649,8 +685,9 @@ void WCSP::preprocessing() {
 //		cout << " " << elimorder[i];
 //	}
 //	cout << endl;
-	setDACOrder(revelimorder);
-	setDACOrder(elimorder);
+		setDACOrder(revelimorder);
+		setDACOrder(elimorder);
+	
 
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
@@ -2127,3 +2164,18 @@ TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
 	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
   }
 }
+//----------------------------------------
+//procedure when berge acycl constant are present in the problem
+// toulbar2::Berge_Dec has to be initialized > 0;
+
+void WCSP::visit(int i, vector <int>&revdac, vector <bool>& marked, const vector< vector<int> >&listofsuccessors ) {
+   marked[i] = true;
+  for (unsigned int  j = 0 ; j < listofsuccessors[i].size(); j++) {
+  // for (unsigned int  j = listofsuccessors[i].size()-1 ; j == 0 ; j--) {
+      if (!marked[listofsuccessors[i][j]]) visit(listofsuccessors[i][j],revdac,marked,listofsuccessors) ;
+    }
+   revdac.push_back(i);
+}
+
+
+

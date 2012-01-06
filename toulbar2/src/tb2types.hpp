@@ -213,7 +213,7 @@ public:
 	static bool costfuncSeparate;
 	static int preprocessNary;
 	static bool QueueComplexity;
-	static bool staticVarOrder;
+	static bool Static_variable_ordering;// flag for static variable ordering during search (dynamic ordering is default value)
 	static bool lastConflict;
 	static int weightedDegree;
     static int nbDecisionVars;
@@ -274,6 +274,10 @@ public:
 	static bool isZ;
 	static TProb logZ;
     static Cost negCost;
+	static int Berge_Dec; // flag for berge acyclic decomposition
+	static int nbvar; // initial number of variable (read in the file) 
+
+	
 };
 
 /*
