@@ -23,6 +23,12 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
     vector<StoreCost> deltaCostsZ;
+    bool functionalX;
+    vector<Value> functionX;
+    bool functionalY;
+    vector<Value> functionY;
+    bool functionalZ;
+    vector<Value> functionZ;
     vector< pair<Value,Value> > supportX;
     vector< pair<Value,Value> > supportY;
     vector< pair<Value,Value> > supportZ;
@@ -36,7 +42,8 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     
     void findSupport(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
-            vector< pair<Value,Value> > &supportY, vector< pair<Value,Value> > &supportZ);
+            vector< pair<Value,Value> > &supportY, vector< pair<Value,Value> > &supportZ,
+			bool functionalY, vector<Value> &functionY, bool functionalZ, vector<Value> &functionZ);
     void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y,  EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
             vector< pair<Value,Value> > &supportY, vector<StoreCost> &deltaCostsY, 
@@ -47,9 +54,9 @@ class TernaryConstraint : public AbstractTernaryConstraint<EnumeratedVariable,En
     bool isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
                vector< pair<Value,Value> > &supportX);
                
-    void findSupportX() {findSupport(x,y,z,supportX,deltaCostsX,supportY,supportZ);}
-    void findSupportY() {findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ);}
-    void findSupportZ() {findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY);}
+    void findSupportX() {findSupport(x,y,z,supportX,deltaCostsX,supportY,supportZ,functionalY, functionY, functionalZ, functionZ);}
+    void findSupportY() {findSupport(y,x,z,supportY,deltaCostsY,supportX,supportZ,functionalX, functionX, functionalZ, functionZ);}
+    void findSupportZ() {findSupport(z,x,y,supportZ,deltaCostsZ,supportX,supportY,functionalX, functionX, functionalY, functionY);}
     void findFullSupportX() {if (y->wcspIndex < z->wcspIndex) findFullSupport(x,y,z,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ,xy,xz,yz);
         else findFullSupport(x,z,y,supportX,deltaCostsX,supportZ,deltaCostsZ,supportY,deltaCostsY,xz,xy,yz);}
     void findFullSupportY() {if (x->wcspIndex < z->wcspIndex) findFullSupport(y,x,z,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ,xy,yz,xz);

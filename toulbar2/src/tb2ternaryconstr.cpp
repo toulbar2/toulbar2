@@ -23,22 +23,45 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 									 StoreStack<Cost, Cost> *storeCost) 
 									 
 					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz), 
-					  sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize())
+					  sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize()),
+					  functionalX(true), functionalY(true), functionalZ(true)
 {
+    assert(tab.size() == sizeX * sizeY * sizeZ);
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST,storeCost));
     deltaCostsY = vector<StoreCost>(sizeY,StoreCost(MIN_COST,storeCost));
     deltaCostsZ = vector<StoreCost>(sizeZ,StoreCost(MIN_COST,storeCost));
-    assert(tab.size() == sizeX * sizeY * sizeZ);
+	assert(getIndex(x) < getIndex(y) && getIndex(y) < getIndex(z));
+	functionX = vector<Value>(sizeY * sizeZ, -1);
+	functionY = vector<Value>(sizeX * sizeZ, -1);
+	functionZ = vector<Value>(sizeX * sizeY, -1);
     supportX = vector< pair<Value,Value> >(sizeX,make_pair(y->getInf(),z->getInf()));
     supportY = vector< pair<Value,Value> >(sizeY,make_pair(x->getInf(),z->getInf()));
     supportZ = vector< pair<Value,Value> >(sizeZ,make_pair(x->getInf(),y->getInf()));
 
     costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
     
-    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
-         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) 
-            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) 
-                costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+		for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+		  Cost cost = tab[a * sizeY * sizeZ + b * sizeZ + c];
+		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
+		  if (!CUT(cost, wcsp->getUb())) {
+			if (functionalX) {
+			  if (functionX[b * sizeZ + c] == -1) functionX[b * sizeZ + c] = x->toValue(a);
+			  else functionalX = false;
+			}
+			if (functionalY) {
+			  if (functionY[a * sizeZ + c] == -1) functionY[a * sizeZ + c] = y->toValue(b);
+			  else functionalY = false;
+			}
+			if (functionalZ) {
+			  if (functionZ[a * sizeY + b] == -1) functionZ[a * sizeY + b] = z->toValue(c);
+			  else functionalZ = false;
+			}
+		  }
+		}
+	  }
+	}
  
     xy = xy_;
     xz = xz_;
@@ -50,7 +73,8 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 
 TernaryConstraint::TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) 
 					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp), 
-					  sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize()), sizeZ(wcsp->getMaxDomainSize())
+					  sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize()), sizeZ(wcsp->getMaxDomainSize()),
+					  functionalX(false), functionalY(false), functionalZ(false)
 {
 	unsigned int maxdom = wcsp->getMaxDomainSize();
     deltaCostsX = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
@@ -96,7 +120,7 @@ double TernaryConstraint::computeTightness()
 
 void TernaryConstraint::print(ostream& os)
 {
-    os << this << " TernaryConstraint(" << x->getName() << "," << y->getName() << "," << z->getName() << ")";
+  os << this << " TernaryConstraint(" << x->getName() << ((functionalX)?"!":"") << "," << y->getName() << ((functionalY)?"!":"") << "," << z->getName() << ((functionalZ)?"!":"") << ")";
 	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
     if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
     else cout << endl;
@@ -185,7 +209,8 @@ void TernaryConstraint::extend(BinaryConstraint* xy, EnumeratedVariable *x, Enum
 
 void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX, vector<StoreCost> &deltaCostsX, 
-            vector< pair<Value,Value> > &supportY, vector< pair<Value,Value> > &supportZ)
+			vector< pair<Value,Value> > &supportY, vector< pair<Value,Value> > &supportZ,
+			bool functionalY, vector<Value> &functionY, bool functionalZ, vector<Value> &functionZ)
 {
     assert(getIndex(y) < getIndex(z));  // check that support.first/.second is consistent with y/z parameters
     assert(connected());
@@ -199,13 +224,35 @@ void TernaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y
             getCost(x,y,z,*iterX,support.first,support.second) > MIN_COST) {
 
             Cost minCost = MAX_COST;
-            for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
+			if (functionalZ) {
+			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
+				Value valZ = (getIndex(x) < getIndex(y))?functionZ[xindex * y->getDomainInitSize() + y->toIndex(*iterY)]:functionZ[y->toIndex(*iterY) * x->getDomainInitSize() + xindex];
+				if (valZ >= 0 && z->canbe(valZ)) {
+                    Cost cost = getCost(x,y,z,*iterX,*iterY,valZ);
+                    if (GLB(&minCost, cost)) {
+                        support = make_pair(*iterY,valZ);
+                    }
+				}
+			  }
+			} else if (functionalY) {
+			  for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
+				Value valY = (getIndex(x) < getIndex(z))?functionY[xindex * z->getDomainInitSize() + z->toIndex(*iterZ)]:functionY[z->toIndex(*iterZ) * x->getDomainInitSize() + xindex];
+				if (valY >= 0 && y->canbe(valY)) {
+                    Cost cost = getCost(x,y,z,*iterX,valY,*iterZ);
+                    if (GLB(&minCost, cost)) {
+					  support = make_pair(valY,*iterZ);
+                    }
+				}
+			  }
+			} else {
+			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
                 for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
                     Cost cost = getCost(x,y,z,*iterX,*iterY,*iterZ);
                     if (GLB(&minCost, cost)) {
                         support = make_pair(*iterY,*iterZ);
                     }
                 }
+			  }
             }
             if (minCost > MIN_COST) {
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);
