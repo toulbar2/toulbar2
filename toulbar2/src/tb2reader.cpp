@@ -224,10 +224,7 @@ void WCSP::read_wcsp(const char *fileName)
         assert(theindex == i);   
 	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order;
     }
-    
-    if (ToulBar2::verbose >=1) {
-	    cout << "initial Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions (wcsp header)"<<endl;
-    }   
+
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
