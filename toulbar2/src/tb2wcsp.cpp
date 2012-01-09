@@ -647,9 +647,9 @@ void WCSP::preprocessing() {
 	  //	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
 	  //Mark native variable
-	  for (unsigned int i = ToulBar2::nbvar-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	  for (int i = ToulBar2::nbvar-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 	  //Mark q variable only 
-	  for (unsigned int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	  for (int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
 	  // listofsuccessors.clear(); // appel a la methode clear de l'objet vector
 
