@@ -27,8 +27,8 @@ public:
 
     virtual bool extension() const {return false;} // return true if the cost function is defined in extension (with explicit tuples)
 
-    virtual bool connected() {cout << "dummy connected on (" << this << ")!" << endl;return true;}
-    virtual bool deconnected() {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
+    virtual bool connected() const {cout << "dummy connected on (" << this << ")!" << endl;return true;}
+    virtual bool deconnected() const {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
     // remove a constraint from the set of active constraints
     // (reuse=true if the constraint is empty and canbe reuse immediately)
     virtual void deconnect(bool reuse = false) {cout << "dummy deconnect on (" << this << ")!" << endl;}
@@ -53,7 +53,7 @@ public:
     // return the smallest wcsp index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestVarIndexInScope(int forbiddenScopeIndex) = 0;
     virtual int getSmallestVarIndexInScope() = 0;
-    virtual int getDACScopeIndex() {cout << "dummy getDACScopeIndex on (" << this << ")!" << endl; return 0;}
+    virtual int getDACScopeIndex() const {cout << "dummy getDACScopeIndex on (" << this << ")!" << endl; return 0;}
     virtual void setDACScopeIndex() {}
 
     virtual void propagate() = 0;

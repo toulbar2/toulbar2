@@ -11,7 +11,16 @@
 #include "tb2wcsp.hpp"
 
 class BinaryConstraint;
-typedef Cost (BinaryConstraint::*GetCostMember)(Value vx, Value vy);
+struct Functor_getCost {
+  BinaryConstraint &obj;
+  inline Functor_getCost(BinaryConstraint &in) : obj(in) {}
+  inline Cost operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy) const;
+};
+struct Functor_getCostReverse {
+  BinaryConstraint &obj;
+  inline Functor_getCostReverse(BinaryConstraint &in) : obj(in) {}
+  inline Cost operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vy, Value vx) const;
+};
 
 class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>
 {
@@ -24,34 +33,32 @@ protected:
     
     vector<Value> supportX;
     vector<Value> supportY;
-
-    Cost getCostReverse(Value vy, Value vx) {return getCost(vx,vy);}
     
-    template <GetCostMember getBinaryCost> void findSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
+    template <typename T> void findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, 
             vector<Value> &supportX, vector<StoreCost> &deltaCostsX);
-    template <GetCostMember getBinaryCost> void findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y, 
+    template <typename T> void findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, 
             vector<Value> &supportX, vector<StoreCost> &deltaCostsX, 
             vector<Value> &supportY, vector<StoreCost> &deltaCostsY);
-    template <GetCostMember getBinaryCost> void projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX);
-    template <GetCostMember getBinaryCost> bool verify(EnumeratedVariable *x, EnumeratedVariable *y);
+    template <typename T> void projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX);
+    template <typename T> bool verify(T getCost, EnumeratedVariable *x, EnumeratedVariable *y);
 
     // return true if unary support of x is broken
     bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
     void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
   
-    void findSupportX() {findSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX);}
-    void findSupportY() {findSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY);}
-    void findFullSupportX() {findFullSupport<&BinaryConstraint::getCost>(x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
-    void findFullSupportY() {findFullSupport<&BinaryConstraint::getCostReverse>(y,x,supportY,deltaCostsY,supportX,deltaCostsX);}
-    void projectX() {projection<&BinaryConstraint::getCost>(x,y,y->getValue(),deltaCostsX);}
-    void projectY() {projection<&BinaryConstraint::getCostReverse>(y,x,x->getValue(),deltaCostsY);}
-    bool verifyX() {return verify<&BinaryConstraint::getCost>(x,y);}
-    bool verifyY() {return verify<&BinaryConstraint::getCostReverse>(y,x);}
+    void findSupportX() {findSupport(Functor_getCost(*this),x,y,supportX,deltaCostsX);}
+    void findSupportY() {findSupport(Functor_getCostReverse(*this),y,x,supportY,deltaCostsY);}
+    void findFullSupportX() {findFullSupport(Functor_getCost(*this),x,y,supportX,deltaCostsX,supportY,deltaCostsY);}
+    void findFullSupportY() {findFullSupport(Functor_getCostReverse(*this),y,x,supportY,deltaCostsY,supportX,deltaCostsX);}
+    void projectX() {projection(Functor_getCost(*this),x,y,y->getValue(),deltaCostsX);}
+    void projectY() {projection(Functor_getCostReverse(*this),y,x,x->getValue(),deltaCostsY);}
+    bool verifyX() {return verify(Functor_getCost(*this),x,y);}
+    bool verifyY() {return verify(Functor_getCostReverse(*this),y,x);}
     bool projectX(Value value, Cost cost) {return project(x,value,cost,deltaCostsX);}
     bool projectY(Value value, Cost cost) {return project(y,value,cost,deltaCostsY);}
     void extendX(Value value, Cost cost) {extend(x,value,cost,deltaCostsX);}
     void extendY(Value value, Cost cost) {extend(y,value,cost,deltaCostsY);}
-    
+   
 public:
     BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
 
@@ -61,7 +68,7 @@ public:
 
     bool extension() const {return true;}
     
-    Cost getCost(Value vx, Value vy) {
+    Cost getCost(Value vx, Value vy) const {
         int ix = x->toIndex(vx);
         int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
@@ -70,7 +77,7 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
-    
+
     Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) {
         int vindex[2];
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
@@ -82,7 +89,7 @@ public:
         return res;
     }
 
-   void addcost( int vx, int vy, Cost mincost ) {
+    void addcost( int vx, int vy, Cost mincost ) {
     		assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
             assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost));
    	        int ix = x->toIndex(vx);
@@ -116,7 +123,6 @@ public:
 	   assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
    	   costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
    }
-
 
    void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
 		assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
@@ -155,7 +161,6 @@ public:
           }
         }
     }
-
 
 	Cost evalsubstr( String& s, Constraint* ctr )
 	{
@@ -408,6 +413,12 @@ public:
 
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
+
+    friend struct Functor_getCost;
+    friend struct Functor_getCostReverse;
 };
+
+inline Cost Functor_getCost::operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getCost(vx, vy);}
+inline Cost Functor_getCostReverse::operator()(EnumeratedVariable* yy, EnumeratedVariable* xx, Value vy, Value vx) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getCost(vx, vy);}
 
 #endif /*TB2BINCONSTR_HPP_*/

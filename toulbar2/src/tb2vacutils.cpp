@@ -304,7 +304,7 @@ bool VACVariable::averaging()
 					Cost costi = (Long) extc;
 					for (iterator itx = x->begin(); itx != x->end(); ++itx) {
 					for (iterator ity = y->begin(); ity != y->end(); ++ity) {
-						tctr->addcost(this,x,y,*it,*itx,*ity,costi);				
+						tctr->addCost(this,x,y,*it,*itx,*ity,costi);				
 					}}
 					if(mean > to_double(cu)) project(*it, -costi); 
 					else extend(*it, costi);

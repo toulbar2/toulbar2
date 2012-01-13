@@ -643,7 +643,7 @@ void WCSP::preprocessing() {
 	  vector<bool> marked(numberOfVariables(), false);
 	  vector<int> revdac;
 	  // nouvel ordre DAC inverse
-	  //	for (unsigned int i = numberOfVariables()-1 ; i > 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	  //	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 	  //	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
 	  //Mark native variable
@@ -659,7 +659,7 @@ void WCSP::preprocessing() {
 		  cout << endl;
 		}
 	  }
-	  cout << "BERGE DAC order:";
+	  cout << "BERGE DAC reverse order:";
 	  for (unsigned int i = 0; i < numberOfVariables(); i++) {
 		cout << " " << revdac[i];
 	  }

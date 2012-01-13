@@ -6,10 +6,6 @@
 #include "tb2wcsp.hpp"
 #include "tb2clusters.hpp"
 
-
-// coding shorthand
-#define GETCOST (this->*getBinaryCost)
-
 /*
  * Constructors and misc.
  *
@@ -112,9 +108,8 @@ void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vec
     x->extend(value, cost);
 }
 
-
-template <GetCostMember getBinaryCost>
-void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
+template <typename T>
+void BinaryConstraint::findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
 	assert(connected());
@@ -124,12 +119,12 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         int xindex = x->toIndex(*iterX);
         Value support = supportX[xindex];
-        if (y->cannotbe(support) || GETCOST(*iterX, support) > MIN_COST) {
+        if (y->cannotbe(support) || getCost(x,y, *iterX, support) > MIN_COST) {
             Value minCostValue = y->getInf();
-            Cost minCost = GETCOST(*iterX, minCostValue);
+            Cost minCost = getCost(x,y, *iterX, minCostValue);
             EnumeratedVariable::iterator iterY = y->begin();
             for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
-                Cost cost = GETCOST(*iterX, *iterY);
+			  Cost cost = getCost(x,y, *iterX, *iterY);
                 if (GLB(&minCost, cost)) {
                     minCostValue = *iterY;
                 }
@@ -146,8 +141,8 @@ void BinaryConstraint::findSupport(EnumeratedVariable *x, EnumeratedVariable *y,
     }
 }
 
-template <GetCostMember getBinaryCost>
-void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable *y,
+template <typename T>
+void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
         vector<Value> &supportX, vector<StoreCost> &deltaCostsX,
         vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
@@ -158,12 +153,12 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         int xindex = x->toIndex(*iterX);
         Value support = supportX[xindex];
-        if (y->cannotbe(support) || GETCOST(*iterX, support) + y->getCost(support) > MIN_COST) {
+        if (y->cannotbe(support) || getCost(x,y, *iterX, support) + y->getCost(support) > MIN_COST) {
             Value minCostValue = y->getInf();
-            Cost minCost = GETCOST(*iterX, minCostValue) + y->getCost(minCostValue);
+            Cost minCost = getCost(x,y, *iterX, minCostValue) + y->getCost(minCostValue);
             EnumeratedVariable::iterator iterY = y->begin();
             for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
-                Cost cost = GETCOST(*iterX, *iterY) + y->getCost(*iterY);
+                Cost cost = getCost(x,y, *iterX, *iterY) + y->getCost(*iterY);
                 if (GLB(&minCost, cost)) {
                     minCostValue = *iterY;
                 }
@@ -171,7 +166,7 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
             if (minCost > MIN_COST) {
                 // extend unary to binary
                 for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                    Cost cost = GETCOST(*iterX, *iterY);
+                    Cost cost = getCost(x,y, *iterX, *iterY);
                     if (GLBTEST(minCost, cost)) {
 						extend(y, *iterY, minCost - cost, deltaCostsY);
                         supportY[y->toIndex(*iterY)] = *iterX;
@@ -192,13 +187,13 @@ void BinaryConstraint::findFullSupport(EnumeratedVariable *x, EnumeratedVariable
     }
 }
 
-template <GetCostMember getBinaryCost>
-void BinaryConstraint::projection(EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
+template <typename T>
+void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
     bool supportBroken = false;
     wcsp->revise(this);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        Cost cost = GETCOST(*iterX, valueY);
+        Cost cost = getCost(x,y, *iterX, valueY);
         if (cost > MIN_COST) {
             supportBroken |= project(x, *iterX, cost, deltaCostsX);
         }
@@ -208,15 +203,15 @@ void BinaryConstraint::projection(EnumeratedVariable *x, EnumeratedVariable *y, 
     }
 }
 
-template <GetCostMember getBinaryCost>
-bool BinaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y)
+template <typename T>
+bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariable *y)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        Cost minCost = GETCOST(*iterX, y->getInf());
+        Cost minCost = getCost(x,y, *iterX, y->getInf());
 		if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
         EnumeratedVariable::iterator iterY = y->begin();
         for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
-            Cost cost = GETCOST(*iterX, *iterY);
+            Cost cost = getCost(x,y, *iterX, *iterY);
 			if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
             GLB(&minCost, cost);
         }

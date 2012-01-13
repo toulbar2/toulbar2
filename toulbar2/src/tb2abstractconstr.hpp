@@ -29,8 +29,8 @@ public:
 
     virtual ~AbstractUnaryConstraint() {delete linkX;}
 
-    bool connected() {return !linkX->removed;}
-    bool deconnected() {return linkX->removed;}
+    bool connected() const {return !linkX->removed;}
+    bool deconnected() const {return linkX->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
@@ -98,8 +98,8 @@ public:
 
     virtual ~AbstractBinaryConstraint() {delete linkX; delete linkY;}
 
-    bool connected() {return !linkX->removed && !linkY->removed;}
-    bool deconnected() {return linkX->removed || linkY->removed;}
+    bool connected() const {return !linkX->removed && !linkY->removed;}
+    bool deconnected() const {return linkX->removed || linkY->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
@@ -136,7 +136,7 @@ public:
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->wcspIndex:y->wcspIndex;}
     int getSmallestVarIndexInScope() {return min(x->wcspIndex, y->wcspIndex);}
-    int getDACScopeIndex() {return dacvar;}
+    int getDACScopeIndex() const {return dacvar;}
     void setDACScopeIndex() {if (x->getDACOrder() < y->getDACOrder()) dacvar = 0; else dacvar = 1;}
 
 	void getScope( TSCOPE& scope_inv ) {
@@ -181,8 +181,8 @@ public:
 
     virtual ~AbstractTernaryConstraint() {delete linkX; delete linkY; delete linkZ;}
 
-    bool connected() {return !linkX->removed && !linkY->removed && !linkZ->removed;}
-    bool deconnected() {return linkX->removed || linkY->removed || linkZ->removed;}
+    bool connected() const {return !linkX->removed && !linkY->removed && !linkZ->removed;}
+    bool deconnected() const {return linkX->removed || linkY->removed || linkZ->removed;}
     void deconnect(bool reuse = false) {
         if (connected()) {
             if (ToulBar2::verbose >= 3) cout << "deconnect " << this << endl;
@@ -248,7 +248,7 @@ public:
         int res = min(x->wcspIndex,y->wcspIndex);
         return min(res, z->wcspIndex);
     }
-    int getDACScopeIndex() {return dacvar;}
+    int getDACScopeIndex() const {return dacvar;}
     void setDACScopeIndex() {
         if (x->getDACOrder() < y->getDACOrder() && x->getDACOrder() < z->getDACOrder()) dacvar = 0;
         else if (y->getDACOrder() < x->getDACOrder() && y->getDACOrder() < z->getDACOrder()) dacvar = 1;
@@ -325,15 +325,15 @@ public:
 		else return it->second;
     }
 
-    bool connected(int varIndex) {return !links[varIndex]->removed;}
-    bool deconnected(int varIndex) {return links[varIndex]->removed;}
+    bool connected(int varIndex) const {return !links[varIndex]->removed;}
+    bool deconnected(int varIndex) const {return links[varIndex]->removed;}
 
-	bool connected() {
+	bool connected() const {
        for(int i=0;i<arity_;i++) if(!links[i]->removed) return true;
        return false;
 	}
 
-    bool deconnected() {
+    bool deconnected() const {
        for(int i=0;i<arity_;i++) if(!links[i]->removed) return false;
        return true;
     }
