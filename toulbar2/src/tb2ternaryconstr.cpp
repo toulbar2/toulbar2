@@ -317,16 +317,43 @@ template <typename T1, typename T2, typename T3, typename T4, typename T5, typen
             getCostWithBinaries(x,y,z, *iterX,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
 
             Cost minCost = MAX_COST;
-            for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
+			if (functionalZ) {
+			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
+				Value valZ = getFunctionZ(x,y, *iterX, *iterY);
+				if (valZ >= 0 && z->canbe(valZ)) {
+				  Cost cost = getCostWithBinaries(x,y,z, *iterX,*iterY,valZ) + y->getCost(*iterY) + z->getCost(valZ);
+				  if (GLB(&minCost, cost)) {
+					support = make_pair(*iterY,valZ);
+				  }
+				}
+			  }
+			} else if (functionalY) {
+			  for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
+				Value valY = getFunctionY(x,z, *iterX, *iterZ);
+				if (valY >= 0 && y->canbe(valY)) {
+				  Cost cost = getCostWithBinaries(x,y,z, *iterX,valY,*iterZ) + y->getCost(valY) + z->getCost(*iterZ);
+				  if (GLB(&minCost, cost)) {
+					support = make_pair(valY,*iterZ);
+				  }
+				}
+			  }
+			} else {
+			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
                 for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
 				  Cost cost = getCostWithBinaries(x,y,z, *iterX,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ);
-                    if (GLB(&minCost, cost)) {
-                        support = make_pair(*iterY,*iterZ);
-                    }
+				  if (GLB(&minCost, cost)) {
+					support = make_pair(*iterY,*iterZ);
+				  }
                 }
-            }
-            assert(minCost < MAX_COST);
-            
+			  }
+			}
+			if (CUT(minCost +  wcsp->getLb(), wcsp->getUb())) {
+			  supportBroken |= project(x, *iterX, minCost, deltaCostsX);
+			  if (deconnected()) return;
+			  continue;
+			}
+			assert(minCost < MAX_COST);
+
             if (minCost > MIN_COST) {
                 // extend unary to binary
                 for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -632,7 +659,9 @@ void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCo
     }
 }
 
-bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
+template <typename T1, typename T2, typename T3>
+bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
+            EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
             vector< pair<Value,Value> > &supportX)
 {
     int xindex = x->toIndex(a);
@@ -640,6 +669,27 @@ bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable
     pair<Value,Value> support = supportX[xindex];
     if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
         getCostWithBinaries(x,y,z,a,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
+	  if (functionalZ) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+		  Value valZ = getFunctionZ(x,y, a, *iterY);
+		  if (valZ >= 0 && z->canbe(valZ)) {
+			if (getCostWithBinaries(x,y,z,a,*iterY,valZ) + y->getCost(*iterY) + z->getCost(valZ) == MIN_COST) {
+			  supportX[xindex] = make_pair(*iterY,valZ);
+			  return true;
+			}
+		  }
+		}
+	  } else if (functionalY) {
+		for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+		  Value valY = getFunctionY(x,z, a, *iterZ);
+		  if (valY >= 0 && y->canbe(valY)) {
+			if (getCostWithBinaries(x,y,z,a,valY,*iterZ) + y->getCost(valY) + z->getCost(*iterZ) == MIN_COST) {
+			  supportX[xindex] = make_pair(valY,*iterZ);
+			  return true;
+			}
+		  }
+		}
+	  } else {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
                 if (getCostWithBinaries(x,y,z,a,*iterY,*iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == MIN_COST) {
@@ -648,8 +698,9 @@ bool TernaryConstraint::isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable
                 }
             }
         }
+	  }
 //        cout << x->getName() << " = " << a << " not EAC due to constraint " << *this << endl; 
-        return false;
+	  return false;
     }
     return true;
 }

@@ -69,7 +69,7 @@ public:
     virtual void extendAll(Cost cost);
     Value getSupport() const {return support;}
     void setSupport(Value val) {support = val;}    
-    Cost getCost(const Value value) const {
+    inline Cost getCost(const Value value) const {
         return costs[toIndex(value)] - deltaCost;
     }
     Cost getBinaryCost(ConstraintLink c,    Value myvalue, Value itsvalue);

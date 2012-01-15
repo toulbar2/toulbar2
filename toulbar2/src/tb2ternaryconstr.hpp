@@ -181,7 +181,8 @@ protected:
             BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz);
     bool verify(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z);
 
-    bool isEAC(EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
+    template <typename T1, typename T2, typename T3> bool isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
+               EnumeratedVariable *x, Value a, EnumeratedVariable *y, EnumeratedVariable *z,
                vector< pair<Value,Value> > &supportX);
                
   void findSupportX() {findSupport(Functor_getCostXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x,y,z,0,1,2,supportX,deltaCostsX,supportY,supportZ);}
@@ -426,10 +427,10 @@ public:
 	assert(!isDuplicate());
 	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     switch(varIndex) {
-            case 0: return isEAC(x,a,y,z,supportX); break;
-            case 1: return isEAC(y,a,x,z,supportY); break;
-            case 2: return isEAC(z,a,x,y,supportZ); break;
-            default: exit(EXIT_FAILURE);
+	case 0: return isEAC(Functor_getCostWithBinariesXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x,a,y,z,supportX); break;
+	case 1: return isEAC(Functor_getCostWithBinariesYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y,a,x,z,supportY); break;
+	case 2: return isEAC(Functor_getCostWithBinariesZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z,a,x,y,supportZ); break;
+	default: exit(EXIT_FAILURE);
     }
     return true;
   }
