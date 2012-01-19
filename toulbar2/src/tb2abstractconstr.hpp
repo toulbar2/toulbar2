@@ -62,6 +62,7 @@ public:
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 1); return x->wcspIndex;}
     int getSmallestVarIndexInScope() {return x->wcspIndex;}
+    int getSmallestDACIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 1); return x->getDACOrder();}
 
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -138,6 +139,7 @@ public:
     int getSmallestVarIndexInScope() {return min(x->wcspIndex, y->wcspIndex);}
     int getDACScopeIndex() const {return dacvar;}
     void setDACScopeIndex() {if (x->getDACOrder() < y->getDACOrder()) dacvar = 0; else dacvar = 1;}
+    int getSmallestDACIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex)?x->getDACOrder():y->getDACOrder();}
 
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -253,6 +255,16 @@ public:
         if (x->getDACOrder() < y->getDACOrder() && x->getDACOrder() < z->getDACOrder()) dacvar = 0;
         else if (y->getDACOrder() < x->getDACOrder() && y->getDACOrder() < z->getDACOrder()) dacvar = 1;
         else dacvar = 2;
+	}
+    int getSmallestDACIndexInScope(int forbiddenScopeIndex)
+	{
+        assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 3);
+		switch (forbiddenScopeIndex) {
+            case 0: return min(y->getDACOrder(),z->getDACOrder()); break;
+            case 1: return min(x->getDACOrder(),z->getDACOrder()); break;
+            case 2: return min(x->getDACOrder(),y->getDACOrder()); break;
+            default: exit(EXIT_FAILURE);
+        }
 	}
 	void getScope( TSCOPE& scope_inv ) {
 		scope_inv.clear();
@@ -393,6 +405,17 @@ public:
             scope_inv[ scope[i]->wcspIndex ] = i;
         }
     }
+    int getSmallestDACIndexInScope(int forbiddenScopeIndex)
+    {
+        assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < arity_);
+        int indexmin = INT_MAX;
+        for(int i=0; i < arity_; i++) if (i != forbiddenScopeIndex) {
+            if (scope[i]->getDACOrder() < indexmin) {
+                indexmin = scope[i]->getDACOrder();
+            }
+        }
+        return indexmin;
+	}
 
     set<Constraint *> subConstraint(){
     	set <Constraint *> subcstr;

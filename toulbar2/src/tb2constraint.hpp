@@ -55,6 +55,8 @@ public:
     virtual int getSmallestVarIndexInScope() = 0;
     virtual int getDACScopeIndex() const {cout << "dummy getDACScopeIndex on (" << this << ")!" << endl; return 0;}
     virtual void setDACScopeIndex() {}
+    // return the smallest DAC ordering index in the constraint scope except for one variable having a forbidden scope index
+    virtual int getSmallestDACIndexInScope(int forbiddenScopeIndex) = 0;
 
     virtual void propagate() = 0;
     virtual void increase(int index) {propagate();}

@@ -199,6 +199,7 @@ void setvalue(int wcspId, int varIndex, Value value)
 
 int Solver::getNextUnassignedVar()
 {
+  //    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) return lastConflictVar;
     return (unassignedVars->empty())?-1:(*unassignedVars->begin());
 }
 

@@ -491,6 +491,33 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
 
 void WCSP::sortConstraints()
 {
+  if(ToulBar2::Berge_Dec > 0 ) {
+	// flag pour indiquer si une variable a deja ete visitee initialement a faux
+	vector<bool> marked(numberOfVariables(), false);
+	vector<int> revdac;
+	// nouvel ordre DAC inverse
+	//	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	//	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+
+	//Mark native variable
+	for (int i = ToulBar2::nbvar-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	//Mark q variable only 
+	for (int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+
+	// listofsuccessors.clear(); // appel a la methode clear de l'objet vector
+
+	if( ToulBar2::verbose >= 1 ) { 
+	  cout << "BERGE DAC reverse order:";
+	  for (unsigned int i = 0; i < numberOfVariables(); i++) {
+		cout << " " << revdac[i];
+	  }
+	  cout << endl;
+	}
+
+	assert( revdac.size() == numberOfVariables() );
+
+	setDACOrder(revdac);
+  }
   if (ToulBar2::varOrder) {
 	vector<int> order;
 	elimOrderFile2Vector(ToulBar2::varOrder, order);
@@ -637,41 +664,6 @@ void WCSP::preprocessing() {
 	// recompute current DAC order and its reverse
 	vector<int> elimorder(numberOfVariables(), -1);
 	vector<int> revelimorder(numberOfVariables(), -1);
-
-	if(ToulBar2::Berge_Dec > 0 ) {
-	  // flag pour indiquer si une variable a deja ete visitee initialement a faux
-	  vector<bool> marked(numberOfVariables(), false);
-	  vector<int> revdac;
-	  // nouvel ordre DAC inverse
-	  //	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-	  //	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-
-	  //Mark native variable
-	  for (int i = ToulBar2::nbvar-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-	  //Mark q variable only 
-	  for (int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-
-	  // listofsuccessors.clear(); // appel a la methode clear de l'objet vector
-
-	  if( ToulBar2::verbose >= 1 ) { cout << "MARKED:";
-		for (unsigned int i = 0; i < numberOfVariables(); i++) {
-		  cout << i<< "=" << marked[i];
-		  cout << endl;
-		}
-	  }
-	  cout << "BERGE DAC reverse order:";
-	  for (unsigned int i = 0; i < numberOfVariables(); i++) {
-		cout << " " << revdac[i];
-	  }
-	  cout << endl;
-	  if( revdac.size() != numberOfVariables() ) { 
-		cout << "topoligac order error in setDAC order " << revdac.size() << "  not cover the set of variable "<< numberOfVariables() << endl;
-
-	  }
-
-	  setDACOrder(revdac);	
-	}
- 
 	for (unsigned int i = 0; i < numberOfVariables(); i++) {
 	  revelimorder[getVar(i)->getDACOrder()] = i;
 	  elimorder[numberOfVariables() - getVar(i)->getDACOrder() -1] = i;
@@ -686,9 +678,8 @@ void WCSP::preprocessing() {
 //		cout << " " << elimorder[i];
 //	}
 //	cout << endl;
-		setDACOrder(revelimorder);
-		setDACOrder(elimorder);
-	
+	setDACOrder(revelimorder);
+	setDACOrder(elimorder);
 
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {

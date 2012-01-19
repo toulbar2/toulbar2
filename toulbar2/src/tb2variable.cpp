@@ -76,6 +76,17 @@ int cmpConstraint(const void *p1, const void *p2)
     else return 0;
 }
 
+int cmpConstraintDAC(const void *p1, const void *p2)
+{
+    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
+    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+    if (v1 < v2) return 1;
+    else if (v1 > v2) return -1;
+    else return 0;
+}
+
 int cmpConstraintTightness(const void *p1, const void *p2)
 {
     DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
@@ -87,7 +98,6 @@ int cmpConstraintTightness(const void *p1, const void *p2)
     else return 0;
 }
 
-
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();
@@ -96,7 +106,7 @@ void Variable::sortConstraints()
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         sorted[i++] = iter.getElt();
     }
-    qsort(sorted, size, sizeof(DLink<ConstraintLink> *), cmpConstraint);
+    qsort(sorted, size, sizeof(DLink<ConstraintLink> *), cmpConstraintDAC);
     for (int i = 0; i < size; i++) {
         constrs.erase(sorted[i],true);
         constrs.push_back(sorted[i],true);
