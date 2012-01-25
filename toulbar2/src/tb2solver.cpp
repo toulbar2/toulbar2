@@ -682,7 +682,7 @@ void Solver::singletonConsistency()
     bool done = false;
     while(!done) {
     	done = true;
-	    for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
+	    for (unsigned int varIndex = 0; varIndex < ((ToulBar2::nbDecisionVars > 0 && ToulBar2::nbDecisionVars <= wcsp->numberOfVariables())?ToulBar2::nbDecisionVars:wcsp->numberOfVariables()); varIndex++) {
 			  int size = wcsp->getDomainSize(varIndex);
 		      ValueCost* sorted = new ValueCost [size];
 			  wcsp->iniSingleton();
