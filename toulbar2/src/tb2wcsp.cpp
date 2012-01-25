@@ -656,7 +656,7 @@ void WCSP::preprocessing() {
 		}
 		posConstrs = constrs.size();
 		posElimTernConstrs = elimTernOrder;
-		cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
+		if (!ToulBar2::uai || ToulBar2::debug) cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
 	}
 
 	propagate();
@@ -987,7 +987,7 @@ void WCSP::dump(ostream& os, bool original) {
 	if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
 	//####################" dump dot file ###############################""
-	cout << " Graph structure saved in problem.dot " << endl;
+	if (!ToulBar2::uai || ToulBar2::debug) cout << " Graph structure saved in problem.dot " << endl;
 	if (original) {
 		strcat(Pb_graph, "_original.dot");
 	} else {
@@ -2013,7 +2013,7 @@ void WCSP::buildTreeDecomposition() {
 	double time = cpuTime();
 	if (ToulBar2::approximateCountingBTD) td->buildFromOrderForApprox();
 	else td->buildFromOrder();
-	cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
+	if (!ToulBar2::uai || ToulBar2::debug) cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
 	if (!ToulBar2::approximateCountingBTD) {
 		vector<int> order;
 		td->getElimVarOrder(order);

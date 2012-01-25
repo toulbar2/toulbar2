@@ -835,6 +835,7 @@ void WCSP::read_uai2008(const char *fileName)
     Cost cost;
     int ntuples;
     int arity;
+	int maxarity = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
 	                
 	list<int> lctrs;
@@ -868,6 +869,7 @@ void WCSP::read_uai2008(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
+		maxarity = max(maxarity,arity);
 
         if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
         if (!file) {
@@ -1049,8 +1051,8 @@ void WCSP::read_uai2008(const char *fileName)
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    if (ToulBar2::verbose >= 0) {
-        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions." << endl;
+    if (ToulBar2::debug) {
+        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
     }   
     histogram();
  
@@ -1067,6 +1069,8 @@ void WCSP::read_uai2008(const char *fileName)
 	    vector<int> variables;
 	    vector<Value> values;
 		fevid >> nevi;
+		if (nevi == 0) return;
+		if (nevi == 1) fevid >> nevi;  // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
 	 	while(nevi) {
 	 		if(!fevid) {
 				cerr << "Error: incorrect number of evidences." << endl;
@@ -1089,8 +1093,11 @@ void WCSP::read_uai2008(const char *fileName)
 void WCSP::solution_UAI(Cost res)
 {
  	if (!ToulBar2::uai) return;
-    cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << " ";
+	// UAI 2012 Challenge output format
+	cout << "-BEGIN-" << endl;
+	cout << "1" << endl; // UAI 2012: we assume a single evidence sample
+	if (ToulBar2::debug) cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+	if (ToulBar2::debug) cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
 	ifstream sol;
 	sol.open("sol");	
 	if(sol) { 	

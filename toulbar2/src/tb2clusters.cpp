@@ -1363,7 +1363,7 @@ int TreeDecomposition::makeRooted()
 		Cluster* c = clusters[i];
 		if(c->getNbVars() > treewidth) treewidth = c->getNbVars();
 	}
-	if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "Tree decomposition width  : " << treewidth - 1 << endl;
+	if(ToulBar2::debug || ToulBar2::verbose || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "Tree decomposition width  : " << treewidth - 1 << endl;
 
 	return height(root);
 }
@@ -1564,7 +1564,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 	}
 
 	int h = makeRooted();
-	if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "Tree decomposition height : " << h << endl;
+	if(ToulBar2::debug || ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "Tree decomposition height : " << h << endl;
 	 if (!ToulBar2::approximateCountingBTD)
 	 {
 		 // assign constraints to clusters and check for duplicate ternary constraints
@@ -1630,7 +1630,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 			 }
 		 }
 	 }
-	if ((!ToulBar2::xmlflag && !ToulBar2::uai) || ToulBar2::verbose >= 1) {
+	if ((!ToulBar2::xmlflag && !ToulBar2::uai) || ToulBar2::debug || ToulBar2::verbose >= 1) {
 		cout << "Number of clusters        : " << clusters.size() << endl;
 		if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1) {
 		  print();
