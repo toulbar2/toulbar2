@@ -261,6 +261,8 @@ public:
 	static bool xmlflag;
 	static TProb markov_log;
 	static string evidence_file;
+	static ofstream solution_file;
+    static bool uai_firstoutput;
 
 	static double startCpuTime;
 

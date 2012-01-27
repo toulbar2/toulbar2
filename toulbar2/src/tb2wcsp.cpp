@@ -53,7 +53,7 @@ bool ToulBar2::dichotomicBranching = true;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 int ToulBar2::lds = 0;
 bool ToulBar2::limited = false;
-Long ToulBar2::restart = 0;
+Long ToulBar2::restart = -1;
 bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 bool ToulBar2::Static_variable_ordering=false;
@@ -74,6 +74,8 @@ Haplotype *ToulBar2::haplotype = NULL;
 bool ToulBar2::bayesian = false;
 bool ToulBar2::uai = false;
 string ToulBar2::evidence_file;
+ofstream ToulBar2::solution_file;
+bool ToulBar2::uai_firstoutput = true;
 TProb ToulBar2::markov_log = 0;
 bool ToulBar2::xmlflag = false;
 string ToulBar2::map_file;
@@ -633,8 +635,7 @@ void WCSP::preprocessing() {
 			ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
 			maxDegree = -1;
 			propagate();
-			if (!ToulBar2::uai && !ToulBar2::xmlflag) cout << "Maximum degree of generic variable elimination: "
-					<< maxDegree << endl;
+			cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
 		} else if (ToulBar2::elimDegree >= 0) {
 			ToulBar2::elimDegree_ = ToulBar2::elimDegree;
 		}
@@ -656,7 +657,7 @@ void WCSP::preprocessing() {
 		}
 		posConstrs = constrs.size();
 		posElimTernConstrs = elimTernOrder;
-		if (!ToulBar2::uai || ToulBar2::debug) cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
+		cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
 	}
 
 	propagate();
@@ -987,7 +988,7 @@ void WCSP::dump(ostream& os, bool original) {
 	if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
 	//####################" dump dot file ###############################""
-	if (!ToulBar2::uai || ToulBar2::debug) cout << " Graph structure saved in problem.dot " << endl;
+	cout << " Graph structure saved in problem.dot " << endl;
 	if (original) {
 		strcat(Pb_graph, "_original.dot");
 	} else {
@@ -2013,7 +2014,7 @@ void WCSP::buildTreeDecomposition() {
 	double time = cpuTime();
 	if (ToulBar2::approximateCountingBTD) td->buildFromOrderForApprox();
 	else td->buildFromOrder();
-	if (!ToulBar2::uai || ToulBar2::debug) cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
+	cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
 	if (!ToulBar2::approximateCountingBTD) {
 		vector<int> order;
 		td->getElimVarOrder(order);
@@ -2086,12 +2087,12 @@ void WCSP::setDACOrder(vector<int> &order) {
 	}
 
 	// set DAC order to the inverse of the elimination variable ordering
-	if (!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << "DAC order:";
+	if (ToulBar2::verbose) cout << "DAC order:";
 	for (int i = order.size() - 1; i >= 0; i--) {
-		if (!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << " " << getVar(order[i])->getName();
+		if (ToulBar2::verbose) cout << " " << getVar(order[i])->getName();
 		getVar(order[i])->setDACOrder(order.size() - 1 - i);
 	}
-	if (!ToulBar2::uai && !ToulBar2::xmlflag && ToulBar2::verbose) cout << endl;
+	if (ToulBar2::verbose) cout << endl;
 
 	for (unsigned int i = 0; i < numberOfConstraints(); i++) {
 		Constraint* ctr = getCtr(i);

@@ -11,7 +11,6 @@
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
 #include <list>
-#include <libgen.h>
 
 typedef struct {
     EnumeratedVariable *var;
@@ -780,10 +779,8 @@ void WCSP::read_wcsp(const char *fileName)
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    if (ToulBar2::verbose >= 0) {
-	  cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
-    }   
     histogram();
+    cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
 
 
@@ -1051,10 +1048,8 @@ void WCSP::read_uai2008(const char *fileName)
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    if (ToulBar2::debug) {
-        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
-    }   
     histogram();
+    cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
  
  	int nevi = 0;	
 	ifstream fevid(ToulBar2::evidence_file.c_str());
@@ -1090,25 +1085,36 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
-void WCSP::solution_UAI(Cost res)
+void WCSP::solution_UAI(Cost res, bool opt)
 {
  	if (!ToulBar2::uai) return;
+ 	if (ToulBar2::isZ) return;
 	// UAI 2012 Challenge output format
-	cout << "-BEGIN-" << endl;
-	cout << "1" << endl; // UAI 2012: we assume a single evidence sample
-	if (ToulBar2::debug) cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	if (ToulBar2::debug) cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
+	if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
+	else ToulBar2::solution_file << "-BEGIN-" << endl;
+	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
+	if (ToulBar2::showSolutions) cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+	if (ToulBar2::showSolutions) cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
 	ifstream sol;
 	sol.open("sol");	
 	if(sol) { 	
-		cout << vars.size() << " ";
+		if (ToulBar2::showSolutions) cout << vars.size() << " ";
+		ToulBar2::solution_file << vars.size() << " ";
 	    for (unsigned int i=0; i<vars.size(); i++) {
 			int value;
 	    	sol >> value;
-	    	cout << value << " ";
+	    	if (ToulBar2::showSolutions) cout << value << " ";
+	    	ToulBar2::solution_file << value << " ";
 	    }
 	}
-	cout << endl;
+	if (opt) {
+	  if (ToulBar2::showSolutions) cout << "LU" << endl;
+	  ToulBar2::solution_file << "LU" << endl;
+	} else {
+	  if (ToulBar2::showSolutions) cout << "L" << endl;
+	  ToulBar2::solution_file << "L" << endl;
+	}
+	ToulBar2::solution_file.flush();
 	sol.close();
 }
 
@@ -1339,10 +1345,8 @@ void WCSP::read_wcnf(const char *fileName)
   for (unsigned int u=0; u<unaryconstrs.size(); u++) {
 	postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
   }
-  if (ToulBar2::verbose >= 0) {
-	cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
-  }   
   histogram();  
+  cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
@@ -1501,8 +1505,6 @@ void WCSP::read_qpbo(const char *fileName)
 	  postUnary(i, costs);
     }
   }
-
   histogram();  
-
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }

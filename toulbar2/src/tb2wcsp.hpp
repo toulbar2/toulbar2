@@ -282,7 +282,7 @@ public:
 
 	void read_XML(const char *fileName);		///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
-	void solution_UAI(Cost res);				///< \brief output solution in UAI 2008 output format
+	void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
 
 	void print(ostream& os);								///< \brief print current domains and active cost functions (see \ref verbosity)
 	void dump(ostream& os, bool original = true);			///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes

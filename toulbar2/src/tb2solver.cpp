@@ -21,7 +21,7 @@ extern void setvalue(int wcspId, int varIndex, Value value);
 
 Solver *Solver::currentSolver = NULL;
 
-Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(-1), wcsp(NULL),
+Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(NULL),
                                                      allVars(NULL), unassignedVars(NULL), lastConflictVar(-1), nbSol(0.), nbSGoods(0), nbSGoodsUse(0)
 {
     store = new Store(storeSize);
@@ -521,7 +521,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     store->restore();
     wcsp->enforceUb();
     nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 
     if (dichotomic) {
       if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
@@ -557,7 +557,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         store->restore();
         wcsp->enforceUb();
         nbBacktracks++;
-		if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+		if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
           if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
         } else assign(varIndex, value);
@@ -608,7 +608,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     store->restore();
     wcsp->enforceUb();
     nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	if (reverse) assign(varIndex, xinf);
 	else increase(varIndex, postponeValue);
     recursiveSolve();
@@ -648,7 +648,7 @@ void Solver::narySortedChoicePoint(int varIndex)
 	delete [] sorted;
     wcsp->enforceUb();
     nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
 
 /* returns true if a limit has occured during the search */
@@ -673,7 +673,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 	delete [] sorted;
     wcsp->enforceUb();
     nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
 
 void Solver::singletonConsistency()
@@ -736,10 +736,10 @@ void Solver::newSolution()
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 	if (ToulBar2::isZ) ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + ToulBar2::negCost);
 
-  	if(!ToulBar2::xmlflag && !ToulBar2::uai && (!ToulBar2::allSolutions || ToulBar2::debug)) {
+  	if(!ToulBar2::allSolutions || ToulBar2::debug) {
   		if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 		else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {
   		if(ToulBar2::xmlflag) {
@@ -800,6 +800,8 @@ void Solver::newSolution()
 	}
 
 	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
+
+	if (ToulBar2::restart==0 && !ToulBar2::lds) throw NbBacktracksOut();
 }
 
 void Solver::recursiveSolve()
@@ -807,10 +809,10 @@ void Solver::recursiveSolve()
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
 	else if (ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar();
-	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
-	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
-	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
-	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
+	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
+	else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -832,10 +834,10 @@ void Solver::recursiveSolveLDS(int discrepancy)
 {
 	int varIndex = -1;
 	if (ToulBar2::bep) varIndex = getMostUrgent();
-	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
-	else if(ToulBar2::lastConflict) varIndex =  ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
-	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
-	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
+	else if(ToulBar2::lastConflict) varIndex =  ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
+	else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
 	    if (ToulBar2::bep) scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -891,12 +893,10 @@ bool Solver::solve()
 
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
-		if (!ToulBar2::uai || ToulBar2::debug) cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+		cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 
-        if (ToulBar2::verbose >= 1 || ToulBar2::debug || (!ToulBar2::xmlflag && !ToulBar2::uai)) {
-		  cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions." << endl;
-		  cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
-		}
+		cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions." << endl;
+		cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
 
         if (ToulBar2::singletonConsistency) {
 		  singletonConsistency();
@@ -909,7 +909,7 @@ bool Solver::solve()
 		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
 		  wcsp->buildTreeDecomposition();
 	    } else if (ToulBar2::weightedDegree && (((Long) wcsp->numberOfConnectedConstraints()) >= ((Long) ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables())) {
-		  if (!ToulBar2::uai || ToulBar2::debug) cout << "Weighted degree heuristic disabled (#constr=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << "*#var=" << ((Long)ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables() << ")" << endl;
+		  cout << "Weighted degree heuristic disabled (#constr=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << "*#var=" << ((Long)ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables() << ")" << endl;
 		  ToulBar2::weightedDegree = 0;
 		}
 		
@@ -918,8 +918,8 @@ bool Solver::solve()
         // special data structure to be initialized for variable ordering heuristics
 	    initVarHeuristic();
 
-		if (ToulBar2::restart) {
-		  nbBacktracksLimit = 1;
+		if (ToulBar2::restart>=0) {
+		  if (ToulBar2::restart>0)nbBacktracksLimit = 1;
 		  CurrentWeightedCSP = wcsp;
 		  UpperBound = wcsp->getUb();
 		  ToulBar2::newsolution = solution_restart;
@@ -930,25 +930,25 @@ bool Solver::solve()
 		Long nbBacktracksLimitTop = 1;
 		int storedepth = store->getDepth();
 		do {
-		  if (ToulBar2::restart) {
+		  if (ToulBar2::restart>=0) {
 			nbbacktracksout = false;
 			nbrestart++;
-			//			currentNbBacktracksLimit = max(currentNbBacktracksLimit + 1, (Long) (1.2 * (Double) currentNbBacktracksLimit + 0.5));
-			if (ToulBar2::lds) currentNbBacktracksLimit *= 4;
-			else currentNbBacktracksLimit = luby(nbrestart);
+			// currentNbBacktracksLimit = max(currentNbBacktracksLimit + 1, (Long) (1.2 * (Double) currentNbBacktracksLimit + 0.5));
+			// if (ToulBar2::lds) currentNbBacktracksLimit *= 4;
+			currentNbBacktracksLimit = luby(nbrestart);
 			if (currentNbBacktracksLimit > nbBacktracksLimitTop || IsASolution) {
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
 			  currentNbBacktracksLimit = 1;
 			}
-			if (!IsASolution && nbNodes > ToulBar2::restart) {
+			if (!IsASolution && nbNodes >= ToulBar2::restart) {
 			  nbBacktracksLimit = LONGLONG_MAX;
 			  ToulBar2::restart = 0;
-			  if(!ToulBar2::uai || ToulBar2::debug) cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
+			  cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
 			} else {
 			  nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
-			  if(!ToulBar2::uai || ToulBar2::debug) cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
-			  store->store();
+			  cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
 			}
+			store->store();
 			IsASolution = false;
 			wcsp->setUb(UpperBound);
 			wcsp->enforceUb();
@@ -956,16 +956,16 @@ bool Solver::solve()
 			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 		  }
 		  try {
-			if (ToulBar2::lds) {
+			if (ToulBar2::restart <= 0 && ToulBar2::lds) {
 			  int discrepancy = 0;
 			  do {
-				if (discrepancy > ToulBar2::lds) {if (!ToulBar2::uai || ToulBar2::debug) cout << "--- [" << store->getDepth() << "] Search with no discrepancy limit --- (" << nbNodes << " nodes)" << endl;}
-				else {if (!ToulBar2::uai || ToulBar2::debug) cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << " nodes)" << endl;}
+				if (discrepancy > ToulBar2::lds) {cout << "--- [" << store->getDepth() << "] Search with no discrepancy limit --- (" << nbNodes << " nodes)" << endl;}
+				else {cout << "--- [" << store->getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << " nodes)" << endl;}
 				ToulBar2::limited = false;
 				try {
 				  store->store();
 				  if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-				  if (discrepancy > ToulBar2::lds) recursiveSolve(); else recursiveSolveLDS(discrepancy);
+				  if (discrepancy > ToulBar2::lds) {ToulBar2::lds = false; recursiveSolve();} else recursiveSolveLDS(discrepancy);
 				} catch (Contradiction) {
 				  wcsp->whenContradiction();
 				}
@@ -1025,10 +1025,13 @@ bool Solver::solve()
     }
     if(ToulBar2::isZ) {
 	  if (ToulBar2::uai) {
-		cout << "-BEGIN-" << endl;
-		cout << "1" << endl;
+		if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
+		else ToulBar2::solution_file << "-BEGIN-" << endl;
+		ToulBar2::solution_file << "1" << endl;
+		ToulBar2::solution_file << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
+		ToulBar2::solution_file.flush();
 	  }
-	  if (ToulBar2::debug) cout << "Log10(Z)= ";
+	  cout << "Log10(Z)= ";
 	  cout <<  (ToulBar2::logZ + ToulBar2::markov_log) << endl;
 	  return true;
     }
@@ -1056,18 +1059,15 @@ bool Solver::solve()
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
     		else if(ToulBar2::uai && !ToulBar2::isZ) {
-			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb());
-			  if(ToulBar2::debug) cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
+			  cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			}
     	}
         return true;
     } else {
-	    if(ToulBar2::debug || (!ToulBar2::uai && !ToulBar2::xmlflag)) {
- 	       cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-    	}
+	    cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
         return false;
     }
-
 }
 
 

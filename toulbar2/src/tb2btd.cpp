@@ -283,7 +283,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
     }
     store->restore();
     nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
     try {
         store->store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -345,7 +345,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
 	}
 	store->restore();
 	nbBacktracks++;
-	if (ToulBar2::restart && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
+	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	try {
 		store->store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -379,10 +379,10 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
 
   int varIndex = -1;
-  if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
-  else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
-  else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
-  else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
+  if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+  else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
+  else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
+  else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
 
   if (varIndex < 0) {
 	// Current cluster is completely assigned
@@ -432,7 +432,8 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	    // A new solution has been found for the current cluster
 		cluster->solutionRec(lb);
 		if(cluster == td->getRoot() || cluster == td->getRootRDS()) {
-			if(ToulBar2::verbose >= 1||(!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+			if(!ToulBar2::bayesian) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+			else cout << "New solution: " << lb << " log10like: " << wcsp->Cost2LogLike(lb) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob(lb) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 			if(cluster == td->getRoot()) td->newSolution(lb);
 			else {
 			  assert(cluster == td->getRootRDS());
@@ -505,7 +506,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  td->setRootRDS(c);
 	  lastConflictVar = -1;
 
-	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
+	  cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
 
 	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
 	  Cost rdslb = td->getLbRecRDS();
@@ -514,7 +515,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 
 	  if (ToulBar2::debug || ToulBar2::verbose >= 1) c->printStatsRec();
-	  if(ToulBar2::verbose >= 1 || (!ToulBar2::xmlflag && !ToulBar2::uai)) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
+	  cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
@@ -539,10 +540,10 @@ BigInteger Solver::sharpBTD(Cluster *cluster){
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************"<< endl;
 
 	int varIndex = -1;
-	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
-	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
-	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
-	else varIndex = ((ToulBar2::restart)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
+	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
+	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
+	else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
 
 	if (varIndex < 0) {
 		// Current cluster is completely assigned
