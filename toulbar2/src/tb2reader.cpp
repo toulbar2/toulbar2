@@ -1064,6 +1064,7 @@ void WCSP::read_uai2008(const char *fileName)
 	    vector<int> variables;
 	    vector<Value> values;
 		fevid >> nevi;
+		bool firstevid =true;
 		if (nevi == 0) return;
 		if (nevi == 1) fevid >> nevi;  // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
 	 	while(nevi) {
@@ -1073,6 +1074,11 @@ void WCSP::read_uai2008(const char *fileName)
 	 		}
 	 		fevid >> i;
 	 		fevid >> j;
+			if (firstevid && !fevid) { // old UAI 2008 evidence format
+			  variables.push_back(nevi);
+			  values.push_back(i);
+			  break;
+			} else firstevid = false;
 			variables.push_back(i);
 			values.push_back(j);
 	 		nevi--;
