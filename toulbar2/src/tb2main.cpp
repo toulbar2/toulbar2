@@ -1363,7 +1363,6 @@ int _tmain(int argc, TCHAR * argv[])
 				cout <<  "loading uai file:  "<< glob.File(n) << endl;
 				ToulBar2::uai = true;
 				ToulBar2::bayesian = true;
-				ToulBar2::writeSolution = true;
 			}
 			// UAI evidence file
 			if(check_file_ext(glob.File(n),file_extension_map["evid_ext"]) ) {

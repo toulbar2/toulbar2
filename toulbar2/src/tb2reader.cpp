@@ -1085,37 +1085,31 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
-void WCSP::solution_UAI(Cost res, bool opt)
+void WCSP::solution_UAI(Cost res, TAssign *sol, bool opt)
 {
  	if (!ToulBar2::uai) return;
  	if (ToulBar2::isZ) return;
 	// UAI 2012 Challenge output format
+	if (!opt) setSolution(sol); // WARNING!!! It assumes a call with opt=true is outside the search tree (variables unassigned)
 	if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
 	else ToulBar2::solution_file << "-BEGIN-" << endl;
 	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
-	if (ToulBar2::showSolutions) cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	if (ToulBar2::showSolutions) cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
-	ifstream sol;
-	sol.open("sol");	
-	if(sol) { 	
-		if (ToulBar2::showSolutions) cout << vars.size() << " ";
-		ToulBar2::solution_file << vars.size() << " ";
-	    for (unsigned int i=0; i<vars.size(); i++) {
-			int value;
-	    	sol >> value;
-	    	if (ToulBar2::showSolutions) cout << value << " ";
-	    	ToulBar2::solution_file << value << " ";
-	    }
+	if (ToulBar2::showSolutions) {
+	  cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+	  cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
+	  cout << numberOfVariables();
+	  printSolution(cout);
 	}
+	ToulBar2::solution_file << numberOfVariables();
+	printSolution(ToulBar2::solution_file);
 	if (opt) {
-	  if (ToulBar2::showSolutions) cout << "LU" << endl;
-	  ToulBar2::solution_file << "LU" << endl;
+	  if (ToulBar2::showSolutions) cout << " LU" << endl;
+	  ToulBar2::solution_file << " LU" << endl;
 	} else {
-	  if (ToulBar2::showSolutions) cout << "L" << endl;
-	  ToulBar2::solution_file << "L" << endl;
+	  if (ToulBar2::showSolutions) cout << " L" << endl;
+	  ToulBar2::solution_file << " L" << endl;
 	}
 	ToulBar2::solution_file.flush();
-	sol.close();
 }
 
 

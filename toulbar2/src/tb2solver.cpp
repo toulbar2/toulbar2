@@ -734,12 +734,14 @@ void Solver::newSolution()
 #endif
     if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->updateUb(wcsp->getLb());
 	else if (!ToulBar2::btdMode) nbSol += 1.;
-	if (ToulBar2::isZ) ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + ToulBar2::negCost);
-
-  	if(!ToulBar2::allSolutions || ToulBar2::debug) {
+	if (ToulBar2::isZ) {
+	  ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + ToulBar2::negCost);
+	  if (ToulBar2::debug && (nbBacktracks % 10000LL)==0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
+	}
+  	if((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug>=2) {
   		if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 		else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb() + ToulBar2::negCost) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + ToulBar2::negCost ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {
   		if(ToulBar2::xmlflag) {
@@ -1059,7 +1061,7 @@ bool Solver::solve()
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
     		else if(ToulBar2::uai && !ToulBar2::isZ) {
-			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
+			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), NULL, true);
 			  cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			}
     	}

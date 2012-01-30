@@ -43,6 +43,7 @@ class WCSP : public WeightedCSP {
 	Cost ub; 							///< current problem upper bound
 	vector<Variable *> vars; 			///< list of all variables
 	vector<Value> bestValues; 			///< hint for some value ordering heuristics (ONLY used by RDS)
+	vector<Value> solution; 			///< remember last solution found
 	vector<Constraint *> constrs; 		///< list of original cost functions
 	int NCBucketSize; 					///< number of buckets for NC bucket sort
 	vector< VariableList > NCBuckets;	///< NC buckets: vector of backtrackable lists of variables
@@ -282,7 +283,10 @@ public:
 
 	void read_XML(const char *fileName);		///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
-	void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
+    void solution_UAI(Cost res, TAssign *sol = NULL, bool opt = false );				///< \brief output solution in UAI 2008 output format
+    vector<Value> &getSolution() {return solution;}
+    void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
+    void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}
 
 	void print(ostream& os);								///< \brief print current domains and active cost functions (see \ref verbosity)
 	void dump(ostream& os, bool original = true);			///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
@@ -306,7 +310,7 @@ public:
 		}
 	}
 
-	void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getSup()+1);}
+	void link(Variable *x) {vars.push_back(x); bestValues.push_back(x->getSup()+1); solution.push_back(x->getSup()+1);}
 	void link(Constraint *c) {constrs.push_back(c);}
 
 	VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }

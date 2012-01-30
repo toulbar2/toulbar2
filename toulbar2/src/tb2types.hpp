@@ -153,6 +153,7 @@ const int MAX_ELIM_BIN = 1000000000;
 const int MAX_ARITY = 1000;
 
 typedef map<int, int> TSCOPE;
+typedef map<int, Value> TAssign;
 
 #ifdef NARYCHAR
 #define CHAR_FIRST '0'

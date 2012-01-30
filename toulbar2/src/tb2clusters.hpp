@@ -19,7 +19,7 @@ class Cluster;
 
 typedef set<int>	       TVars;
 typedef set<Constraint*>   TCtrs;
-typedef map<int,Value>     TAssign;
+//typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
 typedef pair<Cost,bool>     TPairNG;

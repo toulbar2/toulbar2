@@ -1850,7 +1850,7 @@ void TreeDecomposition::newSolution( Cost lb )
 		wcsp->solution_XML();
 	}
 	else if(ToulBar2::uai) {
-		wcsp->solution_UAI(lb);
+	  wcsp->solution_UAI(lb, &a);
 	}
 	// warning: cannot read solution from variable assignments
 	// else if(ToulBar2::pedigree){
