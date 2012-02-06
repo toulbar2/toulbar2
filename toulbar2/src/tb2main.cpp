@@ -685,7 +685,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
 	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
 	cerr << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
-	cerr << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment read from file \"sol\")" << endl << endl;
+	cerr << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" or given as input filename with \".sol\" extension)" << endl << endl;
 	cerr << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
 	cerr << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cerr << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
@@ -892,6 +892,7 @@ int _tmain(int argc, TCHAR * argv[])
 					if (ToulBar2::debug) cout << "partial assignment to be checked ..." << certificateString << endl;
 				} else {
 					certificate = true;
+					certificateString = (char *) "";
 					certificateFilename = (char *) "sol";
 					if (ToulBar2::debug) cout << "certificate of solution read in file: ./" << certificateFilename << endl;
 
@@ -1467,9 +1468,9 @@ int _tmain(int argc, TCHAR * argv[])
 			// read assignment in file or filename of solution
 			if(check_file_ext(glob.File(n),file_extension_map["sol_ext"]) ) 
 			{
-				if (certificateString)
+				if (certificateString && strcmp(certificateString, "")!=0)
 				{ 
-					cerr << "\n COMMAND LINE ERROR bad partial assignment, assignment already defined in command line ...-x argument " << endl ;
+					cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl ;
 					exit(-1) ;
 				}
 				cout << "loading solution in file: " << glob.File(n) << endl;

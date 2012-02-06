@@ -107,7 +107,8 @@ void Solver::read_solution(const char *filename)
     wcsp->assignLS(variables, values);
     wcsp->propagate();
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
-	if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
+	assert(wcsp->numberOfUnassignedVariables() == 0);
+	wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     store->restore(depth);
 }
 
@@ -163,7 +164,7 @@ void Solver::parse_solution(const char *certificate)
 
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
     
-    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
+//    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
 //    store->restore(depth);
 }
 
