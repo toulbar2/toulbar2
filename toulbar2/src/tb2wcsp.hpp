@@ -220,6 +220,9 @@ public:
 		return res;}
 	unsigned int numberOfConstraints() const {return constrs.size();}	///< \brief initial number of cost functions
 	unsigned int numberOfConnectedConstraints() const;				///< \brief current number of cost functions
+	unsigned int numberOfConnectedBinaryConstraints() const;		///< \brief current number of binary cost functions
+	unsigned int medianDomainSize() const;							///< \brief median current domain size of variables
+	unsigned int medianDegree() const;								///< \brief median current degree of variables
 	Value getDomainSizeSum();										///< \brief total sum of current domain sizes
 	/// \brief Cartesian product of current domain sizes
 	/// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP

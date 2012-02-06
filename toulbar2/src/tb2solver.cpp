@@ -290,12 +290,13 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
 			nbties = 1;
 			ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+			//        } else if ((heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
         } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
 		 ties[nbties] = *iter;
 		 nbties++;
 	   }
     }
-    if (nbties>1) return ties[myrand()%nbties];
+    if (nbties>1) {if (ToulBar2::debug>1) cout << "RAND VAR " << nbties << endl; return ties[myrand()%nbties];}
     else return varIndex;
 }
 
@@ -382,12 +383,13 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
 		   nbties = 1;
 		   ties[0] = varIndex;
            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+		   //       } else if ((heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
        } else if (heuristic < best + 1./1000001. && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
 		 ties[nbties] = *iter;
 		 nbties++;
 	   }
    }
-   if (nbties>1) return ties[myrand()%nbties];
+   if (nbties>1) {if (ToulBar2::debug>1) cout << "RAND VAR " << nbties << endl; return ties[myrand()%nbties];}
    else return varIndex;
 }
 
@@ -502,8 +504,10 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
     Value middle = value;
     bool increasing = true;
+	//	bool reverse = ((ToulBar2::restart>0) && (myrand()%10==0));
     if (dichotomic) {
       middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
+	  //      if (value <= middle || reverse) increasing = true;
       if (value <= middle) increasing = true;
       else increasing = false;
     }
@@ -512,7 +516,9 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
         lastConflictVar = varIndex;
         if (dichotomic) {
     	  if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
-    	} else assign(varIndex, value);
+    	// } else if (reverse) {
+		//   remove(varIndex, value);
+		} else assign(varIndex, value);
         lastConflictVar = -1;
         recursiveSolve();
     } catch (Contradiction) {
@@ -525,7 +531,9 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
 
     if (dichotomic) {
       if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
-    } else remove(varIndex, value);
+    // } else if (reverse) {
+	//   assign(varIndex, value);
+	} else remove(varIndex, value);
     recursiveSolve();
 
 }
@@ -910,8 +918,8 @@ bool Solver::solve()
 	    if (ToulBar2::btdMode) {
 		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
 		  wcsp->buildTreeDecomposition();
-	    } else if (ToulBar2::weightedDegree && (((Long) wcsp->numberOfConnectedConstraints()) >= ((Long) ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables())) {
-		  cout << "Weighted degree heuristic disabled (#constr=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << "*#var=" << ((Long)ToulBar2::weightedDegree) * wcsp->numberOfUnassignedVariables() << ")" << endl;
+	    } else if (ToulBar2::weightedDegree && (((Long) wcsp->numberOfConnectedConstraints()) >= ((Long) ToulBar2::weightedDegree))) {
+		  cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;
 		  ToulBar2::weightedDegree = 0;
 		}
 		
@@ -942,7 +950,8 @@ bool Solver::solve()
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
 			  currentNbBacktracksLimit = 1;
 			}
-			if (!IsASolution && nbNodes >= ToulBar2::restart) {
+			//			if (!IsASolution && nbNodes >= ToulBar2::restart) {
+			if (nbNodes >= ToulBar2::restart) {
 			  nbBacktracksLimit = LONGLONG_MAX;
 			  ToulBar2::restart = 0;
 			  cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;

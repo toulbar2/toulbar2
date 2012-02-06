@@ -278,7 +278,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_lastConflict, 			(char*) "--lastConflict--off", 		SO_NONE 	},
 	{ OPT_dichotomicBranching,		(char*) "-d", 				SO_NONE 	},
 	{ NO_OPT_dichotomicBranching,		(char*) "-d:", 				SO_NONE 	},
-	{ OPT_weightedDegree,			(char*) "-q", 				SO_NONE 	},
+	{ OPT_weightedDegree,			(char*) "-q", 				SO_OPT 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
 	{ OPT_nbDecisionVars,			(char*) "-var", 				SO_REQ_SEP		},
 
@@ -653,8 +653,8 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -q : weighted degree variable ordering heuristic";
-	if (ToulBar2::weightedDegree) cerr << " (default option if #constr<" << ToulBar2::weightedDegree << "*#var)";
+	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value";
+	if (ToulBar2::weightedDegree) cerr << " (default option if #costfunctions<" << ToulBar2::weightedDegree << ")";
 	cerr << endl;
 	cerr << "   -d : search using dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
 	if (ToulBar2::dichotomicBranching) cerr << " (default option)";
@@ -966,9 +966,9 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 			// weitghted Degree (var ordering )
-			if (args.OptionId() == OPT_weightedDegree ) {
-
-				ToulBar2::weightedDegree = 1000;
+			if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL ) {
+			    int weighteddegree = atol(args.OptionArg());
+				if (weighteddegree > 0) ToulBar2::weightedDegree = weighteddegree;
 			}   else if ( args.OptionId() == NO_OPT_weightedDegree ) 
 			{
 				ToulBar2::weightedDegree = 0;
