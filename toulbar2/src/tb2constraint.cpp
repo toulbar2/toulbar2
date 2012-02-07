@@ -226,3 +226,18 @@ bool Constraint::decompose()
   }
   return sep;
 }
+
+Constraint *Constraint::copy() 
+{
+  int scope[arity()];
+  for (int i=0; i<arity(); i++) scope[i] = getVar(i)->wcspIndex;
+  int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), getDefCost());
+  Cost c;
+  String t;
+  first();
+  while(next(t,c)) {
+	wcsp->postNaryConstraintTuple(ctrIndex, t, c);
+  }
+  wcsp->getCtr(ctrIndex)->deconnect();
+  return wcsp->getCtr(ctrIndex);
+}

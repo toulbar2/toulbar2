@@ -77,6 +77,7 @@ public:
 		BinaryConstraint*   xy;		///< corresponding binary cost function if any
 		BinaryConstraint*   xz;		///< corresponding binary cost function if any
 		TernaryConstraint*  xyz;	///< corresponding ternary cost function if any
+	    Constraint*         ctr;    ///< corresponding sum/join cost function if using generic variable elimination
 	} elimInfo;
 
 	StoreInt elimOrder;					///< current number of eliminated variables
@@ -86,6 +87,7 @@ public:
 	vector<Constraint*>  elimBinConstrs;	///< pool of (fresh) binary cost functions
 	vector<Constraint*>  elimTernConstrs;	///< pool of (fresh) ternary cost functions
 	int maxDegree;						///< maximum degree of eliminated variables found in preprocessing
+    Long elimSpace;                     ///< estimate of total space required for generic variable elimination
 
 	VACExtension*  vac;					///< link to VAC management system
 

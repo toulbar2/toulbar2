@@ -81,6 +81,7 @@ public:
     virtual void dump(ostream& os, bool original = true) {os << this << " Unknown constraint!";}
 
     virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
+    virtual Long space() const {return 0;} ///< \brief estimate of the constraint memory space size
 
 	virtual void firstlex() {}
 	virtual bool nextlex(String& t, Cost& c) { return false; }
@@ -121,6 +122,8 @@ public:
     virtual bool ishard();
 
     virtual Cost getMinCost();
+
+    Constraint *copy(); ///< \brief returns a copy of itself as a new deconnected NaryConstraintMap (DO NOT USE DURING SEARCH!)
 
 	void sumScopeIncluded( Constraint* ctr );
 

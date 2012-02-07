@@ -552,7 +552,7 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
        // deconnect first to be sure the current var is not involved in future propagation
        ctr->deconnect();
        // to be done before propagation
-       WCSP::elimInfo ei = {this, x, NULL, ctr, NULL, NULL};
+       WCSP::elimInfo ei = {this, x, NULL, ctr, NULL, NULL, NULL};
        wcsp->elimInfos[wcsp->getElimOrder()] = ei;
        wcsp->elimOrderInc();
 
@@ -638,7 +638,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 
 	 if(td) yz->setCluster( getCluster() );
 	 // to be done before propagation
-	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL};
+	 WCSP::elimInfo ei = {this, y,z, (BinaryConstraint*) xylink.constr, (BinaryConstraint*) xzlink.constr, NULL, NULL};
 	 wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	 wcsp->elimOrderInc();
      yz->propagate();
@@ -720,7 +720,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 	if (y->unassigned() && z->unassigned()) yz->reconnect();
 
 	// to be done before propagation
-	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz};
+	WCSP::elimInfo ei = {this,y,z,(BinaryConstraint*) links[(flag_rev)?1:0].constr, (BinaryConstraint*) links[(flag_rev)?0:1].constr, xyz, NULL};
 	wcsp->elimInfos[wcsp->getElimOrder()] = ei;
 	wcsp->elimOrderInc();
     yz->propagate();
@@ -737,6 +737,10 @@ void EnumeratedVariable::eliminate()
     if (ToulBar2::elimDegree_preprocessing_ >= 0 &&
         (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
          getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
+	  if (ToulBar2::elimSpaceMaxMB && wcsp->elimSpace > (Long) ToulBar2::elimSpaceMaxMB * 1024 * 1024) {
+		cout << "Generic variable elimination stopped (" <<  wcsp->elimSpace/1024./1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
+		return;
+	  }
 	  wcsp->variableElimination(this);
 	  return;
     }

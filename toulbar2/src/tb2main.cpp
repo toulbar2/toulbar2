@@ -62,7 +62,7 @@ void initCosts(Cost c)
 		ToulBar2::vac = false;
 		ToulBar2::minsumDiffusion = false;
 	}
-	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)
+	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::elimDegree_preprocessing<-1)
 	{
 		cerr << "Variable elimination not implemented on Paretopair." << endl;
 		ToulBar2::elimDegree = -1;
@@ -299,7 +299,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	//preprocessing
 	{ OPT_minsumDiffusion,	 		(char*) "-M", 				SO_REQ_SEP		},
 	{ OPT_singletonConsistency,		(char*) "-S", 				SO_NONE			},
-	{ OPT_preprocessTernary,		(char*) "-t", 				SO_NONE		},
+	{ OPT_preprocessTernary,		(char*) "-t", 				SO_OPT		},
 	{ NO_OPT_preprocessTernary,		(char*) "-t:", 				SO_NONE		},
 	{ OPT_preprocessFunctional,		(char*) "-f", 				SO_OPT		},
 	{ NO_OPT_preprocessFunctional,	(char*) "-f:", 		 	    SO_NONE		},
@@ -661,8 +661,8 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
-	cerr << "   -t : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions";
-	if (ToulBar2::preprocessTernaryRPC) cerr << " (default option)";
+	cerr << "   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)";
+	if (ToulBar2::preprocessTernaryRPC) cerr << " (" << ToulBar2::preprocessTernaryRPC << " MB)";
 	cerr << endl;
 	cerr << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
 	cerr << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
@@ -892,7 +892,6 @@ int _tmain(int argc, TCHAR * argv[])
 					if (ToulBar2::debug) cout << "partial assignment to be checked ..." << certificateString << endl;
 				} else {
 					certificate = true;
-					certificateString = (char *) "";
 					certificateFilename = (char *) "sol";
 					if (ToulBar2::debug) cout << "certificate of solution read in file: ./" << certificateFilename << endl;
 
@@ -1005,7 +1004,8 @@ int _tmain(int argc, TCHAR * argv[])
 
 				if(args.OptionArg() !=NULL) {
 					ndegree = atoi(args.OptionArg());
-					if (ndegree > 0) ToulBar2::elimDegree_preprocessing = ndegree;
+					if (ndegree != 0) ToulBar2::elimDegree_preprocessing = ndegree;
+					if (ndegree<0) ToulBar2::elimSpaceMaxMB = 128;
 				} else ToulBar2::elimDegree_preprocessing = 3; 
 				if (ToulBar2::debug) cout << "elimDegree_preprocessing ON: "  <<  ToulBar2::elimDegree_preprocessing << endl;
 
@@ -1070,10 +1070,14 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if ( args.OptionId() == OPT_singletonConsistency)  ToulBar2::singletonConsistency = true;
 			if ( args.OptionId() == OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = true;
-			if ( args.OptionId() == OPT_preprocessTernary) ToulBar2::preprocessTernaryRPC = true;
-			else if ( args.OptionId() == NO_OPT_preprocessTernary) {
+			if ( args.OptionId() == OPT_preprocessTernary) {
+			  if (args.OptionArg() != NULL) {
+				int size = atol(args.OptionArg());
+				if (size>=0) ToulBar2::preprocessTernaryRPC = size;
+			  } else ToulBar2::preprocessTernaryRPC = 128;
+			} else if ( args.OptionId() == NO_OPT_preprocessTernary) {
 			  if (ToulBar2::debug) cout <<"preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
-			  ToulBar2::preprocessTernaryRPC = false;
+			  ToulBar2::preprocessTernaryRPC = 0;
 			}
 
 			// elimination of functional variables
@@ -1478,6 +1482,7 @@ int _tmain(int argc, TCHAR * argv[])
 				certificate = true;
 				certificateFilename = new char[256];
 				certificateFilename= glob.File(n);
+				certificateString = (char *) "";  // ensure the search will continue starting from this solution
 			}
 
 
@@ -1508,12 +1513,6 @@ int _tmain(int argc, TCHAR * argv[])
 	/////////////////////////////////////////
 	if (ub <= MIN_COST) ub = MAX_COST;
 
-	if (ToulBar2::elimDegree_preprocessing > 0 && (ToulBar2::showSolutions || ToulBar2::writeSolution))
-	{
-	    cout << "Warning! Cannot show/save solutions if general variable elimination used in preprocessing." << endl;
-		ToulBar2::showSolutions = false;
-		ToulBar2::writeSolution = false;
-	}
 	if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1)
 	{
 		cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
@@ -1713,7 +1712,7 @@ int _tmain(int argc, TCHAR * argv[])
 			cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
 			ToulBar2::btdMode = 0;
 		}
-		if (solver.getWCSP()->isGlobal() && ToulBar2::elimDegree_preprocessing >= 1)	{
+		if (solver.getWCSP()->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))	{
 			cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
 			ToulBar2::elimDegree_preprocessing = -1;
 		}

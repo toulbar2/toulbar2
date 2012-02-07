@@ -413,6 +413,7 @@ public:
 
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
+    Long space() const {return (Long) sizeof(StoreCost) * sizeX * sizeY;}
 
     friend struct Functor_getCost;
     friend struct Functor_getCostReverse;

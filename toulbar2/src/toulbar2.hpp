@@ -76,6 +76,9 @@ public:
     virtual unsigned int numberOfUnassignedVariables() const =0;
     virtual unsigned int numberOfConstraints() const =0;
     virtual unsigned int numberOfConnectedConstraints() const =0;
+	virtual unsigned int numberOfConnectedBinaryConstraints() const =0;
+	virtual unsigned int medianDomainSize() const =0;
+	virtual unsigned int medianDegree() const =0;
     virtual Value getDomainSizeSum() =0;       // total current number of values
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) =0;
