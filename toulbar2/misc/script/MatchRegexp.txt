@@ -1,0 +1,14 @@
+#file structure :
+#label;value_postion;regular expression;mandatory (1 = yes,0=no)
+#label = name used for data storage and colonne name in the report file
+#value position = rank of wanted value in the regular expression specified in the next field
+#regular expression ==> reg exp in perl syntax fence define extract value 
+# mandatory ==> boolean flag 1=> current element is mandotory .i.e test will be succefull or failed is this field is not found in the jobs output 
+
+Optimum;2;(Optimum:)\s(\d*);1
+backtracks;1;[in]\s(\d+)\s+(backtracks);0
+nodes;1;[and]\s(\d+)\s+(nodes);0
+seconds;1;[and]\s(\d+.\d*|\d+)\s+(seconds.);0
+Pretime;1;[Preprocessing Time]\s+[:]\s*(\d+.\d*|\d+)\s+(seconds);0 
+Solution;1;New solution:\s(\d+);0
+logLike;1;log10like:\s([+-]\d*.\d*)\s;0

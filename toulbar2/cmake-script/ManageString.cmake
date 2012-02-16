@@ -142,7 +142,7 @@ IF(NOT DEFINED _MANAGE_STRING_CMAKE_)
 	STRING(LENGTH "${_delimiter}" _de_len)
 
 	WHILE(NOT _token_count EQUAL _max_tokens)
-	    MESSAGE("_token_count=${_token_count} _max_tokens=${_max_tokens} _str=${_str}")
+	    #MESSAGE("_token_count=${_token_count} _max_tokens=${_max_tokens} _str=${_str}")
 	    MATH(EXPR _token_count ${_token_count}+1)
 	    IF(_token_count EQUAL _max_tokens)
 		# Last token, no need splitting

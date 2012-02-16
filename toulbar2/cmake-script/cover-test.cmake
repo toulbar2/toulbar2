@@ -4,13 +4,17 @@
 # and generate a new test for each entrie
 include(${My_cmake_scritp}/ManageString.cmake)
 
+MESSAGE(STATUS "\n##############COVER  liste #############\n")
+	MESSAGE(STATUS " COVER TEST SCANING  ${Default_cover_dir} ")
+MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
 
     file ( GLOB_RECURSE
-                        validation_file
-                       cover/*.wcsp
-                       cover/*.bep
-                       cover/*.pre
+                       cover_file 
+                       ${Default_cover_dir}/*.wcsp
+                       ${Default_cover_dir}/*.bep
+                       ${Default_cover_dir}/*.bep
+                       ${Default_cover_dir}/*.uai
                                     )
 
 
@@ -18,7 +22,7 @@ include(${My_cmake_scritp}/ManageString.cmake)
 # test unitaire
 ###############
 SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
-SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/cover/cover-option.cmake")
+SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmake")
 
 ###############"""
 
@@ -33,7 +37,7 @@ ENDIF()
 
 MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
-FOREACH (UTEST ${validation_file})
+FOREACH (UTEST ${cover_file})
 	GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH  ) # test path
 	GET_FILENAME_COMPONENT(tfile ${UTEST} NAME ) # filname with extension
 	GET_FILENAME_COMPONENT(tfile_WE ${UTEST} NAME_WE ) # filname without extension
@@ -44,19 +48,18 @@ FOREACH (UTEST ${validation_file})
 
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} founded ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} founded ")
 	ELSE()
 	# init default value :
 	set (test_timeout ${Default_test_timeout})
 	set (test_regexp  ${Default_test_regexp})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded  ==>
-	default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
 	ENDIF()	
 
-	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded  ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
+#	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 
 
-	STRING(REPLACE "${PROJECT_SOURCE_DIR}/cover/" "" TMP ${UTEST})
+	STRING(REPLACE "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/" "" TMP ${UTEST})
 	STRING(REPLACE ".wcsp" ""  TNAME ${TMP})
 
 	if($verbose) 
@@ -68,7 +71,6 @@ FOREACH (UTEST ${validation_file})
 
 	SET (INDEX 0)
 	FOREACH (COVERTEST ${${tfile}})
-		MESSAGE( STATUS "tfile = ${tfile} option ==> ${COVERTEST}")
 		#OPTION multipale space cleaning
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})

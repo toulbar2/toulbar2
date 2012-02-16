@@ -10,7 +10,8 @@ set (My_cmake_scritp "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of c
 set (My_Source src)	# source location 
 set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" ) # doxygen repository default ./doc/
 set (doc_destination "share/doc")   		#path of doc installation 
-set (My_validation "validation")
+set (My_validation "validation")		#validation test location
+set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
@@ -68,6 +69,8 @@ include(CMakeDependentOption)
 	OPTION(BUILD_API_DOC "build documentation with doxygen [default:on]" ON)
 	OPTION(STATIC "static compilation flag [default: on]" ON)
 	OPTION(verbose "verbose mode [default:on]" ON)
+	OPTION(COVER_TEST "cover test [default:on]" ON)
+	OPTION(BENCH "benchmarcking [default:on]" OFF)
 
 
 ###########################
@@ -94,10 +97,19 @@ ENDIF(APPLE)
 ################
 # default OPTION for toulbar2 test  phase
 #############
+SET(FOPT "test-opt.cmake" CACHE string "filename containing localet  option used for validation ") 
 SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line.")
-SET(FOPT "test-opt.cmake" CACHE string "filename containing benchmark option") 
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
+SET(Default_validation_dir "validation" CACHE string "default location of benchmark file")
+SET(Default_cover_dir "cover" CACHE string "default location of cover test file ")
 SET(Default_regexp "end." CACHE string "default regex searched in test output")
+
+SET(Default_BenchDir "benchmarks" CACHE string "default location of benchmark file")
+SET(Default_BenchFormat "wcsp" CACHE string "default format extension for benchmark file search") 
+SET(Default_bench_timeout 30 CACHE INTEGER "default timeout used for benchmarking ")
+SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command line for benchmarking.")
+SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
+
 
 	MARK_AS_ADVANCED(FORCE LIBTB2 BUILD_API_DOC verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY)
 	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
@@ -353,17 +365,6 @@ ENDIF(LIBTB2INT)
 ###############################################
 include(${My_cmake_scritp}/iloglue.cmake)
 
-#################
-# test unitaire
-###############
-
-
-
-include(${My_cmake_scritp}/test.cmake)
-
-MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
-MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
-
 ##############
 # define option
 #############
@@ -371,11 +372,39 @@ MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...
 include(${My_cmake_scritp}/define_option.cmake)
 MESSAGE(STATUS "######## define_option passed#########################")
 
+#################
+# test unitaire
+###############
+
+IF(COVER_TEST) 
+include(${My_cmake_scritp}/test.cmake)
+
+MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
+MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+
 #############
 # COVER TEST
 #########
 include(${My_cmake_scritp}/cover-test.cmake)
+ENDIF(COVER_TEST)
 
+IF(BENCH)
+include(${My_cmake_scritp}/test_bench.cmake)
+include(${My_cmake_scritp}/add_make_command.cmake)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/script/MatchRegexp.txt
+ ${CMAKE_CURRENT_BINARY_DIR}/MatchRegexp.txt COPYONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/script/run_test.pl
+    ${EXECUTABLE_OUTPUT_PATH}/run_test.pl COPYONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/script/make_report.pl
+    ${CMAKE_CURRENT_BINARY_DIR}/make_report.pl COPYONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/script/exp_opt.pl
+    ${CMAKE_CURRENT_BINARY_DIR}/exp_opt.pl COPYONLY)
+
+ENDIF (BENCH)
 ####################################################################################"
 #   Doc generation
 ###################################################################################"
