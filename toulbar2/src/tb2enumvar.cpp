@@ -556,22 +556,45 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
        wcsp->elimInfos[wcsp->getElimOrder()] = ei;
        wcsp->elimOrderInc();
 
+	   Cost mycosts[x->getDomainInitSize()];
+#ifndef NDEBUG
+	   for (unsigned int i=0; i<x->getDomainInitSize(); i++) mycosts[i]=-MAX_COST;
+#endif
+       Cost negcost = MIN_COST;
        bool supportBroken = false;
        for (iterator iter1 = x->begin(); iter1 != x->end(); ++iter1) {
-           Cost mincost = MAX_COST;
-           for (iterator iter = begin(); iter != end(); ++iter) {
-               Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1);
-               if (curcost < mincost) mincost = curcost;
-           }
-           if (mincost > MIN_COST) {
-			   if(td) td->addDelta(cluster,x,*iter1,mincost);
-		       if (x->getSupport() == *iter1) supportBroken = true;
-               x->project(*iter1, mincost);
-           }
+    	   Cost mincost = MAX_COST;
+    	   for (iterator iter = begin(); iter != end(); ++iter) {
+    		   Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1);
+    		   if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+    		   else if (curcost < mincost) mincost = curcost;
+    	   }
+    	   if (ToulBar2::isZ) {
+    		   if (mincost < negcost) negcost = mincost;
+    		   mycosts[x->toIndex(*iter1)] = mincost;
+    	   } else if (mincost > MIN_COST) {
+    		   if(td) td->addDelta(cluster,x,*iter1,mincost);
+    		   if (x->getSupport() == *iter1) supportBroken = true;
+    		   x->project(*iter1, mincost);
+    	   }
        }
-      if (supportBroken) {  x->findSupport();  }
+       assert(negcost <= MIN_COST);
+       if (ToulBar2::isZ) {
+    	   for (iterator iter1 = x->begin(); iter1 != x->end(); ++iter1) {
+    		   assert(mycosts[x->toIndex(*iter1)] != -MAX_COST);
+    		   Cost mincost = mycosts[x->toIndex(*iter1)] - negcost;
+    		   assert(mincost >= MIN_COST);
+    		   if (mincost > MIN_COST) {
+    			   if(td) td->addDelta(cluster,x,*iter1,mincost);
+    			   if (x->getSupport() == *iter1) supportBroken = true;
+    			   x->project(*iter1, mincost);
+    		   }
+    	   }
+    	   if (negcost < 0) wcsp->decreaseLb(negcost);
+       }
+       if (supportBroken) {  x->findSupport();  }
 
-      return true;
+       return true;
 }
 
 
@@ -608,6 +631,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
      BinaryConstraint* yznew = wcsp->newBinaryConstr(y,z,xylink.constr,xzlink.constr);
  	 wcsp->elimBinOrderInc();
 
+     Cost negcost = MIN_COST;
 	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
 	    Cost mincost = MAX_COST;
@@ -617,10 +641,21 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 						   getBinaryCost(xylink, *iter, *itery) +
 						   getBinaryCost(xzlink, *iter, *iterz);
 
-	        if (curcost < mincost) mincost = curcost;
+	        if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+		    else if (curcost < mincost) mincost = curcost;
 	    }
-		yznew->setcost(*itery,*iterz,mincost);
+	    if (mincost < negcost) negcost = mincost;
+		yznew->setcost(*itery,*iterz,mincost); // Warning! it can set a negative cost temporally
 	 }}
+     assert(negcost <= MIN_COST);
+     if (negcost < MIN_COST) {
+    	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
+    		 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+    			 yznew->addcost(*itery,*iterz, -negcost);
+    		 }
+    	 }
+    	 wcsp->decreaseLb(negcost);
+     }
 
 	 if(yz) {
  	 	 if(td && yz->getCluster() != cluster) {
@@ -694,6 +729,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
         }
 	}
 
+    Cost negcost = MIN_COST;
 	for (iterator itery = y->begin(); itery != y->end(); ++itery) {
 	for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
 	    Cost mincost = MAX_COST;
@@ -711,11 +747,22 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 				if(n2links > 1) { assert(links[1].constr->getIndex(y) >= 0);
   								  curcost += getBinaryCost(links[1], *iter, *itery); }
 			}
-	        if (curcost < mincost) mincost = curcost;
+			if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+			else if (curcost < mincost) mincost = curcost;
 	    }
-		yz->addcost(*itery,*iterz,mincost);
+	    if (mincost < negcost) negcost = mincost;
+		yz->addcost(*itery,*iterz,mincost); // Warning! it can add a negative cost temporally
 	 }
 	}
+    assert(negcost <= MIN_COST);
+    if (negcost < MIN_COST) {
+   	 for (iterator itery = y->begin(); itery != y->end(); ++itery) {
+   		 for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+   			 yz->addcost(*itery,*iterz, -negcost);
+   		 }
+   	 }
+   	 wcsp->decreaseLb(negcost);
+    }
 
 	if (y->unassigned() && z->unassigned()) yz->reconnect();
 
@@ -753,7 +800,7 @@ void EnumeratedVariable::eliminate()
     	assert(getDomainSize()>1);
 		wcsp->getTreeDec()->getCluster( cluster )->multCount(getDomainSize());
 		//		cout << "** "<< wcsp->getTreeDec()->getCluster( cluster )->getCount() << " **" << endl;
-	} else{
+	} else {
     	if (getDegree() > ToulBar2::elimDegree_) return;
     	// if (getDegree()==1 && CSP(wcsp->getLb(),wcsp->getUb()) && constrs->begin().constr->arity() >= 4) {
     	// 	// special case: there is only one n-ary constraint on this variable
@@ -784,8 +831,16 @@ void EnumeratedVariable::eliminate()
     			} else {
     				BinaryConstraint* xy = (BinaryConstraint*) xylink.constr;
     				if(!elimVar( xy )) return;
-    				return;
     			}
+    		}
+    	} else {
+    		if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
+    			Cost clogz = wcsp->getUb();
+    			for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
+    				clogz = wcsp->SumLogLikeCost(clogz, getCost(*itv));
+    			}
+    			if (clogz < MIN_COST) wcsp->decreaseLb(clogz);
+    			else wcsp->increaseLb(clogz);
     		}
     	}
     }

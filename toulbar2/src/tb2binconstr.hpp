@@ -91,7 +91,7 @@ public:
 
     void addcost( int vx, int vy, Cost mincost ) {
     		assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
-            assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost));
+            assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost) || ToulBar2::isZ); // Warning! negative costs can be added temporally by variable elimination on the fly
    	        int ix = x->toIndex(vx);
             int iy = y->toIndex(vy);
    	       	costs[ix * sizeY + iy] += mincost;

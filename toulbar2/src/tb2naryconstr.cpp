@@ -1008,7 +1008,7 @@ void NaryConstraintMap::project( EnumeratedVariable* x )
 			end = (it == fproj.end());
 			bool sameprefix = false;
 
-			Cost cnext = -UNIT_COST;
+			Cost cnext = MAX_COST;
 			if(!end) {
 				tnext = it->first;
 				cnext = it->second;
@@ -1051,7 +1051,8 @@ void NaryConstraintMap::project( EnumeratedVariable* x )
 		f[t] = c - negcost;
 	  }
 	  default_cost -= negcost;
-	  ToulBar2::negCost += negcost;
+	  assert(default_cost >= MIN_COST); // THIS TEST COULD BE REMOVED BUT NEGATIVE DEFAULT COST EFFECTS ARE UNSPECIFIED
+	  wcsp->decreaseLb(negcost);
 	}
 	if(x->unassigned()) {
 		x->deconnect(links[arity_-1]);

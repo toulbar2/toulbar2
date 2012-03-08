@@ -48,7 +48,7 @@ class Solver
     void assign(int varIndex, Value value);
     void remove(int varIndex, Value value);
     void conflict() {}
-
+    void enforceUb();
     void singletonConsistency();
 
     void binaryChoicePoint(int xIndex, Value value);

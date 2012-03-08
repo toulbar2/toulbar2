@@ -29,6 +29,9 @@ public:
     virtual void setLb(Cost newLb) =0;
     virtual void setUb(Cost newUb) =0;
 
+    virtual void decreaseLb(Cost cost) =0;
+    virtual Cost getNegativeLb() const =0;
+
     virtual bool enumerated(int varIndex) const =0;
 
     virtual string getName(int varIndex) const =0;
@@ -80,6 +83,7 @@ public:
 	virtual unsigned int medianDomainSize() const =0;
 	virtual unsigned int medianDegree() const =0;
     virtual Value getDomainSizeSum() =0;       // total current number of values
+    virtual int getMaxDomainSize() =0;
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) =0;
     virtual int makeEnumeratedVariable(string n, Value *d, int dsize) =0;

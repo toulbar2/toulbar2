@@ -416,9 +416,22 @@ int Solver::getMostUrgent()
  *
  */
 
+/// \brief Enforce WCSP upper-bound and backtrack if ub <= lb or in the case of probabilistic inference if the contribution is too small
+void Solver::enforceUb()
+{
+	wcsp->enforceUb();
+	if (ToulBar2::isZ) {
+		Cost newCost = wcsp->getLb() + wcsp->getNegativeLb() + wcsp->LogLike2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
+		Double newlogz = wcsp->SumLogLikeCost(ToulBar2::logZ, newCost);
+		if (newlogz - ToulBar2::logZ < 0.001) {
+			THROWCONTRADICTION;
+		}
+	}
+}
+
 void Solver::increase(int varIndex, Value value)
 {
-    wcsp->enforceUb();
+    enforceUb();
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
@@ -437,7 +450,7 @@ void Solver::increase(int varIndex, Value value)
 
 void Solver::decrease(int varIndex, Value value)
 {
-    wcsp->enforceUb();
+    enforceUb();
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
@@ -456,7 +469,7 @@ void Solver::decrease(int varIndex, Value value)
 
 void Solver::assign(int varIndex, Value value)
 {
-    wcsp->enforceUb();
+    enforceUb();
     nbNodes++;
 	if (ToulBar2::debug && ((nbNodes % 128) == 0)) {
 	  cout << "\r" << store->getDepth();
@@ -481,7 +494,7 @@ void Solver::assign(int varIndex, Value value)
 
 void Solver::remove(int varIndex, Value value)
 {
-    wcsp->enforceUb();
+    enforceUb();
     nbNodes++;
     if (ToulBar2::verbose >= 1) {
         if (ToulBar2::verbose >= 2) cout << *wcsp;
@@ -526,7 +539,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
         wcsp->whenContradiction();
     }
     store->restore();
-    wcsp->enforceUb();
+    enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 
@@ -564,7 +577,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
             wcsp->whenContradiction();
         }
         store->restore();
-        wcsp->enforceUb();
+        enforceUb();
         nbBacktracks++;
 		if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
@@ -615,7 +628,7 @@ void Solver::scheduleOrPostpone(int varIndex)
         wcsp->whenContradiction();
     }
     store->restore();
-    wcsp->enforceUb();
+    enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	if (reverse) assign(varIndex, xinf);
@@ -655,7 +668,7 @@ void Solver::narySortedChoicePoint(int varIndex)
         store->restore();
     }
 	delete [] sorted;
-    wcsp->enforceUb();
+    enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
@@ -680,7 +693,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
         store->restore();
     }
 	delete [] sorted;
-    wcsp->enforceUb();
+    enforceUb();
     nbBacktracks++;
 	if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 }
@@ -744,13 +757,13 @@ void Solver::newSolution()
     if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->updateUb(wcsp->getLb());
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 	if (ToulBar2::isZ) {
-	  ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + ToulBar2::negCost);
+	  ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
 	  if (ToulBar2::debug && (nbBacktracks % 10000LL)==0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
 	}
   	if((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug>=2) {
   		if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 		else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb() + ToulBar2::negCost) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + ToulBar2::negCost ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + wcsp->getNegativeLb() ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   	}
   	else {
   		if(ToulBar2::xmlflag) {
@@ -812,7 +825,7 @@ void Solver::newSolution()
 
 	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
 
-	if (ToulBar2::restart==0 && !ToulBar2::lds) throw NbBacktracksOut();
+	if (ToulBar2::restart==0 && !ToulBar2::lds && !ToulBar2::isZ) throw NbBacktracksOut();
 }
 
 void Solver::recursiveSolve()
@@ -895,7 +908,6 @@ bool Solver::solve()
 
 	if (ToulBar2::isZ) {
 	  ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-	  ToulBar2::negCost = 0;
 	}
 
     try {
@@ -914,7 +926,7 @@ bool Solver::solve()
 		  wcsp->propagate();
 		}
 
-		if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << ToulBar2::negCost << endl;
+		if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 
 	    if (ToulBar2::btdMode) {
 		  if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;
@@ -923,7 +935,6 @@ bool Solver::solve()
 		  cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;
 		  ToulBar2::weightedDegree = 0;
 		}
-		
 		
 		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
 
@@ -942,6 +953,7 @@ bool Solver::solve()
 		Long nbBacktracksLimitTop = 1;
 		int storedepth = store->getDepth();
 		do {
+		  store->store();
 		  if (ToulBar2::restart>=0) {
 			nbbacktracksout = false;
 			nbrestart++;
@@ -961,10 +973,9 @@ bool Solver::solve()
 			  nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
 			  cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
 			}
-			store->store();
 			IsASolution = false;
 			wcsp->setUb(UpperBound);
-			wcsp->enforceUb();
+			enforceUb();
 			wcsp->propagate();
 			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
 		  }
@@ -1030,13 +1041,14 @@ bool Solver::solve()
 			}
 		  } catch (NbBacktracksOut) {
 			nbbacktracksout = true;
-			store->restore(storedepth);
 		  }
+		  store->restore(storedepth);
 		} while (nbbacktracksout);
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
     if(ToulBar2::isZ) {
+	  if (ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 	  if (ToulBar2::uai) {
 		if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
 		else ToulBar2::solution_file << "-BEGIN-" << endl;
@@ -1045,7 +1057,7 @@ bool Solver::solve()
 		ToulBar2::solution_file.flush();
 	  }
 	  cout << "Log10(Z)= ";
-	  cout <<  (ToulBar2::logZ + ToulBar2::markov_log) << endl;
+	  cout <<  (ToulBar2::logZ + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  return true;
     }
 	if(ToulBar2::allSolutions) {
@@ -1057,7 +1069,7 @@ bool Solver::solve()
 	  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
 	  cout << "Size of sep            :    " << tailleSep << endl;
 	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-	  cout << "... with " <<nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
+	  cout << "... in " <<nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
 	  return true;
 	}
 //  store->restore();         // see above for store->store()

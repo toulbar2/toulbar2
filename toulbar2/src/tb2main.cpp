@@ -1565,16 +1565,6 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
 		ToulBar2::vac = 1;
 	}
-	if (ToulBar2::isZ && ToulBar2::elimDegree >= 0)
-	{
-	  cout << "Warning! Variable elimination on the fly not implemented for Z." << endl;
-	  ToulBar2::elimDegree = -1;
-	}
-	if (ToulBar2::isZ && ToulBar2::preprocessFunctional > 0)
-	{
-	  cout << "Warning! Functional variable elimination not implemented for Z." << endl;
-	  ToulBar2::preprocessFunctional = 0;
-	}
 
 	if (ToulBar2::uai) {
 	  char *tmpPath = new char[strlen(argv[0])+1];

@@ -124,7 +124,6 @@ int ToulBar2::smallSeparatorSize = 4;
 
 bool ToulBar2::isZ = false;
 TProb ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-Cost ToulBar2::negCost = 0;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -134,7 +133,7 @@ int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the
  */
 
 WCSP::WCSP(Store *s, Cost upperBound) :
-	storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), NCBucketSize(cost2log2gub(upperBound) + 1),
+	storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
 			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0),
 			elimOrder(0, &s->storeValue), elimBinOrder(0, &s->storeValue), elimTernOrder(0, &s->storeValue),
@@ -819,6 +818,10 @@ void WCSP::preprocessing() {
 		ToulBar2::elimDegree_preprocessing_ = -1;
 		if (ToulBar2::elimDegree >= 0) {
 			ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+			if (ToulBar2::elimDegree_preprocessing < min(2,ToulBar2::elimDegree)) {
+				for(int i=numberOfVariables()-1; i>=0; i--) vars[i]->queueEliminate();
+				propagate();
+			}
 			if (ToulBar2::verbose >= 1) cout << "Variable elimination during search of degree <= "
 					<< ToulBar2::elimDegree << endl;
 		}
@@ -1755,7 +1758,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 	if (truearity - 1 > 3) {
 		((NaryConstraint*) ctr_inout)->project(var);
 		ctr_inout->propagate();
-		if (ToulBar2::verbose >= 1) cout << endl << "   has result: " << *ctr_inout << endl;
+		if (ToulBar2::verbose >= 1) cout << endl << "   has result*: " << *ctr_inout << endl;
 		return;
 	}
 	ctr_inout->deconnect();
@@ -1775,7 +1778,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 	}
 
 	Constraint* ctr = NULL;
-	Cost Top = getUb();
+	Cost Top = MAX_COST; // getUb();
 	int ctrIndex;
 	Char t[arity + 1];
 	vector<Cost> costs;
@@ -1786,9 +1789,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 		NaryConstraint *nctr = (NaryConstraint*) ctr_inout;
 		if (truearity == 4 && arity >= 5) {
 			for (i = 0; i < arity; i++) {
-				if (ctr_inout->getVar(i)->assigned()) t[ctr_inout->getIndex(ctr_inout->getVar(i))]
-						= ((EnumeratedVariable*) ctr_inout->getVar(i))->toIndex(ctr_inout->getVar(i)->getValue())
-								+ CHAR_FIRST;
+				if (ctr_inout->getVar(i)->assigned()) t[ctr_inout->getIndex(ctr_inout->getVar(i))] = ((EnumeratedVariable*) ctr_inout->getVar(i))->toIndex(ctr_inout->getVar(i)->getValue()) + CHAR_FIRST;
 			}
 		}
 		for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
@@ -1826,7 +1827,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 			  }
 			}
 		  }
-		  ToulBar2::negCost += negcost;
+		  decreaseLb(negcost);
 		}
 		ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
 		ctr = getCtr(ctrIndex);
@@ -1841,8 +1842,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 				Cost mincost = Top;
 				if (evars[0]->canbe(v0) && evars[1]->canbe(v1)) {
 					for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
-						Cost c = tctr->getCost(evars[0], evars[1], var, v0, v1, *itv)
-								+ var->getCost(*itv);
+						Cost c = tctr->getCost(evars[0], evars[1], var, v0, v1, *itv) + var->getCost(*itv);
 						if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
 						else if (c < mincost) mincost = c;
 					}
@@ -1857,7 +1857,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 			  costs[vxi * evars[1]->getDomainInitSize() + vyi] -= negcost;
 			}
 		  }
-		  ToulBar2::negCost += negcost;
+		  decreaseLb(negcost);
 		}
 		ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
 		ctr = getCtr(ctrIndex);
@@ -1884,11 +1884,12 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 			if (costs[vxi] - negcost > MIN_COST) evars[0]->project(*itv0, costs[vxi] - negcost);
 		}
 		evars[0]->findSupport();
-		if (negcost < 0) ToulBar2::negCost += negcost;
+		if (negcost < 0) decreaseLb(negcost);
 	    }
 		break;
 	default:
-		;
+		cerr << "Bad resulting cost function arity during generic variable elimination!";
+		exit(EXIT_FAILURE);
 	}
 	ctr_inout = ctr;
 	if (ctr) {
@@ -1938,7 +1939,7 @@ void WCSP::variableElimination(EnumeratedVariable* var) {
 		for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 		  clogz = SumLogLikeCost(clogz, var->getCost(*itv));
 		}
-		if (clogz < 0) ToulBar2::negCost += clogz;
+		if (clogz < 0) decreaseLb(clogz);
 		else increaseLb(clogz);
 	  }
 	}
@@ -2272,6 +2273,7 @@ TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
 	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
   }
 }
+
 //----------------------------------------
 //procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;

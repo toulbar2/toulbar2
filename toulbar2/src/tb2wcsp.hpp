@@ -41,6 +41,7 @@ class WCSP : public WeightedCSP {
 	Store *storeData; 					///< backtrack management system and data
 	StoreCost lb; 						///< current problem lower bound
 	Cost ub; 							///< current problem upper bound
+	StoreCost negCost;					///< shifting value to be added to problem lowerbound when computing the partition function
 	vector<Variable *> vars; 			///< list of all variables
 	vector<Value> bestValues; 			///< hint for some value ordering heuristics (ONLY used by RDS)
 	vector<Value> solution; 			///< remember last solution found
@@ -139,6 +140,7 @@ public:
 	/// \brief increases problem lower bound thanks to \e eg soft local consistencies
 	/// \param addLb increment value to be \b added to the problem lower bound
 	void increaseLb(Cost addLb) {
+		assert(addLb >= MIN_COST);
 		if (addLb > MIN_COST) {
 			//		   incWeightedDegree(addLb);
 			Cost newLb = lb + addLb;
@@ -148,6 +150,9 @@ public:
 			if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
 		}
 	}
+
+	void decreaseLb(Cost cost) { assert(cost <= MIN_COST); negCost += cost; }
+	Cost getNegativeLb() const { return negCost; }
 
 	bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}	///< \brief true if the variable has an enumerated domain
 
