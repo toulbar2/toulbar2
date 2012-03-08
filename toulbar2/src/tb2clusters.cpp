@@ -1364,6 +1364,7 @@ int TreeDecomposition::makeRooted()
 		if(c->getNbVars() > treewidth) treewidth = c->getNbVars();
 	}
 	cout << "Tree decomposition width  : " << treewidth - 1 << endl;
+//	if (treewidth > 30) {cout << "Sorry, cannot perform exact haplotype reconstruction! Please, try approximate methods." << endl; exit(EXIT_FAILURE);} // Warning! QTLmap specific exit
 
 	return height(root);
 }

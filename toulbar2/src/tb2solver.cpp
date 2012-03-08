@@ -1213,10 +1213,11 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
   // dump_wcsp("mydebug.wcsp", true);
 
-  // solve using BTD exploiting a lexicographic elimination order, a path decomposition, and only small separators of size ToulBar2::smallSeparatorSize
+  // solve using BTD exploiting a lexicographic elimination order with a path decomposition
 
   ToulBar2::btdMode = 3;
-  ToulBar2::maxSeparatorSize = ToulBar2::smallSeparatorSize;
+  ToulBar2::minProperVarSize = 4;
+  ToulBar2::elimDegree_preprocessing = 12; // Prefer variable elimination than search (do not impose a limit on maximum separator size)
 
   IsASolution = false;
   CurrentSolution = sol;
