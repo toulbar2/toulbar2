@@ -1240,7 +1240,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
 /// ok = ( ret /= 0 )
 /// deallocate(posx,posy,cost)
 /// \endcode
-int solveSymMax2SAT_(int *n, int *m, int *posx, int *posy, double *cost, int *sol)
+int solvesymmax2sat_(int *n, int *m, int *posx, int *posy, double *cost, int *sol)
 {return solveSymMax2SAT(*n,*m,posx,posy,cost,sol);}
 
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)

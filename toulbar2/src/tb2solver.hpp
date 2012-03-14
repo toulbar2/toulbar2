@@ -106,6 +106,6 @@ public:
 };
 
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
-extern "C" int solveSymMax2SAT_(int *n, int *m, int *posx, int *posy, double *cost, int *sol);
+extern "C" int solvesymmax2sat_(int *n, int *m, int *posx, int *posy, double *cost, int *sol);
 
 #endif /*TB2SOLVER_HPP_*/
