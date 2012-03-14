@@ -1219,7 +1219,7 @@ int _tmain(int argc, TCHAR * argv[])
 				if (ToulBar2::debug) cout << endl ;
 				if (ToulBar2::debug) cout << "<<< Bayesian mode ON >>>" << endl;
 
-				if(ToulBar2::verbose ) {
+				if(ToulBar2::verbose >= 1) {
 					cout << endl ;
 					cout << "genotypingErrorRate = " << ToulBar2::errorg << " (default value)" <<  endl;
 					cout << "resolution = " << ToulBar2::resolution << " (default value)" <<  endl;

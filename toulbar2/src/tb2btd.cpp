@@ -432,8 +432,10 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	    // A new solution has been found for the current cluster
 		cluster->solutionRec(lb);
 		if(cluster == td->getRoot() || cluster == td->getRootRDS()) {
-			if(!ToulBar2::bayesian) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-			else cout << "New solution: " << lb << " log10like: " << wcsp->Cost2LogLike(lb) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob(lb) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+			if (ToulBar2::verbose>=0 || ToulBar2::showSolutions) {
+				if(!ToulBar2::bayesian) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+				else cout << "New solution: " << lb << " log10like: " << wcsp->Cost2LogLike(lb) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob(lb) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+			}
 			if(cluster == td->getRoot()) td->newSolution(lb);
 			else {
 			  assert(cluster == td->getRootRDS());
@@ -506,7 +508,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  td->setRootRDS(c);
 	  lastConflictVar = -1;
 
-	  cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
+	  if(ToulBar2::verbose>=0) cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
 
 	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
 	  Cost rdslb = td->getLbRecRDS();
@@ -515,7 +517,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	  if (c->sepSize() == 0) c->nogoodRec(res, true);
 
 	  if (ToulBar2::debug || ToulBar2::verbose >= 1) c->printStatsRec();
-	  cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
+	  if(ToulBar2::verbose>=0) cout << "---  done  cost = " << res << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();

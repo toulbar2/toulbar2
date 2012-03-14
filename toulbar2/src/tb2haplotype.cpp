@@ -388,14 +388,14 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
 
   if(!ToulBar2::haplotype){
 	  for(int l=0; l<nbloci;++l){
-		  if (ToulBar2::verbose) cout << "Genotype encoding for locus " << l << " :" << endl;
+		  if (ToulBar2::verbose >= 1) cout << "Genotype encoding for locus " << l << " :" << endl;
 		  for (int i=1; i<=nballeles[l]; i++) { /* i = first allele of child */
 			  for (int j=i; j<=nballeles[l]; j++) { /* j = second allele of child */
 				  Genotype geno;
 				  geno.allele1 = allelesInv.find(l)->second.find(i)->second;//allelesInv.find(pair<int,int>(l,i))->second;
 				  geno.allele2 = allelesInv.find(l)->second.find(j)->second;//allelesInv.find(pair<int,int>(l,j))->second; //[j];
 				  genoconvert[l].push_back(geno);
-				  if (ToulBar2::verbose) {
+				  if (ToulBar2::verbose >= 1) {
 					  cout << genoconvert[l].size()-1 << ": ";
 					  printGenotype(cout, genoconvert[l].size()-1,l);
 					  cout << endl;
@@ -681,7 +681,7 @@ void Haplotype::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
               }
               break;
   }
-  if (ToulBar2::verbose) {
+  if (ToulBar2::verbose >= 1) {
       cout << "Genotype prior:" << endl;
       for (unsigned int n = 0; n < genoconvert.size(); n++) {
         printGenotype(cout, n,locus);

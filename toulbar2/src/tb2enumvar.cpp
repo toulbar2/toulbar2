@@ -361,7 +361,7 @@ void EnumeratedVariable::propagateEAC()
 #ifndef NDEBUG
             // check if lb has effectively been increased
             if (wcsp->getLb() == beforeLb)
-                if (ToulBar2::verbose) cout << "EAC failed on " << getName() << endl;
+                if (ToulBar2::verbose >= 1) cout << "EAC failed on " << getName() << endl;
 #endif
         }
     }
@@ -887,7 +887,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
   EnumeratedVariable *x = (EnumeratedVariable *) xy->getVarDiffFrom(this);
   assert(x->unassigned());
   assert(x != this);
-  if (ToulBar2::verbose) {
+  if (ToulBar2::verbose >= 1) {
 	cout << "Merge variable " << *this << " into variable " << *x << endl;
 	for (map<Value, Value>::iterator itermap = functional.begin(); itermap != functional.end(); ++itermap) {
 	  cout << (*itermap).first << "," << (*itermap).second << endl;

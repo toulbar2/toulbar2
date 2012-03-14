@@ -324,14 +324,14 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
   assert(nballeles == nb);
 
   
-  if (ToulBar2::verbose) cout << "Genotype encoding:" << endl;
+  if (ToulBar2::verbose >= 1) cout << "Genotype encoding:" << endl;
   for (int i=1; i<=nballeles; i++) { /* i = first allele of child */
     for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
       Genotype geno;
       geno.allele1 = allelesInv[i];
       geno.allele2 = allelesInv[j];
       genoconvert.push_back(geno);
-      if (ToulBar2::verbose) {
+      if (ToulBar2::verbose >= 1) {
         cout << genoconvert.size()-1 << ": ";
         printGenotype(cout, genoconvert.size()-1);
         cout << endl;
@@ -608,7 +608,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
               }    
               break;
   }
-  if (ToulBar2::verbose) {
+  if (ToulBar2::verbose >= 1) {
       cout << "Genotype prior:" << endl;
       for (unsigned int n = 0; n < genoconvert.size(); n++) {
         printGenotype(cout, n);

@@ -2203,12 +2203,12 @@ void WCSP::setDACOrder(vector<int> &order) {
 	}
 
 	// set DAC order to the inverse of the elimination variable ordering
-	if (ToulBar2::verbose) cout << "DAC order:";
+	if (ToulBar2::verbose >= 1) cout << "DAC order:";
 	for (int i = order.size() - 1; i >= 0; i--) {
-		if (ToulBar2::verbose) cout << " " << getVar(order[i])->getName();
+		if (ToulBar2::verbose >= 1) cout << " " << getVar(order[i])->getName();
 		getVar(order[i])->setDACOrder(order.size() - 1 - i);
 	}
-	if (ToulBar2::verbose) cout << endl;
+	if (ToulBar2::verbose >= 1) cout << endl;
 
 	for (unsigned int i = 0; i < numberOfConstraints(); i++) {
 		Constraint* ctr = getCtr(i);

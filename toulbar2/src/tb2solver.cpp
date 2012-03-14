@@ -1227,11 +1227,24 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   return IsASolution;
 }
 
+/// \brief interface for Fortran call
+/// \code
+/// integer     ,dimension(sW),intent(out)        :: H
+/// integer     ,dimension(:)    ,allocatable       :: posx,posy ! On exit dimension value is m
+/// real(kind=dp),dimension(:)   ,allocatable   :: cost
+/// logical :: ok
+/// allocate (posx(sW*sW),posy(sW*sW),cost(sW*sW))
+/// ret = solvesymmax2sat_(n,m,posx,posy,cost,H)
+/// ok = ( ret /= 0 )
+/// deallocate(posx,posy,cost)
+/// \endcode
+int solveSymMax2SAT_(int *n, int *m, int *posx, int *posy, double *cost, int *sol)
+{return solveSymMax2SAT(*n,*m,posx,posy,cost,sol);}
+
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)
 {
   // select verbosity during search
-  ToulBar2::verbose = 0;
-  //  ToulBar2::elimDegree = -1;
+  ToulBar2::verbose = -1;
 
   initCosts(MAX_COST);
   Solver solver(STORE_SIZE, MAX_COST);

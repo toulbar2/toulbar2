@@ -197,7 +197,7 @@ void WCSP::read_wcsp(const char *fileName)
     file >> nbval;
     file >> nbconstr;
     file >> top;
-    if (ToulBar2::verbose) cout << "Read problem: " << pbname << endl;
+    if (ToulBar2::verbose >= 1) cout << "Read problem: " << pbname << endl;
     ToulBar2::nbvar= nbvar;
 	
     
