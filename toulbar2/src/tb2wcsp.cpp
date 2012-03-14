@@ -957,6 +957,7 @@ void WCSP::printNCBuckets() {
  *  Outputs current best solution cost found,
  *  ends by giving the optimum or "No solution".
  *  Last output line should always be: "end."
+ * - (level=-1, no verbosity) restricted output mode: do not print current best solution cost found
  * -# (level=1) shows also search choices ("["\e search_depth \e problem_lower_bound \e problem_upper_bound \e sum_of_current_domain_sizes"] Try" \e variable_index \e operator \e value)
  *  with \e operator being assignment ("=="), value removal ("!="), domain splitting ("<=" or ">=", also showing EAC value in parenthesis)
  * -# (level=2) shows also current domains (\e variable_index \e list_of_current_domain_values "/" \e number_of_cost_functions (see approximate degree in \ref varelim) "/" \e weighted_degree \e list_of_unary_costs "s:" \e support_value) before each search choice
