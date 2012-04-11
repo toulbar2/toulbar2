@@ -52,6 +52,7 @@ bool ToulBar2::binaryBranching = true;
 bool ToulBar2::lastConflict = true;
 bool ToulBar2::dichotomicBranching = true;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
+bool ToulBar2::sortDomains = false;
 int ToulBar2::lds = 0;
 bool ToulBar2::limited = false;
 Long ToulBar2::restart = -1;

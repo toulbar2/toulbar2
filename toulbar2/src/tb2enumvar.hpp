@@ -169,7 +169,8 @@ public:
     
     
     void permuteDomain(int numberOfPermutations);
-    
+    void permuteDomain(Value a, Value b);
+    void sortDomain(vector<Cost> &costs);
     
     void print(ostream& os);
 };

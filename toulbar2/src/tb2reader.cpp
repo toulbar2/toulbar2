@@ -771,6 +771,31 @@ void WCSP::read_wcsp(const char *fileName)
 	if (file) {
 	  cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
 	}
+
+	// merge unarycosts if they are on the same variable
+	vector<int> seen(nbvar, -1);
+	vector<TemporaryUnaryConstraint> newunaryconstrs;
+    for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+    	if (seen[unaryconstrs[u].var->wcspIndex] == -1) {
+    		seen[unaryconstrs[u].var->wcspIndex] = newunaryconstrs.size();
+    		newunaryconstrs.push_back(unaryconstrs[u]);
+    	}
+    	else {
+			for (unsigned int i=0; i<unaryconstrs[u].var->getDomainInitSize(); i++) {
+				if (newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] < getUb()) {
+					if (unaryconstrs[u].costs[i] < getUb()) newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] += unaryconstrs[u].costs[i];
+					else newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] = getUb();
+				}
+			}
+    	}
+    }
+	unaryconstrs = newunaryconstrs;
+	if (ToulBar2::sortDomains) {
+		for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+			unaryconstrs[u].var->sortDomain(unaryconstrs[u].costs);
+		}
+	}
+
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
@@ -780,6 +805,7 @@ void WCSP::read_wcsp(const char *fileName)
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     histogram();
+
     cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
 

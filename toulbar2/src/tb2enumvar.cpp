@@ -850,24 +850,100 @@ void EnumeratedVariable::eliminate()
 	assign(support); // warning! dummy assigned value
 }
 
-
-
 void EnumeratedVariable::permuteDomain(int nperm)
 {
 	while(nperm) {
 		Value a = myrand() % getDomainInitSize();
 		Value b = myrand() % getDomainInitSize();
-		if(canbe(a) && canbe(b)) {
-		 	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-		 	   Constraint* ctr = (*iter).constr;
-		 	   if(ctr->arity() == 2) {
-			 	   	BinaryConstraint* bctr = (BinaryConstraint*) ctr;
-			 	   	bctr->permute(this,a,b);
-		 	   }
-		 	}
-		}
+		if(canbe(a) && canbe(b)) permuteDomain(a,b);
 	 	nperm--;
 	}
+}
+
+void EnumeratedVariable::permuteDomain(Value a, Value b)
+{
+  assert(canbe(a) && canbe(b));
+  for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+	Constraint* ctr = (*iter).constr;
+	if(ctr->arity() == 2 &&  !ctr->isSep() && ctr->extension()) {
+	  BinaryConstraint* bctr = (BinaryConstraint*) ctr;
+	  bctr->permute(this,a,b);
+	} else {
+	  cerr <<  "Sorry! cannot sort domains with non-binary cost functions!" << endl;
+	  exit(EXIT_FAILURE);
+	}
+  }
+}
+
+static int cmpValueCost(const void *p1, const void *p2)
+{
+    Cost c1 = ((ValueCost *) p1)->cost;
+    Cost c2 = ((ValueCost *) p2)->cost;
+    Value v1 = ((ValueCost *) p1)->value;
+    Value v2 = ((ValueCost *) p2)->value;
+    if (c1 < c2) return -1;
+    else if (c1 > c2) return 1;
+    else if (v1 < v2) return -1;
+    else if (v1 > v2) return 1;
+    else return 0;
+}
+
+/// \warning Must be done just after loading the problem and before any propagate (even projection of unary costs)
+void EnumeratedVariable::sortDomain(vector<Cost> &costs)
+{
+  cout << "sort variable " << getName() << " (size="<< getDomainSize() << ")" << endl;
+
+//  // Buble-sort (too slow!!!)
+//  bool swap = false;
+//  do {
+//	swap = false;
+//	iterator iter = begin();
+//	Value a = *iter;
+//	Cost costa = getCost(a);
+//	++iter;
+//	while (iter != end()) {
+//	  Value b = *iter;
+//	  Cost costb = getCost(b);
+//	  if (costa > costb) {
+//		swap = true;
+//		permuteDomain(a,b);
+//	  } else {
+//		a = b;
+//		costa=costb;
+//	  }
+//	  ++iter;
+//	}
+//  } while (swap);
+
+  int size = getDomainInitSize();
+  int position[size];
+  int value[size];
+  for (int i=0; i<size; i++) {
+	  position[i]=i;
+	  value[i]=i;
+  }
+  ValueCost sorted[size];
+//  ValueCost* sorted = new ValueCost [size];
+  for (int i=0; i<size; i++) {
+  	sorted[i].value = i;
+  	sorted[i].cost = costs[i];
+  }
+  qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+  for (int i=0; i<size; i++) {
+	  if (position[toIndex(sorted[i].value)] != i) {
+//		  cout << "swap " << value[i] << "(" << i << ") with " << sorted[i].value << "(" << position[toIndex(sorted[i].value)] << ")" << endl;
+		  assert(i < position[toIndex(sorted[i].value)]);
+		  permuteDomain(i,position[toIndex(sorted[i].value)]);
+		  position[value[i]] = position[toIndex(sorted[i].value)];
+		  value[position[toIndex(sorted[i].value)]] = value[i];
+		  value[i] = sorted[i].value;
+		  position[toIndex(sorted[i].value)] = i;
+	  }
+  }
+  for (int i=0; i<size; i++) {
+	  costs[i] = sorted[i].cost;
+  }
+//	delete [] sorted;
 }
 
 bool EnumeratedVariable::canbeMerged()

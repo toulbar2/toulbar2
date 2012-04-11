@@ -204,6 +204,7 @@ public:
 	static bool binaryBranching;
 	static bool dichotomicBranching;
 	static unsigned int dichotomicBranchingSize;
+	static bool sortDomains;
 	static int elimDegree;
 	static int elimDegree_preprocessing;
 	static int elimDegree_;

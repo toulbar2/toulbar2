@@ -158,6 +158,8 @@ enum {
 	NO_OPT_lastConflict,
 	OPT_dichotomicBranching,
 	NO_OPT_dichotomicBranching,
+	OPT_sortDomains,
+	NO_OPT_sortDomains,
 	OPT_weightedDegree,
 	NO_OPT_weightedDegree,
    	OPT_nbDecisionVars,
@@ -278,6 +280,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_lastConflict, 			(char*) "--lastConflict--off", 		SO_NONE 	},
 	{ OPT_dichotomicBranching,		(char*) "-d", 				SO_NONE 	},
 	{ NO_OPT_dichotomicBranching,		(char*) "-d:", 				SO_NONE 	},
+	{ OPT_sortDomains,		(char*) "-sortd", 				SO_NONE 	},
+	{ NO_OPT_sortDomains,		(char*) "-sortd:", 				SO_NONE 	},
 	{ OPT_weightedDegree,			(char*) "-q", 				SO_OPT 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
 	{ OPT_nbDecisionVars,			(char*) "-var", 				SO_REQ_SEP		},
@@ -659,6 +663,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -d : search using dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
 	if (ToulBar2::dichotomicBranching) cerr << " (default option)";
 	cerr << endl;
+	cerr << "   -sortd : sort domains based on increasing unary costs (warning! works only for binary WCSPs)";
+	if (ToulBar2::sortDomains) cerr << " (default option)";
+	cerr << endl;
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
 	cerr << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
 	cerr << "   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)";
@@ -964,6 +971,11 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::dichotomicBranching = false;
 			}
 
+			if (args.OptionId() == OPT_sortDomains ) {
+				ToulBar2::sortDomains = true;
+			} else if (args.OptionId() == NO_OPT_sortDomains ) {
+				ToulBar2::sortDomains = false;
+			}
 
 			// weitghted Degree (var ordering )
 			if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL ) {
@@ -1564,6 +1576,11 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
 		ToulBar2::vac = 1;
+	}
+	if (ToulBar2::preprocessFunctional >0 && ToulBar2::LcLevel == LC_NC)
+	{
+		cout << "Warning! Cannot perform functional elimination with NC only." << endl;
+		ToulBar2::preprocessFunctional = 0;
 	}
 
 	if (ToulBar2::uai) {
