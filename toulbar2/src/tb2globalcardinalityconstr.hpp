@@ -16,7 +16,7 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 			return make_pair(varindex+1, mapval[val]);
 		}
 		//JP Start// This array stores the repestive weight of each bound
-		int** weights;
+		map<Value, pair<int, int> > weights;
 		int nvalues;
 		//JP End//
 	public:

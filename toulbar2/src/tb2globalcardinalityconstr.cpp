@@ -43,12 +43,6 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 	//JP End//
 	file >> def; 
 	file >> nvalues;
-	//JP// creating weigths array
-	weights = new int*[nvalues];
-	for (int i = 0 ; i < nvalues ; i++) {
-		weights[i] = new int[2];
-		if (def != -1) { weights[i][0] = def; weights[i][1] = def;}
-	}
 	//JP End//
 	for (int i=0;i<nvalues;i++) {
 		int d, high, low;
@@ -58,14 +52,13 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 			exit(1);
 		}
 		//JP Start//
+		int wshortage, wexcess;
 		if (mode == WVALUE) {
-			int whigh, wlow;
-			file >> wlow >> whigh;
-			weights[d][0] = wlow;
-			weights[d][1] = whigh;
+			file >> wshortage >> wexcess;
 		}
 		//JP End//
 		bound[d] = make_pair(high, low);
+		weights[d] = make_pair(wshortage, wexcess);
 		sumlow += low;
 		sumhigh += high;
 	}
@@ -100,14 +93,14 @@ Cost GlobalCardinalityConstraint::evalOriginal( String s ) {
 			//JP Start// Alteration
 			Cost lshortage = i->second.lower_bound - appear[i->first];  
 			shortage += lshortage;
-			cost += lshortage*weights[i->first][0];
+			cost += lshortage*weights[i->first].first;
 			//JP End//
 		} 
 		if (appear[i->first] > i->second.upper_bound) {
 			//JP Start// Alteration
 			Cost lexcess = appear[i->first] - i->second.upper_bound;
 			excess += lexcess;
-			cost += lexcess*weights[i->first][1];
+			cost += lexcess*weights[i->first].second;
 			//JP End//
 		}
 	}
@@ -157,8 +150,8 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 	} else {
 		for (map<Value, int>::iterator i = mapval.begin(); i != mapval.end();i++) {
 			//JP Start// Alteration
-			if( bound[i->first].lower_bound > 0) g.addEdge(0, i->second, weights[i->first][0], bound[i->first].lower_bound);
-			g.addEdge(i->second, t, weights[i->first][1], arity_);
+			if( bound[i->first].lower_bound > 0) g.addEdge(0, i->second, weights[i->first].first, bound[i->first].lower_bound);
+			g.addEdge(i->second, t, weights[i->first].second, arity_);
 			//JP End//
 		}
 	}
@@ -228,7 +221,7 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original) {
   os << " " << def << " " <<  nvalues << endl;
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
 	os << i->first << " " << i->second.lower_bound << " " << i->second.upper_bound;
-	if (mode == WVALUE) os << " " << weights[i->first][0] << " " << weights[i->first][1];
+	if (mode == WVALUE) os << " " << weights[i->first].first << " " << weights[i->first].second;
 	os << endl;
   }
 }
@@ -249,7 +242,7 @@ void GlobalCardinalityConstraint::print(ostream& os) {
   os << "," << def << "," << nvalues;
   for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
 	os << "," << i->first << "," << i->second.lower_bound << "," << i->second.upper_bound;
-	if (mode == WVALUE) os << "," << weights[i->first][0] << "," << weights[i->first][1];
+	if (mode == WVALUE) os << "," << weights[i->first].first << "," << weights[i->first].second;
   }
   os << "]";
 }
