@@ -52,7 +52,8 @@ void GlobalCardinalityConstraint::read(ifstream &file) {
 			exit(1);
 		}
 		//JP Start//
-		int wshortage, wexcess;
+		int wshortage = def;
+		int wexcess = def;
 		if (mode == WVALUE) {
 			file >> wshortage >> wexcess;
 		}
