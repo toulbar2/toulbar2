@@ -158,7 +158,7 @@ foreach my $opt (@optionl) {
 	while (<TMP>) {
 
 		my $line = $_;
-		$line=~s/"TOULBAR_OPTION"/\"$opt\"/;
+		$line=~s/"TOULBAR2_OPTION"/\"$opt\"/;
 
 		print REPORT $line;
 

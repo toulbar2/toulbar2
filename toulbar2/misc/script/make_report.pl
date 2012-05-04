@@ -50,7 +50,6 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Copy;
 use strict;
-use DateTime;
 
 
 # declaration des variables globales;
