@@ -186,7 +186,7 @@ public:
 vector<IlcWeightedCSPI *> IlcWeightedCSPI::AllIlcWeightedCSPI;
 int IlcWeightedCSPI::wcspCounter = 0;
 
-void tb2setvalue(int wcspId, int varIndex, Value value)
+void tb2setvalue(int wcspId, int varIndex, Value value, void *solver)
 {
   assert(wcspId < IlcWeightedCSPI::wcspCounter);
   assert(IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId] != NULL);
@@ -195,7 +195,7 @@ void tb2setvalue(int wcspId, int varIndex, Value value)
   IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId]->vars[varIndex].setValue(value);
 }
 
-void tb2removevalue(int wcspId, int varIndex, Value value)
+void tb2removevalue(int wcspId, int varIndex, Value value, void *solver)
 {
   assert(wcspId < IlcWeightedCSPI::wcspCounter);
   assert(IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId] != NULL);
@@ -204,7 +204,7 @@ void tb2removevalue(int wcspId, int varIndex, Value value)
   IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId]->vars[varIndex].removeValue(value);
 }
 
-void tb2setmin(int wcspId, int varIndex, Value value)
+void tb2setmin(int wcspId, int varIndex, Value value, void *solver)
 {
   assert(wcspId < IlcWeightedCSPI::wcspCounter);
   assert(IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId] != NULL);
@@ -213,7 +213,7 @@ void tb2setmin(int wcspId, int varIndex, Value value)
   IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId]->vars[varIndex].setMin(value);
 }
 
-void tb2setmax(int wcspId, int varIndex, Value value)
+void tb2setmax(int wcspId, int varIndex, Value value, void *solver)
 {
   assert(wcspId < IlcWeightedCSPI::wcspCounter);
   assert(IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId] != NULL);
@@ -222,7 +222,7 @@ void tb2setmax(int wcspId, int varIndex, Value value)
   IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId]->vars[varIndex].setMax(value);
 }
 
-void tb2setminobj(int wcspId, int varIndex, Value value)
+void tb2setminobj(int wcspId, int varIndex, Value value, void *solver)
 {
   assert(wcspId < IlcWeightedCSPI::wcspCounter);
   assert(IlcWeightedCSPI::AllIlcWeightedCSPI[wcspId] != NULL);
