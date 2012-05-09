@@ -116,7 +116,7 @@ public:
 	void setLb(Cost newLb) { lb = newLb; }		///< \internal sets problem upper bound
 
 	/// \brief sets problem upper bound when a new solution is found
-	/// \warning side-effect: adjusts maximum number of buckets (see \ref ncbucket) if called before modeling a problem
+	/// \warning side-effect: adjusts maximum number of buckets (see \ref ncbucket) if called before adding variables to a problem
 	void updateUb(Cost newUb) {
 		if (newUb < ub) {
 			ub = newUb;
