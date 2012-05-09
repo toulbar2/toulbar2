@@ -221,8 +221,7 @@ public:
 	void propagate();               ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
 	bool verify();					///< \brief checks the propagation fix point is reached
 
-	int getMaxDomainSize() { return maxdomainsize;}					///< \brief maximum initial domain size found in all variables
-	unsigned int numberOfVariables() const {return vars.size();}	///< \brief current number of unassigned variables
+	unsigned int numberOfVariables() const {return vars.size();}	///< \brief current number of created variables
 	/// \brief returns current number of unassigned variables
 	unsigned int numberOfUnassignedVariables() const {
 		int res = 0;
@@ -233,6 +232,7 @@ public:
 	unsigned int numberOfConnectedBinaryConstraints() const;		///< \brief current number of binary cost functions
 	unsigned int medianDomainSize() const;							///< \brief median current domain size of variables
 	unsigned int medianDegree() const;								///< \brief median current degree of variables
+	int getMaxDomainSize() { return maxdomainsize;}					///< \brief maximum initial domain size found in all variables
 	Value getDomainSizeSum();										///< \brief total sum of current domain sizes
 	/// \brief Cartesian product of current domain sizes
 	/// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
@@ -249,26 +249,6 @@ public:
 	int biConnectedComponents();	///< \deprecated
 	void minimumDegreeOrdering();	///< \deprecated
 #endif
-
-	/// \defgroup modeling Variable and cost function modeling
-	/// Modeling a Weighted CSP consists in creating variables and cost functions.\n
-	/// Domains of variables can be of two different types:
-	/// - enumerated domain allowing direct access to each value (array) and iteration on current domain in times proportional to the current number of values (double-linked list)
-	/// - interval domain represented by a lower value and an upper value only (useful for large domains)
-	/// \warning Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
-	/// There is no cost functions accepting both interval and enumerated variables for the moment, which means all the variables should have the same type.
-	///
-	/// \addtogroup modeling
-	/// Cost functions can be defined in extension (table or maps) or having a specific semantic.\n
-	/// Cost functions in extension depend on their arity:
-	/// - unary cost function (directly associated to an enumerated variable)
-	/// - binary and ternary cost functions (table of costs)
-	/// - n-ary cost functions (n >= 4) defined by a list of tuples with associated costs and a default cost for missing tuples (allows compact representation)
-	///
-	/// Cost functions having a specific semantic are:
-	/// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
-	/// - global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular)
-	/// \warning Current implementation of toulbar2 has limited solving facilities for global cost functions (no BTD-like methods nor variable elimination)
 
 	int makeEnumeratedVariable(string n, Value iinf, Value isup);
 	int makeEnumeratedVariable(string n, Value *d, int dsize);
@@ -298,7 +278,7 @@ public:
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
     void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
 
-    vector<Value> &getSolution() {return solution;}
+    const vector<Value> &getSolution() {return solution;}
     void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
     void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}
 
