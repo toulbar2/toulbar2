@@ -1117,12 +1117,11 @@ void WCSP::read_uai2008(const char *fileName)
 
 
 
-void WCSP::solution_UAI(Cost res, TAssign *sol, bool opt)
+void WCSP::solution_UAI(Cost res, bool opt)
 {
  	if (!ToulBar2::uai) return;
  	if (ToulBar2::isZ) return;
 	// UAI 2012 Challenge output format
-	if (!opt) setSolution(sol); // WARNING!!! It assumes a call with opt=true is outside the search tree (variables unassigned)
 	if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
 	else ToulBar2::solution_file << "-BEGIN-" << endl;
 	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample

@@ -11,7 +11,7 @@
 #include "tb2clusters.hpp"
 #include <strings.h>
 
-extern void setvalue(int wcspId, int varIndex, Value value);
+extern void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
 
 /*
@@ -19,13 +19,18 @@ extern void setvalue(int wcspId, int varIndex, Value value);
  *
  */
 
-Solver *Solver::currentSolver = NULL;
+WeightedCSPSolver *WeightedCSPSolver::makeWeightedCSPSolver(int storeSize, Cost initUpperBound)
+{
+	WeightedCSPSolver * S = new Solver(storeSize, initUpperBound);
+	return S;
+}
 
 Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(NULL),
-                                                     allVars(NULL), unassignedVars(NULL), lastConflictVar(-1), nbSol(0.), nbSGoods(0), nbSGoodsUse(0)
+                                                     allVars(NULL), unassignedVars(NULL), lastConflictVar(-1),
+                                                     nbSol(0.), nbSGoods(0), nbSGoodsUse(0)
 {
     store = new Store(storeSize);
-    wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound);
+    wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound, (void *) this);
 }
 
 Solver::~Solver()
@@ -66,8 +71,6 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
 
 void Solver::read_solution(const char *filename)
 {
-    currentSolver = this;
-
 	if (ToulBar2::btdMode>=2) wcsp->propagate();
 
 	int depth = store->getDepth();
@@ -114,8 +117,6 @@ void Solver::read_solution(const char *filename)
 
 void Solver::parse_solution(const char *certificate)
 {
-    currentSolver = this;
-
     if (ToulBar2::btdMode>=2) wcsp->propagate();
 
 	//  int depth = store->getDepth();
@@ -174,18 +175,35 @@ void Solver::dump_wcsp(const char *fileName, bool original)
     if (pb) wcsp->dump(pb, original);
 }
 
+Cost Solver::getSolution(vector<Value>& solution)
+{
+		assert(wcsp->getSolution().size() == wcsp->numberOfVariables());
+		for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) solution.push_back(wcsp->getSolution()[i]);
+		return wcsp->getUb();
+}
+
+set<int> Solver::getUnassignedVars() const
+{
+	set<int> res;
+	for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+		res.insert(*iter);
+	}
+	return res;
+}
+
+
 /*
  * Link between solver and wcsp: maintain a backtrackable list of unassigned variable indexes
  *
  */
 
-void setvalue(int wcspId, int varIndex, Value value)
+void setvalue(int wcspId, int varIndex, Value value, void *_solver_)
 {
 //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
-    assert(Solver::currentSolver != NULL);
-	unsigned int i = Solver::currentSolver->getWCSP()->getDACOrder(varIndex);
-    if(!Solver::currentSolver->allVars[i].removed) {
-	  Solver::currentSolver->unassignedVars->erase(&Solver::currentSolver->allVars[i], true);
+	Solver *solver = (Solver *) _solver_;
+	unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
+    if(!solver->allVars[i].removed) {
+	  solver->unassignedVars->erase(&solver->allVars[i], true);
 	}
 }
 
@@ -775,6 +793,7 @@ void Solver::newSolution()
   	}
 
     wcsp->restoreSolution();
+	if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution();
 
     if (ToulBar2::showSolutions) {
 
@@ -825,7 +844,7 @@ void Solver::newSolution()
 	  ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
 	}
 
-	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
+	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
 	if (ToulBar2::restart==0 && !ToulBar2::lds && !ToulBar2::isZ) throw NbBacktracksOut();
 }
@@ -881,18 +900,6 @@ void Solver::recursiveSolveLDS(int discrepancy)
     } else newSolution();
 }
 
-static Cost UpperBound = MAX_COST;
-static WeightedCSP *CurrentWeightedCSP = NULL;
-static bool IsASolution = false;
-static int *CurrentSolution = NULL;
-
-void solution_restart(int wcspIndex)
-{
-  assert(CurrentWeightedCSP->getIndex() == wcspIndex);
-  IsASolution = true;
-  if (CurrentWeightedCSP->getUb() < UpperBound) UpperBound = CurrentWeightedCSP->getUb();
-}
-
 Long luby(Long r) {
   int j = cost2log2(r+1);
   if (r+1 == (1L << j)) return (1L << (j-1));
@@ -901,7 +908,6 @@ Long luby(Long r) {
 
 bool Solver::solve()
 {
-    currentSolver = this;
     Cost initialUpperBound = wcsp->getUb();
     nbBacktracks = 0;
     nbNodes = 0;
@@ -943,11 +949,10 @@ bool Solver::solve()
         // special data structure to be initialized for variable ordering heuristics
 	    initVarHeuristic();
 
+	    Cost upperbound = MAX_COST;
 		if (ToulBar2::restart>=0) {
 		  if (ToulBar2::restart>0)nbBacktracksLimit = 1;
-		  CurrentWeightedCSP = wcsp;
-		  UpperBound = wcsp->getUb();
-		  ToulBar2::newsolution = solution_restart;
+		  upperbound = wcsp->getUb();
 		}
 		bool nbbacktracksout = false;
 		int nbrestart = 0;
@@ -962,21 +967,20 @@ bool Solver::solve()
 			// currentNbBacktracksLimit = max(currentNbBacktracksLimit + 1, (Long) (1.2 * (Double) currentNbBacktracksLimit + 0.5));
 			// if (ToulBar2::lds) currentNbBacktracksLimit *= 4;
 			currentNbBacktracksLimit = luby(nbrestart);
-			if (currentNbBacktracksLimit > nbBacktracksLimitTop || IsASolution) {
+			if (currentNbBacktracksLimit > nbBacktracksLimitTop || (wcsp->getUb() < upperbound)) {
 			  nbBacktracksLimitTop = currentNbBacktracksLimit;
 			  currentNbBacktracksLimit = 1;
 			}
-			//			if (!IsASolution && nbNodes >= ToulBar2::restart) {
+			//			if (!(wcsp->getUb() < upperbound) && nbNodes >= ToulBar2::restart) {
 			if (nbNodes >= ToulBar2::restart) {
 			  nbBacktracksLimit = LONGLONG_MAX;
 			  ToulBar2::restart = 0;
-			  cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
+			  cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
 			} else {
 			  nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit;
-			  cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << UpperBound << " ****** (" << nbNodes << " nodes)" << endl;
+			  cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
 			}
-			IsASolution = false;
-			wcsp->setUb(UpperBound);
+			upperbound = wcsp->getUb();
 			enforceUb();
 			wcsp->propagate();
 			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
@@ -1086,7 +1090,7 @@ bool Solver::solve()
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
     		else if(ToulBar2::uai && !ToulBar2::isZ) {
-			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), NULL, true);
+			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
 			  cout << "Optimum: " << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			}
     	}
@@ -1132,19 +1136,6 @@ void Solver::approximate(BigInteger &nbsol, TreeDecomposition* td)
 	}
 	cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
 
-}
-
-void solution_symmax2sat(int wcspIndex)
-{
-  IsASolution = true;
-  for (unsigned int i=0; i<CurrentWeightedCSP->numberOfVariables(); i++) {
-	assert(CurrentWeightedCSP->assigned(i));
-	if (CurrentWeightedCSP->getValue(i) == 0) {
-	  CurrentSolution[i] = 1;
-	} else {
-	  CurrentSolution[i] = -1;
-	}
-  }
 }
 
 // Maximize h' W h where W is expressed by all its
@@ -1221,12 +1212,18 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
   ToulBar2::minProperVarSize = 4;
   ToulBar2::elimDegree_preprocessing = 12; // Prefer variable elimination than search (do not impose a limit on maximum separator size)
 
-  IsASolution = false;
-  CurrentSolution = sol;
-  CurrentWeightedCSP = wcsp;
-  ToulBar2::newsolution = solution_symmax2sat;
-  solve();
-  return IsASolution;
+  bool res = solve();
+  if (res) {
+	  assert(getWCSP()->getSolution().size() == getWCSP()->numberOfVariables());
+	  for (unsigned int i=0; i<getWCSP()->numberOfVariables(); i++) {
+		  if (getWCSP()->getSolution()[i] == 0) {
+			  sol[i] = 1;
+		  } else {
+			  sol[i] = -1;
+		  }
+	  }
+  }
+  return res;
 }
 
 /// \brief interface for Fortran call

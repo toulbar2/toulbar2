@@ -1641,7 +1641,7 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 
 	initCosts(ub);
-	Solver solver(STORE_SIZE, ub);
+	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
 
 	bool randomproblem = false;
 	bool forceSubModular = false;
@@ -1713,32 +1713,32 @@ int _tmain(int argc, TCHAR * argv[])
 #endif
 	try
 	{
-		if (randomproblem)    solver.read_random(n,m,p,seed,forceSubModular);
-		else 		         solver.read_wcsp((char*)strfile.c_str());
-		if (solver.getWCSP()->isGlobal() && ToulBar2::btdMode >= 1)	{
+		if (randomproblem)    solver->read_random(n,m,p,seed,forceSubModular);
+		else 		         solver->read_wcsp((char*)strfile.c_str());
+		if (solver->getWCSP()->isGlobal() && ToulBar2::btdMode >= 1)	{
 			cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
 			ToulBar2::btdMode = 0;
 		}
-		if (solver.getWCSP()->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))	{
+		if (solver->getWCSP()->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))	{
 			cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
 			ToulBar2::elimDegree_preprocessing = -1;
 		}
 
 		if (certificate)
 		{
-			if (certificateFilename!= NULL) solver.read_solution(certificateFilename);
-			else solver.parse_solution(certificateString);
+			if (certificateFilename!= NULL) solver->read_solution(certificateFilename);
+			else solver->parse_solution(certificateString);
 		}
 		if (ToulBar2::dumpWCSP==1) {
-			solver.dump_wcsp("problem_original.wcsp");
+			solver->dump_wcsp("problem_original.wcsp");
 		}
 		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
 		{
-			if (CSP(solver.getWCSP()->getLb(), solver.getWCSP()->getUb()))
+			if (CSP(solver->getWCSP()->getLb(), solver->getWCSP()->getUb()))
 			{
 				ToulBar2::LcLevel = LC_AC;
 			}
-			solver.solve();
+			solver->solve();
 		}
 	}
 	catch (Contradiction)
@@ -1764,7 +1764,7 @@ int _tmain(int argc, TCHAR * argv[])
 	  string strfile(argv[1]);
 	  int pos = strfile.find_last_of(".");
 	  string strfilewcsp = strfile.substr(0,pos) + ".ub";
-	  sprintf(line,"echo %d > %s",(int)solver.getWCSP()->getUb(),strfilewcsp.c_str());
+	  sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
 	  system(line); */
 
 	return 0;

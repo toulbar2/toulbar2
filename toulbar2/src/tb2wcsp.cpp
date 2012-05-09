@@ -133,8 +133,8 @@ int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the
  *
  */
 
-WCSP::WCSP(Store *s, Cost upperBound) :
-	storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
+WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
+	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
 			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0),
 			elimOrder(0, &s->storeValue), elimBinOrder(0, &s->storeValue), elimTernOrder(0, &s->storeValue),
@@ -157,8 +157,8 @@ WCSP::~WCSP() {
 		delete elimTernConstrs[i];
 }
 
-WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound) {
-	WeightedCSP * W = new WCSP(s, upperBound);
+WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound, void *solver) {
+	WeightedCSP * W = new WCSP(s, upperBound, solver);
 	return W;
 }
 

@@ -38,6 +38,7 @@ class WCSP : public WeightedCSP {
 	static int wcspCounter; 			///< count the number of instances of WCSP class
 	int instance; 						///< instance number
 	string name; 						///< problem name
+	void *solver;						///< special hook to access solver information
 	Store *storeData; 					///< backtrack management system and data
 	StoreCost lb; 						///< current problem lower bound
 	Cost ub; 							///< current problem upper bound
@@ -97,7 +98,7 @@ public:
 	vector< vector<int> > Doms;			///< structures for solution translation: we don't have to parse the XML file again
 #endif
 
-	WCSP(Store *s, Cost upperBound);
+	WCSP(Store *s, Cost upperBound, void *solver = NULL);
 
 	virtual ~WCSP();
 
@@ -106,6 +107,7 @@ public:
 
 	int getIndex() const {return instance;}		///< \brief instantiation occurrence number of current WCSP object
 	string getName() const {return name;}
+	void *getSolver() const {return solver;}
 
 	Cost getLb() const {return lb;}				///< \brief gets problem lower bound
 	Cost getUb() const {return ub;}				///< \brief gets problem upper bound
@@ -147,7 +149,7 @@ public:
 			if (CUT((((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb), ub)) THROWCONTRADICTION;
 			lb = newLb;
 			objectiveChanged=true;
-			if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb);
+			if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb, getSolver());
 		}
 	}
 
@@ -293,7 +295,8 @@ public:
 
 	void read_XML(const char *fileName);		///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
-    void solution_UAI(Cost res, TAssign *sol = NULL, bool opt = false );				///< \brief output solution in UAI 2008 output format
+    void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
+
     vector<Value> &getSolution() {return solution;}
     void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
     void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}

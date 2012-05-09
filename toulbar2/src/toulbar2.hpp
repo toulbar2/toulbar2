@@ -10,12 +10,13 @@
 
 class WeightedCSP {
 public:
-    static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound);      // WCSP factory
+    static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound, void *solver = NULL);      // WCSP factory
 
     virtual ~WeightedCSP() {}
 
     virtual int getIndex() const = 0;       // instantiation occurence number of current WCSP object
     virtual string getName() const = 0;     // WCSP filename (without its extension)
+    virtual void *getSolver() const = 0;    // special hook to access solver information
 
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
 
@@ -122,6 +123,9 @@ public:
     virtual void print(ostream& os) =0;
     virtual void dump(ostream& os, bool original = true) =0;
 
+    virtual vector<Value> &getSolution() =0;
+    virtual void setSolution(TAssign *sol = NULL) =0;
+
     // -----------------------------------------------------------
     // Functions dealing with probabilities
     // warning: ToulBar2::NormFactor has to be initialized
@@ -135,5 +139,37 @@ public:
 };
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);
+
+class WeightedCSPSolver
+{
+public:
+    static WeightedCSPSolver *makeWeightedCSPSolver(int storeSize, Cost initUpperBound);      // Solver factory
+
+    virtual ~WeightedCSPSolver() {}
+
+    virtual Long getNbNodes() const =0;
+    virtual Long getNbBacktracks() const =0;
+    virtual set<int> getUnassignedVars() const =0;
+
+    virtual void increase(int varIndex, Value value) =0;
+    virtual void decrease(int varIndex, Value value) =0;
+    virtual void assign(int varIndex, Value value) =0;
+    virtual void remove(int varIndex, Value value) =0;
+
+    virtual void read_wcsp(const char *fileName) =0;
+    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;
+
+    virtual bool solve() =0;	///< returns false if there is no solution found
+
+    virtual bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol) =0;
+
+    virtual void dump_wcsp(const char *fileName, bool original = true) =0;
+    virtual void read_solution(const char *fileName) =0;
+    virtual void parse_solution(const char *certificate) =0;
+
+    virtual Cost getSolution(vector<Value>& solution) =0;	///< after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use if there is no solution, see solve() output)
+
+    virtual WeightedCSP* getWCSP() = 0;
+};
 
 #endif /*TOULBAR2_HPP_*/

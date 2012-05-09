@@ -166,9 +166,9 @@ typedef map<int, Value> TAssign;
  *
  */
 
-typedef void (*externalevent)(int wcspId, int varIndex, Value value);
-typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost);
-typedef void (*externalsolution)(int wcspId);
+typedef void (*externalevent)(int wcspId, int varIndex, Value value, void *solver);
+typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost, void *solver);
+typedef void (*externalsolution)(int wcspId, void *solver);
 
 typedef enum {
 	ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX

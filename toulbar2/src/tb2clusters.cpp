@@ -1820,6 +1820,7 @@ void TreeDecomposition::newSolution( Cost lb )
 		}
 	  }
 	}
+	if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution(&a);
 
     if (ToulBar2::showSolutions) {
 		TAssign::iterator it = a.begin();
@@ -1851,7 +1852,7 @@ void TreeDecomposition::newSolution( Cost lb )
 		wcsp->solution_XML();
 	}
 	else if(ToulBar2::uai) {
-	  wcsp->solution_UAI(lb, &a);
+	  wcsp->solution_UAI(lb);
 	}
 	// warning: cannot read solution from variable assignments
 	// else if(ToulBar2::pedigree){
@@ -1861,7 +1862,7 @@ void TreeDecomposition::newSolution( Cost lb )
 	//   ToulBar2::haplotype->printSol(wcsp);
 	// }
 
-	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex());
+	if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 }
 
 void TreeDecomposition::intersection( TVars& v1, TVars& v2, TVars& vout ) {

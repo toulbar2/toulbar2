@@ -379,7 +379,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
                 inf = newInf;
                 if (watchForIncrease) queueInc(); else queueAC();
                 if (PARTIALORDER) queueDAC();
-                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
+                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
     }
@@ -400,7 +400,7 @@ void EnumeratedVariable::increase(Value newInf)
                 queueDAC();                                     // diff with increaseFast
                 queueEAC1();                                     // diff with increaseFast
                 if (watchForIncrease) queueInc(); else queueAC();
-                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
+                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
       }
     }
@@ -418,7 +418,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
                 sup = newSup;
                 if (watchForDecrease) queueDec(); else queueAC();
                 if (PARTIALORDER) queueDAC();
-                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
+                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
     }
@@ -439,7 +439,7 @@ void EnumeratedVariable::decrease(Value newSup)
                 queueDAC();                                     // diff with decreaseFast
                 queueEAC1();                                     // diff with decreaseFast
                 if (watchForDecrease) queueDec(); else queueAC();
-                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
+                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
     }
@@ -454,7 +454,7 @@ void EnumeratedVariable::removeFast(Value value)
         domain.erase(value);
         queueAC();
         if (PARTIALORDER) queueDAC();
-        if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value);
+        if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value, wcsp->getSolver());
     }
 }
 
@@ -470,7 +470,7 @@ void EnumeratedVariable::remove(Value value)
         queueDAC();
         queueEAC1();
         queueAC();
-        if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value);
+        if (ToulBar2::removevalue) (*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value, wcsp->getSolver());
     }
 }
 
@@ -504,7 +504,7 @@ void EnumeratedVariable::assign(Value newValue)
             projectLB(cost);
         }
 
-	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
         }
@@ -529,7 +529,7 @@ void EnumeratedVariable::assignLS(Value newValue, set<Constraint *>& delayedCtrs
             projectLB(cost);
         }
 
-	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
         	delayedCtrs.insert((*iter).constr);
         }

@@ -86,7 +86,7 @@ void IntervalVariable::increaseFast(Value newInf)
                 inf = newInf;
                 infCost = MIN_COST;
                 queueInc();
-                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
+                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
     }
@@ -104,7 +104,7 @@ void IntervalVariable::increase(Value newInf)
                 infCost = MIN_COST;
                 if (newInf > maxCostValue) queueNC();           // single diff with increaseFast
                 queueInc();
-                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf);
+                if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
     }
@@ -121,7 +121,7 @@ void IntervalVariable::decreaseFast(Value newSup)
                 sup = newSup;
                 supCost = MIN_COST;
                 queueDec();
-                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
+                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
     }
@@ -139,7 +139,7 @@ void IntervalVariable::decrease(Value newSup)
                 supCost = MIN_COST;
                 if (newSup < maxCostValue) queueNC();           // single diff with decreaseFast
                 queueDec();
-                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup);
+                if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
     }
@@ -157,7 +157,7 @@ void IntervalVariable::assign(Value newValue)
         sup = newValue;
 		infCost = MIN_COST;
 		supCost = MIN_COST;
-        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
         }
@@ -177,7 +177,7 @@ void IntervalVariable::assignLS(Value newValue, set<Constraint *>& delayedCtrs)
         sup = newValue;
 		infCost = MIN_COST;
 		supCost = MIN_COST;
-        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue);
+        if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
         	delayedCtrs.insert((*iter).constr);
         }

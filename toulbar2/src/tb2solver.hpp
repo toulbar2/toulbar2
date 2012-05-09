@@ -11,10 +11,9 @@
 template <class T> struct DLink;
 template <class T> class BTList;
 
-class Solver
+class Solver : public WeightedCSPSolver
 {
-    static Solver *currentSolver;
-
+protected:
     Store *store;
     Long nbNodes;
     Long nbBacktracks;
@@ -55,7 +54,7 @@ class Solver
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    void newSolution();
+    virtual void newSolution();
     void recursiveSolve();
     void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
@@ -86,6 +85,10 @@ public:
     void read_wcsp(const char *fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
 
+    Long getNbNodes() const {return nbNodes;}
+    Long getNbBacktracks() const {return nbBacktracks;}
+    set<int> getUnassignedVars() const;
+
     bool solve();
 
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
@@ -94,7 +97,9 @@ public:
     void read_solution(const char *fileName);
     void parse_solution(const char *certificate);
 
-    friend void setvalue(int wcspId, int varIndex, Value value);
+    Cost getSolution(vector<Value>& solution);
+
+    friend void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
     WeightedCSP* getWCSP() { return wcsp; }
 };
