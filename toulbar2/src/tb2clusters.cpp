@@ -1372,7 +1372,7 @@ int TreeDecomposition::makeRooted()
 void TreeDecomposition::buildFromOrder()
 {
 	vector<int> order;
-	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
+	((WCSP *) wcsp)->elimOrderFile2Vector(ToulBar2::varOrder, order);
 	if (!ToulBar2::varOrder) {
 	  int n = wcsp->numberOfVariables();
 	  for(int i=n-1;i>=n/2;--i) {
@@ -1443,7 +1443,7 @@ void TreeDecomposition::buildFromOrderForApprox()
 //	int nbcstr = 0;					//
 	double time;
 
-	wcsp->elimOrderFile2Vector(ToulBar2::varOrder, order);
+	((WCSP *) wcsp)->elimOrderFile2Vector(ToulBar2::varOrder, order);
 	if (!ToulBar2::varOrder) {
 	  int n = wcsp->numberOfVariables();
 	  for(int i=n-1;i>=n/2;--i) {

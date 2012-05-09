@@ -154,8 +154,8 @@ public:
 		}
 	}
 
-	void decreaseLb(Cost cost) { assert(cost <= MIN_COST); negCost += cost; }
-	Cost getNegativeLb() const { return negCost; }
+	void decreaseLb(Cost cost) { assert(cost <= MIN_COST); negCost += cost; }	///< \internal manages negative costs in probabilistic inference
+	Cost getNegativeLb() const { return negCost; }								///< \internal manages negative costs in probabilistic inference
 
 	bool enumerated(int varIndex) const {return vars[varIndex]->enumerated();}	///< \brief true if the variable has an enumerated domain
 
