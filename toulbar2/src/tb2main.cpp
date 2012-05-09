@@ -8,7 +8,7 @@
  * **************** Main function ***********************************
  */
 
-#include "tb2solver.hpp"
+#include "toulbar2.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
@@ -1444,7 +1444,7 @@ int _tmain(int argc, TCHAR * argv[])
 				strfile = glob.File(n);
 			}
 
-			//////////////////////MEDLESOFT ////////////////////////////////////
+			//////////////////////Mendelian-error analysis and haplotype reconstruction ////////////////////////////////////
 			// map file
 
 			if(check_file_ext(glob.File(n),file_extension_map["map_ext"]) ) {
