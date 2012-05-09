@@ -920,8 +920,7 @@ bool Solver::solve()
 
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
-        wcsp->decreaseUb(initialUpperBound);
-
+        wcsp->enforceUb();
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
 		cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;

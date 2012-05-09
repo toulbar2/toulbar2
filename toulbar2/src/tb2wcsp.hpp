@@ -131,6 +131,7 @@ public:
 	}
 
 	/// \brief sets problem upper bound and asks for propagation
+	/// \deprecated
 	void decreaseUb(Cost newUb) {
 		if (newUb < ub) {
 			if (CUT((((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), newUb)) THROWCONTRADICTION;
