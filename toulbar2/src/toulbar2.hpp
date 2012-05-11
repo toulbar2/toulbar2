@@ -21,7 +21,7 @@
 
 class WeightedCSP {
 public:
-    static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound, void *solver = NULL);      // WCSP factory
+    static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound, void *solver = NULL);	///< \brief Weighted CSP factory
 
     virtual ~WeightedCSP() {}
 
@@ -166,7 +166,7 @@ public:
     virtual TProb SumLogLikeCost(TProb logc1, Cost c2) const =0;
 
     // -----------------------------------------------------------
-    // Internal solver functions DO NOT USE THEM
+    // Internal WCSP functions DO NOT USE THEM
 
     virtual void setLb(Cost newLb) =0;		///< \internal sets problem lower bound
     virtual void setUb(Cost newUb) =0;		///< \internal sets problem upper bound
@@ -185,40 +185,63 @@ public:
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);			///< \relates WeightedCSP::print
 
+/** Abstract class WeightedCSPSolver representing a WCSP solver
+ *	- link to a WeightedCSP
+ *	- generic complete solving method configurable through global variables (see ::ToulBar2 class and command line options)
+ *	- optimal solution available after problem solving
+ *	- elementary decision operations on domains of variables
+ *	- statistics information (number of nodes and backtracks)
+ *	- problem file format reader (multiple formats, see \ref wcspformat)
+ *	- solution checker (output the cost of a given solution)
+ *
+ */
+
 class WeightedCSPSolver
 {
 public:
-    static WeightedCSPSolver *makeWeightedCSPSolver(int storeSize, Cost initUpperBound);      // Solver factory
+    static WeightedCSPSolver *makeWeightedCSPSolver(int storeSize, Cost initUpperBound);	///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}
 
-    virtual Long getNbNodes() const =0;
-    virtual Long getNbBacktracks() const =0;
-    virtual set<int> getUnassignedVars() const =0;
+    virtual WeightedCSP* getWCSP() = 0;				///< \brief access to its associated Weighted CSP
 
-    virtual void increase(int varIndex, Value value) =0;
-    virtual void decrease(int varIndex, Value value) =0;
-    virtual void assign(int varIndex, Value value) =0;
-    virtual void remove(int varIndex, Value value) =0;
+    virtual Long getNbNodes() const =0;				///< \brief number of search nodes (see WeightedCSPSolver::increase, WeightedCSPSolver::decrease, WeightedCSPSolver::assign, WeightedCSPSolver::remove)
+    virtual Long getNbBacktracks() const =0;		///< \brief number of backtracks
 
-    virtual void read_wcsp(const char *fileName) =0;
-    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;
+    virtual void increase(int varIndex, Value value) =0;	///< \brief changes domain lower bound and propagates
+    virtual void decrease(int varIndex, Value value) =0;	///< \brief changes domain upper bound and propagates
+    virtual void assign(int varIndex, Value value) =0;		///< \brief assigns a variable and propagates
+    virtual void remove(int varIndex, Value value) =0;		///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
+
+    virtual void read_wcsp(const char *fileName) =0;		///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
+    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;	///< \brief create a random WCSP, see WeightedCSP::read_random
 
 	/// \brief simplifies and solves to optimality the problem
     /// \return false if there is no solution found
-    /// \warning after solve, the current problem has been modified by various preprocessing techniques
-    /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSP::getSolution INSTEAD
+    /// \warning after solving, the current problem has been modified by various preprocessing techniques
+    /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSPSolver::getSolution INSTEAD
     virtual bool solve() =0;
 
+	/// \brief quadratic unconstrained pseudo-Boolean optimization
+    /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
+    /// non-zero half squared matrix costs (can be positive or negative, with \f$\forall i, posx[i] \leq posy[i]\f$)
+    /// \note costs for \f$posx \neq posy\f$ are multiplied by 2 by this method
+    /// \note by convention: \f$h = 1 \equiv x = 0\f$ and \f$h = -1 \equiv x = 1\f$
+    /// \warning does not allow infinite costs (no forbidden assignments, unconstrained optimization)
+    /// \return true if at least one solution has been found (array \e sol being filled with the best solution)
+    /// \see ::solvesymmax2sat_ for Fortran call
     virtual bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol) =0;
 
-    virtual void dump_wcsp(const char *fileName, bool original = true) =0;
-    virtual void read_solution(const char *fileName) =0;
-    virtual void parse_solution(const char *certificate) =0;
+    virtual void dump_wcsp(const char *fileName, bool original = true) =0;	///< \brief output current problem in a file \see WeightedCSP::dump
+    virtual void read_solution(const char *fileName) =0;					///< \brief read a solution from a file
+    virtual void parse_solution(const char *certificate) =0;				///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
-    virtual Cost getSolution(vector<Value>& solution) =0;	///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use if there is no solution, see solve() output)
+    virtual Cost getSolution(vector<Value>& solution) =0;	///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
 
-    virtual WeightedCSP* getWCSP() = 0;
+    // -----------------------------------------------------------
+    // Internal Solver functions DO NOT USE THEM
+
+    virtual set<int> getUnassignedVars() const =0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
 };
 
 #endif /*TOULBAR2_HPP_*/
