@@ -17,6 +17,7 @@
 #include "tb2clusters.hpp"
 #include "ToulbarVersion.hpp"
 
+#include "tb2globaldecomposable.hpp"
 #include "tb2globalconstr.hpp"
 #include "tb2flowbasedconstr.hpp"
 #include "tb2alldiffconstr.hpp"
@@ -398,6 +399,16 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstr
 	if (file != NULL) gc->read(file);
 
 	return gc->wcspIndex;
+}
+
+void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes){
+    string gcname = "wsum";
+    WeightedSum* decomposableGCF = new WeightedSum(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics); 				
+    decomposableGCF->setBaseCost(baseCost); 				
+    decomposableGCF->setComparator(comparator); 
+	decomposableGCF->setRightRes(rightRes);
+    decomposableGCF->addToCostFunctionNetwork(this);
 }
 
 /// \brief add unary costs to enumerated variable \e xIndex

@@ -254,6 +254,8 @@ public:
 	int makeEnumeratedVariable(string n, Value *d, int dsize);
 	int makeIntervalVariable(string n, Value iinf, Value isup);
 
+    void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
+
 	void postUnary(int xIndex, vector<Cost> &costs);
 	int postUnary(int xIndex, Value *d, int dsize, Cost penalty);
 	int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
@@ -292,6 +294,7 @@ public:
 
 	Store *getStore() {return storeData;}
 	Variable   *getVar(int varIndex) const {return vars[varIndex];}
+	vector< vector<int> > *getListSuccessors() {return &listofsuccessors;}
 	Constraint *getCtr(int ctrIndex) const {
 		if (ctrIndex>=0) {
 			return constrs[ctrIndex];
