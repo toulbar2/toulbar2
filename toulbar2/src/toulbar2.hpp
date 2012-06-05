@@ -82,7 +82,7 @@ public:
 	/// \warning side-effect: updates DAC order according to an existing variable elimination order
 	/// \note must be called after creating all the cost functions and before solving the problem
 	virtual void sortConstraints() =0;
-	/// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool_\theta of P)
+	/// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
 	/// \note must be called after creating all the cost functions and before solving the problem
 	virtual void histogram() =0;
 
@@ -183,7 +183,7 @@ public:
 	virtual void printVACStat() = 0;
 };
 
-ostream& operator<<(ostream& os, WeightedCSP &wcsp);			///< \relates WeightedCSP::print
+ostream& operator<<(ostream& os, WeightedCSP &wcsp);			///< \see WeightedCSP::print
 
 /** Abstract class WeightedCSPSolver representing a WCSP solver
  *	- link to a WeightedCSP
