@@ -17,6 +17,7 @@
                         ${My_Source}/tb2clusters.cpp
                         ${My_Source}/tb2constraint.cpp
                         ${My_Source}/tb2graph.cpp
+                        ${My_Source}/tb2globaldecomposable.cpp
                         ${My_Source}/tb2globalconstr.cpp
                         ${My_Source}/tb2flowbasedconstr.cpp
                         ${My_Source}/tb2alldiffconstr.cpp
