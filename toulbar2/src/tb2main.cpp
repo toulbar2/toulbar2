@@ -170,8 +170,8 @@ enum {
 	OPT_showSolutions,
 	OPT_costfuncSeparate,
 	NO_OPT_costfuncSeparate,
-	
-  
+	OPT_nopre,
+
 	// VAC OPTION
 	OPT_minsumDiffusion,
 	OPT_vac,
@@ -292,6 +292,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_elimDegree_preprocessing,	(char*) "-p:", 				SO_NONE 		},
 	{ OPT_costfuncSeparate,			(char*) "-dec", 			SO_NONE 		},
 	{ NO_OPT_costfuncSeparate,		(char*) "-dec:",			SO_NONE			},
+	{ OPT_nopre,			(char*) "-nopre", 			SO_NONE 		},
 	// vac option
 	{ OPT_vac,				(char*) "-A", 				SO_OPT			},
 	{ NO_OPT_vac,				(char*) "-A:", 				SO_NONE			},
@@ -676,6 +677,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
+	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h:)";
 	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
@@ -998,13 +1000,13 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == NO_OPT_elimDegree )
 			{    
 				ToulBar2::elimDegree = -1; 
-				if (ToulBar2::debug) cout << "elimDegree OFF " << ToulBar2::elimDegree << "( default value 3 )" << endl;
+				if (ToulBar2::debug) cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
 
 			} else if ( args.OptionId() == OPT_elimDegree  and args.OptionArg() != NULL ) { 
 				int ndegree =-1;
 				ndegree = atol(args.OptionArg());
 				if ((ndegree >= 0) && (ndegree <= 3)) {ToulBar2::elimDegree = ndegree;} 
-				if (ToulBar2::debug) cout << "elimDegree ON " << ToulBar2::elimDegree << " ( default value 3 )" << endl;
+				if (ToulBar2::debug) cout << "elimDegree ON " << ToulBar2::elimDegree << endl;
 			} 
 			////////////////////////////////////////////
 
@@ -1019,12 +1021,12 @@ int _tmain(int argc, TCHAR * argv[])
 					if (ndegree != 0) ToulBar2::elimDegree_preprocessing = ndegree;
 					if (ndegree<0) ToulBar2::elimSpaceMaxMB = 128;
 				} else ToulBar2::elimDegree_preprocessing = 3; 
-				if (ToulBar2::debug) cout << "elimDegree_preprocessing ON: "  <<  ToulBar2::elimDegree_preprocessing << endl;
+				if (ToulBar2::debug) cout << "elimDegree_preprocessing ON: "  << ToulBar2::elimDegree_preprocessing << endl;
 
 			}   else if ( args.OptionId() == NO_OPT_elimDegree_preprocessing)
 			{
 				ToulBar2::elimDegree_preprocessing = -1;
-				if (ToulBar2::debug) cout << " elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
+				if (ToulBar2::debug) cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
 			}
 
 
@@ -1323,6 +1325,21 @@ int _tmain(int argc, TCHAR * argv[])
 
 			}
 
+			if (args.OptionId() == OPT_nopre)
+			{
+				ToulBar2::elimDegree = -1;
+				if (ToulBar2::debug) cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
+				ToulBar2::elimDegree_preprocessing = -1;
+				if (ToulBar2::debug) cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
+				if (ToulBar2::debug) cout <<"preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
+				ToulBar2::preprocessTernaryRPC = 0;
+				if (ToulBar2::debug) cout <<"elimination of functional variables OFF" << endl;
+				ToulBar2::preprocessFunctional  = 0;
+				if (ToulBar2::debug) cout <<"preproject of n-ary cost functions OFF" << endl;
+				ToulBar2::preprocessNary  = 0;
+			    if (ToulBar2::debug) cout << "decomposition of cost functions OFF" << endl;
+				ToulBar2::costfuncSeparate = false;
+			}
 
 		}
 
