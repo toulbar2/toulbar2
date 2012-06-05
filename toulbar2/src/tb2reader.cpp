@@ -221,7 +221,6 @@ void WCSP::read_wcsp(const char *fileName)
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
         assert(theindex == i);   
-	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order;
     }
 
     // read each constraint
@@ -276,7 +275,6 @@ void WCSP::read_wcsp(const char *fileName)
 					if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular q0 index "<< q0 << " domain = " << domsize+1 << endl; 
 					int theindex = -1;
 					theindex=makeEnumeratedVariable(varname,0,domsize);			// add q0 variable
-					listofsuccessors.push_back(vector<int>()); // add the new variable in the topological order;
 					//assert(theindex=v+current_var_number);
 					if ( ToulBar2::verbose > 1 ) cout << "wregular add varname =" << varname <<"=> var index "<<  numberOfVariables() << " domain size = " << domsize+1 << endl;
 					} else { exit(EXIT_FAILURE); } 
@@ -329,7 +327,6 @@ void WCSP::read_wcsp(const char *fileName)
 					
 					int theindex = -1;
 					theindex=makeEnumeratedVariable(varname,0,domsize);	// add qi variable
-					listofsuccessors.push_back(vector<int>()); // add new variable in the topological order;
 					assert(theindex=v+current_var_number);
 					if ( ToulBar2::verbose > 1 ) 
 					cout << "DEBUG>> wregular add varname =" << varname <<"=> rank "<<  numberOfVariables() << " domain = " << domsize+1 << endl;

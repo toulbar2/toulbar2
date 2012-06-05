@@ -171,6 +171,7 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup) {
 		x = new VACVariable(this, n, iinf, isup);
 	}
 	if (maxdomainsize < isup - iinf + 1) maxdomainsize = isup - iinf + 1;
+	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
 	return x->wcspIndex;
 }
 
@@ -183,12 +184,14 @@ int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
 		x = new VACVariable(this, n, d, dsize);
 	}
 	if (maxdomainsize < dsize) maxdomainsize = dsize;
+	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
 	return x->wcspIndex;
 }
 
 /// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
 	IntervalVariable *x = new IntervalVariable(this, n, iinf, isup);
+	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
 	return x->wcspIndex;
 }
 
