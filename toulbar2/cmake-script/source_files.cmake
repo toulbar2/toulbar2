@@ -9,6 +9,7 @@
                         source_files
                         ${My_Source}/tb2abstractconstr.cpp
                         ${My_Source}/tb2arithmetic.cpp
+			${My_Source}/tb2automaton.cpp
                         ${My_Source}/tb2bep.cpp
                         ${My_Source}/tb2binconstr.cpp
                         ${My_Source}/tb2btd.cpp

@@ -11,6 +11,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2types.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2automaton.hpp"
 
 using namespace std;
 
@@ -18,14 +19,23 @@ class DecomposableGlobalCostFunction {
 	protected:
 			int 		arity;		
 			int*	 	scope;
+			string label;
 	public:
 		DecomposableGlobalCostFunction();
 		DecomposableGlobalCostFunction(unsigned int _arity, int* _scope);
-		//~DecomposableGlobalCostFunction(); 
+		~DecomposableGlobalCostFunction(); 
 		static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, ifstream &file);
 		
-		virtual void addToCostFunctionNetwork(WCSP* wcsp)=0;
-		virtual void display()=0;
+		int getArity() {return arity;}
+		int getVarIndex(int i) {return scope[i]; }
+		void setLabel(string _label) {label = _label;}
+		string getLabel() {return label; }
+		
+		virtual Cost evaluate(int* tuple) = 0;
+		virtual void addToCostFunctionNetwork(WCSP* wcsp) = 0;
+		virtual void display() = 0;
+		
+		void color(int);
 };
 
 class WeightedAmong : public DecomposableGlobalCostFunction {
@@ -39,66 +49,16 @@ class WeightedAmong : public DecomposableGlobalCostFunction {
 		WeightedAmong();
 		WeightedAmong(unsigned int _arity, int* _scope);
 		WeightedAmong(unsigned int _arity, int* _scope, ifstream &file);
-		//~WeightedAmong();
+		~WeightedAmong();
 		
-		inline void addValue(int _value)							{ values.insert(_value); }
-		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
-		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost; }
-		inline void setBounds(unsigned int _lb, unsigned int _ub) 	{ lb=_lb; ub=_ub; }
+		inline void addValue(int _value)							{ values.insert(_value);	}
+		inline void setSemantics(string _semantics) 				{ semantics=_semantics;		}
+		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost;		}
+		inline void setBounds(unsigned int _lb, unsigned int _ub) 	{ lb=_lb; ub=_ub;			}
 		
+		Cost evaluate(int* tuple);
 		void addToCostFunctionNetwork(WCSP* wcsp);
 		void display();
-};
-
-struct WTransition {
-	unsigned int start;
-	unsigned int end;
-	unsigned int symbol;
-	Cost weight;
-	
-	WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, Cost  _weight) {
-		start = _start;
-		end = _end;
-		symbol = _symbol;
-		weight = _weight;
-	}
-	
-	void display() {
-		cout << start << " x " << symbol << " --("<<weight <<")--> " << end << endl;
-	}
-};
-struct WFA{
-	unsigned int nbStates;
-	list<pair<int,Cost> > initialStates;
-	list<pair<int,Cost> > acceptingStates;
-	list<WTransition*> transitions;
-	
-	WFA(unsigned int _nbStates) {
-		nbStates = _nbStates;
-	}
-	/*~WFA() {
-		initialStates.clear();
-		acceptingStates.clear();
-		transitions.clear();
-	}*/
-	void display() {
-		cout << "Number of states = " << nbStates << endl;
-		cout << "Initial States : " << endl;
-		for (list<pair<int,Cost> >::iterator it = initialStates.begin() ; it != initialStates.end() ; it++) {
-			pair<int,int> initial = *it;
-			cout << initial.first << "(" << initial.second << ")" << endl;
-		}
-		cout << "Accepting States : " << endl;
-		for (list<pair<int,Cost> >::iterator it = acceptingStates.begin() ; it != acceptingStates.end() ; it++) {
-			pair<int,int> accepting = *it;
-			cout << accepting.first << "(" << accepting.second << ")" << endl;
-		}
-		cout << "Transition : " << endl;
-		for (list<WTransition*>::iterator it = transitions.begin() ; it != transitions.end() ; it++) {
-			WTransition* transition = *it;
-			transition->display();
-		}
-	}
 };
 
 class WeightedRegular : public DecomposableGlobalCostFunction{
@@ -108,10 +68,11 @@ class WeightedRegular : public DecomposableGlobalCostFunction{
 		WeightedRegular();
 		WeightedRegular(unsigned int _arity, int* _scope);
 		WeightedRegular(unsigned int _arity, int* _scope, ifstream &file);
-		//~WeightedRegular();
+		~WeightedRegular();
 		
 		inline void setWFA(WFA* _automaton) {automaton=_automaton;}
 		
+		Cost evaluate(int* tuple) { cout << "WeightedRegular::evaluate => no yet implemented" << endl; return 0; }
 		void addToCostFunctionNetwork(WCSP* wcsp);
 		void display(); 
 };
@@ -126,13 +87,37 @@ class WeightedSum : public DecomposableGlobalCostFunction{
 		WeightedSum();
 		WeightedSum(unsigned int _arity, int* _scope);
 		WeightedSum(unsigned int _arity, int* _scope, ifstream &file);
-		//~WeightedSum();
+		~WeightedSum();
 		
 		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
 		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost; }
 		inline void setComparator(string _comparator) 				{ comparator=_comparator;}
 		inline void setRightRes(int _rightRes)						{ rightRes=_rightRes;}
 		
+		Cost evaluate(int* tuple) ;
+		void addToCostFunctionNetwork(WCSP* wcsp);
+		void display(); 
+};
+
+
+class WeightedOverlap : public DecomposableGlobalCostFunction{
+	private:
+		string 	semantics;
+		Cost 	baseCost;
+		string 	comparator;
+		int 	rightRes;
+	public:
+		WeightedOverlap();
+		WeightedOverlap(unsigned int _arity, int* _scope);
+		WeightedOverlap(unsigned int _arity, int* _scope, ifstream &file);
+		~WeightedOverlap();
+		
+		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
+		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost; }
+		inline void setComparator(string _comparator) 				{ comparator=_comparator;}
+		inline void setRightRes(int _rightRes)						{ rightRes=_rightRes;}
+		
+		Cost evaluate(int* tuple);
 		void addToCostFunctionNetwork(WCSP* wcsp);
 		void display(); 
 };
