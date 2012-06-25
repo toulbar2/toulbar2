@@ -41,7 +41,7 @@ class WFA{
 	public:
 		WFA();
 		//WFA(int _nbStates);
-		WFA(ifstream &file);
+		WFA(istream &file);
 		WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 		
 		inline unsigned int 			getNbStates() 			 	{return nbStates;}

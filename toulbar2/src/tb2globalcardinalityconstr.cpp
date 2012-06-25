@@ -23,7 +23,7 @@ void GlobalCardinalityConstraint::buildIndex() {
 	graph.setSize(arity_+D.size()+4);
 }
 
-void GlobalCardinalityConstraint::read(ifstream &file) {
+void GlobalCardinalityConstraint::read(istream &file) {
 	// "var" => softvar
 	// "dec" => softdec
 	// "wdec" => sigmadec

@@ -138,7 +138,7 @@ public:
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
-	virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file) =0;
+	virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file) =0;
     virtual bool isGlobal() =0; 			///< \brief true if there are soft global constraints defined in the problem
     virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0;
     virtual void read_wcsp(const char *fileName) =0;	///< \brief load problem in native wcsp format (\ref wcspformat)

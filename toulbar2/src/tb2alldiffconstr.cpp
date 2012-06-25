@@ -23,7 +23,7 @@ void AllDiffConstraint::buildIndex() {
 	graph.setSize(arity_+D.size()+2);
 }
 
-void AllDiffConstraint::read(ifstream &file) { 
+void AllDiffConstraint::read(istream &file) {
 	
 	// Only two pararmeters for control :
 

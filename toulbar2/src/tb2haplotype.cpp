@@ -585,7 +585,7 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
 	  // apply basic initial propagation AFTER complete network loading
 	  for (unsigned int u=0; u<unaryconstrs.size(); u++) {
 	    for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-	      if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+	      if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a]);
 	    }
 	    unaryconstrs[u].var->findSupport();
 	  }
@@ -797,7 +797,7 @@ void Haplotype::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
   // apply basic initial propagation AFTER complete network loading
   for (unsigned int u=0; u<unaryconstrs.size(); u++) {
     for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-      if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+      if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a]);
     }
     unaryconstrs[u].var->findSupport();
   }

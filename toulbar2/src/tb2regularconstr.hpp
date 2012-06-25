@@ -71,7 +71,7 @@ class RegularConstraint : public FlowBasedGlobalConstraint
 		~RegularConstraint() {}
 		string getName() {return "regular constraint";}
 		Cost eval(String s);
-		void read(ifstream &file);
+		void read(istream &file);
 		virtual Cost getMinCost () {
 			return constructFlow(graph);
 		//	return cost;

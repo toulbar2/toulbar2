@@ -39,7 +39,7 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 
 		string getName() {return "GCC constraint";}
 		Cost evalOriginal (String s);
-		void read(ifstream &file);
+		void read(istream &file);
 
         void print(ostream& os);
         void dump(ostream& os, bool original = true);

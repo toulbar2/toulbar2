@@ -3,7 +3,7 @@
 WFA::WFA() : nbStates(0) {}
 
 //WFA::WFA(int _nbStates) : nbStates(_nbStates) {}
-WFA::WFA(ifstream &file) {
+WFA::WFA(istream &file) {
 	unsigned int _nbStates, nbTransitions, nbStatesInit, nbStatesAccept;
 	file >> _nbStates;
 	nbStates = _nbStates;
@@ -43,8 +43,6 @@ WFA::WFA(ifstream &file) {
 }
 
 WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost) {
-	bool VERBOSE = true;
-	
 	/// Preparing the WFA : nbStates, initialStates, acceptingStates ///
 	nbStates = forbiddenPattern.length();
 	initialStates.push_back(make_pair(0,0));
@@ -58,7 +56,7 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost) {
 			int weight = (res == forbiddenPattern)?cost:0;
 			int start = currentState;
 			int end = 0;
-			for (int receptionState = (min(currentState+1,nbStates-1)) ; receptionState >0 ; receptionState--) {
+			for (int receptionState = ((int) min(currentState+1,nbStates-1)) ; receptionState >0 ; receptionState--) {
 				int stringStart  = (currentState+1-receptionState);
 				int stringLenght = currentState+1 - stringStart;
 				string subCurrent = res.substr(stringStart,stringLenght);

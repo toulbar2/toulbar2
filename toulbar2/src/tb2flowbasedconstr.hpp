@@ -86,7 +86,7 @@ class FlowBasedGlobalConstraint : public GlobalConstraint
 
 		~FlowBasedGlobalConstraint() { }
 
-		virtual void read(ifstream &file) {}
+		virtual void read(istream &file) {}
 		virtual void initStructure();
 		virtual void end();
 

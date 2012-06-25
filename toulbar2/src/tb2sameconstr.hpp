@@ -31,7 +31,7 @@ class SameConstraint : public FlowBasedGlobalConstraint
 		void addToGroupY(Variable *var) {addToGroup(1, var);}
 		*/
 		string getName() {return "same constraint";}
-		void read(ifstream &file); 
+		void read(istream &file);
 		//void findProjection(Graph &graph, int varindex);
 		//void findFullSupport(int varindex);
 		//void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);

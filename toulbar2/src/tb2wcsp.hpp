@@ -267,7 +267,7 @@ public:
 	void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
 	void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
 	void postNaryConstraintEnd(int ctrindex) {getCtr(ctrindex)->propagate();}
-	int postGlobalConstraint(int* scopeIndex, int arity, string &name, ifstream &file);
+	int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file);
 	bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global constraints defined in the problem
 
 	void read_wcsp(const char *fileName); 		///< \brief load problem in native wcsp format (\ref wcspformat)

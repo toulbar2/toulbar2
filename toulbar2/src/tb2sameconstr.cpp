@@ -35,7 +35,7 @@ pair<int,int> SameConstraint::mapto(int varindex, Value val) {
 	}
 }
 
-void SameConstraint::read(ifstream &file) {
+void SameConstraint::read(istream &file) {
 	file >> def; 
 	int size[2];
 	//cout << "def. value = " << def << endl;

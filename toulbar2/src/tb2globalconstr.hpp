@@ -33,7 +33,7 @@ protected:
 
 	// mode : the cost measure
 	// def : the cost of the violation edge 
-	int mode, def;
+	Cost mode, def;
 	int currentDepth;
 
 	int count_nic, count_gac, count_fdac, count_edac, error;
@@ -128,7 +128,7 @@ public:
 	virtual void decrease(int index) {((EnumeratedVariable*)getVar(index))->queueAC();}
 
 	// read the parameter of the constraint parameter from the file
-	virtual void read(ifstream &file) {}
+	virtual void read(istream &file) {}
 
 	// return the minimum cost of the tuples
 	virtual Cost getMinCost() {return 0;}

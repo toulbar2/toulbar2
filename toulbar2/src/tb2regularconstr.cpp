@@ -8,7 +8,7 @@ RegularConstraint::RegularConstraint(WCSP *wcsp, EnumeratedVariable** scope_in,
 	for (int i=0;i<arity_;i++) mapedge[i].resize(((EnumeratedVariable*)getVar(i))->getDomainInitSize());
 }
 
-void RegularConstraint::read(ifstream &file) {
+void RegularConstraint::read(istream &file) {
 	/*file >> subdef;
 	file >> insdef;
 	file >> deldef;

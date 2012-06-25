@@ -375,7 +375,7 @@ void WCSP::postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost) {
 /// \param arity size of scopeIndex
 /// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
 /// \param file problem file (\see \ref wcspformat)
-int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, ifstream &file) {
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file) {
 	assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 	if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
 	GlobalConstraint* gc = NULL;
@@ -424,7 +424,7 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 		}
 	}
 	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-		if (costs[a] > MIN_COST) x->project(a, costs[a]);
+		if (costs[a] > MIN_COST) x->project(x->toValue(a), costs[a]);
 	}
 	x->findSupport();
     x->queueNC();
@@ -448,9 +448,9 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
 	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
 	vector<Cost> costs;
-	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
-	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
-		costs.push_back(max( (b + cst - a <= delta)?((Cost)(b + cst - a)):getUb(), MIN_COST ));
+	for (unsigned int a = 0; a <  x->getDomainInitSize(); a++) {
+	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+		costs.push_back(max( (y->toValue(b) + cst - x->toValue(a) <= delta)?((Cost)(y->toValue(b) + cst - x->toValue(a))):getUb(), MIN_COST ));
 	  }
 	}
 	return postBinaryConstraint(xIndex, yIndex, costs);
@@ -471,9 +471,9 @@ int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost p
 	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
 	vector<Cost> costs;
-	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
-	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
-		costs.push_back(((a >= b + csty) || (b >= a + cstx))?MIN_COST:penalty);
+	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+		costs.push_back(((x->toValue(a) >= y->toValue(b) + csty) || (y->toValue(b) >= x->toValue(a) + cstx))?MIN_COST:penalty);
 	  }
 	}
 	return postBinaryConstraint(xIndex, yIndex, costs);
@@ -494,9 +494,9 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
 	EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
 	EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
 	vector<Cost> costs;
-	for (Value a = 0; a < (Value) x->getDomainInitSize(); a++) {
-	  for (Value b = 0; b < (Value) y->getDomainInitSize(); b++) {
-		costs.push_back((a <= xinfty && b <= yinfty && (a == xinfty || b == yinfty || (a >= b + csty || b >= a + cstx)))?(((a == xinfty)?costx:MIN_COST) + ((b == yinfty)?costy:MIN_COST)):getUb());
+	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+		costs.push_back((x->toValue(a) <= xinfty && y->toValue(b) <= yinfty && (x->toValue(a) == xinfty || y->toValue(b) == yinfty || (x->toValue(a) >= y->toValue(b) + csty || y->toValue(b) >= x->toValue(a) + cstx)))?(((x->toValue(a) == xinfty)?costx:MIN_COST) + ((y->toValue(b) == yinfty)?costy:MIN_COST)):getUb());
 	  }
 	}
 	return postBinaryConstraint(xIndex, yIndex, costs);

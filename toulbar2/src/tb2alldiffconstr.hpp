@@ -32,7 +32,7 @@ class AllDiffConstraint : public FlowBasedGlobalConstraint
 		~AllDiffConstraint() {
 		}
 		Cost evalOriginal (String s);
-		void read(ifstream &file);
+		void read(istream &file);
 		void decompose();
 		//void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
 		//void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}

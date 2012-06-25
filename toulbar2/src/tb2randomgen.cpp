@@ -283,7 +283,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
 	EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
 	for (unsigned int a = 0; a < x->getDomainInitSize(); a++) 
 	  {
-		x->project(a, ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST)); 
+		x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST));
 	  }
 	x->findSupport();
   }

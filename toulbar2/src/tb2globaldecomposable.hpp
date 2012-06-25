@@ -24,7 +24,7 @@ class DecomposableGlobalCostFunction {
 		DecomposableGlobalCostFunction();
 		DecomposableGlobalCostFunction(unsigned int _arity, int* _scope);
 		~DecomposableGlobalCostFunction(); 
-		static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, ifstream &file);
+		static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, istream &file);
 		
 		int getArity() {return arity;}
 		int getVarIndex(int i) {return scope[i]; }
@@ -48,7 +48,7 @@ class WeightedAmong : public DecomposableGlobalCostFunction {
 	public:
 		WeightedAmong();
 		WeightedAmong(unsigned int _arity, int* _scope);
-		WeightedAmong(unsigned int _arity, int* _scope, ifstream &file);
+		WeightedAmong(unsigned int _arity, int* _scope, istream &file);
 		~WeightedAmong();
 		
 		inline void addValue(int _value)							{ values.insert(_value);	}
@@ -67,7 +67,7 @@ class WeightedRegular : public DecomposableGlobalCostFunction{
 	public:
 		WeightedRegular();
 		WeightedRegular(unsigned int _arity, int* _scope);
-		WeightedRegular(unsigned int _arity, int* _scope, ifstream &file);
+		WeightedRegular(unsigned int _arity, int* _scope, istream &file);
 		~WeightedRegular();
 		
 		inline void setWFA(WFA* _automaton) {automaton=_automaton;}
@@ -86,7 +86,7 @@ class WeightedSum : public DecomposableGlobalCostFunction{
 	public:
 		WeightedSum();
 		WeightedSum(unsigned int _arity, int* _scope);
-		WeightedSum(unsigned int _arity, int* _scope, ifstream &file);
+		WeightedSum(unsigned int _arity, int* _scope, istream &file);
 		~WeightedSum();
 		
 		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
@@ -109,7 +109,7 @@ class WeightedOverlap : public DecomposableGlobalCostFunction{
 	public:
 		WeightedOverlap();
 		WeightedOverlap(unsigned int _arity, int* _scope);
-		WeightedOverlap(unsigned int _arity, int* _scope, ifstream &file);
+		WeightedOverlap(unsigned int _arity, int* _scope, istream &file);
 		~WeightedOverlap();
 		
 		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
