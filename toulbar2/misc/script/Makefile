@@ -15,15 +15,13 @@ SRCS = $(SRCSFULL:tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lxml2
+OBJS = $(SRCS:.cpp=.o) -lxml2 -lgmp
 # -lxml2 -lz -lm -lpthread
 else
 OBJS = $(SRCS:.cpp=.o) -lgmp
 endif
 
-LIBSRCS1 = $(SRCS:tb2main.cpp=)
-LIBSRCS2 = $(LIBSRCS1:tb2solver.cpp=)
-LIBSRCS = $(LIBSRCS2:tb2btd.cpp=)
+LIBSRCS = $(SRCS:tb2main.cpp=)
 LIBOBJS = $(LIBSRCS:.cpp=.o)
 
 CC = g++
@@ -41,19 +39,23 @@ ICC = icc
 #ILOGFLAGS = -DILOGLUE -DIL_STD -I/usr/local/ILOG/solver65/include -I/usr/local/ILOG/concert25/include
 #ILOGLIBS = -L/usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3.4/static_pic -L/usr/local/ILOG/concert25/lib/x86-64_rhel4.0_3.4/static_pic -lsolverfloat -lsolver -lconcert
 
-CFLAGS = -g -Wall $(ILOGFLAGS) -DWCSPFORMATONLY -DNARYCHAR $(BOOST) $(XMLI)
+CFLAGS = -g -Wall $(ILOGFLAGS) $(BOOST) $(XMLI) -DNARYCHAR -DWCSPFORMATONLY
+# -ftrapv -g3
 # -O1 -g3 -ftrapv -ansi -pedantic
 # -O1 -g3 -ftrapv -ansi -pedantic -Wall -Wno-long-long
 # -DNARYCHAR  # use this option to print nary constraints (including separators) correctly
+# -DWCSPFORMATONLY # use this option to assume positive domains starting at value 0 (as in the wcsp format file)
 
-OFLAGS = -O3 -DNDEBUG
+#OFLAGS = -O3 -DNDEBUG
 # -O1 -DNDEBUG
 # -O2 -DNDEBUG
 
 ICCFLAGS = 
 #-O3 -ipo -static -DNDEBUG
 
-PFLAGS = -pg -g3
+PFLAGS = 
+
+# -pg -g3 # use these options to catch numerical overflows
 
 BUILD = $(CC) -shared
 
@@ -74,10 +76,13 @@ libtb2.so: LIBFLAGS = -fPIC
 libtb2.so: $(LIBOBJS)
 	$(BUILD) $(LIBFLAGS) $(LIBOBJS) -o $@
 
+toulbar2test: toulbar2test.cpp libtb2.so
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< -L. -ltb2 -lgmp
+
 iloglue: iloglue.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp
 
 clean:
-	-rm -f *.o toulbar2 toulbar2i libtb2.so iloglue
+	-rm -f *.o toulbar2 toulbar2i libtb2.so iloglue toulbar2test
 
 all: toulbar2
