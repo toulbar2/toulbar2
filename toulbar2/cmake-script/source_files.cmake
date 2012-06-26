@@ -9,7 +9,7 @@
                         source_files
                         ${My_Source}/tb2abstractconstr.cpp
                         ${My_Source}/tb2arithmetic.cpp
-			${My_Source}/tb2automaton.cpp
+                        ${My_Source}/tb2automaton.cpp
                         ${My_Source}/tb2bep.cpp
                         ${My_Source}/tb2binconstr.cpp
                         ${My_Source}/tb2btd.cpp
@@ -58,13 +58,16 @@ MESSAGE(STATUS "-------------\n")
                         LIBTB2FILE
                         ${My_Source}/tb2abstractconstr.*pp 
                         ${My_Source}/tb2arithmetic.*pp 
+                        ${My_Source}/tb2automaton.cpp
                         ${My_Source}/tb2bep.*pp 
                         ${My_Source}/tb2binconstr.*pp 
+                        ${My_Source}/tb2btd.cpp
                         ${My_Source}/tb2btlist.*pp
                         ${My_Source}/tb2btqueue.*pp
                         ${My_Source}/tb2clusters.*pp
                         ${My_Source}/tb2constraint.*pp
                         ${My_Source}/tb2graph.*pp
+                        ${My_Source}/tb2globaldecomposable.cpp
                         ${My_Source}/tb2globalconstr.*pp
                         ${My_Source}/tb2flowbasedconstr.*pp
                         ${My_Source}/tb2alldiffconstr.*pp
@@ -80,6 +83,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2queue.*pp
                         ${My_Source}/tb2randomgen.*pp
                         ${My_Source}/tb2reader.*pp
+                        ${My_Source}/tb2solver.cpp
                         ${My_Source}/tb2system.*pp
                         ${My_Source}/tb2ternaryconstr.*pp
                         ${My_Source}/tb2vac.*pp
