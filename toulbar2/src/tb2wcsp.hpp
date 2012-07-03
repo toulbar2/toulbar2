@@ -255,6 +255,9 @@ public:
 	int makeIntervalVariable(string n, Value iinf, Value isup);
 
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
+    void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lb, int ub);
+    //void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts);
+    //void postWeightedOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lbIndex, int ubIndex);
 
 	void postUnary(int xIndex, vector<Cost> &costs);
 	int postUnary(int xIndex, Value *d, int dsize, Cost penalty);

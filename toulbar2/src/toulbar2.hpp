@@ -78,7 +78,7 @@ public:
     virtual Long getWeightedDegree(int varIndex) const =0;	///< \brief weighted degree heuristic
 
     virtual void preprocessing() =0;		///< \brief applies various preprocessing techniques to simplify the current problem
-	/// \brief sorts the list of cost functions associated to each variable based on smallest problem variable indexes
+		/// \brief sorts the list of cost functions associated to each variable based on smallest problem variable indexes
 	/// \warning side-effect: updates DAC order according to an existing variable elimination order
 	/// \note must be called after creating all the cost functions and before solving the problem
 	virtual void sortConstraints() =0;
@@ -124,10 +124,9 @@ public:
 	/// \warning Current implementation of toulbar2 has limited solving facilities for global cost functions (no BTD-like methods nor variable elimination)
     /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints and WeightedCSP::histogram methods to initialize correctly the model before solving it
 
-    virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) =0;
-    virtual int makeEnumeratedVariable(string n, Value *d, int dsize) =0;
-    virtual int makeIntervalVariable(string n, Value iinf, Value isup) =0;
-
+    virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) =0; ///< \brief create an enumerated variable with its domain bounds
+    virtual int makeEnumeratedVariable(string n, Value *d, int dsize) =0; ///< \brief create an enumerated variable with its domain values
+    virtual int makeIntervalVariable(string n, Value iinf, Value isup) =0; ///< \brief create an interval variable with its domain bounds
     virtual void postUnary(int xIndex, vector<Cost> &costs) =0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
@@ -138,9 +137,14 @@ public:
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
-	virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file) =0;
+    virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file) =0;
+    
+    virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0; ///< \brief Post WSum constraint in the WCSP
+    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lb, int ub) =0;   ///< \brief Post WAmong constraint in the WCSP
+    virtual vector< vector<int> >* getListSuccessors() =0;  ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
+    
     virtual bool isGlobal() =0; 			///< \brief true if there are soft global constraints defined in the problem
-    virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0;
+
     virtual void read_wcsp(const char *fileName) =0;	///< \brief load problem in native wcsp format (\ref wcspformat)
     virtual void read_uai2008(const char *fileName) =0;	///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false) =0;	///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, and a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular

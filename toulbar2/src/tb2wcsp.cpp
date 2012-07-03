@@ -411,6 +411,49 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
+void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lb, int ub)
+{
+    WeightedAmong* decomposableGCF = new WeightedAmong(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics); 				
+    decomposableGCF->setBaseCost(baseCost); 
+    for(int i = 0; i < nbValues; i++)
+    {
+        decomposableGCF->addValue(values[i]);
+    }
+    decomposableGCF->setBounds(lb,ub);
+    decomposableGCF->addToCostFunctionNetwork(this); 
+    delete [] values;   
+    //delete [] decomposableGCF;
+}
+
+/*void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, 
+  vector<Cost> transitionsCosts)
+{
+    WFA* automaton=new WFA(nbStates);
+    for(unsigned int i=0; i<initial_States.size(); i++)
+    {
+      automaton->initialStates.push_back(initial_States[i]);
+    }
+    for(unsigned int i=0; i<accepting_States.size(); i++)
+    {
+      automaton->acceptingStates.push_back(accepting_States[i]);
+    }
+    for(unsigned int i=0; i<transitionsCosts.size(); i++)
+    {
+      automaton->transitions.push_back(new WTransition(Wtransitions[i][0],Wtransitions[i][1],Wtransitions[i][2],transitionsCosts[i]));
+    }
+
+    WeightedRegular regular(arity,scopeIndex);
+    regular.setWFA(automaton);
+    regular.addToCostFunctionNetwork(this);   
+    for(int i=0; i < transitionsCosts.size(); i++)
+    {
+      delete [] Wtransitions[i];    
+    }
+    delete [] Wtransitions;
+    //delete [] automaton; 
+}*/
+
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
 void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
