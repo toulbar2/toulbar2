@@ -37,7 +37,7 @@ typedef struct {
  * The wcsp file format is composed of: first, the problem name and dimensions, then the
  * variable domain sizes, and last, the cost functions.
  *
- * - Definition of problem name and problem dimensions
+ * - Header Definition for a given problem:  
  * \verbatim
  <Problem name>
  <Number of variables (N)>
@@ -58,9 +58,13 @@ typedef struct {
  * \note domain values range from zero to \e size-1
  * \note a negative domain size is interpreted as a variable with an interval domain in \f$[0,-size-1]\f$
  * \warning variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)
- * - Definition of cost functions
+ 
+
+ * - General Definition of cost functions
+
  *   - Definition of a cost function in extension
  * \verbatim
+
  <Arity of the cost function>
  <Index of the first variable in the scope of the cost function>
  ...
@@ -75,7 +79,11 @@ typedef struct {
  <Index of the value assigned to the last variable in the scope>
  <Cost of the tuple>
  \endverbatim
- * \note A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.
+
+ * \note  SHARED COST FUNCTION : A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.
+
+ *   - Shared CF example:
+
  * \code
  AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
  4 4 4 4
@@ -90,6 +98,7 @@ typedef struct {
  2 1 3 0 -1
  2 2 3 0 -1
  \endcode
+
  *   - Definition of a cost function in intension by giving its keyword name and K parameters (and replacing the default cost value by -1)
  * \verbatim
  <Arity of the cost function>
@@ -102,19 +111,41 @@ typedef struct {
  ...
  <parameterK>
  \endverbatim
- * Possible keywords followed by their specific parameters:
- *     - ">=" \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
- *     - ">" \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
- *     - "<=" \e cst \e delta to express soft binary constraint \f$x \leq y + cst\f$ with associated cost function  \f$max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\f$
- *     - "<" \e cst \e delta to express soft binary constraint \f$x < y + cst\f$ with associated cost function  \f$max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\f$
+
+ *-  Possible keywords followed by their specific parameters:
+
+ *     - >= \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
+ *     - > \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
+ *     - <= \e cst \e delta to express soft binary constraint \f$x \leq y + cst\f$ with associated cost function  \f$max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\f$
+ *     - < \e cst \e delta to express soft binary constraint \f$x < y + cst\f$ with associated cost function  \f$max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\f$
  *     - "=" \e cst \e delta to express soft binary constraint \f$x = y + cst\f$ with associated cost function  \f$(|y + cst - x| \leq delta)?|y + cst - x|:UB\f$
- *     - "disj" \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
+ 
+ *     - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  *     - "sdisj" \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
- *     - "salldiff" "var"|"dec" \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation
- *     - "sgcc" "var"|"dec" \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
+
+
+ *     - "salldiff" var|"dec" \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation
+
+ *     - "sgcc" var|dec \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
+
  *     - "ssame" \e cost \e list_size1 \e list_size2 (\e variable_index)* (\e variable_index)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)
+
  *     - "sregular" "var"|"edit" \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
- *     - "wregular" \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based   cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+
+ *     - "wamong"  global constraint restrains the number of variables of its scope to take a bounded number of times a value from a given set. The global cost function associated to Among is WeightedAmong. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counters and does a cumulative sum all along the set of ternary cost functions.
+
+ *     - "woverlap" The Overlap global constraint limits the overlaps between two sequence of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero)). The global cost function associated to Overlap is WeightedOverlap. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses two sets of new variables : the first as an overlap flag and a second one as a cumulative sum. Finally, an unary cost function ensures that the overlap respects a given value.
+
+
+ *  - "wsum" The Sum global constraint tests if the sum of a set of variables match with an comparator (for example = 4). The global cost function associated to Sum is WeightedSum. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions. Finally, an unary cost function ensures the comparator.
+
+ * Note : This decomposition can use an exponential size (domains of counter variables).
+ * Let us note <> the comparator, K the value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:
+          *-	if <> is == : gap = abs(K - Sum); if <> is <= : gap = max(0,Sum - K); if <> is < : gap = max(0,Sum - K - 1);
+ 	  *-	if <> is != : gap = 1 if Sum != K and gap = 0 otherwise;  if <> is > : gap = max(0,K - Sum + 1);
+ 	  *-	if <> is >= : gap = max(0,K - Sum);
+
+* -    wregular \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based   cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values 
  *
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
@@ -127,7 +158,12 @@ typedef struct {
  * - soft_gcc({x1,x2,x3,x4} with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
  * - soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*): \code 4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
+
+ * - wsum ({x1,x2,x3,x4} with hard cost (1000) if sum not  == 4 : \code 4 0 1 2 3 -1 wsum hard 1000 == 4 \endcode
+ * - wamong ({x1,x2,x3,x4} with hard cost (1000) if sum not  == 4 :
+The previous example represents a WCSP with 4 variables. These variables are in the scope of a WeightedAmong which limits the number of times they take the values 1 and 2 to be bounded between 1 and 3. In this case, the semantics is hard and the associated cost is 1000 (i.e. in these case the WeightedAmong is a hard constraint).  \code 4 0 1 2 3 -1 wamong hard 1000 2 1 2 1 3 \endcode
  * - wregular({x0,x1,x2,x3}) with DFA (a(ba)*c*): \code 4 0 1 2 3 -1 wregular 3 1 0 0 1 2 0 9 0 0 1 0 0 1 1 1 0 2 1 1 1 1 0 0 1 0 0 1 1 2 0 1 1 2 2 0 1 0 2 1 1 1 2 1 \endcode
+ * - woverlap({x1,x2,x3,x4}) with hard cost (1000)  4 variables : X = { 0, 1 }, Y = { 2, 3 }. And, the overlap between X and Y must less than 1. In this case the semantics is hard and the associated cost is 1000 (i.e. in these case the WeightedOverlap is a hard constraint). \code  4 0 1 2 3 -1 woverlap hard 1000 \endcode
  *
  **/
 
