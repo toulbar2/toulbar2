@@ -2272,7 +2272,8 @@ void WCSP::setDACOrder(vector<int> &order) {
 	for (unsigned int i = 0; i < numberOfConstraints(); i++) {
 		Constraint* ctr = getCtr(i);
 		ctr->setDACScopeIndex();
-		if (ctr->connected()) ctr->propagate();
+		 // Postpone global constraint propagation at the end (call to WCSP::propagate())
+		if (ctr->connected() && (ctr->extension() || ctr->arity()<=3)) ctr->propagate();
 	}
 	for (int i = 0; i < elimBinOrder; i++) {
 		Constraint* ctr = elimBinConstrs[i];
