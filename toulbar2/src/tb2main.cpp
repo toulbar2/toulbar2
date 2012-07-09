@@ -677,7 +677,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
-	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h:)"; << endl;
+	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h:)" << endl;
 	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
