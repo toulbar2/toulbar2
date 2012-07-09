@@ -132,7 +132,7 @@ void GlobalConstraint::propagate() {
 			}
 			break;
 		case LC_EDAC: 
-			//propagateEAC();
+		    // propagateEAC(); // Not implemented yet!
 		case LC_FDAC:
 			if (needPropagateDAC) {
 				propagateDAC();
@@ -152,6 +152,7 @@ void GlobalConstraint::propagate() {
 	}
 }
 
+/// \warning Not implemented yet!
 void GlobalConstraint::propagateEAC() {
 	/*vector<int> provide;
 	provide.resize(arity_);
