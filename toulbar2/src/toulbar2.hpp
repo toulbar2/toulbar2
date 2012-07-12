@@ -120,8 +120,10 @@ public:
 	///
 	/// Cost functions having a specific semantic (see \ref  wcspformat) are:
 	/// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
-	/// - global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular)
-	/// \warning Current implementation of toulbar2 has limited solving facilities for global cost functions (no BTD-like methods nor variable elimination)
+    /// - monolithic global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular)
+    /// - decomposable global cost functions (\e eg weighted regular, weighted among, weighted sum, etc.)
+    /// \note A decomposable version exists for each monolithic global cost function. The decomposable ones propagate less than their monolithic counterpart but are much faster.
+    /// \warning Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
     /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints and WeightedCSP::histogram methods to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) =0; ///< \brief create an enumerated variable with its domain bounds

@@ -11,7 +11,7 @@
 
 int main(int argc, char * argv[])
 {
-	Cost ub = 1; // MAX_COST; // BUG!
+	Cost ub = 1000; // MAX_COST; // BUG!
 	ToulBar2::verbose = 0;
 	ToulBar2::showSolutions = true;
 
@@ -23,8 +23,8 @@ int main(int argc, char * argv[])
 	ToulBar2::preprocessNary  = 0;
 	ToulBar2::costfuncSeparate = false;
 
-	ToulBar2::allSolutions = true;
-	ToulBar2::LcLevel = LC_AC;
+	ToulBar2::allSolutions = false;
+	ToulBar2::LcLevel = LC_EDAC;
 	
 	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
 	int x = solver->getWCSP()->makeEnumeratedVariable("x",-4,4);
@@ -72,7 +72,7 @@ int main(int argc, char * argv[])
 
 	int scope[8] = {x,y,z,w,xb,yb,zb,wb};
 	WeightedSum* constraint = new WeightedSum(8,scope);
-	constraint->setBaseCost(10);
+	constraint->setBaseCost(1000);
 	constraint->setSemantics("lin");
 	constraint->setComparator("==");
 	constraint->setRightRes(2);
@@ -103,7 +103,7 @@ int main(int argc, char * argv[])
 	cout << endl;
 	cout << "xb : ";
 	EnumeratedVariable* xvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(xb);
-	for (EnumeratedVariable::iterator iterXi = xvar->begin(); iterXi != xvar->end(); ++iterXi) {
+	for (EnumeratedVariable::iterator iterXi = xvarb->begin(); iterXi != xvarb->end(); ++iterXi) {
 		cout << *iterXi << " ";
 	}
 	cout << endl;
@@ -115,7 +115,7 @@ int main(int argc, char * argv[])
 	cout << endl;
 	cout << "zb : ";
 	EnumeratedVariable* zvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(zb);
-	for (EnumeratedVariable::iterator iterXi = zvar->begin(); iterXi != zvar->end(); ++iterXi) {
+	for (EnumeratedVariable::iterator iterXi = zvarb->begin(); iterXi != zvarb->end(); ++iterXi) {
 		cout << *iterXi << " ";
 	}
 	cout << endl;
@@ -129,6 +129,8 @@ int main(int argc, char * argv[])
 	constraint->display();
 	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
 
+	solver->getWCSP()->sortConstraints();
+	solver->getWCSP()->histogram();
 	solver->solve();
 	cout << "end." << endl;
 	return 0;
