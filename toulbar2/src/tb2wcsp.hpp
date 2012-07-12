@@ -188,7 +188,8 @@ public:
 		unsigned int size = varIndexes.size();
 		set<Constraint *> delayedctrs;
 		for (unsigned int i=0; i<size; i++) vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
-		for (set<Constraint *>::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) (*it)->propagate();
+		for (set<Constraint *>::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) if (!(*it)->isGlobal()) (*it)->propagate();
+		propagate();
 	}
 
 	Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}			///< \brief unary cost associated to a domain value

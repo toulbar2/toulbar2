@@ -934,7 +934,6 @@ void WCSP::read_uai2008(const char *fileName)
 	 		nevi--;
 	 	}
 		assignLS(variables, values);
-		propagate();
   	}
 }
 

@@ -118,6 +118,9 @@ void GlobalConstraint::projectFromZero(int index) {
 void GlobalConstraint::propagate() {
 
 	if (deconnected()) return;
+	for(int i=0;connected() && i<arity_;i++) {
+	  if (getVar(i)->assigned()) assign(i);
+	}
 
 	needPropagateEAC = false;
 	currentVar = -1;

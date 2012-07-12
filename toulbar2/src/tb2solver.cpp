@@ -71,7 +71,7 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
 
 void Solver::read_solution(const char *filename)
 {
-	if (ToulBar2::btdMode>=2) wcsp->propagate();
+	wcsp->propagate();
 
 	int depth = store->getDepth();
     store->store();
@@ -90,6 +90,7 @@ void Solver::read_solution(const char *filename)
         if ((unsigned int) i >= wcsp->numberOfVariables()) break;
         Value value = 0;
         file >> value;
+		if (!file) break;
         variables.push_back(i);
         values.push_back(value);
         // side-effect: remember last solution
@@ -108,7 +109,6 @@ void Solver::read_solution(const char *filename)
         i++;
     }
     wcsp->assignLS(variables, values);
-    wcsp->propagate();
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
 	assert(wcsp->numberOfUnassignedVariables() == 0);
 	wcsp->updateUb(wcsp->getLb()+UNIT_COST);
@@ -117,7 +117,7 @@ void Solver::read_solution(const char *filename)
 
 void Solver::parse_solution(const char *certificate)
 {
-    if (ToulBar2::btdMode>=2) wcsp->propagate();
+    wcsp->propagate();
 
 	//  int depth = store->getDepth();
 	//    store->store();
@@ -161,8 +161,6 @@ void Solver::parse_solution(const char *certificate)
 //        }
     }
     wcsp->assignLS(variables, values);
-    wcsp->propagate();
-
     cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
     
 //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);

@@ -76,6 +76,8 @@ public:
 	// destrutor
 	virtual ~GlobalConstraint();
 
+    bool isGlobal() const {return true;}
+
     // evaluate the cost of the tuple
 	virtual Cost eval( String s );
 
