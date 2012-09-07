@@ -23,59 +23,16 @@ int main(int argc, char * argv[])
 	ToulBar2::preprocessNary  = 0;
 	ToulBar2::costfuncSeparate = false;
 
-	ToulBar2::allSolutions = false;
+	ToulBar2::allSolutions = true;
 	ToulBar2::LcLevel = LC_EDAC;
 	
 	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
-	int x = solver->getWCSP()->makeEnumeratedVariable("x",-4,4);
+	int x = solver->getWCSP()->makeEnumeratedVariable("x",-2,1);
 	int y = solver->getWCSP()->makeEnumeratedVariable("y",0,0);
-	int z = solver->getWCSP()->makeEnumeratedVariable("z",-1,4);
-	int w = solver->getWCSP()->makeEnumeratedVariable("w",-4,4);
-	
-	int xb = solver->getWCSP()->makeEnumeratedVariable("xb",-4,4);
-	int yb = solver->getWCSP()->makeEnumeratedVariable("yb",0,1);
-	int zb = solver->getWCSP()->makeEnumeratedVariable("zb",-4,-1);
-	int wb = solver->getWCSP()->makeEnumeratedVariable("wb",3,4);
+	int z = solver->getWCSP()->makeEnumeratedVariable("z",-1,3);
+	int w = solver->getWCSP()->makeEnumeratedVariable("w",-1,0);
+	int res = solver->getWCSP()->makeEnumeratedVariable("res",2,2);
 
-	/* // SAFE WAY TO ACCESS INITIAL DOMAINS
-	vector<Cost> costs;
-	EnumeratedVariable *varx = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(x);
-	EnumeratedVariable *vary = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(y);
-	EnumeratedVariable *varz = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(z);
-	EnumeratedVariable *varw = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(w);
-	for (unsigned int i = 0 ; i < varx->getDomainInitSize(); i++) {
-	for (unsigned int j = 0 ; j < vary->getDomainInitSize(); j++) {
-	for (unsigned int k = 0 ; k < varz->getDomainInitSize(); k++) {
-	  costs.push_back((varx->toValue(i)+vary->toValue(j)==varz->toValue(k))?0:1000);
-	}}}
-	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
-	*/
-
-	/* // CAN BE WRONG IF CURRENT DOMAINS HAVE CHANGED DUE TO PREVIOUS CONSTRAINTS
-	vector<Cost> costs;
-	for (Value i = solver->getWCSP()->getInf(x) ; i <= solver->getWCSP()->getSup(x); i++) {
-	for (Value j = solver->getWCSP()->getInf(y) ; j <= solver->getWCSP()->getSup(y); j++) {
-	for (Value k = solver->getWCSP()->getInf(z) ; k <= solver->getWCSP()->getSup(z); k++) {
-	  costs.push_back((i+j==k)?0:1000);
-	}}}
-	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
-	*/
-
-	/*
-	int scope[4] = {x,y,z,w};
-	WeightedAllDifferent* constraint = new WeightedAllDifferent(4,scope);
-	constraint->setBaseCost(1000);
-	constraint->setSemantics("lin");
-	constraint->display();
-	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
-	*/
-
-	int scope[8] = {x,y,z,w,xb,yb,zb,wb};
-	WeightedSum* constraint = new WeightedSum(8,scope);
-	constraint->setBaseCost(1000);
-	constraint->setSemantics("lin");
-	constraint->setComparator("==");
-	constraint->setRightRes(2);
 	{
 	cout << "x : ";
 	EnumeratedVariable* xvar = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(x);
@@ -101,34 +58,55 @@ int main(int argc, char * argv[])
 		cout << *iterXi << " ";
 	}
 	cout << endl;
-	cout << "xb : ";
-	EnumeratedVariable* xvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(xb);
+	cout << "res : ";
+	EnumeratedVariable* xvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(res);
 	for (EnumeratedVariable::iterator iterXi = xvarb->begin(); iterXi != xvarb->end(); ++iterXi) {
 		cout << *iterXi << " ";
 	}
 	cout << endl;
-	cout << "yb : ";
-	EnumeratedVariable* yvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(yb);
-	for (EnumeratedVariable::iterator iterXi = yvarb->begin(); iterXi != yvarb->end(); ++iterXi) {
-		cout << *iterXi << " ";
 	}
-	cout << endl;
-	cout << "zb : ";
-	EnumeratedVariable* zvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(zb);
-	for (EnumeratedVariable::iterator iterXi = zvarb->begin(); iterXi != zvarb->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	cout << "wb : ";
-	EnumeratedVariable* wvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(wb);
-	for (EnumeratedVariable::iterator iterXi = wvarb->begin(); iterXi != wvarb->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	}
+
+	/* // SAFE WAY TO ACCESS INITIAL DOMAINS
+	vector<Cost> costs;
+	EnumeratedVariable *varx = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(x);
+	EnumeratedVariable *vary = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(y);
+	EnumeratedVariable *varz = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(z);
+	EnumeratedVariable *varw = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(w);
+	for (unsigned int i = 0 ; i < varx->getDomainInitSize(); i++) {
+	for (unsigned int j = 0 ; j < vary->getDomainInitSize(); j++) {
+	for (unsigned int k = 0 ; k < varz->getDomainInitSize(); k++) {
+	  costs.push_back((varx->toValue(i)+vary->toValue(j)==varz->toValue(k))?0:1000);
+	}}}
+	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
+	*/
+
+	/* // CAN BE WRONG IF CURRENT DOMAINS HAVE CHANGED DUE TO PREVIOUS CONSTRAINTS
+	vector<Cost> costs;
+	for (Value i = solver->getWCSP()->getInf(x) ; i <= solver->getWCSP()->getSup(x); i++) {
+	for (Value j = solver->getWCSP()->getInf(y) ; j <= solver->getWCSP()->getSup(y); j++) {
+	for (Value k = solver->getWCSP()->getInf(z) ; k <= solver->getWCSP()->getSup(z); k++) {
+	  costs.push_back((i+j==k)?0:1000);
+	}}}
+	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
+	*/
+
+
+	int scope[4] = {x,y,z,w};
+	WeightedAllDifferent* constraint = new WeightedAllDifferent(4,scope);
+	constraint->setBaseCost(1000);
+	constraint->setSemantics("lin");
 	constraint->display();
 	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
 
+	/*
+	int scope[5] = {x,y,z,w,res};
+	WeightedVarSum* constraint = new WeightedVarSum(5,scope);
+	constraint->setBaseCost(1000);
+	constraint->setSemantics("lin");
+	constraint->setComparator("==");
+	constraint->display();
+	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
+	*/
 	solver->getWCSP()->sortConstraints();
 	solver->getWCSP()->histogram();
 	solver->solve();
