@@ -652,7 +652,7 @@ WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
 				if (semantics == "hard")  binaryCosts[positionArray] = (gap)?baseCost:0;
 				if (semantics == "lin")   binaryCosts[positionArray] = (gap*baseCost >= top)?top:gap*baseCost;
 				if (semantics == "quad")  binaryCosts[positionArray] = (gap*gap*baseCost >= top)?top:gap*gap*baseCost;
-				cout << valueCounter << "," << valueVariable << "," << gap << " : " << binaryCosts[positionArray] << endl;
+				//cout << valueCounter << "," << valueVariable << "," << gap << " : " << binaryCosts[positionArray] << endl;
 			}
 	}
 	//cout << "here" << endl;
@@ -667,9 +667,8 @@ WeightedVarSum::display() {
 	for (int variable = 0 ; variable < arity-1 ; ++variable) {
 		cout << scope[variable] << " ";
 	}
-	cout << endl;
-	cout << comparator << " " << scope[arity-1] << endl;
-	cout << semantics << " " << baseCost << endl;
+	cout << comparator << " " << scope[arity-1];
+	cout << " (" << semantics << " " << baseCost << ")" << endl;
 }
 
 /// WEIGHTED OVERLAP ///////////////////////////////////////////////////
