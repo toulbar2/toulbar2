@@ -117,7 +117,7 @@ void BinaryConstraint::findSupport(T getCost, EnumeratedVariable *x, EnumeratedV
     if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        int xindex = x->toIndex(*iterX);
+        unsigned int xindex = x->toIndex(*iterX);
         Value support = supportX[xindex];
         if (y->cannotbe(support) || getCost(x,y, *iterX, support) > MIN_COST) {
             Value minCostValue = y->getInf();
@@ -151,7 +151,7 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, Enumera
     if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-        int xindex = x->toIndex(*iterX);
+    	unsigned int xindex = x->toIndex(*iterX);
         Value support = supportX[xindex];
         if (y->cannotbe(support) || getCost(x,y, *iterX, support) + y->getCost(support) > MIN_COST) {
             Value minCostValue = y->getInf();

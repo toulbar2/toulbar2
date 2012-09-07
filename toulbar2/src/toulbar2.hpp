@@ -140,9 +140,9 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
     virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file) =0;
-    
     virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0; ///< \brief Post WSum constraint in the WCSP
-    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lb, int ub) =0;   ///< \brief Post WAmong constraint in the WCSP
+    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0;   ///< \brief Post WAmong constraint in the WCSP
+
     virtual vector< vector<int> >* getListSuccessors() =0;  ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
     
     virtual bool isGlobal() =0; 			///< \brief true if there are soft global constraints defined in the problem

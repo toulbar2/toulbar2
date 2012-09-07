@@ -19,8 +19,8 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
         constrs(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
-        NCBucket(-1, &w->getStore()->storeValue),
-        cluster(-1, &w->getStore()->storeValue)
+        NCBucket(-1, &w->getStore()->storeInt),
+        cluster(-1, &w->getStore()->storeInt)
 {
     if (w->getStore()->getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;

@@ -889,6 +889,7 @@ static int cmpValueCost(const void *p1, const void *p2)
 }
 
 /// \warning Must be done just after loading the problem and before any propagate (even projection of unary costs)
+/// \warning Does not work with negative domain values!
 void EnumeratedVariable::sortDomain(vector<Cost> &costs)
 {
   cout << "sort variable " << getName() << " (size="<< getDomainSize() << ")" << endl;

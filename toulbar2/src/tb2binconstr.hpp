@@ -69,8 +69,8 @@ public:
     bool extension() const {return true;}
     
     Cost getCost(Value vx, Value vy) const {
-        int ix = x->toIndex(vx);
-        int iy = y->toIndex(vy);
+        unsigned int ix = x->toIndex(vx);
+        unsigned int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
 		//if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
         res -= deltaCostsX[ix] + deltaCostsY[iy];
@@ -79,7 +79,7 @@ public:
     }
 
     Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) {
-        int vindex[2];
+    	unsigned int vindex[2];
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
@@ -89,15 +89,15 @@ public:
         return res;
     }
 
-    void addcost( int vx, int vy, Cost mincost ) {
+    void addcost( Value vx, Value vy, Cost mincost ) {
     		assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
             assert(mincost >= MIN_COST || !LUBTEST(getCost(vx,vy), -mincost) || ToulBar2::isZ); // Warning! negative costs can be added temporally by variable elimination on the fly
-   	        int ix = x->toIndex(vx);
-            int iy = y->toIndex(vy);
+            unsigned int ix = x->toIndex(vx);
+            unsigned int iy = y->toIndex(vy);
    	       	costs[ix * sizeY + iy] += mincost;
    }
 
-   void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+   void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost ) {
       assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
       assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
       if (xin==x) {
@@ -113,13 +113,13 @@ public:
 	                costs[a * sizeY + b] = c;
     }
 
-   void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, int vx, int vy, Cost mincost ) {
+   void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost ) {
 	  assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
       if (xin==x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
       else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] = mincost;
    }
 
-   void setcost( int vx, int vy, Cost mincost ) {
+   void setcost( Value vx, Value vy, Cost mincost ) {
 	   assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
    	   costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
    }
@@ -127,7 +127,7 @@ public:
    void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin ) {
 		assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
 		assert(costsin.size() <= costs.size());
-		int ix, iy;
+		unsigned int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx);  	iy = y->toIndex(*itery);
@@ -139,7 +139,7 @@ public:
    void addCosts( BinaryConstraint* xy ) {
 		assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
 		assert( ((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)) );
-		int ix, iy;
+		unsigned int ix, iy;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
@@ -202,10 +202,10 @@ public:
     { 
     	Char tch[3];
     	if(itvx != xvar->end()) {
-    		int ix = xvar->toIndex(*itvx);
+    		unsigned int ix = xvar->toIndex(*itvx);
 	    	tch[0] = ix + CHAR_FIRST;
 	    	if(itvy != yvar->end()) {
-	    		int iy = yvar->toIndex(*itvy);
+	    		unsigned int iy = yvar->toIndex(*itvy);
 		    	tch[1] = iy + CHAR_FIRST;
 		    	tch[2] = '\0';
 		    	t = tch;
@@ -237,13 +237,13 @@ public:
 		addcost( scope_in[0], scope_in[1], v0, v1, c );				
 	}
 
-	void setTuple( int* t, Cost c, EnumeratedVariable** scope_in )  {
+	void setTuple( unsigned int* t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]);
 		Value v1 = scope_in[1]->toValue(t[1]);
 		setcost( scope_in[0], scope_in[1], v0, v1, c );				
 	}
 
-	void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in )  {
+	void addtoTuple( unsigned int* t, Cost c, EnumeratedVariable** scope_in )  {
 		Value v0 = scope_in[0]->toValue(t[0]);
 		Value v1 = scope_in[1]->toValue(t[1]);
 		addcost( scope_in[0], scope_in[1], v0, v1, c );		
@@ -328,7 +328,7 @@ public:
     if (getDACScopeIndex()==0) {
       if (varIndex==0) {
 	   assert(y->canbe(y->getSupport()));
-	   int yindex = y->toIndex(y->getSupport());
+	   unsigned int yindex = y->toIndex(y->getSupport());
 	   if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex],y->getSupport()) > MIN_COST) {
 	       y->queueEAC2();
 	   }
@@ -336,7 +336,7 @@ public:
     } else {
       if (varIndex==1) {
 	   assert(x->canbe(x->getSupport()));
-	   int xindex = x->toIndex(x->getSupport());
+	   unsigned int xindex = x->toIndex(x->getSupport());
 	   if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(),supportX[xindex]) > MIN_COST) {
 	       x->queueEAC2();
 	   }
@@ -348,7 +348,7 @@ public:
 	assert(!isDuplicate());
 	if (ToulBar2::QueueComplexity && varIndex==getDACScopeIndex()) return true;
     if (varIndex==0) {
-        int xindex = x->toIndex(a);
+    	unsigned int xindex = x->toIndex(a);
         if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                 if (y->getCost(*iterY) == MIN_COST && getCost(a,*iterY) == MIN_COST) {
@@ -359,7 +359,7 @@ public:
             return false;
         }
     } else {
-        int yindex = y->toIndex(a);
+    	unsigned int yindex = y->toIndex(a);
         if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
             for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
                 if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {

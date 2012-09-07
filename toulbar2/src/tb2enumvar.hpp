@@ -39,16 +39,16 @@ public:
 
     unsigned int getDomainInitSize() const {return domain.getInitSize();}
 #ifdef WCSPFORMATONLY
-    unsigned int toIndex(int v) const {return (unsigned int) v;}
-    int toValue(int idx) const {return idx;}
+    unsigned int toIndex(Value v) const {return (unsigned int) v;}
+    Value toValue(unsigned int idx) const {return idx;}
 #else
     unsigned int toIndex(Value v) const {return domain.toIndex(v);}
-    Value toValue(int idx) const {return domain.toValue(idx);}
+    Value toValue(unsigned int idx) const {return domain.toValue(idx);}
 #endif
     unsigned int toCurrentIndex(Value v) {return domain.toCurrentIndex(v);} // return value position in current domain
     unsigned int getDomainSize() const {
         if (assigned()) return 1; 
-        else return domain.getSize();
+        else return domain.getSize(); ///< \warning can return a negative size in the case of a wrong list utilization
     }
 	void getDomain(Value *array);
 	void getDomainAndCost(ValueCost *array);

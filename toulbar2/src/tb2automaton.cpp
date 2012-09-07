@@ -51,7 +51,7 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost) {
 	}
 	/// Computing transition set
 	for (unsigned int currentState = 0 ; currentState < nbStates; currentState++) {
-		for (unsigned int symbol = 0 ; symbol < nbSymbols ; symbol++) {
+		for (unsigned int symbol = 0 ; symbol < (unsigned int) nbSymbols ; symbol++) {
 			string res = forbiddenPattern.substr(0,currentState) + ((char) (symbol+48));
 			int weight = (res == forbiddenPattern)?cost:0;
 			int start = currentState;

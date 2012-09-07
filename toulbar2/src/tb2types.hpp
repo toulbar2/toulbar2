@@ -35,6 +35,8 @@
 typedef int Value;
 /// Maximum domain value
 const Value MAX_VAL = (INT_MAX / 2);
+/// Forbidden domain value
+const Value WRONG_VAL = INT_MAX;
 /// Minimum domain value
 const Value MIN_VAL = -(INT_MAX / 2);
 /// Maximum domain size

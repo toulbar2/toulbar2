@@ -17,7 +17,7 @@
  *
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
- *  \warning ::StoreInt uses Store::storeValue stack.
+ *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int).
  *  \warning maximum size of trailing stacks is limited by C++ integers
  */
 
@@ -118,15 +118,19 @@ public:
 		base = index;
 	}
 
-#ifndef INT_COST
-	void restore(int **adr, int *val, int x) {
+//	void restore(int **adr, int *val, int x) {
+//		*adr[x] = val[x];
+//	}
+
+	void restore(Value **adr, Value *val, int x) {
 		*adr[x] = val[x];
 	}
-#endif
 
+#ifndef INT_COST
 	void restore(Cost **adr, Cost *val, int x) {
 		*adr[x] = val[x];
 	}
+#endif
 
 	void restore(BigInteger **adr, BigInteger *val, int x) {
 		*adr[x] = val[x];
@@ -205,6 +209,7 @@ class Store
 	int depth;
 public:
 	StoreStack<Value, Value> storeValue;
+//	StoreStack<int, int> storeInt;
 	StoreStack<BTList<Value> , DLink<Value> *> storeDomain;
 	StoreStack<Cost, Cost> storeCost;
 	StoreStack<BTList<ConstraintLink> , DLink<ConstraintLink> *> storeConstraint;
@@ -212,7 +217,9 @@ public:
 	StoreStack<BTList<Separator *> , DLink<Separator *> *> storeSeparator;
 	StoreStack<BigInteger, BigInteger> storeBigInteger;
 
-	Store(int pow) : depth(0), storeValue("Value", pow), storeDomain("Domain", pow), storeCost("Cost", pow),
+	Store(int pow) : depth(0), storeValue("Value", pow),
+//			    storeInt("int", pow),
+			    storeDomain("Domain", pow), storeCost("Cost", pow),
 				storeConstraint("Constraint", pow), storeVariable("Variable", pow), storeSeparator("Separator", pow),
 				storeBigInteger("BigInteger", pow) {
 	}
@@ -227,6 +234,7 @@ public:
 		depth++;
 		storeCost.store();
 		storeValue.store();
+//		storeInt.store();
 		storeDomain.store();
 		storeConstraint.store();
 		storeVariable.store();
@@ -239,6 +247,7 @@ public:
 		depth--;
 		storeCost.restore();
 		storeValue.restore();
+//		storeInt.restore();
 		storeDomain.restore();
 		storeConstraint.restore();
 		storeVariable.restore();
@@ -252,5 +261,7 @@ public:
 		while (depth > newDepth) restore();
 	}
 };
+
+#define storeInt storeValue
 
 #endif /*TB2STORE_HPP_*/

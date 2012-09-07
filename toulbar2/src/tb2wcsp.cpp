@@ -138,7 +138,7 @@ WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
 			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0),
-			elimOrder(0, &s->storeValue), elimBinOrder(0, &s->storeValue), elimTernOrder(0, &s->storeValue),
+			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
 	if (ToulBar2::vac) vac = new VACExtension(this);
@@ -411,7 +411,7 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
-void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, int* values, int nbValues, int lb, int ub)
+void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub)
 {
     WeightedAmong* decomposableGCF = new WeightedAmong(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics); 				

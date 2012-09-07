@@ -222,16 +222,16 @@ public:
     bool extension() const {return true;}
 
     Cost getCost(Value vx, Value vy, Value vz) const {
-        int ix = x->toIndex(vx);
-        int iy = y->toIndex(vy);
-        int iz = z->toIndex(vz);
+        unsigned int ix = x->toIndex(vx);
+        unsigned int iy = y->toIndex(vy);
+        unsigned int iz = z->toIndex(vz);
         Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
         assert(res >= MIN_COST);
         return res;
     }
 
     Cost getCost(EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, Value vx, Value vy, Value vz) const {  
-        int vindex[3];
+    	unsigned int vindex[3];
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
@@ -241,32 +241,32 @@ public:
     }
 
     Cost getCostWithBinaries(Value vx, Value vy, Value vz) const {
-        int ix = x->toIndex(vx);
-        int iy = y->toIndex(vy);
-        int iz = z->toIndex(vz);
+    	unsigned int ix = x->toIndex(vx);
+    	unsigned int iy = y->toIndex(vy);
+    	unsigned int iz = z->toIndex(vz);
         Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
-        if (xy->connected()) res += xy->getCost(x,y,ix,iy);
-        if (xz->connected()) res += xz->getCost(x,z,ix,iz);
-        if (yz->connected()) res += yz->getCost(y,z,iy,iz);
+        if (xy->connected()) res += xy->getCost(x,y,vx,vy);
+        if (xz->connected()) res += xz->getCost(x,z,vx,vz);
+        if (yz->connected()) res += yz->getCost(y,z,vy,vz);
         assert(res >= MIN_COST);
         return res;
     }
 
     Cost getCostWithBinaries(EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, Value vx, Value vy, Value vz) const {
-        int vindex[3];
-        vindex[ getIndex(xx) ] = xx->toIndex(vx);
-        vindex[ getIndex(yy) ] = yy->toIndex(vy);
-        vindex[ getIndex(zz) ] = zz->toIndex(vz);
-        Cost res = costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]];
-        if (xy->connected()) res += xy->getCost(x,y,vindex[0],vindex[1]);
-        if (xz->connected()) res += xz->getCost(x,z,vindex[0],vindex[2]);
-        if (yz->connected()) res += yz->getCost(y,z,vindex[1],vindex[2]);
+        pair<unsigned int, Value> vindex[3];
+        vindex[ getIndex(xx) ] = pair<unsigned int, Value>(xx->toIndex(vx),vx);
+        vindex[ getIndex(yy) ] = pair<unsigned int, Value>(yy->toIndex(vy),vy);
+        vindex[ getIndex(zz) ] = pair<unsigned int, Value>(zz->toIndex(vz),vz);
+        Cost res = costs[vindex[0].first*sizeY*sizeZ + vindex[1].first*sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first];
+        if (xy->connected()) res += xy->getCost(x,y,vindex[0].second,vindex[1].second);
+        if (xz->connected()) res += xz->getCost(x,z,vindex[0].second,vindex[2].second);
+        if (yz->connected()) res += yz->getCost(y,z,vindex[1].second,vindex[2].second);
         assert(res >= MIN_COST);
         return res;
     }
 
    void addCosts( TernaryConstraint* xyz ) {
-		int ix, iy, iz;
+	    unsigned int ix, iy, iz;
 		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
@@ -280,17 +280,17 @@ public:
     void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, vector<Cost>& costsin ) {
 		assert(costsin.size() <= costs.size());
 
-        int vindex[3];
-        int sizeYin = yin->getDomainInitSize();
-        int sizeZin = zin->getDomainInitSize();
+		unsigned int vindex[3];
+		unsigned int sizeYin = yin->getDomainInitSize();
+		unsigned int sizeZin = zin->getDomainInitSize();
        
 		for (EnumeratedVariable::iterator iterx = xin->begin(); iterx != xin->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = yin->begin(); itery != yin->end(); ++itery) {
 		for (EnumeratedVariable::iterator iterz = zin->begin(); iterz != zin->end(); ++iterz) {
 
-		    int vxin = xin->toIndex(*iterx);
-		    int vyin = yin->toIndex(*itery);
-		    int vzin = zin->toIndex(*iterz);
+			unsigned int vxin = xin->toIndex(*iterx);
+			unsigned int vyin = yin->toIndex(*itery);
+			unsigned int vzin = zin->toIndex(*iterz);
 
 	        vindex[ getIndex(xin) ] = vxin;
 	        vindex[ getIndex(yin) ] = vyin;
@@ -303,19 +303,19 @@ public:
 
     void addCost( Value vxi, Value vyi, Value vzi, Cost c ) {
         assert(c >= MIN_COST || !LUBTEST(getCost(vxi, vyi, vzi), -c));
-	    int vx = x->toIndex(vxi);
-	    int vy = y->toIndex(vyi);
-	    int vz = z->toIndex(vzi);	        
+        unsigned int vx = x->toIndex(vxi);
+        unsigned int vy = y->toIndex(vyi);
+        unsigned int vz = z->toIndex(vzi);
 		costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c;
     }
 
     void addCost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
         assert(c >= MIN_COST || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
 
-        int vindex[3];
-	    int vx = xin->toIndex(vxi);
-	    int vy = yin->toIndex(vyi);
-	    int vz = zin->toIndex(vzi);
+        unsigned int vindex[3];
+        unsigned int vx = xin->toIndex(vxi);
+        unsigned int vy = yin->toIndex(vyi);
+        unsigned int vz = zin->toIndex(vzi);
 
         vindex[ getIndex(xin) ] = vx;
         vindex[ getIndex(yin) ] = vy;
@@ -325,10 +325,10 @@ public:
     }
 
     void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
-        int vindex[3];
-	    int vx = xin->toIndex(vxi);
-	    int vy = yin->toIndex(vyi);
-	    int vz = zin->toIndex(vzi);
+    	unsigned int vindex[3];
+    	unsigned int vx = xin->toIndex(vxi);
+    	unsigned int vy = yin->toIndex(vyi);
+    	unsigned int vz = zin->toIndex(vzi);
         vindex[ getIndex(xin) ] = vx;
         vindex[ getIndex(yin) ] = vy;
         vindex[ getIndex(zin) ] = vz;
@@ -405,7 +405,7 @@ public:
                 vector< pair<Value,Value> > &supportX) {
     assert(x->canbe(x->getSupport()));
     assert(getIndex(y) < getIndex(z));
-    int xindex = x->toIndex(x->getSupport());
+    unsigned int xindex = x->toIndex(x->getSupport());
     Value ysupport = supportX[xindex].first;
     Value zsupport = supportX[xindex].second;
     if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || 
@@ -548,13 +548,13 @@ public:
     { 
     	Char tch[4];
     	if(itvx != xvar->end()) {
-    		int ix = xvar->toIndex(*itvx);
+    		unsigned int ix = xvar->toIndex(*itvx);
 	    	tch[0] = ix + CHAR_FIRST;
 	    	if(itvy != yvar->end()) {
-	    		int iy = yvar->toIndex(*itvy);
+	    		unsigned int iy = yvar->toIndex(*itvy);
 		    	tch[1] = iy + CHAR_FIRST;
 		    	if(itvz != zvar->end()) {
-		    		int iz = zvar->toIndex(*itvz);
+		    		unsigned int iz = zvar->toIndex(*itvz);
 			    	tch[2] = iz + CHAR_FIRST;
 		 	    	tch[3] = '\0';
 			    	t = tch;

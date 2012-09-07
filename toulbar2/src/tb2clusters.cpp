@@ -20,10 +20,10 @@
 Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
   : AbstractNaryConstraint(wcsp, scope_in, arity_in),
     cluster(NULL),
-    nonassigned(arity_in, &wcsp->getStore()->storeValue),
-    isUsed(false, &wcsp->getStore()->storeValue),
+    nonassigned(arity_in, &wcsp->getStore()->storeInt),
+    isUsed(false, &wcsp->getStore()->storeInt),
     lbPrevious(MIN_COST, &wcsp->getStore()->storeCost),
-    optPrevious(false, &wcsp->getStore()->storeValue)
+    optPrevious(false, &wcsp->getStore()->storeInt)
 {
 	Char* tbuf = new Char [arity_in+1];
 	tbuf[arity_in] = '\0';
@@ -53,10 +53,10 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in)
 
 Separator::Separator(WCSP *wcsp)
 			: AbstractNaryConstraint(wcsp),
-			nonassigned(0, &wcsp->getStore()->storeValue),
-			isUsed(false, &wcsp->getStore()->storeValue),
+			nonassigned(0, &wcsp->getStore()->storeInt),
+			isUsed(false, &wcsp->getStore()->storeInt),
 			lbPrevious(MIN_COST, &wcsp->getStore()->storeCost),
-			optPrevious(false, &wcsp->getStore()->storeValue)
+			optPrevious(false, &wcsp->getStore()->storeInt)
 {
 }
 
@@ -419,7 +419,7 @@ void Separator::print(ostream& os) {
  *
  */
 
-Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL), lb(MIN_COST, &wcsp->getStore()->storeCost), lbRDS(MIN_COST), active(true, &wcsp->getStore()->storeValue), countElimVars(1, &wcsp->getStore()->storeBigInteger)
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL), lb(MIN_COST, &wcsp->getStore()->storeCost), lbRDS(MIN_COST), active(true, &wcsp->getStore()->storeInt), countElimVars(1, &wcsp->getStore()->storeBigInteger)
 {
 }
 
@@ -806,8 +806,8 @@ void Cluster::cartProduct(BigInteger& prodCart)
 TreeDecomposition::TreeDecomposition(WCSP* wcsp_in) :
   wcsp(wcsp_in),
   rootRDS(NULL),
-  currentCluster(-1, &wcsp_in->getStore()->storeValue),
-  deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false, &wcsp_in->getStore()->storeValue)))
+  currentCluster(-1, &wcsp_in->getStore()->storeInt),
+  deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false, &wcsp_in->getStore()->storeInt)))
 {
 }
 

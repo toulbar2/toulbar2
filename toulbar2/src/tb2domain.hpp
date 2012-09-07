@@ -12,7 +12,7 @@ extern int cmpValue(const void *v1, const void *v2);
 
 class Domain : public BTList<Value>
 {
-    const int initSize;
+    const unsigned int initSize;
     const Value distanceToZero;
     DLink<Value> *all;
 
@@ -31,19 +31,18 @@ public:
     
     ~Domain() {if (initSize >= 1) delete[] all;}
         
-    int getInitSize() const {return initSize;}
-    int toIndex(Value v) const {return v - distanceToZero;}
+    unsigned int getInitSize() const {return initSize;}
+    unsigned int toIndex(Value v) const {return v - distanceToZero;}
     Value toValue(int idx) const {return idx + distanceToZero;}
-    int toCurrentIndex(Value v) {
+    unsigned int toCurrentIndex(Value v) {
 	  assert(canbe(v));
-	  int pos=0; 
+	  unsigned int pos=0;
 	  for (iterator iter = begin(); iter != end(); ++iter) {
 		if (*iter == v) return pos;
 		pos++;
 	  }
 	  cerr << "Bad (removed) value given as argument of toCurrentIndex function!" << endl;
 	  exit(EXIT_FAILURE);
-	  return -1;
 	}
 
     bool canbe(Value v) const {return !all[toIndex(v)].removed;}
@@ -51,7 +50,7 @@ public:
 
     void erase(Value v) {BTList<Value>::erase(&all[toIndex(v)], true);}
 
-    int increase(Value v) {
+    Value increase(Value v) {
         iterator newInf = lower_bound(v);
         assert(canbe(*newInf));
         for (iterator iter = begin(); iter != newInf; ++iter) {
@@ -59,7 +58,7 @@ public:
         }
         return *newInf;
     }
-    int decrease(Value v) {
+    Value decrease(Value v) {
         iterator newSup = upper_bound(v);
         assert(canbe(*newSup));
         for (iterator iter = rbegin(); iter != newSup; --iter) {

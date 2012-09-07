@@ -7,7 +7,7 @@
 GlobalConstraint::GlobalConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
 			: AbstractGlobalConstraint(wcsp, scope_in, arity_in),
 				projectedCost(0, &wcsp->getStore()->storeCost), 
-				nonassigned(arity_in, &wcsp->getStore()->storeValue),
+				nonassigned(arity_in, &wcsp->getStore()->storeInt),
 				currentDepth(-1) 
 {
 	deltaCost = new vector<StoreCost>[arity_];
@@ -451,7 +451,7 @@ void GlobalConstraint::checkMinCost(int varindex) {
 
 	count_nic++;
 
-	vector<int> removed;
+	vector<Value> removed;
 	EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
 
 	map<Value, Cost> delta;
@@ -462,7 +462,7 @@ void GlobalConstraint::checkMinCost(int varindex) {
 			removed.push_back(*j);
 		} 
 	}
-	for (vector<int>::iterator i = removed.begin(); i != removed.end();i++) {
+	for (vector<Value>::iterator i = removed.begin(); i != removed.end();i++) {
 		x->remove(*i);
 	}
 
