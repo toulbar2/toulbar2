@@ -170,6 +170,7 @@ public:
     virtual Cost LogLike2Cost(TProb p) const =0;
     virtual Cost SumLogLikeCost(Cost c1, Cost c2) const =0;
     virtual TProb SumLogLikeCost(TProb logc1, Cost c2) const =0;
+    virtual TProb SumLogLikeCost(TProb logc1, TProb logc2) const =0;
 
     // -----------------------------------------------------------
     // Internal WCSP functions DO NOT USE THEM

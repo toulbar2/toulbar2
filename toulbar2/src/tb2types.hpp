@@ -268,6 +268,10 @@ public:
 	static string evidence_file;
 	static ofstream solution_file;
     static bool uai_firstoutput;
+	static bool isZ;
+	static TProb logZ;
+	static TProb logU; // upper bound on rejected potentials
+	static TProb logepsilon;
 
 	static double startCpuTime;
 
@@ -275,16 +279,10 @@ public:
 	static bool boostingBTD;
 	static int maxSeparatorSize;
 	static int minProperVarSize;
-
 	static int smallSeparatorSize;
 
-	static bool isZ;
-	static TProb logZ;
-    static Cost negCost;
 	static int Berge_Dec; // flag for berge acyclic decomposition
 	static int nbvar; // initial number of variable (read in the file) 
-
-	
 };
 
 /*

@@ -126,6 +126,8 @@ int ToulBar2::smallSeparatorSize = 4;
 
 bool ToulBar2::isZ = false;
 TProb ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+TProb ToulBar2::logU = -numeric_limits<TProb>::infinity();
+TProb ToulBar2::logepsilon = -3;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -2328,6 +2330,14 @@ TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
   TProb logc2 = Cost2LogLike(c2);
   if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
   else if (c2 >= getUb()) return logc1;
+  else {
+	if (logc1 >= logc2) return logc1 + (Log1p(Exp10(logc2 - logc1))/Log(10.));
+	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
+  }
+}
+TProb WCSP::SumLogLikeCost(TProb logc1, TProb logc2) const {
+  if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
+  else if (logc2 == -numeric_limits<TProb>::infinity()) return logc1;
   else {
 	if (logc1 >= logc2) return logc1 + (Log1p(Exp10(logc2 - logc1))/Log(10.));
 	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));

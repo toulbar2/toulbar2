@@ -438,8 +438,10 @@ void Solver::enforceUb()
 	wcsp->enforceUb();
 	if (ToulBar2::isZ) {
 		Cost newCost = wcsp->getLb() + wcsp->getNegativeLb() + wcsp->LogLike2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
-		Double newlogz = wcsp->SumLogLikeCost(ToulBar2::logZ, newCost);
-		if (newlogz - ToulBar2::logZ < 0.001) {
+		Double newlogU = wcsp->SumLogLikeCost(ToulBar2::logU, newCost);
+		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
+			if (ToulBar2::verbose >= 1) cout << "CUT " << newlogU << " " << ToulBar2::logZ  << " " << store->getDepth() << endl;
+			ToulBar2::logU = newlogU;
 			THROWCONTRADICTION;
 		}
 	}
@@ -774,7 +776,7 @@ void Solver::newSolution()
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 	if (ToulBar2::isZ) {
 	  ToulBar2::logZ = wcsp->SumLogLikeCost(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
-	  if (ToulBar2::debug && (nbBacktracks % 10000LL)==0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
+	  if (ToulBar2::debug && (nbBacktracks % 10000LL)==0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " <<  (wcsp->SumLogLikeCost(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
 	}
   	if((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug>=2) {
   		if (ToulBar2::verbose>=0 || ToulBar2::showSolutions) {
@@ -914,6 +916,7 @@ bool Solver::solve()
 
 	if (ToulBar2::isZ) {
 	  ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+	  ToulBar2::logU = -numeric_limits<TProb>::infinity();
 	}
 
     try {
@@ -980,7 +983,10 @@ bool Solver::solve()
 			upperbound = wcsp->getUb();
 			enforceUb();
 			wcsp->propagate();
-			if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+			if (ToulBar2::isZ) {
+				ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+				ToulBar2::logU = -numeric_limits<TProb>::infinity();
+			}
 		  }
 		  try {
 			if (ToulBar2::restart <= 0 && ToulBar2::lds) {
@@ -991,7 +997,10 @@ bool Solver::solve()
 				ToulBar2::limited = false;
 				try {
 				  store->store();
-				  if (ToulBar2::isZ) ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+				  if (ToulBar2::isZ) {
+					  ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+					  ToulBar2::logU = -numeric_limits<TProb>::infinity();
+				  }
 				  if (discrepancy > ToulBar2::lds) {ToulBar2::lds = false; recursiveSolve();} else recursiveSolveLDS(discrepancy);
 				} catch (Contradiction) {
 				  wcsp->whenContradiction();
@@ -1059,8 +1068,8 @@ bool Solver::solve()
 		ToulBar2::solution_file << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
 		ToulBar2::solution_file.flush();
 	  }
-	  cout << "Log10(Z)= ";
-	  cout <<  (ToulBar2::logZ + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+	  cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log10(Z) <= ";
+	  cout <<  (wcsp->SumLogLikeCost(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  return true;
     }
 	if(ToulBar2::allSolutions) {
