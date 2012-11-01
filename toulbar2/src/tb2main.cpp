@@ -200,6 +200,7 @@ enum {
 	OPT_EDAC,
 	OPT_ub,
 	OPT_Z,
+	OPT_epsilon,
 	// MEDELESOFT OPTION
 	OPT_generation=99,
 	MENDEL_OPT_genotypingErrorRate=100,
@@ -330,6 +331,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
 	{ OPT_Z,  				 (char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
+	{ OPT_epsilon,		(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
@@ -726,6 +728,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -logz : computes log10 of probability of evidence (i.e. log10 partition function or log10(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
+	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp10(-ToulBar2::logepsilon) << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1303,6 +1306,15 @@ int _tmain(int argc, TCHAR * argv[])
 			// discrete integration for computing the partition function Z
 			if ( args.OptionId() == OPT_Z) ToulBar2::isZ = true;
 
+			if ( args.OptionId() == OPT_epsilon)
+			{
+				if(args.OptionArg() != NULL) {
+					ToulBar2::logepsilon=-Log10(atol(args.OptionArg()));
+					if (ToulBar2::debug) cout << "New assignment for epsilon = " << Exp10(-ToulBar2::logepsilon)  <<  endl;
+				}
+
+			}
+
 			// upper bound initialisation from command line
 			if ( args.OptionId() == OPT_ub) {
 
@@ -1569,6 +1581,16 @@ int _tmain(int argc, TCHAR * argv[])
 			ToulBar2::elimDegree = 0;
 		}
 	}
+	if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0)
+	{
+		//	  if (ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination in preprocessing" << endl;
+		ToulBar2::elimDegree_preprocessing = -1;
+	}
+	if (ToulBar2::allSolutions && ToulBar2::preprocessFunctional > 0)
+	{
+		//	  if (ToulBar2::debug) cout << "Warning! Cannot count all solutions with functional variable elimination during search" << endl;
+		ToulBar2::preprocessFunctional = 0;
+	}
 	if (ToulBar2::Static_variable_ordering && ToulBar2::btdMode >= 1)
 	{
 		cout << "Warning! static variable ordering not compatible with BTD-like search methods." << endl;
@@ -1597,6 +1619,13 @@ int _tmain(int argc, TCHAR * argv[])
 	if (ToulBar2::preprocessFunctional >0 && ToulBar2::LcLevel == LC_NC)
 	{
 		cout << "Warning! Cannot perform functional elimination with NC only." << endl;
+		ToulBar2::preprocessFunctional = 0;
+	}
+	if (ToulBar2::nbDecisionVars > 0 && (ToulBar2::elimDegree>=0 || ToulBar2::elimDegree_preprocessing>=0 || ToulBar2::preprocessFunctional>0))
+	{
+		cout << "Warning! Cannot perform functional/variable elimination with a mixture of decision and intermediate variables!" << endl;
+		ToulBar2::elimDegree = -1;
+		ToulBar2::elimDegree_preprocessing = -1;
 		ToulBar2::preprocessFunctional = 0;
 	}
 
