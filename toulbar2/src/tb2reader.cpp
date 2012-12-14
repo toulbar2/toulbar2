@@ -615,8 +615,13 @@ void WCSP::read_wcsp(const char *fileName)
     }
 	unaryconstrs = newunaryconstrs;
 	if (ToulBar2::sortDomains) {
-		for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-			unaryconstrs[u].var->sortDomain(unaryconstrs[u].costs);
+		if (maxarity > 2) {
+			cout << "Warning! Cannot sort domains in preprocesing with non-binary cost functions." << endl;
+		} else {
+			ToulBar2::sortedDomains.clear();
+			for (unsigned int u=0; u<unaryconstrs.size(); u++) {
+				ToulBar2::sortedDomains[unaryconstrs[u].var->wcspIndex] = unaryconstrs[u].var->sortDomain(unaryconstrs[u].costs);
+			}
 		}
 	}
 

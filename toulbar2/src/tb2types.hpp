@@ -190,6 +190,11 @@ typedef enum {
 	LC_THEMAX
 } LcLevelType;
 
+struct ValueCost {
+	Value value;
+	Cost cost;
+};
+
 ///contains all global variables (mainly solver's command-line options)
 class ToulBar2 {
 protected:
@@ -207,6 +212,7 @@ public:
 	static bool dichotomicBranching;
 	static unsigned int dichotomicBranchingSize;
 	static bool sortDomains;
+	static map<int, ValueCost *> sortedDomains;
 	static int elimDegree;
 	static int elimDegree_preprocessing;
 	static int elimDegree_;
@@ -320,11 +326,6 @@ class Solver;
 class Cluster;
 class Separator;
 class TreeDecomposition;
-
-struct ValueCost {
-	Value value;
-	Cost cost;
-};
 
 struct ConstraintLink {
 	Constraint *constr;

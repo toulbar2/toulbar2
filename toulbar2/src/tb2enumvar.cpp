@@ -890,7 +890,7 @@ static int cmpValueCost(const void *p1, const void *p2)
 
 /// \warning Must be done just after loading the problem and before any propagate (even projection of unary costs)
 /// \warning Does not work with negative domain values!
-void EnumeratedVariable::sortDomain(vector<Cost> &costs)
+ValueCost *EnumeratedVariable::sortDomain(vector<Cost> &costs)
 {
   cout << "sort variable " << getName() << " (size="<< getDomainSize() << ")" << endl;
 
@@ -923,8 +923,8 @@ void EnumeratedVariable::sortDomain(vector<Cost> &costs)
 	  position[i]=i;
 	  value[i]=i;
   }
-  ValueCost sorted[size];
-//  ValueCost* sorted = new ValueCost [size];
+//  ValueCost sorted[size];
+  ValueCost* sorted = new ValueCost[size];
   for (int i=0; i<size; i++) {
   	sorted[i].value = i;
   	sorted[i].cost = costs[i];
@@ -944,7 +944,7 @@ void EnumeratedVariable::sortDomain(vector<Cost> &costs)
   for (int i=0; i<size; i++) {
 	  costs[i] = sorted[i].cost;
   }
-//	delete [] sorted;
+  return sorted;
 }
 
 bool EnumeratedVariable::canbeMerged()

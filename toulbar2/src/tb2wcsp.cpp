@@ -54,6 +54,7 @@ bool ToulBar2::lastConflict = true;
 bool ToulBar2::dichotomicBranching = true;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::sortDomains = false;
+map<int, ValueCost *> ToulBar2::sortedDomains;
 int ToulBar2::lds = 0;
 bool ToulBar2::limited = false;
 Long ToulBar2::restart = -1;
