@@ -1057,7 +1057,7 @@ WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream &file) : Deco
 	file >> semantics >> baseCost;
 	int nbValueToWatch;
 	file >> nbValueToWatch;
-	for (int value = 0 ; value < nbValueToWatch ; value++) {
+	for (int idvalue = 0 ; idvalue < nbValueToWatch ; idvalue++) {
 		Value value; 
 		unsigned int lb,ub;
 		file >> value >> lb >> ub;
@@ -1232,7 +1232,7 @@ WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope) : Decomposabl
 WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
 	file >> semantics >> baseCost;
 	file >> nbValueToWatch;
-	for (int value = 0 ; value < nbValueToWatch ; value++) {
+	for (int idvalue = 0 ; idvalue < nbValueToWatch ; idvalue++) {
 		Value value; 
 		unsigned int lb,ub;
 		file >> value >> lb >> ub;

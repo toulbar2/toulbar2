@@ -624,7 +624,7 @@ CSimpleGlobTempl<SOCHAR>::Add(
     if (!SimpleGlobUtil::strchr(a_pszFileSpec, '*') &&
         !SimpleGlobUtil::strchr(a_pszFileSpec, '?'))
     {
-        SG_FileType nType = GetFileTypeS(a_pszFileSpec);
+        SG_FileType nType = this->GetFileTypeS(a_pszFileSpec);
         if (nType == SG_FILETYPE_INVALID) {
             if (m_uiFlags & SG_GLOB_NOCHECK) {
                 return AppendName(a_pszFileSpec, false);
@@ -647,7 +647,7 @@ CSimpleGlobTempl<SOCHAR>::Add(
 #endif
 
     // search for the first match on the file
-    int rc = FindFirstFileS(a_pszFileSpec, m_uiFlags);
+    int rc = this->FindFirstFileS(a_pszFileSpec, m_uiFlags);
     if (rc != SG_SUCCESS) {
         if (rc == SG_ERR_NOMATCH && (m_uiFlags & SG_GLOB_NOCHECK)) {
             int ok = AppendName(a_pszFileSpec, false);
@@ -660,8 +660,8 @@ CSimpleGlobTempl<SOCHAR>::Add(
     int nError, nStartLen = m_nArgsLen;
     bool bSuccess;
     do {
-        nError = AppendName(GetFileNameS((SOCHAR)0), IsDirS((SOCHAR)0));
-        bSuccess = FindNextFileS((SOCHAR)0);
+        nError = AppendName(this->GetFileNameS((SOCHAR)0), this->IsDirS((SOCHAR)0));
+        bSuccess = this->FindNextFileS((SOCHAR)0);
     }
     while (nError == SG_SUCCESS && bSuccess);
     SimpleGlobBase<SOCHAR>::FindDone();

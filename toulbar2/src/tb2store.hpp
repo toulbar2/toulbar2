@@ -114,7 +114,7 @@ public:
 	void store() {
 		index++;
 		if (index >= indexMax) realloc();
-		pointers[index] = (T *) base;
+		pointers[index] = (T *) (intptr_t) base;
 		base = index;
 	}
 
