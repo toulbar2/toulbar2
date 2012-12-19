@@ -62,7 +62,7 @@ class WCSP : public WeightedCSP {
 	Constraint *lastConflictConstr;		///< hook for last conflict variable heuristic
 	int maxdomainsize;					///< maximum initial domain size found in all variables
 	vector<GlobalConstraint*> globalconstrs;	///< a list of all original global constraints (also inserted in constrs)
-
+	vector<int> delayedNaryCtr;         ///< a list of all original nary constraints in extension (also inserted in constrs)
 	vector< vector<int> > listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
 
 	// make it private because we don't want copy nor assignment
@@ -270,7 +270,7 @@ public:
 	int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
 	void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
 	void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
-	void postNaryConstraintEnd(int ctrindex) {getCtr(ctrindex)->propagate();}
+	void postNaryConstraintEnd(int ctrindex) {}
 	int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file);
 	bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global constraints defined in the problem
 

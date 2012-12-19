@@ -327,21 +327,13 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 /// \note should not be used for binary or ternary cost functions
 /// \warning do not forget to initially propagate the global cost function using WCSP::postNaryConstraintEnd
 int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
-	BinaryConstraint* bctr;
-	TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
-	elimTernConstrs.push_back(tctr);
-	for (int j = 0; j < 3; j++) {
-		if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
-		else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
-		elimBinConstrs.push_back(bctr);
-	}
-
 	EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
 	for (int i = 0; i < arity; i++)
 		scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
 	NaryConstraint *ctr = new NaryConstraintMap(this, scopeVars, arity, defval);
 	delete[] scopeVars;
 
+	delayedNaryCtr.push_back(ctr->wcspIndex);
 	return ctr->wcspIndex;
 }
 
@@ -554,6 +546,17 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
 
 void WCSP::sortConstraints()
 {
+  for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
+	BinaryConstraint* bctr;
+	TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
+	elimTernConstrs.push_back(tctr);
+	for (int j = 0; j < 3; j++) {
+		if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
+		else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
+		elimBinConstrs.push_back(bctr);
+	}
+	getCtr(*idctr)->propagate();
+  }
   if(ToulBar2::Berge_Dec > 0 ) {
 	// flag pour indiquer si une variable a deja ete visitee initialement a faux
 	vector<bool> marked(numberOfVariables(), false);
