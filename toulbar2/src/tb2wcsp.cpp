@@ -140,7 +140,7 @@ int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
-			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0),
+			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
 			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
@@ -333,7 +333,17 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
 	NaryConstraint *ctr = new NaryConstraintMap(this, scopeVars, arity, defval);
 	delete[] scopeVars;
 
-	delayedNaryCtr.push_back(ctr->wcspIndex);
+	if (isDelayedNaryCtr) delayedNaryCtr.push_back(ctr->wcspIndex);
+	else {
+		BinaryConstraint* bctr;
+		TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
+		elimTernConstrs.push_back(tctr);
+		for (int j = 0; j < 3; j++) {
+			if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
+			else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
+			elimBinConstrs.push_back(bctr);
+		}
+	}
 	return ctr->wcspIndex;
 }
 
@@ -406,6 +416,17 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
+void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex)
+{
+    string gcname = "wvarsum";
+    WeightedVarSum* decomposableGCF = new WeightedVarSum(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->setComparator(comparator);
+	decomposableGCF->setIndex(varIndex);
+    decomposableGCF->addToCostFunctionNetwork(this);
+}
+
 void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub)
 {
     WeightedAmong* decomposableGCF = new WeightedAmong(arity, scopeIndex);
@@ -421,33 +442,104 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
     //delete [] decomposableGCF;
 }
 
-/*void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, 
+void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
+{
+    WeightedVarAmong* decomposableGCF = new WeightedVarAmong(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    for(int i = 0; i < nbValues; i++)
+    {
+        decomposableGCF->addValue(values[i]);
+    }
+    decomposableGCF->setIndex(varIndex);
+    decomposableGCF->addToCostFunctionNetwork(this);
+    delete [] values;
+}
+
+void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions,
   vector<Cost> transitionsCosts)
 {
     WFA* automaton=new WFA(nbStates);
     for(unsigned int i=0; i<initial_States.size(); i++)
     {
-      automaton->initialStates.push_back(initial_States[i]);
+      automaton->getInitialStates().push_back(initial_States[i]);
     }
     for(unsigned int i=0; i<accepting_States.size(); i++)
     {
-      automaton->acceptingStates.push_back(accepting_States[i]);
+      automaton->getAcceptingStates().push_back(accepting_States[i]);
     }
     for(unsigned int i=0; i<transitionsCosts.size(); i++)
     {
-      automaton->transitions.push_back(new WTransition(Wtransitions[i][0],Wtransitions[i][1],Wtransitions[i][2],transitionsCosts[i]));
+      automaton->getTransitions().push_back(new WTransition(Wtransitions[i][0],Wtransitions[i][1],Wtransitions[i][2],transitionsCosts[i]));
     }
-
     WeightedRegular regular(arity,scopeIndex);
     regular.setWFA(automaton);
     regular.addToCostFunctionNetwork(this);   
-    for(int i=0; i < transitionsCosts.size(); i++)
+    for(unsigned int i=0; i < transitionsCosts.size(); i++)
     {
       delete [] Wtransitions[i];    
     }
     delete [] Wtransitions;
-    //delete [] automaton; 
-}*/
+}
+
+void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
+{
+    WeightedGcc* decomposableGCF = new WeightedGcc(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->setNbValue(nbValues);
+    for(int i = 0; i < nbValues; i++)
+    {
+        decomposableGCF->setBounds(values[i],lb[i],ub[i]);
+    }
+    decomposableGCF->addToCostFunctionNetwork(this);
+    delete [] values;
+    delete [] lb;
+    delete [] ub;
+}
+
+void WCSP::postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost)
+{
+    WeightedSame* decomposableGCF = new WeightedSame(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->addToCostFunctionNetwork(this);
+}
+
+void WCSP::postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost)
+{
+    WeightedAllDifferent* decomposableGCF = new WeightedAllDifferent(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->addToCostFunctionNetwork(this);
+}
+
+void WCSP::postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
+{
+    WeightedSameGcc* decomposableGCF = new WeightedSameGcc(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->setNbValue(nbValues);
+    for(int i = 0; i < nbValues; i++)
+    {
+        decomposableGCF->setBounds(values[i],lb[i],ub[i]);
+    }
+    decomposableGCF->addToCostFunctionNetwork(this);
+    delete [] values;
+    delete [] lb;
+    delete [] ub;
+}
+
+void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes)
+{
+    WeightedOverlap* decomposableGCF = new WeightedOverlap(arity, scopeIndex);
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->setComparator(comparator);
+	decomposableGCF->setRightRes(rightRes);
+    decomposableGCF->addToCostFunctionNetwork(this);
+}
+
 
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
@@ -557,6 +649,8 @@ void WCSP::sortConstraints()
 	}
 	getCtr(*idctr)->propagate();
   }
+  delayedNaryCtr.clear();
+  isDelayedNaryCtr = false;
   if(ToulBar2::Berge_Dec > 0 ) {
 	// flag pour indiquer si une variable a deja ete visitee initialement a faux
 	vector<bool> marked(numberOfVariables(), false);

@@ -9,6 +9,7 @@
 #include "toulbar2.hpp"
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
+#include "tb2enumvar.hpp"
 
 class BinaryConstraint;
 class TernaryConstraint;
@@ -63,6 +64,7 @@ class WCSP : public WeightedCSP {
 	int maxdomainsize;					///< maximum initial domain size found in all variables
 	vector<GlobalConstraint*> globalconstrs;	///< a list of all original global constraints (also inserted in constrs)
 	vector<int> delayedNaryCtr;         ///< a list of all original nary constraints in extension (also inserted in constrs)
+	bool isDelayedNaryCtr;				///< postpone naryctr propagation after all variables have been created
 	vector< vector<int> > listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
 
 	// make it private because we don't want copy nor assignment
@@ -166,6 +168,8 @@ public:
 	unsigned int getDomainSize(int varIndex) const {return vars[varIndex]->getDomainSize();}	///< \brief current domain size
 	bool getEnumDomain(int varIndex, Value *array);
 	bool getEnumDomainAndCost(int varIndex, ValueCost *array);
+    unsigned int getDomainInitSize(int varIndex) const {assert(vars[varIndex]->enumerated()); return ((EnumeratedVariable *) vars[varIndex])->getDomainInitSize();}   ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
+    Value toValue(int varIndex, unsigned int idx) {assert(vars[varIndex]->enumerated()); return ((EnumeratedVariable *) vars[varIndex])->toValue(idx);}               ///< \brief gets value from index (warning! assumes EnumeratedVariable)
 	int getDACOrder(int varIndex) const {return vars[varIndex]->getDACOrder();} ///< \brief index of the variable in the DAC variable ordering
 	void updateCurrentVarsId();	///< \brief determines the position of each variable in the current list of unassigned variables (see \ref WCSP::dump)
 
@@ -255,11 +259,6 @@ public:
 	int makeEnumeratedVariable(string n, Value *d, int dsize);
 	int makeIntervalVariable(string n, Value iinf, Value isup);
 
-    void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
-    void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub);
-    //void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts);
-    //void postWeightedOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lbIndex, int ubIndex);
-
 	void postUnary(int xIndex, vector<Cost> &costs);
 	int postUnary(int xIndex, Value *d, int dsize, Cost penalty);
 	int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
@@ -270,9 +269,20 @@ public:
 	int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
 	void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
 	void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
-	void postNaryConstraintEnd(int ctrindex) {}
+	void postNaryConstraintEnd(int ctrindex) {if (!isDelayedNaryCtr) getCtr(ctrindex)->propagate();}
 	int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file);
 	bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global constraints defined in the problem
+
+    void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
+    void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex);
+    void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub);
+    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex);
+    void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts);
+    void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost);
+    void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub);
+    void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost);
+    void postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub);
+    void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
 
 	void read_wcsp(const char *fileName); 		///< \brief load problem in native wcsp format (\ref wcspformat)
 	void read_uai2008(const char *fileName);	///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)

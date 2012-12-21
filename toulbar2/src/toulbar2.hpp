@@ -49,6 +49,8 @@ public:
     virtual unsigned int getDomainSize(int varIndex) const =0;				///< \brief current domain size
     virtual bool getEnumDomain(int varIndex, Value *array) =0;				///< \brief gets current domain values in an array
     virtual bool getEnumDomainAndCost(int varIndex, ValueCost *array) =0;	///< \brief gets current domain values and unary costs in an array
+    virtual unsigned int getDomainInitSize(int varIndex) const =0;          ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
+    virtual Value toValue(int varIndex, unsigned int idx) =0;	            ///< \brief gets value from index (warning! assumes EnumeratedVariable)
 	virtual int getDACOrder(int varIndex) const =0; 	///< \brief index of the variable in the DAC variable ordering
 
     virtual bool assigned(int varIndex) const =0;
@@ -140,8 +142,16 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) =0;
     virtual int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file) =0;
-    virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0; ///< \brief Post WSum constraint in the WCSP
-    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0;   ///< \brief Post WAmong constraint in the WCSP
+    virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0;
+    virtual void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex) =0;
+    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0;
+    virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) =0;
+    virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) =0;
+    virtual void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost) =0;
+    virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) =0;
+    virtual void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost) =0;
+    virtual void postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) =0;
+    virtual void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0;
 
     virtual vector< vector<int> >* getListSuccessors() =0;  ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
     

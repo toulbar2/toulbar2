@@ -40,7 +40,7 @@ class WFA{
 		
 	public:
 		WFA();
-		//WFA(int _nbStates);
+		WFA(int _nbStates);
 		WFA(istream &file);
 		WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 		

@@ -211,6 +211,7 @@ class WeightedGcc : public DecomposableGlobalCostFunction{
 		
 		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
 		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost; }
+        inline void setNbValue(int _nbValue) 					    { nbValueToWatch=_nbValue; }
 		void setBounds(Value value, unsigned int lb, unsigned int ub);
 
 		Cost evaluate(int* tuple) { cerr << "Not yet implemented" << endl; return 0; }
@@ -256,6 +257,7 @@ class WeightedSameGcc : public DecomposableGlobalCostFunction{
 		
 		inline void setSemantics(string _semantics) 				{ semantics=_semantics; }
 		inline void setBaseCost(Cost _baseCost) 					{ baseCost=_baseCost; }
+        inline void setNbValue(int _nbValue) 					    { nbValueToWatch=_nbValue; }
 		void setBounds(Value value, unsigned int lb, unsigned int ub);
 		
 		Cost evaluate(int* tuple) { cerr << "Not yet implemented" << endl; return 0; }

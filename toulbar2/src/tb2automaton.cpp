@@ -2,7 +2,7 @@
 
 WFA::WFA() : nbStates(0) {}
 
-//WFA::WFA(int _nbStates) : nbStates(_nbStates) {}
+WFA::WFA(int _nbStates) : nbStates(_nbStates) {}
 WFA::WFA(istream &file) {
 	unsigned int _nbStates, nbTransitions, nbStatesInit, nbStatesAccept;
 	file >> _nbStates;
