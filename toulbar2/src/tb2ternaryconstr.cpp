@@ -73,26 +73,25 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 
 TernaryConstraint::TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) 
 					: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp), 
-					  sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize()), sizeZ(wcsp->getMaxDomainSize()),
+					  sizeX(0), sizeY(0), sizeZ(0),
 					  functionalX(false), functionalY(false), functionalZ(false)
 {
-	unsigned int maxdom = wcsp->getMaxDomainSize();
-    deltaCostsX = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
-    deltaCostsY = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
-    deltaCostsZ = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
-    supportX = vector< pair<Value,Value> >(maxdom);
-    supportY = vector< pair<Value,Value> >(maxdom);
-    supportZ = vector< pair<Value,Value> >(maxdom);
+//	unsigned int maxdom = wcsp->getMaxDomainSize();
+//    deltaCostsX = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
+//    deltaCostsY = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
+//    deltaCostsZ = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
+//    supportX = vector< pair<Value,Value> >(maxdom);
+//    supportY = vector< pair<Value,Value> >(maxdom);
+//    supportZ = vector< pair<Value,Value> >(maxdom);
 	linkX = new DLink<ConstraintLink>;
     linkY = new DLink<ConstraintLink>;    
     linkZ = new DLink<ConstraintLink>;    
     
-    costs = vector<StoreCost>(maxdom*maxdom*maxdom,StoreCost(MIN_COST,storeCost));
-    
-    for (unsigned int a = 0; a < maxdom; a++) 
-       for (unsigned int b = 0; b < maxdom; b++) 
-           for (unsigned int c = 0; c < maxdom; c++) 
-               costs[a * maxdom * maxdom + b * maxdom + c] = MIN_COST;
+//    costs = vector<StoreCost>(maxdom*maxdom*maxdom,StoreCost(MIN_COST,storeCost));
+//    for (unsigned int a = 0; a < maxdom; a++)
+//       for (unsigned int b = 0; b < maxdom; b++)
+//           for (unsigned int c = 0; c < maxdom; c++)
+//               costs[a * maxdom * maxdom + b * maxdom + c] = MIN_COST;
  	xy = NULL;
  	xz = NULL;
  	yz = NULL;

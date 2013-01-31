@@ -777,6 +777,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 void EnumeratedVariable::eliminate()
 {
 	if(isSep_) return;
+    if (ToulBar2::nbDecisionVars>0 && wcspIndex < ToulBar2::nbDecisionVars) return;
+    if (ToulBar2::allSolutions && !ToulBar2::btdMode==1 && wcspIndex < ToulBar2::nbvar) return;
 
 	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );
 
@@ -949,6 +951,9 @@ ValueCost *EnumeratedVariable::sortDomain(vector<Cost> &costs)
 
 bool EnumeratedVariable::canbeMerged()
 {
+  if (ToulBar2::nbDecisionVars>0 && wcspIndex < ToulBar2::nbDecisionVars) return false;
+  if (ToulBar2::allSolutions && wcspIndex < ToulBar2::nbvar && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) return false;
+
   for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
 	Constraint* ctr = (*iter).constr;
 	if (!ctr->extension() || ctr->isSep()) return false;

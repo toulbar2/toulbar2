@@ -536,20 +536,23 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
     Value middle = value;
     bool increasing = true;
-	//	bool reverse = ((ToulBar2::restart>0) && (myrand()%10==0));
+//	bool reverse = true; // (ToulBar2::restart>0);
     if (dichotomic) {
       middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
 	  //      if (value <= middle || reverse) increasing = true;
       if (value <= middle) increasing = true;
       else increasing = false;
+//    } else if (reverse) {
+//    	value = wcsp->getMaxUnaryCostValue(varIndex);
+//		assert(wcsp->canbe(varIndex,value));
     }
     try {
         store->store();
         lastConflictVar = varIndex;
         if (dichotomic) {
     	  if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
-    	// } else if (reverse) {
-		//   remove(varIndex, value);
+//    	} else if (reverse) {
+//    		remove(varIndex, value);
 		} else assign(varIndex, value);
         lastConflictVar = -1;
         recursiveSolve();
@@ -563,8 +566,8 @@ void Solver::binaryChoicePoint(int varIndex, Value value)
 
     if (dichotomic) {
       if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
-    // } else if (reverse) {
-	//   assign(varIndex, value);
+//    } else if (reverse) {
+//    	assign(varIndex, value);
 	} else remove(varIndex, value);
     recursiveSolve();
 
@@ -1077,9 +1080,11 @@ bool Solver::solve()
 		cout << "Number of solutions    : ~= " << nbSol << endl;
 	  else
 		cout << "Number of solutions    : =  " << nbSol << endl;
-	  cout << "Number of #goods       :    " << nbSGoods << endl;
-	  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
-	  cout << "Size of sep            :    " << tailleSep << endl;
+	  if (ToulBar2::btdMode >= 1) {
+		  cout << "Number of #goods       :    " << nbSGoods << endl;
+		  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
+		  cout << "Size of sep            :    " << tailleSep << endl;
+	  }
 	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  cout << "... in " <<nbBacktracks << " backtracks and " << nbNodes << " nodes" << endl;
 	  return true;

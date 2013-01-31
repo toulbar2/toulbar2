@@ -142,6 +142,8 @@ public:
   VACBinaryConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
   ~VACBinaryConstraint ();
 
+  void VACfillElimConstr();
+
   int getK (VACVariable* var, Value v, Long timeStamp);
   void setK (VACVariable* var, Value v, int c, Long timeStamp);
 

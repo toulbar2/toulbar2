@@ -30,7 +30,7 @@ protected:
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
     vector<StoreCost> costs;
-    
+
     vector<Value> supportX;
     vector<Value> supportY;
     
@@ -256,6 +256,11 @@ public:
 		y = yin;
 		sizeX = x->getDomainInitSize();
 		sizeY = y->getDomainInitSize();
+		if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+		if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+		if (sizeX > supportX.size()) supportX.resize(sizeX);
+		if (sizeY > supportY.size()) supportY.resize(sizeY);
+		if (sizeX*sizeY > costs.size()) costs.resize(sizeX*sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
 		linkX->removed = true;
 		linkY->removed = true;
 		linkX->content.constr = this;

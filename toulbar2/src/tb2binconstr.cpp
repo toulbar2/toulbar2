@@ -30,20 +30,20 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
 }
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)
- 	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(wcsp->getMaxDomainSize()), sizeY(wcsp->getMaxDomainSize())
+ 	: AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(0), sizeY(0)
 {
-	unsigned int maxdomainsize = wcsp->getMaxDomainSize();
-    deltaCostsX = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
-    deltaCostsY = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
-    supportX = vector<Value>(maxdomainsize,0);
-    supportY = vector<Value>(maxdomainsize,0);
+//	unsigned int maxdomainsize = wcsp->getMaxDomainSize();
+//    deltaCostsX = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
+//    deltaCostsY = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
+//    supportX = vector<Value>(maxdomainsize,0);
+//    supportY = vector<Value>(maxdomainsize,0);
     linkX = new DLink<ConstraintLink>;
     linkY = new DLink<ConstraintLink>;
 
-    costs = vector<StoreCost>(maxdomainsize*maxdomainsize,StoreCost(MIN_COST,storeCost));
-    for (unsigned int a = 0; a < maxdomainsize; a++)
-         for (unsigned int b = 0; b < maxdomainsize; b++)
-                costs[a * maxdomainsize + b] = MIN_COST;
+//    costs = vector<StoreCost>(maxdomainsize*maxdomainsize,StoreCost(MIN_COST,storeCost));
+//    for (unsigned int a = 0; a < maxdomainsize; a++)
+//         for (unsigned int b = 0; b < maxdomainsize; b++)
+//                costs[a * maxdomainsize + b] = MIN_COST;
 }
 
 void BinaryConstraint::print(ostream& os)

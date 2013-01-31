@@ -1569,27 +1569,15 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
 		ToulBar2::allSolutions = false;
 	}
-	if (ToulBar2::allSolutions && ToulBar2::elimDegree >= 0)
+	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0)
 	{
 		//	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
-		if (!ToulBar2::btdMode)
-		{
-			ToulBar2::elimDegree = -1;
-		}
-		else
-		{
-			ToulBar2::elimDegree = 0;
-		}
+		ToulBar2::elimDegree = 0;
 	}
-	if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0)
+	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree_preprocessing >= 0)
 	{
-		//	  if (ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination in preprocessing" << endl;
+		//	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with generic variable elimination" << endl;
 		ToulBar2::elimDegree_preprocessing = -1;
-	}
-	if (ToulBar2::allSolutions && ToulBar2::preprocessFunctional > 0)
-	{
-		//	  if (ToulBar2::debug) cout << "Warning! Cannot count all solutions with functional variable elimination during search" << endl;
-		ToulBar2::preprocessFunctional = 0;
 	}
 	if (ToulBar2::Static_variable_ordering && ToulBar2::btdMode >= 1)
 	{
@@ -1619,13 +1607,6 @@ int _tmain(int argc, TCHAR * argv[])
 	if (ToulBar2::preprocessFunctional >0 && ToulBar2::LcLevel == LC_NC)
 	{
 		cout << "Warning! Cannot perform functional elimination with NC only." << endl;
-		ToulBar2::preprocessFunctional = 0;
-	}
-	if (ToulBar2::nbDecisionVars > 0 && (ToulBar2::elimDegree>=0 || ToulBar2::elimDegree_preprocessing>=0 || ToulBar2::preprocessFunctional>0))
-	{
-		cout << "Warning! Cannot perform functional/variable elimination with a mixture of decision and intermediate variables!" << endl;
-		ToulBar2::elimDegree = -1;
-		ToulBar2::elimDegree_preprocessing = -1;
 		ToulBar2::preprocessFunctional = 0;
 	}
 

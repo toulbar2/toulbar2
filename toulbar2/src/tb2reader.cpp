@@ -643,7 +643,8 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 {
 	naryRandom randwcsp(this,seed);
     randwcsp.Input(n,m,p,forceSubModular);	    
- 
+    ToulBar2::nbvar= n;
+
  	unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
     
@@ -703,6 +704,7 @@ void WCSP::read_uai2008(const char *fileName)
     
 
     file >> nbvar;
+    ToulBar2::nbvar= nbvar;
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
@@ -1063,6 +1065,7 @@ void WCSP::read_wcnf(const char *fileName)
   Cost top;
   file >> format;
   file >> nbvar;
+  ToulBar2::nbvar= nbvar;
   file >> nbclauses;
   if (format == "wcnf") {
 	getline( file, strtop );
@@ -1253,6 +1256,7 @@ void WCSP::read_qpbo(const char *fileName)
   m = e;
 
   // create Boolean variables
+  ToulBar2::nbvar= n;
   for (int i=0; i<n; i++) {
 	makeEnumeratedVariable(to_string(i), 0, 1);
   }

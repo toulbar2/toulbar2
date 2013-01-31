@@ -44,7 +44,7 @@ int ToulBar2::elimDegree_ = -1;
 int ToulBar2::elimDegree_preprocessing_ = -1;
 int ToulBar2::elimSpaceMaxMB = 0;
 int ToulBar2::preprocessTernaryRPC = 0;
-int ToulBar2::preprocessFunctional = 2;
+int ToulBar2::preprocessFunctional = 1;
 bool ToulBar2::costfuncSeparate = true;
 int ToulBar2::preprocessNary = 10;
 LcLevelType ToulBar2::LcLevel = LC_EDAC;
@@ -1570,7 +1570,7 @@ void WCSP::propagate() {
 
 			if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
 			if (ToulBar2::vac) {
-				assert(verify());
+//				assert(verify());
 				if (vac->firstTime()) {
 					vac->init();
 					cout << "Lb before VAC: " << getLb() << endl;
@@ -1686,6 +1686,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
 	int newIndex = (int) elimBinOrder;
 	BinaryConstraint* ctr = (BinaryConstraint*) elimBinConstrs[newIndex];
 	ctr->fillElimConstr(x, y, from1, from2);
+	if (ToulBar2::vac) ((VACBinaryConstraint *) ctr)->VACfillElimConstr();
 	ctr->isDuplicate_ = false;
 	return ctr;
 }

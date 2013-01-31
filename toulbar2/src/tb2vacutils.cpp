@@ -381,12 +381,15 @@ VACBinaryConstraint::VACBinaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, En
 }
 
 VACBinaryConstraint::VACBinaryConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) , myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+{}
+
+void VACBinaryConstraint::VACfillElimConstr ()
 {
-   for (int a = 0; a < wcsp->getMaxDomainSize(); a++) {
+   for (unsigned int a = kX.size(); a < sizeX; a++) {
 	   	kX.push_back(0);
 	   	kX_timeStamp.push_back(0);
    }
-   for (int b = 0; b < wcsp->getMaxDomainSize(); b++) {
+   for (unsigned int b = kY.size(); b < sizeY; b++) {
 	   	kY.push_back(0);
 	   	kY_timeStamp.push_back(0);
    }

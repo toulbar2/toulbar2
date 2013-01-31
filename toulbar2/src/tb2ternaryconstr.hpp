@@ -658,6 +658,13 @@ public:
 		sizeX = x->getDomainInitSize();
 		sizeY = y->getDomainInitSize();
 		sizeZ = z->getDomainInitSize();
+		if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+		if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+		if (sizeZ > deltaCostsZ.size()) deltaCostsZ.resize(sizeZ, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+		if (sizeX > supportX.size()) supportX.resize(sizeX);
+		if (sizeY > supportY.size()) supportY.resize(sizeY);
+		if (sizeZ > supportZ.size()) supportZ.resize(sizeZ);
+		if (sizeX*sizeY*sizeZ > costs.size()) costs.resize(sizeX*sizeY*sizeZ, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
 		linkX->removed = true;
 		linkY->removed = true;
 		linkZ->removed = true;
