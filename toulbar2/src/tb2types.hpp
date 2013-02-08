@@ -227,6 +227,7 @@ public:
 	static bool Static_variable_ordering;// flag for static variable ordering during search (dynamic ordering is default value)
 	static bool lastConflict;
 	static int weightedDegree;
+	static bool weightedTightness;
     static int nbDecisionVars;
 	static int lds;
 	static bool limited;

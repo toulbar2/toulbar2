@@ -106,7 +106,7 @@ double TernaryConstraint::computeTightness()
    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
       for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
 	      for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-			sum += to_double(getCost(*iterX, *iterY, *iterZ));
+			sum += to_double(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ)));
 			count++;
        }
      }

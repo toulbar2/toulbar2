@@ -52,6 +52,7 @@ void Solver::initVarHeuristic()
     for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
         unassignedVars->push_back(&allVars[i], false);
 		if (wcsp->assigned(allVars[i].content) || (ToulBar2::nbDecisionVars > 0 && allVars[i].content >=  ToulBar2::nbDecisionVars)) unassignedVars->erase(&allVars[i], false);
+		else wcsp->resetWeightedDegree(allVars[i].content);
     }
     // Now function setvalue can be called safely!
 	ToulBar2::setvalue = setvalue;
@@ -367,12 +368,13 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
    int varIndex = -1;
    Cost worstUnaryCost = MIN_COST;
    double best = MAX_VAL - MIN_VAL;
-
+   const double epsilon = 1e-6; // 1./100001.
    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
        // remove following "+1" when isolated variables are automatically assigned
-	 double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getWeightedDegree(*iter) + 1);
-       if (varIndex < 0 || heuristic < best - 1./100001.
-           || (heuristic < best + 1./100001. && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+	   double heuristic = (double) wcsp->getDomainSize(*iter) / (double) (wcsp->getWeightedDegree(*iter) + 1 + ((ToulBar2::weightedTightness)?wcsp->getMaxUnaryCost(*iter):0));
+//	   double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
+       if (varIndex < 0 || heuristic < best - epsilon * best
+           || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
            best = heuristic;
            varIndex = *iter;
            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);

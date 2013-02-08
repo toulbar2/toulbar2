@@ -62,6 +62,7 @@ bool ToulBar2::generation = false;
 int ToulBar2::minsumDiffusion = 0;
 bool ToulBar2::Static_variable_ordering=false;
 int ToulBar2::weightedDegree = 10000;
+bool ToulBar2::weightedTightness = false;
 int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
@@ -1029,43 +1030,6 @@ unsigned int WCSP::numberOfConnectedBinaryConstraints() const {
 	return res;  
 }
 
-// Cormen et al, 1990. pages 152, 158, and 184
-
-int partition(int A[], int p, int r) {
-  int x = A[p];
-  int i = p - 1;
-  int j = r + 1;
-  while (true) {
-	do {
-	  j = j - 1;
-	} while (A[j] > x);
-	do {
-	  i = i + 1;
-	} while (A[i] < x);
-	if (i < j) {
-	  int tmp = A[i];
-	  A[i] = A[j];
-	  A[j] = tmp;
-	} else return j;
-  }
-}
-
-int stochastic_partition(int A[], int p, int r) {
-  int i = (myrand()%(r-p+1)) + p;
-  int tmp = A[p];
-  A[p] = A[i];
-  A[i] = tmp;
-  return partition(A, p, r);
-}
-
-int stochastic_selection(int A[], int p, int r, int i) {
-  if (p == r) return A[p];
-  int q = stochastic_partition(A, p, r);
-  int k = q - p + 1;
-  if (i <= k) return stochastic_selection(A, p, q, i);
-  else return stochastic_selection(A, q+1, r, i-k);
-}
-
 unsigned int WCSP::medianDomainSize() const {
   unsigned int nbunvars = numberOfUnassignedVariables();
   if (nbunvars==0) return 0;
@@ -1073,7 +1037,7 @@ unsigned int WCSP::medianDomainSize() const {
   unsigned int pos = 0;
   for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) {domain[pos]=getDomainSize(i); pos++;}
   assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-  return stochastic_selection(domain, 0, nbunvars, nbunvars / 2);
+  return stochastic_selection<int>(domain, 0, nbunvars, nbunvars / 2);
 }
 
 unsigned int WCSP::medianDegree() const {
@@ -1083,7 +1047,7 @@ unsigned int WCSP::medianDegree() const {
   unsigned int pos = 0;
   for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) {degree[pos]=getTrueDegree(i); pos++;}
   assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-  return stochastic_selection(degree, 0, nbunvars, nbunvars / 2);
+  return stochastic_selection<int>(degree, 0, nbunvars, nbunvars / 2);
 }
 
 void WCSP::printNCBuckets() {
@@ -1155,7 +1119,7 @@ void printClique(ostream& os, int arity, Constraint *ctr) {
 	assert(arity >= 2);
 	for (int i = 0; i < arity - 1; i++) {
 		for (int j = i + 1; j < arity; j++) {
-			os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << ";" << endl;
+			os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
 		}
 	}
 }

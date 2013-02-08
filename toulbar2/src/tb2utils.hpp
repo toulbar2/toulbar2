@@ -85,4 +85,44 @@ return ss.str();
 
 #include "tb2system.hpp"
 
+// Cormen et al, 1990. pages 152, 158, and 184
+
+template<class T>
+int partition(T A[], int p, int r) {
+  T x = A[p];
+  int i = p - 1;
+  int j = r + 1;
+  while (true) {
+	do {
+	  j = j - 1;
+	} while (A[j] > x);
+	do {
+	  i = i + 1;
+	} while (A[i] < x);
+	if (i < j) {
+	  T tmp = A[i];
+	  A[i] = A[j];
+	  A[j] = tmp;
+	} else return j;
+  }
+}
+
+template<class T>
+int stochastic_partition(T A[], int p, int r) {
+  int i = (myrand()%(r-p+1)) + p;
+  T tmp = A[p];
+  A[p] = A[i];
+  A[i] = tmp;
+  return partition(A, p, r);
+}
+
+template<class T>
+int stochastic_selection(T A[], int p, int r, int i) {
+  if (p == r) return A[p];
+  int q = stochastic_partition(A, p, r);
+  int k = q - p + 1;
+  if (i <= k) return stochastic_selection(A, p, q, i);
+  else return stochastic_selection(A, q+1, r, i-k);
+}
+
 #endif /* TB2UTILS_HPP_ */

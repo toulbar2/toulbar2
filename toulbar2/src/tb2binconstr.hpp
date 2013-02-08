@@ -395,14 +395,17 @@ public:
     
 	double computeTightness() {
 	   int count = 0;
-	   double sum = 0;
+//	   double sum = 0;
+	   Cost costs[x->getDomainSize()*y->getDomainSize()];
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                sum += to_double(getCost(*iterX, *iterY));
+//	    	    sum += to_double(min(wcsp->getUb(), getCost(*iterX, *iterY)));
+	    	    costs[count] = min(wcsp->getUb(), getCost(*iterX, *iterY));
 				count++;
 	       }
 	    }
-	    tight = sum / (double) count;
+//	    tight = sum / (double) count;
+	    tight = stochastic_selection<Cost>(costs, 0, count, 1 * count / 4);
 	    return tight;
 	}
 

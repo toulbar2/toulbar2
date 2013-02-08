@@ -44,7 +44,7 @@ public:
     virtual Long getConflictWeight(int varIndex) const {return conflictWeight;}
     virtual void incConflictWeight(Constraint *from) {if (from==this || deconnected()) conflictWeight++; if (fromElim1) fromElim1->incConflictWeight(from); if (fromElim2) fromElim2->incConflictWeight(from);}
     void incConflictWeight(Long incval) {conflictWeight += incval;}
-    void resetConflictWeight() {conflictWeight=1;}
+    void resetConflictWeight() {conflictWeight=1+((ToulBar2::weightedTightness)?getTightness():0);}
     void elimFrom(Constraint *from1, Constraint *from2 = NULL) {fromElim1 = from1; fromElim2 = from2;}
 
 	double tight;
