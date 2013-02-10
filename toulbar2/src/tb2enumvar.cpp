@@ -1018,27 +1018,67 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 	case 2: {
 	  assert(wcsp->unassigned(scopeIndex[0]));
 	  assert(wcsp->unassigned(scopeIndex[1]));
-	  vector<Cost> empty(((EnumeratedVariable *) wcsp->getVar(scopeIndex[0]))->getDomainInitSize() * ((EnumeratedVariable *) wcsp->getVar(scopeIndex[1]))->getDomainInitSize(), MIN_COST);
-	  int res = wcsp->postBinaryConstraint(scopeIndex[0], scopeIndex[1], empty);
-	  newctr = wcsp->getCtr(res);
-	  assert(newctr->arity() == scopeSize);
+	  EnumeratedVariable* u = (EnumeratedVariable *) wcsp->getVar(scopeIndex[0]);
+	  EnumeratedVariable* v = (EnumeratedVariable *) wcsp->getVar(scopeIndex[1]);
+	  assert(x==u || x==v);
+	  vector<Cost> costs(u->getDomainInitSize() * v->getDomainInitSize(), MIN_COST);
+	  bool empty = true;
+	  String oldtuple(ctr->arity(),CHAR_FIRST);
+      for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
+          for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
+			for(int i=0;i<ctr->arity();i++) {
+			  if (ctr->getVar(i) == this) {
+				oldtuple[i] = toIndex(functional[(x==u)?(*iterU):(*iterV)]) + CHAR_FIRST;
+			  } else {
+        		assert(ctr->getVar(i)==u || ctr->getVar(i)==v);
+				oldtuple[i] = ((ctr->getVar(i)==u)?(u->toIndex(*iterU)):(v->toIndex(*iterV))) + CHAR_FIRST;
+			  }
+			}
+			Cost cost = ctr->evalsubstr(oldtuple, ctr);
+			if (cost > MIN_COST) {
+			  empty = false;
+			  costs[(*iterU) * v->getDomainInitSize() + (*iterV)] = cost;
+			}
+          }
+      }
+	  if (!empty) wcsp->postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
 	  break; }
 	case 3: {
 	  assert(wcsp->unassigned(scopeIndex[0]));
 	  assert(wcsp->unassigned(scopeIndex[1]));
 	  assert(wcsp->unassigned(scopeIndex[2]));
-	  vector<Cost> empty(((EnumeratedVariable *) wcsp->getVar(scopeIndex[0]))->getDomainInitSize() * ((EnumeratedVariable *) wcsp->getVar(scopeIndex[1]))->getDomainInitSize() * ((EnumeratedVariable *) wcsp->getVar(scopeIndex[2]))->getDomainInitSize(), MIN_COST);
-	  int res = wcsp->postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], empty);
-	  newctr = wcsp->getCtr(res);
-	  assert(newctr->arity() == scopeSize);
+	  EnumeratedVariable* u = (EnumeratedVariable *) wcsp->getVar(scopeIndex[0]);
+	  EnumeratedVariable* v = (EnumeratedVariable *) wcsp->getVar(scopeIndex[1]);
+	  EnumeratedVariable* w = (EnumeratedVariable *) wcsp->getVar(scopeIndex[2]);
+	  assert(x==u || x==v || x==w);
+	  vector<Cost> costs(u->getDomainInitSize() * v->getDomainInitSize() * w->getDomainInitSize(), MIN_COST);
+	  bool empty = true;
+	  String oldtuple(ctr->arity(),CHAR_FIRST);
+      for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
+          for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
+              for (EnumeratedVariable::iterator iterW = w->begin(); iterW != w->end(); ++iterW) {
+          		for(int i=0;i<ctr->arity();i++) {
+          		  if (ctr->getVar(i) == this) {
+          			oldtuple[i] = toIndex(functional[(x==u)?(*iterU):((x==v)?(*iterV):(*iterW))]) + CHAR_FIRST;
+          		  } else {
+          			assert(ctr->getVar(i)==u || ctr->getVar(i)==v || ctr->getVar(i)==w);
+          			oldtuple[i] = ((ctr->getVar(i)==u)?(u->toIndex(*iterU)):((ctr->getVar(i)==v)?(v->toIndex(*iterV)):(w->toIndex(*iterW)))) + CHAR_FIRST;
+          		  }
+          		}
+          		Cost cost = ctr->evalsubstr(oldtuple, ctr);
+          		if (cost > MIN_COST) {
+          		  empty = false;
+          		  costs[(*iterU) * v->getDomainInitSize() * w->getDomainInitSize() + (*iterV) * w->getDomainInitSize() + (*iterW)] = cost;
+          		}
+              }
+          }
+      }
+	  if (!empty) wcsp->postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
 	  break; }
 	default: {
 	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
 	  newctr = wcsp->getCtr(res);
 	  assert(newctr->arity() == scopeSize);
-	  break; }
-	}
-	if (newctr) {
 	  bool empty = true;
 	  String oldtuple(ctr->arity(),CHAR_FIRST);
 	  EnumeratedVariable* scopeNewCtr[newctr->arity()];
@@ -1067,6 +1107,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 	  assert(newctr->connected());
 	  if (empty && newctr->universal()) newctr->deconnect(true);
 	  else newctr->propagate();
+	  break; }
 	}
   }
   assert(xy->connected());

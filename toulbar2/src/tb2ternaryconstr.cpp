@@ -45,7 +45,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 		for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
 		  Cost cost = tab[a * sizeY * sizeZ + b * sizeZ + c];
 		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
-		  if (!CUT(cost, wcsp->getUb())) {
+		  if (!CUT(cost, wcsp->getUb()) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
 			if (functionalX) {
 			  if (functionX[b * sizeZ + c] == WRONG_VAL) functionX[b * sizeZ + c] = x->toValue(a);
 			  else functionalX = false;
@@ -239,13 +239,13 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
         pair<Value,Value> support = supportX[xindex];
         if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
             getCost(x,y,z,*iterX,support.first,support.second) > MIN_COST) {
-
+        	support = make_pair(y->getInf(),z->getInf());
             Cost minCost = MAX_COST;
 			if (functionalZ) {
 			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
 				Value valZ = getFunctionZ(x,y, *iterX, *iterY);
 				if (valZ != WRONG_VAL && z->canbe(valZ)) {
-				  Cost cost = getCost(x,y,z, *iterX,*iterY,valZ);
+					Cost cost = getCost(x,y,z, *iterX,*iterY,valZ);
                     if (GLB(&minCost, cost)) {
                         support = make_pair(*iterY,valZ);
                     }
@@ -255,7 +255,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
 			  for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
 				Value valY = getFunctionY(x,z, *iterX, *iterZ);
 				if (valY != WRONG_VAL && y->canbe(valY)) {
-				  Cost cost = getCost(x,y,z, *iterX,valY,*iterZ);
+					Cost cost = getCost(x,y,z, *iterX,valY,*iterZ);
                     if (GLB(&minCost, cost)) {
 					  support = make_pair(valY,*iterZ);
                     }
@@ -264,7 +264,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
 			} else {
 			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
                 for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
-				  Cost cost = getCost(x,y,z, *iterX,*iterY,*iterZ);
+                	Cost cost = getCost(x,y,z, *iterX,*iterY,*iterZ);
                     if (GLB(&minCost, cost)) {
                         support = make_pair(*iterY,*iterZ);
                     }
@@ -314,7 +314,7 @@ template <typename T1, typename T2, typename T3, typename T4, typename T5, typen
         pair<Value,Value> support = (supportReversed)?make_pair(supportX[xindex].second,supportX[xindex].first):make_pair(supportX[xindex].first,supportX[xindex].second);
         if (y->cannotbe(support.first) || z->cannotbe(support.second) || 
             getCostWithBinaries(x,y,z, *iterX,support.first,support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
-
+        	support = make_pair(y->getInf(),z->getInf());
             Cost minCost = MAX_COST;
 			if (functionalZ) {
 			  for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
