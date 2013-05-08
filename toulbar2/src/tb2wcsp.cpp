@@ -51,7 +51,7 @@ LcLevelType ToulBar2::LcLevel = LC_EDAC;
 bool ToulBar2::QueueComplexity = false;
 bool ToulBar2::binaryBranching = true;
 bool ToulBar2::lastConflict = true;
-bool ToulBar2::dichotomicBranching = true;
+int ToulBar2::dichotomicBranching = 1;
 unsigned int ToulBar2::dichotomicBranchingSize = 10;
 bool ToulBar2::sortDomains = false;
 map<int, ValueCost *> ToulBar2::sortedDomains;
@@ -63,6 +63,8 @@ int ToulBar2::minsumDiffusion = 0;
 bool ToulBar2::Static_variable_ordering=false;
 int ToulBar2::weightedDegree = 10000;
 bool ToulBar2::weightedTightness = false;
+bool ToulBar2::MSTDAC = false;
+int ToulBar2::DEE = 1;
 int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
@@ -84,6 +86,7 @@ bool ToulBar2::uai_firstoutput = true;
 TProb ToulBar2::markov_log = 0;
 bool ToulBar2::xmlflag = false;
 string ToulBar2::map_file;
+bool ToulBar2::maxsateval = false;
 
 int ToulBar2::resolution = 7;
 TProb ToulBar2::errorg = 0.05;
@@ -101,7 +104,7 @@ int ToulBar2::pedigreePenalty = 0;
 int ToulBar2::vac = 0;
 Cost ToulBar2::costThreshold = UNIT_COST;
 Cost ToulBar2::costThresholdPre = UNIT_COST;
-Cost ToulBar2::costMultiplier = UNIT_COST;
+double ToulBar2::costMultiplier = UNIT_COST;
 Cost ToulBar2::relaxThreshold = MIN_COST;
 
 ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
@@ -141,7 +144,7 @@ int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
-			objectiveChanged(false), nbNodes(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
+			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
 			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
@@ -829,7 +832,7 @@ void WCSP::preprocessing() {
 		}
 		posConstrs = constrs.size();
 		posElimTernConstrs = elimTernOrder;
-		cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
+		if (ToulBar2::verbose >= 0) cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
 	}
 
 	propagate();
@@ -929,7 +932,7 @@ void WCSP::preprocessing() {
 
 	if (ToulBar2::minsumDiffusion && ToulBar2::vac) vac->minsumDiffusion();
 	if (ToulBar2::vac) {
-		cout << "Preprocessing ";
+		if (ToulBar2::verbose >= 0) cout << "Preprocessing ";
 		vac->printStat(true);
 		//    	vac->afterPreprocessing();
 		for (unsigned int i = 0; i < vars.size(); i++)
@@ -985,6 +988,10 @@ void WCSP::preprocessing() {
 					<< ToulBar2::elimDegree << endl;
 		}
 	}
+
+#ifdef BOOST
+	if (ToulBar2::MSTDAC) spanningTreeOrdering();
+#endif
 }
 
 Value WCSP::getDomainSizeSum() {
@@ -1037,7 +1044,7 @@ unsigned int WCSP::medianDomainSize() const {
   unsigned int pos = 0;
   for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) {domain[pos]=getDomainSize(i); pos++;}
   assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-  return stochastic_selection<int>(domain, 0, nbunvars, nbunvars / 2);
+  return stochastic_selection<int>(domain, 0, nbunvars-1, nbunvars / 2);
 }
 
 unsigned int WCSP::medianDegree() const {
@@ -1047,7 +1054,7 @@ unsigned int WCSP::medianDegree() const {
   unsigned int pos = 0;
   for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) {degree[pos]=getTrueDegree(i); pos++;}
   assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-  return stochastic_selection<int>(degree, 0, nbunvars, nbunvars / 2);
+  return stochastic_selection<int>(degree, 0, nbunvars-1, nbunvars / 2);
 }
 
 void WCSP::printNCBuckets() {
@@ -1244,11 +1251,9 @@ void WCSP::dump(ostream& os, bool original) {
 	//####################" end dump dot file ###############################""
 	//#######################dump degree distribution ###################
 #ifdef BOOST
-	if (getenv("TB2GRAPH")) {
-		cout << "Connected components: " << connectedComponents() << endl;
-		cout << "Biconnected components: " << biConnectedComponents() << endl;
-		cout << "Diameter : " << diameter() << endl;
-	}
+	cout << "Connected components: " << connectedComponents() << endl;
+    cout << "Biconnected components: " << biConnectedComponents() << endl;
+	cout << "Diameter : " << diameter() << endl;
 #endif
 
 	int* degDistrib = new int[vars.size()];
@@ -1297,8 +1302,18 @@ bool WCSP::verify() {
 	for (unsigned int i = 0; i < vars.size(); i++) {
 		if (vars[i]->unassigned()) {
 			if (td) {
-				if (td->isActiveAndInCurrentClusterSubTree(vars[i]->getCluster())) if (!vars[i]->verifyNC()) return false;
-			} else if (!vars[i]->verifyNC()) return false;
+				if (td->isActiveAndInCurrentClusterSubTree(vars[i]->getCluster())) {
+					if (!vars[i]->verifyNC()) return false;
+#ifdef DEECOMPLETE
+					if (ToulBar2::DEE && !vars[i]->verifyDEE()) return false;
+#endif
+				}
+			} else {
+				if (!vars[i]->verifyNC()) return false;
+#ifdef DEECOMPLETE
+				if (ToulBar2::DEE && !vars[i]->verifyDEE()) return false;
+#endif
+			}
 		}
 		// Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
 		//isEAC may change current support for variables and constraints
@@ -1329,6 +1344,7 @@ void WCSP::whenContradiction() {
 	EAC1.clear();
 	EAC2.clear();
 	Eliminate.clear();
+	DEE.clear();
 	objectiveChanged = false;
 	nbNodes++;
 }
@@ -1370,6 +1386,7 @@ void WCSP::propagateNC() {
 			}
 		}
 	}
+	if (objectiveChanged || !NC.empty()) propagateNC();
 }
 
 void WCSP::propagateIncDec() {
@@ -1423,6 +1440,40 @@ void WCSP::propagateSeparator() {
 	if (ToulBar2::verbose >= 2) cout << "PendingSeparator size: " << PendingSeparator.getSize() << endl;
 	for (SeparatorList::iterator iter = PendingSeparator.begin(); iter != PendingSeparator.end(); ++iter) {
 		(*iter)->propagate();
+	}
+}
+
+void WCSP::propagateDEE() {
+	if (ToulBar2::verbose >= 2) cout << "DEEQueue size: " << DEE.getSize() << endl;
+	assert(NC.empty());
+	while (!DEE.empty()) {
+		EnumeratedVariable *x = (EnumeratedVariable *) DEE.pop();
+		if (x->unassigned()) {
+			if (ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && getStore()->getDepth()==0)) {
+				for (EnumeratedVariable::iterator itera = x->begin(); itera != x->end(); ++itera ) {
+					for (EnumeratedVariable::iterator iterb = x->lower_bound(*itera +1); iterb != x->end(); ++iterb ) {
+						assert(x->canbe(*itera));
+					    assert(x->canbe(*iterb));
+						assert(*itera != *iterb);
+						x->propagateDEE(*itera, *iterb, false);
+						if (x->cannotbe(*itera)) break;
+					}
+				}
+			} else {
+				Value a = x->getSupport();
+				Value b = x->getMaxCostValue();
+				assert(x->canbe(a) && x->getCost(a)==MIN_COST);
+			    assert(x->canbe(b) && x->getCost(b)==x->getMaxCost());
+				if (a == b) {
+					assert(x->getMaxCost() == MIN_COST);
+					if (a != x->getSup()) b = x->getSup();
+					else b = x->getInf();
+				}
+				assert(a != b);
+				x->propagateDEE(a,b);
+			}
+			propagateNC(); // DEE assumes NC already done
+		}
 	}
 }
 
@@ -1499,49 +1550,57 @@ void WCSP::propagate() {
 	do {
 		do {
 			do {
-				eliminate();
-				while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
-						|| ToulBar2::LcLevel >= LC_FDAC) && !AC.empty()) || (ToulBar2::LcLevel >= LC_DAC
-						&& !DAC.empty()) || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
-					propagateIncDec();
-					if (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb())) propagateEAC();
-					assert(IncDec.empty());
-					if (ToulBar2::LcLevel >= LC_DAC) propagateDAC();
-					assert(IncDec.empty());
-					if (ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) propagateAC();
-					assert(IncDec.empty());
+				do {
+					eliminate();
+					while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
+							|| ToulBar2::LcLevel >= LC_FDAC) && !AC.empty()) || (ToulBar2::LcLevel >= LC_DAC
+									&& !DAC.empty()) || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
+						propagateIncDec();
+						if (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb())) propagateEAC();
+						assert(IncDec.empty());
+						if (ToulBar2::LcLevel >= LC_DAC) propagateDAC();
+						assert(IncDec.empty());
+						if (ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) propagateAC();
+						assert(IncDec.empty());
 
-					Cost oldLb = getLb();
-					bool cont = true;
-					while (cont) {
-						oldLb = getLb();
-						cont = false;
-						for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-							(*(it))->propagate();
-							if (ToulBar2::LcLevel == LC_SNIC) if (!IncDec.empty()) cont = true; //For detecting value removal during SNIC enforcement
-							propagateIncDec();
+						Cost oldLb = getLb();
+						bool cont = true;
+						while (cont) {
+							oldLb = getLb();
+							cont = false;
+							for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
+								(*(it))->propagate();
+								if (ToulBar2::LcLevel == LC_SNIC) if (!IncDec.empty()) cont = true; //For detecting value removal during SNIC enforcement
+								propagateIncDec();
+							}
+							if (ToulBar2::LcLevel == LC_SNIC) if (!NC.empty() || objectiveChanged) cont = true; //For detecting value removal and upper bound change
+							propagateNC();
+							if (ToulBar2::LcLevel == LC_SNIC) if (oldLb != getLb() || !AC.empty()) {
+								cont = true;
+								AC.clear();//For detecting value removal and lower bound change
+							}
 						}
-						if (ToulBar2::LcLevel == LC_SNIC) if (!NC.empty() || objectiveChanged) cont = true; //For detecting value removal and upper bound change
 						propagateNC();
-						if (ToulBar2::LcLevel == LC_SNIC) if (oldLb != getLb() || !AC.empty()) {
-							cont = true;
-							AC.clear();//For detecting value removal and lower bound change
-						}
 					}
-					propagateNC();
-				}
-			} while (!Eliminate.empty());
+				} while (!Eliminate.empty());
 
-			if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
-			if (ToulBar2::vac) {
-//				assert(verify());
-				if (vac->firstTime()) {
-					vac->init();
-					cout << "Lb before VAC: " << getLb() << endl;
+				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
+				if (ToulBar2::vac) {
+					//				assert(verify());
+					if (vac->firstTime()) {
+						vac->init();
+						cout << "Lb before VAC: " << getLb() << endl;
+					}
+					vac->propagate();
 				}
-				vac->propagate();
-			}
-		} while (ToulBar2::vac && !vac->isVAC());
+			} while (ToulBar2::vac && !vac->isVAC());
+			if (ToulBar2::DEE) propagateDEE();
+		} while (objectiveChanged || !NC.empty() || !IncDec.empty()
+				 || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
+				 || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
+			     || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())
+			     || !Eliminate.empty()
+			     || (ToulBar2::vac && !vac->isVAC()));
 		// TO BE DONE AFTER NORMAL PROPAGATION
 		if (td) propagateSeparator();
 	} while (objectiveChanged);
@@ -1550,7 +1609,6 @@ void WCSP::propagate() {
 	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
 		(*(it))->end();
 	}
-
 	assert(verify());
 	assert(!objectiveChanged);
 	assert(NC.empty());
@@ -1562,6 +1620,8 @@ void WCSP::propagate() {
 	assert(EAC1.empty());
 	assert(EAC2.empty());
 	assert(Eliminate.empty());
+	if (ToulBar2::DEE) assert(DEE.empty());
+	else DEE.clear();
 	nbNodes++;
 }
 
@@ -2331,6 +2391,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 	for (int i = order.size() - 1; i >= 0; i--) {
 		if (ToulBar2::verbose >= 1) cout << " " << getVar(order[i])->getName();
 		getVar(order[i])->setDACOrder(order.size() - 1 - i);
+		if (ToulBar2::DEE>=2) getVar(order[i])->queueDEE();
 	}
 	if (ToulBar2::verbose >= 1) cout << endl;
 
@@ -2414,7 +2475,7 @@ TProb WCSP::SumLogLikeCost(TProb logc1, TProb logc2) const {
 void WCSP::visit(int i, vector <int>&revdac, vector <bool>& marked, const vector< vector<int> >&listofsuccessors ) {
    marked[i] = true;
   for (unsigned int  j = 0 ; j < listofsuccessors[i].size(); j++) {
-  // for (unsigned int  j = listofsuccessors[i].size()-1 ; j == 0 ; j--) {
+//   for (int  j = listofsuccessors[i].size()-1 ; j >= 0 ; j--) {
       if (!marked[listofsuccessors[i][j]]) visit(listofsuccessors[i][j],revdac,marked,listofsuccessors) ;
     }
    revdac.push_back(i);

@@ -105,6 +105,7 @@ public:
 	/// \brief Cartesian product of current domain sizes
 	/// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
+    virtual Long getNbDEE() const =0;		///< \brief number of value removals due to dead-end elimination
 
 	/// \defgroup modeling Variable and cost function modeling
 	/// Modeling a Weighted CSP consists in creating variables and cost functions.\n

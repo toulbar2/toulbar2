@@ -58,8 +58,10 @@ class WCSP : public WeightedCSP {
 	Queue EAC2;							///< EAC queue (non backtrackable list)
 	Queue Eliminate;					///< Variable Elimination queue (non backtrackable list)
 	SeparatorList PendingSeparator;		///< List of pending separators for BTD-like methods (backtrackable list)
+	Queue DEE;							///< Dead-End Elimination queue (non backtrackable list)
 	bool objectiveChanged;				///< flag if lb or ub has changed (NC propagation needs to be done)
 	Long nbNodes;                       ///< current number of calls to propagate method (roughly equal to number of search nodes), used as a time-stamp by Queue methods
+	Long nbDEE;							///< number of value removals due to DEE
 	Constraint *lastConflictConstr;		///< hook for last conflict variable heuristic
 	int maxdomainsize;					///< maximum initial domain size found in all variables
 	vector<GlobalConstraint*> globalconstrs;	///< a list of all original global constraints (also inserted in constrs)
@@ -128,7 +130,7 @@ public:
 
 	/// \brief enforces problem upper bound when exploring an alternative search node
 	void enforceUb() {
-		if (CUT((((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), ub)) THROWCONTRADICTION;
+		if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), ub)) THROWCONTRADICTION;
 		objectiveChanged=true;
 	}
 
@@ -136,7 +138,7 @@ public:
 	/// \deprecated
 	void decreaseUb(Cost newUb) {
 		if (newUb < ub) {
-			if (CUT((((lb % ToulBar2::costMultiplier) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), newUb)) THROWCONTRADICTION;
+			if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), newUb)) THROWCONTRADICTION;
 			ub = newUb;
 			objectiveChanged=true;
 		}
@@ -149,7 +151,7 @@ public:
 		if (addLb > MIN_COST) {
 			//		   incWeightedDegree(addLb);
 			Cost newLb = lb + addLb;
-			if (CUT((((newLb % ToulBar2::costMultiplier) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb), ub)) THROWCONTRADICTION;
+			if (CUT((((newLb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?(newLb + ToulBar2::costMultiplier):newLb), ub)) THROWCONTRADICTION;
 			lb = newLb;
 			objectiveChanged=true;
 			if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb, getSolver());
@@ -254,6 +256,7 @@ public:
 	int connectedComponents();		///< \deprecated
 	int biConnectedComponents();	///< \deprecated
 	void minimumDegreeOrdering();	///< \deprecated
+	void spanningTreeOrdering();
 #endif
 
 	int makeEnumeratedVariable(string n, Value iinf, Value isup);
@@ -298,6 +301,7 @@ public:
     const vector<Value> &getSolution() {return solution;}
     void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
     void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}
+    void printSolutionMaxSAT(ostream &os) {os << "v"; for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << ((solution[i])?((int) i+1):-((int) i+1));} ; os << endl;}
 
 	void print(ostream& os);								///< \brief print current domains and active cost functions (see \ref verbosity)
 	void dump(ostream& os, bool original = true);			///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
@@ -334,7 +338,9 @@ public:
 	}
 	void printNCBuckets();
 
-	Long getNbNodes() {return nbNodes;}
+	Long getNbNodes() const {return nbNodes;}
+	Long getNbDEE() const {return nbDEE;}
+	void incNbDEE(Long v = 1LL) {nbDEE += v;}
 
 	void queueNC(DLink<VariableWithTimeStamp> *link) {NC.push(link, nbNodes);}
 	void queueInc(DLink<VariableWithTimeStamp> *link) {IncDec.push(link, INCREASE_EVENT, nbNodes);}
@@ -346,6 +352,7 @@ public:
 	void queueEliminate(DLink<VariableWithTimeStamp> *link) { Eliminate.push(link, nbNodes);  }
 	void queueSeparator(DLink<Separator *> *link) { PendingSeparator.push_back(link, true); }
 	void unqueueSeparator(DLink<Separator *> *link) { PendingSeparator.erase(link, true); }
+	void queueDEE(DLink<VariableWithTimeStamp> *link) {DEE.push(link, nbNodes);}
 
 	void propagateNC();			///< \brief removes forbidden values
 	void propagateIncDec();		///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
@@ -355,6 +362,7 @@ public:
 	Queue *getQueueEAC1() {return &EAC1;}
 	void propagateEAC();		///< \brief ensures unary existential arc consistency supports
 	void propagateSeparator();	///< \brief exploits graph-based learning
+	void propagateDEE();		///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
 
 	/// \brief sorts the list of constraints associated to each variable based on smallest problem variable indexes
 	/// \warning side-effect: updates DAC order according to an existing variable elimination order
