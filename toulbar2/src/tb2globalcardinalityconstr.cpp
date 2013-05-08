@@ -1,6 +1,9 @@
 #include "tb2globalcardinalityconstr.hpp"
 #include "tb2wcsp.hpp"
 
+#define upper_bound first
+#define lower_bound second
+
 GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
 	buildIndex();
 }

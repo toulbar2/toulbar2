@@ -2,9 +2,6 @@
 #include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
 
-#define upper_bound first
-#define lower_bound second
-
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint 
 {
 	private:
