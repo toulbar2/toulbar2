@@ -277,6 +277,7 @@ public:
 
 	void fusion( Cluster* ci, Cluster* cj );
 	bool reduceHeight( Cluster* c, Cluster *father );
+	int getVarMinDomainDivMaxWeightedDegree(TVars *vars);
     void splitClusterRec( Cluster* c,  Cluster* father, unsigned int maxsize );
     TVars boostingVarElimRec( Cluster* c,  Cluster* father,  Cluster* grandfather, unsigned int maxsize );
     void mergeClusterRec( Cluster* c,  Cluster* father, unsigned int maxsepsize, unsigned int minpropervar );
