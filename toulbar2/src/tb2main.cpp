@@ -162,6 +162,8 @@ enum {
 	NO_OPT_sortDomains,
 	OPT_weightedDegree,
 	NO_OPT_weightedDegree,
+	OPT_weightedTightness,
+	NO_OPT_weightedTightness,
    	OPT_nbDecisionVars,
 	OPT_elimDegree,
 	NO_OPT_elimDegree,
@@ -191,6 +193,10 @@ enum {
 	NO_OPT_preprocessNary,
 	OPT_QueueComplexity,
 	NO_OPT_QueueComplexity,
+	OPT_MSTDAC,
+	NO_OPT_MSTDAC,
+	OPT_DEE,
+	NO_OPT_DEE,
 	OPT_lds,
 	NO_OPT_lds,
 	OPT_restart,
@@ -279,12 +285,14 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_lastConflict, 			(char*) "-c:", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "-no--c", 				SO_NONE 	},
 	{ NO_OPT_lastConflict, 			(char*) "--lastConflict--off", 		SO_NONE 	},
-	{ OPT_dichotomicBranching,		(char*) "-d", 				SO_NONE 	},
+	{ OPT_dichotomicBranching,		(char*) "-d", 				SO_OPT 	},
 	{ NO_OPT_dichotomicBranching,		(char*) "-d:", 				SO_NONE 	},
 	{ OPT_sortDomains,		(char*) "-sortd", 				SO_NONE 	},
 	{ NO_OPT_sortDomains,		(char*) "-sortd:", 				SO_NONE 	},
 	{ OPT_weightedDegree,			(char*) "-q", 				SO_OPT 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
+	{ OPT_weightedTightness,	    (char*) "-m",       			  	SO_NONE    	},
+	{ NO_OPT_weightedTightness,		(char*) "-m:",             		   	SO_NONE    	},
 	{ OPT_nbDecisionVars,			(char*) "-var", 				SO_REQ_SEP		},
 
 	{ OPT_elimDegree,			(char*) "-e", 				SO_OPT			},
@@ -312,7 +320,11 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_preprocessNary,			(char*) "-h", 				SO_OPT		},
 	{ NO_OPT_preprocessNary,		(char*) "-h:", 				SO_NONE			},
 
-	{ OPT_QueueComplexity,			(char*) "-o", 				SO_NONE			},
+	{ OPT_QueueComplexity,			(char*) "-o", 				SO_NONE		},
+	{ OPT_MSTDAC,			        (char*) "-mst", 			SO_NONE		},
+	{ NO_OPT_MSTDAC,			    (char*) "-mst:", 			SO_NONE		},
+	{ OPT_DEE,			(char*) "-dee", 			SO_OPT 		},
+	{ NO_OPT_DEE,		(char*) "-dee:",			SO_OPT			},
 	{ OPT_lds,				(char*) "-l", 				SO_OPT			},
 	{ NO_OPT_lds,	 			(char*) "-l:", 				SO_NONE			},
 	{ OPT_restart,	 			(char*) "-L", 				SO_OPT			},
@@ -510,7 +522,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	if (Narycsp_Path!=NULL)
 	{
 		printf ("env variable NARYCPS founded: narycsp path = %s \n",Narycsp_Path);
-		sprintf(line,"%s%cnarycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
+		sprintf(line,"%s%cnarycsp %s %s 0 1 1 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
 		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", Narycsp_Path,PATH_SEP_CHR, fich, filename);
 
 	}
@@ -519,7 +531,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 
 		printf ("narycsp default path: %s \n",CurrentBinaryPath);
 
-		sprintf(line,"%snarycsp %s %s 0 1 5 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
+		sprintf(line,"%snarycsp %s %s 0 1 1 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
 
 		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", CurrentBinaryPath,PATH_SEP_CHR, fich, filename);
 
@@ -662,10 +674,10 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value";
 	if (ToulBar2::weightedDegree) cerr << " (default option if #costfunctions<" << ToulBar2::weightedDegree << ")";
+	cerr << "   -m : cost-based variable ordering heuristic (in conjunction with -q and -c)";
+	if (ToulBar2::weightedTightness) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -d : search using dichotomic branching instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize;
-	if (ToulBar2::dichotomicBranching) cerr << " (default option)";
-	cerr << endl;
+	cerr << "   -d=[integer] : search using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
 	cerr << "   -sortd : sort domains based on increasing unary costs (warning! works only for binary WCSPs)";
 	if (ToulBar2::sortDomains) cerr << " (default option)";
 	cerr << endl;
@@ -679,11 +691,17 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::costfuncSeparate) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -h=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
-	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h:)" << endl;
+#ifdef BOOST
+	cerr << "   -mst : maximum spanning tree DAC ordering";
+	if (ToulBar2::MSTDAC) cerr << " (default option)";
+	cerr << endl;
+#endif
+	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -dee:)" << endl;
 	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
+	cerr << "   -dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is " << ToulBar2::DEE << ")" << endl;
 	cerr << "   -l=[integer] : limited discrepancy search (discrepancy bound = " << maxdiscrepancy << " by default)";
 	if (ToulBar2::lds) cerr << " (default option)";
 	cerr << endl;
@@ -691,7 +709,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::restart>=0) cerr << " (default option)";
 	cerr << endl;
 #ifndef WINDOWS
-	cerr << "   -i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\")" << endl;
+	cerr << "   -i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\") (warning! only for small integer costs)" << endl;
 #endif
 	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
 	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
@@ -768,9 +786,13 @@ int _tmain(int argc, TCHAR * argv[])
 	char buf [512];
 	char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
 	Cost ub = MAX_COST;
-	ToulBar2::verbose = 0;
-	ToulBar2::elimDegree = 3; 
-	char *random_desc = NULL ; // benchmarck decription set from command line;
+	ToulBar2::elimDegree = 3;
+	// Configuration for MaxSAT Evaluation
+//	ToulBar2::maxsateval = true;
+//	ToulBar2::verbose = -1;
+//	ToulBar2::binaryBranching = false;
+//	ToulBar2::lds = 1;
+	char *random_desc = NULL ; // benchmark description set from command line;
 
 	//default file extension : can be enforced using --foo_ext option in command line
 	
@@ -791,7 +813,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-	cout << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2012"<<endl;
+	if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2013"<<endl;
 	// cout << "Binary Path="<<CurrentBinaryPath<<endl;
 
 	// --------------------------simple opt ----------------------
@@ -970,10 +992,15 @@ int _tmain(int argc, TCHAR * argv[])
 			} else if (args.OptionId() == NO_OPT_lastConflict ) { ToulBar2::lastConflict = false; }
 
 			if (args.OptionId() == OPT_dichotomicBranching ) { 
-				ToulBar2::binaryBranching = true;
-				ToulBar2::dichotomicBranching = true;
+				if(args.OptionArg() == NULL ) {
+					ToulBar2::dichotomicBranching = 1;
+				} else {
+					int dico = atoi(args.OptionArg());
+					if (dico > 0) ToulBar2::dichotomicBranching = dico;
+					cout << "dichotomicBranching=" << ToulBar2::dichotomicBranching << endl;
+				}
 			} else if (args.OptionId() == NO_OPT_dichotomicBranching ) { 
-				ToulBar2::dichotomicBranching = false;
+				ToulBar2::dichotomicBranching = 0;
 			}
 
 			if (args.OptionId() == OPT_sortDomains ) {
@@ -991,6 +1018,13 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::weightedDegree = 0;
 				if (ToulBar2::debug) cout << "ToulBar2::weightedDegree = false" << endl;
 			} 
+
+			if (args.OptionId() == OPT_weightedTightness ) {
+				ToulBar2::weightedTightness = true;
+				ToulBar2::binaryBranching = true;
+				ToulBar2::lastConflict = true;
+				if (!ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
+			} else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = false; }
 
 			// LIMIT BRANCHING ON FIRST nbDecisionVars VARIABLES OPTION
 			if ( args.OptionId() == OPT_nbDecisionVars )
@@ -1081,7 +1115,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if ( args.OptionId() == OPT_costMultiplier)
 			{
-				Cost co = string2Cost(args.OptionArg());
+				double co = atof(args.OptionArg());
 				if (co > MIN_COST) ToulBar2::costMultiplier = co;
 			}
 
@@ -1125,6 +1159,19 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::costfuncSeparate = false;
 			}
 
+			if (args.OptionId() == NO_OPT_DEE)
+			{
+			    if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
+				ToulBar2::DEE = 0;
+			} else if (args.OptionId() == OPT_DEE) {
+				ToulBar2::DEE = 1;
+				if (args.OptionArg() != NULL) {
+					int dee = atoi(args.OptionArg());
+					if (dee >= 0) ToulBar2::DEE = dee;
+				}
+				if (ToulBar2::debug) cout << "dead-end elimination: " << ToulBar2::DEE << endl;
+			}
+
 			// pre projection of nary cost functions
 			if ( args.OptionId() == OPT_preprocessNary)
 			{
@@ -1143,6 +1190,8 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 
 			if ( args.OptionId() == OPT_QueueComplexity) ToulBar2::QueueComplexity = true;
+			if ( args.OptionId() == OPT_MSTDAC) ToulBar2::MSTDAC = true;
+			else if ( args.OptionId() == NO_OPT_MSTDAC) ToulBar2::MSTDAC = false;
 
 			// LDS 
 			if ( args.OptionId() == OPT_lds)
@@ -1351,6 +1400,10 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::preprocessNary  = 0;
 			    if (ToulBar2::debug) cout << "decomposition of cost functions OFF" << endl;
 				ToulBar2::costfuncSeparate = false;
+			    if (ToulBar2::debug) cout << "maximum spanning tree DAC ordering OFF" << endl;
+				ToulBar2::MSTDAC = false;
+			    if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
+				ToulBar2::DEE = 0;
 			}
 
 		}
@@ -1429,12 +1482,12 @@ int _tmain(int argc, TCHAR * argv[])
 			// wcnf or cnf file
 
 			if(check_file_ext(glob.File(n),file_extension_map["wcnf_ext"]) ) {
-				cout <<  "loading wcnf file:" << glob.File(n) << endl;
+				if (ToulBar2::verbose >= 0) cout <<  "loading wcnf file:" << glob.File(n) << endl;
 				ToulBar2::wcnf = true;
 				strext = ".wcnf";
 				strfile = glob.File(n);
 			} else if(check_file_ext(glob.File(n),file_extension_map["cnf_ext"]) ) {
-				cout <<  "loading cnf file:" << glob.File(n) << endl;
+				if (ToulBar2::verbose >= 0) cout <<  "loading cnf file:" << glob.File(n) << endl;
 				ToulBar2::wcnf = true;
 				strext = ".cnf";
 				strfile = glob.File(n);
@@ -1574,10 +1627,18 @@ int _tmain(int argc, TCHAR * argv[])
 		//	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
 		ToulBar2::elimDegree = 0;
 	}
-	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree_preprocessing >= 0)
+	if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && ToulBar2::elimDegree >= 0)
+	{
+		//	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
+		ToulBar2::elimDegree = -1;
+	}
+	if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0)
 	{
 		//	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with generic variable elimination" << endl;
 		ToulBar2::elimDegree_preprocessing = -1;
+	}
+	if (ToulBar2::allSolutions || ToulBar2::isZ) {
+		ToulBar2::DEE = 0;
 	}
 	if (ToulBar2::Static_variable_ordering && ToulBar2::btdMode >= 1)
 	{
@@ -1649,8 +1710,8 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	if (ub==MIN_COST)
 	{
-		cout << "Initial upperbound equal to zero!" << endl;
-		cout << "No solution found by initial propagation!" << endl;
+		if (ToulBar2::verbose >= 0) cout << "Initial upperbound equal to zero!" << endl;
+		if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
 	    if (ToulBar2::isZ) {
 		  if (ToulBar2::uai) {
 			if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
@@ -1661,8 +1722,12 @@ int _tmain(int argc, TCHAR * argv[])
 		  }
 		  cout << "Log10(Z)= ";
 		  cout << -numeric_limits<TProb>::infinity() << endl;
-	    }		
-		cout << "end." << endl;
+	    }
+	    if (ToulBar2::maxsateval) {
+	    	cout << "o 0" << endl;
+	    	cout << "s UNSATISFIABLE" << endl;
+	    }
+	    if (ToulBar2::verbose >= 0) cout << "end." << endl;
 		if (ToulBar2::uai) ToulBar2::solution_file.close();
 		return 0;
 	}
@@ -1770,7 +1835,7 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	catch (Contradiction)
 	{
-		cout << "No solution found by initial propagation!" << endl;
+		if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
 	    if (ToulBar2::isZ) {
 		  if (ToulBar2::uai) {
 			if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
@@ -1781,9 +1846,13 @@ int _tmain(int argc, TCHAR * argv[])
 		  }
 		  cout << "Log10(Z)= ";
 		  cout << -numeric_limits<TProb>::infinity() << endl;
-	    }		
+	    }
+	    if (ToulBar2::maxsateval) {
+	    	cout << "o " << solver->getWCSP()->getUb() << endl;
+	    	cout << "s UNSATISFIABLE" << endl;
+	    }
 	}
-	cout << "end." << endl;
+	if (ToulBar2::verbose >= 0) cout << "end." << endl;
 	if (ToulBar2::uai) ToulBar2::solution_file.close();
 
 	// for the competition it was necessary to write a file with the optimal sol
