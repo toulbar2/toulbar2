@@ -83,6 +83,12 @@ ss << t;
 return ss.str();
 }
 
+template <typename T>
+void free_all( T & t ) {
+    T tmp;
+    t.swap( tmp );
+}
+
 #include "tb2system.hpp"
 
 // Cormen et al, 1990. pages 152, 158, and 184
@@ -117,7 +123,7 @@ int stochastic_partition(T A[], int p, int r) {
 }
 
 template<class T>
-int stochastic_selection(T A[], int p, int r, int i) {
+T stochastic_selection(T A[], int p, int r, int i) {
   if (p == r) return A[p];
   int q = stochastic_partition(A, p, r);
   int k = q - p + 1;
