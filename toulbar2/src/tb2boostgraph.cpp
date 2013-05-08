@@ -225,20 +225,29 @@ void WCSP::spanningTreeOrdering()
   prim_minimum_spanning_tree(G, &p[0]);
 
   double tight = 0;
+  bool tightok = true;
   vector<int> roots;
   vector< vector<int> > listofsuccessors(n, vector<int>());
   if (ToulBar2::verbose >= 0) cout << "Maximum spanning tree DAC ordering"; // << endl;
   for (size_t i = 0; i != p.size(); ++i) {
     if (p[i] != i) {
-//      cout << "parent[" << i << "] = " << p[i] << " (" << getVar(i)->getConstr(getVar(p[i]))->getTightness() << ")" << endl;
-      tight += getVar(i)->getConstr(getVar(p[i]))->getTightness();
+      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i]));
+      if (bctr) {
+//      cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
+          tight += bctr->getTightness();
+      } else {
+    	  tightok = false;
+      }
       listofsuccessors[p[i]].push_back(i);
     } else {
       roots.push_back(i);
 //      cout << "parent[" << i << "] = no parent" << endl;
     }
   }
-  if (ToulBar2::verbose >= 0) cout << " (" << 100.0*tight/alltight << "%)" << endl;
+  if (ToulBar2::verbose >= 0) {
+	  if (tightok) cout << " (" << 100.0*tight/alltight << "%)";
+	  cout << endl;
+  }
 
   vector<bool> marked(n, false);
   vector<int> revdac;
