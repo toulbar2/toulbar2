@@ -24,6 +24,8 @@ protected:
 
     bool watchForIncrease;	///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease;	///< \warning should be true if there exists a cost function on this variable watching for decrease events
+    ConstraintLink DEE;		///< \brief residue for dead-end elimination
+    vector<ConstraintLink> DEE2;		///< \brief residue for generalized dead-end elimination
 
     void init();
         
@@ -103,6 +105,11 @@ public:
     bool elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
     bool elimVar( TernaryConstraint* xyz );
 
+    void queueDEE();
+    void propagateDEE(Value a, Value b, bool dee = true);
+    bool verifyDEE(Value a, Value b);
+    bool verifyDEE();
+
     // merge current cost functions to x's list by replacing current variable y by x thanks to functional constraint xy (i.e., y := functional[x])
     void mergeTo( BinaryConstraint *xy, map<Value, Value> &functional);
     bool canbeMerged();
@@ -156,7 +163,9 @@ public:
         if (assigned()) {
             if (v <= getValue()) return iterator(this, domain.lower_bound(getValue()));
             else return end();
-        } else return iterator(this, domain.lower_bound(v));
+        } else if (v > sup) {
+        	return end();
+        } else return iterator(this, domain.lower_bound(max(getInf(), v)));
     }
 
     //Finds the first available element whose value is lower or equal to v
@@ -164,7 +173,9 @@ public:
         if (assigned()) {
             if (v >= getValue()) return iterator(this, domain.upper_bound(getValue()));
             else return end();
-        } else return iterator(this, domain.upper_bound(v));
+        } else if (v < inf) {
+        	return end();
+        } else return iterator(this, domain.upper_bound(min(getSup(), v)));
     }
     
     

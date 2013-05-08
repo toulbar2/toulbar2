@@ -69,6 +69,7 @@ public:
     
     //Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v) {
+    	assert(toIndex(v) >= 0 && toIndex(v) < initSize);
         iterator iter(&all[toIndex(v)]);
         if (cannotbe(v)) {
             ++iter;
@@ -78,6 +79,7 @@ public:
     
     //Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v) {
+    	assert(toIndex(v) >= 0 && toIndex(v) < initSize);
         iterator iter(&all[toIndex(v)]);
         if (cannotbe(v)) {
             --iter;
