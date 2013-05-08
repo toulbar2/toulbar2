@@ -22,6 +22,7 @@ protected:
     DLink<Value> *allVars;
     BTList<Value> *unassignedVars;
     int lastConflictVar;
+    void *searchSize;
 
     BigInteger nbSol;
     Long nbSGoods;				//number of #good which created
@@ -46,6 +47,7 @@ protected:
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);
     void remove(int varIndex, Value value);
+    void remove(int varIndex, ValueCost *array, int first, int last);
     void conflict() {}
     void enforceUb();
     void singletonConsistency();
