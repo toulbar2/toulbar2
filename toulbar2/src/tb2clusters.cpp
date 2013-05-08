@@ -1027,6 +1027,31 @@ bool TreeDecomposition::reduceHeight( Cluster* c, Cluster* cparent )
   return false;
 }
 
+int TreeDecomposition::getVarMinDomainDivMaxWeightedDegree(TVars *vars)
+{
+  int varIndex = -1;
+  Cost worstUnaryCost = MIN_COST;
+  double best = MAX_VAL - MIN_VAL;
+
+  for (TVars::iterator iter = vars->begin(); iter!= vars->end(); ++iter) {
+		Cost unarymediancost = MIN_COST;
+		int domsize = wcsp->getDomainSize(*iter);
+		if (ToulBar2::weightedTightness) {
+		   ValueCost array[domsize];
+		   wcsp->getEnumDomainAndCost(*iter, array);
+		   unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize-1, domsize/2).cost;
+		}
+        double heuristic = (double) domsize / (double) (wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+        if (varIndex < 0 || heuristic < best - epsilon * best
+            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+  }
+  return varIndex;
+}
+
 void TreeDecomposition::splitClusterRec( Cluster* c,  Cluster* father, unsigned int maxsize )
 {
   TVars cvars = c->getVars();
@@ -1043,14 +1068,15 @@ void TreeDecomposition::splitClusterRec( Cluster* c,  Cluster* father, unsigned 
 	if (father) cedges.erase(father);
 	while (cproper.size() > 0) {
 	  TVars cnewvars;
-	  TVars::iterator it = cproper.begin();
-	  for (unsigned int i = 0; i < maxsize && it != cproper.end(); i++) {
-		cnewvars.insert(*it);
-		++it;
+	  int varIndex = getVarMinDomainDivMaxWeightedDegree(&cproper);
+	  for (unsigned int i = 0; i < maxsize && varIndex >= 0; i++) {
+		cnewvars.insert(varIndex);
+		cproper.erase(varIndex);
+		varIndex = getVarMinDomainDivMaxWeightedDegree(&cproper);
 	  }
-	  TVars cpropernew;
-	  difference(cproper, cnewvars, cpropernew);
-	  cproper = cpropernew;
+//	  TVars cpropernew;
+//	  difference(cproper, cnewvars, cpropernew);
+//	  cproper = cpropernew;
 	  if (!cprev) {
 		c->getVars().clear();
 		c->addVars(csep);
@@ -1305,9 +1331,9 @@ int TreeDecomposition::makeRooted()
 		roots.push_back(root);
 		visited.insert(root);
 		while(reduceHeight(root,NULL));
+		if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
 		if (ToulBar2::maxSeparatorSize>=0||ToulBar2::minProperVarSize>=2) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
 		if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1) boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
-		if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
 		while(reduceHeight(root,NULL));
 		makeRootedRec(root, visited);
 		makeDescendants(root);
@@ -1846,7 +1872,9 @@ void TreeDecomposition::newSolution( Cost lb )
 		}
 		file << endl;
     }
-
+  	if (ToulBar2::maxsateval) {
+  				  cout << "o " << lb << endl;
+  	}
 	if(ToulBar2::xmlflag) {
 		cout << "o " << lb << endl;
 		wcsp->solution_XML();

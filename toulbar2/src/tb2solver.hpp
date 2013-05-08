@@ -11,6 +11,8 @@
 template <class T> struct DLink;
 template <class T> class BTList;
 
+const double epsilon = 1e-6; // 1./100001.
+
 class Solver : public WeightedCSPSolver
 {
 protected:
