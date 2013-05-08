@@ -1,7 +1,6 @@
 
 #ifdef BOOST
 #include <boost/config.hpp>
-#include <boost/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/graphviz.hpp>
@@ -9,6 +8,7 @@
 #include <boost/graph/biconnected_components.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
 #include <boost/graph/minimum_degree_ordering.hpp>
+#include <boost/graph/prim_minimum_spanning_tree.hpp>
 
 using namespace boost;
 
@@ -27,9 +27,13 @@ typedef adjacency_list< vecS, vecS, undirectedS, no_property,
                         property< edge_weight_t, int, property < edge_component_t, std::size_t > > > Graph;
 typedef graph_traits < Graph >::vertex_descriptor Vertex;
 typedef graph_traits < Graph >::edge_descriptor Edge;
+
+typedef adjacency_list< vecS, vecS, undirectedS, no_property,
+                        property< edge_weight_t, double, property < edge_component_t, std::size_t > > > GraphD;
 #endif
 
 #include "tb2wcsp.hpp"
+#include "tb2binconstr.hpp"
 
 #ifdef BOOST
 static void addConstraint(Constraint *c, Graph& g)
@@ -44,9 +48,20 @@ static void addConstraint(Constraint *c, Graph& g)
         }
     }
 }
-#endif
 
-#ifdef BOOST
+static void addConstraint(Constraint *c, GraphD& g, double maxweight = 1000000)
+{
+    property_map<GraphD, edge_weight_t>::type weight = get(edge_weight, g);
+    int a = c->arity();
+    for(int i=0;i<a;i++) {
+        for(int j=i+1;j<a;j++) {
+            Variable* vari = c->getVar(i);
+            Variable* varj = c->getVar(j);
+            weight[add_edge( vari->wcspIndex, varj->wcspIndex, g).first] = maxweight-c->getTightness();
+        }
+    }
+}
+
 int WCSP::connectedComponents()
 {
     Graph G;
@@ -74,9 +89,7 @@ int WCSP::connectedComponents()
     
     return res;
 }
-#endif
 
-#ifdef BOOST 
 int WCSP::biConnectedComponents()
 {
     Graph G;
@@ -91,14 +104,13 @@ int WCSP::biConnectedComponents()
     vector<Vertex> art_points;
     articulation_points(G, back_inserter(art_points));
     cout << "Articulation points: " << art_points.size() <<  endl;
-    for (unsigned int i=0; i<art_points.size(); i++) cout << " " << art_points[i];
-	cout << endl;
+    if (art_points.size() > 0) {
+    	for (unsigned int i=0; i<art_points.size(); i++) cout << " " << art_points[i];
+    	cout << endl;
+    }
     return num;
 }
-#endif
 
-
-#ifdef BOOST     
 int WCSP::diameter()
 {
   Graph G;
@@ -142,12 +154,9 @@ int WCSP::diameter()
 
   return maxd;
 }
-#endif
 
 inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->wcspIndex); }
 
-
-#ifdef BOOST   
 /// \bug reordering of vars array is dubious!!! (invalidates further use of variable indexes)    
 void WCSP::minimumDegreeOrdering()
 {
@@ -177,11 +186,13 @@ void WCSP::minimumDegreeOrdering()
      delta,
      id);
      
-  cout << "Minimum Degree Order:";
-  for (size_t i=0; i < num_vertices(G); ++i) {
-    cout << " " << inverse_perm[i];
+  if( ToulBar2::verbose >= 1 ) {
+	  cout << "Minimum Degree Order:";
+	  for (size_t i=0; i < num_vertices(G); ++i) {
+		cout << " " << inverse_perm[i];
+	  }
+	  cout << endl;
   }
-  cout << endl;
   
   for (size_t i=0; i < num_vertices(G); ++i) {
     vars[i]->wcspIndex = num_vertices(G) - perm[i] - 1;
@@ -192,6 +203,61 @@ void WCSP::minimumDegreeOrdering()
   }
   // update DAC ordering
   setDACOrder(inverse_perm);
+}
+
+void WCSP::spanningTreeOrdering()
+{
+  double alltight = 0;
+  double maxt = 0;
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {double t = elimBinConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+
+  GraphD G;
+  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G, maxt);
+
+  int n = num_vertices(G);
+
+  vector < graph_traits < GraphD >::vertex_descriptor > p(n);
+  prim_minimum_spanning_tree(G, &p[0]);
+
+  double tight = 0;
+  vector<int> roots;
+  vector< vector<int> > listofsuccessors(n, vector<int>());
+  if (ToulBar2::verbose >= 0) cout << "Maximum spanning tree DAC ordering"; // << endl;
+  for (size_t i = 0; i != p.size(); ++i) {
+    if (p[i] != i) {
+//      cout << "parent[" << i << "] = " << p[i] << " (" << getVar(i)->getConstr(getVar(p[i]))->getTightness() << ")" << endl;
+      tight += getVar(i)->getConstr(getVar(p[i]))->getTightness();
+      listofsuccessors[p[i]].push_back(i);
+    } else {
+      roots.push_back(i);
+//      cout << "parent[" << i << "] = no parent" << endl;
+    }
+  }
+  if (ToulBar2::verbose >= 0) cout << " (" << 100.0*tight/alltight << "%)" << endl;
+
+  vector<bool> marked(n, false);
+  vector<int> revdac;
+  for (int i = roots.size()-1; i >= 0; i--) { visit(roots[i],revdac,marked,listofsuccessors); }
+  for (int i = n-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+
+  if( ToulBar2::verbose >= 1 ) {
+	 cout << "DAC maximum spanning tree reverse order:";
+	 for (int i = 0; i < n; i++) {
+	   cout << " " << revdac[i];
+	 }
+	 cout << endl;
+  }
+
+  assert( revdac.size() == numberOfVariables() );
+  setDACOrder(revdac);
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->computeTightness();
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->computeTightness();
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->computeTightness();
 }
 #endif
 
