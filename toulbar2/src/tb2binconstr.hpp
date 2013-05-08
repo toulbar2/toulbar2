@@ -301,6 +301,7 @@ public:
         }
     }
     void remove(int varIndex) {
+      if (varIndex == 0) y->queueDEE(); else x->queueDEE();
 	  if (ToulBar2::LcLevel==LC_AC) {
 		if (varIndex == 0) findSupportY();
 		else findSupportX();
@@ -325,7 +326,11 @@ public:
     void decrease(int index) {if (index==0) x->queueAC(); else y->queueAC();}  // Trick! instead of remove(index);
     void assign(int varIndex) {
         deconnect();                    // Warning! deconnection has to be done before the projection
-        if (varIndex == 0) projectY(); else projectX();
+        if (varIndex == 0) {
+        	projectY();
+        } else {
+        	projectX();
+        }
     }
 
   void fillEAC2(int varIndex) {
@@ -393,6 +398,50 @@ public:
 	  }
 	}
     
+    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int varIndex, Value a, Value b) {
+//    	cout << "getMaxCost(" << getVar(varIndex)->getName() << ") " << a << " <-> " << b << endl << *this << endl;
+    	Cost maxcosta = MIN_COST;
+    	Cost diffcosta = MIN_COST;
+    	Cost maxcostb = MIN_COST;
+    	Cost diffcostb = MIN_COST;
+    	if (varIndex == 0) {
+    		Cost ucosta = x->getCost(a);
+    		Cost ucostb = x->getCost(b);
+    		for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+    			Cost costa = getCost(a, *iterY);
+    			Cost costb = getCost(b, *iterY);
+    			if (costa > maxcosta) maxcosta = costa;
+    			if (costb > maxcostb) maxcostb = costb;
+    			Cost ucosty = y->getCost(*iterY);
+				if (!CUT(ucostb + costb + ucosty + wcsp->getLb(), wcsp->getUb())) {
+					if (costa-costb > diffcosta) diffcosta = costa-costb;
+				}
+				if (!CUT(ucosta + costa + ucosty + wcsp->getLb(), wcsp->getUb())) {
+					if (costb-costa > diffcostb) diffcostb = costb-costa;
+				}
+    		}
+    	} else {
+    		Cost ucosta = y->getCost(a);
+    		Cost ucostb = y->getCost(b);
+    		for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+       			Cost costa = getCost(*iterX, a);
+       			Cost costb = getCost(*iterX, b);
+    			if (costa > maxcosta) maxcosta = costa;
+    			if (costb > maxcostb) maxcostb = costb;
+    			Cost ucostx = x->getCost(*iterX);
+				if (!CUT(ucostb + costb + ucostx + wcsp->getLb(), wcsp->getUb())) {
+					if (costa-costb > diffcosta) diffcosta = costa-costb;
+				}
+				if (!CUT(ucosta + costa + ucostx + wcsp->getLb(), wcsp->getUb())) {
+					if (costb-costa > diffcostb) diffcostb = costb-costa;
+				}
+    		}
+    	}
+    	assert(maxcosta >= diffcosta);
+    	assert(maxcostb >= diffcostb);
+    	return make_pair(make_pair(maxcosta,diffcosta), make_pair(maxcostb,diffcostb));
+    }
+
 	double computeTightness() {
 	   int count = 0;
 //	   double sum = 0;
@@ -405,7 +454,7 @@ public:
 	       }
 	    }
 //	    tight = sum / (double) count;
-	    tight = stochastic_selection<Cost>(costs, 0, count, 1 * count / 4);
+	    tight = stochastic_selection<Cost>(costs, 0, count-1, count / 2);
 	    return tight;
 	}
 

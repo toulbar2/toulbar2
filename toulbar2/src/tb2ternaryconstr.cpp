@@ -38,13 +38,13 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
     supportY = vector< pair<Value,Value> >(sizeY,make_pair(x->getInf(),z->getInf()));
     supportZ = vector< pair<Value,Value> >(sizeZ,make_pair(x->getInf(),y->getInf()));
 
-    costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
+//    costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
     
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
 	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
 		for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
 		  Cost cost = tab[a * sizeY * sizeZ + b * sizeZ + c];
-		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
+//		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
 		  if (!CUT(cost, wcsp->getUb()) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
 			if (functionalX) {
 			  if (functionX[b * sizeZ + c] == WRONG_VAL) functionX[b * sizeZ + c] = x->toValue(a);
@@ -67,6 +67,25 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
     xz = xz_;
     yz = yz_;
                 
+    if (functionalX) {
+    	costsYZ = vector<StoreCost>(sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
+		for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+			for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+				if (functionX[b * sizeZ + c] != WRONG_VAL) costsYZ[b * sizeZ + c] = tab[x->toIndex(functionX[b * sizeZ + c]) * sizeY * sizeZ + b * sizeZ + c];
+			}
+		}
+//    	costs.free_all();
+    } else {
+    	costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+    	  for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+    		for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+    		  costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
+    		}
+    	  }
+        }
+    }
+
     propagate();
 }
 
@@ -160,7 +179,7 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
-    // hard binary constraint costs are not changed
+    // hard ternary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
 	    TreeDecomposition* td = wcsp->getTreeDec();
 	    if(td) td->addDelta(cluster,x,value,cost);
@@ -169,6 +188,11 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
     	
     Cost oldcost = x->getCost(value);
     x->project(value, cost);
+#ifdef DEECOMPLETE
+    int xindex = getIndex(x);
+    getVar((xindex+1) % 3)->queueDEE();
+    getVar((xindex+2) % 3)->queueDEE();
+#endif
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
 }
 
@@ -201,6 +225,11 @@ void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 get
 	  }
 	// }
     xy->addcost(x,y,valx,valy,cost);
+#ifdef DEECOMPLETE
+    getVar(0)->queueDEE();
+    getVar(1)->queueDEE();
+    getVar(2)->queueDEE();
+#endif
 }
 
 template <typename T1, typename T2, typename T3>
@@ -232,7 +261,8 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
     assert(getIndex(y) < getIndex(z));  // check that support.first/.second is consistent with y/z parameters
     assert(connected());
     wcsp->revise(this);
-    if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << "," << z->getName() << endl;
+    if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "?" << "," << y->getName() << ((functionalY)?"!":"") << "," << z->getName() << ((functionalZ)?"!":"") << endl;
+    if (ToulBar2::verbose >= 7) cout << *x << endl << *y << endl << *z << endl << *this;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
     	unsigned int xindex = x->toIndex(*iterX);
@@ -306,7 +336,8 @@ template <typename T1, typename T2, typename T3, typename T4, typename T5, typen
 {
     assert(connected());
     wcsp->revise(this);   
-    if (ToulBar2::verbose >= 3) cout << "findFullSupportEAC C" << x->getName() << "," << y->getName()<< "," << z->getName() << endl;
+    if (ToulBar2::verbose >= 3) cout << "findFullSupport C"<< x->getName() << ((functionalX)?"!":"") << "," << y->getName() << ((functionalY)?"!":"") << "," << z->getName() << ((functionalZ)?"!":"") << endl;
+    if (ToulBar2::verbose >= 7) cout << *x << endl << *y << endl << *z << endl << *this << *xy << *xz << *yz;
     bool supportBroken = false;
     bool supportReversed = (getIndexY > getIndexZ);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {

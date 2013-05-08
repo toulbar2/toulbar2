@@ -78,7 +78,6 @@ void BinaryConstraint::dump(ostream& os, bool original)
  * Propagation methods
  *
  */
-
 bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
@@ -92,7 +91,9 @@ bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, ve
     	
     Cost oldcost = x->getCost(value);
     x->project(value, cost);
-
+#ifdef DEECOMPLETE
+    getVarDiffFrom(x)->queueDEE();
+#endif
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
 }
 
@@ -190,6 +191,7 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, Enumera
 template <typename T>
 void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
+	x->queueDEE();
     bool supportBroken = false;
     wcsp->revise(this);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {

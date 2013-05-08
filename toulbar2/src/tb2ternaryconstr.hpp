@@ -155,6 +155,7 @@ protected:
     vector< pair<Value,Value> > supportX;
     vector< pair<Value,Value> > supportY;
     vector< pair<Value,Value> > supportZ;
+    vector<StoreCost> costsYZ;
 
     inline Value getFunctionX(Value vy, Value vz) const {return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)];}
     inline Value getFunctionY(Value vx, Value vz) const {return functionY[x->toIndex(vx) * sizeZ + z->toIndex(vz)];}
@@ -225,7 +226,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
-        Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
+        Cost res = ((costs.empty())?((vx == functionX[iy*sizeZ+iz])?(costsYZ[iy*sizeZ+iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]):wcsp->getUb()):(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -235,7 +236,7 @@ public:
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
-        Cost res = costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]];
+        Cost res = ((costs.empty())?((x->toValue(vindex[0]) == functionX[vindex[1]*sizeZ +vindex[2]])?(costsYZ[vindex[1]*sizeZ+vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]):wcsp->getUb()):(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -244,7 +245,7 @@ public:
     	unsigned int ix = x->toIndex(vx);
     	unsigned int iy = y->toIndex(vy);
     	unsigned int iz = z->toIndex(vz);
-        Cost res = costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz];
+        Cost res = ((costs.empty())?((vx == functionX[iy*sizeZ+iz])?(costsYZ[iy*sizeZ+iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]):wcsp->getUb()):(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         if (xy->connected()) res += xy->getCost(x,y,vx,vy);
         if (xz->connected()) res += xz->getCost(x,z,vx,vz);
         if (yz->connected()) res += yz->getCost(y,z,vy,vz);
@@ -257,7 +258,7 @@ public:
         vindex[ getIndex(xx) ] = pair<unsigned int, Value>(xx->toIndex(vx),vx);
         vindex[ getIndex(yy) ] = pair<unsigned int, Value>(yy->toIndex(vy),vy);
         vindex[ getIndex(zz) ] = pair<unsigned int, Value>(zz->toIndex(vz),vz);
-        Cost res = costs[vindex[0].first*sizeY*sizeZ + vindex[1].first*sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first];
+        Cost res = ((costs.empty())?((vindex[0].second == functionX[vindex[1].first*sizeZ+vindex[2].first])?(costsYZ[vindex[1].first*sizeZ+vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]):wcsp->getUb()):(costs[vindex[0].first*sizeY*sizeZ + vindex[1].first*sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]));
         if (xy->connected()) res += xy->getCost(x,y,vindex[0].second,vindex[1].second);
         if (xz->connected()) res += xz->getCost(x,z,vindex[0].second,vindex[2].second);
         if (yz->connected()) res += yz->getCost(y,z,vindex[1].second,vindex[2].second);
@@ -267,26 +268,28 @@ public:
 
    void addCosts( TernaryConstraint* xyz ) {
 	    unsigned int ix, iy, iz;
-		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
+		for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
         	ix = x->toIndex(*iterx); iy = y->toIndex(*itery); iz = z->toIndex(*iterz);
 			// if(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] < wcsp->getUb()) // BUG with BTD (local ub, deltaCosts missing)
-        	costs[ix*sizeY*sizeZ + iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
+        	if (costs.empty()) {
+        		if (*iterx == functionX[iy * sizeZ + iz]) costsYZ[iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
+        	} else costs[ix*sizeY*sizeZ + iy*sizeZ + iz] += xyz->getCost(x,y,z, *iterx,*itery,*iterz);
 	    }}}
     }
 
 
     void addCosts( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, vector<Cost>& costsin ) {
-		assert(costsin.size() <= costs.size());
+		assert(costsin.size() <= costs.size() || functionalX);
 
 		unsigned int vindex[3];
 		unsigned int sizeYin = yin->getDomainInitSize();
 		unsigned int sizeZin = zin->getDomainInitSize();
        
-		for (EnumeratedVariable::iterator iterx = xin->begin(); iterx != xin->end(); ++iterx) {
 		for (EnumeratedVariable::iterator itery = yin->begin(); itery != yin->end(); ++itery) {
 		for (EnumeratedVariable::iterator iterz = zin->begin(); iterz != zin->end(); ++iterz) {
+		for (EnumeratedVariable::iterator iterx = xin->begin(); iterx != xin->end(); ++iterx) {
 
 			unsigned int vxin = xin->toIndex(*iterx);
 			unsigned int vyin = yin->toIndex(*itery);
@@ -297,7 +300,9 @@ public:
 	        vindex[ getIndex(zin) ] = vzin;
 	        
 			// if(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]]  < wcsp->getUb()) // BUG with BTD (local ub, deltaCosts missing)
-			costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
+	        if (costs.empty()) {
+	        	if (x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) costsYZ[vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
+	        } else costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += costsin[vxin*sizeYin*sizeZin + vyin*sizeZin + vzin];
 	    }}}
     }
 
@@ -306,7 +311,9 @@ public:
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
-		costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c;
+        if (costs.empty()) {
+        	if (vxi == functionX[vy * sizeZ + vz]) costsYZ[vy*sizeZ + vz] += c;
+        } else costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c;
     }
 
     void addCost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
@@ -321,7 +328,9 @@ public:
         vindex[ getIndex(yin) ] = vy;
         vindex[ getIndex(zin) ] = vz;
 	        
-		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
+        if (costs.empty()) {
+        	if (x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) costsYZ[vindex[1]*sizeZ + vindex[2]] += c;
+        } else costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
     }
 
     void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
@@ -332,7 +341,13 @@ public:
         vindex[ getIndex(xin) ] = vx;
         vindex[ getIndex(yin) ] = vy;
         vindex[ getIndex(zin) ] = vz;
-		costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] = c;
+        if (costs.empty()) {
+           if (x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) costsYZ[vindex[1]*sizeZ + vindex[2]] = c;
+           else if (!CUT(c,wcsp->getUb())) {
+        	   cerr << "cannot reset a forbidden tuple in ternary functional cost functions!" << endl;
+        	   exit(EXIT_FAILURE);
+           }
+        } else costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] = c;
     }
 
 	pair<Value,Value> getSupport(EnumeratedVariable* var, Value v) {
@@ -373,9 +388,9 @@ public:
     
     void remove(int varIndex) {
         switch(varIndex) {
-            case 0: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1) findSupportY(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
-            case 1: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
-            case 2: if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1)) findSupportY(); break;
+            case 0: y->queueDEE(); z->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1) findSupportY(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 1: x->queueDEE(); z->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+            case 2: x->queueDEE(); y->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1)) findSupportY(); break;
         }
     }
 
@@ -448,6 +463,74 @@ public:
             
     bool verify();
     
+    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int varIndex, Value a, Value b) {
+    	Cost maxcosta = MIN_COST;
+    	Cost diffcosta = MIN_COST;
+    	Cost maxcostb = MIN_COST;
+    	Cost diffcostb = MIN_COST;
+    	if (varIndex == 0) {
+    		Cost ucosta = x->getCost(a);
+    		Cost ucostb = x->getCost(b);
+    		for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+    			Cost ucosty = y->getCost(*iterY);
+    			for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+    				Cost costa = getCost(a, *iterY, *iterZ);
+    				Cost costb = getCost(b, *iterY, *iterZ);
+    				if (costa > maxcosta) maxcosta = costa;
+    				if (costb > maxcostb) maxcostb = costb;
+        			Cost ucostz = z->getCost(*iterZ);
+    				if (!CUT(ucostb + getCostWithBinaries(b, *iterY, *iterZ) + ucosty + ucostz + wcsp->getLb(), wcsp->getUb())) {
+    					if (costa-costb > diffcosta) diffcosta = costa-costb;
+    				}
+    				if (!CUT(ucosta + getCostWithBinaries(a, *iterY, *iterZ) + ucosty + ucostz + wcsp->getLb(), wcsp->getUb())) {
+    					if (costb-costa > diffcostb) diffcostb = costb-costa;
+    				}
+    			}
+    		}
+    	} else if (varIndex == 1) {
+    		Cost ucosta = y->getCost(a);
+    		Cost ucostb = y->getCost(b);
+    		for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+    			Cost ucostx = x->getCost(*iterX);
+    			for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+    				Cost costa = getCost(*iterX, a, *iterZ);
+    				Cost costb = getCost(*iterX, b, *iterZ);
+    				if (costa > maxcosta) maxcosta = costa;
+    				if (costb > maxcostb) maxcostb = costb;
+        			Cost ucostz = z->getCost(*iterZ);
+    				if (!CUT(ucostb + getCostWithBinaries(*iterX, b, *iterZ) + ucostx + ucostz + wcsp->getLb(), wcsp->getUb())) {
+    					if (costa-costb > diffcosta) diffcosta = costa-costb;
+    				}
+    				if (!CUT(ucosta + getCostWithBinaries(*iterX, a, *iterZ) + ucostx + ucostz + wcsp->getLb(), wcsp->getUb())) {
+    					if (costb-costa > diffcostb) diffcostb = costb-costa;
+    				}
+    			}
+    		}
+    	} else {
+    		assert(varIndex == 2);
+    		Cost ucosta = z->getCost(a);
+    		Cost ucostb = z->getCost(b);
+    		for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+    			Cost ucostx = x->getCost(*iterX);
+        		for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+    				Cost costa = getCost(*iterX, *iterY, a);
+    				Cost costb = getCost(*iterX, *iterY, b);
+    				if (costa > maxcosta) maxcosta = costa;
+    				if (costb > maxcostb) maxcostb = costb;
+        			Cost ucosty = y->getCost(*iterY);
+    				if (!CUT(ucostb + getCostWithBinaries(*iterX, *iterY, b) + ucostx + ucosty + wcsp->getLb(), wcsp->getUb())) {
+    					if (costa-costb > diffcosta) diffcosta = costa-costb;
+    				}
+    				if (!CUT(ucosta + getCostWithBinaries(*iterX, *iterY, a) + ucostx + ucosty + wcsp->getLb(), wcsp->getUb())) {
+    					if (costb-costa > diffcostb) diffcostb = costb-costa;
+    				}
+    			}
+    		}
+    	}
+    	assert(maxcosta >= diffcosta);
+    	assert(maxcostb >= diffcostb);
+    	return make_pair(make_pair(maxcosta,diffcosta), make_pair(maxcostb,diffcostb));
+    }
 
 	template <typename T1, typename T2, typename T3, typename T4> void projectTernaryBinary( T1 getCost, T2 getCostYZX, T3 addCostYZX, bool functionalX, T4 getFunctionX, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* yzin );
 
@@ -652,6 +735,7 @@ public:
 
   void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Constraint *from1)
 	{
+		assert(!functionalX && costsYZ.empty());
 		x = xin;
 		y = yin;
 		z = zin;
