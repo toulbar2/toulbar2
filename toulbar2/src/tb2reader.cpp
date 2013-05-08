@@ -241,7 +241,7 @@ void WCSP::read_wcsp(const char *fileName)
     assert(vars.empty());
     assert(constrs.empty());
     
-	Cost K = ToulBar2::costMultiplier;    
+	double K = ToulBar2::costMultiplier;
 	if(top < MAX_COST / K)	top = top * K;
 	else top = MAX_COST;
 	updateUb(top);
@@ -307,7 +307,7 @@ void WCSP::read_wcsp(const char *fileName)
 			  if((defval != MIN_COST) || (ntuples > 0))
 				{ 
 				  Cost tmpcost = defval*K;
-				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
 				  int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost);
 				  NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
@@ -323,7 +323,7 @@ void WCSP::read_wcsp(const char *fileName)
 					  buf[i] = '\0';
 					  file >> cost;
 					  Cost tmpcost = cost * K;
-					  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+					  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
 					  String tup = buf;
 					  if (shared) {
 						tuples.push_back(tup);
@@ -405,7 +405,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> c;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
                 }
 				if (shared) {
@@ -454,7 +454,7 @@ void WCSP::read_wcsp(const char *fileName)
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
 					    Cost tmpcost = defval*K;
-						if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+						if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                         costs.push_back(tmpcost);
                     }
                 }
@@ -463,7 +463,7 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> b;
                     file >> cost;
 					Cost tmpcost = cost*K;
-					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                     costs[a * y->getDomainInitSize() + b] = tmpcost;
                 }
 				if (shared) {
@@ -542,14 +542,14 @@ void WCSP::read_wcsp(const char *fileName)
 			  }
 			  for (a = 0; a < x->getDomainInitSize(); a++) {
 				Cost tmpcost = defval*K;
-     			if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+     			if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs.push_back(tmpcost);
 			  }
 			  for (k = 0; k < ntuples; k++) {
                 file >> a;
                 file >> cost;
 				Cost tmpcost = cost*K;
- 	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb())) tmpcost *= MEDIUM_COST;
+ 	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                 unaryconstr.costs[a] = tmpcost;
 			  }
 			  if (shared) {
@@ -1041,7 +1041,7 @@ void WCSP::read_wcnf(const char *fileName)
   ifstream file(fileName);
   if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
 
-  Cost K = ToulBar2::costMultiplier;    
+  double K = ToulBar2::costMultiplier;
   Cost inclowerbound = MIN_COST;
   updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST );
  
@@ -1070,16 +1070,16 @@ void WCSP::read_wcnf(const char *fileName)
   if (format == "wcnf") {
 	getline( file, strtop );
 	if (string2Cost((char*) strtop.c_str())>0) {
-	  cout << "(Weighted) Partial Max-SAT input format" << endl;
+	  cout << "c (Weighted) Partial Max-SAT input format" << endl;
 	  top = string2Cost((char*) strtop.c_str());
 	  if(top < MAX_COST / K)	top = top * K;
 	  else top = MAX_COST;
 	  updateUb(top);
 	} else {
-	  cout << "Weighted Max-SAT input format" << endl;
+	  cout << "c Weighted Max-SAT input format" << endl;
 	}
   } else {
-	cout << "Max-SAT input format" << endl;
+	cout << "c Max-SAT input format" << endl;
 	updateUb((nbclauses+1)*K);
   }
   
@@ -1202,7 +1202,7 @@ void WCSP::read_wcnf(const char *fileName)
 	postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
   }
   histogram();  
-  cout << "Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
+  cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
