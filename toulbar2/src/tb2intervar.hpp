@@ -85,13 +85,13 @@ public:
 
     //Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v) {
-        if (v <= sup) return iterator(this, v);
+        if (v <= sup) return iterator(this, max(getInf(), v));
         else return end();
     }
 
     //Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v) {
-        if (v >= inf) return iterator(this, v);
+        if (v >= inf) return iterator(this, min(getSup(), v));
         else return end();
     }
 
