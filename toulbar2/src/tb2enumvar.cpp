@@ -47,6 +47,12 @@ void EnumeratedVariable::init()
     linkEAC1Queue.content.timeStamp = -1;
     linkEAC2Queue.content.var = this;
     linkEAC2Queue.content.timeStamp = -1;
+    linkDEEQueue.content.var = this;
+    linkDEEQueue.content.timeStamp = -1;
+    DEE.constr = NULL;
+    DEE.scopeIndex = -1;
+    if (ToulBar2::DEE >= 2) DEE2 = vector<ConstraintLink>(getDomainInitSize()*getDomainInitSize(), DEE);
+    queueDEE();
 }
 
 void EnumeratedVariable::getDomain(Value *array)
@@ -118,6 +124,11 @@ void EnumeratedVariable::queueEAC2()
     wcsp->queueEAC2(&linkEAC2Queue);
 }
 
+void EnumeratedVariable::queueDEE()
+{
+	wcsp->queueDEE(&linkDEEQueue);
+}
+
 void EnumeratedVariable::project(Value value, Cost cost)
 {
     assert(cost >= MIN_COST);
@@ -183,6 +194,7 @@ void EnumeratedVariable::findSupport()
 		  projectLB(minCost);
         }
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
+        if (support != newSupport) queueDEE();
         support = newSupport;
     }
 }
@@ -316,6 +328,7 @@ bool EnumeratedVariable::isEAC(Value a)
                 return false;
             }
         }
+        if (support != a) queueDEE();
         support = a;
 #ifndef NDEBUG
         if (ToulBar2::verbose >=4) cout << getName() << "(" << a << ") is EAC!" << endl;
@@ -353,6 +366,7 @@ void EnumeratedVariable::propagateEAC()
         }
         fillEAC2(false);
         if (unassigned()) {
+        	queueDEE();
             // findFullSupportEAC may have inserted current variable in EAC1
 	        if (!linkEAC1Queue.removed) {
                 assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
@@ -365,6 +379,139 @@ void EnumeratedVariable::propagateEAC()
 #endif
         }
     }
+}
+
+void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
+{   //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
+	if (a == b) return;
+	Cost costa = getCost(a);
+	Cost costb = getCost(b);
+	assert(!dee || costa <= costb);
+	Cost totalmaxcosta = costa;
+	Cost totaldiffcosta = costa;
+	Cost totalmaxcostb = costb;
+	Cost totaldiffcostb = costb;
+	ConstraintLink residue = ((dee)?DEE:DEE2[a * getDomainInitSize() + b]);
+	ConstraintLink residue2 = ((dee)?DEE:DEE2[b * getDomainInitSize() + a]);
+	if (costa <= costb && residue.constr && residue.constr->connected() && residue.constr->getVar(residue.scopeIndex) == this) {
+		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue.constr->getMaxCost(residue.scopeIndex, a, b);
+        if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
+        if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
+        if (totaldiffcosta <= getMaxCost()) totaldiffcosta += costs.first.second;
+        if (totaldiffcostb <= getMaxCost()) totaldiffcostb += costs.second.second;
+        if (totaldiffcosta > costb && totaldiffcostb > costa) return;
+	}
+	if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.constr->getVar(residue2.scopeIndex) == this) {
+		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue2.constr->getMaxCost(residue2.scopeIndex, a, b);
+        if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
+        if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
+        if (totaldiffcosta <= getMaxCost()) totaldiffcosta += costs.first.second;
+        if (totaldiffcostb <= getMaxCost()) totaldiffcostb += costs.second.second;
+        if (totaldiffcosta > costb && totaldiffcostb > costa) return;
+	}
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+    	if (costa <= costb && residue.constr == (*iter).constr && residue.scopeIndex == (*iter).scopeIndex) continue;
+    	if (costb <= costa && residue2.constr == (*iter).constr && residue2.scopeIndex == (*iter).scopeIndex) continue;
+    	pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
+        if (costs.second.second > costa) {
+        	if (dee) {
+        		if (costa == costb) DEE = (*iter);
+        	} else DEE2[b * getDomainInitSize() + a] = (*iter);
+        }
+        if (costs.first.second > costb) {
+        	if (dee) DEE = (*iter);
+        	else DEE2[a * getDomainInitSize() + b] = (*iter);
+        }
+        if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
+        if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
+        if (totaldiffcosta <= getMaxCost()) totaldiffcosta += costs.first.second;
+        if (totaldiffcostb <= getMaxCost()) totaldiffcostb += costs.second.second;
+        if (totaldiffcosta > costb && totaldiffcostb > costa) return;
+    }
+    assert((totalmaxcosta >= totaldiffcosta || (totalmaxcosta > getMaxCost() && totaldiffcosta > getMaxCost())));
+    assert((totalmaxcostb >= totaldiffcostb || (totalmaxcostb > getMaxCost() && totaldiffcostb > getMaxCost())));
+    assert(totaldiffcosta <= costb || totaldiffcostb <= costa);
+	if (totalmaxcosta == MIN_COST) {
+	    if (ToulBar2::verbose >= 2) cout << "DEE " << *this << " (" << a << "," << totalmaxcosta << ") -> (*,*)" << endl;
+	    wcsp->incNbDEE(getDomainSize()-1);
+		assign(a);
+		return;
+	}
+	if (totalmaxcostb == MIN_COST) {
+	    if (ToulBar2::verbose >= 2) cout << "DEE " << *this << " (" << b << "," << totalmaxcostb << ") -> (*,*)" << endl;
+	    wcsp->incNbDEE(getDomainSize()-1);
+		assign(b);
+		return;
+	}
+	if (totaldiffcosta <= costb) {
+		if (ToulBar2::verbose >= 2) cout << "DEE " << *this << " (" << a << "," << totaldiffcosta << ") -> (" << b << "," << costb << ")" << endl;
+		wcsp->incNbDEE();
+		remove(b);
+		if (assigned()) return;
+	} else {
+		if (ToulBar2::verbose >= 2) cout << "DEE " << *this << " (" << b << "," << totaldiffcostb << ") -> (" << a << "," << costa << ")" << endl;
+		wcsp->incNbDEE();
+		remove(a);
+		if (assigned()) return;
+	}
+	assert(unassigned());
+    Cost totalmaxcost = min(totalmaxcosta, totalmaxcostb);
+    if (totalmaxcost > getMaxCost()) return;
+    for (iterator iter = begin(); iter != end(); ++iter) {
+    	if (*iter == a) continue;
+    	if (*iter == b) continue;
+		assert(unassigned());
+    	if (getCost(*iter) >= totalmaxcost) {
+    		if (ToulBar2::verbose >= 2) cout << "DEE " << *this << " (" << ((totalmaxcosta<totalmaxcostb)?a:b) << "," << totalmaxcost << ") -> (" << *iter << "," << getCost(*iter) << ")" << endl;
+    	    wcsp->incNbDEE();
+    		remove(*iter);
+    	}
+    }
+}
+
+bool EnumeratedVariable::verifyDEE(Value a, Value b)
+{
+   if (a == b) return true;
+   Cost totalmaxcost = getCost(a);
+   Cost totaldiffcost = getCost(a);
+   for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+	    pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
+        if (totalmaxcost + wcsp->getLb() < wcsp->getUb()) totalmaxcost += costs.first.first;
+        if (totaldiffcost + wcsp->getLb() < wcsp->getUb()) totaldiffcost += costs.first.second;
+    }
+    if (getCost(b) >= ((ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost)) {
+    	cout << *this << " has missed dominated value (" << a << "," << ((ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost) << ") -> (" << b << "," << getCost(b) << ")"  << endl;
+    	return true; // should be false but we need to queue all variables each time LB or UB change
+    }
+    for (iterator iter = begin(); iter != end(); ++iter) {
+    	if (*iter == a) continue;
+    	if (*iter == b) continue;
+    	if (getCost(*iter) >= totalmaxcost) {
+    	    cout << *this << " has missed dominated value (" << a << "," << totalmaxcost << ") -> (" << (*iter) << "," << getCost(*iter) << ")"  << endl;
+    		return true; // should be false but we need to queue all variables each time LB or UB change
+     	}
+    }
+    return true;
+}
+
+bool EnumeratedVariable::verifyDEE()
+{
+	if (ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0)) {
+		for (iterator itera = begin(); itera != end(); ++itera) {
+			for (iterator iterb = begin(); iterb != end(); ++iterb) {
+				if (!verifyDEE(*itera, *iterb)) return false;
+			}
+		}
+	} else {
+		if (getSupport() == getMaxCostValue()) {
+			if (getSupport() != getSup()) {
+				if (!verifyDEE(getSupport(), getSup())) return false;
+			} else {
+				if (!verifyDEE(getSupport(), getInf())) return false;
+			}
+		} else if (!verifyDEE(getSupport(), getMaxCostValue())) return false;
+	}
+	return true;
 }
 
 void EnumeratedVariable::increaseFast(Value newInf)

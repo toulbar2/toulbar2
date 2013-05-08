@@ -21,6 +21,7 @@ protected:
     DLink<VariableWithTimeStamp> linkDACQueue;
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
+    DLink<VariableWithTimeStamp> linkDEEQueue;
 
     bool watchForIncrease;	///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease;	///< \warning should be true if there exists a cost function on this variable watching for decrease events

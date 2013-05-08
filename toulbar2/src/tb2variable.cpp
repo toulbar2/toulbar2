@@ -211,6 +211,7 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
     maxCostValue = a;
     assert(cost >= MIN_COST);
     if (maxCost != cost) {
+    	if (cost > maxCost) queueDEE();
         maxCost = cost;
         int newbucket = min(cost2log2gub(cost), wcsp->getNCBucketSize() - 1);
         changeNCBucket(newbucket);
