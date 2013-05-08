@@ -193,6 +193,9 @@ typedef enum {
 struct ValueCost {
 	Value value;
 	Cost cost;
+	friend bool operator<(const ValueCost &u, const ValueCost &v) {return u.cost < v.cost;}
+	friend bool operator>(const ValueCost &u, const ValueCost &v) {return u.cost > v.cost;}
+	friend bool operator==(const ValueCost &u, const ValueCost &v) {return u.cost == v.cost;}
 };
 
 ///contains all global variables (mainly solver's command-line options)
@@ -209,7 +212,7 @@ public:
 	static int dumpWCSP;
 	static bool approximateCountingBTD;
 	static bool binaryBranching;
-	static bool dichotomicBranching;
+	static int dichotomicBranching;
 	static unsigned int dichotomicBranchingSize;
 	static bool sortDomains;
 	static map<int, ValueCost *> sortedDomains;
@@ -228,6 +231,8 @@ public:
 	static bool lastConflict;
 	static int weightedDegree;
 	static bool weightedTightness;
+	static bool MSTDAC;
+	static int DEE;
     static int nbDecisionVars;
 	static int lds;
 	static bool limited;
@@ -255,7 +260,7 @@ public:
 	static int vac;
 	static Cost costThreshold;
 	static Cost costThresholdPre;
-	static Cost costMultiplier;
+	static double costMultiplier;
 	static Cost relaxThreshold;
 	static ElimOrderType elimOrderType;
 	static bool singletonConsistency;
@@ -270,6 +275,7 @@ public:
 	static int btdSubTree;
 	static int btdRootCluster;
 
+	static bool maxsateval;
 	static bool xmlflag;
 	static TProb markov_log;
 	static string evidence_file;
