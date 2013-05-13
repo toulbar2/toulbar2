@@ -1027,6 +1027,11 @@ bool TreeDecomposition::reduceHeight( Cluster* c, Cluster* cparent )
   return false;
 }
 
+int TreeDecomposition::getNextUnassignedVar(TVars *vars)
+{
+    return *(vars->begin());
+}
+
 int TreeDecomposition::getVarMinDomainDivMaxWeightedDegree(TVars *vars)
 {
   int varIndex = -1;
@@ -1068,11 +1073,11 @@ void TreeDecomposition::splitClusterRec( Cluster* c,  Cluster* father, unsigned 
 	if (father) cedges.erase(father);
 	while (cproper.size() > 0) {
 	  TVars cnewvars;
-	  int varIndex = getVarMinDomainDivMaxWeightedDegree(&cproper);
+	  int varIndex = ((ToulBar2::Static_variable_ordering)?getNextUnassignedVar(&cproper):getVarMinDomainDivMaxWeightedDegree(&cproper));
 	  for (unsigned int i = 0; i < maxsize && varIndex >= 0; i++) {
 		cnewvars.insert(varIndex);
 		cproper.erase(varIndex);
-		varIndex = getVarMinDomainDivMaxWeightedDegree(&cproper);
+		varIndex = ((ToulBar2::Static_variable_ordering)?getNextUnassignedVar(&cproper):getVarMinDomainDivMaxWeightedDegree(&cproper));
 	  }
 //	  TVars cpropernew;
 //	  difference(cproper, cnewvars, cpropernew);

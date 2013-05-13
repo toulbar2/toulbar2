@@ -674,7 +674,7 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value";
 	if (ToulBar2::weightedDegree) cerr << " (default option if #costfunctions<" << ToulBar2::weightedDegree << ")";
-	cerr << "   -m : cost-based variable ordering heuristic (in conjunction with -q and -c)";
+	cerr << "   -m : cost-based variable ordering heuristic (in conjunction with weighted degree heuristic -q)";
 	if (ToulBar2::weightedTightness) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -d=[integer] : search using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
@@ -1009,6 +1009,11 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::sortDomains = false;
 			}
 
+			if (args.OptionId() == OPT_weightedTightness ) {
+				ToulBar2::weightedTightness = true;
+				if (!ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
+			} else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = false; }
+
 			// weitghted Degree (var ordering )
 			if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL ) {
 			    int weighteddegree = atol(args.OptionArg());
@@ -1016,15 +1021,9 @@ int _tmain(int argc, TCHAR * argv[])
 			}   else if ( args.OptionId() == NO_OPT_weightedDegree ) 
 			{
 				ToulBar2::weightedDegree = 0;
+				ToulBar2::weightedTightness = false;
 				if (ToulBar2::debug) cout << "ToulBar2::weightedDegree = false" << endl;
 			} 
-
-			if (args.OptionId() == OPT_weightedTightness ) {
-				ToulBar2::weightedTightness = true;
-				ToulBar2::binaryBranching = true;
-				ToulBar2::lastConflict = true;
-				if (!ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
-			} else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = false; }
 
 			// LIMIT BRANCHING ON FIRST nbDecisionVars VARIABLES OPTION
 			if ( args.OptionId() == OPT_nbDecisionVars )

@@ -140,8 +140,15 @@ int Solver::getVarMinDomainDivMaxWeightedDegree(Cluster *cluster)
 
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
-	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+	    Cost unarymediancost = MIN_COST;
+	   	int domsize = wcsp->getDomainSize(*iter);
+	   	if (ToulBar2::weightedTightness) {
+	   	   ValueCost array[domsize];
+	   	   wcsp->getEnumDomainAndCost(*iter, array);
+	   	   unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize-1, domsize/2).cost;
+	   	}
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1 + unarymediancost; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) domsize / (double) max(deg,(Long)1);
         if (varIndex < 0 || heuristic < best - epsilon * best
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -164,8 +171,15 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster)
 
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
-	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+	    Cost unarymediancost = MIN_COST;
+	   	int domsize = wcsp->getDomainSize(*iter);
+	   	if (ToulBar2::weightedTightness) {
+	   	   ValueCost array[domsize];
+	   	   wcsp->getEnumDomainAndCost(*iter, array);
+	   	   unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize-1, domsize/2).cost;
+	   	}
+	    Long deg = wcsp->getWeightedDegree(*iter) + 1 + unarymediancost; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+        double heuristic = (double) domsize / (double) max(deg,(Long)1);
         if (varIndex < 0 || heuristic < best - epsilon * best
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -230,8 +244,16 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *c
 
   for (TVars::iterator iter = cluster->beginVars(); iter!= cluster->endVars(); ++iter) {
 	if (wcsp->unassigned(*iter)) {
-	    Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
-        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
+		Cost unarymediancost = MIN_COST;
+		int domsize = wcsp->getDomainSize(*iter);
+		if (ToulBar2::weightedTightness) {
+		   ValueCost array[domsize];
+		   wcsp->getEnumDomainAndCost(*iter, array);
+		   unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize-1, domsize/2).cost;
+		}
+        double heuristic = (double) domsize / (double) (wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+//	      Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
+//        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
         if (varIndex < 0 || heuristic < best - epsilon * best
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
