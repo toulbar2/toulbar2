@@ -409,7 +409,8 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
   if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << "     cub: " << cub << "     clb: " << cluster->getLb() << "     lbgood: " << lbgood << "     wcsp->lb: " << wcsp->getLb() << "     wcsp->ub: " << wcsp->getUb() << endl;
 
   int varIndex = -1;
-  if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+  if(ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar(cluster);
+  else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
   else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
   else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
   else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));
@@ -573,7 +574,8 @@ BigInteger Solver::sharpBTD(Cluster *cluster){
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************"<< endl;
 
 	int varIndex = -1;
-	if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
+	if(ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar(cluster);
+	else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxWeightedDegreeLastConflict(cluster));
 	else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized(cluster):getVarMinDomainDivMaxDegreeLastConflict(cluster));
 	else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized(cluster):getVarMinDomainDivMaxWeightedDegree(cluster));
 	else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized(cluster):getVarMinDomainDivMaxDegree(cluster));

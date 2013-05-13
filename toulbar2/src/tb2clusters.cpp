@@ -1079,6 +1079,11 @@ void TreeDecomposition::splitClusterRec( Cluster* c,  Cluster* father, unsigned 
 		cproper.erase(varIndex);
 		varIndex = ((ToulBar2::Static_variable_ordering)?getNextUnassignedVar(&cproper):getVarMinDomainDivMaxWeightedDegree(&cproper));
 	  }
+//	  TVars::iterator it = cproper.begin();
+//	  for (unsigned int i = 0; i < maxsize && it != cproper.end(); i++) {
+//		  cnewvars.insert(*it);
+//		  ++it;
+//	  }
 //	  TVars cpropernew;
 //	  difference(cproper, cnewvars, cpropernew);
 //	  cproper = cpropernew;
@@ -1394,7 +1399,7 @@ int TreeDecomposition::makeRooted()
 		Cluster* c = clusters[i];
 		if(c->getNbVars() > treewidth) treewidth = c->getNbVars();
 	}
-	cout << "Tree decomposition width  : " << treewidth - 1 << endl;
+	if(ToulBar2::verbose >= 0) cout << "Tree decomposition width  : " << treewidth - 1 << endl;
 //	if (treewidth > 30) {cout << "Sorry, cannot perform exact haplotype reconstruction! Please, try approximate methods." << endl; exit(EXIT_FAILURE);} // Warning! QTLmap specific exit
 
 	return height(root);
@@ -1596,7 +1601,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 	}
 
 	int h = makeRooted();
-	cout << "Tree decomposition height : " << h << endl;
+	if(ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
     if (!ToulBar2::approximateCountingBTD)
 	 {
 		 // assign constraints to clusters and check for duplicate ternary constraints
@@ -1662,7 +1667,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 			 }
 		 }
 	 }
-	cout << "Number of clusters        : " << clusters.size() << endl;
+    if(ToulBar2::verbose >= 0) cout << "Number of clusters        : " << clusters.size() << endl;
 	if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1) print();
 	if (ToulBar2::dumpWCSP) dump();
 	assert(verify());

@@ -1450,7 +1450,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if(check_file_ext(glob.File(n),file_extension_map["wcsp_ext"]) ) 
 			{
-				cout <<  "loading wcsp file: "<< glob.File(n)  << endl;
+				if (ToulBar2::verbose >= 0) cout <<  "loading wcsp file: "<< glob.File(n)  << endl;
 				strext = ".wcsp";
 				strfile = glob.File(n);
 			}
@@ -1638,11 +1638,6 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	if (ToulBar2::allSolutions || ToulBar2::isZ) {
 		ToulBar2::DEE = 0;
-	}
-	if (ToulBar2::Static_variable_ordering && ToulBar2::btdMode >= 1)
-	{
-		cout << "Warning! static variable ordering not compatible with BTD-like search methods." << endl;
-		ToulBar2::Static_variable_ordering= false;
 	}
 	if (ToulBar2::lds && ToulBar2::btdMode >= 1)
 	{

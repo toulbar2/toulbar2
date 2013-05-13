@@ -2312,7 +2312,7 @@ void WCSP::buildTreeDecomposition() {
 	double time = cpuTime();
 	if (ToulBar2::approximateCountingBTD) td->buildFromOrderForApprox();
 	else td->buildFromOrder();
-	cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
+	if(ToulBar2::verbose >= 0) cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
 	if (!ToulBar2::approximateCountingBTD) {
 		vector<int> order;
 		td->getElimVarOrder(order);
