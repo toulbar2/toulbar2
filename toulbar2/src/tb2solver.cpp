@@ -671,7 +671,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         nbBacktracks++;
 		if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
-          if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+        	if (ToulBar2::dichotomicBranching==1) {
+              if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+            } else if (ToulBar2::dichotomicBranching==2) {
+              if (increasing) remove(varIndex, sorted, middle, domsize-1); else remove(varIndex, sorted, 0, middle-1);
+            }
         } else assign(varIndex, value);
         recursiveSolveLDS(discrepancy);
     } else {
