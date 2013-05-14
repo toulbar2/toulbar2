@@ -291,7 +291,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_sortDomains,		(char*) "-sortd:", 				SO_NONE 	},
 	{ OPT_weightedDegree,			(char*) "-q", 				SO_OPT 	},
 	{ NO_OPT_weightedDegree, 		(char*) "-q:", 				SO_NONE 	},
-	{ OPT_weightedTightness,	    (char*) "-m",       			  	SO_NONE    	},
+	{ OPT_weightedTightness,	    (char*) "-m",       			  	SO_OPT    	},
 	{ NO_OPT_weightedTightness,		(char*) "-m:",             		   	SO_NONE    	},
 	{ OPT_nbDecisionVars,			(char*) "-var", 				SO_REQ_SEP		},
 
@@ -672,11 +672,8 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value";
-	if (ToulBar2::weightedDegree) cerr << " (default option if #costfunctions<" << ToulBar2::weightedDegree << ")";
-	cerr << "   -m : cost-based variable ordering heuristic (in conjunction with weighted degree heuristic -q)";
-	if (ToulBar2::weightedTightness) cerr << " (default option)";
-	cerr << endl;
+	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value (default value is " << ToulBar2::weightedDegree << ")" << endl;
+	cerr << "   -m=[integer] : variable ordering heuristic based on mean (m=1) or median (m=2) costs (in conjunction with weighted degree heuristic -q) (default value is " << ToulBar2::weightedTightness << ")" << endl;
 	cerr << "   -d=[integer] : search using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
 	cerr << "   -sortd : sort domains based on increasing unary costs (warning! works only for binary WCSPs)";
 	if (ToulBar2::sortDomains) cerr << " (default option)";
@@ -1009,10 +1006,15 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::sortDomains = false;
 			}
 
-			if (args.OptionId() == OPT_weightedTightness ) {
-				ToulBar2::weightedTightness = true;
-				if (!ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
-			} else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = false; }
+			if (args.OptionId() == OPT_weightedTightness) {
+				if (args.OptionArg() != NULL) {
+					int weightedtight = atol(args.OptionArg());
+					if (weightedtight >= 0) ToulBar2::weightedTightness = weightedtight;
+				} else {
+					ToulBar2::weightedTightness = 2;
+				}
+				if (ToulBar2::weightedTightness && !ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
+			} else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = 0; }
 
 			// weitghted Degree (var ordering )
 			if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL ) {
@@ -1021,7 +1023,7 @@ int _tmain(int argc, TCHAR * argv[])
 			}   else if ( args.OptionId() == NO_OPT_weightedDegree ) 
 			{
 				ToulBar2::weightedDegree = 0;
-				ToulBar2::weightedTightness = false;
+				ToulBar2::weightedTightness = 0;
 				if (ToulBar2::debug) cout << "ToulBar2::weightedDegree = false" << endl;
 			} 
 

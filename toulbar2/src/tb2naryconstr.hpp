@@ -98,7 +98,6 @@ class NaryConstraint : public AbstractNaryConstraint
 
     virtual void project( EnumeratedVariable* x ) = 0;
 
-    double computeTightness() { return 0; }
     bool   verify() {return true;}
     void   increase(int index) {}
     void   decrease(int index) {}
@@ -142,6 +141,7 @@ public:
 
 	void project( EnumeratedVariable* x );
 	void sum( NaryConstraintMap* nary );
+    double computeTightness();
 
 	TUPLES::iterator  tuple_it;
 
@@ -232,6 +232,8 @@ class NaryConstrie : public NaryConstraint
 	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 
     void project( EnumeratedVariable* x ) {};
+
+    double computeTightness() { return 0; }
 
     Cost eval( String& s );
 

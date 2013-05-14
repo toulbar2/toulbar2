@@ -40,7 +40,10 @@ public:
         
     bool verify();
     
-    double  computeTightness() { return (double) permitted.size() / x->getDomainSize(); }
+    double  computeTightness() {
+    	tight = (double) penalty * abs(permitted.size() - x->getDomainSize()) / x->getDomainSize();
+    	return tight;
+    }
     
     void print(ostream& os);
     void dump(ostream& os, bool original = true);

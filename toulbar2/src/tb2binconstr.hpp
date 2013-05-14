@@ -444,18 +444,22 @@ public:
 
 	double computeTightness() {
 	   int count = 0;
-//	   double sum = 0;
+	   double sum = 0;
 	   Cost costs[x->getDomainSize()*y->getDomainSize()];
 	   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
 	      for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-//	    	    sum += to_double(min(wcsp->getUb(), getCost(*iterX, *iterY)));
-	    	    costs[count] = min(wcsp->getUb(), getCost(*iterX, *iterY));
+		    	Cost c = getCost(*iterX, *iterY);
+	    	    sum += to_double(min(wcsp->getUb(), c));
+	    	    costs[count] = min(wcsp->getUb(), c);
 				count++;
 	       }
 	    }
-//	    tight = sum / (double) count;
-	    tight = stochastic_selection<Cost>(costs, 0, count-1, count / 2);
-	    return tight;
+	    if (ToulBar2::weightedTightness == 2) {
+	    	tight = to_double(stochastic_selection<Cost>(costs, 0, count-1, count / 2));
+	    } else {
+	    	tight = sum / (double) count;
+	    }
+    	return tight;
 	}
 
 	EnumeratedVariable* commonVar( BinaryConstraint* bctr ) {

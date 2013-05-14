@@ -1277,6 +1277,35 @@ void NaryConstraintMap::preprojectall2()
   }
 }
 
+double NaryConstraintMap::computeTightness()
+{
+	int count = 0;
+	double sum = 0;
+	Cost costs[pf->size()];
+    TUPLES::iterator  it = pf->begin();
+    while(it != pf->end()) {
+        Cost c =  it->second;
+		sum += to_double(min(wcsp->getUb(), c));
+        costs[count] = min(wcsp->getUb(), c);
+        count++;
+        it++;
+    }
+    Long psize = getDomainSizeProduct();
+    if (psize >= LONGLONG_MAX) {
+    	tight = to_double(min(wcsp->getUb(), default_cost));
+    } else {
+    	if (ToulBar2::weightedTightness == 2) {
+    		tight = to_double(stochastic_selection<Cost>(costs, 0, count-1, count / 2)); // TO BE IMPPROVED!!!
+    	} else {
+    		if (psize > count) {
+    			tight =  ((double) default_cost * (psize - count) + sum) / (double) psize;
+    		} else {
+    			tight =  sum / (double) count;
+    		}
+    	}
+    }
+    return tight;
+}
 
 void NaryConstraintMap::print(ostream& os)
 {

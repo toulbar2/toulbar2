@@ -122,17 +122,24 @@ double TernaryConstraint::computeTightness()
 {
    int count = 0;
    double sum = 0;
+   Cost costs[x->getDomainSize()*y->getDomainSize()*z->getDomainSize()];
    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
       for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
 	      for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-			sum += to_double(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ)));
+	    	Cost c = getCost(*iterX, *iterY, *iterZ);
+			sum += to_double(min(wcsp->getUb(), c));
+    	    costs[count] = min(wcsp->getUb(), c);
 			count++;
        }
      }
    }
    
-   tight = sum / (double) count;
-   return tight;
+   if (ToulBar2::weightedTightness == 2) {
+   	tight = to_double(stochastic_selection<Cost>(costs, 0, count-1, count / 2));
+   } else {
+   	tight = sum / (double) count;
+   }
+	return tight;
 }
 
 
