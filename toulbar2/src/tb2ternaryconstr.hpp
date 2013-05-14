@@ -564,13 +564,14 @@ public:
 
 	void extendTernary()
 	{	// extend binary cost functions to the ternary cost function
-		Cost c; 
+		Cost c;
+		bool isbincost = false;
 		for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
 		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
 		for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
-			if(xy->connected()) { c = xy->getCost(x, y, *iterx, *itery); addCost(x,y,z,*iterx,*itery,*iterz, c); }
-			if(xz->connected()) { c = xz->getCost(x, z, *iterx, *iterz); addCost(x,y,z,*iterx,*itery,*iterz, c); }
-			if(yz->connected()) { c = yz->getCost(y, z, *itery, *iterz); addCost(x,y,z,*iterx,*itery,*iterz, c); }
+			if(xy->connected()) { c = xy->getCost(x, y, *iterx, *itery); addCost(x,y,z,*iterx,*itery,*iterz, c); if (c > MIN_COST) isbincost = true; }
+			if(xz->connected()) { c = xz->getCost(x, z, *iterx, *iterz); addCost(x,y,z,*iterx,*itery,*iterz, c); if (c > MIN_COST) isbincost = true; }
+			if(yz->connected()) { c = yz->getCost(y, z, *itery, *iterz); addCost(x,y,z,*iterx,*itery,*iterz, c); if (c > MIN_COST) isbincost = true; }
 		}}}
 
         xy->clearCosts();
@@ -582,9 +583,11 @@ public:
         yz->deconnect(true);
 
         // extend unary costs to the ternary cost function
-        for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) extend(x,*iterx, x->getCost(*iterx), deltaCostsX);
-		for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) extend(y,*itery, y->getCost(*itery), deltaCostsY);
-		for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) extend(z,*iterz, z->getCost(*iterz), deltaCostsZ);
+        if (isbincost && ToulBar2::LcLevel >= LC_FDAC) {
+        	for(EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) extend(x,*iterx, x->getCost(*iterx), deltaCostsX);
+        	for(EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) extend(y,*itery, y->getCost(*itery), deltaCostsY);
+        	for(EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) extend(z,*iterz, z->getCost(*iterz), deltaCostsZ);
+        }
 	}
 
 	BinaryConstraint* commonBinary( TernaryConstraint* t )
