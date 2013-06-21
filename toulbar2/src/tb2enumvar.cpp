@@ -1184,7 +1184,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 			Cost cost = ctr->evalsubstr(oldtuple, ctr);
 			if (cost > MIN_COST) {
 			  empty = false;
-			  costs[(*iterU) * v->getDomainInitSize() + (*iterV)] = cost;
+			  costs[u->toIndex(*iterU) * v->getDomainInitSize() + v->toIndex(*iterV)] = cost;
 			}
           }
       }
@@ -1215,7 +1215,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
           		Cost cost = ctr->evalsubstr(oldtuple, ctr);
           		if (cost > MIN_COST) {
           		  empty = false;
-          		  costs[(*iterU) * v->getDomainInitSize() * w->getDomainInitSize() + (*iterV) * w->getDomainInitSize() + (*iterW)] = cost;
+          		  costs[u->toIndex(*iterU) * v->getDomainInitSize() * w->getDomainInitSize() + v->toIndex(*iterV) * w->getDomainInitSize() + w->toIndex(*iterW)] = cost;
           		}
               }
           }
