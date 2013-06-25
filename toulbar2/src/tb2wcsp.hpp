@@ -172,6 +172,7 @@ public:
 	bool getEnumDomainAndCost(int varIndex, ValueCost *array);
     unsigned int getDomainInitSize(int varIndex) const {assert(vars[varIndex]->enumerated()); return ((EnumeratedVariable *) vars[varIndex])->getDomainInitSize();}   ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     Value toValue(int varIndex, unsigned int idx) {assert(vars[varIndex]->enumerated()); return ((EnumeratedVariable *) vars[varIndex])->toValue(idx);}               ///< \brief gets value from index (warning! assumes EnumeratedVariable)
+    unsigned int toIndex(int varIndex, Value value) {assert(vars[varIndex]->enumerated()); return ((EnumeratedVariable *) vars[varIndex])->toIndex(value);}               ///< \brief gets value from index (warning! assumes EnumeratedVariable)
 	int getDACOrder(int varIndex) const {return vars[varIndex]->getDACOrder();} ///< \brief index of the variable in the DAC variable ordering
 	void updateCurrentVarsId();	///< \brief determines the position of each variable in the current list of unassigned variables (see \ref WCSP::dump)
 

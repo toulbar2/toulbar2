@@ -51,6 +51,7 @@ public:
     virtual bool getEnumDomainAndCost(int varIndex, ValueCost *array) =0;	///< \brief gets current domain values and unary costs in an array
     virtual unsigned int getDomainInitSize(int varIndex) const =0;          ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) =0;	            ///< \brief gets value from index (warning! assumes EnumeratedVariable)
+    virtual unsigned int toIndex(int varIndex, Value value) =0;	            ///< \brief gets index from value (warning! assumes EnumeratedVariable)
 	virtual int getDACOrder(int varIndex) const =0; 	///< \brief index of the variable in the DAC variable ordering
 
     virtual bool assigned(int varIndex) const =0;
