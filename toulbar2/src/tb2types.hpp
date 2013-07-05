@@ -171,6 +171,7 @@ typedef map<int, Value> TAssign;
 typedef void (*externalevent)(int wcspId, int varIndex, Value value, void *solver);
 typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost, void *solver);
 typedef void (*externalsolution)(int wcspId, void *solver);
+typedef void (*externalfunc)();
 
 typedef enum {
 	ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX
@@ -296,6 +297,8 @@ public:
 
 	static int Berge_Dec; // flag for berge acyclic decomposition
 	static int nbvar; // initial number of variable (read in the file) 
+	static externalfunc timeOut;
+	static bool interrupted;
 };
 
 /*

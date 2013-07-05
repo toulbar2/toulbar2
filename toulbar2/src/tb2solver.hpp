@@ -114,6 +114,12 @@ public:
     NbBacktracksOut() {if (ToulBar2::verbose >= 2) cout << "... limit on the number of backtracks reached!" << endl;}
 };
 
+class TimeOut
+{
+public:
+    TimeOut() {if (ToulBar2::verbose >= 2) cout << "... time limit reached!" << endl;}
+};
+
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
 extern "C" int solvesymmax2sat_(int *n, int *m, int *posx, int *posy, double *cost, int *sol);
 

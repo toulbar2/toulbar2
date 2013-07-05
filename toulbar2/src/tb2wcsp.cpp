@@ -136,6 +136,9 @@ TProb ToulBar2::logepsilon = -3;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
+externalfunc ToulBar2::timeOut = NULL;
+bool ToulBar2::interrupted = false;
+
 /*
  * WCSP constructors
  *
@@ -663,10 +666,18 @@ void WCSP::sortConstraints()
 	//	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 	//	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
+//	for (unsigned int i = 0; i< numberOfVariables(); i++) {
+//		cout << "listofsuccessors(" << i << "):";
+//		for (unsigned int a = 0; a < listofsuccessors[i].size(); a++) {
+//			cout << " " << listofsuccessors[i][a];
+//		}
+//		cout << endl;
+//	}
+
 	//Mark native variable
-	for (int i = ToulBar2::nbvar-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	for (int i = ((ToulBar2::nbDecisionVars>0)?ToulBar2::nbDecisionVars:ToulBar2::nbvar)-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 	//Mark q variable only 
-	for (int i = numberOfVariables()-1 ; i > ToulBar2::nbvar-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
+	for (int i = numberOfVariables()-1 ; i > ((ToulBar2::nbDecisionVars>0)?ToulBar2::nbDecisionVars:ToulBar2::nbvar)-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
 	// listofsuccessors.clear(); // appel a la methode clear de l'objet vector
 

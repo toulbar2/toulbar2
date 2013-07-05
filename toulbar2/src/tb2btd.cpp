@@ -279,6 +279,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *c
 
 Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value)
 {
+	if (ToulBar2::interrupted) throw TimeOut();
 	TreeDecomposition* td = wcsp->getTreeDec();
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex,value));
@@ -344,6 +345,7 @@ Cost Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varI
 
 BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value)
 {
+	if (ToulBar2::interrupted) throw TimeOut();
 	Cost cub = 1;
 	Cost lbgood = 0;
 	BigInteger nbSol = 0, nb = 0;

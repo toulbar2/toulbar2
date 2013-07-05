@@ -1822,6 +1822,9 @@ int _tmain(int argc, TCHAR * argv[])
 		}
 		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
 		{
+#ifdef LINUX
+			signal(SIGINT,  timeout);
+#endif
 			if (CSP(solver->getWCSP()->getLb(), solver->getWCSP()->getUb()))
 			{
 				ToulBar2::LcLevel = LC_AC;

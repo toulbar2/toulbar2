@@ -22,9 +22,41 @@ double cpuTime()
   return (res>0)?res:0;
 }
 
+void timeout(int sig)
+{
+  if(ToulBar2::verbose>=0) cout << endl << "Time limit expired... Aborting..." << endl;
+  if (ToulBar2::timeOut) ToulBar2::timeOut();
+  else exit(0);
+}
+
+static struct itimerval thetimer = { {0, 0}, {0, 0} };
+
+/* set a timer (in seconds) */
+void timer(int t)
+{
+ ToulBar2::interrupted = false;
+ signal(SIGVTALRM, timeout);
+ thetimer.it_interval.tv_sec = 0;
+ thetimer.it_interval.tv_usec = 0;
+ thetimer.it_value.tv_sec = t;
+ thetimer.it_value.tv_usec = 0;
+ setitimer(ITIMER_VIRTUAL, &thetimer, NULL);
+}
+
+/* stop the current timer */
+void timerStop()
+{
+ thetimer.it_value.tv_sec = 0;
+ thetimer.it_value.tv_usec = 0;
+ setitimer(ITIMER_VIRTUAL, &thetimer, NULL);
+ ToulBar2::interrupted = false;
+}
+
 #else
 double cpuTime()
 {
   return (double) (clock() / CLOCKS_PER_SEC);
 }
+void timer(int t) {}
+void timerStop() {}
 #endif

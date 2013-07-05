@@ -6,8 +6,10 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
-/* return CPU time in seconds */
-double cpuTime();
+double cpuTime();		///< \brief return CPU time in seconds
+void timeout(int sig);
+void timer(int t); 		///< \brief set a timer (in seconds)
+void timerStop(); 		///< \brief stop a timer
 
 #ifdef WIDE_STRING
 const int MAX_CHAR = WCHAR_MAX;
@@ -185,6 +187,7 @@ inline int cost2log2gub(Long x) {return cost2log2(x);}
 // function mkdir
 #ifdef LINUX
 #include <sys/stat.h>
+#include <signal.h>
 #endif
 
 #ifdef WIN32
