@@ -58,6 +58,7 @@ public:
     virtual bool unassigned(int varIndex) const =0;
     virtual bool canbe(int varIndex, Value v) const =0;
     virtual bool cannotbe(int varIndex, Value v) const =0;
+    virtual Value nextValue(int varIndex, Value v) const =0;          ///< \brief first value after v in the current domain or v if there is no value
 
     virtual void increase(int varIndex, Value newInf) =0;	///< \brief changes domain lower bound
     virtual void decrease(int varIndex, Value newSup) =0;	///< \brief changes domain upper bound

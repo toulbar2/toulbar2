@@ -10,6 +10,7 @@
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2intervar.hpp"
 
 class BinaryConstraint;
 class TernaryConstraint;
@@ -195,6 +196,17 @@ public:
 	bool unassigned(int varIndex) const {return vars[varIndex]->unassigned();}
 	bool canbe(int varIndex, Value v) const {return vars[varIndex]->canbe(v);}
 	bool cannotbe(int varIndex, Value v) const {return vars[varIndex]->cannotbe(v);}
+    Value nextValue(int varIndex, Value v) const {
+	  if (enumerated(varIndex)) {
+		EnumeratedVariable::iterator iter = ((EnumeratedVariable *) vars[varIndex])->lower_bound(v+1);
+		if (iter != ((EnumeratedVariable *) vars[varIndex])->end()) return *iter;
+		else return v;
+	  } else {
+		IntervalVariable::iterator iter = ((IntervalVariable *) vars[varIndex])->lower_bound(v+1);
+		if (iter != ((IntervalVariable *) vars[varIndex])->end()) return *iter;
+		else return v;
+	  }
+	}
 
 	void increase(int varIndex, Value newInf) {vars[varIndex]->increase(newInf);}	///< \brief changes domain lower bound
 	void decrease(int varIndex, Value newSup) {vars[varIndex]->decrease(newSup);}	///< \brief changes domain upper bound
