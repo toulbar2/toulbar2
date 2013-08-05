@@ -1,4 +1,5 @@
-
+NEW RELEASE v0.9.6 ADDING NEW VARIABLE ORDERING HEURISTICS AND DOMINANCE RULES.
+NEW RELEASE v0.9.5 ADDING SOFT GLOBAL DECOMPOSABLE COST FUNCTIONS (Schiex et al, AAAI-2012).
 NEW RELEASE v0.9.2 ADDING SOFT GLOBAL COST FUNCTIONS THANKS TO K. L. Leung, Hong-Kong.
 
 Toolbar was a generic solver for Weighted CSP, Max-SAT, and Bayesian Networks. Toulbar2 is a new C++ version that includes most algorithms of toolbar, some new ones, the ability to work in collaboration with ILOG Solver, and to deal with big (thousands of variables and/or large domains) problems. It is a free software under BSD license. A reference to what a WCSP is, and what the algorithms inside toulbar2 are can be found in:
@@ -13,6 +14,14 @@ GAC, FDGAC
  Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction
  J. H. M. Lee and K. L. Leung
  In Proc. of IJCAI-09, Los Angeles, USA, 2010
+
+ Decomposing global cost functions
+ D Allouche, C Bessiere, P Boizumault, S de Givry, P Gutierrez, S Loudni, JP Métivier, and T Schiex
+ In Proc. of AAAI-12, Toronto, Canada, 2012
+ 
+ Pairwise decomposition for combinatorial optimization in graphical models
+ A Favier, S de Givry, A Legarra, and T Schiex
+ In Proc. of IJCAI-11, Barcelona, Spain, 2011
 
 EDAC
  Existential arc consistency: Getting closer to full arc consistency in weighted csps
@@ -51,7 +60,7 @@ BAC
 
 #BTD, Approx_#BTD
  Exploiting problem structure for solution counting
- A. Favier, S. de Givry, and P. J�gou
+ A. Favier, S. de Givry, and P. Jégou
  In Proc. of CP-09, Lisbon, Portugal, 2009
  http://www.inra.fr/mia/T/degivry/Favier09a.pdf
 
