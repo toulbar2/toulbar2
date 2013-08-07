@@ -896,11 +896,11 @@ void WCSP::preprocessing() {
 				EnumeratedVariable *x = (EnumeratedVariable*) xy->getVar(0);
 				EnumeratedVariable *y = (EnumeratedVariable*) xy->getVar(1);
 				map<Value, Value> functional;
-				if (xy->isFunctional(x, y, functional) && y->canbeMerged()) {
+				if (xy->isFunctional(x, y, functional) && y->canbeMerged(x)) {
 					y->mergeTo(xy, functional);
 					merged = true;
 					propagate();
-				} else if (xy->isFunctional(y, x, functional) && x->canbeMerged()) {
+				} else if (xy->isFunctional(y, x, functional) && x->canbeMerged(y)) {
 					x->mergeTo(xy, functional);
 					merged = true;
 					propagate();
@@ -915,11 +915,11 @@ void WCSP::preprocessing() {
 				EnumeratedVariable *x = (EnumeratedVariable*) xy->getVar(0);
 				EnumeratedVariable *y = (EnumeratedVariable*) xy->getVar(1);
 				map<Value, Value> functional;
-				if (xy->isFunctional(x, y, functional) && y->canbeMerged()) {
+				if (xy->isFunctional(x, y, functional) && y->canbeMerged(x)) {
 					y->mergeTo(xy, functional);
 					merged = true;
 					propagate();
-				} else if (xy->isFunctional(y, x, functional) && x->canbeMerged()) {
+				} else if (xy->isFunctional(y, x, functional) && x->canbeMerged(y)) {
 					x->mergeTo(xy, functional);
 					merged = true;
 					propagate();
