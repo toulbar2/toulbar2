@@ -1104,7 +1104,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable *x)
   for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
 	Constraint* ctr = (*iter).constr;
 	if (!ctr->extension() || ctr->isSep()) return false;
-	if (ctr->extension() && (ctr->arity() >= 4) && (mult * ((NaryConstraintMap *) ctr)->size() > MAX_NB_TUPLES)) return false;
+	if (mult>1.1 && ctr->extension() && (ctr->arity() >= 4) && (mult * ((NaryConstraintMap *) ctr)->size() > MAX_NB_TUPLES)) return false;
   }
   return true;
 }
