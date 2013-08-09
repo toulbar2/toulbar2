@@ -406,6 +406,9 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
 					Cost tmpcost = cost*K;
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
+					assert(a>= 0 && a < x->getDomainInitSize());
+					assert(b>= 0 && b < y->getDomainInitSize());
+					assert(c>= 0 && c < z->getDomainInitSize());
                     costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
                 }
 				if (shared) {
@@ -464,6 +467,8 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> cost;
 					Cost tmpcost = cost*K;
 					if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
+					assert(a>= 0 && a < x->getDomainInitSize());
+					assert(b>= 0 && b < y->getDomainInitSize());
                     costs[a * y->getDomainInitSize() + b] = tmpcost;
                 }
 				if (shared) {
@@ -550,6 +555,7 @@ void WCSP::read_wcsp(const char *fileName)
                 file >> cost;
 				Cost tmpcost = cost*K;
  	 	    	if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
+				assert(a>= 0 && a < x->getDomainInitSize());
                 unaryconstr.costs[a] = tmpcost;
 			  }
 			  if (shared) {
