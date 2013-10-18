@@ -958,12 +958,12 @@ void WCSP::preprocessing() {
 		for (unsigned int i = 0; i < constrs.size(); i++)
 			if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->universal()) {
 				if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
-				constrs[i]->deconnect(true); // check if triangles have to be deconnected
+				constrs[i]->deconnect(true);
 			}
 		for (int i = 0; i < elimBinOrder; i++)
 			if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->universal()) {
 				if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimBinConstrs[i];
-				elimBinConstrs[i]->deconnect(true); // check if triangles have to be deconnected
+				elimBinConstrs[i]->deconnect(true);
 			}
 		for (int i = 0; i < elimTernOrder; i++)
 			if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep() && elimTernConstrs[i]->universal()) {
