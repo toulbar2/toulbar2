@@ -1199,7 +1199,7 @@ void WCSP::dump(ostream& os, bool original) {
 
 	if (getLb() > MIN_COST) xcosts++;
 	for (unsigned int i = 0; i < vars.size(); i++) {
-		if (vars[i]->getInf() < 0) {
+		if (original && vars[i]->getInf() < 0) {
 			cerr << "Cannot save domain of variable " << vars[i]->getName() << " with negative values!!!" << endl;
 			exit(EXIT_FAILURE);
 		}
