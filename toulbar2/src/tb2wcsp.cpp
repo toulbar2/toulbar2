@@ -958,12 +958,12 @@ void WCSP::preprocessing() {
 		for (unsigned int i = 0; i < constrs.size(); i++)
 			if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->universal()) {
 				if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *constrs[i];
-				constrs[i]->deconnect(true);
+				constrs[i]->deconnect(true); // check if triangles have to be deconnected
 			}
 		for (int i = 0; i < elimBinOrder; i++)
 			if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep() && elimBinConstrs[i]->universal()) {
 				if (ToulBar2::verbose >= 3) cout << "deconnect empty cost function: " << *elimBinConstrs[i];
-				elimBinConstrs[i]->deconnect(true);
+				elimBinConstrs[i]->deconnect(true); // check if triangles have to be deconnected
 			}
 		for (int i = 0; i < elimTernOrder; i++)
 			if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep() && elimTernConstrs[i]->universal()) {
@@ -1611,7 +1611,10 @@ void WCSP::propagate() {
 					vac->propagate();
 				}
 			} while (ToulBar2::vac && !vac->isVAC());
-			if (ToulBar2::DEE) propagateDEE();
+			if (ToulBar2::DEE) {
+				propagateDEE();
+				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
+			}
 		} while (objectiveChanged || !NC.empty() || !IncDec.empty()
 				 || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
 				 || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
