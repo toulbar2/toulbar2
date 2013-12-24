@@ -390,7 +390,7 @@ public:
 	Queue *getQueueEAC1() {return &EAC1;}
 	void propagateEAC();		///< \brief ensures unary existential arc consistency supports
 	void propagateSeparator();	///< \brief exploits graph-based learning
-	void propagateDEE();		///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
+	void propagateDEE();		///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability) \warning assumes the whole problem is read
 
 	/// \brief sorts the list of constraints associated to each variable based on smallest problem variable indexes
 	/// \warning side-effect: updates DAC order according to an existing variable elimination order
@@ -449,7 +449,7 @@ public:
 	TreeDecomposition* getTreeDec()  { return td; }
 	void buildTreeDecomposition();
 	void elimOrderFile2Vector(char *elimVarOrder, vector<int> &order);
-	void setDACOrder(vector<int> &elimVarOrder);
+	void setDACOrder(vector<int> &elimVarOrder); ///\warning needs to run propagate() after reordering DAC
 
 	// dac order reordering when Berge acyclic gobal constraint are present in the wcsp
 	// 
