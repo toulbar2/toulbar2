@@ -907,7 +907,9 @@ void WCSP::preprocessing() {
 //	}
 //	cout << endl;
 	setDACOrder(revelimorder);
+	propagate();
 	setDACOrder(elimorder);
+	propagate();
 
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
@@ -972,9 +974,11 @@ void WCSP::preprocessing() {
 	if (ToulBar2::preprocessTernaryRPC) {
 		ternaryCompletion();
 		setDACOrder(revelimorder);
+		propagate();
 		processTernary();
 		propagate();
 		setDACOrder(elimorder);
+		propagate();
 		processTernary();
 		propagate();
 	} else if (ToulBar2::preprocessNary > 0) {
@@ -2388,6 +2392,7 @@ void WCSP::buildTreeDecomposition() {
 		TreeDecomposition *tmptd = td;
 		td = NULL;
 		setDACOrder(order);
+		propagate();
 		td = tmptd;
 		// new constraints may be produced by variable elimination that must be correctly assigned to a cluster
 		for (unsigned int i=0; i<numberOfConstraints(); i++) if (constrs[i]->getCluster()==-1) constrs[i]->assignCluster();
@@ -2478,7 +2483,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 		ctr->setDACScopeIndex();
 		if (ctr->connected()) ctr->propagate();
 	}
-	propagate();
+//	propagate(); // avoid general propagate (with DEE) before all the cost functions (including unary cost functions) are posted
 }
 
 // -----------------------------------------------------------
