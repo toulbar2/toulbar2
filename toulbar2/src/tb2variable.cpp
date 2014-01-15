@@ -133,6 +133,7 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 
 int Variable::getTrueDegree()
 {
+    if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
     TSCOPE scope1,scope2,scope3;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
     	if((*iter).constr->isSep()) continue;
