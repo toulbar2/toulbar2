@@ -15,7 +15,6 @@
 #include "tb2haplotype.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
-#include "ToulbarVersion.hpp"
 
 #include "tb2globaldecomposable.hpp"
 #include "tb2globalconstr.hpp"
