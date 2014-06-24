@@ -51,7 +51,7 @@ const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
-const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST);
+const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 inline Cost MIN(Cost a, Cost b) {return min(a,b);}
 inline Cost MAX(Cost a, Cost b) {return max(a,b);}
 inline Cost GLB(Cost a, Cost b) {return MIN(a,b);}
@@ -76,7 +76,7 @@ const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
-const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST);
+const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 inline Cost MIN(Cost a, Cost b) {
 	return min(a, b);
 }
@@ -236,6 +236,7 @@ public:
 	static int weightedTightness;
 	static bool MSTDAC;
 	static int DEE;
+	static int DEE_;
     static int nbDecisionVars;
 	static int lds;
 	static bool limited;
@@ -299,6 +300,7 @@ public:
 
 	static int Berge_Dec; // flag for berge acyclic decomposition
 	static int nbvar; // initial number of variable (read in the file) 
+    static bool learning; // if true, perform pseudoboolean learning
 	static externalfunc timeOut;
 	static bool interrupted;
 };
