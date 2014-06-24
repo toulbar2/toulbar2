@@ -27,6 +27,7 @@ public:
 
     virtual bool extension() const {return false;} // return true if the cost function is defined in extension (with explicit tuples)
     virtual bool isGlobal() const {return false;} // return true if it is a global cost function (flow-based monolithic propagation)
+//    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 
     virtual bool connected() const {cout << "dummy connected on (" << this << ")!" << endl;return true;}
     virtual bool deconnected() const {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}

@@ -479,8 +479,8 @@ bool EnumeratedVariable::verifyDEE(Value a, Value b)
         if (totalmaxcost + wcsp->getLb() < wcsp->getUb()) totalmaxcost += costs.first.first;
         if (totaldiffcost + wcsp->getLb() < wcsp->getUb()) totaldiffcost += costs.first.second;
     }
-    if (getCost(b) >= ((ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost)) {
-    	cout << *this << " has missed dominated value (" << a << "," << ((ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost) << ") -> (" << b << "," << getCost(b) << ")"  << endl;
+    if (getCost(b) >= ((ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost)) {
+    	cout << *this << " has missed dominated value (" << a << "," << ((ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && wcsp->getStore()->getDepth()==0))?totaldiffcost:totalmaxcost) << ") -> (" << b << "," << getCost(b) << ")"  << endl;
     	return true; // should be false but we need to queue all variables each time LB or UB change
     }
     for (iterator iter = begin(); iter != end(); ++iter) {
@@ -496,7 +496,7 @@ bool EnumeratedVariable::verifyDEE(Value a, Value b)
 
 bool EnumeratedVariable::verifyDEE()
 {
-	if (ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && wcsp->getStore()->getDepth()==0)) {
+	if (ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && wcsp->getStore()->getDepth()==0)) {
 		for (iterator itera = begin(); itera != end(); ++itera) {
 			for (iterator iterb = begin(); iterb != end(); ++iterb) {
 				if (!verifyDEE(*itera, *iterb)) return false;
@@ -655,6 +655,9 @@ void EnumeratedVariable::assign(Value newValue)
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
         }
+//        for (ConstraintList::iterator iter=triangles.begin(); iter != triangles.end(); ++iter) {
+//            (*iter).constr->deconnect();
+//        }
     }
 }
 

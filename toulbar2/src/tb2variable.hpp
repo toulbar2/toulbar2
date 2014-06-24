@@ -32,6 +32,7 @@ protected:
     StoreValue sup;
 
     ConstraintList constrs;
+//    ConstraintList triangles;
     
     // incremental NC data
     StoreCost maxCost;
@@ -80,6 +81,7 @@ public:
     virtual void assign(Value newValue) =0;
     virtual void assignLS(Value newValue, set<Constraint *>& delayedCtrs) =0;
 
+//    ConstraintList *getTriangles() {return &triangles;}
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
     int getTrueDegree();

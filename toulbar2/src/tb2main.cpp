@@ -207,6 +207,7 @@ enum {
 	OPT_ub,
 	OPT_Z,
 	OPT_epsilon,
+    OPT_learning,
 	// MEDELESOFT OPTION
 	OPT_generation=99,
 	MENDEL_OPT_genotypingErrorRate=100,
@@ -344,6 +345,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 
 	{ OPT_Z,  				 (char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
 	{ OPT_epsilon,		(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
+
+    { OPT_learning,                         (char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
 
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
@@ -1365,6 +1368,11 @@ int _tmain(int argc, TCHAR * argv[])
 
 			}
 
+            if ( args.OptionId() == OPT_learning )
+            {
+                ToulBar2::learning = true;
+            }
+
 			// upper bound initialisation from command line
 			if ( args.OptionId() == OPT_ub) {
 
@@ -1665,6 +1673,11 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		cout << "Warning! Cannot perform functional elimination with NC only." << endl;
 		ToulBar2::preprocessFunctional = 0;
+	}
+	if (ToulBar2::learning && ToulBar2::elimDegree >= 0)
+	{
+		cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning" << endl;
+		ToulBar2::elimDegree = -1;
 	}
 
 	if (ToulBar2::uai) {

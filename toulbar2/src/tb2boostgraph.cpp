@@ -203,7 +203,6 @@ void WCSP::minimumDegreeOrdering()
   }
   // update DAC ordering
   setDACOrder(inverse_perm);
-  propagate();
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->computeTightness();
   for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->computeTightness();
   for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->computeTightness();
@@ -268,7 +267,6 @@ void WCSP::spanningTreeOrdering()
 
   assert( revdac.size() == numberOfVariables() );
   setDACOrder(revdac);
-  propagate();
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->computeTightness();
   for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->computeTightness();
   for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->computeTightness();

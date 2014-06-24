@@ -767,5 +767,29 @@ inline Value Functor_getFunctionYZX::operator()(EnumeratedVariable *zz, Enumerat
 inline Value Functor_getFunctionZXY::operator()(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getFunctionZ(vx, vy);}
 inline Value Functor_getFunctionZYX::operator()(EnumeratedVariable *yy, EnumeratedVariable *xx, Value vy, Value vx) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getFunctionZ(vx, vy);}
 
+// A triangle of three binary cost functions (maxRPC/PIC)
+//class Triangle : public AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>
+//{
+//    BinaryConstraint* xy;
+//    BinaryConstraint* xz;
+//    BinaryConstraint* yz;
+//    TernaryConstraint* xyz;
+//
+//public:
+//    Triangle(WCSP *wcsp,
+//					  EnumeratedVariable *xx,
+//					  EnumeratedVariable *yy,
+//					  EnumeratedVariable *zz,
+//					  BinaryConstraint* xy,
+//					  BinaryConstraint* xz,
+//					  BinaryConstraint* yz,
+//					  StoreStack<Cost, Cost> *storeCost);
+//
+//	~Triangle() {}
+//
+//    bool isTriangle() const {return true;}
+//
+//    void activateTernary();
+//};
 
 #endif /*TB2TERNARYCONSTR_HPP_*/

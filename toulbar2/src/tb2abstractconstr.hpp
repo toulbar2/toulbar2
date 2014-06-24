@@ -197,11 +197,17 @@ public:
         if (deconnected()) {
             if (ToulBar2::verbose >= 3) cout << "reconnect " << this << endl;
 			assert(linkX->prev == NULL && linkX->next == NULL);
-            x->getConstrs()->push_back(linkX, true);
+//			if (linkX->content.constr->isTriangle()) x->getTriangles()->push_back(linkX, true);
+//			else
+			x->getConstrs()->push_back(linkX, true);
 			assert(linkY->prev == NULL && linkY->next == NULL);
-            y->getConstrs()->push_back(linkY, true);
+//			if (linkY->content.constr->isTriangle()) y->getTriangles()->push_back(linkY, true);
+//			else
+			y->getConstrs()->push_back(linkY, true);
 			assert(linkZ->prev == NULL && linkZ->next == NULL);
-            z->getConstrs()->push_back(linkZ, true);
+//			if (linkZ->content.constr->isTriangle()) z->getTriangles()->push_back(linkZ, true);
+//			else
+			z->getConstrs()->push_back(linkZ, true);
         }
     }
 

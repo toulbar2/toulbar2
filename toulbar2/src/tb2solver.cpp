@@ -1019,6 +1019,7 @@ bool Solver::solve()
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         wcsp->enforceUb();
+		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
         if (ToulBar2::verbose >= 0) cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
@@ -1031,7 +1032,7 @@ bool Solver::solve()
 		  wcsp->propagate();
 		}
 
-		if (ToulBar2::DEE == 4) ToulBar2::DEE = 0; // only PSNS in preprocessing
+		if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
 		if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 
@@ -1183,6 +1184,7 @@ bool Solver::solve()
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
+    ToulBar2::DEE_ = 0;
     if(ToulBar2::isZ) {
 	  if (ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 	  if (ToulBar2::uai) {

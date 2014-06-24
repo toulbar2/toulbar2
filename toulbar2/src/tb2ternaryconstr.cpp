@@ -1025,10 +1025,6 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
     return true;
 }
 
-
-
-
-
 bool TernaryConstraint::verify() {
   TreeDecomposition* td = wcsp->getTreeDec();
   
@@ -1047,3 +1043,31 @@ bool TernaryConstraint::verify() {
 	return verifyX() && verifyY() && verifyZ();
   }
 }
+
+
+//Triangle::Triangle(WCSP *wcsp,
+//				  EnumeratedVariable *xx,
+//				  EnumeratedVariable *yy,
+//				  EnumeratedVariable *zz,
+//				  BinaryConstraint* _xy,
+//				  BinaryConstraint* _xz,
+//				  BinaryConstraint* _yz,
+//				  StoreStack<Cost, Cost> *storeCost)
+//	: AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz),
+//	  xy(_xy), xz(_xz), yz(_yz), xyz(xx->getConstr(yy,zz))
+//						  {
+//	// if xyz == NULL then create "empty" ternaryconstr like in NaryConstr.cpp
+//	// 		BinaryConstraint* bctr;
+////	TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
+////	elimTernConstrs.push_back(tctr);
+////	for (int j = 0; j < 3; j++) {
+////		if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
+////		else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
+////		elimBinConstrs.push_back(bctr);
+////	}
+//
+//						  }
+
+//activate {
+//	xyz = wcsp->newTernaryConstr(x,y,z,this);
+//}
