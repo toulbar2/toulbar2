@@ -103,13 +103,13 @@ void VACExtension::histogram()
 	}
 
 	if (ToulBar2::verbose >= 1) {
-		cout << "Costs Scale: ";
+	    cout << "Reverse Costs Range and Scale: " << scaleCost.rbegin()->first;
 		list < Cost >::iterator itl = scaleVAC.begin();
 		while (itl != scaleVAC.end()) {
-			cout << *itl << " ";
+            cout << " " << *itl;
 			++itl;
 		}
-		cout << endl;
+        cout <<  " " << scaleCost.begin()->first << endl;
 	}
 }
 
@@ -212,6 +212,7 @@ bool VACExtension::propagate()
 		minlambda = ub - lb;
 		nbIterations++;
 		reset();
+//		if (ToulBar2::verbose>=8) cout << *wcsp;
 		wcsp->getStore()->store();
 		enforcePass1();
 		isvac = isVAC();
@@ -220,7 +221,7 @@ bool VACExtension::propagate()
 			acSupportOK = true;
 			acSupport.clear();
 			// fill SeekSupport with ALL variables if in preprocessing (i.e. before the search)
-			if (wcsp->getStore()->getDepth() == 0) {
+			if (wcsp->getStore()->getDepth() <= 1 || ToulBar2::debug) {
 				for (unsigned int i = 0;
 				     i < wcsp->numberOfVariables(); i++) {
 					((VACVariable *) wcsp->getVar(i))->
@@ -228,15 +229,19 @@ bool VACExtension::propagate()
 				}
 			}
 			// remember first arc consistent domain values in Bool(P) before restoring domains 
+			int nbassigned = 0;
+			int nbassignedzero = 0;
 			while (!SeekSupport.empty()) {
 				VACVariable *x =
 				    (VACVariable *) SeekSupport.pop();
+				if (x->assigned()) nbassigned++;
 				pair < VACVariable *, Value > p;
 				p.first = x;
 				p.second = x->getSup() + 1;
 				for (EnumeratedVariable::iterator iterX =
 				     x->begin(); iterX != x->end(); ++iterX) {
 					if (x->getCost(*iterX) == MIN_COST) {
+						if (x->assigned()) nbassignedzero++;
 						p.second = *iterX;
 						break;
 					}
@@ -244,6 +249,7 @@ bool VACExtension::propagate()
 				if (x->canbe(p.second))
 					acSupport.push_back(p);
 			}
+			if (ToulBar2::debug && nbassignedzero>0) cout << "[" << wcsp->getStore()->getDepth() << "] " << nbassignedzero << "/" << nbassigned-nbassignedzero << "/" << wcsp->numberOfUnassignedVariables() << " fixed/singletonnonzerocost/unassigned" << endl;
 		}
 		wcsp->getStore()->restore();
 
