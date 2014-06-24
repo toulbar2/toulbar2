@@ -64,6 +64,7 @@ int ToulBar2::weightedDegree = 10000;
 int ToulBar2::weightedTightness = 0;
 bool ToulBar2::MSTDAC = false;
 int ToulBar2::DEE = 1;
+int ToulBar2::DEE_ = 0;
 int ToulBar2::nbDecisionVars = 0;
 bool ToulBar2::singletonConsistency = false;
 bool ToulBar2::vacValueHeuristic = false;
@@ -138,6 +139,8 @@ int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the
 externalfunc ToulBar2::timeOut = NULL;
 bool ToulBar2::interrupted = false;
 
+bool ToulBar2::learning = false;
+
 /*
  * WCSP constructors
  *
@@ -146,7 +149,7 @@ bool ToulBar2::interrupted = false;
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
-			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
+			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(false),
 			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
@@ -839,6 +842,8 @@ void WCSP::processTernary() {
 /// \note the propagation loop is called after each preprocessing technique (see \ref WCSP::propagate)
 
 void WCSP::preprocessing() {
+    Cost previouslb = getLb();
+
 	Eliminate.clear();
 	if (ToulBar2::elimDegree_preprocessing <= -3) {
 	  int deg = medianDegree();
@@ -905,10 +910,12 @@ void WCSP::preprocessing() {
 //		cout << " " << elimorder[i];
 //	}
 //	cout << endl;
-	setDACOrder(revelimorder);
-	propagate();
-	setDACOrder(elimorder);
-	propagate();
+    do {
+        previouslb = getLb();
+        setDACOrder(revelimorder);
+        setDACOrder(elimorder);
+        if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "TRWS lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
+    } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
@@ -971,15 +978,17 @@ void WCSP::preprocessing() {
 
 
 	if (ToulBar2::preprocessTernaryRPC) {
-		ternaryCompletion();
-		setDACOrder(revelimorder);
-		propagate();
-		processTernary();
-		propagate();
-		setDACOrder(elimorder);
-		propagate();
-		processTernary();
-		propagate();
+	    do {
+	        previouslb = getLb();
+	        ternaryCompletion();
+	        setDACOrder(revelimorder);
+	        processTernary();
+	        propagate();
+	        setDACOrder(elimorder);
+	        processTernary();
+	        propagate();
+	        if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "PIC lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
+	    } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 	} else if (ToulBar2::preprocessNary > 0) {
 		processTernary();
 		propagate();
@@ -1360,18 +1369,18 @@ bool WCSP::verify() {
 				if (td->isActiveAndInCurrentClusterSubTree(vars[i]->getCluster())) {
 					if (!vars[i]->verifyNC()) return false;
 #ifdef DEECOMPLETE
-					if (ToulBar2::DEE && !vars[i]->verifyDEE()) return false;
+					if (ToulBar2::DEE_ && !vars[i]->verifyDEE()) return false;
 #endif
 				}
 			} else {
 				if (!vars[i]->verifyNC()) return false;
 #ifdef DEECOMPLETE
-				if (ToulBar2::DEE && !vars[i]->verifyDEE()) return false;
+				if (ToulBar2::DEE_ && !vars[i]->verifyDEE()) return false;
 #endif
 			}
 		}
 		// Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
-		//isEAC may change current support for variables and constraints
+		// Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
 		if (ToulBar2::LcLevel == LC_EDAC && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !vars[i]->isEAC()) {
 			cout << "support of variable " << vars[i]->getName() << " not EAC!" << endl;
 			return false;
@@ -1507,7 +1516,7 @@ void WCSP::propagateDEE() {
 	    if (ToulBar2::interrupted) throw TimeOut();
 		EnumeratedVariable *x = (EnumeratedVariable *) DEE.pop();
 		if (x->unassigned()) {
-			if (ToulBar2::DEE>=3 || (ToulBar2::DEE==2 && getStore()->getDepth()==0)) {
+			if (ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && getStore()->getDepth()==0)) {
 				for (EnumeratedVariable::iterator itera = x->begin(); itera != x->end(); ++itera ) {
 					for (EnumeratedVariable::iterator iterb = x->lower_bound(*itera +1); iterb != x->end(); ++iterb ) {
 						assert(x->canbe(*itera));
@@ -1655,7 +1664,7 @@ void WCSP::propagate() {
 					vac->propagate();
 				}
 			} while (ToulBar2::vac && !vac->isVAC());
-			if (ToulBar2::DEE) {
+			if (ToulBar2::DEE_) {
 				propagateDEE();
 				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
 			}
@@ -1684,8 +1693,7 @@ void WCSP::propagate() {
 	assert(EAC1.empty());
 	assert(EAC2.empty());
 	assert(Eliminate.empty());
-	if (ToulBar2::DEE) assert(DEE.empty());
-	else DEE.clear();
+	DEE.clear(); // DEE might not be empty if verify() has modified supports
 	nbNodes++;
 }
 
@@ -2391,7 +2399,6 @@ void WCSP::buildTreeDecomposition() {
 		TreeDecomposition *tmptd = td;
 		td = NULL;
 		setDACOrder(order);
-		propagate();
 		td = tmptd;
 		// new constraints may be produced by variable elimination that must be correctly assigned to a cluster
 		for (unsigned int i=0; i<numberOfConstraints(); i++) if (constrs[i]->getCluster()==-1) constrs[i]->assignCluster();
@@ -2482,7 +2489,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 		ctr->setDACScopeIndex();
 		if (ctr->connected()) ctr->propagate();
 	}
-//	propagate(); // avoid general propagate (with DEE) before all the cost functions (including unary cost functions) are posted
+	propagate();
 }
 
 // -----------------------------------------------------------
