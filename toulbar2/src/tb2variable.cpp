@@ -18,6 +18,7 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
 		timestamp(-1), pos(-1),
         inf(iinf, &w->getStore()->storeValue), sup(isup, &w->getStore()->storeValue), 
         constrs(&w->getStore()->storeConstraint),
+//        triangles(&w->getStore()->storeConstraint),
         maxCost(MIN_COST, &w->getStore()->storeCost), maxCostValue(iinf, &w->getStore()->storeValue), 
         NCBucket(-1, &w->getStore()->storeInt),
         cluster(-1, &w->getStore()->storeInt)
@@ -46,6 +47,8 @@ DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
     e.scopeIndex = index;
     DLink<ConstraintLink> *elt = new DLink<ConstraintLink>;
     elt->content = e;
+//    if (c->isTriangle()) triangles.push_back(elt,true);
+//    else
     constrs.push_back(elt,true);
     return elt;
 }
@@ -117,6 +120,8 @@ void Variable::sortConstraints()
 void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 {
     if (!link->removed) {
+//        if (link->content.constr->isTriangle()) getTriangles()->erase(link, true);
+//        else
         getConstrs()->erase(link, true);
 
         if (getDegree() <= ToulBar2::elimDegree_ ||
@@ -133,19 +138,25 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 
 int Variable::getTrueDegree()
 {
-    if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
-    TSCOPE scope1,scope2,scope3;
+//	if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
+//    TSCOPE scope1,scope2,scope3;
+    set<int> scope1;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-    	if((*iter).constr->isSep()) continue;
-    	
-		(*iter).constr->getScope(scope2);
-     	set_union( scope1.begin(), scope1.end(),
-	  		   	   scope2.begin(), scope2.end(),
-			  	   inserter(scope3, scope3.begin()) );		
-		scope1 = scope3;  
-		scope3.clear();   
+		if((*iter).constr->isSep()) continue;
+    	for(int k=0; k < (*iter).constr->arity(); k++) {
+    		scope1.insert((*iter).constr->getVar(k)->wcspIndex);
+    	}
+//		(*iter).constr->getScope(scope2);
+//		for (TSCOPE::iterator iter2=scope2.begin(); iter2 != scope2.end(); ++iter2) {
+//		   scope1.insert( iter2->first );
+//		}
+//     	set_union( scope1.begin(), scope1.end(),
+//	  		   	   scope2.begin(), scope2.end(),
+//			  	   inserter(scope3, scope3.begin()) );
+//		scope1 = scope3;
+//		scope3.clear();
     }
-    if (constrs.getSize() >= 1) return scope1.size() - 1;
+    if (scope1.size() >= 1) return scope1.size() - 1;
     else return 0;
 }
 
