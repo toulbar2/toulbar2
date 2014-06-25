@@ -284,11 +284,13 @@ public:
 	static TProb markov_log;
 	static string evidence_file;
 	static ofstream solution_file;
+    static string solution_filename;
     static bool uai_firstoutput;
 	static bool isZ;
 	static TProb logZ;
 	static TProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
+    static bool uaieval;
 
 	static double startCpuTime;
 

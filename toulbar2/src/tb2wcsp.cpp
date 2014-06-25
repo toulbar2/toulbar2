@@ -82,11 +82,13 @@ bool ToulBar2::bayesian = false;
 bool ToulBar2::uai = false;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
+string ToulBar2::solution_filename = "sol";
 bool ToulBar2::uai_firstoutput = true;
 TProb ToulBar2::markov_log = 0;
 bool ToulBar2::xmlflag = false;
 string ToulBar2::map_file;
 bool ToulBar2::maxsateval = false;
+bool ToulBar2::uaieval = false;
 
 int ToulBar2::resolution = 7;
 TProb ToulBar2::errorg = 0.05;
@@ -1265,11 +1267,12 @@ void WCSP::dump(ostream& os, bool original) {
 	if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
 	//####################" dump dot file ###############################""
-	cout << " Graph structure saved in problem.dot " << endl;
 	if (original) {
 		strcat(Pb_graph, "_original.dot");
+	    cout << " Graph structure saved in problem_original.dot " << endl;
 	} else {
 		strcat(Pb_graph, ".dot");
+	    cout << " Graph structure saved in problem.dot " << endl;
 	}
 	//ofstream pb("current_problem.graph");
 	ofstream pb(Pb_graph);

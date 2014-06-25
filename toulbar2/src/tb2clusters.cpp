@@ -1889,7 +1889,7 @@ void TreeDecomposition::newSolution( Cost lb )
 		cout << "o " << lb << endl;
 		wcsp->solution_XML();
 	}
-	else if(ToulBar2::uai) {
+	else if(ToulBar2::uai || ToulBar2::uaieval) {
 	  wcsp->solution_UAI(lb);
 	}
 	// warning: cannot read solution from variable assignments

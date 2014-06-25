@@ -564,6 +564,15 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 				file >> keyword; // skip ":"
 				file >> tmpUB;
 				if (tmpUB>=MIN_COST && tmpUB < *upperbound) *upperbound = tmpUB;
+				if (ToulBar2::uaieval && *upperbound == bestcost) {
+				    ToulBar2::uai_firstoutput = false;
+				    ToulBar2::solution_file << bestsol.size();
+				    for (map<int,int>::iterator iter = bestsol.begin(); iter != bestsol.end(); ++iter) {
+				        ToulBar2::solution_file << " " << (*iter).second;
+				    }
+				    ToulBar2::solution_file << endl;
+				    ToulBar2::solution_file.flush();
+				}
 				if (ToulBar2::writeSolution && *upperbound == bestcost)
 				{
 					ofstream sol("sol");
@@ -787,11 +796,19 @@ int _tmain(int argc, TCHAR * argv[])
 	char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
 	Cost ub = MAX_COST;
 	ToulBar2::elimDegree = 3;
+
 	// Configuration for MaxSAT Evaluation
 //	ToulBar2::maxsateval = true;
 //	ToulBar2::verbose = -1;
 //	ToulBar2::binaryBranching = false;
 //	ToulBar2::lds = 1;
+
+    // Configuration for UAI Evaluation
+//	ToulBar2::uaieval = true;
+//  ToulBar2::verbose = 0;
+//  ToulBar2::lds = 1;
+//  localsearch = true;
+
 	char *random_desc = NULL ; // benchmark description set from command line;
 
 	//default file extension : can be enforced using --foo_ext option in command line
@@ -1680,7 +1697,7 @@ int _tmain(int argc, TCHAR * argv[])
 		ToulBar2::elimDegree = -1;
 	}
 
-	if (ToulBar2::uai) {
+	if (ToulBar2::uai || ToulBar2::uaieval) {
 	  char *tmpPath = new char[strlen(argv[0])+1];
 	  strcpy(tmpPath,argv[0]);
 	  char *tmpFile = new char[strlen(strfile.c_str())+1];
@@ -1688,10 +1705,13 @@ int _tmain(int argc, TCHAR * argv[])
 	  string filename(tmpPath);
 	  filename += "/";
 	  filename += basename(tmpFile);
+	  unsigned int wcsppos = string::npos;
+	  if (ToulBar2::uaieval && (wcsppos = filename.rfind( ".wcsp" )) != string::npos) filename.replace( wcsppos, 5, ".uai" );
 	  filename += ".";
 	  if (ToulBar2::isZ) filename += "PR";
 	  else filename += "MPE";
-	  ToulBar2::solution_file.open(filename.c_str());
+	  ToulBar2::solution_filename = filename;
+	  ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
 	  delete [] tmpPath;
 	  delete [] tmpFile;
 	  ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
@@ -1700,7 +1720,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 	ToulBar2::startCpuTime = cpuTime();
 
-	if (localsearch && !strstr(strext.c_str(),".pre"))
+	if (localsearch && strstr(strext.c_str(),".wcsp"))
 	{
 #ifndef WINDOWS
 		//if (localSearch(argv[1],&c,CurrentBinaryPath))
@@ -1737,7 +1757,7 @@ int _tmain(int argc, TCHAR * argv[])
 	    	cout << "s UNSATISFIABLE" << endl;
 	    }
 	    if (ToulBar2::verbose >= 0) cout << "end." << endl;
-		if (ToulBar2::uai) ToulBar2::solution_file.close();
+		if (ToulBar2::uai || ToulBar2::uaieval) ToulBar2::solution_file.close();
 		return 0;
 	}
 
@@ -1865,7 +1885,7 @@ int _tmain(int argc, TCHAR * argv[])
 	    }
 	}
 	if (ToulBar2::verbose >= 0) cout << "end." << endl;
-	if (ToulBar2::uai) ToulBar2::solution_file.close();
+	if (ToulBar2::uai || ToulBar2::uaieval) ToulBar2::solution_file.close();
 
 	// for the competition it was necessary to write a file with the optimal sol
 	/*char line[80];
