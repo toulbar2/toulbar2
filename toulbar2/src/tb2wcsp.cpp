@@ -1218,7 +1218,8 @@ void WCSP::dump(ostream& os, bool original) {
 			exit(EXIT_FAILURE);
 		}
 		if (original) {
-			if (vars[i]->getSup() + 1 > maxdomsize) maxdomsize = vars[i]->getSup() + 1;
+		    int domsize = (vars[i]->enumerated()?((EnumeratedVariable *) vars[i])->getDomainInitSize():(vars[i]->getSup() + 1));
+			if (domsize > maxdomsize) maxdomsize = domsize;
 		} else {
 			if (vars[i]->unassigned() && vars[i]->getDomainSize() > maxdomsizeUI) maxdomsizeUI
 					= vars[i]->getDomainSize();
@@ -1236,7 +1237,8 @@ void WCSP::dump(ostream& os, bool original) {
 	for (unsigned int i = 0; i < vars.size(); i++) {
 		if (original) {
 			if (!vars[i]->enumerated()) os << "-";
-			os << vars[i]->getSup() + 1;
+            int domsize = (vars[i]->enumerated()?((EnumeratedVariable *) vars[i])->getDomainInitSize():(vars[i]->getSup() + 1));
+			os << domsize;
 			if (i < vars.size() - 1) os << " ";
 		} else if (vars[i]->unassigned()) {
 			nbvar++;
