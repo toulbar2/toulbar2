@@ -916,7 +916,7 @@ void WCSP::preprocessing() {
         previouslb = getLb();
         setDACOrder(revelimorder);
         setDACOrder(elimorder);
-        if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "TRWS lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
+        if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "Reverse DAC lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
     } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 
 	if (ToulBar2::preprocessNary > 0) {
@@ -1268,86 +1268,87 @@ void WCSP::dump(ostream& os, bool original) {
 	}
 	if (getLb() > MIN_COST) os << "0 " << getLb() << " 0" << endl;
 
-	//####################" dump dot file ###############################""
-	if (original) {
-		strcat(Pb_graph, "_original.dot");
-	    cout << " Graph structure saved in problem_original.dot " << endl;
-	} else {
-		strcat(Pb_graph, ".dot");
-	    cout << " Graph structure saved in problem.dot " << endl;
-	}
-	//ofstream pb("current_problem.graph");
-	ofstream pb(Pb_graph);
-	pb << " graph graphname {\n " << endl;
-	int res = 0;
-	for (unsigned int i = 0; i < constrs.size(); i++)
-		if (constrs[i]->connected()) res += (constrs[i]->arity() * (constrs[i]->arity() - 1) / 2);
-	for (int i = 0; i < elimBinOrder; i++)
-		if (elimBinConstrs[i]->connected()) res += (elimBinConstrs[i]->arity() * (elimBinConstrs[i]->arity() - 1) / 2);
-	for (int i = 0; i < elimTernOrder; i++)
-		if (elimTernConstrs[i]->connected()) res += (elimTernConstrs[i]->arity() * (elimTernConstrs[i]->arity() - 1)
-				/ 2);
-	pb << "// number of constraint = " << res << " number of variable=  " << numberOfVariables() << endl;
-	for (unsigned int i = 0; i < constrs.size(); i++)
-		if (constrs[i]->connected()) {
-			//            pb << constrs[i]->getVar(0)->wcspIndex + 1;
-			//            for (int j=1; j<constrs[i]->arity(); j++) {
-			//                pb << " " << constrs[i]->getVar(j)->wcspIndex + 1;
-			//            }
-			//            pb << endl;
-			printClique(pb, constrs[i]->arity(), constrs[i]);
-		}
-	for (int i = 0; i < elimBinOrder; i++)
-		if (elimBinConstrs[i]->connected()) {
-			//            pb << elimBinConstrs[i]->getVar(0)->wcspIndex + 1;
-			//            for (int j=1; j<elimBinConstrs[i]->arity(); j++) {
-			//                pb << " " << elimBinConstrs[i]->getVar(j)->wcspIndex + 1;
-			//            }
-			//            pb << endl;
-			printClique(pb, elimBinConstrs[i]->arity(), elimBinConstrs[i]);
-		}
-	for (int i = 0; i < elimTernOrder; i++)
-		if (elimTernConstrs[i]->connected()) {
-			//            pb << elimTernConstrs[i]->getVar(0)->wcspIndex + 1;
-			//            for (int j=1; j<elimTernConstrs[i]->arity(); j++) {
-			//                pb << " " << elimTernConstrs[i]->getVar(j)->wcspIndex + 1;
-			//            }
-			//            pb << endl;
-			printClique(pb, elimTernConstrs[i]->arity(), elimTernConstrs[i]);
-		}
-	pb << "}" << endl;
+	if (!ToulBar2::uaieval) {
+	    //####################" dump dot file ###############################""
+	    if (original) {
+	        strcat(Pb_graph, "_original.dot");
+	        cout << " Graph structure saved in problem_original.dot " << endl;
+	    } else {
+	        strcat(Pb_graph, ".dot");
+	        cout << " Graph structure saved in problem.dot " << endl;
+	    }
+	    //ofstream pb("current_problem.graph");
+	    ofstream pb(Pb_graph);
+	    pb << " graph graphname {\n " << endl;
+	    int res = 0;
+	    for (unsigned int i = 0; i < constrs.size(); i++)
+	        if (constrs[i]->connected()) res += (constrs[i]->arity() * (constrs[i]->arity() - 1) / 2);
+	    for (int i = 0; i < elimBinOrder; i++)
+	        if (elimBinConstrs[i]->connected()) res += (elimBinConstrs[i]->arity() * (elimBinConstrs[i]->arity() - 1) / 2);
+	    for (int i = 0; i < elimTernOrder; i++)
+	        if (elimTernConstrs[i]->connected()) res += (elimTernConstrs[i]->arity() * (elimTernConstrs[i]->arity() - 1)
+	                / 2);
+	    pb << "// number of constraint = " << res << " number of variable=  " << numberOfVariables() << endl;
+	    for (unsigned int i = 0; i < constrs.size(); i++)
+	        if (constrs[i]->connected()) {
+	            //            pb << constrs[i]->getVar(0)->wcspIndex + 1;
+	            //            for (int j=1; j<constrs[i]->arity(); j++) {
+	            //                pb << " " << constrs[i]->getVar(j)->wcspIndex + 1;
+	            //            }
+	            //            pb << endl;
+	            printClique(pb, constrs[i]->arity(), constrs[i]);
+	        }
+	    for (int i = 0; i < elimBinOrder; i++)
+	        if (elimBinConstrs[i]->connected()) {
+	            //            pb << elimBinConstrs[i]->getVar(0)->wcspIndex + 1;
+	            //            for (int j=1; j<elimBinConstrs[i]->arity(); j++) {
+	            //                pb << " " << elimBinConstrs[i]->getVar(j)->wcspIndex + 1;
+	            //            }
+	            //            pb << endl;
+	            printClique(pb, elimBinConstrs[i]->arity(), elimBinConstrs[i]);
+	        }
+	    for (int i = 0; i < elimTernOrder; i++)
+	        if (elimTernConstrs[i]->connected()) {
+	            //            pb << elimTernConstrs[i]->getVar(0)->wcspIndex + 1;
+	            //            for (int j=1; j<elimTernConstrs[i]->arity(); j++) {
+	            //                pb << " " << elimTernConstrs[i]->getVar(j)->wcspIndex + 1;
+	            //            }
+	            //            pb << endl;
+	            printClique(pb, elimTernConstrs[i]->arity(), elimTernConstrs[i]);
+	        }
+	    pb << "}" << endl;
 
-	//####################" end dump dot file ###############################""
-	//#######################dump degree distribution ###################
+	    //####################" end dump dot file ###############################""
+	    //#######################dump degree distribution ###################
 #ifdef BOOST
-	cout << "Connected components: " << connectedComponents() << endl;
-    cout << "Biconnected components: " << biConnectedComponents() << endl;
-	cout << "Diameter : " << diameter() << endl;
+	    cout << "Connected components: " << connectedComponents() << endl;
+	    cout << "Biconnected components: " << biConnectedComponents() << endl;
+	    cout << "Diameter : " << diameter() << endl;
 #endif
 
-	int* degDistrib = new int[vars.size()];
+	    int* degDistrib = new int[vars.size()];
 
-	for (unsigned int i = 0; i < vars.size(); i++)
-		degDistrib[i] = 0;
-	for (unsigned int i = 0; i < vars.size(); i++)
-		if (unassigned(i)) degDistrib[getTrueDegree(i)]++;
+	    for (unsigned int i = 0; i < vars.size(); i++)
+	        degDistrib[i] = 0;
+	    for (unsigned int i = 0; i < vars.size(); i++)
+	        if (unassigned(i)) degDistrib[getTrueDegree(i)]++;
 
-	unsigned int lastnonzero = 0;
-	for (unsigned int i = 0; i < vars.size(); i++)
-		if (degDistrib[i]) lastnonzero = i;
+	    unsigned int lastnonzero = 0;
+	    for (unsigned int i = 0; i < vars.size(); i++)
+	        if (degDistrib[i]) lastnonzero = i;
 
-	if (original) {
-		strcat(Pb_degree, "_original.degree"); // original distribution
-	} else {
-		strcat(Pb_degree, ".degree"); // after preprocessing
+	    if (original) {
+	        strcat(Pb_degree, "_original.degree"); // original distribution
+	    } else {
+	        strcat(Pb_degree, ".degree"); // after preprocessing
+	    }
+	    ofstream file(Pb_degree);
+	    for (unsigned int i = 0; i <= lastnonzero; i++)
+	        if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;
+	    delete[] degDistrib;
+
+	    //#######################dump degree distribution ###################
 	}
-	ofstream file(Pb_degree);
-	for (unsigned int i = 0; i <= lastnonzero; i++)
-		if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;
-	delete[] degDistrib;
-
-	//#######################dump degree distribution ###################
-
 
 	if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
 }

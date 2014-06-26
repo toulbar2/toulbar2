@@ -565,7 +565,10 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 				file >> tmpUB;
 				if (tmpUB>=MIN_COST && tmpUB < *upperbound) *upperbound = tmpUB;
 				if (ToulBar2::uaieval && *upperbound == bestcost) {
-				    ToulBar2::uai_firstoutput = false;
+//				    ToulBar2::uai_firstoutput = false;
+			        ToulBar2::solution_file.close();
+			        ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+			        ToulBar2::solution_file << "MPE" << endl;
 				    ToulBar2::solution_file << bestsol.size();
 				    for (map<int,int>::iterator iter = bestsol.begin(); iter != bestsol.end(); ++iter) {
 				        ToulBar2::solution_file << " " << (*iter).second;
@@ -1711,11 +1714,13 @@ int _tmain(int argc, TCHAR * argv[])
 	  if (ToulBar2::isZ) filename += "PR";
 	  else filename += "MPE";
 	  ToulBar2::solution_filename = filename;
-	  ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	  if (!ToulBar2::uaieval) {
+	      ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	      ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
+	      ToulBar2::solution_file.flush();
+	  }
 	  delete [] tmpPath;
 	  delete [] tmpFile;
-	  ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
-	  ToulBar2::solution_file.flush();
 	}
 
 	ToulBar2::startCpuTime = cpuTime();
@@ -1723,14 +1728,17 @@ int _tmain(int argc, TCHAR * argv[])
 	if (localsearch && strstr(strext.c_str(),".wcsp"))
 	{
 #ifndef WINDOWS
-		//if (localSearch(argv[1],&c,CurrentBinaryPath))
-
+	    Cost tmpub = ub;
 		if (localSearch((char*)strfile.c_str(),&ub,CurrentBinaryPath))
 		{
+		    if (ub < MIN_COST || ub >= INT_MAX) ub = tmpub;
 			cout << "Initial upperbound: " << ub << endl;
 
 		}
-		else cerr << "INCOP solver narycsp not found in:"<<CurrentBinaryPath << endl;
+		else {
+		    ub = tmpub;
+		    cerr << "INCOP solver narycsp not found in:"<<CurrentBinaryPath << endl;
+		}
 
 #else
 		cerr << "Initial upperbound: INCOP not compliant with Windows OS" << endl;
@@ -1851,7 +1859,12 @@ int _tmain(int argc, TCHAR * argv[])
 			else solver->parse_solution(certificateString);
 		}
 		if (ToulBar2::dumpWCSP==1) {
-			solver->dump_wcsp("problem_original.wcsp");
+		    string problemname = "problem_original.wcsp";
+		    if (ToulBar2::uaieval) {
+		        problemname = ToulBar2::solution_filename;
+		        problemname.replace( problemname.rfind( ".uai.MPE" ), 8, ".wcsp" );
+		    }
+			solver->dump_wcsp(problemname.c_str());
 		}
 		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
 		{
