@@ -686,6 +686,7 @@ void WCSP::read_uai2008(const char *fileName)
 
 	Cost inclowerbound = MIN_COST;
     updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST );
+    Cost upperbound = UNIT_COST;
 
     int nbval = 0;
     int nbvar,nbconstr;
@@ -821,55 +822,71 @@ void WCSP::read_uai2008(const char *fileName)
 	String s;
 
 	ToulBar2::markov_log = 0;   // for the MARKOV Case   
-					
+
+	int ntuplesarray[lctrs.size()];
+	vector<Cost> costs[lctrs.size()];
 	list<int>::iterator it = lctrs.begin();
 	while(it !=  lctrs.end()) {
-	    ictr++;
-		int arity;
-		if(*it == -1) { ctr = NULL; arity = 1; }
-		else if(*it == -2) { ctr = NULL; arity = 0; }
-		else { assert(*it >= 0); ctr = getCtr(*it); arity = ctr->arity(); }
-		
-		file >> ntuples;
+	    file >> ntuples;
+	    ntuplesarray[ictr] = ntuples;
 
-		TProb p;
-		vector<Cost>  costs;
-		vector<TProb> costsProb;
-	
-		TProb maxp = 0.;	
-		for (k = 0; k < ntuples; k++) {
+	    TProb p;
+	    vector<TProb> costsProb;
+
+	    TProb maxp = 0.;
+	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
 	        costsProb.push_back( p );
 	        if(p > maxp) maxp = p;
 	    }
 
-		Cost minc = MAX_COST;	
-		for (k = 0; k < ntuples; k++) {
-			p = costsProb[k];
-			Cost cost;
+	    Cost minc = MAX_COST;
+	    Cost maxc = MIN_COST;
+	    for (k = 0; k < ntuples; k++) {
+	        p = costsProb[k];
+	        Cost cost;
 	        if(markov) cost = Prob2Cost(p / maxp);
-	        else 	   cost = Prob2Cost(p);
-			costs.push_back(cost);
-			if(cost < minc) minc = cost;
-	        }
+	        else       cost = Prob2Cost(p);
+	        costs[ictr].push_back(cost);
+	        if(cost < minc) minc = cost;
+	        if(cost > maxc && cost < getUb()) maxc = cost;
+	    }
+	    upperbound += maxc;
 
-		if(ToulBar2::preprocessNary>0 && minc > MIN_COST) {	    
-			for (k = 0; k < ntuples; k++) {
-				costs[k] -= minc;
-			}
-			if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
-		    inclowerbound += minc;
-		}
-		
-		if(markov) ToulBar2::markov_log += log10( maxp );	
-			
+        if(ToulBar2::preprocessNary>0 && minc > MIN_COST) {
+            for (k = 0; k < ntuples; k++) {
+                costs[ictr][k] -= minc;
+            }
+            if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
+            inclowerbound += minc;
+        }
+
+	    if(markov) ToulBar2::markov_log += log10( maxp );
+
+	    ictr++;
+	    ++it;
+	}
+    updateUb( upperbound );
+
+    ictr = 0;
+    it = lctrs.begin();
+	while(it !=  lctrs.end()) {
+		ntuples = ntuplesarray[ictr];
+		for (k = 0; k < ntuples; k++) {
+		    if(CUT(costs[ictr][k], getUb())) costs[ictr][k] = getUb() * MEDIUM_COST;
+	    }
+
+		int arity;
+		if(*it == -1) { ctr = NULL; arity = 1; }
+		else if(*it == -2) { ctr = NULL; arity = 0; }
+		else { assert(*it >= 0); ctr = getCtr(*it); arity = ctr->arity(); }
 		switch(arity) {
-			case 0:     inclowerbound += costs[0];
+			case 0:     inclowerbound += costs[ictr][0];
 						break;
 							
 			case 1: 	unaryconstrs[iunaryctr].costs.clear();
 						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
-						      unaryconstrs[iunaryctr].costs.push_back(costs[a]);
+						      unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
 						}			
 						iunaryctr++; 
 						if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;							
@@ -878,7 +895,7 @@ void WCSP::read_uai2008(const char *fileName)
 			case 2: bctr = (BinaryConstraint*) ctr;
 					x = (EnumeratedVariable*) bctr->getVar(0);
             		y = (EnumeratedVariable*) bctr->getVar(1);
-            		bctr->addCosts( x,y, costs );
+            		bctr->addCosts( x,y, costs[ictr] );
 					bctr->propagate();
 					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;							
 					break;
@@ -887,7 +904,7 @@ void WCSP::read_uai2008(const char *fileName)
 					x = (EnumeratedVariable*) tctr->getVar(0);
             		y = (EnumeratedVariable*) tctr->getVar(1);
             		z = (EnumeratedVariable*) tctr->getVar(2);
-		    		tctr->addCosts( x,y,z, costs );
+		    		tctr->addCosts( x,y,z, costs[ictr] );
 					tctr->propagate();
 					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;							
 					break;
@@ -897,7 +914,7 @@ void WCSP::read_uai2008(const char *fileName)
 					nctr->firstlex();
 					while(nctr->nextlex(s,cost)) {
 					  //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
-					  postNaryConstraintTuple(nctr->wcspIndex, s, costs[j]);
+					  postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
 					  j++;
 					}
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
@@ -905,6 +922,7 @@ void WCSP::read_uai2008(const char *fileName)
 					break;
 			
 		}
+        ictr++;
 		++it;
 	}
 	if (ToulBar2::verbose >= 1) {
@@ -965,7 +983,7 @@ void WCSP::solution_UAI(Cost res, bool opt)
  	if (!ToulBar2::uai && !ToulBar2::uaieval) return;
  	if (ToulBar2::isZ) return;
 	// UAI 2012 Challenge output format
-	if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
+	if (ToulBar2::uai_firstoutput && !ToulBar2::uaieval) ToulBar2::uai_firstoutput = false;
 	else {
 //	    ToulBar2::solution_file << "-BEGIN-" << endl;
 	    ToulBar2::solution_file.close();
