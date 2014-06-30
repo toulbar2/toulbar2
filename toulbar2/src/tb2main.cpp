@@ -1708,7 +1708,7 @@ int _tmain(int argc, TCHAR * argv[])
 	  string filename(tmpPath);
 	  filename += "/";
 	  filename += basename(tmpFile);
-	  unsigned int wcsppos = string::npos;
+	  size_t wcsppos = string::npos;
 	  if (ToulBar2::uaieval && (wcsppos = filename.rfind( ".wcsp" )) != string::npos) filename.replace( wcsppos, 5, ".uai" );
 	  filename += ".";
 	  if (ToulBar2::isZ) filename += "PR";
