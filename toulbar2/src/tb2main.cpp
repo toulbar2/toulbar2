@@ -714,7 +714,7 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 	cerr << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
 	cerr << "   -dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is " << ToulBar2::DEE << ")" << endl;
-	cerr << "   -l=[integer] : limited discrepancy search (discrepancy bound = " << maxdiscrepancy << " by default)";
+	cerr << "   -l=[integer] : limited discrepancy search, use a negative value to stop the search after the given absolute number of discrepancies has been explored (discrepancy bound = " << maxdiscrepancy << " by default)";
 	if (ToulBar2::lds) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = " << maxrestarts << " by default)";
@@ -1226,7 +1226,7 @@ int _tmain(int argc, TCHAR * argv[])
 					comment = " (default value) " ;
 				} else {
 					int maxlds =atoi(args.OptionArg());
-					if (maxlds > 0) ToulBar2::lds = maxlds;
+					if (maxlds > 0 || maxlds < 0) ToulBar2::lds = maxlds;
 				}
 				if (ToulBar2::debug) cout << "LDS ON #iter = " << ToulBar2::lds << comment << endl ;
 
