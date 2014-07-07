@@ -525,7 +525,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	if (Narycsp_Path!=NULL)
 	{
 		printf ("env variable NARYCPS founded: narycsp path = %s \n",Narycsp_Path);
-		sprintf(line,"%s%cnarycsp %s %s 0 1 1 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
+		sprintf(line,"%s%cnarycsp %s %s 0 1 3 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
 		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", Narycsp_Path,PATH_SEP_CHR, fich, filename);
 
 	}
@@ -534,7 +534,7 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 
 		printf ("narycsp default path: %s \n",CurrentBinaryPath);
 
-		sprintf(line,"%snarycsp %s %s 0 1 1 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
+		sprintf(line,"%snarycsp %s %s 0 1 3 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
 
 		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", CurrentBinaryPath,PATH_SEP_CHR, fich, filename);
 
