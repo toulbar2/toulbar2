@@ -2334,7 +2334,7 @@ void WCSP::ternaryCompletion() {
 										int xsize = x->getDomainInitSize();
 										int ysize = y->getDomainInitSize();
 										int zsize = z->getDomainInitSize();
-										TripleVarCostSize tvcs = { x , y , z, tight, xsize * ysize * zsize };
+										TripleVarCostSize tvcs = { x , y , z, tight, xsize * ysize * (long unsigned int) zsize };
 										triplelist.push_back(tvcs);
 									}
 								}

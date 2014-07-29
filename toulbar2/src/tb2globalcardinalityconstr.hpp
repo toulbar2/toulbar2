@@ -1,5 +1,11 @@
-//#include "glpk.h"
-#include "stddef.h"
+/** \file tb2globalcardinalityconstr.hpp
+ *  \brief Global Cardinality Soft Constraint.
+ * 
+ */
+
+#ifndef TB2GCC_HPP_
+#define TB2GCC_HPP_
+
 #include "tb2flowbasedconstr.hpp"
 
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint 
@@ -42,4 +48,4 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
         void dump(ostream& os, bool original = true);
 };
 
-
+#endif /* TB2GCC_HPP_ */

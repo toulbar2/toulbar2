@@ -6,6 +6,9 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
+//# Release information include in all files
+#include "ToulbarVersion.hpp"
+
 double cpuTime();		///< \brief return CPU time in seconds
 void timeout(int sig);
 void timer(int t); 		///< \brief set a timer (in seconds)
@@ -195,6 +198,3 @@ inline int cost2log2gub(Long x) {return cost2log2(x);}
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */
-
-//# Release information include in all files
-#include "ToulbarVersion.hpp"

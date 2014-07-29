@@ -1,5 +1,5 @@
 /** \file tb2alldiffconstr.hpp
- *  \brief AllDifferent constraint with mu_var and mu_dec measure
+ *  \brief AllDifferent Soft Constraint with mu_var and mu_dec measure
  *
  */
 
@@ -7,8 +7,6 @@
 #define TB2ALLDIFFCONSTR_HPP_
 
 #include "tb2flowbasedconstr.hpp"
-#include "tb2binconstr.hpp"
-#include "tb2vacutils.hpp"
 
 class AllDiffConstraint : public FlowBasedGlobalConstraint
 {

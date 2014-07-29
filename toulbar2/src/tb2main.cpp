@@ -807,7 +807,7 @@ int _tmain(int argc, TCHAR * argv[])
 //	ToulBar2::lds = 1;
 
     // Configuration for UAI Evaluation
-//	ToulBar2::uaieval = true;
+	//	ToulBar2::uaieval = true;
 //  ToulBar2::verbose = 0;
 //  ToulBar2::lds = 1;
 //  localsearch = true;

@@ -1,3 +1,11 @@
+/** \file tb2sameconstr.hpp
+ *  \brief Same Soft Constraint.
+ * 
+ */
+
+#ifndef TB2SAME_HPP_
+#define TB2SAME_HPP_
+
 #include "tb2flowbasedconstr.hpp"
 
 class SameConstraint : public FlowBasedGlobalConstraint
@@ -39,3 +47,5 @@ class SameConstraint : public FlowBasedGlobalConstraint
         void print(ostream& os);
         void dump(ostream& os, bool original = true);
 };
+
+#endif /* TB2SAME_HPP_ */

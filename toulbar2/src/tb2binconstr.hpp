@@ -441,4 +441,120 @@ public:
 inline Cost Functor_getCost::operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getCost(vx, vy);}
 inline Cost Functor_getCostReverse::operator()(EnumeratedVariable* yy, EnumeratedVariable* xx, Value vy, Value vx) const {assert(xx==obj.x);assert(yy==obj.y);return obj.getCost(vx, vy);}
 
+template <typename T>
+void BinaryConstraint::findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+        vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
+{
+	assert(connected());
+    wcsp->revise(this);
+    if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
+    bool supportBroken = false;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        unsigned int xindex = x->toIndex(*iterX);
+        Value support = supportX[xindex];
+        if (y->cannotbe(support) || getCost(x,y, *iterX, support) > MIN_COST) {
+            Value minCostValue = y->getInf();
+            Cost minCost = getCost(x,y, *iterX, minCostValue);
+            EnumeratedVariable::iterator iterY = y->begin();
+            for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
+			  Cost cost = getCost(x,y, *iterX, *iterY);
+                if (GLB(&minCost, cost)) {
+                    minCostValue = *iterY;
+                }
+            }
+            if (minCost > MIN_COST) {
+                supportBroken |= project(x, *iterX, minCost, deltaCostsX);
+                if (deconnected()) return;
+            }
+            supportX[xindex] = minCostValue;
+        }
+    }
+    if (supportBroken) {
+        x->findSupport();
+    }
+}
+
+template <typename T>
+void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+        vector<Value> &supportX, vector<StoreCost> &deltaCostsX,
+        vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
+{
+	assert(connected());
+    wcsp->revise(this);
+    if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
+    bool supportBroken = false;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+    	unsigned int xindex = x->toIndex(*iterX);
+        Value support = supportX[xindex];
+        if (y->cannotbe(support) || getCost(x,y, *iterX, support) + y->getCost(support) > MIN_COST) {
+            Value minCostValue = y->getInf();
+            Cost minCost = getCost(x,y, *iterX, minCostValue) + y->getCost(minCostValue);
+            EnumeratedVariable::iterator iterY = y->begin();
+            for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
+                Cost cost = getCost(x,y, *iterX, *iterY) + y->getCost(*iterY);
+                if (GLB(&minCost, cost)) {
+                    minCostValue = *iterY;
+                }
+            }
+            if (minCost > MIN_COST) {
+                // extend unary to binary
+                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                    Cost cost = getCost(x,y, *iterX, *iterY);
+                    if (GLBTEST(minCost, cost)) {
+						extend(y, *iterY, minCost - cost, deltaCostsY);
+                        supportY[y->toIndex(*iterY)] = *iterX;
+//                         if (ToulBar2::vac) {
+//                             x->queueVAC2();
+//                             y->queueVAC2();
+//                         }
+                     }
+                }
+                supportBroken |= project(x, *iterX, minCost, deltaCostsX);
+                if (deconnected()) return;
+            }
+            supportX[xindex] = minCostValue;
+        }
+    }
+    if (supportBroken) {
+        x->findSupport();
+    }
+}
+
+template <typename T>
+void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
+{
+	x->queueDEE();
+    bool supportBroken = false;
+    wcsp->revise(this);
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        Cost cost = getCost(x,y, *iterX, valueY);
+        if (cost > MIN_COST) {
+            supportBroken |= project(x, *iterX, cost, deltaCostsX);
+        }
+    }
+    if (supportBroken) {
+        x->findSupport();
+    }
+}
+
+template <typename T>
+bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariable *y)
+{
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        Cost minCost = getCost(x,y, *iterX, y->getInf());
+		if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
+        EnumeratedVariable::iterator iterY = y->begin();
+        for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
+            Cost cost = getCost(x,y, *iterX, *iterY);
+			if (ToulBar2::LcLevel>=LC_DAC && getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
+            GLB(&minCost, cost);
+        }
+        if (minCost > MIN_COST) {
+            cout << *this;
+            return false;
+        }
+    }
+    return true;
+}
+
 #endif /*TB2BINCONSTR_HPP_*/

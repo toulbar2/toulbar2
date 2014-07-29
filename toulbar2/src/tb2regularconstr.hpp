@@ -1,3 +1,11 @@
+/** \file tb2regularconstr.hpp
+ *  \brief Regular Soft Constraint.
+ * 
+ */
+
+#ifndef TB2REGULAR_HPP_
+#define TB2REGULAR_HPP_
+
 #include "tb2flowbasedconstr.hpp"
 
 struct DFA {
@@ -85,3 +93,4 @@ class RegularConstraint : public FlowBasedGlobalConstraint
   //        void dump(ostream& os, bool original = true);
 };
 
+#endif /* TB2REGULAR_HPP_ */

@@ -1,5 +1,6 @@
 #include "tb2alldiffconstr.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2vac.hpp"
 
 
 AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, 

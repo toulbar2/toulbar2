@@ -8,7 +8,6 @@
 
 #include "tb2globalconstr.hpp"
 #include "tb2graph.hpp"
-#include <vector>
 
 class FlowBasedGlobalConstraint : public GlobalConstraint 
 {
