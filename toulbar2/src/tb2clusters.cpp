@@ -856,15 +856,15 @@ void TreeDecomposition::fusion( Cluster* ci, Cluster* cj )
 bool TreeDecomposition::treeFusion( )
 {
 	bool done = false;
-	for(unsigned int i=0; i < clusters.size(); i++) {
-		if(!clusters[i]) continue;
-		Cluster* c = clusters[i];
-		if (ToulBar2::verbose >= 3) { cout << "fusion testing "; c->print(); }
+	for(int j= clusters.size()-1; j >= 0; j--) {
+		if(!clusters[j]) continue;
+		Cluster* cj = clusters[j];
+		if (ToulBar2::verbose >= 3) { cout << "fusion testing "; cj->print(); }
 
-		TClusters::iterator it =  c->beginEdges();
-		while(it != c->endEdges()) {
-			Cluster* cj = *it;
-			assert(cj == clusters[cj->getId()]);
+		TClusters::iterator it =  cj->beginEdges();
+		while(it != cj->endEdges()) {
+			Cluster* c = *it;
+			assert(c == clusters[c->getId()]);
 
 			if((c->getId() < cj->getId()) &&
 			   (included(c->getVars(), cj->getVars()) ||
@@ -883,7 +883,8 @@ bool TreeDecomposition::treeFusion( )
 					clusters[ cj->getId() ] = NULL;
 					if (ToulBar2::verbose >= 1) { cout << "fusion ci " <<  c->getId() << ",  cj " <<  cj->getId() << endl; c->print(); }
 					delete cj;
-					return true;
+//					done = true;
+					break;
 			}
 			++it;
 		}
@@ -1592,7 +1593,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 			Cluster* c = clusters[i];
 			c->print();
 		}
-		cout << "----- fusions process starting... " << endl;
+		cout << "----- fusions process ended... " << endl;
 	}
 
 	for(unsigned int i = 0; i < clusters.size(); i++) {
