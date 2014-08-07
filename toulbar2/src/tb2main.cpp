@@ -740,7 +740,11 @@ void help_msg(char *toulbar2filename)
 	cerr << endl << endl;
 
 	cerr << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-	cerr << "   -O=[filename] : reads a variable elimination order from a file in order to build a tree decomposition" << endl;
+	cerr << "   -O=[filename] : reads a variable elimination order from a file in order to build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering" << endl;
+#ifdef BOOST
+    cerr << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
+	cerr << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering, (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering" << endl;
+#endif
 	cerr << "                  (if not specified, then use the variable order in which variables appear in the problem file)" << endl;
 	cerr << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
 	cerr << "                (use options \"-B=3 -j=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
@@ -930,12 +934,17 @@ int _tmain(int argc, TCHAR * argv[])
 
 			if (args.OptionId() == OPT_varOrder)
 			{
-				char buf[80];
-				sprintf(buf,"%s",args.OptionArg());
-				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
-				ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
-				sprintf(ToulBar2::varOrder, "%s",buf);
-				if (ToulBar2::debug) cout << "variable order read from file " << args.OptionArg() << endl;
+			    int varElimOrder = atoi(args.OptionArg());
+			    if (varElimOrder>=0) {
+                    char buf[80];
+                    sprintf(buf,"%s",args.OptionArg());
+    //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+                    ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+                    sprintf(ToulBar2::varOrder, "%s",buf);
+                    if (ToulBar2::debug) cout << "variable order read from file " << args.OptionArg() << endl;
+			    } else {
+			        ToulBar2::varOrder = (char *) -varElimOrder;
+			    }
 			}
 
 			// filename of solution
@@ -1587,7 +1596,7 @@ int _tmain(int argc, TCHAR * argv[])
 				cout << "loading variable order in file: " << glob.File(n) << endl;	
 				char buf[80];
 				sprintf(buf,"%s",glob.File(n));
-				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+//				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
 				ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
 				sprintf(ToulBar2::varOrder, "%s",buf);
 			}

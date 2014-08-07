@@ -280,11 +280,15 @@ public:
 		}
 	}
 #ifdef BOOST
-	int diameter();					///< \deprecated
-	int connectedComponents();		///< \deprecated
-	int biConnectedComponents();	///< \deprecated
-	void minimumDegreeOrdering();	///< \deprecated
-	void spanningTreeOrdering();
+	int diameter();
+	int connectedComponents();
+	int biConnectedComponents();
+	void minimumDegreeOrderingBGL(vector<int> &order);
+	void spanningTreeOrderingBGL(vector<int> &order);
+	void reverseCuthillMcKeeOrderingBGL(vector<int> &order);
+	void maximumCardinalitySearch(vector<int> &order);
+	void minimumFillInOrdering(vector<int> &order);
+	void minimumDegreeOrdering(vector<int> &order);
 #endif
 
 	int makeEnumeratedVariable(string n, Value iinf, Value isup);

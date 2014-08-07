@@ -1056,7 +1056,11 @@ void WCSP::preprocessing() {
 	}
 
 #ifdef BOOST
-	if (ToulBar2::MSTDAC) spanningTreeOrdering();
+	if (ToulBar2::MSTDAC) {
+	    vector<int> order;
+	    spanningTreeOrderingBGL(order);
+	    setDACOrder(order);
+	}
 #endif
 }
 
@@ -2442,21 +2446,35 @@ void WCSP::buildTreeDecomposition() {
 
 void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 {
-	ifstream file;
-	if (elimVarOrder) file.open(elimVarOrder);
-	if (!elimVarOrder || !file) {
-		if (ToulBar2::verbose >= 1) {
-			cout << "Variable elimination order file missing or unreadable... takes reverse problem file variable index order." << endl;
-		}
-		//		for(unsigned int i=0;i<numberOfVariables();i++) order.push_back(i);
-		for(int i=numberOfVariables()-1; i>=0; i--) order.push_back(i);
-	} else {
-		while (file) {
-			int ix;
-			file >> ix;
-			if (file) order.push_back(ix);
-		}
-	}
+    if ((unsigned int) elimVarOrder >= 1 && (unsigned int) elimVarOrder <=6) {
+        switch ((unsigned int) elimVarOrder) {
+        case 1: maximumCardinalitySearch(order); break;
+        case 2: minimumDegreeOrdering(order); break;
+        case 3: minimumFillInOrdering(order); break;
+        case 4: spanningTreeOrderingBGL(order); break;
+        case 5: reverseCuthillMcKeeOrderingBGL(order); break;
+        case 6: minimumDegreeOrderingBGL(order); break;
+        default:
+            cerr << "Variable elimination order " <<  (unsigned int) elimVarOrder << " not implemented yet!" << endl;
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        ifstream file;
+        if (elimVarOrder) file.open(elimVarOrder);
+        if (!elimVarOrder || !file) {
+            if (ToulBar2::verbose >= 1) {
+                cout << "Variable elimination order file missing or unreadable... takes reverse problem file variable index order." << endl;
+            }
+            //		for(unsigned int i=0;i<numberOfVariables();i++) order.push_back(i);
+            for(int i=numberOfVariables()-1; i>=0; i--) order.push_back(i);
+        } else {
+            while (file) {
+                int ix;
+                file >> ix;
+                if (file) order.push_back(ix);
+            }
+        }
+    }
 	if (order.size() != numberOfVariables()) {
 		cerr << "Variable elimination order file has incorrect number of variables." << endl;
 		exit(EXIT_FAILURE);
@@ -2496,6 +2514,10 @@ void WCSP::setDACOrder(vector<int> &order) {
 		if (ctr->connected()) ctr->propagate();
 	}
 	propagate();
+	// recompute all tightness: too slow???
+	for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) constrs[i]->computeTightness();
+	for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) elimBinConstrs[i]->computeTightness();
+	for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) elimTernConstrs[i]->computeTightness();
 }
 
 // -----------------------------------------------------------
