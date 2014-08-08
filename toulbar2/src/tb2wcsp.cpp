@@ -2446,8 +2446,8 @@ void WCSP::buildTreeDecomposition() {
 
 void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 {
-  if (static_cast<unsigned int>(elimVarOrder) >= 1 && (static_cast<unsigned int>(elimVarOrder) <=6) {
-        switch (static_cast<unsigned int>(elimVarOrder) {
+  if (((unsigned int)((void *) elimVarOrder)) >= 1 && ((unsigned int)((void *) elimVarOrder)) <=6) {
+	switch (((unsigned int)((void *) elimVarOrder))) {
         case 1: maximumCardinalitySearch(order); break;
         case 2: minimumDegreeOrdering(order); break;
         case 3: minimumFillInOrdering(order); break;
@@ -2455,7 +2455,7 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
         case 5: reverseCuthillMcKeeOrderingBGL(order); break;
         case 6: minimumDegreeOrderingBGL(order); break;
         default:
-		  cerr << "Variable elimination order " <<  static_cast<unsigned int>(elimVarOrder) << " not implemented yet!" << endl;
+		  cerr << "Variable elimination order " <<  ((unsigned int)((void *) elimVarOrder)) << " not implemented yet!" << endl;
             exit(EXIT_FAILURE);
         }
     } else {
