@@ -2446,6 +2446,7 @@ void WCSP::buildTreeDecomposition() {
 
 void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 {
+#ifdef BOOST
   if (((long)((void *) elimVarOrder)) >= 1 && ((long)((void *) elimVarOrder)) <=6) {
 	switch (((long)((void *) elimVarOrder))) {
         case 1: maximumCardinalitySearch(order); break;
@@ -2459,6 +2460,7 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
             exit(EXIT_FAILURE);
         }
     } else {
+#endif
         ifstream file;
         if (elimVarOrder) file.open(elimVarOrder);
         if (!elimVarOrder || !file) {
@@ -2474,7 +2476,9 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
                 if (file) order.push_back(ix);
             }
         }
+#ifdef BOOST
     }
+#endif
 	if (order.size() != numberOfVariables()) {
 		cerr << "Variable elimination order file has incorrect number of variables." << endl;
 		exit(EXIT_FAILURE);
