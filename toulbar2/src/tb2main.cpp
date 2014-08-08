@@ -20,6 +20,11 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts =  10000;
+// incop default value 
+const unsigned int Incop_essai = 3; 
+const unsigned int Incop_nbmove = 100000 ; 
+// incop command line option
+string Incop_cmd;
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef WINDOWS
@@ -42,6 +47,7 @@ const Long maxrestarts =  10000;
 #endif
 #include "SimpleOpt.h"
 #include "SimpleGlob.h"
+#include "incop/narycspmain.h"
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
@@ -323,14 +329,14 @@ CSimpleOpt::SOption g_rgOptions[] =
 
 	{ OPT_QueueComplexity,			(char*) "-o", 				SO_NONE		},
 	{ OPT_MSTDAC,			        (char*) "-mst", 			SO_NONE		},
-	{ NO_OPT_MSTDAC,			    (char*) "-mst:", 			SO_NONE		},
-	{ OPT_DEE,			(char*) "-dee", 			SO_OPT 		},
-	{ NO_OPT_DEE,		(char*) "-dee:",			SO_OPT			},
+	{ NO_OPT_MSTDAC,			(char*) "-mst:", 			SO_NONE		},
+	{ OPT_DEE,	     			(char*) "-dee", 			SO_OPT 		},
+	{ NO_OPT_DEE,				(char*) "-dee:",			SO_OPT			},
 	{ OPT_lds,				(char*) "-l", 				SO_OPT			},
 	{ NO_OPT_lds,	 			(char*) "-l:", 				SO_NONE			},
 	{ OPT_restart,	 			(char*) "-L", 				SO_OPT			},
 	{ NO_OPT_restart,			(char*) "-L:", 				SO_NONE			},
-	{ OPT_localsearch,			(char*) "-i", 				SO_NONE		},
+	{ OPT_localsearch,			(char*) "-i", 				SO_OPT			},// incop option default or string for narycsp argument	
 	{ OPT_EDAC,				(char*) "-k", 				SO_REQ_SEP		},
 	{ OPT_ub, 	 			(char*) "-ub", 				SO_REQ_SEP		}, // init upper bound in cli
 	// MEDELSOFT
@@ -343,10 +349,10 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ESTIMAT_FREQ,		(char*) "-probdata", 			SO_NONE			}, //  probs depending on the frequencies found in the current pedigree problem
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
-	{ OPT_Z,  				 (char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
-	{ OPT_epsilon,		(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
+	{ OPT_Z,  				(char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
+	{ OPT_epsilon,				(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 
-    { OPT_learning,                         (char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
+    { OPT_learning,                         	(char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
 
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
@@ -463,7 +469,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 	if (!stat(bin_name, &st))
 	{
 		char* end = (char*) strrchr(bin_name, PATH_SEP_CHR);
-		static char bin_path[256];
+		static char bin_path[512];
 		if (end)
 		{
 			*end=0;
@@ -485,7 +491,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 		snprintf(buffer, buflen, "%s%c%s", tok, PATH_SEP_CHR, bin_name);
 		if (!stat(buffer, &st))
 		{
-			static char bin_path[256];
+			static char bin_path[512];
 			strncpy(buffer, tok, buflen);
 			free(path);
 			sprintf(bin_path,"%s%c", buffer,PATH_SEP_CHR);
@@ -499,7 +505,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 	return NULL;
 }
 
-bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
+bool localSearch(char *filename, Cost *upperbound, string Incop_cmd)
 {
 	string keyword;
 	// narcycsp file name
@@ -510,7 +516,6 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	cout << "incop narycsp output file:" << fich << endl;
 
 	char line[1024];
-	//int pid = get_pid();
 	Cost tmpUB=MIN_COST;
 	int varIndex;
 	int value;
@@ -518,34 +523,30 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 	map<int, int> bestsol;
 	Cost bestcost = MAX_COST;
 	Cost solcost = MAX_COST;
-	// * get narycsp path into system variable call Narycsp_path
-	char* Narycsp_Path = getenv ("NARYCSP");
 
 	// run local search solver INCOP from Bertrand Neveu on wcsp format
-	if (Narycsp_Path!=NULL)
-	{
-		printf ("env variable NARYCPS founded: narycsp path = %s \n",Narycsp_Path);
-		sprintf(line,"%s%cnarycsp %s %s 0 1 3 idwa 100000 cv v 0 200 1 0 0", Narycsp_Path,PATH_SEP_CHR, fich, filename);
-		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", Narycsp_Path,PATH_SEP_CHR, fich, filename);
+		if ( Incop_cmd.size() > 0 ) {
+		
+		// remove leading space  from incop command line
+			Incop_cmd.erase(Incop_cmd.begin(), std::find_if(Incop_cmd.begin(), Incop_cmd.end(), std::bind1st(std::not_equal_to<char>(), ' ')));
+		        sprintf(line, "%s", Incop_cmd.c_str());
 
-	}
-	else
-	{
+		} else {
 
-		printf ("narycsp default path: %s \n",CurrentBinaryPath);
+		sprintf(line,"0 1 %i idwa %i cv v 0 200 1 0 0", Incop_essai , Incop_nbmove);
 
-		sprintf(line,"%snarycsp %s %s 0 1 3 idwa 100000 cv v 0 200 1 0 0", CurrentBinaryPath, fich, filename);
+		cout << "Default " ;
+		}
+		
 
-		// sprintf(line,"%s%cautonarycsp %s %s 0 1 3 idwa 200 cv v 0 10 10 0 0 100", CurrentBinaryPath,PATH_SEP_CHR, fich, filename);
-
-	}
-
-	if (system(line))
-	{
+	if( narycspmain( filename, fich , line ,ToulBar2::verbose) > 0 ) {
 		printf ("exec error from narcycsp call: %s\n",line);//erreur
+		cout << "please check your incop option " << endl;
 	}
 
 
+	
+	
 	// open the file
 	ifstream file(fich);
 	if (!file)
@@ -609,6 +610,13 @@ bool localSearch(char *filename, Cost *upperbound, char *CurrentBinaryPath)
 		}
 	}
 	file.close();
+				cout << "incop best ub found :" << bestcost << endl;
+				cout << "incop best solution found :" << endl;
+						for (unsigned j = 0 ; j < bestsol.size(); ++j)
+				{
+					cout <<  bestsol[j] <<" "; }
+				cout << endl;
+			*upperbound=bestcost;
 
 	/* deletion of tmp file created by narycsp system call */
 
@@ -720,9 +728,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = " << maxrestarts << " by default)";
 	if (ToulBar2::restart>=0) cerr << " (default option)";
 	cerr << endl;
-#ifndef WINDOWS
-	cerr << "   -i : initial upperbound found by INCOP local search solver (filename \"./misc/bin/linux/narycsp\") (warning! only for small integer costs)" << endl;
-#endif
+	cerr << "   -i=\"string\" : initial upperbound found by INCOP local search solver." ;
+	cerr << "   by default  0 1 3 idwa 100000 cv v 0 200 1 0 0 is used. Parameter can be overwrite as follows  -i=\" 0 1 2 idwa 150000 cv v 0 200 1 0 0\" "<< endl;
+
 	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
 	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
 	cerr << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
@@ -838,7 +846,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 	if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2014"<<endl;
-	// cout << "Binary Path="<<CurrentBinaryPath<<endl;
+	 cout << "Toulbar2 Binary Path="<<CurrentBinaryPath<<"toulbar2"<<endl;
 
 	// --------------------------simple opt ----------------------
 
@@ -936,7 +944,7 @@ int _tmain(int argc, TCHAR * argv[])
 			{
 			    int varElimOrder = atoi(args.OptionArg());
 			    if (varElimOrder>=0) {
-                    char buf[80];
+                    char buf[512];
                     sprintf(buf,"%s",args.OptionArg());
     //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
                     ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
@@ -1265,8 +1273,13 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 
 			// local search icop upper bound ..system call
-			if ( args.OptionId() == OPT_localsearch)  localsearch = true;
-
+			//incop command line
+			if ( args.OptionId() == OPT_localsearch)  {
+			localsearch = true;
+				if (args.OptionArg() != NULL) {
+				Incop_cmd= args.OptionArg();
+			}
+			}
 
 
 			// EDAC OPTION
@@ -1736,24 +1749,18 @@ int _tmain(int argc, TCHAR * argv[])
 
 	if (localsearch && strstr(strext.c_str(),".wcsp"))
 	{
-#ifndef WINDOWS
 	    Cost tmpub = ub;
-		if (localSearch((char*)strfile.c_str(),&ub,CurrentBinaryPath))
+		if (localSearch((char*)strfile.c_str(),&ub,Incop_cmd) )
 		{
-		    if (ub < MIN_COST || ub >= INT_MAX) ub = tmpub;
 			cout << "Initial upperbound: " << ub << endl;
+		    if (ub < MIN_COST || ub >= MAX_COST) {  
+			cout << "Initial upperbound too big : " << ub << "reset to initial ub "<< tmpub <<   endl;
+			ub = tmpub;
+			
+			}
 
 		}
-		else {
-		    ub = tmpub;
-		    cerr << "INCOP solver narycsp not found in:"<<CurrentBinaryPath << endl;
-		}
-
-#else
-		cerr << "Initial upperbound: INCOP not compliant with Windows OS" << endl;
-
-#endif
-	}
+	} 
 	if (ub==MIN_COST)
 	{
 		if (ToulBar2::verbose >= 0) cout << "Initial upperbound equal to zero!" << endl;
