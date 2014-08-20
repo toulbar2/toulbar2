@@ -1,1 +1,0 @@
-LSAlgorithm* algo, OpProblem* problem, Configuration** configuration
