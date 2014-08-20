@@ -143,6 +143,8 @@ bool ToulBar2::interrupted = false;
 
 bool ToulBar2::learning = false;
 
+string ToulBar2::incop_cmd = "";
+
 /*
  * WCSP constructors
  *

@@ -305,6 +305,8 @@ public:
     static bool learning; // if true, perform pseudoboolean learning
 	static externalfunc timeOut;
 	static bool interrupted;
+
+	static string incop_cmd;
 };
 
 /*

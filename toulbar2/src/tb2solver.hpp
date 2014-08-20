@@ -95,6 +95,14 @@ public:
 
     bool solve();
 
+    /// \brief solves the current problem using INCOP local search solver by Bertrand Neveu
+    /// \return best solution cost found
+    /// \param cmd command line argument for narycsp INCOP local search solver (cmd format: lowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors  neighborhoodchoice3 autotuning tracemode)
+    /// \param solution best solution assignment found (MUST BE INITIALIZED WITH A DEFAULT COMPLETE ASSIGNMENT)
+    /// \warning cannot solve problems with global cost functions
+    /// \note side-effects: updates current problem upper bound and propagates, best solution saved (using WCSP::setBestValue)
+    Cost narycsp(string cmd, vector<Value> &solution);
+
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
     void dump_wcsp(const char *fileName, bool original = true);

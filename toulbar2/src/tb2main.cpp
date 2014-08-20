@@ -20,11 +20,9 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts =  10000;
-// incop default value 
-const unsigned int Incop_essai = 3; 
-const unsigned int Incop_nbmove = 100000 ; 
-// incop command line option
-string Incop_cmd;
+
+// INCOP default command line option
+const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef WINDOWS
@@ -47,7 +45,6 @@ string Incop_cmd;
 #endif
 #include "SimpleOpt.h"
 #include "SimpleGlob.h"
-#include "incop/narycspmain.h"
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
@@ -505,129 +502,6 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 	return NULL;
 }
 
-bool localSearch(char *filename, Cost *upperbound, string Incop_cmd)
-{
-	string keyword;
-	// narcycsp file name
-	static char fich[512];
-	char * tname ;
-	tname=tmpnam (NULL);
-	strcpy(fich,tname);
-	cout << "incop narycsp output file:" << fich << endl;
-
-	char line[1024];
-	Cost tmpUB=MIN_COST;
-	int varIndex;
-	int value;
-	map<int, int> solution;
-	map<int, int> bestsol;
-	Cost bestcost = MAX_COST;
-	Cost solcost = MAX_COST;
-
-	// run local search solver INCOP from Bertrand Neveu on wcsp format
-		if ( Incop_cmd.size() > 0 ) {
-		
-		// remove leading space  from incop command line
-			Incop_cmd.erase(Incop_cmd.begin(), std::find_if(Incop_cmd.begin(), Incop_cmd.end(), std::bind1st(std::not_equal_to<char>(), ' ')));
-		        sprintf(line, "%s", Incop_cmd.c_str());
-
-		} else {
-
-		sprintf(line,"0 1 %i idwa %i cv v 0 200 1 0 0", Incop_essai , Incop_nbmove);
-
-		cout << "Default " ;
-		}
-		
-
-	if( narycspmain( filename, fich , line ,ToulBar2::verbose) > 0 ) {
-		printf ("exec error from narcycsp call: %s\n",line);//erreur
-		cout << "please check your incop option " << endl;
-	}
-
-
-	
-	
-	// open the file
-	ifstream file(fich);
-	if (!file)
-	{
-		return false;
-	}
-
-	while (file)
-	{
-		file >> keyword;
-		if (keyword == "Meilleur")
-		{
-			file >> keyword;
-			if (keyword == "essai")
-			{
-				file >> keyword; // skip ":"
-				file >> tmpUB;
-				if (tmpUB>=MIN_COST && tmpUB < *upperbound) *upperbound = tmpUB;
-				if (ToulBar2::uaieval && *upperbound == bestcost) {
-//				    ToulBar2::uai_firstoutput = false;
-			        ToulBar2::solution_file.close();
-			        ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
-			        ToulBar2::solution_file << "MPE" << endl;
-				    ToulBar2::solution_file << bestsol.size();
-				    for (map<int,int>::iterator iter = bestsol.begin(); iter != bestsol.end(); ++iter) {
-				        ToulBar2::solution_file << " " << (*iter).second;
-				    }
-				    ToulBar2::solution_file << endl;
-				    ToulBar2::solution_file.flush();
-				}
-				if (ToulBar2::writeSolution && *upperbound == bestcost)
-				{
-					ofstream sol("sol");
-					if (file)
-					{
-						for (map<int,int>::iterator iter = bestsol.begin(); iter != bestsol.end(); ++iter)
-						{
-							sol << " " << (*iter).second;
-						}
-						sol << endl;
-					}
-				}
-				break;
-			}
-		}
-		if (keyword == "variable")
-		{
-			file >> varIndex;
-			file >> keyword; // skip ":"
-			file >> value;
-			solution[varIndex] = value;
-		}
-		if (keyword == "verification")
-		{
-			file >> solcost;
-			if (solcost < bestcost)
-			{
-				bestcost = solcost;
-				bestsol = solution;
-			}
-		}
-	}
-	file.close();
-				cout << "incop best ub found :" << bestcost << endl;
-				cout << "incop best solution found :" << endl;
-						for (unsigned j = 0 ; j < bestsol.size(); ++j)
-				{
-					cout <<  bestsol[j] <<" "; }
-				cout << endl;
-			*upperbound=bestcost;
-
-	/* deletion of tmp file created by narycsp system call */
-
-	if ( remove(fich ) != 0 )
-		perror( "narycsp File: Error deleting file" );
-	else
-		puts( "narycsp tmp File successfully deleted" );
-
-	return true;
-}
-
 //  current unused option letters: 	f F G H J K n N Q U W Y
 void help_msg(char *toulbar2filename)
 {
@@ -728,8 +602,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = " << maxrestarts << " by default)";
 	if (ToulBar2::restart>=0) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -i=\"string\" : initial upperbound found by INCOP local search solver." ;
-	cerr << "   by default  0 1 3 idwa 100000 cv v 0 200 1 0 0 is used. Parameter can be overwrite as follows  -i=\" 0 1 2 idwa 150000 cv v 0 200 1 0 0\" "<< endl;
+	cerr << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
+	cerr << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
+	cerr << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode"<< endl;
 
 	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
 	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
@@ -751,7 +626,8 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -O=[filename] : reads a variable elimination order from a file in order to build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering" << endl;
 #ifdef BOOST
     cerr << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
-	cerr << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering, (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering" << endl;
+	cerr << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
+	cerr << "                           (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering" << endl;
 #endif
 	cerr << "                  (if not specified, then use the variable order in which variables appear in the problem file)" << endl;
 	cerr << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
@@ -803,7 +679,6 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 	setlocale( LC_ALL, "C" );
-	bool localsearch = false;
 	bool certificate = false;
 	char *certificateFilename = NULL;
 	char *certificateString = NULL;
@@ -822,7 +697,7 @@ int _tmain(int argc, TCHAR * argv[])
 	//	ToulBar2::uaieval = true;
 //  ToulBar2::verbose = 0;
 //  ToulBar2::lds = 1;
-//  localsearch = true;
+//  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 	char *random_desc = NULL ; // benchmark description set from command line;
 
@@ -1272,15 +1147,14 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::restart = -1; 
 			}
 
-			// local search icop upper bound ..system call
-			//incop command line
+			// local search INCOP
 			if ( args.OptionId() == OPT_localsearch)  {
-			localsearch = true;
-				if (args.OptionArg() != NULL) {
-				Incop_cmd= args.OptionArg();
+			    if (args.OptionArg() != NULL) {
+			        ToulBar2::incop_cmd = args.OptionArg();
+			    } else {
+			        ToulBar2::incop_cmd = Incop_cmd;
+			    }
 			}
-			}
-
 
 			// EDAC OPTION
 			if ( args.OptionId() == OPT_EDAC )
@@ -1721,6 +1595,10 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning" << endl;
 		ToulBar2::elimDegree = -1;
 	}
+    if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
+        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
+        ToulBar2::incop_cmd = "";
+    }
 
 	if (ToulBar2::uai || ToulBar2::uaieval) {
 	  char *tmpPath = new char[strlen(argv[0])+1];
@@ -1746,44 +1624,6 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 
 	ToulBar2::startCpuTime = cpuTime();
-
-	if (localsearch && strstr(strext.c_str(),".wcsp"))
-	{
-	    Cost tmpub = ub;
-		if (localSearch((char*)strfile.c_str(),&ub,Incop_cmd) )
-		{
-			cout << "Initial upperbound: " << ub << endl;
-		    if (ub < MIN_COST || ub >= MAX_COST) {  
-			cout << "Initial upperbound too big : " << ub << "reset to initial ub "<< tmpub <<   endl;
-			ub = tmpub;
-			
-			}
-
-		}
-	} 
-	if (ub==MIN_COST)
-	{
-		if (ToulBar2::verbose >= 0) cout << "Initial upperbound equal to zero!" << endl;
-		if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
-	    if (ToulBar2::isZ) {
-		  if (ToulBar2::uai) {
-			if (ToulBar2::uai_firstoutput) ToulBar2::uai_firstoutput = false;
-			else ToulBar2::solution_file << "-BEGIN-" << endl;
-			ToulBar2::solution_file << "1" << endl;
-			ToulBar2::solution_file << -numeric_limits<TProb>::infinity() << endl;
-			ToulBar2::solution_file.flush();
-		  }
-		  cout << "Log10(Z)= ";
-		  cout << -numeric_limits<TProb>::infinity() << endl;
-	    }
-	    if (ToulBar2::maxsateval) {
-	    	cout << "o 0" << endl;
-	    	cout << "s UNSATISFIABLE" << endl;
-	    }
-	    if (ToulBar2::verbose >= 0) cout << "end." << endl;
-		if (ToulBar2::uai || ToulBar2::uaieval) ToulBar2::solution_file.close();
-		return 0;
-	}
 
 	initCosts(ub);
 	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
@@ -1868,6 +1708,10 @@ int _tmain(int argc, TCHAR * argv[])
 			cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
 			ToulBar2::elimDegree_preprocessing = -1;
 		}
+	    if (solver->getWCSP()->isGlobal() && ToulBar2::incop_cmd.size() > 0)    {
+            cout << "Warning! Cannot use INCOP local search with global cost functions." << endl;
+            ToulBar2::incop_cmd = "";
+        }
 
 		if (certificate)
 		{

@@ -1022,15 +1022,26 @@ bool Solver::solve()
 		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
-        if (ToulBar2::verbose >= 0) cout << "Preprocessing Time               : " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+        if (ToulBar2::verbose >= 0) cout << "Preprocessing time: " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 
-		if (ToulBar2::verbose >= 0) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
-		if (ToulBar2::verbose >= 0) cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
+        // special data structure to be initialized for variable ordering heuristics
+        initVarHeuristic();
+
+        if (ToulBar2::incop_cmd.size() > 0) {
+            double incopStartTime = cpuTime();
+            vector<int> bestsol(getWCSP()->numberOfVariables(), 0);
+            for (unsigned int i =0; i<wcsp->numberOfVariables(); i++) bestsol[i] = wcsp->getSupport(i);
+            narycsp(ToulBar2::incop_cmd, bestsol);
+            if (ToulBar2::verbose >= 0) cout << "INCOP solving time: " << cpuTime() - incopStartTime << " seconds." << endl;
+        }
 
 		if (ToulBar2::singletonConsistency) {
 		  singletonConsistency();
 		  wcsp->propagate();
 		}
+
+		if (ToulBar2::verbose >= 0) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
+        if (ToulBar2::verbose >= 0) cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[" << endl;
 
 		if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
@@ -1045,9 +1056,6 @@ bool Solver::solve()
 		}
 		
 		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
-
-        // special data structure to be initialized for variable ordering heuristics
-	    initVarHeuristic();
 
 	    Cost upperbound = MAX_COST;
 		if (ToulBar2::restart>=0) {
