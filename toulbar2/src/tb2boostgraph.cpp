@@ -1,3 +1,8 @@
+/*
+ * ****** Graph Algorithms using Boost Graph Library ********
+ *
+ * Variable elimination ordering heuristics developed by Cyril Terrioux <cyril.terrioux@lsis.org>
+ */
 
 #ifdef BOOST
 #include <boost/config.hpp>
