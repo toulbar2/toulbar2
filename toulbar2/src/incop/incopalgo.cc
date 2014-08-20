@@ -1,5 +1,5 @@
-/* le fichier comportant les méthodes des différents algorithmes (gww
-   et recherche locale) , des métaheuristiques, des classes de
+/* le fichier comportant les mÃ©thodes des diffÃ©rents algorithmes (gww
+   et recherche locale) , des mÃ©taheuristiques, des classes de
    configurations, */
 
 
@@ -69,7 +69,7 @@ ThresholdAccepting::ThresholdAccepting(double maxthreshhold,int walklength)
 {thresholdinit=maxthreshhold;
 delta=thresholdinit/walklength;} 
 
-/* constructeur : calcul du pas constant delta de baisse de température */
+/* constructeur : calcul du pas constant delta de baisse de tempÃ©rature */
 SimulatedAnnealing::SimulatedAnnealing(double initialtemperature,int walkl)
 {inittemperature=initialtemperature;
 walklength = walkl;
@@ -124,7 +124,7 @@ AdaptiveGWWAlgorithm(popsize,grtest,derniermouv,elitisme,stop,1)
 
 
 /* **********************************************************************************************************
- les différentes classes de configuration correspondant aux différentes formes d'incrémentalité
+ les diffÃ©rentes classes de configuration correspondant aux diffÃ©rentes formes d'incrÃ©mentalitÃ©
 */
 
 Configuration::Configuration(){;}
@@ -187,7 +187,7 @@ void Configuration::update_conflicts(OpProblem* problem, Move* move)
 {;}
 
 
-/* L'implantation semi-incrementale : seuls les nb de conflits des valeurs courantes sont stockés dans
+/* L'implantation semi-incrementale : seuls les nb de conflits des valeurs courantes sont stockÃ©s dans
    tabconflicts (tableau a une dimension) */
 
 void IncrCSPConfiguration::set_conflicts(int var, int val, int index, Long nbconf)
@@ -199,7 +199,7 @@ Long IncrCSPConfiguration::get_conflicts(int var, int val, int index)
  else return 0;
 }
 
-/* la valeur courante est stockée , pour les autres valeurs, il faut calculer */
+/* la valeur courante est stockÃ©e , pour les autres valeurs, il faut calculer */
 Long IncrCSPConfiguration::get_conflicts_problem (OpProblem* problem, int var, int val)
 {if (config[var]==val) return tabconflicts[var];
  else return  problem->compute_conflict(this,var,val);
@@ -224,8 +224,8 @@ void IncrCSPConfiguration::update_conflicts(OpProblem* problem, Move* move)
 {problem->incr_update_conflicts (this,move);}
 
 
-/* L'implantation toute-incrementale :  les nb de conflits de toutes les valeurs sont stockés dans
-   tabconflicts (tableau à deux dimensions : variable, valeur) */
+/* L'implantation toute-incrementale :  les nb de conflits de toutes les valeurs sont stockÃ©s dans
+   tabconflicts (tableau Ã  deux dimensions : variable, valeur) */
 
 
 void FullincrCSPConfiguration::init_conflicts()
@@ -262,7 +262,7 @@ void FullincrCSPConfiguration::update_conflicts(OpProblem* problem, Move* move)
  
 
 
-// copie la config2 dans la config1 (recopie les tableaux de conflits, l'évaluation)
+// copie la config2 dans la config1 (recopie les tableaux de conflits, l'Ã©valuation)
 
 void Configuration::copy_element (Configuration* config2)
 { 
@@ -305,13 +305,13 @@ void IncompleteAlgorithm::run (OpProblem *problem, Configuration **population)
 //---------------------------LSALGORITHM----------------------------------------------------------
 
 
-/*  Test pour savoir si le mouvement courant peut conduire à une configuration meilleure que toutes
-celles vues jusqu'à présent.
-Cette meilleure valeur est stockée dans l'objet Statistiques. 
+/*  Test pour savoir si le mouvement courant peut conduire Ã  une configuration meilleure que toutes
+celles vues jusqu'Ã  prÃ©sent.
+Cette meilleure valeur est stockÃ©e dans l'objet Statistiques. 
 (ATTENTION : Statistiques : variable globale ; la meilleure configuration est aussi 
-stockée dans le champ best_config du problème, mais cette mise à jour là 
-ne peut s'effectuer qu'une fois le mouvement effectué )
-en cas de meilleur trouvé, cette valeur est mise à jour dans l'objet Statistiques et une impression
+stockÃ©e dans le champ best_config du problÃ¨me, mais cette mise Ã  jour lÃ  
+ne peut s'effectuer qu'une fois le mouvement effectuÃ© )
+en cas de meilleur trouvÃ©, cette valeur est mise Ã  jour dans l'objet Statistiques et une impression
 est eventuellement faite */
 
 int LSAlgorithm::test_bestfound(Move* move)
@@ -331,8 +331,8 @@ int LSAlgorithm::test_bestfound(Move* move)
  return 0;
 }
 
-/* Analyse des evaluations des nbmove derniers mouvements : renvoie l'écart entre valeurs maximale et minimale
-si la derniere valeur est inferieure a la première , renvoie -1 sinon */
+/* Analyse des evaluations des nbmove derniers mouvements : renvoie l'Ã©cart entre valeurs maximale et minimale
+si la derniere valeur est inferieure a la premiÃ¨re , renvoie -1 sinon */
 Long analyselastvaluations(int nbmove)
 {Long valmax =0, valmin = LONG_MAX;
  for (int i= Statistiques->costvalues.size() - nbmove; 
@@ -361,7 +361,7 @@ void DynamicNeighborhoodSearch::initsearch()
  minneighbors= initminneighbors;
 }
 
-/* Réglage dynamique du parametre maxneighbors en fonction des derniers couts*/
+/* RÃ©glage dynamique du parametre maxneighbors en fonction des derniers couts*/
 
 DynamicNeighborhoodSearch::DynamicNeighborhoodSearch(int minneigh, int maxneigh, int finish, int var_conf, int val_conf, double nbbr) : NeighborhoodSearch(minneigh, maxneigh, finish, var_conf, val_conf, nbbr) { initmaxneighbors=maxneigh;
                         initminneighbors=minneigh;  adjustperiod=50;}
@@ -427,7 +427,7 @@ void NeighborhoodSearch::adjust_neighborhood(Configuration* configuration, OpPro
     }
   else
     maxneigh=maxneighbors;
-  // reglage dynamique possible si TRACEMODE=2 (information stockée pour ce reglage) 
+  // reglage dynamique possible si TRACEMODE=2 (information stockÃ©e pour ce reglage) 
   if (TRACEMODE==2) 
     dynamicmaxneighbors (maxneigh,minneigh,nbmoves);
   if (var_conflict)
@@ -437,8 +437,8 @@ void NeighborhoodSearch::adjust_neighborhood(Configuration* configuration, OpPro
 
 
 /*
-Algo de base qui sélectionne, teste et effectue un mouvement à partir de la configuration courante
-Effectue le mouvement et renvoie 1 si un mvt a été effectué et 0 si aucun mouvement ne l'a été
+Algo de base qui sÃ©lectionne, teste et effectue un mouvement Ã  partir de la configuration courante
+Effectue le mouvement et renvoie 1 si un mvt a Ã©tÃ© effectuÃ© et 0 si aucun mouvement ne l'a Ã©tÃ©
 */
 
 int LSAlgorithm::configurationmove(OpProblem* problem,Configuration* configuration)
@@ -461,26 +461,26 @@ int LSAlgorithm::configurationmove(OpProblem* problem,Configuration* configurati
   if (nbhsearch->var_conflict)  
     problem->compute_var_conflict(configuration);
 
-  // calcul des parametres maxneigh et minneigh à partir du voisinage
+  // calcul des parametres maxneigh et minneigh Ã  partir du voisinage
   nbhsearch->adjust_neighborhood (configuration,problem,maxneigh,minneigh,nbmoves);
   
-  // boucle sur les voisins essayés 
+  // boucle sur les voisins essayÃ©s 
   while((nbtries < minneigh) || ((nbtries < maxneigh) && !accepted ))
     {
       problem->next_move(configuration,currentmove,nbhsearch);
       if (isfeasible(currentmove))
 	{ 
-	  // première valeur faisable ? (sous seuil)
+	  // premiÃ¨re valeur faisable ? (sous seuil)
 	  if (!feasiblefound)
 	    {firstmove->copymove(currentmove);
 	     feasiblefound=1;
 	    }
 	  
-	  // meilleur que le meilleur trouve jusqu'à présent ?
+	  // meilleur que le meilleur trouve jusqu'Ã  prÃ©sent ?
 	  if (test_bestfound (currentmove))
 	    bestfound = 1;
 
-	  // test d'acceptation de la métaheuristique 
+	  // test d'acceptation de la mÃ©taheuristique 
 	  if (bestfound //(aspiration si meilleur_trouve)
               || ((!accepted) && mheur->acceptance (currentmove,configuration))
 	      || ( accepted && minneigh > 1 && currentmove->valuation < bestmove->valuation && mheur->acceptance (currentmove,configuration))
@@ -493,7 +493,7 @@ int LSAlgorithm::configurationmove(OpProblem* problem,Configuration* configurati
 	      {bestmove->copymove(currentmove);}
 	    }
 	  else
-	    // mise à jour du meilleur dans le voisinage (courant non acceptable et aucun acceptable n'a été trouvé)
+	    // mise Ã  jour du meilleur dans le voisinage (courant non acceptable et aucun acceptable n'a Ã©tÃ© trouvÃ©)
 	    {if (!accepted && nbhsearch->finished >=2 && currentmove->valuation < bestmove->valuation
 		&& nbrefused < nbhsearch->finished)
 	      {bestmove->copymove(currentmove);}
@@ -506,20 +506,20 @@ int LSAlgorithm::configurationmove(OpProblem* problem,Configuration* configurati
   avgnhtries= ((nbmoves-1)*avgnhtries + nbtries)/nbmoves;
   avgsqnhtries = ((nbmoves-1) * avgsqnhtries + nbtries * nbtries )/nbmoves ;
   nbmoves++;
-  // choix du mouvement à exécuter
-  // le meilleur accepté ou le meilleur faisable (si aucun accepté)
+  // choix du mouvement Ã  exÃ©cuter
+  // le meilleur acceptÃ© ou le meilleur faisable (si aucun acceptÃ©)
   if ((accepted && minneigh > 1) || (!accepted && nbhsearch->finished >=2))
     {
       currentmove=bestmove;
     }
-  // le premier faisable si aucun n'est accepté     
+  // le premier faisable si aucun n'est acceptÃ©     
   if (!accepted && nbhsearch->finished==1 && feasiblefound)
     {   
       currentmove=firstmove;
     }
   if ((accepted) || ((nbhsearch->finished !=0) && feasiblefound))
-    // mise à jour des structures de données de l'heuristique, du problème, puis
-    // exécution du mouvement.
+    // mise Ã  jour des structures de donnÃ©es de l'heuristique, du problÃ¨me, puis
+    // exÃ©cution du mouvement.
     { nbhsearch->spareneighboradjust(configuration,currentmove);
 	  mheur->executebeforemove(currentmove,configuration,problem);
 	  configuration->update_conflicts(problem,currentmove);
@@ -536,21 +536,21 @@ int LSAlgorithm::configurationmove(OpProblem* problem,Configuration* configurati
 	    {
 	    problem->best_config->copy_element(configuration);
 	    }
-          return 1; // mouvement effectué
+          return 1; // mouvement effectuÃ©
 	}
-  return 0; // pas de mouvement effectué
+  return 0; // pas de mouvement effectuÃ©
 }
 
 
 int LSAlgorithm::isfeasible(Move* move) 
 {  return 1;}
 
-/* le test de faisablité d'un mouvement dans une marche de GWW: rester sous le seuil */
+/* le test de faisablitÃ© d'un mouvement dans une marche de GWW: rester sous le seuil */
 int LSAlgorithmGWW::isfeasible(Move* move) 
 {return (move->valuation <= threshold);}
 
 
-/* Une marche aléatoire : on initialise la métaheuristique et on effectue "walklength" mouvements */
+/* Une marche alÃ©atoire : on initialise la mÃ©taheuristique et on effectue "walklength" mouvements */
 void LSAlgorithm::randomwalk
 (OpProblem* problem, Configuration* configuration)
 {int res;
@@ -574,7 +574,7 @@ void LSAlgorithm::randomwalk
    }
  }
      
-/* un algo simple de recherche locale n'a qu'un élément dans la population  */
+/* un algo simple de recherche locale n'a qu'un Ã©lÃ©ment dans la population  */
 void LSAlgorithm::run (OpProblem *problem,Configuration** population)
 
 { nhtries=0;
@@ -582,14 +582,14 @@ void LSAlgorithm::run (OpProblem *problem,Configuration** population)
   nbhsearch->initsearch();
 
   randomwalk   (problem,population[0]);
-  ecriture_fin_lsrun(avgnhtries,avgsqnhtries);
+//  ecriture_fin_lsrun(avgnhtries,avgsqnhtries);
 }
 
 //************************************** GWW ******************************************************
 
-/* Marche aléatoire (ou recherche locale) de gww 
-   le dernier mouvement est avec un seuil baissé pour forcer une amélioration et éviter un regroupement  si lastmovedescent=1
-   En cas de stagnation, on arrête la marche si nomovestop=1
+/* Marche alÃ©atoire (ou recherche locale) de gww 
+   le dernier mouvement est avec un seuil baissÃ© pour forcer une amÃ©lioration et Ã©viter un regroupement  si lastmovedescent=1
+   En cas de stagnation, on arrÃªte la marche si nomovestop=1
 */
 
 void GWWAlgorithm::randomwalk(OpProblem* problem, Configuration* configuration)
@@ -606,7 +606,7 @@ void GWWAlgorithm::randomwalk(OpProblem* problem, Configuration* configuration)
       }
  Long thresh1 =  walkalgorithm->threshold;
  if (lastmovedescent) thresholdupdate();  // baisse lors du dernier mouvement (on suppose la meme baisse que la
-                                          //dernière effectuée)
+                                          //derniÃ¨re effectuÃ©e)
  val= walkalgorithm->configurationmove(problem,configuration) ;
  if (val) Statistiques->nb_moves[Statistiques->current_try] ++;
  if (lastmovedescent)  walkalgorithm->threshold=thresh1; // remise du seuil 
@@ -614,7 +614,7 @@ void GWWAlgorithm::randomwalk(OpProblem* problem, Configuration* configuration)
 }
 
 
-/* nombre de particules au seuil avant la baisse du seuil (pour les statistiques) : la population etant triée à l'appel */
+/* nombre de particules au seuil avant la baisse du seuil (pour les statistiques) : la population etant triÃ©e Ã  l'appel */
 
 int GWWAlgorithm::nb_threshold_population(Configuration** population) {return 0;}
 
@@ -654,7 +654,7 @@ void GWWAlgorithm::run (OpProblem *problem,Configuration **population)
      meilleur = valeur_min (population,populationsize);
      thresholdcomputedelta(population);
      if (TRACEMODE)
-       ecriture_changement_seuil 
+//       ecriture_changement_seuil
 	 (walkalgorithm->threshold, thresholddelta, meilleur, population[0]->valuation,
 	  population[populationsize/2]->valuation, total_nhtries,
 	  nb_threshold_population (population));
@@ -663,7 +663,7 @@ void GWWAlgorithm::run (OpProblem *problem,Configuration **population)
      nb_pas--;
    }
  Statistiques->thresholdchanges+=thresholdchanges;
- ecriture_fin_gww(thresholdchanges, total_nbmoves);
+// ecriture_fin_gww(thresholdchanges, total_nbmoves);
  
 }
 
@@ -685,7 +685,7 @@ void GWWAlgorithm::populationkeepbest(OpProblem* problem, Configuration** popula
 
 
 
-// les méthodes de baisse du seuil 
+// les mÃ©thodes de baisse du seuil 
 
 void GWWAlgorithm::thresholdcomputedelta(Configuration** population)
 {;}
@@ -701,7 +701,7 @@ void StandardGWWAlgorithm::thresholdcomputedelta(Configuration** population)
 
 
 /* baisse rapide du seuil avec un taux thresholddescent (valeur typique 0.005) 
-    à partir de la plus mauvaise valeur et une valeur thresholdmin */
+    Ã  partir de la plus mauvaise valeur et une valeur thresholdmin */
 void FastStandardGWWAlgorithm::thresholdcomputedelta(Configuration** population)
 { 
  thresholddelta = walkalgorithm-> threshold - population[0]->valuation +
@@ -730,13 +730,13 @@ if (population[nbmaxkilled-1]->valuation == walkalgorithm->threshold) thresholdd
 
 }
 
-/* baisse déterminée par un taux de la distance du pire au médian */
+/* baisse dÃ©terminÃ©e par un taux de la distance du pire au mÃ©dian */
 void MedianAdaptGWWAlgorithm::thresholdcomputedelta(Configuration** population)
 {thresholddelta = 1 + walkalgorithm->threshold - valeur_max(population,populationsize) +
   (Long) (mediandescent * (valeur_max(population,populationsize) - valeur_mediane(population,populationsize)));
 }
 
-/* baisse déterminée par un taux de la distance du pire au meilleur */
+/* baisse dÃ©terminÃ©e par un taux de la distance du pire au meilleur */
 void BestAdaptGWWAlgorithm::thresholdcomputedelta(Configuration** population)
 {thresholddelta = 1 + walkalgorithm->threshold - valeur_max(population,populationsize) +
    (Long) (bestdescent * (valeur_max(population,populationsize) - valeur_min(population,populationsize)));
@@ -771,7 +771,7 @@ void ThresholdGWWAlgorithm::thresholdchangesupdate()
 
 
 
-/* Marche (aléatoire ou recherche locale) sur l'ensemble de la population : appel de la marche aléatoire sur chaque élément */
+/* Marche (alÃ©atoire ou recherche locale) sur l'ensemble de la population : appel de la marche alÃ©atoire sur chaque Ã©lÃ©ment */
 void GWWAlgorithm::populationrandomwalk
               (OpProblem* problem,  Configuration** population)
 
@@ -787,7 +787,7 @@ void GWWAlgorithm::populationrandomwalk
 }
 
 
-/* les méthodes d'interaction entre elements (travail sur la population) */
+/* les mÃ©thodes d'interaction entre elements (travail sur la population) */
 
 void GWWAlgorithm::regrouping (Configuration** population)
 {;}
@@ -859,7 +859,7 @@ void NothresholdGWWAlgorithm::regrouping(Configuration** population)
 //*****************************************************************************************************
 
 
-// les méthodes particulières des algorithmes de recherche locale
+// les mÃ©thodes particuliÃ¨res des algorithmes de recherche locale
 
 
 void Metaheuristic::reinit(OpProblem* problem)
@@ -872,17 +872,17 @@ void Metaheuristic::executebeforemove(Move* move,Configuration* configuration, O
 int Metaheuristic::acceptance(Move* move, Configuration* config)
 {return 1;}
 
-/* la marche aléatoire : tout mouvement est accepté */
+/* la marche alÃ©atoire : tout mouvement est acceptÃ© */
 int RandomSearch::acceptance(Move* move,Configuration*  config)
 {return 1;}
 
-/* Descente avec plateau : tout mouvement améliorant ou neutre est accepté */
+/* Descente avec plateau : tout mouvement amÃ©liorant ou neutre est acceptÃ© */
 int GreedySearch::acceptance(Move* move, Configuration* config)
 {return (move->valuation <= config->valuation);}
 
  
 
-/* Metropolis à temperature constante : condition d'acceptation d'un mouvement */
+/* Metropolis Ã  temperature constante : condition d'acceptation d'un mouvement */
 
 int Metropolis::acceptance (Move* move, Configuration* config)
 {if ((move->valuation <= config->valuation)
@@ -893,7 +893,7 @@ int Metropolis::acceptance (Move* move, Configuration* config)
  else return 0; 
 }
 
-void Metropolis::adjustparameter (int temp) // pour le reglage automatique qui ne marche qu'avec des paramètres entiers
+void Metropolis::adjustparameter (int temp) // pour le reglage automatique qui ne marche qu'avec des paramÃ¨tres entiers
 {temperature = ((double)(temp)) /100 ;}
 
 
@@ -916,7 +916,7 @@ void IncrTabuSearch::reinit(OpProblem* problem)
  nbiter=0;
 }
 
-/* acceptation d'un mouvement : non tabou  (le critère d'aspiration est dans l'algo de recherche du voisin) */
+/* acceptation d'un mouvement : non tabou  (le critÃ¨re d'aspiration est dans l'algo de recherche du voisin) */
 int TabuSearch::acceptance (Move* move,  Configuration* config)
 { 
   return (nontabumove(move));
@@ -927,7 +927,7 @@ void TabuSearch::adjustparameter (int length) // pour le reglage automatique de 
 {tabulength = length;}
 
 
-/* acceptation d'un mouvement : non tabou  et améliorant (le critère d'aspiration est dans l'algo de recherche du voisin) */
+/* acceptation d'un mouvement : non tabou  et amÃ©liorant (le critÃ¨re d'aspiration est dans l'algo de recherche du voisin) */
 int TabuGreedySearch::acceptance (Move* move,  Configuration* config)
 { 
   return (move->valuation <= config->valuation && nontabumove(move));
@@ -938,7 +938,7 @@ int IncrTabuGreedySearch::acceptance (Move* move, Configuration* config)
   return (move->valuation <= config->valuation && IncrTabuSearch::acceptance (move,config));
 }
 
-/* la liste taboue est implantée comme une liste de pointeurs sur mouvement : test de présence avec eqmove*/
+/* la liste taboue est implantÃ©e comme une liste de pointeurs sur mouvement : test de prÃ©sence avec eqmove*/
 int TabuSearch::nontabumove (Move* move)
 { 
   for (list<Move*>::iterator imove = move_list.begin(); imove != move_list.end(); imove++)
@@ -946,7 +946,7 @@ int TabuSearch::nontabumove (Move* move)
   return 1;
 }
 
-/* la liste est traitée comme une file de longueur maximale tabulength : fonction de mise à jour avant mouvement */
+/* la liste est traitÃ©e comme une file de longueur maximale tabulength : fonction de mise Ã  jour avant mouvement */
 void TabuSearch::executebeforemove(Move* move,Configuration* configuration, OpProblem * problem)
 {Move* move1 = move->computetabumove(configuration);
  move_list.push_back(move1);
@@ -958,7 +958,7 @@ void TabuSearch::executebeforemove(Move* move,Configuration* configuration, OpPr
 }
 
 
-/* la liste tabou est implantée comme une date de fin d'état tabou pour un mouvement */
+/* la liste tabou est implantÃ©e comme une date de fin d'Ã©tat tabou pour un mouvement */
 int IncrTabuSearch::acceptance (Move* move, Configuration* config)
 {
   return (tabutime[currentproblem->tabuindex(move,config)] <= nbiter)
@@ -974,7 +974,7 @@ void IncrTabuSearch::executebeforemove(Move* move,Configuration* config, OpProbl
 
 
 
-/* l'acceptation à seuil (TA) : méthode d'acceptation d'un mouvement*/
+/* l'acceptation Ã  seuil (TA) : mÃ©thode d'acceptation d'un mouvement*/
 
 int ThresholdAccepting::acceptance(Move* move, Configuration* config)
 {return ((move->valuation - config->valuation) <  thresholdaccept);
@@ -985,13 +985,13 @@ int ThresholdAccepting::acceptance(Move* move, Configuration* config)
 void ThresholdAccepting::executebeforemove(Move* move, Configuration* configuration, OpProblem* problem)
 {thresholdaccept -= delta;}
 
-/* remise du seuil à thresholdinit */
+/* remise du seuil Ã  thresholdinit */
 void ThresholdAccepting::reinit(OpProblem* problem) 
 {thresholdaccept=thresholdinit;} 
 
 
-/* le recuit simulé avec baisse de température constante à chaque mouvement*/
-/* le recuit simulé : acceptation en fonction de la température */
+/* le recuit simulÃ© avec baisse de tempÃ©rature constante Ã  chaque mouvement*/
+/* le recuit simulÃ© : acceptation en fonction de la tempÃ©rature */
 
 int SimulatedAnnealing::acceptance(Move* move, Configuration* config)
 {if ((move->valuation <= config->valuation)
@@ -1002,7 +1002,7 @@ int SimulatedAnnealing::acceptance(Move* move, Configuration* config)
  else return 0; 
 }
 
-/* baisse de température constante de delta à chaque mouvement */
+/* baisse de tempÃ©rature constante de delta Ã  chaque mouvement */
 void SimulatedAnnealing::executebeforemove(Move* move, Configuration* configuration, OpProblem* problem)
 {temperature -= delta;}
 
@@ -1027,7 +1027,7 @@ void CSPMove::copymove(Move* move1)
 }
 
 
-/* le mouvement stocké tabou est le mouvement inverse du mouvement effectué */
+/* le mouvement stockÃ© tabou est le mouvement inverse du mouvement effectuÃ© */
 Move* CSPMove::computetabumove(Configuration* configuration)
 {CSPMove* tabumove = new CSPMove();
  tabumove->variable = variable;
@@ -1036,7 +1036,7 @@ Move* CSPMove::computetabumove(Configuration* configuration)
 }
 
 
-/* test d'égalité de 2 mouvements : utile pour la liste taboue */
+/* test d'Ã©galitÃ© de 2 mouvements : utile pour la liste taboue */
 int Move::eqmove (Move* move1 )
 {return 0;}
 
@@ -1055,7 +1055,7 @@ int CSPMove::eqmove (Move* move1)
 /*-----------------------------------------------------------------------------------------*/
 /*                             TabuAcceptingrate                                           */
 /*-----------------------------------------------------------------------------------------*/
-// implanté comme une sous-classe de TabuSearch
+// implantÃ© comme une sous-classe de TabuSearch
 
 // le constructeur :
 
@@ -1064,7 +1064,7 @@ TabuAcceptingrate::TabuAcceptingrate (int tabul, float cPd, float cP0)
 
 
 
-/* critère d'acceptation : non tabou et pourcentages d'acceptation suivant sens du mouvement (détériorant, neutre, améliorant) */
+/* critÃ¨re d'acceptation : non tabou et pourcentages d'acceptation suivant sens du mouvement (dÃ©tÃ©riorant, neutre, amÃ©liorant) */
 int TabuAcceptingrate::acceptance (Move* move, Configuration* config) {
   return 
     (nontabumove(move)

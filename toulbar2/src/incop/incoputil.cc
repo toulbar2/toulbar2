@@ -8,6 +8,7 @@ lecture des arguments des algos , ecriture,  lancement d'un essai,
 
 
 
+#include <assert.h>
 #include <cerrno>
 #include <stdio.h>
 #include <list>
@@ -28,9 +29,9 @@ using namespace std;
 #include <unistd.h>
 
 #include <stdlib.h> 
-#include <signal.h> 
+//#include <signal.h>
 
-ofstream* ofile;  // le fichier de sortie
+ofstream* ofile = NULL;  // le fichier de sortie
 
 Stat_GWW * Statistiques; //  l'objet pour les statistiques en variable globale 
                          // allou� dans le main() avec npb et nbessais
@@ -41,7 +42,7 @@ Stat_GWW * Statistiques; //  l'objet pour les statistiques en variable globale
 
 int TRACEMODE=0;  // variable globale : niveau de trace
 
-struct sigaction Action;  // trombe_ajout : pour les signaux
+//struct sigaction Action;  // trombe_ajout : pour les signaux
 
 
 /* ------------------------------------ STATISTIQUES ---------------------------------------*/
@@ -94,33 +95,33 @@ void Stat_GWW::execution_report(int nessai, Long lower_bound)
     *ofile << " temps total execution " <<  total_execution_time << endl    ;	  
 }
 
-void sigaction()
-  {Action.sa_handler=handler_stat;           // trombe_ajout : d�tournement du signal SIGUSR1
-  sigaction(SIGUSR1, &Action, NULL);        // trombe_ajout : d�tournement du signal SIGUSR1
-  }
+//void sigaction()
+//  {Action.sa_handler=handler_stat;           // trombe_ajout : d�tournement du signal SIGUSR1
+//  sigaction(SIGUSR1, &Action, NULL);        // trombe_ajout : d�tournement du signal SIGUSR1
+//  }
 
 
 // ajout_trombe : rajout de la fonction suivante pour les signaux !!!
 
-void handler_stat (int sig) {
-
-  *ofile  << "==========================================================================" << endl;
-  *ofile  << "Signal " << sig << " recu !!" << endl;
-
-  ecriture_stat_probleme();   // stats sur les derniers essais du probl�me courant
-
-  if (Statistiques->current_pb > 1) {
-    ecriture_statistiques_global (); // stats sur tous les probl�mes
-  }
-
-  cout << "Fin resolution (interrompue) en : " << Statistiques->total_execution_time 
-       << " secondes" << endl;
-
-  sleep(1);
-
-  kill (getpid(), 9);   // suicide
-
-}
+//void handler_stat (int sig) {
+//
+//  *ofile  << "==========================================================================" << endl;
+//  *ofile  << "Signal " << sig << " recu !!" << endl;
+//
+// // ecriture_stat_probleme();   // stats sur les derniers essais du probl�me courant
+//
+//  if (Statistiques->current_pb > 1) {
+//    ecriture_statistiques_global (); // stats sur tous les probl�mes
+//  }
+//
+//  cout << "Fin resolution (interrompue) en : " << Statistiques->total_execution_time
+//       << " secondes" << endl;
+//
+//  sleep(1);
+//
+//  kill (getpid(), 9);   // suicide
+//
+//}
 
 
 
@@ -226,18 +227,18 @@ liste_methodes.push_back("gww-adapt");
 
 void arguments_arret(char** argv, int& narg, int& stop)
 {stop = argument2ul(argv[narg+1], " arret 1re sol");
- *ofile << " arret 1re sol " << stop << endl;
+// *ofile << " arret 1re sol " << stop << endl;
  narg++;
 }
 
 void arguments_tempscpu(char** argv, int& narg, double& maxtime)
 {maxtime = argument2d( argv[narg+1], " max temps cpu" );
- *ofile << " temps cpu max " << maxtime << endl;
+// *ofile << " temps cpu max " << maxtime << endl;
  narg++;}
 
 void arguments_borneinf(char** argv, int& narg, Long& borneinf)
 {borneinf= argument2ul( argv[narg+1], " borne inferieure " );
- *ofile << " borne inferieure " << borneinf << endl;
+// *ofile << " borne inferieure " << borneinf << endl;
  narg++;
 }
 
@@ -247,26 +248,26 @@ void arguments_methode(char** argv, int& narg, int& graine1, int& nbessais, stri
   method = argument2lp (argv[narg+3], "methode non implantee ", methodes_possibles);
 
   narg=narg+3;
-  *ofile << " graine tirage al�atoire " << graine1 
-	 << " nb essais " << nbessais << " m�thode " << method << endl;
+//  *ofile << " graine tirage al�atoire " << graine1
+//	 << " nb essais " << nbessais << " m�thode " << method << endl;
 }
 
 void arguments_tracemode(char** argv, int& narg)
 { TRACEMODE = argument2ul (argv[narg+1], "indicateur trace ");
- *ofile << " mode trace " << TRACEMODE << endl; 
+// *ofile << " mode trace " << TRACEMODE << endl;
  narg++;}
 
 
 void arguments_algorithme(char** argv, int& narg, int& nbmouv)
 {nbmouv= argument2ul (argv[narg+1], "longueur marche ");
- *ofile << " longueur marche " << nbmouv << endl;
+// *ofile << " longueur marche " << nbmouv << endl;
  narg=narg+1;
 }
 
 
 void arguments_metropolis(char**argv, int& narg, double&  temp)
 { temp = argument2d (argv[narg+1], " temperature " );
- *ofile << " temperature " << temp;
+// *ofile << " temperature " << temp;
  narg=narg+1;
 }
 
@@ -289,30 +290,30 @@ void arguments_voisinage(char** argv,int& narg, int& taille_voisinage_min, int& 
     //    fin_voisinage=argument2bul(argv[narg+5],"indicateur epuisement voisinage",0,taille_voisinage_max);
     fin_voisinage=argument2bul(argv[narg+5],"indicateur epuisement voisinage",0,RAND_MAX);
     dynamic = argument2bul(argv[narg+6], " voisinage dynamique", 0, 1);
-    *ofile << " variables en conflit " << variables_en_conflit << " " << var_conflit;
-    *ofile << " minimum conflit " << minimum_conflit << " " << val_conflit;
-    *ofile << " min voisins " << taille_voisinage_min ;
-    *ofile << " max voisins " << taille_voisinage_max;
-    *ofile << " epuisement voisinage " << fin_voisinage << endl;
-    *ofile << " voisinage dynamique " << dynamic << endl;
+//    *ofile << " variables en conflit " << variables_en_conflit << " " << var_conflit;
+//    *ofile << " minimum conflit " << minimum_conflit << " " << val_conflit;
+//    *ofile << " min voisins " << taille_voisinage_min ;
+//    *ofile << " max voisins " << taille_voisinage_max;
+//    *ofile << " epuisement voisinage " << fin_voisinage << endl;
+//    *ofile << " voisinage dynamique " << dynamic << endl;
     narg= narg+6;
 }
 
 void arguments_tabu(char** argv,int & narg, int& longtabu)
 {longtabu = argument2ul(argv[narg+1]," longueur liste taboue ");
- *ofile << " longueur liste taboue " << longtabu;
+// *ofile << " longueur liste taboue " << longtabu;
  narg= narg+1;
 }
 
 void arguments_recuit(char** argv,int & narg, double& inittemp)
 {inittemp = argument2d(argv[narg+1]," temperature initiale ");
- *ofile << " temperature initiale " << inittemp;
+// *ofile << " temperature initiale " << inittemp;
  narg= narg+1;
 }
 
 void arguments_marcheseuil(char** argv,int & narg, int& seuildebut)
 {seuildebut = argument2ul (argv[narg+1]," seuil debut  " );
- *ofile << " seuil debut  " << seuildebut;
+// *ofile << " seuil debut  " << seuildebut;
  narg= narg+1;
 }
 
@@ -323,17 +324,17 @@ void arguments_gww(char** argv, int & narg, int& taille, int& test_regroupement,
  derniermouv = argument2bul (argv[narg+3]," baisse dernier mouvement ",0,1 );
  elitisme= argument2bul (argv[narg+4], " indicateur elitisme ",0,1);
  stop = argument2bul (argv[narg+5], " indicateur arret stagnation ",0,1);
- *ofile << " nombre particules " << taille ;
- *ofile << " test regroupement " << test_regroupement;
- *ofile << " baisse dernier mouvement " << derniermouv;
- *ofile << " elitisme " << elitisme;
- *ofile << " arret stagnation " << stop;
+// *ofile << " nombre particules " << taille ;
+// *ofile << " test regroupement " << test_regroupement;
+// *ofile << " baisse dernier mouvement " << derniermouv;
+// *ofile << " elitisme " << elitisme;
+// *ofile << " arret stagnation " << stop;
 narg=narg+5;}
 
 void arguments_gww_marche(char** argv, int& narg, string& walk_method, list<string>& liste_methodes)
 {
  walk_method = argument2lp (argv[narg+1], " methode marche non implant�e " , liste_methodes);
-*ofile << " methode marche " << walk_method << endl;
+//*ofile << " methode marche " << walk_method << endl;
 narg=narg+1;
 }
 
@@ -341,8 +342,8 @@ narg=narg+1;
 void arguments_gww_standard(char** argv, int & narg, double& descenteseuil, int& seuilmin)
 {descenteseuil= argument2bd(argv[narg+1]," facteur descente seuil ", 0, 1 );
 seuilmin=argument2ul (argv[narg+2]," borne inferieure ") ;
- *ofile << " facteur descente seuil " << descenteseuil;
- *ofile << " borne-inf�rieure " << seuilmin;
+// *ofile << " facteur descente seuil " << descenteseuil;
+// *ofile << " borne-inf�rieure " << seuilmin;
  narg=narg+2;
 }
 
@@ -350,23 +351,23 @@ void arguments_gww_descente_rapide(char** argv, int & narg, int & nb_tues, int &
 {nb_tues= argument2ul (argv[narg+1] ," nb tu�s " );
 nb_tues_max=argument2ul (argv[narg+2]," nb tu�s max ");
  descenteseuil= argument2bd (argv[narg+3]," facteur descente seuil ", 0, 1 );
-*ofile << " nb tu�s " << nb_tues;
- *ofile << " nb tues max " << nb_tues_max;
- *ofile << " facteur descente seuil " << descenteseuil;
+//*ofile << " nb tu�s " << nb_tues;
+// *ofile << " nb tues max " << nb_tues_max;
+// *ofile << " facteur descente seuil " << descenteseuil;
  narg=narg+3;
 }
 
 
 void arguments_gww_distance_median(char** argv, int & narg,  double& distance_median)
 { distance_median= argument2bd (argv[narg+1], " facteur distance median ",0, 1);
- *ofile << " facteur distance median " << distance_median;
+// *ofile << " facteur distance median " << distance_median;
  narg=narg+1;
 }
 
 void arguments_gww_distance_meilleur(char** argv, int & narg, double& distance_meilleur)
 {
  distance_meilleur= argument2bd (argv[narg+1]," facteur distance meilleur " ,0,1);
- *ofile << " facteur distance meilleur " << distance_meilleur;
+// *ofile << " facteur distance meilleur " << distance_meilleur;
  narg=narg+1;
 }
 
@@ -374,15 +375,15 @@ void arguments_gww_distance_meilleur(char** argv, int & narg, double& distance_m
 
 void arguments_gww_adaptatif(char** argv, int& narg, int & nb_tues)
 {nb_tues = argument2ul (argv[narg+1]," nb tu�s "  );
-*ofile << " nb tu�s " << nb_tues;
+//*ofile << " nb tu�s " << nb_tues;
 narg++;
 }
 
 void arguments_gww_sans_seuil (char** argv, int & narg, int & nb_tues, int& nb_iter)
 {nb_tues =  argument2ul (argv[narg+1]," nb tu�s " );
  nb_iter=   argument2ul (argv[narg+2]," nb iterations "  );
-*ofile << " nb tu�s " << nb_tues;
-*ofile << " nb iterations " << nb_iter;
+//*ofile << " nb tu�s " << nb_tues;
+//*ofile << " nb iterations " << nb_iter;
  narg= narg+2;
 }
 
@@ -390,15 +391,15 @@ void arguments_taburate(char** argv, int & narg, float & Pd, float & P0, int & l
   Pd = argument2bd (argv[narg+1], " Pd ",0,1);
   P0 = argument2bd (argv[narg+2], " P0 ",0,1);
   longtabu = argument2ul(argv[narg+3], " longueur liste taboue ");
-  *ofile << " Pd = " << Pd << endl;
-  *ofile << " P0 =  " << P0 << endl;
-  *ofile << " longueur liste taboue = " << longtabu << endl;
+//  *ofile << " Pd = " << Pd << endl;
+//  *ofile << " P0 =  " << P0 << endl;
+//  *ofile << " longueur liste taboue = " << longtabu << endl;
   narg= narg+3;
 }
 
 void arguments_grwrate(char** argv, int & narg, double & nbr) {
   nbr = argument2bd(argv[narg+1], "taux voisinage " , 0, 1);
-  *ofile << " taux de voisinage " << nbr << endl;
+//  *ofile << " taux de voisinage " << nbr << endl;
   narg++;
 }
 
@@ -419,7 +420,7 @@ LSAlgorithm* algo_marche (char** argv,int& narg,string& method, int gww)
   double nbhr=0;  // defini pour grwrate
   float Pd, P0; 
   arguments_algorithme(argv,narg,nbmouv);
-  *ofile << " methode " << method << endl; 
+//  *ofile << " methode " << method << endl;
   if (method == "metropolis")
     arguments_metropolis(argv,narg,temp);
   else if(method == "tabu" || method == "incrtabu" || method == "idwtabu" || method =="idwatabu" || method =="idwbtabu" || method =="idwgratabu" || method =="idwgrbtabu" || method =="idwincrtabu" ||method =="idwaincrtabu" || method =="idwbincrtabu" || method =="idwgraincrtabu" || method =="idwgrbincrtabu" )
@@ -432,7 +433,7 @@ LSAlgorithm* algo_marche (char** argv,int& narg,string& method, int gww)
     arguments_taburate(argv, narg,  Pd, P0, longtabu);
   else if (method == "grwrate")
     arguments_grwrate (argv,narg,nbhr);
-  *ofile << " arguments voisinage " << endl;
+//  *ofile << " arguments voisinage " << endl;
   arguments_voisinage(argv,narg,taille_voisinage_min,taille_voisinage_max,fin_voisinage,var_conflit,val_conflit,dynamic);
   if (gww)
     algo = new LSAlgorithmGWW (nbmouv);
@@ -777,12 +778,12 @@ void calcul_valeur_population(OpProblem* problem, Configuration** population,int
 
 // execution d'un essai d'un algo sur un  probleme
 void executer_essai
-   (OpProblem* problem,IncompleteAlgorithm* algo, Configuration** population, int taille, int graine1, int nessai)
+   (OpProblem* problem,IncompleteAlgorithm* algo, Configuration** population, int taille, int graine1, int nessai, vector<int> *initconfig)
   {
     // graine du g�n�rateur aleatoire pour l'essai
     srand48(graine1+nessai);
     srand (graine1+nessai);
-    ecriture_graine(graine1+nessai,nessai);
+//    ecriture_graine(graine1+nessai,nessai);
 
     Statistiques->init_try(nessai);
     // d�clenchement du chronom�tre
@@ -790,6 +791,11 @@ void executer_essai
     // population initiale 
 
     instanciation_aleatoire(problem,population,taille);
+    //SdG: initial solution provided by NC/EAC supports given to INCOP
+    if (initconfig && nessai==0) {
+        assert(initconfig->size() == population[0]->nbvar);
+        for (int i=0; i<population[0]->nbvar; i++) population[0]->config[i] = (*initconfig)[i];
+    }
     //    *ofile << " population instanciee " << endl;
     // evaluation de la population
     calcul_valeur_population(problem,population,taille);
@@ -802,18 +808,18 @@ void executer_essai
     algo->initthreshold(population,taille); 
     
     Statistiques->cost_try[nessai]=valeur_min (population,taille);  
-    ecriture_debut_resolution(valeur_max(population,taille),valeur_min(population,taille),algo->methodname);
+//    ecriture_debut_resolution(valeur_max(population,taille),valeur_min(population,taille),algo->methodname);
     
     // lancement de la resolution 
     algo->run(problem,population);
     // apres resolution : arret du chronometre
     stop_timers(VIRTUAL);
-    ecriture_fin_resolution(Statistiques->cost_try[nessai]);
-    problem->best_config_analysis(); 
-    problem->best_config_write();
+//    ecriture_fin_resolution(Statistiques->cost_try[nessai]);
+//    problem->best_config_analysis();
+//    problem->best_config_write();
     // verification de best_config en recalculant sa valeur 
-    problem->best_config_verification();
-    Statistiques->execution_report(nessai,problem->lower_bound);
+//    problem->best_config_verification();
+//    Statistiques->execution_report(nessai,problem->lower_bound);
 }
 
 

@@ -1,4 +1,4 @@
-/* Réglage automatique d'un algo de recherche locale à 1 ou 2 paramètres  */
+/* RÃ©glage automatique d'un algo de recherche locale Ã  1 ou 2 paramÃ¨tres  */
 
 #include <cerrno>
 #include <stdio.h>
@@ -34,7 +34,7 @@ DoubleTuning::DoubleTuning (int pinit, int pinit2, int seed1, int nbessai, int m
   { param2min=pinit2; param2max= 2*pinit2; parambest=pinit; bound2min=b2min; bound2max=b2max; maxtuning2= maxtun2;}
 
 
-// arret de la mécanique : temps cpu épuisé ou tout trouvé ou arret 1er trouvé
+// arret de la mÃ©canique : temps cpu Ã©puisÃ© ou tout trouvÃ© ou arret 1er trouvÃ©
 int endsolve(double maxtime, int nbtries, int pb)
 {return (Statistiques->total_execution_time > maxtime || Statistiques->trouve[pb]== nbtries ||
          (Statistiques->trouve[pb] && Statistiques->stop_trouve)); }
@@ -43,7 +43,7 @@ int endsolve(double maxtime, int nbtries, int pb)
 
 
 
-// algo de réglage d'un paramètre positif par dichotomie  (algorithme à un parametre)
+// algo de rÃ©glage d'un paramÃ¨tre positif par dichotomie  (algorithme Ã  un parametre)
 void Tuning::run (LSAlgorithm* algo, OpProblem* problem, Configuration** population)
 { int minfound =0;
   trynumber = 0;
@@ -112,7 +112,7 @@ void Tuning::run (LSAlgorithm* algo, OpProblem* problem, Configuration** populat
    *ofile << " Fin reglage " << Statistiques->total_execution_time << endl;
 }
 
-// reglage algo a 2 parametres : 2 boucles imbriquées 
+// reglage algo a 2 parametres : 2 boucles imbriquÃ©es 
 // pour chaque valeur du parametre parametre param2, appel  du reglage du parametre param1 (par simplerun)
 void DoubleTuning::run (LSAlgorithm* algo, OpProblem* problem, Configuration** population)
 { int minfound =0;
@@ -200,7 +200,7 @@ void DoubleTuning::simplerun (LSAlgorithm* algo, OpProblem* problem, Configurati
   parammin=parambest;
   if (parammin==0) parammin=1; // pour ne pas stagner en 0
   parammax=2*parammin;
-  *ofile << "reglage boucle intérieure " << "  param extérieur = " << param2 << " param interieur " << parambest << endl;
+  *ofile << "reglage boucle intÃ©rieure " << "  param extÃ©rieur = " << param2 << " param interieur " << parambest << endl;
   //  if (algo->methodname=="tabu" || algo->methodname == "tabugreedy") epsilon=0.1;
   //  if (algo->methodname=="idwminmax") epsilon=0.2;
   if (algo->methodname=="idwaminmax" || algo->methodname =="idwbminmax" || algo->methodname == "idwupk" ||
@@ -274,14 +274,14 @@ void DoubleTuning::simplerun (LSAlgorithm* algo, OpProblem* problem, Configurati
    *ofile << " Fin reglage interieur " << Statistiques->total_execution_time << endl;
 }
 
-// premier essai : pour étalonner le temps
+// premier essai : pour Ã©talonner le temps
 int Tuning::firsttry()
 {return (trynumber==0);}
 
 int DoubleTuning::firsttry()
 {return ((trynumber ==0) && (trynumber1==0));}
 
-// condition arret du reglage : tous essais ont trouvé ou 1 essai a trouvé (cas arret 1 solution)
+// condition arret du reglage : tous essais ont trouvÃ© ou 1 essai a trouvÃ© (cas arret 1 solution)
 int Tuning::end(){
   //  *ofile << "appel de end " << stop << endl;
    return (Statistiques->trouve[Statistiques->current_pb] == nbtries || stop);}
@@ -289,8 +289,8 @@ int Tuning::end(){
 
 
 
-// un reglage : le 1er essai sert à regler la longueur de marche pour effectuer l'essai dans le 
-// temps de référence (sauf pour le recuit simulé)
+// un reglage : le 1er essai sert Ã  regler la longueur de marche pour effectuer l'essai dans le 
+// temps de rÃ©fÃ©rence (sauf pour le recuit simulÃ©)
 void Tuning::onerun (OpProblem* problem, LSAlgorithm* algo, Configuration** population)
 {
   
@@ -315,7 +315,7 @@ void Tuning::onerun (OpProblem* problem, LSAlgorithm* algo, Configuration** popu
       {stop=1;break;}
     }
   Statistiques->current_try++; 
-  ecriture_stat_probleme();
+  //ecriture_stat_probleme();
   if (firsttry())
     //    referencetime = Statistiques->execution_time_try[0];
     referencetime = Statistiques->average_execution_time;
@@ -324,8 +324,8 @@ void Tuning::onerun (OpProblem* problem, LSAlgorithm* algo, Configuration** popu
 }
   
 
-// le reglage automatique d'un parametre pour une longueur de marche donnée + le lancement de l'algorithme avec
-// ce réglage
+// le reglage automatique d'un parametre pour une longueur de marche donnÃ©e + le lancement de l'algorithme avec
+// ce rÃ©glage
 int autotuning(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int tuninit
 , int tuningwalkrate, int tuningmaxtries)
 {
@@ -368,11 +368,11 @@ void autosolving (LSAlgorithm* algo, Configuration** population, OpProblem* prob
       autosolving1(algo,population,problem,numpb,graine1,nbessais,maxtime,initwalklength);
   }
 
-// algo complet resolution avec reglage algo à un parametre
+// algo complet resolution avec reglage algo Ã  un parametre
 void autosolving1 (LSAlgorithm* algo, Configuration** population, OpProblem* problem, int numpb, int graine1, int nbessais, double maxtime, int initwalklength)
 {int pas = 4; // le pas de multiplication de longueur de marche
  int parameter=100 ; // valeur initiale 100
- int tuningwalkrate = 50; // la division de la marche pour le réglage
+ int tuningwalkrate = 50; // la division de la marche pour le rÃ©glage
  int tuningmaxtries = 10; // le maximum d'essais pour la dichotomie
  algo->walklength=initwalklength;
  while (!endsolve(maxtime,nbessais, numpb))
@@ -382,11 +382,11 @@ void autosolving1 (LSAlgorithm* algo, Configuration** population, OpProblem* pro
    parameter=  autotuning (algo, population, problem, graine1, nbessais, tuninit, tuningwalkrate, tuningmaxtries);
    if (algo->walklength > RAND_MAX/pas) break;
    else algo->walklength = pas * algo->walklength;
-   *ofile << " Temps total utilisé " << Statistiques->total_execution_time << endl; 
+   *ofile << " Temps total utilisÃ© " << Statistiques->total_execution_time << endl; 
    }
 }
 
-// réglage de 2 parametres  : parameter1 et parameter2 (en sortie) + lancement algo avec ce reglage
+// rÃ©glage de 2 parametres  : parameter1 et parameter2 (en sortie) + lancement algo avec ce reglage
 void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int&
 parameter1, int& parameter2 ,int tuningwalkrate, int tuningmaxtries, int tuningmaxtries2)
 {
@@ -409,15 +409,15 @@ parameter1, int& parameter2 ,int tuningwalkrate, int tuningmaxtries, int tuningm
    parameter2=tun.param2best;
 }
 
-// algo complet resolution avec reglage algo à deux paramètres
+// algo complet resolution avec reglage algo Ã  deux paramÃ¨tres
 void autosolving2 (LSAlgorithm* algo, Configuration** population, OpProblem* problem, int numpb, int graine1, int nbessais, double maxtime, int initwalklength)
 {int pas = 4; // le pas de multiplication de longueur de marche
- int parameter1=10 ; // valeur initiale 10 pour la liste taboue -> mettre une méthode ; valeur initiale min
+ int parameter1=10 ; // valeur initiale 10 pour la liste taboue -> mettre une mÃ©thode ; valeur initiale min
                     // pour idwminmax et spare-neighbor pour idwupk et idwupgrk
  int parameter2=100 ; // valeur initiale 100
- int tuningwalkrate = 50; // la division de la marche pour le réglage
- int tuningmaxtries = 5; // le maximum d'essais pour les dichotomies  (parametre intérieur)
- int tuningmaxtries2 = 5; // le maximum d'essais pour les dichotomies (parametre extérieur)
+ int tuningwalkrate = 50; // la division de la marche pour le rÃ©glage
+ int tuningmaxtries = 5; // le maximum d'essais pour les dichotomies  (parametre intÃ©rieur)
+ int tuningmaxtries2 = 5; // le maximum d'essais pour les dichotomies (parametre extÃ©rieur)
  algo->walklength=initwalklength;
  while (!endsolve(maxtime,nbessais, numpb))
    { *ofile << " ESSAI RESOLUTION :  longueur marche : " << algo->walklength << endl;
@@ -426,7 +426,7 @@ void autosolving2 (LSAlgorithm* algo, Configuration** population, OpProblem* pro
    autotuning2 (algo, population, problem, graine1, nbessais, parameter1, parameter2, tuningwalkrate, tuningmaxtries, tuningmaxtries2);
    if (algo->walklength > RAND_MAX/pas) break;
    else algo->walklength = pas * algo->walklength;
-   *ofile << " Temps total utilisé " << Statistiques->total_execution_time << endl; 
+   *ofile << " Temps total utilisÃ© " << Statistiques->total_execution_time << endl; 
    }
 }
 
@@ -443,9 +443,9 @@ else if (algo->methodname=="idwgratabu" || algo->methodname=="idwgrbtabu" ||
 else if (algo->methodname =="idwaminmax" || algo->methodname =="idwbminmax")
   *ofile << " valeur parametre voisinage  max voisins " << parameter2 << " min voisins " << parameter1 << endl;
 else if (algo->methodname =="idwupk")
-    *ofile << " valeur parametre voisinage  max voisins " << parameter2 << " remontée " << parameter1 << endl;
+    *ofile << " valeur parametre voisinage  max voisins " << parameter2 << " remontÃ©e " << parameter1 << endl;
 else if (algo->methodname =="idwgrupk")
-  *ofile << " valeur parametre voisinage  max voisins " << parameter2/5 << " remontée " << parameter1/5 << endl;
+  *ofile << " valeur parametre voisinage  max voisins " << parameter2/5 << " remontÃ©e " << parameter1/5 << endl;
 }
 void Tuning::oneparameterwrite(LSAlgorithm* algo, int parameter)
 {
@@ -459,8 +459,8 @@ void Tuning::oneparameterwrite(LSAlgorithm* algo, int parameter)
   else if ( algo->methodname =="simann")
     *ofile << " valeur temperature initiale " << ((double) parameter /100)  << endl;}
 
-// pour le réglage automatique d'un paramètre
-// indique selon l'algo le parametre à regler et lance le reglage (onerun)
+// pour le rÃ©glage automatique d'un paramÃ¨tre
+// indique selon l'algo le parametre Ã  regler et lance le reglage (onerun)
 void Tuning::onerunparam (OpProblem* problem,LSAlgorithm* algo, Configuration** population, int parameter )
 { 
   if (algo->methodname =="idwa" || algo->methodname =="idwbsn")
@@ -472,12 +472,12 @@ void Tuning::onerunparam (OpProblem* problem,LSAlgorithm* algo, Configuration** 
     algo->nbhsearch->minneighbors = 1;
     algo->nbhsearch->finished = parameter;}
   else  if (algo->methodname =="idwgra")   // minvoisins=maxvoisins - sortie any (finished=1)
-    {algo->nbhsearch->maxneighbors = parameter/5; // on commence à 20
+    {algo->nbhsearch->maxneighbors = parameter/5; // on commence Ã  20
     algo->nbhsearch->minneighbors = parameter/5;
     algo->nbhsearch->finished = 1;}
 
   else  if (algo->methodname =="idwgrb")   // minvoisins=maxvoisins - sortie best (finished = max)
-    {algo->nbhsearch->maxneighbors = parameter/5; // on commence à 20
+    {algo->nbhsearch->maxneighbors = parameter/5; // on commence Ã  20
     algo->nbhsearch->minneighbors = parameter/5;
     algo->nbhsearch->finished = parameter/5;}
 
@@ -492,7 +492,7 @@ void Tuning::onerunparam (OpProblem* problem,LSAlgorithm* algo, Configuration** 
   oneparameterwrite(algo,parameter);  
 }
 
-// pour le reglage automatique de 2 paramètres 
+// pour le reglage automatique de 2 paramÃ¨tres 
 void DoubleTuning::onerun2param (OpProblem* problem, LSAlgorithm* algo,Configuration** population, int parameter1, int parameter2 )
 { 
   if (algo->methodname=="idwatabu" || algo->methodname=="idwaincrtabu")

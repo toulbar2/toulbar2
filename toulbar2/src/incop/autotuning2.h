@@ -1,4 +1,4 @@
-/* Reglage automatique d'un algorithme à un paramètre */
+/* Reglage automatique d'un algorithme Ã  un paramÃ¨tre */
 /** Automatic tuning of a local search algorithm with one parameter */
 
 class Tuning 
@@ -39,7 +39,7 @@ int autotuning(LSAlgorithm* algo, Configuration** population, OpProblem* problem
 int endoslve(double maxtime);
 
 
-/* Réglage automatique d'un algorithme à deux paramètres */
+/* RÃ©glage automatique d'un algorithme Ã  deux paramÃ¨tres */
 /** Automatic tuning of a local search algorithm with two parameters */
 class DoubleTuning : public Tuning
 {public :

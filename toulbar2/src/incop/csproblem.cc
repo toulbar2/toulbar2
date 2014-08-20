@@ -1,5 +1,5 @@
 
- /* méthodes des classes  OpProblem, CSProblem, BinaryCSProblem  */
+ /* mÃ©thodes des classes  OpProblem, CSProblem, BinaryCSProblem  */
 
 #include <list>
 #include <vector>
@@ -24,7 +24,7 @@ void CSProblem::init_domains(int nbvar,int s)
   	domains[i]=0;
 }
 
-/* un seul domaine de taille s (valeurs de 0 à s-1) */
+/* un seul domaine de taille s (valeurs de 0 Ã  s-1) */
 void CSProblem::init_tabdomains(int s)
 {      tabdomains[0].clear();
       for (int i=0;i<s;i++)
@@ -42,7 +42,7 @@ void CSProblem::compute_var_conflict(Configuration* configuration)
  
 }
 
-/* constructeur : par defaut, la borne inférieure (condition d'arret) est 0 */
+/* constructeur : par defaut, la borne infÃ©rieure (condition d'arret) est 0 */
 
 int CSProblem::variable_domainsize (int var)
 {return tabdomains[domains[var]].size();}
@@ -69,7 +69,7 @@ for (int i=0;i< populationsize;i++)
  best_config=create_configuration ();
 }
 
-/* par defaut , pas d'incrementalité */
+/* par defaut , pas d'incrementalitÃ© */
 Configuration* CSProblem::create_configuration()
     { return (new Configuration(nbvar));}
 
@@ -112,7 +112,7 @@ int CSProblem::random_conflict_variable(Configuration* configuration)
   return configuration->var_conflict[rand() % configuration->var_conflict.size()];
 }
 
-/* choix aléatoire d'une valeur autre que la courante : renvoie l'indice de la valeur*/
+/* choix alÃ©atoire d'une valeur autre que la courante : renvoie l'indice de la valeur*/
 int CSProblem::random_value(int var, int val)
 
 { if (variable_domainsize(var) ==1) return 0; // domaine a une valeur
@@ -123,8 +123,8 @@ int CSProblem::random_value(int var, int val)
   return val_changee;}
 
 /* une valeur du domaine de var minimisant les conflits
-  autre que la courante (val)  , tirage aléatoire
-entre valeurs équivalentes : renvoie l'indice de la valeur */
+  autre que la courante (val)  , tirage alÃ©atoire
+entre valeurs Ã©quivalentes : renvoie l'indice de la valeur */
 int CSProblem::min_conflict_value(int var, int val, Configuration* configuration)
 {  if (variable_domainsize(var)==1) return 0; // domaine a une valeur
    Long minpromises=LONG_MAX; Long promises=0; int k1=1; int j=0;
@@ -142,7 +142,7 @@ int CSProblem::min_conflict_value(int var, int val, Configuration* configuration
    return j;
 }
 
-/* détermination du prochain mouvement a tester et évaluation de ce mouvement */
+/* dÃ©termination du prochain mouvement a tester et Ã©valuation de ce mouvement */
 void CSProblem::next_move(Configuration* configuration, Move* move, NeighborhoodSearch* nbhs)
 {
  if (nbhs->var_conflict)
@@ -156,7 +156,7 @@ void CSProblem::next_move(Configuration* configuration, Move* move, Neighborhood
  else
    ((CSPMove*)move)->value = random_value(((CSPMove*)move)->variable, 
 					  configuration->config[((CSPMove*)move)->variable]);
- // passage de l'indice à la valeur
+ // passage de l'indice Ã  la valeur
  ((CSPMove*)move)->value=  index2value(((CSPMove*)move)->value,((CSPMove*)move)->variable);
 
  move->valuation = move_evaluation (configuration,move);
@@ -165,7 +165,7 @@ void CSProblem::next_move(Configuration* configuration, Move* move, Neighborhood
 
 }
 
-/* exécution d'un mouvement  : fonction de base - affectation du coût du mouvement*/
+/* exÃ©cution d'un mouvement  : fonction de base - affectation du coÃ»t du mouvement*/
 void OpProblem::move_execution(Configuration* configuration,Move* move)
 {configuration->valuation = move->valuation;}
 
@@ -193,7 +193,7 @@ Long CSProblem::move_evaluation
 
 
 /* optimisation fullincr  :  
-   dans le cas full incr,  tout a été préparé dans le tableau tabconflicts qu'il suffit de consulter 
+   dans le cas full incr,  tout a Ã©tÃ© prÃ©parÃ© dans le tableau tabconflicts qu'il suffit de consulter 
 cette optimisation semble inutile */
 /*
 int CSProblem::move_evaluation 
@@ -208,7 +208,7 @@ int CSProblem::move_evaluation
 }
 */
 
-/* Ecriture de la meilleure solution trouvée (best_config) */
+/* Ecriture de la meilleure solution trouvÃ©e (best_config) */
 void CSProblem::best_config_write()
 {
  *ofile<< " meilleure solution " << endl;
@@ -216,24 +216,15 @@ void CSProblem::best_config_write()
   *ofile << " variable " << i << " : " << best_config->config[i] << endl;
 }
 
-/*return best solution so far */
-vector <int> CSProblem::get_best_config()
-{
-vector <int> Solution ;
- for (int i = 0; i< nbvar ; i++) Solution.push_back((int) best_config->config[i]);
-return Solution;
-}
 
-
-
-/* la création des 3 mouvements utilisés par un algo de recherche locale */
+/* la crÃ©ation des 3 mouvements utilisÃ©s par un algo de recherche locale */
 void OpProblem::allocate_moves()
 {firstmove = create_move();
  bestmove=  create_move();
  currentmove =  create_move();
 }
 
-/* vérification du cout de la meilleure solution en le recalculant */
+/* vÃ©rification du cout de la meilleure solution en le recalculant */
 void OpProblem::best_config_verification()
 {
     Long value1 = best_config->valuation;
