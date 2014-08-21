@@ -249,6 +249,7 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
               ct->constrainedvariables.push_back(numvar);
               (*vv)[numvar]->constraints.push_back(ct);
           }
+          assert(ct->constrainedvariables.size() == arity);
           ct->compute_indexmultiplyers(tabdomaines);
           String tuple;
           Cost cost;
@@ -306,9 +307,9 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           int arity=1; int numvar=0;
           INCOP::NaryConstraint* ct = new INCOP::NaryConstraint(arity);
           vct->push_back(ct);
-              numvar = wcsp->getVar(i)->getCurrentVarId();
-              ct->constrainedvariables.push_back(numvar);
-              (*vv)[numvar]->constraints.push_back(ct);
+          numvar = wcsp->getVar(i)->getCurrentVarId();
+          ct->constrainedvariables.push_back(numvar);
+          (*vv)[numvar]->constraints.push_back(ct);
           ct->compute_indexmultiplyers(tabdomaines);
           for (EnumeratedVariable::iterator it=((EnumeratedVariable *)wcsp->getVar(i))->begin() ; it != ((EnumeratedVariable *)wcsp->getVar(i))->end() ; ++it) {
               ct->tuplevalues.push_back(wcsp->getUnaryCost(i, *it));
