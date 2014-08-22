@@ -1716,7 +1716,7 @@ int _tmain(int argc, TCHAR * argv[])
             WCSP *wcsp = (WCSP *) solver->getWCSP();
             for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
                 if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() > ToulBar2::preprocessNary) {
-                    cout << "Warning! Cannot use INCOP local search with large arity " << wcsp->getCtr(i)->arity() << " cost functions (see option -h)." << endl;
+                    cout << "Warning! Cannot use INCOP local search with large arity (" << wcsp->getCtr(i)->arity() << ") cost functions (see option -h to change the threshold)." << endl;
                     ToulBar2::incop_cmd = "";
                     break;
                 }
