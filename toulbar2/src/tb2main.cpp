@@ -1708,20 +1708,20 @@ int _tmain(int argc, TCHAR * argv[])
 			cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
 			ToulBar2::elimDegree_preprocessing = -1;
 		}
-	    if (solver->getWCSP()->isGlobal() && ToulBar2::incop_cmd.size() > 0)    {
-            cout << "Warning! Cannot use INCOP local search with global cost functions." << endl;
-            ToulBar2::incop_cmd = "";
-        }
-        if (ToulBar2::incop_cmd.size() > 0)    {
-            WCSP *wcsp = (WCSP *) solver->getWCSP();
-            for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
-                if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() > ToulBar2::preprocessNary) {
-                    cout << "Warning! Cannot use INCOP local search with large arity (" << wcsp->getCtr(i)->arity() << ") cost functions (see option -h to change the threshold)." << endl;
-                    ToulBar2::incop_cmd = "";
-                    break;
-                }
-            }
-        }
+//	    if (solver->getWCSP()->isGlobal() && ToulBar2::incop_cmd.size() > 0)    {
+//            cout << "Warning! Cannot use INCOP local search with global cost functions." << endl;
+//            ToulBar2::incop_cmd = "";
+//        }
+//        if (ToulBar2::incop_cmd.size() > 0)    {
+//            WCSP *wcsp = (WCSP *) solver->getWCSP();
+//            for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+//                if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() > ToulBar2::preprocessNary) {
+//                    cout << "Warning! Cannot use INCOP local search with large arity (" << wcsp->getCtr(i)->arity() << ") cost functions (see option -h to change the threshold)." << endl;
+//                    ToulBar2::incop_cmd = "";
+//                    break;
+//                }
+//            }
+//        }
         if (ToulBar2::incop_cmd.size() > 0)    {
             for (unsigned int i=0; i<solver->getWCSP()->numberOfVariables(); i++) {
                 if (solver->getWCSP()->unassigned(i) && !solver->getWCSP()->enumerated(i)) {
