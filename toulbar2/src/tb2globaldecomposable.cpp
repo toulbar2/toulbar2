@@ -1087,7 +1087,7 @@ WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 	int counters[nbcounters];
 	int clb[nbcounters];
 	int cub[nbcounters];
-	int cscope[nbcounters];
+//	int cscope[nbcounters];
 	for (map<Value,pair <unsigned int,unsigned int> >::iterator it = bounds.begin(); it != bounds.end() ; ++it) {
 		pair<Value,pair <unsigned int,unsigned int> > bound = *it;
 		
