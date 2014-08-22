@@ -482,7 +482,8 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
   upperbound = wcsp->getUb();
 
   vector<int> initconfig(nbvar, 0);
-  vector<Value> tabdomaines[nbvar] ; // les différents types de domaines
+  vector<Value> *tabdomaines; // les différents types de domaines
+  tabdomaines = new vector<Value>[nbvar];
   wcspdomaines_file_read((WCSP *) wcsp,nbvar, tabdomaines, bestsolution, initconfig);
 
   int domaines[nbvar];  // 1 domaine par variable
@@ -492,7 +493,8 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
   // Initialisation des structures de données des problémes
   vector<INCOP::NaryConstraint*> constraints;
   vector<INCOP::NaryVariable*> variables;
-  vector<int> connexions [nbvar];
+  vector<int> *connexions;
+  connexions = new vector<int>[nbvar];
 
   for (int i=0;i<nbvar;i++)
     {INCOP::NaryVariable* nv = new INCOP::NaryVariable();
@@ -550,6 +552,8 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
 //      ecriture_stat_probleme();
   }
   delete problem;
+  delete[] tabdomaines;
+  delete[] connexions;
 
   wcsp->enforceUb();
   wcsp->propagate();
