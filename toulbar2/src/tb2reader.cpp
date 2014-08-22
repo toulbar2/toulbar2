@@ -824,7 +824,8 @@ void WCSP::read_uai2008(const char *fileName)
 	ToulBar2::markov_log = 0;   // for the MARKOV Case   
 
 	int ntuplesarray[lctrs.size()];
-	vector<Cost> costs[lctrs.size()];
+	vector< vector<Cost> > costs;
+	costs.resize(lctrs.size());
 	list<int>::iterator it = lctrs.begin();
 	while(it !=  lctrs.end()) {
 	    file >> ntuples;
