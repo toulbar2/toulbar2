@@ -156,6 +156,24 @@ bool Constraint::universal()
   return true;
 }
 
+/// \warning always returns MAX_COST for cost functions in intention
+Cost Constraint::getMaxFiniteCost()
+{
+    if (!extension()) return MAX_COST;
+
+    Cost maxcost = MIN_COST;
+    String tuple;
+    Cost cost;
+    Long nbtuples = 0;
+    first();
+    while (next(tuple,cost)) {
+      nbtuples++;
+      if (cost < wcsp->getUb() && cost > maxcost) maxcost = cost;
+    }
+    if (getDefCost() < wcsp->getUb() && getDefCost() > maxcost && nbtuples < getDomainSizeProduct()) maxcost = getDefCost();
+    return maxcost;
+}
+
 /// \warning always returns false for cost functions in intention
 bool Constraint::ishard()
 {

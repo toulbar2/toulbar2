@@ -39,6 +39,10 @@ public:
 	/// \brief increases problem lower bound thanks to \e eg soft local consistencies
 	/// \param addLb increment value to be \b added to the problem lower bound
     virtual void increaseLb(Cost addLb) =0;
+    /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
+    /// \return the worst-case assignment finite cost
+    /// \warning current problem should be completely loaded before calling this function
+    virtual Cost finiteUb() const =0;
 
 	virtual bool enumerated(int varIndex) const =0;		///< \brief true if the variable has an enumerated domain
 
@@ -242,6 +246,14 @@ public:
     /// \warning after solving, the current problem has been modified by various preprocessing techniques
     /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSPSolver::getSolution INSTEAD
     virtual bool solve() =0;
+
+    /// \brief solves the current problem using INCOP local search solver by Bertrand Neveu
+    /// \return best solution cost found
+    /// \param cmd command line argument for narycsp INCOP local search solver (cmd format: lowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors  neighborhoodchoice3 autotuning tracemode)
+    /// \param solution best solution assignment found (MUST BE INITIALIZED WITH A DEFAULT COMPLETE ASSIGNMENT)
+    /// \warning cannot solve problems with global cost functions
+    /// \note side-effects: updates current problem upper bound and propagates, best solution saved (using WCSP::setBestValue)
+    virtual Cost narycsp(string cmd, vector<Value> &solution) =0;
 
 	/// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its

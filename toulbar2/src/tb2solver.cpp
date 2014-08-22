@@ -1022,6 +1022,13 @@ bool Solver::solve()
 		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
         wcsp->propagate();                // initial propagation
         wcsp->preprocessing();            // preprocessing after initial propagation
+        Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost as new upper bound
+        if (finiteUb < initialUpperBound) {
+            initialUpperBound = finiteUb;
+            wcsp->updateUb(finiteUb);
+            wcsp->enforceUb();
+            wcsp->propagate();
+        }
         if (ToulBar2::verbose >= 0) cout << "Preprocessing time: " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 
         // special data structure to be initialized for variable ordering heuristics

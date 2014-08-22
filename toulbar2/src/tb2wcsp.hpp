@@ -138,10 +138,10 @@ public:
 	/// \brief sets problem upper bound when a new solution is found
 	/// \warning side-effect: adjusts maximum number of buckets (see \ref ncbucket) if called before adding variables to a problem
 	void updateUb(Cost newUb) {
-		if (newUb < ub) {
-			ub = newUb;
-			if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
-		}
+	    if (newUb < ub) {
+	        ub = newUb;
+	        if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
+	    }
 	}
 
 	/// \brief enforces problem upper bound when exploring an alternative search node
@@ -173,6 +173,11 @@ public:
 			if (ToulBar2::setminobj) (*ToulBar2::setminobj)(getIndex(), -1, newLb, getSolver());
 		}
 	}
+
+    /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
+	/// \return the worst-case assignment finite cost
+	/// \warning current problem should be completely loaded before calling this function
+    Cost finiteUb() const;
 
 	void decreaseLb(Cost cost) { assert(cost <= MIN_COST); negCost += cost; }	///< \internal manages negative costs in probabilistic inference
 	Cost getNegativeLb() const { return negCost; }								///< \internal manages negative costs in probabilistic inference

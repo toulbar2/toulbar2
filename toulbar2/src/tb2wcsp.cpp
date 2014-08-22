@@ -1066,6 +1066,34 @@ void WCSP::preprocessing() {
 #endif
 }
 
+Cost WCSP::finiteUb() const
+{
+    Cost summaxcost = getLb() + UNIT_COST;
+    for (unsigned int i = 0; i < constrs.size(); i++) {
+        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+            summaxcost += constrs[i]->getMaxFiniteCost();
+            if (summaxcost >= MAX_COST) return MAX_COST;
+        }
+    }
+    for (int i = 0; i < elimBinOrder; i++) {
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) {
+            summaxcost += elimBinConstrs[i]->getMaxFiniteCost();
+            if (summaxcost >= MAX_COST) return MAX_COST;
+        }
+    }
+    for (int i = 0; i < elimTernOrder; i++) {
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+            summaxcost += elimTernConstrs[i]->getMaxFiniteCost();
+            if (summaxcost >= MAX_COST) return MAX_COST;
+        }
+    }
+    for (unsigned int i=0; i<vars.size(); i++) {
+        summaxcost += vars[i]->getMaxCost();
+        if (summaxcost >= MAX_COST) return MAX_COST;
+    }
+    return summaxcost;
+}
+
 Value WCSP::getDomainSizeSum() {
 	//    cout << " " << connectedComponents() << endl;
 	Value sum = 0;
