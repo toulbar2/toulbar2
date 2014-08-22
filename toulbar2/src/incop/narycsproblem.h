@@ -68,5 +68,5 @@ INCOP::NaryCSProblem* weighted_narycsp_creation (int nbvar, int nbconst, int max
 
 void wcspdomaines_file_read (WCSP *wcsp, int nbvar, vector<int>* tabdomaines);
 
-void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
+int wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
 				vector <int>* connexions, vector<int> * tabdomaines);

@@ -234,13 +234,13 @@ void  wcspdomaines_file_read (WCSP *wcsp, int nbvar, vector<Value>* tabdomaines,
 }
 
 /** lecture des contraintes */
-void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
+int  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
 				vector <int>* connexions, vector<Value> * tabdomaines)
 { 
   Cost gap = wcsp->getUb()-wcsp->getLb();
   int nbconst_ = 0;
   for (unsigned int i =0; i< wcsp->numberOfConstraints(); i++) {
-      if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep()) {
+      if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && !wcsp->getCtr(i)->isGlobal() && wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary) {
           int arity=0; int numvar=0;
           arity = ((wcsp->getCtr(i)->arity()<=3)?wcsp->getCtr(i)->arity():((NaryConstraint *) wcsp->getCtr(i))->nonassigned);
           INCOP::NaryConstraint* ct = new INCOP::NaryConstraint(arity);
@@ -318,7 +318,8 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           nbconst_++;
       }
   }
-  assert(nbconst_ == nbconst);
+  assert(nbconst_ <= nbconst);
+  return nbconst_;
 }
 
 int split (char *str, char c, char ***arr)
@@ -500,7 +501,7 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
     {INCOP::NaryVariable* nv = new INCOP::NaryVariable();
     variables.push_back(nv);}
   
-  wcspdata_constraint_read ((WCSP *) wcsp, nbconst, &variables, &constraints, connexions, tabdomaines);
+  nbconst = wcspdata_constraint_read ((WCSP *) wcsp, nbconst, &variables, &constraints, connexions, tabdomaines);
   int pbnumber=0;
   Statistiques->init_pb(pbnumber);
   problem = weighted_narycsp_creation (nbvar,nbconst,domsize,&variables,&constraints);
