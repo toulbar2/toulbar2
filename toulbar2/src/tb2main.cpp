@@ -1712,6 +1712,15 @@ int _tmain(int argc, TCHAR * argv[])
             cout << "Warning! Cannot use INCOP local search with global cost functions." << endl;
             ToulBar2::incop_cmd = "";
         }
+        if (ToulBar2::incop_cmd.size() > 0)    {
+            for (unsigned int i=0; i<solver->getWCSP()->numberOfVariables(); i++) {
+                if (solver->getWCSP()->unassigned(i) && !solver->getWCSP()->enumerated(i)) {
+                    cout << "Warning! Cannot use INCOP local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                    ToulBar2::incop_cmd = "";
+                    break;
+                }
+            }
+        }
 
 		if (certificate)
 		{
