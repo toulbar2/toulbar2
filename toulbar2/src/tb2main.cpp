@@ -1713,6 +1713,16 @@ int _tmain(int argc, TCHAR * argv[])
             ToulBar2::incop_cmd = "";
         }
         if (ToulBar2::incop_cmd.size() > 0)    {
+            WCSP *wcsp = (WCSP *) solver->getWCSP();
+            for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+                if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() > ToulBar2::preprocessNary) {
+                    cout << "Warning! Cannot use INCOP local search with large arity " << wcsp->getCtr(i)->arity() << " cost functions (see option -h)." << endl;
+                    ToulBar2::incop_cmd = "";
+                    break;
+                }
+            }
+        }
+        if (ToulBar2::incop_cmd.size() > 0)    {
             for (unsigned int i=0; i<solver->getWCSP()->numberOfVariables(); i++) {
                 if (solver->getWCSP()->unassigned(i) && !solver->getWCSP()->enumerated(i)) {
                     cout << "Warning! Cannot use INCOP local search with bounds arc propagation (non enumerated variable domains)." << endl;
