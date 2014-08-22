@@ -237,6 +237,7 @@ void  wcspdomaines_file_read (WCSP *wcsp, int nbvar, vector<Value>* tabdomaines,
 void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
 				vector <int>* connexions, vector<Value> * tabdomaines)
 { 
+  Cost gap = wcsp->getUb()-wcsp->getLb();
   int nbconst_ = 0;
   for (unsigned int i =0; i< wcsp->numberOfConstraints(); i++) {
       if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep()) {
@@ -255,7 +256,7 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           Cost cost;
           wcsp->getCtr(i)->firstlex();
           while (wcsp->getCtr(i)->nextlex(tuple, cost)) {
-              ct->tuplevalues.push_back(cost);
+              ct->tuplevalues.push_back(min(gap, cost));
           }
           nbconst_++;
       }
@@ -276,7 +277,7 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           Cost cost;
           ctr->firstlex();
           while (ctr->nextlex(tuple, cost)) {
-              ct->tuplevalues.push_back(cost);
+              ct->tuplevalues.push_back(min(gap, cost));
           }
           nbconst_++;
       }
@@ -297,7 +298,7 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           Cost cost;
           ctr->firstlex();
           while (ctr->nextlex(tuple, cost)) {
-              ct->tuplevalues.push_back(cost);
+              ct->tuplevalues.push_back(min(gap, cost));
           }
           nbconst_++;
       }
@@ -312,7 +313,7 @@ void  wcspdata_constraint_read (WCSP *wcsp, int nbconst, vector<INCOP::NaryVaria
           (*vv)[numvar]->constraints.push_back(ct);
           ct->compute_indexmultiplyers(tabdomaines);
           for (EnumeratedVariable::iterator it=((EnumeratedVariable *)wcsp->getVar(i))->begin() ; it != ((EnumeratedVariable *)wcsp->getVar(i))->end() ; ++it) {
-              ct->tuplevalues.push_back(wcsp->getUnaryCost(i, *it));
+              ct->tuplevalues.push_back(min(gap, wcsp->getUnaryCost(i, *it)));
           }
           nbconst_++;
       }
@@ -523,7 +524,8 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
       for(int nessai = 0;nessai< nbessais ; nessai++) {
           executer_essai (problem,algo,population,taille,graine1,nessai,&initconfig);
           if (wcsp->getLb() + problem->best_config->valuation < upperbound) {
-                  int depth = store->getDepth();
+              int depth = store->getDepth();
+              try {
                   store->store();
                   vector<Value> solution(problem->best_config->nbvar);
                   for (int i=0; i<problem->best_config->nbvar ; i++) {
@@ -537,7 +539,10 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
                       bestsolution[i] = wcsp->getValue(i);
                       wcsp->setBestValue(i,bestsolution[i]);
                   }
-                  store->restore(depth);
+              } catch (Contradiction) {
+                  wcsp->whenContradiction();
+              }
+              store->restore(depth);
           }
       }
       // ecriture statistiques
