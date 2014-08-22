@@ -1,3 +1,4 @@
+NEW RELEASE v0.9.7 ADDING LOCAL SEARCH INCOP SOLVER AFTER PREPROCESSING.
 NEW RELEASE v0.9.6 ADDING NEW VARIABLE ORDERING HEURISTICS AND DOMINANCE RULES.
 NEW RELEASE v0.9.5 ADDING SOFT GLOBAL DECOMPOSABLE COST FUNCTIONS (Schiex et al, AAAI-2012).
 NEW RELEASE v0.9.2 ADDING SOFT GLOBAL COST FUNCTIONS THANKS TO K. L. Leung, Hong-Kong.
@@ -46,6 +47,12 @@ VAC
  In Proc. of AAAI-08, Chicago, IL, 2008
  http://www.inra.fr/mia/T/degivry/Cooper08.pdf
 
+DEE
+ S de Givry, S Prestwich, and B O'Sullivan
+ Dead-End Elimination for Weighted CSP
+ In Proc. of CP-13, pages 263-272, Uppsala, Sweden, 2013
+ http://www7.inra.fr/mia/T/degivry/Givry13a.pdf
+
 RDS-BTD
  Russian doll search with tree decomposition
  M Sanchez, D Allouche, S de Givry, and T Schiex
@@ -71,7 +78,7 @@ http://www.inra.fr/mia/T/degivry/Sanchez08b.pdf
 and
 http://www.inra.fr/mia/T/degivry/ToulBar2UAI10.pdf
 
-toolbar and toulbar2 are developped as open source programs and are accessible at INRA source forge:
+toolbar and toulbar2 are developed as open source programs and are accessible at INRA source forge:
 
     * toolbar: http://mulcyber.toulouse.inra.fr/projects/toolbar (not anymore developed) 
     * toulbar2: http://mulcyber.toulouse.inra.fr/projects/toulbar2 
@@ -79,5 +86,6 @@ toolbar and toulbar2 are developped as open source programs and are accessible a
 The XCSP 2.1 format reader of CSP and WCSP instances has been provided by Olivier Roussel (roussel at cril.univ-artois.fr).
 
 Executable narycsp is part of INCOP, a local search solver developed by Bertrand Neveu (Bertrand.Neveu@sophia.inria.fr). See http://www-sop.inria.fr/coprin/neveu/incop/presentation-incop.html
-
+Version 0.9.7 integrates INCOP solver before B&B search.
 Executable peo implements various ordering heuristics for variable elimination methods used by BTD-like search methods. It has been provided by Cyril Terrioux (cyril.terrioux@univ-cezanne.fr).
+Version 0.9.7 integrates the simplest peo heuristics.
