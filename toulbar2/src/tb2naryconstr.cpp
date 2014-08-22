@@ -1332,7 +1332,7 @@ void NaryConstraintMap::print(ostream& os)
 	os << "   arity: " << arity();
 	os << "   unassigned: " << (int) nonassigned << "/" << unassigned_ << "         ";
 
-	assert(nonassigned == unassigned_);
+//	assert(nonassigned == unassigned_); // not valid when used with assignLS
 
 	/*TSCOPE::iterator it = scope_inv.begin();
 	while(it != scope_inv.end()) {
