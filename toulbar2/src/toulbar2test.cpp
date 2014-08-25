@@ -3,7 +3,7 @@
  * Test toulbar2 API
  */
 
-#include "toulbar2.hpp"
+#include "toulbar2lib.hpp"
 #include "tb2globaldecomposable.hpp"
 #include <string.h>
 #include <stdio.h>

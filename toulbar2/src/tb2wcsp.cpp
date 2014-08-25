@@ -150,6 +150,7 @@ string ToulBar2::incop_cmd = "";
  *
  */
 
+/// \note isDelayedNaryCtr should be false if toulbar2 is used within numberjack
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),

@@ -8,7 +8,7 @@
  * **************** Main function ***********************************
  */
 
-#include "toulbar2.hpp"
+#include "toulbar2lib.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
@@ -631,7 +631,7 @@ void help_msg(char *toulbar2filename)
 #endif
 	cerr << "                  (if not specified, then use the variable order in which variables appear in the problem file)" << endl;
 	cerr << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
-	cerr << "                (use options \"-B=3 -j=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
+	cerr << "                (use options \"-B=3 -j=1 -svo -k=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
 	cerr << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
 	cerr << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
 	cerr << "   -E : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\")";

@@ -86,6 +86,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
         }
     }
 
+    // Uncomment the following code if toulbar2 is used within numberjack
 //    vector<int> &vecX = wcsp->getListSuccessors()->at(xx->wcspIndex);
 //    vector<int> &vecY = wcsp->getListSuccessors()->at(yy->wcspIndex);
 //    vector<int> &vecZ = wcsp->getListSuccessors()->at(zz->wcspIndex);
