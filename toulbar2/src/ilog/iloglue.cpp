@@ -10,7 +10,7 @@
 
 #include <ilsolver/ilosolver.h>
 #include <ilsolver/ilctrace.h>
-#include "toulbar2.hpp"
+#include "toulbar2lib.hpp"
 #include "tb2domain.hpp"
 extern ostream& operator<<(ostream& os, WCSP &wcsp);
 
