@@ -29,121 +29,230 @@
  *
  */
 
-string ToulBar2::version = Toulbar_VERSION;
-int ToulBar2::verbose = 0;
-int ToulBar2::debug = 0;
-bool ToulBar2::showSolutions = false;
-bool ToulBar2::writeSolution = false;
-bool ToulBar2::allSolutions = false;
-int ToulBar2::dumpWCSP = 0;
-bool ToulBar2::approximateCountingBTD = false;
-int ToulBar2::elimDegree = 3;
-int ToulBar2::elimDegree_preprocessing = -1;
-int ToulBar2::elimDegree_ = -1;
-int ToulBar2::elimDegree_preprocessing_ = -1;
-int ToulBar2::elimSpaceMaxMB = 0;
-int ToulBar2::preprocessTernaryRPC = 0;
-int ToulBar2::preprocessFunctional = 1;
-bool ToulBar2::costfuncSeparate = true;
-int ToulBar2::preprocessNary = 10;
-LcLevelType ToulBar2::LcLevel = LC_EDAC;
-bool ToulBar2::QueueComplexity = false;
-bool ToulBar2::binaryBranching = true;
-bool ToulBar2::lastConflict = true;
-int ToulBar2::dichotomicBranching = 1;
-unsigned int ToulBar2::dichotomicBranchingSize = 10;
-bool ToulBar2::sortDomains = false;
+int WCSP::wcspCounter = 0;
+
+string ToulBar2::version;
+int ToulBar2::verbose;
+int ToulBar2::debug;
+bool ToulBar2::showSolutions;
+bool ToulBar2::writeSolution;
+bool ToulBar2::allSolutions;
+int ToulBar2::dumpWCSP;
+bool ToulBar2::approximateCountingBTD;
+int ToulBar2::elimDegree;
+int ToulBar2::elimDegree_preprocessing;
+int ToulBar2::elimDegree_;
+int ToulBar2::elimDegree_preprocessing_;
+int ToulBar2::elimSpaceMaxMB;
+int ToulBar2::preprocessTernaryRPC;
+int ToulBar2::preprocessFunctional;
+bool ToulBar2::costfuncSeparate;
+int ToulBar2::preprocessNary;
+LcLevelType ToulBar2::LcLevel;
+bool ToulBar2::QueueComplexity;
+bool ToulBar2::binaryBranching;
+bool ToulBar2::lastConflict;
+int ToulBar2::dichotomicBranching;
+unsigned int ToulBar2::dichotomicBranchingSize;
+bool ToulBar2::sortDomains;
 map<int, ValueCost *> ToulBar2::sortedDomains;
-int ToulBar2::lds = 0;
-bool ToulBar2::limited = false;
-Long ToulBar2::restart = -1;
-bool ToulBar2::generation = false;
-int ToulBar2::minsumDiffusion = 0;
-bool ToulBar2::Static_variable_ordering=false;
-int ToulBar2::weightedDegree = 10000;
-int ToulBar2::weightedTightness = 0;
-bool ToulBar2::MSTDAC = false;
-int ToulBar2::DEE = 1;
-int ToulBar2::DEE_ = 0;
-int ToulBar2::nbDecisionVars = 0;
-bool ToulBar2::singletonConsistency = false;
-bool ToulBar2::vacValueHeuristic = false;
+int ToulBar2::lds;
+bool ToulBar2::limited;
+Long ToulBar2::restart;
+bool ToulBar2::generation;
+int ToulBar2::minsumDiffusion;
+bool ToulBar2::Static_variable_ordering;
+int ToulBar2::weightedDegree;
+int ToulBar2::weightedTightness;
+bool ToulBar2::MSTDAC;
+int ToulBar2::DEE;
+int ToulBar2::DEE_;
+int ToulBar2::nbDecisionVars;
+bool ToulBar2::singletonConsistency;
+bool ToulBar2::vacValueHeuristic;
 
-externalevent ToulBar2::setvalue = NULL;
-externalevent ToulBar2::setmin = NULL;
-externalevent ToulBar2::setmax = NULL;
-externalevent ToulBar2::removevalue = NULL;
-externalcostevent ToulBar2::setminobj = NULL;
-externalsolution ToulBar2::newsolution = NULL;
-Pedigree *ToulBar2::pedigree = NULL;
-Haplotype *ToulBar2::haplotype = NULL;
+externalevent ToulBar2::setvalue;
+externalevent ToulBar2::setmin;
+externalevent ToulBar2::setmax;
+externalevent ToulBar2::removevalue;
+externalcostevent ToulBar2::setminobj;
+externalsolution ToulBar2::newsolution;
+Pedigree *ToulBar2::pedigree;
+Haplotype *ToulBar2::haplotype;
 
-bool ToulBar2::bayesian = false;
-bool ToulBar2::uai = false;
+bool ToulBar2::bayesian;
+bool ToulBar2::uai;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
-string ToulBar2::solution_filename = "sol";
-bool ToulBar2::uai_firstoutput = true;
-TProb ToulBar2::markov_log = 0;
-bool ToulBar2::xmlflag = false;
+string ToulBar2::solution_filename;
+bool ToulBar2::uai_firstoutput;
+TProb ToulBar2::markov_log;
+bool ToulBar2::xmlflag;
 string ToulBar2::map_file;
-bool ToulBar2::maxsateval = false;
-bool ToulBar2::uaieval = false;
+bool ToulBar2::maxsateval;
+bool ToulBar2::uaieval;
 
-int ToulBar2::resolution = 7;
-TProb ToulBar2::errorg = 0.05;
-TProb ToulBar2::NormFactor = 1;
+int ToulBar2::resolution;
+TProb ToulBar2::errorg;
+TProb ToulBar2::NormFactor;
 /// Allele frequencies of founders
 /// - 0: 			equal frequencies
 /// - 1: 			probs depending on the frequencies found in the problem
 /// - otherwise:  read probability distribution from command line
-int ToulBar2::foundersprob_class = 0;
+int ToulBar2::foundersprob_class;
 vector<TProb> ToulBar2::allelefreqdistrib;
-bool ToulBar2::consecutiveAllele = false;
-int ToulBar2::pedigreeCorrectionMode = 0;
-int ToulBar2::pedigreePenalty = 0;
+bool ToulBar2::consecutiveAllele;
+int ToulBar2::pedigreeCorrectionMode;
+int ToulBar2::pedigreePenalty;
 
-int ToulBar2::vac = 0;
-Cost ToulBar2::costThreshold = UNIT_COST;
-Cost ToulBar2::costThresholdPre = UNIT_COST;
-double ToulBar2::costMultiplier = UNIT_COST;
-Cost ToulBar2::relaxThreshold = MIN_COST;
+int ToulBar2::vac;
+Cost ToulBar2::costThreshold;
+Cost ToulBar2::costThresholdPre;
+double ToulBar2::costMultiplier;
+Cost ToulBar2::relaxThreshold;
 
-ElimOrderType ToulBar2::elimOrderType = ELIM_NONE;
+ElimOrderType ToulBar2::elimOrderType;
 
-BEP *ToulBar2::bep = NULL;
-bool ToulBar2::wcnf = false;
-bool ToulBar2::qpbo = false;
+BEP *ToulBar2::bep;
+bool ToulBar2::wcnf;
+bool ToulBar2::qpbo;
 
-int WCSP::wcspCounter = 0;
+char* ToulBar2::varOrder;
+int ToulBar2::btdMode;
+int ToulBar2::btdSubTree;
+int ToulBar2::btdRootCluster;
 
-char* ToulBar2::varOrder = NULL;
-int ToulBar2::btdMode = 0;
-int ToulBar2::btdSubTree = -1;
-int ToulBar2::btdRootCluster = -1;
+double ToulBar2::startCpuTime;
 
-double ToulBar2::startCpuTime = 0;
+int ToulBar2::splitClusterMaxSize;
+bool ToulBar2::boostingBTD;
+int ToulBar2::maxSeparatorSize;
+int ToulBar2::minProperVarSize;
 
-int ToulBar2::splitClusterMaxSize = 0;
-bool ToulBar2::boostingBTD = false;
-int ToulBar2::maxSeparatorSize = -1;
-int ToulBar2::minProperVarSize = 0;
+int ToulBar2::smallSeparatorSize;
 
-int ToulBar2::smallSeparatorSize = 4;
-
-bool ToulBar2::isZ = false;
-TProb ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-TProb ToulBar2::logU = -numeric_limits<TProb>::infinity();
-TProb ToulBar2::logepsilon = -3;
+bool ToulBar2::isZ;
+TProb ToulBar2::logZ;
+TProb ToulBar2::logU;
+TProb ToulBar2::logepsilon;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
-externalfunc ToulBar2::timeOut = NULL;
-bool ToulBar2::interrupted = false;
+externalfunc ToulBar2::timeOut;
+bool ToulBar2::interrupted;
 
-bool ToulBar2::learning = false;
+bool ToulBar2::learning;
 
-string ToulBar2::incop_cmd = "";
+string ToulBar2::incop_cmd;
+
+/// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
+void tb2init()
+{
+    ToulBar2::version = Toulbar_VERSION;
+    ToulBar2::verbose = 0;
+    ToulBar2::debug = 0;
+    ToulBar2::showSolutions = false;
+    ToulBar2::writeSolution = false;
+    ToulBar2::allSolutions = false;
+    ToulBar2::dumpWCSP = 0;
+    ToulBar2::approximateCountingBTD = false;
+    ToulBar2::elimDegree = 3;
+    ToulBar2::elimDegree_preprocessing = -1;
+    ToulBar2::elimDegree_ = -1;
+    ToulBar2::elimDegree_preprocessing_ = -1;
+    ToulBar2::elimSpaceMaxMB = 0;
+    ToulBar2::preprocessTernaryRPC = 0;
+    ToulBar2::preprocessFunctional = 1;
+    ToulBar2::costfuncSeparate = true;
+    ToulBar2::preprocessNary = 10;
+    ToulBar2::LcLevel = LC_EDAC;
+    ToulBar2::QueueComplexity = false;
+    ToulBar2::binaryBranching = true;
+    ToulBar2::lastConflict = true;
+    ToulBar2::dichotomicBranching = 1;
+    ToulBar2::dichotomicBranchingSize = 10;
+    ToulBar2::sortDomains = false;
+    ToulBar2::lds = 0;
+    ToulBar2::limited = false;
+    ToulBar2::restart = -1;
+    ToulBar2::generation = false;
+    ToulBar2::minsumDiffusion = 0;
+    ToulBar2::Static_variable_ordering=false;
+    ToulBar2::weightedDegree = 10000;
+    ToulBar2::weightedTightness = 0;
+    ToulBar2::MSTDAC = false;
+    ToulBar2::DEE = 1;
+    ToulBar2::DEE_ = 0;
+    ToulBar2::nbDecisionVars = 0;
+    ToulBar2::singletonConsistency = false;
+    ToulBar2::vacValueHeuristic = false;
+
+    ToulBar2::setvalue = NULL;
+    ToulBar2::setmin = NULL;
+    ToulBar2::setmax = NULL;
+    ToulBar2::removevalue = NULL;
+    ToulBar2::setminobj = NULL;
+    ToulBar2::newsolution = NULL;
+    ToulBar2::pedigree = NULL;
+    ToulBar2::haplotype = NULL;
+
+    ToulBar2::bayesian = false;
+    ToulBar2::uai = false;
+    ToulBar2::solution_filename = "sol";
+    ToulBar2::uai_firstoutput = true;
+    ToulBar2::markov_log = 0;
+    ToulBar2::xmlflag = false;
+    ToulBar2::maxsateval = false;
+    ToulBar2::uaieval = false;
+
+    ToulBar2::resolution = 7;
+    ToulBar2::errorg = 0.05;
+    ToulBar2::NormFactor = 1;
+    ToulBar2::foundersprob_class = 0;
+    ToulBar2::consecutiveAllele = false;
+    ToulBar2::pedigreeCorrectionMode = 0;
+    ToulBar2::pedigreePenalty = 0;
+
+    ToulBar2::vac = 0;
+    ToulBar2::costThreshold = UNIT_COST;
+    ToulBar2::costThresholdPre = UNIT_COST;
+    ToulBar2::costMultiplier = UNIT_COST;
+    ToulBar2::relaxThreshold = MIN_COST;
+
+    ToulBar2::elimOrderType = ELIM_NONE;
+
+    ToulBar2::bep = NULL;
+    ToulBar2::wcnf = false;
+    ToulBar2::qpbo = false;
+
+    ToulBar2::varOrder = NULL;
+    ToulBar2::btdMode = 0;
+    ToulBar2::btdSubTree = -1;
+    ToulBar2::btdRootCluster = -1;
+
+    ToulBar2::startCpuTime = 0;
+
+    ToulBar2::splitClusterMaxSize = 0;
+    ToulBar2::boostingBTD = false;
+    ToulBar2::maxSeparatorSize = -1;
+    ToulBar2::minProperVarSize = 0;
+
+    ToulBar2::smallSeparatorSize = 4;
+
+    ToulBar2::isZ = false;
+    ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+    ToulBar2::logU = -numeric_limits<TProb>::infinity();
+    ToulBar2::logepsilon = -3;
+    ToulBar2::Berge_Dec=0;
+    ToulBar2::nbvar=0;
+
+    ToulBar2::timeOut = NULL;
+    ToulBar2::interrupted = false;
+
+    ToulBar2::learning = false;
+
+    ToulBar2::incop_cmd = "";
+}
 
 /*
  * WCSP constructors

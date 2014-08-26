@@ -277,4 +277,6 @@ public:
     virtual set<int> getUnassignedVars() const =0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
 };
 
+/// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
+extern void tb2init();
 #endif /*TOULBAR2LIB_HPP_*/

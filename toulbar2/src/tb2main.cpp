@@ -676,7 +676,7 @@ void help_msg(char *toulbar2filename)
 
 int _tmain(int argc, TCHAR * argv[])
 {
-
+    tb2init();
 
 	setlocale( LC_ALL, "C" );
 	bool certificate = false;
@@ -685,7 +685,6 @@ int _tmain(int argc, TCHAR * argv[])
 	char buf [512];
 	char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
 	Cost ub = MAX_COST;
-	ToulBar2::elimDegree = 3;
 
 	// Configuration for MaxSAT Evaluation
 //	ToulBar2::maxsateval = true;
