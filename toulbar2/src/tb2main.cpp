@@ -562,7 +562,7 @@ void help_msg(char *toulbar2filename)
 #endif
 #ifndef MENDELSOFT
 #ifdef LINUX
-    cerr << "   -timer=[integer] : CPU timout in seconds" << endl;
+    cerr << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
 	cerr << "   -var=[integer] : search by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
 	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
