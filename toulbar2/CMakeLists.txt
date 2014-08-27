@@ -67,12 +67,12 @@ include(CMakeDependentOption)
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF) 
 
 	OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
-	OPTION(Boost "boost graph binding [default: off]" OFF) 
+	OPTION(Boost "boost graph binding [default: off]" ON) 
 	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
 
 	OPTION(BUILD_API_DOC "build documentation with doxygen [default:on]" ON)
-	OPTION(STATIC "static compilation flag [default: on]" ON)
+	OPTION(STATIC "static compilation flag [default: on]" OFF)
 	OPTION(verbose "verbose mode [default:on]" ON)
 	OPTION(COVER_TEST "cover test [default:on]" ON)
 	OPTION(BENCH "benchmarcking [default:on]" OFF)
@@ -289,6 +289,8 @@ include(${My_cmake_scritp}/xmlcsp.cmake)
 # build executable
 #################
 
+INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
+
 IF(TOULBAR2)
 
 
@@ -324,8 +326,7 @@ IF(LIBTB2)
 	IF(WIN32)
 	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
 	ENDIF(WIN32)
-
-	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
+#	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 	add_library(
@@ -348,7 +349,7 @@ ENDIF(LIBTB2)
 ###############################################
 IF(LIBTB2INT)
 	MESSAGE(STATUS "COMPLING LIBTB2 INT .....")
-	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
+#	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 	add_library(
