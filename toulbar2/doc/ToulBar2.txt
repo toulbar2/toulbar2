@@ -314,8 +314,9 @@ Available options are (use symbol ":" after an option to remove a default option
    -ub=[integer] : initial problem upperbound (default value is 512409557603043100)
    -v=[integer] : verbosity level
    -s : shows each solution found
-   -w : writes last solution found in filename "sol"
+   -w=[filename] : writes last solution found in filename (or "sol" if no parameter is given)
    -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is 7)
+   -timer=[integer] : CPU time limit in seconds
    -var=[integer] : search by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is 0)
    -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)
    -svo : search using a static variable ordering heuristic (same order as DAC)
