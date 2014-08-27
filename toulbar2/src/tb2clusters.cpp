@@ -1870,7 +1870,7 @@ void TreeDecomposition::newSolution( Cost lb )
     }
 
     if (ToulBar2::writeSolution) {
-        ofstream file("sol");
+        ofstream file(ToulBar2::writeSolution);
         if (!file) {
           cerr << "Could not write file " << "solution" << endl;
           exit(EXIT_FAILURE);

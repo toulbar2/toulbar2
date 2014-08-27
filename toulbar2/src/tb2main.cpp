@@ -211,6 +211,7 @@ enum {
 	OPT_Z,
 	OPT_epsilon,
     OPT_learning,
+	OPT_timer,
 	// MEDELESOFT OPTION
 	OPT_generation=99,
 	MENDEL_OPT_genotypingErrorRate=100,
@@ -350,6 +351,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_epsilon,				(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 
     { OPT_learning,                         	(char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
+    { OPT_timer,              (char*) "-timer",             SO_REQ_SEP      }, // CPU timer
 
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
@@ -538,7 +540,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -v=[integer] : verbosity level" << endl;
 	cerr << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
-	cerr << "   -w : writes last solution found in filename \"sol\"" << endl;
+	cerr << "   -w=[filename] : writes last solution found in filename (or \"sol\" if no parameter is given)" << endl;
 	cerr << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
 #else
 	cerr << "   -w=[mode] : writes last solution found" << endl;
@@ -559,6 +561,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "           -problist [nbre of prob] p1 p2 p3... : allele probability distribution given explicitely in the command line" << endl << endl;
 #endif
 #ifndef MENDELSOFT
+#ifdef LINUX
+    cerr << "   -timer=[integer] : CPU timout in seconds" << endl;
+#endif
 	cerr << "   -var=[integer] : search by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
 	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
@@ -685,6 +690,7 @@ int _tmain(int argc, TCHAR * argv[])
 	char buf [512];
 	char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
 	Cost ub = MAX_COST;
+	int timeout = 0;
 
 	// Configuration for MaxSAT Evaluation
 //	ToulBar2::maxsateval = true;
@@ -854,11 +860,14 @@ int _tmain(int argc, TCHAR * argv[])
 			if (args.OptionId() == OPT_writeSolution )
 
 			{
-				ToulBar2::writeSolution = true;
+				ToulBar2::writeSolution = (char *) "sol";
 				if(args.OptionArg() != NULL) {
 					int correct = atoi(args.OptionArg());
 					ToulBar2::pedigreeCorrectionMode = 0;
 					if ((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
+					char *tmpFile = new char[strlen(args.OptionArg())+1];
+					strcpy(tmpFile,args.OptionArg());
+					ToulBar2::writeSolution = tmpFile;
 				}
 			}
 
@@ -1297,6 +1306,16 @@ int _tmain(int argc, TCHAR * argv[])
 				if (ToulBar2::debug) cout <<"UB =" << ub << " passed in  command line" << endl;
 			} 
 
+			// CPU timer
+			if ( args.OptionId() == OPT_timer)
+            {
+                if(args.OptionArg() != NULL) {
+                    timeout=atoi(args.OptionArg());
+                    if (ToulBar2::debug) cout << "TimeOut = " << timeout <<  endl;
+                }
+
+            }
+
 
 			//////////RANDOM GENERATOR///////
 			if ( args.OptionId() == OPT_seed ) {
@@ -1398,7 +1417,7 @@ int _tmain(int argc, TCHAR * argv[])
 				cout <<  "loading xml file:" << glob.File(n) << endl;
 
 				ToulBar2::xmlflag = true;
-				ToulBar2::writeSolution = true;
+				if (!ToulBar2::writeSolution) ToulBar2::writeSolution = (char *) "sol";
 				strext = ".xml";
 				strfile = glob.File(n);
 			}
@@ -1747,7 +1766,8 @@ int _tmain(int argc, TCHAR * argv[])
 		else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
 		{
 #ifdef LINUX
-			signal(SIGINT,  timeout);
+			signal(SIGINT,  timeOut);
+			if (timeout>0) timer(timeout);
 #endif
 			if (CSP(solver->getWCSP()->getLb(), solver->getWCSP()->getUb()))
 			{

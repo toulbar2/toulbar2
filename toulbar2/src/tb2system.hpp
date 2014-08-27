@@ -10,7 +10,7 @@
 #include "ToulbarVersion.hpp"
 
 double cpuTime();		///< \brief return CPU time in seconds
-void timeout(int sig);
+void timeOut(int sig);
 void timer(int t); 		///< \brief set a timer (in seconds)
 void timerStop(); 		///< \brief stop a timer
 

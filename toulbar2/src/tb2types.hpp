@@ -210,7 +210,7 @@ public:
 	static int verbose;
 	static int debug;
 	static bool showSolutions;
-	static bool writeSolution;
+	static char *writeSolution;
 	static bool allSolutions;
 	static int dumpWCSP;
 	static bool approximateCountingBTD;

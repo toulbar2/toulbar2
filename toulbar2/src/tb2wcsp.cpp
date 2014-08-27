@@ -35,7 +35,7 @@ string ToulBar2::version;
 int ToulBar2::verbose;
 int ToulBar2::debug;
 bool ToulBar2::showSolutions;
-bool ToulBar2::writeSolution;
+char *ToulBar2::writeSolution;
 bool ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
 bool ToulBar2::approximateCountingBTD;
@@ -152,7 +152,7 @@ void tb2init()
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
-    ToulBar2::writeSolution = false;
+    ToulBar2::writeSolution = NULL;
     ToulBar2::allSolutions = false;
     ToulBar2::dumpWCSP = 0;
     ToulBar2::approximateCountingBTD = false;

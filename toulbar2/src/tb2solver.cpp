@@ -925,7 +925,7 @@ void Solver::newSolution()
 		  ToulBar2::haplotype->printSol((WCSP*) wcsp);
 		}
 //        else {
-	        ofstream file("sol");
+	        ofstream file(ToulBar2::writeSolution);
 	        if (!file) {
 	          cerr << "Could not write file " << "solution" << endl;
 	          exit(EXIT_FAILURE);
