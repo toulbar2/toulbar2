@@ -18,8 +18,11 @@
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
  *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int).
- *  \warning maximum size of trailing stacks is limited by C++ integers
+ *  \warning maximum size of trailing stacks is limited by C++ integers (see LONGLONG_INDEX macro to use long long instead)
  */
+
+// to be uncommented if trailing stack indexes are represented by long long int (only valid for 64-bit systems)
+//#define LONGLONG_INDEX
 
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
@@ -33,6 +36,14 @@ class Variable;
 class Separator;
 class ConstraintLink;
 
+#ifdef LONGLONG_INDEX
+typedef long long Int;
+const Int Int_MAX = LONGLONG_MAX;
+#else
+typedef int Int;
+const Int Int_MAX = INT_MAX;
+#endif
+
 /*
  * Storable stack
  *
@@ -43,9 +54,9 @@ class StoreStack
 	string name;
 	T **pointers;
 	V *content;
-	int index;
-	int indexMax;
-	int base;
+	Int index;
+	Int indexMax;
+	Int base;
 
 	// make it private because we don't want copy nor assignment
 	StoreStack(const StoreStack &s);
@@ -53,11 +64,11 @@ class StoreStack
 
 public:
 	StoreStack(string s, int powbckmemory) : name(s) {
-		if (pow(2., powbckmemory) >= INT_MAX) {
+		if (pow(2., powbckmemory) >= Int_MAX) {
 			cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
 			exit(EXIT_FAILURE);
 		}
-		indexMax = (int) pow(2., powbckmemory);
+		indexMax = (Int) pow(2., powbckmemory);
 		pointers = new T *[indexMax];
 		content = new V[indexMax];
 		index = 0;
@@ -79,7 +90,7 @@ public:
 			cerr << name << " stack out of memory!" << endl;
 			exit(EXIT_FAILURE);
 		}
-		for (int i = 0; i < indexMax; i++) {
+		for (Int i = 0; i < indexMax; i++) {
 			newpointers[i] = pointers[i];
 			newcontent[i] = content[i];
 		}
@@ -118,28 +129,28 @@ public:
 		base = index;
 	}
 
-//	void restore(int **adr, int *val, int x) {
+//	void restore(int **adr, int *val, Int x) {
 //		*adr[x] = val[x];
 //	}
 
-	void restore(Value **adr, Value *val, int x) {
+	void restore(Value **adr, Value *val, Int x) {
 		*adr[x] = val[x];
 	}
 
 #ifndef INT_COST
-	void restore(Cost **adr, Cost *val, int x) {
+	void restore(Cost **adr, Cost *val, Int x) {
 		*adr[x] = val[x];
 	}
 #endif
 
-	void restore(BigInteger **adr, BigInteger *val, int x) {
+	void restore(BigInteger **adr, BigInteger *val, Int x) {
 		*adr[x] = val[x];
 	}
-	template<class Q> void restore(BTList<Q> **l, DLink<Q> **elt, int &x);
+	template<class Q> void restore(BTList<Q> **l, DLink<Q> **elt, Int &x);
 
 	void restore() {
 		if (index > 0) { // do nothing if already at depth = 0
-			int x, y;
+			Int x, y;
 
 			x = index + 1;
 			y = base;
@@ -148,7 +159,7 @@ public:
 			}
 
 			index = y - 1;
-			base = (long) pointers[y];
+			base = (Int) pointers[y];
 		}
 	}
 };
