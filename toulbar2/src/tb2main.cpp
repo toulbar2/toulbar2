@@ -127,7 +127,8 @@ enum {
 	OPT_wcsp_ext,
 	OPT_wcspXML_ext,
 	OPT_order_ext,
-	OPT_uai_ext,
+    OPT_uai_ext,
+    OPT_uai_log_ext,
 	OPT_evid_ext,
 	OPT_map_ext,
 	OPT_sol_ext,
@@ -248,6 +249,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_wcspXML_ext,                 (char*) "--wcspXML_ext",                              SO_REQ_SEP      },
 	{ OPT_order_ext, 	                 (char*) "--order_ext",                                SO_REQ_SEP      },
 	{ OPT_uai_ext,          	         (char*) "--uai_ext",                                  SO_REQ_SEP      },
+    { OPT_uai_log_ext,                       (char*) "--uai_log_ext",                                  SO_REQ_SEP      },
 	{ OPT_evid_ext,                 	 (char*) "--evid_ext",                                 SO_REQ_SEP      },
 	{ OPT_map_ext,                     (char*) "--map_ext",                                  SO_REQ_SEP      },
 	{ OPT_sol_ext,                     (char*) "--sol_ext",                                  SO_REQ_SEP      },
@@ -528,6 +530,7 @@ void help_msg(char *toulbar2filename)
 	cerr << endl;
 #endif
 	cerr << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task)" << endl;
+    cerr << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 	cerr << "   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
 	cerr << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
 	cerr << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
@@ -715,6 +718,7 @@ int _tmain(int argc, TCHAR * argv[])
 		file_extension_map["ub_ext"]=".ub";
 		file_extension_map["sol_ext"]=".sol";
 		file_extension_map["uai_ext"]=".uai";
+        file_extension_map["uai_log_ext"]=".LG";
 		file_extension_map["evid_ext"]=".evid";
 		file_extension_map["bep_ext"]=".bep";
 		file_extension_map["pre_ext"]=".pre";
@@ -1403,9 +1407,17 @@ int _tmain(int argc, TCHAR * argv[])
 				strfile = glob.File(n);
 				strext = ".uai";
 				cout <<  "loading uai file:  "<< glob.File(n) << endl;
-				ToulBar2::uai = true;
+				ToulBar2::uai = 1;
 				ToulBar2::bayesian = true;
 			}
+            // uai log file
+            if(check_file_ext(glob.File(n),file_extension_map["uai_log_ext"]) ) {
+                strfile = glob.File(n);
+                strext = ".LG";
+                cout <<  "loading uai log file:  "<< glob.File(n) << endl;
+                ToulBar2::uai = 2;
+                ToulBar2::bayesian = true;
+            }
 			// UAI evidence file
 			if(check_file_ext(glob.File(n),file_extension_map["evid_ext"]) ) {
 				cout <<  "loading evidence file:  "<< glob.File(n) << endl;
