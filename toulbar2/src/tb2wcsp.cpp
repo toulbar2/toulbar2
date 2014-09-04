@@ -81,7 +81,7 @@ Pedigree *ToulBar2::pedigree;
 Haplotype *ToulBar2::haplotype;
 
 bool ToulBar2::bayesian;
-bool ToulBar2::uai;
+int ToulBar2::uai;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
 string ToulBar2::solution_filename;
@@ -197,7 +197,7 @@ void tb2init()
     ToulBar2::haplotype = NULL;
 
     ToulBar2::bayesian = false;
-    ToulBar2::uai = false;
+    ToulBar2::uai = 0;
     ToulBar2::solution_filename = "sol";
     ToulBar2::uai_firstoutput = true;
     ToulBar2::markov_log = 0;

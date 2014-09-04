@@ -251,7 +251,7 @@ public:
 	static Haplotype *haplotype;
 	static string map_file;
 	static bool bayesian;
-	static bool uai;
+	static int uai;
 	static int resolution;
 	static TProb errorg;
 	static TProb NormFactor;

@@ -846,8 +846,8 @@ void WCSP::read_uai2008(const char *fileName)
 	    for (k = 0; k < ntuples; k++) {
 	        p = costsProb[k];
 	        Cost cost;
-	        if(markov) cost = Prob2Cost(p / maxp);
-	        else       cost = Prob2Cost(p);
+	        if(markov) cost = ((ToulBar2::uai>1)?LogLike2Cost(p - maxp):Prob2Cost(p / maxp));
+	        else       cost = ((ToulBar2::uai>1)?LogLike2Cost(p):Prob2Cost(p));
 	        costs[ictr].push_back(cost);
 	        if(cost < minc) minc = cost;
 	        if(cost > maxc && cost < getUb()) maxc = cost;
@@ -862,7 +862,7 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-	    if(markov) ToulBar2::markov_log += log10( maxp );
+	    if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log10( maxp ));
 
 	    ictr++;
 	    ++it;
