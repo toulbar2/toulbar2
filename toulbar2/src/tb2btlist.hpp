@@ -208,7 +208,7 @@ typedef BTList<Separator *> SeparatorList;
  * 
  */
 
-template <class T, class V> template <class Q> void StoreStack<T,V>::restore(BTList<Q> **l, DLink<Q> **elt, Int &x)
+template <class T, class V> template <class Q> void StoreStack<T,V>::restore(BTList<Q> **l, DLink<Q> **elt, ptrdiff_t &x)
 {
     if (elt[x] == NULL) {
         l[x]->undoPushBack();
