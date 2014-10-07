@@ -41,7 +41,7 @@ public:
     virtual void increaseLb(Cost addLb) =0;
     /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
     /// \return the worst-case assignment finite cost
-    /// \warning current problem should be completely loaded before calling this function
+    /// \warning current problem should be completely loaded and propagated before calling this function
     virtual Cost finiteUb() const =0;
 
 	virtual bool enumerated(int varIndex) const =0;		///< \brief true if the variable has an enumerated domain

@@ -1018,11 +1018,17 @@ bool Solver::solve()
 
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
-        wcsp->enforceUb();
 		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
+        wcsp->enforceUb();
         wcsp->propagate();                // initial propagation
-        wcsp->preprocessing();            // preprocessing after initial propagation
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost as new upper bound
+        if (finiteUb < initialUpperBound) {
+            initialUpperBound = finiteUb;
+            wcsp->updateUb(finiteUb);
+            wcsp->enforceUb();
+        }
+        wcsp->preprocessing();            // preprocessing after initial propagation
+        finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
             wcsp->updateUb(finiteUb);

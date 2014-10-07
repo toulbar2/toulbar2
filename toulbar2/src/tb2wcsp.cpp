@@ -1178,6 +1178,8 @@ void WCSP::preprocessing() {
 
 Cost WCSP::finiteUb() const
 {
+    assert(NC.empty());
+
     Cost summaxcost = getLb() + UNIT_COST;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         if (constrs[i]->connected() && !constrs[i]->isSep()) {
