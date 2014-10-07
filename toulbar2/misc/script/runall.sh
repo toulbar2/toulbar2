@@ -4,7 +4,7 @@
 # ./runall.sh ../validation
 
 solver=./toulbar2
-timelimit=600
+timelimit=3600
 K=1
 
 rm -f outall
@@ -14,7 +14,6 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     base=`basename $e .wcsp`
     file=$dir/$base
 
-# COMMENT OUT IF USING INITIAL UPPER BOUND
     ubfile=${dir}/${base}.ub
 
     rm -f out
@@ -34,13 +33,18 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     echo -n $file " " >> outall
 
     ulimit -t $timelimit > /dev/null
-    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub $2 -C=$K >> outsolver) 2> usedtime
 
-    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
+#    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub $2 -C=$K >> outsolver) 2> usedtime
+#    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
+# UNCOMMENT PREVIOUS *OR* NEXT TWO LINES
+    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp $2 -C=$K >> outsolver) 2> usedtime
+    cat outsolver | awk -v UB=-1 -f ./misc/script/runall.awk >> out ; cat out
 
     cat usedtime | awk '/ user /{ printf("%.2f",0.0+$1+$3); }'
    
-    cat out  | awk '/ /{ if($1 != $2) printf("           *******ERROR optimal cost"); }'
+    if [[ -e $ubfile ]] ; then
+        cat out  | awk '/ /{ if($1 != $2) printf("           *******ERROR optimal cost"); }'
+    fi
     
     cat out >> outall  
     cat usedtime | awk '/ user /{ printf(" %.2f",0.0+$1+$3); }' >> outall

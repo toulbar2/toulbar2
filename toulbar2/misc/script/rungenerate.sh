@@ -1,13 +1,13 @@
 #!/bin/bash
 
 nerr=0
-ninstances=1000
+ninstances=100
 nend=20
-bctr=30
+bctr=20
 tctr=0
 nary=0
-tight=50
-n=5
+tight=80
+n=4
 d=2
 K=1
 
@@ -49,8 +49,8 @@ while (( $n < $nend )) ; do
     seed=`expr $seed + 1`
   done	
   nary=`expr $nary + 1` 
-  tctr=`expr $tctr + 1`  
-  bctr=`expr $bctr + 4`  
+  tctr=`expr $tctr + 3`  
+  bctr=`expr $bctr + 5`  
   n=`expr $n + 1`
 done
 
