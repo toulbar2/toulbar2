@@ -197,4 +197,8 @@ inline int cost2log2gub(Long x) {return cost2log2(x);}
 #include <direct.h> // for WINDOWS?
 #endif
 
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t)-1)
+#endif
+
 #endif /* TB2SYSTEM_HPP_ */
