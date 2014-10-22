@@ -313,7 +313,17 @@ public:
         unsigned int vz = z->toIndex(vzi);
         if (costs.empty()) {
         	if (vxi == functionX[vy * sizeZ + vz]) costsYZ[vy*sizeZ + vz] += c;
-        } else costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c;
+        } else {
+            if (c < MIN_COST && (functionalX || functionalY || functionalZ)) {
+                if ((!functionalX || getFunctionX(vyi, vzi) == vxi) &&
+                    (!functionalY || getFunctionY(vxi, vzi) == vyi) &&
+                    (!functionalZ || getFunctionZ(vxi, vyi) == vzi)) {
+                        costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c; // does not subtract infinity if known by a functional constraint
+                    }
+            } else {
+                costs[vx*sizeY*sizeZ + vy*sizeZ + vz] += c;
+            }
+        }
     }
 
     void addCost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
@@ -330,7 +340,20 @@ public:
 	        
         if (costs.empty()) {
         	if (x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) costsYZ[vindex[1]*sizeZ + vindex[2]] += c;
-        } else costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
+        } else {
+            if (c < MIN_COST && (functionalX || functionalY || functionalZ)) {
+                Value valxi = x->toValue(vindex[0]);
+                Value valyi = y->toValue(vindex[1]);
+                Value valzi = z->toValue(vindex[2]);
+                if ((!functionalX || getFunctionX(valyi, valzi) == valxi) &&
+                    (!functionalY || getFunctionY(valxi, valzi) == valyi) &&
+                    (!functionalZ || getFunctionZ(valxi, valyi) == valzi)) {
+                         costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c; // does not subtract infinity if known by a functional constraint
+                }
+            } else {
+                costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] += c;
+            }
+        }
     }
 
     void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
@@ -1088,8 +1111,8 @@ template <typename T1, typename T2, typename T3, typename T4>
 void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCostYZX, bool functionalX, T4 getFunctionX,
 		 EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, BinaryConstraint* yzin)
 {
-	//	cout << "PROJECT " << *this <<endl;
-	//	cout << "on " << y->getName() << "," << z->getName() << endl;
+	//cout << "PROJECT " << *this <<endl;
+	//cout << "on " << y->getName() << "," << z->getName() << endl;
 
     bool flag = false;
     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
