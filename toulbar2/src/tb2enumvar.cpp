@@ -369,8 +369,14 @@ void EnumeratedVariable::propagateEAC()
         	queueDEE();
             // findFullSupportEAC may have inserted current variable in EAC1
 	        if (!linkEAC1Queue.removed) {
-                assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
-                wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
+	            if (linkEAC1Queue.content.timeStamp == wcsp->getNbNodes()) {
+	                assert(((BTList<VariableWithTimeStamp> *) wcsp->getQueueEAC1())->inBTList(&linkEAC1Queue));
+	                wcsp->getQueueEAC1()->remove(&linkEAC1Queue);
+	            } else {
+	                linkEAC1Queue.removed = true;
+	                linkEAC1Queue.content.timeStamp = -1;
+	                linkEAC1Queue.content.incdec = NOTHING_EVENT;
+	            }
             }
 #ifndef NDEBUG
             // check if lb has effectively been increased
