@@ -85,6 +85,7 @@ int ToulBar2::uai;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
 string ToulBar2::solution_filename;
+string ToulBar2::problemsaved_filename;
 bool ToulBar2::uai_firstoutput;
 TProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
@@ -199,6 +200,7 @@ void tb2init()
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
     ToulBar2::solution_filename = "sol";
+    ToulBar2::problemsaved_filename = "problem.wcsp";
     ToulBar2::uai_firstoutput = true;
     ToulBar2::markov_log = 0;
     ToulBar2::xmlflag = false;
@@ -1416,14 +1418,8 @@ void WCSP::dump(ostream& os, bool original) {
 
 	if (!ToulBar2::uaieval) {
 	    //####################" dump dot file ###############################""
-	    if (original) {
-	        strcat(Pb_graph, "_original.dot");
-	        cout << " Graph structure saved in problem_original.dot " << endl;
-	    } else {
-	        strcat(Pb_graph, ".dot");
-	        cout << " Graph structure saved in problem.dot " << endl;
-	    }
-	    //ofstream pb("current_problem.graph");
+	    strcat(Pb_graph, ".dot");
+	    cout << " Graph structure saved in problem.dot " << endl;
 	    ofstream pb(Pb_graph);
 	    pb << " graph graphname {\n " << endl;
 	    int res = 0;
@@ -1483,11 +1479,7 @@ void WCSP::dump(ostream& os, bool original) {
 	    for (unsigned int i = 0; i < vars.size(); i++)
 	        if (degDistrib[i]) lastnonzero = i;
 
-	    if (original) {
-	        strcat(Pb_degree, "_original.degree"); // original distribution
-	    } else {
-	        strcat(Pb_degree, ".degree"); // after preprocessing
-	    }
+	    strcat(Pb_degree, ".degree"); // after preprocessing
 	    ofstream file(Pb_degree);
 	    for (unsigned int i = 0; i <= lastnonzero; i++)
 	        if (degDistrib[i]) file << i << " " << degDistrib[i] << endl;

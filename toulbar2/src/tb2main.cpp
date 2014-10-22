@@ -148,6 +148,7 @@ enum {
 	OPT_boostingBTD,
 	OPT_minProperVarSize,
 	OPT_varOrder,
+    OPT_problemsaved_filename,
 	OPT_PARTIAL_ASSIGNMENT,
 	OpT_showSolutions,
 	OPT_writeSolution,
@@ -273,7 +274,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_minProperVarSize,     		(char*) "-X",             			SO_REQ_SEP 	},
 	{ OPT_PARTIAL_ASSIGNMENT,  		(char*) "-x",             			SO_OPT 	 	},
 	{ OPT_boostingBTD,          		(char*) "-E",             			SO_NONE    	},
-	{ OPT_varOrder,		    		(char*) "-O",             			SO_REQ_SEP 	}, // filemane of variable order
+	{ OPT_varOrder,		    		(char*) "-O",             			SO_REQ_SEP 	}, // filename of variable order
+    { OPT_problemsaved_filename,        (char*) "--save",                       SO_REQ_SEP  }, // filename of saved problem
 	{ OPT_showSolutions,         		(char*) "-s",             			SO_NONE    	},//print solution founded
 	{ OPT_showSolutions,         		(char*) "--show",          			SO_NONE    	},//print solution founded
 	{ OPT_writeSolution,        		(char*) "-w",       			  	SO_OPT  	}, //  depending of value write last solution found in filename "sol" in different format
@@ -839,6 +841,15 @@ int _tmain(int argc, TCHAR * argv[])
 			    }
 			}
 
+            if (args.OptionId() == OPT_problemsaved_filename)
+            {
+                char buf[512];
+                sprintf(buf,"%s",args.OptionArg());
+                ToulBar2::problemsaved_filename = to_string(buf);
+                if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP = 1;
+                if (ToulBar2::debug) cout << "saved problem into file " << ToulBar2::problemsaved_filename << endl;
+            }
+
 			// filename of solution
 			if (args.OptionId() == OPT_PARTIAL_ASSIGNMENT) {
 				if (args.OptionArg()!= NULL)	{
@@ -1265,7 +1276,7 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_dumpWCSP) {
 				if (args.OptionArg() != NULL) { ToulBar2::dumpWCSP= atoi(args.OptionArg());} else ToulBar2::dumpWCSP=1;
 				if(ToulBar2::dumpWCSP <= 1 ) {
-				if (ToulBar2::debug) cout <<"original problem dump in problem_original.wcsp (see also Graphviz and degree distribution)"  << endl;
+				if (ToulBar2::debug) cout <<"original problem dump in problem.wcsp (see also Graphviz and degree distribution)"  << endl;
 				} else {
 				if (ToulBar2::debug) cout <<"dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)"  << endl;
 
@@ -1768,7 +1779,7 @@ int _tmain(int argc, TCHAR * argv[])
 			else solver->parse_solution(certificateString);
 		}
 		if (ToulBar2::dumpWCSP==1) {
-		    string problemname = "problem_original.wcsp";
+		    string problemname = ToulBar2::problemsaved_filename;
 		    if (ToulBar2::uaieval) {
 		        problemname = ToulBar2::solution_filename;
 		        problemname.replace( problemname.rfind( ".uai.MPE" ), 8, ".wcsp" );

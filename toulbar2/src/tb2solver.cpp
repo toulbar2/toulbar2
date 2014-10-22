@@ -1068,7 +1068,7 @@ bool Solver::solve()
 		  ToulBar2::weightedDegree = 0;
 		}
 		
-		if (ToulBar2::dumpWCSP) {dump_wcsp("problem.wcsp",false); cout << "end." << endl; exit(0);}
+		if (ToulBar2::dumpWCSP) {dump_wcsp(ToulBar2::problemsaved_filename.c_str(),false); cout << "end." << endl; exit(0);}
 
 	    Cost upperbound = MAX_COST;
 		if (ToulBar2::restart>=0) {
