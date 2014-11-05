@@ -1797,6 +1797,9 @@ void WCSP::propagate() {
 						propagateNC();
 					}
 				} while (!Eliminate.empty());
+                if (ToulBar2::DEE_) {
+                    propagateDEE();
+                }
 
 				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
 				if (ToulBar2::vac) {
@@ -1808,10 +1811,6 @@ void WCSP::propagate() {
 					vac->propagate();
 				}
 			} while (ToulBar2::vac && !vac->isVAC());
-			if (ToulBar2::DEE_) {
-				propagateDEE();
-				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
-			}
 		} while (objectiveChanged || !NC.empty() || !IncDec.empty()
 				 || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
 				 || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
