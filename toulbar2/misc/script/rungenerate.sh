@@ -22,7 +22,6 @@ while (( $n < $nend )) ; do
     rm -f sol
     randomfile=nary-$n-$d-$tight-$bctr-$tctr-$nary-$seed 
     ./toulbar2 -random=$randomfile -C=$K -z > /dev/null
-    mv problem_original.wcsp problem.wcsp
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     ub0=`cat toolbar_opt`
     ub=`expr $ub0 + 2`
@@ -60,5 +59,5 @@ rm -f toolbar_opt
 rm -f toolbar_sol
 rm -f order
 rm -f sol
-rm -f problem_original.dot
-rm -f problem_original.degree
+rm -f problem.dot
+rm -f problem.degree
