@@ -154,6 +154,7 @@ public:
 
 	void setTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
 	void addtoTuple( String& tin, Cost c, EnumeratedVariable** scope_in = NULL );
+	void setInfiniteCost(Cost ub);
     void insertSum( String& t1, Cost c1, Constraint* ctr1, String t2, Cost c2, Constraint* ctr2, bool bFilters = false );
 	void permute( EnumeratedVariable** scope_in );
 

@@ -1664,6 +1664,8 @@ int _tmain(int argc, TCHAR * argv[])
 	  delete [] tmpFile;
 	}
 
+	//TODO: If --show_options then dump ToulBar2 object here
+
 	ToulBar2::startCpuTime = cpuTime();
 
 	initCosts(ub);

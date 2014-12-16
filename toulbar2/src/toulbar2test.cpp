@@ -4,112 +4,95 @@
  */
 
 #include "toulbar2lib.hpp"
-#include "tb2globaldecomposable.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+// INCOP default command line option
+const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 int main(int argc, char * argv[])
 {
-	Cost ub = 1000; // MAX_COST; // BUG!
-	ToulBar2::verbose = 0;
-	ToulBar2::showSolutions = true;
+    mysrand(getpid());
 
-	/// no preprocessing
-	ToulBar2::elimDegree = -1;
-	ToulBar2::elimDegree_preprocessing = -1;
-	ToulBar2::preprocessTernaryRPC = 0;
-	ToulBar2::preprocessFunctional  = 0;
-	ToulBar2::preprocessNary  = 0;
-	ToulBar2::costfuncSeparate = false;
+    tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
-	ToulBar2::allSolutions = true;
-	ToulBar2::LcLevel = LC_EDAC;
+	ToulBar2::verbose = -1;  // change to 0 to see more information
+
+	// uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
+//	ToulBar2::vac = 1; // option -A
+//	ToulBar2::vacValueHeuristic = true; // option -V
+	// uncomment if partial Limited Discrepancy Search enable
+//	ToulBar2::lds = 1;  // option -l=1
+	// uncomment if INCOP local search enable
+//	ToulBar2::incop_cmd = Incop_cmd; // option -i
 	
-	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
-	int x = solver->getWCSP()->makeEnumeratedVariable("x",-2,1);
-	int y = solver->getWCSP()->makeEnumeratedVariable("y",0,0);
-	int z = solver->getWCSP()->makeEnumeratedVariable("z",-1,3);
-	int w = solver->getWCSP()->makeEnumeratedVariable("w",-1,0);
-	int res = solver->getWCSP()->makeEnumeratedVariable("res",2,2);
+	// create a problem with three 0/1 variables
+	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, MAX_COST);
+	int x = solver->getWCSP()->makeEnumeratedVariable("x",0,1); // note that for efficiency issue, I assume domain values start at zero (otherwise remove flag -DWCSPFORMATONLY in Makefile)
+	int y = solver->getWCSP()->makeEnumeratedVariable("y",0,1);
+	int z = solver->getWCSP()->makeEnumeratedVariable("z",0,1);
 
+	// add random unary cost functions on each variable
 	{
-	cout << "x : ";
-	EnumeratedVariable* xvar = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(x);
-	for (EnumeratedVariable::iterator iterXi = xvar->begin(); iterXi != xvar->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	cout << "y : ";
-	EnumeratedVariable* yvar = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(y);
-	for (EnumeratedVariable::iterator iterXi = yvar->begin(); iterXi != yvar->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	cout << "z : ";
-	EnumeratedVariable* zvar = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(z);
-	for (EnumeratedVariable::iterator iterXi = zvar->begin(); iterXi != zvar->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	cout << "w : ";
-	EnumeratedVariable* wvar = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(w);
-	for (EnumeratedVariable::iterator iterXi = wvar->begin(); iterXi != wvar->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
-	cout << "res : ";
-	EnumeratedVariable* xvarb = (EnumeratedVariable*) static_cast<WCSP*>(solver->getWCSP())->getVar(res);
-	for (EnumeratedVariable::iterator iterXi = xvarb->begin(); iterXi != xvarb->end(); ++iterXi) {
-		cout << *iterXi << " ";
-	}
-	cout << endl;
+	    vector<Cost> costs(2, 0);
+	    costs[0] = randomCost(0,100);
+	    costs[1] = randomCost(0,100);
+	    solver->getWCSP()->postUnary(x, costs);
+	    costs[0] = randomCost(0,100);
+	    costs[1] = randomCost(0,100);
+	    solver->getWCSP()->postUnary(y, costs);
+	    costs[0] = randomCost(0,100);
+	    costs[1] = randomCost(0,100);
+	    solver->getWCSP()->postUnary(z, costs);
 	}
 
-	/* // SAFE WAY TO ACCESS INITIAL DOMAINS
-	vector<Cost> costs;
-	EnumeratedVariable *varx = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(x);
-	EnumeratedVariable *vary = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(y);
-	EnumeratedVariable *varz = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(z);
-	EnumeratedVariable *varw = (EnumeratedVariable *) ((WCSP *) solver->getWCSP())->getVar(w);
-	for (unsigned int i = 0 ; i < varx->getDomainInitSize(); i++) {
-	for (unsigned int j = 0 ; j < vary->getDomainInitSize(); j++) {
-	for (unsigned int k = 0 ; k < varz->getDomainInitSize(); k++) {
-	  costs.push_back((varx->toValue(i)+vary->toValue(j)==varz->toValue(k))?0:1000);
-	}}}
-	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
-	*/
+    // add binary cost functions (Ising) on each pair of variables
+    {
+        vector<Cost> costs;
+        for (unsigned int i = 0 ; i < 2; i++) {
+            for (unsigned int j = 0 ; j < 2; j++) {
+                costs.push_back((solver->getWCSP()->toValue(x, i) == solver->getWCSP()->toValue(y, j)) ? 0 : 30);  // penalizes by a cost=30 if variables are assigned to different values
+            }
+        }
+        solver->getWCSP()->postBinaryConstraint(x,y,costs);
+        solver->getWCSP()->postBinaryConstraint(x,z,costs);
+        solver->getWCSP()->postBinaryConstraint(y,z,costs);
+    }
 
-	/* // CAN BE WRONG IF CURRENT DOMAINS HAVE CHANGED DUE TO PREVIOUS CONSTRAINTS
-	vector<Cost> costs;
-	for (Value i = solver->getWCSP()->getInf(x) ; i <= solver->getWCSP()->getSup(x); i++) {
-	for (Value j = solver->getWCSP()->getInf(y) ; j <= solver->getWCSP()->getSup(y); j++) {
-	for (Value k = solver->getWCSP()->getInf(z) ; k <= solver->getWCSP()->getSup(z); k++) {
-	  costs.push_back((i+j==k)?0:1000);
-	}}}
-	solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
-	*/
+    // add a ternary hard constraint (x+y=z)
+    {
+        vector<Cost> costs;
+        for (unsigned int i = 0 ; i < 2; i++) {
+            for (unsigned int j = 0 ; j < 2; j++) {
+                for (unsigned int k = 0 ; k < 2; k++) {
+                    costs.push_back((solver->getWCSP()->toValue(x, i) + solver->getWCSP()->toValue(y, j) == solver->getWCSP()->toValue(z, k)) ? 0 : MAX_COST);
+                }
+            }
+        }
+        solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
+    }
 
+	solver->getWCSP()->sortConstraints(); // to be done before search
+	solver->getWCSP()->histogram(); // to be done before search
 
-	int scope[4] = {x,y,z,w};
-	WeightedAllDifferent* constraint = new WeightedAllDifferent(4,scope);
-	constraint->setBaseCost(1000);
-	constraint->setSemantics("lin");
-	constraint->display();
-	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
+//	int verbose = ToulBar2::verbose;
+//	ToulBar2::verbose = 5;  // high verbosity to see the cost functions
+//	solver->getWCSP()->print(cout);
+//	ToulBar2::verbose = verbose;
 
-	/*
-	int scope[5] = {x,y,z,w,res};
-	WeightedVarSum* constraint = new WeightedVarSum(5,scope);
-	constraint->setBaseCost(1000);
-	constraint->setSemantics("lin");
-	constraint->setComparator("==");
-	constraint->display();
-	constraint->addToCostFunctionNetwork(static_cast<WCSP*>(solver->getWCSP()));
-	*/
-	solver->getWCSP()->sortConstraints();
-	solver->getWCSP()->histogram();
-	solver->solve();
+	if (solver->solve()) {
+	    // show optimal solution
+	    vector<Value> sol;
+	    Cost optimum = solver->getSolution(sol);
+	    cout << "Optimum=" << optimum << endl;
+	    cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
+	} else {
+	    cout << "No solution found!" << endl;
+	}
+	cout << "Initial problem lower bound: " << solver->getWCSP()->getLb() << endl;
+
 	cout << "end." << endl;
 	return 0;
 }

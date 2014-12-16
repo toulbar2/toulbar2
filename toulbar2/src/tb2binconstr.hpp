@@ -162,6 +162,19 @@ public:
         }
     }
 
+    void setInfiniteCost(Cost ub) {
+        Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST))?(max(LARGE_COST, ub * MEDIUM_COST)):ub);
+        for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+            unsigned int ix = x->toIndex(*iterx);
+            for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+                unsigned int iy = y->toIndex(*itery);
+                Cost cost = costs[ix * sizeY + iy];
+                Cost delta = deltaCostsX[ix] + deltaCostsY[iy];
+                if (CUT(cost-delta, ub)) costs[ix * sizeY + iy] = mult_ub + delta;
+            }
+        }
+    }
+
 	Cost evalsubstr( String& s, Constraint* ctr )
 	{
 		Value vals[2];

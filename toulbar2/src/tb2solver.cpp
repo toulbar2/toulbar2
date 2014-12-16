@@ -467,7 +467,18 @@ void Solver::enforceUb()
 {
 	wcsp->enforceUb();
 	if (ToulBar2::isZ) {
-		Cost newCost = wcsp->getLb() + wcsp->getNegativeLb() + wcsp->LogLike2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
+		Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
+//		+ wcsp->LogLike2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));  // Easy -logZ lower bound
+	    for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) {
+	        if (wcsp->enumerated(*iter_variable)) {
+	            EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
+	            for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) {
+	                wcsp->SumLogLikeCost(newCost, var->getCost(*iter_value));
+	            }
+	        } else {
+	            newCost += wcsp->LogLike2Cost(Log10(wcsp->getDomainSize(*iter_variable)));
+	        }
+	    }
 		Double newlogU = wcsp->SumLogLikeCost(ToulBar2::logU, newCost);
 		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
 			if (ToulBar2::verbose >= 1) cout << "CUT " << newlogU << " " << ToulBar2::logZ  << " " << store->getDepth() << endl;
@@ -1019,19 +1030,28 @@ bool Solver::solve()
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
 		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
+        Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
+        if (finiteUb < initialUpperBound) {
+            initialUpperBound = finiteUb;
+            wcsp->updateUb(finiteUb);
+        }
+        wcsp->setInfiniteCost();          // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
         wcsp->enforceUb();
         wcsp->propagate();                // initial propagation
-        Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost as new upper bound
+        finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
             wcsp->updateUb(finiteUb);
+            wcsp->setInfiniteCost();
             wcsp->enforceUb();
+            wcsp->propagate();
         }
         wcsp->preprocessing();            // preprocessing after initial propagation
-        finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost as new upper bound
+        finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
             wcsp->updateUb(finiteUb);
+            wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
         }

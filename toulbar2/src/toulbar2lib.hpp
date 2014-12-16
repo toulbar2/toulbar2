@@ -43,6 +43,9 @@ public:
     /// \return the worst-case assignment finite cost
     /// \warning current problem should be completely loaded and propagated before calling this function
     virtual Cost finiteUb() const =0;
+    /// \brief updates infinite costs in all cost functions accordingly to the problem global lower and upper bounds
+    /// \warning to be used in preprocessing only
+    virtual void setInfiniteCost() =0;
 
 	virtual bool enumerated(int varIndex) const =0;		///< \brief true if the variable has an enumerated domain
 

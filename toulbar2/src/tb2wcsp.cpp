@@ -1180,8 +1180,6 @@ void WCSP::preprocessing() {
 
 Cost WCSP::finiteUb() const
 {
-    assert(NC.empty());
-
     Cost summaxcost = getLb() + UNIT_COST;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         if (constrs[i]->connected() && !constrs[i]->isSep()) {
@@ -1202,10 +1200,46 @@ Cost WCSP::finiteUb() const
         }
     }
     for (unsigned int i=0; i<vars.size(); i++) {
-        summaxcost += vars[i]->getMaxCost();
+        if (NC.empty()) {
+            summaxcost += vars[i]->getMaxCost();
+        } else {
+            if (vars[i]->enumerated()) {
+                Cost maxcost = MIN_COST;
+                EnumeratedVariable *var = (EnumeratedVariable *) vars[i];
+                for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+                    if (var->getCost(*iter) > maxcost) maxcost = var->getCost(*iter);
+                }
+                summaxcost += maxcost;
+            } else {
+                summaxcost += max(vars[i]->getInfCost(), vars[i]->getSupCost());
+            }
+        }
         if (summaxcost >= MAX_COST) return MAX_COST;
     }
     return summaxcost;
+}
+
+void WCSP::setInfiniteCost()
+{
+    assert(getStore()->getDepth() == 0);
+    Cost ub = getUb() - getLb();
+    assert(ub > 0);
+    if (ToulBar2::verbose >= 1) cout << "Set infinite cost to " << ub << endl;
+    for (unsigned int i = 0; i < constrs.size(); i++) {
+        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+            constrs[i]->setInfiniteCost(ub);
+        }
+    }
+    for (int i = 0; i < elimBinOrder; i++) {
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) {
+            elimBinConstrs[i]->setInfiniteCost(ub);
+        }
+    }
+    for (int i = 0; i < elimTernOrder; i++) {
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+            elimTernConstrs[i]->setInfiniteCost(ub);
+        }
+    }
 }
 
 Value WCSP::getDomainSizeSum() {

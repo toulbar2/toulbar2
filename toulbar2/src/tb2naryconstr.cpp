@@ -830,6 +830,15 @@ void NaryConstraintMap::addtoTuple( String& tin, Cost c, EnumeratedVariable** sc
 	(*pf)[t] += c;
 }
 
+void NaryConstraintMap::setInfiniteCost(Cost ub)
+{
+    Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST))?(max(LARGE_COST, ub * MEDIUM_COST)):ub);
+    for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
+        Cost c =  it->second;
+        if (CUT(c, ub)) it->second = mult_ub;
+    }
+    if (CUT(default_cost, ub)) default_cost = mult_ub;
+}
 
 void NaryConstraintMap::insertSum( String& t1, Cost c1, Constraint* ctr1, String t2, Cost c2, Constraint* ctr2, bool bFilters )
 {

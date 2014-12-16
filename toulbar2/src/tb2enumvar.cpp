@@ -225,14 +225,14 @@ bool EnumeratedVariable::verifyNC()
 {
     bool supported = true;
     Cost minCost = MAX_COST;
-    Value minCostValue = getSup()+1;
+//    Value minCostValue = getSup()+1;
     for (iterator iter = begin(); iter != end(); ++iter) {
         Cost cost = getCost(*iter);
         if (CUT(cost + wcsp->getLb(), wcsp->getUb())) {
             cout << *this << " not NC!" << endl;
             return false;
         }
-		if (cost < minCost) minCostValue = *iter;
+//		if (cost < minCost) minCostValue = *iter;
         GLB(&minCost, cost);
     }
     if (minCost > MIN_COST) {
