@@ -1,11 +1,13 @@
 #include "tb2alldiffconstr.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2vac.hpp"
-
 
 AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, 
 		int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
-	buildIndex();
+	buildIndex();        
+        
+        modeEnum["var"] = AllDiffConstraint::VAR;
+        modeEnum["dec"] = AllDiffConstraint::DEC;
+        modeEnum["decbi"] = AllDiffConstraint::DECBI;
 }
 
 void AllDiffConstraint::buildIndex() {
@@ -21,7 +23,7 @@ void AllDiffConstraint::buildIndex() {
 	for (vector<Value>::iterator i = D.begin(); i != D.end();i++) {
 		mapval[*i] = arity_+(int)(i-D.begin())+1;
 	}
-	graph.setSize(arity_+D.size()+2);
+	//graph.setSize(arity_+D.size()+2);
 }
 
 void AllDiffConstraint::read(istream &file) {
@@ -35,7 +37,7 @@ void AllDiffConstraint::read(istream &file) {
 	// mapping to def
 	file >> def;
 	//cout << "str = " << str << endl;
-	if (str == "var") {
+	/*if (str == "var") {
 		mode = VAR;
 	} else if (str == "dec") {
 		mode = DEC;
@@ -45,7 +47,13 @@ void AllDiffConstraint::read(istream &file) {
 	} else {
 		cout << "unknown mode?\n";
 		exit(0);
-	}
+	}*/
+        setSemantics(str);
+               
+}
+
+void AllDiffConstraint::organizeConfig() {
+    if (mode == DECBI) decompose();
 }
 
 Cost AllDiffConstraint::evalOriginal( String s ) {
@@ -66,18 +74,22 @@ Cost AllDiffConstraint::evalOriginal( String s ) {
 	return tuple_cost;
 }
 
+size_t AllDiffConstraint::GetGraphAllocatedSize() {
+	return mapval.size() + arity_  + 2;
+}
+
 void AllDiffConstraint::buildGraph(Graph &g) {
 
-	if (g.size() == 0) g.setSize(mapval.size() + arity_  + 2);
-	g.clearEdge();
+	// if (g.size() == 0) g.setSize(mapval.size() + arity_  + 2);
+	// g.clearEdge();
 	for (int i=0;i<arity_;i++) {
 		g.addEdge(0, i+1, 0);
 		EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
 		for (EnumeratedVariable::iterator j = x->begin(); j != x->end(); ++j) {
 			int index = mapval[*j];
 			if (index != 0) {
-					g.addEdge(i+1, index, -deltaCost[i][*j]);
-				vector<Cost> weight = g.getWeight(index, graph.size()-1);
+					g.addEdge(i+1, index, -deltaCost[i][x->toIndex(*j)]);
+				vector<Cost> weight = g.getWeight(index, g.size()-1);
 				Cost count = 0;
 				if (weight.size() != 0) {
 					if (mode == DEC) {
@@ -86,7 +98,8 @@ void AllDiffConstraint::buildGraph(Graph &g) {
 						count = def;
 					}
 				} 
-				g.addEdge(index, graph.size()-1, count);
+				g.addEdge(index, g.size()-1, count);
+				//g.print();
 			}
 		}
 	}

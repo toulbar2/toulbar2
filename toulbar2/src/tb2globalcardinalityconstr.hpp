@@ -1,18 +1,17 @@
 /** \file tb2globalcardinalityconstr.hpp
- *  \brief Global Cardinality Soft Constraint.
- * 
+ *  \brief Flow based global cost function : sgcc_flow
  */
 
-#ifndef TB2GCC_HPP_
-#define TB2GCC_HPP_
-
+//#include "glpk.h"
+#include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
 
-class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint 
+class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 {
 	private:
 		map<Value, pair<int, int> > bound;
 		void buildIndex();
+		size_t GetGraphAllocatedSize();
 		void buildGraph(Graph &g);
 		Cost constructFlow(Graph &g);
 		pair<int,int> mapto(int varindex, Value val) {
@@ -21,6 +20,7 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 		//JP Start// This array stores the repestive weight of each bound
 		map<Value, pair<int, int> > weights;
 		int nvalues;
+		int nDistinctDomainValue;
 		//JP End//
 	public:
 		//JP Start// New type 
@@ -43,9 +43,23 @@ class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 		string getName() {return "GCC constraint";}
 		Cost evalOriginal (String s);
 		void read(istream &file);
+                
+                //GlobalCostFunctionParameters* getParameters() {return this;}                    
+                void addValueAndBounds(Value value, int upper = -1, int lower = 0) {                                        
+                    if (upper == -1) upper = arity();
+                    bound[value] = make_pair(lower, upper);
+                    
+                }
+                void addValueAndWeights(Value value, int wexcess = -1, int wshortage = -1) {                                        
+                    if (wexcess == -1) wexcess = def;
+                    if (wshortage == -1) wshortage = def;
+                    weights[value] = make_pair(wshortage, wexcess);
+                    
+                }                
+                void organizeConfig();
 
         void print(ostream& os);
         void dump(ostream& os, bool original = true);
 };
 
-#endif /* TB2GCC_HPP_ */
+

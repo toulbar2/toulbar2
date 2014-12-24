@@ -13,6 +13,14 @@
 
 using namespace std;
 
+class WeightedAutomaton {
+public:
+    virtual void setNumStates(int nStates) = 0;
+    virtual void addInitialState(int begin) = 0;
+    virtual void addFinalState(int end) = 0;
+    virtual void addTransition(int start, int symbol, int end, int weight) = 0;				
+};
+
 struct WTransition {
 	unsigned int start;
 	unsigned int end;

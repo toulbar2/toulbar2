@@ -129,7 +129,7 @@ void EnumeratedVariable::queueDEE()
 	wcsp->queueDEE(&linkDEEQueue);
 }
 
-void EnumeratedVariable::project(Value value, Cost cost)
+void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
@@ -140,7 +140,10 @@ void EnumeratedVariable::project(Value value, Cost cost)
         queueDAC();
         queueEAC1();
     }
-    if (CUT(newcost + wcsp->getLb(), wcsp->getUb())) removeFast(value);     // Avoid any unary cost overflow
+    if (CUT(newcost + wcsp->getLb(), wcsp->getUb())) {
+      if (delayed) queueNC();
+      else removeFast(value);     // Avoid any unary cost overflow
+    }
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
@@ -163,10 +166,10 @@ void EnumeratedVariable::projectSupCost(Cost cost)
 
 void EnumeratedVariable::extend(Value value, Cost cost)
 {
+    assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
     assert(cost >= MIN_COST);
 	assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
-    assert( ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true) );
     if (value == maxCostValue || PARTIALORDER) queueNC();
 }
 

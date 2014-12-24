@@ -452,7 +452,7 @@ bool VACBinaryConstraint::isNull (Cost c)
 }
 
 bool VACBinaryConstraint::revise (VACVariable* var, Value v) {
-  bool wipeout = false;
+//  bool wipeout = false;
   VACVariable* xi = (VACVariable*) getVar(0);
   VACVariable* xj = (VACVariable*) getVar(1);
   Value sup = getSupport(var,v);
@@ -461,7 +461,7 @@ bool VACBinaryConstraint::revise (VACVariable* var, Value v) {
   Cost cost, minCost = wcsp->getUb();
 
   if(xj->canbe(sup)) {
-	  if(xj->getVACCost(sup) != MIN_COST) { wipeout = xj->removeVAC(sup);  }
+	  if(xj->getVACCost(sup) != MIN_COST) { xj->removeVAC(sup);  } // wipeout = xj->removeVAC(sup);
 	  else {
 		  if (getVACCost(xi,xj,v,sup) == MIN_COST) {
 		    return false;
@@ -471,7 +471,7 @@ bool VACBinaryConstraint::revise (VACVariable* var, Value v) {
 
   for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
 	  Value w = *it;
-	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+	  if(xj->getVACCost(w) != MIN_COST) { xj->removeVAC(w); xj->queueVAC(); } // wipeout = xj->removeVAC(w); xj->queueVAC();
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
 	      if (cost == MIN_COST) {
@@ -485,7 +485,7 @@ bool VACBinaryConstraint::revise (VACVariable* var, Value v) {
   }
   for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
 	  Value w = *it;
-	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+	  if(xj->getVACCost(w) != MIN_COST) { xj->removeVAC(w); xj->queueVAC(); } // wipeout = xj->removeVAC(w); xj->queueVAC();
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
 	      if (cost == MIN_COST) {

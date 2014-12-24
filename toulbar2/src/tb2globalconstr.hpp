@@ -1,5 +1,5 @@
 /** \file tb2globalconstr.hpp
- *  \brief Global Constraint using enumerated variables with parameter read from file
+ *  \brief Global Constraint using enumerated variables with parameters read from file
  * 
  */
 
@@ -33,8 +33,10 @@ protected:
 
 	// mode : the cost measure
 	// def : the cost of the violation edge 
-	Cost mode, def;
-	int currentDepth;
+	int currentDepth;                
+    Cost def;
+	int mode;
+    map<string, int> modeEnum;
 
 	int count_nic, count_gac, count_fdac, count_edac, error;
 
@@ -60,12 +62,13 @@ protected:
 		vector<map<Value, Cost> > deltas; deltas.push_back(delta);
 		changeAfterProject(supports, deltas);	
 	}
-    void project(int index, Value value, Cost cost);
+    void project(int index, Value value, Cost cost, bool delayed = false);
     void extend(int index, Value value, Cost cost);
 	// undo the previous extension
 	virtual void undoExtend() {}
 	// compute the original cost of the tuple s (i.e. cost without projection) 
-    virtual Cost evalOriginal( String s ) {return 0;}
+    virtual Cost evalOriginal( String s ) {return 0;}        	
+    
 	// compute the minimum cost of the tuple from all feasible tuples
 
 
@@ -75,6 +78,9 @@ public:
 	GlobalConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval);
 	// destrutor
 	virtual ~GlobalConstraint();
+                                          
+        virtual void setBaseCost(Cost cost)  {def = cost;}       
+        virtual void setSemantics(const string &semantic) {mode = modeEnum[semantic];}                    
 
     bool isGlobal() const {return true;}
 
@@ -83,6 +89,7 @@ public:
 
     double computeTightness() { return 0; }
 	virtual string getName() {return "global constraint";}
+  virtual void print(ostream& os);
 
 	// initialize the constraint structure for enforing consistency
 	void init();

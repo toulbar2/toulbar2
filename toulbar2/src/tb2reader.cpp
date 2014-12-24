@@ -111,21 +111,30 @@ typedef struct {
  *     - = \e cst \e delta to express soft binary constraint \f$x = y + cst\f$ with associated cost function  \f$(|y + cst - x| \leq delta)?|y + cst - x|:UB\f$
  *     - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  *     - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
- *     - salldiff var|dec \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation
- *     - sgcc var|dec \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
+ *-  Global cost functions using a flow based propagator:
+ *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
+ *     - sgcc var|dec|wdec \e cost \e nb_values (\e value \e lower_bound \e upper_bound (\e shortage_weight \e excess_weight)?)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound (if \e wdec then violation cost depends on each value shortage or excess weights)
  *     - ssame \e cost \e list_size1 \e list_size2 (\e variable_index)* (\e variable_index)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)
  *     - sregular var|edit \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
- *     - wamong  global constraint restrains the number of variables of its scope to take a bounded number of times a value from a given set. The global cost function associated to Among is WeightedAmong. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counters and does a cumulative sum all along the set of ternary cost functions.
- *     - wvaramong  hard global constraint restrains the number of variables of its scope, except the last variable, to take a value from a given set to be equal to the last variable.
- *     - woverlap The Overlap global constraint limits the overlaps between two sequence of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero)). The global cost function associated to Overlap is WeightedOverlap. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses two sets of new variables : the first as an overlap flag and a second one as a cumulative sum. Finally, an unary cost function ensures that the overlap respects a given value.
- *     - wsum The Sum global constraint tests if the sum of a set of variables match with a comparator and a right-handside value (for example == 4). The global cost function associated to Sum is WeightedSum. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions. Finally, an unary cost function ensures the comparator.
- *     - wvarsum The Sum global constraint tests if the sum of a set of variables match with a comparator and a given variable. The global cost function associated to Sum is WeightedSum. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions. Finally, a binary cost function compares the last counter variable with the last variable in the scope.
+ *-  Global cost functions using a dynamic programming based propagator:
+ *     - sregulardp var \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+ *     - sgrammar|sgrammardp var|weight \e cost \e nb_symbols \e nb_values \e start_symbol \e nb_rules ((0 \e terminal_symbol \e value)|(1 \e nonterminal_in \e nonterminal_out_left \e nonterminal_out_right)|(2 \e terminal_symbol \e value \e weight)|(3 \e nonterminal_in \e nonterminal_out_left \e nonterminal_out_right \e weight))* to express a soft/weighted grammar in Chomsky normal form
+ *     - samong|samongdp var \e cost \e lower_bound \e upper_bound \e nb_values (\e value)* to express a soft among constraint to restrict the number of variables taking their value into a given set of values
+ *     - max|smaxdp val \e nbtuples (\e variable \e value \e cost)* to express a weighted max cost function with a specific cost associated to the maximum value of a set of variables. Non-zero costs are given by a list of \e nbtuples with \e cost associated to \e variable assigned to \e value.
+ *     - smst|smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
+ *-  Global cost functions using a cost function network based propagator:
+ *     - wregular \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+ *     - walldiff hard|lin|quad \e cost to express a soft alldifferent constraint as a set of wamong hard constraint (\e hard keyword) or decomposition-based (\e lin and \e quad keywords) cost semantic with a given \e cost per violation
+ *     - wamong hard|lin|quad \e cost  global constraint restrains the number of variables of its scope to take a bounded number of times a value from a given set. The global cost function associated to Among is WeightedAmong. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counters and does a cumulative sum all along the set of ternary cost functions
+ *     - wvaramong  hard global constraint restrains the number of variables of its scope, except the last variable, to take a value from a given set to be equal to the last variable
+ *     - woverlap hard|lin|quad \e cost The Overlap global constraint limits the overlaps between two sequence of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero)). The global cost function associated to Overlap is WeightedOverlap. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses two sets of new variables : the first as an overlap flag and a second one as a cumulative sum. Finally, an unary cost function ensures that the overlap respects a given value
+ *     - wsum hard|lin|quad \e cost The Sum global constraint tests if the sum of a set of variables match with a comparator and a right-handside value (for example == 4). The global cost function associated to Sum is WeightedSum. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions. Finally, an unary cost function ensures the comparator
+ *     - wvarsum hard global constraint restrains the sum to be equal to the last variable value
  * \note This decomposition can use an exponential size (domains of counter variables).
  * Let us note <> the comparator, K the value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:
  *       -	if <> is == : gap = abs(K - Sum); if <> is <= : gap = max(0,Sum - K); if <> is < : gap = max(0,Sum - K - 1);
  *       -	if <> is != : gap = 1 if Sum != K and gap = 0 otherwise;  if <> is > : gap = max(0,K - Sum + 1);
  *       -	if <> is >= : gap = max(0,K - Sum);
- *     - wregular \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based   cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
  *
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
@@ -140,6 +149,8 @@ typedef struct {
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
  * - soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*): \code 4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
+ * - soft_grammar({x1,x2,x3,x4}) with hard cost (1000) producing well-formed parenthesis expressions: \code 4 0 1 2 3 -1 sgrammardp var 1000 4 2 0 6 1 0 0 0 1 0 1 2 1 0 1 3 1 2 0 3 0 1 0 0 3 1 \endcode
+ * - soft_among({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 0 1 2 3 -1 samongdp var 1000 1 3 2 1 2 \endcode
  * - wsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i) \neq 4\f$: \code 4 0 1 2 3 -1 wsum hard 1000 == 4 \endcode
  * - wvarsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i) \neq x_4\f$: \code 4 0 1 2 3 -1 wvarsum hard 1000 == \endcode
  * - wamong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 0 1 2 3 -1 wamong hard 1000 2 1 2 1 3 \endcode
@@ -354,12 +365,12 @@ void WCSP::read_wcsp(const char *fileName)
 			if (defval == -1) {
 				string gcname;
 				file >> gcname;			
-				if (gcname.substr(0,1) == "w") {
+				if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
 					DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
 					decomposableGCF->addToCostFunctionNetwork(this);
 				}
-				else { //NOT wregular
-				postGlobalConstraint(scopeIndex, arity, gcname, file); 
+				else { // monolithic global cost functions
+				postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
 				}
 
 			} else { 
@@ -495,7 +506,7 @@ void WCSP::read_wcsp(const char *fileName)
 				scopeIndex[2] = k;
 				string gcname;
 				file >> gcname;
-				postGlobalConstraint(scopeIndex, arity, gcname, file);
+				postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
 			}
 		} else if (arity == 2) {
 		    maxarity = max(maxarity,arity);
@@ -1240,13 +1251,6 @@ void WCSP::read_wcnf(const char *fileName)
 	  postNaryConstraintTuple(index, tup, cost*K);
 	  postNaryConstraintEnd(index);
 	} else if (arity == 3) {
-	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
-	  EnumeratedVariable *y = (EnumeratedVariable *) vars[scopeIndex[1]];
-	  EnumeratedVariable *z = (EnumeratedVariable *) vars[scopeIndex[2]];
-	  EnumeratedVariable *scope[3];
-	  scope[0] = x;
-	  scope[1] = y;
-	  scope[2] = z;
 	  vector<Cost> costs;
 	  for (int a = 0; a < 2; a++) {
 		for (int b = 0; b < 2; b++) {
@@ -1258,11 +1262,6 @@ void WCSP::read_wcnf(const char *fileName)
 	  costs[(buf[0] - CHAR_FIRST)*4 + (buf[1] - CHAR_FIRST)*2 + (buf[2] - CHAR_FIRST)] = cost*K;
 	  postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
 	} else if (arity == 2) {
-	  EnumeratedVariable *x = (EnumeratedVariable *) vars[scopeIndex[0]];
-	  EnumeratedVariable *y = (EnumeratedVariable *) vars[scopeIndex[1]];
-	  EnumeratedVariable *scope[2];
-	  scope[0] = x;
-	  scope[1] = y;
 	  vector<Cost> costs;
 	  for (int a = 0; a < 2; a++) {
 		for (int b = 0; b < 2; b++) {

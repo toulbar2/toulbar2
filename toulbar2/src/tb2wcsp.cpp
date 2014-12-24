@@ -18,11 +18,17 @@
 
 #include "tb2globaldecomposable.hpp"
 #include "tb2globalconstr.hpp"
+#include "tb2lpsconstr.hpp"
 #include "tb2flowbasedconstr.hpp"
 #include "tb2alldiffconstr.hpp"
 #include "tb2globalcardinalityconstr.hpp"
 #include "tb2sameconstr.hpp"
-#include "tb2regularconstr.hpp"
+#include "tb2regularflowconstr.hpp"
+#include "tb2amongconstr.hpp"
+#include "tb2regularDPconstr.hpp"
+#include "tb2grammarconstr.hpp"
+#include "tb2treeconstr.hpp"
+#include "tb2maxconstr.hpp"
 
 /*
  * Global variables with their default value
@@ -505,41 +511,8 @@ void WCSP::postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost) {
 	ctr->setTuple(tuple, cost, NULL);
 }
 
-/// \brief create a global cost function in intension with a particular semantic
-/// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
-/// \param arity size of scopeIndex
-/// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
-/// \param file problem file (\see \ref wcspformat)
-int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file) {
-	assert(arity >= 4); // does not work for binary or ternary cost functions!!!
-#ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
-#endif
-	if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
-	GlobalConstraint* gc = NULL;
-	EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
-	for (int i = 0; i < arity; i++)
-		scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
-
-	if (gcname == "salldiff") {
-		gc = new AllDiffConstraint(this, scopeVars, arity);
-	} else if (gcname == "sgcc") {
-		gc = new GlobalCardinalityConstraint(this, scopeVars, arity);
-	} else if (gcname == "ssame") {
-		gc = new SameConstraint(this, scopeVars, arity);
-	} else if (gcname == "sregular") {
-		gc = new RegularConstraint(this, scopeVars, arity);
-	} else {
-		cout << gcname << " undefined" << endl;
-		exit(1);
-	}
-	if (gc != NULL) globalconstrs.push_back(gc);
-	if (file != NULL) gc->read(file);
-
-	return gc->wcspIndex;
-}
-
 void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes){
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -554,6 +527,7 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
 
 void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -568,6 +542,7 @@ void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCo
 
 void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -586,6 +561,7 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
 
 void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -604,6 +580,7 @@ void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost base
 void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions,
   vector<Cost> transitionsCosts)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -632,6 +609,7 @@ void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<in
 
 void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -651,8 +629,11 @@ void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost,
 
 void WCSP::postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=i+1; j<arity/2; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=arity/2; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=arity/2; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WeightedSame* decomposableGCF = new WeightedSame(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics);
@@ -662,6 +643,7 @@ void WCSP::postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost
 
 void WCSP::postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
@@ -673,8 +655,11 @@ void WCSP::postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseC
 
 void WCSP::postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=i+1; j<arity/2; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=arity/2; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=arity/2; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WeightedSameGcc* decomposableGCF = new WeightedSameGcc(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics);
@@ -692,8 +677,11 @@ void WCSP::postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseC
 
 void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes)
 {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
 #ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=i+1; j<arity/2; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=arity/2; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for(int i=0; i<arity/2; i++) for (int j=arity/2; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WeightedOverlap* decomposableGCF = new WeightedOverlap(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics);
@@ -703,6 +691,314 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
+/// \brief create a monolithic global cost function in intension with a particular semantic
+/// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
+/// \param arity size of scopeIndex
+/// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
+/// \param file problem file (\see \ref wcspformat)
+/// \deprecated should use postWXXX methods
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file, int *constrcounter) {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+    GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
+    if (gc == NULL) return -1;
+    if (file != NULL) gc->read(file);
+    return gc->wcspIndex;
+}
+
+/// \warning does not work for arity below 4 (use binary or ternary cost functions instead)
+GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const string &gcname, int *constrcounter) {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
+    GlobalConstraint* gc = NULL;
+    EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+
+    if (gcname == "salldiff") {
+        gc = new AllDiffConstraint(this, scopeVars, arity);
+    } else if (gcname == "sgcc") {
+        gc = new GlobalCardinalityConstraint(this, scopeVars, arity);
+    } else if (gcname == "ssame") {
+        gc = new SameConstraint(this, scopeVars, arity);
+    } else if (gcname == "sregular") {
+        gc = new RegularFlowConstraint(this, scopeVars, arity);
+    } else if (gcname == "slinear") {
+        gc = new LPSConstraint(this, scopeVars, arity, constrcounter);
+    } else if (gcname == "samong" || gcname == "samongdp") {
+        gc = new AmongConstraint(this, scopeVars, arity);
+    } else if (gcname == "sregulardp") {
+        gc = new RegularDPConstraint(this, scopeVars, arity);
+    } else if (gcname == "sgrammar" || gcname == "sgrammardp") {
+        gc = new GrammarConstraint(this, scopeVars, arity);
+    } else if (gcname == "MST" || gcname == "smstdp") {
+        gc = new TreeConstraint(this, scopeVars, arity);
+    } else if (gcname == "max" || gcname == "smaxdp") {
+        gc = new MaxConstraint(this, scopeVars, arity);
+    } else {
+        cout << gcname << " undefined" << endl;
+        exit(1);
+    }
+
+    if (gc != NULL) globalconstrs.push_back(gc);
+
+    return gc;
+}
+
+int WCSP::postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                      const vector<Value> &values, int lb, int ub)
+{
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    if (propagator == "cfn") {
+        string semantics_ = semantics;
+        int *values_ = (int *) &values[0];
+        postWAmong(scopeIndex, arity, semantics_, baseCost, values_, values.size(), lb, ub);
+        return INT_MIN;
+    }
+
+    AmongConstraint* gc = (AmongConstraint*)postGlobalCostFunction(scopeIndex, arity, "samong");
+    if (gc == NULL) return -1;
+
+    gc->setSemantics(semantics);
+    gc->setBaseCost(baseCost);
+    gc->setUpperBound(ub);
+    gc->setLowerBound(lb);
+    for(unsigned int i = 0; i < values.size(); i++) gc->addBoundingValue(values[i]);
+    return gc->wcspIndex;
+}
+
+
+int WCSP::postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                               int nbStates,
+                              const vector<WeightedObj<int> > &initial_States,
+                              const vector<WeightedObj<int> > &accepting_States,
+                              const vector<DFATransition > &Wtransitions )
+{
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    if (propagator == "cfn") {
+        vector<pair<int, Cost> > initial_States_;
+        for(unsigned int i=0; i<initial_States.size(); i++)
+        {
+            initial_States_.push_back(pair<int, Cost>(initial_States[i].val, initial_States[i].weight));
+        }
+        vector<pair<int, Cost> > accepting_States_;
+        for(unsigned int i=0; i<accepting_States.size(); i++)
+        {
+            accepting_States_.push_back(pair<int, Cost>(accepting_States[i].val, accepting_States[i].weight));
+        }
+        vector<Cost> transitionsCosts;
+        vector<int *> transitions;
+        for(unsigned int i=0; i<transitionsCosts.size(); i++)
+        {
+            int *transition = new int[3];
+            transition[0] = Wtransitions[i].start;
+            transition[1] = Wtransitions[i].end;
+            transition[2] = Wtransitions[i].symbol;
+            transitions.push_back( transition );
+            transitionsCosts.push_back(Wtransitions[i].weight);
+        }
+        postWRegular(scopeIndex, arity, nbStates, initial_States_, accepting_States_, &transitions[0], transitionsCosts);
+        return INT_MIN;
+    }
+
+    WeightedAutomaton *wfa = NULL;
+    int constrIndex = -1;
+
+    if (propagator == "flow") {
+        RegularFlowConstraint* gc = (RegularFlowConstraint*)postGlobalCostFunction(scopeIndex, arity, "sregular");
+        if (gc != NULL) {
+            constrIndex = gc->wcspIndex;
+            gc->setSemantics(semantics);
+            gc->setBaseCost(baseCost);
+            wfa = gc->getWeightedAutomaton();
+        }
+    } else {
+        RegularDPConstraint* gc = (RegularDPConstraint*)postGlobalCostFunction(scopeIndex, arity, "sregulardp");
+        if (gc != NULL) {
+            constrIndex = gc->wcspIndex;
+            gc->setSemantics(semantics);
+            gc->setBaseCost(baseCost);
+            wfa = gc->getWeightedAutomaton();
+        }
+    }
+
+    if (wfa != NULL) {
+        wfa->setNumStates(nbStates);
+        for(unsigned int i=0; i<initial_States.size(); i++) {
+            wfa->addInitialState(initial_States[i].val);
+        }
+        for(unsigned int i=0; i<accepting_States.size(); i++) {
+            wfa->addFinalState(accepting_States[i].val);
+        }
+        for(unsigned int i=0; i<Wtransitions.size(); i++) {
+            wfa->addTransition(Wtransitions[i].start, Wtransitions[i].symbol,
+                                Wtransitions[i].end, Wtransitions[i].weight);
+        }
+    }
+
+    return constrIndex;
+
+}
+
+int WCSP::postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                       const vector<BoundedObj<Value> > &values)
+{
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+
+    GlobalCardinalityConstraint* gc = (GlobalCardinalityConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgcc");
+     if (gc == NULL) return -1;
+
+    gc->setSemantics(semantics);
+    gc->setBaseCost(baseCost);
+    for (unsigned int i=0;i<values.size();i++) {
+        gc->addValueAndBounds(values[i].val,values[i].lower,values[i].upper);
+    }
+
+    return gc->wcspIndex;
+
+}
+
+int WCSP::postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string &semantics, const string &propagator, Cost baseCost)
+{
+    assert(arityG1 >= 2); // does not work for binary or ternary cost functions!!!
+    assert(arityG1 == arityG2);
+#ifndef NDEBUG
+    for(int i=0; i<arityG1; i++) for (int j=i+1; j<arityG1; j++) assert(scopeIndexG1[i] != scopeIndexG1[j]);
+    for(int i=0; i<arityG2; i++) for (int j=i+1; j<arityG2; j++) assert(scopeIndexG2[i] != scopeIndexG2[j]);
+    for(int i=0; i<arityG1; i++) for (int j=1; j<arityG2; j++) assert(scopeIndexG1[i] != scopeIndexG2[j]);
+#endif
+
+    if (propagator == "cfn") {
+        string semantics_ = semantics;
+        vector<int> scopeIndex;
+        for(int i=0; i<arityG1; i++) scopeIndex.push_back(scopeIndexG1[i]);
+        for(int i=0; i<arityG2; i++) scopeIndex.push_back(scopeIndexG2[i]);
+        int arity = arityG1 + arityG2;
+        postWSame(&scopeIndex[0], arity, semantics_, baseCost);
+        return INT_MIN;
+    }
+
+    int* scopeIndex = new int[arityG1+arityG2];
+    int arity = arityG1+arityG2;
+    for (int i=0;i<arityG1;i++) {scopeIndex[i] = scopeIndexG1[i];}
+    for (int i=0;i<arityG2;i++) {scopeIndex[i+arityG1] = scopeIndexG2[i];}
+
+    SameConstraint* gc = (SameConstraint*)postGlobalCostFunction(scopeIndex, arity, "ssame");
+     if (gc == NULL) return -1;
+
+    gc->setSemantics(semantics);
+    gc->setBaseCost(baseCost);
+    for (int i=0;i<arityG1;i++) gc->addVariablesToGroup((EnumeratedVariable *)vars[scopeIndexG1[i]],0);
+    for (int i=0;i<arityG2;i++) gc->addVariablesToGroup((EnumeratedVariable *)vars[scopeIndexG2[i]],1);
+
+    delete[] scopeIndex;
+
+    return gc->wcspIndex;
+}
+
+int WCSP::postWAllDiff(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost)
+{
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    if (propagator == "cfn") {
+        string semantics_ = semantics;
+        postWAllDiff(scopeIndex, arity, semantics_, baseCost);
+        return INT_MIN;
+    }
+
+    GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, "salldiff");
+
+    if (gc == NULL) return -1;
+
+    gc->setSemantics(semantics);
+    gc->setBaseCost(baseCost);
+    return gc->wcspIndex;
+
+}
+
+int WCSP::postWGrammarCNF(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                           int nbNonTerminal,
+                           int startSymbol,
+                           const vector<CFGProductionRule> WRuleToTerminal) {
+
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+
+    GrammarConstraint* gc = (GrammarConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgrammar");
+
+     if (gc == NULL) return -1;
+
+    gc->setSemantics(semantics);
+    gc->setBaseCost(baseCost);
+
+    WeightedCNFCFG* cnf = gc->getGrammar();
+
+    cnf->setNumNonTerminals(nbNonTerminal);
+    cnf->setStartSymbol(startSymbol);
+
+    for (unsigned int i=0;i<WRuleToTerminal.size();i++) {
+        if (WRuleToTerminal[i].order == 1) {
+            cnf->addProduction(WRuleToTerminal[i].from, WRuleToTerminal[i].to[0], 0 );
+        } else if (WRuleToTerminal[i].order == 2) {
+            cnf->addProduction(WRuleToTerminal[i].from, WRuleToTerminal[i].to[0], WRuleToTerminal[i].to[1], 0 );
+        } else {
+            printf("Either A->v or A->BC is allowed\n");
+        }
+    }
+
+    return gc->wcspIndex;
+
+}
+
+int WCSP::postMST(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost) {
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+   TreeConstraint* gc = (TreeConstraint*)postGlobalCostFunction(scopeIndex, arity, "MST");
+    if (gc == NULL) return -1;
+   gc->setSemantics(semantics);
+   gc->setBaseCost(baseCost);
+   return gc->wcspIndex;
+}
+
+int WCSP::postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                         const vector<WeightedVarValPair> weightFunction){
+    assert(arity >= 4); // does not work for binary or ternary cost functions!!!
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+
+    MaxConstraint* gc = (MaxConstraint*)postGlobalCostFunction(scopeIndex, arity, "max");
+
+    if (gc == NULL) return -1;
+
+   gc->setSemantics(semantics);
+   gc->setBaseCost(baseCost);
+
+   for (unsigned int i=0;i<weightFunction.size();i++) {
+       gc->setAssignmentWeight((EnumeratedVariable *)vars[weightFunction[i].varIndex],
+                                weightFunction[i].val,
+                                weightFunction[i].weight);
+   }
+
+    return gc->wcspIndex;
+}
 
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
@@ -1785,7 +2081,7 @@ void WCSP::propagate() {
 	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
 		(*(it))->init();
 	}
-	if (isGlobal()) {
+	if (isGlobal() && ToulBar2::LcLevel >= LC_EDAC) {
 		for (unsigned int i = 0; i < vars.size(); i++) {
 			EnumeratedVariable* x = (EnumeratedVariable*) vars[i];
 			if (x->unassigned()) {

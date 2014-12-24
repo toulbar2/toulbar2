@@ -4,8 +4,13 @@
 #define upper_bound first
 #define lower_bound second
 
-GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
+GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) 
+: FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
 	buildIndex();
+        
+        modeEnum["var"] = GlobalCardinalityConstraint::VAR;
+        modeEnum["dec"] = GlobalCardinalityConstraint::VALUE;
+        modeEnum["wdec"] = GlobalCardinalityConstraint::WVALUE;
 }
 
 void GlobalCardinalityConstraint::buildIndex() {
@@ -23,7 +28,8 @@ void GlobalCardinalityConstraint::buildIndex() {
 	for (vector<Value>::iterator i = D.begin(); i != D.end();i++) {
 		mapval[*i] = arity_+(int)(i-D.begin())+1;
 	}
-	graph.setSize(arity_+D.size()+4);
+	nDistinctDomainValue = D.size();
+	//graph.setSize(arity_+D.size()+4);
 }
 
 void GlobalCardinalityConstraint::read(istream &file) {
@@ -32,17 +38,18 @@ void GlobalCardinalityConstraint::read(istream &file) {
 	// "wdec" => sigmadec
 	string str;
 	int nvalues;
-	int sumlow = 0, sumhigh = 0;
+	//int sumlow = 0, sumhigh = 0;
 	file >> str;
 	//JP Start// alteration
-	mode = EMPTY;
+	/*mode = EMPTY;
 	if (strcmp(str.c_str(), "var") 	== 0) mode = VAR;
 	if (strcmp(str.c_str(), "dec") 	== 0) mode = VALUE;
 	if (strcmp(str.c_str(), "wdec") == 0) mode = WVALUE;
 	if (mode == EMPTY) {
 		cerr << "Error occur in reading gcc() : No violation measure" << endl;
 		exit(1);
-	}
+	}*/
+        setSemantics(str);
 	//JP End//
 	file >> def; 
 	file >> nvalues;
@@ -63,14 +70,31 @@ void GlobalCardinalityConstraint::read(istream &file) {
 		//JP End//
 		bound[d] = make_pair(high, low);
 		weights[d] = make_pair(wshortage, wexcess);
-		sumlow += low;
-		sumhigh += high;
-	}
+		//sumlow += low;
+		//sumhigh += high;
+	}                
 
-	for (map<Value,int>::iterator i = mapval.begin();i != mapval.end();i++) {
+}
+
+void GlobalCardinalityConstraint::organizeConfig() {       
+    
+    int sumlow = 0, sumhigh = 0;
+    
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end();i++) {
+        sumlow += i->second.lower_bound;
+        sumhigh += i->second.upper_bound;
+    }
+    
+    for (map<Value,int>::iterator i = mapval.begin();i != mapval.end();i++) {
 		if (bound.find(i->first) == bound.end()) {
 			bound[i->first] = make_pair(arity_+4, 0);
 			sumhigh += arity_+4;
+		}
+	}
+    
+      for (map<Value,int>::iterator i = mapval.begin();i != mapval.end();i++) {
+		if (weights.find(i->first) == weights.end()) {
+			weights[i->first] = make_pair(def, def);
 		}
 	}
 
@@ -81,8 +105,8 @@ void GlobalCardinalityConstraint::read(istream &file) {
 		cerr << "arity_ = " << arity_ << endl;
 		cerr << "sum low = " << sumlow << endl;
 		exit(1);
-	}
-
+	}       
+    
 }
 
 Cost GlobalCardinalityConstraint::evalOriginal( String s ) {
@@ -116,6 +140,10 @@ Cost GlobalCardinalityConstraint::evalOriginal( String s ) {
 	return cost;
 }
 
+size_t GlobalCardinalityConstraint::GetGraphAllocatedSize() {
+	return arity_+nDistinctDomainValue+4;
+}
+
 void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 
 	int n = g.size();
@@ -124,7 +152,7 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 	int ss = n-1;
 	int st = n-2;
 
-	g.clearEdge();
+	//g.clearEdge();
 	g.addEdge(t, 0, 0, INF);
 	g.addEdge(0, st, 0, arity_);
 
@@ -132,7 +160,7 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 		g.addEdge(ss, i+1, 0, 1);
 		EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
 		for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-				g.addEdge(i+1, mapval[*v], -deltaCost[i][*v]);
+				g.addEdge(i+1, mapval[*v], -deltaCost[i][x->toIndex(*v)]);
 		}
 	}
 

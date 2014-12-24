@@ -19,7 +19,8 @@ void SameConstraint::buildIndex() {
 	for (vector<Value>::iterator i = D.begin(); i != D.end();i++) {
 		mapval[*i] = arity_+(int)(i-D.begin())+1;
 	}
-	graph.setSize(arity_+D.size()+2);
+	nDistinctDomainValues = D.size();
+	//graph.setSize(arity_+D.size()+2);
 }
 
 pair<int,int> SameConstraint::mapto(int varindex, Value val) {
@@ -84,21 +85,25 @@ Cost SameConstraint::evalOriginal(String s) {
 	return tuple_cost;
 }
 
+size_t SameConstraint::GetGraphAllocatedSize() {
+	return arity_+nDistinctDomainValues+2;
+}
+
 void SameConstraint::buildGraph(Graph &g) {
-	g.clearEdge();
+	//g.clearEdge();
 	for (vector<int>::iterator i = group[0].begin();i != group[0].end();i++) {
 		EnumeratedVariable *x = (EnumeratedVariable*)getVar(*i);
 		for (EnumeratedVariable::iterator v = x->begin();v != x->end();++v) {
-			g.addEdge((*i)+1, mapval[*v], -deltaCost[*i][*v], 1, *v);
+			g.addEdge((*i)+1, mapval[*v], -deltaCost[*i][x->toIndex(*v)], 1, *v);
 		}
 		g.addEdge(0, (*i)+1, 0);
 	}
 	for (vector<int>::iterator i = group[1].begin();i != group[1].end();i++) {
 		EnumeratedVariable *x = (EnumeratedVariable*)getVar(*i);
 		for (EnumeratedVariable::iterator v = x->begin();v != x->end();++v) {
-				g.addEdge(mapval[*v], (*i)+1, -deltaCost[*i][*v], 1, *v);
+				g.addEdge(mapval[*v], (*i)+1, -deltaCost[*i][x->toIndex(*v)], 1, *v);
 		}
-		g.addEdge((*i)+1, graph.size()-1, 0);
+		g.addEdge((*i)+1, g.size()-1, 0);
 	}
 	for (map<Value, int>::iterator i = mapval.begin(); i != mapval.end();i++) {
 		map<Value, int>::iterator j = i;
@@ -106,8 +111,7 @@ void SameConstraint::buildGraph(Graph &g) {
 			g.addEdge(i->second, j->second, def, arity_);
 			g.addEdge(j->second, i->second, def, arity_);
 		}
-	}
-	//g.print(); exit(0);
+	}	
 }
 
 /*void SameConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {

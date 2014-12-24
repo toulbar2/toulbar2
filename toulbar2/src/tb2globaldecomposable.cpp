@@ -2,7 +2,7 @@
 
 /// DECOMPOSABLE COST FUNCTION /////////////////////////////////////////
 
-DecomposableGlobalCostFunction::DecomposableGlobalCostFunction() : arity(0), label("empty") {
+DecomposableGlobalCostFunction::DecomposableGlobalCostFunction() : arity(0), scope(NULL), label("empty") {
 	ToulBar2::Berge_Dec=1;
 }
 
@@ -21,18 +21,17 @@ DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction() {
 DecomposableGlobalCostFunction* 
 DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream &file) {
 	//cout << "Creating a " << type << " global cost function " << endl;
-	if (type == "wamong") 				return new WeightedAmong(_arity,_scope,file);
-	if (type == "wregular")				return new WeightedRegular(_arity,_scope,file);
-	if (type == "wsum")					return new WeightedSum(_arity,_scope,file);
-	if (type == "woverlap")				return new WeightedOverlap(_arity,_scope,file);
-	
-	if (type == "wvaramong") 			return new WeightedVarAmong(_arity,_scope,file);
-	if (type == "walldifferent")		return new WeightedAllDifferent(_arity,_scope,file);
-	if (type == "wgcc")					return new WeightedGcc(_arity,_scope,file);
-	if (type == "wsame")				return new WeightedSame(_arity,_scope,file);
-	if (type == "wsamegcc")				return new WeightedSameGcc(_arity,_scope,file);
-	
-	if (type == "wvarsum")				return new WeightedVarSum(_arity,_scope,file);
+    if (type == "wamong")               return new WeightedAmong(_arity,_scope,file);
+    if (type == "wvaramong")            return new WeightedVarAmong(_arity,_scope,file);
+    if (type == "wsum")                 return new WeightedSum(_arity,_scope,file);
+    if (type == "wvarsum")              return new WeightedVarSum(_arity,_scope,file);
+    if (type == "woverlap")             return new WeightedOverlap(_arity,_scope,file);
+
+    if (type == "walldifferent" || type == "walldiff")      return new WeightedAllDifferent(_arity,_scope,file);
+    if (type == "wgcc")                 return new WeightedGcc(_arity,_scope,file);
+    if (type == "wregular")             return new WeightedRegular(_arity,_scope,file);
+    if (type == "wsame")                return new WeightedSame(_arity,_scope,file);
+    if (type == "wsamegcc")             return new WeightedSameGcc(_arity,_scope,file);
 	
 	cout << type << " unknown decomposable global cost function" << endl;
 	return 0;
@@ -143,7 +142,7 @@ WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp) {
 			if (((unsigned int) i) >= lb && ((unsigned int) i)  <= ub) unaryCosts[i] = 0;							
 			else unaryCosts[i] = min(top,baseCost);
 		}
-		if (semantics == "lin")  unaryCosts[i] = min (top, baseCost * gap);							
+		if (semantics == "lin" || semantics == "var")  unaryCosts[i] = min (top, baseCost * gap);
 		if (semantics == "quad") unaryCosts[i] = min (top,baseCost * gap * gap);
 		if (VVERBOSE) cout << i << " => " << unaryCosts[i] << endl;
 	}	
@@ -159,7 +158,7 @@ WeightedAmong::evaluate(int* tuple) {
 	int gap = max( 0 , max( int(lb - occurency), int(occurency - ub) ) );
 	if (gap) {
 		if (semantics == "hard") return baseCost;
-		if (semantics == "lin")  return baseCost * gap;	
+		if (semantics == "lin" || semantics == "var")  return baseCost * gap;
 		if (semantics == "quad") return baseCost * gap * gap;	
 	}
 	return 0;
@@ -212,8 +211,7 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
 		int unsigned domsize  = automaton->getNbStates()-1;
 		string varname = "WR" + to_string(current_var_number);
 		if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular q0 index "<< q0 << " domain = " << domsize+1 << endl; 
-		int theindex = -1;
-		theindex=wcsp->makeEnumeratedVariable(varname,(Value) 0, (Value) domsize);			// add q0 variable
+		wcsp->makeEnumeratedVariable(varname,(Value) 0, (Value) domsize);			// add q0 variable
 		if ( ToulBar2::verbose > 1 ) cout << "wregular add varname =" << varname <<"=> var index "<<  wcsp->numberOfVariables() << " domain size = " << domsize+1 << endl;
 		} else { exit(EXIT_FAILURE); 
 	} 		
@@ -473,7 +471,7 @@ WeightedSum::addToCostFunctionNetwork(WCSP* wcsp) {
 		}
 				
 		if (semantics == "hard")  unaryCosts[positionVar] = (gap)?baseCost:0;
-		if (semantics == "lin")   unaryCosts[positionVar] = gap*baseCost;
+		if (semantics == "lin" || semantics == "var")   unaryCosts[positionVar] = gap*baseCost;
 		if (semantics == "quad")  unaryCosts[positionVar] = gap*gap*baseCost;
 		//cout << positionVar << " (=) " << i << " ==> " << unaryCosts[positionVar] << endl;
 		
@@ -498,7 +496,7 @@ WeightedSum::evaluate(int* tuple) {
 	if (comparator == "==") {
 		int gap = (sum < rightRes)?  rightRes - sum: sum - rightRes;
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 	if (comparator == "!=") {
@@ -508,14 +506,14 @@ WeightedSum::evaluate(int* tuple) {
 		int newRightRes = rightRes; if (comparator == "<") newRightRes--;
 		int gap = max(0,sum - newRightRes);
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 		if (comparator == ">" || comparator == ">=") {
 		int newRightRes = rightRes; if (comparator == ">") newRightRes++;
 		int gap = max(0,newRightRes - sum);
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 	return 0;
@@ -650,7 +648,7 @@ WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
 				}
 				
 				if (semantics == "hard")  binaryCosts[positionArray] = (gap)?baseCost:0;
-				if (semantics == "lin")   binaryCosts[positionArray] = (gap*baseCost >= top)?top:gap*baseCost;
+				if (semantics == "lin" || semantics == "var")   binaryCosts[positionArray] = (gap*baseCost >= top)?top:gap*baseCost;
 				if (semantics == "quad")  binaryCosts[positionArray] = (gap*gap*baseCost >= top)?top:gap*gap*baseCost;
 				//cout << valueCounter << "," << valueVariable << "," << gap << " : " << binaryCosts[positionArray] << endl;
 			}
@@ -780,7 +778,7 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
 			else {
 				int gap = (i < rightRes)?  rightRes - i: i - rightRes;
 				if (semantics == "hard") unaryCosts[i] = baseCost;
-				if (semantics == "lin")  unaryCosts[i] = gap*baseCost;
+				if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
 				if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
 			}
 		}
@@ -802,7 +800,7 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
 			else {
 				int gap = max(0,i - newRightRes);
 				if (semantics == "hard") unaryCosts[i] = baseCost;
-				if (semantics == "lin")  unaryCosts[i] = gap*baseCost;
+				if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
 				if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
 			}
 		}
@@ -816,7 +814,7 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
 			else {
 				int gap = max(0,newRightRes - i);
 				if (semantics == "hard") unaryCosts[i] = baseCost;
-				if (semantics == "lin")  unaryCosts[i] = gap*baseCost;
+				if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
 				if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
 			}
 		}
@@ -839,7 +837,7 @@ WeightedOverlap::evaluate(int* tuple) {
 	if (comparator == "==") {
 		int gap = (occurency < rightRes)?  rightRes - occurency: occurency - rightRes;
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 	if (comparator == "!=") {
@@ -849,14 +847,14 @@ WeightedOverlap::evaluate(int* tuple) {
 		int newRightRes = rightRes; if (comparator == "<") newRightRes--;
 		int gap = max(0,occurency - newRightRes);
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 		if (comparator == ">" || comparator == ">=") {
 		int newRightRes = rightRes; if (comparator == ">") newRightRes++;
 		int gap = max(0,newRightRes - occurency);
 		if (semantics == "hard") return min(gap*baseCost,baseCost);
-		if (semantics == "lin")  return gap*baseCost;
+		if (semantics == "lin" || semantics == "var")  return gap*baseCost;
 		if (semantics == "quad") return gap*gap*baseCost;
 	}
 	return 0;
@@ -957,7 +955,7 @@ WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp) {
 	}
 	
 	// -- binary constraints : final variable -- // 
-	if (semantics != "hard") { color(1) ; cout << "WARNING :: only hard semantics can be consider"; color(-1) ; cout << endl; }
+	if (semantics != "hard") { color(1) ; cout << "WARNING :: only hard semantics can be considered"; color(-1) ; cout << endl; }
 	if (VERBOSE) cout << "\033[45m" << "post binary constraint on " << addVariablesIndex[arity-1] << " and " << scope[arity - 1] << "\033[0m" << endl;
 	int indexCount = addVariablesIndex[arity-1];
 	int indexLast  = scope[arity - 1];
@@ -1082,11 +1080,11 @@ WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub) {
 
 void 
 WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp) {
-	int nbcounters = bounds.size();
-	int counter = 0;
-	int counters[nbcounters];
-	int clb[nbcounters];
-	int cub[nbcounters];
+//	int nbcounters = bounds.size();
+//	int counter = 0;
+//	int counters[nbcounters];
+//	int clb[nbcounters];
+//	int cub[nbcounters];
 //	int cscope[nbcounters];
 	for (map<Value,pair <unsigned int,unsigned int> >::iterator it = bounds.begin(); it != bounds.end() ; ++it) {
 		pair<Value,pair <unsigned int,unsigned int> > bound = *it;
@@ -1094,17 +1092,17 @@ WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 		//Adding a wamong
 		Value value = bound.first;
 		unsigned int lb = (bound.second).first;
-		clb[counter] = lb;
+//		clb[counter] = lb;
 		unsigned int ub = (bound.second).second;
-		cub[counter] = ub;
+//		cub[counter] = ub;
 		WeightedAmong* wamong = new WeightedAmong(arity,scope);
 		wamong->setSemantics(semantics);
 		wamong->setBaseCost(baseCost);
 		wamong->addValue(value);
 		wamong->setBounds(lb,ub);
 		wamong->addToCostFunctionNetwork(wcsp);	
-		counters[counter] = wcsp->numberOfVariables() - 1;
-		counter++;
+//		counters[counter] = wcsp->numberOfVariables() - 1;
+//		counter++;
 	}
 //	if (semantics == "hard") rec_sum_counters(wcsp, cscope, 0, 0, 0, counters, clb, cub, nbcounters, 0);
 }
@@ -1250,7 +1248,7 @@ WeightedSame::addToCostFunctionNetwork(WCSP* wcsp) {
 				if (gap < 0) gap *=-1;
 				Cost currentCost = 0;
 				if (gap && semantics == "hard") currentCost = baseCost;
-				if (semantics == "lin") 		currentCost = baseCost*gap;
+				if (semantics == "lin" || semantics == "var") 		currentCost = baseCost*gap;
 				if (semantics == "quad") 		currentCost = baseCost*gap*gap;
 				binaryCosts[position] = currentCost;
 				
@@ -1379,7 +1377,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 				if (gap < 0) gap *=-1;
 				Cost currentCost = 0;
 				if (gap && semantics == "hard") currentCost = baseCost;
-				if (semantics == "lin") 		currentCost = baseCost*gap;
+				if (semantics == "lin" || semantics == "var") 		currentCost = baseCost*gap;
 				if (semantics == "quad") 		currentCost = baseCost*gap*gap;
 				binaryCosts[position] = currentCost;
 				
@@ -1408,7 +1406,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 					Cost currentCost = 0;
 					int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
 					if (gap && semantics == "hard") currentCost = baseCost;
-					if (semantics == "lin") 		currentCost = baseCost*gap;
+					if (semantics == "lin" || semantics == "val") 		currentCost = baseCost*gap;
 					if (semantics == "quad") 		currentCost = baseCost*gap*gap;
 					unaryCosts[count] = currentCost;
 				}
@@ -1420,7 +1418,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 					Cost currentCost = 0;
 					int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
 					if (gap && semantics == "hard") currentCost = baseCost;
-					if (semantics == "lin") 		currentCost = baseCost*gap;
+					if (semantics == "lin" || semantics == "val") 		currentCost = baseCost*gap;
 					if (semantics == "quad") 		currentCost = baseCost*gap*gap;
 					unaryCosts[count] = currentCost;
 				}

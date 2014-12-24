@@ -23,7 +23,7 @@ class FlowBasedGlobalConstraint;
 class AllDiffConstraint;
 class GlobalCardinalityConstraint;
 class SameConstraint;
-class RegularConstraint;
+class RegularFlowConstraint;
 
 /** Concrete class WCSP containing a weighted constraint satisfaction problem
  *	- problem lower and upper bound
@@ -315,19 +315,41 @@ public:
 	void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
 	void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
 	void postNaryConstraintEnd(int ctrindex) {if (!isDelayedNaryCtr) getCtr(ctrindex)->propagate();}
-	int postGlobalConstraint(int* scopeIndex, int arity, string &name, istream &file);
-	bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global constraints defined in the problem
 
-    void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
-    void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex);
-    void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub);
-    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex);
-    void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts);
-    void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost);
-    void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub);
-    void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost);
-    void postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub);
-    void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes);
+	int postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file, int *constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
+
+    GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string &name, int *constrcounter = NULL);
+
+	int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                            const vector<Value> &values, int lb, int ub);///< \brief post a soft among cost function
+    void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
+    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e cfn propagator only)
+    int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                              int nbStates,
+                              const vector<WeightedObj<int> > &initial_States,
+                              const vector<WeightedObj<int> > &accepting_States,
+                              const vector<DFATransition > &Wtransitions ); ///< \brief post a soft or weighted regular cost function
+    void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
+    int postWAllDiff(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a soft alldifferent cost function
+    void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
+    int postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                          const vector<BoundedObj<Value> > &values); ///< \brief post a soft global cardinality cost function
+    void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
+    int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
+    void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function
+    void postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \brief post a combination of a same and gcc cost function decomposed as a cost function network
+    int postWGrammarCNF(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                                 int nbSymbols,
+                                 int startSymbol,
+                                 const vector<CFGProductionRule> WRuleToTerminal ); ///< \brief post a soft/weighted grammar cost function with the dynamic programming propagator and grammar in Chomsky normal form
+    int postMST(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a Spanning Tree hard constraint
+    int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
+                                const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (a unary cost function associated to the maximum of a set of variables)
+    void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
+    void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
+    void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
+
+    bool isGlobal() {return (globalconstrs.size() > 0);} ///< \brief true if there are soft global cost functions defined in the problem
 
 	void read_wcsp(const char *fileName); 		///< \brief load problem in native wcsp format (\ref wcspformat)
 	void read_uai2008(const char *fileName);	///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)

@@ -166,6 +166,58 @@ typedef map<int, Value> TAssign;
 #endif
 
 /*
+ * Abstract data type that help post a global cost function
+ *
+ */
+
+// A value with weight
+template<class Object>
+struct WeightedObj{
+    Object val;
+    Cost weight;
+
+    WeightedObj(const Object &val_, Cost weight_ = MIN_COST) : val(val_), weight(weight_) {}
+};
+
+// A value with upper and lower limit
+template<class Object>
+struct BoundedObj{
+    Object val;
+    unsigned int upper;
+    unsigned int lower;
+
+    BoundedObj(const Object &val_, unsigned int upper_, unsigned int lower_ = 0) : val(val_), upper(upper_), lower(lower_) {}
+};
+
+// A transition in DFA
+struct DFATransition {
+    int start;
+    int end;
+    Value symbol;
+    unsigned int weight;
+
+    DFATransition(int start_, Value symbol_, int end_, Cost weight_ = MIN_COST)
+        : start(start_), end(end_), symbol(symbol_), weight(weight_) {}
+
+};
+
+// A production rule in CFG
+struct CFGProductionRule {
+    int from;
+    unsigned int weight;
+    int order;
+    int *to;
+
+};
+
+// A variable-value pair with weight
+struct WeightedVarValPair {
+    int varIndex;
+    Value val;
+    Cost weight;
+};
+
+/*
  * Global variables encapsulated as static members
  *
  */

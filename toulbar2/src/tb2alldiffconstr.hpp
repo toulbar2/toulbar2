@@ -1,5 +1,5 @@
 /** \file tb2alldiffconstr.hpp
- *  \brief AllDifferent Soft Constraint with mu_var and mu_dec measure
+ *  \brief AllDifferent constraint with mu_var and mu_dec measure
  *
  */
 
@@ -7,6 +7,8 @@
 #define TB2ALLDIFFCONSTR_HPP_
 
 #include "tb2flowbasedconstr.hpp"
+#include "tb2binconstr.hpp"
+#include "tb2vacutils.hpp"
 
 class AllDiffConstraint : public FlowBasedGlobalConstraint
 {
@@ -16,6 +18,7 @@ class AllDiffConstraint : public FlowBasedGlobalConstraint
 			return make_pair(varindex+1, mapval[val]);
 		}
 		//void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
+		size_t GetGraphAllocatedSize();
 		void buildGraph(Graph &g);
 	public:
 		static const int DECBI = 2;
@@ -30,7 +33,10 @@ class AllDiffConstraint : public FlowBasedGlobalConstraint
 		~AllDiffConstraint() {
 		}
 		Cost evalOriginal (String s);
-		void read(istream &file);
+                
+		void read(istream &file);                
+                void organizeConfig();                                
+                
 		void decompose();
 		//void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
 		//void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}

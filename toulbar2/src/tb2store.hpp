@@ -262,5 +262,6 @@ public:
 };
 
 #define storeInt storeValue
+#define storeIndexList storeDomain
 
 #endif /*TB2STORE_HPP_*/

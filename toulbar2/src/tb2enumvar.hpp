@@ -67,7 +67,7 @@ public:
     void assignWhenEliminated(Value newValue);
     void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
 
-    virtual void project(Value value, Cost cost);
+    virtual void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
     virtual void extend(Value value, Cost cost);
     virtual void extendAll(Cost cost);
     Value getSupport() const {return support;}

@@ -50,8 +50,8 @@ void BinaryConstraint::print(ostream& os)
 {
     os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
 	if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
-    if(wcsp->getTreeDec()) cout << "   cluster: " << getCluster() << endl;
-    else cout << endl;
+    if(wcsp->getTreeDec()) os << "   cluster: " << getCluster() << endl;
+    else os << endl;
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
