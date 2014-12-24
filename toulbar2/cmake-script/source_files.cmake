@@ -24,7 +24,17 @@
                         ${My_Source}/tb2alldiffconstr.cpp
                         ${My_Source}/tb2globalcardinalityconstr.cpp
                         ${My_Source}/tb2sameconstr.cpp
-                        ${My_Source}/tb2regularconstr.cpp
+                        ${My_Source}/tb2regularflowconstr.cpp
+                        ${My_Source}/tb2dpglobalconstr.cpp
+                        ${My_Source}/tb2regularDPconstr.cpp
+                        ${My_Source}/tb2amongconstr.cpp
+                        ${My_Source}/tb2grammarconstr.cpp
+                        ${My_Source}/tb2wgrammar.cpp
+                        ${My_Source}/tb2maxconstr.cpp
+                        ${My_Source}/tb2treeconstr.cpp
+                        ${My_Source}/tb2linearconstr.cpp
+                        ${My_Source}/tb2lpsconstr.cpp
+                        ${My_Source}/tb2mipsolver.cpp
                         ${My_Source}/tb2domain.cpp
                         ${My_Source}/tb2enumvar.cpp
                         ${My_Source}/tb2intervar.cpp
@@ -74,7 +84,17 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2alldiffconstr.*pp
                         ${My_Source}/tb2globalcardinalityconstr.*pp
                         ${My_Source}/tb2sameconstr.*pp
-                        ${My_Source}/tb2regularconstr.*pp
+                        ${My_Source}/tb2regularflowconstr.*pp
+                        ${My_Source}/tb2dpglobalconstr.*pp
+                        ${My_Source}/tb2regularDPconstr.*pp
+                        ${My_Source}/tb2amongconstr.*pp
+                        ${My_Source}/tb2grammarconstr.*pp
+                        ${My_Source}/tb2wgrammar.*pp
+                        ${My_Source}/tb2maxconstr.*pp
+                        ${My_Source}/tb2treeconstr.*pp
+                        ${My_Source}/tb2linearconstr.*pp
+                        ${My_Source}/tb2lpsconstr.*pp
+                        ${My_Source}/tb2mipsolver.*pp
                         ${My_Source}/tb2domain.*pp
                         ${My_Source}/tb2enumvar.*pp
                         ${My_Source}/tb2intervar.*pp
