@@ -67,7 +67,7 @@ include(CMakeDependentOption)
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF) 
 
 	OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
-	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
+##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 	OPTION(Boost "boost graph binding [default: off]" ON) 
 	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
