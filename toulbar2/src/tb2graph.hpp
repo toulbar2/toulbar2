@@ -155,7 +155,7 @@ class Graph {
 		vector<Vertex*> vertexList;
 		
 		// potentials
-		vector<StoreCost> potential;
+		//vector<StoreCost> potential;
 		
 		// pre-allocated temporary structure
 		vector<int> p;
@@ -276,12 +276,13 @@ class Graph {
 		}
 				
 		// shortest path algorithm (using Dijkstra with reweighting)
-		void shortest_path_with_potential(int source);
+		// Not used due to error in computing potentials after argumentation
+		/*void shortest_path_with_potential(int source);
 		void shortest_path_with_potential(int source, vector<Cost> &pathCost) {
 			shortest_path_with_potential(source);
 			pathCost.resize(size());
 			for (int i=0;i<size();i++) pathCost[i] = d[i];	
-		}
+		}*/
 
 		// just for checking
 		void print() {

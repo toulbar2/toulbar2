@@ -3,7 +3,7 @@
 Graph::Graph(int n, int depth_, Store* storeStack_) 
 : adjlist(n)
 , vertexList(n)
-, potential(n, StoreCost(0, &storeStack_->storeCost))
+//, potential(n, StoreCost(0, &storeStack_->storeCost))
 , p(n)
 , counter(n)
 , d(n)
@@ -227,17 +227,20 @@ void Graph::addFlow(int u, int v, Cost flowval) {
 
 pair<int, Cost> Graph::minCostFlow(int s, int t) {
 
-	int n = size();
+	//int n = size();
 	Cost flow = 0;
 	Cost cost = 0;
 	pair<Cost, bool> result;
 	bool stopped = false;
 	
-	shortest_path(s);
-	for (int i=0;i<n;i++) potential[i] = d[i]; 
+	//shortest_path(s);
+	//for (int i=0;i<n;i++) potential[i] = d[i]; 
+	int iterationCount = 0;
 	while (!stopped) {
+		iterationCount++;
 		stopped = false;
-		shortest_path_with_potential(s);
+		//shortest_path_with_potential(s);
+		shortest_path(s);
 		int u = t;
 		Cost minc = MAX_COST+1;
 		while (p[u] != u && !stopped) {
@@ -264,7 +267,7 @@ pair<int, Cost> Graph::minCostFlow(int s, int t) {
 				addFlow(p[u], u, minc);
 				u = p[u];
 			}
-			for (int i=0;i<n;i++) potential[i] += d[i]; 
+			//for (int i=0;i<n;i++) potential[i] += d[i];
 		}
 	}
 
@@ -330,7 +333,7 @@ pair<Cost, bool> Graph::augment(int s, int t, bool can_change) {
 			u = p[u];
 		}
 		if (exist) addFlow(t, s, minc); 
-		for (int i=0;i<size();i++) potential[i] = d[i]; 
+		//for (int i=0;i<size();i++) potential[i] = d[i]; 
 	}	
 
 	return result;
@@ -425,8 +428,15 @@ void Graph::print(ostream &os) {
 		}
 		os << "\n";
 	}
+
+	/*os << "==potential==\n";
 					
-	os << "==============\n";
+	for (int u=0;u<gsize;u++) {
+		os << u << ": " << potential[u] << " ";
+	}
+	os << "\n";
+	*/
+	os << "==graph===\n";
 			
 	for (int i = 0; i < gsize; i++) {
 		os << i << ":";
@@ -490,6 +500,20 @@ void Graph::shortest_path(list<int> &sources, bool &nevloop) {
 	
 }
 
+void Graph::printPath(int s, int t) {
+
+	int u = t;
+	cout << u << " <- ";
+	while (p[u] != u) {
+		cout << p[u] << " <- ";
+		u = p[u];
+	}
+	cout << u << " <- " << endl;
+
+}
+
+// Not used due to error in updating potentials after argumentation
+/*
 void Graph::shortest_path_with_potential(int s) {
 
 	int n = size();
@@ -521,6 +545,10 @@ void Graph::shortest_path_with_potential(int s) {
 				edgeList.end();++k) {		
 				List_Node &edge = *(adjlist[u][*k]);
 				Cost weight = edge.weight + potential[u] - potential[edge.adj];
+				if (weight < 0) {
+					cout << "(u,v): " << u << " " << edge.adj << " weight: " <<
+					edge.weight << "\n";
+				}
 				assert(weight >= 0);
 				if ((d[u] + weight < d[edge.adj])) {
 					d[edge.adj] = d[u] + weight;
@@ -536,18 +564,7 @@ void Graph::shortest_path_with_potential(int s) {
 	}
 
 }
-
-void Graph::printPath(int s, int t) {
-
-	int u = t;
-	cout << u << " <- ";
-	while (p[u] != u) {
-		cout << p[u] << " <- ";
-		u = p[u];
-	}
-	cout << u << " <- " << endl;
-
-}
+*/
 
 /*
    set<set<int> >& Graph::compute_scc() {
