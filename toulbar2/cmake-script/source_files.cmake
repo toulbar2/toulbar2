@@ -32,9 +32,9 @@
                         ${My_Source}/tb2wgrammar.cpp
                         ${My_Source}/tb2maxconstr.cpp
                         ${My_Source}/tb2treeconstr.cpp
-                        ${My_Source}/tb2linearconstr.cpp
-                        ${My_Source}/tb2lpsconstr.cpp
-                        ${My_Source}/tb2mipsolver.cpp
+##                        ${My_Source}/tb2linearconstr.cpp
+##                        ${My_Source}/tb2lpsconstr.cpp
+##                        ${My_Source}/tb2mipsolver.cpp
                         ${My_Source}/tb2domain.cpp
                         ${My_Source}/tb2enumvar.cpp
                         ${My_Source}/tb2intervar.cpp
@@ -92,9 +92,9 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2wgrammar.*pp
                         ${My_Source}/tb2maxconstr.*pp
                         ${My_Source}/tb2treeconstr.*pp
-                        ${My_Source}/tb2linearconstr.*pp
-                        ${My_Source}/tb2lpsconstr.*pp
-                        ${My_Source}/tb2mipsolver.*pp
+##                        ${My_Source}/tb2linearconstr.*pp
+##                        ${My_Source}/tb2lpsconstr.*pp
+##                        ${My_Source}/tb2mipsolver.*pp
                         ${My_Source}/tb2domain.*pp
                         ${My_Source}/tb2enumvar.*pp
                         ${My_Source}/tb2intervar.*pp
