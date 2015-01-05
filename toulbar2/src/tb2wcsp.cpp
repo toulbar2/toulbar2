@@ -18,7 +18,9 @@
 
 #include "tb2globaldecomposable.hpp"
 #include "tb2globalconstr.hpp"
-#include "tb2lpsconstr.hpp"
+#ifdef ILOGCPLEX
+  #include "tb2lpsconstr.hpp"
+#endif
 #include "tb2flowbasedconstr.hpp"
 #include "tb2alldiffconstr.hpp"
 #include "tb2globalcardinalityconstr.hpp"
@@ -725,8 +727,10 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
         gc = new SameConstraint(this, scopeVars, arity);
     } else if (gcname == "sregular") {
         gc = new RegularFlowConstraint(this, scopeVars, arity);
+#ifdef ILOGCPLEX
     } else if (gcname == "slinear") {
         gc = new LPSConstraint(this, scopeVars, arity, constrcounter);
+#endif
     } else if (gcname == "samong" || gcname == "samongdp") {
         gc = new AmongConstraint(this, scopeVars, arity);
     } else if (gcname == "sregulardp") {
