@@ -758,7 +758,7 @@ int WCSP::postWAmong(int* scopeIndex, int arity, const string &semantics, const 
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (propagator == "cfn") {
+    if (propagator == "network") {
         string semantics_ = semantics;
         int *values_ = (int *) &values[0];
         postWAmong(scopeIndex, arity, semantics_, baseCost, values_, values.size(), lb, ub);
@@ -787,7 +787,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string &semantics, cons
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (propagator == "cfn") {
+    if (propagator == "network") {
         vector<pair<int, Cost> > initial_States_;
         for(unsigned int i=0; i<initial_States.size(); i++)
         {
@@ -883,7 +883,7 @@ int WCSP::postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arity
     for(int i=0; i<arityG1; i++) for (int j=1; j<arityG2; j++) assert(scopeIndexG1[i] != scopeIndexG2[j]);
 #endif
 
-    if (propagator == "cfn") {
+    if (propagator == "network") {
         string semantics_ = semantics;
         vector<int> scopeIndex;
         for(int i=0; i<arityG1; i++) scopeIndex.push_back(scopeIndexG1[i]);
@@ -917,7 +917,7 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string &semantics, cons
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (propagator == "cfn") {
+    if (propagator == "network") {
         string semantics_ = semantics;
         postWAllDiff(scopeIndex, arity, semantics_, baseCost);
         return INT_MIN;
@@ -1625,7 +1625,7 @@ void WCSP::printNCBuckets() {
 	}
 }
 
-/** \defgroup verbosity Output messages and verbosity options
+/** \defgroup verbosity Output messages, verbosity options and debugging
  *
  * Depending on verbosity level given as option "-v=level", \p toulbar2 will output:
  * - (level=0, no verbosity) default output mode: shows version number, number of variables and cost functions read in the problem file,
@@ -2067,11 +2067,13 @@ void WCSP::eliminate() {
 /// -# EAC queue
 /// -# DAC queue
 /// -# AC queue
-/// -# global cost function propagation (not incremental)
+/// -# monolithic (flow-based and DAG-based) global cost function propagation (partly incremental)
 /// -# NC queue
 /// -# returns to #1 until all the previous queues are empty
-/// -# VAC propagation (not incremental)
+/// -# DEE queue
 /// -# returns to #1 until all the previous queues are empty
+/// -# VAC propagation (not incremental)
+/// -# returns to #1 until all the previous queues are empty (and problem is VAC if enable)
 /// -# exploits goods in pending separators for BTD-like methods
 ///
 /// Queues are first-in / first-out lists of variables (avoiding multiple insertions).

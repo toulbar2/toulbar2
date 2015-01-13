@@ -323,7 +323,7 @@ public:
 	int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                             const vector<Value> &values, int lb, int ub);///< \brief post a soft among cost function
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e cfn propagator only)
+    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                               int nbStates,
                               const vector<WeightedObj<int> > &initial_States,
@@ -344,7 +344,7 @@ public:
                                  const vector<CFGProductionRule> WRuleToTerminal ); ///< \brief post a soft/weighted grammar cost function with the dynamic programming propagator and grammar in Chomsky normal form
     int postMST(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a Spanning Tree hard constraint
     int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                                const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (a unary cost function associated to the maximum of a set of variables)
+                                const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)

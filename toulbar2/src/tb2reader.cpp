@@ -103,43 +103,57 @@ typedef struct {
  ...
  <parameterK>
  \endverbatim
- *-  Possible keywords followed by their specific parameters:
- *     - >= \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
- *     - > \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
- *     - <= \e cst \e delta to express soft binary constraint \f$x \leq y + cst\f$ with associated cost function  \f$max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\f$
- *     - < \e cst \e delta to express soft binary constraint \f$x < y + cst\f$ with associated cost function  \f$max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\f$
- *     - = \e cst \e delta to express soft binary constraint \f$x = y + cst\f$ with associated cost function  \f$(|y + cst - x| \leq delta)?|y + cst - x|:UB\f$
- *     - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
- *     - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
- *-  Global cost functions using a flow based propagator:
+ *   .
+ * .
+ * Possible keywords of cost functions defined in intension followed by their specific parameters:
+ * - >= \e cst \e delta to express soft binary constraint \f$x \geq y + cst\f$ with associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\f$
+ * - > \e cst \e delta to express soft binary constraint \f$x > y + cst\f$ with associated cost function  \f$max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\f$
+ * - <= \e cst \e delta to express soft binary constraint \f$x \leq y + cst\f$ with associated cost function  \f$max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\f$
+ * - < \e cst \e delta to express soft binary constraint \f$x < y + cst\f$ with associated cost function  \f$max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\f$
+ * - = \e cst \e delta to express soft binary constraint \f$x = y + cst\f$ with associated cost function  \f$(|y + cst - x| \leq delta)?|y + cst - x|:UB\f$
+ * - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
+ * - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
+ * - Global cost functions using a flow-based propagator:
  *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
  *     - sgcc var|dec|wdec \e cost \e nb_values (\e value \e lower_bound \e upper_bound (\e shortage_weight \e excess_weight)?)* to express a soft global cardinality constraint with either variable-based (\e var keyword) or decomposition-based (\e dec keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound (if \e wdec then violation cost depends on each value shortage or excess weights)
  *     - ssame \e cost \e list_size1 \e list_size2 (\e variable_index)* (\e variable_index)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)
  *     - sregular var|edit \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
- *-  Global cost functions using a dynamic programming based propagator:
- *     - sregulardp var \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with either variable-based (\e var keyword) or edit distance-based (\e edit keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+ *     .
+ * - Global cost functions using a dynamic programming DAG-based propagator:
+ *     - sregulardp var \e cost \e nb_states \e nb_initial_states (\e state)* \e nb_final_states (\e state)* \e nb_transitions (\e start_state \e symbol_value \e end_state)* to express a soft regular constraint with a variable-based (\e var keyword) cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
  *     - sgrammar|sgrammardp var|weight \e cost \e nb_symbols \e nb_values \e start_symbol \e nb_rules ((0 \e terminal_symbol \e value)|(1 \e nonterminal_in \e nonterminal_out_left \e nonterminal_out_right)|(2 \e terminal_symbol \e value \e weight)|(3 \e nonterminal_in \e nonterminal_out_left \e nonterminal_out_right \e weight))* to express a soft/weighted grammar in Chomsky normal form
  *     - samong|samongdp var \e cost \e lower_bound \e upper_bound \e nb_values (\e value)* to express a soft among constraint to restrict the number of variables taking their value into a given set of values
- *     - max|smaxdp val \e nbtuples (\e variable \e value \e cost)* to express a weighted max cost function with a specific cost associated to the maximum value of a set of variables. Non-zero costs are given by a list of \e nbtuples with \e cost associated to \e variable assigned to \e value.
+ *     - max|smaxdp \e defCost \e nbtuples (\e variable \e value \e cost)* to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, \e defCost if unspecified)
  *     - smst|smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
- *-  Global cost functions using a cost function network based propagator:
+ *     .
+ * - Global cost functions using a cost function network-based propagator:
  *     - wregular \e nb_states \e nb_initial_states (\e state and cost enum)* \e nb_final_states (\e state and cost enum)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a wregular constraint with variable-based cost semantic with a given \e cost per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
  *     - walldiff hard|lin|quad \e cost to express a soft alldifferent constraint as a set of wamong hard constraint (\e hard keyword) or decomposition-based (\e lin and \e quad keywords) cost semantic with a given \e cost per violation
- *     - wamong hard|lin|quad \e cost  global constraint restrains the number of variables of its scope to take a bounded number of times a value from a given set. The global cost function associated to Among is WeightedAmong. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counters and does a cumulative sum all along the set of ternary cost functions
- *     - wvaramong  hard global constraint restrains the number of variables of its scope, except the last variable, to take a value from a given set to be equal to the last variable
- *     - woverlap hard|lin|quad \e cost The Overlap global constraint limits the overlaps between two sequence of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero)). The global cost function associated to Overlap is WeightedOverlap. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses two sets of new variables : the first as an overlap flag and a second one as a cumulative sum. Finally, an unary cost function ensures that the overlap respects a given value
- *     - wsum hard|lin|quad \e cost The Sum global constraint tests if the sum of a set of variables match with a comparator and a right-handside value (for example == 4). The global cost function associated to Sum is WeightedSum. This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions. Finally, an unary cost function ensures the comparator
- *     - wvarsum hard global constraint restrains the sum to be equal to the last variable value
- * \note This decomposition can use an exponential size (domains of counter variables).
- * Let us note <> the comparator, K the value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:
- *       -	if <> is == : gap = abs(K - Sum); if <> is <= : gap = max(0,Sum - K); if <> is < : gap = max(0,Sum - K - 1);
- *       -	if <> is != : gap = 1 if Sum != K and gap = 0 otherwise;  if <> is > : gap = max(0,K - Sum + 1);
- *       -	if <> is >= : gap = max(0,K - Sum);
+ *     - wgcc hard|lin|quad \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint as either a hard constraint (\e hard keyword) or with decomposition-based (\e lin and \e quad keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound
+ *     - wsame hard|lin|quad \e cost to express a permutation constraint on two lists of variables of equal size (implicitly concatenated in the scope) using implicit decomposition-based cost semantic
+ *     - wsamegcc hard|lin|quad \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express the combination of a soft global cardinality constraint and a permutation constraint
+ *     - wamong hard|lin|quad \e cost \e nb_values (\e value)* \e lower_bound \e upper_bound to express a soft among constraint to restrict the number of variables taking their value into a given set of values
+ *     - wvaramong hard \e cost \e nb_values (\e value)* to express a hard among constraint to restrict the number of variables taking their value into a given set of values to be equal to the last variable in the scope
+ *     - woverlap hard|lin|quad \e cost \e comparator \e righthandside  overlaps between two sequences of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero))
+ *     - wsum hard|lin|quad \e cost \e comparator \e righthandside to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value
+ *     - wvarsum hard \e cost \e comparator to express a hard sum constraint to restrict the sum to be \e comparator to the value of the last variable in the scope
  *
+ *       Let us note <> the comparator, K the right-hand-side value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:
+ *       -	if <> is == : gap = abs(K - Sum)
+ *       -  if <> is <= : gap = max(0,Sum - K)
+ *       -  if <> is < : gap = max(0,Sum - K - 1)
+ *       -	if <> is != : gap = 1 if Sum != K and gap = 0 otherwise
+ *       -  if <> is > : gap = max(0,K - Sum + 1);
+ *       -	if <> is >= : gap = max(0,K - Sum);
+ *       .
+ *     .
+ * .
+ *
+ * \warning The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
  *
- * \note More about decomposable global cost functions can be found here https://metivier.users.greyc.fr/decomposable/
+ * \note More about network-based global cost functions can be found here https://metivier.users.greyc.fr/decomposable/
  *
  * Examples:
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
@@ -149,14 +163,16 @@ typedef struct {
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
  * - soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*): \code 4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 \endcode
- * - soft_grammar({x1,x2,x3,x4}) with hard cost (1000) producing well-formed parenthesis expressions: \code 4 0 1 2 3 -1 sgrammardp var 1000 4 2 0 6 1 0 0 0 1 0 1 2 1 0 1 3 1 2 0 3 0 1 0 0 3 1 \endcode
- * - soft_among({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 0 1 2 3 -1 samongdp var 1000 1 3 2 1 2 \endcode
- * - wsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i) \neq 4\f$: \code 4 0 1 2 3 -1 wsum hard 1000 == 4 \endcode
- * - wvarsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i) \neq x_4\f$: \code 4 0 1 2 3 -1 wvarsum hard 1000 == \endcode
- * - wamong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 0 1 2 3 -1 wamong hard 1000 2 1 2 1 3 \endcode
- * - wvaramong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4\f$: \code 4 0 1 2 3 -1 wvaramong hard 1000 2 1 2 \endcode
+ * - soft_grammar({x0,x1,x2,x3}) with hard cost (1000) producing well-formed parenthesis expressions: \code 4 0 1 2 3 -1 sgrammardp var 1000 4 2 0 6 1 0 0 0 1 0 1 2 1 0 1 3 1 2 0 3 0 1 0 0 3 1 \endcode
+ * - soft_among({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 1 2 3 4 -1 samongdp var 1000 1 3 2 1 2 \endcode
+ * - soft max({x0,x1,x2,x3}) with cost equal to \f$\max_{i=0}^3((x_i!=i)?1000:(4-i))\f$: \code 4 0 1 2 3 -1 smaxdp 1000 4 0 0 4 1 1 3 2 2 2 3 3 1 \endcode
  * - wregular({x0,x1,x2,x3}) with DFA (a(ba)*c*): \code 4 0 1 2 3 -1 wregular 3 1 0 0 1 2 0 9 0 0 1 0 0 1 1 1 0 2 1 1 1 1 0 0 1 0 0 1 1 2 0 1 1 2 2 0 1 0 2 1 1 1 2 1 \endcode
- * - woverlap({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^2(x_i = x_{i+2}) \geq 1\f$: \code 4 0 1 2 3 -1 woverlap hard 1000 < 1\endcode
+ * - wamong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 1 2 3 4 -1 wamong hard 1000 2 1 2 1 3 \endcode
+ * - wvaramong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4\f$: \code 4 1 2 3 4 -1 wvaramong hard 1000 2 1 2 \endcode
+ * - woverlap({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^2(x_i = x_{i+2}) \geq 1\f$: \code 4 1 2 3 4 -1 woverlap hard 1000 < 1\endcode
+ * - wsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i) \neq 4\f$: \code 4 1 2 3 4 -1 wsum hard 1000 == 4 \endcode
+ * - wvarsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i) \neq x_4\f$: \code 4 1 2 3 4 -1 wvarsum hard 1000 == \endcode
+ * .
  *
  * Latin Square 4 x 4 crisp CSP example in wcsp format:
  * \code

@@ -121,27 +121,32 @@ public:
 	/// Domains of variables can be of two different types:
 	/// - enumerated domain allowing direct access to each value (array) and iteration on current domain in times proportional to the current number of values (double-linked list)
 	/// - interval domain represented by a lower value and an upper value only (useful for large domains)
+    /// .
 	/// \warning Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
 	/// There is no cost functions accepting both interval and enumerated variables for the moment, which means all the variables should have the same type.
-	///
-	/// \addtogroup modeling
+
+    /// \addtogroup modeling
 	/// Cost functions can be defined in extension (table or maps) or having a specific semantic.\n
 	/// Cost functions in extension depend on their arity:
 	/// - unary cost function (directly associated to an enumerated variable)
 	/// - binary and ternary cost functions (table of costs)
 	/// - n-ary cost functions (n >= 4) defined by a list of tuples with associated costs and a default cost for missing tuples (allows for a compact representation)
-	///
+	/// .
+    ///
 	/// Cost functions having a specific semantic (see \ref  wcspformat) are:
 	/// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
     /// - global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular, etc) with three different propagator keywords:
-    /// -- \e flow propagator based on flow algorithms (\e salldiff, \e sgcc, \e ssame, \e sregular)
-    /// -- \e dp propagator based on dynamic programming algorithms (\e samongdp, sregulardp, sgrammardp, smstdp, smaxdp)
-    /// -- \e cfn propagator based on cost function network decomposition (\e wsum, \e wvarsum, \e walldiff, \e wgcc, \e wsame, \e wsamegcc, \e wregular, \e wamong, \e wvaramong, \e woverlap)
-    /// \note The default semantics(using \e var keyword) of monolithic (flow and DP-based propagators) global cost functions is to count the number of variables to change in order to restore consistency and to multiply it by the basecost. Other particular semantics may be used in conjunction with the flow-based propagator
-    /// \note The semantics of the decomposition-to-CFN propagator approach is either a hard constraint ("hard" keyword) or a soft constraint by multiplying the number of changes by the basecost ("lin" or "var" keyword) or by multiplying the square value of the number of changes by the basecost ("quad" keyword)
-    /// \note A decomposable version exists for each monolithic global cost function except grammar and MST. The decomposable ones may propagate less than their monolithic counterpart and they introduce extra variables but they can be much faster in practice
+    ///   - \e flow propagator based on flow algorithms with "s" prefix in the keyword (\e salldiff, \e sgcc, \e ssame, \e sregular)
+    ///   - \e DAG propagator based on dynamic programming algorithms with "s" prefix and "dp" postfix (\e samongdp, sregulardp, sgrammardp, smstdp, smaxdp)
+    ///   - \e network propagator based on cost function network decomposition with "w" prefix (\e wsum, \e wvarsum, \e walldiff, \e wgcc, \e wsame, \e wsamegcc, \e wregular, \e wamong, \e wvaramong, \e woverlap)
+    ///   .
+    /// .
+    /// \note The default semantics (using \e var keyword) of monolithic (flow and DAG-based propagators) global cost functions is to count the number of variables to change in order to restore consistency and to multiply it by the basecost. Other particular semantics may be used in conjunction with the flow-based propagator
+    /// \note The semantics of the network-based propagator approach is either a hard constraint ("hard" keyword) or a soft constraint by multiplying the number of changes by the basecost ("lin" or "var" keyword) or by multiplying the square value of the number of changes by the basecost ("quad" keyword)
+    /// \note A decomposable version exists for each monolithic global cost function, except grammar and MST. The decomposable ones may propagate less than their monolithic counterpart and they introduce extra variables but they can be much faster in practice
     /// \warning Each global cost function may have less than three propagators implemented
     /// \warning Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
+    /// \warning Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
     /// \warning Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
     /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints and WeightedCSP::histogram methods to initialize correctly the model before solving it
 
@@ -164,8 +169,8 @@ public:
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: "var" or -- "hard" or "lin" or "quad" (cfn-based propagator only)--
-    /// \param propagator the propagation method (only "dp" or "cfn")
+    /// \param semantics the semantics of the global cost function: "var" or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param propagator the propagation method (only "DAG" or "network")
     /// \param baseCost the scaling factor of the violation
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
@@ -173,19 +178,19 @@ public:
     virtual int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                             const vector<Value> &values, int lb, int ub) =0;
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) =0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e cfn propagator only)
+    virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) =0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
 
     /// \brief post a soft or weighted regular cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: "var" or "edit" (flow-based propagator only) or -- "hard" or "lin" or "quad" (cfn-based propagator only)--
-    /// \param propagator the propagation method ("flow", "dp", "cfn")
+    /// \param semantics the semantics of the global cost function: "var" or "edit" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
     /// \param nbStates the number of the states in the corresponding DFA. The states are indexed as 0, 1, ..., nbStates-1
     /// \param initial_States a vector of WeightedObj specifying the starting states with weight
     /// \param accepting_States a vector of WeightedObj specifying the final states
     /// \param Wtransitions a vector of transitions
-    /// \warning Weights are ignored in the current implementation of DP and flow-based propagators
+    /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
     virtual int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                               int nbStates,
                               const vector<WeightedObj<int> > &initial_States,
@@ -196,8 +201,8 @@ public:
     /// \brief post a soft alldifferent cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for cfn-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
-    /// \param propagator the propagation method ("flow", "cfn")
+    /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
+    /// \param propagator the propagation method ("flow", "network")
     /// \param baseCost the scaling factor of the violation
     virtual int postWAllDiff(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost) =0;
     virtual void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost) =0; ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
@@ -205,8 +210,8 @@ public:
     /// \brief post a soft global cardinality cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
       /// \param arity the size of the array
-      /// \param semantics the semantics of the global cost function: "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (cfn-based propagator only)--
-      /// \param propagator the propagation method ("flow", "cfn")
+      /// \param semantics the semantics of the global cost function: "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
+      /// \param propagator the propagation method ("flow", "network")
       /// \param baseCost the scaling factor of the violation
       /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
@@ -218,8 +223,8 @@ public:
     /// \param arityG1 the size of \a scopeIndexG1
     /// \param scopeIndexG2 an array of the second group of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arityG2 the size of \a scopeIndexG2
-    /// \param semantics the semantics of the global cost function: "var" or -- "hard" or "lin" or "quad" (cfn-based propagator only)--
-    /// \param propagator the propagation method ("flow" or "cfn")
+    /// \param semantics the semantics of the global cost function: "var" or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param propagator the propagation method ("flow" or "network")
     /// \param baseCost the scaling factor of the violation.
     virtual int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string &semantics, const string &propagator, Cost baseCost) =0;
     virtual void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost) =0; ///< \deprecated post a soft same cost function
@@ -229,7 +234,7 @@ public:
     /// \param scopeIndex an array of the first group of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of \a scopeIndex
     /// \param semantics the semantics of the global cost function: "var" or "weight"
-    /// \param propagator the propagation method ("dp" only)
+    /// \param propagator the propagation method ("DAG" only)
     /// \param baseCost the scaling factor of the violation
     /// \param nbSymbols the number of symbols in the corresponding grammar. Symbols are indexed as 0, 1, ..., nbSymbols-1
     /// \param startSymbol the index of the starting symbol
@@ -248,15 +253,15 @@ public:
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of \a scopeIndex
     /// \param semantics the semantics of the global cost function: "hard"
-    /// \param propagator the propagation method ("dp" only)
+    /// \param propagator the propagation method ("DAG" only)
     /// \param baseCost unused in the current implementation (MAX_COST)
     virtual int postMST(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost) =0;
 
-    /// \brief post a weighted max cost function (a unary cost function associated to the maximum of a set of variables)
+    /// \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of \a scopeIndex
     /// \param semantics the semantics of the global cost function: "val"
-    /// \param propagator the propagation method ("dp" only)
+    /// \param propagator the propagation method ("DAG" only)
     /// \param baseCost if a variable-value pair does not exist in \a weightFunction, its weight will be mapped to baseCost.
     /// \param weightFunction a vector of WeightedVarValPair containing a mapping from variable-value pairs to their weights.
     virtual int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
@@ -265,8 +270,8 @@ public:
     /// \brief post a soft linear constraint with unit coefficients
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of \a scopeIndex
-    /// \param semantics the semantics of the global cost function: "hard" or "lin" or "quad" (cfn-based propagator only)
-    /// \param propagator the propagation method ("cfn" only)
+    /// \param semantics the semantics of the global cost function: "hard" or "lin" or "quad" (network-based propagator only)
+    /// \param propagator the propagation method ("network" only)
     /// \param baseCost the scaling factor of the violation
     /// \param comparator the comparison operator of the linear constraint ("==", "!=", "<", "<=", ">,", ">=")
     /// \param rightRes right-hand side value of the linear constraint
@@ -276,8 +281,8 @@ public:
     /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of \a scopeIndex (should be an even value)
-    /// \param semantics the semantics of the global cost function: "hard" or "lin" or "quad" (cfn-based propagator only)
-    /// \param propagator the propagation method ("cfn" only)
+    /// \param semantics the semantics of the global cost function: "hard" or "lin" or "quad" (network-based propagator only)
+    /// \param propagator the propagation method ("network" only)
     /// \param baseCost the scaling factor of the violation.
     /// \param comparator the point-wise comparison operator applied to the number of equivalent variables ("==", "!=", "<", "<=", ">,", ">=")
     /// \param rightRes right-hand side value of the comparison
