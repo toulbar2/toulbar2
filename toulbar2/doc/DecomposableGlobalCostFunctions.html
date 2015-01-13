@@ -1,0 +1,498 @@
+<HTML>
+<HEAD>
+<TITLE>Decomposable Global Cost Functions</TITLE>
+<link rel="stylesheet" type="text/css" href="nonogram.css"/>
+</HEAD>
+<BODY>
+<div class="main">
+<H1>
+Decomposable Global Cost Functions
+</H1>
+
+<P>
+This page gives a quick look to decomposable global cost function included in <a href="http://mulcyber.toulouse.inra.fr/projects/toulbar2/">ToulBar2</a>.
+
+<OL>
+<li> <A HREF=".#decomposable">What is a Decomposable Global Cost Function ?</A></li>
+<li> <A HREF=".#WeightedAmong">WeightedAmong Global Cost Function</A></li>
+<li> <A HREF=".#WeightedRegular">WeightedRegular Global Cost Function</A></li>
+<li> <A HREF=".#WeightedSum">WeightedSum Global Cost Function</A></li>
+<li> <A HREF=".#WeightedOverlap">WeightedOverlap Global Cost Function</A></li>
+<li> <A HREF=".#output">Toulbar, Decomposition, and Output</A></li>
+<li> <A HREF=".#reference">References and others stuffs</A></li>
+</OL>
+</P>
+
+<HR/>
+<A NAME="decomposable">
+<H2>What is a Decomposable Global Cost Function ?</H2>
+</A>
+
+<P>
+The Decomposable global cost functions are global cost functions that can be decomposed into an equivalent cost function network.
+Actually, only some Berge-Acyclic Global Cost Functions have been added into Toulbar2 :
+<ul>
+<li>WeightedAmong</li>
+<li>WeightedRegular</li>
+<li>WeightedSum</li>
+<li>WeightedOverlap</li>
+</ul>
+</P>
+
+<HR/>
+<A NAME="WeightedAmong">
+<H2>WeightedAmong Global Cost Function</H2>
+</A>
+
+<H3>WeightedAmong and Violation Measure</H3>
+<P>
+The <em>Among</em> global constraint restrains the number of variables of its scope to take a bounded number of times a value from a given set. 
+The global cost function associated to Among is <em>WeightedAmong</em>. 
+This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. 
+This decomposition uses the new variables as counters and does a cumulative sum all along the set of ternary cost functions.
+</P>
+
+<P>
+Let us note <i>gap</i> as the distance to the bounds, and <i>baseCost</i> as the cost associated to the global cost function.
+The WeightedAmong can be, currently, associated with three violation measure:
+<OL>
+<li><em>hard</em> : if <i>gap</i> is greater than zero the cost <i>baseCost</i> is returned</li>
+<li><em>lin</em>  : the cost <i>gap</i> <span class="monospace">x</span> <i>baseCost</i> is returned</li>
+<li><em>quad</em> : the cost <i>gap</i><span class="monospace">^2 x</span> <i>baseCost</i> is returned</li>
+</OL>
+</P>
+
+<H3>WCSP Format And Example</H3>
+<P>
+
+The following figure presents the WCSP format of WeightedAmong:
+<div class="code">
+arity variable_1 ... variable_arity -1 wamong semantics basecost<BR/>
+nbValueToWatch value_1 ... value_nbValueToWatch<BR/>
+lb ub
+</div>
+</P>
+
+<P>
+The following figure presents an example of WeightedAmong:
+<div class="code">
+WAMONG_hard 4 3 1 1000<br/>
+3 3 3 3<br/>
+<br/>
+4 0 1 2 3 -1 wamong hard 1000<br/>
+2 1 2<br/>
+1 3<br/>
+</div>
+
+The previous example represents a WCSP with 4 variables.
+These variables are in the scope of a WeightedAmong which limits the number of times they take the values 1 and 2 to be bounded between 1 and 3.
+In this case, the semantics is <i>hard</i> and the associated cost is 1000 (i.e. in these case the WeightedAmong is a hard constraint).
+</P>
+
+<P>
+For other examples :
+<ul>
+<li>hard violation measure : <a href="./instance/wamong_hard.wcsp">wamong_hard.wcsp</a></li>
+<li>lin violation measure : <a href="./instance/wamong_lin.wcsp">wamong_lin.wcsp</a></li>
+<li>quad violation measure : <a href="./instance/wamong_quad.wcsp">wamong_quad.wcsp</a></li>
+</ul>
+</P>
+
+<H3>Adding a WeightedAmong into Toulbar2's code</H3>
+
+<P>
+To add a WeightedAmong global cost function into Toulbar2's code, you have to use the following procedure:
+<ol>
+<li> Constructing a WeightedAmong
+	<ul>
+		<li><span class="monospace">WeightedAmong(unsigned int _arity, int* _scope);</span></li>
+	</ul>
+</li>
+<li> Using accessors to add the informations (semantics, cost, ...)
+	<ul>
+		<li> <span class="monospace">void addValue(int _value);</span></li>
+		<li> <span class="monospace">void setSemantics(string _semantics);</span></li>
+		<li> <span class="monospace">void setBaseCost(Cost _baseCost);</span></li>
+		<li> <span class="monospace">void setBounds(unsigned int _lb, unsigned int _ub);</span></li>
+	</ul>
+</li>
+<li> add the cost function to the cost function network
+<ul>
+		<li><span class="monospace">void addToCostFunctionNetwork(WCSP* wcsp);</span></li>
+	</ul>
+</li>
+</ol>
+
+Then, the previous example can be added as following:
+<div class="code">
+int* scope = new int[4]; <br/>
+for (int i = 0 ; i &lt; 4 ; i++) scope[i] = i;<br/>
+WeightedAmong among(4,scope);<br/>
+among.setSemantics("hard");<br/>
+among.setBaseCost(1000);<br/>
+among.addValue(1);<br/>
+among.addValue(2);<br/>
+among.setBounds(1,3);<br/>
+among.addToCostFunctionNetwork(wcsp);
+</div>
+</P>
+
+<HR/>
+<A NAME="WeightedRegular">
+<H2>WeightedRegular Global Cost Function</H2>
+</A>
+
+<H3>WeightedRegular and Violation Measure</H3>
+<P>
+The <em>Regular</em> global constraint restrains a sequence of variables to form a word recognized by a Finite Automaton.
+The global cost function associated to Regular is <em>WeightedRegular</em>. 
+This global cost function can be decomposed into a set of ternary cost functions which are the table of transitions.
+</P>
+
+<P>
+The automaton associated to WeightedRegular is a Weighted Finite Automaton and this automaton holds the violation measure through the cost of its transitions and states (and can encode many violation measures like hamming-based or levenshtien-based).
+</P>
+
+<H3>WCSP Format And Example</H3>
+<P>
+
+The following figure presents the WCSP format of WeightedRegular:
+<div class="code">
+arity variable_1 ... variable_arity -1 wregular<BR/>
+nbStates<BR/>
+nbInitialStates<BR/>
+initialStates_1 cost_start_initialStates_1<BR/>
+...<BR/>
+initialStates_nbInitialStates cost_start_initialStates_nbInitialStates<BR/>
+nbAcceptingStates<BR/>
+acceptingStates_1 cost_end_acceptingStates_1<BR/>
+...<BR/>
+acceptingStates_nbAcceptingStates cost_end_acceptingStates_nbAcceptingStates<BR/>
+nbTransitions<BR/>
+start_t_1 symbol_t_1 end_t_1 cost_t_1<BR/>
+...<BR/>
+start_t_nbTransitions symbol_t_nbTransitions end_t_nbTransitions cost_t_nbTransitions<BR/>
+</div>
+</P>
+
+<P>
+The following figures present example of WeightedRegular recognizing "a symbol 1 cannot follow another symbol 1 (cost 100)":
+<div class="code">
+WREGULAR 4 2 1 1000<br/>
+2 2 2 2<br/>
+<br/>
+4 0 1 2 3 -1 wregular<br/>
+2<br/>
+1<br/>
+0 0<br/>
+2 <br/>
+0 0<br/>
+1 1<br/>
+4<br/>
+0 0 0 0<br/>
+0 1 1 0<br/>
+1 0 0 0<br/>
+1 1 1 100<br/>
+</div>
+
+The wcsp file can be found here : <a href="./instance/wregular.wcsp">wregular.wcsp</a>.
+</P>
+
+<H3>Adding a WeightedRegular into Toulbar2's code</H3>
+
+<P>
+To add a WeightedRegular  global cost function into Toulbar2's code, you have to use the following procedure:
+<ol>
+<li> Constructing a WFA structure (<em>TO BE CHANGED</em>)
+	<ul>
+		<li><span class="monospace">WFA(int _nbStates);</span></li>
+	</ul>
+</li>
+<li> Constructing a WeightedRegular
+	<ul>
+		<li><span class="monospace">WeightedRegular(unsigned int _arity, int* _scope);</span></li>
+	</ul>
+</li>
+<li> Using accessors to add the informations (semantics, cost, ...)
+	<ul>
+		<li> <span class="monospace">void setWFA(WFA* _automaton);</span></li>
+	</ul>
+</li>
+<li> add the cost function to the cost function network
+<ul>
+		<li><span class="monospace">void addToCostFunctionNetwork(WCSP* wcsp);</span></li>
+	</ul>
+</li>
+</ol>
+
+Then, the previous example can be added as following:
+<div class="code">
+WFA* automaton=new WFA(2);<br/>
+automaton->initialStates.push_back(make_pair(0,0));<br/>
+automaton->acceptingStates.push_back(make_pair(0,0));<br/>
+automaton->acceptingStates.push_back(make_pair(1,0));<br/>
+automaton->transitions.push_back(new WTransition(0,0,0,0));<br/>
+automaton->transitions.push_back(new WTransition(0,1,1,0));<br/>
+automaton->transitions.push_back(new WTransition(1,0,0,0));<br/>
+automaton->transitions.push_back(new WTransition(1,1,1,100));<br/>
+<br/>
+int* scope = new int[4]; <br/>
+for (int i = 0 ; i &lt; 4 ; i++) scope[i] = i;<br/>
+WeightedRegular regular(4,scope);<br/>
+regular.setWFA(automaton);<br/>
+regular.addToCostFunctionNetwork(wcsp);
+</div>
+</P>
+
+<!--------------------------------------------------------------------->
+<HR/>
+<A NAME="WeightedSum">
+<H2>WeightedSum Global Cost Function</H2>
+</A>
+
+<H3>WeightedSum and Violation Measure</H3>
+<P>
+The <em>Sum</em> global constraint tests if the sum of a set of variables match with an comparator (for example <span class="monospace">= 5</span>).
+The global cost function associated to Sum is <em>WeightedSum</em>. 
+This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. 
+This decomposition uses the new variables as counter and does a cumulative sum all along the set of ternary cost functions.
+Finally, an unary cost function ensures the comparator.
+</P>
+
+<P>
+Note : This decomposition can use an exponential size (domains of counter variables).
+</P>
+
+<P>
+Let us note <span class="monospace">&lt;&gt;</span> the comparator, 
+<span class="monospace">K</span> the value associated to the comparator, 
+and <span class="monospace">Sum</span> the result of the sum over the variables.
+For each comparator, the <i>gap</i> is defined according to the distance as follows:
+<UL>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>==</em> : 
+		<span class="monospace">gap = abs(K - Sum)</span></li>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>&lt;=</em> : 
+		<span class="monospace">gap = max(0,Sum - K);</span></li>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>&lt;</em> : 
+		<span class="monospace">gap = max(0,Sum - K - 1);</span></li>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>!=</em> : 
+		<span class="monospace">gap = 1</span> if Sum != K and <span class="monospace">gap = 0</span> otherwise</li>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>&gt;</em> : 
+		<span class="monospace">gap = max(0,K - Sum  + 1);</span></li>
+<li> if <span class="monospace">&lt;&gt;</span> is <em>&gt;=</em> : 
+		<span class="monospace">gap = max(0,K - Sum);</span></li>
+</UL>
+According to <i>gap</i>, there are 3 violation semantics :
+<OL>
+<li><em>hard</em> : if <i>gap</i> is greater than zero the cost <i>baseCost</i> is returned</li>
+<li><em>lin</em>  : the cost <i>gap</i> <span class="monospace">x</span> <i>baseCost</i> is returned</li>
+<li><em>quad</em> : the cost <i>gap</i><span class="monospace">^2 x</span> <i>baseCost</i> is returned</li>
+</OL>
+</P>
+
+<H3>WCSP Format And Example</H3>
+<P>
+
+The following figure presents the WCSP format of WeightedSum:
+<div class="code">
+arity variable_1 ... variable_arity -1 wsum semantics basecost<BR/>
+&lt;&gt; K<BR/>
+</div>
+</P>
+
+<P>
+The following figure presents an example of WeightedAmong:
+<div class="code">
+WSUM_hard 4 3 1 1000<br/>
+3 3 3 3<br/>
+<br/>
+4 0 1 2 3 -1 wsum hard 1000<br/>
+== 4
+</div>
+
+The previous example represents a WCSP with 4 variables.
+These variables are in the scope of a WeightedSum with <span class="monospace">== 4</span>.
+In this case the semantics is <i>hard</i> and the associated cost is 1000 (i.e. in these case the WeightedSum is a hard constraint).
+</P>
+
+<P>
+For other examples :
+<ul>
+<li>hard violation measure : <a href="./instance/wsum_hard.wcsp">wsum_hard.wcsp</a></li>
+<li>lin violation measure : <a href="./instance/wsum_lin.wcsp">wsum_lin.wcsp</a></li>
+<li>quad violation measure : <a href="./instance/wsum_quad.wcsp">wsum_quad.wcsp</a></li>
+</ul>
+</P>
+
+<H3>Adding a WeightedSum into Toulbar2's code</H3>
+
+<P>
+To add a WeightedSum global cost function into Toulbar2's code, you have to use the following procedure:
+<ol>
+<li> Constructing a WeightedSum
+	<ul>
+		<li><span class="monospace">WeightedSum(unsigned int _arity, int* _scope);</span></li>
+	</ul>
+</li>
+<li> Using accessors to add the informations (semantics, cost, ...)
+	<ul>
+		<li> <span class="monospace">void setSemantics(string _semantics);</span></li>
+		<li> <span class="monospace">void setBaseCost(Cost _baseCost);</span></li>
+		<li> <span class="monospace">void setComparator(string _comparator);</span></li>
+		<li> <span class="monospace">void setRightRes(int _rightRes);</span></li>
+	</ul>
+</li>
+<li> add the cost function to the cost function network
+	<ul>
+		<li><span class="monospace">void addToCostFunctionNetwork(WCSP* wcsp);</span></li>
+	</ul>
+</li>
+</ol>
+
+Then, the previous example can be added as following:
+<div class="code">
+int* scope = new int[4]; <br/>
+for (int i = 0 ; i &lt; 4 ; i++) scope[i] = i;<br/>
+WeightedSum sum(4,scope);<br/>
+sum.setSemantics("hard");<br/>
+sum.setBaseCost(1000);<br/>
+sum.setComparator("==");<br/>
+sum.setRightRes(4);<br/>
+sum.addToCostFunctionNetwork(wcsp);
+</div>
+</P>
+
+<!--------------------------------------------------------------------->
+<HR/>
+<A NAME="WeightedOverlap">
+<H2>WeightedOverlap Global Cost Function</H2>
+</A>
+
+<H3>WeightedOverlap and Violation Measure</H3>
+<P>
+The <em>Overlap</em> global constraint limits the overlaps between two sequence of variables <i>X</i>, <i>Y</i> (i.e. set the fact that Xi and Yi take the same value (not equal to zero)).
+The global cost function associated to Overlap is <em>WeightedOverlap</em>. 
+This global cost function can be decomposed into a set of ternary constraints with an additionnal set of variables. 
+This decomposition uses two sets of new variables : the first as an overlap flag and a second one as a cumulative sum.
+Finally, an unary cost function ensures that the overlap respects a given value.
+</P>
+
+<P>
+As WeightedSum, the control of the overlap can be done thanks to a comparator and a right hand member. 
+Let us note <i>gap</i>, the gap between the effective overlap and the right hand member.
+
+Accordingly to <i>gap</i>, there are 3 violation semantics :
+<OL>
+<li><em>hard</em> : if <i>gap</i> is greater than zero the cost <i>baseCost</i> is returned</li>
+<li><em>lin</em>  : the cost <i>gap</i> <span class="monospace">x</span> <i>baseCost</i> is returned</li>
+<li><em>quad</em> : the cost <i>gap</i><span class="monospace">^2 x</span> <i>baseCost</i> is returned</li>
+</OL>
+</P>
+
+<H3>WCSP Format And Example</H3>
+<P>
+
+The following figure presents the WCSP format of WeightedOverlap:
+<div class="code">
+arity variable_1 ... variable_arity -1 woverlap semantics basecost<BR/>
+&lt;&gt; K<BR/>
+</div>
+</P>
+
+<P>
+Note : The first half of the scope corresponds to the first sequence of variable <i>X</i>, and the second half to <i>Y</i>
+</P>
+
+<P>
+The following figure presents an example of WeightedOverlap:
+<div class="code">
+WOVERLAP_hard 4 3 1 1000<br/>
+3 3 3 3<br/>
+<br/>
+4 0 1 2 3 -1 woverlap hard 1000<br/>
+< 1
+</div>
+
+The previous example represents a WCSP with 4 variables : X = { 0, 1 }, Y = { 2, 3 }.
+And, the overlap between X and Y must less than 1.
+In this case the semantics is <i>hard</i> and the associated cost is 1000 (i.e. in these case the WeightedOverlap is a hard constraint).
+</P>
+
+<H3>Adding a WeightedOverlap into Toulbar2's code</H3>
+
+<P>
+To add a WeightedOverlap global cost function into Toulbar2's code, you have to use the following procedure:
+<ol>
+<li> Constructing a WeightedOverlap
+	<ul>
+		<li><span class="monospace">WeightedOverlap(unsigned int _arity, int* _scope);</span></li>
+	</ul>
+</li>
+<li> Using accessors to add the informations (semantics, cost, ...)
+	<ul>
+		<li> <span class="monospace">void setSemantics(string _semantics);</span></li>
+		<li> <span class="monospace">void setBaseCost(Cost _baseCost);</span></li>
+		<li> <span class="monospace">void setComparator(string _comparator);</span></li>
+		<li> <span class="monospace">void setRightRes(int _rightRes);</span></li>
+	</ul>
+</li>
+<li> add the cost function to the cost function network
+	<ul>
+		<li><span class="monospace">void addToCostFunctionNetwork(WCSP* wcsp);</span></li>
+	</ul>
+</li>
+</ol>
+
+Then, the previous example can be added as following:
+<div class="code">
+int* scope = new int[4]; <br/>
+for (int i = 0 ; i &lt; 4 ; i++) scope[i] = i;<br/>
+WeightedOverlap over(4,scope);<br/>
+over.setSemantics("hard");<br/>
+over.setBaseCost(1000);<br/>
+over.setComparator("&lt;");<br/>
+over.setRightRes(1);<br/>
+over.addToCostFunctionNetwork(wcsp);
+</div>
+</P>
+
+<HR/>
+<A NAME="output">
+<H2>Toulbar, Decomposition, and Output</H2>
+</A>
+
+<P>
+When the solution of a problem is displayed or writen, all variables are used (even the new counter variables).
+</P>
+
+<div class="terminal">
+me@computer$ ./toulbar wsum_quad.wcsp -s <br/>
+./bin/Linux/toulbar2  version : 0.9.4.0, copyright (c) INRA 2012 <br/>
+loading wcsp file: /export/home/metivier/web/www/decomposable/instance/wsum_quad.wcsp <br/>
+Read 4 variables, with 3 values at most, and 5 cost functions, with maximum arity 4. <br/>
+Cost function decomposition time : 0 seconds. <br/>
+Preprocessing Time               : 0.01 seconds. <br/>
+0 unassigned variables, 0 values in all current domains (med. size:0) and 0 non-unary cost functions (med. degree:0) <br/>
+Initial lower and upper bounds: [40,1000[ <br/>
+New solution: 40 (0 backtracks, 0 nodes, depth 1) <br/>
+<b><font color="green"> 1 1 1 1 </font><font color="red"> 0 1 2 3 4 </font> </b><br/>
+Optimum: 40 in 0 backtracks and 0 nodes and 0.01 seconds. <br/>
+end.
+</div>
+
+<P>
+The 4 first variables (in green) are the variables from the initial model and the 5 lasts (in red) are the new counter variables.
+</P>
+<HR/>
+<A NAME="reference">
+<h2>References and others stuffs</h2>
+</A>
+<p>
+<UL>
+<li>The Global Constraint Catalog : <a href="http://www.emn.fr/z-info/sdemasse/gccat/">http://www.emn.fr/z-info/sdemasse/gccat/</a></li>
+<li>The Toulbar's forge : <A HREF="http://mulcyber.toulouse.inra.fr/projects/toolbar/">http://mulcyber.toulouse.inra.fr/projects/toolbar/</A></li>
+</UL>
+</p>
+</div>
+</BODY>
+</HTML>
