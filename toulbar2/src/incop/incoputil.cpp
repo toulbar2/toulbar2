@@ -86,7 +86,14 @@ void Stat_GWW::init_try(int trynumber)
 
 
 void Stat_GWW::execution_report(int nessai, Long lower_bound)
-{execution_time_try [nessai] += VIRTUAL_TIMELAPSE; 
+{
+#ifdef WINDOWS
+execution_time_try [nessai] += 1.00;
+cout << " WARNING : Timer not supported under windows OS : ==> incop exec time is false " << endl;
+#else
+execution_time_try [nessai] += VIRTUAL_TIMELAPSE; 
+#endif
+
     if (cost_try[nessai]== lower_bound) 
       { trouve[current_pb]++;}
     ecriture_stat_essai();
@@ -787,7 +794,9 @@ void executer_essai
 
     Statistiques->init_try(nessai);
     // d�clenchement du chronom�tre
+#ifndef WINDOWS
     start_timers(); 
+#endif
     // population initiale 
 
     instanciation_aleatoire(problem,population,taille);
@@ -813,7 +822,9 @@ void executer_essai
     // lancement de la resolution 
     algo->run(problem,population);
     // apres resolution : arret du chronometre
+#ifndef WINDOWS // time not supported under windows OS
     stop_timers(VIRTUAL);
+#endif 
 //    ecriture_fin_resolution(Statistiques->cost_try[nessai]);
 //    problem->best_config_analysis();
 //    problem->best_config_write();

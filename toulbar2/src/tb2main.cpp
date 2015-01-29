@@ -206,6 +206,7 @@ enum {
 	NO_OPT_lds,
 	OPT_restart,
 	NO_OPT_restart,
+
 	OPT_localsearch,
 	NO_OPT_localsearch,
 	OPT_EDAC,
@@ -1170,6 +1171,7 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::restart = -1; 
 			}
 
+#ifndef WINDOWS
 			// local search INCOP
 			if ( args.OptionId() == OPT_localsearch)  {
 			    if (args.OptionArg() != NULL) {
@@ -1179,6 +1181,7 @@ int _tmain(int argc, TCHAR * argv[])
 			    }
 			}
 
+#endif
 			// EDAC OPTION
 			if ( args.OptionId() == OPT_EDAC )
 			{
@@ -1636,10 +1639,12 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning" << endl;
 		ToulBar2::elimDegree = -1;
 	}
+#ifndef WINDOWS
     if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
         cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
         ToulBar2::incop_cmd = "";
     }
+#endif
 
 	if (ToulBar2::uai || ToulBar2::uaieval) {
 	  char *tmpPath = new char[strlen(argv[0])+1];

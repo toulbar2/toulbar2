@@ -62,11 +62,18 @@ typedef long double Double;
 	inline void mysrand(long seed) {return srand48(seed);}
 	inline int myrand() { return lrand48();  }
 	inline Long myrandl() {return (Long) ((Long)lrand48()/**LONGLONG_MAX*/);}
+
 #endif
 #ifdef WINDOWS
 	inline void mysrand(long seed) {return srand(seed);}
 	inline int myrand() { return rand();  }
 	inline Long myrandl() {return (Long) ((Long)rand()/**LONGLONG_MAX*/);}
+	
+	
+//replace srand48(seed) by srand(seed)
+//replace drand48() by (double(rand()) / RAND_MAX)
+
+
 #endif
 
 
