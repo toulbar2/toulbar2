@@ -31,7 +31,7 @@ Time virtual_ulapse, virtual_slapse;
 static Time real_time;
 Time real_lapse;
 
-/*
+
 void start_timers()
 {
     getrusage( RUSAGE_SELF, &res );
