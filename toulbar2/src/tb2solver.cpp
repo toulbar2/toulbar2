@@ -131,7 +131,7 @@ void Solver::parse_solution(const char *certificate)
     certif2= strstr(certif2,sep);
 
     if (certif2) certif2++;
-    
+
 	vector<int> variables;
 	vector<Value> values;
     int var;
@@ -164,7 +164,7 @@ void Solver::parse_solution(const char *certificate)
     }
     wcsp->assignLS(variables, values);
     if (ToulBar2::verbose >= 0) cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
-    
+
 //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
 //    store->restore(depth);
 }
@@ -468,7 +468,7 @@ void Solver::enforceUb()
 	wcsp->enforceUb();
 	if (ToulBar2::isZ) {
 		Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-//		+ wcsp->LogLike2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));  // Easy -logZ lower bound
+//		+ wcsp->LogLike2Cost(unassignedVars->getSize() * Log(wcsp->getMaxDomainSize()));  // Easy -logZ lower bound
 	    for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) {
 	        if (wcsp->enumerated(*iter_variable)) {
 	            EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
@@ -476,12 +476,12 @@ void Solver::enforceUb()
 	                wcsp->SumLogLikeCost(newCost, var->getCost(*iter_value));
 	            }
 	        } else {
-	            newCost += wcsp->LogLike2Cost(Log10(wcsp->getDomainSize(*iter_variable)));
+	            newCost += wcsp->LogLike2Cost(Log(wcsp->getDomainSize(*iter_variable)));
 	        }
 	    }
 		Double newlogU = wcsp->SumLogLikeCost(ToulBar2::logU, newCost);
 		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-			if (ToulBar2::verbose >= 1) cout << "CUT " << newlogU << " " << ToulBar2::logZ  << " " << store->getDepth() << endl;
+			if (ToulBar2::verbose >= 1) cout << "ZCUT " << newlogU << " " << ToulBar2::logZ  << " " << store->getDepth() << endl;
 			ToulBar2::logU = newlogU;
 			THROWCONTRADICTION;
 		}
@@ -884,9 +884,9 @@ void Solver::newSolution()
 	}
   	if((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug>=2) {
   		if (ToulBar2::verbose>=0 || ToulBar2::showSolutions) {
-  			if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+		  if(ToulBar2::haplotype) cout <<  "***New solution: " <<  wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getLb())/Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   			else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-  			else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + wcsp->getNegativeLb() ) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+  			else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << (wcsp->Cost2LogLike(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)/Log(10.) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + wcsp->getNegativeLb() ) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
   		}
   	}
   	else {
@@ -1087,7 +1087,7 @@ bool Solver::solve()
 	      if (ToulBar2::verbose >= 0) cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;
 		  ToulBar2::weightedDegree = 0;
 		}
-		
+
 		if (ToulBar2::dumpWCSP) {dump_wcsp(ToulBar2::problemsaved_filename.c_str(),false); cout << "end." << endl; exit(0);}
 
 	    Cost upperbound = MAX_COST;
@@ -1239,8 +1239,10 @@ bool Solver::solve()
 		ToulBar2::solution_file << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
 		ToulBar2::solution_file.flush();
 	  }
-	  cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log10(Z) <= ";
+	  cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
 	  cout <<  (wcsp->SumLogLikeCost(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+	  cout << (ToulBar2::logZ + ToulBar2::markov_log)/Log(10.) << " <= Log10(Z) <= ";
+	  cout <<  (wcsp->SumLogLikeCost(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log)/Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  return true;
     }
 	if(ToulBar2::allSolutions) {
@@ -1264,14 +1266,14 @@ bool Solver::solve()
     if (wcsp->getUb() < initialUpperBound) {
 	  if(ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
             if (ToulBar2::uaieval) ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
-	        if(ToulBar2::haplotype) cout <<  "\n" << ((ToulBar2::limited)?"Best upper-bound: ":"Optimum: ") <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())<< " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getUb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+	    if(ToulBar2::haplotype) cout <<  "\n" << ((ToulBar2::limited)?"Best upper-bound: ":"Optimum: ") <<  wcsp->getUb() << " log10like: " << ToulBar2::haplotype->Cost2LogLike(wcsp->getUb())/Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2Prob( wcsp->getUb()) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     		else if(!ToulBar2::bayesian) cout << ((ToulBar2::limited)?"Best upper-bound: ":"Optimum: ") << wcsp->getUb() << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-			else cout << ((ToulBar2::limited)?"Best upper-bound: ":"Optimum: ") << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+		else cout << ((ToulBar2::limited)?"Best upper-bound: ":"Optimum: ") << wcsp->getUb() << " log10like: " << (wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log)/Log(10.) << " prob: " << wcsp->Cost2Prob(wcsp->getUb()) * Exp(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     	} else {
     		if(ToulBar2::xmlflag) ((WCSP*)wcsp)->solution_XML(true);
     		else if(ToulBar2::uai && !ToulBar2::isZ) {
 			  ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
-			  cout << ((ToulBar2::limited)?"Best upperbound: ":"Optimum: ") << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb()) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp10(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+			  cout << ((ToulBar2::limited)?"Best upperbound: ":"Optimum: ") << wcsp->getUb() << " log10like: " << wcsp->Cost2LogLike(wcsp->getUb())/Log(10.) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob( wcsp->getUb() ) * Exp(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 			} else if (ToulBar2::maxsateval && !ToulBar2::limited) {
 			  cout << "o " << wcsp->getUb() << endl;
 			  cout << "s OPTIMUM FOUND" << endl;
@@ -1389,7 +1391,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
     }
   }
 
-  wcsp->histogram();  
+  wcsp->histogram();
 
   if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
   // dump_wcsp("mydebug.wcsp", true);
