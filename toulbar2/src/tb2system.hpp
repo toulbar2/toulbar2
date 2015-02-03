@@ -81,6 +81,7 @@ typedef long double Double;
 	#ifdef LINUX
 inline double Pow(double x, double y) {return pow(x,y);}
 inline double Exp10(double x) {return exp10(x);}
+inline double Exp(double x) {return exp(x);}
 inline double Log10(double x) {return log10(x);}
 inline double Log(double x) {return log(x);}
 inline double Log1p(double x) {return log1p(x);}
@@ -88,6 +89,7 @@ inline double Log1p(double x) {return log1p(x);}
 	#ifdef WINDOWS
 inline double Pow(double x, double y) {return pow(x,y);}
 inline double Exp10(double x) {return pow(10.,x);}
+inline double Exp(double x) {return exp(x);}
 inline double Log10(double x) {return log(x)/log(10.);}
 inline double Log(double x) {return log(x);}
 inline double Log1p(double x) {return log(1. + x);}
@@ -97,7 +99,8 @@ inline double Log1p(double x) {return log(1. + x);}
 #ifdef LONGDOUBLE_PROB
 	#ifdef LINUX
 		inline Double Pow(Double x, Double y) {return powl(x,y);}
-        inline Double Exp10(Double x) {return powl(10.l, x);} // {return pow10l(x);} // {return exp10l(x);}
+                inline Double Exp10(Double x) {return exp10l(x);}
+                inline Double Exp(Double x) {return expl(x);}
 		inline Double Log10(Double x) {return log10l(x);}
 		inline Double Log(Double x) {return logl(x);}
 		inline Double Log1p(Double x) {return log1pl(x);}
