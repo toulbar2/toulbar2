@@ -21,7 +21,7 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 # init version NUMBER
 ############################
 	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
-	set (Toulbar_MINOR "9.7.0" CACHE STRING "Toulbar2 Framework minor release")
+	set (Toulbar_MINOR "9.8.0-dev" CACHE STRING "Toulbar2 Framework minor release")
  
 ############################
 # init command line option for simpleOPT
