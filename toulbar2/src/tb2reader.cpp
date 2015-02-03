@@ -1,6 +1,6 @@
 /*
  * **************** Read wcsp format files **************************
- * 
+ *
  */
 
 #include "tb2wcsp.hpp"
@@ -325,7 +325,7 @@ void WCSP::read_wcsp(const char *fileName)
         cerr << "Could not open file " << fileName << endl;
         exit(EXIT_FAILURE);
     }
-    
+
     // read problem name and sizes
     file >> pbname;
     file >> nbvar;
@@ -334,11 +334,11 @@ void WCSP::read_wcsp(const char *fileName)
     file >> top;
     if (ToulBar2::verbose >= 1) cout << "Read problem: " << pbname << endl;
     ToulBar2::nbvar= nbvar;
-	
-    
+
+
     assert(vars.empty());
     assert(constrs.empty());
-    
+
 	double K = ToulBar2::costMultiplier;
 	if(top < MAX_COST / K)	top = top * K;
 	else top = MAX_COST;
@@ -349,13 +349,13 @@ void WCSP::read_wcsp(const char *fileName)
         string varname;
         varname = to_string(i);
         file >> domsize;
-		if(domsize > nbvaltrue) nbvaltrue = domsize; 
+		if(domsize > nbvaltrue) nbvaltrue = domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
         int theindex = -1;
-         
+
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
-        assert(theindex == i);   
+        assert(theindex == i);
     }
 
     // read each constraint
@@ -380,7 +380,7 @@ void WCSP::read_wcsp(const char *fileName)
             file >> defval;
 			if (defval == -1) {
 				string gcname;
-				file >> gcname;			
+				file >> gcname;
 				if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
 					DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
 					decomposableGCF->addToCostFunctionNetwork(this);
@@ -389,21 +389,21 @@ void WCSP::read_wcsp(const char *fileName)
 				postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
 				}
 
-			} else { 
-			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); } 		 
+			} else {
+			  if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }
 			  file >> ntuples;
 			  int reusedconstr = -1;
 			  bool reused = (ntuples < 0);
 			  if (reused) {
 				reusedconstr = -ntuples-1;
 				if (reusedconstr >= (int) sharedSize.size()) {
-				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
 				  exit(EXIT_FAILURE);
 				}
 				ntuples = sharedSize[reusedconstr];
 			  }
 			  if((defval != MIN_COST) || (ntuples > 0))
-				{ 
+				{
 				  Cost tmpcost = defval*K;
 				  if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
 				  int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost);
@@ -415,7 +415,7 @@ void WCSP::read_wcsp(const char *fileName)
 				  for (t = 0; t < ntuples; t++) {
 					if (!reused) {
 					  for(i=0;i<arity;i++) {
-						file >> j;			            
+						file >> j;
 						buf[i] = j + CHAR_FIRST;
 					  }
 					  buf[i] = '\0';
@@ -438,7 +438,7 @@ void WCSP::read_wcsp(const char *fileName)
 					sharedCosts.push_back(costs);
 					sharedTuples.push_back(tuples);
 				  }
-				
+
 				  if (ToulBar2::preprocessNary>0) {
 					Cost minc = nary->getMinCost();
 					if (minc > MIN_COST) {
@@ -479,7 +479,7 @@ void WCSP::read_wcsp(const char *fileName)
 				if (ntuples < 0) {
 				  int reusedconstr = -ntuples-1;
 				  if (reusedconstr >= (int) sharedSize.size()) {
-					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
 					exit(EXIT_FAILURE);
 				  }
 				  ntuples = sharedSize[reusedconstr];
@@ -507,7 +507,7 @@ void WCSP::read_wcsp(const char *fileName)
 					assert(a>= 0 && a < x->getDomainInitSize());
 					assert(b>= 0 && b < y->getDomainInitSize());
 					assert(c>= 0 && c < z->getDomainInitSize());
-                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;                    
+                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;
                 }
 				if (shared) {
 				  sharedSize.push_back(costs.size());
@@ -543,7 +543,7 @@ void WCSP::read_wcsp(const char *fileName)
 				if (ntuples < 0) {
 				  int reusedconstr = -ntuples-1;
 				  if (reusedconstr >= (int) sharedSize.size()) {
-					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+					cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
 					exit(EXIT_FAILURE);
 				  }
 				  ntuples = sharedSize[reusedconstr];
@@ -634,7 +634,7 @@ void WCSP::read_wcsp(const char *fileName)
 			  if (ntuples < 0) {
 				int reusedconstr = -ntuples-1;
 				if (reusedconstr >= (int) sharedSize.size()) {
-				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl; 
+				  cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
 				  exit(EXIT_FAILURE);
 				}
 				ntuples = sharedSize[reusedconstr];
@@ -677,7 +677,7 @@ void WCSP::read_wcsp(const char *fileName)
 				  cerr << "Error: unary cost function with non-zero cost tuple!" << endl;
 				  exit(EXIT_FAILURE);
 				}
-			  }			  
+			  }
 			  postUnary(i,dom,ntuples,defval);
 			  delete [] dom;
 			}
@@ -692,9 +692,9 @@ void WCSP::read_wcsp(const char *fileName)
             if (ntuples == 1) file >> cost;
               else cost = defval;
             inclowerbound += cost*K;
-        } 
+        }
     }
-    
+
 	file >> funcname;
 	if (file) {
 	  cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
@@ -732,7 +732,7 @@ void WCSP::read_wcsp(const char *fileName)
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
-    
+
     // unary cost functions are delayed for compatibility issue (same lowerbound found) with old toolbar solver
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
@@ -743,18 +743,18 @@ void WCSP::read_wcsp(const char *fileName)
 }
 
 
-void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular ) 
+void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular )
 {
 	naryRandom randwcsp(this,seed);
-    randwcsp.Input(n,m,p,forceSubModular);	    
+    randwcsp.Input(n,m,p,forceSubModular);
     ToulBar2::nbvar= n;
 
  	unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
-    
+
     if (ToulBar2::verbose >= 0) {
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " cost functions." << endl;
-    }  
+    }
 }
 
 
@@ -762,14 +762,15 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 
 void WCSP::read_uai2008(const char *fileName)
 {
-    ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
-    if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
+	// Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
+    ToulBar2::NormFactor = (-1.0/Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
+    if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/(TProb)ToulBar2::resolution) {
 	   cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 	   exit(EXIT_FAILURE);
     } else if (ToulBar2::verbose >= 1) {
 	  cout << "NormFactor= " << ToulBar2::NormFactor << endl;
 	}
-	
+
 	//    Cost inclowerbound = MIN_COST;
 	string uaitype;
 	ifstream file(fileName);
@@ -795,18 +796,17 @@ void WCSP::read_uai2008(const char *fileName)
     int arity;
 	int maxarity = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
-	                
+
 	list<int> lctrs;
 
 	file >> uaitype;
-	
+
 	if (ToulBar2::verbose >= 3) cout << "Reading " << uaitype << "  file." << endl;
-	
-	
+
+
 	bool markov = uaitype == string("MARKOV");
 	//bool bayes = uaitype == string("BAYES");
 
-    
 
     file >> nbvar;
     ToulBar2::nbvar= nbvar;
@@ -816,11 +816,11 @@ void WCSP::read_uai2008(const char *fileName)
         varname = to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
-	    if(domsize > nbval) nbval = domsize; 
+	    if(domsize > nbval) nbval = domsize;
         int theindex = -1;
         if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
         else theindex = makeIntervalVariable(varname,0,-domsize-1);
-        assert(theindex == i);   
+        assert(theindex == i);
     }
 
 
@@ -830,24 +830,25 @@ void WCSP::read_uai2008(const char *fileName)
         file >> arity;
 		maxarity = max(maxarity,arity);
 
-        if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }       
+        if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }
         if (!file) {
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
+
         if (arity > 3) {
-        	int scopeIndex[MAX_ARITY];        	
+        	int scopeIndex[MAX_ARITY];
             if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
 
 			for(i=0;i<arity;i++) {
 	            file >> j;
 	            scopeIndex[i] = j;
 	            if (ToulBar2::verbose >= 3) cout << j << " ";
-			}     	
+			}
 			if (ToulBar2::verbose >= 3) cout << endl;
             lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST) );
 			assert(lctrs.back() >= 0);
-        } 
+        }
         else if (arity == 3) {
             file >> i;
             file >> j;
@@ -870,7 +871,7 @@ void WCSP::read_uai2008(const char *fileName)
             }
 			lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
 			assert(lctrs.back() >= 0);
-		} 
+		}
 		else if (arity == 2) {
             file >> i;
             file >> j;
@@ -887,9 +888,9 @@ void WCSP::read_uai2008(const char *fileName)
                     costs.push_back(MIN_COST);
                 }
             }
-            lctrs.push_back( postBinaryConstraint(i,j,costs) );          
+            lctrs.push_back( postBinaryConstraint(i,j,costs) );
 			assert(lctrs.back() >= 0);
-        } 
+        }
         else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
@@ -897,13 +898,12 @@ void WCSP::read_uai2008(const char *fileName)
 			TemporaryUnaryConstraint unaryconstr;
 			unaryconstr.var = x;
 	    	unaryconstrs.push_back(unaryconstr);
-            lctrs.push_back(-1);            
+            lctrs.push_back(-1);
         } else if(arity == 0) {
-            lctrs.push_back(-2);            
+            lctrs.push_back(-2);
         }
-        
     }
-    
+
 	int iunaryctr = 0;
 	int ictr = 0;
 	Constraint*	ctr = NULL;
@@ -912,7 +912,7 @@ void WCSP::read_uai2008(const char *fileName)
 	NaryConstraint* nctr = NULL;
 	String s;
 
-	ToulBar2::markov_log = 0;   // for the MARKOV Case   
+	ToulBar2::markov_log = 0;   // for the MARKOV Case
 
 	int ntuplesarray[lctrs.size()];
 	vector< vector<Cost> > costs;
@@ -937,6 +937,7 @@ void WCSP::read_uai2008(const char *fileName)
 	    for (k = 0; k < ntuples; k++) {
 	        p = costsProb[k];
 	        Cost cost;
+	        // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
 	        if(markov) cost = ((ToulBar2::uai>1)?LogLike2Cost(p - maxp):Prob2Cost(p / maxp));
 	        else       cost = ((ToulBar2::uai>1)?LogLike2Cost(p):Prob2Cost(p));
 	        costs[ictr].push_back(cost);
@@ -975,21 +976,21 @@ void WCSP::read_uai2008(const char *fileName)
 		switch(arity) {
 			case 0:     inclowerbound += costs[ictr][0];
 						break;
-							
+
 			case 1: 	unaryconstrs[iunaryctr].costs.clear();
 						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
 						      unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
-						}			
-						iunaryctr++; 
-						if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;							
-						break;	
-	
+						}
+						iunaryctr++;
+						if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;
+						break;
+
 			case 2: bctr = (BinaryConstraint*) ctr;
 					x = (EnumeratedVariable*) bctr->getVar(0);
             		y = (EnumeratedVariable*) bctr->getVar(1);
             		bctr->addCosts( x,y, costs[ictr] );
 					bctr->propagate();
-					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;							
+					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;
 					break;
 
 			case 3: tctr = (TernaryConstraint*) ctr;
@@ -998,9 +999,9 @@ void WCSP::read_uai2008(const char *fileName)
             		z = (EnumeratedVariable*) tctr->getVar(2);
 		    		tctr->addCosts( x,y,z, costs[ictr] );
 					tctr->propagate();
-					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;							
+					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;
 					break;
-			 
+
 			default: nctr = (NaryConstraint*) ctr;
 					j = 0;
 					nctr->firstlex();
@@ -1012,7 +1013,7 @@ void WCSP::read_uai2008(const char *fileName)
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 				    postNaryConstraintEnd(nctr->wcspIndex);
 					break;
-			
+
 		}
         ictr++;
 		++it;
@@ -1030,15 +1031,15 @@ void WCSP::read_uai2008(const char *fileName)
     }
     histogram();
     cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
- 
- 	int nevi = 0;	
+
+ 	int nevi = 0;
 	ifstream fevid(ToulBar2::evidence_file.c_str());
-  	if (!fevid) 
-  	{ 
+  	if (!fevid)
+  	{
   		string strevid(string(fileName) + string(".evid"));
   		fevid.open(strevid.c_str());
   		cerr << "No evidence file specified. Trying " << strevid << endl;
-		if(!fevid) cerr << "No evidence file. " << endl;			 
+		if(!fevid) cerr << "No evidence file. " << endl;
   	}
   	if(fevid) {
 	    vector<int> variables;
@@ -1104,8 +1105,6 @@ void WCSP::solution_UAI(Cost res, bool opt)
 
 
 
-
-
 #ifdef XMLFLAG
 #include "./xmlcsp/xmlcsp.h"
 #endif
@@ -1114,22 +1113,22 @@ void WCSP::solution_UAI(Cost res, bool opt)
 void WCSP::read_XML(const char *fileName)
 {
 	 #ifdef XMLFLAG
-		 MyCallback xmlCallBack; 
-		 xmlCallBack.wcsp = this;	
+		 MyCallback xmlCallBack;
+		 xmlCallBack.wcsp = this;
 	 	 xmlCallBack.fname = string(fileName);
 	  	 xmlCallBack.convertWCSP = true;
 		 try {
 		    XMLParser_libxml2<> parser( xmlCallBack );
 		    parser.setPreferredExpressionRepresentation(INFIX_C);
-		    parser.parse(fileName); 
+		    parser.parse(fileName);
 		  } catch (exception &e) {
 		    cout.flush();
 		    cerr << "\n\tUnexpected exception in XML parsing\n";
 		    cerr << "\t" << e.what() << endl;
 		    exit(1);
 		  }
-	#else	
-		cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n" << endl;			   
+	#else
+		cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n" << endl;
 	    exit(1);
 	#endif
 }
@@ -1139,27 +1138,27 @@ void WCSP::solution_XML(bool opt)
   {
 	 #ifdef XMLFLAG
 	 	if (!ToulBar2::xmlflag) return;
-	
-		if(opt)  cout << "s OPTIMUM FOUND" << endl;	
+
+		if(opt)  cout << "s OPTIMUM FOUND" << endl;
 
 		//ofstream fsol;
 		ifstream sol;
-		sol.open("sol");	
+		sol.open("sol");
 		//if(!sol) { cout << "cannot open solution file to translate" << endl; exit(1); }
-		//fsol.open("solution");	
+		//fsol.open("solution");
 		//fsol << "SOL ";
 
 
-		cout << "v "; 
+		cout << "v ";
 	    for (unsigned int i=0; i<vars.size(); i++) {
 			int value;
 	    	sol >> value;
-			int index = ((EnumeratedVariable*) getVar(i))->toIndex(value);	    	
+			int index = ((EnumeratedVariable*) getVar(i))->toIndex(value);
 		  	cout << Doms[varsDom[i]][ index ] << " ";
 	    }
 		cout << endl;
-			    
-		//fsol << endl;	
+
+		//fsol << endl;
 		//fsol.close();
 		sol.close();
 	#endif
@@ -1173,13 +1172,13 @@ void WCSP::read_wcnf(const char *fileName)
   double K = ToulBar2::costMultiplier;
   Cost inclowerbound = MIN_COST;
   updateUb( (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST );
- 
+
   int maxarity = 0;
   vector<TemporaryUnaryConstraint> unaryconstrs;
 
   int nbvar,nbclauses;
   string dummy,sflag;
-  
+
   file >> sflag;
   while (sflag == "c") {
 	getline( file, dummy );
@@ -1187,7 +1186,7 @@ void WCSP::read_wcnf(const char *fileName)
   }
   if (sflag != "p") {
         cerr << "Wrong wcnf format in " << fileName << endl;
-        exit(EXIT_FAILURE);	
+        exit(EXIT_FAILURE);
   }
 
   string format,strtop;
@@ -1211,14 +1210,14 @@ void WCSP::read_wcnf(const char *fileName)
 	cout << "c Max-SAT input format" << endl;
 	updateUb((nbclauses+1)*K);
   }
-  
+
   // create Boolean variables
   for (int i = 0; i<nbvar; i++) {
 	string varname;
 	varname = to_string(i);
 	int theindex = -1;
 	theindex = makeEnumeratedVariable(varname,0,1);
-	assert(theindex == i);   
+	assert(theindex == i);
   }
 
   // Read each clause
@@ -1228,7 +1227,7 @@ void WCSP::read_wcnf(const char *fileName)
 	Char buf[MAX_ARITY];
 	int arity = 0;
 	if (ToulBar2::verbose >= 3) cout << "read clause on ";
-	
+
 	int j = 0;
 	Cost cost = UNIT_COST;
 	if (format == "wcnf") file >> cost;
@@ -1260,7 +1259,7 @@ void WCSP::read_wcnf(const char *fileName)
 	if (tautology) continue;
 	buf[arity] = '\0';
 	maxarity = max(maxarity,arity);
-	
+
 	if (arity > 3) {
 	  int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST);
 	  String tup = buf;
@@ -1302,7 +1301,7 @@ void WCSP::read_wcnf(const char *fileName)
 	  inclowerbound += cost*K;
 	} else {
 	  cerr << "Wrong clause arity " << arity << " in " << fileName << endl;
-	  exit(EXIT_FAILURE);	
+	  exit(EXIT_FAILURE);
 	}
   }
 
@@ -1314,11 +1313,11 @@ void WCSP::read_wcnf(const char *fileName)
   sortConstraints();
   // apply basic initial propagation AFTER complete network loading
   increaseLb(inclowerbound);
-  
+
   for (unsigned int u=0; u<unaryconstrs.size(); u++) {
 	postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
   }
-  histogram();  
+  histogram();
   cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
@@ -1386,7 +1385,7 @@ void WCSP::read_qpbo(const char *fileName)
   for (int e=0; e<m; e++) {
 	sumcost += 2. * abs(cost[e]);
   }
-  Double multiplier = Pow(10., (Double) ToulBar2::resolution);
+  Double multiplier = Exp10((Double) ToulBar2::resolution);
   if (multiplier * sumcost >= (Double) MAX_COST) {
 	cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
 	exit(EXIT_FAILURE);
@@ -1479,6 +1478,6 @@ void WCSP::read_qpbo(const char *fileName)
 	  postUnary(i, costs);
     }
   }
-  histogram();  
+  histogram();
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
