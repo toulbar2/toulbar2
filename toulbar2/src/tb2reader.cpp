@@ -828,7 +828,7 @@ void WCSP::read_uai2008(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
-		maxarity = max(maxarity,arity);
+        maxarity = max(maxarity,arity);
 
         if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }
         if (!file) {
@@ -840,20 +840,20 @@ void WCSP::read_uai2008(const char *fileName)
         	int scopeIndex[MAX_ARITY];
             if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
 
-			for(i=0;i<arity;i++) {
+	    for(i=0;i<arity;i++) {
 	            file >> j;
 	            scopeIndex[i] = j;
 	            if (ToulBar2::verbose >= 3) cout << j << " ";
-			}
-			if (ToulBar2::verbose >= 3) cout << endl;
+	    }
+	    if (ToulBar2::verbose >= 3) cout << endl;
             lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST) );
-			assert(lctrs.back() >= 0);
+	    assert(lctrs.back() >= 0);
         }
         else if (arity == 3) {
             file >> i;
             file >> j;
             file >> k;
-        	if ((i == j) || (i == k) || (k == j)) {
+	    if ((i == j) || (i == k) || (k == j)) {
     	       cerr << "Error: ternary cost function!" << endl;
                exit(EXIT_FAILURE);
             }
@@ -869,14 +869,14 @@ void WCSP::read_uai2008(const char *fileName)
 					}
                 }
             }
-			lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
-			assert(lctrs.back() >= 0);
-		}
-		else if (arity == 2) {
-            file >> i;
+	    lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
+	    assert(lctrs.back() >= 0);
+	}
+	else if (arity == 2) {
+	    file >> i;
             file >> j;
-			if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
-        	if (i == j) {
+	    if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
+	    if (i == j) {
     	       cerr << "Error: binary cost function with only one variable in its scope!" << endl;
                exit(EXIT_FAILURE);
             }
@@ -889,24 +889,24 @@ void WCSP::read_uai2008(const char *fileName)
                 }
             }
             lctrs.push_back( postBinaryConstraint(i,j,costs) );
-			assert(lctrs.back() >= 0);
+	    assert(lctrs.back() >= 0);
         }
         else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
-		    x = (EnumeratedVariable *) vars[i];
-			TemporaryUnaryConstraint unaryconstr;
-			unaryconstr.var = x;
-	    	unaryconstrs.push_back(unaryconstr);
-            lctrs.push_back(-1);
-        } else if(arity == 0) {
+	    x = (EnumeratedVariable *) vars[i];
+	    TemporaryUnaryConstraint unaryconstr;
+	    unaryconstr.var = x;
+	    unaryconstrs.push_back(unaryconstr);
+	    lctrs.push_back(-1);
+        } else if (arity == 0) {
             lctrs.push_back(-2);
         }
     }
 
 	int iunaryctr = 0;
 	int ictr = 0;
-	Constraint*	ctr = NULL;
+	Constraint* ctr = NULL;
 	TernaryConstraint* tctr = NULL;
 	BinaryConstraint* bctr = NULL;
 	NaryConstraint* nctr = NULL;
@@ -938,8 +938,8 @@ void WCSP::read_uai2008(const char *fileName)
 	        p = costsProb[k];
 	        Cost cost;
 	        // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
-	        if(markov) cost = ((ToulBar2::uai>1)?LogLike2Cost(p - maxp):Prob2Cost(p / maxp));
-	        else       cost = ((ToulBar2::uai>1)?LogLike2Cost(p):Prob2Cost(p));
+	        if (markov) cost = ((ToulBar2::uai>1)?LogLike2Cost(p - maxp):Prob2Cost(p / maxp));
+	        else        cost = ((ToulBar2::uai>1)?LogLike2Cost(p):Prob2Cost(p));
 	        costs[ictr].push_back(cost);
 	        if(cost < minc) minc = cost;
 	        if(cost > maxc && cost < getUb()) maxc = cost;
@@ -954,10 +954,10 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-	    if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log10( maxp ));
+	if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log10( maxp ));
 
-	    ictr++;
-	    ++it;
+	ictr++;
+	++it;
 	}
     updateUb( upperbound );
 
@@ -1013,18 +1013,17 @@ void WCSP::read_uai2008(const char *fileName)
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 				    postNaryConstraintEnd(nctr->wcspIndex);
 					break;
-
 		}
-        ictr++;
+		ictr++;
 		++it;
 	}
 	if (ToulBar2::verbose >= 1) {
-	  cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
+	    cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
 	}
 
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
-	increaseLb(inclowerbound);
+    increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
@@ -1032,43 +1031,40 @@ void WCSP::read_uai2008(const char *fileName)
     histogram();
     cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 
- 	int nevi = 0;
-	ifstream fevid(ToulBar2::evidence_file.c_str());
-  	if (!fevid)
-  	{
-  		string strevid(string(fileName) + string(".evid"));
-  		fevid.open(strevid.c_str());
-  		cerr << "No evidence file specified. Trying " << strevid << endl;
-		if(!fevid) cerr << "No evidence file. " << endl;
-  	}
-  	if(fevid) {
-	    vector<int> variables;
-	    vector<Value> values;
-		fevid >> nevi;
-		bool firstevid =true;
-		if (nevi == 0) return;
-		if (nevi == 1) fevid >> nevi;  // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
-	 	while(nevi) {
-	 		if(!fevid) {
-				cerr << "Error: incorrect number of evidences." << endl;
-	            exit(EXIT_FAILURE);
-	 		}
-	 		fevid >> i;
-	 		fevid >> j;
-			if (firstevid && !fevid) { // old UAI 2008 evidence format
-			  variables.push_back(nevi);
-			  values.push_back(i);
-			  break;
-			} else firstevid = false;
-			variables.push_back(i);
-			values.push_back(j);
-	 		nevi--;
-	 	}
-		assignLS(variables, values);
-  	}
+    int nevi = 0;
+    ifstream fevid(ToulBar2::evidence_file.c_str());
+    if (!fevid)	{
+        string strevid(string(fileName) + string(".evid"));
+	fevid.open(strevid.c_str());
+	cerr << "No evidence file specified. Trying " << strevid << endl;
+	if(!fevid) cerr << "No evidence file. " << endl;
+    }
+    if(fevid) {
+        vector<int> variables;
+	vector<Value> values;
+	fevid >> nevi;
+	bool firstevid =true;
+	if (nevi == 0) return;
+	if (nevi == 1) fevid >> nevi;  // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
+	while(nevi) {
+	    if(!fevid) {
+	        cerr << "Error: incorrect number of evidences." << endl;
+		exit(EXIT_FAILURE);
+	    }
+	    fevid >> i;
+	    fevid >> j;
+	    if (firstevid && !fevid) { // old UAI 2008 evidence format
+	        variables.push_back(nevi);
+		values.push_back(i);
+		break;
+	    } else firstevid = false;
+	    variables.push_back(i);
+	    values.push_back(j);
+	    nevi--;
+	}
+	assignLS(variables, values);
+    }
 }
-
-
 
 
 void WCSP::solution_UAI(Cost res, bool opt)
