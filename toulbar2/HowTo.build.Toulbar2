@@ -1,6 +1,11 @@
 # required package
 # depending of the flag activated in cmake
 # boost graph and libxml  may be required (warning! XML flag incompatible with STATIC compilation flag)
+# by default boost-graph is required , under debian or ubuntu you can easely install the library with
+# the following command :
+
+sudo  apt-get install libboost-graph-dev
+
 #obviosely if you tag the ilog flag 
 #ilog librares will be required.
 
