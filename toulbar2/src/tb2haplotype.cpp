@@ -13,8 +13,8 @@ void Haplotype::iniProb( WCSP* wcsp ) {
 
 	   int locus = 0;
 
-	   ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
-	   if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/-Log10(Pow( (TProb)10., -(TProb)ToulBar2::resolution))) {
+	   ToulBar2::NormFactor = (-1.0/Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
+	   if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/((TProb)ToulBar2::resolution)) {
 		  cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 		  exit(EXIT_FAILURE);
 	   }
@@ -26,7 +26,7 @@ void Haplotype::iniProb( WCSP* wcsp ) {
 	   if(nballeles > 1) {
 		   int ngenotyped = genotypes.size();
 		   while(ngenotyped) {
-		   		TopProb += -Log10(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
+		   		TopProb += -Log(ToulBar2::errorg / (TProb)(nballeles-1)) * ToulBar2::NormFactor;
 		   		ngenotyped--;
 		   }
 	   }
@@ -35,17 +35,17 @@ void Haplotype::iniProb( WCSP* wcsp ) {
 	  	Individual& individual = *iter;
 		if(individual.typed) {
 			if(individual.mother && individual.father) {
-				TopProb += -Log10(0.25) * ToulBar2::NormFactor;
+				TopProb += -Log(0.25) * ToulBar2::NormFactor;
 			}
 			else if(individual.mother || individual.father) {
-				TopProb += -Log10(0.50) * ToulBar2::NormFactor;
+				TopProb += -Log(0.50) * ToulBar2::NormFactor;
 			}
 			else
 			{
 				TProb minp = 1.;
 				switch(ToulBar2::foundersprob_class)
 				{
-					case 0:  TopProb += -Log10(1./(nballeles * nballeles)) * ToulBar2::NormFactor;
+					case 0:  TopProb += -Log(1./(nballeles * nballeles)) * ToulBar2::NormFactor;
 							 break;
 
 					case 1:  for (map<int,int>::iterator iter = freqalleles.find(locus)->second.begin(); iter != freqalleles.find(locus)->second.end(); ++iter) {
@@ -53,7 +53,7 @@ void Haplotype::iniProb( WCSP* wcsp ) {
 								if(p < minp) minp = p;
 							 }
 
-							 TopProb += -Log10(minp) * ToulBar2::NormFactor;
+							 TopProb += -Log(minp) * ToulBar2::NormFactor;
 							 break;
 
 					default: foundersprob.clear();
@@ -67,7 +67,7 @@ void Haplotype::iniProb( WCSP* wcsp ) {
 	                         for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
 					        	if(*iter < minp) minp = *iter;
 					         }
-							 TopProb += -Log10(minp) * ToulBar2::NormFactor;
+							 TopProb += -Log(minp) * ToulBar2::NormFactor;
 				}
 			}
 		}
@@ -759,7 +759,7 @@ void Haplotype::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 		  	 	else {p = ToulBar2::errorg / (TProb)(domsize - nballeles);
                       penalty = pedigree[individuals[individual]].nbtyped; }
   	  	 	 }
-			 if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogLike(-((penalty>0)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST)):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST) << " cost" << endl;
+			 if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogLike(-((penalty>0)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST))/Log(10.):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST) << " cost" << endl;
  	  	 	 unaryconstr.costs.push_back((typed && fixed && !theone)?wcsp->getUb():(wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty>0 && penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST)) );
 		  }
 	    }
@@ -831,7 +831,7 @@ void Haplotype::buildWCSP_haplotype( const char *fileName, WCSP *wcsp )
 
 	  for(map<pair<int,int>,Double,classcomp >::iterator w = W.begin(); w != W.end(); ++w)
 		  sumcost += abs(w->second);
-	  ToulBar2::NormFactor = (-Log( (TProb)10.)/Log1p( - Pow( (TProb)10., -(TProb)ToulBar2::resolution)));
+	  ToulBar2::NormFactor = (-1.0/Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
 	  wcsp->updateUb((Cost) (ToulBar2::NormFactor*sumcost));
 //	  Double constante = 0.;
 	  for(map<pair<int,int>,Double,classcomp >::iterator w = W.begin(); w != W.end(); ++w){
@@ -967,7 +967,7 @@ void Haplotype::printCorrection(WCSP *wcsp)
 
 		  if (ToulBar2::pedigreePenalty>0 && pedigree[individuals[genotypes[i]]].nbtyped>ToulBar2::pedigreePenalty) {
 			cout << "*";
-			penalty -= Log10(pedigree[individuals[genotypes[i]]].nbtyped);
+			penalty -= Log(pedigree[individuals[genotypes[i]]].nbtyped);
 		  }
 
 		  if(errorinfo) {
