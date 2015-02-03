@@ -520,9 +520,9 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
 #endif
     string gcname = "wsum";
     WeightedSum* decomposableGCF = new WeightedSum(arity, scopeIndex);
-    decomposableGCF->setSemantics(semantics); 				
-    decomposableGCF->setBaseCost(baseCost); 				
-    decomposableGCF->setComparator(comparator); 
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
+    decomposableGCF->setComparator(comparator);
 	decomposableGCF->setRightRes(rightRes);
     decomposableGCF->addToCostFunctionNetwork(this);
 }
@@ -549,15 +549,15 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WeightedAmong* decomposableGCF = new WeightedAmong(arity, scopeIndex);
-    decomposableGCF->setSemantics(semantics); 				
-    decomposableGCF->setBaseCost(baseCost); 
+    decomposableGCF->setSemantics(semantics);
+    decomposableGCF->setBaseCost(baseCost);
     for(int i = 0; i < nbValues; i++)
     {
         decomposableGCF->addValue(values[i]);
     }
     decomposableGCF->setBounds(lb,ub);
-    decomposableGCF->addToCostFunctionNetwork(this); 
-    delete [] values;   
+    decomposableGCF->addToCostFunctionNetwork(this);
+    delete [] values;
     //delete [] decomposableGCF;
 }
 
@@ -601,10 +601,10 @@ void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<in
     }
     WeightedRegular regular(arity,scopeIndex);
     regular.setWFA(automaton);
-    regular.addToCostFunctionNetwork(this);   
+    regular.addToCostFunctionNetwork(this);
     for(unsigned int i=0; i < transitionsCosts.size(); i++)
     {
-      delete [] Wtransitions[i];    
+      delete [] Wtransitions[i];
     }
     delete [] Wtransitions;
 }
@@ -1135,12 +1135,12 @@ void WCSP::sortConstraints()
 
 	//Mark native variable
 	for (int i = ((ToulBar2::nbDecisionVars>0)?ToulBar2::nbDecisionVars:ToulBar2::nbvar)-1; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-	//Mark q variable only 
+	//Mark q variable only
 	for (int i = numberOfVariables()-1 ; i > ((ToulBar2::nbDecisionVars>0)?ToulBar2::nbDecisionVars:ToulBar2::nbvar)-1 ; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
 
 	// listofsuccessors.clear(); // appel a la methode clear de l'objet vector
 
-	if( ToulBar2::verbose >= 1 ) { 
+	if( ToulBar2::verbose >= 1 ) {
 	  cout << "BERGE DAC reverse order:";
 	  for (unsigned int i = 0; i < numberOfVariables(); i++) {
 		cout << " " << revdac[i];
@@ -1315,7 +1315,7 @@ void WCSP::preprocessing() {
 	for (unsigned int i = 0; i < numberOfVariables(); i++) {
 	  revelimorder[getVar(i)->getDACOrder()] = i;
 	  elimorder[numberOfVariables() - getVar(i)->getDACOrder() -1] = i;
-	}	
+	}
 //	cout << "DAC:";
 //	for (int i = 0; i < numberOfVariables(); i++) {
 //		cout << " " << revelimorder[i];
@@ -1582,7 +1582,7 @@ unsigned int WCSP::numberOfConnectedBinaryConstraints() const {
 		if (constrs[i]->connected() && constrs[i]->arity()==2 && !constrs[i]->isSep()) res++;
 	for (int i = 0; i < elimBinOrder; i++)
 		if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) res++;
-	return res;  
+	return res;
 }
 
 unsigned int WCSP::medianDomainSize() const {
@@ -2588,7 +2588,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 		assert(negcost <= 0);
 		if (negcost < 0) {
 		  for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
-			for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) { 
+			for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) {
 			  costs[vxi * evars[1]->getDomainInitSize() + vyi] -= negcost;
 			}
 		  }
@@ -2764,7 +2764,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
 
 void WCSP::ternaryCompletion() {
     if (numberOfUnassignedVariables() < 3) return;
-    
+
 	Double nbunvars  = numberOfUnassignedVariables();
 	Double connectivity = 2. * numberOfConnectedBinaryConstraints() / (nbunvars * (nbunvars-1));
 	Double domsize =  medianDomainSize();
@@ -2786,13 +2786,13 @@ void WCSP::ternaryCompletion() {
 			if (ctr->arity() == 2) {
 				BinaryConstraint* bctr = (BinaryConstraint*) ctr;
 				EnumeratedVariable* y = (EnumeratedVariable*) bctr->getVarDiffFrom(x);
-				if (y->wcspIndex > x->wcspIndex) 
+				if (y->wcspIndex > x->wcspIndex)
 					for (ConstraintList::iterator it2 = y->getConstrs()->begin(); it2 != y->getConstrs()->end(); ++it2) {
 						Constraint* ctr2 = (*it2).constr;
 						if (ctr != ctr2 && ctr2->arity() == 2) {
 							BinaryConstraint* bctr2 = (BinaryConstraint*) ctr2;
 							EnumeratedVariable* z = (EnumeratedVariable*) bctr2->getVarDiffFrom(y);
-							if (z->wcspIndex > y->wcspIndex) 
+							if (z->wcspIndex > y->wcspIndex)
 								for (ConstraintList::iterator it3 = z->getConstrs()->begin(); it3 != z->getConstrs()->end(); ++it3) {
 									Constraint* ctr3 = (*it3).constr;
 									if (ctr2 != ctr3 && ctr3->arity() == 2) {
@@ -2817,11 +2817,11 @@ void WCSP::ternaryCompletion() {
 				}
 			}
 		}
-		
+
 	Double totalsize = 0.;
 	Double maxsize = 1024. * 1024. * ToulBar2::preprocessTernaryRPC;
 	int ntern = 0;
-	
+
 	sort(triplelist.begin(), triplelist.end());
 	for (vector<TripleVarCostSize>::iterator it = triplelist.begin(); it != triplelist.end(); ++it) {
 		if (totalsize + (Double) sizeof(StoreCost) * it->size <= maxsize) {
@@ -2999,7 +2999,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 
 Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
-	TProb res = -Log10(p) * ToulBar2::NormFactor;
+	TProb res = -Log(p) * ToulBar2::NormFactor;
 	if (res > to_double(MAX_COST)) {
 		cerr << "Overflow when converting probability to cost." << endl;
 		exit(EXIT_FAILURE);
@@ -3011,22 +3011,25 @@ Cost WCSP::Prob2Cost(TProb p) const {
 
 Cost WCSP::LogLike2Cost(TProb p) const {
 	TProb res = -p * ToulBar2::NormFactor;
-	Cost c = (Cost) res;
-	return c;	
+	if (res > to_double(MAX_COST/2)) {
+		cout << "Warning: converting -loglike/energy " << -p << " to Top\n";
+		return getUb();
+		}
+	else return (Cost) res;
 }
 TProb WCSP::Cost2LogLike(Cost c) const {
 	return -to_double(c) / ToulBar2::NormFactor;
 }
 TProb WCSP::Cost2Prob(Cost c) const {
-  return Exp10(-to_double(c) / ToulBar2::NormFactor);
+  return Exp(-to_double(c) / ToulBar2::NormFactor);
 }
 Cost  WCSP::SumLogLikeCost(Cost c1, Cost c2) const {
   if (c1 >= getUb()) return c2;
   else if (c2 >= getUb()) return c1;
-  else if (c1 == c2) return c1+LogLike2Cost(Log10(2.));
+  else if (c1 == c2) return c1+LogLike2Cost(Log(2.));
   else {
-	if (c1 < c2) return c1 + LogLike2Cost(Log1p(Exp10(Cost2LogLike(c2 - c1)))/Log(10.));
-	else return c2 + LogLike2Cost(Log1p(Exp10(Cost2LogLike(c1 - c2)))/Log(10.));
+	if (c1 < c2) return c1 + LogLike2Cost(Log1p(Exp(Cost2LogLike(c2 - c1))));
+	else return c2 + LogLike2Cost(Log1p(Exp(Cost2LogLike(c1 - c2))));
   }
 }
 TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
@@ -3034,16 +3037,16 @@ TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
   if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
   else if (c2 >= getUb()) return logc1;
   else {
-	if (logc1 >= logc2) return logc1 + (Log1p(Exp10(logc2 - logc1))/Log(10.));
-	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
+	if (logc1 >= logc2) return logc1 + (Log1p(Exp(logc2 - logc1)));
+	else return logc2 + (Log1p(Exp(logc1 - logc2)));
   }
 }
 TProb WCSP::SumLogLikeCost(TProb logc1, TProb logc2) const {
   if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
   else if (logc2 == -numeric_limits<TProb>::infinity()) return logc1;
   else {
-	if (logc1 >= logc2) return logc1 + (Log1p(Exp10(logc2 - logc1))/Log(10.));
-	else return logc2 + (Log1p(Exp10(logc1 - logc2))/Log(10.));
+	if (logc1 >= logc2) return logc1 + (Log1p(Exp(logc2 - logc1)));
+	else return logc2 + (Log1p(Exp(logc1 - logc2)));
   }
 }
 
