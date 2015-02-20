@@ -7,14 +7,74 @@
 #define TB2SOLVER_HPP_
 
 #include "toulbar2lib.hpp"
+#include "tb2store.hpp"
 
 template <class T> struct DLink;
 template <class T> class BTList;
 
 const double epsilon = 1e-6; // 1./100001.
 
+const int MAX_BRANCH_SIZE = 1000000;
+const int CHOICE_POINT_LIMIT = INT_MAX - 2 * MAX_BRANCH_SIZE;
+const int OPEN_NODE_LIMIT = INT_MAX;
+
 class Solver : public WeightedCSPSolver
 {
+public:
+    class OpenNode
+    {
+    public:
+        Cost cost;      // lower bound associated to the open node
+        int first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
+        int last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
+
+        OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
+        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and deepest depth next
+    };
+
+    class OpenList : public priority_queue<OpenNode>
+    {
+    public:
+        Cost glb;   // current cluster lower bound built from closed nodes
+        Cost cub;   // current cluster upper bound
+
+        OpenList(Cost lb, Cost ub) : glb(lb), cub(ub) {}
+        OpenList() : glb(MAX_COST), cub(MAX_COST) {}
+
+        void clear() {glb=MAX_COST; cub=MAX_COST; while (!empty()) pop();}
+    };
+
+    typedef enum {
+        CP_ASSIGN = 0, CP_REMOVE = 1, CP_INCREASE = 2, CP_DECREASE = 3, CP_REMOVE_RANGE = 4, CP_MAX
+    } ChoicePointOp;
+    static const string CPOperation[CP_MAX]; // for pretty print
+
+    struct ChoicePoint {
+        ChoicePointOp op;   // choice point operation
+        int varIndex;       // variable wcsp's index
+        Value value;        // variable's value
+        bool reverse;       // true if the choice point corresponds to the last right branch of an open node
+
+        ChoicePoint(ChoicePointOp op_, int var_, Value val_, bool rev_) : op(op_), varIndex(var_), value(val_), reverse(rev_) {}
+    };
+
+    class CPStore : public vector<ChoicePoint>
+    {
+        public:
+            int start;       // beginning of the current branch
+            int stop;        // deepest saved branch end (should be free at this position)
+            StoreInt index;  // current branch depth (should be free at this position)
+
+            CPStore(Store *s) : start(0), stop(0), index(0, &s->storeInt) {}
+
+            void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
+            void store() {start = stop; index = start;}
+    };
+
+    void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
+    void addOpenNode(CPStore &cp, OpenList &open, Cost lb);
+    void restore(CPStore &cp, OpenNode node);
+
 protected:
     Store *store;
     Long nbNodes;
@@ -32,6 +92,12 @@ protected:
     map<int,BigInteger > ubSol;	// upper bound of solution number
     double timeDeconnect;		// time for the disconnection
 
+    CPStore *cp;                // choice point cache for open nodes (except BTD)
+    OpenList *open;             // list of open nodes (except BTD)
+    Long hybridBFSLimit;        // limit on number of backtracks for hybrid search (except BTD)
+    Long nbHybrid;
+    Long nbHybridContinue;
+
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
@@ -45,21 +111,21 @@ protected:
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
-    void increase(int varIndex, Value value);
-    void decrease(int varIndex, Value value);
-    void assign(int varIndex, Value value);
-    void remove(int varIndex, Value value);
-    void remove(int varIndex, ValueCost *array, int first, int last);
+    void increase(int varIndex, Value value, bool reverse = false);
+    void decrease(int varIndex, Value value, bool reverse = false);
+    void assign(int varIndex, Value value, bool reverse = false);
+    void remove(int varIndex, Value value, bool reverse = false);
+    void remove(int varIndex, ValueCost *array, int first, int last, bool reverse = false);
     void conflict() {}
     void enforceUb();
     void singletonConsistency();
 
-    void binaryChoicePoint(int xIndex, Value value);
+    void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
-    void narySortedChoicePoint(int xIndex);
+    void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    virtual void newSolution();
-    void recursiveSolve();
+    void newSolution();
+    void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
     void scheduleOrPostpone(int varIndex);
@@ -74,8 +140,10 @@ protected:
     int getVarMinDomainDivMaxDegree(Cluster *cluster);
     int getNextUnassignedVar(Cluster *cluster);
 
-    Cost binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
-    Cost recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
+    pair<Cost, Cost> binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
+    pair<Cost, Cost> recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
+    pair<Cost,Cost> hybridSolve(Cluster *root, Cost clb, Cost cub);
+    pair<Cost,Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
     void russianDollSearch(Cluster *c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);

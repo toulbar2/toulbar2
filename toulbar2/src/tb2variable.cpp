@@ -164,8 +164,9 @@ Long Variable::getWeightedDegree()
 {
     Long res = 0;
     for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
-    	if((*iter).constr->isSep()) continue;
+//    	if((*iter).constr->isSep()) continue;
         res += (*iter).constr->getConflictWeight((*iter).scopeIndex);
+        if((*iter).constr->isSep()) res--;  // do not count unused separators
     }
     return res;
 }

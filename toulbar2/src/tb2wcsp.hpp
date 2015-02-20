@@ -69,6 +69,7 @@ class WCSP : public WeightedCSP {
 	vector<int> delayedNaryCtr;         ///< a list of all original nary constraints in extension (also inserted in constrs)
 	bool isDelayedNaryCtr;				///< postpone naryctr propagation after all variables have been created
 	vector< vector<int> > listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
+    StoreInt isPartOfOptimalSolution;   ///< true if the current assignment belongs to an optimal solution recorded into bestValues
 
 	// make it private because we don't want copy nor assignment
 	WCSP(const WCSP &wcsp);
@@ -217,10 +218,10 @@ public:
 	  }
 	}
 
-	void increase(int varIndex, Value newInf) {vars[varIndex]->increase(newInf);}	///< \brief changes domain lower bound
-	void decrease(int varIndex, Value newSup) {vars[varIndex]->decrease(newSup);}	///< \brief changes domain upper bound
-	void assign(int varIndex, Value newValue) {vars[varIndex]->assign(newValue);}	///< \brief assigns a variable and immediately propagates this assignment
-	void remove(int varIndex, Value remValue) {vars[varIndex]->remove(remValue);}	///< \brief removes a domain value
+	void increase(int varIndex, Value newInf) {vars[varIndex]->increase(newInf, true);}	///< \brief changes domain lower bound
+	void decrease(int varIndex, Value newSup) {vars[varIndex]->decrease(newSup, true);}	///< \brief changes domain upper bound
+	void assign(int varIndex, Value newValue) {vars[varIndex]->assign(newValue, true);}	///< \brief assigns a variable and immediately propagates this assignment
+	void remove(int varIndex, Value remValue) {vars[varIndex]->remove(remValue, true);}	///< \brief removes a domain value
 
 	/// \brief assigns a set of variables at once and propagates
 	/// \param varIndexes vector of variable indexes as returned by makeXXXVariable
@@ -229,10 +230,14 @@ public:
 	void assignLS(vector<int>& varIndexes, vector<Value>& newValues) {
 		assert(varIndexes.size()==newValues.size());
 		unsigned int size = varIndexes.size();
+		assignLS(&varIndexes[0], &newValues[0], size, true);
+	}
+
+	void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate) {
 		set<Constraint *> delayedctrs;
 		for (unsigned int i=0; i<size; i++) vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
 		for (set<Constraint *>::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) if (!(*it)->isGlobal()) (*it)->propagate();
-		propagate();
+		if (dopropagate) propagate();
 	}
 
 	Cost getUnaryCost(int varIndex, Value v) const {return vars[varIndex]->getCost(v);}			///< \brief unary cost associated to a domain value
@@ -241,6 +246,8 @@ public:
 	Value getSupport(int varIndex) const {return vars[varIndex]->getSupport();}					///< \brief unary (NC/EAC) support value
 	Value getBestValue(int varIndex) const {return bestValues[varIndex];}						///< \brief hint for some value ordering heuristics (ONLY used by RDS)
 	void setBestValue(int varIndex, Value v) {bestValues[varIndex] = v;}						///< \brief hint for some value ordering heuristics (ONLY used by RDS)
+    bool getIsPartOfOptimalSolution() {return (isPartOfOptimalSolution!=0);}                        ///< \brief special flag used for debugging purposes only
+    void setIsPartOfOptimalSolution(bool v) {isPartOfOptimalSolution = (v?1:0);}                    ///< \brief special flag used for debugging purposes only
 
 	int getDegree(int varIndex) const {return vars[varIndex]->getDegree();}						///< \brief approximate degree of a variable (\e ie number of active cost functions, see \ref varelim)
 	int getTrueDegree(int varIndex) const {return vars[varIndex]->getTrueDegree();}				///< \brief degree of a variable

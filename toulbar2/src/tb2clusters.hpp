@@ -22,7 +22,7 @@ typedef set<Constraint*>   TCtrs;
 //typedef map<int,Value>     TAssign;
 typedef set<Cluster*>	   TClusters;
 
-typedef pair<Cost,bool>     TPairNG;
+typedef triplet<Cost, Cost, Solver::OpenList >     TPairNG;
 typedef pair<Cost,String>   TPairSol;
 
 typedef map<String, TPairNG>  TNoGoods;
@@ -68,8 +68,8 @@ class Separator : public AbstractNaryConstraint
     TVars::iterator  begin() { return vars.begin(); }
     TVars::iterator  end()   { return vars.end(); }
 
-    void set( Cost c, bool opt );
-    bool get( Cost& res, bool& opt );
+    void set( Cost clb, Cost cub, Solver::OpenList **open = NULL );
+    bool get( Cost& clb, Cost& cub, Solver::OpenList **open = NULL );
 
     void setSg( Cost c, BigInteger nb );
     BigInteger getSg( Cost& res, BigInteger& nb );
@@ -121,6 +121,7 @@ class Cluster
 
   Separator* 	      sep; // associated separator with parent cluster
   StoreCost           lb; // current cluster lower bound deduced by propagation
+  Cost                ub; // current cluster upper bound
   Cost				  lbRDS; // global cluster lower bound found by RDS
   StoreInt			  active; // unactive if a nogood including this cluster has been used by propagation
 
@@ -144,6 +145,11 @@ class Cluster
       void          deconnectSep(); // deconnect all the constraints on separator variables and assigns separator variables to their support value
       void 			deconnectDiff(TCtrs listCtrsTot,TCtrs listCtrs);
       bool 			isSepVar( int i ) { if(!sep) return false; return sep->is(i); }
+
+      Solver::CPStore*      cp;         // choice point cache for open nodes related to this cluster
+      Solver::OpenList*     open;       // list of open nodes related to this cluster
+      Long          hybridBFSLimit;     // limit on number of backtracks for hybrid search
+      Long          nbBacktracks;       // current number of backtracks related to this cluster
 
       bool 			isVar( int i ) { TVars::iterator it = vars.find(i); return it != vars.end(); }
 	  int			getNbVars() { return vars.size(); }
@@ -179,6 +185,8 @@ class Cluster
 	  Cost			getLb()  { return lb; }
 	  void			setLb(Cost c)  { lb = c; }
       void 			increaseLb( Cost addToLb ) { lb += addToLb; }
+      Cost          getUb()  { return ub; }
+      void          setUb(Cost c) {ub = c;}
 	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return MAX(lbRDS - delta, MIN_COST); }
 	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
 	  Cost	        getLbRec();
@@ -186,8 +194,8 @@ class Cluster
 
 	  void          addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
 
-	  void          nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }
-      Cost          nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }
+	  void          nogoodRec( Cost clb, Cost cub, Solver::OpenList **open = NULL ) { if(sep) sep->set(clb,cub,open); }
+      bool          nogoodGet( Cost &clb, Cost &cub, Solver::OpenList **open = NULL ) { return sep->get(clb,cub,open); }
 
       void          resetOptRec(Cluster *rootCluster);
 
@@ -199,7 +207,7 @@ class Cluster
   	  int			getPart(){return num_part;}
   	  void			setPart(int num){num_part=num;}
 
-	  void          solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
+	  void          solutionRec(Cost c) { ub = c; if(sep) sep->solRec(c); }
       void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
 
 	  void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest

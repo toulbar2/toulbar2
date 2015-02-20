@@ -106,9 +106,9 @@ void Separator::propagate()
 {
   if (ToulBar2::debug >= 3) cout << this << " C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << endl;
   if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
-
-	  Cost res = MIN_COST;
+      wcsp->revise(this);
 	  if(ToulBar2::allSolutions){
+	      Cost res = MIN_COST;
 		  BigInteger nb = 0.;
 		  getSg(res,nb);
 		  if (nb == 0.)  {
@@ -120,11 +120,13 @@ void Separator::propagate()
 				  unqueueSep();
 	  }
 	  else{
-		  bool opt = false;
-		  get(res,opt);
+	      Cost clb = MIN_COST;
+	      Cost cub = MAX_COST;
+		  get(clb,cub,&cluster->open);
+		  bool opt = (clb == cub);
 		  if (cluster->isActive()) {
 			  Cost lbpropa = cluster->getLbRec();
-			  Cost lb = res - lbpropa;
+			  Cost lb = clb - lbpropa;
 			  if(opt || lb>MIN_COST) {
 				  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl;
 				  assert(lb >= MIN_COST);
@@ -135,17 +137,17 @@ void Separator::propagate()
 				  assert(cluster->getParent()->getId() == Constraint::cluster);
 				  cluster->getParent()->increaseLb(lbpropa);
 				  if (lb>MIN_COST) projectLB(lb); // project into global lb and into parent cluster
-				  lbPrevious = res;
+				  lbPrevious = clb;
 				  optPrevious = opt;
 				  // end of atomic operations.
 			  }
 		  } else if (isUsed && cluster->getParent()->isActive()) {
-			  if (res > lbPrevious || (opt==true && optPrevious==false)) {
-				  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbPrevious=" << lbPrevious << " ,optPrevious=" << optPrevious << " ,res=" << res << " ,opt=" << opt << ")" << endl;
+			  if (clb > lbPrevious || (opt==true && optPrevious==false)) {
+				  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbPrevious=" << lbPrevious << " ,optPrevious=" << optPrevious << " ,clb=" << clb << " ,opt=" << opt << ")" << endl;
 				  if (opt) unqueueSep();
 				  // atomic operations:
-				  if (res > lbPrevious) projectLB(res - lbPrevious); // project into global lb and into parent cluster
-				  lbPrevious = res;
+				  if (clb > lbPrevious) projectLB(clb - lbPrevious); // project into global lb and into parent cluster
+				  lbPrevious = clb;
 				  optPrevious = opt;
 				  // end of atomic operations.
 			  }
@@ -154,7 +156,8 @@ void Separator::propagate()
   }
 }
 
-void Separator::set( Cost c, bool opt ) {
+void Separator::set( Cost clb, Cost cub, Solver::OpenList **open ) {
+    assert(clb <= cub);
 	int i = 0;
 	WCSP* wcsp = cluster->getWCSP();
 	Cost deltares = MIN_COST;
@@ -169,15 +172,39 @@ void Separator::set( Cost c, bool opt ) {
 		++it;
 		i++;
 	}
-	assert(!opt || c + deltares >= MIN_COST);
-	if (ToulBar2::verbose >= 1) cout << ") Learn nogood " << c << " + delta=" << deltares << "(opt=" << opt << ")" << " on cluster " << cluster->getId() << endl;
+	if (ToulBar2::verbose >= 1) cout << ")";
+	assert(clb < cub || clb + deltares >= MIN_COST);
 	//assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
+	TNoGoods::iterator itng = nogoods.find(t);
     if (ToulBar2::debug >= 2) {
-	  cout << "<" << cluster->getId() << ",";
+	  cout << " <C" << cluster->getId() << ",";
 	  Cout << t;
-	  cout << "," << MAX(MIN_COST, c + deltares) << "," << opt << ">" << endl;
+	  cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
 	}
-	nogoods[t] = TPairNG(MAX(MIN_COST, c + deltares), opt);
+    if (open) {
+        if (*open) {
+            // open node list already found => the corresponding nogood has been created before
+            assert(itng != nogoods.end());
+            assert(*open == &itng->second.third);
+            itng->second.first = MAX(itng->second.first, clb + deltares);
+            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)));
+            if (ToulBar2::verbose >= 1) cout << " Learn nogood " << itng->second.first << ", cub= " <<  itng->second.second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
+        } else {
+            assert(itng == nogoods.end());
+            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)), Solver::OpenList());
+            if (ToulBar2::verbose >= 1) cout << " Learn nogood " << nogoods[t].first << ", cub= " <<  nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
+            *open = &nogoods[t].third;
+        }
+    } else {
+        if (itng == nogoods.end()) {
+            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)), Solver::OpenList());
+            if (ToulBar2::verbose >= 1) cout << " Learn nogood " << nogoods[t].first << ", cub= " <<  nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
+        } else {
+            itng->second.first = MAX(itng->second.first, clb + deltares);
+            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)));
+            if (ToulBar2::verbose >= 1) cout << " Learn nogood " << itng->second.first << ", cub= " <<  itng->second.second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
+        }
+    }
 }
 
 
@@ -231,10 +258,10 @@ Cost Separator::getCurrentDelta() {
 	return sumdelta;
 }
 
-bool Separator::get( Cost& res, bool& opt ) {
+bool Separator::get( Cost& clb, Cost& cub, Solver::OpenList **open) {
 	int i = 0;
-	res = MIN_COST;
-	opt = false;
+	clb = MIN_COST;
+	cub = MIN_COST;
 
 	if (ToulBar2::verbose >= 1) cout << "( ";
 	TVars::iterator it = vars.begin();
@@ -243,27 +270,34 @@ bool Separator::get( Cost& res, bool& opt ) {
 	  Value val = cluster->getWCSP()->getValue(*it);
 	  if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
 	  t[i] = val + CHAR_FIRST;	 // build the tuple
-	  res -= delta[i][val];      // delta structure
+	  clb -= delta[i][val];      // delta structure
+      cub -= delta[i][val];      // delta structure
 	  ++it;
 	  i++;
 	}
 	TNoGoods::iterator itng = nogoods.find(t);
 	if(itng != nogoods.end()) {
-		TPairNG p = itng->second;
-		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << res << " (opt=" << p.second << ") on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
-		assert(!p.second || res + p.first >= MIN_COST);
-		res += p.first;
-	    opt = p.second;
+		TPairNG &p = itng->second; // it is crucial here to get a reference to the data triplet object instead of a copy, otherwise open node list would be copied
+		if (ToulBar2::verbose >= 1) cout << ") Use nogood " << p.first << ", delta=" << clb << " (cub=" << p.second << ") on cluster " << cluster->getId() << " (active=" << cluster->isActive() << ")" << endl;
+		assert(p.first < p.second || clb + p.first >= MIN_COST);
+		clb += p.first;
+	    cub += p.second;
+	    cub = MAX(MIN_COST,cub);
+        cluster->setUb(cub);
+	    if (open) *open = &p.third;
 		if (ToulBar2::btdMode >= 2) {
 		  Cost lbrds = cluster->getLbRDS();
-		  assert(!opt || res >= lbrds);
-		  res = MAX(lbrds, res);
+		  assert(clb < cub || clb >= lbrds);
+		  clb = MAX(lbrds, clb);
 		} else {
-		  res = MAX(MIN_COST,res);
+		  clb = MAX(MIN_COST,clb);
 		}
 		return true;
 	} else {
-	    res = (ToulBar2::btdMode >= 2)?cluster->getLbRDS():MIN_COST;
+	    clb = (ToulBar2::btdMode >= 2)?cluster->getLbRDS():MIN_COST;
+	    cub = MAX_COST;
+	    cluster->setUb(MAX_COST);
+	    if (open) *open = NULL;
 		if (ToulBar2::verbose >= 1) cout << ") NOT FOUND for cluster " <<  cluster->getId() << endl;
 		return false;
 	}
@@ -375,12 +409,13 @@ void Separator::resetOpt()
 {
 	TNoGoods::iterator it = nogoods.begin();
 	while(it != nogoods.end()) {
-		(it->second).second = false;
+		(it->second).second = MAX_COST;
+		(it->second).third.clear();
 		++it;
 	}
 }
 
-void Separator::print(ostream& os) {
+void Separator::print(ostream& os)
 {
 	os << this << " nogoods(";
 	Double totaltuples = 1;
@@ -411,19 +446,19 @@ void Separator::print(ostream& os) {
 }
 
 
-}
-
-
 /*
  * Cluster class
  *
  */
 
-Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL), lb(MIN_COST, &wcsp->getStore()->storeCost), lbRDS(MIN_COST), active(true, &wcsp->getStore()->storeInt), countElimVars(1, &wcsp->getStore()->storeBigInteger)
-{
-}
+Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL),
+                                            lb(MIN_COST, &wcsp->getStore()->storeCost), ub(MAX_COST), lbRDS(MIN_COST),
+                                            active(true, &wcsp->getStore()->storeInt),
+                                            countElimVars(1, &wcsp->getStore()->storeBigInteger),
+                                            cp(NULL), open(NULL), hybridBFSLimit(LONGLONG_MAX), nbBacktracks(0) {}
 
 Cluster::~Cluster() {
+    delete cp;
 }
 
 void Cluster::addVar( Variable* x ) { vars.insert(x->wcspIndex); }
@@ -651,6 +686,10 @@ bool Cluster::isEdge( Cluster* c ) {
 void Cluster::setup()
 {
   	if(sep) sep->setup(this);
+  	if (ToulBar2::hybridBFS) {
+  	    if (cp) delete cp;
+  	    cp = new Solver::CPStore(wcsp->getStore());
+  	}
 }
 
 void Cluster::accelerateDescendants()

@@ -154,6 +154,10 @@ bool ToulBar2::learning;
 
 string ToulBar2::incop_cmd;
 
+Long ToulBar2::hybridBFS;
+
+bool ToulBar2::verifyOpt;
+Cost ToulBar2::verifiedOptimum;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
@@ -262,6 +266,10 @@ void tb2init()
     ToulBar2::learning = false;
 
     ToulBar2::incop_cmd = "";
+    ToulBar2::hybridBFS = 0;
+
+    ToulBar2::verifyOpt = false;
+    ToulBar2::verifiedOptimum = MAX_COST;
 }
 
 /*
@@ -274,7 +282,7 @@ WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
 			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(false),
-			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
+			isPartOfOptimalSolution(0, &s->storeInt), elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
 	if (ToulBar2::vac) vac = new VACExtension(this);

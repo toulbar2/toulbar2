@@ -526,6 +526,7 @@ bool EnumeratedVariable::verifyDEE()
 void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
 	     if (newInf > sup) {THROWCONTRADICTION;
          } else {
@@ -541,9 +542,13 @@ void EnumeratedVariable::increaseFast(Value newInf)
     }
 }
 
-void EnumeratedVariable::increase(Value newInf)
+void EnumeratedVariable::increase(Value newInf, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) < newInf) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
+#endif
     if (newInf > inf) {
       if (newInf > sup) {THROWCONTRADICTION;
 	  } else {
@@ -565,6 +570,7 @@ void EnumeratedVariable::increase(Value newInf)
 void EnumeratedVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -580,9 +586,13 @@ void EnumeratedVariable::decreaseFast(Value newSup)
     }
 }
 
-void EnumeratedVariable::decrease(Value newSup)
+void EnumeratedVariable::decrease(Value newSup, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) > newSup) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
+#endif
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -604,6 +614,7 @@ void EnumeratedVariable::decrease(Value newSup)
 void EnumeratedVariable::removeFast(Value value)
 {
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) != value);
     if (value == inf) increaseFast(value + 1);
     else if (value == sup) decreaseFast(value - 1);
     else if (canbe(value)) {
@@ -614,9 +625,13 @@ void EnumeratedVariable::removeFast(Value value)
     }
 }
 
-void EnumeratedVariable::remove(Value value)
+void EnumeratedVariable::remove(Value value, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) == value) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) != value);
+#endif
     if (value == inf) increase(value + 1);
     else if (value == sup) decrease(value - 1);
     else if (canbe(value)) {
@@ -642,9 +657,13 @@ void EnumeratedVariable::assignWhenEliminated(Value newValue)
         maxCost = MIN_COST;
 }
 
-void EnumeratedVariable::assign(Value newValue)
+void EnumeratedVariable::assign(Value newValue, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) == newValue);
+#endif
     if (unassigned() || getValue() != newValue) {
         if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
