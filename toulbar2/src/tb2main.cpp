@@ -1618,8 +1618,9 @@ int _tmain(int argc, TCHAR * argv[])
 		ToulBar2::approximateCountingBTD = false;
 		ToulBar2::allSolutions = false;
 	}
-	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1)
+	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1)
 	{
+        cout << "Warning! Cannot find all solutions with RDS-like search methods in optimization (i.e., ub > 1)." << endl;
 		ub = 1;
 	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
