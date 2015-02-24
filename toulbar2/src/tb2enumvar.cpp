@@ -402,7 +402,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
 	Cost totaldiffcostb = costb;
 	ConstraintLink residue = ((dee)?DEE:DEE2[a * getDomainInitSize() + b]);
 	ConstraintLink residue2 = ((dee)?DEE:DEE2[b * getDomainInitSize() + a]);
-	if (costa <= costb && residue.constr && residue.constr->connected() && residue.constr->getVar(residue.scopeIndex) == this) {
+	if (costa <= costb && residue.constr && residue.constr->connected() && residue.scopeIndex < residue.constr->arity() && residue.constr->getVar(residue.scopeIndex) == this) {
 		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue.constr->getMaxCost(residue.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
@@ -410,7 +410,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
         if (totaldiffcostb <= getMaxCost()) totaldiffcostb += costs.second.second;
         if (totaldiffcosta > costb && totaldiffcostb > costa) return;
 	}
-	if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.constr->getVar(residue2.scopeIndex) == this) {
+	if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.scopeIndex < residue2.constr->arity() && residue2.constr->getVar(residue2.scopeIndex) == this) {
 		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue2.constr->getMaxCost(residue2.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
