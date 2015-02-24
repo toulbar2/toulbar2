@@ -23,25 +23,34 @@ class Solver : public WeightedCSPSolver
 public:
     class OpenNode
     {
+        Cost cost;      // global lower bound associated to the open node
     public:
-        Cost cost;      // lower bound associated to the open node
         int first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
         int last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
         OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
         bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and deepest depth next
+
+        Cost getCost(Cost delta = MIN_COST) const {return cost - delta;}
     };
 
     class OpenList : public priority_queue<OpenNode>
     {
-    public:
-        Cost glb;   // current cluster lower bound built from closed nodes
+        Cost clb;   // current cluster lower bound built from closed nodes
         Cost cub;   // current cluster upper bound
+    public:
+        OpenList(Cost lb, Cost ub) : clb(lb), cub(ub) {}
+        OpenList() : clb(MAX_COST), cub(MAX_COST) {}
 
-        OpenList(Cost lb, Cost ub) : glb(lb), cub(ub) {}
-        OpenList() : glb(MAX_COST), cub(MAX_COST) {}
+        Cost getLb(Cost delta = MIN_COST) const {return clb - delta;}
+        void setLb(Cost lb, Cost delta = MIN_COST) {clb = lb + delta;}
+        void updateLb(Cost lb, Cost delta = MIN_COST) {clb = MIN(clb, lb + delta);}
 
-        void clear() {glb=MAX_COST; cub=MAX_COST; while (!empty()) pop();}
+        Cost getUb(Cost delta = MIN_COST) const {return cub - delta;}
+        void setUb(Cost ub, Cost delta = MIN_COST) {cub = ub + delta;}
+        void updateUb(Cost ub, Cost delta = MIN_COST) {cub = MIN(cub, ub + delta);}
+
+        void clear() {clb=MAX_COST; cub=MAX_COST; while (!empty()) pop();}
     };
 
     typedef enum {
@@ -72,7 +81,7 @@ public:
     };
 
     void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
-    void addOpenNode(CPStore &cp, OpenList &open, Cost lb);
+    void addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta = MIN_COST);     ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore &cp, OpenNode node);
 
 protected:

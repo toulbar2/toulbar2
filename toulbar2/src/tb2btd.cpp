@@ -338,7 +338,7 @@ pair<Cost,Cost> Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cu
 		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hybridBFSLimit);
 		bestlb = MAX(bestlb, wcsp->getLb());
 		if (cluster->nbBacktracks >= cluster->hybridBFSLimit) {
-		    addOpenNode(*(cluster->cp), *(cluster->open), bestlb);
+		    addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta());
 		} else {
 		    pair<Cost,Cost> res = recursiveSolve(cluster, bestlb, cub);
 	        clb = MIN(res.first, clb);

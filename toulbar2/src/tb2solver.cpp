@@ -550,9 +550,10 @@ void Solver::assign(int varIndex, Value value, bool reverse)
 	  cout << "\r" << store->getDepth();
 	  if (ToulBar2::hybridBFS) {
 	      if (wcsp->getTreeDec()) {
-              if (wcsp->getTreeDec()->getCurrentCluster()->open->size() > 0) cout << " [" << wcsp->getTreeDec()->getCurrentCluster()->open->top().cost << "," << wcsp->getUb() << "]/" << wcsp->getTreeDec()->getCurrentCluster()->open->size() << "/" << wcsp->getTreeDec()->getCurrentCluster()->cp->size() << " " << (100. * (wcsp->getUb() - wcsp->getTreeDec()->getCurrentCluster()->open->top().cost) / wcsp->getUb()) << "%";
+	          Cost delta = wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta();
+              if (wcsp->getTreeDec()->getCurrentCluster()->open->size() > 0) cout << " [" << wcsp->getTreeDec()->getCurrentCluster()->open->top().getCost(delta) << "," << wcsp->getUb() << "]/" << wcsp->getTreeDec()->getCurrentCluster()->open->size() << "/" << wcsp->getTreeDec()->getCurrentCluster()->cp->size() << " " << (100. * (wcsp->getUb() - wcsp->getTreeDec()->getCurrentCluster()->open->top().getCost(delta)) / wcsp->getUb()) << "%";
 	      } else {
-	          if (open->size() > 0) cout << " [" << open->top().cost << "," << wcsp->getUb() << "]/" << open->size() << "/" << cp->size() << " " << (100. * (wcsp->getUb() - open->top().cost) / wcsp->getUb()) << "%";
+	          if (open->size() > 0) cout << " [" << open->top().getCost() << "," << wcsp->getUb() << "]/" << open->size() << "/" << cp->size() << " " << (100. * (wcsp->getUb() - open->top().getCost()) / wcsp->getUb()) << "%";
 	      }
 	  }
 	  cout << " " << exp(((Cost) (*((StoreCost *) searchSize)))/10e6);
@@ -937,7 +938,7 @@ void Solver::newSolution()
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
 
         if(ToulBar2::allSolutions) {
-        	cout << nbSol << " solution: ";
+        	cout << nbSol << " solution(" << wcsp->getLb() << "): ";
         }
 
         for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
@@ -1048,6 +1049,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
     if (ToulBar2::hybridBFS) {
         CPStore *cp_ = NULL;
         OpenList *open_ = NULL;
+        Cost delta = MIN_COST;
         if (cluster) {
             // BFS with BTD on current cluster (can be root or not)
             assert(cluster->cp);
@@ -1056,6 +1058,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 if (!cluster->open) cluster->open = new OpenList();
                 cluster->setUb(cub); // global problem upper bound
             } else {
+                delta = cluster->getCurrentDelta();
                 if (!cluster->open) {
                     cluster->nogoodRec(clb, MAX_COST, &cluster->open); // create an initial empty open list
                     cluster->setUb(MAX_COST); // no initial solution found for this cluster
@@ -1084,23 +1087,23 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
             hybridBFSLimit = nbBacktracks;
         }
         cp_->store();
-        if (open_->size() == 0 || (cluster && (clb >= open_->glb || cub > open_->cub))) { // start a new list of open nodes if needed
+        if (open_->size() == 0 || (cluster && (clb >= open_->getLb(delta) || cub > open_->getUb(delta)))) { // start a new list of open nodes if needed
             open_->clear();
-            addOpenNode(*cp_, *open_, clb);
-            open_->glb = cub;
-            open_->cub = cub;
+            addOpenNode(*cp_, *open_, clb, delta);
+            open_->setLb(cub, delta);
+            open_->setUb(cub, delta);
         } else nbHybridContinue++;
         nbHybrid++;
         Cost initiallb = clb;
         Cost initialub = cub;
-        clb = MIN(cub, MAX(clb, open_->top().cost));
-        Cost glb = MIN(cub, open_->glb);
+        clb = MIN(cub, MAX(clb, open_->top().getCost(delta)));
+        Cost glb = MIN(cub, open_->getLb(delta));
         assert(clb <= glb);
         assert(glb <= cub);
-        open_->glb = glb;
-        open_->cub = cub;
-        if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << open_->size() << " " << open_->top().cost << " " << open_->glb << " " << open_->cub << endl;
-        while (clb < cub && !open_->empty() && !CUT(open_->top().cost, cub) && (!cluster || (open_->top().cost <= initiallb && cub == initialub))) {
+        open_->setLb(glb, delta);
+        open_->setUb(cub, delta);
+        if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getLb(delta) << " " << open_->getUb(delta) << endl;
+        while (clb < cub && !open_->empty() && !CUT(open_->top().getCost(delta), cub) && (!cluster || (open_->top().getCost(delta) <= initiallb && cub == initialub))) {
             if (cluster) {
                 cluster->hybridBFSLimit += ToulBar2::hybridBFS;
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -1115,10 +1118,10 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 open_->pop();
                 if (ToulBar2::verbose >= 1 || ToulBar2::debug>=2) {
                     if (wcsp->getTreeDec()) cout << "C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << " ";
-                    cout << "[ " << nd.cost << ", " << cub <<  "] ( " << open_->size() << " open)" << endl;
+                    cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << " open)" << endl;
                 }
                 restore(*cp_, nd);
-                Cost bestlb = MAX(nd.cost, wcsp->getLb());
+                Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
                 bestlb = MAX(bestlb, clb);
                 if (cluster) {
                     pair<Cost,Cost> res = recursiveSolve(cluster, bestlb, cub);
@@ -1126,11 +1129,11 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                     assert(res.first >= bestlb);
                     assert(res.second <= cub);
                     assert(res.second == cub || cluster->getUb() == res.second);
-                    assert(open_->empty() || open_->top().cost >= nd.cost);
+                    assert(open_->empty() || open_->top().getCost(delta) >= nd.getCost(delta));
                     glb = MIN(glb, res.first);
-                    open_->glb = MIN(open_->glb, glb);
+                    open_->updateLb(glb, delta);
                     cub = MIN(cub, res.second);
-                    open_->cub = MIN(open_->cub, cub);
+                    open_->updateUb(cub, delta);
                 } else {
                     recursiveSolve(bestlb);
                     cub = wcsp->getUb();
@@ -1151,8 +1154,8 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
         if (open_->empty()) {
             clb = glb;
         } else {
-            clb = MIN(cub, MAX(clb, open_->top().cost));
-            if (CUT(open_->top().cost, cub)) open_->clear();      // clear overcost priority queue
+            clb = MIN(cub, MAX(clb, MIN(glb, open_->top().getCost(delta))));
+            if (CUT(open_->top().getCost(delta), cub)) open_->clear();      // clear overcost priority queue
         }
         assert(clb >= initiallb && cub <= initialub);
     } else {
@@ -1648,15 +1651,15 @@ void Solver::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool re
     }
 }
 
-void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb)
+void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
 {
     int idx = cp.index;
     if (ToulBar2::verbose >= 1) {
         if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-        cout << "add open node " << lb << " (" << cp.start << ", " << idx << ")" << endl;
+        cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
     }
     assert(cp.start <= idx);
-    open.push(OpenNode(lb, cp.start, idx));
+    open.push(OpenNode(lb + delta, cp.start, idx));
     cp.stop = max(cp.stop, idx);
 }
 
@@ -1664,7 +1667,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
 {
     if (ToulBar2::verbose >= 1) {
         if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-        cout << "restore open node " << nd.cost << " (" << nd.first << ", " << nd.last << ")" << endl;
+        cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
     }
     for (int idx = nd.first; idx < nd.last; ++idx) {
         assert(idx < cp.size());
@@ -1697,7 +1700,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
 
 //void Solver::restore(CPStore &cp, OpenNode nd)
 //{
-//    if (ToulBar2::verbose >= 1) cout << "restore open node " << nd.cost << " (" << nd.first << ", " << nd.last << ")" << endl;
+//    if (ToulBar2::verbose >= 1) cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
 //    assert(nd.last >= nd.first);
 //
 //    unsigned int maxsize = nd.last - nd.first;
@@ -1760,5 +1763,5 @@ void Solver::restore(CPStore &cp, OpenNode nd)
 //        }
 //    }
 //    wcsp->propagate();
-//    if (wcsp->getLb() != nd.cost) cout << "***** node cost: " << nd.cost << " but lb: " << wcsp->getLb() << endl;
+//    //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
 //}
