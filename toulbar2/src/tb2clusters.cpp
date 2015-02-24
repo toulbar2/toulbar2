@@ -365,13 +365,14 @@ void Separator::solRec(Cost ub)
 {
 	WCSP* wcsp = cluster->getWCSP();
 
-
+    Cost deltares = MIN_COST;
 	int i = 0;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
 	  assert(wcsp->assigned(*it));
 	  Value val = wcsp->getValue(*it);
 	  t[i] = val + CHAR_FIRST;	 // build the tuple
+      deltares += delta[i][val];
 	  ++it;
 	  i++;
 	}
@@ -380,7 +381,7 @@ void Separator::solRec(Cost ub)
 //  	TSols::iterator itsol = solutions.find(t);
 //  	if(itsol != solutions.end()) {
 //  		p = itsol->second;
-//  	    assert(p.first > ub);
+//  	    assert(p.first > ub + deltares);
 //  	}
 
 	wcsp->restoreSolution(cluster);
@@ -397,10 +398,10 @@ void Separator::solRec(Cost ub)
 		++it;
 	}
 
-	solutions[t] = TPairSol(ub,s);
+	solutions[t] = TPairSol(ub + deltares,s);
 
 	if (ToulBar2::verbose >= 1) {
-		cout << "recording solution  " << " cost: " << ub;
+		cout << "recording solution  " << " cost: " << ub << " + delta: " << deltares;
 		Cout << " sol: " << s <<  " sep: " << t << endl;
 	}
 }
@@ -663,7 +664,7 @@ void Cluster::getSolution( TAssign& sol )
 			if (!isSepVar(*it)) {
 				sol[*it] = ((EnumeratedVariable*) wcsp->getVar(*it))->toValue(s[i] - CHAR_FIRST);
 				//				cout << *it << " := " << sol[*it] << endl;
-				wcsp->setBestValue(*it, sol[*it]);
+				if (!ToulBar2::verifyOpt) wcsp->setBestValue(*it, sol[*it]);
 				i++;
 			}
 			++it;

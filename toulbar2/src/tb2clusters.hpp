@@ -187,12 +187,13 @@ class Cluster
       void 			increaseLb( Cost addToLb ) { lb += addToLb; }
       Cost          getUb()  { return ub; }
       void          setUb(Cost c) {ub = c;}
-	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return MAX(lbRDS - delta, MIN_COST); }
+	  Cost		    getLbRDS() { Cost delta = getCurrentDelta(); return MAX(lbRDS - delta, MIN_COST); }
 	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
 	  Cost	        getLbRec();
 	  Cost	        getLbRecRDS();
 
 	  void          addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
+	  Cost          getCurrentDelta() {return (sep)?sep->getCurrentDelta():MIN_COST;}
 
 	  void          nogoodRec( Cost clb, Cost cub, Solver::OpenList **open = NULL ) { if(sep) sep->set(clb,cub,open); }
       bool          nogoodGet( Cost &clb, Cost &cub, Solver::OpenList **open = NULL ) { return sep->get(clb,cub,open); }
