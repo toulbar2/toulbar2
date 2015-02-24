@@ -1774,7 +1774,7 @@ void WCSP::dump(ostream& os, bool original) {
 	                / 2);
 	    pb << "// number of constraint = " << res << " number of variable=  " << numberOfVariables() << endl;
 	    for (unsigned int i = 0; i < constrs.size(); i++)
-	        if (constrs[i]->connected()) {
+	        if (!constrs[i]->isSep() && constrs[i]->connected()) {
 	            //            pb << constrs[i]->getVar(0)->wcspIndex + 1;
 	            //            for (int j=1; j<constrs[i]->arity(); j++) {
 	            //                pb << " " << constrs[i]->getVar(j)->wcspIndex + 1;
