@@ -18,7 +18,6 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt
     rm -f toolbar_sol
-    rm -f order
     rm -f sol
     randomfile=nary-$n-$d-$tight-$bctr-$tctr-$nary-$seed 
     ./toulbar2 -random=$randomfile -C=$K -z > /dev/null
@@ -39,7 +38,6 @@ while (( $n < $nend )) ; do
     if [[ $ub1 != $ub2 ]] ; then
       echo "error found"
       mv problem.wcsp error$nerr.wcsp
-#      mv order        o$nerr
       nerr=`expr $nerr + 1`
     fi
     if [[ $ub1 != $ub3 ]] ; then
@@ -57,7 +55,6 @@ rm -f problem.wcsp
 rm -f toulbar2_opt
 rm -f toolbar_opt
 rm -f toolbar_sol
-rm -f order
 rm -f sol
 rm -f problem.dot
 rm -f problem.degree
