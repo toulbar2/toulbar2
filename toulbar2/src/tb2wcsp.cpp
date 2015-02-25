@@ -2891,14 +2891,13 @@ void WCSP::buildTreeDecomposition() {
 		for (unsigned int i=0; i<numberOfConstraints(); i++) if (constrs[i]->getCluster()==-1) constrs[i]->assignCluster();
 		for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && elimBinConstrs[i]->getCluster()==-1) elimBinConstrs[i]->assignCluster();
 		for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getCluster()==-1) elimTernConstrs[i]->assignCluster();
-		// check if ternary constraint cluster assignments are valid
-#ifndef NDEBUG
+		// check if ternary constraint cluster assignments are valid and do corrections if needed
 		for (unsigned int i=0; i<numberOfConstraints(); i++) {
 		  Constraint* ctr = getCtr(i);
 		  if (ctr->connected() && !ctr->isSep()) {
 			if(ctr->arity() == 3) {
 			  TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-			  //			  tctr->setDuplicates();
+			  tctr->setDuplicates();
 			  assert(tctr->xy->getCluster() == tctr->getCluster() &&
 					 tctr->xz->getCluster() == tctr->getCluster() &&
 					 tctr->yz->getCluster() == tctr->getCluster() );
@@ -2910,14 +2909,13 @@ void WCSP::buildTreeDecomposition() {
 			if (ctr->connected() && !ctr->isSep()) {
 			  if(ctr->arity() == 3) {
 				TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-				//				tctr->setDuplicates();
+				tctr->setDuplicates();
 				assert(tctr->xy->getCluster() == tctr->getCluster() &&
 					   tctr->xz->getCluster() == tctr->getCluster() &&
 					   tctr->yz->getCluster() == tctr->getCluster() );
 			  }
 			}
 		  }
-#endif
 	}
 }
 
