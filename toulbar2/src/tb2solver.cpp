@@ -1087,23 +1087,16 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
             hybridBFSLimit = nbBacktracks;
         }
         cp_->store();
-        if (open_->size() == 0 || (cluster && (clb >= open_->getLb(delta) || cub > open_->getUb(delta)))) { // start a new list of open nodes if needed
-            open_->clear();
-            addOpenNode(*cp_, *open_, clb, delta);
-            open_->setLb(cub, delta);
-            open_->setUb(cub, delta);
+        if (open_->size() == 0 || (cluster && (clb >= open_->getClosedNodesLb(delta) || cub > open_->getUb(delta)))) { // start a new list of open nodes if needed
+            open_->init(this, cp_, clb, cub, delta);
         } else nbHybridContinue++;
         nbHybrid++;
         Cost initiallb = clb;
         Cost initialub = cub;
-        clb = MIN(cub, MAX(clb, open_->top().getCost(delta)));
-        Cost glb = MIN(cub, open_->getLb(delta));
-        assert(clb <= glb);
-        assert(glb <= cub);
-        open_->setLb(glb, delta);
-        open_->setUb(cub, delta);
-        if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getLb(delta) << " " << open_->getUb(delta) << endl;
-        while (clb < cub && !open_->empty() && !CUT(open_->top().getCost(delta), cub) && (!cluster || (open_->top().getCost(delta) <= initiallb && cub == initialub))) {
+        open_->updateUb(cub, delta);
+        clb = MAX(clb, open_->getLb(delta));
+        if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
+        while (clb < cub && !open_->finished() && (!cluster || (open_->getLb(delta) <= initiallb && cub == initialub))) {
             if (cluster) {
                 cluster->hybridBFSLimit += ToulBar2::hybridBFS;
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -1118,7 +1111,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 open_->pop();
                 if (ToulBar2::verbose >= 1 || ToulBar2::debug>=2) {
                     if (wcsp->getTreeDec()) cout << "C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << " ";
-                    cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << " open)" << endl;
+                    cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << " still open)" << endl;
                 }
                 restore(*cp_, nd);
                 Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
@@ -1130,14 +1123,13 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                     assert(res.second <= cub);
                     assert(res.second == cub || cluster->getUb() == res.second);
                     assert(open_->empty() || open_->top().getCost(delta) >= nd.getCost(delta));
-                    glb = MIN(glb, res.first);
-                    open_->updateLb(glb, delta);
+                    open_->updateClosedNodesLb(res.first, delta);
+                    open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
-                    open_->updateUb(cub, delta);
                 } else {
                     recursiveSolve(bestlb);
                     cub = wcsp->getUb();
-                    glb = cub;
+                    open_->updateUb(cub);
                 }
             } catch (Contradiction) {
                 wcsp->whenContradiction();
@@ -1149,13 +1141,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 if (cluster) cluster->hybridBFSLimit = LONGLONG_MAX;
                 else hybridBFSLimit = LONGLONG_MAX;
             }
-        }
-        assert(clb <= glb);
-        if (open_->empty()) {
-            clb = glb;
-        } else {
-            clb = MIN(cub, MAX(clb, MIN(glb, open_->top().getCost(delta))));
-            if (CUT(open_->top().getCost(delta), cub)) open_->clear();      // clear overcost priority queue
+            clb = MAX(clb, open_->getLb(delta));
         }
         assert(clb >= initiallb && cub <= initialub);
     } else {
@@ -1629,6 +1615,15 @@ int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)
 
 /* Hybrid Best-First/Depth-First Search */
 
+void Solver::OpenList::init(Solver *solver, CPStore *cp, Cost lb, Cost ub, Cost delta)
+{
+    assert(lb <= ub);
+    clb = MAX(MIN_COST, ub + delta);
+    cub = MAX(MIN_COST, ub + delta);
+    while (!empty()) pop();
+    solver->addOpenNode(*cp, *this, lb, delta);
+}
+
 void Solver::CPStore::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse)
 {
     if (ToulBar2::verbose >= 1) cout << "add choice point " << CPOperation[op] << ((reverse)?"*":"") << " (" << varIndex << ", " << value << ") at position " << index  << endl;
@@ -1659,7 +1654,7 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
         cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
     }
     assert(cp.start <= idx);
-    open.push(OpenNode(lb + delta, cp.start, idx));
+    open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx));
     cp.stop = max(cp.stop, idx);
 }
 

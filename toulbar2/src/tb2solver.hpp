@@ -31,24 +31,29 @@ public:
         OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
         bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and deepest depth next
 
-        Cost getCost(Cost delta = MIN_COST) const {return cost - delta;}
+        Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
     };
 
+    class CPStore;
     class OpenList : public priority_queue<OpenNode>
     {
-        Cost clb;   // current cluster lower bound built from closed nodes
-        Cost cub;   // current cluster upper bound
+        Cost clb;   // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
+        Cost cub;   // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:
         OpenList(Cost lb, Cost ub) : clb(lb), cub(ub) {}
         OpenList() : clb(MAX_COST), cub(MAX_COST) {}
+        void init(Solver *solver, CPStore *cp, Cost lb, Cost ub, Cost delta = MIN_COST);
 
-        Cost getLb(Cost delta = MIN_COST) const {return clb - delta;}
-        void setLb(Cost lb, Cost delta = MIN_COST) {clb = lb + delta;}
-        void updateLb(Cost lb, Cost delta = MIN_COST) {clb = MIN(clb, lb + delta);}
+        bool finished() const {assert(clb <= cub); return (empty() || CUT(top().getCost(), clb));}
+        Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty()?MAX_COST:top().getCost(delta)));}
 
-        Cost getUb(Cost delta = MIN_COST) const {return cub - delta;}
-        void setUb(Cost ub, Cost delta = MIN_COST) {cub = ub + delta;}
-        void updateUb(Cost ub, Cost delta = MIN_COST) {cub = MIN(cub, ub + delta);}
+        Cost getClosedNodesLb(Cost delta = MIN_COST) const {return MAX(MIN_COST, clb - delta);}
+        void setClosedNodesLb(Cost lb, Cost delta = MIN_COST) {clb = MAX(MIN_COST, lb + delta); assert(clb <= cub);}
+        void updateClosedNodesLb(Cost lb, Cost delta = MIN_COST) {clb = MIN(clb, MAX(MIN_COST, lb + delta));}
+
+        Cost getUb(Cost delta = MIN_COST) const {return MAX(MIN_COST, cub - delta);}
+        void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
+        void updateUb(Cost ub, Cost delta = MIN_COST) {Cost tmpub = MAX(MIN_COST, ub + delta); cub = MIN(cub, tmpub); clb = MIN(clb, tmpub);}
 
         void clear() {clb=MAX_COST; cub=MAX_COST; while (!empty()) pop();}
     };
