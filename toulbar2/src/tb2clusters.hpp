@@ -121,7 +121,7 @@ class Cluster
 
   Separator* 	      sep; // associated separator with parent cluster
   StoreCost           lb; // current cluster lower bound deduced by propagation
-  Cost                ub; // current cluster upper bound
+  Cost                ub; // current cluster best known solution cost
   Cost				  lbRDS; // global cluster lower bound found by RDS
   StoreInt			  active; // unactive if a nogood including this cluster has been used by propagation
 

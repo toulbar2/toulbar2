@@ -187,21 +187,21 @@ void Separator::set( Cost clb, Cost cub, Solver::OpenList **open ) {
             assert(itng != nogoods.end());
             assert(*open == &itng->second.third);
             itng->second.first = MAX(itng->second.first, clb + deltares);
-            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)));
+            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:MIN_COST)));
             if (ToulBar2::verbose >= 1) cout << " Learn nogood " << itng->second.first << ", cub= " <<  itng->second.second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
             assert(itng == nogoods.end());
-            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)), Solver::OpenList());
+            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:MIN_COST)), Solver::OpenList());
             if (ToulBar2::verbose >= 1) cout << " Learn nogood " << nogoods[t].first << ", cub= " <<  nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
             *open = &nogoods[t].third;
         }
     } else {
         if (itng == nogoods.end()) {
-            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)), Solver::OpenList());
+            nogoods[t] = make_triplet(MAX(MIN_COST, clb + deltares), MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:MIN_COST)), Solver::OpenList());
             if (ToulBar2::verbose >= 1) cout << " Learn nogood " << nogoods[t].first << ", cub= " <<  nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
             itng->second.first = MAX(itng->second.first, clb + deltares);
-            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:0)));
+            itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST)?deltares:MIN_COST)));
             if (ToulBar2::verbose >= 1) cout << " Learn nogood " << itng->second.first << ", cub= " <<  itng->second.second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         }
     }
@@ -234,26 +234,25 @@ Cost Separator::getCurrentDelta() {
 	Cost sumdelta = MIN_COST;
 	TVars::iterator it = vars.begin();
 	while(it != vars.end()) {
+	    if (wcsp->assigned(*it)) {
+	        Value val = wcsp->getValue(*it);
+	        sumdelta += delta[i][val];
+	    } else {
 		  EnumeratedVariable* x = (EnumeratedVariable*) wcsp->getVar(*it);
 		  if (wcsp->td->isDeltaModified(x->wcspIndex)) {
 			Cost del = -MAX_COST;
-			Value val;
-			if(x->assigned()) {
-			  val = x->getValue();
-			  del = delta[i][val];
-			} else {
-			  for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
-				val = *itx;
-				// Cost unaryc = x->getCost(val);
-				// Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
-				if(del < delta[i][val]) del = delta[i][val];
-			  }
+			for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
+			    Value val = *itx;
+			    // Cost unaryc = x->getCost(val);
+			    // Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
+			    if(del < delta[i][val]) del = delta[i][val];
 			}
 			assert(del > -MAX_COST);
 			sumdelta += del;
 		  }
-		  ++it;
-		  i++;
+	    }
+	    ++it;
+	    i++;
 	}
 	return sumdelta;
 }
@@ -1858,7 +1857,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable *x, Value value, C
   if(! cy->isDescendant( cx ) ) {
 	int ckid,posx;
 	assert(x->clusters.size() > 0);
-	if (cost>MIN_COST && !deltaModified[x->wcspIndex]) deltaModified[x->wcspIndex] = true;
+	if (cost != MIN_COST && !deltaModified[x->wcspIndex]) deltaModified[x->wcspIndex] = true;
 	x->beginCluster();
 	while( x->nextCluster(ckid,posx) ) {
 	  Cluster* ck = getCluster( ckid );
