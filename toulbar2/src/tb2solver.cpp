@@ -1658,105 +1658,106 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
     cp.stop = max(cp.stop, idx);
 }
 
-void Solver::restore(CPStore &cp, OpenNode nd)
-{
-    if (ToulBar2::verbose >= 1) {
-        if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-        cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
-    }
-    for (int idx = nd.first; idx < nd.last; ++idx) {
-        assert(idx < cp.size());
-        if (ToulBar2::verbose >= 1) cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse)?"*":"") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx  << endl;
-        if (ToulBar2::verbose >= 1) cout << *((WCSP *) wcsp)->getVar(cp[idx].varIndex) << endl;
-        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
-        switch (cp[idx].op) {
-        case CP_ASSIGN:
-            if (cp[idx].reverse && idx < nd.last-1) remove(cp[idx].varIndex, cp[idx].value);
-            else assign(cp[idx].varIndex, cp[idx].value);
-            break;
-        case CP_REMOVE:
-            if (cp[idx].reverse && idx < nd.last-1) assign(cp[idx].varIndex, cp[idx].value);
-            else remove(cp[idx].varIndex, cp[idx].value);
-            break;
-        case CP_INCREASE:
-            if (cp[idx].reverse && idx < nd.last-1) decrease(cp[idx].varIndex, cp[idx].value - 1);
-            else increase(cp[idx].varIndex, cp[idx].value);
-            break;
-        case CP_DECREASE:
-            if (cp[idx].reverse && idx < nd.last-1) increase(cp[idx].varIndex, cp[idx].value + 1);
-            else decrease(cp[idx].varIndex, cp[idx].value);
-            break;
-        default:
-            cerr << "unknown choice point for hybrid best first search!!!" << endl;
-            exit(EXIT_FAILURE);
-        }
-    }
-}
-
+//// BUG: not compatible with boosting search by variable elimination (default dummy assignment may be incompatible with restored choice point)
 //void Solver::restore(CPStore &cp, OpenNode nd)
 //{
-//    if (ToulBar2::verbose >= 1) cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
-//    assert(nd.last >= nd.first);
-//
-//    unsigned int maxsize = nd.last - nd.first;
-//    int assignLS[maxsize];
-//    Value valueLS[maxsize];
-//    unsigned int size = 0;
-//    for (int idx = nd.first; idx < nd.last; ++idx) {
-//        assert(idx < cp.size());
-//        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
-//        if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last-1)) ||
-//            (cp[idx].op == CP_REMOVE && cp[idx].reverse && idx < nd.last-1)) {
-//            assignLS[size] = cp[idx].varIndex;
-//            valueLS[size] = cp[idx].value;
-//            size++;
-//        }
+//    if (ToulBar2::verbose >= 1) {
+//        if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+//        cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
 //    }
-//    wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
 //    for (int idx = nd.first; idx < nd.last; ++idx) {
 //        assert(idx < cp.size());
 //        if (ToulBar2::verbose >= 1) cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse)?"*":"") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx  << endl;
 //        if (ToulBar2::verbose >= 1) cout << *((WCSP *) wcsp)->getVar(cp[idx].varIndex) << endl;
-//        nbNodes++;
+//        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
 //        switch (cp[idx].op) {
 //        case CP_ASSIGN:
-//            if (cp[idx].reverse && idx < nd.last-1) {
-//                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-//                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
-//            } else addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+//            if (cp[idx].reverse && idx < nd.last-1) remove(cp[idx].varIndex, cp[idx].value);
+//            else assign(cp[idx].varIndex, cp[idx].value);
 //            break;
 //        case CP_REMOVE:
-//            if (cp[idx].reverse && idx < nd.last-1) {
-//                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
-//            } else {
-//                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-//                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
-//            }
+//            if (cp[idx].reverse && idx < nd.last-1) assign(cp[idx].varIndex, cp[idx].value);
+//            else remove(cp[idx].varIndex, cp[idx].value);
 //            break;
 //        case CP_INCREASE:
-//            if (cp[idx].reverse && idx < nd.last-1) {
-//                wcsp->decrease(cp[idx].varIndex, cp[idx].value - 1);
-//                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value - 1, false);
-//            } else {
-//                wcsp->increase(cp[idx].varIndex, cp[idx].value);
-//                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value, false);
-//            }
+//            if (cp[idx].reverse && idx < nd.last-1) decrease(cp[idx].varIndex, cp[idx].value - 1);
+//            else increase(cp[idx].varIndex, cp[idx].value);
 //            break;
 //        case CP_DECREASE:
-//            if (cp[idx].reverse && idx < nd.last-1) {
-//                wcsp->increase(cp[idx].varIndex, cp[idx].value + 1);
-//                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value + 1, false);
-//            }
-//            else {
-//                wcsp->decrease(cp[idx].varIndex, cp[idx].value);
-//                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value, false);
-//            }
+//            if (cp[idx].reverse && idx < nd.last-1) increase(cp[idx].varIndex, cp[idx].value + 1);
+//            else decrease(cp[idx].varIndex, cp[idx].value);
 //            break;
 //        default:
 //            cerr << "unknown choice point for hybrid best first search!!!" << endl;
 //            exit(EXIT_FAILURE);
 //        }
 //    }
-//    wcsp->propagate();
-//    //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
 //}
+
+void Solver::restore(CPStore &cp, OpenNode nd)
+{
+    if (ToulBar2::verbose >= 1) cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
+    assert(nd.last >= nd.first);
+
+    unsigned int maxsize = nd.last - nd.first;
+    int assignLS[maxsize];
+    Value valueLS[maxsize];
+    unsigned int size = 0;
+    for (int idx = nd.first; idx < nd.last; ++idx) {
+        assert(idx < cp.size());
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
+        if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last-1)) ||
+            (cp[idx].op == CP_REMOVE && cp[idx].reverse && idx < nd.last-1)) {
+            assignLS[size] = cp[idx].varIndex;
+            valueLS[size] = cp[idx].value;
+            size++;
+        }
+    }
+    wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
+    for (int idx = nd.first; idx < nd.last; ++idx) {
+        assert(idx < cp.size());
+        if (ToulBar2::verbose >= 1) cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse)?"*":"") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx  << endl;
+        if (ToulBar2::verbose >= 1) cout << *((WCSP *) wcsp)->getVar(cp[idx].varIndex) << endl;
+        nbNodes++;
+        switch (cp[idx].op) {
+        case CP_ASSIGN:
+            if (cp[idx].reverse && idx < nd.last-1) {
+                wcsp->remove(cp[idx].varIndex, cp[idx].value);
+                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+            } else addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+            break;
+        case CP_REMOVE:
+            if (cp[idx].reverse && idx < nd.last-1) {
+                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+            } else {
+                wcsp->remove(cp[idx].varIndex, cp[idx].value);
+                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+            }
+            break;
+        case CP_INCREASE:
+            if (cp[idx].reverse && idx < nd.last-1) {
+                wcsp->decrease(cp[idx].varIndex, cp[idx].value - 1);
+                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value - 1, false);
+            } else {
+                wcsp->increase(cp[idx].varIndex, cp[idx].value);
+                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value, false);
+            }
+            break;
+        case CP_DECREASE:
+            if (cp[idx].reverse && idx < nd.last-1) {
+                wcsp->increase(cp[idx].varIndex, cp[idx].value + 1);
+                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value + 1, false);
+            }
+            else {
+                wcsp->decrease(cp[idx].varIndex, cp[idx].value);
+                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value, false);
+            }
+            break;
+        default:
+            cerr << "unknown choice point for hybrid best first search!!!" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    wcsp->propagate();
+    //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
+}

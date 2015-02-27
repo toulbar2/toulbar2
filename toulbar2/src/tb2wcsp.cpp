@@ -281,7 +281,7 @@ void tb2init()
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
-			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(false),
+			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
 			isPartOfOptimalSolution(0, &s->storeInt), elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
@@ -2980,7 +2980,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 		Constraint* ctr = getCtr(i);
 		ctr->setDACScopeIndex();
 		 // Postpone global constraint propagation at the end (call to WCSP::propagate())
-		if (ctr->connected() && !ctr->isGlobal()) ctr->propagate();
+		if (ctr->connected() && !ctr->isGlobal() && !ctr->isSep()) ctr->propagate();
 	}
 	for (int i = 0; i < elimBinOrder; i++) {
 		Constraint* ctr = elimBinConstrs[i];

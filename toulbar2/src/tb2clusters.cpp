@@ -104,7 +104,10 @@ void Separator::assign(int varIndex)
 
 void Separator::propagate()
 {
-  if (ToulBar2::debug >= 3) cout << this << " C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << endl;
+  if (ToulBar2::verbose >= 3) cout << this << " propagate C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << " " << connected() << endl;
+  for(int i=0;connected() && i<arity_;i++) {
+      if (getVar(i)->assigned()) assign(i);
+  }
   if(nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
       wcsp->revise(this);
 	  if(ToulBar2::allSolutions){

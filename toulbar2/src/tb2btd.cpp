@@ -450,7 +450,14 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	  } else {
 		lbSon = c->getLbRec();
 		ubSon = c->getUb();
+#ifndef NDEBUG
+		Cost dummylb = -MAX_COST;
+		Cost tmpub = -MAX_COST;
+		c->nogoodGet(dummylb, tmpub, &c->open);
+        assert(tmpub == ubSon);
+#endif
 	  }
+//	  if (ToulBar2::verbose >= 2) cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << endl;
 	  if (lbSon < ubSon) { // we do not have an optimality proof
 	      if (clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
 	          ubSon = MIN(ubSon, cub - clb + lbSon);

@@ -101,7 +101,8 @@ void GlobalConstraint::assign(int varIndex) {
 			String t(arity_, CHAR_FIRST);			
 			for(int i=0;i<arity_;i++) { 		
 				t[i] = getVar(i)->getValue() + CHAR_FIRST;                               
-			}			
+			}
+			wcsp->revise(this);
 			projectLB(eval(t));
 		} else { 
 			pushAll();
@@ -147,11 +148,11 @@ void GlobalConstraint::projectFromZero(int index) {
 
 void GlobalConstraint::propagate() {
 
-	if (deconnected()) return;
-        
 	for(int i=0;connected() && i<arity_;i++) {
 	  if (getVar(i)->assigned()) assign(i);
 	}
+
+	if (deconnected()) return;
 
 	needPropagateEAC = false;
 	currentVar = -1;

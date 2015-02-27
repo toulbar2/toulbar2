@@ -167,7 +167,7 @@ public:
 		}
 	}
 
-	// propagaetion for the whole constraint
+	// propagation for the whole constraint
 	virtual void propagate();
 	virtual void propagateDAC();  
 	virtual void propagateAC();  

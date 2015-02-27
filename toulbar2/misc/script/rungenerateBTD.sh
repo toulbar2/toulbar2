@@ -1,7 +1,7 @@
 #!/bin/bash
 
 nerr=0
-ninstances=100
+ninstances=1000
 nend=30
 bctr=10
 tctr=3

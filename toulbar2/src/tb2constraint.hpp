@@ -66,6 +66,7 @@ public:
     virtual void remove(int index) {propagate();}
     virtual void projectFromZero(int index) {}
     virtual void assign(int index) {propagate();}
+    void assigns();
 
     virtual void fillEAC2(int index) {}
     virtual bool isEAC(int index, Value a) {return true;}
