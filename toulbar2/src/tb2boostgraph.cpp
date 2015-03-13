@@ -241,6 +241,101 @@ void WCSP::minimumDegreeOrderingBGL(vector<int> &order_inv)
   assert( order_inv.size() == numberOfVariables() );
 }
 
+// Function that took a node root and a list of sons of this root
+// and return a list of (value,cost) 
+WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
+{
+    assert(unassigned(root));
+    EnumeratedVariable *x = (EnumeratedVariable *) getVar(root);
+    ResultVisitZ res;
+    
+    for (EnumeratedVariable::iterator iter = x->begin(); iter != x->end(); ++iter) { // Loop over the domain of the variable root
+        res.push_back( pair<Value, Cost>(*iter, x->getCost(*iter)) ); // Fill the res list with the unarycost of root's sons
+    }
+    
+    for (int i=0; i<sons[root].size(); i++) { // Loop until there is no root's sons.
+		//Recurcive call of visitZ over the root's son i 
+        ResultVisitZ resi = visitZ(sons[root][i].first, sons);
+
+        // Reuse code developed for EnumeratedVariable::elimVar( BinaryConstraint* ctr )
+        EnumeratedVariable *y = (EnumeratedVariable *) getVar(sons[root][i].first); // Take the i-th sons of the root
+        BinaryConstraint *ctr = sons[root][i].second; // Take the binary constraint that link the i-th sons and the root
+        int pos = 0;
+        for (EnumeratedVariable::iterator iter1 = x->begin(); iter1 != x->end(); ++iter1, pos++) {
+            Cost mincost = MAX_COST;
+            for (int iter = 0; iter < resi.size(); ++iter) {
+				//SUM UNARY of the i-th sons AND BINARY that link the i-th sons to the root
+                Cost curcost = resi[iter].second + ctr->getCost(y, x, resi[iter].first, *iter1); 
+                mincost = SumLogLikeCost(mincost,curcost);
+            }
+            res[pos].second += mincost;
+        }
+    }
+    
+    return res;
+}
+
+TProb WCSP::spanningTreeZ(Cost c0)
+{
+  double alltight = 0;
+  double maxt = 0;
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {double t = elimBinConstrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
+
+  DoubleWeightedGraph G;
+  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
+  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
+  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G, maxt);
+
+  int n = num_vertices(G);
+
+  vector < graph_traits < DoubleWeightedGraph >::vertex_descriptor > p(n);
+  prim_minimum_spanning_tree(G, &p[0]); // return the "maximum" spanning tree (list of p[i] : parent of node i of the graph G)
+
+  double tight = 0;
+  bool tightok = true;
+  vector<int> roots;
+  vector< vector< pair<int, BinaryConstraint *> > > sons(vars.size(), vector< pair<int, BinaryConstraint *> >() );
+  
+  for (size_t i = 0; i != p.size(); ++i) {
+    if (p[i] != i) { // if p[i]=i, the node is a root
+      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the cost function of i and his parent (i<-->p[i])
+      assert(unassigned(i));
+      assert(unassigned(p[i]));
+      if (bctr) {
+		  //cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
+          tight += bctr->getTightness();
+          sons[p[i]].push_back( pair<int, BinaryConstraint *>(i, bctr) ); // Fill a list (Sons of p[i],Binarycost i<-->p[i])
+      } else {
+          tightok = false;
+      }
+    } else { // if the node is a root, put it in a list of roots nodes
+        if (unassigned(i)) roots.push_back(i);
+        //cout << "parent[" << i << "] = no parent" << endl;
+    }
+  }
+  if (ToulBar2::verbose >= 1) { // Write the pourcentage of costs taken over the all costs
+      if (tightok) cout << " MSTZ(" << 100.0*tight/alltight << "%)";
+      cout << endl;
+  }
+
+  TProb res = 0 ;//-numeric_limits<TProb>::infinity();
+  
+  for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
+      ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each nodes. The value term contain the bynary cost and the unary cost.
+      Cost mincost = MAX_COST;
+      for (int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
+		  //Bring back together all the costs that go from a node to a leaf in the spanning tree : Dynamic programming
+          mincost = SumLogLikeCost(mincost,resi[iter].second); 
+      }
+		// Total Sum on the spanning tree
+      res += Cost2LogLike(mincost) ; 
+  }
+  return res + Cost2LogLike(c0);
+}
+
 void WCSP::spanningTreeOrderingBGL(vector<int> &order_inv)
 {
   double alltight = 0;

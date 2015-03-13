@@ -212,6 +212,7 @@ enum {
 	OPT_EDAC,
 	OPT_ub,
 	OPT_Z,
+	OPT_ZUB,
 	OPT_epsilon,
     OPT_learning,
 	OPT_timer,
@@ -353,6 +354,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
 	{ OPT_Z,  				(char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
+	{ OPT_ZUB,  				(char*) "-zub", 				SO_REQ_SEP		}, // Choose Upper bound number for computing Z
 	{ OPT_epsilon,				(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 
     { OPT_learning,                         	(char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
@@ -1298,6 +1300,11 @@ int _tmain(int argc, TCHAR * argv[])
 
 			// discrete integration for computing the partition function Z
 			if ( args.OptionId() == OPT_Z) ToulBar2::isZ = true;
+			
+			if ( args.OptionId() == OPT_ZUB){
+				int zuboption = atoi(args.OptionArg());
+				if (zuboption >= 1) ToulBar2::isZUB = zuboption;
+			}
 
 			if ( args.OptionId() == OPT_epsilon)
 			{

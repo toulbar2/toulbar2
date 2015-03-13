@@ -317,6 +317,8 @@ public:
     virtual TProb SumLogLikeCost(TProb logc1, Cost c2) const =0;
     virtual TProb SumLogLikeCost(TProb logc1, TProb logc2) const =0;
 
+    virtual TProb spanningTreeZ(Cost) =0;
+
     // -----------------------------------------------------------
     // Internal WCSP functions DO NOT USE THEM
 

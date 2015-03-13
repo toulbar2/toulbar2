@@ -141,6 +141,7 @@ int ToulBar2::minProperVarSize;
 int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
+int ToulBar2::isZUB;
 TProb ToulBar2::logZ;
 TProb ToulBar2::logU;
 TProb ToulBar2::logepsilon;
@@ -250,6 +251,7 @@ void tb2init()
     ToulBar2::smallSeparatorSize = 4;
 
     ToulBar2::isZ = false;
+    ToulBar2::isZUB = 0;
     ToulBar2::logZ = -numeric_limits<TProb>::infinity();
     ToulBar2::logU = -numeric_limits<TProb>::infinity();
     ToulBar2::logepsilon = -3;
@@ -3009,14 +3011,25 @@ Cost WCSP::Prob2Cost(TProb p) const {
 	return c;
 }
 
+//Cost WCSP::LogLike2Cost(TProb p) const {
+//	TProb res = -p * ToulBar2::NormFactor;
+//	Cost c = (Cost) res;
+//	return c;
+//}
+
 Cost WCSP::LogLike2Cost(TProb p) const {
 	TProb res = -p * ToulBar2::NormFactor;
+	Cost c;
 	if (res > to_double(MAX_COST/2)) {
-		cout << "Warning: converting -loglike/energy " << -p << " to Top\n";
-		return getUb();
+		c = (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST;
+		if (ToulBar2::verbose >= 1){
+            cout << "Warning: converting energy " << -p << " to Top\n";
+            }
 		}
-	else return (Cost) res;
+	else c = (Cost) res;
+	return c;
 }
+
 TProb WCSP::Cost2LogLike(Cost c) const {
 	return -to_double(c) / ToulBar2::NormFactor;
 }

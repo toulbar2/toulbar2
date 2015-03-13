@@ -298,6 +298,12 @@ public:
 	void maximumCardinalitySearch(vector<int> &order);
 	void minimumFillInOrdering(vector<int> &order);
 	void minimumDegreeOrdering(vector<int> &order);
+
+	typedef vector< vector< pair<int, BinaryConstraint *> > > Sons;
+	typedef vector< pair<Value,Cost> > ResultVisitZ;
+
+	ResultVisitZ visitZ(int root, Sons &sons);
+    TProb spanningTreeZ(Cost c0);
 #endif
 
 	int makeEnumeratedVariable(string n, Value iinf, Value isup);

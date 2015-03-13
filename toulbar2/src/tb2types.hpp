@@ -340,6 +340,7 @@ public:
     static string problemsaved_filename;
     static bool uai_firstoutput;
 	static bool isZ;
+	static int isZUB;
 	static TProb logZ;
 	static TProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
