@@ -95,7 +95,7 @@ ofstream ToulBar2::solution_file;
 string ToulBar2::solution_filename;
 string ToulBar2::problemsaved_filename;
 bool ToulBar2::uai_firstoutput;
-TProb ToulBar2::markov_log;
+TLogProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
 string ToulBar2::map_file;
 bool ToulBar2::maxsateval;
@@ -103,7 +103,7 @@ bool ToulBar2::uaieval;
 
 int ToulBar2::resolution;
 TProb ToulBar2::errorg;
-TProb ToulBar2::NormFactor;
+TLogProb ToulBar2::NormFactor;
 /// Allele frequencies of founders
 /// - 0: 			equal frequencies
 /// - 1: 			probs depending on the frequencies found in the problem
@@ -142,9 +142,9 @@ int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
 int ToulBar2::isZUB;
-TProb ToulBar2::logZ;
-TProb ToulBar2::logU;
-TProb ToulBar2::logepsilon;
+TLogProb ToulBar2::logZ;
+TLogProb ToulBar2::logU;
+TLogProb ToulBar2::logepsilon;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -252,8 +252,8 @@ void tb2init()
 
     ToulBar2::isZ = false;
     ToulBar2::isZUB = 0;
-    ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-    ToulBar2::logU = -numeric_limits<TProb>::infinity();
+    ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -3;
     ToulBar2::Berge_Dec=0;
     ToulBar2::nbvar=0;
@@ -2546,7 +2546,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 				  t[arity] = '\0';
 				  String strt(t);
 				  Cost c = nctr->eval(strt) + var->getCost(*itv);
-				  if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+				  if (ToulBar2::isZ) mincost = LogSumExp(mincost,c);
 				  else if (c < mincost) mincost = c;
 				}
 			  }
@@ -2580,7 +2580,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 				if (evars[0]->canbe(v0) && evars[1]->canbe(v1)) {
 					for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 						Cost c = tctr->getCost(evars[0], evars[1], var, v0, v1, *itv) + var->getCost(*itv);
-						if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+						if (ToulBar2::isZ) mincost = LogSumExp(mincost,c);
 						else if (c < mincost) mincost = c;
 					}
 				}
@@ -2608,7 +2608,7 @@ void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
 			if (evars[0]->canbe(v0)) {
 				for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 					Cost c = bctr->getCost(evars[0], var, v0, *itv) + var->getCost(*itv);
-					if (ToulBar2::isZ) mincost = SumLogLikeCost(mincost,c);
+					if (ToulBar2::isZ) mincost = LogSumExp(mincost,c);
 					else if (c < mincost) mincost = c;
 				}
 			}
@@ -2674,7 +2674,7 @@ void WCSP::variableElimination(EnumeratedVariable* var) {
 	  if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
 		Cost clogz = getUb();
 		for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
-		  clogz = SumLogLikeCost(clogz, var->getCost(*itv));
+		  clogz = LogSumExp(clogz, var->getCost(*itv));
 		}
 		if (clogz < 0) decreaseLb(clogz);
 		else increaseLb(clogz);
@@ -3001,7 +3001,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 
 Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
-	TProb res = -Log(p) * ToulBar2::NormFactor;
+	TLogProb res = -Log(p) * ToulBar2::NormFactor;
 	if (res > to_double(MAX_COST)) {
 		cerr << "Overflow when converting probability to cost." << endl;
 		exit(EXIT_FAILURE);
@@ -3011,52 +3011,56 @@ Cost WCSP::Prob2Cost(TProb p) const {
 	return c;
 }
 
-//Cost WCSP::LogLike2Cost(TProb p) const {
-//	TProb res = -p * ToulBar2::NormFactor;
+//Cost WCSP::LogProb2Cost(TLogProb p) const {
+//	TLogProb res = -p * ToulBar2::NormFactor;
 //	Cost c = (Cost) res;
 //	return c;
 //}
 
-Cost WCSP::LogLike2Cost(TProb p) const {
-	TProb res = -p * ToulBar2::NormFactor;
+Cost WCSP::LogProb2Cost(TLogProb p) const {
+	TLogProb res = -p * ToulBar2::NormFactor;
 	Cost c;
 	if (res > to_double(MAX_COST/2)) {
 		c = (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST;
 		if (ToulBar2::verbose >= 1){
-            cout << "Warning: converting energy " << -p << " to Top\n";
-            }
+		    cout << "Warning: converting energy " << -p << " to Top\n";
 		}
+	}
 	else c = (Cost) res;
 	return c;
 }
 
-TProb WCSP::Cost2LogLike(Cost c) const {
+TLogProb WCSP::Cost2LogProb(Cost c) const {
 	return -to_double(c) / ToulBar2::NormFactor;
 }
+
 TProb WCSP::Cost2Prob(Cost c) const {
   return Exp(-to_double(c) / ToulBar2::NormFactor);
 }
-Cost  WCSP::SumLogLikeCost(Cost c1, Cost c2) const {
+
+Cost  WCSP::LogSumExp(Cost c1, Cost c2) const {
   if (c1 >= getUb()) return c2;
   else if (c2 >= getUb()) return c1;
-  else if (c1 == c2) return c1+LogLike2Cost(Log(2.));
+  else if (c1 == c2) return c1+LogProb2Cost(Log(2.));
   else {
-	if (c1 < c2) return c1 + LogLike2Cost(Log1p(Exp(Cost2LogLike(c2 - c1))));
-	else return c2 + LogLike2Cost(Log1p(Exp(Cost2LogLike(c1 - c2))));
+	if (c1 < c2) return c1 + LogProb2Cost(Log1p(Exp(Cost2LogProb(c2 - c1))));
+	else return c2 + LogProb2Cost(Log1p(Exp(Cost2LogProb(c1 - c2))));
   }
 }
-TProb WCSP::SumLogLikeCost(TProb logc1, Cost c2) const {
-  TProb logc2 = Cost2LogLike(c2);
-  if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
+
+TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const {
+  TLogProb logc2 = Cost2LogProb(c2);
+  if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
   else if (c2 >= getUb()) return logc1;
   else {
 	if (logc1 >= logc2) return logc1 + (Log1p(Exp(logc2 - logc1)));
 	else return logc2 + (Log1p(Exp(logc1 - logc2)));
   }
 }
-TProb WCSP::SumLogLikeCost(TProb logc1, TProb logc2) const {
-  if (logc1 == -numeric_limits<TProb>::infinity()) return logc2;
-  else if (logc2 == -numeric_limits<TProb>::infinity()) return logc1;
+
+TLogProb WCSP::LogSumExp(TProb logc1, TProb logc2) const {
+  if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
+  else if (logc2 == -numeric_limits<TLogProb>::infinity()) return logc1;
   else {
 	if (logc1 >= logc2) return logc1 + (Log1p(Exp(logc2 - logc1)));
 	else return logc2 + (Log1p(Exp(logc1 - logc2)));

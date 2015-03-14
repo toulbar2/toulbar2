@@ -266,7 +266,7 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
             for (int iter = 0; iter < resi.size(); ++iter) {
 				//SUM UNARY of the i-th sons AND BINARY that link the i-th sons to the root
                 Cost curcost = resi[iter].second + ctr->getCost(y, x, resi[iter].first, *iter1); 
-                mincost = SumLogLikeCost(mincost,curcost);
+                mincost = LogSumExp(mincost,curcost);
             }
             res[pos].second += mincost;
         }
@@ -275,7 +275,7 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
     return res;
 }
 
-TProb WCSP::spanningTreeZ(Cost c0)
+TLogProb WCSP::spanningTreeZ(Cost c0)
 {
   double alltight = 0;
   double maxt = 0;
@@ -321,19 +321,19 @@ TProb WCSP::spanningTreeZ(Cost c0)
       cout << endl;
   }
 
-  TProb res = 0 ;//-numeric_limits<TProb>::infinity();
+  TLogProb res = 0 ;//-numeric_limits<TLogProb>::infinity();
   
   for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
       ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each nodes. The value term contain the bynary cost and the unary cost.
       Cost mincost = MAX_COST;
       for (int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
 		  //Bring back together all the costs that go from a node to a leaf in the spanning tree : Dynamic programming
-          mincost = SumLogLikeCost(mincost,resi[iter].second); 
+          mincost = LogSumExp(mincost,resi[iter].second); 
       }
 		// Total Sum on the spanning tree
-      res += Cost2LogLike(mincost) ; 
+      res += Cost2LogProb(mincost) ; 
   }
-  return res + Cost2LogLike(c0);
+  return res + Cost2LogProb(c0);
 }
 
 void WCSP::spanningTreeOrderingBGL(vector<int> &order_inv)

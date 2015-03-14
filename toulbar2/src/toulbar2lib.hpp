@@ -311,13 +311,13 @@ public:
 
     virtual Cost Prob2Cost(TProb p) const =0;
     virtual TProb Cost2Prob(Cost c) const =0;
-    virtual TProb Cost2LogLike(Cost c) const =0;
-    virtual Cost LogLike2Cost(TProb p) const =0;
-    virtual Cost SumLogLikeCost(Cost c1, Cost c2) const =0;
-    virtual TProb SumLogLikeCost(TProb logc1, Cost c2) const =0;
-    virtual TProb SumLogLikeCost(TProb logc1, TProb logc2) const =0;
+    virtual TLogProb Cost2LogProb(Cost c) const =0;
+    virtual Cost LogProb2Cost(TLogProb p) const =0;
+    virtual Cost LogSumExp(Cost c1, Cost c2) const =0;
+    virtual TLogProb LogSumExp(TLogProb logc1, Cost c2) const =0;
+    virtual TLogProb LogSumExp(TLogProb logc1, TLogProb logc2) const =0;
 
-    virtual TProb spanningTreeZ(Cost) =0;
+    virtual TLogProb spanningTreeZ(Cost) =0;
 
     // -----------------------------------------------------------
     // Internal WCSP functions DO NOT USE THEM

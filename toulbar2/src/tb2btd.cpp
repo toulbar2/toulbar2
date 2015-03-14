@@ -467,7 +467,7 @@ Cost Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 		if(cluster == td->getRoot() || cluster == td->getRootRDS()) {
 			if (ToulBar2::verbose>=0 || ToulBar2::showSolutions) {
 				if(!ToulBar2::bayesian) cout << "New solution: " <<  lb << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
-				else cout << "New solution: " << lb << " log10like: " << wcsp->Cost2LogLike(lb) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob(lb) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
+				else cout << "New solution: " << lb << " log10like: " << wcsp->Cost2LogProb(lb) + ToulBar2::markov_log << " prob: " << wcsp->Cost2Prob(lb) * Exp10(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl;
 			}
 			if(cluster == td->getRoot()) td->newSolution(lb);
 			else {

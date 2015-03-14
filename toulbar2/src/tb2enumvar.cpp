@@ -725,7 +725,7 @@ bool EnumeratedVariable::elimVar( BinaryConstraint* ctr )
     	   Cost mincost = MAX_COST;
     	   for (iterator iter = begin(); iter != end(); ++iter) {
     		   Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1);
-    		   if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+    		   if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost,curcost);
     		   else if (curcost < mincost) mincost = curcost;
     	   }
     	   if (ToulBar2::isZ) {
@@ -800,7 +800,7 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 						   getBinaryCost(xylink, *iter, *itery) +
 						   getBinaryCost(xzlink, *iter, *iterz);
 
-	        if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+	        if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost,curcost);
 		    else if (curcost < mincost) mincost = curcost;
 	    }
 	    if (mincost < negcost) negcost = mincost;
@@ -906,7 +906,7 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 				if(n2links > 1) { assert(links[1].constr->getIndex(y) >= 0);
   								  curcost += getBinaryCost(links[1], *iter, *itery); }
 			}
-			if (ToulBar2::isZ) mincost = wcsp->SumLogLikeCost(mincost,curcost);
+			if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost,curcost);
 			else if (curcost < mincost) mincost = curcost;
 	    }
 	    if (mincost < negcost) negcost = mincost;
@@ -998,7 +998,7 @@ void EnumeratedVariable::eliminate()
     		if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
     			Cost clogz = wcsp->getUb();
     			for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
-    				clogz = wcsp->SumLogLikeCost(clogz, getCost(*itv));
+    				clogz = wcsp->LogSumExp(clogz, getCost(*itv));
     			}
     			if (clogz < MIN_COST) wcsp->decreaseLb(clogz);
     			else wcsp->increaseLb(clogz);

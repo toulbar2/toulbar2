@@ -6,12 +6,13 @@
  * - ::Cost : cost value (exact type depends on compilation flag)
  * - ::Long : large integer (long long int)
  * - ::TProb : probability value (exact type depends on compilation flag)
+ * - ::TLogProb : log probability value (exact type depends on compilation flag)
  * - ::Double : large float (long double)
  * - ::String : string with extended character size (wide string) to encode tuples
  *
  * \note Compilation flag for Cost is: \c INT_COST (int), \c LONGLONG_COST (long long), or \c PARETOPAIR_COST (see ::ParetoPair)
  * \warning \c PARETOPAIR_COST is fragile.
- * \note Compilation flag for TProb is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
+ * \note Compilation flag for T(Log)Prob is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for String is: \c WIDE_STRING or nothing (usual C++ string)
  */
 
@@ -142,10 +143,12 @@ const Cost MAX_COST = PARETOPAIR_MAX;
 
 #ifdef DOUBLE_PROB
 typedef double TProb;
+typedef double TLogProb;
 #endif
 
 #ifdef LONGDOUBLE_PROB
 typedef Double TProb;
+typedef Double TLogProb;
 #endif
 
 const int STORE_SIZE = 16;
@@ -306,7 +309,7 @@ public:
 	static int uai;
 	static int resolution;
 	static TProb errorg;
-	static TProb NormFactor;
+	static TLogProb NormFactor;
 	static int foundersprob_class;
 	static vector<TProb> allelefreqdistrib;
 	static bool consecutiveAllele;
@@ -333,7 +336,7 @@ public:
 
 	static bool maxsateval;
 	static bool xmlflag;
-	static TProb markov_log;
+	static TLogProb markov_log;
 	static string evidence_file;
 	static ofstream solution_file;
     static string solution_filename;
@@ -341,8 +344,8 @@ public:
     static bool uai_firstoutput;
 	static bool isZ;
 	static int isZUB;
-	static TProb logZ;
-	static TProb logU; // upper bound on rejected potentials
+	static TLogProb logZ;
+	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
     static bool uaieval;
 
