@@ -7,6 +7,7 @@
 #include "tb2domain.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
+#include "tb2cpd.hpp"
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
 #include <strings.h>
@@ -956,22 +957,31 @@ void Solver::newSolution()
 
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
 
-        if(ToulBar2::allSolutions) {
+        if(ToulBar2::allSolutions && !ToulBar2::cpd) {
         	cout << nbSol << " solution: ";
         }
-
-        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
-	        cout << " ";
-            if (ToulBar2::pedigree) {
+        if (ToulBar2::cpd) {
+          ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
+          if (!ToulBar2::allSolutions)
+            ToulBar2::cpd->printSequences();
+            }
+        else 
+          {
+            for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+              cout << " ";
+              if (ToulBar2::pedigree) {
                 cout <<  wcsp->getName(i) << ":";
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
-            } else if (ToulBar2::haplotype) {
+              } else if (ToulBar2::haplotype) {
             	ToulBar2::haplotype->printHaplotype(cout,wcsp->getValue(i),i);
-			} else {
+              }
+              else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end())? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
+              }
             }
-        }
-        cout << endl;
+          }
+        if (!ToulBar2::cpd)
+          cout << endl;
 		if (ToulBar2::bep) ToulBar2::bep->printSolution((WCSP *) wcsp);
     }
     if (ToulBar2::pedigree) {
@@ -1296,6 +1306,12 @@ bool Solver::solve()
 	  cout <<  (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log)/Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  return true;
     }
+    if (ToulBar2::cpd)
+      if (ToulBar2::showSolutions)
+        {
+          ToulBar2::cpd->printSequences();
+          cout << "Total number of sequences: " << ToulBar2::cpd->getTotalSequences() << endl;
+        }
 	if(ToulBar2::allSolutions) {
 	  if(ToulBar2::approximateCountingBTD)
 		cout << "Number of solutions    : ~= " << nbSol << endl;
@@ -1306,6 +1322,7 @@ bool Solver::solve()
 		  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
 		  cout << "Size of sep            :    " << tailleSep << endl;
 	  }
+          
 	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  cout << "... in " <<nbBacktracks << " backtracks and " << nbNodes << " nodes"  << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << endl;
 	  return true;

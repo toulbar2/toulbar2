@@ -7,6 +7,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
+#include "tb2cpd.hpp"
 #include "tb2bep.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
@@ -697,8 +698,21 @@ void WCSP::read_wcsp(const char *fileName)
 
 	file >> funcname;
 	if (file) {
-	  cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
-	}
+          if (ToulBar2::cpd)
+            {
+              try {
+                ToulBar2::cpd->read_rotamers2aa(file, vars);
+              }
+              catch (int badwcsp)
+                {
+                  cerr << "Bad CPD wcsp format ! " << endl;exit(1);
+                }
+            }
+          else
+            {
+              cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+            }
+        }
 
 	// merge unarycosts if they are on the same variable
 	vector<int> seen(nbvar, -1);

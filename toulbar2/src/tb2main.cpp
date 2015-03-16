@@ -11,6 +11,7 @@
 #include "toulbar2lib.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
+#include "tb2cpd.hpp"
 #include "tb2bep.hpp"
 #include <string.h>
 #include <stdio.h>
@@ -227,7 +228,11 @@ enum {
 
 	// random generator
 	OPT_seed,
-	OPT_random=1000
+	OPT_random=1000,
+
+        // CPD options
+        OPT_cpd
+        
 };
 
 string getExt(string FileName)
@@ -363,7 +368,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
 	{ OPT_random, 	 			 (char*) "-random", 			SO_REQ_SEP }, // init upper bound in cli
-
+        // CPD options
+        { OPT_cpd,                               (char*) "--cpd",                       SO_NONE },
 
 	SO_END_OF_OPTIONS
 };
@@ -1371,6 +1377,11 @@ int _tmain(int argc, TCHAR * argv[])
 			    if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
 				ToulBar2::DEE = 0;
 			}
+
+                        ///////////////// CPD options //////////////
+                        if (args.OptionId() == OPT_cpd) {
+                          ToulBar2::cpd = new Cpd;
+                        }
 
 		}
 

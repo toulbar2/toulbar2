@@ -13,6 +13,7 @@
 #include "tb2arithmetic.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
+#include "tb2cpd.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
 
@@ -87,6 +88,7 @@ externalcostevent ToulBar2::setminobj;
 externalsolution ToulBar2::newsolution;
 Pedigree *ToulBar2::pedigree;
 Haplotype *ToulBar2::haplotype;
+Cpd *ToulBar2::cpd;
 
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
@@ -205,6 +207,7 @@ void tb2init()
     ToulBar2::newsolution = NULL;
     ToulBar2::pedigree = NULL;
     ToulBar2::haplotype = NULL;
+    ToulBar2::cpd = NULL;
 
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;

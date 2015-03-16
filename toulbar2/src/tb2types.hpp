@@ -237,6 +237,7 @@ typedef enum {
 class Pedigree;
 class Haplotype;
 class BEP;
+class Cpd;
 
 typedef enum {
 	LC_NC = 0,
@@ -304,6 +305,7 @@ public:
 	static externalsolution newsolution;
 	static Pedigree *pedigree;
 	static Haplotype *haplotype;
+  static Cpd *cpd;
 	static string map_file;
 	static bool bayesian;
 	static int uai;

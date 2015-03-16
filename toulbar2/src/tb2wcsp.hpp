@@ -125,6 +125,8 @@ public:
 	// -----------------------------------------------------------
 	// General API for weighted CSP global constraint
 
+  const vector< Variable* > & getVars() const {return vars;}
+
 	int getIndex() const {return instance;}		///< \brief instantiation occurrence number of current WCSP object
 	string getName() const {return name;}
 	void *getSolver() const {return solver;}
