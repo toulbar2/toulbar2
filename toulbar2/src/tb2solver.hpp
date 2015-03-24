@@ -111,6 +111,7 @@ protected:
     Long hybridBFSLimit;        // limit on number of backtracks for hybrid search (except BTD)
     Long nbHybrid;
     Long nbHybridContinue;
+    Long nbRecomputationNodes;
 
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
@@ -158,7 +159,7 @@ protected:
     pair<Cost, Cost> recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
     pair<Cost,Cost> hybridSolve(Cluster *root, Cost clb, Cost cub);
     pair<Cost,Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
-    void russianDollSearch(Cluster *c, Cost cub);
+    pair<Cost,Cost> russianDollSearch(Cluster *c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
     BigInteger sharpBTD(Cluster *cluster);

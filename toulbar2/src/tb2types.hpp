@@ -362,6 +362,7 @@ public:
 	static string incop_cmd;
 
     static Long hybridBFS;
+    static int hybridGap;
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution

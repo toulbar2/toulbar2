@@ -417,6 +417,21 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
  *
  */
 
+//struct less_than_key
+//{
+//    inline bool operator() (Cluster *c1, Cluster *c2)
+//    {
+////        if (!c1->isActive()) {
+////          c1->nogoodGet(lbSon, ubSon, &c->open);
+////          good = true;
+////        } else {
+////          lbSon = c->getLbRec();
+////          ubSon = c->getUb();
+////        return (((Double) c1->getNbBacktracksClusterTree() / (Double) (c1->getUb() - c1->getLbRec())) < ((Double) c2->getNbBacktracksClusterTree() / (Double) (c2->getUb() - c2->getLbRec())));
+//        return c1->getNbBacktracksClusterTree()  < c2->getNbBacktracksClusterTree();
+//    }
+//};
+
 // Maintains the best (monotonically increasing) lower bound of the cluster in parameter lbgood
 
 pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
@@ -436,6 +451,11 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	Cost clb = wcsp->getLb();
 	assert(clb <= cub);
 	Cost csol = clb;
+
+//	if (cluster->sons.empty()) for (TClusters::iterator iter = cluster->beginEdges(); iter != cluster->endEdges(); ++iter) cluster->sons.push_back(*iter);
+//	std::sort(cluster->sons.begin(), cluster->sons.end(), less_than_key());
+//	for (vector<Cluster *>::iterator iter = cluster->sons.begin(); clb < cub && iter != cluster->sons.end(); ) {
+
 	for (TClusters::iterator iter = cluster->beginEdges(); clb < cub && iter!= cluster->endEdges(); ) {
 	  // Solves each cluster son with local lower and upper bounds
 	  Cluster* c = *iter;
@@ -469,7 +489,8 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	              wcsp->enforceUb();
 	              wcsp->propagate();
 	              Cost bestlb = MAX(wcsp->getLb(),lbSon);
-	              if (csol < MAX_COST && iter == cluster->endEdges()) bestlb = MAX(bestlb, lbgood-csol+lbSon); // simple trick to provide a better initial lower bound for the last son
+//	              if (csol < MAX_COST && iter == cluster->sons.end()) bestlb = MAX(bestlb, lbgood-csol+lbSon); // simple trick to provide a better initial lower bound for the last son
+                  if (csol < MAX_COST && iter == cluster->endEdges()) bestlb = MAX(bestlb, lbgood-csol+lbSon); // simple trick to provide a better initial lower bound for the last son
 	              if(ToulBar2::btdMode >= 2) {
 	                  Cost rds = td->getLbRecRDS();
 	                  bestlb = MAX(bestlb, rds);
@@ -525,6 +546,9 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 				cout << endl;
 			  }
 			}
+		} else {
+		    // switch from depth-first search to best-first search in this cluster
+		    if (ToulBar2::hybridBFS) cluster->hybridBFSLimit = cluster->nbBacktracks;
 		}
 	}
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << MAX(lbgood,clb) << " " << cub << endl;
@@ -557,9 +581,10 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
  *
  */
 
-void Solver::russianDollSearch(Cluster *c, Cost cub)
+pair<Cost,Cost> Solver::russianDollSearch(Cluster *c, Cost cub)
 {
 	TreeDecomposition* td = wcsp->getTreeDec();
+	pair<Cost, Cost> res = make_pair(MIN_COST, cub);
 
 	TClusters::iterator it = c->beginEdges();
 	while(it != c->endEdges()) {
@@ -570,8 +595,16 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 	try {
 	  store->store();
 
+	  Cost nogoodlb = MIN_COST;
+      Cost nogoodub = MAX_COST;
 	  if(c != td->getRoot()) {
 	      c->deconnectSep();
+	      c->nogoodGet(nogoodlb, nogoodub, &c->open); // update c->open and c->ub
+//	      if (nogoodlb == bestub) {
+//	          assert(bestub <= cub);
+//	          store->restore();
+//	          return make_pair(bestub,bestub);
+//	      }
 		  assert(c->getLbRec() == MIN_COST);
 		  c->setLb(MIN_COST);
 		  wcsp->setLb(MIN_COST);
@@ -580,6 +613,7 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 		  td->setCurrentCluster(c);
 		  Cost lbc = td->getLbRecRDS();
 		  cub = cub - lbroot + lbc;
+		  cub = MIN(cub, nogoodub);
 	  }
 	  wcsp->setUb(cub);
 	  td->setCurrentCluster(c);
@@ -588,29 +622,38 @@ void Solver::russianDollSearch(Cluster *c, Cost cub)
 
 	  if(ToulBar2::verbose>=0) cout << "--- Solving cluster subtree " << c->getId() << " ..." << endl;
 
-	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
-	  Cost rdslb = td->getLbRecRDS();
-	  pair<Cost, Cost> res = hybridSolve(c, rdslb, cub);
-	  assert(res.first >= rdslb);
+//	  if(c == td->getRoot()) wcsp->propagate(); // needed if there are connected components
+	  enforceUb();
+	  wcsp->propagate();
+	  Cost bestlb = td->getLbRecRDS();
+	  bestlb = MAX(bestlb, nogoodlb);
+	  if (bestlb >= cub) THROWCONTRADICTION;
+	  res = hybridSolve(c, bestlb, cub);
+	  assert(res.first >= bestlb);
 	  c->setLbRDS(res.first);
-	  if (c->sepSize() == 0)  {
+//	  if (c->sepSize() == 0)  {
 	      c->nogoodRec(res.first, ((res.second<cub)?res.second:MAX_COST), &c->open);
-	      if (c->open) c->open->clear();
-	  }
+//	  }
 
 	  if (ToulBar2::debug || ToulBar2::verbose >= 1) c->printStatsRec();
-	  if(ToulBar2::verbose>=0) cout << "---  done  cost = " << res.second << " ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
+	  if(ToulBar2::verbose>=0) cout << "---  done  cost = [" << res.first << "," << res.second << "] ("    << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << store->getDepth() << ")" << endl << endl;
 
 	} catch (Contradiction) {
 	  wcsp->whenContradiction();
+	  res.first = res.second;
 	  c->setLbRDS(cub);
-	  if (c->sepSize() == 0) {
+//	  if (c->sepSize() == 0) {
 	      c->nogoodRec(cub, MAX_COST, &c->open);
-	      if (c->open) c->open->clear();
-	  }
+//	  }
 	}
 	store->restore();
-    c->resetOptRec(c);
+	if (c == td->getRoot()) {
+	    c->resetLbRec();
+	} else {
+	    if (c->open) c->open->clear();
+	    c->resetUbRec(c);
+	}
+    return res;
 }
 
 

@@ -209,6 +209,7 @@ enum {
 	NO_OPT_restart,
     OPT_bfs,
     NO_OPT_bfs,
+    OPT_gap,
 	OPT_localsearch,
 	NO_OPT_localsearch,
 	OPT_EDAC,
@@ -346,6 +347,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_restart,			(char*) "-L:", 				SO_NONE			},
     { OPT_bfs,              (char*) "-bfs",               SO_OPT          },
     { NO_OPT_bfs,           (char*) "-bfs:",              SO_NONE         },
+    { OPT_gap,              (char*) "-gap",               SO_REQ_SEP          },
 	{ OPT_localsearch,			(char*) "-i", 				SO_OPT			},// incop option default or string for narycsp argument	
 	{ OPT_EDAC,				(char*) "-k", 				SO_REQ_SEP		},
 	{ OPT_ub, 	 			(char*) "-ub", 				SO_REQ_SEP		}, // init upper bound in cli
@@ -673,6 +675,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cerr << endl;
 	cerr << "   -bfs=[integer] : hybrid Depth/Best-First Search every given number of backtracks (default value is " << ToulBar2::hybridBFS << ")" << endl;
+    cerr << "   -gap=[integer] : in conjunction with BFS and BTD-like methods, percentage of gap improvement before backtracking (default value is " << ToulBar2::hybridGap << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1203,7 +1206,21 @@ int _tmain(int argc, TCHAR * argv[])
                 if (ToulBar2::debug) cout <<"hybrid BFS OFF" << endl;
                 ToulBar2::hybridBFS = 0;
             }
-
+            if ( args.OptionId() == OPT_gap)
+            {
+                ToulBar2::hybridGap = atoi(args.OptionArg());
+                if (ToulBar2::hybridGap >= 0 && ToulBar2::hybridGap <= 100) {
+                    if (ToulBar2::debug) cout << "hybrid Gap = " << ToulBar2::hybridGap << endl;
+                    if (!ToulBar2::hybridBFS) {
+                        ToulBar2::hybridBFS = hybridbfslimit;
+                        if (ToulBar2::debug) cout << "hybrid BFS ON #iter = " << ToulBar2::hybridBFS << endl;
+                    }
+                    if (!ToulBar2::btdMode) {
+                        ToulBar2::btdMode = 1;
+                        if (ToulBar2::debug) cout << "BTD search ON" << endl;
+                    }
+                } else ToulBar2::hybridGap = 0;
+            }
 			// local search INCOP
 			if ( args.OptionId() == OPT_localsearch)  {
 			    if (args.OptionArg() != NULL) {

@@ -77,7 +77,8 @@ class Separator : public AbstractNaryConstraint
 	void solRec( Cost ub );
 	bool solGet( TAssign& a, String& sol );
 
-	void resetOpt();
+	void resetLb();
+    void resetUb();
 
     void queueSep() { wcsp->queueSeparator(&linkSep); }
     void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
@@ -150,6 +151,8 @@ class Cluster
       Solver::OpenList*     open;       // list of open nodes related to this cluster
       Long          hybridBFSLimit;     // limit on number of backtracks for hybrid search
       Long          nbBacktracks;       // current number of backtracks related to this cluster
+      Long          getNbBacktracksClusterTree() const {Long res = nbBacktracks; for (TClusters::const_iterator iter = beginEdges(); iter != endEdges(); ++iter) res += (*iter)->getNbBacktracksClusterTree(); return res;}
+      vector<Cluster *>   sons;         // copy of edges allowing sorting
 
       bool 			isVar( int i ) { TVars::iterator it = vars.find(i); return it != vars.end(); }
 	  int			getNbVars() { return vars.size(); }
@@ -178,18 +181,18 @@ class Cluster
 	  void 			addCtr( Constraint* c );
 	  void 			sum( TCtrs& c1, TCtrs& c2, TCtrs& ctout );
 
-	  bool			isActive() { int a = active; return a == 1; }
+	  bool			isActive() const { int a = active; return a == 1; }
 	  void 			deactivate();
 	  void 			reactivate();
 
 	  Cost			getLb()  { return lb; }
 	  void			setLb(Cost c)  { lb = c; }
       void 			increaseLb( Cost addToLb ) { lb += addToLb; }
-      Cost          getUb()  { return ub; }
+      Cost          getUb() const { return ub; }
       void          setUb(Cost c) {ub = c;}
 	  Cost		    getLbRDS() { Cost delta = getCurrentDelta(); return MAX(lbRDS - delta, MIN_COST); }
 	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
-	  Cost	        getLbRec();
+	  Cost	        getLbRec() const;
 	  Cost	        getLbRecRDS();
 
 	  void          addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
@@ -198,7 +201,8 @@ class Cluster
 	  void          nogoodRec( Cost clb, Cost cub, Solver::OpenList **open = NULL ) { if(sep) sep->set(clb,cub,open); }
       bool          nogoodGet( Cost &clb, Cost &cub, Solver::OpenList **open = NULL ) { return sep->get(clb,cub,open); }
 
-      void          resetOptRec(Cluster *rootCluster);
+      void          resetLbRec();
+      void          resetUbRec(Cluster *rootCluster);
 
   	  void			sgoodRec( Cost c, BigInteger nb) { if(sep) sep->setSg(c,nb);}
   	  BigInteger		sgoodGet( ){Cost c = MIN_COST; BigInteger nb; sep->getSg(c,nb); return nb; }
@@ -222,8 +226,10 @@ class Cluster
 	  TVars::iterator endSep()   { return sep->end(); }
 	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
-	  TClusters::iterator beginEdges() { return edges.begin(); }
-	  TClusters::iterator endEdges()   { return edges.end(); }
+	  TClusters::iterator beginEdges() const { return edges.begin(); }
+	  TClusters::iterator endEdges() const { return edges.end(); }
+      TClusters::reverse_iterator rbeginEdges() const { return edges.rbegin(); }
+      TClusters::reverse_iterator rendEdges() const { return edges.rend(); }
 	  TClusters::iterator beginDescendants() { return descendants.begin(); }
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
 

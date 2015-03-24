@@ -408,7 +408,17 @@ void Separator::solRec(Cost ub)
 	}
 }
 
-void Separator::resetOpt()
+void Separator::resetLb()
+{
+    TNoGoods::iterator it = nogoods.begin();
+    while(it != nogoods.end()) {
+        (it->second).first = MIN_COST;
+        (it->second).third.clear();
+        ++it;
+    }
+}
+
+void Separator::resetUb()
 {
 	TNoGoods::iterator it = nogoods.begin();
 	while(it != nogoods.end()) {
@@ -428,7 +438,7 @@ void Separator::print(ostream& os)
 		totaltuples = totaltuples * scope[i]->getDomainInitSize();
 	}
 	os << ")    ";
-	os << " |nogoods| = " << nogoods.size() << " / " << totaltuples;
+	os << " |nogoods| = " << nogoods.size() << " / " << totaltuples << " (" << cluster->getNbBacktracksClusterTree() << ")";
 	if (ToulBar2::verbose >= 4) {
 		os << "nogoods: {";
 		TNoGoods::iterator  it = nogoods.begin();
@@ -545,6 +555,7 @@ void Cluster::deconnectSep() {
             Cluster* ctrc = td->getCluster(ctr->getCluster()); // warning! return parent cluster if sep
 			if (!(ctr->isSep() && isDescendant(ctrc))) {
 			  // keep descendant separators connected
+//			    if (ctr->isSep()) cout << "deconnect separator parent " << ctr->cluster << " " << *ctr << endl;
 			  ctr->deconnect();
 			}
 	    }
@@ -553,18 +564,28 @@ void Cluster::deconnectSep() {
 	}
 }
 
-void Cluster::resetOptRec(Cluster *root)
+void Cluster::resetLbRec()
+{
+  if (sepSize() > 0) sep->resetLb();
+  if (this != td->getRoot()) open = NULL;
+  for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
+    (*iter)->resetLbRec();
+  }
+}
+
+void Cluster::resetUbRec(Cluster *root)
 {
   if(!sep || sepSize()==0 || !root->sep || root->sepSize()==0) return;
   TVars inter;
   td->intersection(sep->getVars(), root->sep->getVars(), inter);
-  if (inter.size() > 0) sep->resetOpt();
+  if (inter.size() > 0) sep->resetUb();
+  if (this != td->getRoot()) open = NULL;
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
-	(*iter)->resetOptRec(root);
+	(*iter)->resetUbRec(root);
   }
 }
 
-Cost Cluster::getLbRec() {
+Cost Cluster::getLbRec() const {
   assert(isActive());
   Cost res = lb;
   for (TClusters::iterator iter = beginEdges(); iter!= endEdges(); ++iter) {
