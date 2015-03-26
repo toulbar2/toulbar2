@@ -20,7 +20,7 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts =  10000;
-const Long hybridbfslimit = 100;
+const Long hybridbfslimit = 128;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";

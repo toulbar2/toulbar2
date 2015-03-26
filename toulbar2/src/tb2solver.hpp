@@ -55,7 +55,7 @@ public:
         void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
         void updateUb(Cost ub, Cost delta = MIN_COST) {Cost tmpub = MAX(MIN_COST, ub + delta); cub = MIN(cub, tmpub); clb = MIN(clb, tmpub);}
 
-        void clear() {clb=MAX_COST; cub=MAX_COST; while (!empty()) pop();}
+        void clear() {clb=MAX_COST; cub=MAX_COST; while (!empty()) pop();} //TODO: speed-up priority queue cleaning
     };
 
     typedef enum {
