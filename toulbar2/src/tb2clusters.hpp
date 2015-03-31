@@ -20,7 +20,14 @@ class Cluster;
 typedef set<int>	       TVars;
 typedef set<Constraint*>   TCtrs;
 //typedef map<int,Value>     TAssign;
-typedef set<Cluster*>	   TClusters;
+
+
+// sort cluster sons by mean separator size first and by number of variables in their subtree next
+struct CmpClusterStruct {
+  bool operator() (const Cluster *lhs, const Cluster *rhs) const;
+};
+typedef set<Cluster*>       TClusters;
+typedef set<Cluster*, CmpClusterStruct>       TClustersSorted;
 
 typedef triplet<Cost, Cost, Solver::OpenList >     TPairNG;
 typedef pair<Cost,String>   TPairSol;
@@ -114,6 +121,7 @@ class Cluster
   TVars				  vars; // contains all variables inside a cluster including separator variables
   TCtrs			      ctrs; // intermediate usage by bucket elimination (DO NOT USE)
   TClusters           edges; // adjacent clusters (includes parent cluster before makeRooted is done)
+  TClustersSorted     sortedEdges; // cluster sons are sorted after makeRooted is done
 
   Cluster*			  parent; // parent cluster
   TClusters           descendants; // set of cluster descendants (including itself)
@@ -135,14 +143,14 @@ class Cluster
 
 	  void          setup();
 
-	  int           getId() { return id; }
+	  int           getId() const { return id; }
 	  void          setId(int iid) { id=iid; }
 
 	  WCSP* 		getWCSP() { return wcsp; }
 
       Separator*    getSep() { return sep; }
 	  void 			setSep( Separator* sepin ) { sep = sepin; }
-	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
+	  int			sepSize() const { if(sep) return sep->arity(); else return 0; }
       void          deconnectSep(); // deconnect all the constraints on separator variables and assigns separator variables to their support value
       void 			deconnectDiff(TCtrs listCtrsTot,TCtrs listCtrs);
       bool 			isSepVar( int i ) { if(!sep) return false; return sep->is(i); }
@@ -155,8 +163,9 @@ class Cluster
       vector<Cluster *>   sons;         // copy of edges allowing sorting
 
       bool 			isVar( int i ) { TVars::iterator it = vars.find(i); return it != vars.end(); }
-	  int			getNbVars() { return vars.size(); }
+	  int			getNbVars() const { return vars.size(); }
 	  TVars&		getVars() { return vars; }
+      int           getNbVarsTree() const { return varsTree.size(); }
 	  TVars&		getVarsTree() { return varsTree; }
 	  TCtrs 		getCtrsTree();
 	  void 			addVars( TVars& vars );
@@ -212,7 +221,7 @@ class Cluster
   	  int			getPart(){return num_part;}
   	  void			setPart(int num){num_part=num;}
 
-	  void          solutionRec(Cost c) { ub = c; if(sep) sep->solRec(c); }
+	  void          solutionRec(Cost c) { setUb(c); if(sep) sep->solRec(c); }
       void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
 
 	  void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
@@ -228,18 +237,20 @@ class Cluster
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
 	  TClusters::iterator beginEdges() const { return edges.begin(); }
 	  TClusters::iterator endEdges() const { return edges.end(); }
-      TClusters::reverse_iterator rbeginEdges() const { return edges.rbegin(); }
-      TClusters::reverse_iterator rendEdges() const { return edges.rend(); }
 	  TClusters::iterator beginDescendants() { return descendants.begin(); }
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
+
+	  void sortEdgesRec() {for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) (*iter)->sortEdgesRec(); TClustersSorted tmpset(edges.begin(), edges.end(), CmpClusterStruct()); sortedEdges = tmpset;}
+      TClusters::iterator beginSortedEdges() const { return sortedEdges.begin(); }
+      TClusters::iterator endSortedEdges() const { return sortedEdges.end(); }
 
 	  void print();
       void dump();
 	  void printStats() { if(!sep) return; sep->print(cout); }
 
 	  void printStatsRec() {
-	  		TClusters::iterator it = beginEdges();
-			while(it != endEdges()) {
+	  		TClusters::iterator it = beginSortedEdges();
+			while(it != endSortedEdges()) {
 				(*it)->sep->print(cout);
 				(*it)->printStatsRec();
 				++it;

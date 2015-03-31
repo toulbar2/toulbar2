@@ -11,6 +11,15 @@
 #include <list>
 #include <algorithm>
 
+/*
+ * Comparison between cluster sons
+ *
+ */
+
+bool CmpClusterStruct::operator() (const Cluster *lhs, const Cluster *rhs) const
+{
+    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs<rhs))));
+}
 
 /*
  * Separator class derived from NaryConstraint
@@ -754,11 +763,20 @@ void Cluster::print() {
 
 	if (!edges.empty()) {
 	  cout << " sons {";
-	  TClusters::iterator itc = beginEdges();
-	  while(itc != endEdges()) {
-		cout << (*itc)->getId();
-		++itc;
-		if(itc != endEdges()) cout << ",";
+	  if (sortedEdges.size() == edges.size()) {
+	      TClusters::iterator itc = beginSortedEdges();
+	      while(itc != endSortedEdges()) {
+	        cout << (*itc)->getId();
+	        ++itc;
+	        if(itc != endSortedEdges()) cout << ",";
+	      }
+	  } else {
+	      TClusters::iterator itc = beginEdges();
+	      while(itc != endEdges()) {
+	        cout << (*itc)->getId();
+	        ++itc;
+	        if(itc != endEdges()) cout << ",";
+	      }
 	  }
 	  cout << "}";
 	}
@@ -1457,6 +1475,7 @@ int TreeDecomposition::makeRooted()
 		c->setup();
 	}
 	rootRDS = NULL;
+	root->sortEdgesRec();
 
  	int treewidth = 0;
 	for(unsigned int i = 0; i < clusters.size(); i++) {
@@ -2065,8 +2084,8 @@ void TreeDecomposition::print( Cluster* c, int recnum )
     c->print();
 
 
-	TClusters::iterator ita = c->beginEdges();
-	while(ita != c->endEdges()) {
+	TClusters::iterator ita = c->beginSortedEdges();
+	while(ita != c->endSortedEdges()) {
 		print( *ita, recnum+1 );
 		++ita;
 	}
