@@ -1162,8 +1162,9 @@ void WCSP::sortConstraints()
 
 	setDACOrder(revdac);
   }
-  if (ToulBar2::varOrder) {
-	vector<int> order;
+  // postpone costly variable elimination heuristics if too many variables
+  if (ToulBar2::varOrder && (numberOfVariables() < 10000 || ((long)((void *) ToulBar2::varOrder)) < 2 || ((long)((void *) ToulBar2::varOrder)) > 6)) {
+    vector<int> order;
 	elimOrderFile2Vector(ToulBar2::varOrder, order);
 	setDACOrder(order);
   }
@@ -1320,6 +1321,11 @@ void WCSP::preprocessing() {
 	propagate();
 
 	// recompute current DAC order and its reverse
+	if (ToulBar2::varOrder && numberOfVariables() >= 10000 && numberOfUnassignedVariables() < 10000 && (((long)((void *) ToulBar2::varOrder)) >= 2 && ((long)((void *) ToulBar2::varOrder)) <= 6)) {
+	    vector<int> order;
+	    elimOrderFile2Vector(ToulBar2::varOrder, order);
+	    setDACOrder(order);
+	}
 	vector<int> elimorder(numberOfVariables(), -1);
 	vector<int> revelimorder(numberOfVariables(), -1);
 	for (unsigned int i = 0; i < numberOfVariables(); i++) {
