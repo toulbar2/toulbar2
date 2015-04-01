@@ -447,7 +447,7 @@ void Separator::print(ostream& os)
 		totaltuples = totaltuples * scope[i]->getDomainInitSize();
 	}
 	os << ")    ";
-	os << " |nogoods| = " << nogoods.size() << " / " << totaltuples << " (" << cluster->getNbBacktracksClusterTree() << ")";
+	os << " |nogoods| = " << nogoods.size() << " / " << totaltuples << " min:" << min_element(nogoods.begin(), nogoods.end(), nogoods.value_comp())->second.first << " (" << cluster->getNbBacktracksClusterTree() << " bt)";
 	if (ToulBar2::verbose >= 4) {
 		os << "nogoods: {";
 		TNoGoods::iterator  it = nogoods.begin();

@@ -29,6 +29,7 @@ public:
         int last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
         OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
+//        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) > (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and smallest depth next
         bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and deepest depth next
 
         Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
@@ -111,6 +112,7 @@ protected:
     Long hybridBFSLimit;        // limit on number of backtracks for hybrid search (except BTD)
     Long nbHybrid;
     Long nbHybridContinue;
+    Long nbHybridNew;
     Long nbRecomputationNodes;
 
     // Heuristics and search methods

@@ -29,7 +29,7 @@ WeightedCSPSolver *WeightedCSPSolver::makeWeightedCSPSolver(int storeSize, Cost 
 Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(NULL),
                                                      allVars(NULL), unassignedVars(NULL), lastConflictVar(-1),
                                                      nbSol(0.), nbSGoods(0), nbSGoodsUse(0), cp(NULL), open(NULL),
-                                                     hybridBFSLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbRecomputationNodes(0)
+                                                     hybridBFSLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(0), nbRecomputationNodes(0)
 {
     store = new Store(storeSize);
     searchSize = new StoreCost(MIN_COST, &store->storeCost);
@@ -1090,14 +1090,15 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
         cp_->store();
         int hybridGap = ToulBar2::hybridGap;
         if (open_->size() == 0 || (cluster && (clb >= open_->getClosedNodesLb(delta) || cub > open_->getUb(delta)))) { // start a new list of open nodes if needed
-//            if (open_->size() != 0) {
+            if (open_->size() != 0) {
 //                cout << "C" << cluster->getId() << " " << clb << " " << cub << " " <<  open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
+                //TODO: if revisit then double initial hybridGap or set it to 100
 //                hybridGap = 100;
-//            }
+            } else if (!cluster || cluster->getNbVars() > 0) nbHybridNew++;
             open_->init(this, cp_, clb, cub, delta);
-            //TODO: if revisit then double initial hybridGap or set it to 100
-        } else nbHybridContinue++;
+        } else if (!cluster || cluster->getNbVars() > 0) nbHybridContinue++;
         if (!cluster || cluster->getNbVars() > 0) nbHybrid++; // do not count empty root cluster
+        Long nbnodes = nbNodes;
         Cost initiallb = clb;
         Cost initialub = cub;
         Cost threshold_gap = MAX((Cost) ((1. - hybridGap/100.) * (initialub - initiallb)), 1);
@@ -1107,7 +1108,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
         if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
 //        while (clb < cub && !open_->finished() && (!cluster || (open_->getLb(delta) <= initiallb && cub == initialub))) {
 //        while (clb < cub && !open_->finished() && (!cluster || ((cub >= threshold_ub) && (cub - clb >= threshold_gap)))) {
-        while (clb < cub && !open_->finished() && (!cluster || (cub - clb >= threshold_gap))) {
+        while (clb < cub && !open_->finished() && (!cluster || (cub - clb >= threshold_gap && nbNodes - nbnodes <= 10000))) {
             if (cluster) {
                 cluster->hybridBFSLimit = cluster->nbBacktracks + ToulBar2::hybridBFS;
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -1121,8 +1122,8 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 OpenNode nd = open_->top();
                 open_->pop();
                 if (ToulBar2::verbose >= 1 || ToulBar2::debug>=2) {
-                    if (wcsp->getTreeDec()) cout << "C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << " ";
-                    cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << " still open)" << endl;
+                    if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+                    cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << "+1 still open)" << endl;
                 }
                 restore(*cp_, nd);
                 Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
@@ -1153,7 +1154,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 else hybridBFSLimit = LONGLONG_MAX;
             }
             clb = MAX(clb, open_->getLb(delta));
-            if (ToulBar2::hybridBFS && nbRecomputationNodes>0) {
+            if (ToulBar2::hybridBFS && nbRecomputationNodes>0) { // wait until a nonempty open node is restored (at least after first global solution is found)
                 assert(nbNodes > 0);
                 float recompute_effort = (float) nbRecomputationNodes / nbNodes;
                 if (recompute_effort > 0.1 && ToulBar2::hybridBFS <= 10000) ToulBar2::hybridBFS *= 2;
@@ -1412,7 +1413,7 @@ bool Solver::solve()
 				  exit(EXIT_FAILURE);
 				}
 				if(ToulBar2::debug) start->printStatsRec();
-				if (nbHybrid>=1) cout << "Hybrid solve open list reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
+				if (nbHybrid>=1) cout << "Hybrid solve open list restart " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
 			  } else hybridSolve();
 			}
 		  } catch (NbBacktracksOut) {
@@ -1666,6 +1667,7 @@ void Solver::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool re
 {
     TreeDecomposition *td = wcsp->getTreeDec();
     if (td) {
+        if (ToulBar2::verbose >= 1) cout << "[C" << td->getCurrentCluster()->getId() << "] ";
         td->getCurrentCluster()->cp->addChoicePoint(op, varIndex, value, reverse);
     } else {
         cp->addChoicePoint(op, varIndex, value, reverse);
@@ -1722,7 +1724,13 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
 
 void Solver::restore(CPStore &cp, OpenNode nd)
 {
-    if (ToulBar2::verbose >= 1) cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
+    if (ToulBar2::verbose >= 1) {
+        if (wcsp->getTreeDec()) {
+            cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] restore open node " << nd.getCost(wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta()) << " (" << nd.first << ", " << nd.last << ")" << endl;
+        } else {
+            cout << "restore open node " << nd.getCost(MIN_COST) << " (" << nd.first << ", " << nd.last << ")" << endl;
+        }
+    }
     assert(nd.last >= nd.first);
     nbRecomputationNodes += nd.last - nd.first;
 
@@ -1740,6 +1748,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
             size++;
         }
     }
+    wcsp->enforceUb();
     wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
     for (int idx = nd.first; idx < nd.last; ++idx) {
         assert(idx < cp.size());

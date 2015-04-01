@@ -527,7 +527,7 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 			  }
 			}
 		} else {
-		    // switch from depth-first search to best-first search in this cluster
+		    // switch from depth-first search to best-first search in this cluster if a new solution has been found (can be too optimistic=)
 //		    if (ToulBar2::hybridBFS) cluster->hybridBFSLimit = cluster->nbBacktracks;
 		}
 	}
@@ -550,7 +550,7 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	    assert(prevopen == cluster->open);
 #endif
 	    addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta()); // reinsert as a new open node
-	    cluster->hybridBFSLimit = cluster->nbBacktracks; // stop current visited node
+	    cluster->hybridBFSLimit = cluster->nbBacktracks; // and stop current visited node
 	    bestlb = cub;
 	}
     return make_pair(bestlb, cub);
