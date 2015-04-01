@@ -1413,7 +1413,7 @@ bool Solver::solve()
 				  exit(EXIT_FAILURE);
 				}
 				if(ToulBar2::debug) start->printStatsRec();
-				if (nbHybrid>=1) cout << "Hybrid solve open list restart " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
+				if (nbHybrid>=1) cout << "Hybrid solve open list restart " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
 			  } else hybridSolve();
 			}
 		  } catch (NbBacktracksOut) {
