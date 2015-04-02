@@ -1091,8 +1091,8 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
         int hybridGap = ToulBar2::hybridGap;
         if (open_->size() == 0 || (cluster && (clb >= open_->getClosedNodesLb(delta) || cub > open_->getUb(delta)))) { // start a new list of open nodes if needed
             if (open_->size() != 0) {
-//                cout << "C" << cluster->getId() << " " << clb << " " << cub << " " <<  open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
                 //TODO: if revisit then double initial hybridGap or set it to 100
+//                cout << "C" << cluster->getId() << " " << clb << " " << cub << " " <<  open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
 //                hybridGap = 100;
             } else if (!cluster || cluster->getNbVars() > 0) nbHybridNew++;
             open_->init(this, cp_, clb, cub, delta);
@@ -1101,13 +1101,11 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
         Long nbnodes = nbNodes;
         Cost initiallb = clb;
         Cost initialub = cub;
-        Cost threshold_gap = MAX((Cost) ((1. - hybridGap/100.) * (initialub - initiallb)), 1);
-//        Cost threshold_ub = (Cost) (90. * initialub / 100.);
+        Cost threshold_gap = MAX((Cost) ((1.L - 0.01L * (Double) hybridGap) * ((Double) (initialub - initiallb))), UNIT_COST);
         open_->updateUb(cub, delta);
         clb = MAX(clb, open_->getLb(delta));
         if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
 //        while (clb < cub && !open_->finished() && (!cluster || (open_->getLb(delta) <= initiallb && cub == initialub))) {
-//        while (clb < cub && !open_->finished() && (!cluster || ((cub >= threshold_ub) && (cub - clb >= threshold_gap)))) {
         while (clb < cub && !open_->finished() && (!cluster || (cub - clb >= threshold_gap && nbNodes - nbnodes <= 10000))) {
             if (cluster) {
                 cluster->hybridBFSLimit = cluster->nbBacktracks + ToulBar2::hybridBFS;
