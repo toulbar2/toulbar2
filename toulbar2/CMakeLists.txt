@@ -41,10 +41,6 @@ project("Toulbar2_framework")
 	MESSAGE(STATUS " MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 	MESSAGE(STATUS "#################################")
 
-#directory location of peo and narycsp  cf initial ub
-set (My_misc_bin "misc/bin/${CMAKE_SYSTEM_NAME}") 
-# cf. package.cmake for peo and narycsp install command
-
 include(CMakeDependentOption)
 
 ##########################"
@@ -259,9 +255,6 @@ ELSE(WIN32)
 
 	SET(COST LONGLONG_COST)
 	MESSAGE(STATUS "COST ==>  long long")
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/bin/Linux/narycsp
-    ${EXECUTABLE_OUTPUT_PATH}/narycsp COPYONLY)
 
 
 ENDIF(WIN32)
