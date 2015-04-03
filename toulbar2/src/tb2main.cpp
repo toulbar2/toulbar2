@@ -664,7 +664,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::boostingBTD) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -R=[integer] : choice for a specific root cluster number" << endl;
-	cerr << "   -I=[integer] : choice for solving only a particular rooted cluster subtree" << endl << endl;
+	cerr << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl << endl;
 	cerr << "   -a : finds all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)";
 	if (ToulBar2::allSolutions) cerr << " (default option)";
 	cerr << endl;
@@ -1678,6 +1678,11 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
 		ToulBar2::binaryBranching = true;
 	}
+    if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1)
+    {
+        cout << "Warning! solving only a problem subtree => force Russian Doll Search method." << endl;
+        ToulBar2::btdMode = 2;
+    }
 	if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1)
 	{
 		cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;

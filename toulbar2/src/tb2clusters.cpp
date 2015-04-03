@@ -140,7 +140,7 @@ void Separator::propagate()
 			  Cost lbpropa = cluster->getLbRec();
 			  Cost lb = clb - lbpropa;
 			  if(opt || lb>MIN_COST) {
-				  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb=" << lb << ")" << endl;
+				  if (ToulBar2::verbose >= 1) cout << "nogood C" << cluster->getId() << " used in advance (lbpropa=" << lbpropa << " ,lb+=" << lb << ")" << endl;
 				  assert(lb >= MIN_COST);
 				  if (opt) unqueueSep();
 				  // atomic operations:

@@ -1379,6 +1379,7 @@ bool Solver::solve()
 				        do {
 				            try {
 				                store->store();
+				                td->setCurrentCluster(start);
 				                enforceUb();
 				                wcsp->propagate();
 				                res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);

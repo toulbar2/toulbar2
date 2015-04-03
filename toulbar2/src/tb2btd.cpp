@@ -458,9 +458,11 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
         assert(tmpub == ubSon);
 #endif
 	  }
-//	  if (ToulBar2::verbose >= 2) cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << endl;
+	  if (ToulBar2::verbose >= 2) cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
 	  if (lbSon < ubSon) { // we do not have an optimality proof
 	      if (clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
+	          bool csolution = (csol < MAX_COST && ubSon < cub - csol + lbSon);
+	          assert(!csolution || ubSon < cub - clb + lbSon);
 	          ubSon = MIN(ubSon, cub - clb + lbSon);
 	          td->setCurrentCluster(c);
 	          wcsp->setUb(ubSon);
@@ -481,14 +483,15 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	              c->nogoodRec(res.first, ((res.second<ubSon)?res.second:MAX_COST), &c->open);
 	              clb += res.first - lbSon;
 	              if (csol < MAX_COST) {
-	                  if (res.second < ubSon) csol += res.second - lbSon;
+	                  if (res.second < ubSon || csolution) csol += res.second - lbSon;
 	                  else csol = MAX_COST;
 	              }
 	          } catch (Contradiction) {
 	              wcsp->whenContradiction();
 	              c->nogoodRec(ubSon, MAX_COST, &c->open);
-	              clb = cub;
-	              csol = MAX_COST;
+	              clb += ubSon - lbSon;
+	              if (csolution) csol += ubSon - lbSon;
+	              else csol = MAX_COST;
 	          }
 	          store->restore();
 	      } else {
