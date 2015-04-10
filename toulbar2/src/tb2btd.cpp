@@ -337,6 +337,7 @@ pair<Cost,Cost> Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cu
 		  if (increasing) increase(varIndex, middle+1, cluster->nbBacktracks >= cluster->hybridBFSLimit); else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hybridBFSLimit);
 		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hybridBFSLimit);
 		bestlb = MAX(bestlb, wcsp->getLb());
+	    if (!ToulBar2::hybridBFS && cluster==td->getRoot() && initialDepth+1==store->getDepth()) {initialDepth++; showGap(bestlb, cub);};
 		if (cluster->nbBacktracks >= cluster->hybridBFSLimit) {
 		    addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta());
 		} else {

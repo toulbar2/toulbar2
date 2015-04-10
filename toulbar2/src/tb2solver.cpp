@@ -29,7 +29,8 @@ WeightedCSPSolver *WeightedCSPSolver::makeWeightedCSPSolver(int storeSize, Cost 
 Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(NULL),
                                                      allVars(NULL), unassignedVars(NULL), lastConflictVar(-1),
                                                      nbSol(0.), nbSGoods(0), nbSGoodsUse(0), cp(NULL), open(NULL),
-                                                     hybridBFSLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(0), nbRecomputationNodes(0)
+                                                     hybridBFSLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(0), nbRecomputationNodes(0),
+                                                     initialLowerBound(MIN_COST), globalLowerBound(MIN_COST), globalUpperBound(MAX_COST), initialDepth(0)
 {
     store = new Store(storeSize);
     searchSize = new StoreCost(MIN_COST, &store->storeCost);
@@ -638,6 +639,25 @@ int cmpValueCost(const void *p1, const void *p2)
     else return 0;
 }
 
+void Solver::initGap(Cost newLb, Cost newUb)
+{
+    initialLowerBound = newLb;
+    globalLowerBound = newLb;
+    globalUpperBound = newUb;
+    initialDepth = store->getDepth();
+}
+
+void Solver::showGap(Cost newLb, Cost newUb)
+{
+    if (newUb > initialLowerBound && store->getDepth()==initialDepth) {
+        int oldgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
+        globalLowerBound = MAX(globalLowerBound, newLb);
+        globalUpperBound = MIN(globalUpperBound, newUb);
+        int newgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
+        if (newgap < oldgap) cout << "Optimality gap: [ " <<  globalLowerBound << " , " << globalUpperBound << " ] " << newgap << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+    }
+}
+
 void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 {
     assert(wcsp->unassigned(varIndex));
@@ -693,6 +713,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 //    } else if (reverse) {
 //    	assign(varIndex, value, nbBacktracks > hybridBFSLimit);
 	} else remove(varIndex, value, nbBacktracks >= hybridBFSLimit);
+    if (!ToulBar2::hybridBFS) showGap(wcsp->getLb(), wcsp->getUb());
     if (nbBacktracks >= hybridBFSLimit) addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
     else recursiveSolve(lb);
 }
@@ -744,6 +765,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
               if (increasing) remove(varIndex, sorted, middle, domsize-1); else remove(varIndex, sorted, 0, middle-1);
             }
         } else assign(varIndex, value);
+        if (!ToulBar2::hybridBFS && !ToulBar2::limited) showGap(wcsp->getLb(), wcsp->getUb());
         recursiveSolveLDS(discrepancy);
     } else {
         ToulBar2::limited = true;
@@ -1152,6 +1174,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                 else hybridBFSLimit = LONGLONG_MAX;
             }
             clb = MAX(clb, open_->getLb(delta));
+            showGap(clb, cub);
             if (ToulBar2::hybridBFS && nbRecomputationNodes>0) { // wait until a nonempty open node is restored (at least after first global solution is found)
                 assert(nbNodes > 0);
                 float recompute_effort = (float) nbRecomputationNodes / nbNodes;
@@ -1245,6 +1268,7 @@ bool Solver::solve()
 
 		if (ToulBar2::verbose >= 0) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
         if (ToulBar2::verbose >= 0) cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[ " << (Double) 100.0 * (wcsp->getUb()-wcsp->getLb())/(Double) wcsp->getUb() << "%" << endl;
+        initGap(wcsp->getLb(), wcsp->getUb());
 
 		if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
@@ -1336,10 +1360,12 @@ bool Solver::solve()
 //					  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
 //					  		wcsp->resetWeightedDegree(*iter);
 //					  }
+					initialDepth = store->getDepth();
 					hybridSolve();
 				} else {
 					try {
 					  store->store();
+	                  initialDepth = store->getDepth();
 					  recursiveSolveLDS(discrepancy);
 					} catch (Contradiction) {
 						wcsp->whenContradiction();
@@ -1382,8 +1408,9 @@ bool Solver::solve()
 				                td->setCurrentCluster(start);
 				                enforceUb();
 				                wcsp->propagate();
+				                initialDepth = store->getDepth();
 				                res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
-				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+//				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
 				            } catch (Contradiction) {
 				                wcsp->whenContradiction();
 				                res.first = res.second;
@@ -1397,9 +1424,9 @@ bool Solver::solve()
 				    break;
 				case 2:case 3: {
 				    pair<Cost, Cost> res = make_pair(wcsp->getLb(), ub);
-				    do {
+				    do {//TODO: set up for optimality gap pretty print
 				        res = russianDollSearch(start, res.second);
-				        if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+//				        if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
 				    } while (res.first < res.second);
                     assert(res.first == res.second);
 				    ub = start->getLbRDS();
@@ -1413,7 +1440,10 @@ bool Solver::solve()
 				}
 				if(ToulBar2::debug) start->printStatsRec();
 				if (nbHybrid>=1) cout << "Hybrid solve open list restart " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
-			  } else hybridSolve();
+			  } else {
+                  initialDepth = store->getDepth();
+			      hybridSolve();
+			  }
 			}
 		  } catch (NbBacktracksOut) {
 			nbbacktracksout = true;

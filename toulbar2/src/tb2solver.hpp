@@ -115,6 +115,14 @@ protected:
     Long nbHybridNew;
     Long nbRecomputationNodes;
 
+    //only for pretty print of optimality gap information
+    Cost initialLowerBound;
+    Cost globalLowerBound;
+    Cost globalUpperBound;
+    int initialDepth;
+    void initGap(Cost newlb, Cost newub);
+    void showGap(Cost newlb, Cost newub);
+
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
