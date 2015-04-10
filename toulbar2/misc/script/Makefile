@@ -48,7 +48,7 @@ CFLAGS = -g -Wall $(ILOGFLAGS) $(BOOST) $(XMLI) -DNARYCHAR
 # -DWCSPFORMATONLY
 # -ftrapv -g3
 # -Wconversion -Wsign-conversion
-# -O1 -g3 -ftrapv -ansi -pedantic
+# -O1 -g3 -ftrapv -ansi -pedantic -fsanitize=undefined
 # -O1 -g3 -ftrapv -ansi -pedantic -Wall -Wno-long-long
 # -DNARYCHAR  # use this option to print nary constraints (including separators) correctly
 # -DWCSPFORMATONLY # use this option to assume positive domains starting at value 0 (as in the wcsp format file)
