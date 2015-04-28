@@ -649,6 +649,7 @@ void Solver::initGap(Cost newLb, Cost newUb)
 
 void Solver::showGap(Cost newLb, Cost newUb)
 {
+    if (newLb > newUb) newLb = newUb;
     if (newUb > initialLowerBound && store->getDepth()==initialDepth) {
         int oldgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
         globalLowerBound = MAX(globalLowerBound, newLb);
@@ -1158,13 +1159,13 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
                     open_->updateClosedNodesLb(res.first, delta);
                     open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
-                } else {
-                    recursiveSolve(bestlb);
-                    cub = wcsp->getUb();
-                    open_->updateUb(cub);
-                }
+                } else recursiveSolve(bestlb);
             } catch (Contradiction) {
                 wcsp->whenContradiction();
+            }
+            if (!cluster) { // synchronize current upper bound with DFS (without tree decomposition)
+                cub = wcsp->getUb();
+                open_->updateUb(cub);
             }
             store->restore(storedepthBFS);
             cp_->store();
