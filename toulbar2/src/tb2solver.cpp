@@ -1712,16 +1712,7 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
         cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
     }
     assert(cp.start <= idx);
-//    Cost best = (open.empty())?0:open.top().getCost(0);
-//    int prevfirst = (open.empty())?0:open.top().first;
-//    int prevlast = (open.empty())?0:open.top().last;
     open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx));
-//    int first = (open.empty())?0:open.top().first;
-//    int last = (open.empty())?0:open.top().last;
-//    if (MAX(MIN_COST, lb + delta) == best && prevlast - prevfirst == idx - cp.start) {
-//        if (first == cp.start && last == idx) cout << "less rotation.." << endl;
-//        else cout << "ROTATE!!!" << endl;
-//    }
     cp.stop = max(cp.stop, idx);
 }
 

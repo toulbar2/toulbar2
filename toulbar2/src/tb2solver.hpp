@@ -29,9 +29,7 @@ public:
         int last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
         OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
-//        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) > (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and smallest depth next
-        //TODO: check circular effect of sons visiting if using <= instead of <
-        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first)));} // reverse order to get the open node with the smallest lower bound first and deepest depth next
+        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first) || ((last-first) == (right.last-right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
     };
