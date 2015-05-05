@@ -41,8 +41,7 @@ public:
         Cost cub;   // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:
         OpenList(Cost lb, Cost ub) : clb(lb), cub(ub) {}
-        OpenList() : clb(MAX_COST), cub(MAX_COST) {}
-        void init(Solver *solver, CPStore *cp, Cost lb, Cost ub, Cost delta = MIN_COST);
+        OpenList() : clb(MAX_COST), cub(MAX_COST) {} /// \warning use also this method to clear an open list
 
         bool finished() const {assert(clb <= cub); return (empty() || CUT(top().getCost(), clb));}
         Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty()?MAX_COST:top().getCost(delta)));}
@@ -54,8 +53,6 @@ public:
         Cost getUb(Cost delta = MIN_COST) const {return MAX(MIN_COST, cub - delta);}
         void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
         void updateUb(Cost ub, Cost delta = MIN_COST) {Cost tmpub = MAX(MIN_COST, ub + delta); cub = MIN(cub, tmpub); clb = MIN(clb, tmpub);}
-
-        void clear() {clb=MAX_COST; cub=MAX_COST; while (!empty()) pop();} //TODO: speed-up priority queue cleaning
     };
 
     typedef enum {

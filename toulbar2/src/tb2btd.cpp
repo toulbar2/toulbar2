@@ -654,7 +654,7 @@ pair<Cost,Cost> Solver::russianDollSearch(Cluster *c, Cost cub)
 	if (c == td->getRoot()) {
 	    c->resetLbRec();
 	} else {
-	    if (c->open) c->open->clear();
+	    if (c->open) *(c->open) = OpenList(); // clear current open list
 	    c->resetUbRec(c);
 	}
     return res;

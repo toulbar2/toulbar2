@@ -1118,7 +1118,9 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 //                cout << "C" << cluster->getId() << " " << clb << " " << cub << " " <<  open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
 //                hybridGap = 100;
             } else if (!cluster || cluster->getNbVars() > 0) nbHybridNew++;
-            open_->init(this, cp_, clb, cub, delta);
+            // reinitialize current open list and insert empty node
+            *open_ = OpenList(MAX(MIN_COST, cub + delta), MAX(MIN_COST, cub + delta));
+            addOpenNode(*cp_, *open_, clb, delta);
         } else if (!cluster || cluster->getNbVars() > 0) nbHybridContinue++;
         if (!cluster || cluster->getNbVars() > 0) nbHybrid++; // do not count empty root cluster
         Long nbnodes = nbNodes;
@@ -1671,15 +1673,6 @@ int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)
 
 
 /* Hybrid Best-First/Depth-First Search */
-
-void Solver::OpenList::init(Solver *solver, CPStore *cp, Cost lb, Cost ub, Cost delta)
-{
-    assert(lb <= ub);
-    clb = MAX(MIN_COST, ub + delta);
-    cub = MAX(MIN_COST, ub + delta);
-    while (!empty()) pop();
-    solver->addOpenNode(*cp, *this, lb, delta);
-}
 
 void Solver::CPStore::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse)
 {

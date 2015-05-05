@@ -422,7 +422,7 @@ void Separator::resetLb()
     TNoGoods::iterator it = nogoods.begin();
     while(it != nogoods.end()) {
         (it->second).first = MIN_COST;
-        (it->second).third.clear();
+        (it->second).third = Solver::OpenList();
         ++it;
     }
 }
@@ -432,7 +432,7 @@ void Separator::resetUb()
 	TNoGoods::iterator it = nogoods.begin();
 	while(it != nogoods.end()) {
 		(it->second).second = MAX_COST;
-		(it->second).third.clear();
+		(it->second).third = Solver::OpenList();
 		++it;
 	}
 }
