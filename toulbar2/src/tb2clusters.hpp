@@ -157,7 +157,8 @@ class Cluster
 
       Solver::CPStore*      cp;         // choice point cache for open nodes related to this cluster
       Solver::OpenList*     open;       // list of open nodes related to this cluster
-      Long          hybridBFSLimit;     // limit on number of backtracks for hybrid search
+      Long          hbfsGlobalLimit;    // global limit on number of backtracks for hybrid search on the subproblem rooted to this cluster
+      Long          hbfsLimit;          // local limit on number of backtracks for hybrid search on this cluster only
       Long          nbBacktracks;       // current number of backtracks related to this cluster
       Long          getNbBacktracksClusterTree() const {Long res = nbBacktracks; for (TClusters::const_iterator iter = beginEdges(); iter != endEdges(); ++iter) res += (*iter)->getNbBacktracksClusterTree(); return res;}
       vector<Cluster *>   sons;         // copy of edges allowing sorting

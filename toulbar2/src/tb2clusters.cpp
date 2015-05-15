@@ -477,7 +477,7 @@ Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(
                                             lb(MIN_COST, &wcsp->getStore()->storeCost), ub(MAX_COST), lbRDS(MIN_COST),
                                             active(true, &wcsp->getStore()->storeInt),
                                             countElimVars(1, &wcsp->getStore()->storeBigInteger),
-                                            cp(NULL), open(NULL), hybridBFSLimit(LONGLONG_MAX), nbBacktracks(0) {}
+                                            cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0) {}
 
 Cluster::~Cluster() {
     delete cp;
@@ -719,7 +719,7 @@ bool Cluster::isEdge( Cluster* c ) {
 void Cluster::setup()
 {
   	if(sep) sep->setup(this);
-  	if (ToulBar2::hybridBFS) {
+  	if (ToulBar2::hbfs) {
   	    if (cp) delete cp;
   	    cp = new Solver::CPStore(wcsp->getStore());
   	}

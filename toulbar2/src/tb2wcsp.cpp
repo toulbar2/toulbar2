@@ -154,8 +154,8 @@ bool ToulBar2::learning;
 
 string ToulBar2::incop_cmd;
 
-Long ToulBar2::hybridBFS;
-int ToulBar2::hybridGap;
+Long ToulBar2::hbfs;
+Long ToulBar2::hbfsGlobalLimit;
 
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
@@ -267,8 +267,8 @@ void tb2init()
     ToulBar2::learning = false;
 
     ToulBar2::incop_cmd = "";
-    ToulBar2::hybridBFS = 0;
-    ToulBar2::hybridGap = 0;
+    ToulBar2::hbfs = 0;
+    ToulBar2::hbfsGlobalLimit = 0;
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;

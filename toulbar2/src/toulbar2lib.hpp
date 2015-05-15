@@ -161,7 +161,7 @@ public:
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval) =0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) =0;
-    virtual void postNaryConstraintEnd(int ctrindex) =0;
+    virtual void postNaryConstraintEnd(int ctrindex) =0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints and WeightedCSP::histogram)
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;

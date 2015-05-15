@@ -20,7 +20,7 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts =  10000;
-const Long hybridbfslimit = 1;
+const Long hbfsgloballimit = 10000;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -207,9 +207,8 @@ enum {
 	NO_OPT_lds,
 	OPT_restart,
 	NO_OPT_restart,
-    OPT_bfs,
-    NO_OPT_bfs,
-    OPT_gap,
+    OPT_hbfs,
+    NO_OPT_hbfs,
 	OPT_localsearch,
 	NO_OPT_localsearch,
 	OPT_EDAC,
@@ -345,9 +344,10 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ NO_OPT_lds,	 			(char*) "-l:", 				SO_NONE			},
 	{ OPT_restart,	 			(char*) "-L", 				SO_OPT			},
 	{ NO_OPT_restart,			(char*) "-L:", 				SO_NONE			},
-    { OPT_bfs,              (char*) "-bfs",               SO_OPT          },
-    { NO_OPT_bfs,           (char*) "-bfs:",              SO_NONE         },
-    { OPT_gap,              (char*) "-gap",               SO_REQ_SEP          },
+    { OPT_hbfs,              (char*) "-hbfs",               SO_OPT          },
+    { OPT_hbfs,              (char*) "-bfs",               SO_OPT          },
+    { NO_OPT_hbfs,           (char*) "-hbfs:",              SO_NONE         },
+    { NO_OPT_hbfs,           (char*) "-bfs:",              SO_NONE         },
 	{ OPT_localsearch,			(char*) "-i", 				SO_OPT			},// incop option default or string for narycsp argument	
 	{ OPT_EDAC,				(char*) "-k", 				SO_REQ_SEP		},
 	{ OPT_ub, 	 			(char*) "-ub", 				SO_REQ_SEP		}, // init upper bound in cli
@@ -674,8 +674,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
 	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cerr << endl;
-	cerr << "   -bfs=[integer] : hybrid Depth/Best-First Search every given number of backtracks (default value is " << ToulBar2::hybridBFS << ")" << endl;
-    cerr << "   -gap=[integer] : in conjunction with BFS and BTD-like methods, percentage of gap improvement before backtracking (default value is " << ToulBar2::hybridGap << ")" << endl;
+	cerr << "   -hbfs=[integer] : hybrid best-first search switching from depth-first to best-first search after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1190,36 +1189,24 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 
             // hybrid BFS option
-            if ( args.OptionId() == OPT_bfs)
+            if ( args.OptionId() == OPT_hbfs)
             {
                 string comment ;
                 if( args.OptionArg() == NULL ) {
                     comment = " (default value) " ;
-                    ToulBar2::hybridBFS = hybridbfslimit;
+                    ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
                 } else {
                     Long maxbt = atoll(args.OptionArg());
-                    if (maxbt >= 0) ToulBar2::hybridBFS = maxbt;
+                    if (maxbt > 0) ToulBar2::hbfsGlobalLimit = maxbt;
+                    else ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
                 }
-                if (ToulBar2::debug) cout << "hybrid BFS ON #iter = " << ToulBar2::hybridBFS << comment << endl;
-            } else if (args.OptionId() ==NO_OPT_bfs)
+                ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
+                if (ToulBar2::debug) cout << "hybrid BFS ON #iter with backtrack limit = " << ToulBar2::hbfsGlobalLimit << comment << endl;
+            } else if (args.OptionId() ==NO_OPT_hbfs)
             {
                 if (ToulBar2::debug) cout <<"hybrid BFS OFF" << endl;
-                ToulBar2::hybridBFS = 0;
-            }
-            if ( args.OptionId() == OPT_gap)
-            {
-                ToulBar2::hybridGap = atoi(args.OptionArg());
-                if (ToulBar2::hybridGap >= 0 && ToulBar2::hybridGap <= 100) {
-                    if (ToulBar2::debug) cout << "hybrid Gap = " << ToulBar2::hybridGap << endl;
-                    if (!ToulBar2::hybridBFS) {
-                        ToulBar2::hybridBFS = hybridbfslimit;
-                        if (ToulBar2::debug) cout << "hybrid BFS ON #iter = " << ToulBar2::hybridBFS << endl;
-                    }
-                    if (!ToulBar2::btdMode) {
-                        ToulBar2::btdMode = 1;
-                        if (ToulBar2::debug) cout << "BTD search ON" << endl;
-                    }
-                } else ToulBar2::hybridGap = 0;
+                ToulBar2::hbfs = 0;
+                ToulBar2::hbfsGlobalLimit = 0;
             }
 			// local search INCOP
 			if ( args.OptionId() == OPT_localsearch)  {
@@ -1668,6 +1655,16 @@ int _tmain(int argc, TCHAR * argv[])
 		cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
 		ToulBar2::lds = 0;
 	}
+    if (ToulBar2::lds && ToulBar2::hbfs)
+    {
+        cout << "Warning! Limited Discrepancy Search not compatible with hybrid best-first search methods." << endl;
+        ToulBar2::lds = 0;
+    }
+    if (ToulBar2::hbfs && ToulBar2::btdMode >= 2)
+    {
+        cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
+        ToulBar2::hbfs = 0;
+    }
 	if (ToulBar2::restart>=0 && ToulBar2::btdMode >= 1)
 	{
 		cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
@@ -1702,12 +1699,12 @@ int _tmain(int argc, TCHAR * argv[])
         cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
         ToulBar2::incop_cmd = "";
     }
-    if (!ToulBar2::binaryBranching && ToulBar2::hybridBFS)
+    if (!ToulBar2::binaryBranching && ToulBar2::hbfs)
     {
         cout << "Warning! n-ary branching not implemented with best-first search => force binary branching." << endl;
         ToulBar2::binaryBranching = true;
     }
-    if (ToulBar2::dichotomicBranching>=2 && ToulBar2::hybridBFS)
+    if (ToulBar2::dichotomicBranching>=2 && ToulBar2::hbfs)
     {
         cout << "Warning! complex dichotomic branching not implemented with best-first search => force simple dichotomic branching." << endl;
         ToulBar2::dichotomicBranching = 1;

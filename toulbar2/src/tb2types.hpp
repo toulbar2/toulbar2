@@ -361,8 +361,8 @@ public:
 
 	static string incop_cmd;
 
-    static Long hybridBFS;
-    static int hybridGap;
+    static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
+    static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution

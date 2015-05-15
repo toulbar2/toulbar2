@@ -334,11 +334,11 @@ pair<Cost,Cost> Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cu
 			if(CUT(bestlb, cub)) THROWCONTRADICTION;
 		}
 		if (dichotomic) {
-		  if (increasing) increase(varIndex, middle+1, cluster->nbBacktracks >= cluster->hybridBFSLimit); else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hybridBFSLimit);
-		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hybridBFSLimit);
+		  if (increasing) increase(varIndex, middle+1, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit); else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
+		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
 		bestlb = MAX(bestlb, wcsp->getLb());
-	    if (!ToulBar2::hybridBFS && cluster==td->getRoot() && initialDepth+1==store->getDepth()) {initialDepth++; showGap(bestlb, cub);};
-		if (cluster->nbBacktracks >= cluster->hybridBFSLimit) {
+	    if (!ToulBar2::hbfs && cluster==td->getRoot() && initialDepth+1==store->getDepth()) {initialDepth++; showGap(bestlb, cub);};
+		if (cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit) {
 		    addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta());
 		} else {
 		    pair<Cost,Cost> res = recursiveSolve(cluster, bestlb, cub);
@@ -530,15 +530,12 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 				cout << endl;
 			  }
 			}
-		} else {
-		    // switch from depth-first search to best-first search in this cluster if a new solution has been found (can be too optimistic=)
-//		    if (ToulBar2::hybridBFS) cluster->hybridBFSLimit = cluster->nbBacktracks;
 		}
 	}
 	Cost bestlb = MAX(lbgood,clb);
 	if (ToulBar2::verbose >= 1) cout << "[" << store->getDepth() << "] C" << cluster->getId() << " return " << bestlb << " " << cub << endl;
 	assert(bestlb <= cub);
-	if (ToulBar2::hybridBFS && bestlb < cub) { // keep current node in open list instead of closing it!
+	if (ToulBar2::hbfs && bestlb < cub) { // keep current node in open list instead of closing it!
 	    if (cluster->getNbVars() > 0) {
 	        int varid = *cluster->getVars().begin();
 	        assert(wcsp->assigned(varid));
@@ -554,7 +551,7 @@ pair<Cost,Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
 	    assert(prevopen == cluster->open);
 #endif
 	    addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta()); // reinsert as a new open node
-	    cluster->hybridBFSLimit = cluster->nbBacktracks; // and stop current visited node
+	    cluster->hbfsLimit = cluster->nbBacktracks; // and stop current visited node
 	    bestlb = cub;
 	}
     return make_pair(bestlb, cub);

@@ -15,8 +15,8 @@ template <class T> class BTList;
 const double epsilon = 1e-6; // 1./100001.
 
 const int MAX_BRANCH_SIZE = 1000000;
-const int CHOICE_POINT_LIMIT = INT_MAX - 2 * MAX_BRANCH_SIZE;
-const int OPEN_NODE_LIMIT = INT_MAX;
+const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - 2 * MAX_BRANCH_SIZE;
+const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 
 class Solver : public WeightedCSPSolver
 {
@@ -25,10 +25,10 @@ public:
     {
         Cost cost;      // global lower bound associated to the open node
     public:
-        int first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
-        int last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
+        ptrdiff_t first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
+        ptrdiff_t last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
-        OpenNode(Cost cost_, int first_, int last_) : cost(cost_), first(first_), last(last_) {}
+        OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_) : cost(cost_), first(first_), last(last_) {}
         bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first) || ((last-first) == (right.last-right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
@@ -72,11 +72,11 @@ public:
     class CPStore : public vector<ChoicePoint>
     {
         public:
-            int start;       // beginning of the current branch
-            int stop;        // deepest saved branch end (should be free at this position)
-            StoreInt index;  // current branch depth (should be free at this position)
+            ptrdiff_t start;       // beginning of the current branch
+            ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
+            StoreCost index;  // current branch depth (should be free at this position)
 
-            CPStore(Store *s) : start(0), stop(0), index(0, &s->storeInt) {}
+            CPStore(Store *s) : start(0), stop(0), index(0, &s->storeCost) {}
 
             void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
             void store() {start = stop; index = start;}
@@ -105,7 +105,7 @@ protected:
 
     CPStore *cp;                // choice point cache for open nodes (except BTD)
     OpenList *open;             // list of open nodes (except BTD)
-    Long hybridBFSLimit;        // limit on number of backtracks for hybrid search (except BTD)
+    Long hbfsLimit;             // limit on number of backtracks for hybrid search (except BTD)
     Long nbHybrid;
     Long nbHybridContinue;
     Long nbHybridNew;
