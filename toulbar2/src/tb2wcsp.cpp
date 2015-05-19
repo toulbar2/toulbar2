@@ -156,6 +156,10 @@ string ToulBar2::incop_cmd;
 
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
+Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
+Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
+ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
+ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
 
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
@@ -269,6 +273,10 @@ void tb2init()
     ToulBar2::incop_cmd = "";
     ToulBar2::hbfs = 0;
     ToulBar2::hbfsGlobalLimit = 0;
+    ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
+    ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
+    ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
+    ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;

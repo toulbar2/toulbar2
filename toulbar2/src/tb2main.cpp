@@ -209,6 +209,7 @@ enum {
 	NO_OPT_restart,
     OPT_hbfs,
     NO_OPT_hbfs,
+    OPT_open,
 	OPT_localsearch,
 	NO_OPT_localsearch,
 	OPT_EDAC,
@@ -348,6 +349,7 @@ CSimpleOpt::SOption g_rgOptions[] =
     { OPT_hbfs,              (char*) "-bfs",               SO_OPT          },
     { NO_OPT_hbfs,           (char*) "-hbfs:",              SO_NONE         },
     { NO_OPT_hbfs,           (char*) "-bfs:",              SO_NONE         },
+    { OPT_open,              (char*) "-open",               SO_REQ_SEP          },
 	{ OPT_localsearch,			(char*) "-i", 				SO_OPT			},// incop option default or string for narycsp argument	
 	{ OPT_EDAC,				(char*) "-k", 				SO_REQ_SEP		},
 	{ OPT_ub, 	 			(char*) "-ub", 				SO_REQ_SEP		}, // init upper bound in cli
@@ -674,7 +676,8 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
 	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cerr << endl;
-	cerr << "   -hbfs=[integer] : hybrid best-first search switching from depth-first to best-first search after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
+	cerr << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
+    cerr << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1201,14 +1204,24 @@ int _tmain(int argc, TCHAR * argv[])
                     else ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
                 }
                 ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
-                if (ToulBar2::debug) cout << "hybrid BFS ON #iter with backtrack limit = " << ToulBar2::hbfsGlobalLimit << comment << endl;
+                if (ToulBar2::debug) cout << "hybrid BFS ON with global backtrack limit = " << ToulBar2::hbfsGlobalLimit << comment << endl;
             } else if (args.OptionId() ==NO_OPT_hbfs)
             {
                 if (ToulBar2::debug) cout <<"hybrid BFS OFF" << endl;
                 ToulBar2::hbfs = 0;
                 ToulBar2::hbfsGlobalLimit = 0;
             }
-			// local search INCOP
+            if ( args.OptionId() == OPT_open)
+            {
+                ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+                Long openlimit = atoll(args.OptionArg());
+                if (openlimit>0) ToulBar2::hbfsOpenNodeLimit = openlimit;
+                if (ToulBar2::hbfsGlobalLimit==0) ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
+                ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
+                if (ToulBar2::debug) cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
+            }
+
+            // local search INCOP
 			if ( args.OptionId() == OPT_localsearch)  {
 			    if (args.OptionArg() != NULL) {
 			        ToulBar2::incop_cmd = args.OptionArg();

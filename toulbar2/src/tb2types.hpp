@@ -43,6 +43,10 @@ const Value MIN_VAL = -(INT_MAX / 2);
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
 
+const int MAX_BRANCH_SIZE = 1000000;
+const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
+const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
+
 #ifdef INT_COST
 const bool PARTIALORDER = false;
 typedef int Cost;
@@ -363,6 +367,10 @@ public:
 
     static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
     static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
+    static Long hbfsAlpha; // inverse of minimum node redundancy goal limit
+    static Long hbfsBeta; // inverse of maximum node redundancy goal limit
+    static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
+    static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution

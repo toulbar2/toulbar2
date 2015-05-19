@@ -14,10 +14,6 @@ template <class T> class BTList;
 
 const double epsilon = 1e-6; // 1./100001.
 
-const int MAX_BRANCH_SIZE = 1000000;
-const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - 2 * MAX_BRANCH_SIZE;
-const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
-
 class Solver : public WeightedCSPSolver
 {
 public:

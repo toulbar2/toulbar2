@@ -188,7 +188,7 @@ void Separator::set( Cost clb, Cost cub, Solver::OpenList **open ) {
 	assert(clb < cub || clb + deltares >= MIN_COST);
 	//assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
 	TNoGoods::iterator itng = nogoods.find(t);
-    if (ToulBar2::debug >= 2) {
+    if (ToulBar2::verbose >= 3) {
 	  cout << " <C" << cluster->getId() << ",";
 	  Cout << t;
 	  cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
