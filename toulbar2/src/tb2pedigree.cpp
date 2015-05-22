@@ -743,8 +743,9 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
 	if(!gencorrects.size()) return;
 
     string problemname = ToulBar2::problemsaved_filename;
-    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
-    problemname = problemname + to_string(".correct_sol");
+    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, "_correct.sol" );
+    if (problemname.rfind( ".pre" ) != string::npos) problemname.replace( problemname.rfind( ".pre" ), 4, "_correct.sol" );
+    if (problemname.rfind( "_correct.sol" ) == string::npos) problemname = problemname + to_string("_correct.sol");
     ofstream file(problemname.c_str());
     if (!file) {
       cerr << "Could not write file " << "solution" << endl;
@@ -770,8 +771,9 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
 void Pedigree::printSol(WCSP *wcsp)
 {
     string problemname = ToulBar2::problemsaved_filename;
-    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
-    problemname = problemname + to_string(".sol");
+    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".sol" );
+    if (problemname.rfind( ".pre" ) != string::npos) problemname.replace( problemname.rfind( ".pre" ), 4, ".sol" );
+    if (problemname.rfind( ".sol" ) == string::npos) problemname = problemname + to_string(".sol");
     ofstream file(problemname.c_str());
     if (!file) {
       cerr << "Could not write file " << "solution" << endl;
