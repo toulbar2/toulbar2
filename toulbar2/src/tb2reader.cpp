@@ -1076,7 +1076,7 @@ void WCSP::solution_UAI(Cost res, bool opt)
 	else {
 //	    ToulBar2::solution_file << "-BEGIN-" << endl;
 	    ToulBar2::solution_file.close();
-	    ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	    ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
 	    ToulBar2::solution_file << "MPE" << endl;
 	}
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample

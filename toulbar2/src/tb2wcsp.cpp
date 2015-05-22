@@ -92,7 +92,7 @@ bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
-string ToulBar2::solution_filename;
+string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
 bool ToulBar2::uai_firstoutput;
 TProb ToulBar2::markov_log;
@@ -216,7 +216,7 @@ void tb2init()
 
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
-    ToulBar2::solution_filename = "sol";
+    ToulBar2::solution_uai_filename = "sol";
     ToulBar2::problemsaved_filename = "problem.wcsp";
     ToulBar2::uai_firstoutput = true;
     ToulBar2::markov_log = 0;
@@ -1709,11 +1709,11 @@ void WCSP::dump(ostream& os, bool original) {
 	unsigned int maxdomsizeUI = 0;
 	Value xcosts = 0;
 	// dump filename
-	char Pb_basename[80];
-	char Pb_graph[80];
-	char Pb_degree[80];
+	char Pb_basename[512];
+	char Pb_graph[512];
+	char Pb_degree[512];
 
-	strcpy(Pb_basename, "problem");
+	strcpy(Pb_basename, ToulBar2::problemsaved_filename.c_str());
 	strcpy(Pb_graph, Pb_basename);
 	strcpy(Pb_degree, Pb_basename);
 
@@ -1846,7 +1846,11 @@ void WCSP::dump(ostream& os, bool original) {
 	    //#######################dump degree distribution ###################
 	}
 
-	if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
+	if (ToulBar2::pedigree) {
+	    string problemname = ToulBar2::problemsaved_filename;
+	    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
+	    ToulBar2::pedigree->save((problemname.rfind( "problem.pre" ) == string::npos)?problemname.c_str():"problem_corrected.pre", this, false, true);
+	}
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp) {

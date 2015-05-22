@@ -567,6 +567,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
 	cerr << "               mode=1: saves pedigree with erroneous genotypings corrected" << endl;
 	cerr << "               mode=2: saves pedigree with erroneous genotypings corrected and missing genotypes of informative individuals inferred" << endl;
+	cerr << "   --save=[filename] : saves pedigree in filename (or \"pedigree_corrected.pre\" if no parameter is given)" << endl;
 	cerr << "   -g : sorts pedigree by increasing generation number and if equal by increasing individual number" << endl;
 	cerr << "   -u=[integer] : adds a penalty weight (must use option y also) on genotyped individuals depending on the number of their genotyped children in order to penalize genotyping removals if the number of genotyped children is strictly greater than a given threshold" << endl;
 
@@ -584,20 +585,20 @@ void help_msg(char *toulbar2filename)
 #ifdef LINUX
     cerr << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
-	cerr << "   -var=[integer] : search by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
-	cerr << "   -b : search using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
+	cerr << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
+	cerr << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
 	if (ToulBar2::binaryBranching) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -svo : search using a static variable ordering heuristic (same order as DAC)";
+	cerr << "   -svo : searches using a static variable ordering heuristic (same order as DAC)";
 	if (ToulBar2::Static_variable_ordering) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -c : search using binary branching with last conflict backjumping variable ordering heuristic";
+	cerr << "   -c : searches using binary branching with last conflict backjumping variable ordering heuristic";
 	if (ToulBar2::lastConflict) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value (default value is " << ToulBar2::weightedDegree << ")" << endl;
 	cerr << "   -m=[integer] : variable ordering heuristic based on mean (m=1) or median (m=2) costs (in conjunction with weighted degree heuristic -q) (default value is " << ToulBar2::weightedTightness << ")" << endl;
-	cerr << "   -d=[integer] : search using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
-	cerr << "   -sortd : sort domains based on increasing unary costs (warning! works only for binary WCSPs)";
+	cerr << "   -d=[integer] : searches using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
+	cerr << "   -sortd : sorts domains based on increasing unary costs (warning! works only for binary WCSPs)";
 	if (ToulBar2::sortDomains) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
@@ -615,7 +616,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::MSTDAC) cerr << " (default option)";
 	cerr << endl;
 #endif
-	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -dee:)" << endl;
+	cerr << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -dee:)" << endl;
 	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
@@ -631,8 +632,9 @@ void help_msg(char *toulbar2filename)
 	cerr << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
 	cerr << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode"<< endl;
 
-	cerr << "   -z=[integer] : saves problem in wcsp format in filename \"problem.wcsp\" (1: original instance, 2: after preprocessing)" << endl;
-	cerr << "		writes also the  graphviz dot file  and the degree distribution of the input problem " << endl;
+	cerr << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
+	cerr << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
+	cerr << "   -z=[integer] : 1: saves original instance (by default), 2: saves after preprocessing" << endl;
 	cerr << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 #ifndef NDEBUG
 	cerr << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
@@ -867,7 +869,7 @@ int _tmain(int argc, TCHAR * argv[])
                 char buf[512];
                 sprintf(buf,"%s",args.OptionArg());
                 ToulBar2::problemsaved_filename = to_string(buf);
-                if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP = 1;
+//                if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP = 1;
                 if (ToulBar2::debug) cout << "saved problem into file " << ToulBar2::problemsaved_filename << endl;
             }
 
@@ -896,14 +898,12 @@ int _tmain(int argc, TCHAR * argv[])
 			if (args.OptionId() == OPT_writeSolution )
 
 			{
-				ToulBar2::writeSolution = (char *) "sol";
+			    ToulBar2::writeSolution = (char *) "sol";
 				if(args.OptionArg() != NULL) {
-					int correct = atoi(args.OptionArg());
-					ToulBar2::pedigreeCorrectionMode = 0;
-					if ((correct > 0) && (correct <= 2)) ToulBar2::pedigreeCorrectionMode = correct;
 					char *tmpFile = new char[strlen(args.OptionArg())+1];
 					strcpy(tmpFile,args.OptionArg());
-					ToulBar2::writeSolution = tmpFile;
+					if (strlen(tmpFile) == 1 && (tmpFile[0] == '0' || tmpFile[0] == '1' || tmpFile[0] == '2')) ToulBar2::pedigreeCorrectionMode = atoi(tmpFile);
+					else ToulBar2::writeSolution = tmpFile;
 				}
 			}
 
@@ -1325,7 +1325,14 @@ int _tmain(int argc, TCHAR * argv[])
 			//  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
 
 			if ( args.OptionId() == OPT_dumpWCSP) {
-				if (args.OptionArg() != NULL) { ToulBar2::dumpWCSP= atoi(args.OptionArg());} else ToulBar2::dumpWCSP=1;
+			    if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP=1;
+				if (args.OptionArg() != NULL) {
+                    char *tmpFile = new char[strlen(args.OptionArg())+1];
+                    strcpy(tmpFile,args.OptionArg());
+                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '1' || tmpFile[0] == '2')) ToulBar2::dumpWCSP = atoi(tmpFile);
+                    else ToulBar2::problemsaved_filename = to_string(tmpFile);
+				}
+
 				if(ToulBar2::dumpWCSP <= 1 ) {
 				if (ToulBar2::debug) cout <<"original problem dump in problem.wcsp (see also Graphviz and degree distribution)"  << endl;
 				} else {
@@ -1753,9 +1760,9 @@ int _tmain(int argc, TCHAR * argv[])
 	  filename += ".";
 	  if (ToulBar2::isZ) filename += "PR";
 	  else filename += "MPE";
-	  ToulBar2::solution_filename = filename;
+	  ToulBar2::solution_uai_filename = filename;
 	  if (!ToulBar2::uaieval) {
-	      ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	      ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
 	      ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
 	      ToulBar2::solution_file.flush();
 	  }
@@ -1882,7 +1889,7 @@ int _tmain(int argc, TCHAR * argv[])
 		if (ToulBar2::dumpWCSP==1) {
 		    string problemname = ToulBar2::problemsaved_filename;
 		    if (ToulBar2::uaieval) {
-		        problemname = ToulBar2::solution_filename;
+		        problemname = ToulBar2::solution_uai_filename;
 		        problemname.replace( problemname.rfind( ".uai.MPE" ), 8, ".wcsp" );
 		    }
 			solver->dump_wcsp(problemname.c_str());

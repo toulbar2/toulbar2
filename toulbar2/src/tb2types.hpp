@@ -340,7 +340,7 @@ public:
 	static TProb markov_log;
 	static string evidence_file;
 	static ofstream solution_file;
-    static string solution_filename;
+    static string solution_uai_filename;
     static string problemsaved_filename;
     static bool uai_firstoutput;
 	static bool isZ;

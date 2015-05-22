@@ -742,7 +742,10 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
 {
 	if(!gencorrects.size()) return;
 
-    ofstream file("sol_correct");
+    string problemname = ToulBar2::problemsaved_filename;
+    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
+    problemname = problemname + to_string(".correct_sol");
+    ofstream file(problemname.c_str());
     if (!file) {
       cerr << "Could not write file " << "solution" << endl;
       exit(EXIT_FAILURE);
@@ -766,7 +769,10 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
 
 void Pedigree::printSol(WCSP *wcsp)
 {
-    ofstream file("sol");
+    string problemname = ToulBar2::problemsaved_filename;
+    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
+    problemname = problemname + to_string(".sol");
+    ofstream file(problemname.c_str());
     if (!file) {
       cerr << "Could not write file " << "solution" << endl;
       exit(EXIT_FAILURE);
