@@ -51,7 +51,9 @@ protected:
     void remove(int varIndex, Value value);
     void remove(int varIndex, ValueCost *array, int first, int last);
     void conflict() {}
+	//void preZUb();
     void enforceUb();
+
     void singletonConsistency();
 
     void binaryChoicePoint(int xIndex, Value value);

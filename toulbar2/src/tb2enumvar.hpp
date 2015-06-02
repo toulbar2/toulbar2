@@ -22,6 +22,7 @@ protected:
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
     DLink<VariableWithTimeStamp> linkDEEQueue;
+    //DLink<VariableWithTimeStamp> linkZQueue;
 
     bool watchForIncrease;	///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease;	///< \warning should be true if there exists a cost function on this variable watching for decrease events
@@ -110,6 +111,8 @@ public:
     void propagateDEE(Value a, Value b, bool dee = true);
     bool verifyDEE(Value a, Value b);
     bool verifyDEE();
+    
+    //void queueZ();
 
     // merge current cost functions to x's list by replacing current variable y by x thanks to functional constraint xy (i.e., y := functional[x])
     void mergeTo( BinaryConstraint *xy, map<Value, Value> &functional);

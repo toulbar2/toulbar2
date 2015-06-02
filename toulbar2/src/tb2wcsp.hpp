@@ -12,6 +12,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
 
+
+
 class BinaryConstraint;
 class TernaryConstraint;
 class NaryConstraint;
@@ -58,6 +60,7 @@ class WCSP : public WeightedCSP {
 	Queue EAC1;							///< EAC intermediate queue (non backtrackable list)
 	Queue EAC2;							///< EAC queue (non backtrackable list)
 	Queue Eliminate;					///< Variable Elimination queue (non backtrackable list)
+	//Queue Z;							///< Z queue (non backtrackable list)
 	SeparatorList PendingSeparator;		///< List of pending separators for BTD-like methods (backtrackable list)
 	Queue DEE;							///< Dead-End Elimination queue (non backtrackable list)
 	bool objectiveChanged;				///< flag if lb or ub has changed (NC propagation needs to be done)
@@ -369,6 +372,8 @@ public:
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
     void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
 
+    TrieNum* read_TRIE(const char *fileName); // read the TB2 all solution file (temp wtd)
+
     const vector<Value> &getSolution() {return solution;}
     void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
     void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}
@@ -424,6 +429,8 @@ public:
 	void queueSeparator(DLink<Separator *> *link) { PendingSeparator.push_back(link, true); }
 	void unqueueSeparator(DLink<Separator *> *link) { PendingSeparator.erase(link, true); }
 	void queueDEE(DLink<VariableWithTimeStamp> *link) {DEE.push(link, nbNodes);}
+	
+	//void queueZ(DLink<VariableWithTimeStamp> *link) {Z.push(link, nbNodes);}
 
 	void propagateNC();			///< \brief removes forbidden values
 	void propagateIncDec();		///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)

@@ -99,8 +99,8 @@ inline double Log1p(double x) {return log(1. + x);}
 #ifdef LONGDOUBLE_PROB
 	#ifdef LINUX
 		inline Double Pow(Double x, Double y) {return powl(x,y);}
-                inline Double Exp10(Double x) {return exp10l(x);}
-                inline Double Exp(Double x) {return expl(x);}
+        inline Double Exp10(Double x) {return exp10l(x);}
+        inline Double Exp(Double x) {return expl(x);}
 		inline Double Log10(Double x) {return log10l(x);}
 		inline Double Log(Double x) {return logl(x);}
 		inline Double Log1p(Double x) {return log1pl(x);}

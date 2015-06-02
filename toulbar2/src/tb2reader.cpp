@@ -13,6 +13,13 @@
 #include "tb2randomgen.hpp"
 #include "tb2globaldecomposable.hpp"
 #include <list>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include "tb2trienum.hpp"
+
+using namespace boost;
+
+
 
 typedef struct {
     EnumeratedVariable *var;
@@ -272,6 +279,11 @@ void WCSP::read_wcsp(const char *fileName)
     Nfile2 = strdup(fileName);
     name = to_string(basename(Nfile2));
 
+	//~ if (ToulBar2::isZ) { // read all-solution tb2 file (temp way to do)
+		//~ ToulBar2::trieZ = read_TRIE(fileName);
+		//~ cout<< "Preprocessing Log(Z) : "<< ToulBar2::trieZ->get_logz()<< endl;
+	//~ }
+		
     if (ToulBar2::haplotype) {
 	  ToulBar2::haplotype->read(fileName, this);
       return;
@@ -294,7 +306,9 @@ void WCSP::read_wcsp(const char *fileName)
 	} else if (ToulBar2::qpbo) {
 	  read_qpbo(fileName);
 	  return;
+	  
 	}
+	
     string pbname;
     int nbvar,nbval,nbconstr;
 	int nbvaltrue = 0;
@@ -849,7 +863,6 @@ void WCSP::read_uai2008(const char *fileName)
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
-
         if (arity > 3) {
         	int scopeIndex[MAX_ARITY];
             if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
@@ -951,7 +964,7 @@ void WCSP::read_uai2008(const char *fileName)
 	    for (k = 0; k < ntuples; k++) {
 	        p = costsProb[k];
 	        Cost cost;
-	        // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
+			// ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
 	        if (markov) cost = ((ToulBar2::uai>1)?LogProb2Cost((TLogProb)(p - maxp)):Prob2Cost(p / maxp));
 	        else        cost = ((ToulBar2::uai>1)?LogProb2Cost((TLogProb)p):Prob2Cost(p));
 	        costs[ictr].push_back(cost);
@@ -967,8 +980,8 @@ void WCSP::read_uai2008(const char *fileName)
             if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
             inclowerbound += minc;
         }
-
-	if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log10( maxp ));
+		//log10?
+		if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log( maxp ));
 
 	ictr++;
 	++it;
@@ -1027,6 +1040,7 @@ void WCSP::read_uai2008(const char *fileName)
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 				    postNaryConstraintEnd(nctr->wcspIndex);
 					break;
+			
 		}
 		ictr++;
 		++it;
@@ -1047,11 +1061,12 @@ void WCSP::read_uai2008(const char *fileName)
 
     int nevi = 0;
     ifstream fevid(ToulBar2::evidence_file.c_str());
-    if (!fevid)	{
+    if (!fevid)	
+	{
         string strevid(string(fileName) + string(".evid"));
-	fevid.open(strevid.c_str());
-	cerr << "No evidence file specified. Trying " << strevid << endl;
-	if(!fevid) cerr << "No evidence file. " << endl;
+		fevid.open(strevid.c_str());
+		cerr << "No evidence file specified. Trying " << strevid << endl;
+		if(!fevid) cerr << "No evidence file. " << endl;
     }
     if(fevid) {
         vector<int> variables;
@@ -1094,12 +1109,12 @@ void WCSP::solution_UAI(Cost res, bool opt)
 	    ToulBar2::solution_file << "MPE" << endl;
 	}
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
-	if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
-	  cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	  cout << "s " << Cost2LogProb(res) + ToulBar2::markov_log << endl;
-	  cout << numberOfVariables();
-	  printSolution(cout);
-	}
+	//~ if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
+	  //~ cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+	  //~ cout << "s " << Cost2LogProb(res) + ToulBar2::markov_log << endl;
+	  //~ cout << numberOfVariables();
+	  //~ printSolution(cout);
+	//~ }
 	ToulBar2::solution_file << numberOfVariables();
 	printSolution(ToulBar2::solution_file);
     ToulBar2::solution_file << endl;
@@ -1490,4 +1505,48 @@ void WCSP::read_qpbo(const char *fileName)
   }
   histogram();
   cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
+}
+
+TrieNum* WCSP::read_TRIE(const char *fileName)
+{
+	TrieNum* trie = new TrieNum();
+	Cost logz=MAX_COST;
+	string strie(string(fileName) + string(".trie"));
+	vector<int> position_vector;
+	string sol_num;
+	string trashed;
+	Cost sol_cost;
+	string sol_pos;
+	string s;
+	istringstream line;
+	ifstream ftrie;
+	ftrie.open(strie.c_str());
+  	if (!ftrie) { cerr << "Could not open file " << strie << endl; exit(EXIT_FAILURE); }
+	else{cerr<<"Fill the Z trie using "<<strie<<endl;}
+	while (!ftrie.eof())
+	{
+		getline(ftrie,s);
+		line.str(s);
+		line.clear();
+		if (line.str().empty())
+		{
+			line.str().clear();
+        }
+		else
+        {
+			line >> sol_num >> trashed >> sol_cost >> sol_pos;
+			vector<string> sol_pos_str;
+			boost::split(sol_pos_str,sol_pos,boost::is_any_of("-"));
+			for(auto iter: sol_pos_str)
+			{
+				int rot_pos = boost::lexical_cast<int>(iter);
+				position_vector.push_back(rot_pos);
+			}
+			trie->add_Sol(position_vector,sol_cost);
+			logz=LogSumExp(logz,sol_cost);
+			
+		}
+	}
+	trie->set_logz(logz);
+	return trie;
 }

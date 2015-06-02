@@ -54,6 +54,7 @@
                         ${My_Source}/tb2vacutils.cpp
                         ${My_Source}/tb2variable.cpp
                         ${My_Source}/tb2wcsp.cpp
+                        ${My_Source}/tb2trienum.cpp
 			${My_Source}/incop/*.cpp
         )
 
@@ -115,6 +116,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2vacutils.*pp
                         ${My_Source}/tb2variable.*pp
                         ${My_Source}/tb2wcsp.*pp
+                        ${My_Source}/tb2trienum.*pp
                         ${My_Source}/incop/*.h
 			${My_Source}/incop/*.cpp 
         )

@@ -301,7 +301,7 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   
   for (size_t i = 0; i != p.size(); ++i) {
     if (p[i] != i) { // if p[i]=i, the node is a root
-      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the cost function of i and his parent (i<-->p[i])
+      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the binary cost of i and his parent (i<-->p[i])
       assert(unassigned(i));
       assert(unassigned(p[i]));
       if (bctr) {
@@ -321,8 +321,8 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
       cout << endl;
   }
 
-  TLogProb res = 0 ;//-numeric_limits<TLogProb>::infinity();
-  
+  TLogProb res = 0 ;
+
   for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
       ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each nodes. The value term contain the bynary cost and the unary cost.
       Cost mincost = MAX_COST;

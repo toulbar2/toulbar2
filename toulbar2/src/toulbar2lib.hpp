@@ -53,7 +53,7 @@ public:
     virtual Value getInf(int varIndex) const =0;		///< \brief minimum current domain value
     virtual Value getSup(int varIndex) const =0;		///< \brief maximum current domain value
     virtual Value getValue(int varIndex) const =0;		///< \brief current assigned value \warning undefined if not assigned yet
-  virtual const vector< Variable* > & getVars() const =0;
+  	virtual const vector< Variable* > & getVars() const =0;
     virtual unsigned int getDomainSize(int varIndex) const =0;				///< \brief current domain size
     virtual bool getEnumDomain(int varIndex, Value *array) =0;				///< \brief gets current domain values in an array
     virtual bool getEnumDomainAndCost(int varIndex, ValueCost *array) =0;	///< \brief gets current domain values and unary costs in an array

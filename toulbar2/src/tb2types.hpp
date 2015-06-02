@@ -12,6 +12,7 @@
  *
  * \note Compilation flag for Cost is: \c INT_COST (int), \c LONGLONG_COST (long long), or \c PARETOPAIR_COST (see ::ParetoPair)
  * \warning \c PARETOPAIR_COST is fragile.
+ * \note Compilation flag for TProb is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for T(Log)Prob is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for String is: \c WIDE_STRING or nothing (usual C++ string)
  */
@@ -238,6 +239,7 @@ class Pedigree;
 class Haplotype;
 class BEP;
 class Cpd;
+class TrieNum;
 
 typedef enum {
 	LC_NC = 0,
@@ -305,7 +307,7 @@ public:
 	static externalsolution newsolution;
 	static Pedigree *pedigree;
 	static Haplotype *haplotype;
-  static Cpd *cpd;
+  	static Cpd *cpd;
 	static string map_file;
 	static bool bayesian;
 	static int uai;
@@ -349,6 +351,7 @@ public:
 	static TLogProb logZ;
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
+	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
     static bool uaieval;
 
 	static double startCpuTime;

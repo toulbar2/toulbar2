@@ -129,6 +129,11 @@ void EnumeratedVariable::queueDEE()
 	wcsp->queueDEE(&linkDEEQueue);
 }
 
+//~ void EnumeratedVariable::queueZ()
+//~ {
+	//~ wcsp->queueZ(&linkZQueue);
+//~ }
+
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);

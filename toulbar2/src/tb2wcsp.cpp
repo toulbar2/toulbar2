@@ -147,6 +147,7 @@ int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
+TrieNum* ToulBar2::trieZ;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -257,7 +258,7 @@ void tb2init()
     ToulBar2::isZUB = 0;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logepsilon = -3;
+    ToulBar2::logepsilon = -Log(1000);
     ToulBar2::Berge_Dec=0;
     ToulBar2::nbvar=0;
 
@@ -3042,6 +3043,7 @@ TProb WCSP::Cost2Prob(Cost c) const {
 }
 
 Cost  WCSP::LogSumExp(Cost c1, Cost c2) const {
+
   if (c1 >= getUb()) return c2;
   else if (c2 >= getUb()) return c1;
   else if (c1 == c2) return c1+LogProb2Cost(Log(2.));

@@ -230,8 +230,8 @@ enum {
 	OPT_seed,
 	OPT_random=1000,
 
-        // CPD options
-        OPT_cpd
+	// CPD options
+	OPT_cpd
         
 };
 
@@ -368,8 +368,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	// random generator
 	{ OPT_seed,			         (char*) "-seed", 				SO_REQ_SEP},
 	{ OPT_random, 	 			 (char*) "-random", 			SO_REQ_SEP }, // init upper bound in cli
-        // CPD options
-        { OPT_cpd,                               (char*) "--cpd",                       SO_NONE },
+	// CPD options
+	{ OPT_cpd,                               (char*) "--cpd",                       SO_NONE },
 
 	SO_END_OF_OPTIONS
 };
@@ -665,6 +665,7 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
 	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
+	cerr << "	-zub=[integer] : compute -logz with pruning upper born 0, 1 or 2" << endl;
 	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
@@ -909,7 +910,7 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 
 
-			// approximate conting
+			// approximate counting
 
 			if (args.OptionId() == OPT_approximateCountingBTD)
 			{
@@ -1378,10 +1379,10 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::DEE = 0;
 			}
 
-                        ///////////////// CPD options //////////////
-                        if (args.OptionId() == OPT_cpd) {
-                          ToulBar2::cpd = new Cpd;
-                        }
+			///////////////// CPD options //////////////
+			if (args.OptionId() == OPT_cpd) {
+				ToulBar2::cpd = new Cpd;
+			}
 
 		}
 
@@ -1660,30 +1661,28 @@ int _tmain(int argc, TCHAR * argv[])
         ToulBar2::incop_cmd = "";
     }
 
-	if (ToulBar2::uai || ToulBar2::uaieval) {
-	  char *tmpPath = new char[strlen(argv[0])+1];
-	  strcpy(tmpPath,argv[0]);
-	  char *tmpFile = new char[strlen(strfile.c_str())+1];
-	  strcpy(tmpFile,strfile.c_str());
-	  string filename(tmpPath);
-	  filename += "/";
-	  filename += basename(tmpFile);
-	  size_t wcsppos = string::npos;
-	  if (ToulBar2::uaieval && (wcsppos = filename.rfind( ".wcsp" )) != string::npos) filename.replace( wcsppos, 5, ".uai" );
-	  filename += ".";
-	  if (ToulBar2::isZ) filename += "PR";
-	  else filename += "MPE";
-	  ToulBar2::solution_filename = filename;
-	  if (!ToulBar2::uaieval) {
-	      ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
-	      ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
-	      ToulBar2::solution_file.flush();
-	  }
-	  delete [] tmpPath;
-	  delete [] tmpFile;
-	}
-
-	//TODO: If --show_options then dump ToulBar2 object here
+	//~ if (ToulBar2::uai || ToulBar2::uaieval) {
+	  //~ char *tmpPath = new char[strlen(argv[0])+1];
+	  //~ strcpy(tmpPath,argv[0]);
+	  //~ char *tmpFile = new char[strlen(strfile.c_str())+1];
+	  //~ strcpy(tmpFile,strfile.c_str());
+	  //~ string filename(tmpPath);
+	  //~ filename += "/";
+	  //~ filename += basename(tmpFile);
+	  //~ size_t wcsppos = string::npos;
+	  //~ if (ToulBar2::uaieval && (wcsppos = filename.rfind( ".wcsp" )) != string::npos) filename.replace( wcsppos, 5, ".uai" );
+	  //~ filename += ".";
+	  //~ if (ToulBar2::isZ) filename += "PR";
+	  //~ else filename += "MPE";
+	  //~ ToulBar2::solution_filename = filename;
+	  //~ if (!ToulBar2::uaieval) {
+	      //~ ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	      //~ ToulBar2::solution_file << ((ToulBar2::isZ)?"PR":"MPE") << endl;
+	      //~ ToulBar2::solution_file.flush();
+	  //~ }
+	  //~ delete [] tmpPath;
+	  //~ delete [] tmpFile;
+	//~ }
 
 	ToulBar2::startCpuTime = cpuTime();
 
