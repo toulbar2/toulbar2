@@ -69,3 +69,33 @@ void Cpd::printSequences()
 {
   cpdtrie->print_tree();
 }
+
+void Cpd::printSequence(const vector<Variable *> & vars, Cost _cost)
+{
+  //  cpdtrie->print_tree();
+  string sequence;
+  for(size_t i=0; i<vars.size(); i++)
+    {
+      sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
+    }
+  cout << "New sequence: " << sequence << " Cost: " << _cost << endl;
+}
+
+void Cpd::printSequence(TAssign & vars)
+{
+  //  cpdtrie->print_tree();
+  string sequence;
+  // TAssign::iterator it = vars.begin();
+  // while(it != vars.end())
+  //   {
+  //     sequence.push_back(rotamers2aa[it->first][it->second]);
+  //     ++it;
+  //   }
+  for(size_t i=0; i<vars.size(); i++)
+    {
+      sequence.push_back(rotamers2aa[i][vars[i]]);
+    }
+
+  cout << "New sequence: " << sequence << endl;
+}
+

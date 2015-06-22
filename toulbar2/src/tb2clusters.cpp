@@ -7,7 +7,7 @@
 #include "tb2naryconstr.hpp"
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
-
+#include "tb2cpd.hpp"
 #include <list>
 #include <algorithm>
 
@@ -1867,6 +1867,10 @@ void TreeDecomposition::newSolution( Cost lb )
 			++it;
 		}
 		cout << endl;
+                if (ToulBar2::cpd)
+                  {
+                    ToulBar2::cpd->printSequence(a);
+                  }
     }
 
     if (ToulBar2::writeSolution) {
