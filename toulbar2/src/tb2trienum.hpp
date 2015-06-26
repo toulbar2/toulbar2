@@ -18,7 +18,6 @@ public:
     std::vector<VarNode*> get_Children() { return m_Children; } // Get the children's list
 
 private:
-	//cost cost_node Ajouter le cost de la solution
     int m_Content; // Content of the NODE (Numero of the rotamer for Variable)
     Cost m_cost;
     bool m_Marker; // Marker: if true the "word" is over (use to find partial assigment)
@@ -29,11 +28,14 @@ class TrieNum {
 public:
     TrieNum(); //Constructor
     ~TrieNum(); // Destructor
-	Cost get_logz(){ return m_logz; }
+    std::vector<Cost> get_sols() { return sol_costs; }// Get the solution's list
+    void add_costs(Cost c) { sol_costs.push_back(c);} // add solution to solution's list
+    Cost get_logz(){ return m_logz; }
     void set_logz(Cost logz){m_logz=logz;}
     void add_Sol(std::vector<int> Sol,const Cost ct);
     bool search_Sol(std::vector<int> Sol);
 private:
     VarNode* root; // Root of the trie list
     Cost m_logz;
+    std::vector<Cost> sol_costs;
 };

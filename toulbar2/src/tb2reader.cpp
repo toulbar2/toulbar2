@@ -279,11 +279,6 @@ void WCSP::read_wcsp(const char *fileName)
     Nfile2 = strdup(fileName);
     name = to_string(basename(Nfile2));
 
-	//~ if (ToulBar2::isZ) { // read all-solution tb2 file (temp way to do)
-		//~ ToulBar2::trieZ = read_TRIE(fileName);
-		//~ cout<< "Preprocessing Log(Z) : "<< ToulBar2::trieZ->get_logz()<< endl;
-	//~ }
-		
     if (ToulBar2::haplotype) {
 	  ToulBar2::haplotype->read(fileName, this);
       return;
@@ -293,6 +288,9 @@ void WCSP::read_wcsp(const char *fileName)
       return;
     } else if (ToulBar2::uai) {
 	    read_uai2008(fileName);
+        if (ToulBar2::isPreZ) { // read all-solution tb2 file (temporary way to do)
+            ToulBar2::trieZ = read_TRIE(fileName);
+        }
 	    return;
     } else if (ToulBar2::xmlflag) {
 	    read_XML(fileName);
@@ -306,9 +304,9 @@ void WCSP::read_wcsp(const char *fileName)
 	} else if (ToulBar2::qpbo) {
 	  read_qpbo(fileName);
 	  return;
-	  
+
 	}
-	
+
     string pbname;
     int nbvar,nbval,nbconstr;
 	int nbvaltrue = 0;
@@ -955,10 +953,14 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
-	        costsProb.push_back( p );
-	        if(p > maxp) maxp = p;
+	        if(ToulBar2::isZCPD){
+                p /= ((1.9891/1000.0 * 298.15)) ;
+                costsProb.push_back( p );
+	        }else{
+                costsProb.push_back( p );
+	        }
+	        if(p > maxp){maxp = p;}
 	    }
-
 	    Cost minc = MAX_COST;
 	    Cost maxc = MIN_COST;
 	    for (k = 0; k < ntuples; k++) {
@@ -980,7 +982,7 @@ void WCSP::read_uai2008(const char *fileName)
             if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
             inclowerbound += minc;
         }
-		//log10?
+
 		if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log( maxp ));
 
 	ictr++;
@@ -1040,7 +1042,7 @@ void WCSP::read_uai2008(const char *fileName)
 				    if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
 				    postNaryConstraintEnd(nctr->wcspIndex);
 					break;
-			
+
 		}
 		ictr++;
 		++it;
@@ -1061,7 +1063,7 @@ void WCSP::read_uai2008(const char *fileName)
 
     int nevi = 0;
     ifstream fevid(ToulBar2::evidence_file.c_str());
-    if (!fevid)	
+    if (!fevid)
 	{
         string strevid(string(fileName) + string(".evid"));
 		fevid.open(strevid.c_str());
@@ -1510,7 +1512,7 @@ void WCSP::read_qpbo(const char *fileName)
 TrieNum* WCSP::read_TRIE(const char *fileName)
 {
 	TrieNum* trie = new TrieNum();
-	Cost logz=MAX_COST;
+//	Cost logz= MAX_COST;
 	string strie(string(fileName) + string(".trie"));
 	vector<int> position_vector;
 	string sol_num;
@@ -1535,18 +1537,17 @@ TrieNum* WCSP::read_TRIE(const char *fileName)
 		else
         {
 			line >> sol_num >> trashed >> sol_cost >> sol_pos;
-			vector<string> sol_pos_str;
-			boost::split(sol_pos_str,sol_pos,boost::is_any_of("-"));
-			for(auto iter: sol_pos_str)
-			{
-				int rot_pos = boost::lexical_cast<int>(iter);
-				position_vector.push_back(rot_pos);
-			}
-			trie->add_Sol(position_vector,sol_cost);
-			logz=LogSumExp(logz,sol_cost);
-			
+//			vector<string> sol_pos_str;
+//			boost::split(sol_pos_str,sol_pos,boost::is_any_of("-"));
+//			for(auto iter: sol_pos_str)
+//			{
+//				int rot_pos = boost::lexical_cast<int>(iter);
+//				position_vector.push_back(rot_pos);
+//			}
+//			trie->add_Sol(position_vector,sol_cost);
+//			logz=LogSumExp(logz,sol_cost);
+			trie->add_costs(sol_cost);
 		}
 	}
-	trie->set_logz(logz);
 	return trie;
 }

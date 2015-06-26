@@ -51,7 +51,7 @@ protected:
     void remove(int varIndex, Value value);
     void remove(int varIndex, ValueCost *array, int first, int last);
     void conflict() {}
-	//void preZUb();
+    TLogProb preZub(); // Compute preporcessing Z
     void enforceUb();
 
     void singletonConsistency();

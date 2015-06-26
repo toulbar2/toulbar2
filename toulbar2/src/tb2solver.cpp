@@ -10,6 +10,7 @@
 #include "tb2cpd.hpp"
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
+#include "tb2trienum.hpp"
 #include <strings.h>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void *solver);
@@ -463,53 +464,71 @@ int Solver::getMostUrgent()
  *
  */
 
-//~ void Solver::preZUb()
-//~ {
-	//~ 
-	//~ 
-//~ }
+TLogProb Solver::preZub(){
 
+TLogProb LogZhat = -numeric_limits<TProb>::infinity();
+    for(auto iter : ToulBar2::trieZ->get_sols() ){
+        TLogProb iter_logprob = wcsp->Cost2LogProb((iter + wcsp->getNegativeLb()));
+        LogZhat = wcsp->LogSumExp(LogZhat,iter_logprob);
+    }
+    return LogZhat;
+}
 
 //Enforce WCSP upper-bound and backtrack if ub <= lb or in the case of probabilistic inference if the contribution is too small
 void Solver::enforceUb()
 {
 	wcsp->enforceUb();
 	if (ToulBar2::isZ) {
-        Double newlogU;
+        TLogProb newlogU;
+        //cout<<wcsp->getNegativeLb()<<endl;
         Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-        //Upper bound on Z edition 0
-        if (ToulBar2::isZUB==0) {
-            newCost += wcsp->LogProb2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
-            newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-        }
         
-        //Upper bound on Z edition 1
-        else if (ToulBar2::isZUB==1) {	
-			for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
-				EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
-				Cost SumUnaryCost = MAX_COST;
-					if (wcsp->enumerated(*iter_variable)) {
-						for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
-							SumUnaryCost = wcsp->LogSumExp(SumUnaryCost,var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
+        switch(ToulBar2::isZUB){
+			//Upper bound on Z edition 0
+			case 0 :
+				newCost += wcsp->LogProb2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
+				newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+				break;
+			//Upper bound on Z edition 1
+			case 1 :
+				for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
+					EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
+					Cost SumUnaryCost = MAX_COST;
+						if (wcsp->enumerated(*iter_variable)) {
+							for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
+								SumUnaryCost = wcsp->LogSumExp(SumUnaryCost,var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
+							}
 						}
-					}
-					else {
-						newCost += wcsp->LogProb2Cost(Log10(wcsp->getDomainSize(*iter_variable)));
-					}
-				newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
-			}
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-		} 
-		
-		//Upper bound on Z edition 2
-		else if (ToulBar2::isZUB==2){	
-			newlogU = wcsp->LogSumExp(ToulBar2::logU, wcsp->spanningTreeZ(newCost));
+						else {
+							newCost += wcsp->LogProb2Cost(Log10(wcsp->getDomainSize(*iter_variable)));
+						}
+					newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
+				}
+				newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+				break;
+
+			//Upper bound on Z edition 2
+			case 2 :
+				newlogU = wcsp->LogSumExp(ToulBar2::logU, wcsp->spanningTreeZ(newCost));
+				break;
+			default :
+				cerr << "Please enter a correct upper bound number (-zub=0, 1, 2) or use the default one)"<<endl;
+				return;
 		}
-				
-		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-			if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born "<<ToulBar2::isZUB<<" : " << newlogU << " " << ToulBar2::logZ  << " " << store->getDepth() << endl;
-			ToulBar2::logU = newlogU;
-			THROWCONTRADICTION;
+		
+		if(ToulBar2::isPreZ){
+			if (newlogU < ToulBar2::logepsilon + max( ToulBar2::logZ , ToulBar2::preZ)){
+				if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born "<<ToulBar2::isZUB<<" : " << newlogU << " " << ToulBar2::logZ + ToulBar2::logepsilon << " " <<ToulBar2::preZ + ToulBar2::logepsilon<<" "<< store->getDepth() << endl;
+				ToulBar2::logU = newlogU;
+				THROWCONTRADICTION;
+			}	
+		}
+		else{
+			if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
+				if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born "<<ToulBar2::isZUB<<" : " << newlogU << " " << ToulBar2::logZ + ToulBar2::logepsilon << " " <<ToulBar2::preZ + ToulBar2::logepsilon<<" "<< store->getDepth() << endl;
+				ToulBar2::logU = newlogU;
+				THROWCONTRADICTION;
+			}
 		}
 	}
 }
@@ -935,11 +954,14 @@ void Solver::newSolution()
         if(ToulBar2::allSolutions && !ToulBar2::cpd) {
         	cout<<nbSol <<" solution: "<<wcsp->getLb()<<" ";
         }
+        else if (ToulBar2::allSolutions && ToulBar2::uai>1) {
+			cout<<nbSol <<" solution: "<<wcsp->getLb()<<" ";
+		}
         if (ToulBar2::cpd) {
           ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
           if (!ToulBar2::allSolutions) ToulBar2::cpd->printSequences();
         }
-        else 
+        else
           {
             for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
               if (i!=0) cout << "-";
@@ -949,7 +971,7 @@ void Solver::newSolution()
               } else if (ToulBar2::haplotype) {
             	ToulBar2::haplotype->printHaplotype(cout,wcsp->getValue(i),i);
               }
-              else { // cout rot sequence
+              else { /// cout rot sequence
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end())? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
               }
             }
@@ -1057,8 +1079,12 @@ bool Solver::solve()
 	int tailleSep = 0;
 
 	if (ToulBar2::isZ) {
-	  ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-	  ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+		ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+		ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+		if(ToulBar2::isPreZ){
+			ToulBar2::preZ = preZub();
+			cout<<"PREPROCESSING Log(Z) : "<<ToulBar2::preZ + ToulBar2::markov_log<<endl;
+		}
 	}
 
     try {
@@ -1176,6 +1202,10 @@ bool Solver::solve()
 			if (ToulBar2::isZ) {
 				ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
 				ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+				if(ToulBar2::isPreZ){
+					ToulBar2::preZ = preZub();
+					cout<<"PREPROCESSING Log(Z) : "<<ToulBar2::preZ + ToulBar2::markov_log<<endl;
+				}
 			}
 		  }
 		  try {
@@ -1188,8 +1218,12 @@ bool Solver::solve()
 				enforceUb();
 				wcsp->propagate();
 				if (ToulBar2::isZ) {
-				  ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-				  ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+					ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+					ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+				  	if(ToulBar2::isPreZ){
+						ToulBar2::preZ = preZub();
+						cout<<"PREPROCESSING Log(Z) : "<<ToulBar2::preZ + ToulBar2::markov_log<<endl;
+					}
 				}
 				if (discrepancy > abs(ToulBar2::lds)) {
 				    if (ToulBar2::lds < 0) {
@@ -1296,7 +1330,7 @@ bool Solver::solve()
 		  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
 		  cout << "Size of sep            :    " << tailleSep << endl;
 	  }
-          
+
 	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 	  cout << "... in " <<nbBacktracks << " backtracks and " << nbNodes << " nodes"  << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << endl;
 	  return true;

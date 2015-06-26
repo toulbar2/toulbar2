@@ -347,8 +347,11 @@ public:
     static string problemsaved_filename;
     static bool uai_firstoutput;
 	static bool isZ;
+	static bool isPreZ;
+	static bool isZCPD;
 	static int isZUB;
 	static TLogProb logZ;
+	static TLogProb preZ;
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies

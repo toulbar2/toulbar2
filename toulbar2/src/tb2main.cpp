@@ -213,6 +213,8 @@ enum {
 	OPT_EDAC,
 	OPT_ub,
 	OPT_Z,
+	OPT_PREZ,
+	OPT_ZCPD,
 	OPT_ZUB,
 	OPT_epsilon,
     OPT_learning,
@@ -359,6 +361,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
 	{ OPT_Z,  				(char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
+	{ OPT_PREZ,  				(char*) "-prez", 				SO_NONE			},  // compute a rapid LB on log partition function (log Z)
+	{ OPT_ZCPD,  				(char*) "-zcpd", 				SO_NONE			},  // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
 	{ OPT_ZUB,  				(char*) "-zub", 				SO_REQ_SEP		}, // Choose Upper bound number for computing Z
 	{ OPT_epsilon,				(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 
@@ -664,8 +668,10 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -D : approximate satisfiable solution count with BTD";
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-	cerr << "	-zub=[integer] : compute -logz with pruning upper born 0, 1 or 2" << endl;
+	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai or .LG)" << endl;
+	cerr << "   -prez : computes a rapid Upper Bound on log of probability of evidence "<<endl;
+	cerr << "   -zcpd : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai or .LG)" << endl;
+	cerr << "	-zub=[integer] : with -logz or -zcpd compute log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
 	cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
 	cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
@@ -1308,11 +1314,22 @@ int _tmain(int argc, TCHAR * argv[])
 			// discrete integration for computing the partition function Z
 			if ( args.OptionId() == OPT_Z) ToulBar2::isZ = true;
 			
+						// discrete integration for computing the partition function Z
+			if ( args.OptionId() == OPT_PREZ) ToulBar2::isPreZ = true;
+			
+			// Compute Z with energie divided by RT constant = (1.9891/1000.0 * 298.15)
+			if ( args.OptionId() == OPT_ZCPD){
+				 ToulBar2::isZCPD = true;
+				 ToulBar2::isZ=true;
+			 }
+			
+			// Option for choosing the upper born tightness
 			if ( args.OptionId() == OPT_ZUB){
 				int zuboption = atoi(args.OptionArg());
 				if (zuboption >= 1) ToulBar2::isZUB = zuboption;
 			}
 
+			// Set epsilon for epsilon approximation of Z
 			if ( args.OptionId() == OPT_epsilon)
 			{
 				if(args.OptionArg() != NULL) {

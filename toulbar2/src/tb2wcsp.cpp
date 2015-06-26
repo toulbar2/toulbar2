@@ -143,8 +143,11 @@ int ToulBar2::minProperVarSize;
 int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
+bool ToulBar2::isZCPD;
+bool ToulBar2::isPreZ;
 int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
+TLogProb ToulBar2::preZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
 TrieNum* ToulBar2::trieZ;
@@ -255,8 +258,11 @@ void tb2init()
     ToulBar2::smallSeparatorSize = 4;
 
     ToulBar2::isZ = false;
-    ToulBar2::isZUB = 0;
+    ToulBar2::isPreZ =false;
+    ToulBar2::isZCPD = false;
+    ToulBar2::isZUB = 1;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::preZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -Log(1000);
     ToulBar2::Berge_Dec=0;
