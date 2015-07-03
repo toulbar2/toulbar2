@@ -959,19 +959,10 @@ void Solver::newSolution()
 		}
         if (ToulBar2::cpd) {
           ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
-<<<<<<< HEAD
-          if (!ToulBar2::allSolutions) ToulBar2::cpd->printSequences();
-        }
-<<<<<<< HEAD
-        else
-=======
-=======
           if (!ToulBar2::allSolutions)
             ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
-            }
->>>>>>> Print sequences in --cpd mode
+	}
         else 
->>>>>>> 95239ab58dd1078eabec881c9d8c22cce1121ef7
           {
             for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
               if (i!=0) cout << "-";
@@ -1327,26 +1318,6 @@ bool Solver::solve()
     if (ToulBar2::cpd)
       if (ToulBar2::showSolutions)
         {
-<<<<<<< HEAD
-          ToulBar2::cpd->printSequences();
-          cout << "Total number of sequences: " << ToulBar2::cpd->getTotalSequences() << endl;
-        }
-	if(ToulBar2::allSolutions) {
-	  if(ToulBar2::approximateCountingBTD)
-		cout << "Number of solutions    : ~= " << nbSol << endl;
-	  else
-		cout << "Number of solutions    : =  " << nbSol << endl;
-	  if (ToulBar2::btdMode >= 1) {
-		  cout << "Number of #goods       :    " << nbSGoods << endl;
-		  cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
-		  cout << "Size of sep            :    " << tailleSep << endl;
-	  }
-
-	  cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-	  cout << "... in " <<nbBacktracks << " backtracks and " << nbNodes << " nodes"  << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << endl;
-	  return true;
-	}
-=======
           if(ToulBar2::allSolutions) {
             ToulBar2::cpd->printSequences();
             cout << "Total number of sequences: " << ToulBar2::cpd->getTotalSequences() << endl;
@@ -1370,7 +1341,6 @@ bool Solver::solve()
           //     ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
           //   }
         }
->>>>>>> 95239ab58dd1078eabec881c9d8c22cce1121ef7
 //  store->restore();         // see above for store->store()
 
    	if(ToulBar2::vac) wcsp->printVACStat();
