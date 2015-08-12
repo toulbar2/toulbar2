@@ -85,10 +85,11 @@ void DPGlobalConstraint::propagateAC(){
             first = false;
 
             Cost cost = r.first;
-            if(cost >= thisUb || cost + wcsp->getLb() + scope[i]->getCost(*it) >= thisUb){            
+            /*if(cost >= thisUb || cost + wcsp->getLb() + scope[i]->getCost(*it) >= thisUb){            
 			  x->remove(*it);
 			  changed = true;
-            }else if(cost > 0){
+            }else */
+			if(cost > 0){
                 project(i, *it, cost);
                 changed = true;
             } else if(cost < 0) {

@@ -34,11 +34,9 @@ void FlowBasedGlobalConstraint::initStructure() {
 		}
 	
 		buildGraph(*graph);
-		cost = constructFlow(*graph);
-	
+		cost = constructFlow(*graph);	
 	}
 	
-	propagate();
 		
 }
 
