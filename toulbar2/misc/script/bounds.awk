@@ -1,6 +1,7 @@
 BEGIN {
   print "" > "ub" N;
   print "" > "lb" N;
+  print "" > "open" N;
 }
 
 FNR==1{start=$1}
@@ -58,9 +59,10 @@ FNR==1{start=$1}
   gsub(","," ",$0);
   gsub("/"," ",$0);
   print $1,$3 >> "lb" N;
+  print $1,$5 >> "open" N;
   fflush("ub" N);
   fflush("lb" N);
+  fflush("open" N);
 }
 
 {print $0;}
-

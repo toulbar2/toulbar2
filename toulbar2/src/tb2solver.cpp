@@ -10,6 +10,7 @@
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
 #include <strings.h>
+#include <unistd.h>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
@@ -548,7 +549,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
     enforceUb();
     nbNodes++;
 	if (ToulBar2::debug && ((nbNodes % 128) == 0)) {
-	  cout << "\r";
+	  if (isatty(fileno(stdout))) cout << "\r";
 	  cout << store->getDepth();
 	  if (ToulBar2::hbfs) {
 	      if (wcsp->getTreeDec()) {
@@ -560,7 +561,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
 	  }
 	  cout << " " << exp(((Cost) (*((StoreCost *) searchSize)))/10e6);
 	  if (wcsp->getTreeDec()) cout << " C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
-	  cout << "         ";
+	  if (isatty(fileno(stdout))) cout << "         "; else cout << endl;
 	  cout.flush();
 	}
     if (ToulBar2::verbose >= 1) {
