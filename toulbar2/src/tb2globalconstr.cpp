@@ -161,6 +161,10 @@ void GlobalConstraint::propagate() {
 	currentVar = -1;
 
 	wcsp->revise(this);
+
+	vector<int> rmv;
+	checkRemoved(rmv);
+
 	switch (ToulBar2::LcLevel) {
 		case LC_DAC:
 			if (needPropagateDAC || needPropagateAC) 
@@ -224,19 +228,21 @@ void GlobalConstraint::propagateEAC() {
 
 void GlobalConstraint::propagateDAC() {
 
-	vector<map<Value, Cost> > deltas(arity_);
+	vector<map<Value, Cost> > deltas;
 	vector<int> vars;
-	vector<int> rmv;
+	//vector<int> rmv;
+	//checkRemoved(rmv);
     for(int i = 0; i < arity_; i++){
         EnumeratedVariable * x = scope[i];
-		vars.push_back(i);
 		if (x->unassigned()) {
-			checkRemoved(rmv);
+			map<Value, Cost> delta;
         	for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it){
-			  deltas[i][*it] = x->getCost(*it);
+			  delta[*it] = x->getCost(*it);
 			  deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
 			  preUnaryCosts[i][x->toIndex(*it)] = x->getCost(*it);
 			}
+			vars.push_back(i);
+			deltas.push_back(delta);
         }
     }
 	changeAfterExtend(vars, deltas);
@@ -271,10 +277,10 @@ void GlobalConstraint::propagateDAC() {
 }
 
 void GlobalConstraint::propagateAC() {
-	vector<int> rmv;
+	//vector<int> rmv;
 	for (int i=0;i<arity_;i++) {
 		if (getVar(i)->unassigned()) {
-			checkRemoved(rmv);
+			//checkRemoved(rmv);
 			findSupport(i); 
 		}
 	}
