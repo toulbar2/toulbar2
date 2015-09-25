@@ -332,7 +332,10 @@ void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int va
 
 void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv) {		
 
-	for (int varindex = 0; varindex < arity_; varindex++) {
+	//for (int varindex = 0; varindex < arity_; varindex++) {
+	for (vector<int>::iterator i = rmv.begin();i != rmv.end();i++)
+	{
+		int varindex = *i;
 		EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);    
 		for (unsigned int valIndex = 0;valIndex < mapedge[varindex].size();valIndex++) {
 			if (x->cannotbe(x->toValue(valIndex))) {

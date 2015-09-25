@@ -47,7 +47,10 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
 	pair<Cost, bool> result;
 	vector<int> cDomain, cDomain2;
 	bool deleted = false;
-	for (int i=0;i<arity_;i++) {
+	//for (int i=0;i<arity_;i++) {
+	for (vector<int>::iterator it = rmv.begin();it != rmv.end();it++)
+	{
+		int i = *it;
 		cDomain.clear();
 		getDomainFromGraph(graph, i, cDomain);
 		sort(cDomain.begin(), cDomain.end());
@@ -71,7 +74,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
 		if (!cDomain.empty()) {
 			//bool flag = false;
 			cDomain2.clear();
-			rmv.push_back(i);
+			//rmv.push_back(i);
 			for (vector<int>::iterator v=cDomain.begin();v != cDomain.end();v++) {
 				pair<int, int> edge = mapto(i, *v);
 				if (!graph.removeEdge(edge.first, edge.second)) {
