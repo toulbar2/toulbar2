@@ -360,10 +360,13 @@ void GlobalConstraint::propagateNIC() {
 
 bool GlobalConstraint::isEAC(int index, Value a) {
 	if (currentVar != index) 
-	{
+	{	
 		currentVar = index;
-		//vector<int> rmv;
-		//checkRemoved(rmv);
+
+		vector<int> rmv;
+		for (int i=0;i<arity_;i++) rmv.push_back(i);
+		checkRemoved(rmv);
+		
 		vector<int> support;
 		vector<map<Value, Cost> > deltas;
 		for (set<int>::iterator i = fullySupportedSet[index].begin();i !=
@@ -411,22 +414,27 @@ void GlobalConstraint::findFullSupportEAC(int index) {
 		vector<int> vars;
 		vector<int> rmv;
 		//vars.push_back(index);
+		vars.push_back(index);
 		for (set<int>::iterator i = fullySupportedSet[index].begin();i !=
 				fullySupportedSet[index].end();i++) {
 			EnumeratedVariable * x = scope[*i];
 			if (x->unassigned() && (*i != index)) {
-				map<Value, Cost> delta;
-				for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it){
-					delta[*it] = x->getCost(*it);
-					//deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
-					preUnaryCosts[*i][x->toIndex(*it)] = x->getCost(*it);
-				}
 				vars.push_back(*i);
-				deltas.push_back(delta);
 			}
 		}
+
+		for(vector<int>::iterator i = vars.begin(); i != vars.end(); ++i){
+			EnumeratedVariable* x = scope[*i];
+			map<Value, Cost> delta;
+			for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it){
+				delta[*it] = x->getCost(*it);
+				//deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
+				preUnaryCosts[*i][x->toIndex(*it)] = x->getCost(*it);
+			}
+			//vars.push_back(*i);
+			deltas.push_back(delta);
+		}
 		changeAfterExtend(vars, deltas);
-		vars.insert(vars.begin(), index);
 
 		for(vector<int>::iterator it = vars.begin(); it != vars.end(); ++it){
 			int varindex = *it;

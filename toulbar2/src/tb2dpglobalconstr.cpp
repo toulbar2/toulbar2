@@ -73,8 +73,8 @@ void DPGlobalConstraint::propagateAC(){
     bool changed = true;
     clear();  
 
-    Cost thisUb;
-	thisUb = wcsp->getUb();
+    //Cost thisUb;
+	//thisUb = wcsp->getUb();
     for(int i = 0; i < arity(); i++){
         EnumeratedVariable * x = scope[i];
         bool first = true;
@@ -162,42 +162,61 @@ void DPGlobalConstraint::propagateDAC(){
 
 bool DPGlobalConstraint::isEAC(int var, Value val){		
 
-    for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-        fullySupportedSet[var].end(); ++it){
-        EnumeratedVariable *x = scope[*it];
-        for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){    
-			deltaCost[*it][x->toIndex(*jt)] -= x->getCost(*jt);
-        }
-    }
-    bool ret = (minCost(var, val, true).first == 0);
-    for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-        fullySupportedSet[var].end(); ++it){
-        EnumeratedVariable *x = scope[*it];
-        for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){            
-			deltaCost[*it][x->toIndex(*jt)] += x->getCost(*jt);
-        }
-    }
-    return ret;
+	for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
+			fullySupportedSet[var].end(); ++it){
+		EnumeratedVariable *x = scope[*it];
+		if (x->unassigned() && (*it != var)) {
+			for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){    
+				deltaCost[*it][x->toIndex(*jt)] -= x->getCost(*jt);
+			} 
+		}
+	}
+	bool ret = (minCost(var, val, true).first == 0);
+	for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
+			fullySupportedSet[var].end(); ++it){
+		EnumeratedVariable *x = scope[*it];
+		if (x->unassigned() && (*it != var)) {
+			for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){            
+				deltaCost[*it][x->toIndex(*jt)] += x->getCost(*jt);
+			}
+		}
+	}
+	return ret;
 }
 
 void DPGlobalConstraint::findFullSupportEAC(int var){
-    assert(fullySupportedSet[var].find(var) == fullySupportedSet[var].end());
-    
-    clear();
-    fullySupportedSet[var].insert(var);
-    for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it){
-        EnumeratedVariable *x = scope[*it];
-        for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){
-        	/* fix the problem in EAC */
-			preUnaryCosts[*it][x->toIndex(*jt)] = x->getCost(*jt);
-			deltaCost[*it][x->toIndex(*jt)] -= x->getCost(*jt);
-        }
-    }
-    fullySupportedSet[var].erase(var);
-    bool changed = true;
-    findSupport(var, changed);
-    for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it)
-        findSupport(*it, changed);
+	assert(fullySupportedSet[var].find(var) == fullySupportedSet[var].end());
+
+	clear();
+	//fullySupportedSet[var].insert(var);
+	for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
+			fullySupportedSet[var].end(); ++it){
+		EnumeratedVariable *x = scope[*it];
+		if (x->unassigned() && (*it != var)) {
+			for(EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt){
+				/* fix the problem in EAC */
+				preUnaryCosts[*it][x->toIndex(*jt)] = x->getCost(*jt);
+				deltaCost[*it][x->toIndex(*jt)] -= x->getCost(*jt);
+			}
+		}
+	}
+	//fullySupportedSet[var].erase(var);
+	EnumeratedVariable *cur = scope[var];
+	for(EnumeratedVariable::iterator jt = cur->begin(); jt != cur->end(); ++jt){
+		/* fix the problem in EAC */
+		preUnaryCosts[var][cur->toIndex(*jt)] = cur->getCost(*jt);
+		deltaCost[var][cur->toIndex(*jt)] -= cur->getCost(*jt);
+	}
+
+
+	bool changed = true;
+	findSupport(var, changed);
+	for(set<int>::iterator it = fullySupportedSet[var].begin(); it !=
+			fullySupportedSet[var].end(); ++it)
+	{
+		EnumeratedVariable *x = scope[*it];
+		if (x->unassigned() && (*it != var)) {
+			findSupport(*it, changed);
+		}
+	}
 }
