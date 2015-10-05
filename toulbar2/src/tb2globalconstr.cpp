@@ -83,11 +83,13 @@ void GlobalConstraint::print(ostream& os) {
 Cost GlobalConstraint::eval(String s) {
         
 	Cost tcost = evalOriginal(s);
+	for (unsigned int i=0;i<s.length();i++) {
+		EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
+		if (tcost < wcsp->getUb()) {
+			tcost -= deltaCost[i][x->toIndex(s[i]-CHAR_FIRST)];
+		}
+	}
 	if (tcost < wcsp->getUb()) {
-		for (unsigned int i=0;i<s.length();i++) {
-                   EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
-                    tcost -= deltaCost[i][x->toIndex(s[i]-CHAR_FIRST)];
-                }
 		tcost -= projectedCost;
 	}
 	assert(tcost >= 0);        
