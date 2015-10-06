@@ -43,6 +43,7 @@
                         ${My_Source}/tb2pedigree.cpp
                         ${My_Source}/tb2haplotype.cpp
                         ${My_Source}/tb2cpd.cpp
+                        ${My_Source}/tb2scpbranch.cpp
                         ${My_Source}/tb2trie.cpp
                         ${My_Source}/tb2queue.cpp
                         ${My_Source}/tb2randomgen.cpp
@@ -105,6 +106,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2pedigree.*pp
                         ${My_Source}/tb2haplotype.cpp
                         ${My_Source}/tb2cpd.*pp
+                        ${My_Source}/tb2scpbranch.*pp
                         ${My_Source}/tb2trie.*pp
                         ${My_Source}/tb2queue.*pp
                         ${My_Source}/tb2randomgen.*pp

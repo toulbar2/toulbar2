@@ -239,6 +239,7 @@ class Pedigree;
 class Haplotype;
 class BEP;
 class Cpd;
+class Tb2ScpBranch;
 class TrieNum;
 
 typedef enum {
@@ -308,6 +309,7 @@ public:
 	static Pedigree *pedigree;
 	static Haplotype *haplotype;
   	static Cpd *cpd;
+  static Tb2ScpBranch *scpbranch;
 	static string map_file;
 	static bool bayesian;
 	static int uai;

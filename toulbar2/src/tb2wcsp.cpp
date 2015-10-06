@@ -14,6 +14,7 @@
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
 #include "tb2cpd.hpp"
+#include "tb2scpbranch.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
 
@@ -89,6 +90,7 @@ externalsolution ToulBar2::newsolution;
 Pedigree *ToulBar2::pedigree;
 Haplotype *ToulBar2::haplotype;
 Cpd *ToulBar2::cpd;
+Tb2ScpBranch *ToulBar2::scpbranch;
 
 bool ToulBar2::bayesian;
 int ToulBar2::uai;

@@ -12,6 +12,7 @@
 #include "tb2pedigree.hpp"
 #include "tb2haplotype.hpp"
 #include "tb2cpd.hpp"
+#include "tb2scpbranch.hpp"
 #include "tb2bep.hpp"
 #include <string.h>
 #include <stdio.h>
@@ -233,7 +234,8 @@ enum {
 	OPT_random=1000,
 
 	// CPD options
-	OPT_cpd
+	OPT_cpd,
+        OPT_scp
         
 };
 
@@ -374,6 +376,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_random, 	 			 (char*) "-random", 			SO_REQ_SEP }, // init upper bound in cli
 	// CPD options
 	{ OPT_cpd,                               (char*) "--cpd",                       SO_NONE },
+	{ OPT_scp,                               (char*) "--scpbranch",                       SO_NONE },
 
 	SO_END_OF_OPTIONS
 };
@@ -1399,6 +1402,15 @@ int _tmain(int argc, TCHAR * argv[])
 			///////////////// CPD options //////////////
 			if (args.OptionId() == OPT_cpd) {
 				ToulBar2::cpd = new Cpd;
+			}
+                        if (args.OptionId() == OPT_scp) {
+                          if (ToulBar2::cpd)
+                            ToulBar2::scpbranch = new Tb2ScpBranch;
+                          else
+                            {
+                              cerr << "Can't use --scpbranch option wihtout --cpd" << endl;
+                              return 1;
+                            }
 			}
 
 		}

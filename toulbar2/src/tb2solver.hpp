@@ -55,7 +55,7 @@ protected:
     void enforceUb();
 
     void singletonConsistency();
-
+    void scpChoicePoint(int xIndex, Value value);
     void binaryChoicePoint(int xIndex, Value value);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex);
