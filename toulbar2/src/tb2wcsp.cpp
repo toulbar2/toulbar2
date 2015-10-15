@@ -4,6 +4,8 @@
  * Contains also ToulBar2 options expressed by global variable definitions
  */
 
+#include <random>
+#include <chrono>
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
@@ -17,6 +19,7 @@
 #include "tb2scpbranch.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
+#include "tb2seq.hpp"
 
 #include "tb2globaldecomposable.hpp"
 #include "tb2globalconstr.hpp"
@@ -146,12 +149,17 @@ int ToulBar2::smallSeparatorSize;
 bool ToulBar2::isZ;
 bool ToulBar2::isZCPD;
 bool ToulBar2::isPreZ;
+bool ToulBar2::isGumbel;
+float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::preZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
 TrieNum* ToulBar2::trieZ;
+string ToulBar2::Trie_File;
+bool ToulBar2::isTrie_File = false;
+Seq *ToulBar2::seq;
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -161,6 +169,7 @@ bool ToulBar2::interrupted;
 bool ToulBar2::learning;
 
 string ToulBar2::incop_cmd;
+unsigned ToulBar2::seed;
 
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
@@ -261,6 +270,8 @@ void tb2init()
     ToulBar2::isZ = false;
     ToulBar2::isPreZ =false;
     ToulBar2::isZCPD = false;
+    ToulBar2::isGumbel= false;
+    ToulBar2::isZCelTemp = 25;
     ToulBar2::isZUB = 1;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::preZ = -numeric_limits<TLogProb>::infinity();
@@ -275,6 +286,7 @@ void tb2init()
     ToulBar2::learning = false;
 
     ToulBar2::incop_cmd = "";
+    ToulBar2::seed=std::chrono::system_clock::now().time_since_epoch().count(); //initialize the seed to generate different random distrib.
 }
 
 /*
@@ -3021,12 +3033,6 @@ Cost WCSP::Prob2Cost(TProb p) const {
 	if (c > getUb()) return getUb();
 	return c;
 }
-
-//Cost WCSP::LogProb2Cost(TLogProb p) const {
-//	TLogProb res = -p * ToulBar2::NormFactor;
-//	Cost c = (Cost) res;
-//	return c;
-//}
 
 Cost WCSP::LogProb2Cost(TLogProb p) const {
 	TLogProb res = -p * ToulBar2::NormFactor;

@@ -16,6 +16,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include "tb2trienum.hpp"
+#include "tb2seq.hpp"
+#include "tb2gumdistrib.hpp"
 
 using namespace boost;
 
@@ -788,6 +790,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 
 void WCSP::read_uai2008(const char *fileName)
 {
+    string dummy;
 	// Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
     ToulBar2::NormFactor = (-1.0/Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
     if (ToulBar2::NormFactor > (Pow( (TProb)2., (TProb)INTEGERBITS)-1)/(TLogProb)ToulBar2::resolution) {
@@ -954,7 +957,7 @@ void WCSP::read_uai2008(const char *fileName)
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
 	        if(ToulBar2::isZCPD){
-                p /= ((1.9891/1000.0 * 298.15)) ;
+                p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
                 costsProb.push_back( p );
 	        }else{
                 costsProb.push_back( p );
@@ -963,6 +966,25 @@ void WCSP::read_uai2008(const char *fileName)
 	    }
 	    Cost minc = MAX_COST;
 	    Cost maxc = MIN_COST;
+        
+        if(ToulBar2::isGumbel){
+            if(ToulBar2::verbose>0){
+                for(auto p : costsProb){
+                    cout<< p << ' ';
+                }
+                cout<<endl;
+                cout<<"CHANGE TO"<<endl;
+            }
+            costsProb=Gumbel_noise_vec(costsProb); // Apply Gumbel perturbation on the Energy Matrix
+            for(auto p : costsProb){
+                if(p > maxp){maxp = p;}; 
+                if(ToulBar2::verbose>0){
+                    cout<<p<<' ';
+                }
+            }
+            if(ToulBar2::verbose>0) cout<<endl;
+        }
+    
 	    for (k = 0; k < ntuples; k++) {
 	        p = costsProb[k];
 	        Cost cost;
@@ -988,6 +1010,26 @@ void WCSP::read_uai2008(const char *fileName)
 	ictr++;
 	++it;
 	}
+   
+	
+	
+    //~ file>>dummy;
+    //~ cout<<dummy<<endl;
+	if (file) {
+		if (ToulBar2::seq)
+		{
+			Cpd *cpd = new Cpd;
+			file.get();
+			cpd->read_rotamers2aa(file, vars);
+			ToulBar2::seq->generate_mask(cpd-> getRotamers2AA());	
+       	}
+		//~ else
+		//~ {
+			//~ cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+		//~ }
+	}
+	
+    
     updateUb( upperbound );
 
     ictr = 0;
@@ -1008,7 +1050,29 @@ void WCSP::read_uai2008(const char *fileName)
 
 			case 1: 	unaryconstrs[iunaryctr].costs.clear();
 						for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
-						      unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
+							if(ToulBar2::seq)
+							{
+								if(ToulBar2::seq->get_mask()[ictr-1][a])
+								{
+									unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
+								}
+								else
+								{
+									if (ToulBar2::verbose >= 1) 
+									{
+										cout<<"Eliminating: "<< ictr<< " "<<a<<endl;
+										if (ToulBar2::verbose >= 4)
+										{
+											cout<<ictr<<' '<<a<<" MASK "<<ToulBar2::seq->get_mask()[ictr-1][a]<<endl;
+										}
+									}
+									unaryconstrs[iunaryctr].costs.push_back(MAX_COST);
+								}
+							}
+							else 
+							{
+								unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
+							}
 						}
 						iunaryctr++;
 						if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;
@@ -1512,13 +1576,17 @@ void WCSP::read_qpbo(const char *fileName)
 TrieNum* WCSP::read_TRIE(const char *fileName)
 {
 	TrieNum* trie = new TrieNum();
-//	Cost logz= MAX_COST;
-	string strie(string(fileName) + string(".trie"));
-	vector<int> position_vector;
-	string sol_num;
-	string trashed;
+    string strie;
+    if(ToulBar2::isTrie_File){
+        strie=ToulBar2::Trie_File;
+        cout << "loading trie solution file of file: " << strie << endl;
+    }
+    else{
+        strie=string(fileName) + string(".trie");
+        cout << "loading trie solution file of file: " << strie << endl;
+	}
+    vector<int> position_vector;
 	Cost sol_cost;
-	string sol_pos;
 	string s;
 	istringstream line;
 	ifstream ftrie;
@@ -1536,17 +1604,8 @@ TrieNum* WCSP::read_TRIE(const char *fileName)
         }
 		else
         {
-			line >> sol_num >> trashed >> sol_cost >> sol_pos;
-//			vector<string> sol_pos_str;
-//			boost::split(sol_pos_str,sol_pos,boost::is_any_of("-"));
-//			for(auto iter: sol_pos_str)
-//			{
-//				int rot_pos = boost::lexical_cast<int>(iter);
-//				position_vector.push_back(rot_pos);
-//			}
-//			trie->add_Sol(position_vector,sol_cost);
-//			logz=LogSumExp(logz,sol_cost);
-			trie->add_costs(sol_cost);
+            line >> sol_cost;
+            trie->add_costs(sol_cost);
 		}
 	}
 	return trie;

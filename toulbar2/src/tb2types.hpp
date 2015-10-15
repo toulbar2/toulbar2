@@ -235,6 +235,7 @@ typedef enum {
 	ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX
 } ElimOrderType;
 
+class Seq;
 class Pedigree;
 class Haplotype;
 class BEP;
@@ -351,12 +352,17 @@ public:
 	static bool isZ;
 	static bool isPreZ;
 	static bool isZCPD;
+	static float isZCelTemp;
 	static int isZUB;
+    static bool isGumbel;
+    static Seq *seq;
 	static TLogProb logZ;
 	static TLogProb preZ;
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
+        static string Trie_File;
+        static bool isTrie_File;
     static bool uaieval;
 
 	static double startCpuTime;
@@ -374,6 +380,7 @@ public:
 	static bool interrupted;
 
 	static string incop_cmd;
+    static unsigned seed;
 };
 
 /*

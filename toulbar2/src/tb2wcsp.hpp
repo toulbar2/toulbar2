@@ -370,9 +370,10 @@ public:
 
 	void read_XML(const char *fileName);		///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
 	void solution_XML( bool opt = false );		///< \brief output solution in Max-CSP 2008 output format
-    void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
-
-    TrieNum* read_TRIE(const char *fileName); // read the TB2 all solution file (temp wtd)
+        void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
+        TProb Gumbel_noise(TProb prob);
+        vector<TProb> Gumbel_noise_vec(vector<TProb> costsProb);
+        TrieNum* read_TRIE(const char *fileName); // read the TB2 all solution file (temp wtd)
 
     const vector<Value> &getSolution() {return solution;}
     void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
