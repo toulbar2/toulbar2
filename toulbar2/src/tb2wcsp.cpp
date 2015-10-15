@@ -91,7 +91,6 @@ Pedigree *ToulBar2::pedigree;
 Haplotype *ToulBar2::haplotype;
 Cpd *ToulBar2::cpd;
 Tb2ScpBranch *ToulBar2::scpbranch;
-
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;

@@ -310,7 +310,7 @@ public:
 	static Haplotype *haplotype;
   	static Cpd *cpd;
   static Tb2ScpBranch *scpbranch;
-	static string map_file;
+  static string map_file;
 	static bool bayesian;
 	static int uai;
 	static int resolution;

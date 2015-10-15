@@ -141,6 +141,18 @@ size_t Tb2ScpBranch::moveAAFirst(ValueCost * sorted, size_t domsize, size_t left
   return cursor;
 }
 
+
+bool Tb2ScpBranch::multipleAA(int varIndex, ValueCost *sorted, int domsize)
+{
+  char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
+  for(size_t i=0;i<domsize;i++)
+    {
+      if (ToulBar2::cpd->getAA(varIndex, sorted[i].value)!=type)
+        return true;
+    }
+  return false;
+}
+
 // void Tb2ScpBranch::keep(size_t begin, size_t end, size_t var_index)
 // {
 //   size_t domsize = sort_criterium[var_index].size(); 

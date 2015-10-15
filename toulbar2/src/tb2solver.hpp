@@ -45,6 +45,7 @@ protected:
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
+  int getNextScpCandidate();
     void increase(int varIndex, Value value);
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);

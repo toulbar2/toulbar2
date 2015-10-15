@@ -225,6 +225,26 @@ int Solver::getNextUnassignedVar()
   return (unassignedVars->empty())?-1:(*unassignedVars->begin());
 }
 
+int Solver::getNextScpCandidate()
+{
+  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+    unsigned int domsize = wcsp->getDomainSize(*iter);
+    size_t left,right;
+    ValueCost sorted[domsize];
+    wcsp->getEnumDomainAndCost(*iter, sorted);
+    if (ToulBar2::scpbranch->multipleAA(*iter, sorted, domsize))
+      return *iter;
+  }
+  int varIndex=-1;
+  if (ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar();
+  else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
+  else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
+  else if(ToulBar2::weightedDegree) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeRandomized():getVarMinDomainDivMaxWeightedDegree());
+  else varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeRandomized():getVarMinDomainDivMaxDegree());
+
+  return varIndex;
+}
+
 int Solver::getVarMinDomainDivMaxDegree()
 {
   int varIndex = -1;
@@ -698,10 +718,12 @@ void Solver::scpChoicePoint(int varIndex, Value value)
   unsigned int domsize = wcsp->getDomainSize(varIndex);
   size_t left,right;
   ValueCost sorted[domsize];
+  int check=0;
   wcsp->getEnumDomainAndCost(varIndex, sorted);
   tie(left,right)=ToulBar2::scpbranch->getBounds(varIndex,value);
   size_t middle;
   middle = ToulBar2::scpbranch->moveAAFirst(sorted, domsize, left, right);
+  char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
   try {
     store->store();
     lastConflictVar = varIndex;
@@ -710,7 +732,21 @@ void Solver::scpChoicePoint(int varIndex, Value value)
     else assign(varIndex, value);
     lastConflictVar = -1;
     recursiveSolve();
-  } catch (Contradiction) {
+  } 
+  catch (FindNewSequence) {
+    if (middle==domsize)
+      {
+        store->restore();
+        enforceUb();
+        nbBacktracks++;
+        throw FindNewSequence();
+      }
+    else
+      {
+        check=1;
+      }
+  }
+  catch (Contradiction) {
     wcsp->whenContradiction();
   }
   store->restore();
@@ -719,7 +755,18 @@ void Solver::scpChoicePoint(int varIndex, Value value)
   if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
   if (middle!=domsize) remove(varIndex, sorted, 0, middle-1);
   else remove(varIndex, value);
+  try {
   recursiveSolve();
+   }
+  catch (FindNewSequence) {
+    if (middle==domsize)
+      {
+        store->restore();
+        enforceUb();
+        nbBacktracks++;
+        throw FindNewSequence();
+      }
+  }
 }
 
 
@@ -1085,12 +1132,14 @@ void Solver::newSolution()
   if (ToulBar2::newsolution) (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
   if (ToulBar2::restart==0 && !ToulBar2::lds && !ToulBar2::isZ) throw NbBacktracksOut();
+  if (ToulBar2::allSolutions && ToulBar2::scpbranch) { throw FindNewSequence();}
 }
 
 void Solver::recursiveSolve()
 {
   int varIndex = -1;
   if (ToulBar2::bep) varIndex = getMostUrgent();
+  else if (ToulBar2::scpbranch) varIndex = getNextScpCandidate(); 
   else if (ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar();
   else if(ToulBar2::weightedDegree && ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized():getVarMinDomainDivMaxWeightedDegreeLastConflict());
   else if(ToulBar2::lastConflict) varIndex = ((ToulBar2::restart>0)?getVarMinDomainDivMaxDegreeLastConflictRandomized():getVarMinDomainDivMaxDegreeLastConflict());
@@ -1105,18 +1154,28 @@ void Solver::recursiveSolve()
         // Reuse last solution found if available
         Value bestval = wcsp->getBestValue(varIndex);
         if(ToulBar2::scpbranch)
-          scpChoicePoint(varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex));
+          {
+            try {
+              scpChoicePoint(varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex));
+            }
+            catch (FindNewSequence) { throw FindNewSequence();}
+          }
         else
           binaryChoicePoint(varIndex, (wcsp->canbe(varIndex, bestval))?bestval:wcsp->getSupport(varIndex));
       } else narySortedChoicePoint(varIndex);
     } else 
       {
         if(ToulBar2::scpbranch)
-          scpChoicePoint(varIndex, wcsp->getInf(varIndex));
+          {
+            try {
+              scpChoicePoint(varIndex, wcsp->getInf(varIndex));
+            }
+            catch (FindNewSequence) { throw FindNewSequence();}
+          }
         else
           binaryChoicePoint(varIndex, wcsp->getInf(varIndex));
       }
-  } else newSolution();
+  } else try { newSolution(); } catch (FindNewSequence) { throw FindNewSequence();}
 
 }
 
@@ -1159,7 +1218,6 @@ bool Solver::solve()
   nbNodes = 0;
   lastConflictVar = -1;
   int tailleSep = 0;
-
   if (ToulBar2::isZ) {
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
@@ -1316,7 +1374,8 @@ bool Solver::solve()
               //					  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
               //					  		wcsp->resetWeightedDegree(*iter);
               //					  }
-              recursiveSolve();
+              try {
+                recursiveSolve();} catch (FindNewSequence) {}
             } else {
               try {
                 store->store();
@@ -1369,7 +1428,7 @@ bool Solver::solve()
             }
             wcsp->setUb(ub);
             if(ToulBar2::debug) start->printStatsRec();
-          } else recursiveSolve();
+          } else try {recursiveSolve();} catch (FindNewSequence) {}
         }
       } catch (NbBacktracksOut) {
         nbbacktracksout = true;
