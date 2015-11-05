@@ -28,6 +28,7 @@ protected:
 	set<int> *fullySupportedSet;
 	
 	map<Value, Cost> EACCost; 
+	vector<vector<Cost> > preUnaryCosts;
 	int currentVar;
 	bool needPropagateAC, needPropagateDAC, needPropagateEAC;
 

@@ -19,10 +19,6 @@ ELSE(WIN32)
 	MESSAGE(STATUS " project :${PROJECT_NAME} packaging")
 	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR} FOR UNIX")
 	MESSAGE(STATUS "#################################")
-	MESSAGE(STATUS "${My_misc_bin}/peo ${My_misc_bin}/narycsp  added in the package")
-	MESSAGE(STATUS "---------------------------------")
-	INSTALL(FILES ${My_misc_bin}/peo ${My_misc_bin}/narycsp  DESTINATION bin PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE 
-       GROUP_READ GROUP_EXECUTE  WORLD_EXECUTE  WORLD_READ)
 
 	SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libgcc1 (>= 1:3.4.2-12), boost (>=1.34.0), xml2 ")
 	SET(CPACK_STRIP_FILES "bin/toulbar2;bin/iloglue;bin/mendelsoft")
