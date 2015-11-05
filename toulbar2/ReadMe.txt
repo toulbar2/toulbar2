@@ -85,7 +85,6 @@ toolbar and toulbar2 are developed as open source programs and are accessible at
 
 The XCSP 2.1 format reader of CSP and WCSP instances has been provided by Olivier Roussel (roussel at cril.univ-artois.fr).
 
-Executable narycsp is part of INCOP, a local search solver developed by Bertrand Neveu (Bertrand.Neveu at enpc.fr). See http://imagine.enpc.fr/~neveub/incop/incoppresentation.html
-Version 0.9.7 or later integrates the source code of INCOP solver done before B&B search and after preprocessing.
-Executable peo implements various ordering heuristics for variable elimination methods used by BTD-like search methods. It has been provided by Cyril Terrioux (cyril.terrioux at univ-cezanne.fr).
-Version 0.9.7 or later integrates the source code of the simplest peo heuristics.
+Version 0.9.7 or later integrates the source code of INCOP, a local search solver developed by Bertrand Neveu (Bertrand.Neveu at enpc.fr). See http://imagine.enpc.fr/~neveub/incop/incoppresentation.html. INCOP is used before B&B search for upper-bounding.
+
+Version 0.9.7 or later integrates various ordering heuristics for building tree decompositions for variable elimination like methods such as BTD (Backtrack withh tree decomposition). This code  has been provided by Cyril Terrioux (cyril.terrioux at univ-cezanne.fr).

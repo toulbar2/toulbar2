@@ -332,50 +332,23 @@ void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int va
 
 void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv) {		
 
-    /*for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*) getVar(i);
-        tempdomain[i].clear();
-        for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-            tempdomain[i].insert(*v);
-        }
-        for (unsigned int v = 0; v < mapedge[i].size(); v++) {
-            if ((tempdomain[i].find(x->toValue(v)) == tempdomain[i].end()) &&
-                    (mapedge[i][v].size() != 0)) {
-                rmv.push_back(i);
-                break;
-            }
-        }
-    }
-    buildGraphBasic(graph, true);  */
-    
-     for (int varindex = 0; varindex < arity_; varindex++) {
-        EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);     
-        curdomain[varindex].clear();
-        for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {           
-            curdomain[varindex].insert(*v);
-        }
-                        
-		set<int> result;
-		set_difference(predomain[varindex].begin(), predomain[varindex].end(), 
-						curdomain[varindex].begin(), curdomain[varindex].end(),
-    					std::inserter(result, result.end()));
-		
-		if (!result.empty()) {
-			rmv.push_back(varindex);	
-			for (set<int>::iterator v = result.begin(); v != result.end();++v) {
-				vector<pair<int, int> > &edges = mapedge[varindex][x->toIndex(*v)];
-	        	for (vector<pair<int, int> >::iterator i = edges.begin(); i !=
-	                edges.end(); i++) {
-	            	pair<int, int> edge = *i;
-		            graph.removeEdge(edge.first, edge.second, *v);
-	        	}		
-        	}
+	//for (int varindex = 0; varindex < arity_; varindex++) {
+	for (vector<int>::iterator i = rmv.begin();i != rmv.end();i++)
+	{
+		int varindex = *i;
+		EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);    
+		for (unsigned int valIndex = 0;valIndex < mapedge[varindex].size();valIndex++) {
+			if (x->cannotbe(x->toValue(valIndex))) {
+				vector<pair<int, int> > &edges = mapedge[varindex][valIndex];
+				for (vector<pair<int, int> >::iterator i = edges.begin(); i !=
+						edges.end(); i++) {
+					pair<int, int> edge = *i;
+					graph.removeEdge(edge.first, edge.second, x->toValue(valIndex));
+				}
+			}
 		}
-    					                
-    }    
-    
-    predomain = curdomain;
-            
+	}
+	    
 }
 
 void RegularFlowConstraint::augmentStructure(Graph &g, StoreCost &cost, int varindex, map<Value, Cost> &delta) {
