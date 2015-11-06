@@ -556,6 +556,7 @@ void help_msg(char *toulbar2filename)
 	cerr << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
 	cerr << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
+    cerr << "   -help : shows this help message" << endl;
 	cerr << "   -ub=[integer] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
 	cerr << "   -v=[integer] : verbosity level" << endl;
 	cerr << "   -s : shows each solution found" << endl;
@@ -754,7 +755,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 
 	assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-	if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2014"<<endl;
+	if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2015"<<endl;
 	 cout << "Toulbar2 Binary Path="<<CurrentBinaryPath<<"toulbar2"<<endl;
 
 	// --------------------------simple opt ----------------------
@@ -1644,7 +1645,7 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1)
 	{
-        cout << "Warning! Cannot find all solutions with RDS-like search methods in optimization (i.e., ub > 1)." << endl;
+        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization => force ub = 1." << endl;
 		ub = 1;
 	}
 	if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)

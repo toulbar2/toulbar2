@@ -1,7 +1,7 @@
 
 toulbar2 v0.9
 
-Copyright© - INRA - 2010
+Copyright© - INRA - 2015
 
 * All rights reserved.
 * Redistribution and use in source and binary forms, with or without

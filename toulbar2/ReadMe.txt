@@ -1,3 +1,4 @@
+NEW RELEASE v0.9.8 ADDING HYBRID BEST-FIRST SEARCH AND MORE SOFT GLOBAL COST FUNCTIONS.
 NEW RELEASE v0.9.7 ADDING LOCAL SEARCH INCOP SOLVER AFTER PREPROCESSING.
 NEW RELEASE v0.9.6 ADDING NEW VARIABLE ORDERING HEURISTICS AND DOMINANCE RULES.
 NEW RELEASE v0.9.5 ADDING SOFT GLOBAL DECOMPOSABLE COST FUNCTIONS (Schiex et al, AAAI-2012).
@@ -70,6 +71,12 @@ BAC
  A. Favier, S. de Givry, and P. Jégou
  In Proc. of CP-09, Lisbon, Portugal, 2009
  http://www.inra.fr/mia/T/degivry/Favier09a.pdf
+
+HBFS
+ Anytime Hybrid Best-First Search with Tree Decomposition for Weighted CSP
+ D Allouche, S de Givry, G Katsirelos, T Schiex, and M Zytnicki
+ In Proc. of CP-15, Cork, Ireland, 2015 
+ http://www.inra.fr/mia/T/degivry/Katsirelos15a.pdf
 
 See a short description of the toolbar/toulbar2 collaborative project at:
 http://www.inra.fr/mia/T/degivry/ToolBar.pdf
