@@ -1220,6 +1220,8 @@ bool Solver::solve()
 	  ToulBar2::logU = -numeric_limits<TProb>::infinity();
 	}
 
+	Long hbfs_ = ToulBar2::hbfs;
+	ToulBar2::hbfs = 0;         // do not perform hbfs operations in preprocessing except for building tree decomposition
     try {
 //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
 		if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
@@ -1266,6 +1268,7 @@ bool Solver::solve()
 		  wcsp->propagate();
 		}
 
+		ToulBar2::hbfs = hbfs_;
 		if (ToulBar2::verbose >= 0) cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
         if (ToulBar2::verbose >= 0) cout << "Initial lower and upper bounds: [" << wcsp->getLb() << "," << wcsp->getUb() << "[ " << (Double) 100.0 * (wcsp->getUb()-wcsp->getLb())/(Double) wcsp->getUb() << "%" << endl;
         initGap(wcsp->getLb(), wcsp->getUb());

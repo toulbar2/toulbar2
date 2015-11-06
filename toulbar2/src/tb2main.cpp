@@ -1677,8 +1677,8 @@ int _tmain(int argc, TCHAR * argv[])
 	}
     if (ToulBar2::lds && ToulBar2::hbfs)
     {
-        cout << "Warning! Limited Discrepancy Search not compatible with hybrid best-first search methods." << endl;
-        ToulBar2::lds = 0;
+        cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
+        ToulBar2::hbfs = 0;
     }
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2)
     {
@@ -1721,12 +1721,12 @@ int _tmain(int argc, TCHAR * argv[])
     }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs)
     {
-        cout << "Warning! n-ary branching not implemented with best-first search => force binary branching." << endl;
+        cout << "Warning! n-ary branching not implemented with best-first search => force binary branching. (or add -hbfs: parameter)" << endl;
         ToulBar2::binaryBranching = true;
     }
     if (ToulBar2::dichotomicBranching>=2 && ToulBar2::hbfs)
     {
-        cout << "Warning! complex dichotomic branching not implemented with best-first search => force simple dichotomic branching." << endl;
+        cout << "Warning! complex dichotomic branching not implemented with best-first search => force simple dichotomic branching. (or add -hbfs: parameter)" << endl;
         ToulBar2::dichotomicBranching = 1;
     }
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
