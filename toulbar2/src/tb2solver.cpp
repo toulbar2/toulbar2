@@ -1778,7 +1778,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
         if (ToulBar2::verbose >= 1) cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse)?"*":"") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx  << endl;
         if (ToulBar2::verbose >= 1) cout << *((WCSP *) wcsp)->getVar(cp[idx].varIndex) << endl;
         nbNodes++;
-        switch (cp[idx].op) {
+        switch (cp[idx].op) { //TODO: some operations (remove,increase,decrease) are useless because of all assigns previously done
         case CP_ASSIGN:
             if (cp[idx].reverse && idx < nd.last-1) {
                 wcsp->remove(cp[idx].varIndex, cp[idx].value);
