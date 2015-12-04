@@ -352,12 +352,15 @@ public:
 	static bool isZ;
 	static bool isPreZ;
 	static bool isZCPD;
+  static bool isSubZ;
 	static float isZCelTemp;
 	static int isZUB;
+  static bool stop; // STOP TB2 (TMP way)
     static bool isGumbel;
+    static unsigned int run;
     static Seq *seq;
 	static TLogProb logZ;
-	static TLogProb preZ;
+  static TLogProb UplogZ;
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies

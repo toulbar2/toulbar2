@@ -53,7 +53,8 @@ protected:
     void remove(int varIndex, ValueCost *array, int first, int last);
     void conflict() {}
     TLogProb preZub(); // Compute preprocessing Z
-    TLogProb GumofThrone(); //Compute preprocessing Z with GumBel perturbation method (cf Tamir Hazan)
+    TLogProb UnderTheZ(); // Compute Z with only subotpimal solution
+    TLogProb GumofThrone(); //Compute Z with GumBel perturbation method (cf Tamir Hazan)
     void enforceUb();
 
     void singletonConsistency();

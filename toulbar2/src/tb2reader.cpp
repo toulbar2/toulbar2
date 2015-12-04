@@ -956,6 +956,10 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
+          //~ if(ToulBar2::isGumbel){
+            //~ p= Gumbel_noise(p);
+            //~ costsProb.push_back( p );
+          //~ }
 	        if(ToulBar2::isZCPD){
                 p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
                 costsProb.push_back( p );

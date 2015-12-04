@@ -150,10 +150,13 @@ bool ToulBar2::isZ;
 bool ToulBar2::isZCPD;
 bool ToulBar2::isPreZ;
 bool ToulBar2::isGumbel;
+unsigned int ToulBar2::run;
+bool ToulBar2::isSubZ;
 float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
+//bool ToulBar2::stop;
 TLogProb ToulBar2::logZ;
-TLogProb ToulBar2::preZ;
+TLogProb ToulBar2::UplogZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
 TrieNum* ToulBar2::trieZ;
@@ -271,10 +274,12 @@ void tb2init()
     ToulBar2::isPreZ =false;
     ToulBar2::isZCPD = false;
     ToulBar2::isGumbel= false;
+    ToulBar2::run=10;
+    ToulBar2::isSubZ=false; //tmp option
     ToulBar2::isZCelTemp = 25;
     ToulBar2::isZUB = 1;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::preZ = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::UplogZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -Log(1000);
     ToulBar2::Berge_Dec=0;
@@ -3039,7 +3044,7 @@ Cost WCSP::LogProb2Cost(TLogProb p) const {
 	Cost c;
 	if (res > to_double(MAX_COST/2)) {
 		c = (MAX_COST-UNIT_COST)/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST/MEDIUM_COST;
-		if (ToulBar2::verbose >= 1){
+		if (ToulBar2::verbose >= 2){
 		    cout << "Warning: converting energy " << -p << " to Top\n";
 		}
 	}
