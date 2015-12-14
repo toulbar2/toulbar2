@@ -25,8 +25,9 @@ protected:
     BTList<Value> *unassignedVars;
     int lastConflictVar;
     void *searchSize;
-
+	
     BigInteger nbSol;
+    int nbSoldiv=0;
     Long nbSGoods;				//number of #good which created
     Long nbSGoodsUse;			//number of #good which used
     map<int,BigInteger > ubSol;	// upper bound of solution number

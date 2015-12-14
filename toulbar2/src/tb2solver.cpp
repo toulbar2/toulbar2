@@ -1109,7 +1109,10 @@ void Solver::newSolution()
   if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution();
   if (ToulBar2::isSubZ){
     ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
-    cout<< nbSol << " Log(Z) = "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+    if((nbSol-1)==nbSoldiv*ToulBar2::zshow){ 
+		cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+		nbSoldiv++;
+	}
   }
   if (ToulBar2::showSolutions) {
 
@@ -1332,10 +1335,10 @@ bool Solver::solve()
     if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
     if (ToulBar2::isZ){ // Compute easy lower and upper bound and verify if we already have an epsilon approximation
       ToulBar2::UplogZ = preZub();
-      cout<< "Initial Z Bound : " << wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log <<" <= Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
-      //cout << Exp(ToulBar2::UplogZ) << " <? "<< Exp(wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()))*(Exp(ToulBar2::logepsilon) + 1)<<endl;
+      if (ToulBar2::verbose>0) cout<< "Initial Z Bound : " << wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log <<" <= Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
       if ( Exp(ToulBar2::UplogZ) < (Exp(ToulBar2::logepsilon)+1)*Exp(wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()))){
         cout<< "Already have an epsilon = "<<Exp(ToulBar2::logepsilon)<<" approximation" <<endl;
+        cout<<  wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log <<" <= Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
         return EXIT_SUCCESS;
       }
     }
@@ -1560,7 +1563,8 @@ bool Solver::solve()
     }
     return true;
   } else {
-    if (ToulBar2::verbose >= 0) cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+	if (ToulBar2::isSubZ) cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+    else if (ToulBar2::verbose >= 0) cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     if (ToulBar2::maxsateval && !ToulBar2::limited) {
       cout << "o " << wcsp->getUb() << endl;
       cout << "s UNSATISFIABLE" << endl;

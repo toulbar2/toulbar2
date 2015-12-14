@@ -152,6 +152,7 @@ bool ToulBar2::isPreZ;
 bool ToulBar2::isGumbel;
 unsigned int ToulBar2::run;
 bool ToulBar2::isSubZ;
+int ToulBar2::zshow;
 float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
 //bool ToulBar2::stop;
@@ -275,7 +276,8 @@ void tb2init()
     ToulBar2::isZCPD = false;
     ToulBar2::isGumbel= false;
     ToulBar2::run=10;
-    ToulBar2::isSubZ=false; //tmp option
+    ToulBar2::isSubZ=false;
+    ToulBar2::zshow=1;
     ToulBar2::isZCelTemp = 25;
     ToulBar2::isZUB = 1;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();

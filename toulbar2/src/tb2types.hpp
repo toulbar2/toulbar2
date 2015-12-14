@@ -353,6 +353,7 @@ public:
 	static bool isPreZ;
 	static bool isZCPD;
   static bool isSubZ;
+  static int zshow;
 	static float isZCelTemp;
 	static int isZUB;
   static bool stop; // STOP TB2 (TMP way)
