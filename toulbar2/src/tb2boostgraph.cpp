@@ -253,7 +253,7 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
         res.push_back( pair<Value, Cost>(*iter, x->getCost(*iter)) ); // Fill the res list with the unarycost of root's sons
     }
     
-    for (int i=0; i<sons[root].size(); i++) { // Loop until there is no root's sons.
+    for (unsigned int i=0; i<sons[root].size(); i++) { // Loop until there is no root's sons.
 		//Recurcive call of visitZ over the root's son i 
         ResultVisitZ resi = visitZ(sons[root][i].first, sons);
 
@@ -261,9 +261,9 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
         EnumeratedVariable *y = (EnumeratedVariable *) getVar(sons[root][i].first); // Take the i-th sons of the root
         BinaryConstraint *ctr = sons[root][i].second; // Take the binary constraint that link the i-th sons and the root
         int pos = 0;
-        for (EnumeratedVariable::iterator iter1 = x->begin(); iter1 != x->end(); ++iter1, pos++) {
+        for (EnumeratedVariable::iterator iter1 = x->begin(); iter1 != x->end(); ++iter1, pos++) { //Loop over the value in root
             Cost mincost = MAX_COST;
-            for (int iter = 0; iter < resi.size(); ++iter) {
+            for (unsigned int iter = 0; iter < resi.size(); ++iter) {
 				//SUM UNARY of the i-th sons AND BINARY that link the i-th sons to the root
                 Cost curcost = resi[iter].second + ctr->getCost(y, x, resi[iter].first, *iter1); 
                 mincost = LogSumExp(mincost,curcost);
@@ -282,9 +282,9 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
   for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {double t = elimBinConstrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
   for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
-
+  //ComputeTightness() is calculating the mean of the binary cost linking two variable.
   DoubleWeightedGraph G;
-  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G); //Add vertex as many as there is variable
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
   for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
   for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G, maxt);
@@ -292,22 +292,22 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   int n = num_vertices(G);
 
   vector < graph_traits < DoubleWeightedGraph >::vertex_descriptor > p(n);
-  prim_minimum_spanning_tree(G, &p[0]); // return the "maximum" spanning tree (list of p[i] : parent of node i of the graph G)
+  prim_minimum_spanning_tree(G, &p[0]); // return the "maximum" spanning tree (list of p[i] : parent of node i in the MST of G)
 
   double tight = 0;
   bool tightok = true;
   vector<int> roots;
-  vector< vector< pair<int, BinaryConstraint *> > > sons(vars.size(), vector< pair<int, BinaryConstraint *> >() );
+  Sons sons(vars.size(), vector< pair<int, BinaryConstraint *> >() );
   
-  for (size_t i = 0; i != p.size(); ++i) {
+  for (size_t i = 0; i != p.size(); ++i) { // Loop over all the node in the MST.
     if (p[i] != i) { // if p[i]=i, the node is a root
-      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the binary cost of i and his parent (i<-->p[i])
+      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the binary constraints of i and his parent p[i] (i<-->p[i])
       assert(unassigned(i));
       assert(unassigned(p[i]));
       if (bctr) {
 		  //cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
           tight += bctr->getTightness();
-          sons[p[i]].push_back( pair<int, BinaryConstraint *>(i, bctr) ); // Fill a list (Sons of p[i],Binarycost i<-->p[i])
+          sons[p[i]].push_back( pair<int, BinaryConstraint *>(i, bctr) ); // Fill a list (Sons of p[i],Binary constr i<-->p[i])
       } else {
           tightok = false;
       }
@@ -324,9 +324,9 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   TLogProb res = 0 ;
 
   for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
-      ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each nodes. The value term contain the bynary cost and the unary cost.
+      ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each roots. The value term contain the bynary cost and the unary cost.
       Cost mincost = MAX_COST;
-      for (int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
+      for (unsigned int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
 		  //Bring back together all the costs that go from a node to a leaf in the spanning tree : Dynamic programming
           mincost = LogSumExp(mincost,resi[iter].second); 
       }

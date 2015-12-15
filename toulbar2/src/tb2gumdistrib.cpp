@@ -34,8 +34,8 @@ vector<TProb> WCSP::Gumbel_noise_vec(vector<TProb> costsProb)
       for(unsigned int i=0; i<costsProb.size(); ++i){
          perturb = distribution(generator);
          if(costsProb[i] != 0){
-            perturb_prob = Log(costsProb[i]) + perturb;
-            perturb_costsProb.push_back(Exp(perturb_prob));
+            perturb_prob = costsProb[i]+ perturb;
+            perturb_costsProb.push_back(perturb_prob);
          }
          else{
             perturb_costsProb.push_back(costsProb[i]);

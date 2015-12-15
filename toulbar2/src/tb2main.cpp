@@ -692,13 +692,13 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -prez : computes a rapid Lower Bound on log of probability of evidence "<<endl;
 	cerr << "   -zcpd : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai or .LG)" << endl;
 	cerr << "           and divide the Energy by the RT constant in order to compute K-score."<<endl;
-	cerr << "	-zub=[integer] : with -logz or -zcpd, compute log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
+	cerr << "	  -zub=[integer] : with -logz or -zcpd, compute log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
 	cerr << "   -subz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only" << endl;
   cerr << "           by adding the energy terms (use with -ub and -zshow=[int] to see Z with energies between optimum and -ub every zshow)"<<endl;
   cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
   cerr << "   -ztmp=[float] : with -zcpd, choose the temperature T in Celsuis"<<endl;
   cerr << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix"<< endl;
-  cerr << "   -run : Number of run in the gumbel mode (default 10)"<<endl;
+  cerr << "   --run : Number of run in the gumbek mode (default 10) and subz mode (default INFINITY !)"<<endl;
   cerr << "---------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
@@ -1349,9 +1349,11 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::isSubZ = true;
 				ToulBar2::allSolutions = true;
 				ToulBar2::isZCelTemp=25;
+        ToulBar2::run=numeric_limits<TProb>::infinity();
 			} else if ( args.OptionId() == OPT_SUBZ){
 				ToulBar2::isSubZ = true;
 				ToulBar2::allSolutions = true;
+        ToulBar2::run=numeric_limits<TProb>::infinity();
 			}
 			
 			if(args.OptionId() == OPT_ZSHOW){
@@ -1371,12 +1373,12 @@ int _tmain(int argc, TCHAR * argv[])
 			if ( args.OptionId() == OPT_ZUB){
 				ToulBar2::isZUB = atoi(args.OptionArg());
 			}
-            
+      if(args.OptionId() == OPT_RUN){
+					ToulBar2::run=atoi(args.OptionArg());
+      }
 			if ( args.OptionId() == OPT_GUMBEL) {
 				ToulBar2::isGumbel = true; // Flag for Gumbel perturbation
-				if(args.OptionId() == OPT_RUN){
-					ToulBar2::run=atoi(args.OptionArg());
-				}
+        ToulBar2::run=10; // Default number of run
 			}	
 			// Set epsilon for epsilon approximation of Z
 			if ( args.OptionId() == OPT_epsilon)

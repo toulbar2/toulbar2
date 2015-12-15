@@ -155,7 +155,7 @@ bool ToulBar2::isSubZ;
 int ToulBar2::zshow;
 float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
-//bool ToulBar2::stop;
+bool ToulBar2::stop;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::UplogZ;
 TLogProb ToulBar2::logU;

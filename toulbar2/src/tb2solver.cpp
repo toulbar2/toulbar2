@@ -538,8 +538,7 @@ TLogProb Solver::GumofThrone(){
   for(auto iter : ToulBar2::trieZ->get_sols() ){
     LogZhat += iter;
   }
-  if(ToulBar2::run =! ToulBar2::trieZ->get_sols().size()) ;
-  LogZhat = LogZhat / ToulBar2::run;
+  LogZhat = LogZhat / ToulBar2::trieZ->get_sols().size();
   return LogZhat;
 }
 
@@ -811,7 +810,7 @@ void Solver::scpChoicePoint(int varIndex, Value value)
 
 void Solver::binaryChoicePoint(int varIndex, Value value)
 {
-  //if(ToulBar2::stop) return;
+  if(ToulBar2::stop) return;
   assert(wcsp->unassigned(varIndex));
   assert(wcsp->canbe(varIndex,value));
   if (ToulBar2::interrupted) throw TimeOut();
@@ -1108,11 +1107,12 @@ void Solver::newSolution()
   wcsp->restoreSolution();
   if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution();
   if (ToulBar2::isSubZ){
+    if(nbSol > (BigInteger) ToulBar2::run){ToulBar2::stop=true;}
     ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
     if((nbSol-1)==nbSoldiv*ToulBar2::zshow){ 
-		cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
-		nbSoldiv++;
-	}
+      cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+      nbSoldiv++;
+    }
   }
   if (ToulBar2::showSolutions) {
 
@@ -1563,7 +1563,9 @@ bool Solver::solve()
     }
     return true;
   } else {
-	if (ToulBar2::isSubZ) cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+	if (ToulBar2::isSubZ){
+     cout<< nbSol << " Log(Z)= "<<ToulBar2::logZ + ToulBar2::markov_log<<"  time "<< cpuTime() - ToulBar2::startCpuTime << "s"<<endl;
+  }
     else if (ToulBar2::verbose >= 0) cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     if (ToulBar2::maxsateval && !ToulBar2::limited) {
       cout << "o " << wcsp->getUb() << endl;
