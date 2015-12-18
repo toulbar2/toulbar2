@@ -114,7 +114,6 @@ public:
     virtual bool verifyNC() =0;
     virtual bool isEAC() {return true;}
     virtual bool verifyDEE() {return true;}
-
     void queueNC();
     void queueInc();
     void queueDec();

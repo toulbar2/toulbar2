@@ -184,6 +184,7 @@ enum {
 
 	// VAC OPTION
 	OPT_minsumDiffusion,
+  OPT_prodsumDiffusion,
 	OPT_vac,
 	NO_OPT_vac,
 	OPT_costThreshold,
@@ -217,10 +218,8 @@ enum {
 	
 	// Z Evidence option
 	OPT_Z,
-	OPT_PREZ,
 	OPT_SUBZ,
 	OPT_ZSHOW,
-	OPT_ZCPD,
 	OPT_ZCELTEMP,
 	OPT_ZUB,
 	OPT_epsilon,
@@ -373,16 +372,14 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ MENDEL_OPT_ALLOCATE_FREQ,		(char*) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
 	{ OPT_Z,  				(char*) "-logz", 				SO_NONE			},  // compute log partition function (log Z)
-	{ OPT_PREZ,  				(char*) "-prez", 				SO_NONE			},  // compute a rapid LB on log partition function (log Z)
 	{ OPT_SUBZ,  				(char*) "-subz", 				SO_NONE			},  // compute a rapid LB on log partition function (log Z)
-  	{ OPT_ZSHOW,  				(char*) "-zshow", 				SO_REQ_SEP			},
-	{ OPT_ZCPD,  				(char*) "-zcpd", 				SO_NONE			},  // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
-	{ OPT_ZCELTEMP,  			(char*) "-ztmp", 				SO_REQ_SEP			},  // Choose the temperature in Celsius in zcpd mode
+  { OPT_ZSHOW,  				(char*) "-zshow", 				SO_REQ_SEP			},
+	{ OPT_ZCELTEMP,  			(char*) "-ztmp", 				SO_NONE			},  // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
 	{ OPT_ZUB,  				(char*) "-zub", 				SO_REQ_SEP		}, // Choose Upper bound number for computing Z
 	{ OPT_epsilon,				(char*) "-epsilon", 			SO_REQ_SEP		}, // approximation parameter for computing Z
 	{ OPT_GUMBEL,				(char*) "-gum", 			SO_NONE		}, // Apply gumbel perturbation on cost matrix
 	{ OPT_RUN,				(char*) "--run", 			SO_REQ_SEP		}, // Number for run for Gumbel Partition Function
-
+  { OPT_prodsumDiffusion,	 		(char*) "-MC", 				SO_REQ_SEP		},
 
 
     { OPT_learning,                         	(char*) "-learning",                    SO_NONE }, // pseudoboolean learning during search
@@ -688,18 +685,26 @@ void help_msg(char *toulbar2filename)
 	cerr << "   -D : approximate satisfiable solution count with BTD";
 	if (ToulBar2::approximateCountingBTD) cerr << " (default option)";
 	cerr << endl;
-	cerr << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai or .LG)" << endl;
-	cerr << "   -prez : computes a rapid Lower Bound on log of probability of evidence "<<endl;
-	cerr << "   -zcpd : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai or .LG)" << endl;
-	cerr << "           and divide the Energy by the RT constant in order to compute K-score."<<endl;
-	cerr << "	  -zub=[integer] : with -logz or -zcpd, compute log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
-	cerr << "   -subz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only" << endl;
-  cerr << "           by adding the energy terms (use with -ub and -zshow=[int] to see Z with energies between optimum and -ub every zshow)"<<endl;
+  cerr << "---------------------------------------------------------------------------------------" << endl;
+  cerr << "------------------------- Computation of Partition Function ---------------------------" << endl;
+  cerr << "---------------------------------------------------------------------------------------" << endl;
+	cerr << "   -logz : computes approximation of log(Z) (i.e. probability of evidence or PR task)"<<endl;
+  cerr << "           for graphical models only (problem file extension .uai or .LG)" << endl;
+  cerr << endl;
+	cerr << "   -logz -ztmp : -logz and divide the Energy by the RT constant (25°C degrees)."<<endl;
+  cerr << endl;
+	cerr << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
+	cerr <<"                           use -zub=-1 to have full computation of partition function "<<endl;
+  cerr << endl;
+  cerr << "   -subz : computes log(Z) by adding the energy terms" <<endl; 
+  cerr << "           (use with -ub and -zshow=[int] to see log(Z) with energies between optimum and -ub every zshow)"<<endl;
+  cerr << endl;
   cerr << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
-  cerr << "   -ztmp=[float] : with -zcpd, choose the temperature T in Celsuis"<<endl;
+  cerr << endl;
   cerr << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix"<< endl;
-  cerr << "   --run : Number of run in the gumbek mode (default 10) and subz mode (default INFINITY !)"<<endl;
-  cerr << "---------------------------" << endl;
+  cerr << endl;
+  cerr << "   --run : Number of run in the gumbel mode (default 10) and subz mode (default INFINITY !)"<<endl;
+  cerr << "---------------------------------------------------------------------------------------" << endl;
 	cerr << "Alternatively one can call the random problem generator with the following options: " << endl;
 	cerr << endl;
 	cerr << "   -random=[bench profile]  : bench profile must be specified as follow :" << endl;
@@ -1342,10 +1347,7 @@ int _tmain(int argc, TCHAR * argv[])
 			// discrete integration for computing the partition function Z
 			if ( args.OptionId() == OPT_Z) ToulBar2::isZ = true;
 			
-						// discrete integration for computing the partition function Z
-			if ( args.OptionId() == OPT_PREZ) ToulBar2::isPreZ = true;
-			
-			if ( args.OptionId() == OPT_SUBZ && args.OptionId() == OPT_ZCPD){
+			if ( args.OptionId() == OPT_SUBZ && args.OptionId() == OPT_ZCELTEMP){
 				ToulBar2::isSubZ = true;
 				ToulBar2::allSolutions = true;
 				ToulBar2::isZCelTemp=25;
@@ -1359,15 +1361,11 @@ int _tmain(int argc, TCHAR * argv[])
 			if(args.OptionId() == OPT_ZSHOW){
 				ToulBar2::zshow = atoi(args.OptionArg());
 			}
+      
 			// Compute Z with energie divided by RT constant = (1.9891/1000.0 * 273.15 + temperature C°)
-			if ( args.OptionId() == OPT_ZCPD){
-				 ToulBar2::isZCPD = true;
-				 ToulBar2::isZCelTemp=25;
-			 }
-			// Option for choosing the temperature in -zpcd
 			if ( args.OptionId() == OPT_ZCELTEMP){
-				float tpoption = atoi(args.OptionArg());
-				if (tpoption >= 1) ToulBar2::isZCelTemp = tpoption;
+				//ToulBar2::isZCelTemp= atoi(args.OptionArg());
+				ToulBar2::isZCelTemp = 25;
 			}
 			// Option for choosing the upper born tightness
 			if ( args.OptionId() == OPT_ZUB){
@@ -1388,6 +1386,13 @@ int _tmain(int argc, TCHAR * argv[])
 					if (ToulBar2::debug) cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon)  <<  endl;
 				}
 
+			}
+      if ( args.OptionId() == OPT_prodsumDiffusion)
+
+			{
+				ToulBar2::prodsumDiffusion = 2;
+				int nit = atoi(args.OptionArg());
+				if (nit > 0) ToulBar2::prodsumDiffusion = nit;
 			}
 
             if ( args.OptionId() == OPT_learning )
@@ -1540,10 +1545,10 @@ int _tmain(int argc, TCHAR * argv[])
 			}
 			
                         //Trie solution file
-                        if(check_file_ext(glob.File(n),file_extension_map["trie_ext"]) )
+    if(check_file_ext(glob.File(n),file_extension_map["trie_ext"]) )
 			{
 				ToulBar2::Trie_File = string(glob.File(n));
-                                ToulBar2::isTrie_File = true;
+        ToulBar2::isTrie_File = true;
 			}
                         
 			// xml file

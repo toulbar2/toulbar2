@@ -285,6 +285,7 @@ public:
 	static int elimDegree_preprocessing_;
 	static int elimSpaceMaxMB;
 	static int minsumDiffusion;
+  static int prodsumDiffusion;
 	static int preprocessTernaryRPC;
 	static int preprocessFunctional;
 	static bool costfuncSeparate;
@@ -350,8 +351,6 @@ public:
     static string problemsaved_filename;
     static bool uai_firstoutput;
 	static bool isZ;
-	static bool isPreZ;
-	static bool isZCPD;
   static bool isSubZ;
   static int zshow;
 	static float isZCelTemp;

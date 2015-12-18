@@ -74,6 +74,7 @@ bool ToulBar2::limited;
 Long ToulBar2::restart;
 bool ToulBar2::generation;
 int ToulBar2::minsumDiffusion;
+int ToulBar2::prodsumDiffusion;
 bool ToulBar2::Static_variable_ordering;
 int ToulBar2::weightedDegree;
 int ToulBar2::weightedTightness;
@@ -147,8 +148,6 @@ int ToulBar2::minProperVarSize;
 int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
-bool ToulBar2::isZCPD;
-bool ToulBar2::isPreZ;
 bool ToulBar2::isGumbel;
 unsigned int ToulBar2::run;
 bool ToulBar2::isSubZ;
@@ -207,6 +206,7 @@ void tb2init()
     ToulBar2::restart = -1;
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
+    ToulBar2::prodsumDiffusion = 0;
     ToulBar2::Static_variable_ordering=false;
     ToulBar2::weightedDegree = 10000;
     ToulBar2::weightedTightness = 0;
@@ -272,13 +272,11 @@ void tb2init()
     ToulBar2::smallSeparatorSize = 4;
 
     ToulBar2::isZ = false;
-    ToulBar2::isPreZ =false;
-    ToulBar2::isZCPD = false;
     ToulBar2::isGumbel= false;
     ToulBar2::run=10;
     ToulBar2::isSubZ=false;
     ToulBar2::zshow=1;
-    ToulBar2::isZCelTemp = 25;
+    ToulBar2::isZCelTemp = -1;
     ToulBar2::isZUB = 1;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::UplogZ = -numeric_limits<TLogProb>::infinity();

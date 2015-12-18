@@ -17,8 +17,7 @@
 #include <boost/lexical_cast.hpp>
 #include "tb2trienum.hpp"
 #include "tb2seq.hpp"
-#include "tb2gumdistrib.hpp"
-
+#include "tb2wcsp.hpp"
 using namespace boost;
 
 
@@ -290,7 +289,7 @@ void WCSP::read_wcsp(const char *fileName)
       return;
     } else if (ToulBar2::uai) {
 	    read_uai2008(fileName);
-        if (ToulBar2::isPreZ) { // read all-solution tb2 file (temporary way to do)
+        if (ToulBar2::isTrie_File) { // read all-solution tb2 file (temporary way to do)
             ToulBar2::trieZ = read_TRIE(fileName);
         }
 	    return;
@@ -960,7 +959,7 @@ void WCSP::read_uai2008(const char *fileName)
             //~ p= Gumbel_noise(p);
             //~ costsProb.push_back( p );
           //~ }
-	        if(ToulBar2::isZCPD){
+	        if(ToulBar2::isZCelTemp>0){
                 p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
                 costsProb.push_back( p );
 	        }else{

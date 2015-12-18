@@ -229,7 +229,7 @@ int Solver::getNextScpCandidate()
 {
   for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
     unsigned int domsize = wcsp->getDomainSize(*iter);
-    size_t left,right;
+    //size_t left,right;
     ValueCost sorted[domsize];
     wcsp->getEnumDomainAndCost(*iter, sorted);
     if (ToulBar2::scpbranch->multipleAA(*iter, sorted, domsize))
@@ -521,71 +521,21 @@ TLogProb Solver::preZub(){ // Calculate an uper-bound on Z before exploration (s
   return newlogU;
 }
 
-TLogProb Solver::UnderTheZ(){
-
-  TLogProb LogZhat = -numeric_limits<TProb>::infinity();
-  for(auto iter : ToulBar2::trieZ->get_sols() ){
-    TLogProb iter_logprob = wcsp->Cost2LogProb((iter + wcsp->getNegativeLb()));
-    LogZhat = wcsp->LogSumExp(LogZhat,iter_logprob);
-  }
-  return LogZhat;
-}
-
-
-TLogProb Solver::GumofThrone(){
-
-  TLogProb LogZhat = 0;
-  for(auto iter : ToulBar2::trieZ->get_sols() ){
-    LogZhat += iter;
-  }
-  LogZhat = LogZhat / ToulBar2::trieZ->get_sols().size();
-  return LogZhat;
-}
-
-
 //Enforce WCSP upper-bound and backtrack if ub <= lb or in the case of probabilistic inference if the contribution is too small
 void Solver::enforceUb()
 {
   wcsp->enforceUb();
+  
+  if(ToulBar2::prodsumDiffusion>0)
+  {
+    ProdSumDiffusion();
+  }
+  
   if (ToulBar2::isZ) {
     TLogProb newlogU;
-    //cout<<wcsp->getNegativeLb()<<endl;
-    Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-        
-    switch(ToulBar2::isZUB){
-      //Upper bound on Z edition 0
-    case 0 :
-      newCost += wcsp->LogProb2Cost(unassignedVars->getSize() * Log10(wcsp->getMaxDomainSize()));
-      newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-      break;
-      //Upper bound on Z edition 1
-    case 1 :
-      for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
-        EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
-        Cost SumUnaryCost = MAX_COST;
-        if (wcsp->enumerated(*iter_variable)) {
-          for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
-            SumUnaryCost = wcsp->LogSumExp(SumUnaryCost,var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
-          }
-        }
-        else {
-          newCost += wcsp->LogProb2Cost(Log10(wcsp->getDomainSize(*iter_variable)));
-        }
-        newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
-      }
-      newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-      break;
-
-      //Upper bound on Z edition 2
-    case 2 :
-      newlogU = wcsp->LogSumExp(ToulBar2::logU, wcsp->spanningTreeZ(newCost));
-      break;
-    // Full Partition function
-    default :
-      return;
-    }
+    newlogU = Zub();
       if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-        if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born "<<ToulBar2::isZUB<<" U : " << newlogU << " Log(Z)+Log(eps)" << ToulBar2::logZ + ToulBar2::logepsilon <<" "<< store->getDepth() << endl;
+        if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born "<<ToulBar2::isZUB<<" U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon <<" "<< store->getDepth() << endl;
         ToulBar2::logU = newlogU;
         THROWCONTRADICTION;
       }
@@ -761,7 +711,7 @@ void Solver::scpChoicePoint(int varIndex, Value value)
   tie(left,right)=ToulBar2::scpbranch->getBounds(varIndex,value);
   size_t middle;
   middle = ToulBar2::scpbranch->moveAAFirst(sorted, domsize, left, right);
-  char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
+  //char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
   try {
     store->store();
     lastConflictVar = varIndex;
@@ -1264,16 +1214,11 @@ bool Solver::solve()
   nbNodes = 0;
   lastConflictVar = -1;
   int tailleSep = 0;
-  if(ToulBar2::isPreZ && ToulBar2::isGumbel)
+  if(ToulBar2::isTrie_File && ToulBar2::isGumbel)
   {
     ToulBar2::logZ = GumofThrone();
     cout<<"Gumbel Perturbation  Log(Z) : "<<ToulBar2::logZ <<endl;
 		return EXIT_SUCCESS;
-  }
-  else if(ToulBar2::isPreZ){
-      ToulBar2::logZ = UnderTheZ();
-      cout<<"Sub-optimal Log(Z) : "<<ToulBar2::logZ + ToulBar2::markov_log<<endl;
-		return EXIT_SUCCESS;    
   }
   
   if (ToulBar2::isZ || ToulBar2::isSubZ) {
@@ -1334,7 +1279,7 @@ bool Solver::solve()
 
     if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
     if (ToulBar2::isZ){ // Compute easy lower and upper bound and verify if we already have an epsilon approximation
-      ToulBar2::UplogZ = preZub();
+      ToulBar2::UplogZ = Zub();
       if (ToulBar2::verbose>0) cout<< "Initial Z Bound : " << wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log <<" <= Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
       if ( Exp(ToulBar2::UplogZ) < (Exp(ToulBar2::logepsilon)+1)*Exp(wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb()))){
         cout<< "Already have an epsilon = "<<Exp(ToulBar2::logepsilon)<<" approximation" <<endl;
