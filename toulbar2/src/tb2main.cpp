@@ -62,8 +62,8 @@ void initCosts(Cost c)
 	if (ToulBar2::vac)
 	{
 		cerr << "VAC not implemented on Paretopair." << endl;
-		ToulBar2::vac = false;
-		ToulBar2::minsumDiffusion = false;
+		ToulBar2::vac = 0;
+		ToulBar2::minsumDiffusion = 0;
 	}
 	if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::elimDegree_preprocessing<-1)
 	{
@@ -838,7 +838,7 @@ int _tmain(int argc, TCHAR * argv[])
                     sprintf(ToulBar2::varOrder, "%s",buf);
                     if (ToulBar2::debug) cout << "variable order read from file " << args.OptionArg() << endl;
 			    } else {
-			        ToulBar2::varOrder = (char *) -varElimOrder;
+			        ToulBar2::varOrder = reinterpret_cast<char *>(-varElimOrder);
 			    }
 			}
 
