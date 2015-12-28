@@ -1165,7 +1165,7 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
             }
             store->restore(storedepthBFS);
             cp_->store();
-            if (cp_->size() >= ToulBar2::hbfsCPLimit || open_->size() >= ToulBar2::hbfsOpenNodeLimit) {
+            if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
                 ToulBar2::hbfs = 0;
                 ToulBar2::hbfsGlobalLimit = 0;
                 if (cluster) {

@@ -751,6 +751,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 
  	unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
+    histogram();
 
     if (ToulBar2::verbose >= 0) {
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " cost functions." << endl;
