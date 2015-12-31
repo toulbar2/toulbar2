@@ -955,7 +955,7 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-	if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log10( maxp ));
+	if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
 
 	ictr++;
 	++it;
