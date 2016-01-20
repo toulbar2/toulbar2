@@ -1781,7 +1781,6 @@ int _tmain(int argc, TCHAR * argv[])
 	//~ }
 
 	ToulBar2::startCpuTime = cpuTime();
-
 	initCosts(ub);
 	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
 

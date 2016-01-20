@@ -1311,7 +1311,7 @@ void WCSP::preprocessing() {
 					<< ToulBar2::elimDegree_preprocessing << endl;
 			ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
 			maxDegree = -1;
-			propagate();
+		  propagate();
 			cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
 		} else if (ToulBar2::elimDegree >= 0) {
 			ToulBar2::elimDegree_ = ToulBar2::elimDegree;
@@ -1881,7 +1881,7 @@ bool WCSP::verify() {
 #endif
 				}
 			} else {
-				if (!vars[i]->verifyNC()) return false;
+				if(ToulBar2::prodsumDiffusion==0) if (!vars[i]->verifyNC()) return false;
 #ifdef DEECOMPLETE
 				if (ToulBar2::DEE_ && !vars[i]->verifyDEE()) return false;
 #endif
@@ -2110,6 +2110,10 @@ void WCSP::eliminate() {
 /// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
 void WCSP::propagate() {
+//~ if(ToulBar2::prodsumDiffusion>0){
+  //~ 
+//~ }
+//~ else{
     if (ToulBar2::interrupted) throw TimeOut();
 	revise(NULL);
 	if (ToulBar2::vac) vac->iniThreshold();
@@ -2154,7 +2158,7 @@ void WCSP::propagate() {
 								propagateIncDec();
 							}
 							if (ToulBar2::LcLevel == LC_SNIC) if (!NC.empty() || objectiveChanged) cont = true; //For detecting value removal and upper bound change
-							propagateNC();
+              propagateNC();
 							if (ToulBar2::LcLevel == LC_SNIC) if (oldLb != getLb() || !AC.empty()) {
 								cont = true;
 								AC.clear();//For detecting value removal and lower bound change
@@ -2203,7 +2207,8 @@ void WCSP::propagate() {
 	assert(EAC2.empty());
 	assert(Eliminate.empty());
 	DEE.clear(); // DEE might not be empty if verify() has modified supports
-	nbNodes++;
+  nbNodes++;
+  //~ }
 }
 
 void WCSP::restoreSolution(Cluster* c) {

@@ -955,10 +955,6 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
-          //~ if(ToulBar2::isGumbel){
-            //~ p= Gumbel_noise(p);
-            //~ costsProb.push_back( p );
-          //~ }
 	        if(ToulBar2::isZCelTemp>0){
                 p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
                 costsProb.push_back( p );
@@ -994,7 +990,7 @@ void WCSP::read_uai2008(const char *fileName)
 			// ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
 	        if (markov) cost = ((ToulBar2::uai>1)?LogProb2Cost((TLogProb)(p - maxp)):Prob2Cost(p / maxp));
 	        else        cost = ((ToulBar2::uai>1)?LogProb2Cost((TLogProb)p):Prob2Cost(p));
-	        costs[ictr].push_back(cost);
+          costs[ictr].push_back(cost);
 	        if(cost < minc) minc = cost;
 	        if(cost > maxc && cost < getUb()) maxc = cost;
 	    }
@@ -1032,9 +1028,7 @@ void WCSP::read_uai2008(const char *fileName)
 		//~ }
 	}
 	
-    
-    updateUb( upperbound );
-
+    if(!ToulBar2::isZ) updateUb( upperbound );
     ictr = 0;
     it = lctrs.begin();
 	while(it !=  lctrs.end()) {

@@ -26,7 +26,7 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
          for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
                 costs[a * sizeY + b] = tab[a * sizeY + b];
 
-    propagate();
+   propagate();
 }
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost)

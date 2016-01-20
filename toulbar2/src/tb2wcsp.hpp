@@ -60,7 +60,7 @@ class WCSP : public WeightedCSP {
 	Queue EAC1;							///< EAC intermediate queue (non backtrackable list)
 	Queue EAC2;							///< EAC queue (non backtrackable list)
 	Queue Eliminate;					///< Variable Elimination queue (non backtrackable list)
-	//Queue Z;							///< Z queue (non backtrackable list)
+	Queue Z;							///< Z queue (non backtrackable list)
 	SeparatorList PendingSeparator;		///< List of pending separators for BTD-like methods (backtrackable list)
 	Queue DEE;							///< Dead-End Elimination queue (non backtrackable list)
 	bool objectiveChanged;				///< flag if lb or ub has changed (NC propagation needs to be done)
@@ -431,7 +431,7 @@ public:
 	void unqueueSeparator(DLink<Separator *> *link) { PendingSeparator.erase(link, true); }
 	void queueDEE(DLink<VariableWithTimeStamp> *link) {DEE.push(link, nbNodes);}
 	
-	//void queueZ(DLink<VariableWithTimeStamp> *link) {Z.push(link, nbNodes);}
+	void queueZ(DLink<VariableWithTimeStamp> *link) {Z.push(link, nbNodes);}
 
 	void propagateNC();			///< \brief removes forbidden values
 	void propagateIncDec();		///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)

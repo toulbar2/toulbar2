@@ -129,13 +129,20 @@ void EnumeratedVariable::queueDEE()
 	wcsp->queueDEE(&linkDEEQueue);
 }
 
-//~ void EnumeratedVariable::queueZ()
-//~ {
-	//~ wcsp->queueZ(&linkZQueue);
-//~ }
+void EnumeratedVariable::queueZ()
+{
+	wcsp->queueZ(&linkZQueue);
+}
 
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
+  if(ToulBar2::prodsumDiffusion>0){
+    //cout<<"Before in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
+    costs[toIndex(value)] += cost;
+    //cout<<"After in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
+  }
+  else{
+    //cout<<cost<<' '<<MIN_COST<<endl;
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
@@ -149,6 +156,7 @@ void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
       if (delayed) queueNC();
       else removeFast(value);     // Avoid any unary cost overflow
     }
+  }
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
@@ -209,6 +217,7 @@ void EnumeratedVariable::findSupport()
 
 void EnumeratedVariable::propagateNC()
 {
+    //if(ToulBar2::prodsumDiffusion==0){
     wcsp->revise(NULL);
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup()+1;
@@ -227,6 +236,7 @@ void EnumeratedVariable::propagateNC()
     assert(getCost(maxcostvalue) == maxcost || !LUBTEST(maxcost, getCost(maxcostvalue)));
     setMaxUnaryCost(maxcostvalue, maxcost);
     if (supportBroken) findSupport();
+    
 }
 
 bool EnumeratedVariable::verifyNC()
