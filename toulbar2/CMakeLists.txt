@@ -85,6 +85,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
+#SET(CMAKE_CXX_FLAGS "-Wall -std=c++11 -pg" ) #For gprof analysis (can be very slow)
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio126")

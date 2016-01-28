@@ -152,6 +152,8 @@ typedef Double TProb;
 typedef Double TLogProb;
 #endif
 
+
+
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)
 
@@ -366,6 +368,7 @@ public:
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
         static string Trie_File;
         static bool isTrie_File;
+        
     static bool uaieval;
 
 	static double startCpuTime;

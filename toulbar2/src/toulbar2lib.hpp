@@ -319,7 +319,7 @@ public:
     virtual TLogProb LogSumExp(TLogProb logc1, TLogProb logc2) const =0;
 
     virtual TLogProb spanningTreeZ(Cost) =0;
-
+    virtual void spanningTreeRoot() =0;
     // -----------------------------------------------------------
     // Internal WCSP functions DO NOT USE THEM
 

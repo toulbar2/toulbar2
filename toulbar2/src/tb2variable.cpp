@@ -190,7 +190,7 @@ void Variable::conflict()
 
 void Variable::queueNC()
 {
-    wcsp->queueNC(&linkNCQueue);
+    if(ToulBar2::prodsumDiffusion==0) wcsp->queueNC(&linkNCQueue);
 }
 
 void Variable::queueInc()
@@ -233,8 +233,14 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 void Variable::projectLB(Cost cost)
 {
   if (cost == 0) return;
-  if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
-  wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
+  if(cost < MIN_COST){ 
+    if (ToulBar2::verbose >= 2) cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb()+cost << endl;
+    wcsp->decreaseLb(cost);
+  }
+  else{
+    if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb()+cost << endl;
+    wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)  
+  }
   if (wcsp->td) {
 	if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
 	wcsp->td->getCluster(getCluster())->increaseLb(cost);

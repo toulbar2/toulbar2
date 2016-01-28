@@ -258,7 +258,6 @@ void GlobalConstraint::propagateStrongNIC() {
 }
 
 void GlobalConstraint::propagateNIC() {
-
 	if (deconnected()) return;
 	wcsp->revise(this);
 	vector<int> rmv;

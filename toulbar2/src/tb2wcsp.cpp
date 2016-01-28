@@ -163,6 +163,9 @@ TrieNum* ToulBar2::trieZ;
 string ToulBar2::Trie_File;
 bool ToulBar2::isTrie_File = false;
 Seq *ToulBar2::seq;
+
+
+
 int ToulBar2::Berge_Dec=0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar=0; // berge decomposition flag  > 0 if wregular found in the problem
 
@@ -1881,7 +1884,7 @@ bool WCSP::verify() {
 #endif
 				}
 			} else {
-				if(ToulBar2::prodsumDiffusion==0) if (!vars[i]->verifyNC()) return false;
+				if(ToulBar2::prodsumDiffusion==0) {if (!vars[i]->verifyNC()) return false;}
 #ifdef DEECOMPLETE
 				if (ToulBar2::DEE_ && !vars[i]->verifyDEE()) return false;
 #endif
@@ -2110,10 +2113,6 @@ void WCSP::eliminate() {
 /// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
 void WCSP::propagate() {
-//~ if(ToulBar2::prodsumDiffusion>0){
-  //~ 
-//~ }
-//~ else{
     if (ToulBar2::interrupted) throw TimeOut();
 	revise(NULL);
 	if (ToulBar2::vac) vac->iniThreshold();
@@ -2129,7 +2128,6 @@ void WCSP::propagate() {
 			}
 		}
 	}
-
 	do {
 		do {
 			do {
@@ -3035,6 +3033,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 Cost WCSP::Prob2Cost(TProb p) const {
 	if (p == 0.0) return getUb();
 	TLogProb res = -Log(p) * ToulBar2::NormFactor;
+  //cout<<"prob :"<<p<<" Log(p) "<<Log(p)<<" Cost(p) :"<<res<<endl;
 	if (res > to_double(MAX_COST)) {
 		cerr << "Overflow when converting probability to cost." << endl;
 		exit(EXIT_FAILURE);

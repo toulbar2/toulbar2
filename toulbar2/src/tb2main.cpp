@@ -1388,11 +1388,10 @@ int _tmain(int argc, TCHAR * argv[])
 
 			}
       if ( args.OptionId() == OPT_prodsumDiffusion)
-
 			{
 				ToulBar2::prodsumDiffusion = 2;
 				int nit = atoi(args.OptionArg());
-				if (nit > 0) ToulBar2::prodsumDiffusion = nit;
+				if (nit >= 0) ToulBar2::prodsumDiffusion = nit;
 			}
 
             if ( args.OptionId() == OPT_learning )

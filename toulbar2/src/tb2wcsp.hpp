@@ -306,9 +306,13 @@ public:
 
 	typedef vector< vector< pair<int, BinaryConstraint *> > > Sons;
 	typedef vector< pair<Value,Cost> > ResultVisitZ;
-
+  vector<int> MSTroots;
+  Sons MSTsons;
 	ResultVisitZ visitZ(int root, Sons &sons);
-    TProb spanningTreeZ(Cost c0);
+  void setMSTsons(Sons &sons){MSTsons=sons;}
+  void setMSTroots(vector<int> roots){MSTroots=roots;}
+  TProb spanningTreeZ(Cost c0);
+  void spanningTreeRoot();
 #endif
 
 	int makeEnumeratedVariable(string n, Value iinf, Value isup);

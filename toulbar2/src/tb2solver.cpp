@@ -1241,9 +1241,18 @@ bool Solver::solve()
     if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
     if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
-    if (ToulBar2::isZ){ // Compute lower and upper bound and verify if we already have an epsilon approximation
-      ToulBar2::UplogZ = Zub();
-      cout<< "Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
+    if (ToulBar2::isZ){ // Compute upper born
+      switch (ToulBar2::isZUB){
+        case 2 :
+        wcsp->spanningTreeRoot(); 
+        ToulBar2::UplogZ = wcsp->spanningTreeZ(wcsp->getLb()+wcsp->getNegativeLb());
+        cout<< "Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
+        break;
+        default:
+        ToulBar2::UplogZ=Zub();
+        cout<< "Log(Z) <= "<< ToulBar2::UplogZ + ToulBar2::markov_log<<endl;
+        break;
+      }
     }
     if (ToulBar2::btdMode) {
       if(wcsp->numberOfUnassignedVariables()==0 || wcsp->numberOfConnectedConstraints()==0)	ToulBar2::approximateCountingBTD = 0;

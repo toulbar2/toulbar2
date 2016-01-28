@@ -140,6 +140,9 @@ void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
     //cout<<"Before in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
     costs[toIndex(value)] += cost;
     //cout<<"After in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
+    if (CUT(getCost(value)+ cost + wcsp->getLb(), wcsp->getUb())) {
+      removeFast(value);  
+    }
   }
   else{
     //cout<<cost<<' '<<MIN_COST<<endl;
@@ -195,6 +198,8 @@ void EnumeratedVariable::extendAll(Cost cost)
 
 void EnumeratedVariable::findSupport()
 {
+    if (ToulBar2::prodsumDiffusion==0){
+    //~ cout<<"Variable : "<<this->getName()<<endl;
     if (cannotbe(support) || getCost(support) > MIN_COST) {
         Value newSupport = getInf();
         Cost minCost = getCost(newSupport);
@@ -206,18 +211,18 @@ void EnumeratedVariable::findSupport()
             }
         }
         if (minCost > MIN_COST) {
-		  extendAll(minCost);
-		  projectLB(minCost);
+          extendAll(minCost);
+          projectLB(minCost);
         }
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
         if (support != newSupport) queueDEE();
         support = newSupport;
     }
+    }
 }
 
 void EnumeratedVariable::propagateNC()
 {
-    //if(ToulBar2::prodsumDiffusion==0){
     wcsp->revise(NULL);
     if (ToulBar2::verbose >= 3) cout << "propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup()+1;
@@ -669,10 +674,16 @@ void EnumeratedVariable::assign(Value newValue)
         maxCostValue = newValue;
         maxCost = MIN_COST;
 
-        Cost cost = getCost(newValue);
-        if (cost > MIN_COST) {
+        Cost cost = getCost(newValue);        
+        
+        if( ToulBar2::prodsumDiffusion>0){
+          deltaCost += cost;
+          projectLB(cost);
+          }else{
+            if (cost > MIN_COST) {
             deltaCost += cost;
             projectLB(cost);
+            }
         }
 
 	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
@@ -1355,6 +1366,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 }
 
 bool EnumeratedVariable::verify() {
+ 
 	TreeDecomposition* td = wcsp->getTreeDec();
 	if(!td) return true;
  	for(ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {

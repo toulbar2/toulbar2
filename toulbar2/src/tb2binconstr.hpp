@@ -33,7 +33,7 @@ protected:
 
     vector<Value> supportX;
     vector<Value> supportY;
-    
+    bool isinspanningtree=false; //pair<bool,int> isInMST
     template <typename T> void findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, 
             vector<Value> &supportX, vector<StoreCost> &deltaCostsX);
     template <typename T> void findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, 
@@ -65,7 +65,10 @@ public:
     BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
 
     ~BinaryConstraint() {}
-
+    
+    void setIsinSpanningTree(bool is){isinspanningtree=is;}
+    bool IsinSpanninTree(){return isinspanningtree;}
+    
     bool extension() const {return true;}
     
     Cost getCost(Value vx, Value vy) const {
@@ -79,12 +82,14 @@ public:
     }
 
     Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) {
-    	unsigned int vindex[2];
+    	
+      
+      unsigned int vindex[2];
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
 		//if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
-		res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
+        res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
         assert(res >= MIN_COST);
         return res;
     }
@@ -545,6 +550,7 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, Enumera
 template <typename T>
 void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
+ 
 	x->queueDEE();
     bool supportBroken = false;
     wcsp->revise(this);
@@ -555,6 +561,7 @@ void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVa
         }
     }
     if (supportBroken) {
+       //cout<<"ON RENTRE DANS projection binconstr (supportBroken)"<<endl;
         x->findSupport();
     }
 }
@@ -578,5 +585,7 @@ bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariab
     }
     return true;
 }
+
+
 
 #endif /*TB2BINCONSTR_HPP_*/

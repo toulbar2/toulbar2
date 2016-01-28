@@ -245,12 +245,12 @@ void WCSP::minimumDegreeOrderingBGL(vector<int> &order_inv)
 // and return a list of (value,cost) 
 WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
 {
-    assert(unassigned(root));
+    //assert(unassigned(root));
     EnumeratedVariable *x = (EnumeratedVariable *) getVar(root);
     ResultVisitZ res;
     
     for (EnumeratedVariable::iterator iter = x->begin(); iter != x->end(); ++iter) { // Loop over the domain of the variable root
-        res.push_back( pair<Value, Cost>(*iter, x->getCost(*iter)) ); // Fill the res list with the unarycost of root's sons
+        res.push_back( pair<Value, Cost>(*iter, x->getCost(*iter)) ); // Fill the res list with the unarycost of the sons of root
     }
     
     for (unsigned int i=0; i<sons[root].size(); i++) { // Loop until there is no root's sons.
@@ -265,6 +265,7 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
             Cost mincost = MAX_COST;
             for (unsigned int iter = 0; iter < resi.size(); ++iter) {
 				//SUM UNARY of the i-th sons AND BINARY that link the i-th sons to the root
+                //cout<<ctr->getCost(y, x, resi[iter].first, *iter1)<<endl;
                 Cost curcost = resi[iter].second + ctr->getCost(y, x, resi[iter].first, *iter1); 
                 mincost = LogSumExp(mincost,curcost);
             }
@@ -275,8 +276,8 @@ WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
     return res;
 }
 
-TLogProb WCSP::spanningTreeZ(Cost c0)
-{
+void WCSP::spanningTreeRoot(){
+  
   double alltight = 0;
   double maxt = 0;
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
@@ -284,6 +285,7 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->computeTightness(); alltight += t; if (t > maxt) maxt = t;}
   //ComputeTightness() is calculating the mean of the binary cost linking two variable.
   DoubleWeightedGraph G;
+  //cout<<maxt<<endl;
   for (unsigned int i=0; i<vars.size(); i++) add_vertex(G); //Add vertex as many as there is variable
   for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
   for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
@@ -298,16 +300,17 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
   bool tightok = true;
   vector<int> roots;
   Sons sons(vars.size(), vector< pair<int, BinaryConstraint *> >() );
-  
   for (size_t i = 0; i != p.size(); ++i) { // Loop over all the node in the MST.
     if (p[i] != i) { // if p[i]=i, the node is a root
       BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i])); // get the binary constraints of i and his parent p[i] (i<-->p[i])
+      bctr->setIsinSpanningTree(true);
       assert(unassigned(i));
       assert(unassigned(p[i]));
       if (bctr) {
 		  //cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
           tight += bctr->getTightness();
           sons[p[i]].push_back( pair<int, BinaryConstraint *>(i, bctr) ); // Fill a list (Sons of p[i],Binary constr i<-->p[i])
+          
       } else {
           tightok = false;
       }
@@ -320,11 +323,17 @@ TLogProb WCSP::spanningTreeZ(Cost c0)
       if (tightok) cout << " MSTZ(" << 100.0*tight/alltight << "%)";
       cout << endl;
   }
+    setMSTroots(roots);
+    setMSTsons(sons);
+}
 
+TLogProb WCSP::spanningTreeZ(Cost c0)
+{
+  //spanningTreeRoot();
   TLogProb res = 0 ;
 
-  for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
-      ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each roots. The value term contain the bynary cost and the unary cost.
+  for (int i = MSTroots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
+      ResultVisitZ resi = visitZ(MSTroots[i], MSTsons); // Construct a list of (value,cost) for each roots. The value term contain the bynary cost and the unary cost.
       Cost mincost = MAX_COST;
       for (unsigned int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
 		  //Bring back together all the costs that go from a node to a leaf in the spanning tree : Dynamic programming

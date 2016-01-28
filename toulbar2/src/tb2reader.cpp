@@ -799,7 +799,6 @@ void WCSP::read_uai2008(const char *fileName)
 	  cout << "NormFactor= " << ToulBar2::NormFactor << endl;
 	}
 
-	//    Cost inclowerbound = MIN_COST;
 	string uaitype;
 	ifstream file(fileName);
   	if (!file) { cerr << "Could not open file " << fileName << endl; exit(EXIT_FAILURE); }
@@ -955,6 +954,7 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
+          //if (p < 10e-200) p=0;
 	        if(ToulBar2::isZCelTemp>0){
                 p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
                 costsProb.push_back( p );
@@ -1004,7 +1004,7 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-		if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:log( maxp ));
+		if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
 
 	ictr++;
 	++it;
@@ -1115,7 +1115,6 @@ void WCSP::read_uai2008(const char *fileName)
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
-
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
