@@ -261,7 +261,7 @@ void tb2init()
     ToulBar2::isZ = false;
     ToulBar2::logZ = -numeric_limits<TProb>::infinity();
     ToulBar2::logU = -numeric_limits<TProb>::infinity();
-    ToulBar2::logepsilon = -3;
+    ToulBar2::logepsilon = -Log(1000);
     ToulBar2::Berge_Dec=0;
     ToulBar2::nbvar=0;
 

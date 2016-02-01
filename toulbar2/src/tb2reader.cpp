@@ -929,9 +929,11 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
+//	        assert(ToulBar2::uai>1 || (p >= 0. && (markov || p <= 1.)));
 	        costsProb.push_back( p );
 	        if(p > maxp) maxp = p;
 	    }
+//        if ( ToulBar2::uai==1 && maxp == 0. ) THROWCONTRADICTION;
 
 	    Cost minc = MAX_COST;
 	    Cost maxc = MIN_COST;
@@ -955,10 +957,10 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-	if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
+        if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
 
-	ictr++;
-	++it;
+        ictr++;
+        ++it;
 	}
     updateUb( upperbound );
 
@@ -1083,7 +1085,7 @@ void WCSP::solution_UAI(Cost res, bool opt)
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
 	if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
 	  cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	  cout << "s " << Cost2LogLike(res) + ToulBar2::markov_log << endl;
+	  cout << "s " << (Cost2LogLike(res) + ToulBar2::markov_log)/Log(10.) << endl;
 	  cout << numberOfVariables();
 	  printSolution(cout);
 	}
