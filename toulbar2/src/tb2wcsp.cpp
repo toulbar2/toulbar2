@@ -327,6 +327,11 @@ int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
 
 /// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
+    if (ToulBar2::vac) {
+        cerr << "VAC not implemented on interval variables!" << endl;
+        ToulBar2::vac = 0;
+        ToulBar2::minsumDiffusion = 0;
+    }
 	IntervalVariable *x = new IntervalVariable(this, n, iinf, isup);
 	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
 	return x->wcspIndex;

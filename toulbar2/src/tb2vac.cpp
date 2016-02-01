@@ -116,7 +116,7 @@ void VACExtension::histogram()
 void VACExtension::iniThreshold()
 {
 	list < Cost >::iterator it = (scaleVAC.begin());
-	Cost c = *it;
+	Cost c = ((it == scaleVAC.end())?UNIT_COST:(*it));
 	if (wcsp->getUb() < c)
 		c = wcsp->getUb();
 	itThreshold = c;
@@ -349,14 +349,13 @@ void VACExtension::enforcePass1()
 
 	while (!VAC.empty()) {
 		xj = (VACVariable *) VAC.pop_first();
-
 		//list<Constraint*> l;
 		for (ConstraintList::iterator itc = xj->getConstrs()->begin();
 		     itc != xj->getConstrs()->end(); ++itc) {
 			cij = (VACBinaryConstraint *) (*itc).constr;
 			if (cij->arity() == 2 && !cij->isSep()) {
-				//        xi = (VACVariable *)cij->getVarDiffFrom(xj);  
-				//if(xj->getMaxK(nbIterations) > 2) l.push_back(cij); else 
+			    //        xi = (VACVariable *)cij->getVarDiffFrom(xj);
+			    //if(xj->getMaxK(nbIterations) > 2) l.push_back(cij); else
 				if (enforcePass1(xj, cij))
 					return;
 			}
