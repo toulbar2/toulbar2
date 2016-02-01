@@ -929,11 +929,11 @@ void WCSP::read_uai2008(const char *fileName)
 	    TProb maxp = 0.;
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
-//	        assert(ToulBar2::uai>1 || (p >= 0. && (markov || p <= 1.)));
+	        assert(ToulBar2::uai>1 || (p >= 0. && (markov || p <= 1.)));
 	        costsProb.push_back( p );
 	        if(p > maxp) maxp = p;
 	    }
-//        if ( ToulBar2::uai==1 && maxp == 0. ) THROWCONTRADICTION;
+        if ( ToulBar2::uai==1 && maxp == 0. ) THROWCONTRADICTION;
 
 	    Cost minc = MAX_COST;
 	    Cost maxc = MIN_COST;
