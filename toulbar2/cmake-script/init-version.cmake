@@ -1,7 +1,6 @@
 ###############
 # SVN revision 
 ###############
-
 include(FindSubversion)
 IF(Subversion_FOUND) 
     if(EXISTS "${CMAKE_SOURCE_DIR}/.svn")
@@ -18,6 +17,47 @@ IF(Subversion_FOUND)
 ELSE(Subversion_FOUND)
     SET(SVN_REVISION "-1")
 ENDIF(Subversion_FOUND) 
+
+###############
+# GIT revision 
+###############
+include(FindGit)
+IF(GIT_FOUND)
+  if(EXISTS "${CMAKE_SOURCE_DIR}/../.git")
+    # Get the current working branch
+    execute_process(
+      COMMAND git rev-parse --abbrev-ref HEAD
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE GIT_BRANCH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    MESSAGE(${GIT_BRANCH})
+    # Get the latest abbreviated commit hash of the working branch
+    execute_process(
+      COMMAND git log -1 --format=%h
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE GIT_COMMIT_HASH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    MESSAGE(${GIT_COMMIT_HASH})
+    # Check if any changes have been donce wrt the last commit
+    execute_process(
+      COMMAND git ls-files -m
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE GIT_CHANGED
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    MESSAGE("-> ${GIT_CHANGED} <-")
+    
+    if (NOT ${GIT_CHANGED} STREQUAL "")
+      set (TAINTED "-tainted")
+    endif(${GIT_CHANGED} STREQUAL "")
+    MESSAGE(TAINTED)
+    
+    set (MY_WC_REVISION "-${GIT_BRANCH}-${GIT_COMMIT_HASH}${TAINTED}")
+  endif(EXISTS "${CMAKE_SOURCE_DIR}/../.git")
+endif(GIT_FOUND) 
+ 
 
 #############################"
 # init version NUMBER
