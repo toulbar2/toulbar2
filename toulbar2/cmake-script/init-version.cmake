@@ -31,7 +31,6 @@ IF(GIT_FOUND)
       OUTPUT_VARIABLE GIT_BRANCH
       OUTPUT_STRIP_TRAILING_WHITESPACE
       )
-    MESSAGE(${GIT_BRANCH})
     # Get the latest abbreviated commit hash of the working branch
     execute_process(
       COMMAND git log -1 --format=%h
@@ -39,20 +38,17 @@ IF(GIT_FOUND)
       OUTPUT_VARIABLE GIT_COMMIT_HASH
       OUTPUT_STRIP_TRAILING_WHITESPACE
       )
-    MESSAGE(${GIT_COMMIT_HASH})
     # Check if any changes have been donce wrt the last commit
     execute_process(
-      COMMAND git diff --quiet
+      COMMAND git diff --quiet HEAD
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       RESULT_VARIABLE GIT_CHANGED
       OUTPUT_STRIP_TRAILING_WHITESPACE
       )
-    MESSAGE("-> ${GIT_CHANGED} <-")
     
     if (${GIT_CHANGED})
       set (TAINTED "-tainted")
     endif(${GIT_CHANGED})
-    MESSAGE(TAINTED)
     
     set (MY_WC_REVISION "-${GIT_BRANCH}-${GIT_COMMIT_HASH}${TAINTED}")
   endif(EXISTS "${CMAKE_SOURCE_DIR}/../.git")
