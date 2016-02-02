@@ -42,16 +42,16 @@ IF(GIT_FOUND)
     MESSAGE(${GIT_COMMIT_HASH})
     # Check if any changes have been donce wrt the last commit
     execute_process(
-      COMMAND git ls-files -m
+      COMMAND git diff --quiet
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE GIT_CHANGED
+      RESULT_VARIABLE GIT_CHANGED
       OUTPUT_STRIP_TRAILING_WHITESPACE
       )
     MESSAGE("-> ${GIT_CHANGED} <-")
     
-    if (NOT ${GIT_CHANGED} STREQUAL "")
+    if (${GIT_CHANGED})
       set (TAINTED "-tainted")
-    endif(${GIT_CHANGED} STREQUAL "")
+    endif(${GIT_CHANGED})
     MESSAGE(TAINTED)
     
     set (MY_WC_REVISION "-${GIT_BRANCH}-${GIT_COMMIT_HASH}${TAINTED}")
