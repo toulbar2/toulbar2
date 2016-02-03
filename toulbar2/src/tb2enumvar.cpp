@@ -136,15 +136,7 @@ void EnumeratedVariable::queueZ()
 
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
-  if(ToulBar2::prodsumDiffusion>0){
-    //cout<<"Before in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
-    costs[toIndex(value)] += cost;
-    //cout<<"After in function :"<<wcsp->Cost2Prob(costs[toIndex(value)])<<endl;
-    if (CUT(getCost(value)+ cost + wcsp->getLb(), wcsp->getUb())) {
-      removeFast(value);  
-    }
-  }
-  else{
+    
     //cout<<cost<<' '<<MIN_COST<<endl;
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
@@ -159,7 +151,7 @@ void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
       if (delayed) queueNC();
       else removeFast(value);     // Avoid any unary cost overflow
     }
-  }
+  
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
@@ -198,8 +190,6 @@ void EnumeratedVariable::extendAll(Cost cost)
 
 void EnumeratedVariable::findSupport()
 {
-    if (ToulBar2::prodsumDiffusion==0){
-    //~ cout<<"Variable : "<<this->getName()<<endl;
     if (cannotbe(support) || getCost(support) > MIN_COST) {
         Value newSupport = getInf();
         Cost minCost = getCost(newSupport);
@@ -218,7 +208,7 @@ void EnumeratedVariable::findSupport()
         if (support != newSupport) queueDEE();
         support = newSupport;
     }
-    }
+    
 }
 
 void EnumeratedVariable::propagateNC()
@@ -676,15 +666,15 @@ void EnumeratedVariable::assign(Value newValue)
 
         Cost cost = getCost(newValue);        
         
-        if( ToulBar2::prodsumDiffusion>0){
+        
           deltaCost += cost;
           projectLB(cost);
-          }else{
+  
             if (cost > MIN_COST) {
             deltaCost += cost;
             projectLB(cost);
             }
-        }
+        
 
 	    if (ToulBar2::setvalue) (*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {

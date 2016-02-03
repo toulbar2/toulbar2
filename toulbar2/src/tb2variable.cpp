@@ -190,7 +190,7 @@ void Variable::conflict()
 
 void Variable::queueNC()
 {
-    if(ToulBar2::prodsumDiffusion==0) wcsp->queueNC(&linkNCQueue);
+    wcsp->queueNC(&linkNCQueue);
 }
 
 void Variable::queueInc()

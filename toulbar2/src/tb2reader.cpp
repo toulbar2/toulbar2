@@ -1028,7 +1028,7 @@ void WCSP::read_uai2008(const char *fileName)
 		//~ }
 	}
 	
-    if(!ToulBar2::isZ) updateUb( upperbound );
+    updateUb( upperbound );
     ictr = 0;
     it = lctrs.begin();
 	while(it !=  lctrs.end()) {

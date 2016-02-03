@@ -1191,15 +1191,15 @@ bool Solver::solve()
     //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
     if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
     Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
-    if(ToulBar2::isZ) finiteUb = MAX_COST;
+    finiteUb = MAX_COST;
     if (finiteUb < initialUpperBound) {
       initialUpperBound = finiteUb;
       wcsp->updateUb(finiteUb);
     }
-    if(!ToulBar2::isZ) wcsp->setInfiniteCost();          // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
+    wcsp->setInfiniteCost();          // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
     wcsp->enforceUb();
     wcsp->propagate();                // initial propagation
-    if(!ToulBar2::isZ) finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
+    finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
     if (finiteUb < initialUpperBound) {
       initialUpperBound = finiteUb;
       wcsp->updateUb(finiteUb);
@@ -1210,7 +1210,7 @@ bool Solver::solve()
 
     wcsp->preprocessing();         // preprocessing after initial propagation
 
-    if(!ToulBar2::isZ) finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
+    finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
     if (finiteUb < initialUpperBound) {
       initialUpperBound = finiteUb;
       wcsp->updateUb(finiteUb);

@@ -5,11 +5,11 @@
 
 TLogProb Solver::Zub(){ // Calculate an uper-bound on Z before exploration (step 0)
     
-    if(ToulBar2::prodsumDiffusion>0)
-    {
-      //PropagateNoc();
-      ProdSumDiffusion();
-    }
+    //~ if(ToulBar2::prodsumDiffusion>0)
+    //~ {
+      //~ //PropagateNoc();
+      //~ ProdSumDiffusion();
+    //~ }
     TLogProb newlogU;
      vector<Cost> vbinmin(unassignedVars->getSize(),0);
     Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();

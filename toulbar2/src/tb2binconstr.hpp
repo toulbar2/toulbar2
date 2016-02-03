@@ -103,14 +103,6 @@ public:
    }
 
    void addcost( EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost ) {
-      if (ToulBar2::prodsumDiffusion>0){
-         if (xin==x) {
-        costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
-      } else {
-        costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
-        }
-       }
-      else{
       assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
       assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
       if (xin==x) {
@@ -118,7 +110,7 @@ public:
       } else {
         costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
       }
-      }
+      
    }
 
    void setCost( Cost c ) {   	
