@@ -17,18 +17,6 @@ set (My_misc_source misc/src/)
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
 set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
 
-#############################"
-# init version NUMBER
-############################
-	set (Toulbar_MAJOR  "0" CACHE STRING "Toulbar2 Framework major release")
-	set (Toulbar_MINOR "9.8.0-dev" CACHE STRING "Toulbar2 Framework minor release")
- 
-############################
-# init command line option for simpleOPT
-############################
- 	set (SO_MAX_ARGS "100" CACHE INTEGER "Max arguments in command line used by SimpleOpt object")
-       	MARK_AS_ADVANCED ( SO_MAX_ARGS ) 
-
 ################
 # PROJECT NAME
 ################
@@ -203,7 +191,7 @@ ENDIF(MENDELSOFT_ONLY)
 
 IF(TOULBAR2_ONLY)
         MESSAGE(STATUS "#################################")
-        MESSAGE(STATUS " TOULBAR2 SoLVER COMPILATION AND PACKAGING ONLY")
+        MESSAGE(STATUS " TOULBAR2 Solver Compilation and Packaging Only")
         MESSAGE(STATUS "#################################")
 
         SET(MENDELSOFT OFF)
@@ -215,22 +203,20 @@ IF(TOULBAR2_ONLY)
 #description used in the package building
 	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source solver for constraints network optimization written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
         SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
-
 ENDIF(TOULBAR2_ONLY)
 
 #############################"
 # init version NUMBER
 ############################
 
-include(${My_cmake_scritp}/init-version.cmake)
 
 ##############################
-	IF(ILOG)
+IF(ILOG)
 	set(LIBTB2INT ON)
-	ENDIF(ILOG)
+ENDIF(ILOG)
 
-	SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
-	SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
+SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
+SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 
 #########################
 IF(WIN32)
@@ -244,10 +230,10 @@ IF(WIN32)
 	set(ILOG OFF)
 	set(LIBTB2 OFF)
 
-#############################"
+######################################
 	MESSAGE(STATUS "WIN32 on  .")
 	MESSAGE(STATUS "COST ==> int.")
-######################################"
+######################################
 
 # mingW32 env setup
 	include(${My_cmake_scritp}/mingw32-config.cmake) 
@@ -262,7 +248,7 @@ ENDIF(WIN32)
 
 ###########
 # find gmp 
-###########"
+###########
 
 MESSAGE(STATUS "search for GMP library")
 INCLUDE(FindPkgConfig)
@@ -272,23 +258,20 @@ SET (all_depends  ${all_depends} "gmp")
 
 #CMAKE_DEPENDENT_OPTION(ILOG "ILOGLUE COMPIATION" OFF  "LIBTB2INT" OFF)
 #########################
-
-
 INCLUDE(FindPkgConfig)
+INCLUDE(FindGit)
 
-# liste of file used for compilation are include in source_file.cmake 
-# new file news to be add in this list
+# list of files used for compilation are included in source_file.cmake 
+# new file need to be added to this list
 # you can also define your own list and add it to the wall list
 # for example: SET (source_files ${source_files} ${my_file_2add})
 
 include(${My_cmake_scritp}/source_files.cmake)
 
-###########################"
+########################
 
 IF(Boost) 
-
-include(${My_cmake_scritp}/Boost_option.cmake)
-
+  include(${My_cmake_scritp}/Boost_option.cmake)
 ENDIF(Boost)
 
 ####################
@@ -304,14 +287,11 @@ include(${My_cmake_scritp}/xmlcsp.cmake)
 INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 
 IF(TOULBAR2)
-
-
-add_executable(toulbar2${EXE} ${source_files})
-TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
-INSTALL( TARGETS toulbar2${EXE} DESTINATION bin )
-
-
-
+  add_executable(toulbar2${EXE} ${source_files})
+  ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
+  SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
+  TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
+  INSTALL( TARGETS toulbar2${EXE} DESTINATION bin )
 ENDIF(TOULBAR2)
 
 ###############
@@ -319,13 +299,9 @@ ENDIF(TOULBAR2)
 ###############
 
 IF(MENDELSOFT)
-
-add_executable(mendelsoft${EXE} ${source_files})
-TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
-
-install( TARGETS mendelsoft${EXE} DESTINATION bin )
-
-
+  add_executable(mendelsoft${EXE} ${source_files})
+  TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
+  install( TARGETS mendelsoft${EXE} DESTINATION bin )
 ENDIF(MENDELSOFT)
 
 
