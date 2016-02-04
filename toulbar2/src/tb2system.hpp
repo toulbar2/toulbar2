@@ -6,9 +6,6 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
-//# Release information include in all files
-#include "ToulbarVersion.hpp"
-
 double cpuTime();		///< \brief return CPU time in seconds
 void timeOut(int sig);
 void timer(int t); 		///< \brief set a timer (in seconds)

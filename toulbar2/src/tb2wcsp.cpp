@@ -31,6 +31,7 @@
 #include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
+#include "ToulbarVersion.hpp"
 
 /*
  * Global variables with their default value
