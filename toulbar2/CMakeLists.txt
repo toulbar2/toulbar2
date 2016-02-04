@@ -300,6 +300,8 @@ ENDIF(TOULBAR2)
 
 IF(MENDELSOFT)
   add_executable(mendelsoft${EXE} ${source_files})
+  ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
+  SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
   install( TARGETS mendelsoft${EXE} DESTINATION bin )
 ENDIF(MENDELSOFT)
@@ -315,6 +317,9 @@ IF(LIBTB2)
 	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
 	ENDIF(WIN32)
 #	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
+        ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
+        SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
+
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 	add_library(
@@ -327,8 +332,6 @@ IF(LIBTB2)
 			LIBRARY DESTINATION lib
 			ARCHIVE DESTINATION lib
 	       )
-
-
 ENDIF(LIBTB2)
 
 
@@ -336,10 +339,11 @@ ENDIF(LIBTB2)
 # LIBTB2INTCOST GENERATION 
 ###############################################
 IF(LIBTB2INT)
-	MESSAGE(STATUS "COMPLING LIBTB2 INT .....")
+	MESSAGE(STATUS "COMPILING LIBTB2 INT .....")
 #	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
+        ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
+        SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
 	add_library(
 			tb2int
 			${LIBTB2FILE}
