@@ -1,7 +1,7 @@
 ********************************
 * ToulBar2 Brief User Overview *
 ********************************
-c /home/sdegivry/bin/toulbar2  version : 0.9.8.0-dev-R, copyright (c) INRA 2015
+c /home/sdegivry/bin/toulbar2  version : -master-de089b5-tainted, copyright (c) INRA 2015
 
 ________________________________________________________________________________
 Solve a simple weighted constraint satisfaction problem (WCSP)
@@ -77,7 +77,7 @@ New solution: 27 (18 backtracks, 78 nodes, depth 2)
 --- [0] Search with no discrepancy limit --- (187 nodes)
 Optimality gap: [ 23 , 27 ] 80 % (143 backtracks, 347 nodes)
 Optimality gap: [ 24 , 27 ] 60 % (154 backtracks, 369 nodes)
-Optimum: 27 in 156 backtracks and 373 nodes ( 498 removals by DEE) and 0.02 seconds.
+Optimum: 27 in 156 backtracks and 373 nodes ( 498 removals by DEE) and 0.01 seconds.
 end.
 
 ________________________________________________________________________________
@@ -183,7 +183,7 @@ ordering (following problem file) and soft arc consistency:
 
 Read 32 variables, with 44 values at most, and 223 cost functions, with maximum arity 2.
 Cost function decomposition time : 0 seconds.
-Preprocessing time: 0.05 seconds.
+Preprocessing time: 0.06 seconds.
 13 unassigned variables, 475 values in all current domains (med. size:36, max size:44) and 52 non-unary cost functions (med. degree:7)
 Initial lower and upper bounds: [0,160[ 100%
 Tree decomposition width  : 11
@@ -331,7 +331,7 @@ New solution: 159 (1100 backtracks, 1991 nodes, depth 9)
 New solution: 159 (2262 backtracks, 4313 nodes, depth 1)
 ---  done  cost = [159,159] (2262 backtracks, 4313 nodes, depth 1)
 
-Optimum: 159 in 2262 backtracks and 4313 nodes ( 129 removals by DEE) and 0.18 seconds.
+Optimum: 159 in 2262 backtracks and 4313 nodes ( 129 removals by DEE) and 0.19 seconds.
 end.
 
 ________________________________________________________________________________
@@ -343,7 +343,7 @@ followed by BTD:
 Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
 Generic variable elimination of degree 5
 Maximum degree of generic variable elimination: 5
-Cost function decomposition time : 0 seconds.
+Cost function decomposition time : 0.01 seconds.
 Reverse DAC lower bound: 19 (+10.5263%)
 Preprocessing time: 0.21 seconds.
 15 unassigned variables, 75 values in all current domains (med. size:5, max size:5) and 51 non-unary cost functions (med. degree:7)
@@ -449,7 +449,7 @@ Optimality gap: [ 2680 , 2700 ] 6 % (34 backtracks, 132 nodes)
 Optimality gap: [ 2700 , 2700 ] 0 % (34 backtracks, 137 nodes)
 VAC mean lb/incr: 12.4602     total increments: 176     cyclesize: 15.75     k: 3.07386 (mean), 8 (max)
 Node redundancy during HBFS: 43.7956 %
-Optimum: 2700 in 34 backtracks and 137 nodes ( 197 removals by DEE) and 0.02 seconds.
+Optimum: 2700 in 34 backtracks and 137 nodes ( 197 removals by DEE) and 0.01 seconds.
 end.
 
 ________________________________________________________________________________
@@ -517,7 +517,7 @@ Solve the Golomb problem (4 marks) in cp format
 
 Read 10 variables, with 9 values at most, and 10 cost functions, with maximum arity 6.
 Cost function decomposition time : 0 seconds.
-Preprocessing time: 0.01 seconds.
+Preprocessing time: 0 seconds.
 6 unassigned variables, 31 values in all current domains (med. size:5, max size:9) and 14 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [5,9[ 44.4444%
 New solution: 7 (0 backtracks, 3 nodes, depth 4)
@@ -566,7 +566,7 @@ Get a help message on ToulBar2 options and see what are the default options:
 *************************
 
 Command line is:
-toulbar2/toulbar2 problem_filename [options]
+toulbar2 problem_filename [options]
 
 Available problem formats (specified by the filename extension) are:
    *.wcsp : Weighted CSP format (see SoftCSP web site)
@@ -605,9 +605,9 @@ Available options are (use symbol ":" after an option to remove a default option
    -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)
    -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is 1)
    -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions (default option)
-   -h=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)
+   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)
    -mst : maximum spanning tree DAC ordering
-   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -dee:)
+   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee:)
    -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)
    -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)
    -dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)
@@ -647,7 +647,7 @@ Available options are (use symbol ":" after an option to remove a default option
    -a : finds all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)
    -D : approximate satisfiable solution count with BTD
    -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)
-   -epsilon=[float] : approximation factor for computing the partition function (default value is 20.0855)
+   -epsilon=[float] : approximation factor for computing the partition function (default value is 1000)
 
    -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is 10000)
    -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is -1)
