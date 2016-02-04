@@ -654,7 +654,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
         globalLowerBound = MAX(globalLowerBound, newLb);
         globalUpperBound = MIN(globalUpperBound, newUb);
         int newgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
-        if (newgap < oldgap) cout << "Optimality gap: [ " <<  globalLowerBound << " , " << globalUpperBound << " ] " << newgap << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+        if (newgap < oldgap) cout << "Optimality gap: [ " <<  globalLowerBound << " , " << globalUpperBound << " ] " << (100.*(globalUpperBound-globalLowerBound))/globalUpperBound << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
     }
 }
 
