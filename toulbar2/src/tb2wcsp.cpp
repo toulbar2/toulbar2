@@ -362,7 +362,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
 ///
 /// \note It looks for an existing constraint
 /// (even not connected constraints). It also allocates
-/// memory for a new constraint. For this two reasons it should
+/// memory for a new constraint. For these two reasons it should
 /// ONLY be called before search.
 ///
 /// \warning Vector costs must have the same size as Cartesian product of original domains.
@@ -473,7 +473,10 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		}
 
 		ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs, &storeData->storeCost);
-	} else ctr->addCosts(x, y, z, costs);
+	} else {
+	    ctr->addCosts(x, y, z, costs);
+	    ctr->propagate();
+	}
 
 	return ctr->wcspIndex;
 }

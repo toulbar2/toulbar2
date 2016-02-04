@@ -991,8 +991,7 @@ void WCSP::read_uai2008(const char *fileName)
 			case 2: bctr = (BinaryConstraint*) ctr;
 					x = (EnumeratedVariable*) bctr->getVar(0);
             		y = (EnumeratedVariable*) bctr->getVar(1);
-            		bctr->addCosts( x,y, costs[ictr] );
-					bctr->propagate();
+            		postBinaryConstraint( x->wcspIndex, y->wcspIndex, costs[ictr] );
 					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;
 					break;
 
@@ -1000,8 +999,7 @@ void WCSP::read_uai2008(const char *fileName)
 					x = (EnumeratedVariable*) tctr->getVar(0);
             		y = (EnumeratedVariable*) tctr->getVar(1);
             		z = (EnumeratedVariable*) tctr->getVar(2);
-		    		tctr->addCosts( x,y,z, costs[ictr] );
-					tctr->propagate();
+		    		postTernaryConstraint( x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr] );
 					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;
 					break;
 
