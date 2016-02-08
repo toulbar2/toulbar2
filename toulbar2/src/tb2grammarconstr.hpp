@@ -14,17 +14,17 @@ using namespace std;
 
 class GrammarConstraint : public DPGlobalConstraint {
 private:
-    
+
     // dimension: i x j x |N|
     Cost ***f;
     Cost ***up;
     bool ***marked;
-    
+
     Cost ***curf;
-        
+
     // dimension: i x |sigma|
     Cost **u;
-  
+
     // grammar, assuming in CNF
 
     /*struct Rule {
@@ -49,7 +49,7 @@ private:
             }
         }
     }
-    
+
     template<class T>
     void deleteTable(T*** &table) {
         for (int i = 0; i < arity() + 1; i++) {
@@ -73,10 +73,10 @@ protected:
     Result minCost(int var, Value val, bool changed);
 
 public:
-    
+
     static const int WEIGHTED = 1;
     static const int VAR = 0;
-    
+
     GrammarConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
     virtual ~GrammarConstraint();
 

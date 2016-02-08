@@ -2,7 +2,7 @@
  *  \brief Variable with domain represented by an interval.
  * 
  */
- 
+
 #ifndef TB2INTERVAR_HPP_
 #define TB2INTERVAR_HPP_
 
@@ -15,7 +15,7 @@ class IntervalVariable : public Variable
 
     void increaseFast(Value newInf);        // Do not insert in NC queue
     void decreaseFast(Value newSup);        // Do not insert in NC queue
-    
+
 public:    
     IntervalVariable(WCSP *wcsp, string n, Value iinf, Value isup);
 
@@ -24,7 +24,7 @@ public:
     unsigned int getDomainSize() const {
         return sup - inf + 1;
     }
-	
+
     void increase(Value newInf, bool isDecision = false);
     void decrease(Value newSup, bool isDecision = false);
     void remove(Value newValue, bool isDecision = false) {if (newValue==inf) increase(newValue+1, isDecision); else if (newValue==sup) decrease(newValue-1, isDecision);}
@@ -55,13 +55,13 @@ public:
         iterator(IntervalVariable *v, Value vv) : var(v), value(vv) {}
 
         Value operator*() const {return value;}
-        
+
         inline iterator &operator++() {    // Prefix form
             if (value < var->sup) ++value;
             else value = var->sup + 1;
             return *this;
         }
-        
+
         iterator &operator--() {    // Prefix form
             if (value > var->inf) --value;
             else value = var->sup + 1;

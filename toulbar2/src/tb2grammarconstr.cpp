@@ -6,8 +6,7 @@
 #include <set>
 using namespace std;
 
-GrammarConstraint::GrammarConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity)
-: DPGlobalConstraint(wcsp, scope, arity) {
+GrammarConstraint::GrammarConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity) : DPGlobalConstraint(wcsp, scope, arity) {
     modeEnum["var"] = GrammarConstraint::VAR;
     modeEnum["weight"] = GrammarConstraint::WEIGHTED;    
 }
@@ -17,7 +16,7 @@ GrammarConstraint::~GrammarConstraint(void) {
     deleteTable(curf);
     deleteTable(marked);
     deleteTable(curf);
-        
+
     for (int i = 0; i < arity(); i++) {
         delete[] u[i];
     }
@@ -28,7 +27,7 @@ void GrammarConstraint::read(istream & file) {
 
     string str;
     file >> str >> def;
-    
+
     /*if (str == "var") mode = VAR;
     else mode = WEIGHTED;*/
     this->setSemantics(str);
@@ -57,44 +56,44 @@ void GrammarConstraint::read(istream & file) {
     for (int i = 0; i < nRules; i++) {
         file >> type;
         switch (type) {
-            case 0:
-            {            
-                int A, v;
-                file >> A >> v;
-                cfg.addProduction(A, v, 0);
-                break;
-            }
-            case 1:
-            {               
-                int A, B, C;
-                file >> A >> B >> C;
-                cfg.addProduction(A, B, C, 0);
-                break;
-            }            
-            case 2:
-            {            
-                int A, v, w;
-                file >> A >> v >> w;
-                cfg.addProduction(A, v, w);
-                break;
-            }
-            case 3:
-            {               
-                int A, B, C, w;
-                file >> A >> B >> C >> w;
-                cfg.addProduction(A, B, C, w);
-                break;
-            }            
-            default:
-                cerr << "Error occur in reading grammar()" << endl;
-                exit(1);
+        case 0:
+        {
+            int A, v;
+            file >> A >> v;
+            cfg.addProduction(A, v, 0);
+            break;
+        }
+        case 1:
+        {
+            int A, B, C;
+            file >> A >> B >> C;
+            cfg.addProduction(A, B, C, 0);
+            break;
+        }
+        case 2:
+        {
+            int A, v, w;
+            file >> A >> v >> w;
+            cfg.addProduction(A, v, w);
+            break;
+        }
+        case 3:
+        {
+            int A, B, C, w;
+            file >> A >> B >> C >> w;
+            cfg.addProduction(A, B, C, w);
+            break;
+        }
+        default:
+            cerr << "Error occur in reading grammar()" << endl;
+            exit(1);
         }
     }
 
 }
 
 void GrammarConstraint::initMemoization() {
-            
+
     if (mode == VAR) {
         set<int> allValues;
         for (int i = 0; i < arity(); i++) {        
@@ -103,17 +102,17 @@ void GrammarConstraint::initMemoization() {
                 allValues.insert(*it);
             }
         }      
-        
+
         for (set<int>::iterator it=allValues.begin();it != allValues.end();++it) {
             if (cfg.toIndex(*it) == -1) cfg.addRedundantRuleTo(*it);
         }        
-        
+
         cfg.addVariableMeasure(def);
-                
+
     }    
-            
+
     top = max(wcsp->getUb(), MAX_COST);
-    
+
     //Create tables
     resizeTable(f);
     resizeTable(up);
@@ -142,7 +141,7 @@ Cost GrammarConstraint::minCostOriginal() {
     recomputeTable(curf);
 
     int minCost = curf[0][n - 1][cfg.getStartSymbol()];
-       
+
     return minCost;
 
 }
@@ -161,7 +160,7 @@ Cost GrammarConstraint::eval(String s) {
 
     recomputeTable(curf);
     int minCost = curf[0][n - 1][cfg.getStartSymbol()];           
-    
+
     return minCost - projectedCost;
 }
 
@@ -196,7 +195,7 @@ DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool c
                     unary(r->to[0], var, val) + r->weight - up[var][var][r->from] + f[0][n - 1][cfg.getStartSymbol()]);     
         }
     }            
-       
+
     return DPGlobalConstraint::Result(minCost, NULL);
 }
 
@@ -285,7 +284,7 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable) {
 }
 
 Cost GrammarConstraint::unary(int ch, int var, Value v) {       
-   EnumeratedVariable *x = scope[var];
-   Cost ucost = (v == ch) ? (-deltaCost[var][x->toIndex(v)]) : top;
-   return ucost;    
+    EnumeratedVariable *x = scope[var];
+    Cost ucost = (v == ch) ? (-deltaCost[var][x->toIndex(v)]) : top;
+    return ucost;
 }

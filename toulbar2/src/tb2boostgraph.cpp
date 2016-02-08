@@ -20,21 +20,21 @@ using namespace boost;
 
 namespace boost
 {
-  struct edge_component_t
-  {
-    enum
-    { num = 555 };
-    typedef edge_property_tag kind;
-  }
-  edge_component;
+    struct edge_component_t
+    {
+        enum
+        { num = 555 };
+        typedef edge_property_tag kind;
+    }
+    edge_component;
 }
 
 typedef adjacency_list< setS, vecS, undirectedS > Graph;
 typedef adjacency_list< setS, vecS, directedS > DirectedGraph;
 typedef adjacency_list< setS, vecS, undirectedS, no_property,
-                        property< edge_weight_t, int, property < edge_component_t, std::size_t > > > IntWeightedGraph;
+        property< edge_weight_t, int, property < edge_component_t, std::size_t > > > IntWeightedGraph;
 typedef adjacency_list< setS, vecS, undirectedS, no_property,
-                        property< edge_weight_t, double, property < edge_component_t, std::size_t > > > DoubleWeightedGraph;
+        property< edge_weight_t, double, property < edge_component_t, std::size_t > > > DoubleWeightedGraph;
 typedef adjacency_list< setS, vecS, undirectedS, property<vertex_color_t, default_color_type,property<vertex_degree_t,int> > > ColoredGraph;
 #endif
 
@@ -100,8 +100,8 @@ int WCSP::connectedComponents()
     Graph G;
     for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected() && !constrs[i]->universal()) addConstraint(constrs[i], G);
-	for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
-	for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
     vector<int> component(num_vertices(G));
     int num = connected_components(G, &component[0]);
     vector<int> cctruesize(num, 0);
@@ -119,7 +119,7 @@ int WCSP::connectedComponents()
         }
     }
     cout << ")";
-    
+
     return res;
 }
 
@@ -128,8 +128,8 @@ int WCSP::biConnectedComponents()
     IntWeightedGraph G;
     for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
     for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-	for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
-	for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
     property_map < IntWeightedGraph, edge_component_t >::type component = get(edge_component, G);
 
     int num = biconnected_components(G, component);
@@ -138,54 +138,54 @@ int WCSP::biConnectedComponents()
     articulation_points(G, back_inserter(art_points));
     cout << "Articulation points: " << art_points.size() <<  endl;
     if (art_points.size() > 0) {
-    	for (unsigned int i=0; i<art_points.size(); i++) cout << " " << art_points[i];
-    	cout << endl;
+        for (unsigned int i=0; i<art_points.size(); i++) cout << " " << art_points[i];
+        cout << endl;
     }
     return num;
 }
 
 int WCSP::diameter()
 {
-  IntWeightedGraph G;
-  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
-  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
-  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
+    IntWeightedGraph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
 
-  typedef int *int_ptr;
-  int **D;
-  D = new int_ptr[num_vertices(G)];
-  for (unsigned int i = 0; i < num_vertices(G); ++i) D[i] = new int[num_vertices(G)];
-  johnson_all_pairs_shortest_paths(G, D);
+    typedef int *int_ptr;
+    int **D;
+    D = new int_ptr[num_vertices(G)];
+    for (unsigned int i = 0; i < num_vertices(G); ++i) D[i] = new int[num_vertices(G)];
+    johnson_all_pairs_shortest_paths(G, D);
 
-  if (ToulBar2::verbose >= 2) {
-      cout << "     ";
-  for (unsigned int i = 0; i < num_vertices(G); ++i) {
-    cout << i << " -> ";
-    for (unsigned int j = 0; j < num_vertices(G); ++j) {
-        cout << " " << D[i][j];
+    if (ToulBar2::verbose >= 2) {
+        cout << "     ";
+        for (unsigned int i = 0; i < num_vertices(G); ++i) {
+            cout << i << " -> ";
+            for (unsigned int j = 0; j < num_vertices(G); ++j) {
+                cout << " " << D[i][j];
+            }
+            cout << endl;
         }
-        cout << endl;
-      }
-  }
-  
-  int maxd = 0;
-  double meand = 0;
-  for (unsigned int i = 0; i < num_vertices(G); ++i) {
-    for (unsigned int j = 0; j < num_vertices(G); ++j) {
-        if (D[i][j] > maxd) maxd = D[i][j];
-        meand += D[i][j];
     }
-  }
-  meand /= num_vertices(G)*num_vertices(G);
-  if (ToulBar2::verbose >= 1) {
-    cout << "Mean diameter: " << meand << endl;
-  }
 
-  for (unsigned int i = 0; i < num_vertices(G); ++i) delete[] D[i];
-  delete[] D;
+    int maxd = 0;
+    double meand = 0;
+    for (unsigned int i = 0; i < num_vertices(G); ++i) {
+        for (unsigned int j = 0; j < num_vertices(G); ++j) {
+            if (D[i][j] > maxd) maxd = D[i][j];
+            meand += D[i][j];
+        }
+    }
+    meand /= num_vertices(G)*num_vertices(G);
+    if (ToulBar2::verbose >= 1) {
+        cout << "Mean diameter: " << meand << endl;
+    }
 
-  return maxd;
+    for (unsigned int i = 0; i < num_vertices(G); ++i) delete[] D[i];
+    delete[] D;
+
+    return maxd;
 }
 
 inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->wcspIndex); }
@@ -194,134 +194,134 @@ inline bool cmp_vars(Variable *v1, Variable *v2) { return (v1->wcspIndex < v2->w
 /// \warning Output order usually worse than WCSP::minimumDegreeOrdering ???
 void WCSP::minimumDegreeOrderingBGL(vector<int> &order_inv)
 {
-  DirectedGraph G;
-  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
-  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
-  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
-  
-  int n = num_vertices(G);
-  int delta = 0;
-  typedef vector<int> Vector;
-  Vector inverse_perm(n, 0);
-  Vector perm(n, 0);
+    DirectedGraph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
 
-  Vector supernode_sizes(n, 1); // init has to be 1
+    int n = num_vertices(G);
+    int delta = 0;
+    typedef vector<int> Vector;
+    Vector inverse_perm(n, 0);
+    Vector perm(n, 0);
 
-  property_map<DirectedGraph, vertex_index_t>::type id = get(vertex_index, G);
+    Vector supernode_sizes(n, 1); // init has to be 1
 
-  Vector degree(n, 0);
+    property_map<DirectedGraph, vertex_index_t>::type id = get(vertex_index, G);
 
-  minimum_degree_ordering(G,
-     make_iterator_property_map(&degree[0], id, degree[0]),
-     &inverse_perm[0],
-     &perm[0],
-     make_iterator_property_map(&supernode_sizes[0], id, supernode_sizes[0]), 
-     delta,
-     id);
+    Vector degree(n, 0);
 
-  order_inv = inverse_perm;
-  if( ToulBar2::verbose >= 1 ) {
-	  cout << "Minimum degree ordering:";
-	  for (size_t i=0; i < num_vertices(G); ++i) {
-		cout << " " << order_inv[i];
-	  }
-	  cout << endl;
-  }
-  
-// // \bug reordering of vars array is dubious!!! (invalidates further use of variable indexes)
-// for (size_t i=0; i < num_vertices(G); ++i) {
-//    vars[i]->wcspIndex = num_vertices(G) - perm[i] - 1;
-//  }
-//  stable_sort(vars.begin(), vars.end(), cmp_vars);
-//  for (size_t i=0; i < num_vertices(G); ++i) {
-//    assert(vars[i]->wcspIndex == (int) i);
-//  }
+    minimum_degree_ordering(G,
+            make_iterator_property_map(&degree[0], id, degree[0]),
+            &inverse_perm[0],
+            &perm[0],
+            make_iterator_property_map(&supernode_sizes[0], id, supernode_sizes[0]),
+            delta,
+            id);
 
-  assert( order_inv.size() == numberOfVariables() );
+    order_inv = inverse_perm;
+    if( ToulBar2::verbose >= 1 ) {
+        cout << "Minimum degree ordering:";
+        for (size_t i=0; i < num_vertices(G); ++i) {
+            cout << " " << order_inv[i];
+        }
+        cout << endl;
+    }
+
+    // // \bug reordering of vars array is dubious!!! (invalidates further use of variable indexes)
+    // for (size_t i=0; i < num_vertices(G); ++i) {
+    //    vars[i]->wcspIndex = num_vertices(G) - perm[i] - 1;
+    //  }
+    //  stable_sort(vars.begin(), vars.end(), cmp_vars);
+    //  for (size_t i=0; i < num_vertices(G); ++i) {
+    //    assert(vars[i]->wcspIndex == (int) i);
+    //  }
+
+    assert( order_inv.size() == numberOfVariables() );
 }
 
 void WCSP::spanningTreeOrderingBGL(vector<int> &order_inv)
 {
-  double alltight = 0;
-  double maxt = 0;
-  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
-  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {double t = elimBinConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
-  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+    double alltight = 0;
+    double maxt = 0;
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) {double t = constrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) {double t = elimBinConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) {double t = elimTernConstrs[i]->getTightness(); alltight += t; if (t > maxt) maxt = t;}
 
-  DoubleWeightedGraph G;
-  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
-  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
-  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
-  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G, maxt);
+    DoubleWeightedGraph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G, maxt);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G, maxt);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G, maxt);
 
-  int n = num_vertices(G);
+    int n = num_vertices(G);
 
-  vector < graph_traits < DoubleWeightedGraph >::vertex_descriptor > p(n);
-  prim_minimum_spanning_tree(G, &p[0]);
+    vector < graph_traits < DoubleWeightedGraph >::vertex_descriptor > p(n);
+    prim_minimum_spanning_tree(G, &p[0]);
 
-  double tight = 0;
-  bool tightok = true;
-  vector<int> roots;
-  vector< vector<int> > listofsuccessors(n, vector<int>());
-  if (ToulBar2::verbose >= 0) cout << "Maximum spanning tree ordering"; // << endl;
-  for (size_t i = 0; i != p.size(); ++i) {
-    if (p[i] != i) {
-      BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i]));
-      if (bctr) {
-//      cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
-          tight += bctr->getTightness();
-      } else {
-    	  tightok = false;
-      }
-      listofsuccessors[p[i]].push_back(i);
-    } else {
-      roots.push_back(i);
-//      cout << "parent[" << i << "] = no parent" << endl;
+    double tight = 0;
+    bool tightok = true;
+    vector<int> roots;
+    vector< vector<int> > listofsuccessors(n, vector<int>());
+    if (ToulBar2::verbose >= 0) cout << "Maximum spanning tree ordering"; // << endl;
+    for (size_t i = 0; i != p.size(); ++i) {
+        if (p[i] != i) {
+            BinaryConstraint *bctr = getVar(i)->getConstr(getVar(p[i]));
+            if (bctr) {
+                //      cout << "parent[" << i << "] = " << p[i] << " (" << bctr->getTightness() << ")" << endl;
+                tight += bctr->getTightness();
+            } else {
+                tightok = false;
+            }
+            listofsuccessors[p[i]].push_back(i);
+        } else {
+            roots.push_back(i);
+            //      cout << "parent[" << i << "] = no parent" << endl;
+        }
     }
-  }
-  if (ToulBar2::verbose >= 0) {
-	  if (tightok) cout << " (" << 100.0*tight/alltight << "%)";
-	  cout << endl;
-  }
+    if (ToulBar2::verbose >= 0) {
+        if (tightok) cout << " (" << 100.0*tight/alltight << "%)";
+        cout << endl;
+    }
 
-  vector<bool> marked(n, false);
-  for (int i = roots.size()-1; i >= 0; i--) { visit(roots[i],order_inv,marked,listofsuccessors); }
-  for (int i = n-1; i >= 0; i--) { if (!marked[i]){ visit(i,order_inv,marked,listofsuccessors); }}
+    vector<bool> marked(n, false);
+    for (int i = roots.size()-1; i >= 0; i--) { visit(roots[i],order_inv,marked,listofsuccessors); }
+    for (int i = n-1; i >= 0; i--) { if (!marked[i]){ visit(i,order_inv,marked,listofsuccessors); }}
 
-  if( ToulBar2::verbose >= 1 ) {
-	 cout << "Maximum spanning tree ordering:";
-	 for (int i = 0; i < n; i++) {
-	   cout << " " << order_inv[i];
-	 }
-	 cout << endl;
-  }
+    if( ToulBar2::verbose >= 1 ) {
+        cout << "Maximum spanning tree ordering:";
+        for (int i = 0; i < n; i++) {
+            cout << " " << order_inv[i];
+        }
+        cout << endl;
+    }
 
-  assert( order_inv.size() == numberOfVariables() );
+    assert( order_inv.size() == numberOfVariables() );
 }
 
 void WCSP::reverseCuthillMcKeeOrderingBGL(vector<int> &order_inv)
 {
-  ColoredGraph G;
-  for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
-  for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
-  for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
-  for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
+    ColoredGraph G;
+    for (unsigned int i=0; i<vars.size(); i++) add_vertex(G);
+    for (unsigned int i=0; i<constrs.size(); i++) if (constrs[i]->connected()) addConstraint(constrs[i], G);
+    for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected()) addConstraint(elimBinConstrs[i], G);
+    for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected()) addConstraint(elimTernConstrs[i], G);
 
-  int n = num_vertices(G);
-  vector<int> inverse_perm(n, 0);
+    int n = num_vertices(G);
+    vector<int> inverse_perm(n, 0);
 
-  cuthill_mckee_ordering(G, inverse_perm.rbegin(), get(vertex_color, G), make_degree_map(G));
-  order_inv = inverse_perm;
-  if( ToulBar2::verbose >= 1 ) {
-      cout << "Reverse Cuthill-McKee ordering:";
-      for (size_t i=0; i < num_vertices(G); ++i) {
-        cout << " " << order_inv[i];
-      }
-      cout << endl;
-  }
+    cuthill_mckee_ordering(G, inverse_perm.rbegin(), get(vertex_color, G), make_degree_map(G));
+    order_inv = inverse_perm;
+    if( ToulBar2::verbose >= 1 ) {
+        cout << "Reverse Cuthill-McKee ordering:";
+        for (size_t i=0; i < num_vertices(G); ++i) {
+            cout << " " << order_inv[i];
+        }
+        cout << endl;
+    }
 
-  assert( order_inv.size() == numberOfVariables() );
+    assert( order_inv.size() == numberOfVariables() );
 }
 
 /// \brief Maximum Cardinality Search algorithm (Tarjan & Yannakakis)
@@ -403,7 +403,7 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
     if( ToulBar2::verbose >= 1 ) {
         cout << "MCS ordering:";
         for (size_t i=0; i < num_vertices(G); ++i) {
-          cout << " " << order_inv[i];
+            cout << " " << order_inv[i];
         }
         cout << endl;
     }
@@ -509,7 +509,7 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
     if( ToulBar2::verbose >= 1 ) {
         cout << "Min-fill ordering:";
         for (int j=0; j < n; ++j) {
-          cout << " " << order_inv[j];
+            cout << " " << order_inv[j];
         }
         cout << endl;
     }
@@ -530,8 +530,8 @@ void WCSP::minimumDegreeOrdering(vector<int> &order_inv)
     order_inv = order;
     vector<int> degree(n,0);
 
-//    vector<int> preorder;
-//    reverseCuthillMcKeeOrderingBGL(preorder);
+    //    vector<int> preorder;
+    //    reverseCuthillMcKeeOrderingBGL(preorder);
 
     Graph::adjacency_iterator neighbourIt, neighbourEnd;
 
@@ -543,7 +543,7 @@ void WCSP::minimumDegreeOrdering(vector<int> &order_inv)
         int v = 0;
         int deg_min = n+1;
         for (int x = 0; x < n; x++) {
- //           int x = preorder[xx];
+            //           int x = preorder[xx];
             if ((order[x] == -1) && (degree[x] < deg_min)) {
                 v = x;
                 deg_min = degree[x];

@@ -32,12 +32,12 @@ public:
     virtual Cost getLb() const = 0;			///< \brief gets problem lower bound
     virtual Cost getUb() const =0;			///< \brief gets problem upper bound
 
-	/// \brief sets initial problem upper bound and each time a new solution is found
+    /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) =0;
-	/// \brief enforces problem upper bound when exploring an alternative search node
+    /// \brief enforces problem upper bound when exploring an alternative search node
     virtual void enforceUb() =0;
-	/// \brief increases problem lower bound thanks to \e eg soft local consistencies
-	/// \param addLb increment value to be \b added to the problem lower bound
+    /// \brief increases problem lower bound thanks to \e eg soft local consistencies
+    /// \param addLb increment value to be \b added to the problem lower bound
     virtual void increaseLb(Cost addLb) =0;
     /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
     /// \return the worst-case assignment finite cost
@@ -47,7 +47,7 @@ public:
     /// \warning to be used in preprocessing only
     virtual void setInfiniteCost() =0;
 
-	virtual bool enumerated(int varIndex) const =0;		///< \brief true if the variable has an enumerated domain
+    virtual bool enumerated(int varIndex) const =0;		///< \brief true if the variable has an enumerated domain
 
     virtual string getName(int varIndex) const =0;		///< \note by default, variables names are integers, starting at zero
     virtual Value getInf(int varIndex) const =0;		///< \brief minimum current domain value
@@ -59,7 +59,7 @@ public:
     virtual unsigned int getDomainInitSize(int varIndex) const =0;          ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) =0;	            ///< \brief gets value from index (warning! assumes EnumeratedVariable)
     virtual unsigned int toIndex(int varIndex, Value value) =0;	            ///< \brief gets index from value (warning! assumes EnumeratedVariable)
-	virtual int getDACOrder(int varIndex) const =0; 	///< \brief index of the variable in the DAC variable ordering
+    virtual int getDACOrder(int varIndex) const =0; 	///< \brief index of the variable in the DAC variable ordering
 
     virtual bool assigned(int varIndex) const =0;
     virtual bool unassigned(int varIndex) const =0;
@@ -72,9 +72,9 @@ public:
     virtual void assign(int varIndex, Value newValue) =0;	///< \brief assigns a variable and immediately propagates this assignment
     virtual void remove(int varIndex, Value remValue) =0;	///< \brief removes a domain value (valid if done for an enumerated variable or on its domain bounds)
 
-	/// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
-	/// \param varIndexes vector of variable indexes as returned by makeXXXVariable
-	/// \param newValues vector of values to be assigned to the corresponding variables
+    /// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
+    /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
+    /// \param newValues vector of values to be assigned to the corresponding variables
     virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) =0;
     virtual void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate) =0;
 
@@ -93,13 +93,13 @@ public:
     virtual void resetWeightedDegree(int varIndex) =0;		///< \brief initialize weighted degree heuristic
 
     virtual void preprocessing() =0;		///< \brief applies various preprocessing techniques to simplify the current problem
-		/// \brief sorts the list of cost functions associated to each variable based on smallest problem variable indexes
-	/// \warning side-effect: updates DAC order according to an existing variable elimination order
-	/// \note must be called after creating all the cost functions and before solving the problem
-	virtual void sortConstraints() =0;
-	/// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
-	/// \note must be called after creating all the cost functions and before solving the problem
-	virtual void histogram() =0;
+    /// \brief sorts the list of cost functions associated to each variable based on smallest problem variable indexes
+    /// \warning side-effect: updates DAC order according to an existing variable elimination order
+    /// \note must be called after creating all the cost functions and before solving the problem
+    virtual void sortConstraints() =0;
+    /// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
+    /// \note must be called after creating all the cost functions and before solving the problem
+    virtual void histogram() =0;
 
     virtual void whenContradiction() =0;    ///< \brief after a contradiction, resets propagation queues
     virtual void propagate() =0;            ///< \brief propagates until a fix point is reached (or throws a contradiction)
@@ -109,35 +109,35 @@ public:
     virtual unsigned int numberOfUnassignedVariables() const =0;		///< \brief current number of unassigned variables
     virtual unsigned int numberOfConstraints() const =0;				///< \brief initial number of cost functions (before variable elimination)
     virtual unsigned int numberOfConnectedConstraints() const =0;		///< \brief current number of cost functions
-	virtual unsigned int numberOfConnectedBinaryConstraints() const =0; ///< \brief current number of binary cost functions
-	virtual unsigned int medianDomainSize() const =0;					///< \brief median current domain size of variables
-	virtual unsigned int medianDegree() const =0;						///< \brief median current degree of variables
+    virtual unsigned int numberOfConnectedBinaryConstraints() const =0; ///< \brief current number of binary cost functions
+    virtual unsigned int medianDomainSize() const =0;					///< \brief median current domain size of variables
+    virtual unsigned int medianDegree() const =0;						///< \brief median current degree of variables
     virtual int getMaxDomainSize() =0;									///< \brief maximum initial domain size found in all variables
     virtual Value getDomainSizeSum() =0;       							///< \brief total sum of current domain sizes
-	/// \brief Cartesian product of current domain sizes
-	/// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
+    /// \brief Cartesian product of current domain sizes
+    /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
     virtual Long getNbDEE() const =0;		///< \brief number of value removals due to dead-end elimination
 
-	/// \defgroup modeling Variable and cost function modeling
-	/// Modeling a Weighted CSP consists in creating variables and cost functions.\n
-	/// Domains of variables can be of two different types:
-	/// - enumerated domain allowing direct access to each value (array) and iteration on current domain in times proportional to the current number of values (double-linked list)
-	/// - interval domain represented by a lower value and an upper value only (useful for large domains)
+    /// \defgroup modeling Variable and cost function modeling
+    /// Modeling a Weighted CSP consists in creating variables and cost functions.\n
+    /// Domains of variables can be of two different types:
+    /// - enumerated domain allowing direct access to each value (array) and iteration on current domain in times proportional to the current number of values (double-linked list)
+    /// - interval domain represented by a lower value and an upper value only (useful for large domains)
     /// .
-	/// \warning Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
-	/// There is no cost functions accepting both interval and enumerated variables for the moment, which means all the variables should have the same type.
+    /// \warning Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
+    /// There is no cost functions accepting both interval and enumerated variables for the moment, which means all the variables should have the same type.
 
     /// \addtogroup modeling
-	/// Cost functions can be defined in extension (table or maps) or having a specific semantic.\n
-	/// Cost functions in extension depend on their arity:
-	/// - unary cost function (directly associated to an enumerated variable)
-	/// - binary and ternary cost functions (table of costs)
-	/// - n-ary cost functions (n >= 4) defined by a list of tuples with associated costs and a default cost for missing tuples (allows for a compact representation)
-	/// .
+    /// Cost functions can be defined in extension (table or maps) or having a specific semantic.\n
+    /// Cost functions in extension depend on their arity:
+    /// - unary cost function (directly associated to an enumerated variable)
+    /// - binary and ternary cost functions (table of costs)
+    /// - n-ary cost functions (n >= 4) defined by a list of tuples with associated costs and a default cost for missing tuples (allows for a compact representation)
+    /// .
     ///
-	/// Cost functions having a specific semantic (see \ref  wcspformat) are:
-	/// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
+    /// Cost functions having a specific semantic (see \ref  wcspformat) are:
+    /// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
     /// - global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular, etc) with three different propagator keywords:
     ///   - \e flow propagator based on flow algorithms with "s" prefix in the keyword (\e salldiff, \e sgcc, \e ssame, \e sregular)
     ///   - \e DAG propagator based on dynamic programming algorithms with "s" prefix and "dp" postfix (\e samongdp, sregulardp, sgrammardp, smstdp, smaxdp)
@@ -179,7 +179,7 @@ public:
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
     virtual int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                            const vector<Value> &values, int lb, int ub) =0;
+            const vector<Value> &values, int lb, int ub) =0;
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
     virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) =0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
 
@@ -195,10 +195,10 @@ public:
     /// \param Wtransitions a vector of transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
     virtual int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                              int nbStates,
-                              const vector<WeightedObj<int> > &initial_States,
-                              const vector<WeightedObj<int> > &accepting_States,
-                              const vector<DFATransition > &Wtransitions ) =0;
+            int nbStates,
+            const vector<WeightedObj<int> > &initial_States,
+            const vector<WeightedObj<int> > &accepting_States,
+            const vector<DFATransition > &Wtransitions ) =0;
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) =0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
     /// \brief post a soft alldifferent cost function
@@ -212,13 +212,13 @@ public:
 
     /// \brief post a soft global cardinality cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
-      /// \param arity the size of the array
-      /// \param semantics the semantics of the global cost function: "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
-      /// \param propagator the propagation method ("flow", "network")
-      /// \param baseCost the scaling factor of the violation
-      /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
+    /// \param arity the size of the array
+    /// \param semantics the semantics of the global cost function: "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param propagator the propagation method ("flow", "network")
+    /// \param baseCost the scaling factor of the violation
+    /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                          const vector<BoundedObj<Value> > &values)=0;
+            const vector<BoundedObj<Value> > &values)=0;
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) =0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 
     /// \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
@@ -248,9 +248,9 @@ public:
     ///  - if \a order in \a CFGProductionRule is set to 3, it is classified as weighted A -> BC, where A,B,C  the index of the nonterminal symbols.
     ///  - if \a order in \a CFGProductionRule is set to values greater than 3, it is ignored.
     virtual int postWGrammarCNF(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                                 int nbSymbols,
-                                 int startSymbol,
-                                 const vector<CFGProductionRule> WRuleToTerminal ) =0;
+            int nbSymbols,
+            int startSymbol,
+            const vector<CFGProductionRule> WRuleToTerminal ) =0;
 
     /// \brief post a Spanning Tree hard constraint
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -268,7 +268,7 @@ public:
     /// \param baseCost if a variable-value pair does not exist in \a weightFunction, its weight will be mapped to baseCost.
     /// \param weightFunction a vector of WeightedVarValPair containing a mapping from variable-value pairs to their weights.
     virtual int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-                                const vector<WeightedVarValPair> weightFunction) =0;
+            const vector<WeightedVarValPair> weightFunction) =0;
 
     /// \brief post a soft linear constraint with unit coefficients
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -292,7 +292,7 @@ public:
     virtual void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) =0;
 
     virtual vector< vector<int> >* getListSuccessors() =0;  ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
-    
+
     virtual bool isGlobal() =0; 			///< \brief true if there are soft global constraints defined in the problem
 
     virtual void read_wcsp(const char *fileName) =0;	///< \brief load problem in native wcsp format (\ref wcspformat)
@@ -332,10 +332,10 @@ public:
     virtual TreeDecomposition* getTreeDec() = 0;
 
     virtual void iniSingleton() = 0;
-	virtual	void updateSingleton() = 0;
-	virtual void removeSingleton() = 0;
-	virtual int  getVACHeuristic() = 0;
-	virtual void printVACStat() = 0;
+    virtual	void updateSingleton() = 0;
+    virtual void removeSingleton() = 0;
+    virtual int  getVACHeuristic() = 0;
+    virtual void printVACStat() = 0;
 };
 
 ostream& operator<<(ostream& os, WeightedCSP &wcsp);			///< \see WeightedCSP::print
@@ -371,7 +371,7 @@ public:
     virtual void read_wcsp(const char *fileName) =0;		///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;	///< \brief create a random WCSP, see WeightedCSP::read_random
 
-	/// \brief simplifies and solves to optimality the problem
+    /// \brief simplifies and solves to optimality the problem
     /// \return false if there is no solution found
     /// \warning after solving, the current problem has been modified by various preprocessing techniques
     /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSPSolver::getSolution INSTEAD
@@ -385,7 +385,7 @@ public:
     /// \note side-effects: updates current problem upper bound and propagates, best solution saved (using WCSP::setBestValue)
     virtual Cost narycsp(string cmd, vector<Value> &solution) =0;
 
-	/// \brief quadratic unconstrained pseudo-Boolean optimization
+    /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
     /// non-zero half squared matrix costs (can be positive or negative, with \f$\forall i, posx[i] \leq posy[i]\f$)
     /// \note costs for \f$posx \neq posy\f$ are multiplied by 2 by this method

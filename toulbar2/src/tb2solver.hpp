@@ -67,22 +67,22 @@ public:
 
     class CPStore : public vector<ChoicePoint>
     {
-        public:
-            ptrdiff_t start;       // beginning of the current branch
-            ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
-            StoreCost index;  // current branch depth (should be free at this position)
+    public:
+        ptrdiff_t start;       // beginning of the current branch
+        ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
+        StoreCost index;  // current branch depth (should be free at this position)
 
-            CPStore(Store *s) : start(0), stop(0), index(0, &s->storeCost) {}
+        CPStore(Store *s) : start(0), stop(0), index(0, &s->storeCost) {}
 
-            void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
-            void store() {start = stop; index = start;}
+        void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
+        void store() {start = stop; index = start;}
     };
 
     void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
     void addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta = MIN_COST);     ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore &cp, OpenNode node);
 
-protected:
+    protected:
     Store *store;
     Long nbNodes;
     Long nbBacktracks;
@@ -119,9 +119,9 @@ protected:
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
-	int getVarMinDomainDivMaxWeightedDegreeRandomized();
-	int getVarMinDomainDivMaxWeightedDegree();
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+    int getVarMinDomainDivMaxWeightedDegreeRandomized();
+    int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflictRandomized();
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegreeRandomized();
@@ -148,9 +148,9 @@ protected:
     void scheduleOrPostpone(int varIndex);
 
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeRandomized(Cluster *cluster);
@@ -167,7 +167,7 @@ protected:
     BigInteger sharpBTD(Cluster *cluster);
     void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
-public:
+    public:
     Solver(int storeSize, Cost initUpperBound);
     ~Solver();
 
