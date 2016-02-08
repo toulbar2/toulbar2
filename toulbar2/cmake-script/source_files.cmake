@@ -29,7 +29,7 @@
                         ${My_Source}/tb2regulardpconstr.cpp
                         ${My_Source}/tb2amongconstr.cpp
                         ${My_Source}/tb2grammarconstr.cpp
-                        ${My_Source}/tb2wgrammar.cpp
+                        ${My_Source}/tb2grammarutils.cpp
                         ${My_Source}/tb2maxconstr.cpp
                         ${My_Source}/tb2treeconstr.cpp
 ##                        ${My_Source}/tb2linearconstr.cpp
@@ -89,7 +89,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2regulardpconstr.*pp
                         ${My_Source}/tb2amongconstr.*pp
                         ${My_Source}/tb2grammarconstr.*pp
-                        ${My_Source}/tb2wgrammar.*pp
+                        ${My_Source}/tb2grammarutils.*pp
                         ${My_Source}/tb2maxconstr.*pp
                         ${My_Source}/tb2treeconstr.*pp
 ##                        ${My_Source}/tb2linearconstr.*pp

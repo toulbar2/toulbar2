@@ -1,5 +1,5 @@
-#ifndef WGRAMMAR
-#define WGRAMMAR
+#ifndef GRAMMARUTILS
+#define GRAMMARUTILS
 
 #include <vector>
 #include <iostream>

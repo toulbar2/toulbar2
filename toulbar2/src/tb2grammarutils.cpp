@@ -1,4 +1,4 @@
-#include "tb2wgrammar.hpp"   
+#include "tb2grammarutils.hpp"   
 #include <set>
 #include <algorithm>
 
