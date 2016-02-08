@@ -1,4 +1,4 @@
-/** \file tb2regularDPconstr.hpp
+/** \file tb2regulardpconstr.hpp
  *  \brief Dynamic programming based global cost function : sregular_dp
  */
 

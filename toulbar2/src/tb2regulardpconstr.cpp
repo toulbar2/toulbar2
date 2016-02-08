@@ -1,4 +1,4 @@
-#include "tb2regularDPconstr.hpp"
+#include "tb2regulardpconstr.hpp"
 #include <vector>
 #include <fstream>
 #include <string>

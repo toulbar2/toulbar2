@@ -27,7 +27,7 @@
 #include "tb2sameconstr.hpp"
 #include "tb2regularflowconstr.hpp"
 #include "tb2amongconstr.hpp"
-#include "tb2regularDPconstr.hpp"
+#include "tb2regulardpconstr.hpp"
 #include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
