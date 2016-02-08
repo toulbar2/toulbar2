@@ -6,7 +6,7 @@
 #define TB2GRAMMARCCONSTR_HPP_
 
 #include "tb2dpglobalconstr.hpp"
-#include "tb2wgrammar.hpp"
+#include "tb2grammarutils.hpp" 
 #include <vector>
 #include <fstream>
 #include <string>
