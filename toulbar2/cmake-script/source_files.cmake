@@ -26,7 +26,7 @@
                         ${My_Source}/tb2sameconstr.cpp
                         ${My_Source}/tb2regularflowconstr.cpp
                         ${My_Source}/tb2dpglobalconstr.cpp
-                        ${My_Source}/tb2regularDPconstr.cpp
+                        ${My_Source}/tb2regulardpconstr.cpp
                         ${My_Source}/tb2amongconstr.cpp
                         ${My_Source}/tb2grammarconstr.cpp
                         ${My_Source}/tb2wgrammar.cpp
@@ -93,7 +93,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2sameconstr.*pp
                         ${My_Source}/tb2regularflowconstr.*pp
                         ${My_Source}/tb2dpglobalconstr.*pp
-                        ${My_Source}/tb2regularDPconstr.*pp
+                        ${My_Source}/tb2regulardpconstr.*pp
                         ${My_Source}/tb2amongconstr.*pp
                         ${My_Source}/tb2grammarconstr.*pp
                         ${My_Source}/tb2wgrammar.*pp
