@@ -443,6 +443,7 @@ ENDIF (BUILD_API_DOC)
 ###################################################################################"
 #  PACKAGING 
 ###################################################################################"
+set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/MyCPackConf.cmake)
 INCLUDE(InstallRequiredSystemLibraries)
 include(${My_cmake_scritp}/package.cmake)
 ######### END END
