@@ -1,7 +1,7 @@
 #INCLUDE(CTest)
 # cover test for toulbar2
-# read a array of option include in $COVER_OPT_file 
-# and generate a new test for each entrie
+# read an array of option include in $COVER_OPT_file 
+# and generate a new test for each entry
 include(${My_cmake_scritp}/ManageString.cmake)
 
 MESSAGE(STATUS "\n##############COVER  liste #############\n")
@@ -19,18 +19,18 @@ MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
 
 #################
-# test unitaire
+# unit test
 ###############
-SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
+SET(FOPT "test-opt.cmake") #cmake name where local values for timeout,regexp and command line option are declared
 SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmake")
 
 ###############"""
 
 IF (EXISTS ${COVER_OPT_file} ) 
      include (${COVER_OPT_file})
-     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} founded ")
+     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found.")
 ELSE ()
-      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT founded ")
+      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found.")
 ENDIF()
 
 
@@ -48,14 +48,14 @@ FOREACH (UTEST ${cover_file})
 
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} founded ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
 	ELSE()
 	# init default value :
 	set (test_timeout ${Default_test_timeout})
 	set (test_regexp  ${Default_test_regexp})
 	ENDIF()	
 
-#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded  ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not found ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
 #	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 
 
@@ -71,7 +71,7 @@ FOREACH (UTEST ${cover_file})
 
 	SET (INDEX 0)
 	FOREACH (COVERTEST ${${tfile}})
-		#OPTION multipale space cleaning
+		#OPTION multiple space cleaning
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})
 		STRING(REGEX REPLACE " $" "" COVERTEST ${COVERTEST})
