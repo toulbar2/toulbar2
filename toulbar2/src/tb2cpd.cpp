@@ -5,97 +5,87 @@
 
 Cpd::Cpd()
 {
-  cpdtrie = new TrieCpd();
+    cpdtrie = new TrieCpd();
 }
 
 Cpd::~Cpd()
 {
-  delete cpdtrie;
+    delete cpdtrie;
 }
 
-void Cpd::read_rotamers2aa(ifstream & file, vector<Variable *> & vars) throw (int)
+void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 {
-  istringstream line;
-  string s;
-  file.unget();
-  while(file)
-    {
-      vector<char> rot2aa_var;
-      char current_char;
-      getline(file,s,'\n');
-      line.str(s);
-      line.clear();
-      if (line.str().empty())
-        {
-          line.str().clear();
-          continue;
+    istringstream line;
+    string s;
+    file.unget();
+    while (file) {
+        vector<char> rot2aa_var;
+        char current_char;
+        getline(file, s, '\n');
+        line.str(s);
+        line.clear();
+        if (line.str().empty()) {
+            line.str().clear();
+            continue;
         }
-      while(line>>current_char)
-        {
-          //       line >> ws;
-          rot2aa_var.push_back(current_char);
-          //       cout << "Push: " << current_char << endl;getchar();
+        while (line >> current_char) {
+            //       line >> ws;
+            rot2aa_var.push_back(current_char);
+            //       cout << "Push: " << current_char << endl;getchar();
         }
-      rotamers2aa.push_back(rot2aa_var);
+        rotamers2aa.push_back(rot2aa_var);
     }
-  if (rotamers2aa.size()!=vars.size())
-    {
-      cout << "Wrong variable number " << rotamers2aa.size() << " " << vars.size() << endl;
-      throw 1;
-    }
-  else
-    {
-      for (size_t i=0;i<rotamers2aa.size();i++)
-        if (rotamers2aa[i].size()!=vars[i]->getDomainSize())
-          {
-            cout << "Wrong domain size" << rotamers2aa[i].size() << " " << vars[i]->getDomainSize() << endl;
-            throw 2;
-          }
+    if (rotamers2aa.size() != vars.size()) {
+        cout << "Wrong variable number " << rotamers2aa.size() << " " << vars.size() << endl;
+        throw 1;
+    } else {
+        for (size_t i = 0; i < rotamers2aa.size(); i++)
+            if (rotamers2aa[i].size() != vars[i]->getDomainSize()) {
+                cout << "Wrong domain size" << rotamers2aa[i].size() << " " << vars[i]->getDomainSize() << endl;
+                throw 2;
+            }
     }
 }
 
 
-void Cpd::storeSequence(const vector<Variable *> & vars, Cost _cost)
+void Cpd::storeSequence(const vector<Variable *> &vars, Cost _cost)
 {
-  string sequence;
-  for(size_t i=0; i<vars.size(); i++)
-    {
-      sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
+    string sequence;
+    for (size_t i = 0; i < vars.size(); i++) {
+        sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
     }
-  cpdtrie->insert_sequence(sequence, _cost);
+    cpdtrie->insert_sequence(sequence, _cost);
 }
 
 void Cpd::printSequences()
 {
-  cpdtrie->print_tree();
+    cpdtrie->print_tree();
 }
 
-void Cpd::printSequence(const vector<Variable *> & vars, Cost _cost)
+void Cpd::printSequence(const vector<Variable *> &vars, Cost _cost)
 {
-  //  cpdtrie->print_tree();
-  string sequence;
-  for(size_t i=0; i<vars.size(); i++)
-    {
-      sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
+    //  cpdtrie->print_tree();
+    string sequence;
+    for (size_t i = 0; i < vars.size(); i++) {
+        sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
     }
-  cout << "New sequence: " << sequence << " Cost: " << _cost << endl;
+    cout << "New sequence: " << sequence << " Cost: " << _cost << endl;
 }
 
-void Cpd::printSequence(TAssign & vars)
+void Cpd::printSequence(TAssign &vars)
 {
-  //  cpdtrie->print_tree();
-  string sequence;
-  // TAssign::iterator it = vars.begin();
-  // while(it != vars.end())
-  //   {
-  //     sequence.push_back(rotamers2aa[it->first][it->second]);
-  //     ++it;
-  //   }
-  for(size_t i=0; i<vars.size(); i++)
-    {
-      sequence.push_back(rotamers2aa[i][vars[i]]);
+    //  cpdtrie->print_tree();
+    string sequence;
+    // TAssign::iterator it = vars.begin();
+    // while(it != vars.end())
+    //   {
+    //     sequence.push_back(rotamers2aa[it->first][it->second]);
+    //     ++it;
+    //   }
+    for (size_t i = 0; i < vars.size(); i++) {
+        sequence.push_back(rotamers2aa[i][vars[i]]);
     }
 
-  cout << "New sequence: " << sequence << endl;
+    cout << "New sequence: " << sequence << endl;
 }
 

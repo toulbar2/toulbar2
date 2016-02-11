@@ -25,28 +25,28 @@ protected:
     BTList<Value> *unassignedVars;
     int lastConflictVar;
     void *searchSize;
-	
+
     BigInteger nbSol;
-    int nbSoldiv=0;
+    int nbSoldiv = 0;
     Long nbSGoods;				//number of #good which created
     Long nbSGoodsUse;			//number of #good which used
-    map<int,BigInteger > ubSol;	// upper bound of solution number
+    map<int, BigInteger > ubSol;	// upper bound of solution number
     double timeDeconnect;		// time for the disconnection
 
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
-	int getVarMinDomainDivMaxWeightedDegreeRandomized();
-	int getVarMinDomainDivMaxWeightedDegree();
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+    int getVarMinDomainDivMaxWeightedDegreeRandomized();
+    int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflictRandomized();
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegreeRandomized();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
-  int getNextScpCandidate();
+    int getNextScpCandidate();
     void increase(int varIndex, Value value);
     void decrease(int varIndex, Value value);
     void assign(int varIndex, Value value);
@@ -72,9 +72,9 @@ protected:
     void scheduleOrPostpone(int varIndex);
 
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeRandomized(Cluster *cluster);
@@ -87,14 +87,14 @@ protected:
 
     BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
     BigInteger sharpBTD(Cluster *cluster);
-    void approximate(BigInteger& nbsol, TreeDecomposition* td);
+    void approximate(BigInteger &nbsol, TreeDecomposition *td);
 
 public:
     Solver(int storeSize, Cost initUpperBound);
     ~Solver();
 
     void read_wcsp(const char *fileName);
-    void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
+    void read_random(int n, int m, vector<int> &p, int seed, bool forceSubModular = false);
 
     Long getNbNodes() const {return nbNodes;}
     Long getNbBacktracks() const {return nbBacktracks;}
@@ -110,11 +110,11 @@ public:
     void read_solution(const char *fileName);
     void parse_solution(const char *certificate);
 
-    Cost getSolution(vector<Value>& solution);
+    Cost getSolution(vector<Value> &solution);
 
     friend void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
-    WeightedCSP* getWCSP() { return wcsp; }
+    WeightedCSP *getWCSP() { return wcsp; }
 };
 
 class NbBacktracksOut

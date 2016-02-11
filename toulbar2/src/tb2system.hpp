@@ -1,6 +1,6 @@
 /** \file tb2system.hpp
  *  \brief System dependent functions.
- * 
+ *
  */
 
 #ifndef TB2SYSTEM_HPP_
@@ -41,32 +41,32 @@ typedef string String;
 typedef long long Long;
 
 #ifndef LONGLONG_MAX
-	#ifdef LINUX
-     #ifdef LONG_LONG_MAX
-      const Long LONGLONG_MAX = LONG_LONG_MAX;
-     #else
-      const Long LONGLONG_MAX = LLONG_MAX;
-     #endif
-	#endif
-	#ifdef WINDOWS
-	const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
-	#endif
+#ifdef LINUX
+#ifdef LONG_LONG_MAX
+const Long LONGLONG_MAX = LONG_LONG_MAX;
+#else
+const Long LONGLONG_MAX = LLONG_MAX;
+#endif
+#endif
+#ifdef WINDOWS
+const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
+#endif
 #endif
 
 typedef long double Double;
 
 #ifdef LINUX
-	inline void mysrand(long seed) {return srand48(seed);}
-	inline int myrand() { return lrand48();  }
-	inline Long myrandl() {return (Long) ((Long)lrand48()/**LONGLONG_MAX*/);}
+inline void mysrand(long seed) {return srand48(seed);}
+inline int myrand() { return lrand48();  }
+inline Long myrandl() {return (Long)((Long)lrand48()/**LONGLONG_MAX*/);}
 
 #endif
 #ifdef WINDOWS
-	inline void mysrand(long seed) {return srand(seed);}
-	inline int myrand() { return rand();  }
-	inline Long myrandl() {return (Long) ((Long)rand()/**LONGLONG_MAX*/);}
-	
-	
+inline void mysrand(long seed) {return srand(seed);}
+inline int myrand() { return rand();  }
+inline Long myrandl() {return (Long)((Long)rand()/**LONGLONG_MAX*/);}
+
+
 //replace srand48(seed) by srand(seed)
 //replace drand48() by (double(rand()) / RAND_MAX)
 
@@ -75,40 +75,40 @@ typedef long double Double;
 
 
 #ifdef DOUBLE_PROB
-	#ifdef LINUX
-inline double Pow(double x, double y) {return pow(x,y);}
+#ifdef LINUX
+inline double Pow(double x, double y) {return pow(x, y);}
 inline double Exp10(double x) {return exp10(x);}
 inline double Exp(double x) {return exp(x);}
 inline double Log10(double x) {return log10(x);}
 inline double Log(double x) {return log(x);}
 inline double Log1p(double x) {return log1p(x);}
-	#endif
-	#ifdef WINDOWS
-inline double Pow(double x, double y) {return pow(x,y);}
-inline double Exp10(double x) {return pow(10.,x);}
+#endif
+#ifdef WINDOWS
+inline double Pow(double x, double y) {return pow(x, y);}
+inline double Exp10(double x) {return pow(10., x);}
 inline double Exp(double x) {return exp(x);}
-inline double Log10(double x) {return log(x)/log(10.);}
+inline double Log10(double x) {return log(x) / log(10.);}
 inline double Log(double x) {return log(x);}
 inline double Log1p(double x) {return log(1. + x);}
-	#endif
+#endif
 #endif
 
 #ifdef LONGDOUBLE_PROB
-	#ifdef LINUX
-		inline Double Pow(Double x, Double y) {return powl(x,y);}
-        inline Double Exp10(Double x) {return exp10l(x);}
-        inline Double Exp(Double x) {return expl(x);}
-		inline Double Log10(Double x) {return log10l(x);}
-		inline Double Log(Double x) {return logl(x);}
-		inline Double Log1p(Double x) {return log1pl(x);}
-	#endif
-	#ifdef WINDOWS
-		inline Double Pow(Double x, Double y) {return pow(x,y);}
-		inline Double Exp10(Double x) {return pow(10.,x);}
-		inline Double Log10(Double x) {return log(x)/log(10.);}
-		inline Double Log(Double x) {return log(x);}
-		inline Double Log1p(Double x) {return log(1. + x);}
-	#endif
+#ifdef LINUX
+inline Double Pow(Double x, Double y) {return powl(x, y);}
+inline Double Exp10(Double x) {return exp10l(x);}
+inline Double Exp(Double x) {return expl(x);}
+inline Double Log10(Double x) {return log10l(x);}
+inline Double Log(Double x) {return logl(x);}
+inline Double Log1p(Double x) {return log1pl(x);}
+#endif
+#ifdef WINDOWS
+inline Double Pow(Double x, Double y) {return pow(x, y);}
+inline Double Exp10(Double x) {return pow(10., x);}
+inline Double Log10(Double x) {return log(x) / log(10.);}
+inline Double Log(Double x) {return log(x);}
+inline Double Log1p(Double x) {return log(1. + x);}
+#endif
 #endif
 
 #ifdef INT_COST
@@ -137,29 +137,28 @@ inline int string2Cost(const char *ptr) {return atoi(ptr);}
 //cost= 16 log2= 4
 
 // This only works for a 32bits machine
-// and compiler g++ version < 4.0 
- 
- /*
-inline int cost2log2(int v)
-{ 
-  float x;
+// and compiler g++ version < 4.0
 
-  if (v==0) return -1;
-  x=(float) v; 
-  return (*(int*)&x >> 23) - 127;
+/*
+inline int cost2log2(int v)
+{
+ float x;
+
+ if (v==0) return -1;
+ x=(float) v;
+ return (*(int*)&x >> 23) - 127;
 }
 */
 
 inline int cost2log2(int x)
 {
-        if (x==0) return -1;
-        register int l2 = 0;
-        x>>=1;
-        for (; x != 0; x >>=1)
-        {
-                ++ l2;
-        }
-        return (l2);
+    if (x == 0) return -1;
+    register int l2 = 0;
+    x >>= 1;
+    for (; x != 0; x >>= 1) {
+        ++ l2;
+    }
+    return (l2);
 }
 inline int cost2log2glb(int x) {return cost2log2(x);}
 inline int cost2log2gub(int x) {return cost2log2(x);}
@@ -172,23 +171,22 @@ inline Long floor(const Long e) {return e;}
 inline Long randomCost(Long min, Long max) { return  min + (myrandl() % (max - min + 1)); }
 
 #ifdef LINUX
-	inline Long string2Cost(const char *ptr) {return atoll(ptr);}
+inline Long string2Cost(const char *ptr) {return atoll(ptr);}
 #endif
 #ifdef WINDOWS
-	inline Long string2Cost(const char *ptr) {return atol(ptr);}
+inline Long string2Cost(const char *ptr) {return atol(ptr);}
 #endif
 
 
 inline int cost2log2(Long x)
 {
-        if (x==0) return -1;
-        register int l2 = 0;
-        x>>=1;
-        for (; x != 0; x >>=1)
-        {
-                ++ l2;
-        }
-        return (l2);
+    if (x == 0) return -1;
+    register int l2 = 0;
+    x >>= 1;
+    for (; x != 0; x >>= 1) {
+        ++ l2;
+    }
+    return (l2);
 }
 inline int cost2log2glb(Long x) {return cost2log2(x);}
 inline int cost2log2gub(Long x) {return cost2log2(x);}

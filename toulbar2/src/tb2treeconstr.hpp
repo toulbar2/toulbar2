@@ -18,93 +18,95 @@ using namespace std;
 
 class TreeConstraint : public DPGlobalConstraint
 {
-	private:
+private:
 
-		int curTreeCost;
+    int curTreeCost;
 
-		struct Edge {
-			int u;
-			int v;
-			Cost weight;
-			Edge(int u, int v, Cost w): u(u), v(v), weight(w) {}
-			bool operator< (const Edge &e) const {return weight < e.weight;}
-		};
+    struct Edge {
+        int u;
+        int v;
+        Cost weight;
+        Edge(int u, int v, Cost w): u(u), v(v), weight(w) {}
+        bool operator< (const Edge &e) const {return weight < e.weight;}
+    };
 
-		int minTreeEdgeCost;
-		int maxTreeEdgeCost;
-		set<pair<int, int> > treeEdge;
-                
-                struct CCTreeNode;  // Forward declaration                
-                vector<CCTreeNode> nodeStore;
-                //typedef vector<CCTreeNode>::iterator CCTreeNodePtr;                
-                typedef CCTreeNode* CCTreeNodePtr;                
-                                
-		struct CCTreeNode {		
-			int nodeIndex;
-			int u;
-			int v;
-			Cost weight;
-			int height;
-			CCTreeNodePtr parent;
-			CCTreeNodePtr left;
-			CCTreeNodePtr right;
-			CCTreeNode():nodeIndex(0), u(-1), v(-1), weight(MIN_COST), height(0), parent(NULL), left(NULL), right(NULL) {}
-		};                                
+    int minTreeEdgeCost;
+    int maxTreeEdgeCost;
+    set<pair<int, int> > treeEdge;
 
-		vector<CCTreeNodePtr> ccTree;
-		vector<CCTreeNodePtr> inorder;
-		vector<CCTreeNodePtr> inorderNodeHeight;
-		vector<int> pos;	
-		CCTreeNodePtr ccTreeRoot;
-		RangeMinQuery<int> RMQ;
+    struct CCTreeNode;  // Forward declaration
+    vector<CCTreeNode> nodeStore;
+    //typedef vector<CCTreeNode>::iterator CCTreeNodePtr;
+    typedef CCTreeNode *CCTreeNodePtr;
 
-                //CCTreeNodePtr PtrNULL() {return nodeStore.end();}
-                CCTreeNodePtr PtrNULL() {return NULL;}
-                CCTreeNodePtr createNewNode();
-                
-		void joinCCTrees(int u, int v, Cost weight);
-		CCTreeNodePtr findRoot(CCTreeNodePtr node);
-		void InorderTransveral(CCTreeNodePtr root);
+    struct CCTreeNode {
+        int nodeIndex;
+        int u;
+        int v;
+        Cost weight;
+        int height;
+        CCTreeNodePtr parent;
+        CCTreeNodePtr left;
+        CCTreeNodePtr right;
+        CCTreeNode(): nodeIndex(0), u(-1), v(-1), weight(MIN_COST), height(0), parent(NULL), left(NULL), right(NULL) {}
+    };
 
-		// disjoint data set	
-		vector<int> p;	
-		int findParent(int index, vector<int>& p);
-		void unionSet(int u, int v, vector<int>& p);
+    vector<CCTreeNodePtr> ccTree;
+    vector<CCTreeNodePtr> inorder;
+    vector<CCTreeNodePtr> inorderNodeHeight;
+    vector<int> pos;
+    CCTreeNodePtr ccTreeRoot;
+    RangeMinQuery<int> RMQ;
 
-		map<int, int> val2VarIndex;	
+    //CCTreeNodePtr PtrNULL() {return nodeStore.end();}
+    CCTreeNodePtr PtrNULL() {return NULL;}
+    CCTreeNodePtr createNewNode();
 
-		int recomputeCurMST();				
-		int recomputeMST(vector<Edge> &edgeList);				
+    void joinCCTrees(int u, int v, Cost weight);
+    CCTreeNodePtr findRoot(CCTreeNodePtr node);
+    void InorderTransveral(CCTreeNodePtr root);
 
-	protected:
+    // disjoint data set
+    vector<int> p;
+    int findParent(int index, vector<int> &p);
+    void unionSet(int u, int v, vector<int> &p);
 
-		Cost minCostOriginal();
-		Cost minCostOriginal(int var, Value val, bool changed);
-		Result minCost(int var, Value val, bool changed);
-                
-                // This is a hard constraint. SNIC and D(G)AC* are equivalent to AC
-                
-                void propagateStrongNIC() {
-                    propagateAC();
-                }
-		
-		void propagateDAC() {
-                   if (ToulBar2::LcLevel == LC_DAC) propagateAC();
-                }                                
+    map<int, int> val2VarIndex;
 
-		// No need to run anything for (weak) ED(G)AC*
-		bool isEAC(int var, Value val) {return true;}
-		void findFullSupportEAC(int var) {}
+    int recomputeCurMST();
+    int recomputeMST(vector<Edge> &edgeList);
 
-	public:
-		TreeConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
-		virtual ~TreeConstraint();
+protected:
 
-		Cost eval(String s);
+    Cost minCostOriginal();
+    Cost minCostOriginal(int var, Value val, bool changed);
+    Result minCost(int var, Value val, bool changed);
 
-		void read(istream & file) {} //No parameter needed
-                         void initMemoization();
-		string getName(){return "MST";}
+    // This is a hard constraint. SNIC and D(G)AC* are equivalent to AC
+
+    void propagateStrongNIC()
+    {
+        propagateAC();
+    }
+
+    void propagateDAC()
+    {
+        if (ToulBar2::LcLevel == LC_DAC) propagateAC();
+    }
+
+    // No need to run anything for (weak) ED(G)AC*
+    bool isEAC(int var, Value val) {return true;}
+    void findFullSupportEAC(int var) {}
+
+public:
+    TreeConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
+    virtual ~TreeConstraint();
+
+    Cost eval(String s);
+
+    void read(istream &file) {}  //No parameter needed
+    void initMemoization();
+    string getName() {return "MST";}
 };
 
 #endif
