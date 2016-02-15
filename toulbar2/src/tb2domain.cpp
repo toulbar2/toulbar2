@@ -31,7 +31,7 @@ void Domain::init(Value inf, Value sup)
 {
     assert( sup - inf + 1 >= 1 );
     assert( sup - inf + 1 <= MAX_DOMAIN_SIZE );
-#ifdef WCSPFORMATONLY
+#if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     assert(distanceToZero == 0);
 #endif    
     all = new DLink<Value>[sup-inf+1];

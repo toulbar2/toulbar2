@@ -1637,117 +1637,11 @@ int _tmain(int argc, TCHAR * argv[])
     /////////////////////////////////////////
     // test on initial ub cost value;
     /////////////////////////////////////////
-    if (ub <= MIN_COST) ub = MAX_COST;
 
-    if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1)
-    {
-        cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
-        ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = false;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1)
-    {
-        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization => force ub = 1." << endl;
-        ub = 1;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
-    {
-        cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
-        ToulBar2::allSolutions = false;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0)
-    {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
-        ToulBar2::elimDegree = 0;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && ToulBar2::elimDegree >= 0)
-    {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
-        ToulBar2::elimDegree = -1;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0)
-    {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with generic variable elimination" << endl;
-        ToulBar2::elimDegree_preprocessing = -1;
-    }
-    if (ToulBar2::allSolutions || ToulBar2::isZ) {
-        ToulBar2::DEE = 0;
-    }
-    if (ToulBar2::lds && ToulBar2::btdMode >= 1)
-    {
-        cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
-        ToulBar2::lds = 0;
-    }
-    if (ToulBar2::lds && ToulBar2::hbfs)
-    {
-        cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
-        ToulBar2::hbfs = 0;
-    }
-    if (ToulBar2::hbfs && ToulBar2::btdMode >= 2)
-    {
-        cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
-        ToulBar2::hbfs = 0;
-    }
-    if (ToulBar2::restart>=0 && ToulBar2::btdMode >= 1)
-    {
-        cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
-        ToulBar2::restart = -1;
-    }
-    if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1)
-    {
-        cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
-        ToulBar2::binaryBranching = true;
-    }
-    if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1)
-    {
-        cout << "Warning! solving only a problem subtree => force Russian Doll Search method." << endl;
-        ToulBar2::btdMode = 2;
-    }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1)
-    {
-        cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
-        ToulBar2::vac = 1;
-    }
-    if (ToulBar2::preprocessFunctional >0 && ToulBar2::LcLevel == LC_NC)
-    {
-        cout << "Warning! Cannot perform functional elimination with NC only." << endl;
-        ToulBar2::preprocessFunctional = 0;
-    }
-    if (ToulBar2::learning && ToulBar2::elimDegree >= 0)
-    {
-        cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning" << endl;
-        ToulBar2::elimDegree = -1;
-    }
-    if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
-        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
-        ToulBar2::incop_cmd = "";
-    }
-    if (!ToulBar2::binaryBranching && ToulBar2::hbfs)
-    {
-        cout << "Warning! n-ary branching not implemented with best-first search => force binary branching. (or add -hbfs: parameter)" << endl;
-        ToulBar2::binaryBranching = true;
-    }
-    if (ToulBar2::dichotomicBranching>=2 && ToulBar2::hbfs)
-    {
-        cout << "Warning! complex dichotomic branching not implemented with best-first search => force simple dichotomic branching. (or add -hbfs: parameter)" << endl;
-        ToulBar2::dichotomicBranching = 1;
-    }
+    ub = tb2checkOptions(ub);
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
         cout << "Warning! An optimal solution file is missing in the command line. Verifying the optimal solution is disabled." << endl;
         ToulBar2::verifyOpt = false;
-    }
-    if  (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
-        cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::elimDegree = -1;
-        ToulBar2::elimDegree_preprocessing = -1;
-    }
-    if  (ToulBar2::verifyOpt && ToulBar2::preprocessFunctional > 0) {
-        cout << "Warning! Cannot perform functional elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::preprocessFunctional = 0;
-    }
-    if  (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
-        cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::DEE = 0;
     }
 
     if (ToulBar2::uai || ToulBar2::uaieval) {
@@ -1852,37 +1746,6 @@ int _tmain(int argc, TCHAR * argv[])
     {
         if (randomproblem)    solver->read_random(n,m,p,seed,forceSubModular);
         else 		         solver->read_wcsp((char*)strfile.c_str());
-        if (solver->getWCSP()->isGlobal() && ToulBar2::btdMode >= 1)	{
-            cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
-            ToulBar2::btdMode = 0;
-        }
-        if (solver->getWCSP()->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))	{
-            cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
-            ToulBar2::elimDegree_preprocessing = -1;
-        }
-        //	    if (solver->getWCSP()->isGlobal() && ToulBar2::incop_cmd.size() > 0)    {
-        //            cout << "Warning! Cannot use INCOP local search with global cost functions." << endl;
-        //            ToulBar2::incop_cmd = "";
-        //        }
-        //        if (ToulBar2::incop_cmd.size() > 0)    {
-        //            WCSP *wcsp = (WCSP *) solver->getWCSP();
-        //            for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
-        //                if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() > ToulBar2::preprocessNary) {
-        //                    cout << "Warning! Cannot use INCOP local search with large arity (" << wcsp->getCtr(i)->arity() << ") cost functions (see option -n to change the threshold)." << endl;
-        //                    ToulBar2::incop_cmd = "";
-        //                    break;
-        //                }
-        //            }
-        //        }
-        if (ToulBar2::incop_cmd.size() > 0)    {
-            for (unsigned int i=0; i<solver->getWCSP()->numberOfVariables(); i++) {
-                if (solver->getWCSP()->unassigned(i) && !solver->getWCSP()->enumerated(i)) {
-                    cout << "Warning! Cannot use INCOP local search with bounds arc propagation (non enumerated variable domains)." << endl;
-                    ToulBar2::incop_cmd = "";
-                    break;
-                }
-            }
-        }
 
         if (certificate)
         {

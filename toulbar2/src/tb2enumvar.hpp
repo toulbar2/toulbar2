@@ -41,7 +41,7 @@ public:
     bool enumerated() const {return true;}
 
     unsigned int getDomainInitSize() const {return domain.getInitSize();}
-#ifdef WCSPFORMATONLY
+#if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     unsigned int toIndex(Value v) const {return (unsigned int) v;}
     Value toValue(unsigned int idx) const {return idx;}
 #else

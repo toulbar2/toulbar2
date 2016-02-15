@@ -1220,6 +1220,25 @@ bool Solver::solve()
         ToulBar2::logU = -numeric_limits<TProb>::infinity();
     }
 
+    // Last-minute compatibility checks for ToulBar2 selected options
+    if (wcsp->isGlobal() && ToulBar2::btdMode >= 1)    {
+        cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
+        ToulBar2::btdMode = 0;
+    }
+    if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))  {
+        cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
+        ToulBar2::elimDegree_preprocessing = -1;
+    }
+    if (ToulBar2::incop_cmd.size() > 0)    {
+        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+            if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
+                cout << "Warning! Cannot use INCOP local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                ToulBar2::incop_cmd = "";
+                break;
+            }
+        }
+    }
+
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0;         // do not perform hbfs operations in preprocessing except for building tree decomposition
     try {
