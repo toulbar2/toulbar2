@@ -3225,3 +3225,11 @@ void WCSP::visit(int i, vector <int>&revdac, vector <bool>& marked, const vector
 
 
 
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

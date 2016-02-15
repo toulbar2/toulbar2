@@ -1202,3 +1202,4 @@ void Haplotype::sparse_matrix()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

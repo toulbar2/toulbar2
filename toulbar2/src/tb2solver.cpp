@@ -1851,3 +1851,4 @@ void Solver::restore(CPStore &cp, OpenNode nd)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

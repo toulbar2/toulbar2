@@ -901,3 +901,4 @@ void Pedigree::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduc
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+
