@@ -654,7 +654,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
         globalLowerBound = MAX(globalLowerBound, newLb);
         globalUpperBound = MIN(globalUpperBound, newUb);
         int newgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
-        if (newgap < oldgap) cout << "Optimality gap: [ " <<  globalLowerBound << " , " << globalUpperBound << " ] " << (100.*(globalUpperBound-globalLowerBound))/globalUpperBound << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+        if (ToulBar2::verbose >=0 && newgap < oldgap) cout << "Optimality gap: [ " <<  globalLowerBound << " , " << globalUpperBound << " ] " << (100.*(globalUpperBound-globalLowerBound))/globalUpperBound << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
     }
 }
 
@@ -1441,7 +1441,7 @@ bool Solver::solve()
                             exit(EXIT_FAILURE); }
                         }
                         if(ToulBar2::debug) start->printStatsRec();
-                        if (nbHybrid>=1) cout << "HBFS open list restarts: " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
+                        if (ToulBar2::verbose >=0 && nbHybrid>=1) cout << "HBFS open list restarts: " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                     } else {
                         initialDepth = store->getDepth();
                         hybridSolve();
@@ -1489,7 +1489,7 @@ bool Solver::solve()
 
     if(ToulBar2::vac) wcsp->printVACStat();
 
-    if (nbHybrid >= 1 && nbNodes > 0) cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
+    if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0) cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
     if (wcsp->getUb() < initialUpperBound) {
         if(ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
