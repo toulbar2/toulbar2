@@ -18,35 +18,35 @@ int main(int argc, char * argv[])
 
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
-	ToulBar2::verbose = -1;  // change to 0 to see more information
+    ToulBar2::verbose = -1;  // change to 0 to see more information
 
-	// uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
-//	ToulBar2::vac = 1; // option -A
-//	ToulBar2::vacValueHeuristic = true; // option -V
-	// uncomment if partial Limited Discrepancy Search enable
-//	ToulBar2::lds = 1;  // option -l=1
-	// uncomment if INCOP local search enable
-//	ToulBar2::incop_cmd = Incop_cmd; // option -i
-	
-	// create a problem with three 0/1 variables
-	WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, MAX_COST);
-	int x = solver->getWCSP()->makeEnumeratedVariable("x",0,1); // note that for efficiency issue, I assume domain values start at zero (otherwise remove flag -DWCSPFORMATONLY in Makefile)
-	int y = solver->getWCSP()->makeEnumeratedVariable("y",0,1);
-	int z = solver->getWCSP()->makeEnumeratedVariable("z",0,1);
+    // uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
+    //	ToulBar2::vac = 1; // option -A
+    //	ToulBar2::vacValueHeuristic = true; // option -V
+    // uncomment if partial Limited Discrepancy Search enable
+    //	ToulBar2::lds = 1;  // option -l=1
+    // uncomment if INCOP local search enable
+    //	ToulBar2::incop_cmd = Incop_cmd; // option -i
 
-	// add random unary cost functions on each variable
-	{
-	    vector<Cost> costs(2, 0);
-	    costs[0] = randomCost(0,100);
-	    costs[1] = randomCost(0,100);
-	    solver->getWCSP()->postUnary(x, costs);
-	    costs[0] = randomCost(0,100);
-	    costs[1] = randomCost(0,100);
-	    solver->getWCSP()->postUnary(y, costs);
-	    costs[0] = randomCost(0,100);
-	    costs[1] = randomCost(0,100);
-	    solver->getWCSP()->postUnary(z, costs);
-	}
+    // create a problem with three 0/1 variables
+    WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, MAX_COST);
+    int x = solver->getWCSP()->makeEnumeratedVariable("x",0,1); // note that for efficiency issue, I assume domain values start at zero (otherwise remove flag -DWCSPFORMATONLY in Makefile)
+    int y = solver->getWCSP()->makeEnumeratedVariable("y",0,1);
+    int z = solver->getWCSP()->makeEnumeratedVariable("z",0,1);
+
+    // add random unary cost functions on each variable
+    {
+        vector<Cost> costs(2, 0);
+        costs[0] = randomCost(0,100);
+        costs[1] = randomCost(0,100);
+        solver->getWCSP()->postUnary(x, costs);
+        costs[0] = randomCost(0,100);
+        costs[1] = randomCost(0,100);
+        solver->getWCSP()->postUnary(y, costs);
+        costs[0] = randomCost(0,100);
+        costs[1] = randomCost(0,100);
+        solver->getWCSP()->postUnary(z, costs);
+    }
 
     // add binary cost functions (Ising) on each pair of variables
     {
@@ -74,25 +74,24 @@ int main(int argc, char * argv[])
         solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
     }
 
-	solver->getWCSP()->sortConstraints(); // to be done before search
-	solver->getWCSP()->histogram(); // to be done before search
+    solver->getWCSP()->sortConstraints(); // to be done before search
+    solver->getWCSP()->histogram(); // to be done before search
 
-//	int verbose = ToulBar2::verbose;
-//	ToulBar2::verbose = 5;  // high verbosity to see the cost functions
-//	solver->getWCSP()->print(cout);
-//	ToulBar2::verbose = verbose;
+    //	int verbose = ToulBar2::verbose;
+    //	ToulBar2::verbose = 5;  // high verbosity to see the cost functions
+    //	solver->getWCSP()->print(cout);
+    //	ToulBar2::verbose = verbose;
 
-	if (solver->solve()) {
-	    // show optimal solution
-	    vector<Value> sol;
-	    Cost optimum = solver->getSolution(sol);
-	    cout << "Optimum=" << optimum << endl;
-	    cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
-	} else {
-	    cout << "No solution found!" << endl;
-	}
-	cout << "Initial problem lower bound: " << solver->getWCSP()->getLb() << endl;
+    if (solver->solve()) {
+        // show optimal solution
+        vector<Value> sol;
+        Cost optimum = solver->getSolution(sol);
+        cout << "Optimum=" << optimum << endl;
+        cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
+    } else {
+        cout << "No solution found!" << endl;
+    }
+    // cout << "Problem lower bound: " << solver->getWCSP()->getLb() << endl; // initial problem lower bound possibly enhanced by value removals at the root during search
 
-	cout << "end." << endl;
-	return 0;
+    return 0;
 }
