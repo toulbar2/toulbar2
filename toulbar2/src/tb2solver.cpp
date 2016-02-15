@@ -1209,18 +1209,9 @@ Long luby(Long r) {
 
 bool Solver::solve()
 {
-    Cost initialUpperBound = wcsp->getUb();
-    nbBacktracks = 0;
-    nbNodes = 0;
-    lastConflictVar = -1;
-    int tailleSep = 0;
-
-    if (ToulBar2::isZ) {
-        ToulBar2::logZ = -numeric_limits<TProb>::infinity();
-        ToulBar2::logU = -numeric_limits<TProb>::infinity();
-    }
-
     // Last-minute compatibility checks for ToulBar2 selected options
+    wcsp->setUb(tb2checkOptions(wcsp->getUb()));
+
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1)    {
         cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
         ToulBar2::btdMode = 0;
@@ -1237,6 +1228,21 @@ bool Solver::solve()
                 break;
             }
         }
+    }
+    if (CSP(wcsp->getLb(), wcsp->getUb()))
+    {
+        ToulBar2::LcLevel = LC_AC;
+    }
+
+    Cost initialUpperBound = wcsp->getUb();
+    nbBacktracks = 0;
+    nbNodes = 0;
+    lastConflictVar = -1;
+    int tailleSep = 0;
+
+    if (ToulBar2::isZ) {
+        ToulBar2::logZ = -numeric_limits<TProb>::infinity();
+        ToulBar2::logU = -numeric_limits<TProb>::infinity();
     }
 
     Long hbfs_ = ToulBar2::hbfs;

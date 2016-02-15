@@ -1,10 +1,4 @@
-/* SVN FILE: $Id$ */
-/* :  Project Description
- *
- * @author         $Author$
- * @copyright      $Copyright$
- * @version        $Rev$
- * @lastrevision   $Date*
+/*
  * **************** Main function ***********************************
  */
 
@@ -1766,10 +1760,6 @@ int _tmain(int argc, TCHAR * argv[])
             signal(SIGINT,  timeOut);
             if (timeout>0) timer(timeout);
 #endif
-            if (CSP(solver->getWCSP()->getLb(), solver->getWCSP()->getUb()))
-            {
-                ToulBar2::LcLevel = LC_AC;
-            }
             solver->solve();
         }
     }
