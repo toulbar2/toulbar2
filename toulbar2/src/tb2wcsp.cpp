@@ -330,7 +330,7 @@ Cost tb2checkOptions(Cost ub)
     }
     if (ToulBar2::lds && ToulBar2::hbfs)
     {
-        cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
+        // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
         ToulBar2::hbfs = 0;
     }
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2)
@@ -3222,9 +3222,6 @@ void WCSP::visit(int i, vector <int>&revdac, vector <bool>& marked, const vector
     }
     revdac.push_back(i);
 }
-
-
-
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
