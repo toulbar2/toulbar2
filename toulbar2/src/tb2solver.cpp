@@ -482,13 +482,14 @@ void Solver::enforceUb()
     wcsp->enforceUb();
     if (ToulBar2::isZ) {
         Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-        //		+ wcsp->LogProb2Cost(unassignedVars->getSize() * Log(wcsp->getMaxDomainSize()));  // Easy -logZ lower bound
         for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) {
             if (wcsp->enumerated(*iter_variable)) {
                 EnumeratedVariable *var = (EnumeratedVariable *) ((WCSP *) wcsp)->getVar(*iter_variable);
+                Cost sumUnaryCosts = MAX_COST;
                 for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) {
-                    wcsp->LogSumExp(newCost, var->getCost(*iter_value));
+                    sumUnaryCosts = wcsp->LogSumExp(sumUnaryCosts, var->getCost(*iter_value));
                 }
+                newCost += sumUnaryCosts;
             } else {
                 newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
             }
