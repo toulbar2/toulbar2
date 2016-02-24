@@ -143,7 +143,7 @@ protected:
     void enforceUb();
 
     void singletonConsistency();
-    void scpChoicePoint(int xIndex, Value value);
+  void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);

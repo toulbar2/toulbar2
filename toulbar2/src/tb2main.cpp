@@ -736,7 +736,7 @@ void help_msg(char *toulbar2filename)
 	cout << "			"<< endl;
 
 	cout << endl;
->>>>>>> master
+
 #endif
 }
 
