@@ -778,6 +778,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 
  	unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
+    histogram();
 
     if (ToulBar2::verbose >= 0) {
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " cost functions." << endl;
@@ -955,14 +956,14 @@ void WCSP::read_uai2008(const char *fileName)
 	    for (k = 0; k < ntuples; k++) {
 	        file >> p;
           //if (p < 10e-200) p=0;
-	        if(ToulBar2::isZCelTemp>0){
-                p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
-                costsProb.push_back( p );
-	        }else{
-                costsProb.push_back( p );
-	        }
-	        if(p > maxp){maxp = p;}
+	        if(ToulBar2::isZCelTemp>0)
+                  p /= (1.9891/1000.0 * (273.15+ ToulBar2::isZCelTemp)) ;
+	        assert(ToulBar2::uai>1 || (p >= 0. && (markov || p <= 1.)));
+	        costsProb.push_back( p );
+	        if(p > maxp) maxp = p;
 	    }
+        if ( ToulBar2::uai==1 && maxp == 0. ) THROWCONTRADICTION;
+
 	    Cost minc = MAX_COST;
 	    Cost maxc = MIN_COST;
         
@@ -1004,10 +1005,10 @@ void WCSP::read_uai2008(const char *fileName)
             inclowerbound += minc;
         }
 
-		if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
+        if(markov) ToulBar2::markov_log += ((ToulBar2::uai>1)?maxp:Log( maxp ));
 
-	ictr++;
-	++it;
+        ictr++;
+        ++it;
 	}
    
 	
@@ -1078,8 +1079,7 @@ void WCSP::read_uai2008(const char *fileName)
 			case 2: bctr = (BinaryConstraint*) ctr;
 					x = (EnumeratedVariable*) bctr->getVar(0);
             		y = (EnumeratedVariable*) bctr->getVar(1);
-            		bctr->addCosts( x,y, costs[ictr] );
-					bctr->propagate();
+            		postBinaryConstraint( x->wcspIndex, y->wcspIndex, costs[ictr] );
 					if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;
 					break;
 
@@ -1087,8 +1087,7 @@ void WCSP::read_uai2008(const char *fileName)
 					x = (EnumeratedVariable*) tctr->getVar(0);
             		y = (EnumeratedVariable*) tctr->getVar(1);
             		z = (EnumeratedVariable*) tctr->getVar(2);
-		    		tctr->addCosts( x,y,z, costs[ictr] );
-					tctr->propagate();
+		    		postTernaryConstraint( x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr] );
 					if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;
 					break;
 
@@ -1167,16 +1166,17 @@ void WCSP::solution_UAI(Cost res, bool opt)
 	else {
 //	    ToulBar2::solution_file << "-BEGIN-" << endl;
 	    ToulBar2::solution_file.close();
-	    ToulBar2::solution_file.open(ToulBar2::solution_filename.c_str());
+	    ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
 	    ToulBar2::solution_file << "MPE" << endl;
 	}
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
-	//~ if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
-	  //~ cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-	  //~ cout << "s " << Cost2LogProb(res) + ToulBar2::markov_log << endl;
-	  //~ cout << numberOfVariables();
-	  //~ printSolution(cout);
-	//~ }
+
+	if (false){//(ToulBar2::showSolutions && !ToulBar2::uaieval) {
+	  cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+	  cout << "s " << (Cost2LogProb(res) + ToulBar2::markov_log)/Log(10.) << endl;
+	  cout << numberOfVariables();
+	  printSolution(cout);
+	}
 	ToulBar2::solution_file << numberOfVariables();
 	printSolution(ToulBar2::solution_file);
     ToulBar2::solution_file << endl;

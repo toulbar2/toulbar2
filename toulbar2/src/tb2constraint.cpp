@@ -59,6 +59,11 @@ void Constraint::projectLB(Cost cost)
   }
 }
 
+void Constraint::assigns()
+{
+    for(int i=0;connected() && i<arity();i++) if (getVar(i)->assigned()) assign(i);
+}
+
 void Constraint::sumScopeIncluded( Constraint* ctr )
 {
 	int ar = arity();

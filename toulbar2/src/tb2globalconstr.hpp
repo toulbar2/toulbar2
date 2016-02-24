@@ -28,6 +28,7 @@ protected:
 	set<int> *fullySupportedSet;
 	
 	map<Value, Cost> EACCost; 
+	vector<vector<Cost> > preUnaryCosts;
 	int currentVar;
 	bool needPropagateAC, needPropagateDAC, needPropagateEAC;
 
@@ -167,7 +168,7 @@ public:
 		}
 	}
 
-	// propagaetion for the whole constraint
+	// propagation for the whole constraint
 	virtual void propagate();
 	virtual void propagateDAC();  
 	virtual void propagateAC();  

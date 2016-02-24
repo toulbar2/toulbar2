@@ -4,6 +4,7 @@
  
 #include "tb2intervar.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2clusters.hpp"
 
 
 /*
@@ -78,6 +79,7 @@ bool IntervalVariable::verifyNC()
 void IntervalVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
 	    if (newInf > sup) {THROWCONTRADICTION;
         } else {
@@ -92,9 +94,13 @@ void IntervalVariable::increaseFast(Value newInf)
     }
 }
 
-void IntervalVariable::increase(Value newInf)
+void IntervalVariable::increase(Value newInf, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) < newInf) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
+#endif
     if (newInf > inf) {
 	    if (newInf > sup) {THROWCONTRADICTION;
         } else {
@@ -113,6 +119,7 @@ void IntervalVariable::increase(Value newInf)
 void IntervalVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -127,9 +134,13 @@ void IntervalVariable::decreaseFast(Value newSup)
     }
 }
 
-void IntervalVariable::decrease(Value newSup)
+void IntervalVariable::decrease(Value newSup, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) > newSup) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
+#endif
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -145,9 +156,13 @@ void IntervalVariable::decrease(Value newSup)
     }
 }
 
-void IntervalVariable::assign(Value newValue)
+void IntervalVariable::assign(Value newValue, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) == newValue);
+#endif
     if (unassigned() || getValue() != newValue) {
         if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);

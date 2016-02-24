@@ -25,10 +25,10 @@ public:
         return sup - inf + 1;
     }
 	
-    void increase(Value newInf);
-    void decrease(Value newSup);
-    void remove(Value newValue) {if (newValue==inf) increase(newValue+1); else if (newValue==sup) decrease(newValue-1);}
-    void assign(Value newValue);
+    void increase(Value newInf, bool isDecision = false);
+    void decrease(Value newSup, bool isDecision = false);
+    void remove(Value newValue, bool isDecision = false) {if (newValue==inf) increase(newValue+1, isDecision); else if (newValue==sup) decrease(newValue-1, isDecision);}
+    void assign(Value newValue, bool isDecision = false);
     void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
 
     Cost getInfCost() const {return infCost;}

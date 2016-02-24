@@ -77,7 +77,7 @@ public:
   Double haldane(Double x){return 0.5*(1-exp(-2.0*abs(x)));}
   Double getK(){return K;}
   Double Cost2LogProb(Cost c)const{return (K - 4*to_double(c)/ ToulBar2::NormFactor);}
-  Double Cost2Prob(Cost c)const{return K - 4*to_double(c)/ ToulBar2::NormFactor;}
+ // Double Cost2Prob(Cost c)const{return K - 4*to_double(c)/ ToulBar2::NormFactor;}
 };
 
 #endif /*TB2HAPLOTYPE_HPP_*/

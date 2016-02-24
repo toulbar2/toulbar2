@@ -412,7 +412,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
 	Cost totaldiffcostb = costb;
 	ConstraintLink residue = ((dee)?DEE:DEE2[a * getDomainInitSize() + b]);
 	ConstraintLink residue2 = ((dee)?DEE:DEE2[b * getDomainInitSize() + a]);
-	if (costa <= costb && residue.constr && residue.constr->connected() && residue.constr->getVar(residue.scopeIndex) == this) {
+	if (costa <= costb && residue.constr && residue.constr->connected() && residue.scopeIndex < residue.constr->arity() && residue.constr->getVar(residue.scopeIndex) == this) {
 		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue.constr->getMaxCost(residue.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
@@ -420,7 +420,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
         if (totaldiffcostb <= getMaxCost()) totaldiffcostb += costs.second.second;
         if (totaldiffcosta > costb && totaldiffcostb > costa) return;
 	}
-	if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.constr->getVar(residue2.scopeIndex) == this) {
+	if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.scopeIndex < residue2.constr->arity() && residue2.constr->getVar(residue2.scopeIndex) == this) {
 		pair< pair<Cost,Cost>, pair<Cost,Cost> > costs = residue2.constr->getMaxCost(residue2.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost()) totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost()) totalmaxcostb += costs.second.first;
@@ -536,6 +536,7 @@ bool EnumeratedVariable::verifyDEE()
 void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
 	     if (newInf > sup) {THROWCONTRADICTION;
          } else {
@@ -551,9 +552,13 @@ void EnumeratedVariable::increaseFast(Value newInf)
     }
 }
 
-void EnumeratedVariable::increase(Value newInf)
+void EnumeratedVariable::increase(Value newInf, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) < newInf) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
+#endif
     if (newInf > inf) {
       if (newInf > sup) {THROWCONTRADICTION;
 	  } else {
@@ -575,6 +580,7 @@ void EnumeratedVariable::increase(Value newInf)
 void EnumeratedVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -590,9 +596,13 @@ void EnumeratedVariable::decreaseFast(Value newSup)
     }
 }
 
-void EnumeratedVariable::decrease(Value newSup)
+void EnumeratedVariable::decrease(Value newSup, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) > newSup) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
+#endif
     if (newSup < sup) {
 	    if (newSup < inf) {THROWCONTRADICTION;
         } else {
@@ -614,6 +624,7 @@ void EnumeratedVariable::decrease(Value newSup)
 void EnumeratedVariable::removeFast(Value value)
 {
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
+    assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) != value);
     if (value == inf) increaseFast(value + 1);
     else if (value == sup) decreaseFast(value - 1);
     else if (canbe(value)) {
@@ -624,9 +635,13 @@ void EnumeratedVariable::removeFast(Value value)
     }
 }
 
-void EnumeratedVariable::remove(Value value)
+void EnumeratedVariable::remove(Value value, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "remove " << *this << " <> " << value << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) == value) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) != value);
+#endif
     if (value == inf) increase(value + 1);
     else if (value == sup) decrease(value - 1);
     else if (canbe(value)) {
@@ -652,9 +667,13 @@ void EnumeratedVariable::assignWhenEliminated(Value newValue)
         maxCost = MIN_COST;
 }
 
-void EnumeratedVariable::assign(Value newValue)
+void EnumeratedVariable::assign(Value newValue, bool isDecision)
 {
     if (ToulBar2::verbose >= 2) cout << "assign " << *this << " -> " << newValue << endl;
+#ifndef NDEBUG
+    if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue) wcsp->setIsPartOfOptimalSolution(false);
+    assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) == newValue);
+#endif
     if (unassigned() || getValue() != newValue) {
         if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
@@ -689,6 +708,9 @@ void EnumeratedVariable::assign(Value newValue)
 void EnumeratedVariable::assignLS(Value newValue, set<Constraint *>& delayedCtrs)
 {
     if (ToulBar2::verbose >= 2) cout << "assignLS " << *this << " -> " << newValue << endl;
+#ifndef NDEBUG
+    if (wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue) wcsp->setIsPartOfOptimalSolution(false);
+#endif
     if (unassigned() || getValue() != newValue) {
         if (cannotbe(newValue)) THROWCONTRADICTION;
         changeNCBucket(-1);
@@ -953,7 +975,7 @@ void EnumeratedVariable::eliminate()
 {
 	if(isSep_) return;
     if (ToulBar2::nbDecisionVars>0 && wcspIndex < ToulBar2::nbDecisionVars) return;
-    if (ToulBar2::allSolutions && !ToulBar2::btdMode==1 && wcspIndex < ToulBar2::nbvar) return;
+    if (ToulBar2::allSolutions && ToulBar2::btdMode!=1 && wcspIndex < ToulBar2::nbvar) return;
 
 	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );
 

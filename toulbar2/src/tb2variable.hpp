@@ -75,10 +75,10 @@ public:
     virtual bool canbe(Value v) const {return v >= inf && v <= sup;}
     virtual bool cannotbe(Value v) const {return v < inf || v > sup;}
     
-    virtual void increase(Value newInf) =0;
-    virtual void decrease(Value newSup) =0;
-    virtual void remove(Value remValue) =0;
-    virtual void assign(Value newValue) =0;
+    virtual void increase(Value newInf, bool isDecision = false) =0;
+    virtual void decrease(Value newSup, bool isDecision = false) =0;
+    virtual void remove(Value remValue, bool isDecision = false) =0;
+    virtual void assign(Value newValue, bool isDecision = false) =0;
     virtual void assignLS(Value newValue, set<Constraint *>& delayedCtrs) =0;
 
 //    ConstraintList *getTriangles() {return &triangles;}

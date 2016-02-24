@@ -28,7 +28,26 @@
 #include <map>
 #include <sstream>
 #include <set>
+#include <queue>
 using namespace std;
+
+template<typename T1, typename T2, typename T3>
+struct triplet
+{
+    T1 first;
+    T2 second;
+    T3 third;
+};
+
+template<typename T1, typename T2, typename T3>
+triplet<T1,T2,T3> make_triplet(const T1 &m1, const T2 &m2, const T3 &m3)
+{
+    triplet<T1,T2,T3> ans;
+    ans.first = m1;
+    ans.second = m2;
+    ans.third = m3;
+    return ans;
+}
 
 // template<class T>
 // T abs(T x) {

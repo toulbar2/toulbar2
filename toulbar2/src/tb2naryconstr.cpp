@@ -87,7 +87,7 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 	EnumeratedVariable* y = (EnumeratedVariable*) xyz->getVar(1);
 	EnumeratedVariable* z = (EnumeratedVariable*) xyz->getVar(2);
     TernaryConstraint* ctr = x->getConstr(y,z);
-	if(ctr && (ctr->getCluster() != getCluster())) {
+	if(ctr && td && (ctr->getCluster() != getCluster())) {
      	TernaryConstraint* ctr_ = x->getConstr(y,z,getCluster());
      	if(ctr_) ctr = ctr_;
 	}
@@ -96,7 +96,7 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 		if(td) cout << "   cluster nary: " << getCluster() << endl; else cout << endl;
 		if(ctr) cout << "ctr exists" << endl;
 	}
-	if(!ctr || (ctr && cluster != ctr->getCluster())) {
+	if(!ctr || (ctr && td && cluster != ctr->getCluster())) {
  		 xyz->fillElimConstrBinaries();
 		 xyz->reconnect();
 		 if(ctr) xyz->setDuplicate();
@@ -105,7 +105,7 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 		xyz = ctr;
 	}
 	xyz->propagate();
-	assert( xyz->getCluster() == xyz->xy->getCluster() &&  xyz->getCluster() == xyz->xz->getCluster() &&  xyz->getCluster() == xyz->yz->getCluster() );
+	assert( !td || (xyz->getCluster() == xyz->xy->getCluster() &&  xyz->getCluster() == xyz->xz->getCluster() &&  xyz->getCluster() == xyz->yz->getCluster()) );
 }
 
 void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)

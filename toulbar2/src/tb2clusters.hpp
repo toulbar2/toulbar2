@@ -20,9 +20,16 @@ class Cluster;
 typedef set<int>	       TVars;
 typedef set<Constraint*>   TCtrs;
 //typedef map<int,Value>     TAssign;
-typedef set<Cluster*>	   TClusters;
 
-typedef pair<Cost,bool>     TPairNG;
+
+// sort cluster sons by mean separator size first and by number of variables in their subtree next
+struct CmpClusterStruct {
+  bool operator() (const Cluster *lhs, const Cluster *rhs) const;
+};
+typedef set<Cluster*>       TClusters;
+typedef set<Cluster*, CmpClusterStruct>       TClustersSorted;
+
+typedef triplet<Cost, Cost, Solver::OpenList >     TPairNG;
 typedef pair<Cost,String>   TPairSol;
 
 typedef map<String, TPairNG>  TNoGoods;
@@ -68,8 +75,8 @@ class Separator : public AbstractNaryConstraint
     TVars::iterator  begin() { return vars.begin(); }
     TVars::iterator  end()   { return vars.end(); }
 
-    void set( Cost c, bool opt );
-    bool get( Cost& res, bool& opt );
+    void set( Cost clb, Cost cub, Solver::OpenList **open = NULL );
+    bool get( Cost& clb, Cost& cub, Solver::OpenList **open = NULL );
 
     void setSg( Cost c, BigInteger nb );
     BigInteger getSg( Cost& res, BigInteger& nb );
@@ -77,7 +84,8 @@ class Separator : public AbstractNaryConstraint
 	void solRec( Cost ub );
 	bool solGet( TAssign& a, String& sol );
 
-	void resetOpt();
+	void resetLb();
+    void resetUb();
 
     void queueSep() { wcsp->queueSeparator(&linkSep); }
     void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
@@ -113,6 +121,7 @@ class Cluster
   TVars				  vars; // contains all variables inside a cluster including separator variables
   TCtrs			      ctrs; // intermediate usage by bucket elimination (DO NOT USE)
   TClusters           edges; // adjacent clusters (includes parent cluster before makeRooted is done)
+  TClustersSorted     sortedEdges; // cluster sons are sorted after makeRooted is done
 
   Cluster*			  parent; // parent cluster
   TClusters           descendants; // set of cluster descendants (including itself)
@@ -121,6 +130,7 @@ class Cluster
 
   Separator* 	      sep; // associated separator with parent cluster
   StoreCost           lb; // current cluster lower bound deduced by propagation
+  Cost                ub; // current cluster best known solution cost
   Cost				  lbRDS; // global cluster lower bound found by RDS
   StoreInt			  active; // unactive if a nogood including this cluster has been used by propagation
 
@@ -133,21 +143,30 @@ class Cluster
 
 	  void          setup();
 
-	  int           getId() { return id; }
+	  int           getId() const { return id; }
 	  void          setId(int iid) { id=iid; }
 
 	  WCSP* 		getWCSP() { return wcsp; }
 
       Separator*    getSep() { return sep; }
 	  void 			setSep( Separator* sepin ) { sep = sepin; }
-	  int			sepSize() { if(sep) return sep->arity(); else return 0; }
+	  int			sepSize() const { if(sep) return sep->arity(); else return 0; }
       void          deconnectSep(); // deconnect all the constraints on separator variables and assigns separator variables to their support value
       void 			deconnectDiff(TCtrs listCtrsTot,TCtrs listCtrs);
       bool 			isSepVar( int i ) { if(!sep) return false; return sep->is(i); }
 
+      Solver::CPStore*      cp;         // choice point cache for open nodes related to this cluster
+      Solver::OpenList*     open;       // list of open nodes related to this cluster
+      Long          hbfsGlobalLimit;    // global limit on number of backtracks for hybrid search on the subproblem rooted to this cluster
+      Long          hbfsLimit;          // local limit on number of backtracks for hybrid search on this cluster only
+      Long          nbBacktracks;       // current number of backtracks related to this cluster
+      Long          getNbBacktracksClusterTree() const {Long res = nbBacktracks; for (TClusters::const_iterator iter = beginEdges(); iter != endEdges(); ++iter) res += (*iter)->getNbBacktracksClusterTree(); return res;}
+      vector<Cluster *>   sons;         // copy of edges allowing sorting
+
       bool 			isVar( int i ) { TVars::iterator it = vars.find(i); return it != vars.end(); }
-	  int			getNbVars() { return vars.size(); }
+	  int			getNbVars() const { return vars.size(); }
 	  TVars&		getVars() { return vars; }
+      int           getNbVarsTree() const { return varsTree.size(); }
 	  TVars&		getVarsTree() { return varsTree; }
 	  TCtrs 		getCtrsTree();
 	  void 			addVars( TVars& vars );
@@ -172,24 +191,28 @@ class Cluster
 	  void 			addCtr( Constraint* c );
 	  void 			sum( TCtrs& c1, TCtrs& c2, TCtrs& ctout );
 
-	  bool			isActive() { int a = active; return a == 1; }
+	  bool			isActive() const { int a = active; return a == 1; }
 	  void 			deactivate();
 	  void 			reactivate();
 
 	  Cost			getLb()  { return lb; }
 	  void			setLb(Cost c)  { lb = c; }
       void 			increaseLb( Cost addToLb ) { lb += addToLb; }
-	  Cost		    getLbRDS() { Cost delta = (sep)?sep->getCurrentDelta():MIN_COST; return MAX(lbRDS - delta, MIN_COST); }
+      Cost          getUb() const { return ub; }
+      void          setUb(Cost c) {ub = c;}
+	  Cost		    getLbRDS() { Cost delta = getCurrentDelta(); return MAX(lbRDS - delta, MIN_COST); }
 	  void			setLbRDS(Cost c)  {assert(!sep || sep->getCurrentDelta()==MIN_COST); lbRDS = c; }
-	  Cost	        getLbRec();
+	  Cost	        getLbRec() const;
 	  Cost	        getLbRecRDS();
 
 	  void          addDelta( int posvar, Value value, Cost cost ) {assert(sep); sep->addDelta(posvar,value,cost); }
+	  Cost          getCurrentDelta() {return (sep)?sep->getCurrentDelta():MIN_COST;}
 
-	  void          nogoodRec( Cost c, bool opt ) { if(sep) sep->set(c,opt); }
-      Cost          nogoodGet( bool& opt ) { Cost c = MIN_COST; sep->get(c,opt); return c; }
+	  void          nogoodRec( Cost clb, Cost cub, Solver::OpenList **open = NULL ) { if(sep) sep->set(clb,cub,open); }
+      bool          nogoodGet( Cost &clb, Cost &cub, Solver::OpenList **open = NULL ) { return sep->get(clb,cub,open); }
 
-      void          resetOptRec(Cluster *rootCluster);
+      void          resetLbRec();
+      void          resetUbRec(Cluster *rootCluster);
 
   	  void			sgoodRec( Cost c, BigInteger nb) { if(sep) sep->setSg(c,nb);}
   	  BigInteger		sgoodGet( ){Cost c = MIN_COST; BigInteger nb; sep->getSg(c,nb); return nb; }
@@ -199,7 +222,7 @@ class Cluster
   	  int			getPart(){return num_part;}
   	  void			setPart(int num){num_part=num;}
 
-	  void          solutionRec(Cost ub) { if(sep) sep->solRec(ub); }
+	  void          solutionRec(Cost c) { setUb(c); if(sep) sep->solRec(c); }
       void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
 
 	  void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
@@ -213,18 +236,22 @@ class Cluster
 	  TVars::iterator endSep()   { return sep->end(); }
 	  TCtrs::iterator beginCtrs() { return ctrs.begin(); }
 	  TCtrs::iterator endCtrs()   { return ctrs.end(); }
-	  TClusters::iterator beginEdges() { return edges.begin(); }
-	  TClusters::iterator endEdges()   { return edges.end(); }
+	  TClusters::iterator beginEdges() const { return edges.begin(); }
+	  TClusters::iterator endEdges() const { return edges.end(); }
 	  TClusters::iterator beginDescendants() { return descendants.begin(); }
 	  TClusters::iterator endDescendants()   { return descendants.end(); }
+
+	  void sortEdgesRec() {for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) (*iter)->sortEdgesRec(); TClustersSorted tmpset(edges.begin(), edges.end(), CmpClusterStruct()); sortedEdges = tmpset;}
+      TClusters::iterator beginSortedEdges() const { return sortedEdges.begin(); }
+      TClusters::iterator endSortedEdges() const { return sortedEdges.end(); }
 
 	  void print();
       void dump();
 	  void printStats() { if(!sep) return; sep->print(cout); }
 
 	  void printStatsRec() {
-	  		TClusters::iterator it = beginEdges();
-			while(it != endEdges()) {
+	  		TClusters::iterator it = beginSortedEdges();
+			while(it != endSortedEdges()) {
 				(*it)->sep->print(cout);
 				(*it)->printStatsRec();
 				++it;

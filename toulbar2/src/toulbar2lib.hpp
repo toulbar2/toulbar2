@@ -77,6 +77,7 @@ public:
 	/// \param varIndexes vector of variable indexes as returned by makeXXXVariable
 	/// \param newValues vector of values to be assigned to the corresponding variables
     virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) =0;
+    virtual void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate) =0;
 
     virtual Cost getUnaryCost(int varIndex, Value v) const =0;			///< \brief unary cost associated to a domain value
     virtual Cost getMaxUnaryCost(int varIndex) const =0;				///< \brief maximum unary cost in the domain
@@ -84,6 +85,8 @@ public:
     virtual Value getSupport(int varIndex) const =0;					///< \brief NC/EAC unary support value
     virtual Value getBestValue(int varIndex) const =0;					///< \brief hint for some value ordering heuristics (only used by RDS)
     virtual void setBestValue(int varIndex, Value v) =0;				///< \brief hint for some value ordering heuristics (only used by RDS)
+    virtual bool getIsPartOfOptimalSolution() =0;                       ///< \brief special flag used for debugging purposes only
+    virtual void setIsPartOfOptimalSolution(bool v) =0;                 ///< \brief special flag used for debugging purposes only
 
     virtual int getDegree(int varIndex) const =0;			///< \brief approximate degree of a variable (\e ie number of active cost functions, see \ref varelim)
     virtual int getTrueDegree(int varIndex) const =0;		///< \brief degree of a variable
@@ -159,7 +162,7 @@ public:
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval) =0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) =0;
-    virtual void postNaryConstraintEnd(int ctrindex) =0;
+    virtual void postNaryConstraintEnd(int ctrindex) =0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints and WeightedCSP::histogram)
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL) =0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) =0;
@@ -363,10 +366,10 @@ public:
     virtual Long getNbNodes() const =0;				///< \brief number of search nodes (see WeightedCSPSolver::increase, WeightedCSPSolver::decrease, WeightedCSPSolver::assign, WeightedCSPSolver::remove)
     virtual Long getNbBacktracks() const =0;		///< \brief number of backtracks
 
-    virtual void increase(int varIndex, Value value) =0;	///< \brief changes domain lower bound and propagates
-    virtual void decrease(int varIndex, Value value) =0;	///< \brief changes domain upper bound and propagates
-    virtual void assign(int varIndex, Value value) =0;		///< \brief assigns a variable and propagates
-    virtual void remove(int varIndex, Value value) =0;		///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
+    virtual void increase(int varIndex, Value value, bool reverse = false) =0;	///< \brief changes domain lower bound and propagates
+    virtual void decrease(int varIndex, Value value, bool reverse = false) =0;	///< \brief changes domain upper bound and propagates
+    virtual void assign(int varIndex, Value value, bool reverse = false) =0;		///< \brief assigns a variable and propagates
+    virtual void remove(int varIndex, Value value, bool reverse = false) =0;		///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
 
     virtual void read_wcsp(const char *fileName) =0;		///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;	///< \brief create a random WCSP, see WeightedCSP::read_random

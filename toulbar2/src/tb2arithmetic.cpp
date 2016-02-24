@@ -122,8 +122,6 @@ void Unary::propagate()
 	    print(cout);
         cout << " dxinf=" << deltaValueXinf << " dxsup=" << deltaValueXsup << endl;
     }
-
-	assert(connected());
 	wcsp->revise(this);
 	set<Value>::iterator itinf = permitted.lower_bound(x->getInf());
 	set<Value>::iterator itsup = permitted.upper_bound(x->getSup());
@@ -263,7 +261,6 @@ void Disjunction::propagate()
 	print(cout);
 	cout << " dxinf=" << deltaValueXinf << " dxsup=" << deltaValueXsup << " dyinf=" << deltaValueYinf << " dysup=" << deltaValueYsup << endl;
   }
-  assert(connected());
   wcsp->revise(this);
   // deconnect the constraint if always satisfied
   if (x->getInf() >= y->getSup() + csty || y->getInf() >= x->getSup() + cstx) {

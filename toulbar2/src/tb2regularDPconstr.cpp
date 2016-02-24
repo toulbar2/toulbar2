@@ -52,7 +52,7 @@ void RegularDPConstraint::read(istream & file) {
 void RegularDPConstraint::initMemoization() {
     dfa.finalize();
 
-        resizeTable(f, arity()+1, dfa.size());
+    resizeTable(f, arity()+1, dfa.size());
 	resizeTable(curf, arity()+1, dfa.size());
 	resizeTable(invf, arity()+1, dfa.size());
 	resizeTable(u, arity()+1, dfa.symbol.size());

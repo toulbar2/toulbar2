@@ -100,7 +100,7 @@ bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
 ofstream ToulBar2::solution_file;
-string ToulBar2::solution_filename;
+string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
 bool ToulBar2::uai_firstoutput;
 TLogProb ToulBar2::markov_log;
@@ -178,6 +178,15 @@ bool ToulBar2::learning;
 string ToulBar2::incop_cmd;
 unsigned ToulBar2::seed;
 
+Long ToulBar2::hbfs;
+Long ToulBar2::hbfsGlobalLimit;
+Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
+Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
+ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
+ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+
+bool ToulBar2::verifyOpt;
+Cost ToulBar2::verifiedOptimum;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
@@ -233,7 +242,7 @@ void tb2init()
 
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
-    ToulBar2::solution_filename = "sol";
+    ToulBar2::solution_uai_filename = "sol";
     ToulBar2::problemsaved_filename = "problem.wcsp";
     ToulBar2::uai_firstoutput = true;
     ToulBar2::markov_log = 0;
@@ -296,6 +305,15 @@ void tb2init()
 
     ToulBar2::incop_cmd = "";
     ToulBar2::seed=std::chrono::system_clock::now().time_since_epoch().count(); //initialize the seed to generate different random distrib.
+    ToulBar2::hbfs = 1;
+    ToulBar2::hbfsGlobalLimit = 10000;
+    ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
+    ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
+    ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
+    ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+
+    ToulBar2::verifyOpt = false;
+    ToulBar2::verifiedOptimum = MAX_COST;
 }
 
 /*
@@ -307,8 +325,8 @@ void tb2init()
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 	solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
 			NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
-			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(false),
-			elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
+			objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0), isDelayedNaryCtr(true),
+			isPartOfOptimalSolution(0, &s->storeInt), elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
 	        maxDegree(-1), elimSpace(0) {
 	instance = wcspCounter++;
 	if (ToulBar2::vac) vac = new VACExtension(this);
@@ -361,6 +379,11 @@ int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
 
 /// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
+    if (ToulBar2::vac) {
+        cerr << "VAC not implemented on interval variables!" << endl;
+        ToulBar2::vac = 0;
+        ToulBar2::minsumDiffusion = 0;
+    }
 	IntervalVariable *x = new IntervalVariable(this, n, iinf, isup);
 	listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
 	return x->wcspIndex;
@@ -373,7 +396,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
 ///
 /// \note It looks for an existing constraint
 /// (even not connected constraints). It also allocates
-/// memory for a new constraint. For this two reasons it should
+/// memory for a new constraint. For these two reasons it should
 /// ONLY be called before search.
 ///
 /// \warning Vector costs must have the same size as Cartesian product of original domains.
@@ -484,7 +507,10 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 		}
 
 		ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs, &storeData->storeCost);
-	} else ctr->addCosts(x, y, z, costs);
+	} else {
+	    ctr->addCosts(x, y, z, costs);
+	    ctr->propagate();
+	}
 
 	return ctr->wcspIndex;
 }
@@ -1186,8 +1212,9 @@ void WCSP::sortConstraints()
 
 	setDACOrder(revdac);
   }
-  if (ToulBar2::varOrder) {
-	vector<int> order;
+  // postpone costly variable elimination heuristics if too many variables
+  if (ToulBar2::varOrder && (numberOfVariables() < 10000 || ((long)((void *) ToulBar2::varOrder)) < 2 || ((long)((void *) ToulBar2::varOrder)) > 6)) {
+    vector<int> order;
 	elimOrderFile2Vector(ToulBar2::varOrder, order);
 	setDACOrder(order);
   }
@@ -1344,6 +1371,11 @@ void WCSP::preprocessing() {
 	propagate();
 
 	// recompute current DAC order and its reverse
+	if (ToulBar2::varOrder && numberOfVariables() >= 10000 && numberOfUnassignedVariables() < 10000 && (((long)((void *) ToulBar2::varOrder)) >= 2 && ((long)((void *) ToulBar2::varOrder)) <= 6)) {
+	    vector<int> order;
+	    elimOrderFile2Vector(ToulBar2::varOrder, order);
+	    setDACOrder(order);
+	}
 	vector<int> elimorder(numberOfVariables(), -1);
 	vector<int> revelimorder(numberOfVariables(), -1);
 	for (unsigned int i = 0; i < numberOfVariables(); i++) {
@@ -1719,11 +1751,11 @@ void WCSP::dump(ostream& os, bool original) {
 	unsigned int maxdomsizeUI = 0;
 	Value xcosts = 0;
 	// dump filename
-	char Pb_basename[80];
-	char Pb_graph[80];
-	char Pb_degree[80];
+	char Pb_basename[512];
+	char Pb_graph[512];
+	char Pb_degree[512];
 
-	strcpy(Pb_basename, "problem");
+	strcpy(Pb_basename, ToulBar2::problemsaved_filename.c_str());
 	strcpy(Pb_graph, Pb_basename);
 	strcpy(Pb_degree, Pb_basename);
 
@@ -1800,7 +1832,7 @@ void WCSP::dump(ostream& os, bool original) {
 	                / 2);
 	    pb << "// number of constraint = " << res << " number of variable=  " << numberOfVariables() << endl;
 	    for (unsigned int i = 0; i < constrs.size(); i++)
-	        if (constrs[i]->connected()) {
+	        if (!constrs[i]->isSep() && constrs[i]->connected()) {
 	            //            pb << constrs[i]->getVar(0)->wcspIndex + 1;
 	            //            for (int j=1; j<constrs[i]->arity(); j++) {
 	            //                pb << " " << constrs[i]->getVar(j)->wcspIndex + 1;
@@ -1856,7 +1888,11 @@ void WCSP::dump(ostream& os, bool original) {
 	    //#######################dump degree distribution ###################
 	}
 
-	if (ToulBar2::pedigree) ToulBar2::pedigree->save("problem.pre", this, false, true);
+	if (ToulBar2::pedigree) {
+	    string problemname = ToulBar2::problemsaved_filename;
+	    if (problemname.rfind( ".wcsp" ) != string::npos) problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
+	    ToulBar2::pedigree->save((problemname.rfind( "problem.pre" ) == string::npos)?problemname.c_str():"problem_corrected.pre", this, false, true);
+	}
 }
 
 ostream& operator<<(ostream& os, WCSP &wcsp) {
@@ -2917,14 +2953,13 @@ void WCSP::buildTreeDecomposition() {
 		for (unsigned int i=0; i<numberOfConstraints(); i++) if (constrs[i]->getCluster()==-1) constrs[i]->assignCluster();
 		for (int i=0; i<elimBinOrder; i++) if (elimBinConstrs[i]->connected() && elimBinConstrs[i]->getCluster()==-1) elimBinConstrs[i]->assignCluster();
 		for (int i=0; i<elimTernOrder; i++) if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getCluster()==-1) elimTernConstrs[i]->assignCluster();
-		// check if ternary constraint cluster assignments are valid
-#ifndef NDEBUG
+		// check if ternary constraint cluster assignments are valid and do corrections if needed
 		for (unsigned int i=0; i<numberOfConstraints(); i++) {
 		  Constraint* ctr = getCtr(i);
 		  if (ctr->connected() && !ctr->isSep()) {
 			if(ctr->arity() == 3) {
 			  TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-			  //			  tctr->setDuplicates();
+			  tctr->setDuplicates();
 			  assert(tctr->xy->getCluster() == tctr->getCluster() &&
 					 tctr->xz->getCluster() == tctr->getCluster() &&
 					 tctr->yz->getCluster() == tctr->getCluster() );
@@ -2936,14 +2971,13 @@ void WCSP::buildTreeDecomposition() {
 			if (ctr->connected() && !ctr->isSep()) {
 			  if(ctr->arity() == 3) {
 				TernaryConstraint* tctr = (TernaryConstraint*) ctr;
-				//				tctr->setDuplicates();
+				tctr->setDuplicates();
 				assert(tctr->xy->getCluster() == tctr->getCluster() &&
 					   tctr->xz->getCluster() == tctr->getCluster() &&
 					   tctr->yz->getCluster() == tctr->getCluster() );
 			  }
 			}
 		  }
-#endif
 	}
 }
 
@@ -3008,7 +3042,7 @@ void WCSP::setDACOrder(vector<int> &order) {
 		Constraint* ctr = getCtr(i);
 		ctr->setDACScopeIndex();
 		 // Postpone global constraint propagation at the end (call to WCSP::propagate())
-		if (ctr->connected() && !ctr->isGlobal()) ctr->propagate();
+		if (ctr->connected() && !ctr->isGlobal() && !ctr->isSep()) ctr->propagate();
 	}
 	for (int i = 0; i < elimBinOrder; i++) {
 		Constraint* ctr = elimBinConstrs[i];

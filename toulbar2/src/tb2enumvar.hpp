@@ -61,10 +61,10 @@ public:
     bool canbeAfterElim(Value v) const {return domain.canbe(v);}
     bool cannotbe(Value v) const {return v < inf || v > sup || domain.cannotbe(v);}
     
-    virtual void increase(Value newInf);
-    virtual void decrease(Value newSup);
-    virtual void remove(Value value);
-    virtual void assign(Value newValue);
+    virtual void increase(Value newInf, bool isDecision = false);
+    virtual void decrease(Value newSup, bool isDecision = false);
+    virtual void remove(Value value, bool isDecision = false);
+    virtual void assign(Value newValue, bool isDecision = false);
     void assignWhenEliminated(Value newValue);
     void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
 
