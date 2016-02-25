@@ -25,7 +25,7 @@ public:
         ptrdiff_t last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
         OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_) : cost(cost_), first(first_), last(last_) {}
-        bool operator<(const OpenNode& right) const {return (cost > right.cost) || (cost == right.cost && ((last-first) < (right.last-right.first) || ((last-first) == (right.last-right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
+        bool operator<(const OpenNode &right) const {return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
     };
@@ -40,7 +40,7 @@ public:
         OpenList() : clb(MAX_COST), cub(MAX_COST) {} /// \warning use also this method to clear an open list
 
         bool finished() const {assert(clb <= cub); return (empty() || CUT(top().getCost(), clb));}
-        Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty()?MAX_COST:top().getCost(delta)));}
+        Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta)));}
 
         Cost getClosedNodesLb(Cost delta = MIN_COST) const {return MAX(MIN_COST, clb - delta);}
         void setClosedNodesLb(Cost lb, Cost delta = MIN_COST) {clb = MAX(MIN_COST, lb + delta); assert(clb <= cub);}
@@ -67,15 +67,15 @@ public:
 
     class CPStore : public vector<ChoicePoint>
     {
-        public:
-            ptrdiff_t start;       // beginning of the current branch
-            ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
-            StoreCost index;  // current branch depth (should be free at this position)
+    public:
+        ptrdiff_t start;       // beginning of the current branch
+        ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
+        StoreCost index;  // current branch depth (should be free at this position)
 
-            CPStore(Store *s) : start(0), stop(0), index(0, &s->storeCost) {}
+        CPStore(Store *s) : start(0), stop(0), index(0, &s->storeCost) {}
 
-            void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
-            void store() {start = stop; index = start;}
+        void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
+        void store() {start = stop; index = start;}
     };
 
     void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
@@ -92,12 +92,12 @@ protected:
     BTList<Value> *unassignedVars;
     int lastConflictVar;
     void *searchSize;
-	
+
     BigInteger nbSol;
-    int nbSoldiv=0;
+    int nbSoldiv = 0;
     Long nbSGoods;				//number of #good which created
     Long nbSGoodsUse;			//number of #good which used
-    map<int,BigInteger > ubSol;	// upper bound of solution number
+    map<int, BigInteger > ubSol;	// upper bound of solution number
     double timeDeconnect;		// time for the disconnection
 
     CPStore *cp;                // choice point cache for open nodes (except BTD)
@@ -120,16 +120,16 @@ protected:
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict();
-	int getVarMinDomainDivMaxWeightedDegreeRandomized();
-	int getVarMinDomainDivMaxWeightedDegree();
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+    int getVarMinDomainDivMaxWeightedDegreeRandomized();
+    int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflictRandomized();
     int getVarMinDomainDivMaxDegreeLastConflict();
     int getVarMinDomainDivMaxDegreeRandomized();
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
-  int getNextScpCandidate();
+    int getNextScpCandidate();
     void increase(int varIndex, Value value, bool reverse = false);
     void decrease(int varIndex, Value value, bool reverse = false);
     void assign(int varIndex, Value value, bool reverse = false);
@@ -143,7 +143,7 @@ protected:
     void enforceUb();
 
     void singletonConsistency();
-  void scpChoicePoint(int xIndex, Value value, Cost lb);
+    void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
@@ -155,9 +155,9 @@ protected:
     void scheduleOrPostpone(int varIndex);
 
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
-	int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster *cluster);
+    int getVarMinDomainDivMaxWeightedDegree(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeLastConflict(Cluster *cluster);
     int getVarMinDomainDivMaxDegreeRandomized(Cluster *cluster);
@@ -166,20 +166,20 @@ protected:
 
     pair<Cost, Cost> binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost cub, int varIndex, Value value);
     pair<Cost, Cost> recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub);
-    pair<Cost,Cost> hybridSolve(Cluster *root, Cost clb, Cost cub);
-    pair<Cost,Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
-    pair<Cost,Cost> russianDollSearch(Cluster *c, Cost cub);
+    pair<Cost, Cost> hybridSolve(Cluster *root, Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
+    pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
     BigInteger sharpBTD(Cluster *cluster);
-    void approximate(BigInteger& nbsol, TreeDecomposition* td);
+    void approximate(BigInteger &nbsol, TreeDecomposition *td);
 
 public:
     Solver(int storeSize, Cost initUpperBound);
     ~Solver();
 
     void read_wcsp(const char *fileName);
-    void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
+    void read_random(int n, int m, vector<int> &p, int seed, bool forceSubModular = false);
 
     Long getNbNodes() const {return nbNodes;}
     Long getNbBacktracks() const {return nbBacktracks;}
@@ -195,11 +195,11 @@ public:
     void read_solution(const char *fileName);
     void parse_solution(const char *certificate);
 
-    Cost getSolution(vector<Value>& solution);
+    Cost getSolution(vector<Value> &solution);
 
     friend void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
-    WeightedCSP* getWCSP() { return wcsp; }
+    WeightedCSP *getWCSP() { return wcsp; }
 };
 
 class NbBacktracksOut

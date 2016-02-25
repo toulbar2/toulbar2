@@ -29,7 +29,7 @@
 //       ub_reference.push_back(sort_criterium[i][initial_sol[i]]);
 //     }
 // }
-        
+
 // void Tb2ScpBranch::read_solution(const char *filename)
 // {
 //   wcsp->propagate();
@@ -108,54 +108,51 @@
 
 tuple<size_t, size_t> Tb2ScpBranch::getBounds(int varIndex, Value value)
 {
-  size_t left;
-  size_t right;
-  char type = ToulBar2::cpd->getAA(varIndex, value);
-  for(size_t i=(size_t) value;i>=0;i--)
-    if (ToulBar2::cpd->getAA(varIndex, (Value) i) == type)
-      left=i;
-    else
-      break;
-  for(size_t i=(size_t) value;i<ToulBar2::cpd->rot2aaSize(varIndex);i++)
-    if (ToulBar2::cpd->getAA(varIndex, (Value) i) == type)
-      right=i;
-    else
-      break;
-  return make_tuple(left,right);
+    size_t left;
+    size_t right;
+    char type = ToulBar2::cpd->getAA(varIndex, value);
+    for (size_t i = (size_t) value; i >= 0; i--)
+        if (ToulBar2::cpd->getAA(varIndex, (Value) i) == type)
+            left = i;
+        else
+            break;
+    for (size_t i = (size_t) value; i < ToulBar2::cpd->rot2aaSize(varIndex); i++)
+        if (ToulBar2::cpd->getAA(varIndex, (Value) i) == type)
+            right = i;
+        else
+            break;
+    return make_tuple(left, right);
 }
 
-size_t Tb2ScpBranch::moveAAFirst(ValueCost * sorted, size_t domsize, size_t left, size_t right)
+size_t Tb2ScpBranch::moveAAFirst(ValueCost *sorted, size_t domsize, size_t left, size_t right)
 {
-  ValueCost tmp;
-  size_t cursor=0;
-  for(size_t i=0; i<domsize;i++)
-    {
-      if (sorted[i].value>=left && sorted[i].value<=right)
-        {
-          tmp = sorted[cursor];
-          sorted[cursor] = sorted[i];
-          sorted[i] = tmp;
-          cursor++;
+    ValueCost tmp;
+    size_t cursor = 0;
+    for (size_t i = 0; i < domsize; i++) {
+        if (sorted[i].value >= left && sorted[i].value <= right) {
+            tmp = sorted[cursor];
+            sorted[cursor] = sorted[i];
+            sorted[i] = tmp;
+            cursor++;
         }
     }
-  return cursor;
+    return cursor;
 }
 
 
 bool Tb2ScpBranch::multipleAA(int varIndex, ValueCost *sorted, int domsize)
 {
-  char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
-  for(size_t i=0;i<domsize;i++)
-    {
-      if (ToulBar2::cpd->getAA(varIndex, sorted[i].value)!=type)
-        return true;
+    char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
+    for (size_t i = 0; i < domsize; i++) {
+        if (ToulBar2::cpd->getAA(varIndex, sorted[i].value) != type)
+            return true;
     }
-  return false;
+    return false;
 }
 
 // void Tb2ScpBranch::keep(size_t begin, size_t end, size_t var_index)
 // {
-//   size_t domsize = sort_criterium[var_index].size(); 
+//   size_t domsize = sort_criterium[var_index].size();
 //   if (begin)
 //     sort_criterium[var_index].erase(0,begin-1);
 //   if (domsize>end+1)

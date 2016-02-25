@@ -6,5 +6,5 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */

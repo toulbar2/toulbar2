@@ -8,7 +8,8 @@
 #include "tb2flowbasedconstr.hpp"
 #include "tb2automaton.hpp"
 
-class RegularFlowConstraint : public FlowBasedGlobalConstraint {
+class RegularFlowConstraint : public FlowBasedGlobalConstraint
+{
 private:
 
     struct DFA : public WeightedAutomaton {
@@ -19,16 +20,16 @@ private:
         int nstate;
 
         DFA() : transition(NULL), nstate(0) {}
-        
+
         void setNumStates(int size) {
             transition = new vector<pair<int, int> >[size];
             nstate = size;
         }
-        
+
         void addInitialState(int begin) {
             init.push_back(begin);
         }
-        
+
         void addFinalState(int end) {
             final.push_back(end);
         }
@@ -72,13 +73,13 @@ private:
             cout << endl;
         }
     };
-    
-    template<class Element> 
+
+    template<class Element>
     struct min_priority_queue: public priority_queue<Element, vector<Element>, greater<Element> > {};
-        
+
     static const int EDIT = 1;
     static const int VAR = 0;
-    
+
     static const int INS_TAG = -(INT_MAX >> 3);
 
 
@@ -87,7 +88,7 @@ private:
     typedef vector<map<int, map<int, Cost> > > CostTable; //[start][char][end]
     CostTable costTb;
     int epsilonChar;
-    
+
     vector<Cost> fromSource;
     vector<Cost> toSink;
     vector<vector<Cost> > table;
@@ -100,7 +101,7 @@ private:
         return make_pair(0, 0);
     }
 
-    Cost constructFlow(Graph &graph) {        
+    Cost constructFlow(Graph &graph) {
         computeShortestPath(graph, cost);
         return cost;
     }
@@ -111,17 +112,17 @@ private:
     void buildGraph(Graph &g);
     void buildGraphBasic(Graph &g, bool needRebuildIndex);
     void computeShortestPath(Graph &g, StoreCost &cost);
-    
+
     void buildWeightedDFATable();
 
     /*Cost evalOriginal(String s) {
         return 0;
     }*/
     Cost evalOriginal(String s);
-            
-    
+
+
 public:
-    RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
+    RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in);
 
     ~RegularFlowConstraint() {
     }
@@ -131,15 +132,15 @@ public:
     }
     //Cost eval(String s);
     void read(istream &file);
-    WeightedAutomaton* getWeightedAutomaton() {return &dfa;}
+    WeightedAutomaton *getWeightedAutomaton() {return &dfa;}
     void organizeConfig();
 
     virtual Cost getMinCost() {
-        return constructFlow(*graph);     
-    }    
+        return constructFlow(*graph);
+    }
 
-    void print(ostream& os);
-    
+    void print(ostream &os);
+
 };
 
 #endif

@@ -1,6 +1,6 @@
 /** \file tb2enumvar.hpp
  *  \brief Variable with domain represented by an enumerated domain.
- * 
+ *
  */
 
 #ifndef TB2ENUMVAR_HPP_
@@ -15,7 +15,7 @@ protected:
     Domain domain;
     vector<StoreCost> costs;
     StoreCost deltaCost;
-    StoreValue support;     // Warning! the unary support has to be backtrackable 
+    StoreValue support;     // Warning! the unary support has to be backtrackable
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -30,15 +30,15 @@ protected:
     vector<ConstraintLink> DEE2;		///< \brief residue for generalized dead-end elimination
 
     void init();
-        
+
     virtual void increaseFast(Value newInf);        // Do not check for a support nor insert in NC and DAC queue
     virtual void decreaseFast(Value newSup);        // Do not check for a support nor insert in NC and DAC queue
     virtual void removeFast(Value val);             // Do not check for a support nor insert in NC and DAC queue
-    
-public:    
+
+public:
     EnumeratedVariable(WCSP *wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP *wcsp, string n, Value *d, int dsize);
-    
+
     bool enumerated() const {return true;}
 
     unsigned int getDomainInitSize() const {return domain.getInitSize();}
@@ -51,40 +51,40 @@ public:
 #endif
     unsigned int toCurrentIndex(Value v) {return domain.toCurrentIndex(v);} // return value position in current domain
     unsigned int getDomainSize() const {
-        if (assigned()) return 1; 
+        if (assigned()) return 1;
         else return domain.getSize(); ///< \warning can return a negative size in the case of a wrong list utilization
     }
-	void getDomain(Value *array);
-	void getDomainAndCost(ValueCost *array);
-	
+    void getDomain(Value *array);
+    void getDomainAndCost(ValueCost *array);
+
     bool canbe(Value v) const {return v >= inf && v <= sup && domain.canbe(v);}
     bool canbeAfterElim(Value v) const {return domain.canbe(v);}
     bool cannotbe(Value v) const {return v < inf || v > sup || domain.cannotbe(v);}
-    
+
     virtual void increase(Value newInf, bool isDecision = false);
     virtual void decrease(Value newSup, bool isDecision = false);
     virtual void remove(Value value, bool isDecision = false);
     virtual void assign(Value newValue, bool isDecision = false);
     void assignWhenEliminated(Value newValue);
-    void assignLS(Value newValue, set<Constraint *>& delayedCtrs);
+    void assignLS(Value newValue, set<Constraint *> &delayedCtrs);
 
     virtual void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
     virtual void extend(Value value, Cost cost);
     virtual void extendAll(Cost cost);
     Value getSupport() const {return support;}
-    void setSupport(Value val) {support = val;}    
+    void setSupport(Value val) {support = val;}
     inline Cost getCost(const Value value) const {
         return costs[toIndex(value)] - deltaCost;
     }
     Cost getBinaryCost(ConstraintLink c,    Value myvalue, Value itsvalue);
-	Cost getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue);
-            
+    Cost getBinaryCost(BinaryConstraint *c, Value myvalue, Value itsvalue);
+
     Cost getInfCost() const {return costs[toIndex(getInf())] - deltaCost;}
     Cost getSupCost() const {return costs[toIndex(getSup())] - deltaCost;}
     void projectInfCost(Cost cost);
     void projectSupCost(Cost cost);
 
-    void propagateNC();    
+    void propagateNC();
     bool verifyNC();
     void queueAC();                     // public method used also by tb2binconstr.hpp
     void queueDAC();
@@ -99,31 +99,32 @@ public:
     bool isEAC(Value a);
     bool isEAC();
     void propagateEAC();
-	void setCostProvidingPartition();
+    void setCostProvidingPartition();
     virtual void queueVAC2() {}
 
     void eliminate();
-    bool elimVar( BinaryConstraint* xy );
-    bool elimVar( ConstraintLink xylink,  ConstraintLink xzlink );
-    bool elimVar( TernaryConstraint* xyz );
+    bool elimVar(BinaryConstraint *xy);
+    bool elimVar(ConstraintLink xylink,  ConstraintLink xzlink);
+    bool elimVar(TernaryConstraint *xyz);
 
     void queueDEE();
     void propagateDEE(Value a, Value b, bool dee = true);
     bool verifyDEE(Value a, Value b);
     bool verifyDEE();
-    
+
     void queueZ();
     bool Marginalisation();
     void UnaryNormalization();
     bool Normalization();
-     
+
     // merge current cost functions to x's list by replacing current variable y by x thanks to functional constraint xy (i.e., y := functional[x])
-    void mergeTo( BinaryConstraint *xy, map<Value, Value> &functional);
+    void mergeTo(BinaryConstraint *xy, map<Value, Value> &functional);
     bool canbeMerged(EnumeratedVariable *x);
 
     class iterator;
     friend class iterator;
-    class iterator {
+    class iterator
+    {
         EnumeratedVariable *var;
         Domain::iterator diter;
     public:
@@ -131,7 +132,7 @@ public:
         iterator(EnumeratedVariable *v, Domain::iterator iter) : var(v), diter(iter) {}
 
         Value operator*() const {return *diter;}
-        
+
         iterator &operator++() {    // Prefix form
             if (var->unassigned()) ++diter;
             else {
@@ -140,7 +141,7 @@ public:
             }
             return *this;
         }
-        
+
         iterator &operator--() {    // Prefix form
             if (var->unassigned()) --diter;
             else {
@@ -171,7 +172,7 @@ public:
             if (v <= getValue()) return iterator(this, domain.lower_bound(getValue()));
             else return end();
         } else if (v > sup) {
-        	return end();
+            return end();
         } else return iterator(this, domain.lower_bound(max(getInf(), v)));
     }
 
@@ -181,16 +182,16 @@ public:
             if (v >= getValue()) return iterator(this, domain.upper_bound(getValue()));
             else return end();
         } else if (v < inf) {
-        	return end();
+            return end();
         } else return iterator(this, domain.upper_bound(min(getSup(), v)));
     }
-    
-    
+
+
     void permuteDomain(int numberOfPermutations);
     void permuteDomain(Value a, Value b);
     ValueCost *sortDomain(vector<Cost> &costs);
-    
-    void print(ostream& os);
+
+    void print(ostream &os);
 };
 
 #endif /*TB2ENUMVAR_HPP_*/

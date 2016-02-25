@@ -12,7 +12,8 @@
 #include <string>
 using namespace std;
 
-class RegularDPConstraint : public DPGlobalConstraint {
+class RegularDPConstraint : public DPGlobalConstraint
+{
 private:
 
     struct DFA : public WeightedAutomaton {
@@ -92,7 +93,7 @@ private:
     int top;
 
     template <class T>
-    void resizeTable(T** &table, int width, int heigth) {
+    void resizeTable(T ** &table, int width, int heigth) {
         table = new T*[width];
         for (int i = 0; i <= arity(); i++) {
             table[i] = new T[heigth];
@@ -100,13 +101,13 @@ private:
     }
 
     template <class T>
-    void deleteTable(T** &table) {
+    void deleteTable(T ** &table) {
         for (int i = 0; i <= arity(); i++) delete[] table[i];
         delete[] table;
         table = NULL;
     }
 
-    void recomputeTable(DPTableCell** table, DPTableCell** invTable = NULL, int startRow = 0);
+    void recomputeTable(DPTableCell **table, DPTableCell **invTable = NULL, int startRow = 0);
     void recompute();
 
     Cost unary(int ch, int var, Value v);
@@ -115,16 +116,16 @@ protected:
     Cost minCostOriginal();
     Cost minCostOriginal(int var, Value val, bool changed);
     Result minCost(int var, Value val, bool changed);
-    
+
     void initMemoization();
 
 public:
-    RegularDPConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
+    RegularDPConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
     virtual ~RegularDPConstraint();
 
-    Cost eval(String s);    
-    void read(istream & file);
-    WeightedAutomaton* getWeightedAutomaton() {return &dfa;}
+    Cost eval(String s);
+    void read(istream &file);
+    WeightedAutomaton *getWeightedAutomaton() {return &dfa;}
     string getName() {
         return "sregulardp";
     }

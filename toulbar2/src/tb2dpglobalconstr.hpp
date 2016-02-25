@@ -10,31 +10,32 @@
 #include "tb2globalconstr.hpp"
 using namespace std;
 
-class DPGlobalConstraint : public GlobalConstraint {
+class DPGlobalConstraint : public GlobalConstraint
+{
 private:
-    vector<bool> * zero;
-    vector<Cost> * preUnaryCosts;
-    
+    vector<bool> *zero;
+    vector<Cost> *preUnaryCosts;
+
     bool initialized;
-    
+
     void clear();
     void record(Value *tuple);
     void findSupport(int var, bool &changed);
 
 protected:
-    DPGlobalConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
+    DPGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
     virtual ~DPGlobalConstraint();
-    
+
     virtual void initMemoization() {}
-    
+
     virtual void initStructure() {
         if (!initialized) {
             initMemoization();
             initialized = true;
         }
     }
-      
-    typedef pair<Cost, Value*> Result;
+
+    typedef pair<Cost, Value *> Result;
     virtual Cost minCostOriginal() = 0;
     virtual Cost minCostOriginal(int var, Value val, bool changed) = 0;
     virtual Result minCost(int var, Value val, bool changed) = 0;
@@ -43,11 +44,11 @@ protected:
     virtual void propagateStrongNIC();
     virtual void propagateAC();
     virtual void propagateDAC();
-    
+
     //EAC
     virtual bool isEAC(int var, Value val);
     virtual void findFullSupportEAC(int var);
-   
+
 };
 
 #endif //TB2GLOBALCONSTR3_HPP_

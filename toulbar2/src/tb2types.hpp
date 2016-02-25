@@ -58,15 +58,15 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline Cost MIN(Cost a, Cost b) {return min(a,b);}
-inline Cost MAX(Cost a, Cost b) {return max(a,b);}
-inline Cost GLB(Cost a, Cost b) {return MIN(a,b);}
-inline Cost LUB(Cost a, Cost b) {return MAX(a,b);}
+inline Cost MIN(Cost a, Cost b) {return min(a, b);}
+inline Cost MAX(Cost a, Cost b) {return max(a, b);}
+inline Cost GLB(Cost a, Cost b) {return MIN(a, b);}
+inline Cost LUB(Cost a, Cost b) {return MAX(a, b);}
 inline bool GLB(Cost *a, Cost b) {if (b < *a) {*a = b; return true;} else return false;}
 inline bool LUB(Cost *a, Cost b) {if (b > *a) {*a = b; return true;} else return false;}
 inline bool GLBTEST(Cost a, Cost b) {return (b < a);}
 inline bool LUBTEST(Cost a, Cost b) {return (b > a);}
-inline bool DACTEST(Cost a, Cost b) {return (a==0 && b>0);}
+inline bool DACTEST(Cost a, Cost b) {return (a == 0 && b > 0);}
 inline bool SUPPORTTEST(Cost a, Cost b) {return false;}
 inline bool SUPPORTTEST(Cost a) {return false;}
 inline bool CUT(Cost lb, Cost ub) {return lb >= ub;}
@@ -83,54 +83,68 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline Cost MIN(Cost a, Cost b) {
-	return min(a, b);
+inline Cost MIN(Cost a, Cost b)
+{
+    return min(a, b);
 }
-inline Cost MAX(Cost a, Cost b) {
-	return max(a, b);
+inline Cost MAX(Cost a, Cost b)
+{
+    return max(a, b);
 }
-inline Cost GLB(Cost a, Cost b) {
-	return MIN(a, b);
+inline Cost GLB(Cost a, Cost b)
+{
+    return MIN(a, b);
 }
-inline Cost LUB(Cost a, Cost b) {
-	return MAX(a, b);
+inline Cost LUB(Cost a, Cost b)
+{
+    return MAX(a, b);
 }
-inline bool GLB(Cost *a, Cost b) {
-	if (b < *a) {
-		*a = b;
-		return true;
-	} else
-		return false;
+inline bool GLB(Cost *a, Cost b)
+{
+    if (b < *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
 }
-inline bool LUB(Cost *a, Cost b) {
-	if (b > *a) {
-		*a = b;
-		return true;
-	} else
-		return false;
+inline bool LUB(Cost *a, Cost b)
+{
+    if (b > *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
 }
-inline bool GLBTEST(Cost a, Cost b) {
-	return (b < a);
+inline bool GLBTEST(Cost a, Cost b)
+{
+    return (b < a);
 }
-inline bool LUBTEST(Cost a, Cost b) {
-	return (b > a);
+inline bool LUBTEST(Cost a, Cost b)
+{
+    return (b > a);
 }
-inline bool DACTEST(Cost a, Cost b) {
-	return (a == 0 && b > 0);
+inline bool DACTEST(Cost a, Cost b)
+{
+    return (a == 0 && b > 0);
 }
-inline bool SUPPORTTEST(Cost a, Cost b) {
-	return false;
+inline bool SUPPORTTEST(Cost a, Cost b)
+{
+    return false;
 }
-inline bool SUPPORTTEST(Cost a) {
-	return false;
+inline bool SUPPORTTEST(Cost a)
+{
+    return false;
 }
-inline bool CUT(Cost lb, Cost ub) {
-	return lb >= ub;
+inline bool CUT(Cost lb, Cost ub)
+{
+    return lb >= ub;
 }
-inline bool CSP(Cost lb, Cost ub) {
-	return (ub - lb) <= 1;
+inline bool CSP(Cost lb, Cost ub)
+{
+    return (ub - lb) <= 1;
 }
-inline void initCosts(Cost ub) {
+inline void initCosts(Cost ub)
+{
 }
 #endif
 
@@ -182,7 +196,7 @@ typedef map<int, Value> TAssign;
 
 // A value with weight
 template<class Object>
-struct WeightedObj{
+struct WeightedObj {
     Object val;
     Cost weight;
 
@@ -191,7 +205,7 @@ struct WeightedObj{
 
 // A value with upper and lower limit
 template<class Object>
-struct BoundedObj{
+struct BoundedObj {
     Object val;
     unsigned int upper;
     unsigned int lower;
@@ -238,7 +252,7 @@ typedef void (*externalsolution)(int wcspId, void *solver);
 typedef void (*externalfunc)();
 
 typedef enum {
-	ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX
+    ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX
 } ElimOrderType;
 
 class Seq;
@@ -250,146 +264,147 @@ class Tb2ScpBranch;
 class TrieNum;
 
 typedef enum {
-	LC_NC = 0,
-	LC_SNIC = 0,
-	LC_AC = 1,
-	LC_DAC = 2,
-	LC_FDAC = 3,
-	LC_EDAC = 4,
-	LC_THEMAX
+    LC_NC = 0,
+    LC_SNIC = 0,
+    LC_AC = 1,
+    LC_DAC = 2,
+    LC_FDAC = 3,
+    LC_EDAC = 4,
+    LC_THEMAX
 } LcLevelType;
 
 struct ValueCost {
-	Value value;
-	Cost cost;
-	friend bool operator<(const ValueCost &u, const ValueCost &v) {return u.cost < v.cost;}
-	friend bool operator>(const ValueCost &u, const ValueCost &v) {return u.cost > v.cost;}
-	friend bool operator==(const ValueCost &u, const ValueCost &v) {return u.cost == v.cost;}
+    Value value;
+    Cost cost;
+    friend bool operator<(const ValueCost &u, const ValueCost &v) {return u.cost < v.cost;}
+    friend bool operator>(const ValueCost &u, const ValueCost &v) {return u.cost > v.cost;}
+    friend bool operator==(const ValueCost &u, const ValueCost &v) {return u.cost == v.cost;}
 };
 
 ///contains all global variables (mainly solver's command-line options)
-class ToulBar2 {
+class ToulBar2
+{
 protected:
-	virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
+    virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
 public:
-	static string version;
-	static int verbose;
-	static int debug;
-	static bool showSolutions;
-	static char *writeSolution;
-	static bool allSolutions;
-	static int dumpWCSP;
-	static bool approximateCountingBTD;
-	static bool binaryBranching;
-	static int dichotomicBranching;
-	static unsigned int dichotomicBranchingSize;
-	static bool sortDomains;
-	static map<int, ValueCost *> sortedDomains;
-	static int elimDegree;
-	static int elimDegree_preprocessing;
-	static int elimDegree_;
-	static int elimDegree_preprocessing_;
-	static int elimSpaceMaxMB;
-	static int minsumDiffusion;
-  static int prodsumDiffusion;
-	static int preprocessTernaryRPC;
-	static int preprocessFunctional;
-	static bool costfuncSeparate;
-	static int preprocessNary;
-	static bool QueueComplexity;
-	static bool Static_variable_ordering;// flag for static variable ordering during search (dynamic ordering is default value)
-	static bool lastConflict;
-	static int weightedDegree;
-	static int weightedTightness;
-	static bool MSTDAC;
-	static int DEE;
-	static int DEE_;
+    static string version;
+    static int verbose;
+    static int debug;
+    static bool showSolutions;
+    static char *writeSolution;
+    static bool allSolutions;
+    static int dumpWCSP;
+    static bool approximateCountingBTD;
+    static bool binaryBranching;
+    static int dichotomicBranching;
+    static unsigned int dichotomicBranchingSize;
+    static bool sortDomains;
+    static map<int, ValueCost *> sortedDomains;
+    static int elimDegree;
+    static int elimDegree_preprocessing;
+    static int elimDegree_;
+    static int elimDegree_preprocessing_;
+    static int elimSpaceMaxMB;
+    static int minsumDiffusion;
+    static int prodsumDiffusion;
+    static int preprocessTernaryRPC;
+    static int preprocessFunctional;
+    static bool costfuncSeparate;
+    static int preprocessNary;
+    static bool QueueComplexity;
+    static bool Static_variable_ordering;// flag for static variable ordering during search (dynamic ordering is default value)
+    static bool lastConflict;
+    static int weightedDegree;
+    static int weightedTightness;
+    static bool MSTDAC;
+    static int DEE;
+    static int DEE_;
     static int nbDecisionVars;
-	static int lds;
-	static bool limited;
-	static Long restart;
-	static externalevent setvalue;
-	static externalevent setmin;
-	static externalevent setmax;
-	static externalevent removevalue;
-	static externalcostevent setminobj;
-	static externalsolution newsolution;
-	static Pedigree *pedigree;
-	static Haplotype *haplotype;
-  	static Cpd *cpd;
-  static Tb2ScpBranch *scpbranch;
-  static string map_file;
-	static bool bayesian;
-	static int uai;
-	static int resolution;
-	static TProb errorg;
-	static TLogProb NormFactor;
-	static int foundersprob_class;
-	static vector<TProb> allelefreqdistrib;
-	static bool consecutiveAllele;
-	static bool generation;
-	static int pedigreeCorrectionMode;
-	static int pedigreePenalty;
-	static int vac;
-	static Cost costThreshold;
-	static Cost costThresholdPre;
-	static double costMultiplier;
-	static Cost relaxThreshold;
-	static ElimOrderType elimOrderType;
-	static bool singletonConsistency;
-	static bool vacValueHeuristic;
-	static BEP *bep;
-	static LcLevelType LcLevel;
-	static bool wcnf;
-	static bool qpbo;
+    static int lds;
+    static bool limited;
+    static Long restart;
+    static externalevent setvalue;
+    static externalevent setmin;
+    static externalevent setmax;
+    static externalevent removevalue;
+    static externalcostevent setminobj;
+    static externalsolution newsolution;
+    static Pedigree *pedigree;
+    static Haplotype *haplotype;
+    static Cpd *cpd;
+    static Tb2ScpBranch *scpbranch;
+    static string map_file;
+    static bool bayesian;
+    static int uai;
+    static int resolution;
+    static TProb errorg;
+    static TLogProb NormFactor;
+    static int foundersprob_class;
+    static vector<TProb> allelefreqdistrib;
+    static bool consecutiveAllele;
+    static bool generation;
+    static int pedigreeCorrectionMode;
+    static int pedigreePenalty;
+    static int vac;
+    static Cost costThreshold;
+    static Cost costThresholdPre;
+    static double costMultiplier;
+    static Cost relaxThreshold;
+    static ElimOrderType elimOrderType;
+    static bool singletonConsistency;
+    static bool vacValueHeuristic;
+    static BEP *bep;
+    static LcLevelType LcLevel;
+    static bool wcnf;
+    static bool qpbo;
 
-	static char* varOrder;
-	static int btdMode;
-	static int btdSubTree;
-	static int btdRootCluster;
+    static char *varOrder;
+    static int btdMode;
+    static int btdSubTree;
+    static int btdRootCluster;
 
-	static bool maxsateval;
-	static bool xmlflag;
-	static TLogProb markov_log;
-	static string evidence_file;
-	static ofstream solution_file;
+    static bool maxsateval;
+    static bool xmlflag;
+    static TLogProb markov_log;
+    static string evidence_file;
+    static ofstream solution_file;
     static string solution_uai_filename;
     static string problemsaved_filename;
     static bool uai_firstoutput;
-	static bool isZ;
-  static bool isSubZ;
-  static int zshow;
-	static float isZCelTemp;
-	static int isZUB;
-  static bool stop; // STOP TB2 (TMP way)
+    static bool isZ;
+    static bool isSubZ;
+    static int zshow;
+    static float isZCelTemp;
+    static int isZUB;
+    static bool stop; // STOP TB2 (TMP way)
     static bool isGumbel;
     static unsigned int run;
     static Seq *seq;
-	static TLogProb logZ;
-  static TLogProb UplogZ;
-	static TLogProb logU; // upper bound on rejected potentials
-	static TProb logepsilon;
-	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
-        static string Trie_File;
-        static bool isTrie_File;
-        
+    static TLogProb logZ;
+    static TLogProb UplogZ;
+    static TLogProb logU; // upper bound on rejected potentials
+    static TProb logepsilon;
+    static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
+    static string Trie_File;
+    static bool isTrie_File;
+
     static bool uaieval;
 
-	static double startCpuTime;
+    static double startCpuTime;
 
-	static int splitClusterMaxSize;
-	static bool boostingBTD;
-	static int maxSeparatorSize;
-	static int minProperVarSize;
-	static int smallSeparatorSize;
+    static int splitClusterMaxSize;
+    static bool boostingBTD;
+    static int maxSeparatorSize;
+    static int minProperVarSize;
+    static int smallSeparatorSize;
 
-	static int Berge_Dec; // flag for berge acyclic decomposition
-	static int nbvar; // initial number of variable (read in the file) 
+    static int Berge_Dec; // flag for berge acyclic decomposition
+    static int nbvar; // initial number of variable (read in the file)
     static bool learning; // if true, perform pseudoboolean learning
-	static externalfunc timeOut;
-	static bool interrupted;
+    static externalfunc timeOut;
+    static bool interrupted;
 
-	static string incop_cmd;
+    static string incop_cmd;
     static unsigned seed;
 
     static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
@@ -412,12 +427,13 @@ public:
 extern IloSolver IlogSolver;
 #define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0);})
 #else
-class Contradiction {
+class Contradiction
+{
 public:
-	Contradiction() {
-		if (ToulBar2::verbose >= 2)
-			cout << "... contradiction!" << endl;
-	}
+    Contradiction() {
+        if (ToulBar2::verbose >= 2)
+            cout << "... contradiction!" << endl;
+    }
 };
 #define THROWCONTRADICTION {if (ToulBar2::weightedDegree) conflict(); throw Contradiction();}
 #endif
@@ -441,17 +457,18 @@ class TreeDecomposition;
 
 
 struct ConstraintLink {
-	Constraint *constr;
-	int scopeIndex;
+    Constraint *constr;
+    int scopeIndex;
 };
 
-class WCSPLink {
+class WCSPLink
+{
 public:
-	WCSP * const wcsp;
-	int wcspIndex;
-	WCSPLink(WCSP *w, int index) :
-		wcsp(w), wcspIndex(index) {
-	}
+    WCSP *const wcsp;
+    int wcspIndex;
+    WCSPLink(WCSP *w, int index) :
+        wcsp(w), wcspIndex(index) {
+    }
 };
 
 #endif /*TB2TYPES_HPP_*/
