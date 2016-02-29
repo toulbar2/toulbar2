@@ -768,7 +768,7 @@ int WCSP::postGlobalConstraint(int *scopeIndex, int arity, string &gcname, istre
     assert(arity >= 4); // does not work for binary or ternary cost functions!!!
     GlobalConstraint *gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL) return -1;
-    if (file != NULL) gc->read(file);
+    if (file) gc->read(file);
     return gc->wcspIndex;
 }
 

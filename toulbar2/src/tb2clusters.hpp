@@ -26,7 +26,7 @@ typedef set<Constraint *>   TCtrs;
 struct CmpClusterStruct {
     bool operator()(const Cluster *lhs, const Cluster *rhs) const;
 };
-typedef set<Cluster *>       TClusters;
+typedef set<Cluster *>	   TClusters;
 typedef set<Cluster *, CmpClusterStruct>       TClustersSorted;
 
 typedef triplet<Cost, Cost, Solver::OpenList >     TPairNG;

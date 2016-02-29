@@ -246,25 +246,25 @@ public:
     bool nextlex(String &t, Cost &c) { return next(t, c); }
 
 
-    void setTuple(String &t, Cost c, EnumeratedVariable **scope_in)  {
+    void setTuple(String &t, Cost c, EnumeratedVariable **scope_in) {
         Value v0 = scope_in[0]->toValue(t[0] - CHAR_FIRST);
         Value v1 = scope_in[1]->toValue(t[1] - CHAR_FIRST);
         setcost(scope_in[0], scope_in[1], v0, v1, c);
     }
 
-    void addtoTuple(String &t, Cost c, EnumeratedVariable **scope_in)  {
+    void addtoTuple(String &t, Cost c, EnumeratedVariable **scope_in) {
         Value v0 = scope_in[0]->toValue(t[0] - CHAR_FIRST);
         Value v1 = scope_in[1]->toValue(t[1] - CHAR_FIRST);
         addcost(scope_in[0], scope_in[1], v0, v1, c);
     }
 
-    void setTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in)  {
+    void setTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in) {
         Value v0 = scope_in[0]->toValue(t[0]);
         Value v1 = scope_in[1]->toValue(t[1]);
         setcost(scope_in[0], scope_in[1], v0, v1, c);
     }
 
-    void addtoTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in)  {
+    void addtoTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in) {
         Value v0 = scope_in[0]->toValue(t[0]);
         Value v1 = scope_in[1]->toValue(t[1]);
         addcost(scope_in[0], scope_in[1], v0, v1, c);

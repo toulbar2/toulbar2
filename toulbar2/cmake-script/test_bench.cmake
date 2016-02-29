@@ -42,7 +42,7 @@ FOREACH (UTEST ${validation_file})
 	 IF (EXISTS ${ENUM_file})
         FILE(READ ${ENUM_file} TENUM)
 	STRING(REPLACE "\n" ""  ENUM ${TENUM})
-	MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} founded ENUM variable loaded ")
+	MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} found ENUM variable loaded ")
 	
 	ELSE()
 	set(ENUM)
@@ -51,7 +51,7 @@ FOREACH (UTEST ${validation_file})
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} founded ")
+	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
 	ELSE()
 
 	# init default value :

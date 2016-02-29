@@ -15,7 +15,7 @@ set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
-set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
+set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2") #used in packaging
 
 ################
 # PROJECT NAME
@@ -60,7 +60,7 @@ include(CMakeDependentOption)
 	OPTION(STATIC "static compilation flag [default: on]" OFF)
 	OPTION(verbose "verbose mode [default:on]" ON)
 	OPTION(COVER_TEST "cover test [default:on]" ON)
-	OPTION(BENCH "benchmarcking [default:on]" OFF)
+	OPTION(BENCH "benchmarking [default:on]" OFF)
 
 
 ###########################
@@ -68,7 +68,7 @@ include(CMakeDependentOption)
 ###########################
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
-      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
@@ -102,7 +102,7 @@ ENDIF(APPLE)
 ################
 # default OPTION for toulbar2 test  phase
 #############
-SET(FOPT "test-opt.cmake" CACHE string "filename containing localet  option used for validation ") 
+SET(FOPT "test-opt.cmake" CACHE string "filename containing option used for validation ") 
 SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line.")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_validation_dir "validation" CACHE string "default location of benchmark file")
@@ -159,8 +159,8 @@ IF(ALL_APP)
         set (Toulbar_NAME "toulbar2-all")
         project(${Toulbar_NAME})
 #description used in the package building
-	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source framework including solver and library for constraints network optimization, written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
-        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
+	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 
 ENDIF(ALL_APP)
 
@@ -183,8 +183,8 @@ IF(MENDELSOFT_ONLY)
 	set (Toulbar_NAME "mendelsoft")
 #description used in the package building
 	SET (Toulbar_PACKAGE_DESCRIPTION 
-	"MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 
-        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
+	"MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a minimum cardinality list of individuals whose genotype removal restores consistency.") 
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors in complex pedigrees.")
 #############
 
 ENDIF(MENDELSOFT_ONLY)
@@ -201,8 +201,8 @@ IF(TOULBAR2_ONLY)
 #basename for packagin and versionning
         SET(Toulbar_NAME "toulbar2")
 #description used in the package building
-	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source solver for constraints network optimization written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
-        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
+	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 ENDIF(TOULBAR2_ONLY)
 
 #############################"
@@ -443,6 +443,7 @@ ENDIF (BUILD_API_DOC)
 ###################################################################################"
 #  PACKAGING 
 ###################################################################################"
+set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/MyCPackConf.cmake)
 INCLUDE(InstallRequiredSystemLibraries)
 include(${My_cmake_scritp}/package.cmake)
 ######### END END

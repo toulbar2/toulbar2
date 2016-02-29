@@ -49,7 +49,7 @@ public:
 
     Variable *getVar(int varCtrIndex) const {return x;}
 
-    Variable *getVarDiffFrom(Variable *v) const  {
+    Variable *getVarDiffFrom(Variable *v) const {
         if (v != x) return x;
         else exit(EXIT_FAILURE);
     }
@@ -121,7 +121,7 @@ public:
 
     Variable *getVar(int varCtrIndex) const {return (varCtrIndex == 0) ? x : y;}
 
-    Variable *getVarDiffFrom(Variable *v) const  {
+    Variable *getVarDiffFrom(Variable *v) const {
         if (v == x) return y;
         else if (v == y) return x;
         else exit(EXIT_FAILURE);

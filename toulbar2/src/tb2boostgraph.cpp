@@ -20,12 +20,12 @@ using namespace boost;
 
 namespace boost
 {
-    struct edge_component_t {
-        enum
-        { num = 555 };
-        typedef edge_property_tag kind;
-    }
-    edge_component;
+struct edge_component_t {
+    enum
+    { num = 555 };
+    typedef edge_property_tag kind;
+}
+edge_component;
 }
 
 typedef adjacency_list< setS, vecS, undirectedS > Graph;

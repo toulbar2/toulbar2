@@ -662,7 +662,7 @@ public:
         return  Constraint::getConflictWeight();
     }
     Long getConflictWeight() const {
-        return Constraint::getConflictWeight() + ((xy && xy->deconnected()) ? (xy->getConflictWeight() - 1) : 0) + ((xz && xz->deconnected()) ? (xz->getConflictWeight() - 1) : 0) + ((yz && yz->deconnected()) ? (yz->getConflictWeight() - 1) : 0);
+        return Constraint::getConflictWeight() + ((xy->deconnected()) ? (xy->getConflictWeight() - 1) : 0) + ((xz->deconnected()) ? (xz->getConflictWeight() - 1) : 0) + ((yz->deconnected()) ? (yz->getConflictWeight() - 1) : 0);
     }
 
     EnumeratedVariable *xvar;

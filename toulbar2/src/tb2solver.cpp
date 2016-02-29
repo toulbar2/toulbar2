@@ -107,17 +107,17 @@ void Solver::read_solution(const char *filename)
         values.push_back(value);
         // side-effect: remember last solution
         wcsp->setBestValue(i, value);
-//        if (wcsp->unassigned(i)) {
-//		  assign(i, value);
-//		  // side-effect: remember last solution
-//		  wcsp->setBestValue(i, value);
-//        } else {
-//		    if (wcsp->getValue(i) != value) {
-//			  THROWCONTRADICTION;
-//			} else {
-//			  wcsp->setBestValue(i, value); // side-effect: remember last solution
-//			}
-//        }
+        //        if (wcsp->unassigned(i)) {
+        //		  assign(i, value);
+        //		  // side-effect: remember last solution
+        //		  wcsp->setBestValue(i, value);
+        //        } else {
+        //		    if (wcsp->getValue(i) != value) {
+        //			  THROWCONTRADICTION;
+        //			} else {
+        //			  wcsp->setBestValue(i, value); // side-effect: remember last solution
+        //			}
+        //        }
         i++;
     }
     wcsp->assignLS(variables, values);
@@ -510,7 +510,7 @@ void Solver::enforceUb()
         //cout<<"UpperBorn : "<<newlogU+ ToulBar2::markov_log<<"  log(Z) : "<<ToulBar2::logZ + ToulBar2::markov_log<<" BKT :"<<nbBacktracks<< " Nodes : "<<nbNodes<<endl;
         //cout<<"LogU : "<<newlogU+ ToulBar2::markov_log<<"  log(Z) : "<<ToulBar2::logZ + ToulBar2::markov_log<<endl;
         if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-            if (ToulBar2::verbose >= 1) cout << "ZCUT Using Born " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << store->getDepth() << endl;
+            if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << store->getDepth() << endl;
             ToulBar2::logU = newlogU;
             THROWCONTRADICTION;
         }
@@ -767,7 +767,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
             //    		remove(varIndex, value);
         } else assign(varIndex, value);
         lastConflictVar = -1;
-        recursiveSolve();
+        recursiveSolve(lb);
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
@@ -1146,6 +1146,7 @@ void Solver::recursiveSolve(Cost lb)
     }
 }
 
+
 void Solver::recursiveSolveLDS(int discrepancy)
 {
     int varIndex = -1;
@@ -1333,7 +1334,7 @@ bool Solver::solve()
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0;         // do not perform hbfs operations in preprocessing except for building tree decomposition
     try {
-//        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
+        //        store->store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
@@ -1351,7 +1352,7 @@ bool Solver::solve()
             wcsp->enforceUb();
             wcsp->propagate();
         }
-        wcsp->preprocessing();            // preprocessing after initial propagation
+        wcsp->preprocessing();         // preprocessing after initial propagation
         finiteUb = wcsp->finiteUb();      // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
@@ -1361,7 +1362,6 @@ bool Solver::solve()
             wcsp->propagate();
         }
         if (ToulBar2::verbose >= 0) cout << "Preprocessing time: " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-
         // special data structure to be initialized for variable ordering heuristics
         initVarHeuristic();
 
@@ -1419,7 +1419,7 @@ bool Solver::solve()
         Long nbBacktracksLimitTop = 1;
         int storedepth = store->getDepth();
         do {
-//		  store->store();
+            //		  store->store();
             if (ToulBar2::restart >= 0) {
                 nbbacktracksout = false;
                 nbrestart++;
@@ -1481,9 +1481,9 @@ bool Solver::solve()
                                 THROWCONTRADICTION;
                             }
                             ToulBar2::lds = 0;
-//					  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-//					  		wcsp->resetWeightedDegree(*iter);
-//					  }
+                            //					  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+                            //					  		wcsp->resetWeightedDegree(*iter);
+                            //					  }
                             initialDepth = store->getDepth();
                             try {
                                 hybridSolve();
@@ -1627,7 +1627,7 @@ bool Solver::solve()
         //     ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
         //   }
     }
-//  store->restore();         // see above for store->store()
+    //  store->restore();         // see above for store->store()
 
     if (ToulBar2::vac) wcsp->printVACStat();
 
