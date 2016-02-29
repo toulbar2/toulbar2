@@ -2282,7 +2282,6 @@ void WCSP::propagate()
     assert(Eliminate.empty());
     DEE.clear(); // DEE might not be empty if verify() has modified supports
     nbNodes++;
-    //~ }
 }
 
 void WCSP::restoreSolution(Cluster *c)
