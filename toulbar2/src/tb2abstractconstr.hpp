@@ -298,6 +298,8 @@ public:
 
 };
 
+extern int cmpDAC(const void *var1, const void *var2);
+
 class AbstractNaryConstraint : public Constraint
 {
 protected:
@@ -305,6 +307,7 @@ protected:
     int arity_;
 
     EnumeratedVariable** scope;
+    EnumeratedVariable** scope_dac; // scope sorted by increasing DAC order
     TSCOPE scope_inv;
 
     DLink<ConstraintLink>** links;
@@ -313,14 +316,17 @@ public:
     AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in)
     {
         scope = new EnumeratedVariable* [arity_];
+        scope_dac = new EnumeratedVariable* [arity_];
         links = new DLink<ConstraintLink>* [arity_];
 
         for(int i=0; i < arity_; i++) {
             EnumeratedVariable* var = scope_in[i];
             scope_inv[ var->wcspIndex ] = i;
             scope[i] = var;
+            scope_dac[i] = var;
             links[i] = var->link(this,i);
         }
+        setDACScopeIndex();
     }
 
     AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp)
@@ -330,6 +336,7 @@ public:
     virtual ~AbstractNaryConstraint() {}
 
     int arity() const {return arity_;}
+    Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
 
     Variable *getVar(int varCtrIndex) const {
         assert(varCtrIndex < arity_);
@@ -404,12 +411,15 @@ public:
     void getScope( TSCOPE& scope_inv_in ) {
         scope_inv_in = scope_inv;
     }
-    // side-effect only: update scope_inv to current variable wcspIndex
+
+    /// \warning scope_dac uses pointers not indexes!
+    /// \warning additional side-effect: updates scope_inv with current variable wcspIndexes
     void setDACScopeIndex() {
         scope_inv.clear();
         for(int i=0; i < arity_; i++) {
             scope_inv[ scope[i]->wcspIndex ] = i;
         }
+        qsort(scope_dac, arity_, sizeof(EnumeratedVariable *), cmpDAC);
     }
     int getSmallestDACIndexInScope(int forbiddenScopeIndex)
     {

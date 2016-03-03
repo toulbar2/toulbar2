@@ -235,8 +235,9 @@ void GlobalConstraint::propagateDAC() {
     vector<int> vars;
     vector<int> rmv;
     //checkRemoved(rmv);
-    for(int i = 0; i < arity_; i++){
-        EnumeratedVariable * x = scope[i];
+    for(int ii = 0; ii < arity_; ii++){
+        EnumeratedVariable * x = scope_dac[ii];
+        int i = scope_inv[x->wcspIndex];
         if (x->unassigned()) {
             map<Value, Cost> delta;
             for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it){
@@ -250,8 +251,9 @@ void GlobalConstraint::propagateDAC() {
     }
     changeAfterExtend(vars, deltas);
 
-    for(int varindex = 0; varindex < arity_; varindex++) {
-        EnumeratedVariable * x = scope[varindex];
+    for(int ii = 0; ii < arity_; ii++){
+        EnumeratedVariable * x = scope_dac[ii];
+        int varindex = scope_inv[x->wcspIndex];
         if (x->unassigned()) {
             //delta.clear();
             map<Value, Cost> delta;
