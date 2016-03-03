@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/tcsh
 
 # usage: tb2trace.sh trace.txt
 
@@ -29,4 +29,5 @@
 #[5][5,33,35,26] Try 4 == 0
 #[5]New solution: 34 (1 backtracks, 8 nodes, depth 5)
 
+setenv AWKPATH ${AWKPATH}:${0:h}
 awk 'BEGIN{depth=1} /^[[][0-9]*/{d=$1;sub("[[]","",d);depth=0+d} {print "[" depth "]" $0} /contradiction/{depth--}' $1 | tac | awk -f tb2trace.awk | tac
