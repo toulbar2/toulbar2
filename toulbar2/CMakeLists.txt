@@ -21,7 +21,7 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 # PROJECT NAME
 ################
 
-project("Toulbar2_framework")
+project("toulbar2")
 
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
