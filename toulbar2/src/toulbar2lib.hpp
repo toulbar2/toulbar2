@@ -1,6 +1,24 @@
 /** \file toulbar2lib.hpp
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
+<pre>
+    Copyright (c) 2006-2016, INRA
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (degivry@toulouse.inra.fr)
+</pre>
  */
 
 #ifndef TOULBAR2LIB_HPP_
@@ -158,13 +176,15 @@ public:
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, Value *d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
-    virtual void postUnary(int xIndex, vector<Cost> &costs) = 0;
+    virtual void postUnary(int xIndex, vector<Cost> &costs) =0; ///< \deprecated Please use the postUnaryConstraint method instead
+    virtual void postUnaryConstraint(int xIndex, vector<Cost> &costs) =0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) = 0;
     virtual int postNaryConstraintBegin(int *scope, int arity, Cost defval) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost) = 0;
     virtual void postNaryConstraintEnd(int ctrindex) = 0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints and WeightedCSP::histogram)
-    virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) = 0;
+    virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0; ///< \deprecated Please use the postUnaryConstraint method instead
+    virtual int postUnaryConstraint(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL) = 0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
