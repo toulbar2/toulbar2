@@ -27,6 +27,7 @@ graphical models:
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
 
+
 ## Download
 
 http://mulcyber.toulouse.inra.fr/projects/toulbar2/
@@ -53,6 +54,7 @@ Latest debian/windows x86_64 releases:
 [win0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1374/toulbar2.0.9.7.0-Release-x86_64.exe
 [win0_9_8]:
 
+
 ## Installation
 
 Library needed:
@@ -62,6 +64,7 @@ Library needed:
 
 Optional libraries
 * libxml2-dev
+
 
 ## Authors
 
@@ -78,6 +81,7 @@ Additional contributions by:
 [numberjack]: http://numberjack.ucc.ie/
 [proteus]: https://github.com/9thbit/uai-proteus
 
+
 ## Citing
 
 Please use one of the following references for citing toulbar2:
@@ -89,6 +93,7 @@ Please use one of the following references for citing toulbar2:
  Soft arc consistency revisited
  M. Cooper, S. de Givry, M. Sanchez, T. Schiex, M. Zytnicki, and T. Werner
  Artificial Intelligence, 174(7-8):449-478, 2010 
+
 
 ##  What are the algorithms inside toulbar2?
 

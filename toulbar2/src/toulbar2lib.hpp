@@ -21,6 +21,17 @@
 </pre>
  */
 
+/*! @mainpage
+
+    <table>
+        <tr><th>Weighted CSP Solver     <td>toulbar2
+        <tr><th>Copyright               <td>INRA
+        <tr><th>Source                  <td>https://mulcyber.toulouse.inra.fr/projects/toulbar2/
+    </table>
+
+    See the @link md_README.html README @endlink for more details.
+*/
+
 #ifndef TOULBAR2LIB_HPP_
 #define TOULBAR2LIB_HPP_
 
