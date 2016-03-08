@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="Description" content="toulbar2, an open-source cost function network solver" />
+  <meta name="Keywords" content="cost function network, weighted constraint satisfaction problem, probabilistic graphical model, combinatorial optimization, exact solver" />
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <title>toulbar2</title>
+</head>
+
+<body>
+
+<table class="logo">
+  <tr>
+    <td><img alt="logo toulbar2" src="IMAGES/softac.gif" height="150px"/></td>
+    <td><h1>toulbar2</h1> <h2>An exact solver for cost function networks</h2></td>  
+  </tr>                                                                                    
+</table>
+
+<div id="menu">
+  <ul>
+	<li><a href="index.html">Home</a></li>
+	<li><a href="https://mulcyber.toulouse.inra.fr/projects/toulbar2/">Download</a></li>
+	<li><a href="documentation.html">Documentation</a></li>
+	<li><a href="publication.html">Publications</a></li>
+  </ul>
+</div>
+
+
+<h5>NEWS: <i>new release <a href="https://mulcyber.toulouse.inra.fr/frs/?group_id=29&release_id=610#toulbar2-release-0.9.8.0-title-content">0.9.8</a></i><br/>NEWS: <i>3026 <a href="http://genoweb.toulouse.inra.fr/~degivry/evalgm">benchmarks</a> available in various optimization formats (see readme.txt)</i><br/></h5>
+
+<!-- WHY UNDERLINE TITLES? -->
+<h3>Presentation</h3>
+<p>
+<b>toulbar2</b> is an open-source C++ solver for cost function networks. It solves various combinatorial optimization problems.
+</p>
+
+<p>
+The constraints and objective function are factorized in local functions on discrete variables. Each function returns a cost (a finite positive integer) for any assignment of its variables. Constraints are represented as functions with costs in {0,&infin;} where &infin; is a large integer representing forbidden assignments. toulbar2 looks for a non-forbidden assignment of all variables that minimizes the sum of all functions.
+</p>
+
+<p>
+Its engine uses a hybrid best-first branch-and-bound algorithm exploiting soft arc consistencies. See <a href="publication.html">Publications</a>.
+</p>
+
+<p>
+toulbar2 won several competitions on Max-CSP (<a href="http://www.cril.univ-artois.fr/CPAI08/">CPAI08</a>) and probabilistic graphical models (UAI <a href="http://graphmod.ics.uci.edu/uai08/Evaluation/Report/MPE">2008</a>, <a href="http://www.cs.huji.ac.il/project/UAI10/summary.php">2010</a>, <a href="http://auai.org/uai2014/competition.shtml">2014</a> MAP task).
+</p>
+
+
+<h4>Authors</h4> 
+<p>
+<b>toulbar2</b> was originally developped by Toulouse (INRA MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. Additional global cost functions were provided by the Chinese University of Hong Kong and Caen University (GREYC). It also includes codes from Marseille University (LSIS, tree decomposition heuristics) and <i>Ecole des Ponts ParisTech</i> (CERMICS/LIGM, <a href="http://imagine.enpc.fr/~neveub/incop/incoppresentation.html">INCOP</a> local search solver). 
+</p>
+
+<p>
+A Python interface is available in <a href="http://numberjack.ucc.ie">NumberJack</a> (Insight - University College Cork). A portfolio approach dedicated to UAI format instances is available <a href="https://github.com/9thbit/uai-proteus">here</a>.
+</p>
+
+<p>
+<b>toulbar2</b> is currently maintained by <a href="mailto:degivry@toulouse.inra.fr">Simon de Givry</a> and hosted on <a href="https://mulcyber.toulouse.inra.fr/projects/toulbar2/">mulcyber.toulouse.inra.fr</a>.
+</p>
+
+
+<h4>Citation</h4> 
+<p>
+Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization<br/>
+Barry Hurley, Barry O'Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry<br/>
+In Proc. of CPAIOR'16, Banff, Canada, 2016
+</p>
+
+
+<h4>Acknowledgements</h4> 
+<p>
+<b>toulbar2</b> has been partly funded by the French <i>Agence Nationale de la Recherche</i> (projects STAL-DEC-OPT from 2006 to 2008 and ANR-10-BLA-0214 <a href="http://costfunction.org">Ficolofo</a> from 2011 to 2014) and a PHC PROCORE project number 28680VH (from 2013 to 2015).
+</p>
+
+
+<p id="footer"><br/><br/>Last modification : February 19, 2016</p>
+</body>
+</html>
