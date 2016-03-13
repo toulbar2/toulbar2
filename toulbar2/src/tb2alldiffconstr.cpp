@@ -162,9 +162,9 @@ void AllDiffConstraint::decompose() {
             }
             else {
                 if (!ToulBar2::vac) {
-                    ctr = new BinaryConstraint(wcsp, x, y, costs, &wcsp->getStore()->storeCost);
+                    ctr = new BinaryConstraint(wcsp, x, y, costs);
                 } else {
-                    ctr = new VACBinaryConstraint(wcsp, x, y, costs, &wcsp->getStore()->storeCost);
+                    ctr = new VACBinaryConstraint(wcsp, x, y, costs);
                 }
             }
         }

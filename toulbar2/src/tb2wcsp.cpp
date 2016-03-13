@@ -118,7 +118,7 @@ int ToulBar2::pedigreePenalty;
 int ToulBar2::vac;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
-double ToulBar2::costMultiplier;
+Cost ToulBar2::costMultiplier;
 Cost ToulBar2::relaxThreshold;
 
 ElimOrderType ToulBar2::elimOrderType;
@@ -406,7 +406,7 @@ Cost tb2checkOptions(Cost ub)
 
 /// \note isDelayedNaryCtr should be false if toulbar2 is used within numberjack
 WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
-	        solver(_solver_), storeData(s), lb(MIN_COST, &s->storeCost), ub(upperBound), negCost(MIN_COST, &s->storeCost), NCBucketSize(cost2log2gub(upperBound) + 1),
+	        solver(_solver_), storeData(s), lb(MIN_COST), ub(upperBound), negCost(MIN_COST), NCBucketSize(cost2log2gub(upperBound) + 1),
 	        NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
 	        objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0),
 #ifdef NUMBERJACK
@@ -414,7 +414,7 @@ WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
 #else
             isDelayedNaryCtr(true),
 #endif
-	        isPartOfOptimalSolution(0, &s->storeInt), elimOrder(0, &s->storeInt), elimBinOrder(0, &s->storeInt), elimTernOrder(0, &s->storeInt),
+	        isPartOfOptimalSolution(0), elimOrder(0), elimBinOrder(0), elimTernOrder(0),
 	        maxDegree(-1), elimSpace(0) {
     instance = wcspCounter++;
     if (ToulBar2::vac) vac = new VACExtension(this);
@@ -510,10 +510,10 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) {
     } else {
         if (!ToulBar2::vac) {
             ctr
-            = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+            = new BinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs);
         } else {
             ctr
-            = new VACBinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs, &storeData->storeCost);
+            = new VACBinaryConstraint(this, (EnumeratedVariable *) vars[xIndex], (EnumeratedVariable *) vars[yIndex], costs);
         }
     }
 
@@ -568,33 +568,33 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 
         if (!ToulBar2::vac) {
             if (!xy) {
-                xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+                xy = new BinaryConstraint(this, x, y, zerocostsxy);
                 xy->deconnect(true);
             }
             if (!xz) {
-                xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+                xz = new BinaryConstraint(this, x, z, zerocostsxz);
                 xz->deconnect(true);
             }
             if (!yz) {
-                yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+                yz = new BinaryConstraint(this, y, z, zerocostsyz);
                 yz->deconnect(true);
             }
         } else {
             if (!xy) {
-                xy = new VACBinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+                xy = new VACBinaryConstraint(this, x, y, zerocostsxy);
                 xy->deconnect(true);
             }
             if (!xz) {
-                xz = new VACBinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+                xz = new VACBinaryConstraint(this, x, z, zerocostsxz);
                 xz->deconnect(true);
             }
             if (!yz) {
-                yz = new VACBinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+                yz = new VACBinaryConstraint(this, y, z, zerocostsyz);
                 yz->deconnect(true);
             }
         }
 
-        ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs, &storeData->storeCost);
+        ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
     } else {
         ctr->addCosts(x, y, z, costs);
         ctr->propagate();
@@ -622,11 +622,11 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
     if (isDelayedNaryCtr) delayedNaryCtr.push_back(ctr->wcspIndex);
     else {
         BinaryConstraint* bctr;
-        TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
+        TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
-            else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
+            if (!ToulBar2::vac) bctr = new BinaryConstraint(this);
+            else bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
     }
@@ -1174,7 +1174,7 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
 /// \brief add unary costs to interval variable \e xIndex
 int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty) {
     assert(!vars[xIndex]->enumerated());
-    Unary *ctr = new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty, &storeData->storeValue);
+    Unary *ctr = new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty);
     return ctr->wcspIndex;
 }
 
@@ -1184,7 +1184,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Supxyc
         *ctr =
-                new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta, &storeData->storeCost, &storeData->storeValue);
+                new Supxyc(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cst, delta);
         return ctr->wcspIndex;
     } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
         EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
@@ -1208,7 +1208,7 @@ int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost p
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Disjunction
         *ctr =
-                new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty, &storeData->storeValue);
+                new Disjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, penalty);
         return ctr->wcspIndex;
     } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
         EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
@@ -1232,7 +1232,7 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         SpecialDisjunction
         *ctr =
-                new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy, &storeData->storeCost, &storeData->storeValue);
+                new SpecialDisjunction(this, (IntervalVariable *) vars[xIndex], (IntervalVariable *) vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy);
         return ctr->wcspIndex;
     } else if (vars[xIndex]->enumerated() && vars[yIndex]->enumerated()) {
         EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
@@ -1254,11 +1254,11 @@ void WCSP::sortConstraints()
 {
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         BinaryConstraint* bctr;
-        TernaryConstraint* tctr = new TernaryConstraint(this, &storeData->storeCost);
+        TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac) bctr = new BinaryConstraint(this, &storeData->storeCost);
-            else bctr = new VACBinaryConstraint(this, &storeData->storeCost);
+            if (!ToulBar2::vac) bctr = new BinaryConstraint(this);
+            else bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
         getCtr(*idctr)->propagate();
@@ -2397,8 +2397,8 @@ void WCSP::restoreSolution(Cluster* c) {
 
 void WCSP::initElimConstr() {
     BinaryConstraint* xy = NULL;
-    if (!ToulBar2::vac) xy = new BinaryConstraint(this, &storeData->storeCost);
-    else xy = new VACBinaryConstraint(this, &storeData->storeCost);
+    if (!ToulBar2::vac) xy = new BinaryConstraint(this);
+    else xy = new VACBinaryConstraint(this);
     elimBinConstrs.push_back(xy);
     elimInfo ei = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     elimInfos.push_back(ei);
@@ -2463,33 +2463,33 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
 
     if (!ToulBar2::vac) {
         if (!xy) {
-            xy = new BinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+            xy = new BinaryConstraint(this, x, y, zerocostsxy);
             xy->deconnect(true);
         }
         if (!xz) {
-            xz = new BinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+            xz = new BinaryConstraint(this, x, z, zerocostsxz);
             xz->deconnect(true);
         }
         if (!yz) {
-            yz = new BinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+            yz = new BinaryConstraint(this, y, z, zerocostsyz);
             yz->deconnect(true);
         }
     } else {
         if (!xy) {
-            xy = new VACBinaryConstraint(this, x, y, zerocostsxy, &storeData->storeCost);
+            xy = new VACBinaryConstraint(this, x, y, zerocostsxy);
             xy->deconnect(true);
         }
         if (!xz) {
-            xz = new VACBinaryConstraint(this, x, z, zerocostsxz, &storeData->storeCost);
+            xz = new VACBinaryConstraint(this, x, z, zerocostsxz);
             xz->deconnect(true);
         }
         if (!yz) {
-            yz = new VACBinaryConstraint(this, y, z, zerocostsyz, &storeData->storeCost);
+            yz = new VACBinaryConstraint(this, y, z, zerocostsyz);
             yz->deconnect(true);
         }
     }
 
-    TernaryConstraint *ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs, &storeData->storeCost);
+    TernaryConstraint *ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
     return ctr;
 }
 
@@ -2874,7 +2874,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
     }
 
     if (minc > MIN_COST) {
-        tctr = new TernaryConstraint(this, &storeData->storeCost);
+        tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         tctr = newTernaryConstr(x, y, z);
         tctr->fillElimConstrBinaries();

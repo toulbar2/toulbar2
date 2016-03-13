@@ -9,7 +9,7 @@ Graph::Graph(int n, int depth_, Store* storeStack_)  : adjlist(n)
         , gsize(n)
         , depth(depth_)
         , storeStack(storeStack_)
-        , intDLinkStore(&storeStack_->storeInt, n*n)
+        , intDLinkStore(n*n)
 {
     for (int i=0;i<n;i++) vertexList[i] = new Vertex(n, depth_, storeStack_, &intDLinkStore);
 }

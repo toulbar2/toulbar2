@@ -9,7 +9,7 @@
 
 
 NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval) : AbstractNaryConstraint(wcsp, scope_in, arity_in),
-        nonassigned(arity_in, &wcsp->getStore()->storeInt)
+        nonassigned(arity_in)
 {
     int i;
     Char* tbuf = new Char [arity_in+1];
@@ -36,7 +36,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 
 
 
-NaryConstraint::NaryConstraint(WCSP *wcsp) : AbstractNaryConstraint(wcsp), nonassigned(0, &wcsp->getStore()->storeInt)
+NaryConstraint::NaryConstraint(WCSP *wcsp) : AbstractNaryConstraint(wcsp), nonassigned(0)
 {
 }
 
