@@ -51,7 +51,7 @@ FOREACH (UTEST ${validation_file})
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
+	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found ")
 	ELSE()
 
 	# init default value :

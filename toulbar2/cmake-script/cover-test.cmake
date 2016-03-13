@@ -1,8 +1,8 @@
 #INCLUDE(CTest)
 # cover test for toulbar2
-# read an array of option include in $COVER_OPT_file 
-# and generate a new test for each entry
-include(${My_cmake_scritp}/ManageString.cmake)
+# read a array of option include in $COVER_OPT_file 
+# and generate a new test for each entrie
+include(${My_cmake_script}/ManageString.cmake)
 
 MESSAGE(STATUS "\n##############COVER  liste #############\n")
 	MESSAGE(STATUS " COVER TEST SCANING  ${Default_cover_dir} ")
