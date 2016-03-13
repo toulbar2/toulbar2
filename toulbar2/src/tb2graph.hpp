@@ -37,10 +37,11 @@ private:
     StoreInt curUsingBlkIndex;
     vector<DLink<T>*> blockStore;
 public:
-    DLinkStore(StoreStack<int, int> *storeInt, int blkSize_)
+    DLinkStore(int blkSize_)
         : blkSize(blkSize_)
-        , curEmpty(0, storeInt)
-        , curUsingBlkIndex(0, storeInt) {
+    , curEmpty(0)
+    , curUsingBlkIndex(0)
+    {
         blockStore.push_back(new DLink<T>[blkSize]);
     }
     ~DLinkStore() {
@@ -125,8 +126,8 @@ private:
         int rEdgeIndex; // the pointer to the opposite edge
         List_Node(int depth, Store *storeStack,
                   int a = -1, Cost w = 0, Cost c = 0, int t = NO_TAG, int rIndex = -1)
-            : weight(w, &storeStack->storeCost)
-            , cap(c, &storeStack->storeCost)
+        : weight(w)
+        , cap(c)
             , adj(a), tag(t), rEdgeIndex(rIndex) {}
     };
 

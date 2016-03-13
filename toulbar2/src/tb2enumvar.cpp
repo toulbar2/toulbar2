@@ -17,16 +17,16 @@
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) :
     Variable(w, n, iinf, isup),
-    domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
-    support(iinf, &w->getStore()->storeValue), watchForIncrease(false), watchForDecrease(false)
+    domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST),
+    support(iinf), watchForIncrease(false), watchForDecrease(false)
 {
     init();
 }
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) :
     Variable(w, n, min(d, dsize), max(d, dsize)),
-    domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST, &w->getStore()->storeCost),
-    support(min(d, dsize), &w->getStore()->storeValue), watchForIncrease(false), watchForDecrease(false)
+    domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST),
+    support(min(d,dsize)), watchForIncrease(false), watchForDecrease(false)
 {
     init();
 }
@@ -38,7 +38,7 @@ void EnumeratedVariable::init()
         exit(EXIT_FAILURE);
     }
 
-    costs = vector<StoreCost>(getDomainInitSize(), StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+    costs = vector<StoreCost>(getDomainInitSize(), StoreCost(MIN_COST));
     linkACQueue.content.var = this;
     linkACQueue.content.timeStamp = -1;
     linkDACQueue.content.var = this;

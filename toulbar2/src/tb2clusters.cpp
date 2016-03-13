@@ -29,10 +29,10 @@ bool CmpClusterStruct::operator()(const Cluster *lhs, const Cluster *rhs) const
 Separator::Separator(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in),
       cluster(NULL),
-      nonassigned(arity_in, &wcsp->getStore()->storeInt),
-      isUsed(false, &wcsp->getStore()->storeInt),
-      lbPrevious(MIN_COST, &wcsp->getStore()->storeCost),
-      optPrevious(false, &wcsp->getStore()->storeInt)
+        nonassigned(arity_in),
+        isUsed(false),
+        lbPrevious(MIN_COST),
+        optPrevious(false)
 {
     Char *tbuf = new Char [arity_in + 1];
     tbuf[arity_in] = '\0';
@@ -60,12 +60,11 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in)
     }
 }
 
-Separator::Separator(WCSP *wcsp)
-    : AbstractNaryConstraint(wcsp),
-      nonassigned(0, &wcsp->getStore()->storeInt),
-      isUsed(false, &wcsp->getStore()->storeInt),
-      lbPrevious(MIN_COST, &wcsp->getStore()->storeCost),
-      optPrevious(false, &wcsp->getStore()->storeInt)
+Separator::Separator(WCSP *wcsp) : AbstractNaryConstraint(wcsp),
+        nonassigned(0),
+        isUsed(false),
+        lbPrevious(MIN_COST),
+        optPrevious(false)
 {
 }
 
@@ -77,7 +76,7 @@ void Separator::setup(Cluster *cluster_in)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         EnumeratedVariable *var = (EnumeratedVariable *) cluster->getWCSP()->getVar(*it);
-        delta.push_back(vector<StoreCost>(var->getDomainInitSize(), StoreCost(MIN_COST, &cluster->getWCSP()->getStore()->storeCost)));
+        delta.push_back( vector<StoreCost>(var->getDomainInitSize(), StoreCost(MIN_COST)) );
         ++it;
     }
 
@@ -477,9 +476,9 @@ void Separator::print(ostream &os)
  */
 
 Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL),
-    lb(MIN_COST, &wcsp->getStore()->storeCost), ub(MAX_COST), lbRDS(MIN_COST),
-    active(true, &wcsp->getStore()->storeInt),
-    countElimVars(1, &wcsp->getStore()->storeBigInteger),
+        lb(MIN_COST), ub(MAX_COST), lbRDS(MIN_COST),
+        active(true),
+        countElimVars(1),
     cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0) {}
 
 Cluster::~Cluster()
@@ -903,8 +902,8 @@ void Cluster::cartProduct(BigInteger &prodCart)
 TreeDecomposition::TreeDecomposition(WCSP *wcsp_in) :
     wcsp(wcsp_in),
     rootRDS(NULL),
-    currentCluster(-1, &wcsp_in->getStore()->storeInt),
-    deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false, &wcsp_in->getStore()->storeInt)))
+          currentCluster(-1),
+          deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false)))
 {
 }
 

@@ -13,9 +13,8 @@
  */
 
 
-IntervalVariable::IntervalVariable(WCSP *w, string n, Value iinf, Value isup) :
-    Variable(w, n, iinf, isup),
-    infCost(MIN_COST, &w->getStore()->storeCost), supCost(MIN_COST, &w->getStore()->storeCost)
+IntervalVariable::IntervalVariable(WCSP *w, string n, Value iinf, Value isup) : Variable(w, n, iinf, isup),
+        infCost(MIN_COST), supCost(MIN_COST)
 {
 }
 

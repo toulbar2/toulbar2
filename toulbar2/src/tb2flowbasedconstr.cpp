@@ -1,9 +1,8 @@
 #include "tb2flowbasedconstr.hpp"
 #include "tb2wcsp.hpp"
 
-FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-        int arity_in) : GlobalConstraint(wcsp, scope_in, arity_in, 0),
-    graph(NULL), cost(MIN_COST, &wcsp->getStore()->storeCost), zeroEdges(NULL), hasConfigOrganized(false)
+FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : GlobalConstraint(wcsp, scope_in, arity_in, 0),
+        graph(NULL), cost(MIN_COST), zeroEdges(NULL), hasConfigOrganized(false)
 {
 }
 

@@ -8,14 +8,12 @@
 
 
 
-VACVariable::VACVariable(WCSP *wcsp, string n, Value iinf, Value isup) : EnumeratedVariable(wcsp, n, iinf, isup)
-    , vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACVariable::VACVariable (WCSP *wcsp, string n, Value iinf, Value isup) : EnumeratedVariable(wcsp, n, iinf, isup), vac(wcsp->vac), myThreshold(MIN_COST)
 {
     init();
 }
 
-VACVariable::VACVariable(WCSP *wcsp, string n, Value *d, int dsize) : EnumeratedVariable(wcsp, n, d, dsize)
-    , vac(wcsp->vac), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACVariable::VACVariable (WCSP *wcsp, string n, Value *d, int dsize) : EnumeratedVariable(wcsp, n, d, dsize), vac(wcsp->vac), myThreshold(MIN_COST)
 {
     init();
 }
@@ -385,7 +383,7 @@ bool VACVariable::averaging()
  *   A class that stores information about a binary cost function
  */
 
-VACBinaryConstraint::VACBinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) :  BinaryConstraint(wcsp, xx, yy, tab, storeCost), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACBinaryConstraint::VACBinaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab) :  BinaryConstraint(wcsp, xx, yy, tab), myThreshold(MIN_COST)
 {
     for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {
         kX.push_back(0);
@@ -397,7 +395,7 @@ VACBinaryConstraint::VACBinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enu
     }
 }
 
-VACBinaryConstraint::VACBinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : BinaryConstraint(wcsp, storeCost) , myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACBinaryConstraint::VACBinaryConstraint (WCSP *wcsp) : BinaryConstraint(wcsp) , myThreshold(MIN_COST)
 {}
 
 void VACBinaryConstraint::VACfillElimConstr()
