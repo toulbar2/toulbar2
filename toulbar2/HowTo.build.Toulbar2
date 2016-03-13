@@ -149,7 +149,7 @@ ctest -j=2 -R "Phase2" ;
 # you can test a given command line on the instances (*.wcsp file) include in the directory
 # the command line can be  overloaded in specifying the option in  the test-opt.cmake locate in the directory
 # this file include 3 variables : command_line_option , test_timeout, test_regexp
-# test timeout ( used for all wcsp founded in the director)
+# test timeout ( used for all wcsp found in the director)
 #regexp to define successfull end. =>  set (test_regexp  "Optimum: ${UB}")   for each instance
 # will compare the toulbar2 output to the upper bound include in a ub file corresponding to the instances.
 

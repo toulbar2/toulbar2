@@ -2,7 +2,7 @@
 # cover test for toulbar2
 # read a array of option include in $COVER_OPT_file 
 # and generate a new test for each entrie
-include(${My_cmake_scritp}/ManageString.cmake)
+include(${My_cmake_script}/ManageString.cmake)
 
 MESSAGE(STATUS "\n##############COVER  liste #############\n")
 	MESSAGE(STATUS " COVER TEST SCANING  ${Default_cover_dir} ")
@@ -28,9 +28,9 @@ SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmak
 
 IF (EXISTS ${COVER_OPT_file} ) 
      include (${COVER_OPT_file})
-     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} founded ")
+     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found ")
 ELSE ()
-      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT founded ")
+      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found ")
 ENDIF()
 
 
@@ -48,14 +48,14 @@ FOREACH (UTEST ${cover_file})
 
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} founded ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found ")
 	ELSE()
 	# init default value :
 	set (test_timeout ${Default_test_timeout})
 	set (test_regexp  ${Default_test_regexp})
 	ENDIF()	
 
-#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not founded  ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not found  ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
 #	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 
 
