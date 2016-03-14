@@ -307,14 +307,15 @@ void EnumeratedVariable::setCostProvidingPartition()
     for (int scopeSize = maxArity; scopeSize > 3; scopeSize--) {
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
             int arity = (*iter).constr->arity();
-            if (arity == scopeSize) {
+            if (arity == scopeSize && (*iter).constr->isGlobal()) {
+                AbstractNaryConstraint *ctr = (AbstractNaryConstraint *) (*iter).constr;
                 for (int i = 0; i < arity; i++) {
-                    Variable *var = (*iter).constr->getVar(i);
+                    Variable *var = ctr->getDACVar(i);
                     if (var != this && !used[var->wcspIndex]) {
                         //		  if (var != this && (used.find(var->wcspIndex) == used.end())) {
                         used[var->wcspIndex] = true;
                         //			used.insert(var->wcspIndex);
-                        (*iter).constr->linkCostProvidingPartition((*iter).scopeIndex, var);
+                        ctr->linkCostProvidingPartition((*iter).scopeIndex, var);
                     }
                 }
             }
@@ -552,6 +553,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
                 if (watchForIncrease) queueInc();
                 else queueAC();
                 if (PARTIALORDER) queueDAC();
+                if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmin)(*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
@@ -602,6 +604,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
                 if (watchForDecrease) queueDec();
                 else queueAC();
                 if (PARTIALORDER) queueDAC();
+                if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmax)(*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
@@ -646,6 +649,7 @@ void EnumeratedVariable::removeFast(Value value)
         domain.erase(value);
         queueAC();
         if (PARTIALORDER) queueDAC();
+        if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
         if (ToulBar2::removevalue)(*ToulBar2::removevalue)(wcsp->getIndex(), wcspIndex, value, wcsp->getSolver());
     }
 }
@@ -1406,12 +1410,12 @@ bool EnumeratedVariable::verify()
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint *ctr1 = (*iter).constr;
         if (ctr1->isSep()) continue;
-        if (ctr1->arity() > 3) continue;
+        if(ctr1->isGlobal() || ctr1->arity() > 3) continue;
         for (ConstraintList::iterator iter2 = iter; iter2 != constrs.end(); ++iter2) {
             Constraint *ctr2 = (*iter2).constr;
             if (ctr1 == ctr2) continue;
             if (ctr2->isSep()) continue;
-            if (ctr2->arity() > 3) continue;
+            if(ctr2->isGlobal() || ctr2->arity() > 3) continue;
             if (ctr1->arity() == 3 && ctr2->arity() == 2) {
                 TernaryConstraint *tctr1 = (TernaryConstraint *) ctr1;
                 BinaryConstraint *bctr2 = (BinaryConstraint *) ctr2;

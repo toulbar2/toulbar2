@@ -79,6 +79,7 @@ void GlobalConstraint::print(ostream &os)
             // os << endl;
         }
     }
+    if (ToulBar2::verbose >= 6) for(int i = 0; i < arity();i++) os << *scope[i] << endl;
 }
 
 Cost GlobalConstraint::eval(String s)
@@ -237,8 +238,8 @@ void GlobalConstraint::propagateEAC()
 //    changeAfterProject(provide, deltas);
 }
 
-void GlobalConstraint::propagateDAC()
-{
+void GlobalConstraint::propagateDAC() {
+    if (ToulBar2::verbose >= 3) cout << "propagateDAC for " << *this << endl;
 
     vector<map<Value, Cost> > deltas;
     vector<int> vars;
@@ -419,8 +420,9 @@ void GlobalConstraint::fillEAC2(int varindex)
     }
 }
 
-void GlobalConstraint::findFullSupportEAC(int index)
-{
+//TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
+void GlobalConstraint::findFullSupportEAC(int index) {
+    if (ToulBar2::verbose >= 3) cout << "findFullSupportEAC for variable " << index << endl;
     currentVar = -1;
     //if (needPropagateEAC)
     {
@@ -483,8 +485,11 @@ void GlobalConstraint::findFullSupportEAC(int index)
     }
 }
 
+// THIS CODE IS NEVER USED!!!
+//TODO: applies DAC order when enumerating variables
 void GlobalConstraint::findFullSupport(int varindex, vector<int> &support, bool isEAC)
 {
+    if (ToulBar2::verbose >= 3) cout << "findFullSupport for variable " << varindex << endl;
     //wcsp->revise(this);
     EnumeratedVariable *var = (EnumeratedVariable *)getVar(varindex);
     vector<map<Value, Cost> > deltas(support.size());

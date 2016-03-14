@@ -1056,7 +1056,7 @@ WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int *_scope) : D
 WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int *_scope, istream &file) : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    display();
+    //display();
 }
 
 WeightedAllDifferent::~WeightedAllDifferent() {}

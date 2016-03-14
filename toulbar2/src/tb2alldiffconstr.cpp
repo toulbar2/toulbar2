@@ -198,4 +198,8 @@ void AllDiffConstraint::print(ostream &os)
         if (i < arity_ - 1) os << ",";
     }
     os << ")[" << ((mode == VAR) ? "var" : "dec") << "," << def << "]";
+    if (ToulBar2::verbose >= 4) {
+        os << endl;
+        GlobalConstraint::print(os);
+    }
 }
