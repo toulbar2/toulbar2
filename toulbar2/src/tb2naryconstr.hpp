@@ -114,7 +114,7 @@ class NaryConstraintMap : public NaryConstraint
 {
     typedef map<String,Cost> TUPLES;
     TUPLES* pf;
-
+//    Cost *costs;
 
 public:
 
@@ -127,6 +127,10 @@ public:
     TUPLES* getpf() {return pf;}
     int size() {return pf->size();}
     Long space() const {return (Long) pf->size() * (sizeof(Cost) + arity()*sizeof(Char));}
+//    Long space(Long nbtuples) const {return nbtuples * (sizeof(Cost) + arity()*sizeof(Char));}
+//    bool expandtodo() {return space() >= getDomainInitSizeProduct();}
+//    bool expandtodo(Long nbtuples) {return space(nbtuples) >= getDomainInitSizeProduct();}
+//    void expand();
     bool consistent( String& t );
     Cost eval( String& s );
     Cost eval( String& s, EnumeratedVariable** scope_in );
