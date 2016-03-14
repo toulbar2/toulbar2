@@ -59,6 +59,7 @@ public:
     virtual void setDACScopeIndex() {}
     // return the smallest DAC ordering index in the constraint scope except for one variable having a forbidden scope index
     virtual int getSmallestDACIndexInScope(int forbiddenScopeIndex) = 0;
+    virtual Variable *getDACVar(int scopeDACIndex) const = 0; // return scope variable with associated index in the sorted scope by DAC ordering
 
     virtual void propagate() = 0;
     virtual void increase(int index) {propagate();}

@@ -296,7 +296,7 @@ void EnumeratedVariable::setCostProvidingPartition()
             if (arity == scopeSize && (*iter).constr->isGlobal()) {
                 AbstractNaryConstraint *ctr = (AbstractNaryConstraint *) (*iter).constr;
                 for (int i=0;i<arity;i++) {
-                    Variable *var = ctr->scope_dac[i];
+                    Variable *var = ctr->getDACVar(i);
                     if (var != this && !used[var->wcspIndex]) {
                         //		  if (var != this && (used.find(var->wcspIndex) == used.end())) {
                         used[var->wcspIndex] = true;
