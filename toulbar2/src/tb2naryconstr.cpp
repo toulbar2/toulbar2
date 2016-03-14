@@ -365,10 +365,12 @@ NaryConstraintMap::~NaryConstraintMap()
     if (pf) delete pf;
 }
 
-
-
-
-
+//void NaryConstraintMap::expand()
+//{
+//    Long sz = getDomainInitSizeProduct();
+//    costs = new Cost[sz];
+//    for (int i=0; i<sz; i++) costs[i] = default_cost;
+//}
 
 void NaryConstraintMap::resetFilters()
 {
