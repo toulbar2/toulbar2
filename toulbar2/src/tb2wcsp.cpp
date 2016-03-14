@@ -631,6 +631,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval) {
                 elimBinConstrs.push_back(bctr);
             }
         }
+    }
     return ctr->wcspIndex;
 }
 
