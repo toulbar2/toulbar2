@@ -313,6 +313,8 @@ public:
 
     void postUnary(int xIndex, vector<Cost> &costs);
     int postUnary(int xIndex, Value *d, int dsize, Cost penalty);
+    void postUnaryConstraint(int xIndex, vector<Cost> &costs) {postUnary(xIndex, costs);}
+    int postUnaryConstraint(int xIndex, Value *d, int dsize, Cost penalty) {return postUnary(xIndex, d, dsize, penalty);}
     int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL-MIN_VAL);
     int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
@@ -321,7 +323,7 @@ public:
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
-    void postNaryConstraintEnd(int ctrindex) {if (!isDelayedNaryCtr) getCtr(ctrindex)->propagate();}
+    void postNaryConstraintEnd(int ctrindex);
 
     int postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file, int *constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 

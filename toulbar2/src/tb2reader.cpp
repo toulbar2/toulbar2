@@ -388,7 +388,6 @@ void WCSP::read_wcsp(const char *fileName)
                 else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
-
             } else {
                 if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }
                 file >> ntuples;
@@ -522,7 +521,13 @@ void WCSP::read_wcsp(const char *fileName)
                 scopeIndex[2] = k;
                 string gcname;
                 file >> gcname;
-                postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
+                if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
+                    DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
+                    decomposableGCF->addToCostFunctionNetwork(this);
+                }
+                else { // monolithic global cost functions
+                    postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
+                }
             }
         } else if (arity == 2) {
             maxarity = max(maxarity,arity);
@@ -617,8 +622,16 @@ void WCSP::read_wcsp(const char *fileName)
                     file >> funcparam6;
                     postSpecialDisjunction(i,j,funcparam1,funcparam2,funcparam3,funcparam4,funcparam5,funcparam6);
                 } else {
-                    cerr << "Error: function " << funcname << " not implemented!" << endl;
-                    exit(EXIT_FAILURE);
+                    int scopeIndex[2];
+                    scopeIndex[0] = i;
+                    scopeIndex[1] = j;
+                    if (funcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
+                        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcname, arity, scopeIndex, file);
+                        decomposableGCF->addToCostFunctionNetwork(this);
+                    }
+                    else { // monolithic global cost functions
+                        postGlobalConstraint(scopeIndex, arity, funcname, file, &nbconstr);
+                    }
                 }
             }
         } else if (arity == 1) {
@@ -628,40 +641,54 @@ void WCSP::read_wcsp(const char *fileName)
             if (vars[i]->enumerated()) {
                 EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
                 file >> defval;
-                file >> ntuples;
-                TemporaryUnaryConstraint unaryconstr;
-                unaryconstr.var = x;
-                if (ntuples < 0) {
-                    int reusedconstr = -ntuples-1;
-                    if (reusedconstr >= (int) sharedSize.size()) {
-                        cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
+                if (defval == -1) {
+                    int scopeIndex[1];
+                    scopeIndex[0] = i;
+                    string gcname;
+                    file >> gcname;
+                    if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
+                        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
+                        decomposableGCF->addToCostFunctionNetwork(this);
                     }
-                    ntuples = sharedSize[reusedconstr];
-                    assert(ntuples == (int) x->getDomainInitSize());
-                    unaryconstr.costs = sharedCosts[reusedconstr];
+                    else { // monolithic global cost functions
+                        postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
+                    }
+                } else {
+                    file >> ntuples;
+                    TemporaryUnaryConstraint unaryconstr;
+                    unaryconstr.var = x;
+                    if (ntuples < 0) {
+                        int reusedconstr = -ntuples-1;
+                        if (reusedconstr >= (int) sharedSize.size()) {
+                            cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
+                            exit(EXIT_FAILURE);
+                        }
+                        ntuples = sharedSize[reusedconstr];
+                        assert(ntuples == (int) x->getDomainInitSize());
+                        unaryconstr.costs = sharedCosts[reusedconstr];
+                        unaryconstrs.push_back(unaryconstr);
+                        continue;
+                    }
+                    for (a = 0; a < x->getDomainInitSize(); a++) {
+                        Cost tmpcost = defval*K;
+                        if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
+                        unaryconstr.costs.push_back(tmpcost);
+                    }
+                    for (k = 0; k < ntuples; k++) {
+                        file >> a;
+                        file >> cost;
+                        Cost tmpcost = cost*K;
+                        if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
+                        assert(a>= 0 && a < x->getDomainInitSize());
+                        unaryconstr.costs[a] = tmpcost;
+                    }
+                    if (shared) {
+                        sharedSize.push_back(x->getDomainInitSize());
+                        sharedCosts.push_back(unaryconstr.costs);
+                        sharedTuples.push_back(emptyTuples);
+                    }
                     unaryconstrs.push_back(unaryconstr);
-                    continue;
                 }
-                for (a = 0; a < x->getDomainInitSize(); a++) {
-                    Cost tmpcost = defval*K;
-                    if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
-                    unaryconstr.costs.push_back(tmpcost);
-                }
-                for (k = 0; k < ntuples; k++) {
-                    file >> a;
-                    file >> cost;
-                    Cost tmpcost = cost*K;
-                    if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
-                    assert(a>= 0 && a < x->getDomainInitSize());
-                    unaryconstr.costs[a] = tmpcost;
-                }
-                if (shared) {
-                    sharedSize.push_back(x->getDomainInitSize());
-                    sharedCosts.push_back(unaryconstr.costs);
-                    sharedTuples.push_back(emptyTuples);
-                }
-                unaryconstrs.push_back(unaryconstr);
             } else {
                 file >> defval;
                 if (defval == MIN_COST) {
@@ -678,7 +705,7 @@ void WCSP::read_wcsp(const char *fileName)
                         exit(EXIT_FAILURE);
                     }
                 }
-                postUnary(i,dom,ntuples,defval);
+                postUnaryConstraint(i,dom,ntuples,defval);
                 delete [] dom;
             }
         } else if (arity == 0) {
@@ -735,7 +762,7 @@ void WCSP::read_wcsp(const char *fileName)
 
     // unary cost functions are delayed for compatibility issue (same lowerbound found) with old toolbar solver
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-        postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     histogram();
 
@@ -1032,7 +1059,7 @@ void WCSP::read_uai2008(const char *fileName)
     increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-        postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     histogram();
     cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
@@ -1317,7 +1344,7 @@ void WCSP::read_wcnf(const char *fileName)
     increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
-        postUnary(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     histogram();
     cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
@@ -1477,7 +1504,7 @@ void WCSP::read_qpbo(const char *fileName)
             vector<Cost> costs(2, 0);
             costs[0] = unaryCosts0[i];
             costs[1] = unaryCosts1[i];
-            postUnary(i, costs);
+            postUnaryConstraint(i, costs);
         }
     }
     histogram();
