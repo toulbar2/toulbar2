@@ -139,8 +139,9 @@ void DPGlobalConstraint::propagateDAC(){
 
     clear();
 
-    for(int i = 0; i < arity_; i++){
-        EnumeratedVariable * x = scope[i];
+    for(int ii = 0; ii < arity_; ii++){
+        EnumeratedVariable * x = scope_dac[ii];
+        int i = scope_inv[x->wcspIndex];
         for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it){
             if (x->unassigned()) {
                 deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
@@ -150,8 +151,9 @@ void DPGlobalConstraint::propagateDAC(){
     }
 
     bool changed = true;    
-    for(int i = 0; i < arity(); i++) {
-        EnumeratedVariable * x = scope[i];
+    for(int ii = 0; ii < arity_; ii++){
+        EnumeratedVariable * x = scope_dac[ii];
+        int i = scope_inv[x->wcspIndex];
         if (x->unassigned()) {
             findSupport(i, changed);
         }
@@ -183,6 +185,7 @@ bool DPGlobalConstraint::isEAC(int var, Value val){
     return ret;
 }
 
+//TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
 void DPGlobalConstraint::findFullSupportEAC(int var){
     assert(fullySupportedSet[var].find(var) == fullySupportedSet[var].end());
 
