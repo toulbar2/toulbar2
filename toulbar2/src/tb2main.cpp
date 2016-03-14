@@ -741,6 +741,8 @@ void help_msg(char *toulbar2filename)
     cout << "      tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions" << endl;
     cout << " or:                                                                               " << endl;
     cout << "      nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
+    cout << " or:                                                                               " << endl;
+    cout << "      salldiff,{n},{m},{p1},{p2},{p3}...{pn},{seed}  pn is the num of n-ary cost functions in extension if num is positive or n is strictly less than four, else -num salldiff global cost functions" << endl;
     cout << "---------------------------" << endl;
     cout << "			" << endl;
 
@@ -1818,8 +1820,8 @@ int _tmain(int argc, TCHAR *argv[])
     int seed = 3;
     vector<int> p;
 #ifndef MENDELSOFT
-    if (random_desc != NULL) {
-        cout << "random test ON" << endl;
+    if (random_desc !=NULL)
+    {
         int pn[10];
         int narities = 0;
         if (strstr(random_desc, "bin")) {
@@ -1840,15 +1842,38 @@ int _tmain(int argc, TCHAR *argv[])
         }
         if (strstr(random_desc, "nary")) {
             randomproblem = true;
-            char *pch = strtok(random_desc, "-");
-            pch = strtok(NULL, "-");
+            char* pch = strtok (random_desc,"-+,");
+            pch = strtok (NULL, "-+,");
             n = atoi(pch);
-            pch = strtok(NULL, "-");
+            pch = strtok (NULL, "-+,");
             m = atoi(pch);
 
-            while (pch != NULL) {
-                pch = strtok(NULL, "-");
-                if (pch != NULL) {
+            while (pch != NULL)
+            {
+                pch = strtok (NULL, "-+,");
+                if (pch != NULL)
+                {
+                    pn[narities] = atoi(pch);
+                    narities++;
+                }
+            }
+            narities--;
+            seed = pn[narities];
+        }
+        if (strstr(random_desc,"salldiff"))
+        {
+            randomproblem = true;
+            char* pch = strtok (random_desc,"+,");
+            pch = strtok (NULL, "+,");
+            n = atoi(pch);
+            pch = strtok (NULL, "+,");
+            m = atoi(pch);
+
+            while (pch != NULL)
+            {
+                pch = strtok (NULL, "+,");
+                if (pch != NULL)
+                {
                     pn[narities] = atoi(pch);
                     narities++;
                 }
