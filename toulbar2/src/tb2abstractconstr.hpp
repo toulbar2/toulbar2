@@ -48,6 +48,7 @@ public:
     int arity() const {return 1;}
 
     Variable *getVar(int varCtrIndex) const {return x;}
+    Variable *getDACVar(int varCtrIndex) const {return getVar(varCtrIndex);}
 
     Variable *getVarDiffFrom(Variable *v) const {
         if (v != x) return x;
@@ -138,6 +139,7 @@ public:
     int getDACScopeIndex() const {return dacvar;}
     void setDACScopeIndex() {if (x->getDACOrder() < y->getDACOrder()) dacvar = 0; else dacvar = 1;}
     int getSmallestDACIndexInScope(int forbiddenScopeIndex) {assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 2); return (forbiddenScopeIndex) ? x->getDACOrder() : y->getDACOrder();}
+    Variable *getDACVar(int varCtrIndex) const {return ((varCtrIndex == 0) == (dacvar == 0))?x:y;}
 
     void getScope(TSCOPE &scope_inv) {
         scope_inv.clear();
@@ -289,6 +291,25 @@ public:
             exit(EXIT_FAILURE);
         }
     }
+    Variable *getDACVar(int varCtrIndex) const
+    {
+        if (varCtrIndex == 0) {
+            switch (dacvar) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: exit(EXIT_FAILURE);
+            }
+        } else { // varCtrIndex >= 1
+            switch (dacvar) {
+            case 0: return ((varCtrIndex == 1) == (y->getDACOrder() < z->getDACOrder()))?y:z;
+            case 1: return ((varCtrIndex == 1) == (x->getDACOrder() < z->getDACOrder()))?x:z;
+            case 2: return ((varCtrIndex == 1) == (x->getDACOrder() < y->getDACOrder()))?x:y;
+            default: exit(EXIT_FAILURE);
+            }
+        }
+    }
+
     void getScope(TSCOPE &scope_inv) {
         scope_inv.clear();
         scope_inv[ x->wcspIndex ] = 0;
@@ -445,6 +466,10 @@ public:
                 }
             }
         return indexmin;
+    }
+    Variable *getDACVar(int varCtrIndex) const {
+        assert(varCtrIndex < arity_);
+        return scope_dac[varCtrIndex];
     }
 
     set<Constraint *> subConstraint() {
