@@ -147,7 +147,11 @@ public:
 
     /// \brief enforces problem upper bound when exploring an alternative search node
     void enforceUb() {
-        if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), ub)) THROWCONTRADICTION;
+        if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?
+                 ((Cost)lb + ToulBar2::costMultiplier):
+                 (Cost)lb),
+                ub))
+            THROWCONTRADICTION;
         objectiveChanged=true;
     }
 
@@ -155,7 +159,7 @@ public:
     /// \deprecated
     void decreaseUb(Cost newUb) {
         if (newUb < ub) {
-            if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?(lb + ToulBar2::costMultiplier):lb), newUb)) THROWCONTRADICTION;
+            if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?((Cost)lb + ToulBar2::costMultiplier):(Cost)lb), newUb)) THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged=true;
         }

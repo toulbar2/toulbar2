@@ -6,13 +6,14 @@
 cmake_minimum_required(VERSION 2.6)
 # source directory
 #do not change this variable ==> location of the toulbar2 source code
-set (My_cmake_scritp "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
+set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
 set (My_doc "${CMAKE_CURRENT_SOURCE_DIR}/doc" ) # doxygen repository default ./doc/
 set (doc_destination "share/doc")   		#path of doc installation 
 set (My_validation "validation")		#validation test location
 set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
+list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
 set (MAINTAINER "David allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
 set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
@@ -61,6 +62,8 @@ include(CMakeDependentOption)
 	OPTION(verbose "verbose mode [default:on]" ON)
 	OPTION(COVER_TEST "cover test [default:on]" ON)
 	OPTION(BENCH "benchmarcking [default:on]" OFF)
+	OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc)" ON)
+	mark_as_advanced(WITH_MEM_JEMALLOC)
 
 
 ###########################
@@ -204,11 +207,6 @@ IF(TOULBAR2_ONLY)
         SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
 ENDIF(TOULBAR2_ONLY)
 
-#############################"
-# init version NUMBER
-############################
-
-
 ##############################
 IF(ILOG)
 	set(LIBTB2INT ON)
@@ -235,7 +233,7 @@ IF(WIN32)
 ######################################
 
 # mingW32 env setup
-	include(${My_cmake_scritp}/mingw32-config.cmake) 
+	include(${My_cmake_script}/mingw32-config.cmake) 
 
 ELSE(WIN32)
 
@@ -246,12 +244,23 @@ ELSE(WIN32)
 ENDIF(WIN32)
 
 ###########
-# find gmp 
+# find opt libs 
 ###########
+if(WITH_MEM_JEMALLOC)
+  find_package(JeMalloc)
+  if(NOT JEMALLOC_FOUND)
+    set(WITH_MEM_JEMALLOC OFF)
+  endif()
+endif()
+
+if(WITH_MEM_JEMALLOC)
+  link_directories(${JEMALLOC_LIBPATH})
+  SET (all_depends  ${all_depends} "jemalloc") 
+endif()
 
 MESSAGE(STATUS "search for GMP library")
 INCLUDE(FindPkgConfig)
-include(${My_cmake_scritp}/FindGmp.cmake)
+include(${My_cmake_script}/FindGmp.cmake)
 SET (all_depends  ${all_depends} "gmp") 
 #INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
@@ -265,19 +274,20 @@ INCLUDE(FindGit)
 # you can also define your own list and add it to the wall list
 # for example: SET (source_files ${source_files} ${my_file_2add})
 
-include(${My_cmake_scritp}/source_files.cmake)
+include(${My_cmake_script}/source_files.cmake)
 
 ########################
 
 IF(Boost) 
-  include(${My_cmake_scritp}/Boost_option.cmake)
+  include(${My_cmake_script}/Boost_option.cmake)
 ENDIF(Boost)
 
 ####################
 #  FLAG XML ON  ==> xmlcps supported
 #######################
 
-include(${My_cmake_scritp}/xmlcsp.cmake)
+include(${My_cmake_script}/xmlcsp.cmake)
+
 
 ################
 # build executable
@@ -360,13 +370,13 @@ ENDIF(LIBTB2INT)
 ###############################################
 # Ilog Solver 6.0
 ###############################################
-include(${My_cmake_scritp}/iloglue.cmake)
+include(${My_cmake_script}/iloglue.cmake)
 
 ##############
 # define option
 #############
 
-include(${My_cmake_scritp}/define_option.cmake)
+include(${My_cmake_script}/define_option.cmake)
 MESSAGE(STATUS "######## define_option passed#########################")
 
 #################
@@ -374,7 +384,7 @@ MESSAGE(STATUS "######## define_option passed#########################")
 ###############
 
 IF(COVER_TEST) 
-include(${My_cmake_scritp}/test.cmake)
+include(${My_cmake_script}/test.cmake)
 
 MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
 MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
@@ -382,12 +392,12 @@ MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...
 #############
 # COVER TEST
 #########
-include(${My_cmake_scritp}/cover-test.cmake)
+include(${My_cmake_script}/cover-test.cmake)
 ENDIF(COVER_TEST)
 
 IF(BENCH)
-include(${My_cmake_scritp}/test_bench.cmake)
-include(${My_cmake_scritp}/add_make_command.cmake)
+include(${My_cmake_script}/test_bench.cmake)
+include(${My_cmake_script}/add_make_command.cmake)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/script/MatchRegexp.txt
  ${CMAKE_CURRENT_BINARY_DIR}/MatchRegexp.txt COPYONLY)
@@ -421,8 +431,8 @@ IF (BUILD_API_DOC)
 	FIND_PACKAGE(Doxygen)
 
    IF (DOXYGEN_FOUND)
-	MESSAGE(STATUS "#### package doxygen founded #############################")
-	include(${My_cmake_scritp}/UseDoxygen.cmake)
+	MESSAGE(STATUS "#### package doxygen found #############################")
+	include(${My_cmake_script}/UseDoxygen.cmake)
    ELSE(DOXYGEN_FOUND)
 	MESSAGE(STATUS "#### doxy packe not found .cmake cannot generate doc...#############################")
    ENDIF (DOXYGEN_FOUND)
@@ -444,5 +454,5 @@ ENDIF (BUILD_API_DOC)
 ###################################################################################"
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/MyCPackConf.cmake)
 INCLUDE(InstallRequiredSystemLibraries)
-include(${My_cmake_scritp}/package.cmake)
+include(${My_cmake_script}/package.cmake)
 ######### END END

@@ -279,12 +279,12 @@ CSimpleOpt::SOption g_rgOptions[] =
     { OPT_boostingBTD,          		(char*) "-E",             			SO_NONE    	},
     { OPT_varOrder,		    		(char*) "-O",             			SO_REQ_SEP 	}, // filename of variable order
     { OPT_problemsaved_filename,        (char*) "--save",                       SO_REQ_SEP  }, // filename of saved problem
-    { OPT_showSolutions,         		(char*) "-s",             			SO_NONE    	},//print solution founded
-    { OPT_showSolutions,         		(char*) "--show",          			SO_NONE    	},//print solution founded
+    { OPT_showSolutions,         		(char*) "-s",             			SO_NONE    	},//print solution found
+    { OPT_showSolutions,         		(char*) "--show",          			SO_NONE    	},//print solution found
     { OPT_writeSolution,        		(char*) "-w",       			  	SO_OPT  	}, //  depending of value write last solution found in filename "sol" in different format
 
     { OPT_pedigreePenalty,       		(char*) "-u",       			   	SO_REQ_SEP  	}, // int ..
-    { OPT_allSolutions,	  		(char*) "-a",       			  	SO_NONE		}, // counting option ...print solution founded
+    { OPT_allSolutions,	  		(char*) "-a",       			  	SO_NONE		}, // counting option ...print solution found
     { OPT_approximateCountingBTD,	 	(char*) "-D",           			SO_NONE    	}, //approximate counting
     { OPT_binaryBranching,			(char*) "-b",       			  	SO_NONE    	},
     { OPT_binaryBranching,			(char*) "-binaryBranching",         		SO_NONE    	},
@@ -754,7 +754,6 @@ int _tmain(int argc, TCHAR * argv[])
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
     if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2015"<<endl;
-    //	 cout << "Toulbar2 Binary Path="<<CurrentBinaryPath<<"toulbar2"<<endl;
 
     // --------------------------simple opt ----------------------
 
@@ -838,10 +837,6 @@ int _tmain(int argc, TCHAR * argv[])
                 help_msg(argv[0]);
                 return 0;
             }
-
-
-
-
 
 
             ////////////////////////////////////////////////////////////////////////////////////

@@ -4,15 +4,15 @@
 #include "tb2clusters.hpp"
 
 GlobalConstraint::GlobalConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval) : AbstractGlobalConstraint(wcsp, scope_in, arity_in),
-        extendedCost(NULL), projectedCost(0, &wcsp->getStore()->storeCost),
-        nonassigned(arity_in, &wcsp->getStore()->storeInt),
+        extendedCost(NULL), projectedCost(0),
+        nonassigned(arity_in),
         currentVar(-1), needPropagateAC(false), needPropagateDAC(false), needPropagateEAC(false),
         currentDepth(-1), def(1), mode(0),
         count_nic(0), count_gac(0), count_fdac(0), count_edac(0), error(0)
 {
     deltaCost = new vector<StoreCost>[arity_];
     for (int i=0;i<arity_in;i++) {
-        deltaCost[i] = vector<StoreCost>(scope_in[i]->getDomainInitSize(), StoreCost(0,&(wcsp->getStore())->storeCost));
+        deltaCost[i] = vector<StoreCost>(scope_in[i]->getDomainInitSize(), StoreCost(0));
         fill(deltaCost[i].begin(), deltaCost[i].end(), 0);
     }
 

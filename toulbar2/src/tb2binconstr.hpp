@@ -60,9 +60,9 @@ protected:
     void extendY(Value value, Cost cost) {extend(y,value,cost,deltaCostsY);}
 
 public:
-    BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost);
+    BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab);
 
-    BinaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
+    BinaryConstraint(WCSP *wcsp);
 
     ~BinaryConstraint() {}
 
@@ -269,11 +269,11 @@ public:
         y = yin;
         sizeX = x->getDomainInitSize();
         sizeY = y->getDomainInitSize();
-        if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
-        if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+        if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST));
+        if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST));
         if (sizeX > supportX.size()) supportX.resize(sizeX);
         if (sizeY > supportY.size()) supportY.resize(sizeY);
-        if (sizeX*sizeY > costs.size()) costs.resize(sizeX*sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+        if (sizeX*sizeY > costs.size()) costs.resize(sizeX*sizeY, StoreCost(MIN_COST));
         linkX->removed = true;
         linkY->removed = true;
         linkX->content.constr = this;

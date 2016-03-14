@@ -207,10 +207,9 @@ public:
             BinaryConstraint* xy,
             BinaryConstraint* xz,
             BinaryConstraint* yz,
-            vector<Cost> &tab,
-            StoreStack<Cost, Cost> *storeCost);
+            vector<Cost> &tab);
 
-    TernaryConstraint(WCSP *wcsp, StoreStack<Cost, Cost> *storeCost);
+    TernaryConstraint(WCSP *wcsp);
 
     void setBinaries( BinaryConstraint* xyin, BinaryConstraint* xzin, BinaryConstraint* yzin ) { xy = xyin; xz = xzin; yz = yzin; }
 
@@ -725,13 +724,13 @@ public:
         sizeX = x->getDomainInitSize();
         sizeY = y->getDomainInitSize();
         sizeZ = z->getDomainInitSize();
-        if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
-        if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
-        if (sizeZ > deltaCostsZ.size()) deltaCostsZ.resize(sizeZ, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+        if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST));
+        if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST));
+        if (sizeZ > deltaCostsZ.size()) deltaCostsZ.resize(sizeZ, StoreCost(MIN_COST));
         if (sizeX > supportX.size()) supportX.resize(sizeX);
         if (sizeY > supportY.size()) supportY.resize(sizeY);
         if (sizeZ > supportZ.size()) supportZ.resize(sizeZ);
-        if (sizeX*sizeY*sizeZ > costs.size()) costs.resize(sizeX*sizeY*sizeZ, StoreCost(MIN_COST, &wcsp->getStore()->storeCost));
+        if (sizeX*sizeY*sizeZ > costs.size()) costs.resize(sizeX*sizeY*sizeZ, StoreCost(MIN_COST));
         linkX->removed = true;
         linkY->removed = true;
         linkZ->removed = true;

@@ -34,7 +34,7 @@ Solver::Solver(int storeSize, Cost initUpperBound) : store(NULL), nbNodes(0), nb
         initialLowerBound(MIN_COST), globalLowerBound(MIN_COST), globalUpperBound(MAX_COST), initialDepth(0)
 {
     store = new Store(storeSize);
-    searchSize = new StoreCost(MIN_COST, &store->storeCost);
+    searchSize = new StoreCost(MIN_COST);
     wcsp = WeightedCSP::makeWeightedCSP(store, initUpperBound, (void *) this);
 }
 
