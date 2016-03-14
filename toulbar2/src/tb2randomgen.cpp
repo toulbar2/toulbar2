@@ -9,12 +9,13 @@
 #include "tb2enumvar.hpp"
 
 #include <set>
+#include <algorithm>
 
 bool naryRandom::connected() {
     return true;
 }
 
-
+//TODO: post any global cost function instead of salldiff
 void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMin, Cost costMax)
 {
     int i;
@@ -32,16 +33,21 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
     }
     tuple[arity] = '\0';
 
-    Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top) );
+    if (nogoods == -1) {
+        random_shuffle(&scopeIndexs[0], &scopeIndexs[arity-1]);
+        wcsp.postWAllDiff(scopeIndexs, arity, "var", "salldiff", Top);
+    } else {
+        Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top) );
 
-    String s(tuple);
-    while(nogoods>0) {
-        for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST;
-        Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
-        nctr->setTuple(s, c, scopeVars);
-        nogoods--;
+        String s(tuple);
+        while(nogoods>0) {
+            for(i = 0; i<arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST;
+            Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
+            nctr->setTuple(s, c, scopeVars);
+            nogoods--;
+        }
+        nctr->propagate();
     }
-    nctr->propagate();
 
     delete [] scopeIndexs;
     delete [] scopeVars;
@@ -222,7 +228,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
 
     for(arity=0; arity <= maxa; arity++) {
         if(arity < 2) numCtrs.push_back(0);
-        else 	      numCtrs.push_back(p[arity-1]);
+        else 	      numCtrs.push_back(abs(p[arity-1]));
     }
 
     if (forceSubModular) {
@@ -265,7 +271,8 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
                             case 3:
                                 generateTernCtr(indexs[0],indexs[1],indexs[2],nogoods);
                                 break;
-                            default: generateNaryCtr(indexs,nogoods);
+                            default: generateNaryCtr(indexs, ((arity>=2 && p[arity-1]<0)?-1:nogoods));
+                                break;
                             }
                         }
                         tCtrs--;
