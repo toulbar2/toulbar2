@@ -264,7 +264,7 @@ BinaryConstraint *Variable::getConstr(Variable *x)
     BinaryConstraint *ctr2;
     TernaryConstraint *ctr3;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
 
         if ((*iter).constr->arity() == 2) {
             ctr2 = (BinaryConstraint *)(*iter).constr;
@@ -290,7 +290,7 @@ BinaryConstraint *Variable::getConstr(Variable *x, int cid)
     BinaryConstraint *ctr2;
     TernaryConstraint *ctr3;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
 
         if ((*iter).constr->arity() == 2) {
             ctr2 = (BinaryConstraint *)(*iter).constr;
@@ -321,7 +321,7 @@ TernaryConstraint *Variable::getConstr(Variable *x, Variable *y)
 {
     TernaryConstraint *ctr;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
 
         if ((*iter).constr->arity() == 3) {
             ctr = (TernaryConstraint *)(*iter).constr;
@@ -335,7 +335,7 @@ TernaryConstraint *Variable::getConstr(Variable *x, Variable *y, int cid)
 {
     TernaryConstraint *ctr = NULL;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
 
         if ((*iter).constr->arity() == 3) {
             ctr = (TernaryConstraint *)(*iter).constr;
@@ -379,7 +379,7 @@ double Variable::strongLinkedby(Variable *&strvar,  TernaryConstraint *&tctr1max
     TernaryConstraint *tctr1 = NULL;
 
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
         if ((*iter).constr->arity() == 2) {
             BinaryConstraint *bctr = (BinaryConstraint *)(*iter).constr;
             double bintight = bctr->getTightness();

@@ -463,6 +463,8 @@ public:
 
         return subcstr;
     }
+
+    void projectNaryBeforeSearch();
 };
 
 #define AbstractGlobalConstraint AbstractNaryConstraint
