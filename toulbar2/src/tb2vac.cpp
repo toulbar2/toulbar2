@@ -117,6 +117,7 @@ void VACExtension::histogram()
 
 void VACExtension::iniThreshold()
 {
+    if (scaleCost.size()>0 && scaleVAC.size()==0) histogram();
     list < Cost >::iterator it = (scaleVAC.begin());
     Cost c = ((it == scaleVAC.end()) ? UNIT_COST : (*it));
     if (wcsp->getUb() < c)
