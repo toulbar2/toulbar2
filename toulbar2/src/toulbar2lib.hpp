@@ -128,9 +128,6 @@ public:
     /// \warning side-effect: updates DAC order according to an existing variable elimination order
     /// \note must be called after creating all the cost functions and before solving the problem
     virtual void sortConstraints() = 0;
-    /// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
-    /// \note must be called after creating all the cost functions and before solving the problem
-    virtual void histogram() = 0;
 
     virtual void whenContradiction() = 0;   ///< \brief after a contradiction, resets propagation queues
     virtual void propagate() = 0;           ///< \brief propagates until a fix point is reached (or throws a contradiction)
@@ -182,7 +179,7 @@ public:
     /// \warning Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
     /// \warning Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
     /// \warning Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
-    /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints and WeightedCSP::histogram methods to initialize correctly the model before solving it
+    /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, Value *d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
@@ -193,7 +190,7 @@ public:
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) = 0;
     virtual int postNaryConstraintBegin(int *scope, int arity, Cost defval) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost) = 0;
-    virtual void postNaryConstraintEnd(int ctrindex) = 0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints and WeightedCSP::histogram)
+    virtual void postNaryConstraintEnd(int ctrindex) =0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual int postUnaryConstraint(int xIndex, Value *d, int dsize, Cost penalty) =0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL) = 0;

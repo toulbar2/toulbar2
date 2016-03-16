@@ -2975,12 +2975,7 @@ void WCSP::histogram(Cost c)
 {
     if (vac) vac->histogram(c);
 }
-void WCSP::histogram()
-{
-    if (vac) vac->histogram();
-}
-void WCSP::iniSingleton()
-{
+void WCSP::iniSingleton() {
     if (vac) vac->iniSingleton();
 }
 void WCSP::updateSingleton()

@@ -606,8 +606,6 @@ public:
         preds.clear();
         ctrs.clear();
 
-        wcsp->histogram();
-
     }
 
     virtual void endInstance()

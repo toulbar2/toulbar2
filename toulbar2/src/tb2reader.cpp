@@ -781,7 +781,6 @@ void WCSP::read_wcsp(const char *fileName)
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    histogram();
 
     cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
@@ -795,7 +794,6 @@ void WCSP::read_random(int n, int m, vector<int> &p, int seed, bool forceSubModu
 
     unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
-    histogram();
 
     if (ToulBar2::verbose >= 0) {
         cout << "Generated random problem " << n << " variables, with " << m << " values, and " << nbconstr << " cost functions." << endl;
@@ -1125,7 +1123,6 @@ void WCSP::read_uai2008(const char *fileName)
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    histogram();
     cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 
     int nevi = 0;
@@ -1410,7 +1407,6 @@ void WCSP::read_wcnf(const char *fileName)
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    histogram();
     cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
@@ -1571,7 +1567,6 @@ void WCSP::read_qpbo(const char *fileName)
             postUnaryConstraint(i, costs);
         }
     }
-    histogram();
     cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
 
