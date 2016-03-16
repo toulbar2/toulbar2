@@ -75,7 +75,6 @@ int main(int argc, char * argv[])
     }
 
     solver->getWCSP()->sortConstraints(); // to be done before search
-    solver->getWCSP()->histogram(); // to be done before search
 
     //	int verbose = ToulBar2::verbose;
     //	ToulBar2::verbose = 5;  // high verbosity to see the cost functions

@@ -1645,8 +1645,6 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
         }
     }
 
-    wcsp->histogram();
-
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
     // dump_wcsp("mydebug.wcsp", true);
 
