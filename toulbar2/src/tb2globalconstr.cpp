@@ -36,13 +36,13 @@ void GlobalConstraint::init() {
     needPropagateEAC = false;
     EACCost.clear();
     for (int i=0;i<arity_;i++) fullySupportedSet[i].clear();
-    /*if ((currentDepth == -1) || (currentDepth >= wcsp->getStore()->getDepth())) {
+    /*if ((currentDepth == -1) || (currentDepth >= Store::getDepth())) {
 		initStructure();
 	} else {
 		vector<int> rmv;
 		checkRemoved(rmv);
 	}
-	currentDepth = wcsp->getStore()->getDepth();*/
+	currentDepth = Store::getDepth();*/
     initStructure();
     propagate();
 }
@@ -118,7 +118,7 @@ void GlobalConstraint::assign(int varIndex) {
 
 void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed) {
     if (deconnected()) return;
-    assert(ToulBar2::verbose < 4 || ((cout << "[" << wcsp->getStore()->getDepth() << "] project(" << getName() << ", " << getVar(index)->getName() << ", " << value << ", " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] project(" << getName() << ", " << getVar(index)->getName() << ", " << value << ", " << cost << ")" << endl), true));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
@@ -130,7 +130,7 @@ void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed) 
 }
 
 void GlobalConstraint::extend(int index, Value value, Cost cost) {
-    assert(ToulBar2::verbose < 4 || ((cout << "[" << wcsp->getStore()->getDepth() << "] extend(" << getName() << "," << getVar(index)->getName() << "," << value << ", " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] extend(" << getName() << "," << getVar(index)->getName() << "," << value << ", " << cost << ")" << endl), true));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
     TreeDecomposition* td = wcsp->getTreeDec();
     if(td) td->addDelta(cluster,x,value,-cost);

@@ -735,7 +735,7 @@ void Cluster::setup()
     if(sep) sep->setup(this);
     if (ToulBar2::hbfs) {
         if (cp) delete cp;
-        cp = new Solver::CPStore(wcsp->getStore());
+        cp = new Solver::CPStore();
     }
 }
 

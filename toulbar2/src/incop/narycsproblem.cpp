@@ -527,9 +527,9 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
       for(int nessai = 0;nessai< nbessais ; nessai++) {
           executer_essai (problem,algo,population,taille,graine1,nessai,&initconfig);
           if (wcsp->getLb() + problem->best_config->valuation < upperbound) {
-              int depth = store->getDepth();
+              int depth = Store::getDepth();
               try {
-                  store->store();
+                  Store::store();
                   vector<Value> solution(problem->best_config->nbvar);
                   for (int i=0; i<problem->best_config->nbvar ; i++) {
                       solution[i] = tabdomaines[i][problem->best_config->config[i]];
@@ -545,7 +545,7 @@ Cost Solver::narycsp(string cmd, vector<Value> &bestsolution)
               } catch (Contradiction) {
                   wcsp->whenContradiction();
               }
-              store->restore(depth);
+              Store::restore(depth);
           }
       }
       // ecriture statistiques

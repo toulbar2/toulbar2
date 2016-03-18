@@ -27,10 +27,6 @@ extern ostream& operator<<(ostream& os, WCSP &wcsp);
 // use STL namespace
 ILOSTLBEGIN
 
-// backtrackable WCSP datastore
-const int StoreSize = 16;
-static Store STORE(StoreSize);
-
 IlcIntVar Objective;
 int ProblemSize = 0;
 IlcIntVarArray ProblemVars;
@@ -68,14 +64,14 @@ public:
     unassignedVars(NULL), currentNumberOfFails(0), 
     synchronized(solver, IlcTrue) {
     // creates a WCSP object
-    wcsp = WeightedCSP::makeWeightedCSP(&STORE, MAX_COST);
+    wcsp = WeightedCSP::makeWeightedCSP(MAX_COST);
     // load WCSP problem from a file if available
     if (fileName) {
       wcsp->read_wcsp(fileName);
       assert((unsigned int) size == wcsp->numberOfVariables());
     }
     // specific data to check if all variables have been assigned
-    unassignedVars = new Domain(0, size-1, &STORE.storeDomain);
+    unassignedVars = new Domain(0, size-1);
     // memorizes all WeightedCSP instances
     assert (wcsp->getIndex() == wcspCounter);
     AllIlcWeightedCSPI.push_back(this);
@@ -265,7 +261,7 @@ ILOCPCONSTRAINTWRAPPER3(IloWeightedCSP, solver, IloIntVar, obj, IloIntVarArray, 
 
 ILCGOAL2(IlcGuess, IlcIntVar, var, IlcInt, value)
 {
-  STORE.store();
+  Store::store();
   if (ToulBar2::verbose >= 1) cout << "[" << getSolver().getSearchNode().getDepth() << "," << Objective.getMin() << "," << UpperBound << "] Try " << var << " = " << value << endl;
   var.setValue(value);
   return 0;
@@ -273,8 +269,8 @@ ILCGOAL2(IlcGuess, IlcIntVar, var, IlcInt, value)
 
 ILCGOAL3(IlcRefute, IlcIntVar, var, IlcInt, value, IlcInt, depth)
 {
-  STORE.restore(depth);
-  STORE.store();   // => store.getDepth() == getSolver().getSearchNode().getDepth()
+  Store::restore(depth);
+  Store::store();   // => store.getDepth() == getSolver().getSearchNode().getDepth()
   Objective.setMax(UpperBound-1);
   if (ToulBar2::verbose >= 1) cout << "[" << getSolver().getSearchNode().getDepth() << "," << Objective.getMin() << "," << UpperBound << "] Refute " << var << " != " << value << endl;
   var.removeValue(value);
@@ -307,7 +303,7 @@ ILOCPGOALWRAPPER0(IloNewSolution, solver)
 ILCGOAL2(IlcInstantiateVar, IlcIntVar, var, IlcInt, varIndex)
 {
     IlcInt value;
-    int depth = STORE.getDepth();
+    int depth = Store::getDepth();
 	
     if (var.isBound())
         return 0;
@@ -494,7 +490,7 @@ int main(int argc, char **argv)
 
     // finds an optimal solution
     solver.solve(IloGenerateVars(env,vars) && IloNewSolution(env));
-    STORE.restore(0);
+    Store::restore(0);
     // restores the best solution and shows it
 //     solver.solve(IloRestoreSolution(env,solution));
 //     cout << solver.getStatus() << " Solution" << endl;

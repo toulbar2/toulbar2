@@ -324,7 +324,7 @@ public:
     static int vac;
     static Cost costThreshold;
     static Cost costThresholdPre;
-    static Cost costMultiplier;
+    static double costMultiplier;
     static Cost relaxThreshold;
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;

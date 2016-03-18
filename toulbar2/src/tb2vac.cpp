@@ -33,7 +33,7 @@ bool cmp_function(tVACStat * v1, tVACStat * v2)
     return v1->sumlb > v2->sumlb;
 }
 
-VACExtension::VACExtension(WCSP * w):wcsp(w), VAC2(&w->getStore()->storeVariable), nbIterations(0),
+VACExtension::VACExtension(WCSP * w):wcsp(w), VAC2(&Store::storeVariable), nbIterations(0),
         inconsistentVariable(-1)
 {
     queueP = new stack < pair < int, int > >;
@@ -137,7 +137,7 @@ void VACExtension::nextScaleCost()
     if (!done)
         c = itThreshold / (UNIT_COST + UNIT_COST);
 
-    if (wcsp->getStore()->getDepth() == 0) {
+    if (Store::getDepth() == 0) {
         if (c < ToulBar2::costThresholdPre)
             c = MIN_COST;
     } else if (c < ToulBar2::costThreshold)
@@ -187,7 +187,7 @@ void VACExtension::reset()
 bool VACExtension::propagate()
 {
 
-    if (wcsp->getStore()->getDepth() >= ToulBar2::vac) {
+    if (Store::getDepth() >= ToulBar2::vac) {
         return false;
     }
     // if(getVarTimesStat(varAssign) > 100) {
@@ -214,7 +214,7 @@ bool VACExtension::propagate()
         nbIterations++;
         reset();
         //		if (ToulBar2::verbose>=8) cout << *wcsp;
-        wcsp->getStore()->store();
+        Store::store();
         enforcePass1();
         isvac = isVAC();
 
@@ -222,7 +222,7 @@ bool VACExtension::propagate()
             acSupportOK = true;
             acSupport.clear();
             // fill SeekSupport with ALL variables if in preprocessing (i.e. before the search)
-            if (wcsp->getStore()->getDepth() <= 1 || ToulBar2::debug) {
+            if (Store::getDepth() <= 1 || ToulBar2::debug) {
                 for (unsigned int i = 0;
                         i < wcsp->numberOfVariables(); i++) {
                     ((VACVariable *) wcsp->getVar(i))->
@@ -250,9 +250,9 @@ bool VACExtension::propagate()
                 if (x->canbe(p.second))
                     acSupport.push_back(p);
             }
-            if (ToulBar2::debug && nbassignedzero>0) cout << "[" << wcsp->getStore()->getDepth() << "] " << nbassignedzero << "/" << nbassigned-nbassignedzero << "/" << wcsp->numberOfUnassignedVariables() << " fixed/singletonnonzerocost/unassigned" << endl;
+            if (ToulBar2::debug && nbassignedzero>0) cout << "[" << Store::getDepth() << "] " << nbassignedzero << "/" << nbassigned-nbassignedzero << "/" << wcsp->numberOfUnassignedVariables() << " fixed/singletonnonzerocost/unassigned" << endl;
         }
-        wcsp->getStore()->restore();
+        Store::restore();
 
         if (!isvac) {
             enforcePass2();

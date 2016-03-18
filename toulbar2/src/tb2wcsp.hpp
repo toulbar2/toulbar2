@@ -41,7 +41,6 @@ class WCSP : public WeightedCSP {
     int instance; 						///< instance number
     string name; 						///< problem name
     void *solver;						///< special hook to access solver information
-    Store *storeData; 					///< backtrack management system and data
     StoreCost lb; 						///< current problem lower bound
     Cost ub; 							///< current problem upper bound
     StoreCost negCost;					///< shifting value to be added to problem lowerbound when computing the partition function
@@ -119,7 +118,7 @@ public:
     vector< vector<int> > Doms;			///< structures for solution translation: we don't have to parse the XML file again
 #endif
 
-    WCSP(Store *s, Cost upperBound, void *solver = NULL);
+    WCSP(Cost upperBound, void *solver = NULL);
 
     virtual ~WCSP();
 
@@ -147,7 +146,7 @@ public:
 
     /// \brief enforces problem upper bound when exploring an alternative search node
     void enforceUb() {
-        if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?
+        if (CUT(((((Cost)lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?
                  ((Cost)lb + ToulBar2::costMultiplier):
                  (Cost)lb),
                 ub))
@@ -159,7 +158,7 @@ public:
     /// \deprecated
     void decreaseUb(Cost newUb) {
         if (newUb < ub) {
-            if (CUT((((lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?((Cost)lb + ToulBar2::costMultiplier):(Cost)lb), newUb)) THROWCONTRADICTION;
+            if (CUT(((((Cost)lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?((Cost)lb + ToulBar2::costMultiplier):(Cost)lb), newUb)) THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged=true;
         }
@@ -387,7 +386,6 @@ public:
     // -----------------------------------------------------------
     // Specific API for Variable and Constraint classes
 
-    Store *getStore() {return storeData;}
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
     vector< vector<int> > *getListSuccessors() {return &listofsuccessors;}
     Constraint *getCtr(int ctrIndex) const {
