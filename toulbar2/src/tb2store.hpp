@@ -17,7 +17,8 @@
  *
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
- *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int).
+ *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int!).
+ *  \warning Current storable data management is not thread-safe! (Store is a static virtual class relying on StoreBasic<T> static members)
  */
 
 #ifndef TB2STORE_HPP_
@@ -67,14 +68,8 @@ public:
         index = 0;
         base = 0;
         if (ToulBar2::verbose >= 0) {
-            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " <<
-#if (BOOST_VERSION >= 105600)
-                boost::typeindex::type_id<T>().pretty_name()
-#else
-                typeid(T).name()
-                #endif
-                 << " stack." << endl;
-        }
+            cout << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
+    }
     }
 
     ~StoreStack() {
@@ -174,7 +169,7 @@ class StoreBasic
 
 public:
     StoreBasic(T vv) : v(vv) {
-    }
+    } ///< \warning allows conversion from T to StoreBasic<T>, which may loose the compiler when mixing T and StoreBasic<T> in the same expression: explicit cast needed e.g. in T::v1 + (T) StoreBasic<T>::v2
 
     operator T() const {
         return v;
@@ -215,8 +210,6 @@ public:
 template<class T>
 StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
 
-
-//typedef StoreBasic<int> StoreInt;
 typedef StoreBasic<Value> StoreValue;
 typedef StoreValue StoreInt;
 typedef StoreBasic<Cost> StoreCost;
@@ -227,29 +220,27 @@ typedef StoreBasic<BigInteger> StoreBigInteger;
  */
 class Store
 {
-    int depth;
+protected:
+    virtual ~Store() = 0; // Trick to avoid any instantiation of Store
     
 public:
-    StoreStack<BTList<Value> , DLink<Value> *> storeDomain;
-    StoreStack<BTList<ConstraintLink> , DLink<ConstraintLink> *> storeConstraint;
-    StoreStack<BTList<Variable *> , DLink<Variable *> *> storeVariable;
-    StoreStack<BTList<Separator *> , DLink<Separator *> *> storeSeparator;
-
-    Store(int pow) : depth(0) {
-    }
+    static int depth;
+    static StoreStack<BTList<Value> , DLink<Value> *> storeDomain;
+    static StoreStack<BTList<ConstraintLink> , DLink<ConstraintLink> *> storeConstraint;
+    static StoreStack<BTList<Variable *> , DLink<Variable *> *> storeVariable;
+    static StoreStack<BTList<Separator *> , DLink<Separator *> *> storeSeparator;
 
     /// \return the current (backtrack / tree search) depth
-    int getDepth() const {
+    static int getDepth() {
         return depth;
     }
 
     /// makes a copy of the current state
-    void store() {
+    static void store() {
         depth++;
-        StoreCost::store();
         StoreValue::store();
+        StoreCost::store();
         StoreBigInteger::store();
-//		storeInt.store();
         storeDomain.store();
         storeConstraint.store();
         storeVariable.store();
@@ -257,12 +248,11 @@ public:
     }
 
     /// restores the current state to the last copy
-    void restore() {
+    static void restore() {
         depth--;
-        StoreCost::restore();
         StoreValue::restore();
+        StoreCost::restore();
         StoreBigInteger::restore();
-//		storeInt.restore();
         storeDomain.restore();
         storeConstraint.restore();
         storeVariable.restore();
@@ -270,13 +260,12 @@ public:
     }
 
     /// restore the current state to the copy made at depth \c newDepth
-    void restore(int newDepth) {
+    static void restore(int newDepth) {
         assert(depth >= newDepth);
         while (depth > newDepth) restore();
     }
 };
 
-//#define storeInt storeValue
 #define storeIndexList storeDomain
 
 #endif /*TB2STORE_HPP_*/

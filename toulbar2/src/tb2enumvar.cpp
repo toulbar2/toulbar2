@@ -17,7 +17,7 @@
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup) :
     Variable(w, n, iinf, isup),
-    domain(iinf, isup, &w->getStore()->storeDomain), deltaCost(MIN_COST),
+    domain(iinf, isup), deltaCost(MIN_COST),
     support(iinf), watchForIncrease(false), watchForDecrease(false)
 {
     init();
@@ -25,7 +25,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value iinf, Value isup
 
 EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) :
     Variable(w, n, min(d, dsize), max(d, dsize)),
-    domain(d, dsize, &w->getStore()->storeDomain), deltaCost(MIN_COST),
+    domain(d, dsize), deltaCost(MIN_COST),
     support(min(d,dsize)), watchForIncrease(false), watchForDecrease(false)
 {
     init();
@@ -33,7 +33,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP *w, string n, Value *d, int dsize) :
 
 void EnumeratedVariable::init()
 {
-    if (wcsp->getStore()->getDepth() > 0) {
+    if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
         exit(EXIT_FAILURE);
     }
@@ -501,8 +501,8 @@ bool EnumeratedVariable::verifyDEE(Value a, Value b)
         if (totalmaxcost + wcsp->getLb() < wcsp->getUb()) totalmaxcost += costs.first.first;
         if (totaldiffcost + wcsp->getLb() < wcsp->getUb()) totaldiffcost += costs.first.second;
     }
-    if (getCost(b) >= ((ToulBar2::DEE_ >= 3 || (ToulBar2::DEE_ == 2 && wcsp->getStore()->getDepth() == 0)) ? totaldiffcost : totalmaxcost)) {
-        cout << *this << " has missed dominated value (" << a << "," << ((ToulBar2::DEE_ >= 3 || (ToulBar2::DEE_ == 2 && wcsp->getStore()->getDepth() == 0)) ? totaldiffcost : totalmaxcost) << ") -> (" << b << "," << getCost(b) << ")"  << endl;
+    if (getCost(b) >= ((ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && Store::getDepth()==0))?totaldiffcost:totalmaxcost)) {
+        cout << *this << " has missed dominated value (" << a << "," << ((ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && Store::getDepth()==0))?totaldiffcost:totalmaxcost) << ") -> (" << b << "," << getCost(b) << ")"  << endl;
         return true; // should be false but we need to queue all variables each time LB or UB change
     }
     for (iterator iter = begin(); iter != end(); ++iter) {
@@ -518,7 +518,7 @@ bool EnumeratedVariable::verifyDEE(Value a, Value b)
 
 bool EnumeratedVariable::verifyDEE()
 {
-    if (ToulBar2::DEE_ >= 3 || (ToulBar2::DEE_ == 2 && wcsp->getStore()->getDepth() == 0)) {
+    if (ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && Store::getDepth()==0)) {
         for (iterator itera = begin(); itera != end(); ++itera) {
             for (iterator iterb = begin(); iterb != end(); ++iterb) {
                 if (!verifyDEE(*itera, *iterb)) return false;
@@ -1008,7 +1008,7 @@ void EnumeratedVariable::eliminate()
     }
 
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1) {
-        if (wcsp->getStore()->getDepth() == 0) return; // tree decomposition not available yet!
+        if (Store::getDepth()==0) return; // tree decomposition not available yet!
         if (getDegree() > ToulBar2::elimDegree_) return;
         assert(getDegree() == 0);
         assert(wcsp->getTreeDec());
@@ -1178,7 +1178,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable *x)
 // only in preprocessing
 void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functional)
 {
-    assert(wcsp->getStore()->getDepth() == 0);
+    assert(Store::getDepth()==0);
     assert(unassigned());
     EnumeratedVariable *x = (EnumeratedVariable *) xy->getVarDiffFrom(this);
     assert(x->unassigned());

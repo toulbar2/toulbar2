@@ -22,7 +22,7 @@ void FlowBasedGlobalConstraint::initStructure()
 
     if (graph == NULL) {
         size_t graphSize = GetGraphAllocatedSize();
-        graph = new Graph(graphSize, arity_, wcsp->getStore());
+        graph = new Graph(graphSize, arity_);
 
         if (zeroEdges == NULL) {
             zeroEdges = new bool*[graph->size()];

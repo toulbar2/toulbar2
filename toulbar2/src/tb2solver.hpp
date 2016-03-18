@@ -72,7 +72,7 @@ public:
         ptrdiff_t stop;        // deepest saved branch end (should be free at this position)
         StoreCost index;  // current branch depth (should be free at this position)
 
-        CPStore(Store *s) : start(0), stop(0), index(0) {}
+        CPStore() : start(0), stop(0), index(0) {}
 
         void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
         void store() {start = stop; index = start;}
@@ -83,7 +83,6 @@ public:
     void restore(CPStore &cp, OpenNode node);
 
 protected:
-    Store *store;
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
@@ -175,7 +174,7 @@ protected:
     void approximate(BigInteger &nbsol, TreeDecomposition *td);
 
 public:
-    Solver(int storeSize, Cost initUpperBound);
+    Solver(Cost initUpperBound);
     ~Solver();
 
     void read_wcsp(const char *fileName);

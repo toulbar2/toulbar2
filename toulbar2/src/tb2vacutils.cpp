@@ -528,7 +528,7 @@ bool VACBinaryConstraint::revise(VACVariable *var, Value v)
  *   A class that stores information about a ternary cost function
  */
 /*
-VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, EnumeratedVariable *zz, BinaryConstraint *xy, BinaryConstraint *xz, BinaryConstraint *yz, vector<Cost> &tab, StoreStack<Cost, Cost> *storeCost) :  TernaryConstraint(wcsp, xx, yy, zz, xy, xz, yz, tab, storeCost), myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, EnumeratedVariable *zz, BinaryConstraint *xy, BinaryConstraint *xz, BinaryConstraint *yz, vector<Cost> &tab) :  TernaryConstraint(wcsp, xx, yy, zz, xy, xz, yz, tab, storeCost), myThreshold(MIN_COST)
 {
    for (int a = 0; a < xx->getDomainInitSize(); a++) {
 	   	kX.push_back(0);
@@ -544,7 +544,7 @@ VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, 
    }
 }
 
-VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp, StoreStack<Cost, Cost> *storeCost) : TernaryConstraint(wcsp, storeCost) , myThreshold(MIN_COST, &wcsp->getStore()->storeCost)
+VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp) : TernaryConstraint(wcsp) , myThreshold(MIN_COST)
 {
    for (int a = 0; a < wcsp->getMaxDomainSize(); a++) {
 	   	kX.push_back(0);

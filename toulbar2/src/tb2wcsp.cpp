@@ -43,6 +43,12 @@
  *
  */
 
+int Store::depth = 0;
+StoreStack<BTList<Value> , DLink<Value> *> Store::storeDomain(STORE_SIZE);
+StoreStack<BTList<ConstraintLink> , DLink<ConstraintLink> *> Store::storeConstraint(STORE_SIZE);
+StoreStack<BTList<Variable *> , DLink<Variable *> *> Store::storeVariable(STORE_SIZE);
+StoreStack<BTList<Separator *> , DLink<Separator *> *> Store::storeSeparator(STORE_SIZE);
+
 int WCSP::wcspCounter = 0;
 
 string ToulBar2::version;
@@ -125,7 +131,7 @@ int ToulBar2::pedigreePenalty;
 int ToulBar2::vac;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
-Cost ToulBar2::costMultiplier;
+double ToulBar2::costMultiplier;
 Cost ToulBar2::relaxThreshold;
 
 ElimOrderType ToulBar2::elimOrderType;
@@ -189,6 +195,8 @@ Cost ToulBar2::verifiedOptimum;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
+    Store::depth = 0;
+
     ToulBar2::version = Toulbar_VERSION;
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
@@ -321,9 +329,9 @@ void tb2init()
  */
 
 /// \note isDelayedNaryCtr should be false if toulbar2 is used within numberjack
-WCSP::WCSP(Store *s, Cost upperBound, void *_solver_) :
-	        solver(_solver_), storeData(s), lb(MIN_COST), ub(upperBound), negCost(MIN_COST), NCBucketSize(cost2log2gub(upperBound) + 1),
-    NCBuckets(NCBucketSize, VariableList(&s->storeVariable)), PendingSeparator(&s->storeSeparator),
+WCSP::WCSP(Cost upperBound, void *_solver_) :
+	        solver(_solver_), lb(MIN_COST), ub(upperBound), negCost(MIN_COST), NCBucketSize(cost2log2gub(upperBound) + 1),
+	        NCBuckets(NCBucketSize, VariableList(&Store::storeVariable)), PendingSeparator(&Store::storeSeparator),
 	        objectiveChanged(false), nbNodes(0), nbDEE(0), lastConflictConstr(NULL), maxdomainsize(0),
 #ifdef NUMBERJACK
             isDelayedNaryCtr(false),
@@ -351,9 +359,8 @@ WCSP::~WCSP()
             delete elimTernConstrs[i];
 }
 
-WeightedCSP *WeightedCSP::makeWeightedCSP(Store *s, Cost upperBound, void *solver)
-{
-    WeightedCSP *W = new WCSP(s, upperBound, solver);
+WeightedCSP *WeightedCSP::makeWeightedCSP(Cost upperBound, void *solver) {
+    WeightedCSP * W = new WCSP(upperBound, solver);
     return W;
 }
 
@@ -1610,7 +1617,7 @@ Cost WCSP::finiteUb() const
 
 void WCSP::setInfiniteCost()
 {
-    assert(getStore()->getDepth() == 0);
+    assert(Store::getDepth() == 0);
     Cost ub = getUb() - getLb();
     assert(ub > 0);
     if (ToulBar2::verbose >= 1) cout << "Set infinite cost to " << ub << endl;
@@ -2110,7 +2117,7 @@ void WCSP::propagateDEE()
         if (ToulBar2::interrupted) throw TimeOut();
         EnumeratedVariable *x = (EnumeratedVariable *) DEE.pop();
         if (x->unassigned()) {
-            if (ToulBar2::DEE_ >= 3 || (ToulBar2::DEE_ == 2 && getStore()->getDepth() == 0)) {
+            if (ToulBar2::DEE_>=3 || (ToulBar2::DEE_==2 && Store::getDepth()==0)) {
                 for (EnumeratedVariable::iterator itera = x->begin(); itera != x->end(); ++itera) {
                     for (EnumeratedVariable::iterator iterb = x->lower_bound(*itera + 1); iterb != x->end(); ++iterb) {
                         assert(x->canbe(*itera));

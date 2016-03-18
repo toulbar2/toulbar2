@@ -662,7 +662,7 @@ void help_msg(char *toulbar2filename)
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
     cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
-    cout << "   -C=[integer] : multiplies all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
+    cout << "   -C=[float] : multiplies all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
     cout << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
     if (ToulBar2::singletonConsistency) cout << " (default option)";
     cout << endl;
@@ -1808,7 +1808,7 @@ int _tmain(int argc, TCHAR *argv[])
 
     ToulBar2::startCpuTime = cpuTime();
     initCosts(ub);
-    WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, ub);
+    WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
 
     bool randomproblem = false;
     bool forceSubModular = false;

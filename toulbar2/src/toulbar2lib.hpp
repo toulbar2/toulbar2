@@ -51,7 +51,7 @@
 class WeightedCSP
 {
 public:
-    static WeightedCSP *makeWeightedCSP(Store *s, Cost upperBound, void *solver = NULL);	///< \brief Weighted CSP factory
+    static WeightedCSP *makeWeightedCSP(Cost upperBound, void *solver = NULL);	///< \brief Weighted CSP factory
 
     virtual ~WeightedCSP() {}
 
@@ -389,7 +389,7 @@ ostream &operator<<(ostream &os, WeightedCSP &wcsp);			///< \see WeightedCSP::pr
 class WeightedCSPSolver
 {
 public:
-    static WeightedCSPSolver *makeWeightedCSPSolver(int storeSize, Cost initUpperBound);	///< \brief WeightedCSP Solver factory
+    static WeightedCSPSolver *makeWeightedCSPSolver(Cost initUpperBound);	///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}
 

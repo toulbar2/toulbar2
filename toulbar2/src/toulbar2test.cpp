@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 //	ToulBar2::incop_cmd = Incop_cmd; // option -i
 
     // create a problem with three 0/1 variables
-    WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(STORE_SIZE, MAX_COST);
+    WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
     int x = solver->getWCSP()->makeEnumeratedVariable("x", 0, 1); // note that for efficiency issue, I assume domain values start at zero (otherwise remove flag -DWCSPFORMATONLY in Makefile)
     int y = solver->getWCSP()->makeEnumeratedVariable("y", 0, 1);
     int z = solver->getWCSP()->makeEnumeratedVariable("z", 0, 1);

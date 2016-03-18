@@ -16,13 +16,13 @@
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) :
     WCSPLink(w, w->numberOfVariables()), name(n), dac(w->numberOfVariables()),
     timestamp(-1), pos(-1),
-        inf(iinf), sup(isup), constrs(&w->getStore()->storeConstraint),
-//        triangles(&w->getStore()->storeConstraint),
+        inf(iinf), sup(isup), constrs(&Store::storeConstraint),
+        //triangles(&Store::storeConstraint),
         maxCost(MIN_COST), maxCostValue(iinf), 
         NCBucket(-1),
         cluster(-1)
 {
-    if (w->getStore()->getDepth() > 0) {
+    if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
         exit(EXIT_FAILURE);
     }
@@ -129,7 +129,7 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
                   getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
     }
     if (reuse) {
-        assert(wcsp->getStore()->getDepth() == 0);
+        assert(Store::getDepth()==0);
         link->prev = NULL;
         link->next = NULL;
     }
