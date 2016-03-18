@@ -18,7 +18,7 @@
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
  *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int!).
- *  \warning Current storable data management is not thread-safe! (Store is a static virtual class relying on StoreBasic<T> static members)
+ *  \warning Current storable data management is not multi-threading safe! (Store is a static virtual class relying on StoreBasic<T> static members)
  */
 
 #ifndef TB2STORE_HPP_
