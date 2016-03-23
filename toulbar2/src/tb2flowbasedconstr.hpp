@@ -70,7 +70,7 @@ protected:
     // corresponding to the assignment of varindex according to delta
     virtual void augmentStructure(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta);
 
-    // compute the csot according to the original cost struture
+    // compute the cost according to the original cost structure
     virtual Cost evalOriginal(String s) {return MIN_COST;}
     virtual Cost getMinCost() {
         return cost;

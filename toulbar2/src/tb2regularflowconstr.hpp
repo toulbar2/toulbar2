@@ -60,6 +60,24 @@ private:
             return require;
         }
 
+        void dump(ostream& os, bool original) {
+            assert(original); //TODO: case original is false
+            os << nstate << endl;
+            os << init.size();
+            for (vector<int>::iterator i = init.begin(); i != init.end(); i++) os << " " << *i;
+            os << endl;
+            os << final.size();
+            for (vector<int>::iterator i = final.begin(); i != final.end(); i++) os << " " << *i;
+            os << endl;
+            int nbtrans = 0;
+            for (int s = 0; s < nstate; s++) nbtrans += transition[s].size();
+            os << nbtrans << endl;
+            for (int s = 0; s < nstate; s++) {
+                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                    os << s << " " << i->first << " " << i->second << endl;
+            }
+        }
+
         void print() {
             cout << "start state : ";
             for (vector<int>::iterator i = init.begin(); i != init.end(); i++) cout << *i << " ";
@@ -115,9 +133,6 @@ private:
 
     void buildWeightedDFATable();
 
-    /*Cost evalOriginal(String s) {
-        return 0;
-    }*/
     Cost evalOriginal(String s);
 
 
@@ -139,6 +154,7 @@ public:
         return constructFlow(*graph);
     }
 
+    void dump(ostream& os, bool original);
     void print(ostream &os);
 
 };

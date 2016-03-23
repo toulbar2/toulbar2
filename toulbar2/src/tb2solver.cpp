@@ -74,10 +74,10 @@ void Solver::read_wcsp(const char *fileName)
     wcsp->read_wcsp(fileName);
 }
 
-void Solver::read_random(int n, int m, vector<int> &p, int seed, bool forceSubModular)
+void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
 {
     ToulBar2::setvalue = NULL;
-    wcsp->read_random(n, m, p, seed, forceSubModular);
+    wcsp->read_random(n,m,p,seed, forceSubModular, globalname);
 }
 
 void Solver::read_solution(const char *filename)
@@ -1835,9 +1835,16 @@ void Solver::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool re
     TreeDecomposition *td = wcsp->getTreeDec();
     if (td) {
         if (ToulBar2::verbose >= 1) cout << "[C" << td->getCurrentCluster()->getId() << "] ";
-        td->getCurrentCluster()->cp->addChoicePoint(op, varIndex, value, reverse);
+        CPStore *cp_ = td->getCurrentCluster()->cp;
+        CPStore::size_type before = cp_->capacity();
+        cp_->addChoicePoint(op, varIndex, value, reverse);
+        CPStore::size_type after = cp_->capacity();
+        if (ToulBar2::verbose >= 0 && after > before && after > (1 << STORE_SIZE)) cout << "c " << after * sizeof(ChoicePointOp) + td->getCurrentCluster()->open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes at cluster " << td->getCurrentCluster()->getId() << "." << endl;
     } else {
+        CPStore::size_type before = cp->capacity();
         cp->addChoicePoint(op, varIndex, value, reverse);
+        CPStore::size_type after = cp->capacity();
+        if (ToulBar2::verbose >= 0 && after > before && after > (1 << STORE_SIZE)) cout << "c " << after * sizeof(ChoicePointOp) + open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes." << endl;
     }
 }
 
@@ -1850,6 +1857,7 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
     }
     assert(cp.start <= idx);
     open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx));
+
     cp.stop = max(cp.stop, idx);
 }
 

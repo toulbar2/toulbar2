@@ -67,8 +67,8 @@ public:
         content = new V[indexMax];
         index = 0;
         base = 0;
-        if (ToulBar2::verbose >= 0) {
-            cout << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
+        if (ToulBar2::verbose > 0) {
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
     }
     }
 
@@ -92,8 +92,8 @@ public:
         pointers = newpointers;
         content = newcontent;
         indexMax *= 2;
-        if (ToulBar2::verbose > 0) {
-            cout << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
+        if (ToulBar2::verbose >= 0) {
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
         }
     }
 
