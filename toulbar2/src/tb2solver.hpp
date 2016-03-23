@@ -49,6 +49,8 @@ public:
         Cost getUb(Cost delta = MIN_COST) const {return MAX(MIN_COST, cub - delta);}
         void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
         void updateUb(Cost ub, Cost delta = MIN_COST) {Cost tmpub = MAX(MIN_COST, ub + delta); cub = MIN(cub, tmpub); clb = MIN(clb, tmpub);}
+
+        size_type capacity() const {return c.capacity();}
     };
 
     typedef enum {
@@ -171,7 +173,7 @@ public:
     ~Solver();
 
     void read_wcsp(const char *fileName);
-    void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false );
+    void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "");
 
     Long getNbNodes() const {return nbNodes;}
     Long getNbBacktracks() const {return nbBacktracks;}

@@ -681,24 +681,24 @@ void help_msg(char *toulbar2filename)
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
     cout << "   -random=[bench profile]  : bench profile must be specified as follow :" << endl;
-    cout << "                         n and m are respectively the number of variable and the maximum domain size  of the random problem." << endl;
+    cout << "                         n and d are respectively the number of variable and the maximum domain size  of the random problem." << endl;
     cout << "			"<< endl;
-    cout << "       bin-{n}-{m}-{p1}-{p2}-{seed}       :p1 is the tightness in percentage %" << endl;
+    cout << "       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions" << endl;
     cout << "                                          :p2 is the num of binary cost functions to include" << endl;
     cout << "                                          :the seed parameter is optional" << endl;
 
     cout << "   or:                                                                               " << endl;
-    cout << "       binsub-{n}-{m}-{p1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl;
-    cout << "                                          p1 is the tightness in percentage % of random cost functions" << endl;
+    cout << "       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl;
+    cout << "                                          t1 is the tightness in percentage % of random cost functions" << endl;
     cout << "                                          p2 is the num of binary cost functions to include" << endl;
     cout << "                                          p3 is the percentage % of submodular cost functions among p2 cost functions" << endl;
     cout << "                                           (plus 10 permutations of two randomly-chosen values for each domain)" << endl;
     cout << " or:                                                                               " << endl;
-    cout << "      tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions" << endl;
+    cout << "      tern-{n}-{d}-{t1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions" << endl;
     cout << " or:                                                                               " << endl;
-    cout << "      nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
+    cout << "      nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
     cout << " or:                                                                               " << endl;
-    cout << "      salldiff,{n},{m},{p1},{p2},{p3}...{pn},{seed}  pn is the num of n-ary cost functions in extension if num is positive or n is strictly less than four, else -num salldiff global cost functions" << endl;
+    cout << "      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)" << endl;
     cout << "---------------------------" << endl;
     cout << "			"<< endl;
 
@@ -1667,6 +1667,7 @@ int _tmain(int argc, TCHAR * argv[])
 
     bool randomproblem = false;
     bool forceSubModular = false;
+    string randomglobal;
 
     int n = 10;
     int m = 2;
@@ -1677,12 +1678,6 @@ int _tmain(int argc, TCHAR * argv[])
     {
         int pn[10];
         int narities = 0;
-        if (strstr(random_desc,"bin"))
-        {
-            randomproblem = true;
-            sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed);
-            narities = 2;
-        }
         if (strstr(random_desc,"binsub"))
         {
             forceSubModular = true;
@@ -1690,45 +1685,31 @@ int _tmain(int argc, TCHAR * argv[])
             sscanf(random_desc, "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &seed);
             narities = 2;
         }
-        if (strstr(random_desc,"tern"))
+        else if (strstr(random_desc,"bin"))
+        {
+            randomproblem = true;
+            sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1],&seed);
+            narities = 2;
+        }
+        else if (strstr(random_desc,"tern"))
         {
             randomproblem = true;
             sscanf(random_desc, "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2],&seed);
             narities = 3;
         }
-        if (strstr(random_desc,"nary"))
+        else // if (strstr(random_desc,"salldiff"))
         {
             randomproblem = true;
-            char* pch = strtok (random_desc,"-+,");
-            pch = strtok (NULL, "-+,");
+            char* pch = strtok (random_desc,"-");
+            randomglobal = string(pch);
+            pch = strtok (NULL, "-");
             n = atoi(pch);
-            pch = strtok (NULL, "-+,");
+            pch = strtok (NULL, "-");
             m = atoi(pch);
 
             while (pch != NULL)
             {
-                pch = strtok (NULL, "-+,");
-                if (pch != NULL)
-                {
-                    pn[narities] = atoi(pch);
-                    narities++;
-                }
-            }
-            narities--;
-            seed = pn[narities];
-        }
-        if (strstr(random_desc,"salldiff"))
-        {
-            randomproblem = true;
-            char* pch = strtok (random_desc,"+,");
-            pch = strtok (NULL, "+,");
-            n = atoi(pch);
-            pch = strtok (NULL, "+,");
-            m = atoi(pch);
-
-            while (pch != NULL)
-            {
-                pch = strtok (NULL, "+,");
+                pch = strtok (NULL, "-");
                 if (pch != NULL)
                 {
                     pn[narities] = atoi(pch);
@@ -1747,15 +1728,15 @@ int _tmain(int argc, TCHAR * argv[])
         if (forceSubModular) p.push_back( pn[narities] );
         if (narities == 0)
         {
-            //help_msg(argv[0]);
-            //exit(0);
+            cerr << "Random problem generator with no cost functions! (no arity)" << endl;
+            exit(-1);
         }
     }
     if (strstr(strext.c_str(),".bep") || strstr((char*)strfile.c_str(),"bEpInstance")) ToulBar2::bep = new BEP;
 #endif
     try
     {
-        if (randomproblem)    solver->read_random(n,m,p,seed,forceSubModular);
+        if (randomproblem)    solver->read_random(n,m,p,seed,forceSubModular,randomglobal);
         else 		         solver->read_wcsp((char*)strfile.c_str());
 
         if (certificate)

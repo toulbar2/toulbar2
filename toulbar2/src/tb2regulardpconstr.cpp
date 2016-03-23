@@ -192,6 +192,29 @@ Cost RegularDPConstraint::unary(int ch, int var, Value v) {
 	return ucost - deltaCost[var][x->toIndex(v)];
 }
 
+void RegularDPConstraint::dump(ostream& os, bool original)
+{
+    if (original) {
+        os << arity_;
+        for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+    } else {
+        os << nonassigned;
+        for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+    }
+    os << " -1 sregulardp" << endl << "var" << " " << def << endl;
+    dfa.dump(os, original);
+}
+
+void RegularDPConstraint::print(ostream& os) {
+    os << "sregulardp(";
+    for (int i = 0; i < arity_; i++) {
+        os << scope[i]->wcspIndex;
+        if (i < arity_ - 1) os << ",";
+    }
+    os << ")[" << def << "]";
+    dfa.dump(os, true);
+}
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

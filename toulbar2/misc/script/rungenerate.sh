@@ -13,7 +13,7 @@ K=1
 
 while (( $n < $nend )) ; do
   seed=0
-  echo n:$n m:$d tight:$tight%  binary:$bctr  ternary:$tctr  quatary:$nary  
+  echo n:$n d:$d tight:$tight%  binary:$bctr  ternary:$tctr  quatary:$nary  
   while (( $seed < $ninstances )) ; do
     rm -f toulbar2_opt
     rm -f toolbar_opt

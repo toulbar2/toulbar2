@@ -762,11 +762,6 @@ void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<in
     WeightedRegular regular(arity,scopeIndex);
     regular.setWFA(automaton);
     regular.addToCostFunctionNetwork(this);
-    for(unsigned int i=0; i < transitionsCosts.size(); i++)
-    {
-        delete [] Wtransitions[i];
-    }
-    delete [] Wtransitions;
 }
 
 void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
@@ -937,7 +932,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string &semantics, cons
 #ifndef NDEBUG
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (propagator == "network") {
+    if (propagator == "network") { // Warning! semantics not used
         vector<pair<int, Cost> > initial_States_;
         for(unsigned int i=0; i<initial_States.size(); i++)
         {
@@ -950,7 +945,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string &semantics, cons
         }
         vector<Cost> transitionsCosts;
         vector<int *> transitions;
-        for(unsigned int i=0; i<transitionsCosts.size(); i++)
+        for(unsigned int i=0; i<Wtransitions.size(); i++)
         {
             int *transition = new int[3];
             transition[0] = Wtransitions[i].start;
@@ -960,6 +955,11 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string &semantics, cons
             transitionsCosts.push_back(Wtransitions[i].weight);
         }
         postWRegular(scopeIndex, arity, nbStates, initial_States_, accepting_States_, &transitions[0], transitionsCosts);
+        for(unsigned int i=0; i < Wtransitions.size(); i++)
+        {
+            delete [] transitions[i];
+        }
+
         return INT_MIN;
     }
 

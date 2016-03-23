@@ -214,13 +214,13 @@ public:
     /// \brief post a soft or weighted regular cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: "var" or "edit" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param semantics the semantics of the soft global cost function: "var" or "edit" (flow-based propagator) or -- "var" (DAG-based propagator)-- (unused parameter for network-based propagator)
     /// \param propagator the propagation method ("flow", "DAG", "network")
-    /// \param baseCost the scaling factor of the violation
+    /// \param baseCost the scaling factor of the violation ("flow", "DAG")
     /// \param nbStates the number of the states in the corresponding DFA. The states are indexed as 0, 1, ..., nbStates-1
     /// \param initial_States a vector of WeightedObj specifying the starting states with weight
     /// \param accepting_States a vector of WeightedObj specifying the final states
-    /// \param Wtransitions a vector of transitions
+    /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
     virtual int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
             int nbStates,
@@ -325,7 +325,7 @@ public:
 
     virtual void read_wcsp(const char *fileName) =0;	///< \brief load problem in native wcsp format (\ref wcspformat)
     virtual void read_uai2008(const char *fileName) =0;	///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
-    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false) =0;	///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, and a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular
+    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") =0;	///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char *fileName) =0;	///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char *fileName) =0;	///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
 
@@ -397,7 +397,7 @@ public:
     virtual void remove(int varIndex, Value value, bool reverse = false) =0;		///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
 
     virtual void read_wcsp(const char *fileName) =0;		///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
-    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false ) =0;	///< \brief create a random WCSP, see WeightedCSP::read_random
+    virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") =0;	///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem
     /// \return false if there is no solution found
