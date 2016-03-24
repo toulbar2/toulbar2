@@ -22,7 +22,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
         vector<Cost> &tab) :
         AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz),
         sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize()),
-        functionalX(true), functionalY(true), functionalZ(true)
+        top(wcsp->getUb()), functionalX(true), functionalY(true), functionalZ(true)
 {
     assert(tab.size() == sizeX * sizeY * sizeZ);
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST));
@@ -43,7 +43,7 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
                 Cost cost = tab[a * sizeY * sizeZ + b * sizeZ + c];
                 //		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
-                if (!CUT(cost, wcsp->getUb()) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
+                if (!CUT(cost, top) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
                     if (functionalX) {
                         if (functionX[b * sizeZ + c] == WRONG_VAL) functionX[b * sizeZ + c] = x->toValue(a);
                         else functionalX = false;
