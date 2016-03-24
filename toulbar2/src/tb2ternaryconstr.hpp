@@ -146,6 +146,7 @@ protected:
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
     vector<StoreCost> deltaCostsZ;
+    Cost top;
     bool functionalX;
     vector<Value> functionX;
     bool functionalY;
@@ -231,7 +232,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : wcsp->getUb()) : (costs[ix * sizeY * sizeZ + iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
+        Cost res = ((costs.empty())?((vx == functionX[iy*sizeZ+iz])?(costsYZ[iy*sizeZ+iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]):top):(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -241,7 +242,7 @@ public:
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
         vindex[ getIndex(zz) ] = zz->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) ? (costsYZ[vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]) : wcsp->getUb()) : (costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
+        Cost res = ((costs.empty())?((x->toValue(vindex[0]) == functionX[vindex[1]*sizeZ +vindex[2]])?(costsYZ[vindex[1]*sizeZ+vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]):top):(costs[vindex[0]*sizeY*sizeZ + vindex[1]*sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -250,7 +251,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : wcsp->getUb()) : (costs[ix * sizeY * sizeZ + iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
+        Cost res = ((costs.empty())?((vx == functionX[iy*sizeZ+iz])?(costsYZ[iy*sizeZ+iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]):top):(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         if (xy->connected()) res += xy->getCost(x, y, vx, vy);
         if (xz->connected()) res += xz->getCost(x, z, vx, vz);
         if (yz->connected()) res += yz->getCost(y, z, vy, vz);
@@ -263,7 +264,7 @@ public:
         vindex[ getIndex(xx) ] = pair<unsigned int, Value>(xx->toIndex(vx), vx);
         vindex[ getIndex(yy) ] = pair<unsigned int, Value>(yy->toIndex(vy), vy);
         vindex[ getIndex(zz) ] = pair<unsigned int, Value>(zz->toIndex(vz), vz);
-        Cost res = ((costs.empty()) ? ((vindex[0].second == functionX[vindex[1].first * sizeZ + vindex[2].first]) ? (costsYZ[vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]) : wcsp->getUb()) : (costs[vindex[0].first * sizeY * sizeZ + vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]));
+        Cost res = ((costs.empty())?((vindex[0].second == functionX[vindex[1].first*sizeZ+vindex[2].first])?(costsYZ[vindex[1].first*sizeZ+vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]):top):(costs[vindex[0].first*sizeY*sizeZ + vindex[1].first*sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]));
         if (xy->connected()) res += xy->getCost(x, y, vindex[0].second, vindex[1].second);
         if (xz->connected()) res += xz->getCost(x, z, vindex[0].second, vindex[2].second);
         if (yz->connected()) res += yz->getCost(y, z, vindex[1].second, vindex[2].second);
