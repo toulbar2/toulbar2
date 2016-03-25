@@ -62,7 +62,7 @@ protected:
     Cost minCostOriginal(int var, Value val, bool changed);
     Result minCost(int var, Value val, bool changed);
 
-    Cost evalOriginal(String s);
+    Cost evalOriginal( String& s );
 
 public:
     MaxConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
@@ -89,6 +89,7 @@ public:
     void initMemoization();
 
     string getName() {return "max";}
+    void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2MAXCONSTR_HPP_*/

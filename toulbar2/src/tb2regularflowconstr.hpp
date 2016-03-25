@@ -133,7 +133,7 @@ private:
 
     void buildWeightedDFATable();
 
-    Cost evalOriginal(String s);
+    Cost evalOriginal(String& s);
 
 
 public:
@@ -145,7 +145,7 @@ public:
     string getName() {
         return "regular constraint";
     }
-    //Cost eval(String s);
+    //Cost eval(String& s);
     void read(istream &file);
     WeightedAutomaton *getWeightedAutomaton() {return &dfa;}
     void organizeConfig();

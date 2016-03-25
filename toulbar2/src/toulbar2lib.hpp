@@ -168,7 +168,7 @@ public:
     /// - simple arithmetic and scheduling (temporal disjunction) cost functions on interval variables
     /// - global cost functions (\e eg soft alldifferent, soft global cardinality constraint, soft same, soft regular, etc) with three different propagator keywords:
     ///   - \e flow propagator based on flow algorithms with "s" prefix in the keyword (\e salldiff, \e sgcc, \e ssame, \e sregular)
-    ///   - \e DAG propagator based on dynamic programming algorithms with "s" prefix and "dp" postfix (\e samongdp, sregulardp, sgrammardp, smstdp, smaxdp)
+    ///   - \e DAG propagator based on dynamic programming algorithms with "s" prefix and "dp" postfix (\e samongdp, salldiffdp, sgccdp, sregulardp, sgrammardp, smstdp, smaxdp)
     ///   - \e network propagator based on cost function network decomposition with "w" prefix (\e wsum, \e wvarsum, \e walldiff, \e wgcc, \e wsame, \e wsamegcc, \e wregular, \e wamong, \e wvaramong, \e woverlap)
     ///   .
     /// .
@@ -234,8 +234,8 @@ public:
     /// \brief post a soft alldifferent cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
-    /// \param propagator the propagation method ("flow", "network")
+    /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for DAG-based propagator: "var", for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
+    /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
     virtual int postWAllDiff(int *scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost) = 0;
     virtual void postWAllDiff(int *scopeIndex, int arity, string semantics, Cost baseCost) = 0; ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
@@ -243,8 +243,8 @@ public:
     /// \brief post a soft global cardinality cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
     /// \param arity the size of the array
-    /// \param semantics the semantics of the global cost function: "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
-    /// \param propagator the propagation method ("flow", "network")
+    /// \param semantics the semantics of the global cost function: "var" (DAG-based propagator only) or -- "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
+    /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
     /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int *scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,

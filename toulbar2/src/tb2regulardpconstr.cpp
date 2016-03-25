@@ -94,8 +94,7 @@ Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost RegularDPConstraint::eval(String s)
-{
+Cost RegularDPConstraint::eval(String& s) {
     int n = arity();
     for (int i = 1; i <= n; i++) {
         for (unsigned int j = 0; j < dfa.symbol.size(); j++) {
@@ -213,7 +212,7 @@ void RegularDPConstraint::dump(ostream& os, bool original)
         os << nonassigned;
         for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 sregulardp" << endl << "var" << " " << def << endl;
+    os << " -1 sregulardp var " << def << endl;
     dfa.dump(os, original);
 }
 

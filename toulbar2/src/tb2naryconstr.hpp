@@ -17,10 +17,7 @@ public:
     bool store_top; 		    // this is true when default_cost < getUb() meaning that tuples with cost greater than ub must be stored
     StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (storeint) !
 
-    String iterTuple;
     String evalTuple;
-
-    vector<EnumeratedVariable::iterator> it_values;
 
     vector<Long> conflictWeights;
     Long getConflictWeight() const {return Constraint::getConflictWeight();}
@@ -40,9 +37,6 @@ public:
             }
         }
     }
-
-    void firstlex();
-    bool nextlex(String &t, Cost &c);
 
     NaryConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in, Cost defval);
     NaryConstraint(WCSP *wcsp);

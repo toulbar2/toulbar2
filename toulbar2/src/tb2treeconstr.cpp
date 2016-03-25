@@ -70,8 +70,7 @@ Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost TreeConstraint::eval(String s)
-{
+Cost TreeConstraint::eval(String& s) {
 
     int n = arity();
     int root = -1;
@@ -294,3 +293,23 @@ TreeConstraint::CCTreeNodePtr TreeConstraint::createNewNode()
     nodeStore.push_back(newNode);
     return &(nodeStore.back());
 }
+
+void TreeConstraint::dump(ostream& os, bool original)
+{
+    if (original) {
+        os << arity_;
+        for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+    } else {
+        os << nonassigned;
+        for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+    }
+    os << " -1 smstdp" << endl;
+}
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

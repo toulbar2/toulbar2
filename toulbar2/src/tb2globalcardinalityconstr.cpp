@@ -61,8 +61,8 @@ void GlobalCardinalityConstraint::read(istream &file)
         int d, high, low;
         file >> d >> low >> high;
         if (high < low) {
-            cerr << "Error occur in reading gcc()" << endl;
-            exit(1);
+            cout << "Error occur in reading gcc: upper bound " << high << " smaller than lower bound " << low << endl;
+            THROWCONTRADICTION;
         }
         //JP Start//
         int wshortage = def;
@@ -103,18 +103,19 @@ void GlobalCardinalityConstraint::organizeConfig()
     }
 
     if ((mode == VAR) && ((arity_ < sumlow) || (arity_ > sumhigh))) {
-        cerr << "Error occur in gcc() model using variable-based measure : " << endl;
-        cerr << "sum of lower bound is too high / sum of upper bound is too low\n." << endl;
-        cerr << "sum high = " << sumhigh << endl;
-        cerr << "arity_ = " << arity_ << endl;
-        cerr << "sum low = " << sumlow << endl;
-        exit(1);
+        if (ToulBar2::verbose >= 0) {
+            cout << "Error occur in gcc() model using variable-based measure : " << endl;
+            cout << "sum of lower bound is too high / sum of upper bound is too low compared to arity." << endl;
+            cout << "sum high = " << sumhigh << endl;
+            cout << "sum low = " << sumlow << endl;
+            cout << "arity = " << arity_ << endl;
+        }
+        THROWCONTRADICTION;
     }
 
 }
 
-Cost GlobalCardinalityConstraint::evalOriginal(String s)
-{
+Cost GlobalCardinalityConstraint::evalOriginal( String& s ) {
 
     Cost excess = 0, shortage = 0, cost = 0;
     map<Value , int> appear;
@@ -244,8 +245,8 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph &g)
 
 }*/
 
-void GlobalCardinalityConstraint::dump(ostream &os, bool original)
-{
+void GlobalCardinalityConstraint::dump(ostream& os, bool original) {
+    assert(original); //TODO: case original is false
     int nvalues = 0;
     if (original) {
         os << arity_;

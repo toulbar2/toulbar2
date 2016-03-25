@@ -42,8 +42,29 @@ void MaxConstraint::read(istream &file)
 
 }
 
-void MaxConstraint::initMemoization()
+void MaxConstraint::dump(ostream& os, bool original)
 {
+    assert(original); //TODO: case original is false
+    if (original) {
+        os << arity_;
+        for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+    } else {
+        os << nonassigned;
+        for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+    }
+    os << " -1 smaxdp " << def << endl;
+    int ntuples = 0;
+    for (int i=0;i<arity_;i++) ntuples += weightMap[i].size();
+    os << ntuples << endl;
+    for (int i=0;i<arity_;i++) {
+        for (map<Value, Cost>::iterator it = weightMap[i].begin(); it != weightMap[i].end(); ++it) {
+            os << i << " " << it->first << " " << it->second << endl;
+        }
+    }
+    os << endl;
+}
+
+void MaxConstraint::initMemoization() {
     int n = arity();
     for (int i = 0; i < n; i++) {
         EnumeratedVariable *x = scope[i];
@@ -59,8 +80,12 @@ void MaxConstraint::initMemoization()
     best.resize(n);
 }
 
+<<<<<<< HEAD
 Cost MaxConstraint::evalOriginal(String s)
 {
+=======
+Cost MaxConstraint::evalOriginal( String& s ) {
+>>>>>>> a955f14... [error] validation tests for global cost functions and debugging
     int largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {

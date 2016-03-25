@@ -82,8 +82,7 @@ void GlobalConstraint::print(ostream &os)
     if (ToulBar2::verbose >= 6) for(int i = 0; i < arity();i++) os << *scope[i] << endl;
 }
 
-Cost GlobalConstraint::eval(String s)
-{
+Cost GlobalConstraint::eval(String& s) {
 
     Cost tcost = evalOriginal(s);
     for (unsigned int i = 0; i < s.length(); i++) {

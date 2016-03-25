@@ -36,7 +36,7 @@ public:
     }
 
     string getName() {return "LPS constraint";}
-    Cost evalOriginal(string s);
+    Cost evalOriginal(String& s);
     virtual void read(istream &file);
 
     void print(ostream &os);

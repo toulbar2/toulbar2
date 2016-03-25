@@ -350,6 +350,9 @@ protected:
 
     DLink<ConstraintLink> **links;
 
+    vector<EnumeratedVariable::iterator> it_values; // used by firstlex/nextlex and for separator decomposition tests
+    String iterTuple;
+
 public:
     AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in) {
         scope = new EnumeratedVariable* [arity_];
@@ -362,6 +365,7 @@ public:
             scope[i] = var;
             scope_dac[i] = var;
             links[i] = var->link(this, i);
+            iterTuple.append(1, CHAR_FIRST);
         }
         setDACScopeIndex();
     }
@@ -488,6 +492,9 @@ public:
 
         return subcstr;
     }
+
+    void firstlex();
+    bool nextlex( String& t, Cost& c);
 
     void projectNaryBeforeSearch();
 };

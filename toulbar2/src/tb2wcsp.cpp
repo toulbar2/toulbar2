@@ -768,9 +768,31 @@ void WCSP::postWOverlap(int *scopeIndex, int arity, string semantics, Cost baseC
 /// \param file problem file (\see \ref wcspformat)
 /// \deprecated should use postWXXX methods
 int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file, int *constrcounter) {
+    if (gcname == "salldiffdp") {
+        string semantics;
+        Cost baseCost;
+        file >> semantics >> baseCost;
+        postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
+        return -1;
+    } else if (gcname == "sgccdp") {
+        string semantics;
+        Cost baseCost;
+        int nvalues;
+        vector<BoundedObj<Value> > values;
+        file >> semantics >> baseCost >> nvalues;
+        for (int i=0;i<nvalues;i++) {
+            int d, high, low;
+            file >> d >> low >> high;
+            values.push_back(BoundedObj<Value>(d, high, low));
+        }
+        postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
+        return -1;
+    }
+
     GlobalConstraint *gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL) return -1;
-    if (file) gc->read(file);
+    if (file != NULL) gc->read(file);
+    gc->init();
     return gc->wcspIndex;
 }
 
@@ -778,7 +800,6 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (ToulBar2::verbose >= 2) cout << "Number of global constraints = " << globalconstrs.size() << endl;
     GlobalConstraint *gc = NULL;
     EnumeratedVariable **scopeVars = new EnumeratedVariable*[arity];
     for (int i = 0; i < arity; i++)
@@ -816,6 +837,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
     return gc;
 }
 
+// only DAG-based or network-based propagator
 int WCSP::postWAmong(int *scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                      const vector<Value> &values, int lb, int ub)
 {
@@ -837,6 +859,7 @@ int WCSP::postWAmong(int *scopeIndex, int arity, const string &semantics, const 
     gc->setUpperBound(ub);
     gc->setLowerBound(lb);
     for (unsigned int i = 0; i < values.size(); i++) gc->addBoundingValue(values[i]);
+    gc->init();
     return gc->wcspIndex;
 }
 
@@ -913,7 +936,7 @@ int WCSP::postWRegular(int *scopeIndex, int arity, const string &semantics, cons
                                Wtransitions[i].end, Wtransitions[i].weight);
         }
     }
-
+    if (constrIndex >= 0) ((GlobalConstraint *) getCtr(constrIndex))->init();
     return constrIndex;
 
 }
@@ -924,7 +947,22 @@ int WCSP::postWGcc(int *scopeIndex, int arity, const string &semantics, const st
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
+    if (propagator == "network") {
+        string semantics_ = semantics;
+        int nbValues = values.size();
+        Value *values_ = new Value[nbValues];
+        int *lb = new int[nbValues];
+        int *ub = new int[nbValues];
+        for (unsigned int i=0;i<values.size();i++) {
+            values_[i] = values[i].val;
+            lb[i] = values[i].lower;
+            ub[i] = values[i].upper;
+        }
+        postWGcc(scopeIndex, arity, semantics, baseCost, values_, nbValues, lb, ub);
+        return INT_MIN;
+    }
 
+    if (propagator=="flow") {
     GlobalCardinalityConstraint *gc = (GlobalCardinalityConstraint *)postGlobalCostFunction(scopeIndex, arity, "sgcc");
     if (gc == NULL) return -1;
 
@@ -933,9 +971,17 @@ int WCSP::postWGcc(int *scopeIndex, int arity, const string &semantics, const st
     for (unsigned int i = 0; i < values.size(); i++) {
         gc->addValueAndBounds(values[i].val, values[i].lower, values[i].upper);
     }
-
+        gc->init();
     return gc->wcspIndex;
-
+    } else { // DAG-based propagator
+        for (unsigned int i=0;i<values.size();i++) {
+            //Adding a wamong
+            vector<Value> values_;
+            values_.push_back(values[i].val);
+            postWAmong(scopeIndex, arity, semantics, "DAG", baseCost, values_, values[i].lower, values[i].upper);
+        }
+        return INT_MIN;
+    }
 }
 
 int WCSP::postWSame(int *scopeIndexG1, int arityG1, int *scopeIndexG2, int arityG2, const string &semantics, const string &propagator, Cost baseCost)
@@ -973,6 +1019,7 @@ int WCSP::postWSame(int *scopeIndexG1, int arityG1, int *scopeIndexG2, int arity
 
     delete[] scopeIndex;
 
+    gc->init();
     return gc->wcspIndex;
 }
 
@@ -987,14 +1034,34 @@ int WCSP::postWAllDiff(int *scopeIndex, int arity, const string &semantics, cons
         return INT_MIN;
     }
 
+    if (propagator=="flow") {
     GlobalConstraint *gc = postGlobalCostFunction(scopeIndex, arity, "salldiff");
 
     if (gc == NULL) return -1;
 
     gc->setSemantics(semantics);
     gc->setBaseCost(baseCost);
+        gc->init();
     return gc->wcspIndex;
+    } else { // DAG-based propagation using a decomposition into multiple among cost functions
+        // Counting the number of value
+        int inf = ((EnumeratedVariable *) getVar(scopeIndex[0]))->getInf();
+        int sup = ((EnumeratedVariable *) getVar(scopeIndex[0]))->getSup();
+        for (int variable = 0 ; variable < arity ; ++variable) {
+            int tinf = ((EnumeratedVariable *) getVar(scopeIndex[variable]))->getInf();
+            int tsup = ((EnumeratedVariable *) getVar(scopeIndex[variable]))->getSup();
+            inf = min ( inf , tinf );
+            sup = max (sup , tsup );
+        }
 
+        // Adding WeightedAmong over each variable
+        for (int value = inf ; value <= sup ; value++) {
+            vector<Value> values;
+            values.push_back(value);
+            postWAmong(scopeIndex, arity, semantics, "DAG", baseCost, values, 0, 1);
+        }
+        return INT_MIN;
+    }
 }
 
 int WCSP::postWGrammarCNF(int *scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
@@ -1029,6 +1096,7 @@ int WCSP::postWGrammarCNF(int *scopeIndex, int arity, const string &semantics, c
         }
     }
 
+    gc->init();
     return gc->wcspIndex;
 
 }
@@ -1041,6 +1109,7 @@ int WCSP::postMST(int* scopeIndex, int arity, const string &semantics, const str
     if (gc == NULL) return -1;
     gc->setSemantics(semantics);
     gc->setBaseCost(baseCost);
+    gc->init();
     return gc->wcspIndex;
 }
 
@@ -1063,6 +1132,7 @@ int WCSP::postMaxWeight(int *scopeIndex, int arity, const string &semantics, con
                                 weightFunction[i].weight);
     }
 
+    gc->init();
     return gc->wcspIndex;
 }
 

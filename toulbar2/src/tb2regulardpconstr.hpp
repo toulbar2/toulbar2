@@ -141,7 +141,7 @@ public:
     RegularDPConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
     virtual ~RegularDPConstraint();
 
-    Cost eval(String s);
+    Cost eval(String& s);
     void read(istream &file);
     WeightedAutomaton *getWeightedAutomaton() {return &dfa;}
     string getName() {

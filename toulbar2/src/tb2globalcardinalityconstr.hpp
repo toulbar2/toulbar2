@@ -41,7 +41,7 @@ public:
     }
 
     string getName() {return "GCC constraint";}
-    Cost evalOriginal(String s);
+    Cost evalOriginal(String& s);
     void read(istream &file);
 
     //GlobalCostFunctionParameters* getParameters() {return this;}
