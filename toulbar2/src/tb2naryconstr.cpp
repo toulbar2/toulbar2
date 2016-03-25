@@ -24,7 +24,6 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
             exit(EXIT_FAILURE);
         }
     }
-    iterTuple = String(tbuf);
     evalTuple = String(tbuf);
     delete [] tbuf;
 
@@ -289,53 +288,6 @@ void NaryConstraint::starrule(String& t, Cost minc)
     setTuple( t, eval(t) - minc );
     projectLB(minc);
 }
-
-
-
-
-void NaryConstraint::firstlex()
-{
-    it_values.clear();
-    EnumeratedVariable* var;
-    for(int i=0;i<arity_;i++) {
-        var = (EnumeratedVariable*) getVar(i);
-        it_values.push_back( var->begin() );
-    }
-}
-
-bool NaryConstraint::nextlex( String& t, Cost& c)
-{
-    int i;
-    int a = arity();
-    EnumeratedVariable* var = (EnumeratedVariable*) getVar(0);
-    if(it_values[0] == var->end()) return false;
-
-    for(i=0;i<a;i++) {
-        var = (EnumeratedVariable*) getVar(i);
-        iterTuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
-    }
-    t = iterTuple;
-    c = eval(t);
-
-    // and now increment
-    bool finished = false;
-    i = a-1;
-    while(!finished) {
-        var = (EnumeratedVariable*) getVar(i);
-        ++it_values[i];
-        finished = it_values[i] != var->end();
-        if(!finished) {
-            if(i>0) {
-                it_values[i] = var->begin();
-                i--;
-            } else finished = true;
-        }
-    }
-    return true;
-}
-
-
-
 
 
 // ********************* NaryConstraintMap *********************

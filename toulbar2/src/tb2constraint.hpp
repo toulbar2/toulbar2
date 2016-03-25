@@ -88,10 +88,10 @@ public:
     virtual Long space() const {return 0;} ///< \brief estimate of the constraint memory space size
 
     virtual void firstlex() {}
-    virtual bool nextlex(String& t, Cost& c) { return false; }
+    virtual bool nextlex(String& t, Cost& c) { cout << "dummy nextlex on (" << this << ")!" << endl; return false; }
 
-    virtual void first() {}
-    virtual bool next( String& t, Cost& c) { return false; }
+    virtual void first() {firstlex();}
+    virtual bool next( String& t, Cost& c) { return nextlex(t,c); }
 
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta ) {}
     virtual bool separability( EnumeratedVariable* alpha , EnumeratedVariable* beta) {return false;}

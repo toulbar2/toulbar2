@@ -1377,7 +1377,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
                 if (gap < 0) gap *=-1;
                 Cost currentCost = 0;
                 if (gap && semantics == "hard") currentCost = baseCost;
-                if (semantics == "lin" || semantics == "var") 		currentCost = baseCost*gap;
+                if (semantics == "lin" || semantics == "dec") 		currentCost = baseCost*gap;
                 if (semantics == "quad") 		currentCost = baseCost*gap*gap;
                 binaryCosts[position] = currentCost;
 
@@ -1406,7 +1406,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
                     Cost currentCost = 0;
                     int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
                     if (gap && semantics == "hard") currentCost = baseCost;
-                    if (semantics == "lin" || semantics == "val") 		currentCost = baseCost*gap;
+                    if (semantics == "lin" || semantics == "dec") 		currentCost = baseCost*gap;
                     if (semantics == "quad") 		currentCost = baseCost*gap*gap;
                     unaryCosts[count] = currentCost;
                 }
@@ -1418,7 +1418,7 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
                     Cost currentCost = 0;
                     int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
                     if (gap && semantics == "hard") currentCost = baseCost;
-                    if (semantics == "lin" || semantics == "val") 		currentCost = baseCost*gap;
+                    if (semantics == "lin" || semantics == "dec") 		currentCost = baseCost*gap;
                     if (semantics == "quad") 		currentCost = baseCost*gap*gap;
                     unaryCosts[count] = currentCost;
                 }

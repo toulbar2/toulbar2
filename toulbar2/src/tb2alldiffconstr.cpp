@@ -56,7 +56,7 @@ void AllDiffConstraint::organizeConfig() {
     if (mode == DECBI) decompose();
 }
 
-Cost AllDiffConstraint::evalOriginal( String s ) {
+Cost AllDiffConstraint::evalOriginal( String& s ) {
     Cost tuple_cost = 0;
     if (mode == DEC) {
         for (unsigned int i=0;i<s.length();i++) {
@@ -180,7 +180,7 @@ void AllDiffConstraint::dump(ostream& os, bool original)
         os << nonassigned;
         for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 salldiff" << endl << ((mode==VAR)?"var":"dec") << " " << def << endl;
+    os << " -1 salldiff " << ((mode==VAR)?"var":"dec") << " " << def << endl;
 }
 
 void AllDiffConstraint::print(ostream& os) {

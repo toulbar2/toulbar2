@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Usage:
+# rungenerateglobal.sh globalname "options"
+
 nerr=0
 ninstances=100
 nend=10
@@ -16,14 +19,14 @@ while (( $n < $nend )) ; do
   echo n:$n d:$d tight:$tight%  binary:$bctr  ternary:$tctr  quatary:$nary  
   while (( $seed < $ninstances )) ; do
   
-    # tests sregular
+    # tests flow-based propagation
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="sregular-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
+    randomfile="s${1}-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z > /dev/null
     cp problem.wcsp problemflow.wcsp
-    ./toulbar2 problem.wcsp $1 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ./toulbar2 problem.wcsp $2 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$3;} END{printf("%d",opt);}' > toulbar2_verif
     ub1b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`
@@ -43,14 +46,14 @@ while (( $n < $nend )) ; do
       nerr=`expr $nerr + 1`
     fi
   
-    # tests sregulardp
+    # tests DAG-based propagation
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="sregulardp-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
+    randomfile="s${1}dp-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z > /dev/null
     cp problem.wcsp problemDAG.wcsp
-    ./toulbar2 problem.wcsp $1 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ./toulbar2 problem.wcsp $2 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub2=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$3;} END{printf("%d",opt);}' > toulbar2_verif
     ub2b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`
@@ -70,14 +73,14 @@ while (( $n < $nend )) ; do
       nerr=`expr $nerr + 1`
     fi
   
-    # tests wregular
+    # tests network-based propagation
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="wregular-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
+    randomfile="w${1}-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z > /dev/null
     cp problem.wcsp problemnetwork.wcsp
-    ./toulbar2 problem.wcsp $1 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ./toulbar2 problem.wcsp $2 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub3=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$3;} END{printf("%d",opt);}' > toulbar2_verif
     ub3b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`

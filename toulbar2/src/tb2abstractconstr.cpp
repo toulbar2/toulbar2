@@ -35,6 +35,47 @@ int cmpDAC(const void *p1, const void *p2)
     else return 0;
 }
 
+void AbstractNaryConstraint::firstlex()
+{
+    it_values.clear();
+    EnumeratedVariable* var;
+    for(int i=0;i<arity_;i++) {
+        var = (EnumeratedVariable*) getVar(i);
+        it_values.push_back( var->begin() );
+    }
+}
+
+bool AbstractNaryConstraint::nextlex( String& t, Cost& c)
+{
+    int i;
+    int a = arity();
+    EnumeratedVariable* var = (EnumeratedVariable*) getVar(0);
+    if(it_values[0] == var->end()) return false;
+
+    for(i=0;i<a;i++) {
+        var = (EnumeratedVariable*) getVar(i);
+        iterTuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
+    }
+    t = iterTuple;
+    c = eval(t);
+
+    // and now increment
+    bool finished = false;
+    i = a-1;
+    while(!finished) {
+        var = (EnumeratedVariable*) getVar(i);
+        ++it_values[i];
+        finished = it_values[i] != var->end();
+        if(!finished) {
+            if(i>0) {
+                it_values[i] = var->begin();
+                i--;
+            } else finished = true;
+        }
+    }
+    return true;
+}
+
 // projects n-ary cost function of arity less than 3 into a unary/binary/ternary cost function in extension before the search
 void AbstractNaryConstraint::projectNaryBeforeSearch()
 {

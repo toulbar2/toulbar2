@@ -178,7 +178,7 @@ void RegularFlowConstraint::buildWeightedDFATable() {
 
 }
 
-Cost RegularFlowConstraint::evalOriginal(String s) {
+Cost RegularFlowConstraint::evalOriginal(String& s) {
 
     typedef pair<Cost,pair<int,int> > Element;
     //priority_queue<Element, vector<Element>, greater<Element> > minqueue;
@@ -443,7 +443,7 @@ void RegularFlowConstraint::dump(ostream& os, bool original)
         os << nonassigned;
         for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 sregular" << endl << ((insdef==0 && deldef==0)?"var":"edit") << " " << def << endl;
+    os << " -1 sregular " << ((insdef==0 && deldef==0)?"var":"edit") << " " << def << endl;
     dfa.dump(os, original);
 }
 

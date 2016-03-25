@@ -1699,7 +1699,7 @@ void Solver::CPStore::addChoicePoint(ChoicePointOp op, int varIndex, Value value
 {
     if (ToulBar2::verbose >= 1) cout << "add choice point " << CPOperation[op] << ((reverse)?"*":"") << " (" << varIndex << ", " << value << ") at position " << index  << endl;
     if ((size_t) index >= size()) {
-        assert(index == size());
+        assert((size_t) index == size());
         push_back(ChoicePoint(op, varIndex, value, reverse));
     } else {
         operator[](index) = ChoicePoint(op, varIndex, value, reverse);
@@ -1791,7 +1791,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
     Value valueLS[maxsize];
     unsigned int size = 0;
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-        assert(idx < cp.size());
+        assert((size_t) idx < cp.size());
         assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
         if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last-1)) ||
                 (cp[idx].op == CP_REMOVE && cp[idx].reverse && idx < nd.last-1)) {
@@ -1803,7 +1803,7 @@ void Solver::restore(CPStore &cp, OpenNode nd)
     wcsp->enforceUb();
     wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-        assert(idx < cp.size());
+        assert((size_t) idx < cp.size());
         if (ToulBar2::verbose >= 1) cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse)?"*":"") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx  << endl;
         if (ToulBar2::verbose >= 1) cout << *((WCSP *) wcsp)->getVar(cp[idx].varIndex) << endl;
         nbNodes++;

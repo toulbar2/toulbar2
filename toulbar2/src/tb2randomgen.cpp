@@ -31,10 +31,15 @@ void naryRandom::generateGlobalCtr( vector<int>& indexs, string globalname, Cost
 
     random_shuffle(&scopeIndexs[0], &scopeIndexs[arity-1]);
 
-    if (globalname == "salldiff") {
-        wcsp.postWAllDiff(scopeIndexs, arity, "var", "flow", Top);
-    } else if (globalname == "walldiff") {
-        wcsp.postWAllDiff(scopeIndexs, arity, "var", "network", Top);
+    if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
+        wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff")?"flow":((globalname == "walldiff")?"network":"DAG"), Top);
+    } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
+        // soft alldiff
+        vector<BoundedObj<Value> > values;
+        for (unsigned int i=0; i<scopeVars[0]->getDomainInitSize(); i++) {
+            values.push_back(BoundedObj<Value>(i, 1));
+        }
+        wcsp.postWGcc(scopeIndexs, arity, "var", (globalname == "sgcc")?"flow":((globalname == "wgcc")?"network":"DAG"), Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
         vector<WeightedObj<int> > init(1, WeightedObj<int>(0));
@@ -46,7 +51,7 @@ void naryRandom::generateGlobalCtr( vector<int>& indexs, string globalname, Cost
             trans.push_back(DFATransition(1,i,(i%2)?0:1));
         }
         wcsp.postWRegular(scopeIndexs, arity, "var", (globalname == "sregular")?"flow":((globalname == "wregular")?"network":"DAG"), Top, 2, init, last, trans);
-    } else {
+   } else {
         cerr << "Random generator: unknown global cost function name " << globalname << endl;
         exit(-1);
     }
