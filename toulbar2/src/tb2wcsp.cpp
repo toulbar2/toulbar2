@@ -791,7 +791,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istre
 
     GlobalConstraint *gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL) return -1;
-    if (file != NULL) gc->read(file);
+    if (file) gc->read(file);
     gc->init();
     return gc->wcspIndex;
 }

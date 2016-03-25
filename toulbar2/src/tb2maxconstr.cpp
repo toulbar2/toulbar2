@@ -80,12 +80,7 @@ void MaxConstraint::initMemoization() {
     best.resize(n);
 }
 
-<<<<<<< HEAD
-Cost MaxConstraint::evalOriginal(String s)
-{
-=======
 Cost MaxConstraint::evalOriginal( String& s ) {
->>>>>>> a955f14... [error] validation tests for global cost functions and debugging
     int largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {

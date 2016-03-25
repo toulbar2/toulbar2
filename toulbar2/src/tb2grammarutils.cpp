@@ -44,3 +44,25 @@ void WCNFCFG::print(ostream &ofs)
         ofs << p->from << "->" << p->to[0] << ": " << p->weight << "\n";
     }
 }
+
+void WCNFCFG::dump(ostream& os, bool original)
+{
+    assert(original); //TODO: case original is false
+    os << nNonTerminals << " " << nTerminals << " " << startSymbol << endl;
+    os << nonTermProd.size() + termProd.size() << endl;
+    for (vector<WCNFRule>::iterator p = nonTermProd.begin(); p != nonTermProd.end(); ++p) {
+        if (p->weight == 0) os << "1 " << p->from << " " << p->to[0] << " " << p->to[1] << endl;
+        else os << "3 " << p->from << " " << p->to[0] << " " << p->to[1] << " " << p->weight << endl;
+    }
+    for (vector<WCNFRule>::iterator p = termProd.begin(); p != termProd.end(); ++p) {
+        if (p->weight == 0) os << "0 " << p->from << " " << p->to[0] << endl;
+        else os << "2 " << p->from << " " << p->to[0] << " " << p->weight << endl;
+    }
+}
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
