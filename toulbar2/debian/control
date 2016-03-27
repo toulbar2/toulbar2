@@ -1,0 +1,15 @@
+Source: toulbar2
+Maintainer: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
+Section: science
+Priority: optional
+Homepage: http://www.inra.fr/mia/T/toulbar2
+Standards-Version: 3.9.6
+Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-graph-dev, libjemalloc-dev
+
+Package: toulbar2
+Architecture: amd64 i386
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: an exact combinatorial optimization tool for Graphical Models.
+ Toulbar2 is  an exact combinatorial optimization tool for Graphical Models 
+ such as Cost Function Networks, Markov Random Fields, Weighted Constraint 
+ Satisfaction Problems and Bayesian Nets.
