@@ -353,10 +353,7 @@ void WCSP::read_wcsp(const char *fileName)
         file >> domsize;
         if(domsize > nbvaltrue) nbvaltrue = domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
-        int theindex = -1;
-
-        if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
-        else theindex = makeIntervalVariable(varname,0,-domsize-1);
+        DEBONLY(int theindex = ) ((domsize >= 0) ? makeEnumeratedVariable(varname,0,domsize-1) : makeIntervalVariable(varname,0,-domsize-1));
         assert(theindex == i);
     }
 
@@ -845,9 +842,7 @@ void WCSP::read_uai2008(const char *fileName)
         file >> domsize;
         if (ToulBar2::verbose >= 3) cout << "read variable " << i << " of size " << domsize << endl;
         if(domsize > nbval) nbval = domsize;
-        int theindex = -1;
-        if (domsize >= 0) theindex = makeEnumeratedVariable(varname,0,domsize-1);
-        else theindex = makeIntervalVariable(varname,0,-domsize-1);
+        DEBONLY(int theindex =) ((domsize >= 0)  ? makeEnumeratedVariable(varname,0,domsize-1) : makeIntervalVariable(varname,0,-domsize-1));
         assert(theindex == i);
     }
 
@@ -1243,8 +1238,7 @@ void WCSP::read_wcnf(const char *fileName)
     for (int i = 0; i<nbvar; i++) {
         string varname;
         varname = to_string(i);
-        int theindex = -1;
-        theindex = makeEnumeratedVariable(varname,0,1);
+        DEBONLY(int theindex = ) makeEnumeratedVariable(varname,0,1);
         assert(theindex == i);
     }
 
