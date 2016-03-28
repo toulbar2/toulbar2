@@ -29,12 +29,17 @@ extern ofstream *ofile;  // le fichier de sortie
 // les constructeurs et destructeurs
 
 LSAlgorithm::LSAlgorithm(int nbmov)
-{walklength = nbmov;}
+{
+	walklength = nbmov;
+}
 
 LSAlgorithmGWW::LSAlgorithmGWW(int nbmov) : LSAlgorithm(nbmov) {;}
 
 LSAlgorithm::~LSAlgorithm()
-{delete nbhsearch; delete mheur;}
+{
+	delete nbhsearch;
+	delete mheur;
+}
 
 NeighborhoodSearch::NeighborhoodSearch(int nbhmin, int nbhmax, int endnbh, int varconf, int valconf , double nbhr)
 {
@@ -711,9 +716,9 @@ void GWWAlgorithm::run(OpProblem *problem, Configuration **population)
         thresholdcomputedelta(population);
         if (TRACEMODE)
 //       ecriture_changement_seuil
-            (walkalgorithm->threshold, thresholddelta, meilleur, population[0]->valuation,
-             population[populationsize / 2]->valuation, total_nhtries,
-             nb_threshold_population(population));
+			*ofile << walkalgorithm->threshold << thresholddelta <<  meilleur
+			       << population[0]->valuation << population[populationsize / 2]->valuation
+			       << total_nhtries << nb_threshold_population(population);
         thresholdupdate();
         thresholdchangesupdate();
         nb_pas--;

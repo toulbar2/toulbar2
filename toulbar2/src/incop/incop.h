@@ -15,7 +15,6 @@ inline void srand48(long seed) {return srand48(seed);}
 #endif
 
 
-
 /* struct Long */
 /* { */
 /*   long long p; */
@@ -357,6 +356,7 @@ public :
     virtual void dynamicmaxneighbors(int &maxneigh, int &minneigh, int nbmoves);
     virtual void initsearch();
     virtual void spareneighboradjust(Configuration *config, Move *move) {;}
+	virtual ~NeighborhoodSearch() {};
 };
 
 

@@ -1,12 +1,7 @@
-
-
-
 /* ------------------------------------------------------------
 Les fonctions utilitaires de incop : Statistiques,
 lecture des arguments des algos , ecriture,  lancement d'un essai,
 ------------------------------------------------------------ */
-
-
 
 #include <assert.h>
 #include <cerrno>
@@ -23,8 +18,6 @@ using namespace std;
 #include "incop.h"
 #include "incoputil.h"
 
-
-
 #include <math.h>
 #include <unistd.h>
 
@@ -34,16 +27,12 @@ using namespace std;
 ofstream *ofile = NULL;  // le fichier de sortie
 
 Stat_GWW *Statistiques;  //  l'objet pour les statistiques en variable globale
-// allou� dans le main() avec npb et nbessais
-
-
-
+// alloué dans le main() avec npb et nbessais
 
 
 int TRACEMODE = 0; // variable globale : niveau de trace
 
 //struct sigaction Action;  // trombe_ajout : pour les signaux
-
 
 /* ------------------------------------ STATISTIQUES ---------------------------------------*/
 
@@ -139,7 +128,7 @@ void Stat_GWW::execution_report(int nessai, Long lower_bound)
 
 /* les fonctions de lecture et de v�rification de type et de valeur des donn�es */
 
-int argument2ul(char *arg, char *message)
+int argument2ul(char *arg, const char *message)
 {
     char *error;
     int s = strtoul(arg, &error, 10);
@@ -151,7 +140,7 @@ int argument2ul(char *arg, char *message)
 }
 
 
-double argument2d(char *arg, char *message)
+double argument2d(char *arg, const char *message)
 {
     char *error;
     errno = 0;
@@ -163,21 +152,21 @@ double argument2d(char *arg, char *message)
     return s;
 }
 
-double argument2bd(char *arg, char *message, double min1, double max1)
+double argument2bd(char *arg, const char *message, double min1, double max1)
 {
-    double s = argument2d(arg, message);
-    if ((s < min1) || (s > max1)) {
-        cerr << "Erreur " << message << arg << " doit �tre compris entre " << min1 << " et " << max1;
+	double s = argument2d(arg, message);
+	if ((s < min1) || (s > max1)) {
+		cerr << "Erreur " << message << arg << " doit être compris entre " << min1 << " et " << max1;
         exit(1);
     }
     return s;
 }
 
-int argument2bul(char *arg, char *message, int min1, int max1)
+int argument2bul(char *arg, const char *message, int min1, int max1)
 {
-    int s = argument2ul(arg, message);
-    if ((s < min1) || (s > max1)) {
-        cerr << "Erreur " << message << arg << " doit �tre compris entre " << min1 << " et " << max1;
+	int s = argument2ul(arg, message);
+	if ((s < min1) || (s > max1)) {
+		cerr << "Erreur " << message << arg << " doit être compris entre " << min1 << " et " << max1;
         exit(1);
     }
     return s;
@@ -185,7 +174,7 @@ int argument2bul(char *arg, char *message, int min1, int max1)
 
 
 
-string argument2lp(char *arg, char *message, list<string> &possibles)
+string argument2lp(char *arg, const char *message, list<string> &possibles)
 {
     string s = arg;
     if (find(possibles.begin(), possibles.end(), arg) == possibles.end())
@@ -449,12 +438,13 @@ LSAlgorithm *algo_marche(char **argv, int &narg, string &method, int gww)
     LSAlgorithm *algo;
     Metaheuristic *mheuristic = new Metaheuristic();
     NeighborhoodSearch *nbhsear;
-    int taille_voisinage_min, taille_voisinage_max, fin_voisinage, var_conflit, val_conflit, seuildebut;
+	int taille_voisinage_min, taille_voisinage_max, fin_voisinage, var_conflit, val_conflit;
+	int seuildebut = 0;
     double temp = 0;
     int longtabu = 0;
     int dynamic = 0;
     int nbmouv;
-    double inittemp;
+	double inittemp = 0.0;
     double nbhr = 0; // defini pour grwrate
     float Pd, P0;
     arguments_algorithme(argv, narg, nbmouv);
