@@ -25,7 +25,7 @@
 #define TB2STORE_HPP_
 
 #include "tb2types.hpp"
-#include <typeinfo>
+#include <boost/type_index.hpp>
 
 template<class T> class BTList;
 template<class T> class DLink;
@@ -62,8 +62,8 @@ public:
         content = new V[indexMax];
         index = 0;
         base = 0;
-        if (ToulBar2::verbose > 0) {
-            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
+        if (ToulBar2::verbose >= 0) {
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << boost::typeindex::type_id<T>().pretty_name() << " stack." << endl;
         }
     }
 
