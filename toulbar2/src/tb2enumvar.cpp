@@ -716,7 +716,7 @@ void EnumeratedVariable::assign(Value newValue, bool isDecision)
     }
 }
 
-void EnumeratedVariable::assignLS(Value newValue, set<Constraint *> &delayedCtrs)
+void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
 {
     if (ToulBar2::verbose >= 2) cout << "assignLS " << *this << " -> " << newValue << endl;
 #ifndef NDEBUG

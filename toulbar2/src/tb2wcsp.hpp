@@ -242,9 +242,9 @@ public:
     }
 
     void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate) {
-        set<Constraint *> delayedctrs;
+        ConstraintSet delayedctrs;
         for (unsigned int i = 0; i < size; i++) vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
-        for (set<Constraint *>::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) if (!(*it)->isGlobal()) {if ((*it)->isSep())(*it)->assigns(); else (*it)->propagate();}
+        for (ConstraintSet::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) if (!(*it)->isGlobal()) {if ((*it)->isSep()) (*it)->assigns(); else (*it)->propagate();}
         if (dopropagate) propagate();
     }
 

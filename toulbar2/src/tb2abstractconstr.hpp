@@ -69,8 +69,8 @@ public:
         scope_inv[ x->wcspIndex ] = 0;
     }
 
-    set<Constraint *> subConstraint() {
-        set <Constraint *> subcstr;
+    ConstraintSet subConstraint(){
+        ConstraintSet subcstr;
         return subcstr;
     }
 };
@@ -147,8 +147,8 @@ public:
         scope_inv[ y->wcspIndex ] = 1;
     }
 
-    set<Constraint *> subConstraint() {
-        set <Constraint *> subcstr;
+    ConstraintSet subConstraint(){
+        ConstraintSet subcstr;
         return subcstr;
     }
 };
@@ -317,8 +317,8 @@ public:
         scope_inv[ z->wcspIndex ] = 2;
     }
 
-    set<Constraint *> subConstraint() {
-        set <Constraint *> subcstr;
+    ConstraintSet subConstraint(){
+        ConstraintSet subcstr;
         set<int> scope;
         for (int k = 0; k < arity(); k++) {
             scope.insert(getVar(k)->wcspIndex);
@@ -476,8 +476,8 @@ public:
         return scope_dac[varCtrIndex];
     }
 
-    set<Constraint *> subConstraint() {
-        set <Constraint *> subcstr;
+    ConstraintSet subConstraint(){
+        ConstraintSet subcstr;
         set<int> scope;
         for (int k = 0; k < arity(); k++) {
             scope.insert(getVar(k)->wcspIndex);

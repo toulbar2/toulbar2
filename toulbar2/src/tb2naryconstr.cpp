@@ -335,7 +335,7 @@ void NaryConstraintMap::resetFilters()
 void NaryConstraintMap::fillFilters()
 {
     if (filters == NULL) {
-        filters = new set<Constraint *>;
+        filters = new ConstraintSet;
         for (int i = 0; i < arity(); i++) {
             EnumeratedVariable *v = (EnumeratedVariable *) getVar(i);
             for (ConstraintList::iterator iter = v->getConstrs()->begin(); iter != v->getConstrs()->end(); ++iter) {
@@ -823,7 +823,7 @@ void NaryConstraintMap::insertSum(String &t1, Cost c1, Constraint *ctr1, String 
     String tstr(t);
 
     if (bFilters && filters && (default_cost >= Top)) {
-        set<Constraint *>::iterator it = filters->begin();
+        ConstraintSet::iterator it = filters->begin();
         while (it != filters->end()) {
             Constraint *ctr = *it;
             if (ctr->connected()) {

@@ -662,7 +662,7 @@ void help_msg(char *toulbar2filename)
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
     cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
-    cout << "   -C=[float] : multiplies all costs by this number (default value is " << ToulBar2::costMultiplier << ")" << endl;
+    cout << "   -C=[float] : multiplies all costs by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
     cout << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
     if (ToulBar2::singletonConsistency) cout << " (default option)";
     cout << endl;
@@ -724,12 +724,13 @@ void help_msg(char *toulbar2filename)
     
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
+    cout << "   -seed=[integer] : random seed value (default value is 1)" << endl;
     cout << "   -random=[bench profile]  : bench profile must be specified as follow :" << endl;
     cout << "                         n and d are respectively the number of variable and the maximum domain size  of the random problem." << endl;
     cout << "			" << endl;
     cout << "       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions" << endl;
     cout << "                                          :p2 is the num of binary cost functions to include" << endl;
-    cout << "                                          :the seed parameter is optional" << endl;
+    cout << "                                          :the seed parameter is optional (and will overwrite -seed)" << endl;
 
     cout << "   or:                                                                               " << endl;
     cout << "       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl;
@@ -1433,8 +1434,9 @@ int _tmain(int argc, TCHAR *argv[])
 
             //////////RANDOM GENERATOR///////
             if (args.OptionId() == OPT_seed) {
-                ToulBar2::seed = atol(args.OptionArg());
-                mysrand(ToulBar2::seed);
+                mysrand(atol(args.OptionArg()));
+            } else {
+                mysrand(1);
             }
 
             if (args.OptionId() == OPT_random) {

@@ -131,7 +131,7 @@ public:
     void setDefCost(Cost df) { default_cost = df; }
     void keepAllowedTuples(Cost df);
 
-    set<Constraint *> *filters;
+    ConstraintSet* filters;
     void resetFilters();
     void fillFilters();
 
