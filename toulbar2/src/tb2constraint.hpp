@@ -218,7 +218,7 @@ public:
     void setDuplicate()	   {isDuplicate_ = true; if (ToulBar2::verbose >= 1) { cout << *this << " set duplicate" << endl; }}
     bool isDuplicate() 	   {return isDuplicate_;}
 
-    virtual set<Constraint*> subConstraint(){set<Constraint*> s; return s;};
+    virtual ConstraintSet subConstraint(){ConstraintSet s; return s;};
 
     friend ostream& operator<<(ostream& os, Constraint &c) {
         c.print(os);

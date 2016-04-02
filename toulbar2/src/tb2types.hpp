@@ -431,6 +431,30 @@ public:
     }
 };
 
+/// < \brief allows to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
+template<class T> bool compareWCSPIndex(const T *lhs, const T *rhs)
+{
+    assert(lhs);
+    assert(rhs);
+    int left = lhs->wcspIndex;
+    int right = rhs->wcspIndex;
+    if (left < 0) left = MAX_ELIM_BIN - left;   // makes elimTernConstraints after elimBinConstraints after original constraints
+    if (right < 0) right = MAX_ELIM_BIN - right;
+    return left < right;
+}
+template<class T>
+struct Compare
+{
+    typedef bool (*compare_t)(const T *, const T *);
+};
+template<class T> class Set : public set<T *, typename Compare<T>::compare_t  >
+{
+public:
+    Set() : set<T *, typename Compare<T>::compare_t >(compareWCSPIndex<T>) {}
+};
+typedef Set<Constraint> ConstraintSet;
+typedef Set<Variable> VariableSet;
+
 #endif /*TB2TYPES_HPP_*/
 
 /* Local Variables: */

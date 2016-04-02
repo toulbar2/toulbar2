@@ -87,7 +87,7 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is 0)</li>
   <li>-T=[integer] : threshold cost value for VAC (default value is 1)</li>
   <li>-P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)</li>
-  <li>-C=[integer] : multiplies all costs by this number (default value is 1)</li>
+  <li>-C=[float] : multiplies all costs by this number when loading the problem (default value is 1)</li>
   <li>-S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")</li>
   <li>-V : VAC-based value ordering heuristic</li>
   <li>-B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)</li>
@@ -105,12 +105,12 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-epsilon=[float] : approximation factor for computing the partition function (default value is 1000)</li>
   <li>-hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is 10000)</li>
   <li>-open=[integer] : hybrid best-first search limit on the number of open nodes (default value is -1)</li>
+  <li>-seed=[integer] : random seed value (default value is 1)</li>
 </ul>
 <p>
 </p>
 
 
-<p id="footer"><br/><br/>Last modification : February 19, 2016</p>
+<p id="footer"><br/><br/>Last modification : April 1, 2016</p>
 </body>
 </html>
-

@@ -8,7 +8,7 @@ tctr=0
 nary=0
 tight=80
 n=4
-d=2
+d=5
 K=1
 
 while (( $n < $nend )) ; do

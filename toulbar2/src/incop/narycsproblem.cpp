@@ -228,7 +228,7 @@ INCOP::NaryCSProblem *weighted_narycsp_creation(int nbvar, int nbconst, int maxd
 void  wcspdomaines_file_read(WCSP *wcsp, int nbvar, vector<Value> *tabdomaines, vector<Value> &initsolution, vector<int> &initconfig)
 {
 	assert(initsolution.size() == wcsp->numberOfVariables());
-	assert(initconfig.size() == nbvar);
+	assert(initconfig.size() == (unsigned int) nbvar);
 	int size = 0;
 	for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) if (wcsp->unassigned(i)) {
 			for (EnumeratedVariable::iterator it = ((EnumeratedVariable *)wcsp->getVar(i))->begin() ; it != ((EnumeratedVariable *)wcsp->getVar(i))->end() ; ++it) {
@@ -258,7 +258,7 @@ int  wcspdata_constraint_read(WCSP *wcsp, int nbconst, vector<INCOP::NaryVariabl
 					ct->constrainedvariables.push_back(numvar);
 					(*vv)[numvar]->constraints.push_back(ct);
 				}
-			assert(ct->constrainedvariables.size() == arity);
+			assert(ct->constrainedvariables.size() == (unsigned int) arity);
 			ct->compute_indexmultiplyers(tabdomaines);
 			String tuple;
 			Cost cost;

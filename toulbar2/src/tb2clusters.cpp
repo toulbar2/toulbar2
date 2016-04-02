@@ -16,9 +16,13 @@
  *
  */
 
+bool CmpClusterStructBasic::operator() (const Cluster *lhs, const Cluster *rhs) const
+{
+    return lhs && rhs && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs));
+}
 bool CmpClusterStruct::operator() (const Cluster *lhs, const Cluster *rhs) const
 {
-    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs<rhs))));
+    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs))))));
 }
 
 /*
@@ -998,7 +1002,7 @@ void TreeDecomposition::treeFusions()
     //	heuristicFusionRec(croot, croot);
 
     int treewidth = 0;
-    set<Cluster*> sclu;
+    TClusters sclu;
     for(unsigned int i=0; i < clusters.size(); i++) {
         if(clusters[i])	{
             Cluster* c = clusters[i];
@@ -1008,7 +1012,7 @@ void TreeDecomposition::treeFusions()
     }
     int i = 0;
     clusters.clear();
-    set<Cluster*>::iterator it = sclu.begin();
+    TClusters::iterator it = sclu.begin();
     while(it != sclu.end()) {
         Cluster* c = *it;
         c->setId(i++);
@@ -1533,7 +1537,7 @@ void TreeDecomposition::buildFromOrder()
         c->addVar( wcsp->getVar( order[i] ) );
         clusters.push_back( c );
     }
-    set<Constraint*> usedctrs;
+    ConstraintSet usedctrs;
 
     for(unsigned int i=0;i<wcsp->numberOfVariables();i++) {
         Variable* x = wcsp->getVar( order[i] );
@@ -1575,7 +1579,7 @@ void TreeDecomposition::buildFromOrderForApprox()
     vector<int> order;
     bool firstComponent = true;
     int sizepart = 0;				//number of parts in the built partition
-    set<Constraint*> totalusedctrs;	// constraints already in a part
+    ConstraintSet totalusedctrs;	// constraints already in a part
     vector<int> degreeinusedctr;	// number of constraints not adding for each variable
     //	int nbcstr = 0;					//
     double time;
@@ -1605,7 +1609,7 @@ void TreeDecomposition::buildFromOrderForApprox()
     time =cpuTime();
     while (totalusedctrs.size() < wcsp->numberOfConnectedConstraints() )//&& nbparties<4)
     {
-        set<Constraint*> currentusedctrs;						// liste des contraintes contenues dans la partie courante
+        ConstraintSet currentusedctrs;						// liste des contraintes contenues dans la partie courante
         TVars currentusedvars;									// liste des variables contenues dans la partie courante
         TVars inusedvars;										// liste des variables qui n'ont pas encore ete etudiee dans la partie courante
         vector<Variable *> currentRevElimOrder;					// liste des variables dans l'ordre inverse construit
@@ -1647,7 +1651,7 @@ void TreeDecomposition::buildFromOrderForApprox()
             }
             cout << endl;
             cout << "\tContraintes : ";
-            for(set<Constraint *>::iterator it=currentusedctrs.begin(); it != currentusedctrs.end();it++) {
+            for(ConstraintSet::iterator it=currentusedctrs.begin(); it != currentusedctrs.end();it++) {
                 cout << "[";
                 for(int k=0; k < (*it)->arity(); k++) {
                     cout << (*it)->getVar(k)->wcspIndex;
@@ -1776,7 +1780,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 }
 
 
-void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constraint*> &totalusedctrs, TVars &inusedvars, TVars &currentusedvars, vector<Variable *> &currentRevElimOrder,set<Constraint*> &currentusedctrs)
+void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, ConstraintSet &totalusedctrs, TVars &inusedvars, TVars &currentusedvars, vector<Variable *> &currentRevElimOrder,ConstraintSet &currentusedctrs)
 {
     vector<TVars>  listeVars(wcsp->numberOfVariables());	// liste des voisins d'ordre superieur de chaque variable
     int nbcstr = 0;
@@ -1822,7 +1826,7 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constrai
                     { //all edges of the ctr are in the sub graph => the cstr is added in this current part
                         if( included(sc,listeVars[maxvar->wcspIndex]) )
                         {
-                            set<Constraint*> subctr;
+                            ConstraintSet subctr;
                             nbcstr++;
                             currentusedctrs.insert(ctr);
                             totalusedctrs.insert(ctr);
@@ -1855,7 +1859,7 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, set<Constrai
     }
 }
 
-void TreeDecomposition::insert(int sizepart, vector <Variable *> currentRevElimOrder, set<Constraint *> currentusedctrs )
+void TreeDecomposition::insert(int sizepart, vector <Variable *> currentRevElimOrder, ConstraintSet currentusedctrs )
 {
     int firstCluster = clusters.size();
     for(unsigned int i=0;i<currentRevElimOrder.size();i++) {
@@ -1864,7 +1868,7 @@ void TreeDecomposition::insert(int sizepart, vector <Variable *> currentRevElimO
         c->addVar( currentRevElimOrder[currentRevElimOrder.size()-i-1] );
         clusters.push_back( c );
     }
-    set<Constraint*> usedctrs;
+    ConstraintSet usedctrs;
 
     for(unsigned int i=0;i<currentRevElimOrder.size();i++) {
         Cluster* c  = clusters[firstCluster+i];

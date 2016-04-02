@@ -235,9 +235,8 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
         int unsigned domsize = automaton->getNbStates()-1;
         string varname = to_string(v+q0);
 
-        DEBONLY(int theindex = -1;)
-        DEBONLY(theindex =) wcsp->makeEnumeratedVariable(varname,(Value) 0,(Value) domsize);			// add qi variable
-        assert(theindex=v+current_var_number);
+        DEBONLY(int theindex =) wcsp->makeEnumeratedVariable(varname,(Value) 0,(Value) domsize);			// add qi variable
+        assert(theindex == v+ (int) current_var_number);
         if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular add varname =" << varname <<"=> rank "<<  wcsp->numberOfVariables() << " domain = " << domsize+1 << endl;
     }
     int unsigned q_last = wcsp->numberOfVariables() -1 ;
