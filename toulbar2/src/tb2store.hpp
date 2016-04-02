@@ -68,7 +68,13 @@ public:
         index = 0;
         base = 0;
         if (ToulBar2::verbose >= 0) {
-            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << boost::typeindex::type_id<T>().pretty_name() << " stack." << endl;
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " <<
+#if (BOOST_VERSION >= 105600)
+                boost::typeindex::type_id<T>().pretty_name()
+#else
+                typeid(T).name()
+                #endif
+                 << " stack." << endl;
     }
     }
 
