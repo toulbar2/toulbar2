@@ -119,6 +119,8 @@ public:
 class Cluster
 {
 private:
+    static int clusterCounter;          ///< count the number of instances of Cluster class
+    int instance;                       ///< instance number
     TreeDecomposition  *td;
     WCSP				  *wcsp;
     int                 id; // corresponding to the vector index of the cluster in the tree decomposition
@@ -147,7 +149,8 @@ public:
 
     void          setup();
 
-    int           getId() const { return id; }
+    int getIndex() const {return instance;}     ///< \brief instantiation occurrence number of current Cluster object
+    int           getId() const { return id; }  ///< \brief temporary/final index of the cluster in the current tree decomposition
     void          setId(int iid) { id = iid; }
 
     WCSP 		*getWCSP() { return wcsp; }

@@ -16,14 +16,15 @@
  *
  */
 
+int Cluster::clusterCounter = 0;
+
 bool CmpClusterStructBasic::operator() (const Cluster *lhs, const Cluster *rhs) const
 {
-//    return lhs && rhs && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs)); // TODO: getId may be uninitialized?
-    return lhs && rhs && (lhs < rhs); // Warning! stochastic behavior!!
+    return lhs && rhs && (lhs->getIndex() < rhs->getIndex());
 }
 bool CmpClusterStruct::operator()(const Cluster *lhs, const Cluster *rhs) const
 {
-    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs))))));
+    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs->getIndex() < rhs->getIndex()))));
 }
 
 /*
@@ -484,7 +485,9 @@ Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(
         lb(MIN_COST), ub(MAX_COST), lbRDS(MIN_COST),
         active(true),
         countElimVars(1),
-    cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0) {}
+        cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0) {
+    instance = clusterCounter++;
+}
 
 Cluster::~Cluster()
 {
