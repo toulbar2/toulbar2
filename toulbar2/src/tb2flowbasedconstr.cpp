@@ -88,7 +88,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
                 pair<int, int> edge = mapto(i, *v);
                 vector<Cost> weight = graph.getWeight(edge.second, edge.first);
                 if (weight.size() == 0) {
-                    cout << "error for non-existence of egde (" << edge.second << "," << edge.first << ")\n";
+                    cout << "error for non-existence of edge (" << edge.second << "," << edge.first << ")\n";
                     graph.print();
                     exit(0);
                 }
@@ -99,7 +99,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
                     result.second = graph.removeEdge(edge.first, edge.second);
                 }
                 if (!result.second) {
-                    cout << "ERROR cannot delete egde (" << edge.second << "," << edge.first << ")\n";
+                    cout << "ERROR cannot delete edge (" << edge.second << "," << edge.first << ")\n";
                     graph.print();
                     exit(0);
                 }
