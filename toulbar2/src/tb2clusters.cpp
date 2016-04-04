@@ -18,7 +18,8 @@
 
 bool CmpClusterStructBasic::operator() (const Cluster *lhs, const Cluster *rhs) const
 {
-    return lhs && rhs && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs));
+//    return lhs && rhs && ((lhs->getId()>=0 && rhs->getId()>=0)?(lhs->getId() < rhs->getId()):(lhs < rhs)); // TODO: getId may be uninitialized?
+    return lhs && rhs && (lhs < rhs); // Warning! stochastic behavior!!
 }
 bool CmpClusterStruct::operator()(const Cluster *lhs, const Cluster *rhs) const
 {
