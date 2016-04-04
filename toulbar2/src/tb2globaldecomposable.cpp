@@ -202,7 +202,7 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
     int unsigned current_var_number = wcsp->numberOfVariables();
     int unsigned q0 = current_var_number;
     if ( ToulBar2::verbose > 1 ) 	{
-        cout << "DEBUG>> wregular found : inital number of variables before creation = " <<  wcsp->numberOfVariables() <<endl;
+        cout << "DEBUG>> wregular found : initial number of variables before creation = " <<  wcsp->numberOfVariables() <<endl;
         cout << "DEBUG>> wregular Automatum Total number of states: " <<  automaton->getNbStates() <<endl;
         cout << "DEBUG>> wregular Initial states number: " << automaton->getInitialStates().size()  <<endl;
         cout << "DEBUG>> wregular add new variable from " << q0 <<" to "<<  current_var_number+arity+1 <<endl;
