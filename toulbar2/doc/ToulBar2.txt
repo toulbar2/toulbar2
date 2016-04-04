@@ -1,7 +1,7 @@
 ********************************
 * ToulBar2 Brief User Overview *
 ********************************
-c /home/sdegivry/bin/toulbar2  version : -master-de089b5-tainted, copyright (c) INRA 2015
+c /home/sdegivry/bin/toulbar2  version : -master-42f03f3-tainted (1459760192), copyright (c) INRA 2015
 
 ________________________________________________________________________________
 Solve a simple weighted constraint satisfaction problem (WCSP)
@@ -17,11 +17,11 @@ Preprocessing time: 0 seconds.
 24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [22,64[ 65.625%
 New solution: 29 (0 backtracks, 8 nodes, depth 9)
-Optimality gap: [ 23 , 29 ] 85 % (8 backtracks, 16 nodes)
+Optimality gap: [ 23 , 29 ] 20.6897 % (8 backtracks, 16 nodes)
 New solution: 27 (8 backtracks, 24 nodes, depth 8)
-Optimality gap: [ 24 , 27 ] 60 % (14 backtracks, 30 nodes)
-Optimality gap: [ 25 , 27 ] 40 % (44 backtracks, 113 nodes)
-Optimality gap: [ 26 , 27 ] 20 % (54 backtracks, 151 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (14 backtracks, 30 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (44 backtracks, 113 nodes)
+Optimality gap: [ 26 , 27 ] 3.7037 % (54 backtracks, 151 nodes)
 Optimality gap: [ 27 , 27 ] 0 % (54 backtracks, 157 nodes)
 Node redundancy during HBFS: 30.5732 %
 Optimum: 27 in 54 backtracks and 157 nodes ( 205 removals by DEE) and 0 seconds.
@@ -40,14 +40,14 @@ Reverse DAC lower bound: 22 (+9.09091%)
 Preprocessing time: 0 seconds.
 24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [22,28[ 21.4286%
-Optimality gap: [ 23 , 28 ] 83 % (7 backtracks, 14 nodes)
+Optimality gap: [ 23 , 28 ] 17.8571 % (7 backtracks, 14 nodes)
 New solution: 27 (7 backtracks, 20 nodes, depth 6)
-Optimality gap: [ 23 , 27 ] 80 % (12 backtracks, 25 nodes)
-Optimality gap: [ 24 , 27 ] 60 % (26 backtracks, 67 nodes)
-Optimality gap: [ 25 , 27 ] 40 % (58 backtracks, 163 nodes)
+Optimality gap: [ 23 , 27 ] 14.8148 % (12 backtracks, 25 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (26 backtracks, 67 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (58 backtracks, 163 nodes)
 Optimality gap: [ 27 , 27 ] 0 % (70 backtracks, 217 nodes)
 Node redundancy during HBFS: 35.4839 %
-Optimum: 27 in 70 backtracks and 217 nodes ( 158 removals by DEE) and 0 seconds.
+Optimum: 27 in 70 backtracks and 217 nodes ( 158 removals by DEE) and 0.01 seconds.
 end.
 
 cat sol
@@ -75,8 +75,8 @@ New solution: 28 (0 backtracks, 17 nodes, depth 2)
 New solution: 27 (18 backtracks, 78 nodes, depth 2)
 --- [0] LDS 4 --- (84 nodes)
 --- [0] Search with no discrepancy limit --- (187 nodes)
-Optimality gap: [ 23 , 27 ] 80 % (143 backtracks, 347 nodes)
-Optimality gap: [ 24 , 27 ] 60 % (154 backtracks, 369 nodes)
+Optimality gap: [ 23 , 27 ] 14.8148 % (143 backtracks, 347 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (154 backtracks, 369 nodes)
 Optimum: 27 in 156 backtracks and 373 nodes ( 498 removals by DEE) and 0.01 seconds.
 end.
 
@@ -95,9 +95,9 @@ New solution: 27 (0 backtracks, 0 nodes, depth 1)
 INCOP solving time: 0.22 seconds.
 24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [22,27[ 18.5185%
-Optimality gap: [ 23 , 27 ] 80 % (19 backtracks, 48 nodes)
-Optimality gap: [ 24 , 27 ] 60 % (23 backtracks, 60 nodes)
-Optimality gap: [ 25 , 27 ] 40 % (53 backtracks, 130 nodes)
+Optimality gap: [ 23 , 27 ] 14.8148 % (19 backtracks, 48 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (23 backtracks, 60 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (53 backtracks, 130 nodes)
 Optimality gap: [ 27 , 27 ] 0 % (65 backtracks, 167 nodes)
 Node redundancy during HBFS: 22.1557 %
 Optimum: 27 in 65 backtracks and 167 nodes ( 137 removals by DEE) and 0.22 seconds.
@@ -120,16 +120,16 @@ Tree decomposition height : 16
 Number of clusters        : 18
 Tree decomposition time: 0 seconds.
 New solution: 29 (19 backtracks, 34 nodes, depth 2)
-Optimality gap: [ 20 , 29 ] 90 % (19 backtracks, 34 nodes)
-Optimality gap: [ 22 , 29 ] 70 % (43 backtracks, 92 nodes)
+Optimality gap: [ 20 , 29 ] 31.0345 % (19 backtracks, 34 nodes)
+Optimality gap: [ 22 , 29 ] 24.1379 % (43 backtracks, 92 nodes)
 New solution: 28 (71 backtracks, 157 nodes, depth 2)
-Optimality gap: [ 22 , 28 ] 66 % (71 backtracks, 157 nodes)
+Optimality gap: [ 22 , 28 ] 21.4286 % (71 backtracks, 157 nodes)
 New solution: 27 (94 backtracks, 204 nodes, depth 2)
-Optimality gap: [ 22 , 27 ] 62 % (94 backtracks, 204 nodes)
-Optimality gap: [ 23 , 27 ] 50 % (115 backtracks, 249 nodes)
-Optimality gap: [ 24 , 27 ] 37 % (159 backtracks, 363 nodes)
-Optimality gap: [ 25 , 27 ] 25 % (176 backtracks, 414 nodes)
-Optimality gap: [ 26 , 27 ] 12 % (177 backtracks, 441 nodes)
+Optimality gap: [ 22 , 27 ] 18.5185 % (94 backtracks, 204 nodes)
+Optimality gap: [ 23 , 27 ] 14.8148 % (115 backtracks, 249 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (159 backtracks, 363 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (176 backtracks, 414 nodes)
+Optimality gap: [ 26 , 27 ] 3.7037 % (177 backtracks, 441 nodes)
 Optimality gap: [ 27 , 27 ] 0 % (181 backtracks, 537 nodes)
 HBFS open list restarts: 0 % and reuse: 11.4286 % of 70
 Node redundancy during HBFS: 34.2644 %
@@ -343,9 +343,9 @@ followed by BTD:
 Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
 Generic variable elimination of degree 5
 Maximum degree of generic variable elimination: 5
-Cost function decomposition time : 0.01 seconds.
+Cost function decomposition time : 0 seconds.
 Reverse DAC lower bound: 19 (+10.5263%)
-Preprocessing time: 0.21 seconds.
+Preprocessing time: 0.22 seconds.
 15 unassigned variables, 75 values in all current domains (med. size:5, max size:5) and 51 non-unary cost functions (med. degree:7)
 Initial lower and upper bounds: [21,64[ 67.1875%
 Tree decomposition width  : 8
@@ -353,20 +353,20 @@ Tree decomposition height : 12
 Number of clusters        : 18
 Tree decomposition time: 0 seconds.
 New solution: 30 (13 backtracks, 18 nodes, depth 2)
-Optimality gap: [ 22 , 30 ] 88 % (13 backtracks, 18 nodes)
+Optimality gap: [ 22 , 30 ] 26.6667 % (13 backtracks, 18 nodes)
 New solution: 29 (19 backtracks, 30 nodes, depth 2)
-Optimality gap: [ 22 , 29 ] 87 % (19 backtracks, 30 nodes)
+Optimality gap: [ 22 , 29 ] 24.1379 % (19 backtracks, 30 nodes)
 New solution: 28 (37 backtracks, 71 nodes, depth 2)
-Optimality gap: [ 22 , 28 ] 85 % (37 backtracks, 71 nodes)
+Optimality gap: [ 22 , 28 ] 21.4286 % (37 backtracks, 71 nodes)
 New solution: 27 (68 backtracks, 134 nodes, depth 2)
-Optimality gap: [ 23 , 27 ] 66 % (68 backtracks, 134 nodes)
-Optimality gap: [ 24 , 27 ] 50 % (72 backtracks, 146 nodes)
-Optimality gap: [ 25 , 27 ] 33 % (101 backtracks, 226 nodes)
-Optimality gap: [ 26 , 27 ] 16 % (102 backtracks, 235 nodes)
+Optimality gap: [ 23 , 27 ] 14.8148 % (68 backtracks, 134 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (72 backtracks, 146 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (101 backtracks, 226 nodes)
+Optimality gap: [ 26 , 27 ] 3.7037 % (102 backtracks, 235 nodes)
 Optimality gap: [ 27 , 27 ] 0 % (102 backtracks, 246 nodes)
 HBFS open list restarts: 0 % and reuse: 17.0732 % of 41
 Node redundancy during HBFS: 22.7642 %
-Optimum: 27 in 102 backtracks and 246 nodes ( 29 removals by DEE) and 0.22 seconds.
+Optimum: 27 in 102 backtracks and 246 nodes ( 29 removals by DEE) and 0.23 seconds.
 end.
 
 ________________________________________________________________________________
@@ -385,28 +385,28 @@ Preprocessing time: 0 seconds.
 24 unassigned variables, 118 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [2403,6301[ 61.8632%
 New solution: 2900 (0 backtracks, 8 nodes, depth 9)
-Optimality gap: [ 2413 , 2900 ] 97 % (21 backtracks, 52 nodes)
+Optimality gap: [ 2413 , 2900 ] 16.7931 % (21 backtracks, 52 nodes)
 New solution: 2800 (21 backtracks, 62 nodes, depth 8)
-Optimality gap: [ 2415 , 2800 ] 96 % (30 backtracks, 73 nodes)
-Optimality gap: [ 2420 , 2800 ] 95 % (39 backtracks, 95 nodes)
-Optimality gap: [ 2439 , 2800 ] 90 % (57 backtracks, 135 nodes)
-Optimality gap: [ 2456 , 2800 ] 86 % (89 backtracks, 204 nodes)
-Optimality gap: [ 2459 , 2800 ] 85 % (106 backtracks, 244 nodes)
-Optimality gap: [ 2520 , 2800 ] 70 % (125 backtracks, 285 nodes)
+Optimality gap: [ 2415 , 2800 ] 13.75 % (30 backtracks, 73 nodes)
+Optimality gap: [ 2420 , 2800 ] 13.5714 % (39 backtracks, 95 nodes)
+Optimality gap: [ 2439 , 2800 ] 12.8929 % (57 backtracks, 135 nodes)
+Optimality gap: [ 2456 , 2800 ] 12.2857 % (89 backtracks, 204 nodes)
+Optimality gap: [ 2459 , 2800 ] 12.1786 % (106 backtracks, 244 nodes)
+Optimality gap: [ 2520 , 2800 ] 10 % (125 backtracks, 285 nodes)
 New solution: 2700 (127 backtracks, 297 nodes, depth 6)
-Optimality gap: [ 2523 , 2700 ] 59 % (131 backtracks, 302 nodes)
-Optimality gap: [ 2525 , 2700 ] 58 % (132 backtracks, 308 nodes)
-Optimality gap: [ 2535 , 2700 ] 55 % (136 backtracks, 323 nodes)
-Optimality gap: [ 2550 , 2700 ] 50 % (143 backtracks, 347 nodes)
-Optimality gap: [ 2583 , 2700 ] 39 % (154 backtracks, 373 nodes)
-Optimality gap: [ 2593 , 2700 ] 36 % (154 backtracks, 379 nodes)
-Optimality gap: [ 2596 , 2700 ] 35 % (155 backtracks, 388 nodes)
-Optimality gap: [ 2600 , 2700 ] 33 % (156 backtracks, 396 nodes)
-Optimality gap: [ 2605 , 2700 ] 31 % (156 backtracks, 406 nodes)
-Optimality gap: [ 2625 , 2700 ] 25 % (156 backtracks, 411 nodes)
-Optimality gap: [ 2628 , 2700 ] 24 % (157 backtracks, 418 nodes)
-Optimality gap: [ 2636 , 2700 ] 21 % (157 backtracks, 426 nodes)
-Optimality gap: [ 2644 , 2700 ] 18 % (157 backtracks, 432 nodes)
+Optimality gap: [ 2523 , 2700 ] 6.55556 % (131 backtracks, 302 nodes)
+Optimality gap: [ 2525 , 2700 ] 6.48148 % (132 backtracks, 308 nodes)
+Optimality gap: [ 2535 , 2700 ] 6.11111 % (136 backtracks, 323 nodes)
+Optimality gap: [ 2550 , 2700 ] 5.55556 % (143 backtracks, 347 nodes)
+Optimality gap: [ 2583 , 2700 ] 4.33333 % (154 backtracks, 373 nodes)
+Optimality gap: [ 2593 , 2700 ] 3.96296 % (154 backtracks, 379 nodes)
+Optimality gap: [ 2596 , 2700 ] 3.85185 % (155 backtracks, 388 nodes)
+Optimality gap: [ 2600 , 2700 ] 3.7037 % (156 backtracks, 396 nodes)
+Optimality gap: [ 2605 , 2700 ] 3.51852 % (156 backtracks, 406 nodes)
+Optimality gap: [ 2625 , 2700 ] 2.77778 % (156 backtracks, 411 nodes)
+Optimality gap: [ 2628 , 2700 ] 2.66667 % (157 backtracks, 418 nodes)
+Optimality gap: [ 2636 , 2700 ] 2.37037 % (157 backtracks, 426 nodes)
+Optimality gap: [ 2644 , 2700 ] 2.07407 % (157 backtracks, 432 nodes)
 Optimality gap: [ 2700 , 2700 ] 0 % (157 backtracks, 441 nodes)
 VAC mean lb/incr: -nan     total increments: 0     cyclesize: -nan     k: -nan (mean), 0 (max)
 Node redundancy during HBFS: 27.8912 %
@@ -429,23 +429,23 @@ Preprocessing time: 0 seconds.
 24 unassigned variables, 118 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
 Initial lower and upper bounds: [2404,6301[ 61.8473%
 New solution: 3000 (0 backtracks, 9 nodes, depth 10)
-Optimality gap: [ 2422 , 3000 ] 96 % (7 backtracks, 16 nodes)
+Optimality gap: [ 2422 , 3000 ] 19.2667 % (7 backtracks, 16 nodes)
 New solution: 2800 (7 backtracks, 25 nodes, depth 9)
-Optimality gap: [ 2452 , 2800 ] 87 % (10 backtracks, 28 nodes)
-Optimality gap: [ 2465 , 2800 ] 84 % (13 backtracks, 36 nodes)
-Optimality gap: [ 2496 , 2800 ] 76 % (18 backtracks, 49 nodes)
-Optimality gap: [ 2520 , 2800 ] 70 % (21 backtracks, 59 nodes)
+Optimality gap: [ 2452 , 2800 ] 12.4286 % (10 backtracks, 28 nodes)
+Optimality gap: [ 2465 , 2800 ] 11.9643 % (13 backtracks, 36 nodes)
+Optimality gap: [ 2496 , 2800 ] 10.8571 % (18 backtracks, 49 nodes)
+Optimality gap: [ 2520 , 2800 ] 10 % (21 backtracks, 59 nodes)
 New solution: 2700 (24 backtracks, 71 nodes, depth 4)
-Optimality gap: [ 2531 , 2700 ] 57 % (25 backtracks, 72 nodes)
-Optimality gap: [ 2541 , 2700 ] 53 % (27 backtracks, 81 nodes)
-Optimality gap: [ 2544 , 2700 ] 52 % (29 backtracks, 90 nodes)
-Optimality gap: [ 2598 , 2700 ] 34 % (32 backtracks, 100 nodes)
-Optimality gap: [ 2608 , 2700 ] 31 % (34 backtracks, 111 nodes)
-Optimality gap: [ 2646 , 2700 ] 18 % (34 backtracks, 113 nodes)
-Optimality gap: [ 2654 , 2700 ] 15 % (34 backtracks, 119 nodes)
-Optimality gap: [ 2671 , 2700 ] 9 % (34 backtracks, 123 nodes)
-Optimality gap: [ 2675 , 2700 ] 8 % (34 backtracks, 127 nodes)
-Optimality gap: [ 2680 , 2700 ] 6 % (34 backtracks, 132 nodes)
+Optimality gap: [ 2531 , 2700 ] 6.25926 % (25 backtracks, 72 nodes)
+Optimality gap: [ 2541 , 2700 ] 5.88889 % (27 backtracks, 81 nodes)
+Optimality gap: [ 2544 , 2700 ] 5.77778 % (29 backtracks, 90 nodes)
+Optimality gap: [ 2598 , 2700 ] 3.77778 % (32 backtracks, 100 nodes)
+Optimality gap: [ 2608 , 2700 ] 3.40741 % (34 backtracks, 111 nodes)
+Optimality gap: [ 2646 , 2700 ] 2 % (34 backtracks, 113 nodes)
+Optimality gap: [ 2654 , 2700 ] 1.7037 % (34 backtracks, 119 nodes)
+Optimality gap: [ 2671 , 2700 ] 1.07407 % (34 backtracks, 123 nodes)
+Optimality gap: [ 2675 , 2700 ] 0.925926 % (34 backtracks, 127 nodes)
+Optimality gap: [ 2680 , 2700 ] 0.740741 % (34 backtracks, 132 nodes)
 Optimality gap: [ 2700 , 2700 ] 0 % (34 backtracks, 137 nodes)
 VAC mean lb/incr: 12.4602     total increments: 176     cyclesize: 15.75     k: 3.07386 (mean), 8 (max)
 Node redundancy during HBFS: 43.7956 %
@@ -517,30 +517,29 @@ Solve the Golomb problem (4 marks) in cp format
 
 Read 10 variables, with 9 values at most, and 10 cost functions, with maximum arity 6.
 Cost function decomposition time : 0 seconds.
-Preprocessing time: 0 seconds.
+Reverse DAC lower bound: 6 (+33.3333%)
+Preprocessing time: 0.01 seconds.
 6 unassigned variables, 31 values in all current domains (med. size:5, max size:9) and 14 non-unary cost functions (med. degree:5)
-Initial lower and upper bounds: [5,9[ 44.4444%
+Initial lower and upper bounds: [6,9[ 33.3333%
 New solution: 7 (0 backtracks, 3 nodes, depth 4)
-0 1 3 7 1 3 7 2 6 4
-Optimality gap: [ 6 , 7 ] 50 % (2 backtracks, 5 nodes)
+0 1 5 7 1 5 7 4 6 2
 New solution: 6 (2 backtracks, 7 nodes, depth 1)
 0 1 4 6 1 4 6 3 5 2
-Optimality gap: [ 6 , 6 ] 0 % (2 backtracks, 7 nodes)
 Node redundancy during HBFS: 28.5714 %
-Optimum: 6 in 2 backtracks and 7 nodes ( 0 removals by DEE) and 0.01 seconds.
+Optimum: 6 in 2 backtracks and 7 nodes ( 0 removals by DEE) and 0.02 seconds.
 end.
 ./golomb4.wcsp
 # New solution: 7 (0 backtracks, 3 nodes, depth 4)
 g1 0
 g2 1
-g3 3
+g3 5
 g4 7
 d1_2 1
-d1_3 3
+d1_3 5
 d1_4 7
-d2_3 2
+d2_3 4
 d2_4 6
-d3_4 4
+d3_4 2
 # New solution: 6 (2 backtracks, 7 nodes, depth 1)
 g1 0
 g2 1
@@ -626,7 +625,7 @@ Available options are (use symbol ":" after an option to remove a default option
    -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is 0)
    -T=[integer] : threshold cost value for VAC (default value is 1)
    -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)
-   -C=[integer] : multiplies all costs by this number (default value is 1)
+   -C=[float] : multiplies all costs by this number when loading the problem (default value is 1)
    -S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")
    -V : VAC-based value ordering heuristic
 
@@ -654,22 +653,25 @@ Available options are (use symbol ":" after an option to remove a default option
 ---------------------------
 Alternatively one can call the random problem generator with the following options: 
 
+   -seed=[integer] : random seed value (default value is 1)
    -random=[bench profile]  : bench profile must be specified as follow :
-                         n and m are respectively the number of variable and the maximum domain size  of the random problem.
+                         n and d are respectively the number of variable and the maximum domain size  of the random problem.
 			
-       bin-{n}-{m}-{p1}-{p2}-{seed}       :p1 is the tightness in percentage %
+       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions
                                           :p2 is the num of binary cost functions to include
-                                          :the seed parameter is optional
+                                          :the seed parameter is optional (and will overwrite -seed)
    or:                                                                               
-       binsub-{n}-{m}-{p1}-{p2}-{p3}-{seed} binary random & submodular cost functions
-                                          p1 is the tightness in percentage % of random cost functions
+       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions
+                                          t1 is the tightness in percentage % of random cost functions
                                           p2 is the num of binary cost functions to include
                                           p3 is the percentage % of submodular cost functions among p2 cost functions
                                            (plus 10 permutations of two randomly-chosen values for each domain)
  or:                                                                               
-      tern-{n}-{m}-{p1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions
+      tern-{n}-{d}-{t1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions
  or:                                                                               
-      nary-{n}-{m}-{p1}-{p2}-{p3}...{pn}-{seed}  pn is the num of n-ary cost functions
+      nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of n-ary cost functions
+ or:                                                                               
+      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)
 ---------------------------
 			
 
