@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-dev, libboost-graph
 Package: toulbar2
 Architecture: amd64 i386
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: an exact combinatorial optimization tool for Graphical Models.
+Description: Exact combinatorial optimization for Graphical Models
  Toulbar2 is  an exact discrete optimization tool for Graphical Models 
  such as Cost Function Networks, Markov Random Fields, Weighted Constraint 
  Satisfaction Problems and Bayesian Nets.
