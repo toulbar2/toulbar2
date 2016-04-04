@@ -7,7 +7,7 @@ Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
 Vcs-Git: git://anonscm.debian.org/debian-science/packages/toulbar2.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-science/packages/toulbar2.git
 Standards-Version: 3.9.6
-Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-graph-dev, libjemalloc-dev
+Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-dev, libboost-graph-dev, libjemalloc-dev
 
 Package: toulbar2
 Architecture: amd64 i386

@@ -52,7 +52,8 @@
                         ${My_Source}/tb2vacutils.cpp
                         ${My_Source}/tb2variable.cpp
                         ${My_Source}/tb2wcsp.cpp
-			${My_Source}/incop/*.cpp
+								${My_Source}/ToulbarVersion.cpp
+								${My_Source}/incop/*.cpp
         )
 
 MESSAGE(STATUS "-------------\n")
@@ -111,8 +112,9 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2vacutils.*pp
                         ${My_Source}/tb2variable.*pp
                         ${My_Source}/tb2wcsp.*pp
+								${My_Source}/ToulbarVersion.*pp
                         ${My_Source}/incop/*.h
-			${My_Source}/incop/*.cpp 
+								${My_Source}/incop/*.cpp 
         )
 
 

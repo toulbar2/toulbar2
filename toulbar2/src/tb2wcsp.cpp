@@ -31,7 +31,6 @@
 #include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
-#include "ToulbarVersion.hpp"
 
 /*
  * Global variables with their default value
@@ -46,7 +45,6 @@ StoreStack<BTList<Separator *> , DLink<Separator *> *> Store::storeSeparator(STO
 
 int WCSP::wcspCounter = 0;
 
-string ToulBar2::version;
 int ToulBar2::verbose;
 int ToulBar2::debug;
 bool ToulBar2::showSolutions;
@@ -176,7 +174,6 @@ void tb2init()
 {
     Store::depth = 0;
 
-    ToulBar2::version = Toulbar_VERSION;
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
