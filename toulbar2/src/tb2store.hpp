@@ -25,9 +25,14 @@
 #define TB2STORE_HPP_
 
 #include "tb2types.hpp"
+
+#ifdef BOOST
 #include <boost/version.hpp>
 #if (BOOST_VERSION >= 105600)
 #include <boost/type_index.hpp>
+#else
+#include <typeinfo>
+#endif
 #else
 #include <typeinfo>
 #endif
