@@ -446,7 +446,8 @@ LSAlgorithm *algo_marche(char **argv, int &narg, string &method, int gww)
 	int nbmouv;
 	double inittemp = 0.0;
 	double nbhr = 0; // defini pour grwrate
-	float Pd, P0;
+	float Pd = 0.05;
+	float P0 = 0.1;
 	arguments_algorithme(argv, narg, nbmouv);
 //  *ofile << " methode " << method << endl;
 	if (method == "metropolis")
