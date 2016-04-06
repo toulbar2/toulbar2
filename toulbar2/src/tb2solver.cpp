@@ -101,6 +101,15 @@ void Solver::read_solution(const char *filename)
         if ((unsigned int) i >= wcsp->numberOfVariables()) break;
         Value value = 0;
         file >> value;
+        if (ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) {
+            int j = wcsp->getDomainInitSize(i) - 1;
+            while (j >= 0) {
+                if (ToulBar2::sortedDomains[i][j].value == value) break;
+                j--;
+            }
+            assert(j >= 0);
+            value = j;
+        }
         if (!file) break;
         variables.push_back(i);
         values.push_back(value);
@@ -162,6 +171,15 @@ void Solver::parse_solution(const char *certificate)
         certif2 = strstr(certif2, sep);
         if (certif2) certif2++;
 
+        if (ToulBar2::sortDomains && ToulBar2::sortedDomains.find(var) != ToulBar2::sortedDomains.end()) {
+            int j = wcsp->getDomainInitSize(var) - 1;
+            while (j >= 0) {
+                if (ToulBar2::sortedDomains[var][j].value == value) break;
+                j--;
+            }
+            assert(j >= 0);
+            value = j;
+        }
         variables.push_back(var);
         values.push_back(value);
         // side-effect: remember last solution
