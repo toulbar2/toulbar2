@@ -69,8 +69,8 @@ sudo apt-get install texlive-latex-recommended  texlive-fonts-recommended doxyge
 
 cmake .. ; make doc
 
-# for generating reference manual and extracting its wcsp file format description
-# warning! change to COMPACT_LATEX          = NO for a separate wcsp description 
+# for generating reference manual and extracting its wcsp file format description
+# warning! change to COMPACT_LATEX          = NO for a separate wcsp description 
 
 cd doc/dev/latex/
 pdflatex refman.tex
