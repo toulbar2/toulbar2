@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
 
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
-    ToulBar2::verbose = -1;  // change to 0 to see more information
+    ToulBar2::verbose = -1;  // change to 0 or higher values to see more trace information
 
     // uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
     //	ToulBar2::vac = 1; // option -A
@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
         solver->getWCSP()->postTernaryConstraint(x,y,z,costs);
     }
 
-    solver->getWCSP()->sortConstraints(); // to be done before search
+    solver->getWCSP()->sortConstraints(); // must be done before the search
 
     //	int verbose = ToulBar2::verbose;
     //	ToulBar2::verbose = 5;  // high verbosity to see the cost functions

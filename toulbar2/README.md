@@ -8,7 +8,7 @@ solves  various combinatorial  optimization problems.  The constraints
 and objective function  are factorized in local  functions on discrete
 variables. Each  function returns a  cost (a finite  positive integer)
 for any  assignment of its  variables. Constraints are  represented as
-functions with costs in {0,∞} where  ∞ is a large integer representing
+functions with costs in {0,k} where k is a large integer representing
 forbidden assignments.  toulbar2 looks for a  non-forbidden assignment
 of all variables  that minimizes the sum of all  functions. 
 
@@ -33,26 +33,26 @@ graphical models:
 http://mulcyber.toulouse.inra.fr/projects/toulbar2/
 
 Latest debian/windows x86_64 releases:
-* 2016: [0.9.8][deb0_9_8][win0_9_8] with hybrid best-first search and more soft global cost functions
-* 2015: [0.9.7][deb0_9_7][win0_9_7] with local search [INCOP][incop] solver after preprocessing
-* 2014: [0.9.6][deb0_9_6][win0_9_6] with extra variable ordering heuristics and dominance pruning rules
-* 2012: [0.9.5][deb0_9_5][win0_9_5] with soft global decomposable cost functions
-* 2011: [0.9.4][deb0_9_4][win0_9_4] with more preprocessing techniques
-* 2010: [0.9.3][deb0_9_3][win0_9_3] with soft global cost functions
+* 2016: [deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
+* 2015: [deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
+* 2014: [deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
+* 2012: [deb0_9_5]/[win0_9_5] with soft global decomposable cost functions
+* 2011: [deb0_9_4]/[win0_9_4] with more preprocessing techniques
+* 2010: [deb0_9_3]/[win0_9_3] with soft global cost functions
 
 [deb0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/964/toulbar2.0.9.3.0-Release-i686.deb
 [deb0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1008/toulbar2.0.9.4.0-Release-i686.deb
 [deb0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1134/toulbar2.0.9.5.0-Release-x86_64.deb
 [deb0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1281/toulbar2.0.9.6.0-Release-i686.deb
 [deb0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1371/toulbar2.0.9.7.0-Release-x86_64.deb
-[deb0_9_8]:
+[deb0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1448/toulbar2.0.9.8.0-Release-x86_64.deb
 
 [win0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/962/toulbar2.0.9.3.0-Release-i686.exe
 [win0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1006/toulbar2.0.9.4.0-Release-i686.exe
 [win0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1129/toulbar2.0.9.5.0-Release-i686.exe
 [win0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1279/toulbar2.0.9.6.0-Release-i686.exe
 [win0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1374/toulbar2.0.9.7.0-Release-x86_64.exe
-[win0_9_8]:
+[win0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1446/toulbar2.0.9.8.0-Release-x86_64.exe
 
 
 ## Installation
