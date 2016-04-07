@@ -30,6 +30,24 @@
     </table>
 
     See the @link md_README.html README @endlink for more details.
+
+    toulbar2 can be used as a stand-alone solver reading various problem file formats (wcsp, uai, wcnf, qpbo) or as a C++ library.\n
+    This document describes the wcsp native file format and the toulbar2 C++ library API.
+    \note Use cmake flag LIBTB2 to get the toulbar2 C++ library libtb2.so
+
+    \defgroup wcspformat
+    \defgroup modeling
+    \defgroup solving
+    \defgroup verbosity
+    \defgroup preprocessing
+    \defgroup heuristics
+    \defgroup softac
+    \defgroup VAC
+    \defgroup ncbucket
+    \defgroup varelim
+    \defgroup propagation
+    \defgroup backtrack
+
 */
 
 #ifndef TOULBAR2LIB_HPP_
@@ -399,6 +417,50 @@ public:
     virtual void decrease(int varIndex, Value value, bool reverse = false) = 0;	///< \brief changes domain upper bound and propagates
     virtual void assign(int varIndex, Value value, bool reverse = false) = 0;		///< \brief assigns a variable and propagates
     virtual void remove(int varIndex, Value value, bool reverse = false) = 0;		///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
+
+    /** \defgroup solving Solving cost function networks
+     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact B&B search method (see WeightedCSPSolver::solve).\n
+     * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files src/tb2types.hpp and src/tb2main.cpp).\n
+     * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
+     * \code
+    #include "toulbar2lib.hpp"
+    #include <string.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <unistd.h>
+    int main(int argc, char **argv) {
+
+        tb2init(); // must be call before setting specific ToulBar2 options and creating a model
+
+        // Create a solver object
+        WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
+
+        // Read a problem file in wcsp format
+        solver->read_wcsp(argv[1]);
+
+        ToulBar2::verbose = -1;  // change to 0 or higher values to see more trace information
+
+        // Uncomment if solved using INCOP local search followed by a partial Limited Discrepancy Search with a maximum discrepancy of one
+        //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
+        //  ToulBar2::lds = -1;  // remove it or change to a positive value then the search continues by a complete B&B search method
+
+        if (solver->solve()) {
+            // show (sub-)optimal solution
+            vector<Value> sol;
+            Cost ub = solver->getSolution(sol);
+            cout << "Best solution found cost: " << ub << endl;
+            cout << "Best solution found:";
+            for (unsigned int i=0; i<sol.size(); i++) cout << ((i>0)?",":"") << " x" << i << " = " << sol[i];
+            cout << endl;
+        } else {
+            cout << "No solution found!" << endl;
+        }
+        delete solver;
+    }
+    \endcode
+     * \see another code example in src/toulbar2test.cpp
+     * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
+    **/
 
     virtual void read_wcsp(const char *fileName) = 0;		///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") =0;	///< \brief create a random WCSP, see WeightedCSP::read_random

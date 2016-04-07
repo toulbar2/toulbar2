@@ -391,6 +391,21 @@ ENDIF (BENCH)
 ##########################################
 IF (BUILD_API_DOC)
 
+	SET (DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+	SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source})
+
+	# output directory for code source documentation
+
+	SET (DOXYFILE_OUTPUT_DIR ${My_doc}/dev)  
+#	SET (DOXYFILE_LATEX_DIR ${DOXYFILE_OUTPUT_DIR}/latex)
+#	SET (DOXYFILE_HTML_DIR ${DOXYFILE_OUTPUT_DIR}/html)
+	SET (DOXYFILE_LATEX_DIR latex)
+	SET (DOXYFILE_HTML_DIR html) 
+	
+	FIND_PACKAGE(Doxygen)
+
+   IF (DOXYGEN_FOUND)
+	MESSAGE(STATUS "#### package doxygen found #############################")
 	include(${My_cmake_script}/UseDoxygen.cmake)
 ENDIF (BUILD_API_DOC)
 

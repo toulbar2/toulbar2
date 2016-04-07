@@ -62,8 +62,6 @@ Latest src/debian/windows x86_64 releases:
 [win0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1446/toulbar2.0.9.8.0-Release-x86_64.exe
 
 
-
-
 ## Installation
 
 Library needed:
