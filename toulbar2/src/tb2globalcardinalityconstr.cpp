@@ -268,24 +268,45 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original) {
     }
 }
 
-void GlobalCardinalityConstraint::print(ostream &os)
+string GlobalCardinalityConstraint::getName()
 {
+    string name = "sgcc";
     int nvalues = 0;
-
-    os << "sgcc(";
-    for (int i = 0; i < arity_; i++) {
-        os << scope[i]->wcspIndex;
-        if (i < arity_ - 1) os << ",";
-    }
     for (map<Value, pair<int, int> >::iterator i = bound.begin(); i !=	bound.end(); i++) nvalues++;
-    os << ")[" ;
-    if (mode == VAR) os << "var";
-    if (mode == VALUE) os << "dec";
-    if (mode == WVALUE) os << "wdec";
-    os << "," << def << "," << nvalues;
+    name += "[" + to_string(nvalues);
     for (map<Value, pair<int, int> >::iterator i = bound.begin(); i !=	bound.end(); i++) {
-        os << "," << i->first << "," << i->second.lower_bound << "," << i->second.upper_bound;
-        if (mode == WVALUE) os << "," << weights[i->first].first << "," << weights[i->first].second;
+        name += "," + to_string(i->first) + "," + to_string(i->second.lower_bound) + "," + to_string(i->second.upper_bound);
+        if (mode == WVALUE) name += "," + to_string(weights[i->first].first) +  "," + to_string(weights[i->first].second);
     }
-    os << "]";
+    name += "]";
+    return name;
 }
+
+//void GlobalCardinalityConstraint::print(ostream& os) {
+//    int nvalues = 0;
+//
+//    os << "sgcc(";
+//    for(int i = 0; i < arity_;i++) {
+//        os << scope[i]->wcspIndex;
+//        if(i < arity_-1) os << ",";
+//    }
+//    for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) nvalues++;
+//    os << ")[" ;
+//    if (mode == VAR   ) os << "var";
+//    if (mode == VALUE ) os << "dec";
+//    if (mode == WVALUE) os << "wdec";
+//    os << "," << def << "," << nvalues;
+//    for (map<Value, pair<int,int> >::iterator i = bound.begin(); i !=	bound.end();i++) {
+//        os << "," << i->first << "," << i->second.lower_bound << "," << i->second.upper_bound;
+//        if (mode == WVALUE) os << "," << weights[i->first].first << "," << weights[i->first].second;
+//    }
+//    os << "]";
+//}
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

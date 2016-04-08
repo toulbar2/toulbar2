@@ -142,9 +142,8 @@ public:
     ~RegularFlowConstraint() {
     }
 
-    string getName() {
-        return "regular constraint";
-    }
+    string getName();
+
     //Cost eval(String& s);
     void read(istream &file);
     WeightedAutomaton *getWeightedAutomaton() {return &dfa;}
@@ -155,7 +154,7 @@ public:
     }
 
     void dump(ostream& os, bool original);
-    void print(ostream &os);
+//    void print(ostream& os);
 
 };
 

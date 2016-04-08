@@ -144,8 +144,8 @@ void DPGlobalConstraint::findSupport(int var, bool &changed)
     changed = true;  //Detect any change in variable domain or unary costs
 }
 
-void DPGlobalConstraint::propagateDAC()
-{
+void DPGlobalConstraint::propagateDAC(){
+    if (ToulBar2::verbose >= 3) cout << "propagateDAC for " << *this << endl;
 
     clear();
 

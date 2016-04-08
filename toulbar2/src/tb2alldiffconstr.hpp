@@ -25,7 +25,7 @@ public:
     static const int DEC = 1;
     static const int VAR = 0;
 
-    string getName() {return "allDifferent";}
+    string getName() {return "salldiff";}
 
     AllDiffConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int
                       arity_in);
@@ -42,7 +42,7 @@ public:
     //void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
     //void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
 
-    void print(ostream &os);
+//    void print(ostream& os);
     void dump(ostream &os, bool original = true);
 };
 
