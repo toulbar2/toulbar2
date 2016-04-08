@@ -136,6 +136,7 @@ void DPGlobalConstraint::findSupport(int var, bool &changed){
 }
 
 void DPGlobalConstraint::propagateDAC(){
+    if (ToulBar2::verbose >= 3) cout << "propagateDAC for " << *this << endl;
 
     clear();
 

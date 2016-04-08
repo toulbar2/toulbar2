@@ -183,18 +183,18 @@ void AllDiffConstraint::dump(ostream& os, bool original)
     os << " -1 salldiff " << ((mode==VAR)?"var":"dec") << " " << def << endl;
 }
 
-void AllDiffConstraint::print(ostream& os) {
-    os << "salldiff(";
-    for(int i = 0; i < arity_;i++) {
-        os << scope[i]->wcspIndex;
-        if(i < arity_-1) os << ",";
-    }
-    os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "]";
-    if (ToulBar2::verbose >= 4) {
-        os << endl;
-        GlobalConstraint::print(os);
-    }
-}
+//void AllDiffConstraint::print(ostream& os) {
+//    os << "salldiff(";
+//    for(int i = 0; i < arity_;i++) {
+//        os << scope[i]->wcspIndex;
+//        if(i < arity_-1) os << ",";
+//    }
+//    os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "]";
+//    if (ToulBar2::verbose >= 4) {
+//        os << endl;
+//        GlobalConstraint::print(os);
+//    }
+//}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

@@ -155,21 +155,21 @@ void SameConstraint::dump(ostream& os, bool original)
     os << endl;
 }
 
-void SameConstraint::print(ostream& os)
-{
-    os << "ssame(";
-    for(int i = 0; i < arity_;i++) {
-        os << scope[i]->wcspIndex;
-        if(i < arity_-1) os << ",";
-    }
-    os << ")[" << def << "," << group[0].size() << "," << group[1].size();
-    for (int g=0; g<2; g++) {
-        for (unsigned int i = 0; i < group[g].size(); i++) {
-            os << "," << getVar(group[g][i])->wcspIndex;
-        }
-    }
-    os << "]";
-}
+//void SameConstraint::print(ostream& os)
+//{
+//    os << "ssame(";
+//    for(int i = 0; i < arity_;i++) {
+//        os << scope[i]->wcspIndex;
+//        if(i < arity_-1) os << ",";
+//    }
+//    os << ")[" << def << "," << group[0].size() << "," << group[1].size();
+//    for (int g=0; g<2; g++) {
+//        for (unsigned int i = 0; i < group[g].size(); i++) {
+//            os << "," << getVar(group[g][i])->wcspIndex;
+//        }
+//    }
+//    os << "]";
+//}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

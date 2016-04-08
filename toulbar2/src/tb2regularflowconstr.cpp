@@ -447,15 +447,23 @@ void RegularFlowConstraint::dump(ostream& os, bool original)
     dfa.dump(os, original);
 }
 
-void RegularFlowConstraint::print(ostream& os) {
-    os << "sregular(";
-    for (int i = 0; i < arity_; i++) {
-        os << scope[i]->wcspIndex;
-        if (i < arity_ - 1) os << ",";
-    }
-    os << ")[" << subdef << "," << insdef << "," << deldef << "]";
-    dfa.dump(os, true);
+string RegularFlowConstraint::getName() {
+    ostringstream name;
+    name << "sregular_" << to_string(subdef) << "_" << to_string(insdef) << "_" << to_string(deldef) << "\n{";
+    dfa.dump(name, true);
+    name << "\n}";
+    return name.str();
 }
+
+//void RegularFlowConstraint::print(ostream& os) {
+//    os << "sregular(";
+//    for (int i = 0; i < arity_; i++) {
+//        os << scope[i]->wcspIndex;
+//        if (i < arity_ - 1) os << ",";
+//    }
+//    os << ")[" << subdef << "," << insdef << "," << deldef << "]";
+//    dfa.dump(os, true);
+//}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

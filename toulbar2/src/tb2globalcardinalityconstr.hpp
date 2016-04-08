@@ -40,7 +40,7 @@ public:
 			}*/ 
     }
 
-    string getName() {return "GCC constraint";}
+    string getName();
     Cost evalOriginal(String& s);
     void read(istream &file);
 
@@ -58,7 +58,7 @@ public:
     }
     void organizeConfig();
 
-    void print(ostream& os);
+//    void print(ostream& os);
     void dump(ostream& os, bool original = true);
 };
 
