@@ -32,13 +32,20 @@ graphical models:
 
 http://mulcyber.toulouse.inra.fr/projects/toulbar2/
 
-Latest debian/windows x86_64 releases:
-* 2016: [deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
-* 2015: [deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
-* 2014: [deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
-* 2012: [deb0_9_5]/[win0_9_5] with soft global decomposable cost functions
-* 2011: [deb0_9_4]/[win0_9_4] with more preprocessing techniques
-* 2010: [deb0_9_3]/[win0_9_3] with soft global cost functions
+Latest src/debian/windows x86_64 releases:
+* 2016: [src0_9_8]/[deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
+* 2015: [src0_9_7]/[deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
+* 2014: [src0_9_6]/[deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
+* 2012: [src0_9_5]/[deb0_9_5]/[win0_9_5] with soft global decomposable cost functions
+* 2011: [src0_9_4]/[deb0_9_4]/[win0_9_4] with more preprocessing techniques
+* 2010: [src0_9_3]/[deb0_9_3]/[win0_9_3] with soft global cost functions
+
+[src0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1455/toulbar2.0.9.8.0-Release-sources.tar.gz
+[src0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1380/toulbar2.0.9.7.0-Release-sources.tar.gz
+[src0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1292/toulbar2.0.9.6.0-Release-sources.tar.gz
+[src0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1142/toulbar2.0.9.5.0-Release-sources.tar.gz
+[src0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1019/toulbar2.0.9.4.0-Release-sources.tar.gz
+[src0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/975/toulbar2.0.9.3.0-Release-sources.tar.gz
 
 [deb0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/964/toulbar2.0.9.3.0-Release-i686.deb
 [deb0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1008/toulbar2.0.9.4.0-Release-i686.deb

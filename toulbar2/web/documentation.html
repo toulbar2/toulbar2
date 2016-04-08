@@ -29,6 +29,8 @@
   </ul>
 </div>
 
+<h5>NEWS: <i><a href="https://mulcyber.toulouse.inra.fr/plugins/scmgit/cgi-bin/gitweb.cgi?p=toulbar2/toulbar2.git;a=blob;f=toulbar2/doc/userdoc.pdf">user</a> and <a href="https://mulcyber.toulouse.inra.fr/plugins/scmgit/cgi-bin/gitweb.cgi?p=toulbar2/toulbar2.git;a=blob;f=toulbar2/doc/refman.pdf">reference</a> manuals under construction..</i><br/></h5>
+
 <h3>Documentation</h3>
 
 <h2>Input formats</h2>
@@ -41,7 +43,17 @@ The available file formats are:<br/>
   <li>Weigthed Partial Max-SAT (<a href="http://www.maxsat.udl.cat/08/index.php?disp=requirements">.cnf/.wcnf</a> file extension)</li>
   <li>Quadratic Pseudo-Boolean Optimization (<a href="https://mulcyber.toulouse.inra.fr/plugins/scmgit/cgi-bin/gitweb.cgi?p=toulbar2/toulbar2.git;a=blob_plain;f=toulbar2/doc/QpboFormat.txt;hb=refs/heads/master">.qpbo</a> file extension)</li>
 </ul>
+
+<h2>Some examples</h2>
+<ul>
+  <li>Random binary cost function network <a href="EXAMPLES/example.wcsp">example.wcsp</a></li>
+  <li>Latin square 4x4 with random costs on each variable <a href="EXAMPLES/latin4.wcsp">latin4.wcsp</a></li>
+  <li>Radio link frequency assignment CELAR instance <a href="EXAMPLES/scen06.wcsp">scen06.wcsp</a></li>
+  <li>Protein folding instance <a href="EXAMPLES/1CM1.uai">1CM1.uai</a></li>
+  <li>Max-clique DIMACS instance  <a href="EXAMPLES/c-fat500-10.clq.wcnf">c-fat500-10.clq.wcnf</a></li>
+</ul>
 <p>
+Many more instances available <a href="http://genoweb.toulouse.inra.fr/~degivry/evalgm">here</a> and  <a href="http://costfunction.org/en/benchmark">there</a>.
 </p>
 
 <h2>Command line arguments</h2>
@@ -107,10 +119,8 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-open=[integer] : hybrid best-first search limit on the number of open nodes (default value is -1)</li>
   <li>-seed=[integer] : random seed value (default value is 1)</li>
 </ul>
-<p>
-</p>
 
 
-<p id="footer"><br/><br/>Last modification : April 1, 2016</p>
+<p id="footer"><br/><br/>Last modification : April 8, 2016</p>
 </body>
 </html>
