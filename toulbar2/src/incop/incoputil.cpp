@@ -842,7 +842,7 @@ void executer_essai
 	instanciation_aleatoire(problem, population, taille);
 	//SdG: initial solution provided by NC/EAC supports given to INCOP
 	if (initconfig && nessai == 0) {
-		assert(initconfig->size() == population[0]->nbvar);
+		assert(initconfig->size() == (unsigned int) population[0]->nbvar);
 		for (int i = 0; i < population[0]->nbvar; i++) population[0]->config[i] = (*initconfig)[i];
 	}
 	//    *ofile << " population instanciee " << endl;
