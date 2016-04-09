@@ -2,6 +2,9 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
+\usepackage{doxygen}
+
+\def\ci{\perp\!\!\!\perp}
 
 \def\toulbar2{\textsc{Toulbar2}}
 \title{\toulbar2 User documentation}
@@ -26,8 +29,8 @@ functions''.
 
 Using on the fly translation, \toulbar2 can also directly solve
 optimization problems on other graphical models such as Maximum
-probability Explanation (MPE) on Bayesian networks~\cite{}, and
-Maximum A Posteriori (MAP) on Markov random field~\cite{}. It can also
+probability Explanation (MPE) on Bayesian networks~\cite{koller2009}, and
+Maximum A Posteriori (MAP) on Markov random field~\cite{koller2009}. It can also
 read partial weighted MaxSAT problems, Quadratic Pseudo Boolean
 problems (MAXCUT) as well as Linkage \texttt{.pre} pedigree files for
 genotyping error detection and correction.
@@ -45,7 +48,7 @@ also fail to solve in reasonable time problems with a search space
 smaller than $2^{264}$.
 
 \toulbar2 provides and uses by default an ``anytime''
-algorithm~\cite{} that tries to quickly provide good solutions together
+algorithm~\cite{Katsirelos15a} that tries to quickly provide good solutions together
 with an upper bound on the gap between the cost of each solution and
 the (unknown) optimal cost. Thus, even if it is unable to prove
 optimality, it will bound the quality of the solution provided.
@@ -83,7 +86,7 @@ cmake ..
 make
 \end{verbatim}
 
-Fnally, \toulbar2 should be soon available in the debian-science
+Finally, \toulbar2 should be soon available in the debian-science
 section of the unstable/sid debian version. It should therefore be
 directly installable using:
 
@@ -94,7 +97,7 @@ sudo apt-get install toulbar2
 If you want to try \toulbar2 on crafted, random, or real problems,
 please look for benchmarks in the
 \href{https://mulcyber.toulouse.inra.fr/projects/costfunctionlib}{Cost
-  Funtion Library}.
+  Function Library}.
 
 \section{Using it as a black box}
 
@@ -126,20 +129,20 @@ toulbar2
 \end{verbatim}
 
 \toulbar2 will give you its (long) list of optional parameter which we
-now dscribe in more detail. If you don't known much about Constraint
+now describe in more detail. If you don't known much about Constraint
 and Cost Function Programming, section~\ref{how-work} describes some
 of the inner working of \toulbar2 to help you tune it to your
 requirements.
 
-To deactivate a default command line option, juste use the
+To deactivate a default command line option, just use the
 command-line option followed by ``\texttt{:}''. For example:
 
 \begin{verbatim}
 toulbar2 -dee: <file>
 \end{verbatim}
 
-will disable the default Dead End Elimination~\cite{} (aka Soft Neighborhood
-Substitutability~\cite{}) preprocessing.
+will disable the default Dead End Elimination~\cite{Givry13a} (aka Soft Neighborhood
+Substitutability) preprocessing.
 
 
 \subsection{General control}
@@ -153,7 +156,7 @@ Substitutability~\cite{}) preprocessing.
   (problem file extension .uai)
 \item[{-timer=[integer]}] give a CPU time limit in seconds. \toulbar2
   will stop after the specified CPU time has been consumed. The time
-  limit is a cpu user time limit, not wall clock time limit.
+  limit is a CPU user time limit, not wall clock time limit.
 \end{description}
  
 \subsection{Preprocessing}
@@ -179,7 +182,7 @@ Substitutability~\cite{}) preprocessing.
 \item[{-mst}] maximum spanning tree DAC ordering
 \item[{-M=[integer]}]
   apply the Min Sum Diffusion algorithm (default is inactivated, with
-  a number of iterations of 0). See~\cite{Cooper2010,Werner??}.
+  a number of iterations of 0). See~\cite{Cooper10a}.
  \end{description}
  
 
@@ -188,7 +191,7 @@ Substitutability~\cite{}) preprocessing.
 \begin{description}
 \item[{-l=[integer]}] limited discrepancy search, use a negative value to stop the search after the given absolute number of discrepancies has been explored (discrepancy bound = 4 by default)
 \item[{-L=[integer]}] randomized (quasi-random variable ordering) search with restart (maximum number of nodes = 10000 by default)
-\item[{-i=["string"]}] initial upperbound found by INCOP local search
+\item[{-i=["string"]}] initial upper-bound found by INCOP local search
   solver.The string parameter is optional, using ``0 1 3 idwa 100000
   cv v 0 200 1 0 0'' by default with the following meaning:
   stoppinglowerbound randomseed nbiterations method nbmoves
@@ -240,7 +243,7 @@ Substitutability~\cite{}) preprocessing.
 \begin{description}
 \item[{-e=[integer]}] performs ``on the fly'' variable elimination of variable with small
   degree (less than or equal specified value, default is 3 creating a
-  maximum of ternary cost functions). See~\cite{Larrosa2000}.
+  maximum of ternary cost functions). See~\cite{Larrosa00}.
 \item[{-k=[integer]}] soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)
 \item[{-A=[integer]}] enforces VAC at each search node with a search depth less than a given value (default value is 0)
 \item[{-dee=[integer]}] restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)
@@ -251,8 +254,7 @@ Substitutability~\cite{}) preprocessing.
 
 \begin{description}
 \item[-svo] searches using a static variable ordering heuristic. The
-  variable order value usd will be the same order as the DAC order
-  (see section~\ref{}).
+  variable order value used will be the same order as the DAC order.
 \item[-b] searches using only binary branching instead of the default
   that uses binary branching for interval domains and small domains
   and dichotomic branching for large enumerated domains.
@@ -288,7 +290,7 @@ Substitutability~\cite{}) preprocessing.
   it gets no argument.
 \item[{-v=[integer]}] sets the verbosity level (default 0).
 \item[-s] shows each solution found during search. The solution is
-  preinted on one line, giving the value (integer) of each variable
+  printed on one line, giving the value (integer) of each variable
   successively in increasing order.
 \end{description}
 
@@ -369,33 +371,610 @@ Substitutability~\cite{}) preprocessing.
     
 \section{Input File formats}
 \label{file-formats}
+Notice that by default \texttt{toulbar2} distinguishes file formats based on their extension.
+\subsection{wcsp format (.wcsp file extension)}
 
-\subsection{wcsp format}
+It is a text format composed of a list of numerical and string terms separated by spaces. Instead of using names for making reference to variables, variable indexes are employed. The same for domain values. All indexes start at zero.
 
+Cost functions can be defined in intention (see below) or in extension, by their list of tuples. A default cost value is defined per function in order to reduce the size of the list. Only tuples with a different cost value should be given (not mandatory). All the cost values must be positive. The arity of a cost function in extension may be equal to zero. In this case, there is no tuples and the default cost value is added to the cost of any solution. This can be used to represent a global lower bound constant of the problem.
+
+The wcsp file format is composed of three parts\-: a problem header, the list of variable domain sizes, and the list of cost functions.
+
+
+\begin{DoxyItemize}
+\item Header definition for a given problem\-: \begin{DoxyVerb}<Problem name>
+<Number of variables (N)>
+<Maximum domain size>
+<Number of cost functions>
+<Initial global upper bound of the problem (UB)>
+\end{DoxyVerb}
+ The goal is to find an assignment of all the variables with minimum total cost, strictly lower than U\-B. Tuples with a cost greater than or equal to U\-B are forbidden (hard constraint).
+\item Definition of domain sizes \begin{DoxyVerb}<Domain size of variable with index 0>
+...
+<Domain size of variable with index N - 1>
+\end{DoxyVerb}
+ \begin{DoxyNote}{Note}
+domain values range from zero to {\itshape size-\/1} 
+
+a negative domain size is interpreted as a variable with an interval domain in $[0,-size-1]$ 
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)
+\end{DoxyWarning}
+
+\item General definition of cost functions
+\begin{DoxyItemize}
+\item Definition of a cost function in extension \begin{DoxyVerb}<Arity of the cost function>
+<Index of the first variable in the scope of the cost function>
+...
+<Index of the last variable in the scope of the cost function>
+<Default cost value>
+<Number of tuples with a cost different than the default cost>
+\end{DoxyVerb}
+ followed by for every tuple with a cost different than the default cost\-: \begin{DoxyVerb}<Index of the value assigned to the first variable in the scope>
+...
+<Index of the value assigned to the last variable in the scope>
+<Cost of the tuple>
+\end{DoxyVerb}
+ \begin{DoxyNote}{Note}
+Shared cost function\-: A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one All\-Different hard constraint decomposed into 6 binary constraints.
+\end{DoxyNote}
+
+\item Shared C\-F used inside a small example in wcsp format\-: 
+\begin{DoxyCode}
+AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
+4 4 4 4
+-2 0 1 0 4
+0 0 1
+1 1 1
+2 2 1
+3 3 1
+2 0 2 0 -1
+2 0 3 0 -1
+2 1 2 0 -1
+2 1 3 0 -1
+2 2 3 0 -1
+\end{DoxyCode}
+
+\item Definition of a cost function in intension by replacing the default cost value by -\/1 and by giving its keyword name and its K parameters \begin{DoxyVerb}<Arity of the cost function>
+<Index of the first variable in the scope of the cost function>
+...
+<Index of the last variable in the scope of the cost function>
+-1
+<keyword>
+<parameter1>
+...
+<parameterK>
+\end{DoxyVerb}
+
+\end{DoxyItemize}
+\end{DoxyItemize}Possible keywords of cost functions defined in intension followed by their specific parameters\-:
+\begin{DoxyItemize}
+\item $>$= {\itshape cst} {\itshape delta} to express soft binary constraint $x \geq y + cst$ with associated cost function $max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )$
+\item $>$ {\itshape cst} {\itshape delta} to express soft binary constraint $x > y + cst$ with associated cost function $max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )$
+\item $<$= {\itshape cst} {\itshape delta} to express soft binary constraint $x \leq y + cst$ with associated cost function $max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )$
+\item $<$ {\itshape cst} {\itshape delta} to express soft binary constraint $x < y + cst$ with associated cost function $max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )$
+\item = {\itshape cst} {\itshape delta} to express soft binary constraint $x = y + cst$ with associated cost function $(|y + cst - x| \leq delta)?|y + cst - x|:UB$
+\item disj {\itshape cstx} {\itshape csty} {\itshape penalty} to express soft binary disjunctive constraint $x \geq y + csty \vee y \geq x + cstx$ with associated cost function $(x \geq y + csty \vee y \geq x + cstx)?0:penalty$
+\item sdisj {\itshape cstx} {\itshape csty} {\itshape xinfty} {\itshape yinfty} {\itshape costx} {\itshape costy} to express a special disjunctive constraint with three implicit hard constraints $x \leq xinfty$ and $y \leq yinfty$ and $x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)$ and an additional cost function $((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)$
+\item Global cost functions using a flow-\/based propagator\-:
+\begin{DoxyItemize}
+\item salldiff var$\vert$dec$\vert$decbi {\itshape cost} to express a soft alldifferent constraint with either variable-\/based ({\itshape var} keyword) or decomposition-\/based ({\itshape dec} and {\itshape decbi} keywords) cost semantic with a given {\itshape cost} per violation ({\itshape decbi} decomposes into a binary cost function complete network)
+\item sgcc var$\vert$dec$\vert$wdec {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound} ({\itshape shortage\-\_\-weight} {\itshape excess\-\_\-weight})?)$\ast$ to express a soft global cardinality constraint with either variable-\/based ({\itshape var} keyword) or decomposition-\/based ({\itshape dec} keyword) cost semantic with a given {\itshape cost} per violation and for each value its lower and upper bound (if {\itshape wdec} then violation cost depends on each value shortage or excess weights)
+\item ssame {\itshape cost} {\itshape list\-\_\-size1} {\itshape list\-\_\-size2} ({\itshape variable\-\_\-index})$\ast$ ({\itshape variable\-\_\-index})$\ast$ to express a permutation constraint on two lists of variables of equal size (implicit variable-\/based cost semantic)
+\item sregular var$\vert$edit {\itshape cost} {\itshape nb\-\_\-states} {\itshape nb\-\_\-initial\-\_\-states} ({\itshape state})$\ast$ {\itshape nb\-\_\-final\-\_\-states} ({\itshape state})$\ast$ {\itshape nb\-\_\-transitions} ({\itshape start\-\_\-state} {\itshape symbol\-\_\-value} {\itshape end\-\_\-state})$\ast$ to express a soft regular constraint with either variable-\/based ({\itshape var} keyword) or edit distance-\/based ({\itshape edit} keyword) cost semantic with a given {\itshape cost} per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+\end{DoxyItemize}
+\item Global cost functions using a dynamic programming D\-A\-G-\/based propagator\-:
+\begin{DoxyItemize}
+\item sregulardp var {\itshape cost} {\itshape nb\-\_\-states} {\itshape nb\-\_\-initial\-\_\-states} ({\itshape state})$\ast$ {\itshape nb\-\_\-final\-\_\-states} ({\itshape state})$\ast$ {\itshape nb\-\_\-transitions} ({\itshape start\-\_\-state} {\itshape symbol\-\_\-value} {\itshape end\-\_\-state})$\ast$ to express a soft regular constraint with a variable-\/based ({\itshape var} keyword) cost semantic with a given {\itshape cost} per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values
+\item sgrammar$\vert$sgrammardp var$\vert$weight {\itshape cost} {\itshape nb\-\_\-symbols} {\itshape nb\-\_\-values} {\itshape start\-\_\-symbol} {\itshape nb\-\_\-rules} ((0 {\itshape terminal\-\_\-symbol} {\itshape value})$\vert$(1 {\itshape nonterminal\-\_\-in} {\itshape nonterminal\-\_\-out\-\_\-left} {\itshape nonterminal\-\_\-out\-\_\-right})$\vert$(2 {\itshape terminal\-\_\-symbol} {\itshape value} {\itshape weight})$\vert$(3 {\itshape nonterminal\-\_\-in} {\itshape nonterminal\-\_\-out\-\_\-left} {\itshape nonterminal\-\_\-out\-\_\-right} {\itshape weight}))$\ast$ to express a soft/weighted grammar in Chomsky normal form
+\item samong$\vert$samongdp var {\itshape cost} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound} {\itshape nb\-\_\-values} ({\itshape value})$\ast$ to express a soft among constraint to restrict the number of variables taking their value into a given set of values
+\item salldiffdp var {\itshape cost} to express a soft alldifferent constraint with variable-\/based ({\itshape var} keyword) cost semantic with a given {\itshape cost} per violation (decomposes into samongdp cost functions)
+\item sgccdp var {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound})$\ast$ to express a soft global cardinality constraint with variable-\/based ({\itshape var} keyword) cost semantic with a given {\itshape cost} per violation and for each value its lower and upper bound (decomposes into samongdp cost functions)
+\item max$\vert$smaxdp {\itshape def\-Cost} {\itshape nbtuples} ({\itshape variable} {\itshape value} {\itshape cost})$\ast$ to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, {\itshape def\-Cost} if unspecified)
+\item M\-S\-T$\vert$smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
+\end{DoxyItemize}
+\item Global cost functions using a cost function network-\/based propagator\-:
+\begin{DoxyItemize}
+\item wregular {\itshape nb\-\_\-states} {\itshape nb\-\_\-initial\-\_\-states} ({\itshape state} and cost)$\ast$ {\itshape nb\-\_\-final\-\_\-states} ({\itshape state} and cost)$\ast$ {\itshape nb\-\_\-transitions} ({\itshape start\-\_\-state} {\itshape symbol\-\_\-value} {\itshape end\-\_\-state} {\itshape cost})$\ast$ to express a weighted regular constraint with weights on initial states, final states, and transitions, followed by the definition of a deterministic finite automaton with number of states, list of initial and final states with their costs, and list of weighted state transitions where symbols are domain values
+\item walldiff hard$\vert$lin$\vert$quad {\itshape cost} to express a soft alldifferent constraint as a set of wamong hard constraint ({\itshape hard} keyword) or decomposition-\/based ({\itshape lin} and {\itshape quad} keywords) cost semantic with a given {\itshape cost} per violation
+\item wgcc hard$\vert$lin$\vert$quad {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound})$\ast$ to express a soft global cardinality constraint as either a hard constraint ({\itshape hard} keyword) or with decomposition-\/based ({\itshape lin} and {\itshape quad} keyword) cost semantic with a given {\itshape cost} per violation and for each value its lower and upper bound
+\item wsame hard$\vert$lin$\vert$quad {\itshape cost} to express a permutation constraint on two lists of variables of equal size (implicitly concatenated in the scope) using implicit decomposition-\/based cost semantic
+\item wsamegcc hard$\vert$lin$\vert$quad {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound})$\ast$ to express the combination of a soft global cardinality constraint and a permutation constraint
+\item wamong hard$\vert$lin$\vert$quad {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value})$\ast$ {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound} to express a soft among constraint to restrict the number of variables taking their value into a given set of values
+\item wvaramong hard {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value})$\ast$ to express a hard among constraint to restrict the number of variables taking their value into a given set of values to be equal to the last variable in the scope
+\item woverlap hard$\vert$lin$\vert$quad {\itshape cost} {\itshape comparator} {\itshape righthandside} overlaps between two sequences of variables X, Y (i.\-e. set the fact that Xi and Yi take the same value (not equal to zero))
+\item wsum hard$\vert$lin$\vert$quad {\itshape cost} {\itshape comparator} {\itshape righthandside} to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-\/hand-\/side value
+\item wvarsum hard {\itshape cost} {\itshape comparator} to express a hard sum constraint to restrict the sum to be {\itshape comparator} to the value of the last variable in the scope
+
+Let us note $<$$>$ the comparator, K the right-\/hand-\/side value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows\-:
+\begin{DoxyItemize}
+\item if $<$$>$ is == \-: gap = abs(K -\/ Sum)
+\item if $<$$>$ is $<$= \-: gap = max(0,Sum -\/ K)
+\item if $<$$>$ is $<$ \-: gap = max(0,Sum -\/ K -\/ 1)
+\item if $<$$>$ is != \-: gap = 1 if Sum != K and gap = 0 otherwise
+\item if $<$$>$ is $>$ \-: gap = max(0,K -\/ Sum + 1);
+\item if $<$$>$ is $>$= \-: gap = max(0,K -\/ Sum);
+\end{DoxyItemize}
+\end{DoxyItemize}
+\end{DoxyItemize}\begin{DoxyWarning}{Warning}
+The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes). 
+
+{\itshape list\-\_\-size1} and {\itshape list\-\_\-size2} must be equal in {\itshape ssame}. 
+
+Cost functions defined in intention cannot be shared.
+\end{DoxyWarning}
+\begin{DoxyNote}{Note}
+More about network-\/based global cost functions can be found here \href{https://metivier.users.greyc.fr/decomposable/}{\tt https\-://metivier.\-users.\-greyc.\-fr/decomposable/}
+\end{DoxyNote}
+Examples\-:
+\begin{DoxyItemize}
+\item quadratic cost function $x0 * x1$ in extension with variable domains $\{0,1\}$ (equivalent to a soft clause $\neg x0 \vee \neg x1$)\-:
+\begin{DoxyCode}
+2 0 1 0 1 1 1 1 
+\end{DoxyCode}
+
+\item simple arithmetic hard constraint $x1 < x2$\-:
+\begin{DoxyCode}
+2 1 2 -1 < 0 0 
+\end{DoxyCode}
+
+\item hard temporal disjunction $x1 \geq x2 + 2 \vee x2 \geq x1 + 1$\-:
+\begin{DoxyCode}
+2 1 2 -1 disj 1 2 UB 
+\end{DoxyCode}
+
+\item soft\-\_\-alldifferent(\{x0,x1,x2,x3\})\-:
+\begin{DoxyCode}
+4 0 1 2 3 -1 salldiff var 1 
+\end{DoxyCode}
+
+\item soft\-\_\-gcc(\{x1,x2,x3,x4\}) with each value {\itshape v} from 1 to 4 only appearing at least v-\/1 and at most v+1 times\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 
+\end{DoxyCode}
+
+\item soft\-\_\-same(\{x0,x1,x2,x3\},\{x4,x5,x6,x7\})\-:
+\begin{DoxyCode}
+8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 
+\end{DoxyCode}
+
+\item soft\-\_\-regular(\{x1,x2,x3,x4\}) with D\-F\-A (3$\ast$)+(4$\ast$)\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 sregular var 1 2 1 0 2 0 1 3 0 3 0 0 4 1 1 4 1 
+\end{DoxyCode}
+
+\item soft\-\_\-grammar(\{x0,x1,x2,x3\}) with hard cost (1000) producing well-\/formed parenthesis expressions\-:
+\begin{DoxyCode}
+4 0 1 2 3 -1 sgrammardp var 1000 4 2 0 6 1 0 0 0 1 0 1 2 1 0 1 3 1 2 0 3 0 1 0 0 3 1 
+\end{DoxyCode}
+
+\item soft\-\_\-among(\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^4(x_i \in \{1,2\}) < 1$ or $\sum_{i=1}^4(x_i \in \{1,2\}) > 3$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 samongdp var 1000 1 3 2 1 2 
+\end{DoxyCode}
+
+\item soft max(\{x0,x1,x2,x3\}) with cost equal to $\max_{i=0}^3((x_i!=i)?1000:(4-i))$\-:
+\begin{DoxyCode}
+4 0 1 2 3 -1 smaxdp 1000 4 0 0 4 1 1 3 2 2 2 3 3 1 
+\end{DoxyCode}
+
+\item wregular(\{x0,x1,x2,x3\}) with D\-F\-A (0(10)$\ast$2$\ast$)\-:
+\begin{DoxyCode}
+4 0 1 2 3 -1 wregular 3 1 0 0 1 2 0 9 0 0 1 0 0 1 1 1 0 2 1 1 1 1 0 0 1 0 0 1 1 2 0 1 1 2 2 0 1 0 2 1 1 1 2
+       1 
+\end{DoxyCode}
+
+\item wamong (\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^4(x_i \in \{1,2\}) < 1$ or $\sum_{i=1}^4(x_i \in \{1,2\}) > 3$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 wamong hard 1000 2 1 2 1 3 
+\end{DoxyCode}
+
+\item wvaramong (\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 wvaramong hard 1000 2 1 2 
+\end{DoxyCode}
+
+\item woverlap(\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^2(x_i = x_{i+2}) \geq 1$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 woverlap hard 1000 < 1
+\end{DoxyCode}
+
+\item wsum (\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^4(x_i) \neq 4$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 wsum hard 1000 == 4 
+\end{DoxyCode}
+
+\item wvarsum (\{x1,x2,x3,x4\}) with hard cost (1000) if $\sum_{i=1}^3(x_i) \neq x_4$\-:
+\begin{DoxyCode}
+4 1 2 3 4 -1 wvarsum hard 1000 == 
+\end{DoxyCode}
+
+\end{DoxyItemize}Latin Square 4 x 4 crisp C\-S\-P example in wcsp format\-: 
+\begin{DoxyCode}
+latin4 16 4 8 1
+4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+4 0 1 2 3 -1 salldiff var 1
+4 4 5 6 7 -1 salldiff var 1
+4 8 9 10 11 -1 salldiff var 1
+4 12 13 14 15 -1 salldiff var 1
+4 0 4 8 12 -1 salldiff var 1
+4 1 5 9 13 -1 salldiff var 1
+4 2 6 10 14 -1 salldiff var 1
+4 3 7 11 15 -1 salldiff var 1
+\end{DoxyCode}
+
+
+4-\/queens binary weighted C\-S\-P example with random unary costs in wcsp format\-: 
+\begin{DoxyCode}
+4-WQUEENS 4 4 10 5
+4 4 4 4
+2 0 1 0 10
+0 0 5
+0 1 5
+1 0 5
+1 1 5
+1 2 5
+2 1 5
+2 2 5
+2 3 5
+3 2 5
+3 3 5
+2 0 2 0 8
+0 0 5
+0 2 5
+1 1 5
+1 3 5
+2 0 5
+2 2 5
+3 1 5
+3 3 5
+2 0 3 0 6
+0 0 5
+0 3 5
+1 1 5
+2 2 5
+3 0 5
+3 3 5
+2 1 2 0 10
+0 0 5
+0 1 5
+1 0 5
+1 1 5
+1 2 5
+2 1 5
+2 2 5
+2 3 5
+3 2 5
+3 3 5
+2 1 3 0 8
+0 0 5
+0 2 5
+1 1 5
+1 3 5
+2 0 5
+2 2 5
+3 1 5
+3 3 5
+2 2 3 0 10
+0 0 5
+0 1 5
+1 0 5
+1 1 5
+1 2 5
+2 1 5
+2 2 5
+2 3 5
+3 2 5
+3 3 5
+1 0 0 2
+1 1
+3 1
+1 1 0 2
+1 1
+2 1
+1 2 0 2
+1 1
+2 1
+1 3 0 2
+0 1
+2 1
+\end{DoxyCode}
+ 
 \subsubsection{CPD final stanza}
+TODO
 
-\subsection{UAI/LG formats}
+\subsection{UAI LG formats (.uai .LG)}
+
+It is a simple text file format specified below to describe probabilistic graphical model instances. The format is a generalization of the Ergo file format initially developed by Noetic Systems Inc. for their Ergo software.
+
+\begin{itemize}
+\item {\bf Structure}~\\
+
+A file in the UAI format consists of the following two parts, in that order:
+\begin{verbatim}
+<Preamble>
+
+<Function tables>
+\end{verbatim}
+
+The contents of each section (denoted $<...>$ above) are described in the following:
+\item {\bf Preamble}~\\
+
+The preamble starts with one line denoting the type of network. This will be either BAYES (if the network is a Bayesian network) or MARKOV (in case of a Markov network). This is followed by a line containing the number of variables. The next line specifies each variable's domain size, one at a time, separated by whitespace (note that this implies an order on the variables which will be used throughout the file).
+
+The fourth line contains only one integer, denoting the number of functions in the problem (conditional probability tables for Bayesian networks, general factors for Markov networks). Then, one function per line, the scope of each function is given as follows: The first integer in each line specifies the size of the function's scope, followed by the actual indexes of the variables in the scope. The order of this list is not restricted, except when specifying a conditional probability table (CPT) in a Bayesian network, where the child variable has to come last. Also note that variables are indexed starting with 0.
+
+For instance, a general function over variables 0, 5 and 11 would have this entry:
+\begin{verbatim}
+3 0 5 11
+\end{verbatim}
+
+A simple Markov network preamble with three variables and two functions might for instance look like this:
+
+\begin{DoxyCode}
+MARKOV
+3
+2 2 3
+2
+2 0 1
+3 0 1 2
+\end{DoxyCode}
+
+The first line denotes the Markov network, the second line tells us the problem consists of three variables, let's refer to them as X, Y, and Z. Their domain size is 2, 2, and 3 respectively (from the third line). Line four specifies that there are 2 functions. The scope of the first function is X,Y, while the second function is defined over X,Y,Z.
+
+An example preamble for a Belief network over three variables (and therefore with three functions) might be:
+
+\begin{DoxyCode}
+BAYES
+3
+2 2 3
+3
+1 0
+2 0 1
+2 1 2
+\end{DoxyCode}
+
+The first line signals a Bayesian network. This example has three variables, let's call them X, Y, and Z, with domain size 2, 2, and 3, respectively (from lines two and three). Line four says that there are 3 functions (CPTs in this case). The scope of the first function is given in line five as just X (the probability P(X)), the second one is defined over X and Y (this is (Y $|$ X)). The third function, from line seven, is the CPT P(Z $|$ Y). We can therefore deduce that the joint probability for this problem factors as P(X,Y,Z) = P(X).P(Y $|$ X).P(Z $|$ Y).
+
+\item {\bf Function tables}~\\
+
+In this section each function is specified by giving its full table (i.e, specifying the function value for each tuple). The order of the functions is identical to the one in which they were introduced in the preamble.
+
+For each function table, first the number of entries is given (this should be equal to the product of the domain sizes of the variables in the scope). Then, one by one, separated by whitespace, the values for each assignment to the variables in the function's scope are enumerated. Tuples are implicitly assumed in ascending order, with the last variable in the scope as the 'least significant'.
+
+To illustrate, we continue with our Bayesian network example from above, let's assume the following conditional probability tables:
+
+\begin{eqnarray*}
+X & P(X) &\\
+0 & 0.436 &\\
+1 & 0.564 &\\
+&&\\
+X & Y & P(Y | X)\\
+0 & 0 & 0.128\\
+0 & 1 & 0.872\\
+1 & 0 & 0.920\\
+1 & 1 & 0.080\\
+&&\\
+Y & Z & P(Z | Y)\\
+0 & 0 & 0.210\\
+0 & 1 & 0.333\\
+0 & 2 & 0.457\\
+1 & 0 & 0.811\\
+1 & 1 & 0.000\\
+1 &	2 &	0.189\\
+\end{eqnarray*}
+
+The correspoding function tables in the file would then look like this:
+
+\begin{DoxyCode}
+2
+ 0.436 0.564
+
+4
+ 0.128 0.872
+ 0.920 0.080
+
+6
+ 0.210 0.333 0.457
+ 0.811 0.000 0.189 
+\end{DoxyCode}
+
+(Note that line breaks and empty lines are effectively just whitespace, exactly like plain spaces " ". They are used here to improve readability.)
+
+\item {\bf Summary}~\\
+
+To sum up, a problem file consists of 2 sections: the preamble and the full the function tables, the names and the labels
+
+For our Markov network example above, the full file could be:
+
+\begin{DoxyCode}
+MARKOV
+3
+2 2 3
+2
+2 0 1
+3 0 1 2
+
+4
+ 4.000 2.400
+ 1.000 0.000
+
+12
+ 2.2500 3.2500 3.7500
+ 0.0000 0.0000 10.0000
+ 1.8750 4.0000 3.3330
+ 2.0000 2.0000 3.4000
+\end{DoxyCode}
+
+Here is the full Bayesian network example from above:
+
+\begin{DoxyCode}
+BAYES
+3
+2 2 3
+3
+1 0
+2 0 1
+2 1 2
+
+2
+ 0.436 0.564
+
+4
+ 0.128 0.872
+ 0.920 0.080
+
+6
+ 0.210 0.333 0.457
+ 0.811 0.000 0.189 
+\end{DoxyCode}
+
+\item {\bf Expressing evidence}~\\
+
+Evidence is specified in a separate file. This file has the same name as the original problems file but an added .evid extension at the end. For instance, problem.uai will have evidence in problem.uai.evid.
+
+The file simply starts with a line specifying the number of evidence variables. This is followed by the pairs of variable and value indexes for each observed variable, one pair per line. The indexes correspond to the ones implied by the original problem file.
+
+If, for our above example, we want to specify that variable Y has been observed as having its first value and Z with its second value, the file example.uai.evid would contain the following:
+
+\begin{DoxyCode}
+2
+ 1 0
+ 2 1
+\end{DoxyCode}
+\end{itemize}
 
 \subsection{(Partial Weighted) MaxSAT format}
 
-\subsection{QPBO format}
+\paragraph{Max-SAT input format (.cnf)}~\\
 
-\subsection{Linkage format}
+The input file format for Max-SAT will be in DIMACS format:
 
-\subsection{BPE format}
+\begin{DoxyCode}
+c
+c comments Max-SAT
+c
+p cnf 3 4
+1 -2 0
+-1 2 -3 0
+-3 2 0
+1 3 0
+\end{DoxyCode}
+
+\begin{itemize}
+\item The file can start with comments, that is lines beginning with the character 'c'.
+\item Right after the comments, there is the line "p cnf nbvar nbclauses" indicating that the instance is in CNF format; nbvar is the number of variables appearing in the file; nbclauses is the exact number of clauses contained in the file.
+\item Then the clauses follow. Each clause is a sequence of distinct non-null numbers between -nbvar and nbvar ending with 0 on the same line. Positive numbers denote the corresponding variables. Negative numbers denote the negations of the corresponding variables.
+\end{itemize}
+
+\paragraph{Weighted Max-SAT input format (.wcnf)}~\\
+
+In Weighted Max-SAT, the parameters line is "p wcnf nbvar nbclauses". The weights of each clause will be identified by the first integer in each clause line. The weight of each clause is an integer greater than or equal to 1.
+
+Example of Weighted Max-SAT formula:
+
+\begin{DoxyCode}
+c
+c comments Weighted Max-SAT
+c
+p wcnf 3 4
+10 1 -2 0
+3 -1 2 -3 0
+8 -3 2 0
+5 1 3 0
+\end{DoxyCode}
+
+\paragraph{Partial Max-SAT input format (.wcnf)}~\\
+
+In Partial Max-SAT, the parameters line is "p wcnf nbvar nbclauses top". We associate a weight with each clause, wich is the first integer in the clause. Weigths must be greater than or equal to 1. Hard clauses have weigth top and soft clauses have weigth 1. We assume that top is a weight always greater than the sum of the weights of violated soft clauses.
+
+Example of Partial Max-SAT formula:
+
+\begin{DoxyCode}
+c
+c comments Partial Max-SAT
+c
+p wcnf 4 5 15
+15 1 -2 4 0
+15 -1 -2 3 0
+1 -2 -4 0
+1 -3 2 0
+1 1 3 0
+\end{DoxyCode}
+
+\paragraph{Weigthed Partial Max-SAT input format (.wcnf)}~\\
+
+In Weigthed Partial Max-SAT, the parameters line is "p wcnf nbvar nbclauses top". We associate a weight with each clause, wich is the first integer in the clause. Weigths must be greater than or equal to 1. Hard clauses have weigth top and soft clauses have a weigth smaller than top. We assume that top is a weight always greater than the sum of the weights of violated soft clauses.
+
+Example of Weigthed Partial Max-SAT formula:
+
+\begin{DoxyCode}
+c
+c comments Weigthed Partial Max-SAT
+c
+p wcnf 4 5 16
+16 1 -2 4 0
+16 -1 -2 3 0
+8 -2 -4 0
+4 -3 2 0
+3 1 3 0
+\end{DoxyCode}
+
+\subsection{QPBO format (.qpbo)}
+
+In the quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format,
+the goal is to minimize or maximize the quadratic function:
+
+$$X' * W * X = \sum_{i=1}^N \sum_{j=1}^N  W_{ij} * X_i * X_j$$
+
+where $W$ is a symmetric squared $N \times N$ matrix expressed by all its non-zero half ($i \leq j$) squared matrix coefficients, $X$ is a vector of $N$ binary variables with domain values in $\{0,1\}$ or $\{1,-1\}$, and $X'$ is the transposed vector of $X$.
+
+Note that for two indices $i \neq j$, coefficient $W_{ij} = W_{ji}$ (symmetric matrix) and it appears twice in the previous sum. Note also that coefficients can be positive or negative and are real float numbers. They are converted to fixed-point real numbers by multiplying them by $10^{precision}$ (see option {\em -precision} to modify it, default value is 7).  Infinite coefficients are forbidden.
+
+Notice that depending on the sign of the number of variables in the first text line, the domain of all variables is either $\{0,1\}$ or $\{1,-1\}$.
+
+Warning! The encoding in Weighted CSP of variable domain $\{1,-1\}$ associates for each variable value the following index: value 1 has index 0 and value -1 has index 1 in the solutions found by toulbar2.
+The encoding  of variable domain $\{0,1\}$ is direct.
+
+Qpbo is a file text format:
+\begin{itemize}
+\item First line contains the number of variables $N$ and the number of non-zero coefficients $M$.
+
+If $N$ is negative then domain values are in $\{1, -1\}$, otherwise $\{0, 1\}$.
+If $M$ is negative then it will maximize the quadratic function, otherwise it will minimize it.
+
+\item Followed by $|M|$ lines where each text line contains three values separated by spaces:
+position index $i$ (integer belonging to $[1,|N|]$),
+position index $j$ (integer belonging to $[1,|N|]$),
+coefficient $W_{ij}$ (float number)
+such that $i \leq j$ and $W_{ij} \neq 0$
+\end{itemize}
+
+\subsection{Linkage format (.pre)}
+
+See \texttt{mendelsoft} companion software at \url{http://www.inra.fr/mia/T/MendelSoft} for pedigree correction. See also \url{https://carlit.toulouse.inra.fr/cgi-bin/awki.cgi/HaplotypeInference} for haplotype inference in half-sib families.
+
+%\subsection{BEP format}
 
 \section{Using it as a library}
 
+See \texttt{toulbar2} reference manual which describes the libtb2.so C++ library API.
+
 \section{Using it from Python/Numberjack}
 
+See \url{http://numberjack.ucc.ie}.
 
 \section{How does it work}
+\label{how-work}
+TODO
+%\subsection{Preprocessing}
 
-\subsection{Preprocessing}
+%\subsection{Upper bounding}
 
-\subsection{Upper bounding}
+%\subsection{Search algorithms}
 
-\subsection{Search algorithms}
-
+\bibliographystyle{plain}
+\bibliography{publications.bib}
 
 \end{document}
