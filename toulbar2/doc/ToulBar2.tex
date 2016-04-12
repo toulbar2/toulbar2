@@ -1,0 +1,444 @@
+\begin{enumerate}
+\item Download a binary weighted constraint satisfaction problem (WCSP) file {\em example.wcsp} from the toulbar2's Documentation Web page. Solve it with default options:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/example.wcsp
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 20 (+10%)
+Reverse DAC lower bound: 22 (+9.09091%)
+Preprocessing time: 0 seconds.
+24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
+Initial lower and upper bounds: [22,64[ 65.625%
+New solution: 29 (0 backtracks, 8 nodes, depth 9)
+Optimality gap: [ 23 , 29 ] 20.6897 % (8 backtracks, 16 nodes)
+New solution: 27 (8 backtracks, 24 nodes, depth 8)
+Optimality gap: [ 24 , 27 ] 11.1111 % (14 backtracks, 30 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (44 backtracks, 113 nodes)
+Optimality gap: [ 26 , 27 ] 3.7037 % (54 backtracks, 151 nodes)
+Optimality gap: [ 27 , 27 ] 0 % (54 backtracks, 157 nodes)
+Node redundancy during HBFS: 30.5732 %
+Optimum: 27 in 54 backtracks and 157 nodes ( 205 removals by DEE) and 0.01 seconds.
+end.
+\end{DoxyCode}}
+\item Solve a WCSP using INCOP, a local search method~\cite{idwalk:cp04} applied just after preprocessing, in order to find a good upper bound before a complete search:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/example.wcsp -i
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 20 (+10%)
+Reverse DAC lower bound: 22 (+9.09091%)
+Preprocessing time: 0 seconds.
+New solution: 27 (0 backtracks, 0 nodes, depth 1)
+INCOP solving time: 0.23 seconds.
+24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
+Initial lower and upper bounds: [22,27[ 18.5185%
+Optimality gap: [ 23 , 27 ] 14.8148 % (19 backtracks, 48 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (23 backtracks, 60 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (53 backtracks, 130 nodes)
+Optimality gap: [ 27 , 27 ] 0 % (65 backtracks, 167 nodes)
+Node redundancy during HBFS: 22.1557 %
+Optimum: 27 in 65 backtracks and 167 nodes ( 137 removals by DEE) and 0.24 seconds.
+end.
+\end{DoxyCode}}
+\item Solve a WCSP with an initial upper bound and save its (first) optimal solution
+in filename ''example.sol'':
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/example.wcsp -ub=28 -w=example.sol
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 20 (+10%)
+Reverse DAC lower bound: 22 (+9.09091%)
+Preprocessing time: 0 seconds.
+24 unassigned variables, 117 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. degree:5)
+Initial lower and upper bounds: [22,28[ 21.4286%
+Optimality gap: [ 23 , 28 ] 17.8571 % (7 backtracks, 14 nodes)
+New solution: 27 (7 backtracks, 20 nodes, depth 6)
+Optimality gap: [ 23 , 27 ] 14.8148 % (12 backtracks, 25 nodes)
+Optimality gap: [ 24 , 27 ] 11.1111 % (26 backtracks, 67 nodes)
+Optimality gap: [ 25 , 27 ] 7.40741 % (58 backtracks, 163 nodes)
+Optimality gap: [ 27 , 27 ] 0 % (70 backtracks, 217 nodes)
+Node redundancy during HBFS: 35.4839 %
+Optimum: 27 in 70 backtracks and 217 nodes ( 158 removals by DEE) and 0 seconds.
+end.
+\end{DoxyCode}}
+\begin{DoxyCode}
+cat example.sol
+# each value corresponds to one variable assignment in problem file order
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+ 1 0 1 2 3 4 0 4 2 0 3 1 0 2 3 0 1 3 2 4 2 1 0 4 4
+\end{DoxyCode}}
+\item Download a larger WCSP file {\em scen06.wcsp} from the toulbar2's Documentation Web page. Solve it using a limited discrepancy search strategy~\cite{Ginsberg95} in order to speed-up the search for finding good upper bounds first\footnote{By default, toulbar2 uses another diversification strategy based on hybrid best-first search~\cite{Katsirelos15a}.}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/scen06.wcsp -l
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 100 variables, with 44 values at most, and 1222 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Preprocessing time: 0.16 seconds.
+82 unassigned variables, 3273 values in all current domains (med. size:44, max size:44) and 327 non-unary cost functions (med. degree:6)
+Initial lower and upper bounds: [0,248338[ 100%
+--- [0] LDS 0 --- (0 nodes)
+c 2097152 Bytes allocated for x stack.
+c 4194304 Bytes allocated for x stack.
+c 8388608 Bytes allocated for x stack.
+New solution: 8451 (0 backtracks, 110 nodes, depth 1)
+--- [0] LDS 1 --- (110 nodes)
+New solution: 6134 (2 backtracks, 386 nodes, depth 2)
+New solution: 5795 (4 backtracks, 527 nodes, depth 2)
+New solution: 5711 (5 backtracks, 590 nodes, depth 2)
+New solution: 5444 (6 backtracks, 676 nodes, depth 2)
+New solution: 4828 (7 backtracks, 747 nodes, depth 2)
+New solution: 4507 (9 backtracks, 853 nodes, depth 2)
+New solution: 4408 (10 backtracks, 910 nodes, depth 2)
+New solution: 4145 (15 backtracks, 1047 nodes, depth 2)
+New solution: 3730 (18 backtracks, 1112 nodes, depth 2)
+--- [0] LDS 2 --- (1132 nodes)
+New solution: 3635 (64 backtracks, 1606 nodes, depth 3)
+New solution: 3585 (150 backtracks, 2169 nodes, depth 3)
+New solution: 3493 (168 backtracks, 2283 nodes, depth 3)
+New solution: 3472 (171 backtracks, 2312 nodes, depth 3)
+--- [0] LDS 4 --- (2420 nodes)
+New solution: 3463 (988 backtracks, 5683 nodes, depth 5)
+New solution: 3441 (990 backtracks, 5711 nodes, depth 5)
+New solution: 3401 (1101 backtracks, 6178 nodes, depth 5)
+--- [0] Search with no discrepancy limit --- (8111 nodes)
+Optimality gap: [ 349 , 3401 ] 89.7383 % (44869 backtracks, 94455 nodes)
+New solution: 3400 (56746 backtracks, 118233 nodes, depth 24)
+New solution: 3399 (56747 backtracks, 118235 nodes, depth 23)
+New solution: 3389 (56749 backtracks, 118248 nodes, depth 29)
+Optimality gap: [ 1023 , 3389 ] 69.8141 % (90007 backtracks, 184743 nodes)
+Optimality gap: [ 1306 , 3389 ] 61.4636 % (91295 backtracks, 187319 nodes)
+Optimality gap: [ 1818 , 3389 ] 46.3559 % (93973 backtracks, 192675 nodes)
+Optimality gap: [ 2261 , 3389 ] 33.2842 % (94054 backtracks, 192837 nodes)
+Optimality gap: [ 2777 , 3389 ] 18.0584 % (94060 backtracks, 192849 nodes)
+Optimum: 3389 in 94062 backtracks and 192853 nodes ( 375927 removals by DEE) and 55.23 seconds.
+end.
+\end{DoxyCode}}
+\item Download file {\em 404.wcsp}. Solve it using Depth-First Brand and Bound with Tree Decomposition (BTD)~\cite{Schiex06a} based on a min-fill variable ordering:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/404.wcsp -O=-3 -B=1
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 100 variables, with 4 values at most, and 710 cost functions, with maximum arity 3.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 63 (+28.5714%)
+Reverse DAC lower bound: 65 (+3.07692%)
+Reverse DAC lower bound: 66 (+1.51515%)
+Preprocessing time: 0.01 seconds.
+88 unassigned variables, 226 values in all current domains (med. size:2, max size:4) and 591 non-unary cost functions (med. degree:13)
+Initial lower and upper bounds: [66,155[ 57.4194%
+Tree decomposition width  : 19
+Tree decomposition height : 43
+Number of clusters        : 47
+Tree decomposition time: 0 seconds.
+New solution: 124 (22 backtracks, 40 nodes, depth 2)
+Optimality gap: [ 69 , 124 ] 44.3548 % (22 backtracks, 40 nodes)
+New solution: 123 (36 backtracks, 69 nodes, depth 2)
+Optimality gap: [ 76 , 123 ] 38.2114 % (36 backtracks, 69 nodes)
+New solution: 117 (166 backtracks, 333 nodes, depth 2)
+Optimality gap: [ 87 , 117 ] 25.641 % (166 backtracks, 333 nodes)
+Optimality gap: [ 89 , 117 ] 23.9316 % (237 backtracks, 521 nodes)
+Optimality gap: [ 92 , 117 ] 21.3675 % (270 backtracks, 638 nodes)
+New solution: 114 (375 backtracks, 897 nodes, depth 2)
+Optimality gap: [ 97 , 114 ] 14.9123 % (375 backtracks, 897 nodes)
+Optimality gap: [ 99 , 114 ] 13.1579 % (437 backtracks, 1108 nodes)
+Optimality gap: [ 100 , 114 ] 12.2807 % (439 backtracks, 1130 nodes)
+Optimality gap: [ 101 , 114 ] 11.4035 % (446 backtracks, 1198 nodes)
+Optimality gap: [ 102 , 114 ] 10.5263 % (450 backtracks, 1207 nodes)
+Optimality gap: [ 104 , 114 ] 8.77193 % (470 backtracks, 1265 nodes)
+Optimality gap: [ 105 , 114 ] 7.89474 % (528 backtracks, 1457 nodes)
+Optimality gap: [ 106 , 114 ] 7.01754 % (528 backtracks, 1464 nodes)
+Optimality gap: [ 107 , 114 ] 6.14035 % (534 backtracks, 1490 nodes)
+Optimality gap: [ 109 , 114 ] 4.38596 % (545 backtracks, 1533 nodes)
+Optimality gap: [ 110 , 114 ] 3.50877 % (545 backtracks, 1549 nodes)
+Optimality gap: [ 112 , 114 ] 1.75439 % (556 backtracks, 1585 nodes)
+Optimality gap: [ 113 , 114 ] 0.877193 % (556 backtracks, 1601 nodes)
+Optimality gap: [ 114 , 114 ] 0 % (556 backtracks, 1618 nodes)
+HBFS open list restarts: 0 % and reuse: 10.8635 % of 359
+Node redundancy during HBFS: 33.1891 %
+Optimum: 114 in 556 backtracks and 1618 nodes ( 22 removals by DEE) and 0.03 seconds.
+end.
+\end{DoxyCode}}
+\item Solve the same problem using Russian Doll Search exploiting BTD~\cite{Sanchez09a}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/404.wcsp -O=-3 -B=2
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 100 variables, with 4 values at most, and 710 cost functions, with maximum arity 3.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 63 (+28.5714%)
+Reverse DAC lower bound: 65 (+3.07692%)
+Reverse DAC lower bound: 66 (+1.51515%)
+Preprocessing time: 0.01 seconds.
+88 unassigned variables, 226 values in all current domains (med. size:2, max size:4) and 591 non-unary cost functions (med. degree:13)
+Initial lower and upper bounds: [66,155[ 57.4194%
+Tree decomposition width  : 19
+Tree decomposition height : 43
+Number of clusters        : 47
+Tree decomposition time: 0 seconds.
+--- Solving cluster subtree 5 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 1)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 1)
+
+--- Solving cluster subtree 6 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 1)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 1)
+
+--- Solving cluster subtree 7 ...
+
+...
+
+--- Solving cluster subtree 44 ...
+New solution: 41 (398 backtracks, 692 nodes, depth 7)
+New solution: 40 (409 backtracks, 708 nodes, depth 7)
+New solution: 36 (419 backtracks, 738 nodes, depth 21)
+---  done  cost = [36,36] (507 backtracks, 878 nodes, depth 1)
+
+--- Solving cluster subtree 46 ...
+New solution: 114 (507 backtracks, 878 nodes, depth 1)
+---  done  cost = [114,114] (507 backtracks, 878 nodes, depth 1)
+
+Optimum: 114 in 507 backtracks and 878 nodes ( 13 removals by DEE) and 0.02 seconds.
+end.
+\end{DoxyCode}}
+\item Solve a WCSP using the original Russian Doll Search method~\cite{Verfaillie96} with static variable
+ordering (following problem file) and soft arc consistency:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 240 variables, with 4 values at most, and 2242 cost functions, with maximum arity 3.
+Cost function decomposition time : 0 seconds.
+Preprocessing time: 0.01 seconds.
+233 unassigned variables, 666 values in all current domains (med. size:2, max size:4) and 1966 non-unary cost functions (med. degree:16)
+Initial lower and upper bounds: [2,34347[ 99.9942%
+Tree decomposition width  : 59
+Tree decomposition height : 233
+Number of clusters        : 239
+Tree decomposition time: 0.02 seconds.
+--- Solving cluster subtree 0 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 1)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 1)
+
+--- Solving cluster subtree 1 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 1)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 1)
+
+--- Solving cluster subtree 2 ...
+
+...
+
+--- Solving cluster subtree 3 ...
+New solution: 21253 (26963 backtracks, 48851 nodes, depth 2)
+New solution: 21251 (26991 backtracks, 48883 nodes, depth 3)
+---  done  cost = [21251,21251] (26992 backtracks, 48883 nodes, depth 1)
+
+--- Solving cluster subtree 238 ...
+New solution: 21253 (26992 backtracks, 48883 nodes, depth 1)
+---  done  cost = [21253,21253] (26992 backtracks, 48883 nodes, depth 1)
+
+Optimum: 21253 in 26992 backtracks and 48883 nodes ( 0 removals by DEE) and 5.87 seconds.
+end.
+\end{DoxyCode}}
+\item Download a Markov Random Field (MRF) file {\em pedigree9.uai} in UAI format from the toulbar2's Documentation Web page. Solve it using bounded (of degree at most 8) variable elimination enhanced by cost function decomposition in preprocessing~\cite{Favier11a} followed by BTD exploiting only small-size (less than four variables) separators:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/pedigree9.uai -O=-3 -p=-8 -B=1 -r=4
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 1118 variables, with 7 values at most, and 1118 cost functions, with maximum arity 4.
+Generic variable elimination of degree 4
+Maximum degree of generic variable elimination: 4
+Cost function decomposition time : 0.01 seconds.
+Preprocessing time: 0.11 seconds.
+232 unassigned variables, 517 values in all current domains (med. size:2, max size:7) and 415 non-unary cost functions (med. degree:6)
+Initial lower and upper bounds: [553902779,13246577453[ 95.8185%
+Tree decomposition width  : 227
+Tree decomposition height : 230
+Number of clusters        : 890
+Tree decomposition time: 0.05 seconds.
+New solution: 865165767 log10like: -129.591 prob: 2.56352e-130 (72 backtracks, 140 nodes, depth 2)
+New solution: 844300454 log10like: -128.685 prob: 2.06541e-129 (128 backtracks, 254 nodes, depth 2)
+New solution: 819061410 log10like: -127.589 prob: 2.57706e-128 (185 backtracks, 368 nodes, depth 2)
+New solution: 812515216 log10like: -127.305 prob: 4.95931e-128 (361 backtracks, 756 nodes, depth 2)
+New solution: 806836620 log10like: -127.058 prob: 8.75064e-128 (399 backtracks, 834 nodes, depth 2)
+New solution: 784864376 log10like: -126.104 prob: 7.87558e-127 (541 backtracks, 1147 nodes, depth 2)
+New solution: 734383216 log10like: -123.911 prob: 1.22645e-124 (871 backtracks, 1935 nodes, depth 2)
+New solution: 733157137 log10like: -123.858 prob: 1.38643e-124 (1011 backtracks, 2221 nodes, depth 2)
+New solution: 727478541 log10like: -123.611 prob: 2.44634e-124 (1278 backtracks, 2773 nodes, depth 2)
+New solution: 711184893 log10like: -122.904 prob: 1.24779e-123 (1672 backtracks, 3583 nodes, depth 2)
+HBFS open list restarts: 0 % and reuse: 40.6146 % of 1497
+Node redundancy during HBFS: 33.2613 %
+Optimum: 711184893 log10like: -122.904 prob: 1.24779e-123 in 15757 backtracks and 47187 nodes ( 15233 removals by DEE) and 3.94 seconds.
+end.
+\end{DoxyCode}}
+\item Download another MRF file {\em GeomSurf-7-gm256.uai}. Solve it using Virtual Arc Consistency (VAC) in preprocessing~\cite{Cooper08} and exploit a VAC-based value ordering heuristic~\cite{Cooper10a}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/GeomSurf-7-gm256.uai -A -V
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 787 variables, with 7 values at most, and 3527 cost functions, with maximum arity 3.
+Lb before VAC: 4515002208
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 5851002592 (+0.220958%)
+Preprocessing VAC mean lb/incr: 2.51008e+06     total increments: 524     cyclesize: 21.666     k: 1.31489 (mean), 12 (max)
+Lb after VAC: 5905751286
+Preprocessing time: 2.72 seconds.
+730 unassigned variables, 4826 values in all current domains (med. size:7, max size:7) and 3133 non-unary cost functions (med. degree:6)
+Initial lower and upper bounds: [5905751286,111615200815[ 94.7088%
+c 2097152 Bytes allocated for x stack.
+c 4194304 Bytes allocated for x stack.
+New solution: 6021337963 log10like: -472.649 prob: 2.24179e-473 (0 backtracks, 118 nodes, depth 119)
+Optimality gap: [ 5913682376 , 6021337963 ] 1.7879 % (102 backtracks, 220 nodes)
+New solution: 5922481881 log10like: -468.356 prob: 4.40413e-469 (102 backtracks, 287 nodes, depth 65)
+Optimality gap: [ 5922481881 , 5922481881 ] 0 % (142 backtracks, 327 nodes)
+VAC mean lb/incr: -nan     total increments: 0     cyclesize: -nan     k: -nan (mean), 0 (max)
+Node redundancy during HBFS: 0.917431 %
+Optimum: 5922481881 log10like: -468.356 prob: 4.40413e-469 in 142 backtracks and 327 nodes ( 6334 removals by DEE) and 2.91 seconds.
+end.
+\end{DoxyCode}}
+\item Download another MRF file {\em 1CM1.uai}. Solve it by applying first a strong dominance pruning test in preprocessing, and secondly, a modified variable ordering heuristic during search~\cite{Schiex14a}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/1CM1.uai -dee=2 -m=2
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 37 variables, with 350 values at most, and 703 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 102868791154 (+0.010277%)
+Preprocessing time: 11.4 seconds.
+37 unassigned variables, 1679 values in all current domains (med. size:33, max size:350) and 624 non-unary cost functions (med. degree:35)
+Initial lower and upper bounds: [102868791154,239074057808[ 56.972%
+c 2097152 Bytes allocated for x stack.
+c 4194304 Bytes allocated for x stack.
+c 8388608 Bytes allocated for x stack.
+c 16777216 Bytes allocated for x stack.
+c 33554432 Bytes allocated for x stack.
+c 67108864 Bytes allocated for x stack.
+New solution: 104206588216 log10like: 5413.18 prob: inf (0 backtracks, 48 nodes, depth 49)
+Optimality gap: [ 103905905484 , 104206588216 ] 0.288545 % (22 backtracks, 70 nodes)
+New solution: 104174014744 log10like: 5414.59 prob: inf (22 backtracks, 82 nodes, depth 3)
+Optimality gap: [ 103963607615 , 104174014744 ] 0.201977 % (23 backtracks, 83 nodes)
+Optimality gap: [ 104010471712 , 104174014744 ] 0.15699 % (24 backtracks, 93 nodes)
+Optimality gap: [ 104174014744 , 104174014744 ] 0 % (25 backtracks, 96 nodes)
+Node redundancy during HBFS: 19.7917 %
+Optimum: 104174014744 log10like: 5414.59 prob: inf in 25 backtracks and 96 nodes ( 3803 removals by DEE) and 12 seconds.
+end.
+\end{DoxyCode}}
+\item Download a weighted Max-SAT file {\em brock200\_4.clq.wcnf} in wcnf format from the toulbar2's Documentation Web page. Solve it using a modified variable ordering heuristic~\cite{Schiex14a}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/brock200_4.clq.wcnf -m=1
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+c Read 200 variables, with 2 values at most, and 7011 clauses, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 91 (+86.8132%)
+Reverse DAC lower bound: 92 (+1.08696%)
+Preprocessing time: 0.03 seconds.
+200 unassigned variables, 400 values in all current domains (med. size:2, max size:2) and 6811 non-unary cost functions (med. degree:68)
+Initial lower and upper bounds: [92,200[ 54%
+New solution: 189 (0 backtracks, 9 nodes, depth 10)
+New solution: 188 (20 backtracks, 55 nodes, depth 10)
+New solution: 187 (113 backtracks, 326 nodes, depth 20)
+New solution: 186 (428 backtracks, 1013 nodes, depth 21)
+New solution: 185 (8011 backtracks, 17396 nodes, depth 14)
+New solution: 184 (13807 backtracks, 29658 nodes, depth 11)
+New solution: 183 (13821 backtracks, 29682 nodes, depth 7)
+Node redundancy during HBFS: 26.313 %
+Optimum: 183 in 299378 backtracks and 812567 nodes ( 3362 removals by DEE) and 22.38 seconds.
+end.
+\end{DoxyCode}}
+\item Download another WCSP file {\em latin4.wcsp}. Count the number of feasible solutions:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/latin4.wcsp -a
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 16 variables, with 4 values at most, and 24 cost functions, with maximum arity 4.
+Cost function decomposition time : 0 seconds.
+Reverse DAC lower bound: 48 (+2.08333%)
+Preprocessing time: 0 seconds.
+16 unassigned variables, 64 values in all current domains (med. size:4, max size:4) and 8 non-unary cost functions (med. degree:6)
+Initial lower and upper bounds: [48,1000[ 95.2%
+Optimality gap: [ 49 , 1000 ] 95.1 % (12 backtracks, 26 nodes)
+Optimality gap: [ 58 , 1000 ] 94.2 % (353 backtracks, 813 nodes)
+Optimality gap: [ 72 , 1000 ] 92.8 % (575 backtracks, 1360 nodes)
+Optimality gap: [ 1000 , 1000 ] 0 % (575 backtracks, 1369 nodes)
+Number of solutions    : =  576
+Time                   :    0.3 seconds
+... in 575 backtracks and 1369 nodes
+end.
+\end{DoxyCode}}
+\item Download a crisp CSP file {\em GEOM40\_6.wcsp} (initial upper bound equal to 1). Count the number of solutions using \#BTD~\cite{Favier09a} using a min-fill variable ordering\footnote{Warning, cannot use BTD to find all solutions in optimization.}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 40 variables, with 6 values at most, and 78 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Preprocessing time: 0 seconds.
+40 unassigned variables, 240 values in all current domains (med. size:6, max size:6) and 78 non-unary cost functions (med. degree:4)
+Initial lower and upper bounds: [0,1[ 100%
+Tree decomposition width  : 5
+Tree decomposition height : 20
+Number of clusters        : 29
+Tree decomposition time: 0 seconds.
+Number of solutions    : =  4.11111e+23
+Number of #goods       :    3993
+Number of used #goods  :    17190
+Size of sep            :    4
+Time                   :    0.06 seconds
+... in 13689 backtracks and 27378 nodes
+end.
+\end{DoxyCode}}
+\item Get a quick approximation of the number of solutions of a CSP with Approx\#BTD~\cite{Favier09a}:
+\begin{DoxyCode}
+	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -D
+\end{DoxyCode}
+{\scriptsize
+\begin{DoxyCode}
+Read 40 variables, with 6 values at most, and 78 cost functions, with maximum arity 2.
+Cost function decomposition time : 0 seconds.
+Preprocessing time: 0 seconds.
+40 unassigned variables, 240 values in all current domains (med. size:6, max size:6) and 78 non-unary cost functions (med. degree:4)
+Initial lower and upper bounds: [0,1[ 100%
+
+part 1 : 40 variables and 71 constraints (really added)
+part 2 : 10 variables and 7 constraints (really added)
+--> number of parts : 2
+--> time : 0 seconds. 
+
+Tree decomposition width  : 5
+Tree decomposition height : 17
+Number of clusters        : 33
+Tree decomposition time: 0 seconds.
+
+Cartesian product 		   :    1.33675e+31
+Upper bound of number of solutions : <= 1.71993e+24
+Number of solutions    : ~= 4.8e+23
+Number of #goods       :    468
+Number of used #goods  :    4788
+Size of sep            :    3
+Time                   :    0.01 seconds
+... in 3738 backtracks and 7476 nodes
+end.
+\end{DoxyCode}}
+\end{enumerate}
