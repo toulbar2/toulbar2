@@ -4,9 +4,9 @@ Priority: extra
 Homepage: http://www.inra.fr/mia/T/toulbar2
 Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>
 Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
-Vcs-Git: git://anonscm.debian.org/debian-science/packages/toulbar2.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-science/packages/toulbar2.git
-Standards-Version: 3.9.6
+Vcs-Git:  https://anonscm.debian.org/git/debian-science/packages/toulbar2.git
+Vcs-Browser: https://anonscm.debian.org/cgit/debian-science/packages/toulbar2.git
+Standards-Version: 3.9.7
 Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-dev, libboost-graph-dev, libjemalloc-dev
 
 Package: toulbar2
