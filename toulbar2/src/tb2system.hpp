@@ -12,7 +12,6 @@ void timer(int t); 		///< \brief set a timer (in seconds)
 void timerStop(); 		///< \brief stop a timer
 
 #ifdef WIDE_STRING
-const int MAX_CHAR = WCHAR_MAX;
 typedef wchar_t Char;
 typedef wstring String;
 #define Cout wcout
@@ -25,7 +24,6 @@ typedef wstring String;
 #define Strncmp wcsncmp
 #define Strlen wcslen
 #else
-const int MAX_CHAR = CHAR_MAX;
 typedef char Char;
 typedef string String;
 #define Cout cout
