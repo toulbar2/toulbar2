@@ -17,9 +17,9 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 
     for(i=0;i<arity_in;i++) {
         conflictWeights.push_back(0);
-        int domsize = scope_in[i]->getDomainInitSize();
+        unsigned int domsize = scope_in[i]->getDomainInitSize();
         tbuf[i] = CHAR_FIRST;
-        if(domsize + CHAR_FIRST > MAX_CHAR) {
+        if(domsize + CHAR_FIRST > std::numeric_limits<Char>::max()) {
             cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl;
             exit(EXIT_FAILURE);
         }
