@@ -82,8 +82,11 @@ GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
+    bash
+    cd src
     echo '#define Toulbar_VERSION "0.9.8"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
+    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
 
 ## Authors
 
