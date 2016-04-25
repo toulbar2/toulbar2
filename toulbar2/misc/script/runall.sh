@@ -4,8 +4,9 @@
 # ./runall.sh ../validation
 
 solver=./toulbar2
-timelimit=3600
-K=1
+timelimit=300
+vmemlimit=4000000
+K=1000
 
 rm -f outall
 
@@ -33,6 +34,7 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     echo -n $file " " >> outall
 
     ulimit -t $timelimit > /dev/null
+    ulimit -v $vmemlimit > /dev/null
 
 #    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub $2 -C=$K >> outsolver) 2> usedtime
 #    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out

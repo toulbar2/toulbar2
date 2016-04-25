@@ -3,7 +3,7 @@
 
 # for each directory, returns:
 # directory mean_initial_upperbound 
-#           mean_optimum mean_nodes mean_time(in seconds) 
+#           mean_optimum mean_initlb mean_backtracks mean_nodes mean_time(in seconds) 
 #           number_of_problems_completely_solved 
 #           number_of_problems
 
@@ -16,9 +16,12 @@
 	d = name " ";
 	dirs[d]++;
 	ub[d] += $2;
-	if ($2 == $3) { nbopt[d]++; }
-	nodes[d] += $4;
-	time[d] += $5;
+	opt[d] += $3;
+	if ($3 != "-" && $3 >= 0) { nbopt[d]++; }
+	initlb[d] += $4;
+	bt[d] += $5;
+	nodes[d] += $6;
+	time[d] += $7;
 	name = name "/" path[i];
     }
 }
@@ -28,9 +31,9 @@ END {
 	printf("------------------------------------------------------------\n");
 	n=dirs[d];
 	if (d in nbopt) {
-	    printf("%s time: %.2f  nodes:  %.2f  optimal: %d of %d\n", d, time[d]/n, nodes[d]/n, nbopt[d], n);
+	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, time[d]/n, nbopt[d], n);
 	} else {
-	    printf("%s time: %.2f  nodes:  %.2f  optimal: %d of %d\n", d, time[d]/n, nodes[d]/n, 0, n);
+	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, time[d]/n, 0, n);
 	}
     }
 }
