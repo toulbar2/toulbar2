@@ -69,9 +69,21 @@ Library needed:
 * libboost-dev
 * libboost-graph-dev
 
-Optional libraries
+Optional libraries:
 * libxml2-dev
 
+GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
+* LINUX
+* LONGLONG_COST
+* WIDE_STRING
+* LONGDOUBLE_PROB
+* NARYCHAR
+* WCSPFORMATONLY
+
+Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
+
+    echo '#define Toulbar_VERSION "0.9.8"' > ToulbarVersion.hpp
+    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
 
 ## Authors
 
@@ -95,7 +107,7 @@ Please use one of the following references for citing toulbar2:
 
  Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
  Barry Hurley, Barry O'Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry
- In Proc. of CP-AI-OR, Banff, Canada, 2016.
+ Constraints, 22p, 2016
 
  Soft arc consistency revisited
  M. Cooper, S. de Givry, M. Sanchez, T. Schiex, M. Zytnicki, and T. Werner
