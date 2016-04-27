@@ -10,7 +10,7 @@ Standards-Version: 3.9.7
 Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-dev, libboost-graph-dev, libjemalloc-dev
 
 Package: toulbar2
-Architecture: amd64 i386
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Exact combinatorial optimization for Graphical Models
  Toulbar2 is  an exact discrete optimization tool for Graphical Models 
