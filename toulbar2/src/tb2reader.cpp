@@ -851,6 +851,10 @@ void WCSP::read_uai2008(const char *fileName)
     // read each constraint
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
+        if (!file) {
+            cerr << "Warning: EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
+            break;
+        }
         maxarity = max(maxarity,arity);
 
         if(arity > MAX_ARITY)  { cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl; exit(EXIT_FAILURE); }
@@ -943,6 +947,10 @@ void WCSP::read_uai2008(const char *fileName)
     list<int>::iterator it = lctrs.begin();
     while(it !=  lctrs.end()) {
         file >> ntuples;
+        if (!file) {
+            cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
+            break;
+        }
         ntuplesarray[ictr] = ntuples;
 
         TProb p;
@@ -984,6 +992,12 @@ void WCSP::read_uai2008(const char *fileName)
         ictr++;
         ++it;
     }
+
+    file >> varname;
+    if (file) {
+        cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+    }
+
     updateUb( upperbound );
 
     ictr = 0;
