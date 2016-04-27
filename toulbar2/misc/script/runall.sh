@@ -4,9 +4,9 @@
 # ./runall.sh ../validation
 
 solver=./toulbar2
-timelimit=300
-vmemlimit=4000000
-K=1000
+timelimit=3600
+vmemlimit=16000000
+K=1
 
 rm -f outall
 
