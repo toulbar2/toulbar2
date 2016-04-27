@@ -46,7 +46,7 @@ Separator::Separator(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in)
         tbuf[i] = CHAR_FIRST;
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         vars.insert(scope_in[i]->wcspIndex);
-        if(domsize + CHAR_FIRST > std::numeric_limits<Char>::max()) {
+        if(domsize + CHAR_FIRST > (unsigned int)std::numeric_limits<Char>::max()) {
             cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl;
             exit(EXIT_FAILURE);
         }

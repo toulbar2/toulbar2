@@ -17,11 +17,11 @@ typedef wstring String;
 #define Cout wcout
 #include <cwchar>
 #define Strcpy wcscpy
-#define Strncpy wcsncpy
-#define Strcat wcscat
-#define Strncat wcsncat
+//    #define Strncpy wcsncpy
+//    #define Strcat wcscat
+//    #define Strncat wcsncat
 #define Strcmp wcscmp
-#define Strncmp wcsncmp
+//    #define Strncmp wcsncmp
 #define Strlen wcslen
 #else
 typedef char Char;
