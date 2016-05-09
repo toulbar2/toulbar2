@@ -248,14 +248,10 @@ ENDIF(WIN32)
 ###########
 if(WITH_MEM_JEMALLOC)
   find_package(JeMalloc)
-  if(NOT JEMALLOC_FOUND)
-    set(WITH_MEM_JEMALLOC OFF)
+  if(JEMALLOC_FOUND)
+    link_directories(${JEMALLOC_LIBPATH})
+    SET (all_depends  ${all_depends} "jemalloc") 
   endif()
-endif()
-
-if(WITH_MEM_JEMALLOC)
-  link_directories(${JEMALLOC_LIBPATH})
-  SET (all_depends  ${all_depends} "jemalloc") 
 endif()
 
 MESSAGE(STATUS "search for GMP library")
