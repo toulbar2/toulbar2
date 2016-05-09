@@ -1,17 +1,23 @@
 Source: toulbar2
-Section: science
-Priority: extra
-Homepage: http://www.inra.fr/mia/T/toulbar2
 Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>
 Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
-Vcs-Git:  https://anonscm.debian.org/git/debian-science/packages/toulbar2.git
+Section: science
+Priority: optional
+Build-Depends: debhelper (>= 9),
+               cmake,
+               libgmp-dev,
+               libboost-dev,
+               libboost-graph-dev,
+               libjemalloc-dev
+Standards-Version: 3.9.8
 Vcs-Browser: https://anonscm.debian.org/cgit/debian-science/packages/toulbar2.git
-Standards-Version: 3.9.7
-Build-Depends: debhelper (>= 9), cmake, libgmp-dev, libboost-dev, libboost-graph-dev, libjemalloc-dev
+Vcs-Git: https://anonscm.debian.org/git/debian-science/packages/toulbar2.git
+Homepage: http://www.inra.fr/mia/T/toulbar2
 
 Package: toulbar2
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
 Description: Exact combinatorial optimization for Graphical Models
  Toulbar2 is  an exact discrete optimization tool for Graphical Models 
  such as Cost Function Networks, Markov Random Fields, Weighted Constraint 
