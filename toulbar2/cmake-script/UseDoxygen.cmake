@@ -14,8 +14,14 @@ set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-add_custom_target(doc
+add_custom_target(doc ALL
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp)
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
+  DEPENDS ${doxyfile}
   COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+  COMMAND cmake -E touch ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Generating API documentation with Doxygen"
   VERBATIM)
