@@ -1,6 +1,6 @@
 # add a target to generate API documentation with Doxygen
 find_package(LATEX)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+find_package(Doxygen)
 
 IF (DOXYGEN_FOUND)
   MESSAGE(STATUS "########## package doxygen found #######################")
@@ -37,67 +37,22 @@ if(BUILD_API_DOC_LATEX STREQUAL "ON")
     if(DOXYGEN_DOT_EXECUTABLE)
       set(DOXYFILE_DOT "YES")
     endif()
-endif()
-endif()
-
-macro(usedoxygen_set_default name value)
-	if(NOT DEFINED "${name}")
-		set("${name}" "${value}")
-	endif()
-endmacro()
-
-find_package(Doxygen)
-
-if(DOXYGEN_FOUND)
-	find_file(DOXYFILE_IN "Doxyfile.in"
-			PATHS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_ROOT}/Modules/")
-
-	include(FindPackageHandleStandardArgs)
-	find_package_handle_standard_args(Doxyfile.in DEFAULT_MSG DOXYFILE_IN)
+    
+    add_custom_command(TARGET doc
+      POST_BUILD
+      COMMAND ${DOXYFILE_MAKE}
+      COMMENT "Running LaTeX for Doxygen documentation in ${CMAKE_CURRENT_BINARY_DIR}/latex..."
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/latex")
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE})
+  else()
+    set(DOXYGEN_LATEX "NO")
+  endif()
+else()
+  set(DOXYFILE_GENERATE_LATEX "NO")
 endif()
 
-if(DOXYGEN_FOUND AND DOXYFILE_IN)
-	add_custom_target(doxygen ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-
-	usedoxygen_set_default(DOXYFILE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc")
-	usedoxygen_set_default(DOXYFILE_HTML_DIR "html")
-
-	set_property(DIRECTORY APPEND PROPERTY
-			ADDITIONAL_MAKE_CLEAN_FILES "${DOXYFILE_OUTPUT_DIR}/${DOXYFILE_HTML_DIR}")
-
-	set(DOXYFILE_LATEX "NO")
-	set(DOXYFILE_PDFLATEX "NO")
-	set(DOXYFILE_DOT "NO")
-
-#	find_package(LATEX)
-#	if(LATEX_COMPILER AND MAKEINDEX_COMPILER)
-#		set(DOXYFILE_LATEX "YES")
-#		usedoxygen_set_default(DOXYFILE_LATEX_DIR "latex")
-
-#		set_property(DIRECTORY APPEND PROPERTY
-#				ADDITIONAL_MAKE_CLEAN_FILES
-#				"${DOXYFILE_OUTPUT_DIR}/${DOXYFILE_LATEX_DIR}")
-
-#		if(PDFLATEX_COMPILER)
-#			set(DOXYFILE_PDFLATEX "YES")
-#		endif()
-#		if(DOXYGEN_DOT_EXECUTABLE)
-#			set(DOXYFILE_DOT "YES")
-#		endif()
-
-#		add_custom_command(TARGET doxygen
-#			POST_BUILD
-#			COMMAND ${CMAKE_MAKE_PROGRAM}
-#			WORKING_DIRECTORY "${DOXYFILE_OUTPUT_DIR}/${DOXYFILE_LATEX_DIR}")
-#	endif()
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE})
 
 
-	configure_file(${DOXYFILE_IN} Doxyfile ESCAPE_QUOTES IMMEDIATE @ONLY)
 
-	get_target_property(DOC_TARGET doc TYPE)
-	if(NOT DOC_TARGET)
-		add_custom_target(doc)
-	endif()
-		
-	add_dependencies(doc doxygen)
-endif()
+
