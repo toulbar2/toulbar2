@@ -440,10 +440,26 @@ IF (BUILD_API_DOC)
 
 ENDIF (BUILD_API_DOC)
 
-###########
+ADD_CUSTOM_TARGET(man ALL)
+
+ADD_CUSTOM_COMMAND(
+  TARGET man
+  SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+  COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1 ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  )
+
+ADD_CUSTOM_COMMAND(
+  TARGET man
+  SOURCE man
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  )
+
+##########################################
 # doc install
 ###########
          install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE} PATTERN ".svn" EXCLUDE)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 
 ########
 # examples installation
