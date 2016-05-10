@@ -1,33 +1,6 @@
-# - Run Doxygen
-#
-# Adds a doxygen target that runs doxygen to generate the html
-# and optionally the LaTeX API documentation.
-# The doxygen target is added to the doc target as dependency.
-# i.e.: the API documentation is built with:
-#  make doc
-#
-# USAGE: GLOBAL INSTALL
-#
-# Install it with:
-#  cmake ./ && sudo make install
-# Add the following to the CMakeLists.txt of your project:
-#  include(UseDoxygen OPTIONAL)
-# Optionally copy Doxyfile.in in the directory of CMakeLists.txt and edit it.
-#
-# USAGE: INCLUDE IN PROJECT
-#
-#  set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-#  include(UseDoxygen)
-# Add the Doxyfile.in and UseDoxygen.cmake files to the projects source directory.
-#
-#
-# Variables you may define are:
-#  DOXYFILE_OUTPUT_DIR - Path where the Doxygen output is stored. Defaults to "doc".
-#
-#  DOXYFILE_LATEX_DIR - Directory where the Doxygen LaTeX output is stored. Defaults to "latex".
-#
-#  DOXYFILE_HTML_DIR - Directory where the Doxygen html output is stored. Defaults to "html".
-#
+# add a target to generate API documentation with Doxygen
+find_package(LATEX)
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
 
 IF (DOXYGEN_FOUND)
   MESSAGE(STATUS "########## package doxygen found #######################")
