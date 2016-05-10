@@ -112,7 +112,7 @@ SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command
 SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
 
 MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY LONG_COSTS)
-	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
+MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
 ##########################################
 # static building

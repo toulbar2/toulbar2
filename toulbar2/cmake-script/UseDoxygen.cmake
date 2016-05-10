@@ -56,7 +56,3 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION ${doc_destination}/${Toulbar_NAME})
 
 
-
-
-=======
->>>>>>> 0138d09... [doc] make doc now creates a doc again (including latex)
