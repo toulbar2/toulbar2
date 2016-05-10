@@ -279,7 +279,7 @@ IF(TOULBAR2)
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
-  INSTALL( TARGETS toulbar2${EXE} DESTINATION bin )
+  INSTALL( TARGETS toulbar2${EXE} DESTINATION bin)
 ENDIF(TOULBAR2)
 
 ##########################################
@@ -290,7 +290,7 @@ IF(MENDELSOFT)
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
-  install( TARGETS mendelsoft${EXE} DESTINATION bin )
+  install( TARGETS mendelsoft${EXE} DESTINATION bin)
 ENDIF(MENDELSOFT)
 
 # we must delete INT_COST
@@ -392,10 +392,26 @@ IF (BUILD_API_DOC)
   include(${My_cmake_script}/UseDoxygen.cmake)  
 ENDIF (BUILD_API_DOC)
 
+ADD_CUSTOM_TARGET(man ALL)
+
+ADD_CUSTOM_COMMAND(
+  TARGET man
+  SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+  COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1 ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  )
+
+ADD_CUSTOM_COMMAND(
+  TARGET man
+  SOURCE man
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  )
+
 ##########################################
 # doc install
 ##########################################
 install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE} PATTERN ".svn" EXCLUDE)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 
 ##########################################
 # examples installation
