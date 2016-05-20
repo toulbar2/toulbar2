@@ -1152,7 +1152,7 @@ void WCSP::solution_UAI(Cost res, bool opt)
 //	    ToulBar2::solution_file << "-BEGIN-" << endl;
         ToulBar2::solution_file.close();
         ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
-        ToulBar2::solution_file << "MPE" << endl;
+        //ToulBar2::solution_file << "MPE" << endl;
     }
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
 
@@ -1162,7 +1162,7 @@ void WCSP::solution_UAI(Cost res, bool opt)
         cout << numberOfVariables();
         printSolution(cout);
     }
-    ToulBar2::solution_file << numberOfVariables();
+    //ToulBar2::solution_file << numberOfVariables();
     printSolution(ToulBar2::solution_file);
     ToulBar2::solution_file << endl;
 //	if (opt) {

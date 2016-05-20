@@ -691,12 +691,35 @@ void help_msg(char *toulbar2filename)
     cout << "   -D : approximate satisfiable solution count with BTD";
     if (ToulBar2::approximateCountingBTD) cout << " (default option)";
     cout << endl;
+    
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
+    
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
-    cout << "---------------------------" << endl;
+    cout << "---------------------------------------------------------------------------------------" << endl;
+	cout << "------------------------- Computation of Partition Function ---------------------------" << endl;
+	cout << "---------------------------------------------------------------------------------------" << endl;
+	cout << "   -logz : computes approximation of log(Z) (i.e. probability of evidence or PR task)"<<endl;
+	cout << "           for graphical models only (problem file extension .uai or .LG)" << endl;
+	cout << endl;
+	cout << "   -logz -ztmp : -logz and divide the Energy by the RT constant (25°C degrees)."<<endl;
+	cout << endl;
+	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
+	cout <<"                           use -zub=-1 to have full computation of partition function "<<endl;
+	cout << endl;
+	cout << "   -subz : computes log(Z) by adding the energy terms" <<endl; 
+	cout << "           (use with -ub and -zshow=[int] to see log(Z) with energies between optimum and -ub every zshow)"<<endl;
+	cout << endl;
+	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
+	cout << endl;
+	cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix"<< endl;
+	cout << endl;
+	cout << "   --run : Number of run in the gumbel mode (default 10) and subz mode (default INFINITE !)"<<endl;
+	cout << "---------------------------------------------------------------------------------------" << endl;
+	
+    
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
     cout << "   -random=[bench profile]  : bench profile must be specified as follow :" << endl;
