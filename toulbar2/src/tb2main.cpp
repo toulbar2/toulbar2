@@ -304,7 +304,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_writeSolution,	(char *) "-w",       			  	SO_OPT  	},         //  depending of value write last solution found in filename "sol" in different format
 
     { OPT_pedigreePenalty,	(char *) "-u",       			   	SO_REQ_SEP  	},        // int ..
-    { OPT_allSolutions,	  		(char*) "-a",       			  	SO_NONE		}, // counting option ...print solution found
+    { OPT_allSolutions,	  		(char*) "-a",       			  	SO_OPT		}, // counting option ...print solution found
     { OPT_approximateCountingBTD,	(char *) "-D",           			SO_NONE    	},  //approximate counting
     { OPT_binaryBranching,	(char *) "-b",       			  	SO_NONE    	},
     { OPT_binaryBranching,	(char *) "-binaryBranching",         		SO_NONE    	},
@@ -688,8 +688,8 @@ void help_msg(char *toulbar2filename)
     cout << endl;
     cout << "   -R=[integer] : choice for a specific root cluster number" << endl;
     cout << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl << endl;
-    cout << "   -a : finds all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)";
-    if (ToulBar2::allSolutions) cout << " (default option)";
+    cout << "   -a=[integer] : finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD)";
+    if (ToulBar2::allSolutions) cout << " (default value is " << ToulBar2::allSolutions << ")";
     cout << endl;
     cout << "   -D : approximate satisfiable solution count with BTD";
     if (ToulBar2::approximateCountingBTD) cout << " (default option)";
@@ -944,16 +944,20 @@ int _tmain(int argc, TCHAR *argv[])
                 if (penaltyThreshold >= 1) ToulBar2::pedigreePenalty = penaltyThreshold;
             }
             // counting
-            if (args.OptionId() == OPT_allSolutions) {
-                ToulBar2::allSolutions = true;
+            if (args.OptionId() == OPT_allSolutions)
+            {
+                ToulBar2::allSolutions = LONGLONG_MAX;
+                if(args.OptionArg() != NULL) {
+                    Long nbsol = atoll(args.OptionArg());
+                    if (nbsol > 0) ToulBar2::allSolutions = nbsol;
+                }
             }
-
 
             // approximate counting
 
             if (args.OptionId() == OPT_approximateCountingBTD) {
                 ToulBar2::approximateCountingBTD = true;
-                ToulBar2::allSolutions = true;
+                ToulBar2::allSolutions = LONGLONG_MAX;
                 ToulBar2::btdMode = 1;
             }
 

@@ -1128,7 +1128,10 @@ void Solver::newSolution()
     if (ToulBar2::newsolution)(*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
     if (ToulBar2::restart == 0 && !ToulBar2::lds && !ToulBar2::isZ) throw NbBacktracksOut();
-    if (ToulBar2::allSolutions && ToulBar2::scpbranch) { throw FindNewSequence();}
+    if (ToulBar2::allSolutions) {
+	if (nbSol >= ToulBar2::allSolutions) throw NbSolutionsOut();
+	if (ToulBar2::scpbranch) throw FindNewSequence();
+    }
 }
 
 void Solver::recursiveSolve(Cost lb)
@@ -1358,6 +1361,7 @@ bool Solver::solve()
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0;         // do not perform hbfs operations in preprocessing except for building tree decomposition
     try {
+        try {
         //        Store::store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
         if (ToulBar2::DEE) ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
@@ -1601,12 +1605,15 @@ bool Solver::solve()
                 }
             } catch (NbBacktracksOut) {
                 nbbacktracksout = true;
+                    ToulBar2::limited = false;
             }
             Store::restore(storedepth);
         } while (nbbacktracksout);
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
+    } catch (NbSolutionsOut) {}
+
     ToulBar2::DEE_ = 0;
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
@@ -1635,8 +1642,10 @@ bool Solver::solve()
         }
         if (ToulBar2::approximateCountingBTD)
             cout << "Number of solutions    : ~= " << nbSol << endl;
-        else
-            cout << "Number of solutions    : =  " << nbSol << endl;
+        else {
+            if (ToulBar2::limited) cout << "Number of solutions    : >=  " << nbSol << endl;
+            else cout << "Number of solutions    : =  " << nbSol << endl;
+        }
         if (ToulBar2::btdMode >= 1) {
             cout << "Number of #goods       :    " << nbSGoods << endl;
             cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
