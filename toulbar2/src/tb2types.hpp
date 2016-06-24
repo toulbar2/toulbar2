@@ -271,7 +271,7 @@ public:
     static int debug;
     static bool showSolutions;
     static char *writeSolution;
-    static bool allSolutions;
+    static Long allSolutions;
     static int dumpWCSP;
     static bool approximateCountingBTD;
     static bool binaryBranching;

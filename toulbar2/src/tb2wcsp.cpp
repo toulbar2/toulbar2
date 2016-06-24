@@ -49,7 +49,7 @@ int ToulBar2::verbose;
 int ToulBar2::debug;
 bool ToulBar2::showSolutions;
 char *ToulBar2::writeSolution;
-bool ToulBar2::allSolutions;
+Long ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
 bool ToulBar2::approximateCountingBTD;
 int ToulBar2::elimDegree;
@@ -178,7 +178,7 @@ void tb2init()
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
-    ToulBar2::allSolutions = false;
+    ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;
     ToulBar2::approximateCountingBTD = false;
     ToulBar2::elimDegree = 3;
@@ -298,7 +298,7 @@ Cost tb2checkOptions(Cost ub)
     {
         cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
         ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = false;
+        ToulBar2::allSolutions = 0;
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1)
     {
@@ -308,7 +308,7 @@ Cost tb2checkOptions(Cost ub)
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
     {
         cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
-        ToulBar2::allSolutions = false;
+        ToulBar2::allSolutions = 0;
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0)
     {

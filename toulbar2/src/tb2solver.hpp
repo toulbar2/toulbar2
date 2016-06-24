@@ -199,13 +199,19 @@ public:
 class NbBacktracksOut
 {
 public:
-    NbBacktracksOut() {if (ToulBar2::verbose >= 2) cout << "... limit on the number of backtracks reached!" << endl;}
+    NbBacktracksOut() {ToulBar2::limited = true; if (ToulBar2::verbose >= 2) cout << "... limit on the number of backtracks reached!" << endl;}
+};
+
+class NbSolutionsOut
+{
+public:
+    NbSolutionsOut() {ToulBar2::limited = true; if (ToulBar2::verbose >= 2) cout << "... limit on the number of solutions reached!" << endl;}
 };
 
 class TimeOut
 {
 public:
-    TimeOut() {if (ToulBar2::verbose >= 2) cout << "... time limit reached!" << endl;}
+    TimeOut() {ToulBar2::limited = true; if (ToulBar2::verbose >= 2) cout << "... time limit reached!" << endl;}
 };
 
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
