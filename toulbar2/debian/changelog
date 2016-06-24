@@ -1,7 +1,7 @@
 toulbar2 (0.9.8-1) unstable; urgency=medium
 
   * Initial release.
-  * Closes: bug: #780516 (ITP: toulbar2 -- An exact optimization solver for
-    Graphical Models.)
+  * Closes: #780516 (ITP: toulbar2 - Exact optimization solver for Graphical
+    Models.)
 
- -- Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>  Wed, 6 Apr 2016 01:37:54 +0100
+ -- Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>  Thu, 28 Apr 2016 00:33:44 +0200
