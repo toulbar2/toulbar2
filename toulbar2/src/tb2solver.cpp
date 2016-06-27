@@ -729,7 +729,6 @@ void Solver::showGap(Cost newLb, Cost newUb)
 
 void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 {
-    if (ToulBar2::stop) return;
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
     if (ToulBar2::interrupted) throw TimeOut();
@@ -1038,11 +1037,14 @@ void Solver::newSolution()
     wcsp->restoreSolution();
     if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution();
     if (ToulBar2::isSubZ) {
-        if (nbSol > (BigInteger) ToulBar2::run) {ToulBar2::stop = true;}
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
         if ((nbSol - 1) == nbSoldiv * ToulBar2::zshow) {
             cout << nbSol << " Log(Z)= " << ToulBar2::logZ + ToulBar2::markov_log << "  time " << cpuTime() - ToulBar2::startCpuTime << "s" << endl;
             nbSoldiv++;
+        }
+        if (nbSol >= (BigInteger) ToulBar2::run) {
+          ToulBar2::stop = true;
+          exit(EXIT_SUCCESS);
         }
     }
     if (ToulBar2::showSolutions) {
@@ -1390,7 +1392,7 @@ bool Solver::solve()
         if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
         if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
-        if (ToulBar2::isZ) { // Compute upper bound
+        if (ToulBar2::isZ || ToulBar2::isSubZ) { // Compute upper bound
             switch (ToulBar2::isZUB) {
             case 2 :
                 wcsp->spanningTreeRoot();
