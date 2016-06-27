@@ -1650,12 +1650,6 @@ bool Solver::solve()
             else if (ToulBar2::uai && !ToulBar2::isZ) {
                 ((WCSP *)wcsp)->solution_UAI(wcsp->getUb(), true);
                 cout << ((ToulBar2::limited)?"Best upperbound: ":"Optimum: ") << wcsp->getUb()+ wcsp->getNegativeLb() << " Energy: " << setprecision(12) << -(wcsp->Cost2LogProb(wcsp->getUb()+ wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob( wcsp->getUb()+ wcsp->getNegativeLb() ) * Exp(ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE)?(" ( "+to_string(wcsp->getNbDEE())+" removals by DEE)"):"") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-				cout <<"Optimum: ";
-				for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-                    cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-                    if (i!=wcsp->numberOfVariables()-1) cout<<"-";
-				}
-				cout << endl;
             } else if (ToulBar2::maxsateval && !ToulBar2::limited) {
                 cout << "o " << wcsp->getUb() << endl;
                 cout << "s OPTIMUM FOUND" << endl;
