@@ -1350,17 +1350,12 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // discrete integration for computing the partition function Z
-            if (args.OptionId() == OPT_Z) ToulBar2::isZ = true;
-
-            if (args.OptionId() == OPT_SUBZ && args.OptionId() == OPT_ZCELTEMP) {
+            if (args.OptionId() == OPT_Z){ 
+              ToulBar2::isZ = true;
+            }
+            else if (args.OptionId() == OPT_SUBZ) {
                 ToulBar2::isSubZ = true;
                 ToulBar2::allSolutions = true;
-                ToulBar2::isZCelTemp = 25;
-                ToulBar2::run = numeric_limits<TProb>::infinity();
-            } else if (args.OptionId() == OPT_SUBZ) {
-                ToulBar2::isSubZ = true;
-                ToulBar2::allSolutions = true;
-                ToulBar2::run = numeric_limits<TProb>::infinity();
             }
 
             if (args.OptionId() == OPT_ZSHOW) {
@@ -1376,6 +1371,7 @@ int _tmain(int argc, TCHAR *argv[])
             if (args.OptionId() == OPT_ZUB) {
                 ToulBar2::isZUB = atoi(args.OptionArg());
             }
+            
             if (args.OptionId() == OPT_RUN) {
                 ToulBar2::run = atoi(args.OptionArg());
             }
