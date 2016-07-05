@@ -213,6 +213,7 @@ enum {
     NO_OPT_localsearch,
     OPT_EDAC,
     OPT_ub,
+    OPT_ub_energy,
 
     // Z Evidence option
     OPT_Z,
@@ -368,6 +369,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_localsearch,	(char *) "-i", 				SO_OPT			}, // incop option default or string for narycsp argument
     { OPT_EDAC,	(char *) "-k", 				SO_REQ_SEP		},
     { OPT_ub,	(char *) "-ub", 				SO_REQ_SEP		},     // init upper bound in cli
+    { OPT_ub_energy,	(char *) "-ubE", 				SO_REQ_SEP		},     // init upper bound in cli (energy value)
     // MEDELSOFT
     { OPT_generation,	(char *) "-g", 				SO_NONE			},  //sort pedigree by increasing generation number and if equal by increasing individual number
     //	{ OPT_pedigree_by_MPE,  		(char*) "-y", 				SO_OPT			}, // bayesian flag
@@ -381,7 +383,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_Z,	(char *) "-logz", 				SO_NONE			},      // compute log partition function (log Z)
     { OPT_SUBZ,	(char *) "-subz", 				SO_NONE			},      // compute a rapid LB on log partition function (log Z)
     { OPT_ZSHOW,	(char *) "-zshow", 				SO_REQ_SEP			},
-    { OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_NONE			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
+    { OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_OPT			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
     { OPT_ZUB,	(char *) "-zub", 				SO_REQ_SEP		},     // Choose Upper bound number for computing Z
     { OPT_epsilon,	(char *) "-epsilon", 			SO_REQ_SEP		},   // approximation parameter for computing Z
     { OPT_GUMBEL,	(char *) "-gum", 			SO_NONE		},   // Apply gumbel perturbation on cost matrix
@@ -1364,8 +1366,10 @@ int _tmain(int argc, TCHAR *argv[])
 
             // Compute Z with energie divided by RT constant = (1.9891/1000.0 * 273.15 + temperature C°)
             if (args.OptionId() == OPT_ZCELTEMP) {
-                //ToulBar2::isZCelTemp= atoi(args.OptionArg());
                 ToulBar2::isZCelTemp = 25;
+                if(args.OptionArg()== NULL) {ToulBar2::isZCelTemp = 25;}
+                else {ToulBar2::isZCelTemp= atoi(args.OptionArg());}
+                if (ToulBar2::debug) cout << "Temperature is "<< ToulBar2::isZCelTemp<<" C°"<< endl;
             }
             // Option for choosing the upper born tightness
             if (args.OptionId() == OPT_ZUB) {
@@ -1402,8 +1406,17 @@ int _tmain(int argc, TCHAR *argv[])
                 ToulBar2::verifyOpt = true;
 #endif
 
-            // upper bound initialisation from command line
-            if (args.OptionId() == OPT_ub) {
+            //~ // upper bound initialisation from command line
+            //~ if (args.OptionId() == OPT_ub_energy) {
+//~ 
+                //~ if (args.OptionArg() != NULL) {
+                    //~ ub = (args.OptionArg()) ? wcsp->LogProb2Cost(stod(args.OptionArg())) : MAX_COST;
+                //~ }
+                //~ if (ToulBar2::debug) cout << "UB =" << ub << " passed in  command line" << endl;
+            //~ }
+            
+            // upper bound initialisation from command line (Energy value)
+            if (args.OptionId() == OPT_ub_energy) {
 
                 if (args.OptionArg() != NULL) {
                     ub = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
