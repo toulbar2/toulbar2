@@ -26,7 +26,7 @@ while (( $n < $nend )) ; do
     randomfile="s${1}-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z > /dev/null
     cp problem.wcsp problemflow.wcsp
-    ./toulbar2 problem.wcsp $2 -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ./toulbar2 problem.wcsp "${@:2}" -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$3;} END{printf("%d",opt);}' > toulbar2_verif
     ub1b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`
