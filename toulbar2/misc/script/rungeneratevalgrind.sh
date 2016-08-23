@@ -25,7 +25,18 @@ while (( $n < $nend )) ; do
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     ub0=`cat toolbar_opt`
     ub=`expr $ub0 + 2`
-    ./toulbar2 problem.wcsp "$@" -w -ub=$ub | awk 'BEGIN{opt="-";} /Read [0-9]* variables/{n=$2;} / unassigned variables/{f=$1} /^Optimum: /{opt=$2;}  END{printf("%d %d %d",opt,n,f);}'  > toulbar2_opt
+    ./toulbar2 problem.wcsp "$@" -w -ub=$ub | tee toulbar2_output | awk 'BEGIN{opt="-";} /Read [0-9]* variables/{n=$2;} / unassigned variables/{f=$1} /^Optimum: /{opt=$2;}  END{printf("%d %d %d",opt,n,f);}'  > toulbar2_opt
+    valgrind ./toulbar2 problem.wcsp "$@" -w -ub=$ub 2>&1 | fgrep "Optimum:" | sed "s/[0-9.]* seconds//" > toulbar2_valgrind
+    fgrep "Optimum:" toulbar2_output | sed "s/[0-9.]* seconds//" > toulbar2_normal
+    if ! cmp toulbar2_normal toulbar2_valgrind >/dev/null 2>&1
+    then
+      echo "valgrind error found"
+      cat toulbar2_normal
+      cat toulbar2_valgrind
+      cp problem.wcsp valgrinderror$nerr.wcsp
+      nerr=`expr $nerr + 1`
+	  # restart service
+    fi
     toolbar problem.wcsp  -csol  | awk 'BEGIN{opt="-";} /^Total cost /{opt=$4;}  END{printf("%d \n",opt); }' > toolbar_sol
     ub1=`awk '{printf("%d", $1)}' toulbar2_opt`
     ub2=`awk '{printf("%d", $1)}' toolbar_opt`
