@@ -200,9 +200,6 @@ bool VACExtension::propagate()
     //    }
     // }
 
-    Cost ub = wcsp->getUb();
-    Cost lb = wcsp->getLb();
-
     bool isvac = true;
     bool util = true;
 
@@ -212,7 +209,7 @@ bool VACExtension::propagate()
     bool acSupportOK = false;
 
     while ((!util || isvac) && itThreshold != MIN_COST) {
-        minlambda = ub - lb;
+        minlambda = wcsp->getUb() - wcsp->getLb();
         nbIterations++;
         reset();
 //		if (ToulBar2::verbose>=8) cout << *wcsp;
@@ -355,8 +352,9 @@ void VACExtension::enforcePass1()
         //list<Constraint*> l;
         for (ConstraintList::iterator itc = xj->getConstrs()->begin();
                 itc != xj->getConstrs()->end(); ++itc) {
-            cij = (VACBinaryConstraint *)(*itc).constr;
-            if (cij->arity() == 2 && !cij->isSep()) {
+            Constraint *c = (*itc).constr;
+            if (c->arity() == 2 && !c->isSep()) {
+                cij = (VACBinaryConstraint *) c;
                 //        xi = (VACVariable *)cij->getVarDiffFrom(xj);
                 //if(xj->getMaxK(nbIterations) > 2) l.push_back(cij); else
                 if (enforcePass1(xj, cij))
@@ -387,8 +385,9 @@ bool VACExtension::checkPass1() const
             continue;
         for (ConstraintList::iterator iter = xi->getConstrs()->begin();
                 iter != xj->getConstrs()->end(); ++iter) {
-            cij = (VACBinaryConstraint *)(*iter).constr;
-            if (cij->arity() == 2 && !cij->isSep()) {
+            Constraint *c = (*iter).constr;
+            if (c->arity() == 2 && !c->isSep()) {
+                cij = (VACBinaryConstraint *) c;
                 xj = (VACVariable *) cij->getVarDiffFrom(xi);
                 for (EnumeratedVariable::iterator iti =
                             xi->begin(); iti != xi->end(); ++iti) {
@@ -446,7 +445,7 @@ void VACExtension::enforcePass2()
         Cost cost = xi0->getVACCost(v);
         if (cost > MIN_COST) {
             if (cost < minlambda) {
-                minlambda = cost;	// NB: we don't need to check for bottleneck here as k=1 neesssarily
+                minlambda = cost;	// NB: we don't need to check for bottleneck here as k=1 necessarily
             }
         } else
             xi0->setMark(v, nbIterations);
@@ -488,6 +487,13 @@ void VACExtension::enforcePass2()
                                 bneckVar = -1;
                             }
                         }
+                    } else {
+                        if ((costij / tmpK) < minlambda) { // costij should be made infinite to avoid to decrease minlambda
+                            Cost cost = tmpK * minlambda - costij;
+                            assert(cost > MIN_COST);
+                            assert(ToulBar2::verbose < 1 || ((cout << "inflate(C" << cij->getVar(0)->getName() << "," << cij->getVar(1)->getName() << ", (" << ((xi==cij->getVar(0))?v:w) << "," << ((xi==cij->getVar(0))?w:v) << "), " << cost << ")" << endl), true));
+                            cij->addcost( xi, xj, v, w, cost );
+                        }
                     }
                 } else {
                     int tmpK =
@@ -526,7 +532,7 @@ void VACExtension::enforcePass2()
                                             cost;
                                 }
                             }
-                        }
+                        } // else cost is infinite and it will not be decreased by VACextend
                     }
                 }
             }
@@ -745,6 +751,7 @@ void VACExtension::dequeueVAC2(DLink < Variable * > *link)
 
 void VACExtension::printStat(bool ini)
 {
+    if (ToulBar2::verbose >= 0) {
     long double mean = to_double(sumlb) / (long double)nlb;
     cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb
          << "     cyclesize: " << (double)sumvars /
@@ -752,7 +759,7 @@ void VACExtension::printStat(bool ini)
          (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
     if (ini)
         cout << "Lb after VAC: " << wcsp->getLb() << endl;
-
+    }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
        vector<tVACStat*>::iterator it = heap.begin();
