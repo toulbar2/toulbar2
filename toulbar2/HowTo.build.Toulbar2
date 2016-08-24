@@ -67,7 +67,7 @@ sudo apt-get install texlive-latex-recommended  texlive-fonts-recommended doxyge
 
 #  for generating documentation use the following command:
 
-cmake .. ; make doc
+cmake -DBUILD_API_DOC=ON -DBUILD_API_DOC_LATEX=ON .. ; make doc
 
 # for generating reference manual and extracting its wcsp file format description
 # warning! change to COMPACT_LATEX          = NO for a separate wcsp description 

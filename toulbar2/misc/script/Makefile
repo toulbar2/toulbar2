@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp incop/*.cpp)
+SRCSFULL = $(wildcard tb2*.cpp incop/*.cpp ToulbarVersion.cpp)
 
 # Comment the following line if BOOST Graph library uninstalled
 BOOST = -DBOOST
@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -pthread -rdynamic 
 
-CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
+CFLAGS = -g -Wall -std=c++11 -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
 # -DLINUX # compile on linux computers
 # -DLONGLONG_COST # uses type long long for encoding costs
 # -DWIDE_STRING # uses wide strings (2 bytes per char) for encoding value tuples (including separators)
@@ -56,7 +56,7 @@ CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWI
 OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
 
-PFLAGS = 
+PFLAGS =
 # -pg -g3
 
 BUILD = $(CC) -shared

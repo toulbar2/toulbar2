@@ -68,7 +68,7 @@ IF(NOT CMAKE_BUILD_TYPE)
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "-Wall" )
+SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio126")
@@ -351,6 +351,11 @@ include(${My_cmake_script}/iloglue.cmake)
 ##########################################
 include(${My_cmake_script}/define_option.cmake)
 MESSAGE(STATUS "######## define_option passed#########################")
+
+##########################################
+# toulbar2test
+##########################################
+include(${My_cmake_script}/toulbar2test.cmake)
 
 ##########################################
 # unit tests

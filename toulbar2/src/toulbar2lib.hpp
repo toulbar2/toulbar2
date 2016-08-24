@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (degivry@toulouse.inra.fr)
+    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
 </pre>
  */
 
@@ -33,7 +33,8 @@
 
     toulbar2 can be used as a stand-alone solver reading various problem file formats (wcsp, uai, wcnf, qpbo) or as a C++ library.\n
     This document describes the wcsp native file format and the toulbar2 C++ library API.
-    \note Use cmake flag LIBTB2 to get the toulbar2 C++ library libtb2.so
+    \note Use cmake flags LIBTB2=ON and TOULBAR2_ONLY=OFF to get the toulbar2 C++ library libtb2.so and toulbar2test executable example.
+    \see ./src/toulbar2test.cpp
 
     \defgroup wcspformat
     \defgroup modeling
@@ -204,7 +205,7 @@ public:
     virtual void postUnaryConstraint(int xIndex, vector<Cost> &costs) =0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) =0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) =0;
-    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval) =0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) =0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) =0;
     virtual void postNaryConstraintEnd(int ctrindex) =0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0; ///< \deprecated Please use the postUnaryConstraint method instead
