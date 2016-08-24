@@ -143,5 +143,5 @@ In Proc. of ECAI-06, pages 133-137, Trento, Italy, 2006.
 
 
 Please report bugs or problems to Simon de Givry
-Email: degivry@toulouse.inra.fr
+Email: simon.degivry@toulouse.inra.fr
 Last Update: December 29th 2009

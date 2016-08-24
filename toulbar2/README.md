@@ -85,7 +85,7 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
     bash
     cd src
     echo '#define Toulbar_VERSION "0.9.8"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -std=c++11 -DNDEBUG -DLINUX \
      -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
 
 ## Authors
@@ -110,10 +110,14 @@ Please use one of the following references for citing toulbar2:
 
  Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
  Barry Hurley, Barry O'Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry
- Constraints, 22p, 2016
+ Constraints, 21(3):413-434, 2016
+
+ Tractability-preserving Transformations of Global Cost Functions
+ David Allouche, Christian Bessiere, Patrice Boizumault, Simon de Givry, Patricia Gutierrez, Jimmy HM. Lee, Ka Lun Leung, Samir Loudni, Jean-Philippe Métivier, Thomas Schiex, Yi Wu
+ Artificial Intelligence, 238:166-189, 2016
 
  Soft arc consistency revisited
- M. Cooper, S. de Givry, M. Sanchez, T. Schiex, M. Zytnicki, and T. Werner
+ Martin Cooper, Simon de Givry, Marti Sanchez, Thomas Schiex, Matthias Zytnicki, and Thomas Werner
  Artificial Intelligence, 174(7-8):449-478, 2010 
 
 
@@ -186,5 +190,5 @@ Please use one of the following references for citing toulbar2:
 
 
 Copyright (C) 2006-2016, INRA.
-toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (degivry@toulouse.inra.fr)
+toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
 

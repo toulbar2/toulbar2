@@ -29,7 +29,7 @@ assignment of all variables such that the sum of all cost functions is
 minimum and lest than a given upper bound often denoted as $k$ or
 $\top$. Functions can be typically specified by sparse or full tables
 but also more concisely as specific functions called ``global cost
-functions''.
+functions''~\cite{Schiex16a}.
 
 Using on the fly translation, \toulbar2 can also directly solve
 optimization problems on other graphical models such as Maximum
@@ -90,7 +90,7 @@ cmake ..
 make
 \end{verbatim}
 
-Finally, \toulbar2 should be soon available in the debian-science
+Finally, \toulbar2 is available in the debian-science
 section of the unstable/sid Debian version. It should therefore be
 directly installable using:
 
@@ -101,7 +101,7 @@ sudo apt-get install toulbar2
 If you want to try \toulbar2 on crafted, random, or real problems,
 please look for benchmarks in the
 \href{https://mulcyber.toulouse.inra.fr/projects/costfunctionlib}{Cost
-  Function Library}.
+  Function Library}. Other benchmarks coming from various discrete optimization languages are available at \href{http://genoweb.toulouse.inra.fr/~degivry/evalgm}{Genotoul EvalGM}~\cite{Hurley16b}.
 
 \section{Using it as a black box}
 
@@ -159,8 +159,8 @@ Substitutability) preprocessing.
 \subsection{General control}
 
 \begin{description}
-\item[{-a}] finds all solutions (or count the number of zero-cost
-  satisfiable solutions in conjunction with BTD)
+\item[{-a=[integer]}] finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, 
+or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD)
 \item[{-D}] approximate satisfiable solution count with BTD
 \item[{-logz}] computes log of probability of evidence (i.e. log
   partition function or log(Z) or PR task) for graphical models only

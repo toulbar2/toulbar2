@@ -12,8 +12,8 @@ solves discrete optimization problems defined by a graphical model including Cos
 .PP
 GENERAL CONTROL
 .TP
-.BR \-a
-Find all solutions (or count the number of zero-cost solutions in conjunction with BTD).
+.BR \-a=[\fIinteger\fR]
+Finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD).
 .TP
 .BR \-D 
 Approximate zero-cost solution count with BTD.
