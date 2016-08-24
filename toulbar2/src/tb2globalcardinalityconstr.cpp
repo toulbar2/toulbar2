@@ -115,7 +115,7 @@ void GlobalCardinalityConstraint::organizeConfig()
 
 }
 
-Cost GlobalCardinalityConstraint::evalOriginal( String& s ) {
+Cost GlobalCardinalityConstraint::evalOriginal( const String& s ) {
 
     Cost excess = 0, shortage = 0, cost = 0;
     map<Value , int> appear;

@@ -425,7 +425,7 @@ public:
                     int ctrIndex = -1;
                     Constraint *ctr = NULL;
                     if (arity > 3) {
-                        ctrIndex = wcsp->postNaryConstraintBegin(scopeIndex, arity, defval);
+			  ctrIndex = wcsp->postNaryConstraintBegin(scopeIndex,arity,defval,r->tuples.size());
                         ctr = wcsp->getCtr(ctrIndex);
                         list<int *>::iterator  itl = r->tuples.begin();
                         while (itl != r->tuples.end()) {
@@ -435,17 +435,17 @@ public:
                                 values[i] = DomsToIndex[ wcsp->varsDom[scopeIndex[i]] ][ MAXDOMSIZEZERO + t[pos] ];
                             }
                             if (r->type ==  REL_SUPPORT)  {
-                                ctr->setTuple(values, MIN_COST, scopeVar);
+					ctr->setTuple( values, MIN_COST);
                             } else if (r->type ==  REL_CONFLICT) {
 #ifdef MAXCSP
-                                ctr->setTuple(values, UNIT_COST, scopeVar);
+				  ctr->setTuple( values, UNIT_COST);
 #else
-                                ctr->setTuple(values, MAX_COST_XML, scopeVar);
+				  ctr->setTuple( values, MAX_COST_XML);
 #endif
                             } else if (r->type ==  REL_SOFT) {
-                                ctr->setTuple(values, t[arity], scopeVar);
+					ctr->setTuple( values, t[arity]);
                             } else {
-                                ctr->setTuple(values, MAX_COST_XML, scopeVar);
+					ctr->setTuple( values, MAX_COST_XML);
                             }
 
                             ++itl;

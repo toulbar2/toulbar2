@@ -16,9 +16,6 @@
  *
  */
 
-class BinaryConstraint;
-class TernaryConstraint;
-
 class Variable : public WCSPLink
 {
 protected:
@@ -85,6 +82,7 @@ public:
     ConstraintList *getConstrs() {return &constrs;}
     int getDegree() {return constrs.getSize();}
     int getTrueDegree();
+    Double getMaxElimSize(); /// \brief returns estimated size of the resulting cost function (including this variable) to eliminate itself
     Long getWeightedDegree();
     void resetWeightedDegree();
     DLink<ConstraintLink> *link(Constraint *c, int index);

@@ -78,13 +78,13 @@ void naryRandom::generateNaryCtr(vector<int> &indexs, long nogoods, Cost costMin
     }
     tuple[arity] = '\0';
 
-    Constraint *nctr =  wcsp.getCtr(wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top));
+    Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top, nogoods) );
 
     String s(tuple);
     while (nogoods > 0) {
         for (i = 0; i < arity; i++) s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST;
         Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
-        nctr->setTuple(s, c, scopeVars);
+        nctr->setTuple(s, c);
         nogoods--;
     }
     nctr->propagate();

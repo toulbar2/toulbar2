@@ -340,30 +340,13 @@ bool VACVariable::averaging()
                     nbtuples++;
                     if (toValue(tuple[tindex] - CHAR_FIRST) == (*it) && cost < cmin) cmin = cost;
                 }
-                if (nctr->getDefCost() < cmin && nbtuples < nctr->getDomainSizeProduct()) cmin = nctr->getDefCost();
+                if (nctr->getDefCost() < cmin && nbtuples < nctr->getDomainSizeProduct()/getDomainSize()) cmin = nctr->getDefCost();
                 //				assert(cmin < Top);
                 Double mean = to_double(cmin + cu) / 2.;
                 Double extc = to_double(cu) - mean;
                 if (abs(extc) >= 1) {
                     Cost costi = (Cost) extc;
-                    if (nctr->getDefCost() < Top) {
-                        nctr->firstlex();
-                        while (nctr->nextlex(tuple, cost)) {
-                            if (toValue(tuple[tindex] - CHAR_FIRST) == (*it)) {
-                                if (cost + costi < Top) nctr->setTuple(tuple, cost + costi);
-                                else nctr->setTuple(tuple, Top);
-                            }
-                        }
-                        nctr->setDefCost(Top);
-                    } else {
-                        nctr->first();
-                        while (nctr->next(tuple, cost)) {
-                            if (toValue(tuple[tindex] - CHAR_FIRST) == (*it)) {
-                                if (cost + costi < Top) nctr->addtoTuple(tuple, costi);
-                                else nctr->setTuple(tuple, Top);
-                            }
-                        }
-                    }
+                    nctr->addtoTuples(this, *it, costi);
                     if (mean > to_double(cu)) project(*it, -costi);
                     else extend(*it, costi);
                     change = true;
@@ -425,6 +408,8 @@ void VACBinaryConstraint::VACproject(VACVariable *x, Value v, Cost c)
     // TO BE REPLACED BY A LOOP ON THE DOMAIN IN ORDER TO AVOID SUBTRACTING TOP???
     if (!getIndex(x)) deltaCostsX[index] += c;
     else             deltaCostsY[index] += c;
+    assert(getCost((EnumeratedVariable *) x,(EnumeratedVariable *) getVarDiffFrom(x),v,getVarDiffFrom(x)->getInf()) >= MIN_COST);
+    assert(getCost((EnumeratedVariable *) x,(EnumeratedVariable *) getVarDiffFrom(x),v,getVarDiffFrom(x)->getSup()) >= MIN_COST);
     x->VACproject(v, c);
 }
 

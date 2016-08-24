@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (degivry@toulouse.inra.fr)
+    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
 </pre>
  */
 
@@ -33,7 +33,8 @@
 
     toulbar2 can be used as a stand-alone solver reading various problem file formats (wcsp, uai, wcnf, qpbo) or as a C++ library.\n
     This document describes the wcsp native file format and the toulbar2 C++ library API.
-    \note Use cmake flag LIBTB2 to get the toulbar2 C++ library libtb2.so
+    \note Use cmake flags LIBTB2=ON and TOULBAR2_ONLY=OFF to get the toulbar2 C++ library libtb2.so and toulbar2test executable example.
+    \see ./src/toulbar2test.cpp
 
     \defgroup wcspformat
     \defgroup modeling
@@ -66,8 +67,7 @@
  *
  */
 
-class WeightedCSP
-{
+class WeightedCSP {
 public:
     static WeightedCSP *makeWeightedCSP(Cost upperBound, void *solver = NULL);	///< \brief Weighted CSP factory
 
@@ -206,7 +206,7 @@ public:
     virtual void postUnaryConstraint(int xIndex, vector<Cost> &costs) =0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) = 0;
-    virtual int postNaryConstraintBegin(int *scope, int arity, Cost defval) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) =0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost) = 0;
     virtual void postNaryConstraintEnd(int ctrindex) =0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value *d, int dsize, Cost penalty) =0; ///< \deprecated Please use the postUnaryConstraint method instead
@@ -490,7 +490,7 @@ public:
     virtual bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol) = 0;
 
     virtual void dump_wcsp(const char *fileName, bool original = true) = 0;	///< \brief output current problem in a file \see WeightedCSP::dump
-    virtual void read_solution(const char *fileName) = 0;					///< \brief read a solution from a file
+    virtual void read_solution(const char *fileName, bool updateValueHeuristic = true) =0;					///< \brief read a solution from a file
     virtual void parse_solution(const char *certificate) = 0;				///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
     virtual Cost getSolution(vector<Value> &solution) = 0;	///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
@@ -503,4 +503,15 @@ public:
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
 extern void tb2init();
+/// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
+/// \return new initial upper bound (if options assume it is a satisfaction problem instead of optimization)
+extern Cost tb2checkOptions(Cost initialUpperBound);
 #endif /*TOULBAR2LIB_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -6,7 +6,13 @@
 #ifndef TB2SYSTEM_HPP_
 #define TB2SYSTEM_HPP_
 
-double cpuTime();		///< \brief return CPU time in seconds
+#if __cplusplus > 199711L
+#define FINAL final
+#else
+#define FINAL
+#endif
+
+double cpuTime();		///< \brief return CPU time in seconds with high resolution (microseconds) if available
 void timeOut(int sig);
 void timer(int t); 		///< \brief set a timer (in seconds)
 void timerStop(); 		///< \brief stop a timer

@@ -1003,8 +1003,8 @@ void EnumeratedVariable::eliminate()
     if (ToulBar2::elimDegree_preprocessing_ >= 0 &&
             (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) ||
              getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
-        if (ToulBar2::elimSpaceMaxMB && wcsp->elimSpace > (Long) ToulBar2::elimSpaceMaxMB * 1024 * 1024) {
-            cout << "Generic variable elimination stopped (" <<  wcsp->elimSpace / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
+        if (ToulBar2::elimSpaceMaxMB && (Double) wcsp->elimSpace + (sizeof(Char)*(getTrueDegree()+1)+sizeof(Cost)) * getMaxElimSize() > (Double) ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
+            if (ToulBar2::verbose >= 1) cout << "Generic variable elimination of " << getName() << " stopped (" <<  (Double) wcsp->elimSpace / 1024. / 1024. << " + " << (Double) (sizeof(Char)*(getTrueDegree()+1)+sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
             return;
         }
         wcsp->variableElimination(this);
@@ -1024,7 +1024,7 @@ void EnumeratedVariable::eliminate()
         // if (getDegree()==1 && CSP(wcsp->getLb(),wcsp->getUb()) && constrs->begin().constr->arity() >= 4) {
         // 	// special case: there is only one n-ary constraint on this variable
         // 	// and the current domain size is larger than the number of forbidden tuples
-        // 	NaryConstraintMap *ctr = (NaryConstraintMap *) constrs->begin().constr;
+        // 	NaryConstraint *ctr = (NaryConstraint *) constrs->begin().constr;
         // 	if  (ctr->getDefCost()==0 && ctr->getpf()->size() < getDomainSize()) {
         // 	  // TO BE DONE: find zero-cost unary support for this variable if it exists
         //    // if not, cannot deconnect the constraint!
@@ -1174,7 +1174,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable *x)
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint *ctr = (*iter).constr;
         if (!ctr->extension() || ctr->isSep()) return false;
-        if (mult > 1.1 && ctr->extension() && (ctr->arity() >= 4) && (mult * ((NaryConstraintMap *) ctr)->size() > MAX_NB_TUPLES)) return false;
+        if (mult>1.1 && ctr->extension() && (ctr->arity() >= 4) && (mult * ((NaryConstraint *) ctr)->size() > MAX_NB_TUPLES)) return false;
     }
     return true;
 }
@@ -1267,6 +1267,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             assert(wcsp->unassigned(scopeIndex[0]));
             assert(wcsp->unassigned(scopeIndex[1]));
             assert(wcsp->unassigned(scopeIndex[2]));
+
             EnumeratedVariable *u = (EnumeratedVariable *) wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable *v = (EnumeratedVariable *) wcsp->getVar(scopeIndex[1]);
             EnumeratedVariable *w = (EnumeratedVariable *) wcsp->getVar(scopeIndex[2]);
@@ -1298,7 +1299,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
         }
         default: {
             //	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
-            //	  NaryConstraintMap *newctrok = (NaryConstraintMap*) wcsp->getCtr(res);
+            //	  NaryConstraint *newctrok = (NaryConstraint*) wcsp->getCtr(res);
             //	  assert(newctrok->arity() == scopeSize);
             //	  bool empty = true;
             //	  String oldtuple(ctr->arity(),CHAR_FIRST);
@@ -1322,16 +1323,18 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             //		cost = ctr->evalsubstr(oldtuple, ctr);
             //		if (cost > MIN_COST) {
             //		  empty = false;
-            //		  newctrok->addtoTuple(tuple,cost,scopeNewCtr);
+            //		  newctrok->addtoTuple(tuple,cost);
             //		}
             //	  }
 
             assert(ctr->arity() >= 4);
-            NaryConstraintMap *oldctr = (NaryConstraintMap *) ctr;
+
+            NaryConstraint *oldctr = (NaryConstraint*) ctr;
             Cost defcost = oldctr->getDefCost();
-            int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost);
-            NaryConstraintMap *newctr = (NaryConstraintMap *) wcsp->getCtr(res);
-            assert(newctr->arity() == scopeSize);
+            int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost, (noduplicate)?oldctr->size()*x->getDomainInitSize()/getDomainInitSize():oldctr->size()/getDomainInitSize());
+            Constraint *newctrctr = wcsp->getCtr(res);
+            assert(newctrctr->arity() == scopeSize);
+            NaryConstraint *newctr = (NaryConstraint*) newctrctr;
             String newtuple(scopeSize, CHAR_FIRST);
             EnumeratedVariable *scopeNewCtr[scopeSize];
             for (int i = 0; i < scopeSize; i++) {
@@ -1355,13 +1358,13 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                     }
                     if (posxold >= 0) {
                         if (functional[x->toValue(tuple[posxold] - CHAR_FIRST)] == toValue(tuple[posold] - CHAR_FIRST)) {
-                            newctr->addtoTuple(newtuple, cost, scopeNewCtr);
+                            newctr->setTuple(newtuple,cost);
                         }
                     } else {
                         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
                             if (functional[*iterX] == toValue(tuple[posold] - CHAR_FIRST)) {
                                 newtuple[posx] = x->toIndex(*iterX) + CHAR_FIRST;
-                                newctr->addtoTuple(newtuple, cost, scopeNewCtr);
+                                newctr->setTuple(newtuple,cost);
                             }
                         }
                     }

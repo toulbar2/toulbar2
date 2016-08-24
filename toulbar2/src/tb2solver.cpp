@@ -80,19 +80,19 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
     wcsp->read_random(n,m,p,seed, forceSubModular, globalname);
 }
 
-void Solver::read_solution(const char *filename)
+void Solver::read_solution(const char *filename, bool updateValueHeuristic)
 {
+    // open the file
+    ifstream file(filename);
+    if (!file) {
+        cout << "Solution file " << filename << " not found.." << endl;
+        return;
+    }
+
     wcsp->propagate();
 
     int depth = Store::getDepth();
     Store::store();
-
-    // open the file
-    ifstream file(filename);
-    if (!file) {
-        cerr << "Solution file " << filename << " not found!" << endl;
-        exit(EXIT_FAILURE);
-    }
 
     vector<int> variables;
     vector<Value> values;
@@ -1424,6 +1424,7 @@ bool Solver::solve()
         }
         if (ToulBar2::btdMode) {
             if (wcsp->numberOfUnassignedVariables() == 0 || wcsp->numberOfConnectedConstraints() == 0)	ToulBar2::approximateCountingBTD = 0;
+                ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
             wcsp->buildTreeDecomposition();
         } else if (ToulBar2::weightedDegree && (((Long) wcsp->numberOfConnectedConstraints()) >= ((Long) ToulBar2::weightedDegree))) {
             if (ToulBar2::verbose >= 0) cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;

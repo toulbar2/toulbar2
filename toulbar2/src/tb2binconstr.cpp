@@ -86,6 +86,8 @@ bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, ve
         TreeDecomposition *td = wcsp->getTreeDec();
         if (td) td->addDelta(cluster, x, value, cost);
         deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getInf()) >= MIN_COST);
+        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getSup()) >= MIN_COST);
     }
 
     Cost oldcost = x->getCost(value);

@@ -72,7 +72,7 @@ protected:
     // undo the previous extension
     virtual void undoExtend() {}
     // compute the original cost of the tuple s (i.e. cost without projection)
-    virtual Cost evalOriginal( String& s ) {return 0;}
+    virtual Cost evalOriginal( const String& s ) {return 0;}
 
     // compute the minimum cost of the tuple from all feasible tuples
 
@@ -90,7 +90,7 @@ public:
     bool isGlobal() const {return true;}
 
     // evaluate the cost of the tuple
-    virtual Cost eval( String& s );
+    virtual Cost eval( const String& s );
 
     double computeTightness() { return 0; }
     virtual string getName() =0;

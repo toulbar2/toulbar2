@@ -119,7 +119,7 @@ Cost AmongConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost AmongConstraint::evalOriginal(String& s)
+Cost AmongConstraint::evalOriginal(const String& s)
 {
     int n = arity();
     int count = 0;

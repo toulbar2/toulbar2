@@ -10,7 +10,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-class BinaryConstraint;
 struct Functor_getCost {
     BinaryConstraint &obj;
     inline Functor_getCost(BinaryConstraint &in) : obj(in) {}
@@ -69,7 +68,7 @@ public:
     void setIsinSpanningTree(bool is) {isinspanningtree = is;}
     bool IsinSpanninTree() {return isinspanningtree;}
 
-    bool extension() const {return true;}
+    bool extension() const FINAL {return true;}
 
     Cost getCost(Value vx, Value vy) const {
         unsigned int ix = x->toIndex(vx);
@@ -185,11 +184,11 @@ public:
         }
     }
 
-    Cost evalsubstr(String &s, Constraint *ctr) {
+    Cost evalsubstr( const String& s, Constraint* ctr ) FINAL {
         Value vals[2];
         int count = 0;
 
-        for (int i = 0; i < arity(); i++) {
+        for(int i=0;i<2;i++) {
             EnumeratedVariable *var = (EnumeratedVariable *) getVar(i);
             int ind = ctr->getIndex(var);
             if (ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }
@@ -197,6 +196,7 @@ public:
         if (count == 2) return getCost(vals[0], vals[1]);
         else return MIN_COST;
     }
+    Cost evalsubstr( const String& s, NaryConstraint* ctr ) FINAL {return evalsubstr( s, (Constraint *) ctr);} // NaryConstraint class undefined
 
     Value getSupport(EnumeratedVariable *var, Value v) {
         if (var == x) return supportX[x->toIndex(v)];
@@ -246,29 +246,29 @@ public:
     bool nextlex(String &t, Cost &c) { return next(t, c); }
 
 
-    void setTuple(String &t, Cost c, EnumeratedVariable **scope_in) {
-        Value v0 = scope_in[0]->toValue(t[0] - CHAR_FIRST);
-        Value v1 = scope_in[1]->toValue(t[1] - CHAR_FIRST);
-        setcost(scope_in[0], scope_in[1], v0, v1, c);
+    void setTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        setcost( v0, v1, c );
     }
 
-    void addtoTuple(String &t, Cost c, EnumeratedVariable **scope_in) {
-        Value v0 = scope_in[0]->toValue(t[0] - CHAR_FIRST);
-        Value v1 = scope_in[1]->toValue(t[1] - CHAR_FIRST);
-        addcost(scope_in[0], scope_in[1], v0, v1, c);
+    void addtoTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        addcost( v0, v1, c );
     }
 
-    void setTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in) {
-        Value v0 = scope_in[0]->toValue(t[0]);
-        Value v1 = scope_in[1]->toValue(t[1]);
-        setcost(scope_in[0], scope_in[1], v0, v1, c);
-    }
-
-    void addtoTuple(unsigned int *t, Cost c, EnumeratedVariable **scope_in) {
-        Value v0 = scope_in[0]->toValue(t[0]);
-        Value v1 = scope_in[1]->toValue(t[1]);
-        addcost(scope_in[0], scope_in[1], v0, v1, c);
-    }
+//    void setTuple( unsigned int* t, Cost c )  {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        setcost( v0, v1, c );
+//    }
+//
+//    void addtoTuple( unsigned int* t, Cost c )  {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        addcost( v0, v1, c );
+//    }
 
 
     void fillElimConstr(EnumeratedVariable *xin, EnumeratedVariable *yin, Constraint *from1,  Constraint *from2) {
@@ -362,7 +362,7 @@ public:
             if (varIndex == 0) {
                 assert(y->canbe(y->getSupport()));
                 unsigned int yindex = y->toIndex(y->getSupport());
-                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST) {
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex],y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
                     y->queueEAC2();
                 }
             }
@@ -370,7 +370,7 @@ public:
             if (varIndex == 1) {
                 assert(x->canbe(x->getSupport()));
                 unsigned int xindex = x->toIndex(x->getSupport());
-                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST) {
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(),supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
                     x->queueEAC2();
                 }
             }
@@ -456,7 +456,8 @@ public:
 
     void print(ostream &os);
     void dump(ostream &os, bool original = true);
-    Long space() const {return (Long) sizeof(StoreCost) * sizeX * sizeY;}
+    Long size() const FINAL {return (Long) sizeX * sizeY;}
+    Long space() const FINAL {return (Long) sizeof(StoreCost) * sizeX * sizeY;}
 
     friend struct Functor_getCost;
     friend struct Functor_getCostReverse;

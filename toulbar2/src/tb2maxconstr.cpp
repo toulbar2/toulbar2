@@ -80,7 +80,7 @@ void MaxConstraint::initMemoization() {
     best.resize(n);
 }
 
-Cost MaxConstraint::evalOriginal( String& s ) {
+Cost MaxConstraint::evalOriginal( const String& s ) {
     int largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {

@@ -165,7 +165,7 @@ Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost GrammarConstraint::eval(String& s) {
+Cost GrammarConstraint::eval(const String& s) {
     int n = arity();
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {

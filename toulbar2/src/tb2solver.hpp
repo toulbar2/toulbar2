@@ -14,7 +14,7 @@ template <class T> class BTList;
 
 const double epsilon = 1e-6; // 1./100001.
 
-class Solver : public WeightedCSPSolver
+class Solver FINAL : public WeightedCSPSolver
 {
 public:
     class OpenNode
@@ -142,7 +142,6 @@ protected:
     void ProdSumDiffusion();
     void PropagateNoc();
     void enforceUb();
-
     void singletonConsistency();
     void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
@@ -193,7 +192,7 @@ public:
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
     void dump_wcsp(const char *fileName, bool original = true);
-    void read_solution(const char *fileName);
+    void read_solution(const char *fileName, bool updateValueHeuristic = true);
     void parse_solution(const char *certificate);
 
     Cost getSolution(vector<Value> &solution);
@@ -219,3 +218,11 @@ int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
 extern "C" int solvesymmax2sat_(int *n, int *m, int *posx, int *posy, double *cost, int *sol);
 
 #endif /*TB2SOLVER_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

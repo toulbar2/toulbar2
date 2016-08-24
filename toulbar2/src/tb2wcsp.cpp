@@ -232,7 +232,7 @@ void tb2init()
     ToulBar2::DEE_ = 0;
     ToulBar2::nbDecisionVars = 0;
     ToulBar2::singletonConsistency = false;
-    ToulBar2::vacValueHeuristic = false;
+    ToulBar2::vacValueHeuristic = true;
 
     ToulBar2::setvalue = NULL;
     ToulBar2::setmin = NULL;
@@ -318,6 +318,121 @@ void tb2init()
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;
+}
+
+/// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
+Cost tb2checkOptions(Cost ub)
+{
+    if (ub <= MIN_COST) ub = MAX_COST;
+
+    if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1)
+    {
+        cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
+        ToulBar2::approximateCountingBTD = false;
+        ToulBar2::allSolutions = 0;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1)
+    {
+        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization (only in satisfaction)." << endl;
+        ub = 1;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
+    {
+        cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
+        ToulBar2::allSolutions = 0;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0)
+    {
+        //    if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
+        ToulBar2::elimDegree = 0;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && ToulBar2::elimDegree >= 0)
+    {
+        //    if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
+        ToulBar2::elimDegree = -1;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0)
+    {
+        //    if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with generic variable elimination" << endl;
+        ToulBar2::elimDegree_preprocessing = -1;
+    }
+    if (ToulBar2::allSolutions || ToulBar2::isZ) {
+        ToulBar2::DEE = 0;
+    }
+    if (ToulBar2::lds && ToulBar2::btdMode >= 1)
+    {
+        cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
+        ToulBar2::lds = 0;
+    }
+    if (ToulBar2::lds && ToulBar2::hbfs)
+    {
+        // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
+        ToulBar2::hbfs = 0;
+    }
+    if (ToulBar2::hbfs && ToulBar2::btdMode >= 2)
+    {
+        cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
+        ToulBar2::hbfs = 0;
+    }
+    if (ToulBar2::restart>=0 && ToulBar2::btdMode >= 1)
+    {
+        cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
+        ToulBar2::restart = -1;
+    }
+    if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1)
+    {
+        cout << "Warning! N-ary branching not implemented with BTD-like search methods, use binary branching instead." << endl;
+        ToulBar2::binaryBranching = true;
+    }
+    if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1)
+    {
+        cout << "Warning! Solving only a problem rooted at a given subtree, use Russian Doll Search method for that." << endl;
+        ToulBar2::btdMode = 2;
+    }
+    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1)
+    {
+        cout << "Warning! VAC not implemented with BTD-like search methods during search, use VAC in preprocessing only." << endl;
+        ToulBar2::vac = 1; /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+    }
+    if (ToulBar2::preprocessFunctional >0 && ToulBar2::LcLevel == LC_NC)
+    {
+        cout << "Warning! Cannot perform functional elimination with NC only." << endl;
+        ToulBar2::preprocessFunctional = 0;
+    }
+    if (ToulBar2::learning && ToulBar2::elimDegree >= 0)
+    {
+        cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning." << endl;
+        ToulBar2::elimDegree = -1;
+    }
+    if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
+        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
+        ToulBar2::incop_cmd = "";
+    }
+    if (!ToulBar2::binaryBranching && ToulBar2::hbfs)
+    {
+        cout << "Warning! N-ary branching not implemented with hybrid best-first search, use binary branching instead (or add -hbfs: parameter)." << endl;
+        ToulBar2::binaryBranching = true;
+    }
+    if (ToulBar2::dichotomicBranching>=2 && ToulBar2::hbfs)
+    {
+        cout << "Warning! Complex dichotomic branching not implemented with hybrid best-first search, use simple dichotomic branching (or add -hbfs: parameter)." << endl;
+        ToulBar2::dichotomicBranching = 1;
+    }
+    if  (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
+        cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
+        ToulBar2::elimDegree = -1;
+        ToulBar2::elimDegree_preprocessing = -1;
+    }
+    if  (ToulBar2::verifyOpt && ToulBar2::preprocessFunctional > 0) {
+        cout << "Warning! Cannot perform functional elimination while verifying that the optimal solution is preserved." << endl;
+        ToulBar2::preprocessFunctional = 0;
+    }
+    if  (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
+        cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
+        ToulBar2::DEE = 0;
+    }
+
+    return ub;
 }
 
 /*
@@ -534,17 +649,17 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 /// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
 /// \param arity size of scopeIndex
 /// \param defval default cost for any tuple
+/// \param nbtuples number of tuples to be inserted after creating this global cost function (optional parameter, zero if unknown)
 /// \note should not be used for binary or ternary cost functions
 /// \warning do not forget to initially propagate the global cost function using WCSP::postNaryConstraintEnd
-int WCSP::postNaryConstraintBegin(int *scopeIndex, int arity, Cost defval)
-{
+int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples) {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     EnumeratedVariable **scopeVars = new EnumeratedVariable*[arity];
     for (int i = 0; i < arity; i++)
         scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
-    NaryConstraint *ctr = new NaryConstraintMap(this, scopeVars, arity, defval);
+    NaryConstraint *ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
     delete[] scopeVars;
 
     if (arity > 3) {
@@ -572,11 +687,13 @@ int WCSP::postNaryConstraintBegin(int *scopeIndex, int arity, Cost defval)
 void WCSP::postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost)
 {
     if (ToulBar2::vac) histogram(cost);
-    Constraint *ctr = getCtr(ctrindex);
-    assert(ctr->extension()); // must be an NaryConstraint
-    int indextuple[arity];
-    for (int i = 0; i < arity; i++) indextuple[i] = ((EnumeratedVariable *) ctr->getVar(i))->toIndex(tuple[i]);
-    ctr->setTuple(indextuple, cost, NULL);
+    Constraint *ctrctr = getCtr(ctrindex);
+    assert(ctrctr->extension()); // must be an NaryConstraint
+    assert(arity == ctrctr->arity());
+    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
+    String s(arity, CHAR_FIRST);
+    for (int i=0; i<arity; i++) s[i] = ((EnumeratedVariable *) ctr->getVar(i))->toIndex(tuple[i]) + CHAR_FIRST;
+    ctr->setTuple(s, cost);
 }
 
 /// \brief set one tuple with a specific cost for global cost function in extension
@@ -585,12 +702,12 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost c
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
 /// \warning string encoding of tuples is for advanced users only!
-void WCSP::postNaryConstraintTuple(int ctrindex, String &tuple, Cost cost)
-{
+void WCSP::postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost) {
     if (ToulBar2::vac) histogram(cost);
-    Constraint *ctr = getCtr(ctrindex);
-    assert(ctr->extension()); // must be an NaryConstraint
-    ctr->setTuple(tuple, cost, NULL);
+    Constraint *ctrctr = getCtr(ctrindex);
+    assert(ctrctr->extension()); // must be an NaryConstraint
+    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
+     ctr->setTuple(tuple, cost);
 }
 
 void WCSP::postNaryConstraintEnd(int ctrindex)
@@ -1426,12 +1543,13 @@ void WCSP::preprocessing()
         Double domsize = medianDomainSize();
         Double size = (Double) numberOfUnassignedVariables() * (sizeof(Char) * deg + sizeof(Cost)) * Pow(domsize, deg + 1);
         if (ToulBar2::debug >= 2) cout << "MAX ESTIMATED ELIM SIZE: " << size << endl;
+        assert(ToulBar2::elimSpaceMaxMB > 0);
         if (deg >= 3 && deg <= -ToulBar2::elimDegree_preprocessing && size < (Double) ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
             ToulBar2::elimDegree_preprocessing = deg;
-            cout << "Generic variable elimination of degree " << deg << endl;
+            if (ToulBar2::verbose >= 0) cout << "Generic variable elimination of degree " << deg << endl;
         } else {
             ToulBar2::elimDegree_preprocessing = -1;
-            cout << "Generic variable elimination disabled." << endl;
+            if (ToulBar2::verbose >= 0) cout << "Generic variable elimination disabled." << endl;
         }
     }
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
@@ -1442,7 +1560,7 @@ void WCSP::preprocessing()
             ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
             maxDegree = -1;
             propagate();
-            cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
+            if (ToulBar2::verbose >= 0) cout << "Maximum degree of generic variable elimination: " << maxDegree << endl;
         } else if (ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
         }
@@ -1502,7 +1620,7 @@ void WCSP::preprocessing()
         for (unsigned int i = 0; i < constrs.size(); i++) {
             if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
                     <= ToulBar2::preprocessNary) && constrs[i]->extension()) {
-                NaryConstraintMap *nary = (NaryConstraintMap *) constrs[i];
+                NaryConstraint* nary = (NaryConstraint*) constrs[i];
                 if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
                     nary->keepAllowedTuples(getUb());
                     nary->preprojectall2();
@@ -2335,7 +2453,7 @@ void WCSP::propagate()
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();
-                        cout << "Lb before VAC: " << getLb() << endl;
+                        if (ToulBar2::verbose >= 0) cout << "Lb before VAC: " << getLb() << endl;
                     }
                     vac->propagate();
                 }
@@ -2599,10 +2717,10 @@ Constraint *WCSP::sum(Constraint *ctr1, Constraint *ctr2)
     vector<Cost> costs;
 
     if (arityU > 3) { // || isGlobal()) {
-        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top);
+        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size()*ctr2->size()); //TODO: improve estimated number of tuples
         ctr = getCtr(ctrIndex);
         assert(ctr->extension());
-        NaryConstraintMap *nary = (NaryConstraintMap *) ctr;
+        NaryConstraint* nary = (NaryConstraint*) ctr;
 
         nary->fillFilters();
 
@@ -2836,7 +2954,7 @@ void WCSP::variableElimination(EnumeratedVariable *var)
 {
     int degree = var->getTrueDegree();
     if (ToulBar2::verbose >= 1) cout << endl << "Generic variable elimination of " << var->getName() << "    degree: "
-                                         << var->getDegree() << " true degree: " << degree << endl;
+            << var->getDegree() << " true degree: " << degree << " max elim size: " << var->getMaxElimSize() << endl;
     if (degree > maxDegree) maxDegree = degree;
 
     if (var->getDegree() > 0) {
@@ -3297,5 +3415,10 @@ void WCSP::visit(int i, vector <int> &revdac, vector <bool> &marked, const vecto
     revdac.push_back(i);
 }
 
-
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 
