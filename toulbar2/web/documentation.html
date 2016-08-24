@@ -115,7 +115,7 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-E : merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e")</li>
   <li>-R=[integer] : choice for a specific root cluster number</li>
   <li>-I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)</li>
-  <li>-a : finds all solutions (or count the number of zero-cost satisfiable solutions in conjunction with BTD)</li>
+  <li>-a=[integer] : finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD)</li>
   <li>-D : approximate satisfiable solution count with BTD</li>
   <li>-logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)</li>
   <li>-epsilon=[float] : approximation factor for computing the partition function (default value is 1000)</li>
