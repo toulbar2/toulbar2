@@ -32,7 +32,7 @@ public:
 
     ~AllDiffConstraint() {
     }
-    Cost evalOriginal(String& s);
+    Cost evalOriginal(const String& s);
 
     void read(istream &file);
     void organizeConfig();

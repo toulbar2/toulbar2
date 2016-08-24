@@ -12,11 +12,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
 
-class BinaryConstraint;
-class TernaryConstraint;
 class NaryConstraint;
 class VACExtension;
-class TreeDecomposition;
 
 class GlobalConstraint;
 class FlowBasedGlobalConstraint;
@@ -36,7 +33,7 @@ class RegularFlowConstraint;
  *
  */
 
-class WCSP : public WeightedCSP {
+class WCSP FINAL : public WeightedCSP {
     static int wcspCounter; 			///< count the number of instances of WCSP class
     int instance; 						///< instance number
     string name; 						///< problem name
@@ -323,9 +320,9 @@ public:
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs);
-    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval); /// \warning must call postNaryConstraintEnd after giving cost tuples
+    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
-    void postNaryConstraintTuple(int ctrindex, String& tuple, Cost cost);
+    void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
     int postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istream &file, int *constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
@@ -490,7 +487,7 @@ public:
     // Data and methods for Cluster Tree Decomposition
 
     TreeDecomposition* td;
-    TreeDecomposition* getTreeDec()  { return td; }
+    TreeDecomposition* getTreeDec() { return td; }
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char *elimVarOrder, vector<int> &order);
     void setDACOrder(vector<int> &elimVarOrder);

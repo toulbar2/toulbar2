@@ -318,6 +318,7 @@ CSimpleOpt::SOption g_rgOptions[] =
     { OPT_vac,				(char*) "-A", 				SO_OPT			},
     { NO_OPT_vac,				(char*) "-A:", 				SO_NONE			},
     { OPT_vacValueHeuristic,		(char*) "-V", 				SO_NONE 		},
+    { NO_OPT_vacValueHeuristic,        (char*) "-V:",               SO_NONE         },
     { OPT_costThreshold,			(char*) "-T", 				SO_REQ_SEP		},
     { OPT_costThresholdPre,	 		(char*) "-P", 				SO_REQ_SEP		},
     { OPT_costMultiplier,	 		(char*) "-C", 				SO_REQ_SEP		},
@@ -1079,6 +1080,7 @@ int _tmain(int argc, TCHAR * argv[])
 
             if ( args.OptionId() == OPT_singletonConsistency)  ToulBar2::singletonConsistency = true;
             if ( args.OptionId() == OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = true;
+            else if( args.OptionId() == NO_OPT_vacValueHeuristic) ToulBar2::vacValueHeuristic = false;
             if ( args.OptionId() == OPT_preprocessTernary) {
                 if (args.OptionArg() != NULL) {
                     int size = atol(args.OptionArg());

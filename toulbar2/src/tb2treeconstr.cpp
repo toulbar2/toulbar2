@@ -65,7 +65,7 @@ Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed) {
     return result.first;
 }
 
-Cost TreeConstraint::eval(String& s) {
+Cost TreeConstraint::eval(const String& s) {
 
     int n = arity();
     int root = -1;

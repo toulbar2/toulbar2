@@ -56,7 +56,7 @@ void AllDiffConstraint::organizeConfig() {
     if (mode == DECBI) decompose();
 }
 
-Cost AllDiffConstraint::evalOriginal( String& s ) {
+Cost AllDiffConstraint::evalOriginal( const String& s ) {
     Cost tuple_cost = 0;
     if (mode == DEC) {
         for (unsigned int i=0;i<s.length();i++) {

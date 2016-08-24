@@ -158,6 +158,26 @@ int Variable::getTrueDegree()
     else return 0;
 }
 
+Double Variable::getMaxElimSize()
+{
+    if (getDegree() == 0 ) return getDomainSize();
+    if (getDegree() == 1 ) return (*constrs.begin()).constr->size();
+    //  if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
+    //    TSCOPE scope1,scope2,scope3;
+    map<int,unsigned int> scope1;
+    for (ConstraintList::iterator iter=constrs.begin(); iter != constrs.end(); ++iter) {
+        if((*iter).constr->isSep()) continue;
+        for(int k=0; k < (*iter).constr->arity(); k++) {
+            scope1[(*iter).constr->getVar(k)->wcspIndex] = (*iter).constr->getVar(k)->getDomainSize();
+        }
+    }
+    Double sz = 1.;
+    for (map<int,unsigned int>::iterator iter=scope1.begin(); iter != scope1.end(); ++iter) {
+        sz *= (*iter).second;
+    }
+    return sz;
+}
+
 Long Variable::getWeightedDegree()
 {
     Long res = 0;

@@ -13,9 +13,9 @@
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long AbstractNaryConstraint::getDomainInitSizeProduct()
 {
-    if (arity()==0) return 0;
+    if (arity_==0) return 0;
     Long cartesianProduct = 1;
-    for (int i=0; i<arity(); i++) {
+    for (int i=0; i<arity_; i++) {
         // trap overflow numbers
         if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE) return LONGLONG_MAX;
         cartesianProduct *= scope[i]->getDomainInitSize();
@@ -48,7 +48,7 @@ void AbstractNaryConstraint::firstlex()
 bool AbstractNaryConstraint::nextlex( String& t, Cost& c)
 {
     int i;
-    int a = arity();
+    int a = arity_;
     EnumeratedVariable* var = (EnumeratedVariable*) getVar(0);
     if(it_values[0] == var->end()) return false;
 
@@ -79,9 +79,9 @@ bool AbstractNaryConstraint::nextlex( String& t, Cost& c)
 // projects n-ary cost function of arity less than 3 into a unary/binary/ternary cost function in extension before the search
 void AbstractNaryConstraint::projectNaryBeforeSearch()
 {
-    assert(arity()<=3);
+    assert(arity_<=3);
     deconnect();   // Warning! It assumes the default cost is not used if the cost function has zero arity
-    if (arity()==3) {
+    if (arity_==3) {
         vector<Cost> costs;
         EnumeratedVariable *x = (EnumeratedVariable *) getVar(0);
         EnumeratedVariable *y = (EnumeratedVariable *) getVar(1);
@@ -106,7 +106,7 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
-    } else if (arity()==2) {
+    } else if (arity_==2) {
         vector<Cost> costs;
         EnumeratedVariable *x = (EnumeratedVariable *) getVar(0);
         EnumeratedVariable *y = (EnumeratedVariable *) getVar(1);
@@ -126,7 +126,7 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             costs[a * sizeY + b] = cost;
         }
         wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs);
-    } else if (arity()==1) {
+    } else if (arity_==1) {
         vector<Cost> costs;
         EnumeratedVariable *x = (EnumeratedVariable *) getVar(0);
         unsigned int sizeX = x->getDomainInitSize();

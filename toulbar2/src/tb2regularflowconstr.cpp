@@ -178,7 +178,7 @@ void RegularFlowConstraint::buildWeightedDFATable() {
 
 }
 
-Cost RegularFlowConstraint::evalOriginal(String& s) {
+Cost RegularFlowConstraint::evalOriginal(const String& s) {
 
     typedef pair<Cost,pair<int,int> > Element;
     //priority_queue<Element, vector<Element>, greater<Element> > minqueue;

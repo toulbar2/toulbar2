@@ -213,7 +213,7 @@ void LPSConstraint::read(istream &file) {
     }
 }
 
-Cost LPSConstraint::evalOriginal(String& s ) {
+Cost LPSConstraint::evalOriginal(const String& s ) {
 
     Cost cost = 0;
     for (int i=0;i<nwindows;i++) {

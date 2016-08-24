@@ -19,9 +19,9 @@ class IntervalVariable : public Variable
 public:    
     IntervalVariable(WCSP *wcsp, string n, Value iinf, Value isup);
 
-    bool enumerated() const {return false;}
+    bool enumerated() const FINAL {return false;}
 
-    unsigned int getDomainSize() const {
+    unsigned int getDomainSize() const FINAL {
         return sup - inf + 1;
     }
 
@@ -31,13 +31,13 @@ public:
     void assign(Value newValue, bool isDecision = false);
     void assignLS(Value newValue, ConstraintSet& delayedCtrs);
 
-    Cost getInfCost() const {return infCost;}
-    Cost getSupCost() const {return supCost;}
+    Cost getInfCost() const FINAL {return infCost;}
+    Cost getSupCost() const FINAL {return supCost;}
     void projectInfCost(Cost cost);
     void projectSupCost(Cost cost);
 
     // this method can be applied to interval or enumerated domain
-    Cost getCost(const Value value) const {
+    Cost getCost(const Value value) const FINAL {
         if (value == inf) return getInfCost();
         else if (value == sup) return getSupCost();
         else return MIN_COST;

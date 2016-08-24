@@ -61,7 +61,7 @@ protected:
     Cost minCostOriginal(int var, Value val, bool changed);
     Result minCost(int var, Value val, bool changed);
 
-    Cost evalOriginal( String& s );
+    Cost evalOriginal( const String& s );
 
 public:
     MaxConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);    

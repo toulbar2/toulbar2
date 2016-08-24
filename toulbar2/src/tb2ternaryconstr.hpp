@@ -11,7 +11,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2binconstr.hpp"
 
-class TernaryConstraint;
 struct Functor_getCostXYZ {
     TernaryConstraint &obj;
     inline Functor_getCostXYZ(TernaryConstraint &in) : obj(in) {}
@@ -220,7 +219,7 @@ public:
 
     ~TernaryConstraint() {}
 
-    bool extension() const {return true;}
+    bool extension() const FINAL {return true;}
 
     Cost getCost(Value vx, Value vy, Value vz) const {
         unsigned int ix = x->toIndex(vx);
@@ -356,6 +355,19 @@ public:
         }
     }
 
+    void setcost( Value vxi, Value vyi, Value vzi, Cost c ) {
+        unsigned int vx = x->toIndex(vxi);
+        unsigned int vy = y->toIndex(vyi);
+        unsigned int vz = z->toIndex(vzi);
+        if (costs.empty()) {
+            if (vxi == functionX[vy * sizeZ + vz]) costsYZ[vy*sizeZ + vz] = c;
+            else if (!CUT(wcsp->getLb()+c, wcsp->getUb())) {
+                cerr << "cannot reset a forbidden tuple in ternary functional cost functions!" << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else costs[vx*sizeY*sizeZ + vy*sizeZ + vz] = c;
+    }
+
     void setcost( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c ) {
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);
@@ -471,7 +483,8 @@ public:
         Value ysupport = supportX[xindex].first;
         Value zsupport = supportX[xindex].second;
         if (y->cannotbe(ysupport) || z->cannotbe(zsupport) ||
-                getCostWithBinaries(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST) {
+                getCostWithBinaries(x,y,z,x->getSupport(),ysupport,zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST ||
+                (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
             x->queueEAC2();
         }
     }
@@ -673,40 +686,39 @@ public:
     bool nextlex( String& t, Cost& c) { return next(t,c); } 
 
 
-    void setTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {
-        Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
-        Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
-        Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
-        setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );
+    void setTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        Value v2 = z->toValue(t[2]-CHAR_FIRST);
+        setcost( x, y, z, v0, v1, v2, c );
     }
 
-    void setTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {
-        Value v0 = scope_in[0]->toValue(t[0]);
-        Value v1 = scope_in[1]->toValue(t[1]);
-        Value v2 = scope_in[2]->toValue(t[2]);
-        setcost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );
+//    void setTuple( unsigned int* t, Cost c ) {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        Value v2 = z->toValue(t[2]);
+//        setcost( x, y, z, v0, v1, v2, c );
+//    }
+//
+//    void addtoTuple( unsigned int* t, Cost c ) {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        Value v2 = z->toValue(t[2]);
+//        addCost( v0, v1, v2, c );
+//    }
+
+    void addtoTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        Value v2 = z->toValue(t[2]-CHAR_FIRST);
+        addCost( v0, v1, v2, c );
     }
 
-    void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {
-        Value v0 = scope_in[0]->toValue(t[0]);
-        Value v1 = scope_in[1]->toValue(t[1]);
-        Value v2 = scope_in[2]->toValue(t[2]);
-        addCost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );
-    }
-
-    void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {
-        Value v0 = scope_in[0]->toValue(t[0]-CHAR_FIRST);
-        Value v1 = scope_in[1]->toValue(t[1]-CHAR_FIRST);
-        Value v2 = scope_in[2]->toValue(t[2]-CHAR_FIRST);
-        addCost( scope_in[0], scope_in[1], scope_in[2], v0, v1, v2, c );
-    }
-
-    Cost evalsubstr( String& s, Constraint* ctr )
-    {
+    Cost evalsubstr( const String& s, Constraint* ctr ) FINAL {
         Value vals[3];
         int count = 0;
 
-        for(int i=0;i<arity();i++) {
+        for(int i=0;i<3;i++) {
             EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
             int ind = ctr->getIndex(var);
             if(ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }
@@ -714,7 +726,7 @@ public:
         if(count == 3) return getCost(vals[0], vals[1], vals[2]);
         else return MIN_COST;
     }
-
+    Cost evalsubstr( const String& s, NaryConstraint* ctr ) FINAL {return evalsubstr( s, (Constraint *) ctr);} // NaryConstraint class undefined
 
     void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Constraint *from1)
     {
@@ -755,7 +767,8 @@ public:
 
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
-    Long space() const {return (Long) sizeof(StoreCost) * sizeX * sizeY * sizeZ;}
+    Long size() const FINAL {return (Long) sizeX * sizeY * sizeZ;}
+    Long space() const FINAL {return (Long) sizeof(StoreCost) * sizeX * sizeY * sizeZ;}
 
     friend struct Functor_getCostXYZ;
     friend struct Functor_getCostXZY;

@@ -86,7 +86,7 @@ Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed) {
 	return minCost(var, val, changed).first;
 }
 
-Cost RegularDPConstraint::eval(String& s) {
+Cost RegularDPConstraint::eval(const String& s) {
 	int n = arity();
 	for (int i=1;i<=n;i++) {
 		for (unsigned int j=0;j<dfa.symbol.size();j++) {												

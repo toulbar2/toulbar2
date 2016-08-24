@@ -58,7 +58,7 @@ void SameConstraint::read(istream &file) {
     }
 }
 
-Cost SameConstraint::evalOriginal(String& s) {
+Cost SameConstraint::evalOriginal(const String& s) {
     Cost tuple_cost = 0;
     map<char, int> appear;
     for (vector<int>::iterator i = group[0].begin();i != group[0].end();i++) {

@@ -404,7 +404,7 @@ void WCSP::read_wcsp(const char *fileName)
                 {
                     Cost tmpcost = defval*K;
                     if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
-                    int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost);
+                    int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost,ntuples);
                     NaryConstraint *nary = (NaryConstraint *) constrs[naryIndex];
 
                     Char buf[MAX_ARITY];
@@ -440,14 +440,7 @@ void WCSP::read_wcsp(const char *fileName)
                     if (ToulBar2::preprocessNary>0) {
                         Cost minc = nary->getMinCost();
                         if (minc > MIN_COST) {
-                            Cost defcost = nary->getDefCost();
-                            if (CUT(defcost, minc)) nary->setDefCost(defcost - minc);
-                            String tuple;
-                            Cost cost;
-                            nary->first();
-                            while (nary->next(tuple,cost)) {
-                                nary->setTuple(tuple, cost-minc, NULL);
-                            }
+                            nary->addtoTuples(-minc);
                             if (ToulBar2::verbose >= 2) cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
                             inclowerbound += minc;
                         }
@@ -764,7 +757,7 @@ void WCSP::read_wcsp(const char *fileName)
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
 
-    cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
+    if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
 
 
@@ -873,7 +866,7 @@ void WCSP::read_uai2008(const char *fileName)
                 if (ToulBar2::verbose >= 3) cout << j << " ";
             }
             if (ToulBar2::verbose >= 3) cout << endl;
-            lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST) );
+            lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST,LONGLONG_MAX) );
             assert(lctrs.back() >= 0);
         }
         else if (arity == 3) {
@@ -1070,7 +1063,7 @@ void WCSP::read_uai2008(const char *fileName)
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
-    cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
+    if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 
     int nevi = 0;
     ifstream fevid(ToulBar2::evidence_file.c_str());
@@ -1297,7 +1290,7 @@ void WCSP::read_wcnf(const char *fileName)
         maxarity = max(maxarity,arity);
 
         if (arity > 3) {
-            int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST);
+            int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST,0);
             String tup = buf;
             postNaryConstraintTuple(index, tup, cost*K);
             postNaryConstraintEnd(index);
@@ -1513,7 +1506,7 @@ void WCSP::read_qpbo(const char *fileName)
             postUnaryConstraint(i, costs);
         }
     }
-    cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
+    if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
 
 /* Local Variables: */

@@ -41,7 +41,7 @@ public:
     }
 
     string getName();
-    Cost evalOriginal(String& s);
+    Cost evalOriginal(const String& s);
     void read(istream &file);
 
     //GlobalCostFunctionParameters* getParameters() {return this;}

@@ -85,13 +85,14 @@ public:
     virtual void dump(ostream& os, bool original = true) {os << this << " Unknown constraint!";}
 
     virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
-    virtual Long space() const {return 0;} ///< \brief estimate of the constraint memory space size
+    virtual Long size() const {return 0;} ///< \brief number of tuples stored by the cost function
+    virtual Long space() const {return 0;} ///< \brief estimate of the cost function memory space size
 
-    virtual void firstlex() {}
-    virtual bool nextlex(String& t, Cost& c) { cout << "dummy nextlex on (" << this << ")!" << endl; return false; }
+    virtual void firstlex() {} ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order (initialization call)
+    virtual bool nextlex(String& t, Cost& c) { cout << "dummy nextlex on (" << this << ")!" << endl; return false; }  ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order
 
-    virtual void first() {firstlex();}
-    virtual bool next( String& t, Cost& c) { return nextlex(t,c); }
+    virtual void first() {firstlex();}  ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost (initialization call)
+    virtual bool next( String& t, Cost& c) { return nextlex(t,c); }  ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
 
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta ) {}
     virtual bool separability( EnumeratedVariable* alpha , EnumeratedVariable* beta) {return false;}
@@ -111,15 +112,12 @@ public:
     }
     bool verifySeparate(Constraint * ctr1, Constraint * ctr2);
 
-    virtual void setTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
-    virtual void addtoTuple( String& t, Cost c, EnumeratedVariable** scope_in ) {}
-
-    virtual void setTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {}
-    virtual void addtoTuple( int* t, Cost c, EnumeratedVariable** scope_in ) {}
-
+    virtual void setTuple( const String& t, Cost c ) {}
+    virtual void addtoTuple( const String& t, Cost c ) {}
 
     virtual void getScope( TSCOPE& scope_inv ) {}
-    virtual Cost evalsubstr( String& s, Constraint* ctr ) { return MIN_COST; }
+    virtual Cost evalsubstr( const String& s, Constraint* ctr ) { cout << "dummy evalsubstr call on:" << *this << endl; return MIN_COST; }
+    virtual Cost evalsubstr( const String& s, NaryConstraint* ctr ) { cout << "dummy evalsubstr call on:" << *this << endl; return MIN_COST; }
     virtual Cost getDefCost() { return MIN_COST; }
 
     virtual bool universal();
@@ -130,7 +128,7 @@ public:
     virtual Cost getMaxFiniteCost();
     virtual void setInfiniteCost(Cost ub) { }
 
-    Constraint *copy(); ///< \brief returns a copy of itself as a new deconnected NaryConstraintMap (DO NOT USE DURING SEARCH!)
+    Constraint *copy(); ///< \brief returns a copy of itself as a new deconnected NaryConstraint (DO NOT USE DURING SEARCH!)
 
     void sumScopeIncluded( Constraint* ctr );
 
