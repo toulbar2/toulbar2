@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp)
+SRCSFULL = $(wildcard tb2*.cpp incop/*.cpp ToulbarVersion.cpp)
 
 # Remove the first character in the following line if compile with BOOST Graph library
 BOOST = -I. -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB
