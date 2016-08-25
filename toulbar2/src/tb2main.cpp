@@ -755,7 +755,7 @@ int _tmain(int argc, TCHAR * argv[])
 
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-    if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2015"<<endl;
+    if (ToulBar2::verbose >= 0) cout << "c " << CurrentBinaryPath<<"toulbar2"<<"  version : " << ToulBar2::version << ", copyright (c) INRA 2016"<<endl;
 
     // --------------------------simple opt ----------------------
 
