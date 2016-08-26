@@ -1396,7 +1396,7 @@ bool Solver::solve()
         if (ToulBar2::incop_cmd.size() > 0) {
             double incopStartTime = cpuTime();
             vector<int> bestsol(getWCSP()->numberOfVariables(), 0);
-            for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) bestsol[i] = wcsp->getSupport(i);
+                for (unsigned int i =0; i<wcsp->numberOfVariables(); i++) bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i))?wcsp->getBestValue(i):wcsp->getSupport(i));
             narycsp(ToulBar2::incop_cmd, bestsol);
             if (ToulBar2::verbose >= 0) cout << "INCOP solving time: " << cpuTime() - incopStartTime << " seconds." << endl;
         }
