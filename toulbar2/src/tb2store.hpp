@@ -26,6 +26,7 @@
 
 #include "tb2types.hpp"
 
+#ifndef NUMBERJACK
 #ifdef BOOST
 #include <boost/version.hpp>
 #if (BOOST_VERSION >= 105600)
@@ -35,6 +36,7 @@
 #endif
 #else
 #include <typeinfo>
+#endif
 #endif
 
 template<class T> class BTList;
@@ -73,12 +75,14 @@ public:
         index = 0;
         base = 0;
         if (ToulBar2::verbose > 0) {
-            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " <<
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for "
+#ifndef NUMBERJACK
 #if (BOOST_VERSION >= 105600)
-                boost::typeindex::type_id<T>().pretty_name()
+                << boost::typeindex::type_id<T>().pretty_name()
 #else
-                typeid(T).name()
-                #endif
+                << typeid(T).name()
+#endif
+#endif
                  << " stack." << endl;
         }
     }
@@ -92,7 +96,15 @@ public:
         T **newpointers = new T *[indexMax * 2];
         V *newcontent = new V[indexMax * 2];
         if (!newpointers || !newcontent) {
-            cerr << typeid(T).name() << " stack out of memory!" << endl;
+            cerr
+#ifndef NUMBERJACK
+#if (BOOST_VERSION >= 105600)
+                << boost::typeindex::type_id<T>().pretty_name()
+#else
+                << typeid(T).name()
+#endif
+#endif
+                    << " stack out of memory!" << endl;
             exit(EXIT_FAILURE);
         }
         std::copy(pointers,pointers+indexMax,newpointers);
@@ -104,7 +116,15 @@ public:
         content = newcontent;
         indexMax *= 2;
         if (ToulBar2::verbose >= 0) {
-            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for " << typeid(T).name() << " stack." << endl;
+            cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for "
+#ifndef NUMBERJACK
+#if (BOOST_VERSION >= 105600)
+                << boost::typeindex::type_id<T>().pretty_name()
+#else
+                << typeid(T).name()
+#endif
+#endif
+                    << " stack." << endl;
         }
     }
 
