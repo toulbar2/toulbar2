@@ -201,7 +201,7 @@ double TernaryConstraint::computeTightness()
 {
     int count = 0;
     double sum = 0;
-    Cost costs[x->getDomainSize()*y->getDomainSize()*z->getDomainSize()];
+    Cost *costs = new Cost[x->getDomainSize()*y->getDomainSize()*z->getDomainSize()];
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
@@ -218,6 +218,7 @@ double TernaryConstraint::computeTightness()
     } else {
         tight = sum / (double) count;
     }
+    delete[] costs;
     return tight;
 }
 
