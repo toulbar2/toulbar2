@@ -45,9 +45,9 @@ CC = g++
 
 CFLAGS = -g -Wall -std=c++11 -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
 # -DLINUX # compile on linux computers
-# -DLONGLONG_COST # uses type long long for encoding costs
-# -DWIDE_STRING # uses wide strings (2 bytes per char) for encoding value tuples (including separators)
-# -DLONGDOUBLE_PROB # uses type long double for encoding (log) probabilities
+# -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
+# -DWIDE_STRING # uses wide strings (2 bytes per char instead of one) for encoding value tuples (including separators)
+# -DLONGDOUBLE_PROB # uses type long double for encoding (log) probabilities instead of type double if using -DDOUBLE_PROB
 # -DNARYCHAR # pretty prints of nary constraints (including separators)
 # -DWCSPFORMATONLY # assumes positive domains starting at value 0 (as in the wcsp format file) *** Incompatible with Numberjack ***
 # -DNUMBERJACK # 
