@@ -62,8 +62,7 @@ public:
         IlcConstraintI(solver), obj(objective),
         size(variables.getSize()), vars(variables), wcsp(NULL),
         unassignedVars(NULL), currentNumberOfFails(0),
-        synchronized(solver, IlcTrue)
-    {
+    synchronized(solver, IlcTrue) {
         // creates a WCSP object
     wcsp = WeightedCSP::makeWeightedCSP(MAX_COST);
         // load WCSP problem from a file if available
@@ -81,16 +80,14 @@ public:
     }
 
     // destructor
-    ~IlcWeightedCSPI()
-    {
+  ~IlcWeightedCSPI() {
         AllIlcWeightedCSPI[wcsp->getIndex()] = NULL;
         delete wcsp;
         delete unassignedVars;
     }
 
     // domain synchronization between obj&vars (Ilog) and wcsp (ToulBar2)
-    void synchronize()
-    {
+  void synchronize() {
         if (ToulBar2::verbose >= 2) cout << "Domain synchronization between IlogSolver and Toulbar2!" << endl;
         for (int i = 0; i < size; i++) {
             if (ToulBar2::verbose >= 2) cout << vars[i] << " (" << wcsp->getInf(i) << "," << wcsp->getSup(i) << ")" << endl;
@@ -116,8 +113,7 @@ public:
     }
 
     // if a search node failure has just occured then informs ToulBar2 to reset its propagation queues and update its timestamp
-    void checkFailure()
-    {
+  void checkFailure() {
         if (getSolver().getNumberOfFails() != currentNumberOfFails) {
             currentNumberOfFails = getSolver().getNumberOfFails();
             wcsp->whenContradiction();
@@ -128,8 +124,7 @@ public:
     void post();
 
     // global propagation using WCSP propagation queues
-    void propagate()
-    {
+  void propagate() {
         checkFailure();
         if (synchronized) {
             synchronized.setValue(getSolver(), IlcFalse);
@@ -141,8 +136,7 @@ public:
     }
 
     // variable varIndex has been assigned
-    void whenValue(const IlcInt varIndex)
-    {
+  void whenValue(const IlcInt varIndex) {
         checkFailure();
         if (ToulBar2::verbose >= 2) cout << "ILOG: " << vars[varIndex].getName() << " = " << vars[varIndex].getValue() << endl;
         wcsp->assign(varIndex, vars[varIndex].getValue());
@@ -157,8 +151,7 @@ public:
     }
 
     // check only modifications on the objective variable
-    void whenRange()
-    {
+  void whenRange() {
         checkFailure();
         wcsp->enforceUb(); // fail if lower bound >= upper bound and enforce NC*
         if (obj.getMax() + 1 < wcsp->getUb()) {
@@ -168,8 +161,7 @@ public:
     }
 
     // variable varIndex has its domain reduced
-    void whenDomain(const IlcInt varIndex)
-    {
+  void whenDomain(const IlcInt varIndex) {
         checkFailure();
         if (!vars[varIndex].isBound()) {
             for (IlcIntVarDeltaIterator iter(vars[varIndex]); iter.ok(); ++iter) {

@@ -88,6 +88,8 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
     g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -std=c++11 -DNDEBUG -DLINUX \
      -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
 
+Replace flag LONGLONG_COST by INT_COST to reduce memory usage by two (but costs must be smaller than 10^8).
+
 ## Authors
 
 toulbar2 was originally developped by Toulouse (INRA MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. 

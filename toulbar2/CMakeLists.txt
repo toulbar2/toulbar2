@@ -49,6 +49,7 @@ OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 ##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
 	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
+OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
 	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
 OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
 OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
@@ -110,7 +111,7 @@ SET(Default_bench_timeout 30 CACHE INTEGER "default timeout used for benchmarkin
 SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command line for benchmarking.")
 SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
 
-MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY)
+MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY LONG_COSTS)
 	MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
 ##########################################
