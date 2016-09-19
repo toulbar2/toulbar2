@@ -676,7 +676,8 @@ void help_msg(char *toulbar2filename)
     cout << endl << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order, each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
+    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order, each line contains a cluster number, " << endl;
+    cout << "      followed by a cluster parent number with -1 for the root cluster, followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
     cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
