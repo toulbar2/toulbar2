@@ -32,6 +32,8 @@
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
 
+#include <algorithm>
+
 /*
  * Global variables with their default value
  *
@@ -304,6 +306,11 @@ Cost tb2checkOptions(Cost ub)
     {
         cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization (only in satisfaction)." << endl;
         ub = 1;
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs)
+    {
+        cout << "Warning! Hybrid best-first search not compatible with finding all solutions using BTD method in satisfaction." << endl;
+        ToulBar2::hbfs = 0;
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1)
     {
@@ -1393,7 +1400,8 @@ void WCSP::sortConstraints()
     // postpone costly variable elimination heuristics if too many variables
     if (ToulBar2::varOrder && (numberOfVariables() < 10000 || ((long)((void *) ToulBar2::varOrder)) < 2 || ((long)((void *) ToulBar2::varOrder)) > 6)) {
         vector<int> order;
-        elimOrderFile2Vector(ToulBar2::varOrder, order);
+        if (isAlreadyTreeDec(ToulBar2::varOrder)) treeDecFile2Vector(ToulBar2::varOrder, order);
+        else elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
@@ -1552,7 +1560,8 @@ void WCSP::preprocessing() {
     // recompute current DAC order and its reverse
     if (ToulBar2::varOrder && numberOfVariables() >= 10000 && numberOfUnassignedVariables() < 10000 && (((long)((void *) ToulBar2::varOrder)) >= 2 && ((long)((void *) ToulBar2::varOrder)) <= 6)) {
         vector<int> order;
-        elimOrderFile2Vector(ToulBar2::varOrder, order);
+        if (isAlreadyTreeDec(ToulBar2::varOrder)) treeDecFile2Vector(ToulBar2::varOrder, order);
+        else elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
     }
     vector<int> elimorder(numberOfVariables(), -1);
@@ -2500,7 +2509,8 @@ void WCSP::initElimConstrs()
     for (unsigned int i = 0; i < vars.size(); i++) initElimConstr();
 
     vector<int> order;
-    elimOrderFile2Vector(ToulBar2::varOrder, order);
+    if (isAlreadyTreeDec(ToulBar2::varOrder)) treeDecFile2Vector(ToulBar2::varOrder, order);
+    else elimOrderFile2Vector(ToulBar2::varOrder, order);
     for (int i = vars.size()-1; i >= 0; --i) vars[order[i]]->queueEliminate();
     elimSpace = 0;
 }
@@ -3110,10 +3120,26 @@ int WCSP::getVACHeuristic() {
 // -----------------------------------------------------------
 // Methods for Cluster Tree Decomposition
 
+bool WCSP::isAlreadyTreeDec(char *filename) {
+    if (filename == NULL) return false;
+    ifstream file;
+    file.open(filename);
+    if (!file) return false;
+    int clusterid = 0;
+    int parentid = 0;
+    file >> clusterid;
+    if (!file) return false;
+    file >> parentid;
+    file.close();
+    if (parentid == -1) return true;
+    return false;
+}
+
 void WCSP::buildTreeDecomposition() {
     td = new TreeDecomposition(this);
     double time = cpuTime();
-    if (ToulBar2::approximateCountingBTD) td->buildFromOrderForApprox();
+    if (isAlreadyTreeDec(ToulBar2::varOrder)) td->buildFromCovering(ToulBar2::varOrder);
+    else if (ToulBar2::approximateCountingBTD) td->buildFromOrderForApprox();
     else td->buildFromOrder();
     if(ToulBar2::verbose >= 0) cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
     if (!ToulBar2::approximateCountingBTD) {
@@ -3154,6 +3180,47 @@ void WCSP::buildTreeDecomposition() {
                 }
             }
         }
+    }
+}
+
+void WCSP::treeDecFile2Vector(char *filename, vector<int> &order)
+{
+    assert(order.size() == 0);
+    map<int, int> clusterIds;
+    int nbclusters = 0;
+
+    set<int> usedvars;
+
+    ifstream file (filename,ios::in);
+    string fstr;
+    while (getline(file, fstr)) {
+        istringstream file(fstr);
+        int num;
+        file >> num;
+        if (!file) break;
+
+        clusterIds[num] = nbclusters;
+        nbclusters++;
+
+        int num_parent;
+        file >> num_parent;
+        assert((num_parent == -1) || (clusterIds.find(num_parent) != clusterIds.end()));
+
+        int v = -1;
+        while (file >> v) {
+            if (usedvars.find(v) == usedvars.end()) {
+                order.push_back(v);
+                usedvars.insert(v);
+            }
+        }
+    }
+    file.close();
+
+    reverse(order.begin(), order.end()); // must return an elimination order, the reverse of a topological order
+
+    if (order.size() != numberOfVariables()) {
+        cerr << "Tree decomposition file does not cover all the variables." << endl;
+        exit(EXIT_FAILURE);
     }
 }
 

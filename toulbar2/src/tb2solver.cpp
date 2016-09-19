@@ -1247,6 +1247,12 @@ bool Solver::solve()
             }
         }
     }
+    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder) && ToulBar2::btdMode >= 3)
+    {
+        cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
+        ToulBar2::btdMode = 2;
+    }
+
     if (CSP(wcsp->getLb(), wcsp->getUb()))
     {
         ToulBar2::LcLevel = LC_AC;

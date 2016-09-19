@@ -133,6 +133,7 @@ enum {
     OPT_wcnf_ext,
     OPT_cnf_ext,
     OPT_qpbo_ext,
+    OPT_treedec_ext,
 
     // search option
     OPT_SEARCH_METHOD,
@@ -263,6 +264,7 @@ CSimpleOpt::SOption g_rgOptions[] =
     { OPT_wcnf_ext,                 (char*) "--wcnf_ext",                              SO_REQ_SEP      },
     { OPT_cnf_ext,                 (char*) "--cnf_ext",                              SO_REQ_SEP      },
     { OPT_qpbo_ext,                 (char*) "--qpbo_ext",                              SO_REQ_SEP      },
+    { OPT_treedec_ext,                     (char*) "--treedec_ext",                                SO_REQ_SEP      },
 
 
     { OPT_SEARCH_METHOD,       		(char*) "-B",             			SO_REQ_SEP  	}, // -B [0,1,2] search method
@@ -549,6 +551,8 @@ void help_msg(char *toulbar2filename)
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
     cout << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
     cout << "   *.order  : variable elimination order" << endl;
+    cout << "   *.cov  : tree decomposition given by a list of clusters in topological order," << endl;
+    cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes" << endl;
     cout << "   *.sol  : solution/certificate for the problem" << endl << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
@@ -651,7 +655,7 @@ void help_msg(char *toulbar2filename)
     cout << endl << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-    cout << "   -O=[filename] : reads a variable elimination order from a file in order to build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering" << endl;
+    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order, each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
     cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
@@ -728,7 +732,7 @@ int _tmain(int argc, TCHAR * argv[])
     //	ToulBar2::lds = 1;
 
     // Configuration for UAI Evaluation
-    //	ToulBar2::uaieval = true;
+    //  ToulBar2::uaieval = true;
     //  ToulBar2::verbose = 0;
     //  ToulBar2::lds = 1;
     //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -752,6 +756,7 @@ int _tmain(int argc, TCHAR * argv[])
     file_extension_map["wcnf_ext"]=".wcnf";
     file_extension_map["cnf_ext"]=".cnf";
     file_extension_map["qpbo_ext"]=".qpbo";
+    file_extension_map["treedec_ext"]=".cov";
 
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
@@ -1587,11 +1592,25 @@ int _tmain(int argc, TCHAR * argv[])
             if(check_file_ext(glob.File(n),file_extension_map["order_ext"]) )
             {
                 cout << "loading variable order in file: " << glob.File(n) << endl;
-                char buf[80];
+                char buf[1024];
                 sprintf(buf,"%s",glob.File(n));
                 //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
                 ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
                 sprintf(ToulBar2::varOrder, "%s",buf);
+            }
+
+            //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
+            // filename containing list of clusters
+            //if (strstr(glob.File(n),".cov"))
+            if(check_file_ext(glob.File(n),file_extension_map["treedec_ext"]) )
+            {
+                cout << "loading tree decomposition in file: " << glob.File(n) << endl;
+                char buf[1024];
+                sprintf(buf,"%s",glob.File(n));
+                //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+                ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
+                sprintf(ToulBar2::varOrder, "%s",buf);
+                if (ToulBar2::btdMode == 0) ToulBar2::btdMode = 1;
             }
 
             // read assignment in file or filename of solution
@@ -1792,7 +1811,7 @@ int _tmain(int argc, TCHAR * argv[])
     if (ToulBar2::uai || ToulBar2::uaieval) ToulBar2::solution_file.close();
 
     // for the competition it was necessary to write a file with the optimal sol
-    /*char line[80];
+    /*char line[1024];
 	  string strfile(argv[1]);
 	  int pos = strfile.find_last_of(".");
 	  string strfilewcsp = strfile.substr(0,pos) + ".ub";

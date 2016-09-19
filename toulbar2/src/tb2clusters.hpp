@@ -276,7 +276,7 @@ private:
     Cluster*          rootRDS; // root cluster of the current RDS iteration
 
     StoreInt   		  currentCluster; // used to restrict local propagation (NC) and boosting by variable elimination to the current cluster's subtree
-    vector<StoreInt>  deltaModified; // accelerator avoiding unecessary checks to delta structure if it is empty (Boolean value)
+    vector<StoreInt>  deltaModified; // accelerator avoiding unnecessary checks to delta structure if it is empty (Boolean value)
 
 public:
 
@@ -295,9 +295,10 @@ public:
     bool isActiveAndInCurrentClusterSubTree(int idc);
 
     //main function to build a cluster tree/path decomposition:
-    // - builds a bucket for each variable following a given variable elimination order
+    // - builds a bucket for each variable following a given variable elimination order or directly from a tree decomposition file
     // - builds a tree/path decomposition from the buckets
     // - associate constraints to clusters, with special treatment for ternary constraints (duplicate flag)
+    void buildFromCovering(string filename);
     void buildFromOrder();
     void buildFromOrderNext(vector<int> &order);
     void getElimVarOrder(vector<int> &elimVarOrder);
