@@ -505,8 +505,10 @@ public:
 
     TreeDecomposition *td;
     TreeDecomposition *getTreeDec()  { return td; }
+    bool isAlreadyTreeDec(char *filename); ///< \brief finds if the given file is a variable ordering or a tree decomposition
     void buildTreeDecomposition();
-    void elimOrderFile2Vector(char *elimVarOrder, vector<int> &order);
+    void elimOrderFile2Vector(char *elimVarOrderFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
+    void treeDecFile2Vector(char *treeDecFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
     void setDACOrder(vector<int> &elimVarOrder);
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp

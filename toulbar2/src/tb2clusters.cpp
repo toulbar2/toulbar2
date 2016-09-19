@@ -1512,18 +1512,172 @@ int TreeDecomposition::makeRooted()
     return height(root);
 }
 
+void TreeDecomposition::buildFromCovering(string filename)
+{
+    if(clusters.size() > 0) {
+        for(unsigned int i=0;i<clusters.size();i++) {
+            Cluster* c = clusters[i];
+            if(c) delete c;
+        }
+    }
+    clusters.clear();
+
+    map<int, int> clusterIds;
+    int nbclusters = 0;
+
+    ConstraintSet usedctrs;
+//    vector<int> order;
+
+    ifstream file (filename.c_str(),ios::in);
+    string fstr;
+    while (getline(file, fstr)) {
+        istringstream file(fstr);
+        int num;
+        file >> num;
+        if (!file) break;
+
+        Cluster* C = new Cluster( this );
+        clusterIds[num] = nbclusters;
+        C->setId(nbclusters);
+        clusters.push_back(C);
+        nbclusters++;
+
+        int num_parent;
+        file >> num_parent;
+        assert((num_parent == -1) || (clusterIds.find(num_parent) != clusterIds.end()));
+
+        int v = -1;
+        while (file >> v) {
+            if (! C->isVar(v)) {
+                C->addVar(wcsp->getVar(v));
+//                if ((num_parent == -1) || (!clusters[clusterIds[num_parent]]->isVar(v))) {
+//                  order.push_back(v);
+//                }
+            }
+        }
+
+        if (num_parent >= 0)
+        {
+            C->addEdge(clusters[clusterIds[num_parent]]);
+            clusters[clusterIds[num_parent]]->addEdge(C);
+        }
+
+        for(TVars::iterator iter = C->getVars().begin(); iter != C->getVars().end(); iter++)
+        {
+            ConstraintList* xctrs = wcsp->getVar(*iter)->getConstrs();
+            for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it)
+            {
+                Constraint* ctr = (*it).constr;
+                bool used = usedctrs.find( ctr ) != usedctrs.end();
+                if (! used)
+                {
+                    int k=0;
+                    while ((k < ctr->arity()) && (C->isVar(ctr->getVar(k)->wcspIndex)))
+                        k++;
+
+                    if (k == ctr->arity())
+                    {
+                        usedctrs.insert(ctr);
+                        C->addCtr(ctr);
+                    }
+                }
+            }
+        }
+    }
+    file.close();
+//    reverse(order.begin(), order.end()); // must return an elimination order, the reverse of a topological order
+
+    // buildFromOrderNext(order);
+    // if (ToulBar2::btdMode == 3) pathFusions(order); // bug: it assumes cluster.size() == order.size()
+    // else treeFusions(); // we assume there is no cluster included into another
+
+    for(unsigned int i = 0; i < clusters.size(); i++) {
+        Cluster* c = clusters[i];
+        if (c) c->getDescendants().clear();
+    }
+
+    if (ToulBar2::btdRootCluster == -1) ToulBar2::btdRootCluster = 0;
+    int h = makeRooted();
+
+    if(ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
+    if (!ToulBar2::approximateCountingBTD)
+    {
+        // assign constraints to clusters and check for duplicate ternary constraints
+        for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+            Constraint* ctr = wcsp->getCtr(i);
+            ctr->assignCluster();
+            if (ctr->connected() && !ctr->isSep()) {
+                if(ctr->arity() == 3) {
+                    TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+                    tctr->xy->setCluster( tctr->getCluster() );
+                    tctr->xz->setCluster( tctr->getCluster() );
+                    tctr->yz->setCluster( tctr->getCluster() );
+                }
+            }
+        }
+        for (int i=0; i<wcsp->elimBinOrder; i++) if (wcsp->elimBinConstrs[i]->connected()) {
+            Constraint* ctr = wcsp->elimBinConstrs[i];
+            ctr->assignCluster();
+            if (ctr->connected() && !ctr->isSep()) {
+                if(ctr->arity() == 3) {
+                    TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+                    tctr->xy->setCluster( tctr->getCluster() );
+                    tctr->xz->setCluster( tctr->getCluster() );
+                    tctr->yz->setCluster( tctr->getCluster() );
+                }
+            }
+        }
+        for (int i=0; i<wcsp->elimTernOrder; i++) if (wcsp->elimTernConstrs[i]->connected()) {
+            Constraint* ctr = wcsp->elimTernConstrs[i];
+            ctr->assignCluster();
+            if (ctr->connected() && !ctr->isSep()) {
+                if(ctr->arity() == 3) {
+                    TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+                    tctr->xy->setCluster( tctr->getCluster() );
+                    tctr->xz->setCluster( tctr->getCluster() );
+                    tctr->yz->setCluster( tctr->getCluster() );
+                }
+            }
+        }
+
+        for (unsigned int i=0; i<wcsp->numberOfConstraints(); i++) {
+            Constraint* ctr = wcsp->getCtr(i);
+            if (ctr->connected() && !ctr->isSep()) {
+                if(ctr->arity() == 3) {
+                    TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+                    tctr->setDuplicates();
+                    assert(tctr->xy->getCluster() == tctr->getCluster() &&
+                            tctr->xz->getCluster() == tctr->getCluster() &&
+                            tctr->yz->getCluster() == tctr->getCluster() );
+                }
+            }
+        }
+        for (int i=0; i<wcsp->elimTernOrder; i++) if (wcsp->elimTernConstrs[i]->connected()) {
+            Constraint* ctr = wcsp->elimTernConstrs[i];
+            if (ctr->connected() && !ctr->isSep()) {
+                if(ctr->arity() == 3) {
+                    TernaryConstraint* tctr = (TernaryConstraint*) ctr;
+                    tctr->setDuplicates();
+                    assert(tctr->xy->getCluster() == tctr->getCluster() &&
+                            tctr->xz->getCluster() == tctr->getCluster() &&
+                            tctr->yz->getCluster() == tctr->getCluster() );
+                }
+            }
+        }
+    }
+    if(ToulBar2::verbose >= 0) cout << "Number of clusters         : " << clusters.size() << endl;
+    if(ToulBar2::debug >= 1 || ToulBar2::verbose >= 1) print();
+    if (ToulBar2::dumpWCSP) dump();
+    assert(verify());
+
+}
+
 void TreeDecomposition::buildFromOrder()
 {
     vector<int> order;
+    assert(!((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder));
     ((WCSP *) wcsp)->elimOrderFile2Vector(ToulBar2::varOrder, order);
-    if (!ToulBar2::varOrder) {
-        int n = wcsp->numberOfVariables();
-        for (int i = n - 1; i >= n / 2; --i) {
-            int tmp  = order[n - i - 1];
-            order[n - i - 1] = order[i];
-            order[i] = tmp;
-        }
-    }
+    if (!ToulBar2::varOrder) reverse(order.begin(), order.end());
 
     if (clusters.size() > 0) {
         for (unsigned int i = 0; i < clusters.size(); i++) {
@@ -1585,15 +1739,9 @@ void TreeDecomposition::buildFromOrderForApprox()
 //	int nbcstr = 0;					//
     double time;
 
+    assert(!((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder));
     ((WCSP *) wcsp)->elimOrderFile2Vector(ToulBar2::varOrder, order);
-    if (!ToulBar2::varOrder) {
-        int n = wcsp->numberOfVariables();
-        for (int i = n - 1; i >= n / 2; --i) {
-            int tmp  = order[n - i - 1];
-            order[n - i - 1] = order[i];
-            order[i] = tmp;
-        }
-    }
+    if (!ToulBar2::varOrder) reverse(order.begin(), order.end());
 
     if (clusters.size() > 0) {
         for (unsigned int i = 0; i < clusters.size(); i++) {

@@ -1342,6 +1342,37 @@ Long luby(Long r)
 
 bool Solver::solve()
 {
+    // Last-minute compatibility checks for ToulBar2 selected options
+    wcsp->setUb(tb2checkOptions(wcsp->getUb()));
+
+    if (wcsp->isGlobal() && ToulBar2::btdMode >= 1)    {
+        cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
+        ToulBar2::btdMode = 0;
+    }
+    if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1))  {
+        cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
+        ToulBar2::elimDegree_preprocessing = -1;
+    }
+    if (ToulBar2::incop_cmd.size() > 0)    {
+        for (unsigned int i=0; i<wcsp->numberOfVariables(); i++) {
+            if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
+                cout << "Warning! Cannot use INCOP local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                ToulBar2::incop_cmd = "";
+                break;
+            }
+        }
+    }
+    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder) && ToulBar2::btdMode >= 3)
+    {
+        cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
+        ToulBar2::btdMode = 2;
+    }
+
+    if (CSP(wcsp->getLb(), wcsp->getUb()))
+    {
+        ToulBar2::LcLevel = LC_AC;
+    }
+
     Cost initialUpperBound = wcsp->getUb();
     nbBacktracks = 0;
     nbNodes = 0;
