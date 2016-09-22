@@ -7,8 +7,7 @@
 
 #include "tb2wcsp.hpp"
 
-class naryRandom
-{
+class naryRandom {
 public:
 
     WCSP &wcsp;
@@ -39,3 +38,11 @@ public:
 
 
 #endif /*TB2RANDOMGEN_H_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

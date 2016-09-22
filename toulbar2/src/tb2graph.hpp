@@ -29,8 +29,7 @@ using namespace std;
 
 // BTList Wrapper for easier usage
 template <typename T>
-class DLinkStore
-{
+class DLinkStore {
 private:
     int blkSize;
     StoreInt curEmpty;
@@ -68,8 +67,7 @@ public:
 };
 
 template <typename T>
-class BTListWrapper
-{
+class BTListWrapper {
 private:
     BTList<T> list;
     DLinkStore<T> *dlinkStore;
@@ -110,8 +108,7 @@ public:
     iterator end() {return list.end();}
 };
 
-class Graph
-{
+class Graph {
 
 private:
 
@@ -144,7 +141,8 @@ private:
             for (int i=0;i<n;i++) edgeList[i] = new BTListWrapper<int>(dLinkStore);
         }
 
-        ~Vertex() {
+        ~Vertex()
+        {
             for (unsigned int i = 0; i < edgeList.size(); i++) delete edgeList[i];
         }
     };
@@ -294,8 +292,7 @@ public:
     // iterate each in-coming edges
     class iterator;
     friend class iterator;
-    class iterator
-    {
+    class iterator {
         int node;
         vector<List_Node *>::iterator next_edge;
     public:
@@ -343,8 +340,7 @@ public:
     // iterate each in-coming edges between two nodes
     class edge_iterator;
     friend class edge_iterator;
-    class edge_iterator
-    {
+    class edge_iterator {
         BTListWrapper<int>::iterator next_edge;
         vector<List_Node *> &edgeInfo;
     public:
@@ -389,8 +385,7 @@ public:
     // iterate each neigbouring nodes
     class node_iterator;
     friend class node_iterator;
-    class node_iterator
-    {
+    class node_iterator {
         BTListWrapper<int>::iterator next_node;
     public:
         node_iterator(BTListWrapper<int>::iterator _start)
@@ -423,3 +418,11 @@ public:
 };
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

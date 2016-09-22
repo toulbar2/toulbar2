@@ -307,9 +307,7 @@ void WCSP::read_wcsp(const char *fileName)
     } else if (ToulBar2::qpbo) {
         read_qpbo(fileName);
         return;
-
     }
-
     string pbname;
     int nbvar, nbval, nbconstr;
     int nbvaltrue = 0;
@@ -397,7 +395,8 @@ void WCSP::read_wcsp(const char *fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction *decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                } else { // monolithic global cost functions
+                }
+                else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             } else {
@@ -413,7 +412,8 @@ void WCSP::read_wcsp(const char *fileName)
                     }
                     ntuples = sharedSize[reusedconstr];
                 }
-                if ((defval != MIN_COST) || (ntuples > 0)) {
+                if((defval != MIN_COST) || (ntuples > 0))
+                {
                     Cost tmpcost = defval * K;
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                     int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost,ntuples);
@@ -747,7 +747,8 @@ void WCSP::read_wcsp(const char *fileName)
         if (seen[unaryconstrs[u].var->wcspIndex] == -1) {
             seen[unaryconstrs[u].var->wcspIndex] = newunaryconstrs.size();
             newunaryconstrs.push_back(unaryconstrs[u]);
-        } else {
+        }
+        else {
             for (unsigned int i = 0; i < unaryconstrs[u].var->getDomainInitSize(); i++) {
                 if (newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] < getUb()) {
                     if (unaryconstrs[u].costs[i] < getUb()) newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] += unaryconstrs[u].costs[i];
@@ -800,7 +801,6 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 
 void WCSP::read_uai2008(const char *fileName)
 {
-    string dummy;
     // Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
     if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
@@ -875,6 +875,7 @@ void WCSP::read_uai2008(const char *fileName)
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
+
         if (arity > 3) {
             int scopeIndex[MAX_ARITY];
             if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
@@ -887,7 +888,8 @@ void WCSP::read_uai2008(const char *fileName)
             if (ToulBar2::verbose >= 3) cout << endl;
             lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST,LONGLONG_MAX) );
             assert(lctrs.back() >= 0);
-        } else if (arity == 3) {
+        }
+        else if (arity == 3) {
             file >> i;
             file >> j;
             file >> k;
@@ -909,7 +911,8 @@ void WCSP::read_uai2008(const char *fileName)
             }
             lctrs.push_back(postTernaryConstraint(i, j, k, costs));
             assert(lctrs.back() >= 0);
-        } else if (arity == 2) {
+        }
+        else if (arity == 2) {
             file >> i;
             file >> j;
             if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
@@ -927,7 +930,8 @@ void WCSP::read_uai2008(const char *fileName)
             }
             lctrs.push_back(postBinaryConstraint(i, j, costs));
             assert(lctrs.back() >= 0);
-        } else if (arity == 1) {
+        }
+        else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
             x = (EnumeratedVariable *) vars[i];
@@ -1062,11 +1066,11 @@ void WCSP::read_uai2008(const char *fileName)
         else if (*it == -2) { ctr = NULL; arity = 0; }
         else { assert(*it >= 0); ctr = getCtr(*it); arity = ctr->arity(); }
         switch (arity) {
-        case 0:
+        case 0: {
             inclowerbound += costs[ictr][0];
-            break;
+            break; }
 
-        case 1:
+        case 1: {
             unaryconstrs[iunaryctr].costs.clear();
             for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
                 if (ToulBar2::seq) {
@@ -1087,26 +1091,26 @@ void WCSP::read_uai2008(const char *fileName)
             }
             iunaryctr++;
             if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;
-            break;
+            break; }
 
-        case 2:
+        case 2: {
             bctr = (BinaryConstraint *) ctr;
             x = (EnumeratedVariable *) bctr->getVar(0);
             y = (EnumeratedVariable *) bctr->getVar(1);
             postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs[ictr]);
             if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;
-            break;
+            break; }
 
-        case 3:
+        case 3: {
             tctr = (TernaryConstraint *) ctr;
             x = (EnumeratedVariable *) tctr->getVar(0);
             y = (EnumeratedVariable *) tctr->getVar(1);
             z = (EnumeratedVariable *) tctr->getVar(2);
             postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr]);
             if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;
-            break;
+            break; }
 
-        default:
+        default: {
             nctr = (NaryConstraint *) ctr;
             j = 0;
             nctr->firstlex();
@@ -1117,8 +1121,7 @@ void WCSP::read_uai2008(const char *fileName)
             }
             if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
             postNaryConstraintEnd(nctr->wcspIndex);
-            break;
-
+            break; }
         }
         ictr++;
         ++it;
@@ -1130,6 +1133,7 @@ void WCSP::read_uai2008(const char *fileName)
     sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
+
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
@@ -1181,17 +1185,16 @@ void WCSP::solution_UAI(Cost res, bool opt)
 //	    ToulBar2::solution_file << "-BEGIN-" << endl;
         ToulBar2::solution_file.close();
         ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
-        //ToulBar2::solution_file << "MPE" << endl;
+        ToulBar2::solution_file << "MPE" << endl;
     }
 //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
-
-    if (false) { //(ToulBar2::showSolutions && !ToulBar2::uaieval) {
+    if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
         cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
         cout << "s " << (Cost2LogProb(res) + ToulBar2::markov_log) / Log(10.) << endl;
         cout << numberOfVariables();
         printSolution(cout);
     }
-    //ToulBar2::solution_file << numberOfVariables();
+    ToulBar2::solution_file << numberOfVariables();
     printSolution(ToulBar2::solution_file);
     ToulBar2::solution_file << endl;
 //	if (opt) {
@@ -1580,35 +1583,10 @@ void WCSP::read_qpbo(const char *fileName)
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
 
-TrieNum *WCSP::read_TRIE(const char *fileName)
-{
-    TrieNum *trie = new TrieNum();
-    string strie;
-    if (ToulBar2::isTrie_File) {
-        strie = ToulBar2::Trie_File;
-        cout << "loading trie solution file of file: " << strie << endl;
-    } else {
-        strie = string(fileName) + string(".trie");
-        cout << "loading trie solution file of file: " << strie << endl;
-    }
-    vector<int> position_vector;
-    Cost sol_cost;
-    string s;
-    istringstream line;
-    ifstream ftrie;
-    ftrie.open(strie.c_str());
-    if (!ftrie) { cerr << "Could not open file " << strie << endl; exit(EXIT_FAILURE); }
-    else {cerr << "Fill the Z trie using " << strie << endl;}
-    while (!ftrie.eof()) {
-        getline(ftrie, s);
-        line.str(s);
-        line.clear();
-        if (line.str().empty()) {
-            line.str().clear();
-        } else {
-            line >> sol_cost;
-            trie->add_costs(sol_cost);
-        }
-    }
-    return trie;
-}
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

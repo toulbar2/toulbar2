@@ -48,8 +48,7 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator      // : public Variable::iterator {
-    {
+    class iterator {    // : public Variable::iterator {
         IntervalVariable *var;
         Value value;
     public:
@@ -100,3 +99,11 @@ public:
 };
 
 #endif /*TB2INTERVAR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -13,8 +13,7 @@
 
 using namespace std;
 
-class WeightedAutomaton
-{
+class WeightedAutomaton {
 public:
     virtual void setNumStates(int nStates) = 0;
     virtual void addInitialState(int begin) = 0;
@@ -40,8 +39,7 @@ struct WTransition {
     }
 };
 
-class WFA
-{
+class WFA{
 private:
     unsigned int nbStates;
     list<pair<int, Cost> > initialStates;
@@ -64,3 +62,11 @@ public:
 };
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

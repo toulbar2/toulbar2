@@ -268,17 +268,10 @@ public:
     {
         assert(forbiddenScopeIndex >= 0); assert(forbiddenScopeIndex < 3);
         switch (forbiddenScopeIndex) {
-        case 0:
-            return min(y->getDACOrder(), z->getDACOrder());
-            break;
-        case 1:
-            return min(x->getDACOrder(), z->getDACOrder());
-            break;
-        case 2:
-            return min(x->getDACOrder(), y->getDACOrder());
-            break;
-        default:
-            exit(EXIT_FAILURE);
+        case 0: return min(y->getDACOrder(),z->getDACOrder()); break;
+        case 1: return min(x->getDACOrder(),z->getDACOrder()); break;
+        case 2: return min(x->getDACOrder(),y->getDACOrder()); break;
+        default: exit(EXIT_FAILURE);
         }
     }
     Variable *getDACVar(int varCtrIndex) const FINAL
@@ -344,7 +337,8 @@ protected:
     String iterTuple;
 
 public:
-    AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in) {
+    AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in)
+    {
         scope = new EnumeratedVariable* [arity_];
         scope_dac = new EnumeratedVariable* [arity_];
         links = new DLink<ConstraintLink> *[arity_];
@@ -360,7 +354,8 @@ public:
         setDACScopeIndex();
     }
 
-    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp) {
+    AbstractNaryConstraint(WCSP *wcsp) : Constraint(wcsp)
+    {
     }
 
     virtual ~AbstractNaryConstraint() {}
@@ -494,3 +489,11 @@ public:
 
 
 #endif /*TB2ABSTRACTCONSTR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

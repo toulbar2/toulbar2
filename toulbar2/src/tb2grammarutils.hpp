@@ -8,8 +8,7 @@
 
 using namespace std;
 
-class WeightedCNFCFG
-{
+class WeightedCNFCFG {
 public:
     virtual void setStartSymbol(int start) = 0;
     virtual void setNumNonTerminals(int num) = 0;
@@ -23,8 +22,7 @@ struct WCNFRule {
     int weight;
     int to[2];
     WCNFRule(int A = 0, int B = 0, int C = 0, int w = 0): from(A), weight(w) {
-        to[0] = B;
-        to[1] = C;
+       to[0] = B; to[1] = C;
     }
 
     bool operator==(const WCNFRule &rule) const {
@@ -40,8 +38,7 @@ struct WCNFRule {
     }
 };
 
-class WCNFCFG : public WeightedCNFCFG
-{
+class WCNFCFG : public WeightedCNFCFG { 
 
 // Assumption: if A->a and B-> a, then A = B
 
@@ -118,3 +115,11 @@ public:
 };
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

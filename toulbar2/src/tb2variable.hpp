@@ -112,6 +112,7 @@ public:
     virtual bool verifyNC() = 0;
     virtual bool isEAC() {return true;}
     virtual bool verifyDEE() {return true;}
+
     void queueNC();
     void queueInc();
     void queueDec();
@@ -154,7 +155,8 @@ public:
             pos = (*itclusters).second;
             ++itclusters;
             return true;
-        } else return false;
+        }
+        else return false;
     }
 
     /*
@@ -189,3 +191,11 @@ public:
 };
 
 #endif /*TB2VARIABLE_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

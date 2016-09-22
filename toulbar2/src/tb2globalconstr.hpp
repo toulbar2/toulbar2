@@ -51,20 +51,16 @@ protected:
     // supports[i] to the constraint struture
     virtual void changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas) {}
     virtual void changeAfterExtend(int support, map<Value, Cost> &delta) {
-        vector<int> supports;
-        supports.push_back(support);
-        vector<map<Value, Cost> > deltas;
-        deltas.push_back(delta);
+        vector<int> supports; supports.push_back(support);
+        vector<map<Value, Cost> > deltas; deltas.push_back(delta);
         changeAfterExtend(supports, deltas);
     }
     // project the cost stored in deltas[i] to the unary constraint of
     // supports[i] from the constraint struture
     virtual void changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas) {}
     virtual void changeAfterProject(int support, map<Value, Cost> &delta) {
-        vector<int> supports;
-        supports.push_back(support);
-        vector<map<Value, Cost> > deltas;
-        deltas.push_back(delta);
+        vector<int> supports; supports.push_back(support);
+        vector<map<Value, Cost> > deltas; deltas.push_back(delta);
         changeAfterProject(supports, deltas);
     }
     void project(int index, Value value, Cost cost, bool delayed = false);
@@ -125,13 +121,11 @@ public:
             if (getVar(*j)->unassigned()) {
                 cout << getVar(*j)->getName() << " ";
             }
-        }
-        cout << endl;
+        } cout << endl;
         EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             cout << EACCost[*v] << " ";
-        }
-        cout << endl;
+        } cout << endl;
     }
     virtual void showCostProvidingPartition() {
         for (int i = 0; i < arity_; i++) {
@@ -203,3 +197,11 @@ public:
 
 
 #endif /*TB2GLOBALCONSTR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

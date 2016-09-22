@@ -12,8 +12,7 @@
 #include <string>
 using namespace std;
 
-class GrammarConstraint : public DPGlobalConstraint
-{
+class GrammarConstraint : public DPGlobalConstraint {
 private:
 
     // dimension: i x j x |N|
@@ -96,4 +95,12 @@ public:
 };
 
 #endif /* TB2GRAMMARCCONSTR_HPP_ */
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

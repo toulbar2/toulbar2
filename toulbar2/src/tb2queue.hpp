@@ -11,7 +11,8 @@
 
 typedef enum {NOTHING_EVENT = 0, INCREASE_EVENT = 1, DECREASE_EVENT = 2} EventType;
 
-struct VariableWithTimeStamp {
+struct VariableWithTimeStamp 
+{
     Variable *var;
     Long timeStamp;
     int incdec;
@@ -49,3 +50,11 @@ public:
 };
 
 #endif /*TB2QUEUE_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

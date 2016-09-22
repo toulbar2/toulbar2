@@ -93,7 +93,8 @@ public:
         float meancost;
         long unsigned int size;
 
-        bool operator<(const TripleVarCostSize &a) const {
+        bool operator<(const TripleVarCostSize &a) const
+        {
             return (meancost) > (a.meancost);
         }
     };
@@ -280,8 +281,7 @@ public:
     unsigned int numberOfUnassignedVariables() const {
         int res = 0;
         for (unsigned int i = 0; i < vars.size(); i++) if (unassigned(i)) res++;
-        return res;
-    }
+        return res;}
     unsigned int numberOfConstraints() const {return constrs.size();}	///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const;				///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const;		///< \brief current number of binary cost functions
@@ -292,7 +292,8 @@ public:
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     void cartProd(BigInteger &cartesianProduct) {
-        for (vector<Variable *>::iterator it = vars.begin(); it != vars.end(); it++) {
+        for(vector<Variable*>::iterator it=vars.begin(); it!=vars.end();it++)
+        {
             Variable *x = *it;
             mpz_mul_si(cartesianProduct.integer, cartesianProduct.integer, x->getDomainSize());
         }
@@ -529,3 +530,11 @@ public:
 };
 
 #endif /*TB2WCSP_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

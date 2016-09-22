@@ -17,14 +17,14 @@
 #include "tb2store.hpp"
 
 template <class T>
-struct DLink {
+struct DLink
+{
     bool removed;       // true if the corresponding element has been removed
     DLink *next;
     DLink *prev;
     T content;
 
-public:
-    DLink<T>() : removed(true), next(NULL), prev(NULL) {}
+public: DLink<T>() : removed(true), next(NULL), prev(NULL) {}
 };
 
 template <class T>
@@ -220,3 +220,11 @@ template <class T, class V> template <class Q> void StoreStack<T, V>::restore(BT
 }
 
 #endif /*TB2BTLIST_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

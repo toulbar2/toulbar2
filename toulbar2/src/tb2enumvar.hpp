@@ -42,7 +42,7 @@ public:
     bool enumerated() const FINAL {return true;}
 
     unsigned int getDomainInitSize() const {return domain.getInitSize();}
-#ifdef WCSPFORMATONLY
+#if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     unsigned int toIndex(Value v) const {return (unsigned int) v;}
     Value toValue(unsigned int idx) const {return idx;}
 #else
@@ -123,8 +123,7 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator
-    {
+    class iterator {
         EnumeratedVariable *var;
         Domain::iterator diter;
     public:
@@ -195,3 +194,11 @@ public:
 };
 
 #endif /*TB2ENUMVAR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

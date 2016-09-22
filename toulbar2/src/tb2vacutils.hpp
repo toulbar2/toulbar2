@@ -9,8 +9,7 @@
 #include "tb2ternaryconstr.hpp"
 
 
-class VACVariable : public EnumeratedVariable
-{
+class VACVariable : public EnumeratedVariable {
 
 public:
 
@@ -126,8 +125,7 @@ public:
 /**
  * A class that stores information about a binary cost function
  */
-class VACBinaryConstraint : public BinaryConstraint
-{
+class VACBinaryConstraint : public BinaryConstraint {
 
 private:
 
@@ -173,8 +171,7 @@ public:
 /**
  * A class that stores information about a ternary cost function
  */
-class VACTernaryConstraint : public TernaryConstraint
-{
+class VACTernaryConstraint : public TernaryConstraint {
 
 private:
 
@@ -217,3 +214,11 @@ public:
 };
 
 #endif /*TB2VACUTILS_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

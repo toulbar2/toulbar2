@@ -63,18 +63,13 @@ typedef long double Double;
 inline void mysrand(long seed) {return srand48(seed);}
 inline int myrand() { return lrand48();  }
 inline Long myrandl() {return (Long)((Long)lrand48()/**LONGLONG_MAX*/);}
-
 #endif
 #ifdef WINDOWS
 inline void mysrand(long seed) {return srand(seed);}
 inline int myrand() { return rand();  }
 inline Long myrandl() {return (Long)((Long)rand()/**LONGLONG_MAX*/);}
-
-
 //replace srand48(seed) by srand(seed)
 //replace drand48() by (double(rand()) / RAND_MAX)
-
-
 #endif
 
 
@@ -159,7 +154,8 @@ inline int cost2log2(int x)
     if (x == 0) return -1;
     register int l2 = 0;
     x >>= 1;
-    for (; x != 0; x >>= 1) {
+        for (; x != 0; x >>=1)
+        {
         ++ l2;
     }
     return (l2);
@@ -181,13 +177,13 @@ inline Long string2Cost(const char *ptr) {return atoll(ptr);}
 inline Long string2Cost(const char *ptr) {return atol(ptr);}
 #endif
 
-
 inline int cost2log2(Long x)
 {
     if (x == 0) return -1;
     register int l2 = 0;
     x >>= 1;
-    for (; x != 0; x >>= 1) {
+	    for (; x != 0; x >>=1)
+	    {
         ++ l2;
     }
     return (l2);
@@ -211,3 +207,11 @@ inline int cost2log2gub(Long x) {return cost2log2(x);}
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

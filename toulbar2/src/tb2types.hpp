@@ -83,68 +83,54 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline Cost MIN(Cost a, Cost b)
-{
+inline Cost MIN(Cost a, Cost b) {
     return min(a, b);
 }
-inline Cost MAX(Cost a, Cost b)
-{
+inline Cost MAX(Cost a, Cost b) {
     return max(a, b);
 }
-inline Cost GLB(Cost a, Cost b)
-{
+inline Cost GLB(Cost a, Cost b) {
     return MIN(a, b);
 }
-inline Cost LUB(Cost a, Cost b)
-{
+inline Cost LUB(Cost a, Cost b) {
     return MAX(a, b);
 }
-inline bool GLB(Cost *a, Cost b)
-{
+inline bool GLB(Cost *a, Cost b) {
     if (b < *a) {
         *a = b;
         return true;
     } else
         return false;
 }
-inline bool LUB(Cost *a, Cost b)
-{
+inline bool LUB(Cost *a, Cost b) {
     if (b > *a) {
         *a = b;
         return true;
     } else
         return false;
 }
-inline bool GLBTEST(Cost a, Cost b)
-{
+inline bool GLBTEST(Cost a, Cost b) {
     return (b < a);
 }
-inline bool LUBTEST(Cost a, Cost b)
-{
+inline bool LUBTEST(Cost a, Cost b) {
     return (b > a);
 }
-inline bool DACTEST(Cost a, Cost b)
-{
+inline bool DACTEST(Cost a, Cost b) {
     return (a == 0 && b > 0);
 }
-inline bool SUPPORTTEST(Cost a, Cost b)
-{
+inline bool SUPPORTTEST(Cost a, Cost b) {
     return false;
 }
-inline bool SUPPORTTEST(Cost a)
-{
+inline bool SUPPORTTEST(Cost a) {
     return false;
 }
-inline bool CUT(Cost lb, Cost ub)
-{
+inline bool CUT(Cost lb, Cost ub) {
     return lb >= ub;
 }
-inline bool CSP(Cost lb, Cost ub)
-{
+inline bool CSP(Cost lb, Cost ub) {
     return (ub - lb) <= 1;
 }
-inline void initCosts(Cost ub)
-{
+inline void initCosts(Cost ub) {
 }
 #endif
 
@@ -169,8 +155,6 @@ typedef double TLogProb;
 typedef Double TProb;
 typedef Double TLogProb;
 #endif
-
-
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)
@@ -282,8 +266,7 @@ struct ValueCost {
 };
 
 ///contains all global variables (mainly solver's command-line options)
-class ToulBar2
-{
+class ToulBar2 {
 protected:
     virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
 public:
@@ -427,8 +410,7 @@ public:
 extern IloSolver IlogSolver;
 #define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0);})
 #else
-class Contradiction
-{
+class Contradiction {
 public:
     Contradiction() {
         if (ToulBar2::verbose >= 2)
@@ -464,8 +446,7 @@ struct ConstraintLink {
     int scopeIndex;
 };
 
-class WCSPLink
-{
+class WCSPLink {
 public:
     WCSP *const wcsp;
     int wcspIndex;
@@ -499,3 +480,11 @@ typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
 
 #endif /*TB2TYPES_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

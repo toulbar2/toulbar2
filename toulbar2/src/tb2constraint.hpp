@@ -133,7 +133,8 @@ public:
     void sumScopeIncluded(Constraint *ctr);
 
 
-    bool scopeIncluded(Constraint *ctr) {
+    bool scopeIncluded( Constraint* ctr )
+    {
         bool isincluded = true;
         int a_in = ctr->arity();
         if (a_in >= arity()) return false;
@@ -142,7 +143,8 @@ public:
     }
 
 
-    void scopeCommon(TSCOPE &scope_out, Constraint *ctr) {
+    void scopeCommon( TSCOPE& scope_out, Constraint* ctr )
+    {
         TSCOPE scope1, scope2;
         getScope(scope1);
         ctr->getScope(scope2);
@@ -157,10 +159,10 @@ public:
     }
 
 
-    void scopeUnion(TSCOPE &scope_out, Constraint *ctr) {
+    void scopeUnion( TSCOPE& scope_out, Constraint* ctr )
+    {
         TSCOPE scope1, scope2;
-        getScope(scope1);
-        ctr->getScope(scope2);
+        getScope( scope1 ); ctr->getScope( scope2 );
 
         assert(arity() == (int) scope1.size());
         assert(ctr->arity() == (int) scope2.size());
@@ -170,7 +172,8 @@ public:
                   inserter(scope_out, scope_out.begin()));
     }
 
-    void scopeDifference(TSCOPE &scope_out, Constraint *ctr) {
+    void scopeDifference( TSCOPE& scope_out, Constraint* ctr )
+    {
         TSCOPE scope1, scope2;
         getScope(scope1);
         ctr->getScope(scope2);
@@ -179,7 +182,8 @@ public:
                        inserter(scope_out, scope_out.begin()));
     }
 
-    int order(Constraint *ctr) {
+    int order( Constraint* ctr )
+    {
         if (arity() < ctr->arity()) return 1;
         else if (arity()  > ctr->arity()) return -1;
         TSCOPE scope1, scope2;
@@ -221,3 +225,11 @@ public:
 };
 
 #endif /*TB2CONSTRAINT_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

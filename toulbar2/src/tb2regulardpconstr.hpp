@@ -12,8 +12,7 @@
 #include <string>
 using namespace std;
 
-class RegularDPConstraint : public DPGlobalConstraint
-{
+class RegularDPConstraint : public DPGlobalConstraint {
 private:
 
     struct DFA : public WeightedAutomaton {
@@ -153,3 +152,11 @@ public:
 };
 
 #endif /* TB2REGULARDPCONSTR_HPP_ */
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

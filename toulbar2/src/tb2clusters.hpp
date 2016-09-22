@@ -267,8 +267,7 @@ public:
 };
 
 
-class TreeDecomposition
-{
+class TreeDecomposition  {
 private:
     WCSP			  *wcsp;
     vector<Cluster *>  clusters;
@@ -357,3 +356,11 @@ public:
 };
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -81,8 +81,6 @@ public:
     }
 
     Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) {
-
-
         unsigned int vindex[2];
         vindex[ getIndex(xx) ] = xx->toIndex(vx);
         vindex[ getIndex(yy) ] = yy->toIndex(vy);
@@ -109,7 +107,6 @@ public:
         } else {
             costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] += mincost;
         }
-
     }
 
     void setCost(Cost c) {
@@ -135,8 +132,7 @@ public:
         unsigned int ix, iy;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                ix = x->toIndex(*iterx);
-                iy = y->toIndex(*itery);
+                ix = x->toIndex(*iterx);  	iy = y->toIndex(*itery);
                 if (xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
                 else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
             }
@@ -149,8 +145,7 @@ public:
         unsigned int ix, iy;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                ix = x->toIndex(*iterx);
-                iy = y->toIndex(*itery);
+                ix = x->toIndex(*iterx); iy = y->toIndex(*itery);
                 Cost c = costs[ix * sizeY + iy];
                 //if(costs[ix * sizeY + iy] < wcsp->getUb()) //BUG with BTD: ub is only local, deltaCosts should be considered
                 {
@@ -220,7 +215,8 @@ public:
         yvar = y;
     }
 
-    bool next(String &t, Cost &c) {
+    bool next( String& t, Cost& c) 
+    { 
         Char tch[3];
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
@@ -271,7 +267,8 @@ public:
 //    }
 
 
-    void fillElimConstr(EnumeratedVariable *xin, EnumeratedVariable *yin, Constraint *from1,  Constraint *from2) {
+    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, Constraint *from1,  Constraint *from2 )
+    {
         x = xin;
         y = yin;
         sizeX = x->getDomainInitSize();
@@ -313,18 +310,15 @@ public:
         if (getDACScopeIndex() == 0) {
             x->queueAC();
             x->queueEAC1();
-            if (ToulBar2::LcLevel >= LC_DAC) y->queueDAC();
-            else y->queueAC();
+            if (ToulBar2::LcLevel>=LC_DAC) y->queueDAC(); else y->queueAC();
         } else {
             y->queueAC();
             y->queueEAC1();
-            if (ToulBar2::LcLevel >= LC_DAC) x->queueDAC();
-            else x->queueAC();
+            if (ToulBar2::LcLevel>=LC_DAC) x->queueDAC(); else x->queueAC();
         }
     }
     void remove(int varIndex) {
-        if (varIndex == 0) y->queueDEE();
-        else x->queueDEE();
+        if (varIndex == 0) y->queueDEE(); else x->queueDEE();
         if (ToulBar2::LcLevel == LC_AC) {
             if (varIndex == 0) findSupportY();
             else findSupportX();
@@ -415,8 +409,7 @@ public:
 
     bool verify() {
         if (ToulBar2::LcLevel == LC_DAC) {
-            if (getDACScopeIndex() == 0) return verifyX();
-            else return verifyY();
+            if (getDACScopeIndex()==0) return verifyX(); else return verifyY();
         } else {
             return verifyX() && verifyY();
         }
@@ -549,7 +542,6 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, Enumera
 template <typename T>
 void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
-
     x->queueDEE();
     bool supportBroken = false;
     wcsp->revise(this);
@@ -560,7 +552,6 @@ void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVa
         }
     }
     if (supportBroken) {
-        //cout<<"ON RENTRE DANS projection binconstr (supportBroken)"<<endl;
         x->findSupport();
     }
 }
@@ -585,6 +576,12 @@ bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariab
     return true;
 }
 
-
-
 #endif /*TB2BINCONSTR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

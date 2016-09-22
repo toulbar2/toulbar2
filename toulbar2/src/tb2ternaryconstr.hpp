@@ -189,18 +189,12 @@ protected:
     void findSupportX() {findSupport(Functor_getCostXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x, y, z, 0, 1, 2, supportX, deltaCostsX, supportY, supportZ);}
     void findSupportY() {findSupport(Functor_getCostYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y, x, z, 1, 0, 2, supportY, deltaCostsY, supportX, supportZ);}
     void findSupportZ() {findSupport(Functor_getCostZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, x, y, 2, 0, 1, supportZ, deltaCostsZ, supportX, supportY);}
-    void findFullSupportX() {
-        if (y->wcspIndex < z->wcspIndex) findFullSupport(Functor_getCostXYZ(*this), Functor_getCostXZY(*this), Functor_getCostYZX(*this), Functor_getCostWithBinariesXYZ(*this), Functor_addCostXYZ(*this), Functor_addCostXZY(*this), Functor_addCostYZX(*this), functionalX, Functor_getFunctionXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x, y, z, 0, 1, 2, supportX, deltaCostsX, supportY, deltaCostsY, supportZ, deltaCostsZ, xy, xz, yz);
-        else findFullSupport(Functor_getCostXZY(*this), Functor_getCostXYZ(*this), Functor_getCostZYX(*this), Functor_getCostWithBinariesXZY(*this), Functor_addCostXZY(*this), Functor_addCostXYZ(*this), Functor_addCostZYX(*this), functionalX, Functor_getFunctionXZY(*this), functionalZ, Functor_getFunctionZXY(*this), functionalY, Functor_getFunctionYXZ(*this), x, z, y, 0, 2, 1, supportX, deltaCostsX, supportZ, deltaCostsZ, supportY, deltaCostsY, xz, xy, yz);
-    }
-    void findFullSupportY() {
-        if (x->wcspIndex < z->wcspIndex) findFullSupport(Functor_getCostYXZ(*this), Functor_getCostYZX(*this), Functor_getCostXZY(*this), Functor_getCostWithBinariesYXZ(*this), Functor_addCostYXZ(*this), Functor_addCostYZX(*this), Functor_addCostXZY(*this), functionalY, Functor_getFunctionYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y, x, z, 1, 0, 2, supportY, deltaCostsY, supportX, deltaCostsX, supportZ, deltaCostsZ, xy, yz, xz);
-        else findFullSupport(Functor_getCostYZX(*this), Functor_getCostYXZ(*this), Functor_getCostZXY(*this), Functor_getCostWithBinariesYZX(*this), Functor_addCostYZX(*this), Functor_addCostYXZ(*this), Functor_addCostZXY(*this), functionalY, Functor_getFunctionYZX(*this), functionalZ, Functor_getFunctionZYX(*this), functionalX, Functor_getFunctionXYZ(*this), y, z, x, 1, 2, 0, supportY, deltaCostsY, supportZ, deltaCostsZ, supportX, deltaCostsX, yz, xy, xz);
-    }
-    void findFullSupportZ() {
-        if (x->wcspIndex < y->wcspIndex) findFullSupport(Functor_getCostZXY(*this), Functor_getCostZYX(*this), Functor_getCostXYZ(*this), Functor_getCostWithBinariesZXY(*this), Functor_addCostZXY(*this), Functor_addCostZYX(*this), Functor_addCostXYZ(*this), functionalZ, Functor_getFunctionZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, x, y, 2, 0, 1, supportZ, deltaCostsZ, supportX, deltaCostsX, supportY, deltaCostsY, xz, yz, xy);
-        else findFullSupport(Functor_getCostZYX(*this), Functor_getCostZXY(*this), Functor_getCostYXZ(*this), Functor_getCostWithBinariesZYX(*this), Functor_addCostZYX(*this), Functor_addCostZXY(*this), Functor_addCostYXZ(*this), functionalZ, Functor_getFunctionZYX(*this), functionalY, Functor_getFunctionYZX(*this), functionalX, Functor_getFunctionXZY(*this), z, y, x, 2, 1, 0, supportZ, deltaCostsZ, supportY, deltaCostsY, supportX, deltaCostsX, yz, xz, xy);
-    }
+    void findFullSupportX() {if (y->wcspIndex < z->wcspIndex) findFullSupport(Functor_getCostXYZ(*this), Functor_getCostXZY(*this), Functor_getCostYZX(*this), Functor_getCostWithBinariesXYZ(*this), Functor_addCostXYZ(*this), Functor_addCostXZY(*this), Functor_addCostYZX(*this), functionalX, Functor_getFunctionXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x,y,z,0,1,2,supportX,deltaCostsX,supportY,deltaCostsY,supportZ,deltaCostsZ,xy,xz,yz);
+    else findFullSupport(Functor_getCostXZY(*this), Functor_getCostXYZ(*this), Functor_getCostZYX(*this), Functor_getCostWithBinariesXZY(*this), Functor_addCostXZY(*this), Functor_addCostXYZ(*this), Functor_addCostZYX(*this), functionalX, Functor_getFunctionXZY(*this), functionalZ, Functor_getFunctionZXY(*this), functionalY, Functor_getFunctionYXZ(*this), x,z,y,0,2,1,supportX,deltaCostsX,supportZ,deltaCostsZ,supportY,deltaCostsY,xz,xy,yz);}
+    void findFullSupportY() {if (x->wcspIndex < z->wcspIndex) findFullSupport(Functor_getCostYXZ(*this), Functor_getCostYZX(*this), Functor_getCostXZY(*this), Functor_getCostWithBinariesYXZ(*this), Functor_addCostYXZ(*this), Functor_addCostYZX(*this), Functor_addCostXZY(*this), functionalY, Functor_getFunctionYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y,x,z,1,0,2,supportY,deltaCostsY,supportX,deltaCostsX,supportZ,deltaCostsZ,xy,yz,xz);
+    else findFullSupport(Functor_getCostYZX(*this), Functor_getCostYXZ(*this), Functor_getCostZXY(*this), Functor_getCostWithBinariesYZX(*this), Functor_addCostYZX(*this), Functor_addCostYXZ(*this), Functor_addCostZXY(*this), functionalY, Functor_getFunctionYZX(*this), functionalZ, Functor_getFunctionZYX(*this), functionalX, Functor_getFunctionXYZ(*this), y,z,x,1,2,0,supportY,deltaCostsY,supportZ,deltaCostsZ,supportX,deltaCostsX,yz,xy,xz);}
+    void findFullSupportZ() {if (x->wcspIndex < y->wcspIndex) findFullSupport(Functor_getCostZXY(*this), Functor_getCostZYX(*this), Functor_getCostXYZ(*this), Functor_getCostWithBinariesZXY(*this), Functor_addCostZXY(*this), Functor_addCostZYX(*this), Functor_addCostXYZ(*this), functionalZ, Functor_getFunctionZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this),z,x,y,2,0,1,supportZ,deltaCostsZ,supportX,deltaCostsX,supportY,deltaCostsY,xz,yz,xy);
+    else findFullSupport(Functor_getCostZYX(*this), Functor_getCostZXY(*this), Functor_getCostYXZ(*this), Functor_getCostWithBinariesZYX(*this), Functor_addCostZYX(*this), Functor_addCostZXY(*this), Functor_addCostYXZ(*this), functionalZ, Functor_getFunctionZYX(*this), functionalY, Functor_getFunctionYZX(*this), functionalX, Functor_getFunctionXZY(*this), z,y,x,2,1,0,supportZ,deltaCostsZ,supportY,deltaCostsY,supportX,deltaCostsX,yz,xz,xy);}
     bool verifyX() {return verify(x, y, z);}
     bool verifyY() {return verify(y, x, z);}
     bool verifyZ() {return verify(z, x, y);}
@@ -276,9 +270,7 @@ public:
         for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
             for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
                 for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-                    ix = x->toIndex(*iterx);
-                    iy = y->toIndex(*itery);
-                    iz = z->toIndex(*iterz);
+                    ix = x->toIndex(*iterx); iy = y->toIndex(*itery); iz = z->toIndex(*iterz);
                     // if(costs[ix*sizeY*sizeZ + iy*sizeZ + iz] < wcsp->getUb()) // BUG with BTD (local ub, deltaCosts missing)
                     if (costs.empty()) {
                         if (*iterx == functionX[iy * sizeZ + iz]) costsYZ[iy * sizeZ + iz] += xyz->getCost(x, y, z, *iterx, *itery, *iterz);
@@ -459,41 +451,17 @@ public:
 
     void remove(int varIndex) {
         switch (varIndex) {
-        case 0:
-            y->queueDEE();
-            z->queueDEE();
-            if (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 1) findSupportY();
-            if (connected() && (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 2)) findSupportZ();
-            break;
-        case 1:
-            x->queueDEE();
-            z->queueDEE();
-            if (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 0) findSupportX();
-            if (connected() && (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 2)) findSupportZ();
-            break;
-        case 2:
-            x->queueDEE();
-            y->queueDEE();
-            if (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 0) findSupportX();
-            if (connected() && (ToulBar2::LcLevel == LC_AC || getDACScopeIndex() != 1)) findSupportY();
-            break;
+        case 0: y->queueDEE(); z->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1) findSupportY(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+        case 1: x->queueDEE(); z->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=2)) findSupportZ(); break;
+        case 2: x->queueDEE(); y->queueDEE(); if (ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=0) findSupportX(); if(connected()&&(ToulBar2::LcLevel==LC_AC || getDACScopeIndex()!=1)) findSupportY(); break;
         }
     }
 
     void projectFromZero(int varIndex) {
         switch (varIndex) {
-        case 0:
-            if (getDACScopeIndex() == 1) findFullSupportY();
-            else if (getDACScopeIndex() == 2) findFullSupportZ();
-            break;
-        case 1:
-            if (getDACScopeIndex() == 0) findFullSupportX();
-            else if (getDACScopeIndex() == 2) findFullSupportZ();
-            break;
-        case 2:
-            if (getDACScopeIndex() == 0) findFullSupportX();
-            else if (getDACScopeIndex() == 1) findFullSupportY();
-            break;
+        case 0: if (getDACScopeIndex()==1) findFullSupportY(); else if (getDACScopeIndex()==2) findFullSupportZ(); break;
+        case 1: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==2) findFullSupportZ(); break;
+        case 2: if (getDACScopeIndex()==0) findFullSupportX(); else if (getDACScopeIndex()==1) findFullSupportY(); break;
         }
     }
 
@@ -505,15 +473,9 @@ public:
     void assign(int varIndex) {
         deconnect();
         switch (varIndex) {
-        case 0:
-            projectTernaryBinary(Functor_getCostXYZ(*this), Functor_getCostYZX(*this), Functor_addCostYZX(*this), functionalX, Functor_getFunctionXYZ(*this), x, y , z, yz);
-            break;
-        case 1:
-            projectTernaryBinary(Functor_getCostYXZ(*this), Functor_getCostXZY(*this), Functor_addCostXZY(*this), functionalY, Functor_getFunctionYXZ(*this), y, x, z, xz);
-            break;
-        case 2:
-            projectTernaryBinary(Functor_getCostZXY(*this), Functor_getCostXYZ(*this), Functor_addCostXYZ(*this), functionalZ, Functor_getFunctionZXY(*this), z, x, y, xy);
-            break;
+        case 0: projectTernaryBinary(Functor_getCostXYZ(*this),Functor_getCostYZX(*this),Functor_addCostYZX(*this),functionalX,Functor_getFunctionXYZ(*this), x, y ,z, yz);  break;
+        case 1: projectTernaryBinary(Functor_getCostYXZ(*this),Functor_getCostXZY(*this),Functor_addCostXZY(*this),functionalY,Functor_getFunctionYXZ(*this), y, x, z, xz);  break;
+        case 2: projectTernaryBinary(Functor_getCostZXY(*this),Functor_getCostXYZ(*this),Functor_addCostXYZ(*this),functionalZ,Functor_getFunctionZXY(*this), z, x, y, xy);  break;
         }
     }
 
@@ -534,18 +496,9 @@ public:
     void fillEAC2(int varIndex) {
         assert(!isDuplicate());
         switch (varIndex) {
-        case 0:
-            fillEAC2(y, x, z, supportY);
-            fillEAC2(z, x, y, supportZ);
-            break;
-        case 1:
-            fillEAC2(x, y, z, supportX);
-            fillEAC2(z, x, y, supportZ);
-            break;
-        case 2:
-            fillEAC2(x, y, z, supportX);
-            fillEAC2(y, x, z, supportY);
-            break;
+        case 0: fillEAC2(y,x,z,supportY); fillEAC2(z,x,y,supportZ); break;
+        case 1: fillEAC2(x,y,z,supportX); fillEAC2(z,x,y,supportZ); break;
+        case 2: fillEAC2(x,y,z,supportX); fillEAC2(y,x,z,supportY); break;
         }
     }
 
@@ -553,17 +506,10 @@ public:
         assert(!isDuplicate());
         if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex()) return true;
         switch (varIndex) {
-        case 0:
-            return isEAC(Functor_getCostWithBinariesXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x, a, y, z, supportX);
-            break;
-        case 1:
-            return isEAC(Functor_getCostWithBinariesYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y, a, x, z, supportY);
-            break;
-        case 2:
-            return isEAC(Functor_getCostWithBinariesZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, a, x, y, supportZ);
-            break;
-        default:
-            exit(EXIT_FAILURE);
+        case 0: return isEAC(Functor_getCostWithBinariesXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x,a,y,z,supportX); break;
+        case 1: return isEAC(Functor_getCostWithBinariesYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y,a,x,z,supportY); break;
+        case 2: return isEAC(Functor_getCostWithBinariesZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z,a,x,y,supportZ); break;
+        default: exit(EXIT_FAILURE);
         }
         return true;
     }
@@ -573,15 +519,9 @@ public:
         if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex()) return;
         assert(!wcsp->getTreeDec() || (cluster == xy->getCluster() &&  cluster == xz->getCluster() &&  cluster == yz->getCluster()));
         switch (varIndex) {
-        case 0:
-            findFullSupportX();
-            break;
-        case 1:
-            findFullSupportY();
-            break;
-        case 2:
-            findFullSupportZ();
-            break;
+        case 0: findFullSupportX(); break;
+        case 1: findFullSupportY(); break;
+        case 2: findFullSupportZ(); break;
         }
     }
 
@@ -619,8 +559,8 @@ public:
         } else exit(EXIT_FAILURE);
     }
 
-    void extendTernary() {
-        // extend binary cost functions to the ternary cost function
+    void extendTernary()
+    {	// extend binary cost functions to the ternary cost function
         Cost c;
         bool isbincost = false;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -649,7 +589,8 @@ public:
         }
     }
 
-    BinaryConstraint *commonBinary(TernaryConstraint *t) {
+    BinaryConstraint* commonBinary( TernaryConstraint* t )
+    {
         if ((t->getIndex(xy->getVar(0)) >= 0) && (t->getIndex(xy->getVar(1)) >= 0)) return xy;
         else if ((t->getIndex(xz->getVar(0)) >= 0) && (t->getIndex(xz->getVar(1)) >= 0)) return xz;
         else if ((t->getIndex(yz->getVar(0)) >= 0) && (t->getIndex(yz->getVar(1)) >= 0)) return yz;
@@ -662,20 +603,14 @@ public:
     // use weights minus one due to default initialization of conflictWeight to 1
     Long getConflictWeight(int varIndex) const {
         switch (varIndex) {
-        case 0:
-            return Constraint::getConflictWeight() + ((xy->deconnected()) ? (xy->getConflictWeight(xy->getIndex(x)) - 1) : 0) + ((xz->deconnected()) ? (xz->getConflictWeight(xz->getIndex(x)) - 1) : 0);
-            break;
-        case 1:
-            return Constraint::getConflictWeight() + ((xy->deconnected()) ? (xy->getConflictWeight(xy->getIndex(y)) - 1) : 0) + ((yz->deconnected()) ? (yz->getConflictWeight(yz->getIndex(y)) - 1) : 0);
-            break;
-        case 2:
-            return Constraint::getConflictWeight() + ((xz->deconnected()) ? (xz->getConflictWeight(xz->getIndex(z)) - 1) : 0) + ((yz->deconnected()) ? (yz->getConflictWeight(yz->getIndex(z)) - 1) : 0);
-            break;
+        case 0: return Constraint::getConflictWeight() + ((xy->deconnected())?(xy->getConflictWeight(xy->getIndex(x))-1):0) + ((xz->deconnected())?(xz->getConflictWeight(xz->getIndex(x))-1):0); break;
+        case 1: return Constraint::getConflictWeight() + ((xy->deconnected())?(xy->getConflictWeight(xy->getIndex(y))-1):0) + ((yz->deconnected())?(yz->getConflictWeight(yz->getIndex(y))-1):0); break;
+        case 2: return Constraint::getConflictWeight() + ((xz->deconnected())?(xz->getConflictWeight(xz->getIndex(z))-1):0) + ((yz->deconnected())?(yz->getConflictWeight(yz->getIndex(z))-1):0); break;
         }
         return  Constraint::getConflictWeight();
     }
     Long getConflictWeight() const {
-        return Constraint::getConflictWeight() + ((xy->deconnected()) ? (xy->getConflictWeight() - 1) : 0) + ((xz->deconnected()) ? (xz->getConflictWeight() - 1) : 0) + ((yz->deconnected()) ? (yz->getConflictWeight() - 1) : 0);
+        return Constraint::getConflictWeight() + ((xy && xy->deconnected())?(xy->getConflictWeight()-1):0) + ((xz && xz->deconnected())?(xz->getConflictWeight()-1):0) + ((yz && yz->deconnected())?(yz->getConflictWeight()-1):0);
     }
 
     EnumeratedVariable *xvar;
@@ -694,7 +629,8 @@ public:
         zvar = z;
     }
 
-    bool next(String &t, Cost &c) {
+    bool next( String& t, Cost& c) 
+    { 
         Char tch[4];
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
@@ -731,46 +667,19 @@ public:
         yvar = NULL;
         zvar = NULL;
         switch (pos_alpha) {
-        case 0 :
-            itvz = x->begin();
-            zvar = x;
-            break;
-        case 1 :
-            itvz = y->begin();
-            zvar = y;
-            break;
-        case 2 :
-            itvz = z->begin();
-            zvar = z;
-            break;
+        case 0 : itvz = x->begin(); zvar = x; break;
+        case 1 : itvz = y->begin(); zvar = y; break;
+        case 2 : itvz = z->begin(); zvar = z; break;
         }
         switch (pos_beta) {
-        case 0 :
-            itvy = x->begin();
-            yvar = x;
-            break;
-        case 1 :
-            itvy = y->begin();
-            yvar = y;
-            break;
-        case 2 :
-            itvy = z->begin();
-            yvar = z;
-            break;
+        case 0 : itvy = x->begin(); yvar = x; break;
+        case 1 : itvy = y->begin(); yvar = y; break;
+        case 2 : itvy = z->begin(); yvar = z; break;
         }
         switch (3 - pos_alpha - pos_beta) {
-        case 0 :
-            itvx = x->begin();
-            xvar = x;
-            break;
-        case 1 :
-            itvx = y->begin();
-            xvar = y;
-            break;
-        case 2 :
-            itvx = z->begin();
-            xvar = z;
-            break;
+        case 0 : itvx = x->begin(); xvar = x; break;
+        case 1 : itvx = y->begin(); xvar = y; break;
+        case 2 : itvx = z->begin(); xvar = z; break;
         }
         assert(xvar != yvar);
         assert(xvar != zvar);
@@ -825,7 +734,8 @@ public:
     }
     Cost evalsubstr( const String& s, NaryConstraint* ctr ) FINAL {return evalsubstr( s, (Constraint *) ctr);} // NaryConstraint class undefined
 
-    void fillElimConstr(EnumeratedVariable *xin, EnumeratedVariable *yin, EnumeratedVariable *zin, Constraint *from1) {
+    void fillElimConstr( EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Constraint *from1)
+    {
         assert(!functionalX && costsYZ.empty());
         x = xin;
         y = yin;
@@ -924,8 +834,7 @@ inline Value Functor_getFunctionZXY::operator()(EnumeratedVariable *xx, Enumerat
 inline Value Functor_getFunctionZYX::operator()(EnumeratedVariable *yy, EnumeratedVariable *xx, Value vy, Value vx) const {assert(xx == obj.x); assert(yy == obj.y); return obj.getFunctionZ(vx, vy);}
 
 template <typename T1, typename T2, typename T3>
-void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint *xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost)
-{
+void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
     assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
     assert(cost >= MIN_COST);
     // BUG!
@@ -952,8 +861,7 @@ void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 get
 }
 
 template <typename T1, typename T2, typename T3>
-void TernaryConstraint::extend(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint *xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost)
-{
+void TernaryConstraint::extend(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint* xy, EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Value valx, Value valy, Cost cost) {
     assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
     assert(cost >= MIN_COST);
     // BUG!
@@ -1347,3 +1255,11 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
 //};
 
 #endif /*TB2TERNARYCONSTR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

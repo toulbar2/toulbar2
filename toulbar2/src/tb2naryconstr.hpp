@@ -161,3 +161,11 @@ public:
     void dump(ostream& os, bool original = true);
 };
 #endif /*TB2NARYCONSTR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

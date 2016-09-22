@@ -300,3 +300,11 @@ public:
 #define storeIndexList storeDomain
 
 #endif /*TB2STORE_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -10,8 +10,7 @@
 #include "tb2globalconstr.hpp"
 using namespace std;
 
-class DPGlobalConstraint : public GlobalConstraint
-{
+class DPGlobalConstraint : public GlobalConstraint {
 private:
     vector<bool> *zero;
     vector<Cost> *preUnaryCosts;
@@ -52,3 +51,11 @@ protected:
 };
 
 #endif //TB2GLOBALCONSTR3_HPP_
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

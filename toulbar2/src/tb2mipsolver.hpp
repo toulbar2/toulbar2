@@ -7,8 +7,7 @@
 
 #include "tb2types.hpp"
 
-class MIP   //Wrapper Interface for MIP solver
-{
+class MIP { //Wrapper Interface for MIP solver
 
 private:
 
@@ -152,8 +151,7 @@ public:
 using namespace std;
 
 
-class IlogMIP : public MIP
-{
+class IlogMIP : public MIP {
 private:
     IloEnv env;
     IloModel *model;
@@ -243,3 +241,11 @@ public:
 #endif /*TB2ILOGMIPSOLVER_HPP_*/
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -106,14 +106,11 @@ struct ParetoPair {
 
     friend istream &operator>>(istream &is, ParetoPair &r) {
         char c;
-        do {is.get(c);}
-        while (c != '(');
+        do {is.get(c);} while (c!='(');
         is >> r.p;
-        do {is.get(c);}
-        while (c != ',');
+        do {is.get(c);} while (c!=',');
         is >> r.q;
-        do {is.get(c);}
-        while (c != ')');
+        do {is.get(c);} while (c!=')');
         return is;
     }
 
@@ -141,7 +138,8 @@ inline int cost2log2(int x)
     if (x == 0) return -1;
     register int l2 = 0;
     x >>= 1;
-    for (; x != 0; x >>= 1) {
+    for (; x != 0; x >>=1)
+    {
         ++ l2;
     }
     return (l2);
@@ -166,3 +164,11 @@ inline bool CSP(ParetoPair lb, ParetoPair ub) {ParetoPair r = ub - lb; return (r
 void initCosts(ParetoPair ub);
 
 #endif /*TB2PARETOPAIR_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

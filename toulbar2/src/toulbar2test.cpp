@@ -90,8 +90,15 @@ int main(int argc, char *argv[])
     } else {
         cout << "No solution found!" << endl;
     }
-    cout << "Initial problem lower bound: " << solver->getWCSP()->getLb() << endl;
+    // cout << "Problem lower bound: " << solver->getWCSP()->getLb() << endl; // initial problem lower bound possibly enhanced by value removals at the root during search
 
-    cout << "end." << endl;
     return 0;
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

@@ -8,8 +8,7 @@
 
 #include "tb2wcsp.hpp"
 
-class Genotype
-{
+class Genotype {
 public:
     int allele1;
     int allele2;
@@ -18,8 +17,7 @@ public:
 
 typedef enum {MALE = 1, FEMALE = 2} Sex;
 
-class Individual
-{
+class Individual {
 public:
     int individual;
     int varindex;
@@ -37,8 +35,7 @@ public:
     void print(ostream &os);
 };
 
-class Pedigree
-{
+class Pedigree {
     int locus;    				  // same locus for all the genotypes
     vector<Individual> pedigree;    // list of individuals
     vector<int> genotypes;          // list of genotyped individuals id.
@@ -77,3 +74,11 @@ public:
 };
 
 #endif /*TB2PEDIGREE_HPP_*/
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+
