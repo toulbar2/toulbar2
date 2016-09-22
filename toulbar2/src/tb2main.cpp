@@ -146,6 +146,7 @@ enum {
     OPT_varOrder,
     OPT_problemsaved_filename,
     OPT_PARTIAL_ASSIGNMENT,
+    NO_OPT_PARTIAL_ASSIGNMENT,
     OpT_showSolutions,
     OPT_writeSolution,
     OPT_pedigreePenalty,
@@ -278,6 +279,7 @@ CSimpleOpt::SOption g_rgOptions[] =
 
     { OPT_minProperVarSize,     		(char*) "-X",             			SO_REQ_SEP 	},
     { OPT_PARTIAL_ASSIGNMENT,  		(char*) "-x",             			SO_OPT 	 	},
+    { NO_OPT_PARTIAL_ASSIGNMENT,       (char*) "-x:",                        SO_NONE     },
     { OPT_boostingBTD,          		(char*) "-E",             			SO_NONE    	},
     { OPT_varOrder,		    		(char*) "-O",             			SO_REQ_SEP 	}, // filename of variable order
     { OPT_problemsaved_filename,        (char*) "--save",                       SO_REQ_SEP  }, // filename of saved problem
@@ -553,7 +555,7 @@ void help_msg(char *toulbar2filename)
     cout << "   *.order  : variable elimination order" << endl;
     cout << "   *.cov  : tree decomposition given by a list of clusters in topological order," << endl;
     cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes" << endl;
-    cout << "   *.sol  : solution/certificate for the problem" << endl << endl;
+    cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
@@ -641,7 +643,7 @@ void help_msg(char *toulbar2filename)
 #ifndef NDEBUG
     cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
 #endif
-    cout << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" or given as input filename with \".sol\" extension)" << endl << endl;
+    cout << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl << endl;
     cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
     cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
@@ -725,6 +727,7 @@ int _tmain(int argc, TCHAR * argv[])
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
     Cost ub = MAX_COST;
     int timeout = 0;
+    bool updateValueHeuristic = true;
 
     // Configuration for MaxSAT Evaluation
     //	ToulBar2::maxsateval = true;
@@ -887,6 +890,8 @@ int _tmain(int argc, TCHAR * argv[])
                     if (ToulBar2::debug) cout << "certificate of solution read in file: ./" << certificateFilename << endl;
 
                 }
+            } else if (args.OptionId() == NO_OPT_PARTIAL_ASSIGNMENT ) {
+                updateValueHeuristic = false;
             }
 
             // show Solutions
@@ -1769,7 +1774,7 @@ int _tmain(int argc, TCHAR * argv[])
 
         if (certificate)
         {
-            if (certificateFilename!= NULL) solver->read_solution(certificateFilename);
+            if (certificateFilename!= NULL) solver->read_solution(certificateFilename, updateValueHeuristic);
             else solver->parse_solution(certificateString);
         }
         if (ToulBar2::dumpWCSP==1) {

@@ -487,7 +487,7 @@ public:
     virtual bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol) =0;
 
     virtual void dump_wcsp(const char *fileName, bool original = true) =0;	///< \brief output current problem in a file \see WeightedCSP::dump
-    virtual void read_solution(const char *fileName) =0;					///< \brief read a solution from a file
+    virtual void read_solution(const char *fileName, bool updateValueHeuristic = true) =0;					///< \brief read a solution from a file
     virtual void parse_solution(const char *certificate) =0;				///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
     virtual Cost getSolution(vector<Value>& solution) =0;	///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)

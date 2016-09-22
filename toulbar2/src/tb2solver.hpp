@@ -186,7 +186,7 @@ public:
     bool solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, int *sol);
 
     void dump_wcsp(const char *fileName, bool original = true);
-    void read_solution(const char *fileName);
+    void read_solution(const char *fileName, bool updateValueHeuristic = true);
     void parse_solution(const char *certificate);
 
     Cost getSolution(vector<Value>& solution);

@@ -76,19 +76,19 @@ void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubMo
     wcsp->read_random(n,m,p,seed, forceSubModular, globalname);
 }
 
-void Solver::read_solution(const char *filename)
+void Solver::read_solution(const char *filename, bool updateValueHeuristic)
 {
+    // open the file
+    ifstream file(filename);
+    if (!file) {
+        cout << "Solution file " << filename << " not found.." << endl;
+        return;
+    }
+
     wcsp->propagate();
 
     int depth = Store::getDepth();
     Store::store();
-
-    // open the file
-    ifstream file(filename);
-    if (!file) {
-        cerr << "Solution file " << filename << " not found!" << endl;
-        exit(EXIT_FAILURE);
-    }
 
     vector<int> variables;
     vector<Value> values;
@@ -110,7 +110,7 @@ void Solver::read_solution(const char *filename)
         variables.push_back(i);
         values.push_back(value);
         // side-effect: remember last solution
-        wcsp->setBestValue(i, value);
+        if (updateValueHeuristic) wcsp->setBestValue(i, value);
         //        if (wcsp->unassigned(i)) {
         //		  assign(i, value);
         //		  // side-effect: remember last solution
@@ -130,7 +130,7 @@ void Solver::read_solution(const char *filename)
     if (ToulBar2::verifyOpt) {
         ToulBar2::verifiedOptimum = wcsp->getLb();
     } else {
-        wcsp->updateUb(wcsp->getLb()+UNIT_COST);
+        wcsp->updateUb(wcsp->getLb()+((updateValueHeuristic)?UNIT_COST:MIN_COST));
     }
     Store::restore(depth);
     if (ToulBar2::verifyOpt) {
