@@ -678,10 +678,13 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
         lastConflictVar = -1;
         recursiveSolve(lb);
     } catch (FindNewSequence) {
-        store->restore();
-        enforceUb();
-        nbBacktracks++;
-        throw FindNewSequence();
+        if (middle==domsize)
+            {
+                store->restore();
+                enforceUb();
+                nbBacktracks++;
+                throw FindNewSequence();
+            }
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }

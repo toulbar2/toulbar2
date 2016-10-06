@@ -1416,7 +1416,7 @@ int _tmain(int argc, TCHAR *argv[])
             //~ }
             
             // upper bound initialisation from command line (Energy value)
-            if (args.OptionId() == OPT_ub_energy) {
+            if (args.OptionId() == OPT_ub) {
 
                 if (args.OptionArg() != NULL) {
                     ub = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
