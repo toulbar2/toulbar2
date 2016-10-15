@@ -22,7 +22,7 @@ public:
     //  double AA2Criterium(char c);
     //  tuple<size_t,size_t> getBounds(size_t var_index);
     tuple<size_t, size_t> getBounds(int varIndex, Value value);
-    size_t moveAAFirst(ValueCost *sorted, size_t domsize, size_t left, size_t right);
+    size_t moveAAFirst(ValueCost *sorted, int domsize, Value left, Value right);
     bool multipleAA(int varIndex, ValueCost *stored, int domsize);
     // void keep(size_t begin, size_t end, size_t var_index);
     // void remove(size_t begin, size_t end, size_t var_index);

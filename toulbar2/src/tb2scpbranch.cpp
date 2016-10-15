@@ -124,11 +124,11 @@ tuple<size_t, size_t> Tb2ScpBranch::getBounds(int varIndex, Value value)
     return make_tuple(left, right);
 }
 
-size_t Tb2ScpBranch::moveAAFirst(ValueCost *sorted, size_t domsize, size_t left, size_t right)
+size_t Tb2ScpBranch::moveAAFirst(ValueCost *sorted, int domsize, Value left, Value right)
 {
     ValueCost tmp;
     size_t cursor = 0;
-    for (size_t i = 0; i < domsize; i++) {
+    for (int i = 0; i < domsize; i++) {
         if (sorted[i].value >= left && sorted[i].value <= right) {
             tmp = sorted[cursor];
             sorted[cursor] = sorted[i];
@@ -143,7 +143,7 @@ size_t Tb2ScpBranch::moveAAFirst(ValueCost *sorted, size_t domsize, size_t left,
 bool Tb2ScpBranch::multipleAA(int varIndex, ValueCost *sorted, int domsize)
 {
     char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
-    for (size_t i = 0; i < domsize; i++) {
+    for (int i = 0; i < domsize; i++) {
         if (ToulBar2::cpd->getAA(varIndex, sorted[i].value) != type)
             return true;
     }
