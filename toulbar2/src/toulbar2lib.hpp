@@ -361,7 +361,7 @@ public:
 
     virtual Cost Prob2Cost(TProb p) const =0;
     virtual TProb Cost2Prob(Cost c) const =0;
-    virtual TProb Cost2LogProb(Cost c) const =0;
+    virtual TLogProb Cost2LogProb(Cost c) const = 0;
     virtual Cost LogProb2Cost(TLogProb p) const =0;
     virtual Cost LogSumExp(Cost c1, Cost c2) const =0;
     virtual TLogProb LogSumExp(TLogProb logc1, Cost c2) const =0;

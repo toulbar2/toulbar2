@@ -3329,7 +3329,7 @@ Cost WCSP::LogProb2Cost(TLogProb p) const {
     else return (Cost) res;
 }
 
-TProb WCSP::Cost2LogProb(Cost c) const {
+TLogProb WCSP::Cost2LogProb(Cost c) const {
     return -to_double(c) / ToulBar2::NormFactor;
 }
 
