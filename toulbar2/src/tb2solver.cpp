@@ -1045,7 +1045,7 @@ void Solver::newSolution()
             cout << nbSol << " Log(Z)= " << ToulBar2::logZ + ToulBar2::markov_log << "  time " << cpuTime() - ToulBar2::startCpuTime << "s" << endl;
             nbSoldiv++;
         }
-        if (nbSol >= (BigInteger) ToulBar2::run) {
+        if (nbSol >= ToulBar2::run) {
           exit(EXIT_SUCCESS);
         }
     }

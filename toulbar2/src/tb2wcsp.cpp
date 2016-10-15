@@ -285,7 +285,7 @@ void tb2init()
 
     ToulBar2::isZ = false;
     ToulBar2::isGumbel = false;
-    ToulBar2::run = numeric_limits<TProb>::infinity();
+    ToulBar2::run = numeric_limits<unsigned int>::max();
     ToulBar2::isSubZ = false;
     ToulBar2::zshow = 1;
     ToulBar2::isZCelTemp = -1;
