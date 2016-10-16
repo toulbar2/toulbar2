@@ -7,7 +7,7 @@ MAJOR=`echo $VERSION| cut -d"." -f1`
 MINOR=`echo $VERSION| cut -d"." -f2`
 PATCH=`echo $VERSION| cut -d"." -f3`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
-CTIME=`date date --rfc-3339=seconds`
+CTIME=`date +"%s"`
 HASH=`git log -1 --format=%h`
 
 git diff --quiet HEAD > /dev/null 2>&1

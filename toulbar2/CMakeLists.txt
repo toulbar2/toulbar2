@@ -50,7 +50,7 @@ OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
 	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
-OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:on]" ON)
+OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
 OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
 OPTION(STATIC "static compilation flag [default: off]" OFF)
 	OPTION(verbose "verbose mode [default:on]" ON)
@@ -69,7 +69,6 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
-#SET(CMAKE_CXX_FLAGS "-Wall -std=c++11 -pg" ) #For gprof analysis (can be very slow)
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio126")
@@ -354,6 +353,11 @@ include(${My_cmake_script}/define_option.cmake)
 MESSAGE(STATUS "######## define_option passed#########################")
 
 ##########################################
+# toulbar2test
+##########################################
+include(${My_cmake_script}/toulbar2test.cmake)
+
+##########################################
 # unit tests
 ##########################################
 IF(COVER_TEST) 
@@ -390,35 +394,28 @@ ENDIF (BENCH)
 #   Doc generation
 ##########################################
 IF (BUILD_API_DOC)
-
-	SET (DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-	SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source})
-
-	# output directory for code source documentation
-
-	SET (DOXYFILE_OUTPUT_DIR ${My_doc}/dev)  
-#	SET (DOXYFILE_LATEX_DIR ${DOXYFILE_OUTPUT_DIR}/latex)
-#	SET (DOXYFILE_HTML_DIR ${DOXYFILE_OUTPUT_DIR}/html)
-	SET (DOXYFILE_LATEX_DIR latex)
-	SET (DOXYFILE_HTML_DIR html) 
-	
-	FIND_PACKAGE(Doxygen)
-
-   IF (DOXYGEN_FOUND)
-	MESSAGE(STATUS "#### package doxygen found #############################")
 	include(${My_cmake_script}/UseDoxygen.cmake)
 ENDIF (BUILD_API_DOC)
+
+ADD_CUSTOM_TARGET(man ALL)
+
+ADD_CUSTOM_COMMAND(
+  TARGET man
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+  COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1 ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  )
 
 ##########################################
 # doc install
 ##########################################
-         install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE} PATTERN ".svn" EXCLUDE)
+install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar_NAME} PATTERN ".svn" EXCLUDE)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 
 ##########################################
 # examples installation
 ##########################################
-         install(DIRECTORY ${My_validation} DESTINATION ${doc_destination}/${Toulbar_NAME_COMPLETE}/ PATTERN ".svn" EXCLUDE)
+install(DIRECTORY ${My_validation} DESTINATION ${doc_destination}/${Toulbar_NAME}/ PATTERN ".svn" EXCLUDE)
 
 ##########################################
 #  PACKAGING 
