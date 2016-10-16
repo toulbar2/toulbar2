@@ -1,2 +1,3 @@
 build
 src/ToulbarVersion.hpp
+toulbar2/src/MyCPackConf.cmake
