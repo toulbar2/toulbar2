@@ -2,13 +2,11 @@
 #include "tb2wcsp.hpp"
 
 SameConstraint::SameConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                               int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
-{
+        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
     buildIndex();
 }
 
-void SameConstraint::buildIndex()
-{
+void SameConstraint::buildIndex() {
     vector<Value> D;
     for (int i = 0; i < arity_; i++) {
         EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
@@ -25,8 +23,7 @@ void SameConstraint::buildIndex()
     //graph.setSize(arity_+D.size()+2);
 }
 
-pair<int, int> SameConstraint::mapto(int varindex, Value val)
-{
+pair<int,int> SameConstraint::mapto(int varindex, Value val) {
     if (binary_search(group[0].begin(), group[0].end(), varindex)) {
         return make_pair(varindex + 1, mapval[val]);
         //return make_pair(0,0);
@@ -39,8 +36,7 @@ pair<int, int> SameConstraint::mapto(int varindex, Value val)
     }
 }
 
-void SameConstraint::read(istream &file)
-{
+void SameConstraint::read(istream &file) {
     file >> def;
     int size[2];
     //cout << "def. value = " << def << endl;
@@ -89,13 +85,11 @@ Cost SameConstraint::evalOriginal(const String& s) {
     return tuple_cost;
 }
 
-size_t SameConstraint::GetGraphAllocatedSize()
-{
+size_t SameConstraint::GetGraphAllocatedSize() {
     return arity_ + nDistinctDomainValues + 2;
 }
 
-void SameConstraint::buildGraph(Graph &g)
-{
+void SameConstraint::buildGraph(Graph &g) {
     //g.clearEdge();
     for (vector<int>::iterator i = group[0].begin(); i != group[0].end(); i++) {
         EnumeratedVariable *x = (EnumeratedVariable *)getVar(*i);

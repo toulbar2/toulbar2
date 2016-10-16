@@ -241,8 +241,8 @@ void WCSP::minimumDegreeOrderingBGL(vector<int> &order_inv)
     assert(order_inv.size() == numberOfVariables());
 }
 
-// Function that took a node root and a list of sons of this root
-// and return a list of (value,cost)
+// Function that takes a root node and a list of sons of the root
+// and returns a list of (value,cost)
 WCSP::ResultVisitZ WCSP::visitZ(int root, Sons &sons)
 {
     //assert(unassigned(root));

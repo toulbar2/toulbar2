@@ -5,8 +5,7 @@
 #include <functional>
 
 RegularFlowConstraint::RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in), subdef(0), insdef(0), deldef(0), epsilonChar(0)
-{
+        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in), subdef(0), insdef(0), deldef(0), epsilonChar(0) {
 
     tempdomain.resize(arity_);
     predomain.resize(arity_);
@@ -19,8 +18,7 @@ RegularFlowConstraint::RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable **sc
     modeEnum["edit"] = RegularFlowConstraint::EDIT;
 }
 
-void RegularFlowConstraint::read(istream &file)
-{
+void RegularFlowConstraint::read(istream &file) {
 
     string str;
     file >> str >> def;
@@ -62,8 +60,7 @@ void RegularFlowConstraint::read(istream &file)
 
 }
 
-void RegularFlowConstraint::organizeConfig()
-{
+void RegularFlowConstraint::organizeConfig() {
 
     if (mode == RegularFlowConstraint::VAR) {
         subdef = def;
@@ -129,8 +126,7 @@ void RegularFlowConstraint::organizeConfig()
 
 }
 
-void RegularFlowConstraint::buildWeightedDFATable()
-{
+void RegularFlowConstraint::buildWeightedDFATable() {
 
     int nstate = dfa.size();
 
@@ -231,13 +227,11 @@ Cost RegularFlowConstraint::evalOriginal(const String& s) {
 
 }
 
-size_t RegularFlowConstraint::GetGraphAllocatedSize()
-{
+size_t RegularFlowConstraint::GetGraphAllocatedSize() {
     return dfa.size() * (arity_ + 1) + 2;
 }
 
-void RegularFlowConstraint::buildGraph(Graph &g)
-{
+void RegularFlowConstraint::buildGraph(Graph &g) {
     for (int i = 0; i < arity_; i++) {
         EnumeratedVariable *x = (EnumeratedVariable *) getVar(i);
         tempdomain[i].clear();
@@ -255,8 +249,7 @@ void RegularFlowConstraint::buildGraph(Graph &g)
 
 }
 
-void RegularFlowConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex)
-{
+void RegularFlowConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex) {
 
     //if (g.size() == 0) g.setSize(dfa.size()*(arity_ + 1) + 2);
 
@@ -313,8 +306,7 @@ void RegularFlowConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex)
 
 }
 
-void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta)
-{
+void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta) {
 
     //pair<int, bool> result;
     EnumeratedVariable *x = (EnumeratedVariable *) getVar(varindex);
@@ -343,11 +335,11 @@ void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int va
 
 }
 
-void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv)
-{
+void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv) {		
 
     //for (int varindex = 0; varindex < arity_; varindex++) {
-    for (vector<int>::iterator i = rmv.begin(); i != rmv.end(); i++) {
+    for (vector<int>::iterator i = rmv.begin();i != rmv.end();i++)
+    {
         int varindex = *i;
         EnumeratedVariable *x = (EnumeratedVariable *) getVar(varindex);
         for (unsigned int valIndex = 0; valIndex < mapedge[varindex].size(); valIndex++) {
@@ -364,8 +356,7 @@ void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<i
 
 }
 
-void RegularFlowConstraint::augmentStructure(Graph &g, StoreCost &cost, int varindex, map<Value, Cost> &delta)
-{
+void RegularFlowConstraint::augmentStructure(Graph &g, StoreCost &cost, int varindex, map<Value, Cost> &delta) {
 
     EnumeratedVariable *x = (EnumeratedVariable *) getVar(varindex);
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
@@ -381,8 +372,7 @@ void RegularFlowConstraint::augmentStructure(Graph &g, StoreCost &cost, int vari
 
 }
 
-void RegularFlowConstraint::computeShortestPath(Graph &g, StoreCost &cost)
-{
+void RegularFlowConstraint::computeShortestPath(Graph &g, StoreCost &cost) {
 
     fromSource.resize(g.size());
     toSink.resize(g.size());

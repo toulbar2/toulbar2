@@ -6,21 +6,18 @@ using namespace std;
 
 RegularDPConstraint::RegularDPConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
-    , top(0)
-{
+, top(0) {
 }
 
 
-RegularDPConstraint::~RegularDPConstraint(void)
-{
+RegularDPConstraint::~RegularDPConstraint(void) {
     deleteTable(f);
     deleteTable(u);
     deleteTable(invf);
     deleteTable(curf);
 }
 
-void RegularDPConstraint::read(istream &file)
-{
+void RegularDPConstraint::read(istream & file) {
     string str;
     file >> str >> def;
 
@@ -31,15 +28,13 @@ void RegularDPConstraint::read(istream &file)
     int nstart;
     file >> nstart;
     for (int i = 0; i < nstart; i++) {
-        int t;
-        file >> t;
+		int t; file >> t;
         dfa.init.push_back(t);
     }
     int nfinal;
     file >> nfinal;
     for (int i = 0; i < nfinal; i++) {
-        int t;
-        file >> t;
+		int t; file >> t;
         dfa.final.push_back(t);
     }
     int ntransition;
@@ -54,8 +49,7 @@ void RegularDPConstraint::read(istream &file)
 
 }
 
-void RegularDPConstraint::initMemoization()
-{
+void RegularDPConstraint::initMemoization() {
     dfa.finalize();
 
     resizeTable(f, arity() + 1, dfa.size());
@@ -66,8 +60,7 @@ void RegularDPConstraint::initMemoization()
     top = max(wcsp->getUb(), MAX_COST);
 }
 
-Cost RegularDPConstraint::minCostOriginal()
-{
+Cost RegularDPConstraint::minCostOriginal() {
     int n = arity();
     for (int i = 1; i <= n; i++) {
         for (unsigned int j = 0; j < dfa.symbol.size(); j++) {
@@ -89,8 +82,7 @@ Cost RegularDPConstraint::minCostOriginal()
     return minCost;
 }
 
-Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed)
-{
+Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed) {	
     return minCost(var, val, changed).first;
 }
 
@@ -111,8 +103,7 @@ Cost RegularDPConstraint::eval(const String& s) {
     return minCost - projectedCost;
 }
 
-void RegularDPConstraint::recompute()
-{
+void RegularDPConstraint::recompute() {
     int n = arity();
     for (int i = 1; i <= n; i++) {
         for (unsigned int j = 0; j < dfa.symbol.size(); j++) {
@@ -130,8 +121,7 @@ void RegularDPConstraint::recompute()
     recomputeTable(f, invf);
 }
 
-DPGlobalConstraint::Result RegularDPConstraint::minCost(int var, Value val, bool changed)
-{
+DPGlobalConstraint::Result RegularDPConstraint::minCost(int var, Value val, bool changed) {
 
     if (changed) recompute();
 
@@ -146,11 +136,11 @@ DPGlobalConstraint::Result RegularDPConstraint::minCost(int var, Value val, bool
     return DPGlobalConstraint::Result(minCost, NULL);
 }
 
-void RegularDPConstraint::recomputeTable(DPTableCell **table, DPTableCell **invTable, int startRow)
-{
+void RegularDPConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable, int startRow) {	
     int n = arity();
 
-    if (startRow == 0) {
+	if (startRow == 0)
+	{
         for (int j = 0; j < dfa.size(); j++) {
             table[0][j].val = top;
             table[0][j].source = make_pair(-1, -1);
@@ -196,8 +186,7 @@ void RegularDPConstraint::recomputeTable(DPTableCell **table, DPTableCell **invT
     }
 }
 
-Cost RegularDPConstraint::unary(int ch, int var, Value v)
-{
+Cost RegularDPConstraint::unary(int ch, int var, Value v) {
     Cost ucost = (v == ch) ? 0 : def;
     EnumeratedVariable *x = scope[var];
     return ucost - deltaCost[var][x->toIndex(v)];

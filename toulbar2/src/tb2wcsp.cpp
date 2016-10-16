@@ -192,6 +192,7 @@ ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
 
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
+
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
@@ -466,8 +467,7 @@ WCSP::WCSP(Cost upperBound, void *_solver_) :
     td = NULL;
 }
 
-WCSP::~WCSP()
-{
+WCSP::~WCSP() {
     if (vars.size()) for (unsigned int i = 0; i < vars.size(); i++)
             delete vars[i];
     if (constrs.size()) for (unsigned int i = 0; i < constrs.size() - 1; i++)
@@ -484,8 +484,7 @@ WeightedCSP *WeightedCSP::makeWeightedCSP(Cost upperBound, void *solver) {
 }
 
 /// \brief create an enumerated variable with its domain bounds
-int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
-{
+int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup) {
     EnumeratedVariable *x;
     if (!ToulBar2::vac) {
         x = new EnumeratedVariable(this, n, iinf, isup);
@@ -498,8 +497,7 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
 }
 
 /// \brief create an enumerated variable with its domain values
-int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize)
-{
+int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize) {
     EnumeratedVariable *x;
     if (!ToulBar2::vac) {
         x = new EnumeratedVariable(this, n, d, dsize);
@@ -512,8 +510,7 @@ int WCSP::makeEnumeratedVariable(string n, Value *d, int dsize)
 }
 
 /// \brief create an interval variable with its domain bounds
-int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
-{
+int WCSP::makeIntervalVariable(string n, Value iinf, Value isup) {
     if (ToulBar2::vac) {
         cerr << "VAC not implemented on interval variables!" << endl;
         ToulBar2::vac = 0;
@@ -535,8 +532,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 /// ONLY be called before search.
 ///
 /// \warning Vector costs must have the same size as Cartesian product of original domains.
-int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
-{
+int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs) {
     assert(xIndex != yIndex);
     EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
     EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
@@ -569,8 +565,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost> &costs)
 }
 
 /// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
-int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs)
-{
+int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost> &costs) {
     assert(xIndex != yIndex && xIndex != zIndex && yIndex != zIndex);
     EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
     EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
@@ -691,8 +686,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
 /// \param arity size of the array
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
-void WCSP::postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost)
-{
+void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) {
     if (ToulBar2::vac) histogram(cost);
     Constraint *ctrctr = getCtr(ctrindex);
     assert(ctrctr->extension()); // must be an NaryConstraint
@@ -759,7 +753,8 @@ void WCSP::postWAmong(int *scopeIndex, int arity, string semantics, Cost baseCos
     WeightedAmong *decomposableGCF = new WeightedAmong(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics);
     decomposableGCF->setBaseCost(baseCost);
-    for (int i = 0; i < nbValues; i++) {
+    for(int i = 0; i < nbValues; i++)
+    {
         decomposableGCF->addValue(values[i]);
     }
     decomposableGCF->setBounds(lb, ub);
@@ -776,7 +771,8 @@ void WCSP::postWVarAmong(int *scopeIndex, int arity, string semantics, Cost base
     WeightedVarAmong *decomposableGCF = new WeightedVarAmong(arity, scopeIndex);
     decomposableGCF->setSemantics(semantics);
     decomposableGCF->setBaseCost(baseCost);
-    for (int i = 0; i < nbValues; i++) {
+    for(int i = 0; i < nbValues; i++)
+    {
         decomposableGCF->addValue(values[i]);
     }
     decomposableGCF->setIndex(varIndex);
@@ -791,13 +787,16 @@ void WCSP::postWRegular(int *scopeIndex, int arity, int nbStates, vector<pair<in
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WFA *automaton = new WFA(nbStates);
-    for (unsigned int i = 0; i < initial_States.size(); i++) {
+    for(unsigned int i=0; i<initial_States.size(); i++)
+    {
         automaton->getInitialStates().push_back(initial_States[i]);
     }
-    for (unsigned int i = 0; i < accepting_States.size(); i++) {
+    for(unsigned int i=0; i<accepting_States.size(); i++)
+    {
         automaton->getAcceptingStates().push_back(accepting_States[i]);
     }
-    for (unsigned int i = 0; i < transitionsCosts.size(); i++) {
+    for(unsigned int i=0; i<transitionsCosts.size(); i++)
+    {
         automaton->getTransitions().push_back(new WTransition(Wtransitions[i][0], Wtransitions[i][1], Wtransitions[i][2], transitionsCosts[i]));
     }
     WeightedRegular regular(arity, scopeIndex);
@@ -814,7 +813,8 @@ void WCSP::postWGcc(int *scopeIndex, int arity, string semantics, Cost baseCost,
     decomposableGCF->setSemantics(semantics);
     decomposableGCF->setBaseCost(baseCost);
     decomposableGCF->setNbValue(nbValues);
-    for (int i = 0; i < nbValues; i++) {
+    for(int i = 0; i < nbValues; i++)
+    {
         decomposableGCF->setBounds(values[i], lb[i], ub[i]);
     }
     decomposableGCF->addToCostFunctionNetwork(this);
@@ -858,7 +858,8 @@ void WCSP::postWSameGcc(int *scopeIndex, int arity, string semantics, Cost baseC
     decomposableGCF->setSemantics(semantics);
     decomposableGCF->setBaseCost(baseCost);
     decomposableGCF->setNbValue(nbValues);
-    for (int i = 0; i < nbValues; i++) {
+    for(int i = 0; i < nbValues; i++)
+    {
         decomposableGCF->setBounds(values[i], lb[i], ub[i]);
     }
     decomposableGCF->addToCostFunctionNetwork(this);
@@ -996,11 +997,13 @@ int WCSP::postWRegular(int *scopeIndex, int arity, const string &semantics, cons
 #endif
     if (propagator == "network") { // Warning! semantics not used
         vector<pair<int, Cost> > initial_States_;
-        for (unsigned int i = 0; i < initial_States.size(); i++) {
+        for(unsigned int i=0; i<initial_States.size(); i++)
+        {
             initial_States_.push_back(pair<int, Cost>(initial_States[i].val, initial_States[i].weight));
         }
         vector<pair<int, Cost> > accepting_States_;
-        for (unsigned int i = 0; i < accepting_States.size(); i++) {
+        for(unsigned int i=0; i<accepting_States.size(); i++)
+        {
             accepting_States_.push_back(pair<int, Cost>(accepting_States[i].val, accepting_States[i].weight));
         }
         vector<Cost> transitionsCosts;
@@ -1188,8 +1191,7 @@ int WCSP::postWAllDiff(int *scopeIndex, int arity, const string &semantics, cons
 int WCSP::postWGrammarCNF(int *scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
                           int nbNonTerminal,
                           int startSymbol,
-                          const vector<CFGProductionRule> WRuleToTerminal)
-{
+        const vector<CFGProductionRule> WRuleToTerminal) {
 
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
@@ -1259,8 +1261,7 @@ int WCSP::postMaxWeight(int *scopeIndex, int arity, const string &semantics, con
 
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
-void WCSP::postUnary(int xIndex, vector<Cost> &costs)
-{
+void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
     assert(vars[xIndex]->enumerated());
     EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
 
@@ -1278,16 +1279,14 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs)
 }
 
 /// \brief add unary costs to interval variable \e xIndex
-int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty)
-{
+int WCSP::postUnary(int xIndex, Value *d, int dsize, Cost penalty) {
     assert(!vars[xIndex]->enumerated());
     Unary *ctr = new Unary(this, (IntervalVariable *) vars[xIndex], d, dsize, penalty);
     return ctr->wcspIndex;
 }
 
 /// \brief create a soft constraint \f$x \geq y + cst\f$ with the associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):top , 0 )\f$
-int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
-{
+int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta) {
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Supxyc
@@ -1311,8 +1310,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 }
 
 /// \brief soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
-int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
-{
+int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) {
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Disjunction
@@ -1336,8 +1334,7 @@ int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost p
 }
 
 /// \brief special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
-int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
-{
+int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) {
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         SpecialDisjunction
@@ -1444,8 +1441,7 @@ void WCSP::sortConstraints()
     }
 }
 
-void WCSP::updateCurrentVarsId()
-{
+void WCSP::updateCurrentVarsId() {
     int pos = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned()) {
@@ -1473,8 +1469,7 @@ bool cmpTernaryConstraint(TernaryConstraint *c1, TernaryConstraint *c2)
     return false;
 }
 
-void WCSP::processTernary()
-{
+void WCSP::processTernary() {
     // double maxtight = 0;
     // Variable* var;
     // TernaryConstraint *tctr1max = NULL, *tctr2max = NULL;
@@ -1541,8 +1536,7 @@ void WCSP::processTernary()
 ///
 /// \note the propagation loop is called after each preprocessing technique (see \ref WCSP::propagate)
 
-void WCSP::preprocessing()
-{
+void WCSP::preprocessing() {
     Cost previouslb = getLb();
 
     Eliminate.clear();
@@ -1834,8 +1828,7 @@ void WCSP::setInfiniteCost()
     }
 }
 
-Value WCSP::getDomainSizeSum()
-{
+Value WCSP::getDomainSizeSum() {
     //    cout << " " << connectedComponents() << endl;
     Value sum = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
@@ -1844,24 +1837,21 @@ Value WCSP::getDomainSizeSum()
     return sum;
 }
 
-bool WCSP::getEnumDomain(int varIndex, Value *array)
-{
+bool WCSP::getEnumDomain(int varIndex, Value *array) {
     if (EnumeratedVariable *var = dynamic_cast<EnumeratedVariable *>(vars[varIndex])) {
         var->getDomain(array);
         return true;
     } else return false;
 }
 
-bool WCSP::getEnumDomainAndCost(int varIndex, ValueCost *array)
-{
+bool WCSP::getEnumDomainAndCost(int varIndex, ValueCost *array) {
     if (EnumeratedVariable *var = dynamic_cast<EnumeratedVariable *>(vars[varIndex])) {
         var->getDomainAndCost(array);
         return true;
     } else return false;
 }
 
-unsigned int WCSP::numberOfConnectedConstraints() const
-{
+unsigned int WCSP::numberOfConnectedConstraints() const {
     int res = 0;
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && !constrs[i]->isSep()) res++;
@@ -1872,8 +1862,7 @@ unsigned int WCSP::numberOfConnectedConstraints() const
     return res;
 }
 
-unsigned int WCSP::numberOfConnectedBinaryConstraints() const
-{
+unsigned int WCSP::numberOfConnectedBinaryConstraints() const {
     int res = 0;
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && constrs[i]->arity() == 2 && !constrs[i]->isSep()) res++;
@@ -1882,8 +1871,7 @@ unsigned int WCSP::numberOfConnectedBinaryConstraints() const
     return res;
 }
 
-unsigned int WCSP::medianDomainSize() const
-{
+unsigned int WCSP::medianDomainSize() const {
     unsigned int nbunvars = numberOfUnassignedVariables();
     if (nbunvars == 0) return 0;
     int domain[nbunvars];
@@ -1893,8 +1881,7 @@ unsigned int WCSP::medianDomainSize() const
     return stochastic_selection<int>(domain, 0, nbunvars - 1, nbunvars / 2);
 }
 
-unsigned int WCSP::medianDegree() const
-{
+unsigned int WCSP::medianDegree() const {
     unsigned int nbunvars = numberOfUnassignedVariables();
     if (nbunvars == 0) return 0;
     int degree[nbunvars];
@@ -1904,8 +1891,7 @@ unsigned int WCSP::medianDegree() const
     return stochastic_selection<int>(degree, 0, nbunvars - 1, nbunvars / 2);
 }
 
-void WCSP::printNCBuckets()
-{
+void WCSP::printNCBuckets() {
     int lastbucket = -1;
     for (int bucket = 0; bucket < NCBucketSize; bucket++) {
         if (NCBuckets[bucket].begin() != NCBuckets[bucket].end()) lastbucket = bucket;
@@ -1954,8 +1940,7 @@ void WCSP::printNCBuckets()
  *
  */
 
-void WCSP::print(ostream &os)
-{
+void WCSP::print(ostream& os) {
     os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
@@ -1971,8 +1956,7 @@ void WCSP::print(ostream &os)
     }
 }
 
-void printClique(ostream &os, int arity, Constraint *ctr)
-{
+void printClique(ostream& os, int arity, Constraint *ctr) {
     assert(arity >= 2);
     for (int i = 0; i < arity - 1; i++) {
         for (int j = i + 1; j < arity; j++) {
@@ -1982,8 +1966,7 @@ void printClique(ostream &os, int arity, Constraint *ctr)
 }
 
 // Warning! make the assumption that all initial domains start at zero!!!
-void WCSP::dump(ostream &os, bool original)
-{
+void WCSP::dump(ostream& os, bool original) {
     Value maxdomsize = 0;
     unsigned int maxdomsizeUI = 0;
     Value xcosts = 0;
@@ -2132,14 +2115,12 @@ void WCSP::dump(ostream &os, bool original)
     }
 }
 
-ostream &operator<<(ostream &os, WCSP &wcsp)
-{
+ostream& operator<<(ostream& os, WCSP &wcsp) {
     wcsp.print(os);
     return os;
 }
 
-ostream &operator<<(ostream &os, WeightedCSP &wcsp)
-{
+ostream& operator<<(ostream& os, WeightedCSP &wcsp) {
     wcsp.print(os);
     return os;
 }
@@ -2149,8 +2130,7 @@ ostream &operator<<(ostream &os, WeightedCSP &wcsp)
  *
  */
 
-bool WCSP::verify()
-{
+bool WCSP::verify() {
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned()) {
             if (td) {
@@ -2161,7 +2141,7 @@ bool WCSP::verify()
 #endif
                 }
             } else {
-                if (ToulBar2::prodsumDiffusion == 0) {if (!vars[i]->verifyNC()) return false;}
+                if (!vars[i]->verifyNC()) return false;
 #ifdef DEECOMPLETE
                 if (ToulBar2::DEE_ && !vars[i]->verifyDEE()) return false;
 #endif
@@ -2188,8 +2168,7 @@ bool WCSP::verify()
     return true;
 }
 
-void WCSP::whenContradiction()
-{
+void WCSP::whenContradiction() {
     NC.clear();
     IncDec.clear();
     AC.clear();
@@ -2211,8 +2190,7 @@ void WCSP::whenContradiction()
 ///
 /// NC propagation will revise only variables in the buckets associated to costs sufficiently large wrt current objective bounds.
 
-void WCSP::propagateNC()
-{
+void WCSP::propagateNC() {
     if (ToulBar2::verbose >= 2) cout << "NCQueue size: " << NC.getSize() << endl;
     while (!NC.empty()) {
         Variable *x = NC.pop();
@@ -2243,8 +2221,7 @@ void WCSP::propagateNC()
     if (objectiveChanged || !NC.empty()) propagateNC();
 }
 
-void WCSP::propagateIncDec()
-{
+void WCSP::propagateIncDec() {
     if (ToulBar2::verbose >= 2) cout << "IncDecQueue size: " << IncDec.getSize() << endl;
     while (!IncDec.empty()) {
         int incdec;
@@ -2253,8 +2230,7 @@ void WCSP::propagateIncDec()
     }
 }
 
-void WCSP::propagateAC()
-{
+void WCSP::propagateAC() {
     if (ToulBar2::verbose >= 2) cout << "ACQueue size: " << AC.getSize() << endl;
     while (!AC.empty()) {
         EnumeratedVariable *x = (EnumeratedVariable *)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
@@ -2264,8 +2240,7 @@ void WCSP::propagateAC()
     }
 }
 
-void WCSP::propagateDAC()
-{
+void WCSP::propagateDAC() {
     if (ToulBar2::verbose >= 2) cout << "DACQueue size: " << DAC.getSize() << endl;
     while (!DAC.empty()) {
         if (ToulBar2::interrupted) throw TimeOut();
@@ -2275,8 +2250,7 @@ void WCSP::propagateDAC()
     }
 }
 
-void WCSP::fillEAC2()
-{
+void WCSP::fillEAC2() {
     assert(EAC2.empty());
     if (ToulBar2::verbose >= 2) cout << "EAC1Queue size: " << EAC1.getSize() << endl;
     while (!EAC1.empty()) {
@@ -2285,8 +2259,7 @@ void WCSP::fillEAC2()
     }
 }
 
-void WCSP::propagateEAC()
-{
+void WCSP::propagateEAC() {
     fillEAC2();
     if (ToulBar2::verbose >= 2) cout << "EAC2Queue size: " << EAC2.getSize() << endl;
     while (!EAC2.empty()) {
@@ -2297,16 +2270,14 @@ void WCSP::propagateEAC()
     }
 }
 
-void WCSP::propagateSeparator()
-{
+void WCSP::propagateSeparator() {
     if (ToulBar2::verbose >= 2) cout << "PendingSeparator size: " << PendingSeparator.getSize() << endl;
     for (SeparatorList::iterator iter = PendingSeparator.begin(); iter != PendingSeparator.end(); ++iter) {
         (*iter)->propagate();
     }
 }
 
-void WCSP::propagateDEE()
-{
+void WCSP::propagateDEE() {
     if (ToulBar2::verbose >= 2) cout << "DEEQueue size: " << DEE.getSize() << endl;
     assert(NC.empty());
     while (!DEE.empty()) {
@@ -2356,8 +2327,7 @@ void WCSP::propagateDEE()
 ///		In toulbar2 options, it is the approximate degree which is given by the user for variable elimination during the search (thus, a value at most three).
 ///		But it is the true degree which is given by the user for variable elimination in preprocessing.
 
-void WCSP::eliminate()
-{
+void WCSP::eliminate() {
     while (!Eliminate.empty()) {
         if (ToulBar2::interrupted) throw TimeOut();
         EnumeratedVariable *x = (EnumeratedVariable *) Eliminate.pop();
@@ -2399,8 +2369,7 @@ void WCSP::eliminate()
 /// Queues are first-in / first-out lists of variables (avoiding multiple insertions).
 /// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
-void WCSP::propagate()
-{
+void WCSP::propagate() {
     if (ToulBar2::interrupted) throw TimeOut();
     revise(NULL);
     if (ToulBar2::vac) vac->iniThreshold();
@@ -2416,6 +2385,7 @@ void WCSP::propagate()
             }
         }
     }
+
     do {
         do {
             do {
@@ -2496,8 +2466,7 @@ void WCSP::propagate()
     nbNodes++;
 }
 
-void WCSP::restoreSolution(Cluster *c)
-{
+void WCSP::restoreSolution(Cluster* c) {
     int elimo = getElimOrder();
     for (int i = elimo - 1; i >= 0; i--) {
         elimInfo ei = elimInfos[i];
@@ -2558,8 +2527,7 @@ void WCSP::restoreSolution(Cluster *c)
 
 // Creates n fake empty constraints and puts them in the pool 'elimBinConstrs'
 
-void WCSP::initElimConstr()
-{
+void WCSP::initElimConstr() {
     BinaryConstraint *xy = NULL;
     if (!ToulBar2::vac) xy = new BinaryConstraint(this);
     else xy = new VACBinaryConstraint(this);
@@ -2580,8 +2548,7 @@ void WCSP::initElimConstrs()
 }
 
 // Function that adds a new binary constraint from the pool of fake constraints
-BinaryConstraint *WCSP::newBinaryConstr(EnumeratedVariable *x, EnumeratedVariable *y, Constraint *from1, Constraint *from2)
-{
+BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint *from1, Constraint *from2) {
     int newIndex = (int) elimBinOrder;
     BinaryConstraint *ctr = (BinaryConstraint *) elimBinConstrs[newIndex];
     ctr->fillElimConstr(x, y, from1, from2);
@@ -2592,8 +2559,7 @@ BinaryConstraint *WCSP::newBinaryConstr(EnumeratedVariable *x, EnumeratedVariabl
 
 // warning! you must create beforehand three binary constraints in fake pool (elimBinConstrs)
 // if they do not exist in the main pool (constrs)
-TernaryConstraint *WCSP::newTernaryConstr(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, Constraint *from1)
-{
+TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint *from1) {
     int newIndex = (int) elimTernOrder;
     TernaryConstraint *ctr = (TernaryConstraint *) elimTernConstrs[newIndex];
     ctr->fillElimConstr(x, y, z, from1);
@@ -2602,8 +2568,7 @@ TernaryConstraint *WCSP::newTernaryConstr(EnumeratedVariable *x, EnumeratedVaria
 }
 
 TernaryConstraint *WCSP::newTernaryConstr(EnumeratedVariable *x, EnumeratedVariable *y, EnumeratedVariable *z, vector <
-        Cost > costs)
-{
+        Cost> costs) {
     unsigned int a, b;
     vector<Cost> zerocostsxy;
     vector<Cost> zerocostsxz;
@@ -2661,8 +2626,7 @@ TernaryConstraint *WCSP::newTernaryConstr(EnumeratedVariable *x, EnumeratedVaria
     return ctr;
 }
 
-Constraint *WCSP::sum(Constraint *ctr1, Constraint *ctr2)
-{
+Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2) {
     assert(ctr1 != ctr2);
     if (ctr1->order(ctr2) < 0) {
         Constraint *ctraux = ctr1;
@@ -2775,7 +2739,8 @@ Constraint *WCSP::sum(Constraint *ctr1, Constraint *ctr2)
                     costs.push_back(costsum);
                 }
         ctrIndex = postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
-    } else if (arityU == 2) {
+    }
+    else if(arityU == 2) {
         BinaryConstraint *bctr1 = (BinaryConstraint *) ctr1;
         BinaryConstraint *bctr2 = (BinaryConstraint *) ctr2;
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
@@ -2801,8 +2766,7 @@ Constraint *WCSP::sum(Constraint *ctr1, Constraint *ctr2)
     return ctr;
 }
 
-void WCSP::project(Constraint *&ctr_inout, EnumeratedVariable *var)
-{
+void WCSP::project(Constraint* &ctr_inout, EnumeratedVariable* var) {
     if (ctr_inout->getIndex(var) < 0) return;
     unsigned int vxi, vyi, vzi;
     int arity = ctr_inout->arity();
@@ -2949,9 +2913,9 @@ void WCSP::project(Constraint *&ctr_inout, EnumeratedVariable *var)
         if (negcost < 0) decreaseLb(negcost);
     }
     break;
-    default:
+    default: {
         cerr << "Bad resulting cost function arity during generic variable elimination!";
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); }
     }
     ctr_inout = ctr;
     if (ctr) {
@@ -2960,8 +2924,7 @@ void WCSP::project(Constraint *&ctr_inout, EnumeratedVariable *var)
     }
 }
 
-void WCSP::variableElimination(EnumeratedVariable *var)
-{
+void WCSP::variableElimination(EnumeratedVariable* var) {
     int degree = var->getTrueDegree();
     if (ToulBar2::verbose >= 1) cout << endl << "Generic variable elimination of " << var->getName() << "    degree: "
             << var->getDegree() << " true degree: " << degree << " max elim size: " << var->getMaxElimSize() << endl;
@@ -3011,8 +2974,7 @@ void WCSP::variableElimination(EnumeratedVariable *var)
     var->assign(var->getSupport()); // warning! dummy assigned value
 }
 
-bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint *xy, BinaryConstraint *yz, BinaryConstraint *xz)
-{
+bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz) {
     if ((xIndex == yIndex) || (xIndex == zIndex) || (yIndex == zIndex)) return false;
     EnumeratedVariable *x = (EnumeratedVariable *) vars[xIndex];
     EnumeratedVariable *y = (EnumeratedVariable *) vars[yIndex];
@@ -3091,8 +3053,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint *xy
     return added;
 }
 
-void WCSP::ternaryCompletion()
-{
+void WCSP::ternaryCompletion() {
     if (numberOfUnassignedVariables() < 3) return;
 
     Double nbunvars  = numberOfUnassignedVariables();
@@ -3168,27 +3129,22 @@ void WCSP::ternaryCompletion()
 // -----------------------------------------------------------
 // Methods for Virtual Arc Consistency
 
-void WCSP::histogram(Cost c)
-{
+void WCSP::histogram(Cost c) {
     if (vac) vac->histogram(c);
 }
 void WCSP::iniSingleton() {
     if (vac) vac->iniSingleton();
 }
-void WCSP::updateSingleton()
-{
+void WCSP::updateSingleton() {
     if (vac) vac->updateSingleton();
 }
-void WCSP::removeSingleton()
-{
+void WCSP::removeSingleton() {
     if (vac) vac->removeSingleton();
 }
-void WCSP::printVACStat()
-{
+void WCSP::printVACStat() {
     if (vac) vac->printStat();
 }
-int WCSP::getVACHeuristic()
-{
+int WCSP::getVACHeuristic() {
     if (vac) return vac->getHeuristic();
     else return -1;
 }
@@ -3305,27 +3261,15 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 #ifdef BOOST
     if (((long)((void *) elimVarOrder)) >= 1 && ((long)((void *) elimVarOrder)) <= 6) {
         switch (((long)((void *) elimVarOrder))) {
-        case 1:
-            maximumCardinalitySearch(order);
-            break;
-        case 2:
-            minimumDegreeOrdering(order);
-            break;
-        case 3:
-            minimumFillInOrdering(order);
-            break;
-        case 4:
-            spanningTreeOrderingBGL(order);
-            break;
-        case 5:
-            reverseCuthillMcKeeOrderingBGL(order);
-            break;
-        case 6:
-            minimumDegreeOrderingBGL(order);
-            break;
-        default:
+        case 1: maximumCardinalitySearch(order); break;
+        case 2: minimumDegreeOrdering(order); break;
+        case 3: minimumFillInOrdering(order); break;
+        case 4: spanningTreeOrderingBGL(order); break;
+        case 5: reverseCuthillMcKeeOrderingBGL(order); break;
+        case 6: minimumDegreeOrderingBGL(order); break;
+        default: {
             cerr << "Variable elimination order " << ((long)((void *) elimVarOrder)) << " not implemented yet!" << endl;
-            exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE); }
         }
     } else {
 #endif
@@ -3354,8 +3298,7 @@ void WCSP::elimOrderFile2Vector(char *elimVarOrder, vector<int> &order)
 }
 
 /// \param order variable elimination order (reverse of DAC order)
-void WCSP::setDACOrder(vector<int> &order)
-{
+void WCSP::setDACOrder(vector<int> &order) {
     if (order.size() != numberOfVariables()) {
         cerr << "DAC order has incorrect number of variables." << endl;
         exit(EXIT_FAILURE);
@@ -3397,11 +3340,9 @@ void WCSP::setDACOrder(vector<int> &order)
 // Functions for dealing with probabilities
 // Warning: ToulBar2::NormFactor has to be initialized
 
-Cost WCSP::Prob2Cost(TProb p) const
-{
+Cost WCSP::Prob2Cost(TProb p) const {
     if (p == 0.0) return getUb();
     TLogProb res = -Log(p) * ToulBar2::NormFactor;
-    //cout<<"prob :"<<p<<" Log(p) "<<Log(p)<<" Cost(p) :"<<res<<endl;
     if (res > to_double(MAX_COST)) {
         cerr << "Overflow when converting probability to cost." << endl;
         exit(EXIT_FAILURE);
@@ -3411,8 +3352,7 @@ Cost WCSP::Prob2Cost(TProb p) const
     return c;
 }
 
-Cost WCSP::LogProb2Cost(TLogProb p) const
-{
+Cost WCSP::LogProb2Cost(TLogProb p) const {
     TLogProb res = -p * ToulBar2::NormFactor;
     Cost c;
     if (res > to_double(MAX_COST / 2)) {
@@ -3424,19 +3364,15 @@ Cost WCSP::LogProb2Cost(TLogProb p) const
     return c;
 }
 
-TLogProb WCSP::Cost2LogProb(Cost c) const
-{
+TLogProb WCSP::Cost2LogProb(Cost c) const {
     return -to_double(c) / ToulBar2::NormFactor;
 }
 
-TProb WCSP::Cost2Prob(Cost c) const
-{
+TProb WCSP::Cost2Prob(Cost c) const {
     return Exp(-to_double(c) / ToulBar2::NormFactor);
 }
 
-Cost  WCSP::LogSumExp(Cost c1, Cost c2) const
-{
-
+Cost  WCSP::LogSumExp(Cost c1, Cost c2) const {
     if (c1 >= getUb()) return c2;
     else if (c2 >= getUb()) return c1;
     else if (c1 == c2) return c1 + LogProb2Cost(Log(2.));
@@ -3445,9 +3381,7 @@ Cost  WCSP::LogSumExp(Cost c1, Cost c2) const
         else return c2 + LogProb2Cost(Log1p(Exp(Cost2LogProb(c1 - c2))));
     }
 }
-
-TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const
-{
+TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const {
     TLogProb logc2 = Cost2LogProb(c2);
     if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
     else if (c2 >= getUb()) return logc1;
@@ -3457,8 +3391,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const
     }
 }
 
-TLogProb WCSP::LogSumExp(TProb logc1, TProb logc2) const
-{
+TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const {
     if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
     else if (logc2 == -numeric_limits<TLogProb>::infinity()) return logc1;
     else {
@@ -3471,8 +3404,7 @@ TLogProb WCSP::LogSumExp(TProb logc1, TProb logc2) const
 //procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;
 
-void WCSP::visit(int i, vector <int> &revdac, vector <bool> &marked, const vector< vector<int> > &listofsuccessors)
-{
+void WCSP::visit(int i, vector <int>&revdac, vector <bool>& marked, const vector< vector<int> >&listofsuccessors ) {
     marked[i] = true;
     for (unsigned int  j = 0 ; j < listofsuccessors[i].size(); j++) {
 //   for (int  j = listofsuccessors[i].size()-1 ; j >= 0 ; j--) {
