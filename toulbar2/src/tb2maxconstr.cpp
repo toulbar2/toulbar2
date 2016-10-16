@@ -8,17 +8,14 @@
 using namespace std;
 
 MaxConstraint::MaxConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity):
-    DPGlobalConstraint(wcsp, scope, arity), top(MIN_COST), largest(MIN_COST)
-{
+            DPGlobalConstraint(wcsp, scope, arity), top(MIN_COST), largest(MIN_COST) {
     weightMap.resize(arity);
 }
 
-MaxConstraint::~MaxConstraint()
-{
+MaxConstraint::~MaxConstraint(){
 }
 
-void MaxConstraint::read(istream &file)
-{
+void MaxConstraint::read(istream &file){
     //    int n = arity();
     // weightMap.resize(n);
 
@@ -32,7 +29,8 @@ void MaxConstraint::read(istream &file)
     int nTuple;
     file >> nTuple;
     top = def;
-    for (int it = 0; it < nTuple; it++) {
+    for (int it=0;it<nTuple;it++)
+    {
         int varID;
         unsigned int v;
         Cost w;
@@ -89,20 +87,17 @@ Cost MaxConstraint::evalOriginal( const String& s ) {
     return largeComp;
 }
 
-Cost MaxConstraint::minCostOriginal()
-{
+Cost MaxConstraint::minCostOriginal(){		
     findLargest();
     return largest;
 }
 
-Cost MaxConstraint::minCostOriginal(int var, Value val, bool changed)
-{
+Cost MaxConstraint::minCostOriginal(int var, Value val, bool changed){	
     if (changed) findLargest();
     return max(weightMap[var][val], largest);
 }
 
-void MaxConstraint::findLargest()
-{
+void MaxConstraint::findLargest(){
     largest = 0;
     for (int i = 0; i <  arity(); i++) {
         EnumeratedVariable *x = scope[i];
@@ -113,8 +108,7 @@ void MaxConstraint::findLargest()
     }
 }
 
-void MaxConstraint::recompute()
-{
+void MaxConstraint::recompute() {
 
     int n = arity();
     sorted.clear();
@@ -189,20 +183,17 @@ void MaxConstraint::recompute()
     }
 }
 
-DPGlobalConstraint::Result MaxConstraint::minCost(int var, Value val, bool changed)
-{
+DPGlobalConstraint::Result MaxConstraint::minCost(int var, Value val, bool changed){	
     if (changed) recompute();
     return DPGlobalConstraint::Result(mincosts[var][val], NULL);
 }
 
 
-Cost MaxConstraint::unary(int var, int val)
-{
+Cost MaxConstraint::unary(int var, int val){
     return -deltaCost[var][scope[var]->toIndex(val)];
 }
 
-int MaxConstraint::ancestor(int i)
-{
+int MaxConstraint::ancestor(int i){
     int ret = i;
     while (link[ret] != ret)
         ret = link[ret];
@@ -212,4 +203,12 @@ int MaxConstraint::ancestor(int i)
     }
     return ret;
 }
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

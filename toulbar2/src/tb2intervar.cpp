@@ -80,11 +80,9 @@ void IntervalVariable::increaseFast(Value newInf)
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
-        if (newInf > sup) {
-            THROWCONTRADICTION;
+        if (newInf > sup) {THROWCONTRADICTION;
         } else {
-            if (newInf == sup) {
-                assign(newInf);
+            if (newInf == sup) {assign(newInf);
             } else {
                 inf = newInf;
                 infCost = MIN_COST;
@@ -103,11 +101,9 @@ void IntervalVariable::increase(Value newInf, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
 #endif
     if (newInf > inf) {
-        if (newInf > sup) {
-            THROWCONTRADICTION;
+        if (newInf > sup) {THROWCONTRADICTION;
         } else {
-            if (newInf == sup) {
-                assign(newInf);
+            if (newInf == sup) {assign(newInf);
             } else {
                 inf = newInf;
                 infCost = MIN_COST;
@@ -124,11 +120,9 @@ void IntervalVariable::decreaseFast(Value newSup)
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
-        if (newSup < inf) {
-            THROWCONTRADICTION;
+        if (newSup < inf) {THROWCONTRADICTION;
         } else {
-            if (inf == newSup) {
-                assign(newSup);
+            if (inf == newSup) {assign(newSup);
             } else {
                 sup = newSup;
                 supCost = MIN_COST;
@@ -147,11 +141,9 @@ void IntervalVariable::decrease(Value newSup, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
 #endif
     if (newSup < sup) {
-        if (newSup < inf) {
-            THROWCONTRADICTION;
+        if (newSup < inf) {THROWCONTRADICTION;
         } else {
-            if (inf == newSup) {
-                assign(newSup);
+            if (inf == newSup) {assign(newSup);
             } else {
                 sup = newSup;
                 supCost = MIN_COST;
@@ -205,3 +197,11 @@ void IntervalVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
         }
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

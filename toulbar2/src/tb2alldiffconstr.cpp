@@ -2,8 +2,7 @@
 #include "tb2wcsp.hpp"
 
 AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                                     int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
-{
+        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
     buildIndex();
 
     modeEnum["var"] = AllDiffConstraint::VAR;
@@ -11,8 +10,7 @@ AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
     modeEnum["decbi"] = AllDiffConstraint::DECBI;
 }
 
-void AllDiffConstraint::buildIndex()
-{
+void AllDiffConstraint::buildIndex() {
     vector<Value> D;
     for (int i = 0; i < arity_; i++) {
         EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
@@ -28,8 +26,7 @@ void AllDiffConstraint::buildIndex()
     //graph.setSize(arity_+D.size()+2);
 }
 
-void AllDiffConstraint::read(istream &file)
-{
+void AllDiffConstraint::read(istream &file) {
 
     // Only two pararmeters for control :
 
@@ -55,8 +52,7 @@ void AllDiffConstraint::read(istream &file)
 
 }
 
-void AllDiffConstraint::organizeConfig()
-{
+void AllDiffConstraint::organizeConfig() {
     if (mode == DECBI) decompose();
 }
 
@@ -78,13 +74,11 @@ Cost AllDiffConstraint::evalOriginal( const String& s ) {
     return tuple_cost;
 }
 
-size_t AllDiffConstraint::GetGraphAllocatedSize()
-{
+size_t AllDiffConstraint::GetGraphAllocatedSize() {
     return mapval.size() + arity_  + 2;
 }
 
-void AllDiffConstraint::buildGraph(Graph &g)
-{
+void AllDiffConstraint::buildGraph(Graph &g) {
 
     // if (g.size() == 0) g.setSize(mapval.size() + arity_  + 2);
     // g.clearEdge();
@@ -136,8 +130,7 @@ void AllDiffConstraint::buildGraph(Graph &g)
 
 }*/
 
-void AllDiffConstraint::decompose()
-{
+void AllDiffConstraint::decompose() {
     deconnect();
     for (int i = 0; i < arity_; i++) {
         for (int j = i + 1; j < arity_; j++) {
@@ -166,7 +159,8 @@ void AllDiffConstraint::decompose()
                 ctr->reconnect();
                 ctr->addCosts(x, y, costs);
                 ctr->propagate();
-            } else {
+            }
+            else {
                 if (!ToulBar2::vac) {
                     ctr = new BinaryConstraint(wcsp, x, y, costs);
                 } else {

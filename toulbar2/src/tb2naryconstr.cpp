@@ -42,8 +42,7 @@ NaryConstraint::~NaryConstraint()
 }
 
 // USED ONLY DURING SEARCH
-void NaryConstraint::assign(int varIndex)
-{
+void NaryConstraint::assign(int varIndex) {
     if (connected(varIndex)) {
         deconnect(varIndex);
         nonassigned = nonassigned - 1;
@@ -76,8 +75,7 @@ void NaryConstraint::projectNaryTernary(TernaryConstraint *xyz)
     }
     if (ToulBar2::verbose >= 1) {
         cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
-        if (td) cout << "   cluster nary: " << getCluster() << endl;
-        else cout << endl;
+        if(td) cout << "   cluster nary: " << getCluster() << endl; else cout << endl;
         if (ctr) cout << "ctr exists" << endl;
     }
     if (!ctr || (ctr && td && cluster != ctr->getCluster())) {
@@ -104,11 +102,13 @@ void NaryConstraint::projectNaryBinary(BinaryConstraint *xy)
     if (td) ctr = x->getConstr(y, getCluster());
     if (!ctr) ctr = x->getConstr(y);
 
-    if ((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster()))) {
+    if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster())))
+    {
         if (ToulBar2::verbose >= 2) cout << " exists -> fusion" << endl;
         ctr->addCosts(xy);
         xy = ctr;
-    } else {
+    }
+    else {
         if (td) {
             if (ctr) xy->setDuplicate();
             xy->setCluster(getCluster());
@@ -171,7 +171,8 @@ void NaryConstraint::projectNary()
         }
         if (flag) projectNaryTernary(xyz);
         //else cout << "ternary empty!" << endl;
-    } else if (nunassigned == 2) {
+    }
+    else if(nunassigned == 2) {
         BinaryConstraint *xy = wcsp->newBinaryConstr(x, y, this);
         wcsp->elimBinOrderInc();
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -191,7 +192,8 @@ void NaryConstraint::projectNary()
         }
         if (flag)projectNaryBinary(xy);
         //else cout << "binary empty!" << endl;
-    } else if (nunassigned == 1) {
+    }
+    else if(nunassigned == 1) {
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             Value xval = *iterx;
             t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
@@ -205,7 +207,8 @@ void NaryConstraint::projectNary()
             }
         }
         x->findSupport();
-    } else {
+    }
+    else {
         Cost c = eval(t);
         projectLB(c);
     }
@@ -489,7 +492,8 @@ bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * 
                 if (neweq) {diff = squareminus(c, c1, wcsp->getUb()); neweq = false; }
                 else sev = (diff == squareminus(c, c1, wcsp->getUb()));
                 if (ToulBar2::verbose >= 3) cout << " = " << squareminus(c, c1, wcsp->getUb())  << endl;
-            } else if (ToulBar2::verbose >= 3) cout << "universe\n";
+            }
+            else if(ToulBar2::verbose >= 3) cout << "universe\n";
             finished = false;
             i = a - 1;
             while (sev && !finished) {
@@ -859,7 +863,8 @@ void NaryConstraint::insertSum( const String& t1, Cost c1, Constraint* ctr1, con
         if ((pos1 >= 0) && (pos2 >= 0)) {
             if(t1[pos1] != t2[pos2])  return;
             t[pos] = t1[pos1];
-        } else if (pos1 >= 0) t[pos] = t1[pos1];
+        }
+        else if(pos1 >= 0) t[pos] = t1[pos1];
         else if (pos2 >= 0) t[pos] = t2[pos2];
 
         Cost unaryc = v->getCost(v->toValue(t[pos] - CHAR_FIRST));

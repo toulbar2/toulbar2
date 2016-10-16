@@ -13,15 +13,13 @@ AmongConstraint::AmongConstraint(WCSP *wcsp, EnumeratedVariable **scope, int ari
     , minU(NULL)
     , ub(0), lb(0) {}
 
-AmongConstraint::~AmongConstraint()
-{
+AmongConstraint::~AmongConstraint() {
     deleteTable(f);
     deleteTable(curf);
     deleteTable(invf);
 }
 
-void AmongConstraint::read(istream &file)
-{
+void AmongConstraint::read(istream & file) {
     string str;
     file >> str >> def;
 
@@ -79,8 +77,7 @@ void AmongConstraint::initMemoization() {
     top = max(MAX_COST, wcsp->getUb());
 }
 
-Cost AmongConstraint::minCostOriginal()
-{
+Cost AmongConstraint::minCostOriginal() {
 
     int n = arity();
 
@@ -92,8 +89,7 @@ Cost AmongConstraint::minCostOriginal()
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             int uCost(0), baruCost(def);
             if (V.find(*v) == V.end()) {
-                uCost = def;
-                baruCost = 0;
+                uCost = def; baruCost = 0;
             }
             minu = min(minu, uCost);
             minbaru = min(minbaru, baruCost);
@@ -112,8 +108,7 @@ Cost AmongConstraint::minCostOriginal()
     return minCost;
 }
 
-Cost AmongConstraint::minCostOriginal(int var, Value val, bool changed)
-{
+Cost AmongConstraint::minCostOriginal(int var, Value val, bool changed) {    
     Result result = minCost(var, val, changed);
     delete[] result.second;
     return result.first;
@@ -129,8 +124,7 @@ Cost AmongConstraint::evalOriginal(const String& s)
     return max(0, max(lb - count, count - ub)) * def;
 }
 
-void AmongConstraint::recompute()
-{
+void AmongConstraint::recompute() {
     int n = arity();
     minBarU[0].val = minU[0].val = -1;
     for (int i = 1; i <= n; i++) {
@@ -142,8 +136,7 @@ void AmongConstraint::recompute()
 
 }
 
-DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool changed)
-{
+DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool changed) {
 
     if (changed) recompute();
 
@@ -168,11 +161,11 @@ DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool cha
     return DPGlobalConstraint::Result(minCost, NULL);
 }
 
-void AmongConstraint::recomputeTable(DPTableCell **table, DPTableCell **invTable, int startRow)
-{
+void AmongConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable, int startRow) {
     int n = arity();
 
-    if (startRow == 0) {
+    if (startRow == 0)
+    {
         for (int j = 0; j <= ub; j++) {
             table[0][j].val = j * def;
             table[0][j].source = -1;
@@ -249,4 +242,12 @@ Cost AmongConstraint::computeMinBarU(int var)
     }
     return minCost;
 }
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

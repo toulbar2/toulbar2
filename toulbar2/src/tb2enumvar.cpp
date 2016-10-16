@@ -72,13 +72,11 @@ void EnumeratedVariable::getDomainAndCost(ValueCost *array)
     }
 }
 
-Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue)
-{
+Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue) {
     return (c.scopeIndex == 0) ? ((BinaryConstraint *) c.constr)->getCost(myvalue, itsvalue) : ((BinaryConstraint *) c.constr)->getCost(itsvalue, myvalue);
 }
 
-Cost EnumeratedVariable::getBinaryCost(BinaryConstraint *c, Value myvalue, Value itsvalue)
-{
+Cost EnumeratedVariable::getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue) {
     return (c->getIndex(this) == 0) ? c->getCost(myvalue, itsvalue) : c->getCost(itsvalue, myvalue);
 }
 
@@ -138,8 +136,6 @@ void EnumeratedVariable::queueZ()
 
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
-
-    //cout<<cost<<' '<<MIN_COST<<endl;
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
@@ -153,7 +149,6 @@ void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
         if (delayed) queueNC();
         else removeFast(value);     // Avoid any unary cost overflow
     }
-
 }
 
 void EnumeratedVariable::projectInfCost(Cost cost)
@@ -210,7 +205,6 @@ void EnumeratedVariable::findSupport()
         if (support != newSupport) queueDEE();
         support = newSupport;
     }
-
 }
 
 void EnumeratedVariable::propagateNC()
@@ -233,7 +227,6 @@ void EnumeratedVariable::propagateNC()
     assert(getCost(maxcostvalue) == maxcost || !LUBTEST(maxcost, getCost(maxcostvalue)));
     setMaxUnaryCost(maxcostvalue, maxcost);
     if (supportBroken) findSupport();
-
 }
 
 bool EnumeratedVariable::verifyNC()
@@ -404,8 +397,7 @@ void EnumeratedVariable::propagateEAC()
 }
 
 void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
-{
-    //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
+{   //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
     if (a == b) return;
     Cost costa = getCost(a);
     Cost costb = getCost(b);
@@ -542,16 +534,13 @@ void EnumeratedVariable::increaseFast(Value newInf)
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
-        if (newInf > sup) {
-            THROWCONTRADICTION;
+        if (newInf > sup) {THROWCONTRADICTION;
         } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) {
-                assign(newInf);
+            if (newInf == sup) {assign(newInf);
             } else {
                 inf = newInf;
-                if (watchForIncrease) queueInc();
-                else queueAC();
+                if (watchForIncrease) queueInc(); else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmin)(*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
@@ -568,20 +557,17 @@ void EnumeratedVariable::increase(Value newInf, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
 #endif
     if (newInf > inf) {
-        if (newInf > sup) {
-            THROWCONTRADICTION;
+        if (newInf > sup) {THROWCONTRADICTION;
         } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) {
-                assign(newInf);
+            if (newInf == sup) {assign(newInf);
             } else {
                 inf = newInf;
                 if (newInf > maxCostValue || PARTIALORDER) queueNC();           // diff with increaseFast
                 if (newInf > support || PARTIALORDER) findSupport();            // diff with increaseFast
                 queueDAC();                                     // diff with increaseFast
                 queueEAC1();                                     // diff with increaseFast
-                if (watchForIncrease) queueInc();
-                else queueAC();
+                if (watchForIncrease) queueInc(); else queueAC();
                 if (ToulBar2::setmin)(*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
@@ -593,16 +579,13 @@ void EnumeratedVariable::decreaseFast(Value newSup)
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
-        if (newSup < inf) {
-            THROWCONTRADICTION;
+        if (newSup < inf) {THROWCONTRADICTION;
         } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) {
-                assign(newSup);
+            if (inf == newSup) {assign(newSup);
             } else {
                 sup = newSup;
-                if (watchForDecrease) queueDec();
-                else queueAC();
+                if (watchForDecrease) queueDec(); else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmax)(*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
@@ -619,20 +602,17 @@ void EnumeratedVariable::decrease(Value newSup, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
 #endif
     if (newSup < sup) {
-        if (newSup < inf) {
-            THROWCONTRADICTION;
+        if (newSup < inf) {THROWCONTRADICTION;
         } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) {
-                assign(newSup);
+            if (inf == newSup) {assign(newSup);
             } else {
                 sup = newSup;
                 if (newSup < maxCostValue || PARTIALORDER) queueNC();           // diff with decreaseFast
                 if (newSup < support || PARTIALORDER) findSupport();            // diff with decreaseFast
                 queueDAC();                                     // diff with decreaseFast
                 queueEAC1();                                     // diff with decreaseFast
-                if (watchForDecrease) queueDec();
-                else queueAC();
+                if (watchForDecrease) queueDec(); else queueAC();
                 if (ToulBar2::setmax)(*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
@@ -701,11 +681,13 @@ void EnumeratedVariable::assign(Value newValue, bool isDecision)
         support = newValue;
         maxCostValue = newValue;
         maxCost = MIN_COST;
+
         Cost cost = getCost(newValue);
         if (cost > MIN_COST) {
             deltaCost += cost;
             projectLB(cost);
         }
+
         if (ToulBar2::setvalue)(*ToulBar2::setvalue)(wcsp->getIndex(), wcspIndex, newValue, wcsp->getSolver());
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
             (*iter).constr->assign((*iter).scopeIndex);
@@ -946,23 +928,15 @@ bool EnumeratedVariable::elimVar(TernaryConstraint *xyz)
                 Cost curcost = getCost(*iter) + xyz->getCost(this, y, z, *iter, *itery, *iterz);
 
                 if (!flag_rev) {
-                    if (n2links > 0) {
-                        assert(links[0].constr->getIndex(y) >= 0);
-                        curcost += getBinaryCost(links[0], *iter, *itery);
-                    }
-                    if (n2links > 1) {
-                        assert(links[1].constr->getIndex(z) >= 0);
-                        curcost += getBinaryCost(links[1], *iter, *iterz);
-                    }
+                    if(n2links > 0) { assert(links[0].constr->getIndex(y) >= 0);
+                    curcost += getBinaryCost(links[0], *iter, *itery); }
+                    if(n2links > 1) { assert(links[1].constr->getIndex(z) >= 0);
+                    curcost += getBinaryCost(links[1], *iter, *iterz); }
                 } else {
-                    if (n2links > 0) {
-                        assert(links[0].constr->getIndex(z) >= 0);
-                        curcost += getBinaryCost(links[0], *iter, *iterz);
-                    }
-                    if (n2links > 1) {
-                        assert(links[1].constr->getIndex(y) >= 0);
-                        curcost += getBinaryCost(links[1], *iter, *itery);
-                    }
+                    if(n2links > 0) { assert(links[0].constr->getIndex(z) >= 0);
+                    curcost += getBinaryCost(links[0], *iter, *iterz); }
+                    if(n2links > 1) { assert(links[1].constr->getIndex(y) >= 0);
+                    curcost += getBinaryCost(links[1], *iter, *itery); }
                 }
                 if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost, curcost);
                 else if (curcost < mincost) mincost = curcost;
@@ -1214,8 +1188,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
         case 0: {
             cerr << "Error: empty scope from " << *ctr << " when merging functional variable " << *this << " to variable " << *x << endl;
             exit(EXIT_FAILURE);
-            break;
-        }
+            break; }
         case 1: {
             assert(scopeIndex[0] == x->wcspIndex);
             assert(ctr->arity() == 2);
@@ -1232,8 +1205,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
                 if (modified) x->findSupport();
             } // else xy will be eliminated at the end of this function
-            break;
-        }
+            break; }
         case 2: {
             assert(wcsp->unassigned(scopeIndex[0]));
             assert(wcsp->unassigned(scopeIndex[1]));
@@ -1261,8 +1233,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
             }
             if (!empty) wcsp->postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
-            break;
-        }
+            break; }
         case 3: {
             assert(wcsp->unassigned(scopeIndex[0]));
             assert(wcsp->unassigned(scopeIndex[1]));
@@ -1295,8 +1266,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
             }
             if (!empty) wcsp->postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
-            break;
-        }
+            break; }
         default: {
             //	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
             //	  NaryConstraint *newctrok = (NaryConstraint*) wcsp->getCtr(res);
@@ -1393,8 +1363,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             assert(newctr->connected());
             if (newctr->universal()) newctr->deconnect(true);
             else newctr->propagate();
-            break;
-        }
+            break; }
         }
     }
     assert(xy->connected());
@@ -1407,7 +1376,6 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
 
 bool EnumeratedVariable::verify()
 {
-
     TreeDecomposition *td = wcsp->getTreeDec();
     if (!td) return true;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
@@ -1522,4 +1490,12 @@ bool EnumeratedVariable::verify()
 
 
 
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

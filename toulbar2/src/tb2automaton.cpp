@@ -3,8 +3,7 @@
 WFA::WFA() : nbStates(0) {}
 
 WFA::WFA(int _nbStates) : nbStates(_nbStates) {}
-WFA::WFA(istream &file)
-{
+WFA::WFA(istream &file) {
     unsigned int _nbStates, nbTransitions, nbStatesInit, nbStatesAccept;
     file >> _nbStates;
     nbStates = _nbStates;
@@ -43,8 +42,7 @@ WFA::WFA(istream &file)
     }
 }
 
-WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
-{
+WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost) {
     /// Preparing the WFA : nbStates, initialStates, acceptingStates ///
     nbStates = forbiddenPattern.length();
     initialStates.push_back(make_pair(0, 0));
@@ -76,8 +74,7 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
 ////////////////////////////////////////////////////////////////////////
 
 void
-WFA::display()
-{
+WFA::display()  {
     cout << "Number of states = " << nbStates << endl;
     cout << "Initial States : " << endl;
     for (list<pair<int, Cost> >::iterator it = initialStates.begin() ; it != initialStates.end() ; it++) {
@@ -95,3 +92,11 @@ WFA::display()
         transition->display();
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

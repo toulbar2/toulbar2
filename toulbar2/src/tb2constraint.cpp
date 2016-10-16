@@ -92,8 +92,7 @@ void Constraint::sumScopeIncluded(Constraint *ctr)
 }
 
 
-void Constraint::assignCluster()
-{
+void Constraint::assignCluster() {
     TreeDecomposition *td = wcsp->getTreeDec();
     if (!td) return;
     Cluster *lowest = td->getRoot();
@@ -196,8 +195,7 @@ bool Constraint::verifySeparate(Constraint *ctr1, Constraint *ctr2)
     String tuple;
     Cost cost, c1, c2;
     firstlex();
-    if (ToulBar2::verbose >= 3) {
-        cout << "[ ";
+    if(ToulBar2::verbose >= 3) { cout << "[ ";
         for (int i = 0; i < arity(); ++i)
             cout << getVar(i)->getName() << " ";
         cout << " ]\n" ;
@@ -262,3 +260,11 @@ Constraint *Constraint::copy()
     wcsp->getCtr(ctrIndex)->deconnect();
     return wcsp->getCtr(ctrIndex);
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

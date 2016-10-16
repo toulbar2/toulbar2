@@ -4,8 +4,7 @@
 
 using namespace std;
 
-void WCNFCFG::addVariableMeasure(int violationCost)
-{
+void WCNFCFG::addVariableMeasure(int violationCost) {
 
     // Assume A_i -> a_i
     // 1) for all prod. rules C->A_iB, add C->A_jB with weight = w[C->A_jB] + vioCost, j != i
@@ -35,8 +34,7 @@ void WCNFCFG::addVariableMeasure(int violationCost)
 
 }
 
-void WCNFCFG::print(ostream &ofs)
-{
+void WCNFCFG::print(ostream &ofs) {
     for (vector<WCNFRule>::iterator p = nonTermProd.begin(); p != nonTermProd.end(); ++p) {
         ofs << p->from << "->" << p->to[0] << " " << p->to[1] << ": " << p->weight << "\n";
     }
@@ -66,3 +64,4 @@ void WCNFCFG::dump(ostream& os, bool original)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

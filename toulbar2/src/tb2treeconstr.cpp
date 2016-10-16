@@ -9,18 +9,15 @@
 
 using namespace std;
 
-TreeConstraint::TreeConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity)
-    : DPGlobalConstraint(wcsp, scope, arity), curTreeCost(0), minTreeEdgeCost(0), maxTreeEdgeCost(0), ccTreeRoot(NULL)
+TreeConstraint::TreeConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity) : DPGlobalConstraint(wcsp, scope, arity),
+        curTreeCost(0), minTreeEdgeCost(0), maxTreeEdgeCost(0), ccTreeRoot(NULL)
 {
 }
 
 
-TreeConstraint::~TreeConstraint(void)
-{
-}
+TreeConstraint::~TreeConstraint(void) {}
 
-void TreeConstraint::initMemoization()
-{
+void TreeConstraint::initMemoization() {
 
     //check if the assignments represent a graph
     // check max value <= max var. index
@@ -58,14 +55,12 @@ void TreeConstraint::initMemoization()
 
 }
 
-Cost TreeConstraint::minCostOriginal()
-{
+Cost TreeConstraint::minCostOriginal() {			
     if (curTreeCost >= wcsp->getUb()) return wcsp->getUb();
     return 0;
 }
 
-Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed)
-{
+Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed) {	
     DPGlobalConstraint::Result result = minCost(var, val, changed);
     return result.first;
 }
@@ -126,8 +121,7 @@ Cost TreeConstraint::eval(const String& s) {
 
 }
 
-DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool changed)
-{
+DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool changed) {
 
     if (changed) curTreeCost = recomputeCurMST();
 
@@ -135,7 +129,8 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
     if (curTreeCost >= wcsp->getUb()) {
         consistent = false;
     } else if (treeEdge.find(make_pair(var, val2VarIndex[val])) == treeEdge.end() &&
-               treeEdge.find(make_pair(val2VarIndex[val], var)) == treeEdge.end()) {
+            treeEdge.find(make_pair(val2VarIndex[val], var)) == treeEdge.end())
+    {
         EnumeratedVariable *x = scope[var];
         if (x->getCost(val) + curTreeCost - maxTreeEdgeCost > wcsp->getUb()) {
             consistent = false;
@@ -156,8 +151,7 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
 }
 
 
-int TreeConstraint::recomputeCurMST()
-{
+int TreeConstraint::recomputeCurMST() {
     int n = arity();
     vector<Edge> edgeList;
     for (int i = 0; i < n; i++) {
@@ -171,8 +165,7 @@ int TreeConstraint::recomputeCurMST()
     return recomputeMST(edgeList);
 }
 
-int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
-{
+int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList) {
 
     int n = arity();
     int treeCost = 0;
@@ -229,22 +222,19 @@ int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
     return treeCost;
 }
 
-int TreeConstraint::findParent(int index, vector<int> &p)
-{
+int TreeConstraint::findParent(int index, vector<int>& p) {		
     while (index != p[index]) index = p[index];
     return index;
 }
 
-void TreeConstraint::unionSet(int u, int v, vector<int> &p)
-{
+void TreeConstraint::unionSet(int u, int v, vector<int>& p) {
     int uRoot = findParent(u, p);
     int vRoot = findParent(v, p);
 
     p[uRoot] = vRoot;
 }
 
-void TreeConstraint::joinCCTrees(int u, int v, Cost weight)
-{
+void TreeConstraint::joinCCTrees(int u, int v, Cost weight) {
 
     CCTreeNodePtr uRoot = findRoot(ccTree[u]);
     CCTreeNodePtr vRoot = findRoot(ccTree[v]);
@@ -265,8 +255,7 @@ void TreeConstraint::joinCCTrees(int u, int v, Cost weight)
 
 }
 
-TreeConstraint::CCTreeNodePtr TreeConstraint::findRoot(TreeConstraint::CCTreeNodePtr node)
-{
+TreeConstraint::CCTreeNodePtr TreeConstraint::findRoot(TreeConstraint::CCTreeNodePtr node) {
 
     if (node->parent == PtrNULL()) return node;
     if (node->parent == node) return node;
@@ -275,8 +264,7 @@ TreeConstraint::CCTreeNodePtr TreeConstraint::findRoot(TreeConstraint::CCTreeNod
     return parent;
 }
 
-void TreeConstraint::InorderTransveral(TreeConstraint::CCTreeNodePtr root)
-{
+void TreeConstraint::InorderTransveral(TreeConstraint::CCTreeNodePtr root) {
 
     if (root != PtrNULL()) {
         InorderTransveral(root->left);
@@ -286,8 +274,7 @@ void TreeConstraint::InorderTransveral(TreeConstraint::CCTreeNodePtr root)
     }
 }
 
-TreeConstraint::CCTreeNodePtr TreeConstraint::createNewNode()
-{
+TreeConstraint::CCTreeNodePtr TreeConstraint::createNewNode() {
     CCTreeNode newNode;
     newNode.parent = newNode.left = newNode.right = PtrNULL();
     nodeStore.push_back(newNode);

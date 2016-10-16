@@ -2,13 +2,11 @@
 #include "tb2wcsp.hpp"
 
 LPSConstraint::LPSConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                             int arity_in, int *constrcounter) : LinearConstraint(wcsp, scope_in, arity_in), wcspconstrcounter(constrcounter)
-{
+        int arity_in, int *constrcounter) : LinearConstraint(wcsp, scope_in, arity_in), wcspconstrcounter(constrcounter) {
     buildIndex();
 }
 
-void LPSConstraint::buildIndex()
-{
+void LPSConstraint::buildIndex() {
     vector<Value> D;
     count = 0; // total number of domains (number of vars * number of domains)
     count2 = 0; // number of possible domains (union all possible domains)
@@ -30,8 +28,7 @@ void LPSConstraint::buildIndex()
     }
 }
 
-void LPSConstraint::read(istream &file)
-{
+void LPSConstraint::read(istream &file) {
 
     string str;
     int nvalues, low, high, windowsi, d;
@@ -303,8 +300,7 @@ Cost LPSConstraint::evalOriginal(const String& s ) {
 
 }
 
-Cost LPSConstraint::buildMIP(MIP &mip)
-{
+Cost LPSConstraint::buildMIP(MIP &mip) {
 
     mip.clear();
     mip.addRows(nrows);
@@ -497,8 +493,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
 
 }
 
-Cost LPSConstraint::solveMIP(MIP &mip)
-{
+Cost LPSConstraint::solveMIP(MIP &mip) {
 
     return mip.solValue();
 }
@@ -535,3 +530,11 @@ void LPSConstraint::print(ostream &os)
 
     os << "]";
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

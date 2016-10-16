@@ -6,29 +6,25 @@
 #include "tb2variable.hpp"
 
 
-void Queue::push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp)
-{
+void Queue::push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp) {
     if (elt->content.timeStamp < curTimeStamp) {
         elt->content.timeStamp = curTimeStamp;
         push_back(elt, false);
     }
 }
 
-void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp)
-{
+void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp) {
     elt->content.incdec |= incdec;
     push(elt, curTimeStamp);
 }
 
-void Queue::remove(DLink<VariableWithTimeStamp> *elt)
-{
+void Queue::remove(DLink<VariableWithTimeStamp> *elt) {
     elt->content.timeStamp = -1;
     elt->content.incdec = NOTHING_EVENT;
     erase(elt, false);
 }
 
-Variable *Queue::pop()
-{
+Variable* Queue::pop() {
     assert(!empty());
     DLink<VariableWithTimeStamp> *elt = pop_back(false);
     elt->content.timeStamp = -1;
@@ -36,8 +32,7 @@ Variable *Queue::pop()
     return elt->content.var;
 }
 
-Variable *Queue::pop(int *incdec)
-{
+Variable* Queue::pop(int *incdec) {
     assert(!empty());
     *incdec = (*rbegin()).incdec;
     return pop();
@@ -145,3 +140,11 @@ void Queue::print(ostream &os)
     }
     os << endl;
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

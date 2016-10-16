@@ -6,15 +6,12 @@
 #include <set>
 using namespace std;
 
-GrammarConstraint::GrammarConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity)
-    : DPGlobalConstraint(wcsp, scope, arity)
-{
+GrammarConstraint::GrammarConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity) : DPGlobalConstraint(wcsp, scope, arity) {
     modeEnum["var"] = GrammarConstraint::VAR;
     modeEnum["weight"] = GrammarConstraint::WEIGHTED;
 }
 
-GrammarConstraint::~GrammarConstraint(void)
-{
+GrammarConstraint::~GrammarConstraint(void) {
     deleteTable(f);
     deleteTable(curf);
     deleteTable(marked);
@@ -26,8 +23,7 @@ GrammarConstraint::~GrammarConstraint(void)
     delete[] u;
 }
 
-void GrammarConstraint::read(istream &file)
-{
+void GrammarConstraint::read(istream & file) {
 
     string str;
     file >> str >> def;
@@ -60,25 +56,29 @@ void GrammarConstraint::read(istream &file)
     for (int i = 0; i < nRules; i++) {
         file >> type;
         switch (type) {
-        case 0: {
+        case 0:
+        {
             int A, v;
             file >> A >> v;
             cfg.addProduction(A, v, 0);
             break;
         }
-        case 1: {
+        case 1:
+        {
             int A, B, C;
             file >> A >> B >> C;
             cfg.addProduction(A, B, C, 0);
             break;
         }
-        case 2: {
+        case 2:
+        {
             int A, v, w;
             file >> A >> v >> w;
             cfg.addProduction(A, v, w);
             break;
         }
-        case 3: {
+        case 3:
+        {
             int A, B, C, w;
             file >> A >> B >> C >> w;
             cfg.addProduction(A, B, C, w);
@@ -138,8 +138,7 @@ void GrammarConstraint::initMemoization() {
     }
 }
 
-Cost GrammarConstraint::minCostOriginal()
-{
+Cost GrammarConstraint::minCostOriginal() {
     int n = arity();
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
@@ -160,8 +159,7 @@ Cost GrammarConstraint::minCostOriginal()
 
 }
 
-Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed)
-{
+Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed) {    
     return minCost(var, val, changed).first;
 }
 
@@ -179,8 +177,7 @@ Cost GrammarConstraint::eval(const String& s) {
     return minCost - projectedCost;
 }
 
-void GrammarConstraint::recompute()
-{
+void GrammarConstraint::recompute() {    
     int n = arity();
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
@@ -198,8 +195,7 @@ void GrammarConstraint::recompute()
 
 }
 
-DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool changed)
-{
+DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool changed) {
     if (changed) recompute();
 
     int n = arity();
@@ -216,8 +212,7 @@ DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool c
     return DPGlobalConstraint::Result(minCost, NULL);
 }
 
-void GrammarConstraint::recomputeTable(Cost *** table, Cost *** upTable)
-{
+void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable) {
     int n = arity();
 
 
@@ -278,7 +273,8 @@ void GrammarConstraint::recomputeTable(Cost *** table, Cost *** upTable)
                 int j = i + len - 1;
                 //for (vector<Rule>::iterator r = nonTerm2nonTerm.begin(); r != nonTerm2nonTerm.end(); r++) {
                 for (WCNFCFG::NonTermProdIterator r = cfg.beginNonTermProd(); r != cfg.endNonTermProd(); ++r) {
-                    if (marked[i][j][r->from]) {
+                    if (marked[i][j][r->from]) 
+                    {
                         for (int k = i; k < j; k++) {
                             Cost tmp = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
                             //if (tmp <= upTable[i][j][r->from])
@@ -300,9 +296,16 @@ void GrammarConstraint::recomputeTable(Cost *** table, Cost *** upTable)
     }
 }
 
-Cost GrammarConstraint::unary(int ch, int var, Value v)
-{
+Cost GrammarConstraint::unary(int ch, int var, Value v) {       
     EnumeratedVariable *x = scope[var];
     Cost ucost = (v == ch) ? (-deltaCost[var][x->toIndex(v)]) : top;
     return ucost;
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

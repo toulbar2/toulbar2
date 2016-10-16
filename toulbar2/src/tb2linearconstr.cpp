@@ -4,19 +4,16 @@
 #define verify
 
 LinearConstraint::LinearConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                                   int arity_in) : GlobalConstraint(wcsp, scope_in, arity_in, 0)
-{
+        int arity_in) : GlobalConstraint(wcsp, scope_in, arity_in, 0) {
     initTest = false;
 }
 
 
-Cost LinearConstraint::solveMIP(MIP &mip)
-{
+Cost LinearConstraint::solveMIP(MIP &mip){
     return mip.solve();
 }
 
-void LinearConstraint::initStructure()
-{
+void LinearConstraint::initStructure() {
 
     cost = buildMIP(mip);
 
@@ -27,14 +24,12 @@ void LinearConstraint::initStructure()
 
 }
 
-void LinearConstraint::end()
-{
+void LinearConstraint::end() {
     mip.called_time();
     if (deconnected()) return;
 }
 
-void LinearConstraint::checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv)
-{
+void LinearConstraint::checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv) {
 
 
     pair<Cost, bool> result;
@@ -55,12 +50,10 @@ void LinearConstraint::checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv)
                 cout << "non exist a value ?" << endl;
                 for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
                     cout << *v << " ";
-                }
-                cout << endl;
+                } cout << endl;
                 for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
                     cout << *v << " ";
-                }
-                cout << endl;
+                } cout << endl;
                 exit(0);
             }
             cDomain.erase(it);
@@ -86,8 +79,7 @@ void LinearConstraint::checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv)
     }
 }
 
-void LinearConstraint::findProjection(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta)
-{
+void LinearConstraint::findProjection(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta) {
 
     pair<Cost, bool> result;
     delta.clear();
@@ -104,8 +96,7 @@ void LinearConstraint::findProjection(MIP &mip, Cost &cost, int varindex, map<Va
 
 }
 
-void LinearConstraint::augmentStructure(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta)
-{
+void LinearConstraint::augmentStructure(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta) {
 
     for (map<Value, Cost>::iterator i = delta.begin(); i != delta.end(); i++) {
 
@@ -118,8 +109,7 @@ void LinearConstraint::augmentStructure(MIP &mip, Cost &cost, int varindex, map<
 
 }
 
-void LinearConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas)
-{
+void LinearConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas){	
 
     bucost = cost;
     if (buObj == NULL) {
@@ -139,16 +129,14 @@ void LinearConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value
 
 }
 
-void LinearConstraint::changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas)
-{
+void LinearConstraint::changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas){
     for (unsigned int i = 0; i < supports.size(); i++) {
         augmentStructure(mip, cost, supports[i], deltas[i]);
     }
 
 }
 
-void LinearConstraint::getDomainFromMIP(MIP &mip, int varindex, vector<int> &domain)
-{
+void LinearConstraint::getDomainFromMIP(MIP &mip, int varindex, vector<int> &domain) {
 
     domain.clear();
     for (map<Value, int>::iterator v = mapvar[varindex].begin(); v != mapvar[varindex].end(); v++) {
@@ -158,8 +146,15 @@ void LinearConstraint::getDomainFromMIP(MIP &mip, int varindex, vector<int> &dom
     }
 }
 
-unsigned LinearConstraint::called_time()
-{
+unsigned LinearConstraint::called_time(){
     return mip.called_time();
 }
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

@@ -1,10 +1,4 @@
-/* SVN FILE: $Id$ */
-/* :  Project Description
- *
- * @author         $Author$
- * @copyright      $Copyright$
- * @version        $Rev$
- * @lastrevision   $Date*
+/*
  * **************** Main function ***********************************
  */
 
@@ -58,21 +52,25 @@ ostream myCout(cout.rdbuf());
 #ifdef PARETOPAIR_COST
 void initCosts(Cost c)
 {
-    if (ToulBar2::LcLevel > LC_FDAC) {
+    if (ToulBar2::LcLevel > LC_FDAC)
+    {
         cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl;
         ToulBar2::LcLevel = LC_FDAC;
     }
-    if (ToulBar2::vac) {
+    if (ToulBar2::vac)
+    {
         cerr << "VAC not implemented on Paretopair." << endl;
         ToulBar2::vac = 0;
         ToulBar2::minsumDiffusion = 0;
     }
-    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::elimDegree_preprocessing < -1) {
+    if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::elimDegree_preprocessing<-1)
+    {
         cerr << "Variable elimination not implemented on Paretopair." << endl;
         ToulBar2::elimDegree = -1;
         ToulBar2::elimDegree_preprocessing = -1;
     }
-    if (ToulBar2::btdMode >= 1) {
+    if (ToulBar2::btdMode>=1)
+    {
         cerr << "BTD-like methods not implemented on Paretopair." << endl;
         ToulBar2::btdMode = 0;
     }
@@ -84,7 +82,8 @@ string read_UB(char *ubfilename)
 {
     string ubs;
     ifstream ubfile(ubfilename);
-    if (ubfile.is_open()) {
+    if (ubfile.is_open())
+    {
         ubfile >> ubs;
         cout << "UB read from " << ubfilename << "=" << ubs << endl;
         ubfile.close();
@@ -261,7 +260,8 @@ string getExt(string FileName)
     return ext;
 }
 
-CSimpleOpt::SOption g_rgOptions[] = {
+CSimpleOpt::SOption g_rgOptions[] =
+{
     { OPT_HELP, (char *) "-h",                    SO_NONE         },                    // boolean help
     { OPT_HELP, (char *) "-?",                    SO_NONE         },                    // boolean help
     { OPT_HELP,	(char *) "-help",          			SO_NONE     	},                 // boolean help
@@ -416,19 +416,22 @@ void ShowFiles(int argc, TCHAR **argv)
 {
     // glob files to catch expand wildcards
     CSimpleGlob glob(SG_GLOB_NODOT | SG_GLOB_NOCHECK);
-    if (SG_SUCCESS != glob.Add(argc, argv)) {
+    if (SG_SUCCESS != glob.Add(argc, argv))
+    {
         _tprintf(_T("Error while globbing files\n"));
         return;
     }
 
-    for (int n = 0; n < glob.FileCount(); ++n) {
+    for (int n = 0; n < glob.FileCount(); ++n)
+    {
         _tprintf(_T("file %2d: '%s'\n"), n, glob.File(n));
     }
 }
 
 static const TCHAR *GetLastErrorText(int a_nError)
 {
-    switch (a_nError) {
+    switch (a_nError)
+    {
     case SO_SUCCESS:
         return _T("Success");
     case SO_OPT_INVALID:
@@ -486,7 +489,8 @@ static void Pedi_Args(CSimpleOpt     &args, int nMultiArgs)
             sscanf(rgpszArg[n], "%f", &f2) ;
             ToulBar2::allelefreqdistrib.push_back(f2);
         }
-        if (ToulBar2::verbose >= 0) {
+        if(ToulBar2::verbose >= 0)
+        {
             for (unsigned int x = 0; x <= sizeof(ToulBar2::allelefreqdistrib); x++) cout << "Allele prob used " << x << "=" <<  ToulBar2::allelefreqdistrib[x] << endl;
         }
         _tprintf(_T("%s: expecting %d args\n"), args.OptionText(), nMultiArgs);
@@ -512,14 +516,18 @@ char *find_bindir(const char *bin_name, char *buffer, size_t buflen)
 {
     struct stat st;
     char *path, * tok;
-    if (!stat(bin_name, &st)) {
+    if (!stat(bin_name, &st))
+    {
         char *end = (char *) strrchr(bin_name, PATH_SEP_CHR);
         static char bin_path[512];
-        if (end) {
+        if (end)
+        {
             *end = 0;
             strncpy(buffer, bin_name, buflen);
             sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
-        } else {
+        }
+        else
+        {
             strcpy(buffer, ".");
             //path separator added to the path value
             sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
@@ -528,9 +536,11 @@ char *find_bindir(const char *bin_name, char *buffer, size_t buflen)
     }
     path = strdup(getenv("PATH"));
     tok = strtok(path, PATH_DELIM);
-    while (tok) {
+    while (tok)
+    {
         snprintf(buffer, buflen, "%s%c%s", tok, PATH_SEP_CHR, bin_name);
-        if (!stat(buffer, &st)) {
+        if (!stat(buffer, &st))
+        {
             static char bin_path[512];
             strncpy(buffer, tok, buflen);
             free(path);
@@ -701,10 +711,8 @@ void help_msg(char *toulbar2filename)
     cout << "   -D : approximate satisfiable solution count with BTD";
     if (ToulBar2::approximateCountingBTD) cout << " (default option)";
     cout << endl;
-    
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
-    
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
@@ -756,7 +764,6 @@ void help_msg(char *toulbar2filename)
     cout << "			" << endl;
 
     cout << endl;
-
 #endif
 }
 
@@ -820,12 +827,15 @@ int _tmain(int argc, TCHAR *argv[])
     CSimpleOpt args(argc, argv, g_rgOptions);
 
 
-    while (args.Next()) {
+    while (args.Next())
+    {
 
-        if (args.LastError() == SO_SUCCESS) {
+        if (args.LastError() == SO_SUCCESS)
+        {
 
             //if (check_file_ext(to_string(args.OptionText()),"_ext") )
-            if (strstr(args.OptionText(), "_ext")) {
+            if (strstr(args.OptionText(),"_ext") )
+            {
                 string force_extension = args.OptionText();
                 force_extension.erase(force_extension.begin(), force_extension.begin() + 2);
                 if (ToulBar2::debug) cout << "Old extension " << file_extension_map[force_extension] << " --> ";
@@ -838,43 +848,51 @@ int _tmain(int argc, TCHAR *argv[])
 
 
             //  search algo
-            if (args.OptionId() == OPT_SEARCH_METHOD) {
+            if (args.OptionId() == OPT_SEARCH_METHOD)
+            {
                 int mode = 0;
                 if (args.OptionArg() != NULL) mode = atoi(args.OptionArg());
-                if (mode >= 0) {
+                if (mode >= 0)
+                {
                     ToulBar2::btdMode = mode;
                 } else ToulBar2::btdMode = 0;
                 if (ToulBar2::debug) cout << "Search Method used =  " << mode << endl;
             }
             // BTD root cluster
-            if (args.OptionId() == OPT_btdRootCluster) {
+            if (args.OptionId() == OPT_btdRootCluster)
+            {
                 int root = atoi(args.OptionArg());
                 if (root > 0) ToulBar2::btdRootCluster = root;
             }
             // btd SubTree initialisation sub cluster
 
-            if (args.OptionId() == OPT_btdSubTree) {
+            if (args.OptionId() == OPT_btdSubTree)
+            {
                 int subcluster = atoi(args.OptionArg());
                 if (subcluster >= 1) ToulBar2::btdSubTree = subcluster;
             }
             //cluster Max size
-            if (args.OptionId() == OPT_splitClusterMaxSize) {
+            if (args.OptionId() == OPT_splitClusterMaxSize)
+            {
                 int cmaxsize = atoi(args.OptionArg());
                 if (cmaxsize >= 1) ToulBar2::splitClusterMaxSize = cmaxsize;
             }
 
             // E : merge leaf clusters with their fathers if small local treewidth
-            if (args.OptionId() == OPT_boostingBTD) {
+            if (args.OptionId() == OPT_boostingBTD)
+            {
                 ToulBar2::boostingBTD = true;
             }
 
             //   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit)
-            if (args.OptionId() == OPT_maxSeparatorSize) {
+            if (args.OptionId() == OPT_maxSeparatorSize)
+            {
                 int sepmaxsize = atoi(args.OptionArg());
                 if (sepmaxsize >= -1) ToulBar2::maxSeparatorSize = sepmaxsize;
             }
             // minimal number of Proper variable included into each cluster of BTD
-            if (args.OptionId() == OPT_minProperVarSize) {
+            if (args.OptionId() == OPT_minProperVarSize)
+            {
                 int minpvarsize = atoi(args.OptionArg());
                 if (minpvarsize >= 0) ToulBar2::minProperVarSize = minpvarsize;
             }
@@ -890,7 +908,8 @@ int _tmain(int argc, TCHAR *argv[])
             ////////////////////////////////////////////////////////////////////////////////////
             // filename containing variable order
 
-            if (args.OptionId() == OPT_varOrder) {
+            if (args.OptionId() == OPT_varOrder)
+            {
                 int varElimOrder = atoi(args.OptionArg());
                 if (varElimOrder >= 0) {
                     char buf[512];
@@ -904,7 +923,8 @@ int _tmain(int argc, TCHAR *argv[])
                 }
             }
 
-            if (args.OptionId() == OPT_problemsaved_filename) {
+            if (args.OptionId() == OPT_problemsaved_filename)
+            {
                 char buf[512];
                 sprintf(buf, "%s", args.OptionArg());
                 ToulBar2::problemsaved_filename = to_string(buf);
@@ -949,7 +969,8 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
 
-            if (args.OptionId() == OPT_pedigreePenalty) {
+            if ( args.OptionId() == OPT_pedigreePenalty)
+            {
                 ToulBar2::pedigreePenalty = 1;
                 int penaltyThreshold = atoi(args.OptionArg());
                 if (penaltyThreshold >= 1) ToulBar2::pedigreePenalty = penaltyThreshold;
@@ -966,7 +987,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             // approximate counting
 
-            if (args.OptionId() == OPT_approximateCountingBTD) {
+            if (args.OptionId() == OPT_approximateCountingBTD)
+            {
                 ToulBar2::approximateCountingBTD = true;
                 ToulBar2::allSolutions = LONGLONG_MAX;
                 ToulBar2::btdMode = 1;
@@ -1021,20 +1043,23 @@ int _tmain(int argc, TCHAR *argv[])
             if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL) {
                 int weighteddegree = atol(args.OptionArg());
                 if (weighteddegree > 0) ToulBar2::weightedDegree = weighteddegree;
-            }   else if (args.OptionId() == NO_OPT_weightedDegree) {
+            }   else if ( args.OptionId() == NO_OPT_weightedDegree )
+            {
                 ToulBar2::weightedDegree = 0;
                 ToulBar2::weightedTightness = 0;
                 if (ToulBar2::debug) cout << "ToulBar2::weightedDegree = false" << endl;
             }
 
             // LIMIT BRANCHING ON FIRST nbDecisionVars VARIABLES OPTION
-            if (args.OptionId() == OPT_nbDecisionVars) {
+            if ( args.OptionId() == OPT_nbDecisionVars )
+            {
                 ToulBar2::nbDecisionVars = atoi(args.OptionArg());
             }
 
             //////////////////////////////////////////////////////
 
-            if (args.OptionId() == NO_OPT_elimDegree) {
+            if ( args.OptionId() == NO_OPT_elimDegree )
+            {
                 ToulBar2::elimDegree = -1;
                 if (ToulBar2::debug) cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
 
@@ -1048,7 +1073,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             // p[integer]: preprocessing only: general variable elimination of degree less than or equal to the given value
             // elimination degree in preprocessing
-            if (args.OptionId() == OPT_elimDegree_preprocessing) {
+            if ( args.OptionId() == OPT_elimDegree_preprocessing)
+            {
                 int ndegree;
 
                 if (args.OptionArg() != NULL) {
@@ -1058,7 +1084,8 @@ int _tmain(int argc, TCHAR *argv[])
                 } else ToulBar2::elimDegree_preprocessing = 3;
                 if (ToulBar2::debug) cout << "elimDegree_preprocessing ON: "  << ToulBar2::elimDegree_preprocessing << endl;
 
-            }   else if (args.OptionId() == NO_OPT_elimDegree_preprocessing) {
+            }   else if ( args.OptionId() == NO_OPT_elimDegree_preprocessing)
+            {
                 ToulBar2::elimDegree_preprocessing = -1;
                 if (ToulBar2::debug) cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
             }
@@ -1075,7 +1102,8 @@ int _tmain(int argc, TCHAR *argv[])
                 if (nit > 0) ToulBar2::minsumDiffusion = nit;
             }
 
-            if (args.OptionId() == OPT_vac) {
+            if ( args.OptionId() == OPT_vac)
+            {
                 ToulBar2::vac = 1;
                 if (args.OptionArg() == NULL)
                 { ToulBar2::vac = 1 ;}
@@ -1085,18 +1113,21 @@ int _tmain(int argc, TCHAR *argv[])
                 }
                 if (ToulBar2::debug) cout << "VAC propagation ON" << endl;
 
-            } else if (args.OptionId() == NO_OPT_vac) {
+            } else if( args.OptionId() == NO_OPT_vac)
+            {
                 if (ToulBar2::debug) cout << "VAC propagation OFF" << endl;
 
                 ToulBar2::vac = 0;
             }
 
-            if (args.OptionId() == OPT_costThreshold) {
+            if ( args.OptionId() == OPT_costThreshold)
+            {
                 Cost ct = string2Cost(args.OptionArg());
                 if (ct > UNIT_COST) ToulBar2::costThreshold = ct;
             }
 
-            if (args.OptionId() == OPT_costThresholdPre) {
+            if ( args.OptionId() == OPT_costThresholdPre)
+            {
                 Cost ct = string2Cost(args.OptionArg());
                 if (ct > UNIT_COST) ToulBar2::costThresholdPre = ct;
             }
@@ -1106,7 +1137,8 @@ int _tmain(int argc, TCHAR *argv[])
               }*/
 
 
-            if (args.OptionId() == OPT_costMultiplier) {
+            if ( args.OptionId() == OPT_costMultiplier)
+            {
                 double co = atof(args.OptionArg());
                 if (co > MIN_COST) ToulBar2::costMultiplier = co;
             }
@@ -1125,7 +1157,8 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // elimination of functional variables
-            if (args.OptionId() == OPT_preprocessFunctional) {
+            if ( args.OptionId() == OPT_preprocessFunctional)
+            {
                 if (args.OptionArg() == NULL) {
                     ToulBar2::preprocessFunctional = 1;
                 } else {
@@ -1134,21 +1167,25 @@ int _tmain(int argc, TCHAR *argv[])
                 }
                 if (ToulBar2::debug) cout << "elimination of functional variables ON " << ToulBar2::preprocessFunctional << endl;
 
-            } else if (args.OptionId() == NO_OPT_preprocessFunctional) {
+            } else if( args.OptionId() == NO_OPT_preprocessFunctional)
+            {
                 if (ToulBar2::debug) cout << "elimination of functional variables OFF" << endl;
                 ToulBar2::preprocessFunctional  = 0;
 
             }
 
-            if (args.OptionId() == OPT_costfuncSeparate) {
+            if (args.OptionId() == OPT_costfuncSeparate)
+            {
                 if (ToulBar2::debug) cout << "decomposition of cost functions" << endl;
                 ToulBar2::costfuncSeparate = true;
-            } else if (args.OptionId() == NO_OPT_costfuncSeparate) {
+            } else if (args.OptionId() == NO_OPT_costfuncSeparate)
+            {
                 if (ToulBar2::debug) cout << "decomposition of cost functions OFF" << endl;
                 ToulBar2::costfuncSeparate = false;
             }
 
-            if (args.OptionId() == NO_OPT_DEE) {
+            if (args.OptionId() == NO_OPT_DEE)
+            {
                 if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
                 ToulBar2::DEE = 0;
             } else if (args.OptionId() == OPT_DEE) {
@@ -1161,7 +1198,8 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // pre projection of nary cost functions
-            if (args.OptionId() == OPT_preprocessNary) {
+            if ( args.OptionId() == OPT_preprocessNary)
+            {
                 if (args.OptionArg() == NULL) {
                     ToulBar2::preprocessNary = 10;
                 } else {
@@ -1170,7 +1208,8 @@ int _tmain(int argc, TCHAR *argv[])
                 }
                 if (ToulBar2::debug) cout << "preproject cost functions with arity lower than " << ToulBar2::preprocessNary << " ON" << endl;
 
-            } else if (args.OptionId() == NO_OPT_preprocessNary) {
+            } else if( args.OptionId() == NO_OPT_preprocessNary)
+            {
                 if (ToulBar2::debug) cout << "preproject of n-ary cost functions OFF" << endl;
                 ToulBar2::preprocessNary  = 0;
             }
@@ -1180,7 +1219,8 @@ int _tmain(int argc, TCHAR *argv[])
             else if (args.OptionId() == NO_OPT_MSTDAC) ToulBar2::MSTDAC = false;
 
             // LDS
-            if (args.OptionId() == OPT_lds) {
+            if ( args.OptionId() == OPT_lds)
+            {
                 string comment ;
                 if (args.OptionArg() == NULL) {
                     ToulBar2::lds = maxdiscrepancy;
@@ -1199,7 +1239,8 @@ int _tmain(int argc, TCHAR *argv[])
 
 
             // restart option
-            if (args.OptionId() == OPT_restart) {
+            if ( args.OptionId() == OPT_restart)
+            {
                 string comment ;
                 if (args.OptionArg() == NULL) {
                     comment = " (default value) " ;
@@ -1209,13 +1250,15 @@ int _tmain(int argc, TCHAR *argv[])
                     if (maxbt >= 0) ToulBar2::restart = maxbt;
                 }
                 if (ToulBar2::debug) cout << "restart ON #iter = " << ToulBar2::restart << comment << endl;
-            } else if (args.OptionId() == NO_OPT_restart) {
+            } else if (args.OptionId() ==NO_OPT_restart)
+            {
                 if (ToulBar2::debug) cout << "restart OFF" << endl;
                 ToulBar2::restart = -1;
             }
 
             // hybrid BFS option
-            if (args.OptionId() == OPT_hbfs) {
+            if ( args.OptionId() == OPT_hbfs)
+            {
                 string comment ;
                 if (args.OptionArg() == NULL) {
                     comment = " (default value) " ;
@@ -1227,12 +1270,14 @@ int _tmain(int argc, TCHAR *argv[])
                 }
                 ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
                 if (ToulBar2::debug) cout << "hybrid BFS ON with global backtrack limit = " << ToulBar2::hbfsGlobalLimit << comment << endl;
-            } else if (args.OptionId() == NO_OPT_hbfs) {
+            } else if (args.OptionId() ==NO_OPT_hbfs)
+            {
                 if (ToulBar2::debug) cout << "hybrid BFS OFF" << endl;
                 ToulBar2::hbfs = 0;
                 ToulBar2::hbfsGlobalLimit = 0;
             }
-            if (args.OptionId() == OPT_open) {
+            if ( args.OptionId() == OPT_open)
+            {
                 ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
                 Long openlimit = atoll(args.OptionArg());
                 if (openlimit > 0) ToulBar2::hbfsOpenNodeLimit = openlimit;
@@ -1251,7 +1296,8 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // EDAC OPTION
-            if (args.OptionId() == OPT_EDAC) {
+            if ( args.OptionId() == OPT_EDAC )
+            {
                 ToulBar2::LcLevel = LC_EDAC;
                 LcLevelType lclevel = (LcLevelType) atoi(args.OptionArg());
                 if ((lclevel >= LC_NC) && (lclevel < LC_THEMAX)) ToulBar2::LcLevel = lclevel;
@@ -1263,7 +1309,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             // g  sort pedigree by increasing generation number and if equal by increasing individual number
 
-            if (args.OptionId() == OPT_generation) {
+            if ( args.OptionId() == OPT_generation)
+            {
                 ToulBar2::generation = true;
                 if (ToulBar2::debug) cout << "-g flag ==> sort pedigree option ON" <<  endl;
 
@@ -1271,7 +1318,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             // bayesien -y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE
 
-            if (args.OptionId() == MENDEL_OPT_genotypingErrorRate) {
+            if ( args.OptionId() == MENDEL_OPT_genotypingErrorRate)
+            {
                 if (args.OptionArg() != NULL) {
                     float f;
                     sscanf(args.OptionArg(), "%f", &f) ;
@@ -1281,7 +1329,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             }
 
-            if (args.OptionId() == MENDEL_OPT_resolution) {
+            if ( args.OptionId() == MENDEL_OPT_resolution)
+            {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::resolution = atoi(args.OptionArg());
                     if (ToulBar2::debug) cout << "New assignment for precision = " << ToulBar2::resolution  <<  endl;
@@ -1289,7 +1338,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             }
 
-            if (args.OptionId() == OPT_pedigree_by_MPE) {
+            if ( args.OptionId() == OPT_pedigree_by_MPE)
+            {
                 ToulBar2::bayesian = true;
                 if (ToulBar2::debug) cout << endl ;
                 if (ToulBar2::debug) cout << "<<< Bayesian mode ON >>>" << endl;
@@ -1305,17 +1355,20 @@ int _tmain(int argc, TCHAR *argv[])
 
             }
 
-            if (args.OptionId() == MENDEL_OPT_EQUAL_FREQ && ToulBar2::bayesian) {
+            if ( args.OptionId() == MENDEL_OPT_EQUAL_FREQ && ToulBar2::bayesian)
+            {
 
                 ToulBar2::foundersprob_class = 0;
                 if (ToulBar2::debug) cout << "equal frequencies used ( default mode)" << ToulBar2::foundersprob_class << endl;
 
-            } else if (args.OptionId() == MENDEL_OPT_ESTIMAT_FREQ && ToulBar2::bayesian) {
+            } else if ( args.OptionId() == MENDEL_OPT_ESTIMAT_FREQ && ToulBar2::bayesian)
+            {
                 ToulBar2::foundersprob_class = 1;
                 if (ToulBar2::debug) cout << " => prob depending on the frequencies found in the current pedigree probleme used" << endl;
 
 
-            } else if (args.OptionId() == MENDEL_OPT_ALLOCATE_FREQ && ToulBar2::bayesian) {
+            } else if ( args.OptionId() == MENDEL_OPT_ALLOCATE_FREQ && ToulBar2::bayesian)
+            {
                 if (ToulBar2::debug) cout << " => prob frequencies read from command line" << endl;
                 ToulBar2::foundersprob_class = 2;
                 Pedi_Args(args, -1);
@@ -1359,8 +1412,7 @@ int _tmain(int argc, TCHAR *argv[])
             //		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
 
             if (args.OptionId() == OPT_debug) {
-                if (args.OptionArg() != NULL) { ToulBar2::debug = atoi(args.OptionArg());}
-                else ToulBar2::debug = 1;
+                if (args.OptionArg() != NULL) { ToulBar2::debug= atoi(args.OptionArg());} else ToulBar2::debug=1;
                 if (ToulBar2::debug) cout << "debug level = " << ToulBar2::debug << endl;
 
 
@@ -1412,7 +1464,8 @@ int _tmain(int argc, TCHAR *argv[])
                 if (nit >= 0) ToulBar2::prodsumDiffusion = nit;
             }
 
-            if (args.OptionId() == OPT_learning) {
+            if ( args.OptionId() == OPT_learning )
+            {
                 ToulBar2::learning = true;
             }
 
@@ -1440,7 +1493,8 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // CPU timer
-            if (args.OptionId() == OPT_timer) {
+            if ( args.OptionId() == OPT_timer)
+            {
                 if (args.OptionArg() != NULL) {
                     timeout = atoi(args.OptionArg());
                     if (ToulBar2::debug) cout << "TimeOut = " << timeout <<  endl;
@@ -1463,7 +1517,8 @@ int _tmain(int argc, TCHAR *argv[])
 
             }
 
-            if (args.OptionId() == OPT_nopre) {
+            if (args.OptionId() == OPT_nopre)
+            {
                 ToulBar2::elimDegree = -1;
                 if (ToulBar2::debug) cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
                 ToulBar2::elimDegree_preprocessing = -1;
@@ -1497,8 +1552,8 @@ int _tmain(int argc, TCHAR *argv[])
 
         }
 
-
-        else {
+        else
+        {
             cout <<  "<<<< ERROR >>>>  : " << endl ;
             _tprintf(
                 _T("%s: '%s' (use --help to get command line help)\n"),
@@ -1529,14 +1584,16 @@ int _tmain(int argc, TCHAR *argv[])
 
 
 
-    if (random_desc == NULL) {
+    if(random_desc ==NULL)
+    {
         for (int n = 0; n < glob.FileCount(); ++n) {
             if (ToulBar2::verbose > 0)   _tprintf(_T("file %d: '%s'\n"), n, glob.File(n));
 
             // wcsp input file  == first file
             //	if (strstr(glob.File(n),".wcsp"))
 
-            if (check_file_ext(glob.File(n), file_extension_map["wcsp_ext"])) {
+            if(check_file_ext(glob.File(n),file_extension_map["wcsp_ext"]) )
+            {
                 if (ToulBar2::verbose >= 0) cout <<  "loading wcsp file: " << glob.File(n)  << endl;
                 strext = ".wcsp";
                 strfile = glob.File(n);
@@ -1658,7 +1715,8 @@ int _tmain(int argc, TCHAR *argv[])
             //////////////////////VARIABLE ORDERING ////////////////////////////////////
             // filename containing variable order
             //if (strstr(glob.File(n),".order"))
-            if (check_file_ext(glob.File(n), file_extension_map["order_ext"])) {
+            if(check_file_ext(glob.File(n),file_extension_map["order_ext"]) )
+            {
                 cout << "loading variable order in file: " << glob.File(n) << endl;
                 char buf[1024];
                 sprintf(buf, "%s", glob.File(n));
@@ -1682,8 +1740,10 @@ int _tmain(int argc, TCHAR *argv[])
             }
 
             // read assignment in file or filename of solution
-            if (check_file_ext(glob.File(n), file_extension_map["sol_ext"])) {
-                if (certificateString && strcmp(certificateString, "") != 0) {
+            if(check_file_ext(glob.File(n),file_extension_map["sol_ext"]) )
+            {
+                if (certificateString && strcmp(certificateString, "")!=0)
+                {
                     cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl ;
                     exit(-1) ;
                 }
@@ -1708,7 +1768,8 @@ int _tmain(int argc, TCHAR *argv[])
 
     // PB FILENAME
 
-    if (argc <= 1) {
+    if (argc <= 1)
+    {
         cerr << "Problem filename is missing as command line argument!" << endl;
         cerr << endl;
         help_msg(argv[0]);
@@ -1720,103 +1781,14 @@ int _tmain(int argc, TCHAR *argv[])
     /////////////////////////////////////////
     // test on initial ub cost value;
     /////////////////////////////////////////
-    if (ub <= MIN_COST) ub = MAX_COST;
 
-    if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1) {
-        cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
-        ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = false;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
-        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization => force ub = 1." << endl;
-        ub = 1;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode > 1) {
-        cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
-        ToulBar2::allSolutions = false;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0) {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
-        ToulBar2::elimDegree = 0;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && ToulBar2::elimDegree >= 0) {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
-        ToulBar2::elimDegree = -1;
-    }
-    if (ToulBar2::allSolutions && ToulBar2::elimDegree_preprocessing >= 0) {
-        //	  if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with generic variable elimination" << endl;
-        ToulBar2::elimDegree_preprocessing = -1;
-    }
-    if (ToulBar2::allSolutions || ToulBar2::isZ) {
-        ToulBar2::DEE = 0;
-    }
-    if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
-        ToulBar2::lds = 0;
-    }
-    if (ToulBar2::lds && ToulBar2::hbfs) {
-        cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
-        ToulBar2::hbfs = 0;
-    }
-    if (ToulBar2::hbfs && ToulBar2::btdMode >= 2) {
-        cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
-        ToulBar2::hbfs = 0;
-    }
-    if (ToulBar2::restart >= 0 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
-        ToulBar2::restart = -1;
-    }
-    if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
-        cout << "Warning! n-ary branching not implemented with BTD-like search methods => force binary branching." << endl;
-        ToulBar2::binaryBranching = true;
-    }
-    if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1) {
-        cout << "Warning! solving only a problem subtree => force Russian Doll Search method." << endl;
-        ToulBar2::btdMode = 2;
-    }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! VAC not implemented with BTD-like search methods during search => VAC in preprocessing only." << endl;
-        ToulBar2::vac = 1;
-    }
-    if (ToulBar2::preprocessFunctional > 0 && ToulBar2::LcLevel == LC_NC) {
-        cout << "Warning! Cannot perform functional elimination with NC only." << endl;
-        ToulBar2::preprocessFunctional = 0;
-    }
-    if (ToulBar2::learning && ToulBar2::elimDegree >= 0) {
-        cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning" << endl;
-        ToulBar2::elimDegree = -1;
-    }
-    if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
-        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
-        ToulBar2::incop_cmd = "";
-    }
-    if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {
-        cout << "Warning! n-ary branching not implemented with best-first search => force binary branching. (or add -hbfs: parameter)" << endl;
-        ToulBar2::binaryBranching = true;
-    }
-    if (ToulBar2::dichotomicBranching >= 2 && ToulBar2::hbfs) {
-        cout << "Warning! complex dichotomic branching not implemented with best-first search => force simple dichotomic branching. (or add -hbfs: parameter)" << endl;
-        ToulBar2::dichotomicBranching = 1;
-    }
+    ub = tb2checkOptions(ub);
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
         cout << "Warning! An optimal solution file is missing in the command line. Verifying the optimal solution is disabled." << endl;
         ToulBar2::verifyOpt = false;
     }
-    if (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
-        cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::elimDegree = -1;
-        ToulBar2::elimDegree_preprocessing = -1;
-    }
-    if (ToulBar2::verifyOpt && ToulBar2::preprocessFunctional > 0) {
-        cout << "Warning! Cannot perform functional elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::preprocessFunctional = 0;
-    }
-    if (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
-        cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
-        ToulBar2::DEE = 0;
-    }
 
-    if (false) {//(ToulBar2::uai || ToulBar2::uaieval) {
+    if (ToulBar2::uai || ToulBar2::uaieval) {
         char *tmpPath = new char[strlen(argv[0]) + 1];
         strcpy(tmpPath, argv[0]);
         char *tmpFile = new char[strlen(strfile.c_str()) + 1];
@@ -1842,6 +1814,7 @@ int _tmain(int argc, TCHAR *argv[])
     //TODO: If --show_options then dump ToulBar2 object here
 
     ToulBar2::startCpuTime = cpuTime();
+
     initCosts(ub);
     WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
 
@@ -1899,7 +1872,8 @@ int _tmain(int argc, TCHAR *argv[])
             narities--;
             seed = pn[narities];
         }
-        if (pn[0] > 100) {
+        if (pn[0] > 100)
+        {
             cout << pn[0] << " tightness is a percentage" << endl;
             pn[0] = 100;
         }
@@ -1930,17 +1904,18 @@ int _tmain(int argc, TCHAR *argv[])
                 problemname.replace(problemname.rfind(".uai.MPE"), 8, ".wcsp");
             }
             solver->dump_wcsp(problemname.c_str());
-        } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
+        }
+        else if (!certificate || certificateString!=NULL || ToulBar2::btdMode>=2)
+        {
 #ifdef LINUX
             signal(SIGINT,  timeOut);
             if (timeout > 0) timer(timeout);
 #endif
-            if (CSP(solver->getWCSP()->getLb(), solver->getWCSP()->getUb())) {
-                ToulBar2::LcLevel = LC_AC;
-            }
             solver->solve();
         }
-    } catch (Contradiction) {
+    }
+    catch (Contradiction)
+    {
         if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
         if (ToulBar2::isZ) {
             if (ToulBar2::uai) {
@@ -1971,3 +1946,11 @@ int _tmain(int argc, TCHAR *argv[])
 
     return 0;
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

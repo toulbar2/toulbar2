@@ -29,8 +29,7 @@ GlobalConstraint::~GlobalConstraint()
     if (fullySupportedSet != NULL) delete[] fullySupportedSet;
 }
 
-void GlobalConstraint::init()
-{
+void GlobalConstraint::init() {
     if (deconnected()) return;
     needPropagateAC = true;
     needPropagateDAC = true;
@@ -48,8 +47,7 @@ void GlobalConstraint::init()
     propagate();
 }
 
-void GlobalConstraint::print(ostream &os)
-{
+void GlobalConstraint::print(ostream& os) {
     os << this << " " << getName() << "(";
     int unassigned_ = 0;
     for (int i = 0; i < arity(); i++) {
@@ -99,8 +97,7 @@ Cost GlobalConstraint::eval(const String& s) {
 
 }
 
-void GlobalConstraint::assign(int varIndex)
-{
+void GlobalConstraint::assign(int varIndex) {
 
     if (connected(varIndex)) {
         deconnect(varIndex);
@@ -119,8 +116,7 @@ void GlobalConstraint::assign(int varIndex)
     }
 }
 
-void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed)
-{
+void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed) {
     if (deconnected()) return;
     assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] project(" << getName() << ", " << getVar(index)->getName() << ", " << value << ", " << cost << ")" << endl), true));
     EnumeratedVariable *x = (EnumeratedVariable *)getVar(index);
@@ -143,23 +139,20 @@ void GlobalConstraint::extend(int index, Value value, Cost cost) {
 }
 
 // function used for propagation
-void GlobalConstraint::remove(int index)
-{
+void GlobalConstraint::remove(int index) {
     //vector<int> rmv;
     currentVar = -1;
     needPropagateDAC = true;
     needPropagateAC = true;
 }
 
-void GlobalConstraint::projectFromZero(int index)
-{
+void GlobalConstraint::projectFromZero(int index) {
     //vector<int> rmv;
     currentVar = -1;
     needPropagateDAC = true;
 }
 
-void GlobalConstraint::propagate()
-{
+void GlobalConstraint::propagate() {
 
     for (int i = 0; connected() && i < arity_; i++) {
         if (getVar(i)->assigned()) assign(i);
@@ -178,7 +171,8 @@ void GlobalConstraint::propagate()
 
     switch (ToulBar2::LcLevel) {
     case LC_DAC:
-        if (needPropagateDAC || needPropagateAC) {
+        if (needPropagateDAC || needPropagateAC)
+        {
             propagateDAC();
             needPropagateDAC = false;
             needPropagateAC = false;
@@ -205,8 +199,7 @@ void GlobalConstraint::propagate()
     }
 }
 
-void GlobalConstraint::propagateEAC()
-{
+void GlobalConstraint::propagateEAC() {
     //not done here but wait for variable's propagateEAC
 
 //	vector<int> provide;
@@ -271,7 +264,8 @@ void GlobalConstraint::propagateDAC() {
                 //deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
                 Cost costDelta = i->second - preUnaryCosts[varindex][x->toIndex(i->first)];
                 if (costDelta > 0) {
-                    if (CUT(costDelta + wcsp->getLb(), wcsp->getUb())) {
+                    if (CUT(costDelta + wcsp->getLb(), wcsp->getUb()))
+                    {
                         i->second = preUnaryCosts[varindex][x->toIndex(i->first)];
                     }
                     project(varindex, i->first, costDelta, true);
@@ -296,8 +290,7 @@ void GlobalConstraint::propagateDAC() {
     }*/
 }
 
-void GlobalConstraint::propagateAC()
-{
+void GlobalConstraint::propagateAC() {
     vector<int> rmv;
     for (int i = 0; i < arity_; i++) {
         if (getVar(i)->unassigned()) {
@@ -309,8 +302,7 @@ void GlobalConstraint::propagateAC()
     }
 }
 
-void GlobalConstraint::propagateStrongNIC()
-{
+void GlobalConstraint::propagateStrongNIC() {
     vector<int> rmv;
     checkRemoved(rmv);
     bool cont = false;
@@ -330,8 +322,8 @@ void GlobalConstraint::propagateStrongNIC()
     propagateNIC();
 }
 
-void GlobalConstraint::propagateNIC()
-{
+void GlobalConstraint::propagateNIC() {
+
     if (deconnected()) return;
     //wcsp->revise(this);
     vector<int> rmv;
@@ -372,9 +364,9 @@ void GlobalConstraint::propagateNIC()
 
 }*/
 
-bool GlobalConstraint::isEAC(int index, Value a)
+bool GlobalConstraint::isEAC(int index, Value a) {
+    if (currentVar != index)
 {
-    if (currentVar != index) {
         currentVar = index;
 
         vector<int> rmv;
@@ -408,8 +400,7 @@ bool GlobalConstraint::isEAC(int index, Value a)
 
 }
 
-void GlobalConstraint::fillEAC2(int varindex)
-{
+void GlobalConstraint::fillEAC2(int varindex) {
     currentVar = -1;
     for (int index = 0; index < arity_; index++) {
         if (index != varindex) {
@@ -464,7 +455,8 @@ void GlobalConstraint::findFullSupportEAC(int index) {
                     //deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
                     Cost costDelta = i->second - preUnaryCosts[varindex][x->toIndex(i->first)];
                     if (costDelta > 0) {
-                        if (CUT(costDelta + wcsp->getLb(), wcsp->getUb())) {
+                        if (CUT(costDelta + wcsp->getLb(), wcsp->getUb()))
+                        {
                             i->second = preUnaryCosts[varindex][x->toIndex(i->first)];
                         }
                         project(varindex, i->first, costDelta, true);
@@ -616,8 +608,7 @@ void GlobalConstraint::findSupport(int varindex)
 
 }
 
-void GlobalConstraint::checkMinCost(int varindex)
-{
+void GlobalConstraint::checkMinCost(int varindex) {
 
     count_nic++;
 
@@ -639,3 +630,11 @@ void GlobalConstraint::checkMinCost(int varindex)
     if (!removed.empty()) x->queueAC();
 
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

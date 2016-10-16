@@ -20,7 +20,8 @@ using namespace boost;
 
 namespace boost
 {
-struct edge_component_t {
+    struct edge_component_t
+    {
     enum
     { num = 555 };
     typedef edge_property_tag kind;
@@ -449,7 +450,8 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
     Graph::adjacency_iterator neighbourIt, neighbourEnd;
 
     /* initialize sets, card and size */
-    for (int v = 0; v < n; v++) {
+    for (int v = 0; v < n; v++)
+    {
         size[v] = 0;
 
         for (int i = 0; i < n; i++)
@@ -465,11 +467,13 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
     int j = 0;
     int v = 0;
 
-    while (i >= 0) {
+    while (i >= 0)
+    {
         /* choose a vertex */
         int deg = -1;
         for (int x = 0; x < n; x++)
-            if ((sets[j][x] == 1) && (degree[x] > deg)) {
+            if ((sets[j][x] == 1) && (degree[x] > deg))
+            {
                 v = x;
                 deg = degree[x];
             }
@@ -483,7 +487,8 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
         /* update sets and size */
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices(v, G);
         for (; neighbourIt != neighbourEnd; ++neighbourIt) {
-            if (size[*neighbourIt] >= 0) {
+            if (size[*neighbourIt] >= 0)
+            {
                 sets[size[*neighbourIt]][*neighbourIt] = 0;
                 card[size[*neighbourIt]]--;
 
@@ -584,7 +589,8 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
                         Graph::adjacency_iterator neighbourItX, neighbourEndX;
                         boost::tie(neighbourItX, neighbourEndX) = adjacent_vertices(x, G);
                         for (; neighbourItX != neighbourEndX; ++neighbourItX) {
-                            if ((order[*neighbourItX] == -1) && (*neighbourItX != y)) {
+                            if ((order[*neighbourItX] == -1) && (*neighbourItX != y))
+                            {
                                 if (!edge(y, *neighbourItX, G).second) nb_fillin[x]++;
                                 else nb_fillin[*neighbourItX]--; /* new added edge between x and y has to be removed from nb_fillin  */
                             }
@@ -681,3 +687,11 @@ void WCSP::minimumDegreeOrdering(vector<int> &order_inv)
 }
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

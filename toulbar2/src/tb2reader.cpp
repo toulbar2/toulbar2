@@ -1583,6 +1583,39 @@ void WCSP::read_qpbo(const char *fileName)
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
 
+TrieNum *WCSP::read_TRIE(const char *fileName)
+{
+    TrieNum *trie = new TrieNum();
+    string strie;
+    if (ToulBar2::isTrie_File) {
+        strie = ToulBar2::Trie_File;
+        cout << "loading trie solution file of file: " << strie << endl;
+    } else {
+        strie = string(fileName) + string(".trie");
+        cout << "loading trie solution file of file: " << strie << endl;
+    }
+    vector<int> position_vector;
+    Cost sol_cost;
+    string s;
+    istringstream line;
+    ifstream ftrie;
+    ftrie.open(strie.c_str());
+    if (!ftrie) { cerr << "Could not open file " << strie << endl; exit(EXIT_FAILURE); }
+    else {cerr << "Fill the Z trie using " << strie << endl;}
+    while (!ftrie.eof()) {
+        getline(ftrie, s);
+        line.str(s);
+        line.clear();
+        if (line.str().empty()) {
+            line.str().clear();
+        } else {
+            line >> sol_cost;
+            trie->add_costs(sol_cost);
+        }
+    }
+    return trie;
+}
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

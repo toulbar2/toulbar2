@@ -6,14 +6,12 @@ FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP *wcsp, EnumeratedVaria
 {
 }
 
-Cost FlowBasedGlobalConstraint::constructFlow(Graph &g)
-{
+Cost FlowBasedGlobalConstraint::constructFlow(Graph &g) {
     pair<int, Cost> result = g.minCostFlow(MIN_COST, g.size() - 1);
     return result.second;
 }
 
-void FlowBasedGlobalConstraint::initStructure()
-{
+void FlowBasedGlobalConstraint::initStructure() {
 
     if (!hasConfigOrganized) {
         organizeConfig();
@@ -41,8 +39,7 @@ void FlowBasedGlobalConstraint::initStructure()
 
 }
 
-void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv)
-{
+void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv) {
 
     //if (ToulBar2::GCLevel == LC_NC) return;
 
@@ -50,7 +47,8 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
     vector<int> cDomain, cDomain2;
     bool deleted = false;
     //for (int i=0;i<arity_;i++) {
-    for (vector<int>::iterator it = rmv.begin(); it != rmv.end(); it++) {
+    for (vector<int>::iterator it = rmv.begin();it != rmv.end();it++)
+    {
         int i = *it;
         cDomain.clear();
         getDomainFromGraph(graph, i, cDomain);
@@ -62,12 +60,10 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
                 cout << "non exist a value ?" << endl;
                 for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
                     cout << *v << " ";
-                }
-                cout << endl;
+                } cout << endl;
                 for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
                     cout << *v << " ";
-                }
-                cout << endl;
+                } cout << endl;
                 graph.print();
                 exit(0);
             }
@@ -118,8 +114,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph &graph, StoreCost &cost, vect
 
 }
 
-void FlowBasedGlobalConstraint::findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta)
-{
+void FlowBasedGlobalConstraint::findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta) {
 
     //if (ToulBar2::GCLevel == LC_NC) return;
 
@@ -157,8 +152,7 @@ void FlowBasedGlobalConstraint::findProjection(Graph &graph, StoreCost &cost, in
 
 }
 
-void FlowBasedGlobalConstraint::augmentStructure(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta)
-{
+void FlowBasedGlobalConstraint::augmentStructure(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta) {
 
     for (map<Value, Cost>::iterator i = delta.begin(); i != delta.end(); i++) {
         pair<int, int> edge = mapto(varindex, i->first);
@@ -170,8 +164,7 @@ void FlowBasedGlobalConstraint::augmentStructure(Graph &graph, StoreCost &cost, 
 
 }
 
-void FlowBasedGlobalConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas)
-{
+void FlowBasedGlobalConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas){	
 
     for (unsigned int i = 0; i < supports.size(); i++) {
         for (map<Value, Cost>::iterator v = deltas[i].begin(); v != deltas[i].end(); v++)
@@ -188,8 +181,7 @@ void FlowBasedGlobalConstraint::changeAfterExtend(vector<int> &supports, vector<
     }
 }
 
-void FlowBasedGlobalConstraint::changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas)
-{
+void FlowBasedGlobalConstraint::changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas){
 
     for (unsigned int i = 0; i < supports.size(); i++) {
         augmentStructure(*graph, cost, supports[i], deltas[i]);
@@ -198,8 +190,7 @@ void FlowBasedGlobalConstraint::changeAfterProject(vector<int> &supports, vector
 
 }
 
-void FlowBasedGlobalConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain)
-{
+void FlowBasedGlobalConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
     domain.clear();
     for (map<Value, int>::iterator i = mapval.begin(); i != mapval.end(); i++) {
@@ -209,4 +200,12 @@ void FlowBasedGlobalConstraint::getDomainFromGraph(Graph &graph, int varindex, v
     }
 
 }
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 

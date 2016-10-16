@@ -11,8 +11,7 @@
 #include <set>
 #include <algorithm>
 
-bool naryRandom::connected()
-{
+bool naryRandom::connected() {
     return true;
 }
 
@@ -122,9 +121,7 @@ void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin
                             costs[my * mz * a + b * mz + c] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
                             nogoods--;
                             total_nogoods--;
-                            a = mx;
-                            b = my;
-                            c = mz;
+                            a=mx;b=my;c=mz;
                         }
                         dice--;
                     }
@@ -203,8 +200,7 @@ void naryRandom::generateBinCtr(int i, int j, long nogoods, Cost costMin, Cost c
                         costs[my * a + b] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
                         nogoods--;
                         total_nogoods--;
-                        a = mx;
-                        b = my;
+                        a=mx;b=my;
                     }
                     dice--;
                 }
@@ -333,7 +329,8 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
 
     for (i = 0; i < n; i++) {
         EnumeratedVariable *x = (EnumeratedVariable *) wcsp.getVar(i);
-        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
+        {
             x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST));
         }
         x->findSupport();
@@ -346,3 +343,11 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
         }
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

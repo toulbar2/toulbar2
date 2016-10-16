@@ -3,9 +3,7 @@
 #include <algorithm>
 using namespace std;
 
-DPGlobalConstraint::DPGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity):
-    GlobalConstraint(wcsp, scope, arity, 0), initialized(false)
-{
+DPGlobalConstraint::DPGlobalConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity) : GlobalConstraint(wcsp, scope, arity, 0), initialized(false){
     zero = new vector<bool>[arity];
     for (int i = 0; i < arity; i++)
         zero[i] = vector<bool>(scope[i]->getDomainInitSize(), false);
@@ -14,22 +12,19 @@ DPGlobalConstraint::DPGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope, i
         preUnaryCosts[i] = vector<Cost>(scope[i]->getDomainInitSize(), 0);
 }
 
-DPGlobalConstraint::~DPGlobalConstraint()
-{
+DPGlobalConstraint::~DPGlobalConstraint(){
     delete[] zero;
     delete[] preUnaryCosts;
 }
 
-void DPGlobalConstraint::clear()
-{
+void DPGlobalConstraint::clear(){
     for (int i = 0; i < arity(); i++) {
         fill(zero[i].begin(), zero[i].end(), false);
         fill(preUnaryCosts[i].begin(), preUnaryCosts[i].end(), 0);
     }
 }
 
-void DPGlobalConstraint::record(Value *tuple)
-{
+void DPGlobalConstraint::record(Value *tuple){
     if (tuple == NULL) return;
     for (int i = 0; i < arity(); i++)
         zero[i][scope[i]->toIndex(tuple[i])] = true;
@@ -41,8 +36,7 @@ void DPGlobalConstraint::record(Value *tuple)
     delete[] tuple;
 }
 
-void DPGlobalConstraint::propagateNIC()
-{
+void DPGlobalConstraint::propagateNIC(){
 
     Cost least = minCostOriginal();
     if (least > projectedCost) {
@@ -51,8 +45,7 @@ void DPGlobalConstraint::propagateNIC()
     }
 }
 
-void DPGlobalConstraint::propagateStrongNIC()
-{
+void DPGlobalConstraint::propagateStrongNIC(){
 
     propagateNIC();
     Cost ub = wcsp->getUb();
@@ -74,8 +67,7 @@ void DPGlobalConstraint::propagateStrongNIC()
     }
 }
 
-void DPGlobalConstraint::propagateAC()
-{
+void DPGlobalConstraint::propagateAC(){	
 
     bool changed = true;
     clear();
@@ -111,8 +103,7 @@ void DPGlobalConstraint::propagateAC()
     }
 }
 
-void DPGlobalConstraint::findSupport(int var, bool &changed)
-{
+void DPGlobalConstraint::findSupport(int var, bool &changed){
     EnumeratedVariable *x = scope[var];
     bool first = true;
     vector<Value> remove;
@@ -171,8 +162,7 @@ void DPGlobalConstraint::propagateDAC(){
 
 }
 
-bool DPGlobalConstraint::isEAC(int var, Value val)
-{
+bool DPGlobalConstraint::isEAC(int var, Value val){		
 
     for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
             fullySupportedSet[var].end(); ++it) {
@@ -225,10 +215,19 @@ void DPGlobalConstraint::findFullSupportEAC(int var){
     bool changed = true;
     findSupport(var, changed);
     for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it) {
+            fullySupportedSet[var].end(); ++it)
+    {
         EnumeratedVariable *x = scope[*it];
         if (x->unassigned() && (*it != var)) {
             findSupport(*it, changed);
         }
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

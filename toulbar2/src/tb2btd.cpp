@@ -307,8 +307,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost c
         }
         lastConflictVar = varIndex;
         if (dichotomic) {
-            if (increasing) decrease(varIndex, middle);
-            else increase(varIndex, middle + 1);
+            if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
         } else assign(varIndex, value);
         lastConflictVar = -1;
         bestlb = MAX(bestlb, wcsp->getLb());
@@ -335,8 +334,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster *cluster, Cost lbgood, Cost c
             if (CUT(bestlb, cub)) THROWCONTRADICTION;
         }
         if (dichotomic) {
-            if (increasing) increase(varIndex, middle + 1, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
-            else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
+            if (increasing) increase(varIndex, middle+1, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit); else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
         } else remove(varIndex, value, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
         bestlb = MAX(bestlb, wcsp->getLb());
         if (!ToulBar2::hbfs && cluster==td->getRoot() && initialDepth+1==Store::getDepth()) {initialDepth++; showGap(bestlb, cub);};
@@ -385,8 +383,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
         if (CUT(lbgood, cub)) THROWCONTRADICTION;
         lastConflictVar = varIndex;
         if (dichotomic) {
-            if (increasing) decrease(varIndex, middle);
-            else increase(varIndex, middle + 1);
+            if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
         } else assign(varIndex, value);
         lastConflictVar = -1;
         nb = sharpBTD(cluster);
@@ -404,8 +401,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value v
         wcsp->setUb(cub);
         if (CUT(lbgood, cub)) THROWCONTRADICTION;
         if (dichotomic) {
-            if (increasing) increase(varIndex, middle + 1);
-            else decrease(varIndex, middle);
+            if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
         } else remove(varIndex, value);
 
         nb = sharpBTD(cluster);
@@ -559,7 +555,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster *cluster, Cost lbgood, Cost cub)
             bestlb = cub;
         }
         return make_pair(bestlb, cub);
-    } else {
+    }
+    else {
         // Enumerates cluster proper variables
         *((StoreCost *) searchSize) += ((Cost)(10e6 * log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
@@ -666,8 +663,7 @@ pair<Cost, Cost> Solver::russianDollSearch(Cluster *c, Cost cub)
  *
  */
 
-BigInteger Solver::sharpBTD(Cluster *cluster)
-{
+BigInteger Solver::sharpBTD(Cluster *cluster){
 
     TreeDecomposition *td = wcsp->getTreeDec();
     BigInteger NbSol = 0, nb = 0;
@@ -696,7 +692,9 @@ BigInteger Solver::sharpBTD(Cluster *cluster)
             Cluster *c = *iter;
             if ((nb = c->sgoodGet()) != -1) {
                 nbSGoodsUse++;
-            } else {
+            }
+            else
+            {
                 nb = 0;
                 td->setCurrentCluster(c);
                 try {
@@ -715,7 +713,8 @@ BigInteger Solver::sharpBTD(Cluster *cluster)
                     nb = sharpBTD(c);
                     c->sgoodRec(0, nb);
                     nbSGoods++;
-                } catch (Contradiction) {
+                }
+                catch(Contradiction){
                     wcsp->whenContradiction();
                     c->sgoodRec(0, 0); // no solution
                     nbSGoods++;
@@ -735,7 +734,8 @@ BigInteger Solver::sharpBTD(Cluster *cluster)
 
         }
         return NbSol;
-    } else {
+    }
+    else{
         // Enumerates cluster proper variables
         if (wcsp->enumerated(varIndex)) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
@@ -743,10 +743,19 @@ BigInteger Solver::sharpBTD(Cluster *cluster)
             Value bestval = wcsp->getBestValue(varIndex);
 
             NbSol = binaryChoicePointSBTD(cluster, varIndex, (wcsp->canbe(varIndex, bestval)) ? bestval : wcsp->getSupport(varIndex));
-        } else {
+        }
+        else {
             NbSol = binaryChoicePointSBTD(cluster, varIndex, wcsp->getInf(varIndex));
         }
         if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " return " << NbSol << endl;
         return NbSol;
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

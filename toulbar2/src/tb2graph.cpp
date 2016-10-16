@@ -13,8 +13,7 @@ Graph::Graph(int n, int depth_)  : adjlist(n)
     for (int i=0;i<n;i++) vertexList[i] = new Vertex(n, depth_, &intDLinkStore);
 }
 
-Graph::~Graph()
-{
+Graph::~Graph() {
     for (int i = 0; i < gsize; i++) {
         delete vertexList[i];
         for (vector<List_Node *>::iterator it = adjlist[i].begin();
@@ -25,8 +24,7 @@ Graph::~Graph()
 }
 
 int Graph::addEdgeInternal(int u, int v, Cost w, Cost capacity, int tag,
-                           bool addReverse, int index)
-{
+        bool addReverse, int index) {
 
     if ((u < 0) || (u >= size())) return -1;
     if ((v < 0) || (v >= size())) return -1;
@@ -69,8 +67,7 @@ int Graph::addEdgeInternal(int u, int v, Cost w, Cost capacity, int tag,
     return eIndex;
 }
 
-bool Graph::removeEdge(int u, int v, int tag)
-{
+bool Graph::removeEdge(int u, int v, int tag) {
 
     bool exist = false;
 
@@ -95,8 +92,7 @@ bool Graph::removeEdge(int u, int v, int tag)
 
 }
 
-bool Graph::modifyCost(int u, int v, Cost cost, int tag)
-{
+bool Graph::modifyCost(int u, int v, Cost cost, int tag) {		
 
     bool exist = false;
 
@@ -131,8 +127,7 @@ bool Graph::modifyCost(int u, int v, Cost cost, int tag)
 
 }
 
-bool Graph::increaseCost(int u, int v, Cost cost, int tag)
-{
+bool Graph::increaseCost(int u, int v, Cost cost, int tag) {
 
     bool exist = false;
 
@@ -166,13 +161,11 @@ bool Graph::increaseCost(int u, int v, Cost cost, int tag)
 
 }
 
-bool Graph::edgeExist(int u, int v)
-{
+bool Graph::edgeExist(int u, int v) {
     return !(vertexList[u]->edgeList[v]->empty());
 }
 
-vector<Cost> Graph::getWeight(int u, int v, int tag)
-{
+vector<Cost> Graph::getWeight(int u, int v, int tag) {
 
     vector<Cost> weight;
     for (BTListWrapper<int>::iterator i = vertexList[u]->edgeList[v]->begin(); i !=
@@ -187,8 +180,7 @@ vector<Cost> Graph::getWeight(int u, int v, int tag)
 
 }
 
-Cost Graph::getMinWeight(int u, int v, int tag)
-{
+Cost Graph::getMinWeight(int u, int v, int tag) {
 
     Cost minWeight = MAX_COST + 2;
     for (BTListWrapper<int>::iterator i = vertexList[u]->edgeList[v]->begin(); i !=
@@ -202,8 +194,7 @@ Cost Graph::getMinWeight(int u, int v, int tag)
     return minWeight;
 }
 
-void Graph::addFlow(int u, int v, Cost flowval)
-{
+void Graph::addFlow(int u, int v, Cost flowval) {	
 
     Cost target = getMinWeight(u, v);
     for (BTListWrapper<int>::iterator i = vertexList[u]->edgeList[v]->begin(); i !=
@@ -232,8 +223,7 @@ void Graph::addFlow(int u, int v, Cost flowval)
 
 }
 
-pair<int, Cost> Graph::minCostFlow(int s, int t)
-{
+pair<int, Cost> Graph::minCostFlow(int s, int t) {
 
     //int n = size();
     Cost flow = 0;
@@ -282,8 +272,7 @@ pair<int, Cost> Graph::minCostFlow(int s, int t)
     return make_pair(flow, cost);
 }
 
-pair<Cost, bool> Graph::augment(int s, int t, bool can_change)
-{
+pair<Cost, bool> Graph::augment(int s, int t, bool can_change) {
 
     shortest_path(s);
     pair<Cost, bool> result;
@@ -349,8 +338,7 @@ pair<Cost, bool> Graph::augment(int s, int t, bool can_change)
 
 }
 
-void Graph::removeNegativeCycles(StoreCost &cost)
-{
+void Graph::removeNegativeCycles(StoreCost &cost) {
 
     int n = size();
     int pass[n];
@@ -377,8 +365,7 @@ void Graph::removeNegativeCycles(StoreCost &cost)
             pass[u] = 1;
             path.push_back(u);
             u = p[u];
-        }
-        path.push_back(u);
+        } path.push_back(u);
 
         t = path.back();
         for (vector<int>::iterator i = path.begin(); i != path.end(); i++) {
@@ -394,8 +381,7 @@ void Graph::removeNegativeCycles(StoreCost &cost)
         Cost weight = 0, minc = INF;
 
         for (vector<int>::iterator i = path.begin(); i != path.end() - 1; i++) {
-            u = *i;
-            v = *(i + 1);
+            u = *i;  v = *(i+1);
             Cost w = INF;
             Cost c = INF;
             for (BTListWrapper<int>::iterator j = vertexList[u]->edgeList[v]->begin(); j !=
@@ -412,8 +398,7 @@ void Graph::removeNegativeCycles(StoreCost &cost)
 
         if (weight < 0) {
             for (vector<int>::iterator i = path.begin(); i != path.end() - 1; i++) {
-                u = *i;
-                v = *(i + 1);
+                u = *i;  v = *(i+1);
                 Cost w = INF;
                 for (BTListWrapper<int>::iterator j = vertexList[u]->edgeList[v]->begin(); j !=
                         vertexList[u]->edgeList[v]->end(); ++j) {
@@ -431,8 +416,7 @@ void Graph::removeNegativeCycles(StoreCost &cost)
 
 }
 
-void Graph::print(ostream &os)
-{
+void Graph::print(ostream &os) {
 
     for (int u = 0; u < gsize; u++) {
         os << u << ": ";
@@ -475,22 +459,18 @@ void Graph::print(ostream &os)
 
 }
 
-void Graph::shortest_path(list<int> &sources, bool &nevloop)
-{
+void Graph::shortest_path(list<int> &sources, bool &nevloop) {
 
     int n = size();
     for (int i = 0; i < n; i++) {
-        p[i] = -1;
-        d[i] = INF;
-        counter[i] = 0;
+        p[i] = -1;  d[i] = INF; counter[i] = 0;
     }
 
     nevloop = false;
     list<int> &Q = sources;
     for (list<int>::iterator i = sources.begin(); i != sources.end(); i++) {
         counter[*i]++;
-        d[*i] = 0;
-        p[*i] = *i;
+        d[*i] = 0;   p[*i] = *i;
     }
 
     while (!Q.empty()) {
@@ -518,8 +498,7 @@ void Graph::shortest_path(list<int> &sources, bool &nevloop)
 
 }
 
-void Graph::printPath(int s, int t)
-{
+void Graph::printPath(int s, int t) {
 
     int u = t;
     cout << u << " <- ";
@@ -636,3 +615,11 @@ void Graph::shortest_path_with_potential(int s) {
 
    }
  */
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

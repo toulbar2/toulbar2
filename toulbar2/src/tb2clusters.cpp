@@ -32,8 +32,7 @@ bool CmpClusterStruct::operator()(const Cluster *lhs, const Cluster *rhs) const
  *
  */
 
-Separator::Separator(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in)
-    : AbstractNaryConstraint(wcsp, scope_in, arity_in),
+Separator::Separator(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : AbstractNaryConstraint(wcsp, scope_in, arity_in),
       cluster(NULL),
         nonassigned(arity_in),
         isUsed(false),
@@ -132,9 +131,12 @@ void Separator::propagate()
             if (nb == 0.)  {
                 if (ToulBar2::verbose >= 1) cout << "use #good " << this << endl;
                 THROWCONTRADICTION;
-            } else if (nb > 0.)
+            }
+            else
+                if(nb>0.)
                 unqueueSep();
-        } else {
+        }
+        else{
             Cost clb = MIN_COST;
             Cost cub = MAX_COST;
             get(clb, cub, &cluster->open);
@@ -489,16 +491,14 @@ Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(
     instance = clusterCounter++;
 }
 
-Cluster::~Cluster()
-{
+Cluster::~Cluster() {
     delete cp;
 }
 
 void Cluster::addVar(Variable *x) { vars.insert(x->wcspIndex); }
 void Cluster::removeVar(Variable *x) { vars.erase(x->wcspIndex); }
 
-void Cluster::addVars(TVars &morevars)
-{
+void Cluster::addVars( TVars& morevars ) {
     set_union(vars.begin(), vars.end(),
               morevars.begin(), morevars.end(),
               inserter(vars, vars.begin()));
@@ -508,16 +508,14 @@ void Cluster::addCtr(Constraint *c) { ctrs.insert(c); }
 
 void Cluster::addEdge(Cluster *c) { edges.insert(c); }
 
-TClusters::iterator Cluster::removeEdge(TClusters::iterator it)
-{
+TClusters::iterator Cluster::removeEdge( TClusters::iterator it ) {
     TClusters::iterator itaux = it;
     ++it;
     edges.erase(itaux);
     return it;
 }
 
-void Cluster::removeEdge(Cluster *c)
-{
+void Cluster::removeEdge( Cluster* c )  {
     TClusters::iterator it = edges.find(c);
     if (it != edges.end()) edges.erase(it);
 }
@@ -547,7 +545,8 @@ void Cluster::sum(TCtrs &c1, TCtrs &c2, TCtrs &ctout)
 TCtrs Cluster::getCtrsTree()
 {
     TCtrs ctrsTree;
-    for (TClusters::iterator it = descendants.begin(); it != descendants.end(); ++it) {
+    for(TClusters::iterator it=descendants.begin(); it!=descendants.end(); ++it)
+    {
         Cluster *c = *it;
         c->getCtrs();
         sum(ctrsTree, c->getCtrs(), ctrsTree);
@@ -561,7 +560,8 @@ void Cluster::deconnectDiff(TCtrs listCtrsTot, TCtrs listCtrs)
 
     TCtrs listDiff;
     set_difference(listCtrsTot.begin(), listCtrsTot.end(), listCtrs.begin(), listCtrs.end(), inserter(listDiff, listDiff.begin()));
-    for (TCtrs::iterator itctr = listDiff.begin(); itctr != listDiff.end(); ++itctr) {
+    for(TCtrs::iterator itctr=listDiff.begin(); itctr!=listDiff.end(); ++itctr)
+    {
         Constraint *ctr = *itctr;
         ctr->deconnect();
     }
@@ -895,7 +895,8 @@ void Cluster::dump()
 
 void Cluster::cartProduct(BigInteger &prodCart)
 {
-    for (TVars::iterator it = varsTree.begin(); it != varsTree.end(); it++) {
+    for(TVars::iterator it = varsTree.begin(); it!= varsTree.end();it++)
+    {
         Variable *x = (Variable *) wcsp->getVar(*it);
         prodCart *= x->getDomainSize();
     }
@@ -1483,7 +1484,8 @@ int TreeDecomposition::makeRooted()
         Cluster *c = clusters[i];
         c->accelerateDescendants();
         if (c->getSep()) c->getSep()->setSep();
-        if (!ToulBar2::approximateCountingBTD) {
+        if (!ToulBar2::approximateCountingBTD)
+        {
             int posx = 0;
             TVars::iterator itv = c->beginVars();
             while (itv != c->endVars()) {
@@ -1710,7 +1712,8 @@ void TreeDecomposition::buildFromOrder()
             }
         }
 
-        for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
+        for(unsigned int j=i+1;j<wcsp->numberOfVariables();j++)
+        {
             if (c->isVar(order[j])) {
                 Cluster *cj  = clusters[j];
                 TVars::iterator it = c->beginVars();
@@ -1770,7 +1773,8 @@ void TreeDecomposition::buildFromOrderForApprox()
                         currentRevElimOrder.push_back(wcsp->getVar(i));
                         currentusedvars.insert(i);
                     }
-                } else {
+                }
+                else{
                     if (degreeinusedctr[i] > 0)
                         inusedvars.insert(i);
                 }
@@ -1791,7 +1795,8 @@ void TreeDecomposition::buildFromOrderForApprox()
 
         if (sizepart == 1) cout << endl;
         cout << "part " << sizepart << " : " << currentRevElimOrder.size() << " variables and " << currentusedctrs.size() << " constraints (really added)\n";
-        if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 3) { //affichage
+        if(ToulBar2::debug >=1 ||ToulBar2::verbose >=3)//affichage
+        {
             cout << "\tVariables : ";
             for (vector<Variable *>::iterator it = currentRevElimOrder.begin(); it != currentRevElimOrder.end(); it++) {
                 cout << (*it)->wcspIndex << " " ;
@@ -1854,7 +1859,8 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
 
     int h = makeRooted();
     if (ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
-    if (!ToulBar2::approximateCountingBTD) {
+    if (!ToulBar2::approximateCountingBTD)
+    {
         // assign constraints to clusters and check for duplicate ternary constraints
         for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
             Constraint *ctr = wcsp->getCtr(i);
@@ -1931,7 +1937,8 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, ConstraintSe
     vector<TVars>  listeVars(wcsp->numberOfVariables());	// liste des voisins d'ordre superieur de chaque variable
     int nbcstr = 0;
     double time, timetot = 0;
-    while (inusedvars.size() > 0) {
+    while (inusedvars.size() > 0)
+    {
         int maxsize = -1;
         Variable *maxvar = NULL;	/* next variable */
 
@@ -1950,15 +1957,18 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, ConstraintSe
         if (maxvar) {
 //				cout << "Variable choisie: " << maxvar->wcspIndex << " ";
             ConstraintList *xctrs = maxvar->getConstrs();
-            for (ConstraintList::iterator it = xctrs->begin(); it != xctrs->end(); ++it) {
+            for (ConstraintList::iterator it=xctrs->begin(); it != xctrs->end(); ++it)
+            {
                 Constraint *ctr = (*it).constr;
                 bool used = totalusedctrs.find(ctr) != totalusedctrs.end();
-                if (!used) {
+                if( !used )
+                {
                     TVars scopectr;
                     TVars sc;
                     for (int k = 0; k < ctr->arity(); k++) {
                         Variable *x = ctr->getVar(k);
-                        if (x->wcspIndex != maxvar->wcspIndex && wcsp->unassigned(x->wcspIndex)) {
+                        if( x->wcspIndex!=maxvar->wcspIndex && wcsp->unassigned(x->wcspIndex) )
+                        {
                             sc.insert(x->wcspIndex);
                             if (inusedvars.find(x->wcspIndex) != inusedvars.end())
                                 scopectr.insert(x->wcspIndex);
@@ -1984,7 +1994,8 @@ void  TreeDecomposition::maxchord(int sizepart, vector<int> &order, ConstraintSe
                         }
                     }
 
-                    for (TVars::iterator i = scopectr.begin(); i != scopectr.end(); ++i) {
+                    for(TVars::iterator i=scopectr.begin(); i != scopectr.end();++i)
+                    {
                         int vari = wcsp->getVar(*i)->wcspIndex;
                         int varj = maxvar->wcspIndex;
                         if (included(listeVars[vari] , listeVars[varj])) {
@@ -2034,7 +2045,8 @@ void TreeDecomposition::insert(int sizepart, vector <Variable *> currentRevElimO
             }
         }
 
-        for (unsigned int j = i + 1; j < currentRevElimOrder.size(); j++) {
+        for(unsigned int j=i+1;j<currentRevElimOrder.size();j++)
+        {
             if (c->isVar(currentRevElimOrder[currentRevElimOrder.size() - j - 1]->wcspIndex)) {
                 Cluster *cj  = clusters[firstCluster + j];
                 TVars::iterator it = c->beginVars();
@@ -2137,7 +2149,8 @@ void TreeDecomposition::newSolution(Cost lb)
     if (ToulBar2::xmlflag) {
         cout << "o " << lb << endl;
         wcsp->solution_XML();
-    } else if (ToulBar2::uai || ToulBar2::uaieval) {
+    }
+    else if(ToulBar2::uai || ToulBar2::uaieval) {
         wcsp->solution_UAI(lb);
     }
     // warning: cannot read solution from variable assignments
@@ -2293,3 +2306,11 @@ void TreeDecomposition::dump(Cluster *c)
         ++ita;
     }
 }
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
+

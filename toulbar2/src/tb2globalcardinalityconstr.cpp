@@ -4,9 +4,7 @@
 #define upper_bound first
 #define lower_bound second
 
-GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in)
-    : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
-{
+GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
     buildIndex();
 
     modeEnum["var"] = GlobalCardinalityConstraint::VAR;
@@ -14,8 +12,7 @@ GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP *wcsp, EnumeratedV
     modeEnum["wdec"] = GlobalCardinalityConstraint::WVALUE;
 }
 
-void GlobalCardinalityConstraint::buildIndex()
-{
+void GlobalCardinalityConstraint::buildIndex() {
     vector<Value> D;
     mapval.clear();
     for (int i = 0; i < arity_; i++) {
@@ -34,8 +31,7 @@ void GlobalCardinalityConstraint::buildIndex()
     //graph.setSize(arity_+D.size()+4);
 }
 
-void GlobalCardinalityConstraint::read(istream &file)
-{
+void GlobalCardinalityConstraint::read(istream &file) {
     // "var" => softvar
     // "dec" => softdec
     // "wdec" => sigmadec
@@ -79,8 +75,7 @@ void GlobalCardinalityConstraint::read(istream &file)
 
 }
 
-void GlobalCardinalityConstraint::organizeConfig()
-{
+void GlobalCardinalityConstraint::organizeConfig() {       
 
     int sumlow = 0, sumhigh = 0;
 
@@ -146,13 +141,11 @@ Cost GlobalCardinalityConstraint::evalOriginal( const String& s ) {
     return cost;
 }
 
-size_t GlobalCardinalityConstraint::GetGraphAllocatedSize()
-{
+size_t GlobalCardinalityConstraint::GetGraphAllocatedSize() {
     return arity_ + nDistinctDomainValue + 4;
 }
 
-void GlobalCardinalityConstraint::buildGraph(Graph &g)
-{
+void GlobalCardinalityConstraint::buildGraph(Graph &g) {
 
     int n = g.size();
     int t = n - 3;
@@ -198,8 +191,7 @@ void GlobalCardinalityConstraint::buildGraph(Graph &g)
 
 }
 
-Cost GlobalCardinalityConstraint::constructFlow(Graph &g)
-{
+Cost GlobalCardinalityConstraint::constructFlow(Graph &g) {
 
     //cout << "use the one\n";
     /*pair<int, bool> result;
