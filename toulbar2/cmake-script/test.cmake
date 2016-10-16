@@ -10,7 +10,7 @@
 #################
 # test unitaire
 ###############
-SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
+SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
 
 	MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
@@ -48,7 +48,7 @@ FOREACH (UTEST ${validation_file})
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found ")
+	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
 	ELSE()
 
 	# init default value :

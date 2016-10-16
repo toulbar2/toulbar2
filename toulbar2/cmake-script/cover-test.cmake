@@ -19,18 +19,18 @@ MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
 
 #################
-# test unitaire
+# unit test
 ###############
-SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
+SET(FOPT "test-opt.cmake") #cmake name where local values for timeout,regexp and command line option are declared
 SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmake")
 
 ###############"""
 
 IF (EXISTS ${COVER_OPT_file} ) 
      include (${COVER_OPT_file})
-     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found ")
+     MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found.")
 ELSE ()
-      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found ")
+      MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found.")
 ENDIF()
 
 
@@ -48,7 +48,7 @@ FOREACH (UTEST ${cover_file})
 
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found ")
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
 	ELSE()
 	# init default value :
 	set (test_timeout ${Default_test_timeout})
@@ -71,7 +71,7 @@ FOREACH (UTEST ${cover_file})
 
 	SET (INDEX 0)
 	FOREACH (COVERTEST ${${tfile}})
-		#OPTION multipale space cleaning
+		#OPTION multiple space cleaning
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})
 		STRING(REPLACE "  " " " COVERTEST ${COVERTEST})
 		STRING(REGEX REPLACE " $" "" COVERTEST ${COVERTEST})
