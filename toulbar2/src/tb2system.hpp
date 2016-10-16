@@ -95,7 +95,7 @@ inline double Log1p(double x) {return log(1. + x);}
 #ifdef LONGDOUBLE_PROB
 #ifdef LINUX
 inline Double Pow(Double x, Double y) {return powl(x, y);}
-        inline Double Exp10(Double x) {return powl(10.l, (Double)x);}
+inline Double Exp10(Double x) {return powl(10.l, (Double)x);}
 inline Double Exp(Double x) {return expl(x);}
 inline Double Log10(Double x) {return log10l(x);}
 inline Double Log(Double x) {return logl(x);}
@@ -151,14 +151,13 @@ inline int cost2log2(int v)
 
 inline int cost2log2(int x)
 {
-    if (x == 0) return -1;
-    register int l2 = 0;
-    x >>= 1;
-        for (; x != 0; x >>=1)
-        {
-        ++ l2;
-    }
-    return (l2);
+	if (x == 0) return -1;
+	register int l2 = 0;
+	x >>= 1;
+	for (; x != 0; x >>= 1) {
+		++ l2;
+	}
+	return (l2);
 }
 inline int cost2log2glb(int x) {return cost2log2(x);}
 inline int cost2log2gub(int x) {return cost2log2(x);}
@@ -179,14 +178,13 @@ inline Long string2Cost(const char *ptr) {return atol(ptr);}
 
 inline int cost2log2(Long x)
 {
-    if (x == 0) return -1;
-    register int l2 = 0;
-    x >>= 1;
-	    for (; x != 0; x >>=1)
-	    {
-        ++ l2;
-    }
-    return (l2);
+	if (x == 0) return -1;
+	register int l2 = 0;
+	x >>= 1;
+	for (; x != 0; x >>= 1) {
+		++ l2;
+	}
+	return (l2);
 }
 inline int cost2log2glb(Long x) {return cost2log2(x);}
 inline int cost2log2gub(Long x) {return cost2log2(x);}

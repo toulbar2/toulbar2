@@ -34,15 +34,15 @@ Time real_lapse;
 
 void start_timers()
 {
-    getrusage(RUSAGE_SELF, &res);
-    virtual_utime = (Time) res.ru_utime.tv_sec +
-                    (Time) res.ru_utime.tv_usec / 1000000.0;
-    virtual_stime = (Time) res.ru_stime.tv_sec +
-                    (Time) res.ru_stime.tv_usec / 1000000.0;
+	getrusage(RUSAGE_SELF, &res);
+	virtual_utime = (Time) res.ru_utime.tv_sec +
+	                (Time) res.ru_utime.tv_usec / 1000000.0;
+	virtual_stime = (Time) res.ru_stime.tv_sec +
+	                (Time) res.ru_stime.tv_usec / 1000000.0;
 
-    gettimeofday(&tp, NULL);
-    real_time = (Time) tp.tv_sec +
-                (Time) tp.tv_usec / 1000000.0;
+	gettimeofday(&tp, NULL);
+	real_time = (Time) tp.tv_sec +
+	            (Time) tp.tv_usec / 1000000.0;
 }
 
 
@@ -52,19 +52,19 @@ void start_timers()
  */
 void stop_timers(Timer type)
 {
-    if (type == REAL) {
-        gettimeofday(&tp, NULL);
-        real_lapse = (Time) tp.tv_sec +
-                     (Time) tp.tv_usec / 1000000.0
-                     - real_time;
-    } else {
-        getrusage(RUSAGE_SELF, &res);
-        virtual_ulapse = (Time) res.ru_utime.tv_sec +
-                         (Time) res.ru_utime.tv_usec / 1000000.0
-                         - virtual_utime;
-        virtual_slapse = (Time) res.ru_stime.tv_sec +
-                         (Time) res.ru_stime.tv_usec / 1000000.0
-                         - virtual_stime;
-    }
+	if (type == REAL) {
+		gettimeofday(&tp, NULL);
+		real_lapse = (Time) tp.tv_sec +
+		             (Time) tp.tv_usec / 1000000.0
+		             - real_time;
+	} else {
+		getrusage(RUSAGE_SELF, &res);
+		virtual_ulapse = (Time) res.ru_utime.tv_sec +
+		                 (Time) res.ru_utime.tv_usec / 1000000.0
+		                 - virtual_utime;
+		virtual_slapse = (Time) res.ru_stime.tv_sec +
+		                 (Time) res.ru_stime.tv_usec / 1000000.0
+		                 - virtual_stime;
+	}
 }
 #endif

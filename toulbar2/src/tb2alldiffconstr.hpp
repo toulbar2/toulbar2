@@ -13,37 +13,39 @@
 class AllDiffConstraint : public FlowBasedGlobalConstraint
 {
 private:
-    void buildIndex();
-    pair<int, int> mapto(int varindex, Value val) {
-        return make_pair(varindex + 1, mapval[val]);
-    }
-    //void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
-    size_t GetGraphAllocatedSize();
-    void buildGraph(Graph &g);
+	void buildIndex();
+	pair<int, int> mapto(int varindex, Value val)
+	{
+		return make_pair(varindex + 1, mapval[val]);
+	}
+	//void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
+	size_t GetGraphAllocatedSize();
+	void buildGraph(Graph &g);
 public:
-    static const int DECBI = 2;
-    static const int DEC = 1;
-    static const int VAR = 0;
+	static const int DECBI = 2;
+	static const int DEC = 1;
+	static const int VAR = 0;
 
-    string getName() {return "salldiff";}
+	string getName() {return "salldiff";}
 
-    AllDiffConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int
-                      arity_in);
+	AllDiffConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int
+	                  arity_in);
 
-    ~AllDiffConstraint() {
-    }
-    Cost evalOriginal(const String& s);
+	~AllDiffConstraint()
+	{
+	}
+	Cost evalOriginal(const String &s);
 
-    void read(istream &file);
-    void organizeConfig();
+	void read(istream &file);
+	void organizeConfig();
 
-    void decompose();
-    //void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
-    //void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
-    //void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
+	void decompose();
+	//void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
+	//void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
+	//void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
 
 //    void print(ostream& os);
-    void dump(ostream &os, bool original = true);
+	void dump(ostream &os, bool original = true);
 };
 
 #endif /*TB2ALLDIFFCONSTR_HPP_*/

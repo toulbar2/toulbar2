@@ -1,18 +1,18 @@
 /*=============================================================================
  * parser for CSP instances represented in XML format
- * 
+ *
  * Copyright (c) 2008 Olivier ROUSSEL (olivier.roussel <at> cril.univ-artois.fr)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@
 #include "XMLParser_constants.h"
 
 /**
- * 
+ *
  * a simple representation of an Abstract Syntax Tree (AST) for C
  *
  */
@@ -40,9 +40,8 @@
  * This is also the representation of a symbolic constant.
  */
 typedef
-struct 
-{
-  NodeType type;
+struct {
+	NodeType type;
 } C_AST;
 
 
@@ -50,11 +49,10 @@ struct
  * representation of a variable (necessarily a leaf in the tree)
  */
 typedef
-struct 
-{
-  NodeType type;
-  char *varName;
-  int idVar;
+struct {
+	NodeType type;
+	char *varName;
+	int idVar;
 } C_AST_VarNode;
 
 /*
@@ -62,53 +60,48 @@ struct
  * leaf in the tree)
  */
 typedef
-struct 
-{
-  NodeType type;
-  int val;
+struct {
+	NodeType type;
+	int val;
 } C_AST_CstNode;
 
 /*
- * representation of a function 
+ * representation of a function
  */
 typedef
-struct 
-{
-  NodeType type;
-  int nbarg;
-  C_AST *args[];
+struct {
+	NodeType type;
+	int nbarg;
+	C_AST *args[];
 } C_AST_FxNode;
 
 /*
- * representation of a list 
+ * representation of a list
  */
 typedef
-struct 
-{
-  NodeType type;
-  int size; /* number of items in the list */
-  C_AST *items[];
+struct {
+	NodeType type;
+	int size; /* number of items in the list */
+	C_AST *items[];
 } C_AST_ListNode;
 
 /*
  * entry in a dictionary
  */
 typedef
-struct 
-{
-  char *key;
-  C_AST *value;
+struct {
+	char *key;
+	C_AST *value;
 } C_AST_DictEntry;
 
 /*
- * representation of a dictionary 
+ * representation of a dictionary
  */
 typedef
-struct 
-{
-  NodeType type;
-  int size; /* number of items in the dictionary */
-  C_AST_DictEntry items[];
+struct {
+	NodeType type;
+	int size; /* number of items in the dictionary */
+	C_AST_DictEntry items[];
 } C_AST_DictNode;
 
 
