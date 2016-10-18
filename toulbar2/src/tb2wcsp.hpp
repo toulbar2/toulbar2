@@ -488,7 +488,7 @@ public:
 
     TreeDecomposition* td;
     TreeDecomposition* getTreeDec() { return td; }
-    bool isAlreadyTreeDec(char *filename); ///< \brief finds if the given file is a variable ordering or a tree decomposition
+    static bool isAlreadyTreeDec(char *filename); ///< \brief finds if the given file is a variable ordering or a tree decomposition
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char *elimVarOrderFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char *treeDecFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition

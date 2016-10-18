@@ -1436,28 +1436,42 @@ void TreeDecomposition::makeRootedRec( Cluster* c,  TClusters& visited )
 int TreeDecomposition::makeRooted()
 {
     TClusters visited;
-    roots.clear();
-    Cluster* root;
+    bool isalreadyrooted = (roots.size()>0);
+    Cluster* root = NULL;
+    list<Cluster *> temproots;
+    if (isalreadyrooted) {
+        temproots = roots;
+    }
 
     bool selected = false;
     while(visited.size() < clusters.size()) {
-        if(!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)clusters.size()) {
-            root = getCluster(ToulBar2::btdRootCluster);
-            selected = true;
-        } else root = getBiggerCluster(visited);
-
-        roots.push_back(root);
+        if (isalreadyrooted) {
+            if (temproots.size() > 0) {
+                root = temproots.front();
+                temproots.pop_front();
+            } else {
+                //Error, some clusters are missing in the decomposition tree
+                cerr << "Input tree decomposition file is not valid! (may-be cycles within cluster parents)" << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            if(!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)clusters.size()) {
+                root = getCluster(ToulBar2::btdRootCluster);
+                selected = true;
+            } else root = getBiggerCluster(visited);
+            roots.push_back(root);
+            while(reduceHeight(root,NULL));
+            if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
+            if (ToulBar2::maxSeparatorSize>=0||ToulBar2::minProperVarSize>=2) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
+            if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1) boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
+            while(reduceHeight(root,NULL));
+        }
         visited.insert(root);
-        while(reduceHeight(root,NULL));
-        if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
-        if (ToulBar2::maxSeparatorSize>=0||ToulBar2::minProperVarSize>=2) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
-        if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1) boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
-        while(reduceHeight(root,NULL));
         makeRootedRec(root, visited);
         makeDescendants(root);
     }
 
-    // if it is a forest
+    // if it is a forest then create a unique meta-root cluster with empty separators with its children
     if(roots.size() > 1) {
         root = new Cluster( this );
         root->setId(clusters.size());
@@ -1523,6 +1537,7 @@ void TreeDecomposition::buildFromCovering(string filename)
         }
     }
     clusters.clear();
+    roots.clear();
 
     map<int, int> clusterIds;
     int nbclusters = 0;
@@ -1558,10 +1573,11 @@ void TreeDecomposition::buildFromCovering(string filename)
             }
         }
 
-        if (num_parent >= 0)
-        {
+        if (num_parent >= 0) {
             C->addEdge(clusters[clusterIds[num_parent]]);
             clusters[clusterIds[num_parent]]->addEdge(C);
+        } else {
+            roots.push_back(C);
         }
 
         for(TVars::iterator iter = C->getVars().begin(); iter != C->getVars().end(); iter++)
@@ -1598,7 +1614,6 @@ void TreeDecomposition::buildFromCovering(string filename)
         if (c) c->getDescendants().clear();
     }
 
-    if (ToulBar2::btdRootCluster == -1) ToulBar2::btdRootCluster = 0;
     int h = makeRooted();
 
     if(ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
@@ -1857,6 +1872,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
         c->getDescendants().clear();
     }
 
+    roots.clear();
     int h = makeRooted();
     if(ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
     if (!ToulBar2::approximateCountingBTD)

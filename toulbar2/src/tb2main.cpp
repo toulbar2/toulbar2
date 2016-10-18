@@ -553,8 +553,8 @@ void help_msg(char *toulbar2filename)
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
     cout << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
     cout << "   *.order  : variable elimination order" << endl;
-    cout << "   *.cov  : tree decomposition given by a list of clusters in topological order," << endl;
-    cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes" << endl;
+    cout << "   *.cov  : tree decomposition given by a list of clusters in topological order of a rooted forest," << endl;
+    cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
@@ -657,8 +657,8 @@ void help_msg(char *toulbar2filename)
     cout << endl << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order, each line contains a cluster number, " << endl;
-    cout << "      followed by a cluster parent number with -1 for the root cluster, followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
+    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
+    cout << "      followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
     cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
@@ -1616,6 +1616,10 @@ int _tmain(int argc, TCHAR * argv[])
                 //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
                 ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
                 sprintf(ToulBar2::varOrder, "%s",buf);
+                if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
+                    cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
+                    exit(EXIT_FAILURE);
+                }
                 if (ToulBar2::btdMode == 0) ToulBar2::btdMode = 1;
             }
 
