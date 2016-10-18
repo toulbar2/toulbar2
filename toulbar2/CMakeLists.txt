@@ -65,7 +65,7 @@ mark_as_advanced(WITH_MEM_JEMALLOC BUILD_API_DOC_LATEX)
 ##########################################
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
-    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
@@ -153,8 +153,8 @@ IF(ALL_APP)
   set (Toulbar_NAME "toulbar2-all")
   project(${Toulbar_NAME})
   #description used in the package building
-  SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source framework including solver and library for constraints network optimization, written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
-  SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
+	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
   
 ENDIF(ALL_APP)
 
@@ -194,8 +194,8 @@ IF(TOULBAR2_ONLY)
   #basename for packagin and versionning
   SET(Toulbar_NAME "toulbar2")
   #description used in the package building
-  SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is a free open source solver for constraints network optimization written in C++. Its purpose is solve combinatory problem in the weighted csp framework.")
-  SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME}  solver for network of cost function (WCSP framework)")
+	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 ENDIF(TOULBAR2_ONLY)
 
 ##########################################

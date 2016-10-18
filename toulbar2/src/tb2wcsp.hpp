@@ -504,7 +504,7 @@ public:
 
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
-    TProb Cost2LogProb(Cost c) const;
+    TLogProb Cost2LogProb(Cost c) const;
     Cost LogProb2Cost(TLogProb p) const;
     Cost LogSumExp(Cost c1, Cost c2) const;
     TLogProb LogSumExp(TLogProb logc1, Cost c2) const;
