@@ -156,7 +156,6 @@ int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
 bool ToulBar2::isGumbel;
-unsigned int ToulBar2::run;
 bool ToulBar2::isSubZ;
 int ToulBar2::zshow;
 float ToulBar2::isZCelTemp;
@@ -293,7 +292,6 @@ void tb2init()
 
 	ToulBar2::isZ = false;
 	ToulBar2::isGumbel = false;
-	ToulBar2::run = numeric_limits<unsigned int>::max();
 	ToulBar2::isSubZ = false;
 	ToulBar2::zshow = 1;
 	ToulBar2::isZCelTemp = -1;

@@ -376,7 +376,6 @@ public:
 	static int isZUB;
 	static bool stop; // STOP TB2 (TMP way)
 	static bool isGumbel;
-	static unsigned int run;
 	static Seq *seq;
 	static TLogProb logZ;
 	static TLogProb UplogZ;

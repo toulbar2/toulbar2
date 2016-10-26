@@ -386,7 +386,6 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_ZUB,	(char *) "-zub", 				SO_REQ_SEP		},     // Choose Upper bound number for computing Z
 	{ OPT_epsilon,	(char *) "-epsilon", 			SO_REQ_SEP		},   // approximation parameter for computing Z
 	{ OPT_GUMBEL,	(char *) "-gum", 			SO_NONE		},   // Apply gumbel perturbation on cost matrix
-	{ OPT_RUN,	(char *) "--run", 			SO_REQ_SEP		},   // Number for run for Gumbel Partition Function
 	{ OPT_prodsumDiffusion,	(char *) "-MC", 				SO_REQ_SEP		},
 
 
@@ -711,14 +710,13 @@ void help_msg(char *toulbar2filename)
 	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
-	cout << "   -subz : computes log(Z) by adding the energy terms" << endl;
+	//cout << "   -subz : computes log(Z) by adding the energy terms" << endl;
 	cout << "           (use with -ub and -zshow=[int] to see log(Z) with energies between optimum and -ub every zshow)" << endl;
 	cout << endl;
 	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
 	cout << endl;
 	cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix" << endl;
 	cout << endl;
-	cout << "   --run : Number of run in the gumbel mode (default 10) and subz mode (default INFINITE !)" << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
 
 
@@ -1380,17 +1378,13 @@ int _tmain(int argc, TCHAR *argv[])
 				ToulBar2::isZUB = atoi(args.OptionArg());
 			}
 
-			if (args.OptionId() == OPT_RUN) {
-				ToulBar2::run = atoi(args.OptionArg());
-			}
 			if (args.OptionId() == OPT_GUMBEL) {
 				ToulBar2::isGumbel = true; // Flag for Gumbel perturbation
-				ToulBar2::run = 10; // Default number of run
 			}
 			// Set epsilon for epsilon approximation of Z
 			if (args.OptionId() == OPT_epsilon) {
 				if (args.OptionArg() != NULL) {
-					ToulBar2::logepsilon = -Log(atol(args.OptionArg()));
+					ToulBar2::logepsilon = -Log(stold(args.OptionArg()));
 					if (ToulBar2::debug) cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon)  <<  endl;
 				}
 
