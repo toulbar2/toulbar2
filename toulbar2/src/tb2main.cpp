@@ -982,7 +982,7 @@ int _tmain(int argc, TCHAR * argv[])
                 } else {
                     ToulBar2::weightedTightness = 2;
                 }
-                if (ToulBar2::weightedTightness && !ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
+                if (ToulBar2::weightedTightness && !ToulBar2::weightedDegree) ToulBar2::weightedDegree = 1000000;
             } else if (args.OptionId() == NO_OPT_weightedTightness ) { ToulBar2::weightedTightness = 0; }
 
             // weitghted Degree (var ordering )

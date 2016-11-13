@@ -1290,7 +1290,7 @@ void WCSP::read_wcnf(const char *fileName)
         maxarity = max(maxarity,arity);
 
         if (arity > 3) {
-            int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST,0);
+            int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST,1);
             String tup = buf;
             postNaryConstraintTuple(index, tup, cost*K);
             postNaryConstraintEnd(index);

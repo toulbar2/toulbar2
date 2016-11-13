@@ -19,7 +19,6 @@ class NaryConstraint : public AbstractNaryConstraint
     StoreInt nonassigned;       // nonassigned variables during search, must be backtrackable (StoreInt)!
     ConstraintSet* filters;
     TUPLES::iterator  tuple_it;
-    String evalTuple;
     vector<Long> conflictWeights; // used by weighted degree heuristics
 
 public:
@@ -137,10 +136,6 @@ public:
     void preprojectall2();
 
     void assign(int varIndex);
-
-    void projectNary();
-    void projectNaryTernary(TernaryConstraint* xyz);
-    void projectNaryBinary(BinaryConstraint* xy);
 
     void propagate() {
         for(int i=0;connected() && i<arity_;i++) {

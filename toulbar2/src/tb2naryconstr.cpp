@@ -6,19 +6,14 @@
 NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval, Long nbtuples)
 : AbstractNaryConstraint(wcsp, scope_in, arity_in), pf(NULL), costs(NULL), costSize(0), default_cost(defval), nonassigned(arity_in), filters(NULL)
 {
-    Char* tbuf = new Char [arity_in+1];
-    tbuf[arity_in] = '\0';
     for(int i=0;i<arity_in;i++) {
         conflictWeights.push_back(0);
         unsigned int domsize = scope_in[i]->getDomainInitSize();
-        tbuf[i] = CHAR_FIRST;
         if(domsize + CHAR_FIRST > (unsigned int)std::numeric_limits<Char>::max()) {
             cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl;
             exit(EXIT_FAILURE);
         }
     }
-    evalTuple = String(tbuf);
-    delete [] tbuf;
 
     Cost Top = wcsp->getUb();
     if(default_cost > Top) default_cost = Top;
@@ -50,6 +45,7 @@ void NaryConstraint::assign(int varIndex) {
         if (size()<=4 && universal()) { // check if it is satisfied (clause)
             //	  cout << "nary cost function satisfied: " << this << endl;
             deconnect();
+            return;
         }
 
         if(nonassigned <= 3) {
@@ -57,157 +53,6 @@ void NaryConstraint::assign(int varIndex) {
             deconnect();
             projectNary();
         }
-    }
-}
-
-
-void NaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
-{
-    TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) xyz->setCluster( cluster );
-    EnumeratedVariable* x = (EnumeratedVariable*) xyz->getVar(0);
-    EnumeratedVariable* y = (EnumeratedVariable*) xyz->getVar(1);
-    EnumeratedVariable* z = (EnumeratedVariable*) xyz->getVar(2);
-    TernaryConstraint* ctr = x->getConstr(y,z);
-    if(ctr && td && (ctr->getCluster() != getCluster())) {
-        TernaryConstraint* ctr_ = x->getConstr(y,z,getCluster());
-        if(ctr_) ctr = ctr_;
-    }
-    if (ToulBar2::verbose >= 1) {
-        cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
-        if(td) cout << "   cluster nary: " << getCluster() << endl; else cout << endl;
-        if(ctr) cout << "ctr exists" << endl;
-    }
-    if(!ctr || (ctr && td && cluster != ctr->getCluster())) {
-        xyz->fillElimConstrBinaries();
-        xyz->reconnect();
-        if(ctr) xyz->setDuplicate();
-    } else {
-        ctr->addCosts(xyz);
-        xyz = ctr;
-    }
-    xyz->propagate();
-    assert( !td || (xyz->getCluster() == xyz->xy->getCluster() &&  xyz->getCluster() == xyz->xz->getCluster() &&  xyz->getCluster() == xyz->yz->getCluster()) );
-}
-
-void NaryConstraint::projectNaryBinary(BinaryConstraint* xy)
-{
-    TreeDecomposition* td = wcsp->getTreeDec();
-    EnumeratedVariable* x = (EnumeratedVariable*) xy->getVar(0);
-    EnumeratedVariable* y = (EnumeratedVariable*) xy->getVar(1);
-
-    if (ToulBar2::verbose >= 1) cout << "project nary to binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
-
-    BinaryConstraint* ctr = NULL;
-    if (td) ctr = x->getConstr(y, getCluster());
-    if (!ctr) ctr = x->getConstr(y);
-
-    if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster())))
-    {
-        if (ToulBar2::verbose >= 2) cout << " exists -> fusion" << endl;
-        ctr->addCosts(xy);
-        xy = ctr;
-    }
-    else {
-        if(td) {
-            if(ctr) xy->setDuplicate();
-            xy->setCluster( getCluster() );
-        }
-    }
-    if (x->unassigned() && y->unassigned()) xy->reconnect();
-    xy->propagate();
-
-    if (ToulBar2::verbose >= 2) cout << " and the result: " << *xy << endl;
-}
-
-
-
-// USED ONLY DURING SEARCH to project the nary constraint
-void NaryConstraint::projectNary()
-{
-    wcsp->revise(this);
-    int indexs[3];
-    EnumeratedVariable* unassigned[3] = {NULL,NULL,NULL};
-    Char* tbuf = new Char [arity_ + 1];
-    String t;
-    bool flag = false;
-
-    int i,nunassigned = 0;
-    for(i=0;i<arity_;i++) {
-        EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
-        if(getVar(i)->unassigned()) {
-            unassigned[nunassigned] = var;
-            indexs[nunassigned] = i;
-            tbuf[i] = CHAR_FIRST;
-            nunassigned++;
-        } else tbuf[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
-    }
-    tbuf[arity_] =  '\0';
-    t = tbuf;
-    delete [] tbuf;
-
-    EnumeratedVariable* x = unassigned[0];
-    EnumeratedVariable* y = unassigned[1];
-    EnumeratedVariable* z = unassigned[2];
-
-    assert(nunassigned <= 3);
-    if(nunassigned == 3) {
-        TernaryConstraint* xyz = wcsp->newTernaryConstr(x,y,z,this);
-        wcsp->elimTernOrderInc();
-        for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-            for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
-                    Value xval = *iterx;
-                    Value yval = *itery;
-                    Value zval = *iterz;
-                    t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
-                    t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;
-                    t[indexs[2]] =  z->toIndex(zval) + CHAR_FIRST;
-                    Cost curcost = eval(t);
-                    if (curcost > MIN_COST) flag = true;
-                    xyz->setcost(x,y,z,xval,yval,zval,curcost);
-                }}}
-        if(flag) projectNaryTernary(xyz);
-        //else cout << "ternary empty!" << endl;
-    }
-    else if(nunassigned == 2) {
-        BinaryConstraint* xy = wcsp->newBinaryConstr(x,y,this);
-        wcsp->elimBinOrderInc();
-        for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-            for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                Value xval = *iterx;
-                Value yval = *itery;
-                t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
-                t[indexs[1]] =  y->toIndex(yval) + CHAR_FIRST;
-                Cost curcost = eval(t);
-                if (curcost > MIN_COST) flag = true;
-                xy->setcost(xval,yval,curcost);
-                if (ToulBar2::verbose >= 5) {
-                    Cout << t;
-                    cout << " " << curcost << endl;
-                }
-            }}
-        if(flag)projectNaryBinary(xy);
-        //else cout << "binary empty!" << endl;
-    }
-    else if(nunassigned == 1) {
-        for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-            Value xval = *iterx;
-            t[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
-            Cost c = eval(t);
-            if(c > MIN_COST) {
-                if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
-                    TreeDecomposition* td = wcsp->getTreeDec();
-                    if(td) td->addDelta(cluster,x,xval,c);
-                }
-                x->project(xval, c);
-            }
-        }
-        x->findSupport();
-    }
-    else {
-        Cost c = eval(t);
-        projectLB(c);
     }
 }
 
@@ -1428,7 +1273,7 @@ void NaryConstraint::dump(ostream& os, bool original)
                 Cost c =  it->second;
                 it++;
                 for(unsigned int i=0;i<t.size();i++) {
-                    os << t[i] - CHAR_FIRST << " ";
+                    os << scope[i]->toValue(t[i] - CHAR_FIRST) << " ";
                 }
                 os << c << endl;
             }

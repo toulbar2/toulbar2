@@ -31,6 +31,7 @@
 #include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
+#include "tb2clause.hpp"
 
 #include <algorithm>
 
@@ -205,7 +206,7 @@ void tb2init()
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
     ToulBar2::Static_variable_ordering=false;
-    ToulBar2::weightedDegree = 10000;
+    ToulBar2::weightedDegree = 1000000;
     ToulBar2::weightedTightness = 0;
     ToulBar2::MSTDAC = false;
     ToulBar2::DEE = 1;
@@ -627,11 +628,17 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
     for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
-    for (int i = 0; i < arity; i++)
+    bool binary = true;
+    for (int i = 0; i < arity; i++) {
         scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
-    NaryConstraint *ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
-    delete[] scopeVars;
-
+        if (scopeVars[i]->getDomainInitSize() != 2) binary = false;
+    }
+    AbstractNaryConstraint *ctr = NULL;
+    if (binary && nbtuples==1 && defval==MIN_COST && arity > 3) {
+        ctr = new WeightedClause(this, scopeVars, arity);
+    } else {
+        ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
+    }
     if (arity > 3) {
         if (isDelayedNaryCtr) delayedNaryCtr.push_back(ctr->wcspIndex);
         else {
@@ -645,6 +652,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
             }
         }
     }
+    delete[] scopeVars;
     return ctr->wcspIndex;
 }
 
@@ -656,10 +664,9 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) {
     if(ToulBar2::vac) histogram(cost);
-    Constraint *ctrctr = getCtr(ctrindex);
-    assert(ctrctr->extension()); // must be an NaryConstraint
-    assert(arity == ctrctr->arity());
-    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
+    Constraint *ctr = getCtr(ctrindex);
+//    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
+    assert(arity == ctr->arity());
     String s(arity, CHAR_FIRST);
     for (int i=0; i<arity; i++) s[i] = ((EnumeratedVariable *) ctr->getVar(i))->toIndex(tuple[i]) + CHAR_FIRST;
     ctr->setTuple(s, cost);
@@ -673,10 +680,9 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
 /// \warning string encoding of tuples is for advanced users only!
 void WCSP::postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost) {
     if(ToulBar2::vac) histogram(cost);
-    Constraint *ctrctr = getCtr(ctrindex);
-    assert(ctrctr->extension()); // must be an NaryConstraint
-    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
-     ctr->setTuple(tuple, cost);
+    Constraint *ctr = getCtr(ctrindex);
+//    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
+    ctr->setTuple(tuple, cost);
 }
 
 void WCSP::postNaryConstraintEnd(int ctrindex)
