@@ -1,8 +1,6 @@
 #include "tb2cpd.hpp"
 #include <sstream>
 
-
-
 Cpd::Cpd()
 {
 	cpdtrie = new TrieCpd();
@@ -10,7 +8,7 @@ Cpd::Cpd()
 
 Cpd::~Cpd()
 {
-	delete cpdtrie;
+    delete cpdtrie;
 }
 
 void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
@@ -39,11 +37,13 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 		cout << "Wrong variable number " << rotamers2aa.size() << " " << vars.size() << endl;
 		throw 1;
 	} else {
-		for (size_t i = 0; i < rotamers2aa.size(); i++)
-			if (rotamers2aa[i].size() != vars[i]->getDomainSize()) {
-				cout << "Wrong domain size" << rotamers2aa[i].size() << " " << vars[i]->getDomainSize() << endl;
+		for (size_t i = 0; i < rotamers2aa.size(); i++) {
+            unsigned int initsize = dynamic_cast<EnumeratedVariable *>(vars[i])->getDomainInitSize();
+			if (rotamers2aa[i].size() != initsize) {
+				cout << "Wrong domain size " << rotamers2aa[i].size() << " " << initsize << endl;
 				throw 2;
 			}
+        }
 	}
 }
 
@@ -89,3 +89,9 @@ void Cpd::printSequence(TAssign &vars)
 	cout << "New sequence: " << sequence << endl;
 }
 
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
