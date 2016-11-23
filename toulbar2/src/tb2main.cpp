@@ -707,7 +707,7 @@ void help_msg(char *toulbar2filename)
 	cout << endl;
 	cout << "   -logz -ztmp : -logz and divide the Energy by the RT constant (25°C degrees)." << endl;
 	cout << endl;
-	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper born 0, 1 or 2 (default value is 1)" << endl;
+	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
 	//cout << "   -subz : computes log(Z) by adding the energy terms" << endl;
@@ -1373,7 +1373,7 @@ int _tmain(int argc, TCHAR *argv[])
 				else {ToulBar2::isZCelTemp = atoi(args.OptionArg());}
 				if (ToulBar2::debug) cout << "Temperature is " << ToulBar2::isZCelTemp << " C°" << endl;
 			}
-			// Option for choosing the upper born tightness
+			// Option for choosing the upper bound tightness
 			if (args.OptionId() == OPT_ZUB) {
 				ToulBar2::isZUB = atoi(args.OptionArg());
 			}
