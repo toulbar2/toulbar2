@@ -2465,7 +2465,7 @@ void WCSP::restoreSolution(Cluster* c) {
         if (z) vz = getValue(z->wcspIndex);
         if (ctr) {ctr->firstlex(); ctr->nextlex(tctr, cctr); xctrindex=ctr->getIndex(x); assert(xctrindex>=0);}
 
-        int minv = -1;
+        Value minv = WRONG_VAL;
         Cost mincost = MAX_COST;
         for (unsigned int vxi = 0; vxi < x->getDomainInitSize(); vxi++) {
             Value vx = x->toValue(vxi);
@@ -2492,6 +2492,7 @@ void WCSP::restoreSolution(Cluster* c) {
             }
         }
         //cout << i << ": elim " << x->getName() << "_" << minv << ", y= " << ((y)?y->getName():"-") << "_" << vy << ", z= " << ((z)?z->getName():"-") << "_" << vz << endl;
+        assert(minv != WRONG_VAL);
         x->assignWhenEliminated(minv);
     }
 }

@@ -1247,10 +1247,25 @@ bool Solver::solve()
             }
         }
     }
-    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder) && ToulBar2::btdMode >= 3)
-    {
-        cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
-        ToulBar2::btdMode = 2;
+    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
+        if (ToulBar2::btdMode >= 3) {
+            cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
+            ToulBar2::btdMode = 2;
+        }
+        if (ToulBar2::btdMode >= 1) {
+            if (ToulBar2::elimDegree_preprocessing > 0) {
+                cout << "Warning! Cannot apply variable elimination in preprocessing with a given tree decomposition file." << endl;
+                ToulBar2::elimDegree_preprocessing = 0;
+            }
+            if (ToulBar2::elimDegree > 0) {
+                cout << "Warning! Cannot apply variable elimination during search with a given tree decomposition file." << endl;
+                ToulBar2::elimDegree = 0;
+            }
+            if (ToulBar2::preprocessFunctional > 0) {
+                cout << "Warning! Cannot apply functional variable elimination with a given tree decomposition file." << endl;
+                ToulBar2::preprocessFunctional = 0;
+            }
+        }
     }
 
     if (CSP(wcsp->getLb(), wcsp->getUb()))

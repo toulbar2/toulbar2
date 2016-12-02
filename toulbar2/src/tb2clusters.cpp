@@ -1607,7 +1607,7 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     // buildFromOrderNext(order);
     // if (ToulBar2::btdMode == 3) pathFusions(order); // bug: it assumes cluster.size() == order.size()
-    // else treeFusions(); // we assume there is no cluster included into another
+    // else treeFusions(); // we assume there is no cluster separator included into another cluster separator in the input tree decomposition
 
     for(unsigned int i = 0; i < clusters.size(); i++) {
         Cluster* c = clusters[i];
@@ -2115,7 +2115,7 @@ void TreeDecomposition::newSolution( Cost lb )
     wcsp->restoreSolution(root);
     root->getSolution( a );
 
-    if (ToulBar2::elimDegree>0 && root->getNbVars() == 0) {
+    if ((ToulBar2::elimDegree>0 || ToulBar2::elimDegree_preprocessing>0 || ToulBar2::preprocessFunctional>0) && root->getNbVars() == 0) {
         // recorded solutions in clusters containing a single variable eliminated in preprocessing may be wrong due to variable elimination in preprocessing; must be recovered after complete assignment and restoreSolution
         for (unsigned int i=0; i< wcsp->numberOfVariables(); i++) {
             if (wcsp->enumerated(i)) {
