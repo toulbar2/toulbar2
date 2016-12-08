@@ -32,8 +32,11 @@ class WeightedClause : public AbstractNaryConstraint
             EnumeratedVariable *x =scope[i];
             if (x->unassigned()) {
                 deltaCosts[i] += c;
-                x->extend(getClause(i), c);
-            }
+                Value v = getClause(i);
+                TreeDecomposition* td = wcsp->getTreeDec();
+                if(td) td->addDelta(cluster,x,v,-c);
+                x->extend(v, c);
+            } else assert(x->getValue() == getTuple(i));
         }
         projectLB(c);
     }
@@ -44,13 +47,24 @@ class WeightedClause : public AbstractNaryConstraint
         assert(deltaCosts[varIndex] == lb);
         for(int i=0;i<arity_;i++) {
             EnumeratedVariable *x =scope[i];
-            if (x->unassigned()) {
-                deconnect(i);
+            assert(deconnected(i));
+            if (i != varIndex) {
                 Cost c = deltaCosts[i];
+                Value v = getClause(i);
                 if (c > MIN_COST) {
                     deltaCosts[i] = MIN_COST;
-                    x->project(getClause(i), c, true);
-                    x->findSupport();
+                    if (x->unassigned()) {
+                        if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
+                            TreeDecomposition* td = wcsp->getTreeDec();
+                            if(td) td->addDelta(cluster,x,v,c);
+                        }
+                        x->project(v, c, true);
+                        x->findSupport();
+                    } else {
+                        if (x->canbe(v)) {
+                            Constraint::projectLB(c);
+                        }
+                    }
                 }
             }
         }
@@ -126,6 +140,7 @@ public:
     double computeTightness() {return 1.0 * cost / getDomainSizeProduct();}
 
 //    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST,MAX_COST),make_pair(MAX_COST,MAX_COST)); }
+
     Cost getMaxFiniteCost() {
         Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
         if (CUT(sumdelta, wcsp->getUb())) return MAX_COST;
