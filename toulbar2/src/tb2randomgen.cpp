@@ -77,7 +77,7 @@ void naryRandom::generateNaryCtr( vector<int>& indexs, long nogoods, Cost costMi
     }
     tuple[arity] = '\0';
 
-    Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, Top, nogoods) );
+    Constraint* nctr =  wcsp.getCtr( wcsp.postNaryConstraintBegin(scopeIndexs, arity, 0, nogoods) );
 
     String s(tuple);
     while(nogoods>0) {
@@ -281,7 +281,7 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
     }
 
     for(arity=maxa;arity>1;arity--) {
-        long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity));
+        long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity) + 0.5);
         //long totalarraysize = (long) pow( (double)n, arity);
         long tCtrs = 1;
         set<long> scopes;
