@@ -1140,8 +1140,10 @@ void WCSP::read_uai2008(const char *fileName)
 	if (!fevid) {
 		string strevid(string(fileName) + string(".evid"));
 		fevid.open(strevid.c_str());
-		cerr << "No evidence file specified. Trying " << strevid << endl;
-		if (!fevid) cerr << "No evidence file. " << endl;
+		if (ToulBar2::verbose>0) cerr << "No evidence file specified. Trying " << strevid << endl;
+		if (ToulBar2::verbose>0){
+            if (!fevid) cerr << "No evidence file. " << endl;
+        }
 	}
 	if (fevid) {
 		vector<int> variables;
