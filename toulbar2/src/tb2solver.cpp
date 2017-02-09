@@ -1056,9 +1056,9 @@ void Solver::newSolution()
 	if (ToulBar2::showSolutions) {
 		if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
 
-		if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai && !ToulBar2::isZ {
+		if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai && !ToulBar2::isZ) {
 			cout << nbSol << " solution(" << wcsp->getLb() << "): ";
-		} else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai && !ToulBar2::isZ {
+		} else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai && !ToulBar2::isZ) {
 			cout << nbSol << " Energy " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " : ";
 		} else if (ToulBar2::isZ){
       cout << nbSol << " Log(Z) " << ToulBar2::logZ + ToulBar2::markov_log << " : ";
@@ -1427,7 +1427,7 @@ bool Solver::solve()
 			if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
 			if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
-			if (ToulBar2::isZ || ToulBar2::isSubZ) { // Compute upper bound on the root level
+			if (ToulBar2::isZ) { // Compute upper bound on the root level
 				switch (ToulBar2::isZUB) {
 				case 2 :
 					wcsp->spanningTreeRoot();
