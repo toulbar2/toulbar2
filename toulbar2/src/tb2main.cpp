@@ -380,8 +380,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ MENDEL_OPT_ALLOCATE_FREQ,	(char *) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
 	{ OPT_Z,	(char *) "-logz", 				SO_NONE			},      // compute log partition function (log Z)
-	{ OPT_SUBZ,	(char *) "-subz", 				SO_NONE			},      // compute a rapid LB on log partition function (log Z)
-	{ OPT_ZSHOW,	(char *) "-zshow", 				SO_REQ_SEP			},
+	{ OPT_SUBZ,	(char *) "-subz", 				SO_OPT			},      // compute a rapid LB on log partition function (log Z)
 	{ OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_OPT			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
 	{ OPT_ZUB,	(char *) "-zub", 				SO_REQ_SEP		},     // Choose Upper bound number for computing Z
 	{ OPT_epsilon,	(char *) "-epsilon", 			SO_REQ_SEP		},   // approximation parameter for computing Z
@@ -711,7 +710,6 @@ void help_msg(char *toulbar2filename)
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
 	//cout << "   -subz : computes log(Z) by adding the energy terms" << endl;
-	cout << "           (use with -ub and -zshow=[int] to see log(Z) with energies between optimum and -ub every zshow)" << endl;
 	cout << endl;
 	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
 	cout << endl;
@@ -1358,13 +1356,11 @@ int _tmain(int argc, TCHAR *argv[])
 			if (args.OptionId() == OPT_Z) {
 				ToulBar2::isZ = true;
 			} else if (args.OptionId() == OPT_SUBZ) {
-				ToulBar2::isSubZ = true;
-				ToulBar2::allSolutions = true;
+				ToulBar2::isZ = true;
+        Long nbsol = atoll(args.OptionArg());
+        if (nbsol > 0) ToulBar2::allSolutions = nbsol;
 			}
 
-			if (args.OptionId() == OPT_ZSHOW) {
-				ToulBar2::zshow = atoi(args.OptionArg());
-			}
 
 			// Compute Z with energie divided by RT constant = (1.9891/1000.0 * 273.15 + temperature C°)
 			if (args.OptionId() == OPT_ZCELTEMP) {
@@ -1404,14 +1400,13 @@ int _tmain(int argc, TCHAR *argv[])
 				ToulBar2::verifyOpt = true;
 #endif
 
-			//~ // upper bound initialisation from command line
-			//~ if (args.OptionId() == OPT_ub_energy) {
-//~
-			//~ if (args.OptionArg() != NULL) {
-			//~ ub = (args.OptionArg()) ? wcsp->LogProb2Cost(stod(args.OptionArg())) : MAX_COST;
-			//~ }
-			//~ if (ToulBar2::debug) cout << "UB =" << ub << " passed in  command line" << endl;
-			//~ }
+			// upper bound initialisation from command line
+			if (args.OptionId() == OPT_ub_energy) {
+        if (args.OptionArg() != NULL) {
+          ToulBar2::ubE = stod(args.OptionArg());
+        }
+        if (ToulBar2::debug) cout << "UB =" << ToulBar2::ubE << " passed in  command line" << endl;
+			}
 
 			// upper bound initialisation from command line (Energy value)
 			if (args.OptionId() == OPT_ub) {

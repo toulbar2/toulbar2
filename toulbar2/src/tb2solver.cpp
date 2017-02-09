@@ -524,8 +524,6 @@ void Solver::enforceUb()
 	if (ToulBar2::isZ) {
 		TLogProb newlogU;
 		newlogU = Zub();
-		//cout<<"UpperBorn : "<<newlogU+ ToulBar2::markov_log<<"  log(Z) : "<<ToulBar2::logZ + ToulBar2::markov_log<<" BKT :"<<nbBacktracks<< " Nodes : "<<nbNodes<<endl;
-		//cout<<"LogU : "<<newlogU+ ToulBar2::markov_log<<"  log(Z) : "<<ToulBar2::logZ + ToulBar2::markov_log<<endl;
 		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
 			if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
 			ToulBar2::logU = newlogU;
@@ -1058,11 +1056,13 @@ void Solver::newSolution()
 	if (ToulBar2::showSolutions) {
 		if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
 
-		if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai) {
+		if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai && !ToulBar2::isZ {
 			cout << nbSol << " solution(" << wcsp->getLb() << "): ";
-		} else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai) {
-			cout << nbSol << " Energy(" << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << "): ";
-		}
+		} else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai && !ToulBar2::isZ {
+			cout << nbSol << " Energy " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " : ";
+		} else if (ToulBar2::isZ){
+      cout << nbSol << " Log(Z) " << ToulBar2::logZ + ToulBar2::markov_log << " : ";
+    }
 		if (ToulBar2::cpd) {
 			ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
 			if (!ToulBar2::allSolutions)
@@ -1365,7 +1365,7 @@ bool Solver::solve()
 	lastConflictVar = -1;
 	int tailleSep = 0;
 
-	if (ToulBar2::isZ || ToulBar2::isSubZ) { // Init logZ and logU
+	if (ToulBar2::isZ) { // Init logZ and logU
 		ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
 		ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
 	}
@@ -1427,7 +1427,7 @@ bool Solver::solve()
 			if (ToulBar2::DEE == 4) ToulBar2::DEE_ = 0; // only PSNS in preprocessing
 
 			if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
-			if (ToulBar2::isZ || ToulBar2::isSubZ) { // Compute upper bound
+			if (ToulBar2::isZ || ToulBar2::isSubZ) { // Compute upper bound on the root level
 				switch (ToulBar2::isZUB) {
 				case 2 :
 					wcsp->spanningTreeRoot();
@@ -1701,9 +1701,7 @@ bool Solver::solve()
 		}
 		return true;
 	} else {
-		if (ToulBar2::isSubZ) {
-			cout << nbSol << " Log(Z)= " << ToulBar2::logZ + ToulBar2::markov_log << "  time " << cpuTime() - ToulBar2::startCpuTime << "s" << endl;
-		} else if (ToulBar2::verbose >= 0) cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+		if (ToulBar2::verbose >= 0) cout << "No solution in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 		if (ToulBar2::maxsateval && !ToulBar2::limited) {
 			cout << "o " << wcsp->getUb() << endl;
 			cout << "s UNSATISFIABLE" << endl;

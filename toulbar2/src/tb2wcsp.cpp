@@ -156,8 +156,6 @@ int ToulBar2::smallSeparatorSize;
 
 bool ToulBar2::isZ;
 bool ToulBar2::isGumbel;
-bool ToulBar2::isSubZ;
-int ToulBar2::zshow;
 float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
@@ -169,7 +167,7 @@ string ToulBar2::Trie_File;
 bool ToulBar2::isTrie_File = false;
 Seq *ToulBar2::seq;
 
-
+TLogProb ToulBar2::ubE;
 
 int ToulBar2::Berge_Dec = 0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar = 0; // berge decomposition flag  > 0 if wregular found in the problem
@@ -292,8 +290,6 @@ void tb2init()
 
 	ToulBar2::isZ = false;
 	ToulBar2::isGumbel = false;
-	ToulBar2::isSubZ = false;
-	ToulBar2::zshow = 1;
 	ToulBar2::isZCelTemp = -1;
 	ToulBar2::isZUB = 1;
 	ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
@@ -302,6 +298,8 @@ void tb2init()
 	ToulBar2::logepsilon = -Log(1000);
 	ToulBar2::Berge_Dec = 0;
 	ToulBar2::nbvar = 0;
+
+  ToulBar2::ubE = -numeric_limits<TLogProb>::infinity();
 
 	ToulBar2::timeOut = NULL;
 	ToulBar2::interrupted = false;

@@ -370,8 +370,6 @@ public:
 	static string problemsaved_filename;
 	static bool uai_firstoutput;
 	static bool isZ;
-	static bool isSubZ;
-	static int zshow;
 	static float isZCelTemp;
 	static int isZUB;
 	static bool stop; // STOP TB2 (TMP way)
@@ -384,6 +382,8 @@ public:
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
 	static string Trie_File;
 	static bool isTrie_File;
+
+  static TLogProb ubE;
 
 	static bool uaieval;
 

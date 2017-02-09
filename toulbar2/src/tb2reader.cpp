@@ -1126,6 +1126,9 @@ void WCSP::read_uai2008(const char *fileName)
 		cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
 	}
 
+  if (ToulBar2::ubE > -numeric_limits<TLogProb>::infinity()){
+    updateUb(LogProb2Cost(ToulBar2::ubE - ToulBar2::markov_log));
+  }
 	sortConstraints();
 	// apply basic initial propagation AFTER complete network loading
 	increaseLb(inclowerbound);
