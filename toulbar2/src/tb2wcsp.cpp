@@ -168,6 +168,7 @@ bool ToulBar2::isTrie_File = false;
 Seq *ToulBar2::seq;
 
 TLogProb ToulBar2::ubE;
+TLogProb ToulBar2::Normalizing_Constant;
 
 int ToulBar2::Berge_Dec = 0; // berge decomposition flag  > 0 if wregular found in the problem
 int ToulBar2::nbvar = 0; // berge decomposition flag  > 0 if wregular found in the problem
@@ -300,6 +301,7 @@ void tb2init()
 	ToulBar2::nbvar = 0;
 
   ToulBar2::ubE = -numeric_limits<TLogProb>::infinity();
+  ToulBar2::Normalizing_Constant = -numeric_limits<TLogProb>::infinity();
 
 	ToulBar2::timeOut = NULL;
 	ToulBar2::interrupted = false;

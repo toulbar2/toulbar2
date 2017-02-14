@@ -211,7 +211,7 @@ enum {
 	OPT_ub,
 	OPT_ub_energy,
 
-	// Z Evidence option
+	// Z option
 	OPT_Z,
 	OPT_SUBZ,
 	OPT_ZSHOW,
@@ -220,7 +220,7 @@ enum {
 	OPT_epsilon,
 	OPT_GUMBEL,
 	OPT_RUN,
-
+  OPT_normZ,
 
 	OPT_learning,
 	OPT_timer,
@@ -386,7 +386,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_epsilon,	(char *) "-epsilon", 			SO_REQ_SEP		},   // approximation parameter for computing Z
 	{ OPT_GUMBEL,	(char *) "-gum", 			SO_NONE		},   // Apply gumbel perturbation on cost matrix
 	{ OPT_prodsumDiffusion,	(char *) "-MC", 				SO_REQ_SEP		},
-
+  { OPT_normZ,	(char *) "--normZ", 				SO_OPT		},
 
 	{ OPT_learning,	(char *) "-learning",                    SO_NONE },                         // pseudoboolean learning during search
 #ifndef NDEBUG
@@ -1390,7 +1390,18 @@ int _tmain(int argc, TCHAR *argv[])
 				int nit = atoi(args.OptionArg());
 				if (nit >= 0) ToulBar2::prodsumDiffusion = nit;
 			}
-
+      
+      // upper bound initialisation from command line
+			if (args.OptionId() == OPT_normZ) {
+        if (args.OptionArg() != NULL) {
+          ToulBar2::Normalizing_Constant = stod(args.OptionArg());
+        }
+        ToulBar2::resolution=7;
+        //if (ToulBar2::verbose>0) 
+        cout << "Normalize Constant = " << ToulBar2::Normalizing_Constant << " passed in  command line" << endl;
+        //cout << ToulBar2::resolution<< endl;
+			}
+      
 			if (args.OptionId() == OPT_learning) {
 				ToulBar2::learning = true;
 			}

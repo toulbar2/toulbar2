@@ -384,6 +384,7 @@ public:
 	static bool isTrie_File;
 
   static TLogProb ubE;
+  static TLogProb Normalizing_Constant;
 
 	static bool uaieval;
 
