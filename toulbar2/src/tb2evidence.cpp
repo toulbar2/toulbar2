@@ -134,61 +134,28 @@ TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step
 	}
 	return newlogU;
 }
-//~
-//~ // Function that took a node root and a list of sons of this root
-//~ // and return a list of (value,cost)
-//~ WCSP::ResultVisitZ WCSP::visitZ(int root, WCSP::Sons &sons)
-//~ {
-//~ assert(unassigned(root));
-//~ EnumeratedVariable *x = (EnumeratedVariable *) getVar(root);
-//~ ResultVisitZ res;
-//~
-//~ for (EnumeratedVariable::iterator iter = x->begin(); iter != x->end(); ++iter) { // Loop over the domain of the variable root
-//~ res.push_back( pair<Value, Cost>(*iter, x->getCost(*iter)) ); // Fill the res list with the unarycost of root's sons
-//~ }
-//~
-//~ for (unsigned int i=0; i<sons[root].size(); i++) { // Loop until there is no root's sons.
-//~ //Recurcive call of visitZ over the root's son i
-//~ ResultVisitZ resi = visitZ(sons[root][i].first, sons);
-//~
-//~ // Reuse code developed for EnumeratedVariable::elimVar( BinaryConstraint* ctr )
-//~ EnumeratedVariable *y = (EnumeratedVariable *) getVar(sons[root][i].first); // Take the i-th sons of the root
-//~ BinaryConstraint *ctr = sons[root][i].second; // Take the binary constraint that link the i-th sons and the root
-//~ int pos = 0;
-//~ for (EnumeratedVariable::iterator iter1 = x->begin(); iter1 != x->end(); ++iter1, pos++) { //Loop over the value in root
-//~ Cost mincost = MAX_COST;
-//~ for (unsigned int iter = 0; iter < resi.size(); ++iter) {
-//~ //SUM UNARY of the i-th sons AND BINARY that link the i-th sons to the root
-//~ Cost curcost = resi[iter].second + ctr->getCost(y, x, resi[iter].first, *iter1);
-//~ mincost = LogSumExp(mincost,curcost);
-//~ }
-//~ res[pos].second += mincost;
-//~ }
-//~ }
-//~
-//~ return res;
-//~ }
-//~
-//~ TLogProb WCSP::spanningTreeZ(Cost c0)
-//~ {
-//~ pair<vector<int>,Sons> RootSon = spanningTree();
-//~ vector<int> roots = RootSon.first;
-//~ Sons sons = RootSon.second;
-//~ TLogProb res = 0 ;
-//~
-//~ for (int i = roots.size()-1; i >= 0; i--) { // Loop over all the roots nodes
-//~ ResultVisitZ resi = visitZ(roots[i], sons); // Construct a list of (value,cost) for each roots. The value term contain the bynary cost and the unary cost.
-//~ Cost mincost = MAX_COST;
-//~ for (unsigned int iter = 0; iter < resi.size(); ++iter) { // Loop over all the nodes in the root's list
-//~ //Bring back together all the costs that go from a node to a leaf in the spanning tree : Dynamic programming
-//~ mincost = LogSumExp(mincost,resi[iter].second);
-//~ }
-//~ // Total Sum on the spanning tree
-//~ res += Cost2LogProb(mincost) ;
-//~ }
-//~ return res + Cost2LogProb(c0);
-//~ }
 
+TLogProb Solver::MeanFieldZ()
+{
+	// TLogProb newLogL; // New Lower Bound on Z
+	// Cost newCost = wcsp->getLb() + wcsp->getNegativeLb(); // Get lower bound on cost
+	
+	// for (unsigned int i = 0; i < wcsp->numberOfVariables() - 1; i++) { // Loop on the unassigned variables
+	// 	if (wcsp->unassigned(i)) {
+	// 		EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+	// 		q_i = 1/var->getDomainSize() // Uniform probability q
+	// 		for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
+	// 			//~ cout<<"Variable "<<i<<" "<<j<<endl;
+	// 			if (wcsp->unassigned(j)) {
+	// 				EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+
+	// return newLogL;
+}
 
 ///////////////: Gumbel Perturbation (Non concluant) ////////////
 TLogProb Solver::GumofThrone()

@@ -1364,10 +1364,16 @@ int _tmain(int argc, TCHAR *argv[])
 
 			// Compute Z with energie divided by RT constant = (1.9891/1000.0 * 273.15 + temperature C°)
 			if (args.OptionId() == OPT_ZCELTEMP) {
-				ToulBar2::isZCelTemp = 25;
-				if (args.OptionArg() == NULL) {ToulBar2::isZCelTemp = 25;}
-				else {ToulBar2::isZCelTemp = atoi(args.OptionArg());}
-				if (ToulBar2::debug) cout << "Temperature is " << ToulBar2::isZCelTemp << " C°" << endl;
+				ToulBar2::isZCelTemp = 1.9891 / 1000.0 * (273.15 + 25);
+				if (args.OptionArg() == NULL) {
+					ToulBar2::isZCelTemp = 1.9891 / 1000.0 * (273.15 + 25);
+				}
+				else {
+						ToulBar2::isZCelTemp = 1.9891 / 1000.0 * (273.15 + atoi(args.OptionArg())) ;
+					}
+				
+					cout << "Temperature is " << (ToulBar2::isZCelTemp/(1.9891 / 1000.0))-273.15 << " C°" << endl;
+				
 			}
 			// Option for choosing the upper bound tightness
 			if (args.OptionId() == OPT_ZUB) {

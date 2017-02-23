@@ -376,6 +376,8 @@ public:
 	static bool isGumbel;
 	static Seq *seq;
 	static TLogProb logZ;
+	static TLogProb Entropy;
+	static TLogProb Enthalpy;
 	static TLogProb UplogZ;
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;

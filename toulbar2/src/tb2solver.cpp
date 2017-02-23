@@ -1033,6 +1033,10 @@ void Solver::newSolution()
 	else if (!ToulBar2::btdMode) nbSol += 1.;
 	if (ToulBar2::isZ) { // Add new solutions to logZ
 		ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
+		//if (ToulBar2::isZCelTemp>0){
+			//ToulBar2::Enthalpy = ToulBar2::Enthalpy -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*ToulBar2::isZCelTemp*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
+			//ToulBar2::Entropy = ToulBar2::Entropy + (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
+		//} 
 		if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
 	}
 	if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
@@ -1654,6 +1658,9 @@ bool Solver::solve()
 		cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
 		cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
 		cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+		//cout << "Enthalpy: " << ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log) << endl;
+		//cout << "Entropy: " << (ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ << endl;
+		//cout << ((ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ - ToulBar2::markov_log) - (ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log))/ToulBar2::isZCelTemp << endl;
 		return true;
 	}
 	if (ToulBar2::allSolutions) {

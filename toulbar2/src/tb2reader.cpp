@@ -963,9 +963,11 @@ void WCSP::read_uai2008(const char *fileName)
 		TProb maxp = 0.;
 		for (k = 0; k < ntuples; k++) {
 			file >> p;
-			//if (p < 10e-200) p=0;
-			if (ToulBar2::isZCelTemp > 0)
-				p /= (1.9891 / 1000.0 * (273.15 + ToulBar2::isZCelTemp)) ;
+			if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai ==2) // LG format
+				p /= ToulBar2::isZCelTemp;
+			else if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai == 1) // uai format
+				p = Exp(Log(p)/ToulBar2::isZCelTemp);
+				
 			assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
 			costsProb.push_back(p);
 			if (p > maxp) maxp = p;

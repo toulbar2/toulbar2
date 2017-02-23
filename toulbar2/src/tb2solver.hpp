@@ -138,6 +138,7 @@ protected:
 	void remove(int varIndex, ValueCost *array, int first, int last, bool reverse = false);
 	void conflict() {}
 	TLogProb Zub(); //Compute Upper Bound for evidence
+	TLogProb MeanFieldZ(); //Compute Upper Bound for evidence
 	TLogProb GumofThrone(); //Compute Z with GumBel perturbation method (cf Tamir Hazan)
 	void ProdSumDiffusion();
 	void PropagateNoc();
