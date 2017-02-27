@@ -16,7 +16,7 @@ protected:
 	vector<StoreCost> costs;
 	StoreCost deltaCost;
 	StoreValue support;     // Warning! the unary support has to be backtrackable
-
+  
 	DLink<VariableWithTimeStamp> linkACQueue;
 	DLink<VariableWithTimeStamp> linkDACQueue;
 	DLink<VariableWithTimeStamp> linkEAC1Queue;
@@ -80,7 +80,7 @@ public:
 	}
 	Cost getBinaryCost(ConstraintLink c,    Value myvalue, Value itsvalue);
 	Cost getBinaryCost(BinaryConstraint *c, Value myvalue, Value itsvalue);
-
+  
 	Cost getInfCost() const FINAL {return costs[toIndex(getInf())] - deltaCost;}
 	Cost getSupCost() const FINAL {return costs[toIndex(getSup())] - deltaCost;}
 	void projectInfCost(Cost cost);
@@ -200,6 +200,11 @@ public:
 	ValueCost *sortDomain(vector<Cost> &costs);
 
 	void print(ostream &os);
+  
+  vector<TLogProb> MFdistrib;
+  void UpdateUniformMFdistrib();
+  void UpdateUnaryMFdistrib();
+  
 };
 
 #endif /*TB2ENUMVAR_HPP_*/

@@ -53,6 +53,10 @@ void EnumeratedVariable::init()
 	DEE.scopeIndex = -1;
 	if (ToulBar2::DEE >= 2) DEE2 = vector<ConstraintLink>(getDomainInitSize() * getDomainInitSize(), DEE);
 	queueDEE();
+  
+  for(iterator iter = begin(); iter != end(); ++iter) {
+    MFdistrib.push_back( 1 / ((double) getDomainSize())); // initialize with uniform probability
+  }
 }
 
 void EnumeratedVariable::getDomain(Value *array)
@@ -1517,8 +1521,25 @@ bool EnumeratedVariable::verify()
 }
 
 
+void EnumeratedVariable::UpdateUniformMFdistrib(){
+  MFdistrib.clear();
+  for(iterator iter = begin(); iter != end(); ++iter) {
+    MFdistrib.push_back( 1 / ((double) getDomainSize())); // initialize with uniform probability
+  }
+}
 
-
+void EnumeratedVariable::UpdateUnaryMFdistrib(){
+  MFdistrib.clear();
+  TLogProb Zi=0;
+  for(iterator iter = begin(); iter != end(); ++iter) {
+    Zi+= wcsp->Cost2Prob(getCost(*iter));
+    //cout<<wcsp->Cost2Prob(getCost(*iter))<<' ';
+  }
+  //cout << " = "<<Zi<<endl;
+  for(iterator iter = begin(); iter != end(); ++iter) {
+    MFdistrib.push_back( wcsp->Cost2Prob(getCost(*iter)) / Zi);
+  }
+}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

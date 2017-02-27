@@ -524,6 +524,7 @@ void Solver::enforceUb()
 	if (ToulBar2::isZ) {
 		TLogProb newlogU;
 		newlogU = Zub();
+    //cout << MeanFieldZ()+ToulBar2::logZ+ToulBar2::markov_log << " <= Log(Z) <= "<<Zub()+ToulBar2::markov_log<<endl;
 		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
 			if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
 			ToulBar2::logU = newlogU;
@@ -1438,15 +1439,16 @@ bool Solver::solve()
 
 			if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 			if (ToulBar2::isZ) { // Compute upper bound on the root level
+        cout << MeanFieldZ() + ToulBar2::markov_log;
 				switch (ToulBar2::isZUB) {
 				case 2 :
 					wcsp->spanningTreeRoot();
 					ToulBar2::UplogZ = wcsp->spanningTreeZ(wcsp->getLb() + wcsp->getNegativeLb());
-					cout << "Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
+					cout << " <= Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
 					break;
 				default:
 					ToulBar2::UplogZ = Zub();
-					cout << "Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
+					cout << " <= Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
 				}
 			}
 			if (ToulBar2::btdMode) {

@@ -3,6 +3,7 @@
 #include "tb2binconstr.hpp"
 #include "tb2enumvar.hpp"
 
+
 TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step 0)
 {
 
@@ -135,26 +136,48 @@ TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step
 	return newlogU;
 }
 
+
 TLogProb Solver::MeanFieldZ()
 {
-	// TLogProb newLogL; // New Lower Bound on Z
-	// Cost newCost = wcsp->getLb() + wcsp->getNegativeLb(); // Get lower bound on cost
-	
-	// for (unsigned int i = 0; i < wcsp->numberOfVariables() - 1; i++) { // Loop on the unassigned variables
-	// 	if (wcsp->unassigned(i)) {
-	// 		EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-	// 		q_i = 1/var->getDomainSize() // Uniform probability q
-	// 		for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
-	// 			//~ cout<<"Variable "<<i<<" "<<j<<endl;
-	// 			if (wcsp->unassigned(j)) {
-	// 				EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
-	// 			}
-	// 		}
-	// 	}
-	// }
+	 TLogProb newLogL; // New Lower Bound on Z
+	 TLogProb SumUnaryCost=0;
+   TLogProb SumBinaryCost=0;
+   TLogProb q_i;
+   TLogProb q_j;
+   
+	 for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
+	 	if (wcsp->unassigned(i)) {
+	 		EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+      cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
+      //y->UpdateUniformMFdistrib();
+      y->UpdateUnaryMFdistrib();
+      for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) {
+          q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
+          cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
+					SumUnaryCost += (q_i* (wcsp->Cost2LogProb(y->getCost(*ity)) - Log(q_i))); // Sum over the domain of i.
+      }
+      
+			for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {        
+	 			if (wcsp->unassigned(j)) {
+					EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
+          BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
+          if (bctr != NULL) {
+            for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on y values
+              for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
+                q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
+                q_j=x->MFdistrib[x->toCurrentIndex(*itx)] ;
+                TLogProb pbin = wcsp->Cost2LogProb(bctr->getCost(y, x, *ity, *itx)); // get the binary cost linking "y,ity" and "x,itx"
+                SumBinaryCost += q_i*q_j*pbin;
+              }
+            }
+          }
+	 			}
+	 		}
+	 	}
+	 }
 
-
-	// return newLogL;
+  newLogL = wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) +SumUnaryCost + SumBinaryCost; 
+  return newLogL;
 }
 
 ///////////////: Gumbel Perturbation (Non concluant) ////////////

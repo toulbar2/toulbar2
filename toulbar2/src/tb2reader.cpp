@@ -965,7 +965,7 @@ void WCSP::read_uai2008(const char *fileName)
 			file >> p;
 			if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai ==2) // LG format
 				p /= ToulBar2::isZCelTemp;
-			else if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai == 1) // uai format
+			else if (ToulBar2::isZCelTemp > 0) // uai format
 				p = Exp(Log(p)/ToulBar2::isZCelTemp);
 				
 			assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
@@ -973,7 +973,8 @@ void WCSP::read_uai2008(const char *fileName)
 			if (p > maxp) maxp = p;
 		}
 		if (ToulBar2::uai == 1 && maxp == 0.) THROWCONTRADICTION;
-
+    if (ToulBar2::uai == 2 && maxp < -1e38) THROWCONTRADICTION;
+    
 		Cost minc = MAX_COST;
 		Cost maxc = MIN_COST;
 
