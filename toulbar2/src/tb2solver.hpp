@@ -171,6 +171,8 @@ protected:
 	pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
 	pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
+  pair<Cost, Cost> hybridCounting(Cost clb, Cost cub);
+
 	BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
 	BigInteger sharpBTD(Cluster *cluster);
 	void approximate(BigInteger &nbsol, TreeDecomposition *td);

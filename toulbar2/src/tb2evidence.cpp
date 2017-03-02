@@ -137,28 +137,38 @@ TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step
 }
 
 
-TLogProb Solver::MeanFieldZ()
+TLogProb Solver::MeanFieldZ() // Compute a lower bound on logZ using MF approximation
 {
-	 TLogProb newLogL; // New Lower Bound on Z
-	 TLogProb SumUnaryCost=0;
-   TLogProb SumBinaryCost=0;
-   TLogProb q_i;
-   TLogProb q_j;
-   
-	 for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
-	 	if (wcsp->unassigned(i)) {
-	 		EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-      cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
-      //y->UpdateUniformMFdistrib();
-      y->UpdateUnaryMFdistrib();
+  TLogProb newLogL; // New Lower Bound on Z
+  TLogProb SumUnaryCost=0;
+  TLogProb SumBinaryCost=0;
+  TLogProb q_i;
+  TLogProb q_j;
+  unsigned int n_conv=1; 
+  for (unsigned int k=0; k<n_conv;k++){
+    for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
+      if (wcsp->unassigned(i)) {
+        EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+        y->UpdateMFdistrib();
+        //y->UpdateUniformMFdistrib();
+    }
+    }
+  }
+  
+   for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
+	if (wcsp->unassigned(i)) {
+	  EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+      //cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
+      
       for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) {
           q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
-          cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
+          if (q_i == 0) continue;
+          //cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
 					SumUnaryCost += (q_i* (wcsp->Cost2LogProb(y->getCost(*ity)) - Log(q_i))); // Sum over the domain of i.
       }
       
-			for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {        
-	 			if (wcsp->unassigned(j)) {
+	    for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {        
+	 	  if (wcsp->unassigned(j)) {
 					EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
           BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
           if (bctr != NULL) {
@@ -171,9 +181,9 @@ TLogProb Solver::MeanFieldZ()
               }
             }
           }
-	 			}
-	 		}
-	 	}
+	 	  }
+		}
+	   }
 	 }
 
   newLogL = wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) +SumUnaryCost + SumBinaryCost; 

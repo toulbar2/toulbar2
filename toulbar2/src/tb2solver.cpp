@@ -1199,7 +1199,6 @@ void Solver::recursiveSolveLDS(int discrepancy)
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 {
-  // Need to adapt this solver to Z mode
 	if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub << endl;
 	assert(clb < cub);
 	assert(wcsp->getUb() == cub);
@@ -1331,6 +1330,89 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 	assert(clb <= cub);
 	return make_pair(clb, cub);
 }
+
+
+
+pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
+{
+  // Need to adapt this solver to Z mode
+	assert(clb < cub);
+	assert(wcsp->getUb() == cub);
+	assert(wcsp->getLb() <= clb);
+	if (ToulBar2::hbfs) {
+		CPStore *cp_ = NULL;
+		OpenList *open_ = NULL;
+		Cost delta = MIN_COST;
+	
+    // normal BFS without BTD, i.e., hybridSolve is not reentrant
+    if (cp != NULL) delete cp;
+    cp = new CPStore();
+    cp_ = cp;
+    if (open != NULL) delete open;
+    open = new OpenList();
+    open_ = open;
+		
+		cp_->store();
+		if (open_->size() == 0 ) { // start a new list of open nodes if needed
+			nbHybridNew++;
+			// reinitialize current open list and insert empty node
+			*open_ = OpenList(MAX(MIN_COST, cub + delta), MAX(MIN_COST, cub + delta));
+			addOpenNode(*cp_, *open_, clb, delta);
+		} else nbHybridContinue++;
+    
+		nbHybrid++; // do not count empty root cluster
+
+		open_->updateUb(cub, delta);
+		clb = MAX(clb, open_->getLb(delta));
+		while (clb < cub && !open_->finished()) {
+			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+			int storedepthBFS = Store::getDepth();
+			try {
+				Store::store();
+				OpenNode nd = open_->top();
+				open_->pop();
+				if (ToulBar2::verbose >= 3) {
+					if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+					cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << "+1 still open)" << endl;
+				}
+				restore(*cp_, nd);
+				Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
+				bestlb = MAX(bestlb, clb);
+				recursiveSolve(bestlb);
+			} catch (Contradiction) {
+				wcsp->whenContradiction();
+			}
+      cub = wcsp->getUb();
+      open_->updateUb(cub);
+			
+			Store::restore(storedepthBFS);
+			cp_->store();
+			if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+				ToulBar2::hbfs = 0;
+				ToulBar2::hbfsGlobalLimit = 0;
+				hbfsLimit = LONGLONG_MAX;
+			}
+			clb = MAX(clb, open_->getLb(delta));
+			showGap(clb, cub);
+			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+				assert(nbNodes > 0);
+				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
+				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha && ToulBar2::hbfs >= 2) ToulBar2::hbfs /= 2;
+				if (ToulBar2::debug >= 2) cout << "HBFS backtrack limit: " << ToulBar2::hbfs << endl;
+			}
+		}
+		assert(clb >= initiallb && cub <= initialub);
+	} else {
+    hbfsLimit = LONGLONG_MAX;
+    recursiveSolve();
+    cub = wcsp->getUb();
+    clb = cub;
+	}
+	assert(clb <= cub);
+	return make_pair(clb, cub);
+}
+
+
 
 Long luby(Long r)
 {

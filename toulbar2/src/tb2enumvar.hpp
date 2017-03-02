@@ -201,9 +201,9 @@ public:
 
 	void print(ostream &os);
   
-  vector<TLogProb> MFdistrib;
+  vector<TProb> MFdistrib;
   void UpdateUniformMFdistrib();
-  void UpdateUnaryMFdistrib();
+  void UpdateMFdistrib();
   
 };
 

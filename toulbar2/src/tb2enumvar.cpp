@@ -1526,20 +1526,61 @@ void EnumeratedVariable::UpdateUniformMFdistrib(){
   for(iterator iter = begin(); iter != end(); ++iter) {
     MFdistrib.push_back( 1 / ((double) getDomainSize())); // initialize with uniform probability
   }
+  //cout << endl;
 }
 
-void EnumeratedVariable::UpdateUnaryMFdistrib(){
+
+void EnumeratedVariable::UpdateMFdistrib(){
+  TProb q=0;
+  vector<TProb> Unnormalize;
+  TProb Zi=0;
+  TLogProb logZi=-numeric_limits<TLogProb>::infinity();
+  //~ cout<<"Variable :"<<getName()<<endl;
+  //~ for(auto& qi : MFdistrib){
+    //~ cout<<qi<<' ';
+    //~ Zi += qi;	 
+  //~ }
+  //~ cout<<endl;
+  //~ logZi=Log(Zi);
+  //~ cout<< Zi << endl;
   MFdistrib.clear();
-  TLogProb Zi=0;
-  for(iterator iter = begin(); iter != end(); ++iter) {
-    Zi+= wcsp->Cost2Prob(getCost(*iter));
-    //cout<<wcsp->Cost2Prob(getCost(*iter))<<' ';
+
+
+  for(iterator it = begin(); it != end(); ++it) {
+	q =  wcsp->Cost2LogProb(getCost(*it)) ;
+    for (ConstraintList::iterator cter = getConstrs()->begin(); cter != getConstrs()->end(); ++cter) {
+      Constraint *c = (*cter).constr;
+	  if(c->arity() == 2 && !c->isSep()) {
+	    BinaryConstraint *bctr = (BinaryConstraint *) c;
+	    if (bctr != NULL){
+		  EnumeratedVariable *y = (EnumeratedVariable *) c->getVar(1 - (*cter).scopeIndex);
+      cout<<"Var :"<<y->getName()<<endl;
+		  for(iterator ity = y->begin(); ity != y->end(); ++ity) {
+        cout << y->MFdistrib[y->toCurrentIndex(*ity)] << ' '<<wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity)))<<endl;
+		    q += y->MFdistrib[y->toCurrentIndex(*ity)] * wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity))) ;
+		  }
+      cout<<endl;
+		}
+	  }
+	}
+	cout<<"Q "<<q << endl;
+	Unnormalize.push_back(q); 
   }
-  //cout << " = "<<Zi<<endl;
-  for(iterator iter = begin(); iter != end(); ++iter) {
-    MFdistrib.push_back( wcsp->Cost2Prob(getCost(*iter)) / Zi);
+  cout<<endl;
+  
+  
+  for(auto& q : Unnormalize){
+    logZi = wcsp->LogSumExp(logZi,q);	 
   }
+  
+  for(auto& q : Unnormalize){
+	//cout<< Exp(q-logZi) << ' ';
+	MFdistrib.push_back(Exp(q-logZi));	 
+  }
+  cout<<endl;
+  
 }
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
