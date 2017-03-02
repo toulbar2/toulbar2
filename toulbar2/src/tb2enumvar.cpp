@@ -1533,16 +1533,7 @@ void EnumeratedVariable::UpdateUniformMFdistrib(){
 void EnumeratedVariable::UpdateMFdistrib(){
   TProb q=0;
   vector<TProb> Unnormalize;
-  TProb Zi=0;
   TLogProb logZi=-numeric_limits<TLogProb>::infinity();
-  //~ cout<<"Variable :"<<getName()<<endl;
-  //~ for(auto& qi : MFdistrib){
-    //~ cout<<qi<<' ';
-    //~ Zi += qi;	 
-  //~ }
-  //~ cout<<endl;
-  //~ logZi=Log(Zi);
-  //~ cout<< Zi << endl;
   MFdistrib.clear();
 
 
@@ -1554,23 +1545,23 @@ void EnumeratedVariable::UpdateMFdistrib(){
 	    BinaryConstraint *bctr = (BinaryConstraint *) c;
 	    if (bctr != NULL){
 		  EnumeratedVariable *y = (EnumeratedVariable *) c->getVar(1 - (*cter).scopeIndex);
-      cout<<"Var :"<<y->getName()<<endl;
+      //cout<<"Var :"<<y->getName()<<endl;
 		  for(iterator ity = y->begin(); ity != y->end(); ++ity) {
-        cout << y->MFdistrib[y->toCurrentIndex(*ity)] << ' '<<wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity)))<<endl;
+        //cout << y->MFdistrib[y->toCurrentIndex(*ity)] << ' '<<wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity)))<<endl;
 		    q += y->MFdistrib[y->toCurrentIndex(*ity)] * wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity))) ;
 		  }
-      cout<<endl;
+      //cout<<endl;
 		}
 	  }
 	}
-	cout<<"Q "<<q << endl;
+	//cout<<"Q "<<q << endl;
 	Unnormalize.push_back(q); 
   }
   cout<<endl;
   
   
-  for(auto& q : Unnormalize){
-    logZi = wcsp->LogSumExp(logZi,q);	 
+  for(auto& qi : Unnormalize){
+    logZi = wcsp->LogSumExp(logZi,qi);	 
   }
   
   for(auto& q : Unnormalize){
