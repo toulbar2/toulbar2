@@ -1333,24 +1333,22 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 
 
 
-pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
+pair<Cost, Cost> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 {
   // Need to adapt this solver to Z mode
-	assert(clb < cub);
-	assert(wcsp->getUb() == cub);
-	assert(wcsp->getLb() <= clb);
+	assert(Zlb < Zub);
 	if (ToulBar2::hbfs) {
 		CPStore *cp_ = NULL;
 		OpenList *open_ = NULL;
 		Cost delta = MIN_COST;
 	
-    // normal BFS without BTD, i.e., hybridSolve is not reentrant
-    if (cp != NULL) delete cp;
-    cp = new CPStore();
-    cp_ = cp;
-    if (open != NULL) delete open;
-    open = new OpenList();
-    open_ = open;
+        // normal BFS without BTD, i.e., hybridSolve is not reentrant
+        if (cp != NULL) delete cp;
+        cp = new CPStore();
+        cp_ = cp;
+        if (open != NULL) delete open;
+        open = new OpenList();
+        open_ = open;
 		
 		cp_->store();
 		if (open_->size() == 0 ) { // start a new list of open nodes if needed
@@ -1362,7 +1360,7 @@ pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
     
 		nbHybrid++; // do not count empty root cluster
 
-		open_->updateUb(cub, delta);
+		//open_->updateUb(cub, delta); // On a pas besoin de cela je pense
 		clb = MAX(clb, open_->getLb(delta));
 		while (clb < cub && !open_->finished()) {
 			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
@@ -1371,10 +1369,6 @@ pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
 				Store::store();
 				OpenNode nd = open_->top();
 				open_->pop();
-				if (ToulBar2::verbose >= 3) {
-					if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-					cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << "+1 still open)" << endl;
-				}
 				restore(*cp_, nd);
 				Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
 				bestlb = MAX(bestlb, clb);
@@ -1382,8 +1376,8 @@ pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
 			}
-      cub = wcsp->getUb();
-      open_->updateUb(cub);
+            cub = wcsp->getUb();
+            open_->updateUb(cub);
 			
 			Store::restore(storedepthBFS);
 			cp_->store();
@@ -1403,10 +1397,10 @@ pair<Cost, Cost> Solver::hybridCounting(Cost clb, Cost cub)
 		}
 		assert(clb >= initiallb && cub <= initialub);
 	} else {
-    hbfsLimit = LONGLONG_MAX;
-    recursiveSolve();
-    cub = wcsp->getUb();
-    clb = cub;
+        hbfsLimit = LONGLONG_MAX;
+        recursiveSolve();
+        cub = wcsp->getUb();
+        clb = cub;
 	}
 	assert(clb <= cub);
 	return make_pair(clb, cub);

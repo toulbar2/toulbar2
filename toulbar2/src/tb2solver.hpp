@@ -20,6 +20,9 @@ public:
 	class OpenNode
 	{
 		Cost cost;      // global lower bound associated to the open node
+        TLogProb logLbZ; // Lower bound on Z associated to the open node
+        TLogProb logUbZ; // Upper bound on Z associated to the open node
+
 	public:
 		ptrdiff_t first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
 		ptrdiff_t last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -28,6 +31,11 @@ public:
 		bool operator<(const OpenNode &right) const {return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
 		Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
+        TLogProb getZub() const {return logUbZ;}
+        TLogProb getZlb() const {return logLbZ;}
+        
+        void setZub() {logUbZ=Zub();}
+        void setZlb() {logLbZ=MeanFieldZ();}
 	};
 
 	class CPStore;

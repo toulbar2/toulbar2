@@ -6,134 +6,132 @@
 
 TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step 0)
 {
-
-	//~ if(ToulBar2::prodsumDiffusion>0)
-	//~ {
-	//~ //PropagateNoc();
-	//~ ProdSumDiffusion();
-	//~ }
-	TLogProb newlogU;
-	vector<Cost> vbinmin(unassignedVars->getSize(), 0);
-	Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-	switch (ToulBar2::isZUB) {
-	//Upper bound on Z edition 0
-	case 0 :
-		newCost += wcsp->LogProb2Cost(unassignedVars->getSize() * Log(wcsp->getMaxDomainSize()));
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-		break;
-	//Upper bound on Z edition 1
-	case 1 :
-		//cout<<"p0 : "<<wcsp->Cost2Prob(newCost)<<endl;
-		for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
-			EnumeratedVariable *var = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(*iter_variable);
-			//cout<<"Variable "<<var->getName()<<endl;
-			Cost SumUnaryCost = MAX_COST;
-			if (wcsp->enumerated(*iter_variable)) {
-				for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
-					SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
-					//cout<<"UNARYZ : "<<wcsp->Cost2Prob(var->getCost(*iter_value))<<endl;
-				}
-				newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
-				//cout<<"NewCost : "<<wcsp->Cost2Prob(newCost)<<endl;
-			} else {
-				newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
-			}
-		}
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-		break;
-
-	//Upper bound on Z edition 2
-	case 2 :
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, wcsp->spanningTreeZ(newCost));
-		break;
-	case 3: //test
-
-		for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {// Loop on the unassigned variables
-			if (wcsp->unassigned(i)) {
-				EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-				//cout<<"Variable "<<y->getName()<<endl;
-				for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
-					if (wcsp->unassigned(j)) {
-						EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
-						//cout<<"link to Variable "<<x->getName()<<endl;
-						BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
-
-						if (bctr != NULL) {
-							Cost cbinmin = MAX_COST;
-							for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
-								for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
-									Cost cbin = bctr->getCost(y, x, *ity, *itx); // get the binary cost linking "this,it" and "x,itx"
-									//cout<<cbin<< ' ';
-									if (cbin < cbinmin) cbinmin = cbin;
-								}
-							}
-							//cout<<endl;
-							vbinmin[i] = cbinmin;
-						} else {vbinmin[i] = 0;}
-					}
-				}
-				Cost SumUnaryCost = MAX_COST;
-				for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
-					SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, y->getCost(*ity)); // Sum of the exponential of Unary cost over the domain.
-				}
-
-				//cout << wcsp->Cost2Prob(SumUnaryCost) <<endl;
-				//cout<<"minbin : "<< wcsp->Cost2Prob(vbinmin[i])<<endl;
-				newCost += (SumUnaryCost + vbinmin[i]); //Sum the older cost with the new log(sum(unarycost))
-				//newCost += vbinmin[i];
-			}
-		}
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-		break;
-	case 4:
-		for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
-			EnumeratedVariable *var = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(*iter_variable);
-			//cout<<"Variable "<<var->getName()<<endl;
-			Cost SumUnaryCost = MAX_COST;
-			if (wcsp->enumerated(*iter_variable)) {
-				for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
-					SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
-				}
-				newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
-			} else {
-				newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
-			}
-		}
-
-		for (unsigned int i = 0; i < wcsp->numberOfVariables() - 1; i++) { // Loop on the unassigned variables
-			if (wcsp->unassigned(i)) {
-				EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-				for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
-					//~ cout<<"Variable "<<i<<" "<<j<<endl;
-					if (wcsp->unassigned(j)) {
-						EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
-						BinaryConstraint *bctr = x->getConstr(y);; // get constr that link i to j
-						if (bctr != NULL) {
-							Cost SumBinaryCost = MAX_COST;
-							//~ cout<<"BinaryZ : "<<endl;
-							for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
-								for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
-									Cost cbin = bctr->getCost(y, x, *ity, *itx); // get the binary cost linking "this,it" and "x,itx"
-									//~ cout<<wcsp->Cost2Prob(cbin)<<' ';
-									SumBinaryCost = wcsp->LogSumExp(SumBinaryCost, cbin);
-								}
-								//~ cout<<endl;
-							}
-							//~ cout<< "SumBinaryCost : " <<wcsp->Cost2Prob(SumBinaryCost)<<endl;
-							newCost += SumBinaryCost;
-						}
-						//cout<<"Newcost : " <<wcsp->Cost2LogProb(newCost)<<endl;
-					}
-				}
-			}
-		}
-		newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
-		break;
-	// Full Partition function
-	default :
-		newlogU = numeric_limits<TLogProb>::infinity();
+  //~ if(ToulBar2::prodsumDiffusion>0)
+  //~ {
+  //~ //PropagateNoc();
+  //~ ProdSumDiffusion();
+  //~ }
+  TLogProb newlogU;
+  vector<Cost> vbinmin(unassignedVars->getSize(), 0);
+  Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
+  switch (ToulBar2::isZUB) {
+    //Upper bound on Z edition 0
+  case 0 :
+    newCost += wcsp->LogProb2Cost(unassignedVars->getSize() * Log(wcsp->getMaxDomainSize()));
+    newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+    break;
+    //Upper bound on Z edition 1
+  case 1 :
+    //cout<<"p0 : "<<wcsp->Cost2Prob(newCost)<<endl;
+    for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
+      EnumeratedVariable *var = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(*iter_variable);
+      //cout<<"Variable "<<var->getName()<<endl;
+      Cost SumUnaryCost = MAX_COST;
+      if (wcsp->enumerated(*iter_variable)) {
+	for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
+	  SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
+	  //cout<<"UNARYZ : "<<wcsp->Cost2Prob(var->getCost(*iter_value))<<endl;
 	}
-	return newlogU;
+	newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
+	//cout<<"NewCost : "<<wcsp->Cost2Prob(newCost)<<endl;
+      } else {
+	newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
+      }
+    }
+    newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+    break;
+    
+    //Upper bound on Z edition 2
+  case 2 :
+    newlogU = wcsp->LogSumExp(ToulBar2::logU, wcsp->spanningTreeZ(newCost));
+    break;
+  case 3: //test
+    
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {// Loop on the unassigned variables
+      if (wcsp->unassigned(i)) {
+	EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+	//cout<<"Variable "<<y->getName()<<endl;
+	for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
+	  if (wcsp->unassigned(j)) {
+	    EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
+	    //cout<<"link to Variable "<<x->getName()<<endl;
+	    BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
+	    if (bctr != NULL) {
+	      Cost cbinmin = MAX_COST;
+	      for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
+		for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
+		  Cost cbin = bctr->getCost(y, x, *ity, *itx); // get the binary cost linking "this,it" and "x,itx"
+		  //cout<<cbin<< ' ';
+		  if (cbin < cbinmin) cbinmin = cbin;
+		}
+	      }
+	      //cout<<endl;
+	      vbinmin[i] = cbinmin;
+	    } else {vbinmin[i] = 0;}
+	  }
+	}
+	Cost SumUnaryCost = MAX_COST;
+	for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
+	  SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, y->getCost(*ity)); // Sum of the exponential of Unary cost over the domain.
+	}
+	
+	//cout << wcsp->Cost2Prob(SumUnaryCost) <<endl;
+	//cout<<"minbin : "<< wcsp->Cost2Prob(vbinmin[i])<<endl;
+	newCost += (SumUnaryCost + vbinmin[i]); //Sum the older cost with the new log(sum(unarycost))
+	//newCost += vbinmin[i];
+      }
+    }
+    newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+    break;
+  case 4:
+    for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) { // Loop on the unassigned variables
+      EnumeratedVariable *var = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(*iter_variable);
+      //cout<<"Variable "<<var->getName()<<endl;
+      Cost SumUnaryCost = MAX_COST;
+      if (wcsp->enumerated(*iter_variable)) {
+	for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) { // loop over the domain of the variable
+	  SumUnaryCost = wcsp->LogSumExp(SumUnaryCost, var->getCost(*iter_value)); // Sum of the exponential of Unary cost over the domain.
+	}
+	newCost += SumUnaryCost; //Sum the older cost with the new log(sum(unarycost))
+      } else {
+	newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
+      }
+    }
+    
+    for (unsigned int i = 0; i < wcsp->numberOfVariables() - 1; i++) { // Loop on the unassigned variables
+      if (wcsp->unassigned(i)) {
+	EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+	for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {
+	  //~ cout<<"Variable "<<i<<" "<<j<<endl;
+	  if (wcsp->unassigned(j)) {
+	    EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
+	    BinaryConstraint *bctr = x->getConstr(y);; // get constr that link i to j
+	    if (bctr != NULL) {
+	      Cost SumBinaryCost = MAX_COST;
+	      //~ cout<<"BinaryZ : "<<endl;
+	      for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on "this" values
+		for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
+		  Cost cbin = bctr->getCost(y, x, *ity, *itx); // get the binary cost linking "this,it" and "x,itx"
+		  //~ cout<<wcsp->Cost2Prob(cbin)<<' ';
+		  SumBinaryCost = wcsp->LogSumExp(SumBinaryCost, cbin);
+		}
+		//~ cout<<endl;
+	      }
+	      //~ cout<< "SumBinaryCost : " <<wcsp->Cost2Prob(SumBinaryCost)<<endl;
+	      newCost += SumBinaryCost;
+	    }
+	    //cout<<"Newcost : " <<wcsp->Cost2LogProb(newCost)<<endl;
+	  }
+	}
+      }
+    }
+    newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+    break;
+    // Full Partition function
+  default :
+    newlogU = numeric_limits<TLogProb>::infinity();
+  }
+  return newlogU;
 }
 
 
@@ -151,55 +149,54 @@ TLogProb Solver::MeanFieldZ() // Compute a lower bound on logZ using MF approxim
         EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
         y->UpdateMFdistrib();
         //y->UpdateUniformMFdistrib();
-    }
+      }
     }
   }
   
    for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
-	if (wcsp->unassigned(i)) {
-	  EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-      //cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
-      
-      for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) {
-          q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
-          if (q_i == 0) continue;
-          //cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
-					SumUnaryCost += (q_i* (wcsp->Cost2LogProb(y->getCost(*ity)) - Log(q_i))); // Sum over the domain of i.
-      }
-      
+     if (wcsp->unassigned(i)) {
+       EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+       //cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
+       
+       for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) {
+	 q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
+	 if (q_i == 0) continue;
+	 //cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
+	 SumUnaryCost += (q_i* (wcsp->Cost2LogProb(y->getCost(*ity)) - Log(q_i))); // Sum over the domain of i.
+       }
+       
 	    for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {        
-	 	  if (wcsp->unassigned(j)) {
-					EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
-          BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
-          if (bctr != NULL) {
-            for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on y values
-              for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
-                q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
-                q_j=x->MFdistrib[x->toCurrentIndex(*itx)] ;
-                TLogProb pbin = wcsp->Cost2LogProb(bctr->getCost(y, x, *ity, *itx)); // get the binary cost linking "y,ity" and "x,itx"
-                SumBinaryCost += q_i*q_j*pbin;
+	      if (wcsp->unassigned(j)) {
+		EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
+		BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
+		if (bctr != NULL) {
+		  for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on y values
+		    for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
+		      q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
+		      q_j=x->MFdistrib[x->toCurrentIndex(*itx)] ;
+		      TLogProb pbin = wcsp->Cost2LogProb(bctr->getCost(y, x, *ity, *itx)); // get the binary cost linking "y,ity" and "x,itx"
+		      SumBinaryCost += q_i*q_j*pbin;
               }
-            }
-          }
-	 	  }
+		  }
 		}
-	   }
-	 }
-
-  newLogL = wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) +SumUnaryCost + SumBinaryCost; 
-  return newLogL;
+	      }
+	    }
+     }
+   }
+   
+   newLogL = wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) +SumUnaryCost + SumBinaryCost; 
+   return newLogL;
 }
 
 ///////////////: Gumbel Perturbation (Non concluant) ////////////
 TLogProb Solver::GumofThrone()
 {
-
-	TLogProb LogZhat = 0;
-	for (auto iter : ToulBar2::trieZ->get_sols()) {
-		LogZhat += iter;
-	}
-	LogZhat = LogZhat / ToulBar2::trieZ->get_sols().size();
-	return LogZhat;
+  TLogProb LogZhat = 0;
+  for (auto iter : ToulBar2::trieZ->get_sols()) {
+    LogZhat += iter;
+  }
+  LogZhat = LogZhat / ToulBar2::trieZ->get_sols().size();
+  return LogZhat;
 }
 
 
