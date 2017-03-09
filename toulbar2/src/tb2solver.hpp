@@ -22,6 +22,7 @@ public:
 		Cost cost;      // global lower bound associated to the open node
         TLogProb logLbZ; // Lower bound on Z associated to the open node
         TLogProb logUbZ; // Upper bound on Z associated to the open node
+        TLogProb logGapEpsilon; // Log Gap between UbZ and LBZ ==> Log(exp(logUbZ)-exp(logLbZ)), might be useful during open node pop.
 
 	public:
 		ptrdiff_t first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -33,9 +34,11 @@ public:
 		Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
         TLogProb getZub() const {return logUbZ;}
         TLogProb getZlb() const {return logLbZ;}
+        TLogProb getlogGapEpsilon() const {return logGapEpsilon;}
         
-        void setZub() {logUbZ=Zub();}
-        void setZlb() {logLbZ=MeanFieldZ();}
+        void setZub(TLogProb m_logUbZ) {logUbZ=m_logUbZ;}
+        void setZlb(TLogProb m_logLbZ) {logLbZ=m_logLbZ;}
+        void setlogGapEpsilon(TLogProb m_logGapEpsilon){logGapEpsilon=m_logGapEpsilon;}
 	};
 
 	class CPStore;
@@ -179,7 +182,8 @@ protected:
 	pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
 	pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
-  pair<Cost, Cost> hybridCounting(Cost clb, Cost cub);
+	pair<TLogProb, TLogProb> hybridCounting(TLogProb Zlb, TLogProb Zub);
+	TLogProb getZGap(TLogProb m_logUbZ,TLogProb m_logLbZ);
 
 	BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
 	BigInteger sharpBTD(Cluster *cluster);

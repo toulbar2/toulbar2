@@ -349,3 +349,6 @@ bool EnumeratedVariable::Normalization()
 	return change;
 }
 
+TLogProb Solver::getZGap(TLogProb m_logUbZ,TLogProb m_logLbZ) {
+	return wcsp->LogSumExp(m_logUbZ,-m_logLbZ);
+}

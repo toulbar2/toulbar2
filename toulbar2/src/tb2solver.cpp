@@ -1333,7 +1333,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 
 
 
-pair<Cost, Cost> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
+pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 {
   // Need to adapt this solver to Z mode
 	assert(Zlb < Zub);
@@ -1362,7 +1362,7 @@ pair<Cost, Cost> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 
 		//open_->updateUb(cub, delta); // On a pas besoin de cela je pense
 		clb = MAX(clb, open_->getLb(delta));
-		while (clb < cub && !open_->finished()) {
+		while (!open_->finished()) {
 			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
 			int storedepthBFS = Store::getDepth();
 			try {
@@ -1395,15 +1395,13 @@ pair<Cost, Cost> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 				if (ToulBar2::debug >= 2) cout << "HBFS backtrack limit: " << ToulBar2::hbfs << endl;
 			}
 		}
-		assert(clb >= initiallb && cub <= initialub);
 	} else {
         hbfsLimit = LONGLONG_MAX;
         recursiveSolve();
         cub = wcsp->getUb();
         clb = cub;
 	}
-	assert(clb <= cub);
-	return make_pair(clb, cub);
+	return make_pair(Zlb, Zub);
 }
 
 
