@@ -368,7 +368,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_localsearch,	(char *) "-i", 				SO_OPT			}, // incop option default or string for narycsp argument
 	{ OPT_EDAC,	(char *) "-k", 				SO_REQ_SEP		},
 	{ OPT_ub,	(char *) "-ub", 				SO_REQ_SEP		},     // init upper bound in cli
-	{ OPT_ub_energy,	(char *) "-ubE", 				SO_REQ_SEP		},     // init upper bound in cli (energy value)
+	{ OPT_ub_energy,	(char *) "-ubE", 				SO_OPT		},     // init upper bound in cli (energy value)
 	// MEDELSOFT
 	{ OPT_generation,	(char *) "-g", 				SO_NONE			},  //sort pedigree by increasing generation number and if equal by increasing individual number
 	//	{ OPT_pedigree_by_MPE,  		(char*) "-y", 				SO_OPT			}, // bayesian flag
@@ -383,7 +383,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_SUBZ,	(char *) "-subz", 				SO_OPT			},      // compute a rapid LB on log partition function (log Z)
 	{ OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_OPT			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
 	{ OPT_ZUB,	(char *) "-zub", 				SO_REQ_SEP		},     // Choose Upper bound number for computing Z
-	{ OPT_epsilon,	(char *) "-epsilon", 			SO_REQ_SEP		},   // approximation parameter for computing Z
+	{ OPT_epsilon,	(char *) "-epsilon", 			SO_OPT		},   // approximation parameter for computing Z
 	{ OPT_GUMBEL,	(char *) "-gum", 			SO_NONE		},   // Apply gumbel perturbation on cost matrix
 	{ OPT_prodsumDiffusion,	(char *) "-MC", 				SO_REQ_SEP		},
   { OPT_normZ,	(char *) "--normZ", 				SO_OPT		},
@@ -693,9 +693,6 @@ void help_msg(char *toulbar2filename)
 	cout << "   -D : approximate satisfiable solution count with BTD";
 	if (ToulBar2::approximateCountingBTD) cout << " (default option)";
 	cout << endl;
-	cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
-	cout << endl;
 	cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
 	cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
@@ -709,9 +706,7 @@ void help_msg(char *toulbar2filename)
 	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
-	//cout << "   -subz : computes log(Z) by adding the energy terms" << endl;
-	cout << endl;
-	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
+	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is 0.001)" << endl;
 	cout << endl;
 	cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix" << endl;
 	cout << endl;
@@ -1387,7 +1382,7 @@ int _tmain(int argc, TCHAR *argv[])
 			if (args.OptionId() == OPT_epsilon) {
 				if (args.OptionArg() != NULL) {
 					ToulBar2::logepsilon = -Log(stold(args.OptionArg()));
-					if (ToulBar2::debug) cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon)  <<  endl;
+					cout << "New assignment for epsilon = " << Exp(ToulBar2::logepsilon)  <<  endl;
 				}
 
 			}

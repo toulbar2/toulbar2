@@ -1554,10 +1554,10 @@ void EnumeratedVariable::UpdateMFdistrib(){
 		}
 	  }
 	}
-	//cout<<"Q "<<q << endl;
-	Unnormalize.push_back(q); 
+    //cout<<"Q "<<q << endl;
+    Unnormalize.push_back(q); 
   }
-  cout<<endl;
+  //cout<<endl;
   
   
   for(auto& qi : Unnormalize){
@@ -1566,9 +1566,9 @@ void EnumeratedVariable::UpdateMFdistrib(){
   
   for(auto& q : Unnormalize){
 	//cout<< Exp(q-logZi) << ' ';
-	MFdistrib.push_back(Exp(q-logZi));	 
+    MFdistrib.push_back(Exp(q-logZi));	 
   }
-  cout<<endl;
+  //cout<<endl;
   
 }
 

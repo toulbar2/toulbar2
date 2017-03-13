@@ -161,7 +161,8 @@ int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
 TProb ToulBar2::Entropy;
 TProb ToulBar2::Enthalpy;
-TLogProb ToulBar2::UplogZ;
+TLogProb ToulBar2::GlobalLogUbZ;
+TLogProb ToulBar2::GlobalLogLbZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
 TrieNum *ToulBar2::trieZ;
@@ -298,13 +299,14 @@ void tb2init()
 	ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
 	ToulBar2::Entropy = 0;
 	ToulBar2::Enthalpy = 0;
-	ToulBar2::UplogZ = -numeric_limits<TLogProb>::infinity();
+	ToulBar2::GlobalLogUbZ = numeric_limits<TLogProb>::infinity();
+	ToulBar2::GlobalLogLbZ = -numeric_limits<TLogProb>::infinity();
+  
 	ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-	ToulBar2::logepsilon = -Log(1000);
+	ToulBar2::logepsilon = 0;
 	ToulBar2::Berge_Dec = 0;
 	ToulBar2::nbvar = 0;
 
-  ToulBar2::ubE = -numeric_limits<TLogProb>::infinity();
   ToulBar2::Normalizing_Constant = -numeric_limits<TLogProb>::infinity();
 
 	ToulBar2::timeOut = NULL;
@@ -3452,7 +3454,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const // log[exp(c1) + exp(c2)
 	}
 }
 
-TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + exp(c1)]
+TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + exp(c2)]
 {
 	if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
 	else if (logc2 == -numeric_limits<TLogProb>::infinity()) return logc1;
@@ -3462,6 +3464,12 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + 
 	}
 }
 
+TLogProb WCSP::LogSubExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) - exp(c2)]
+{
+  if (logc1 == logc2) return -numeric_limits<TLogProb>::infinity();
+  else if (logc1 > logc2) return logc1 + (Log(1-Exp(logc2 - logc1)));
+  else return logc2 + (Log(1-Exp(logc1 - logc2)));
+}
 
 //----------------------------------------
 //procedure when berge acycl constant are present in the problem

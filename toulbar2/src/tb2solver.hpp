@@ -19,26 +19,26 @@ class Solver FINAL : public WeightedCSPSolver
 public:
 	class OpenNode
 	{
+    TLogProb logLbZ; // Lower bound on Z associated to the open node
+    TLogProb logUbZ; // Upper bound on Z associated to the open node
 		Cost cost;      // global lower bound associated to the open node
-        TLogProb logLbZ; // Lower bound on Z associated to the open node
-        TLogProb logUbZ; // Upper bound on Z associated to the open node
-        TLogProb logGapEpsilon; // Log Gap between UbZ and LBZ ==> Log(exp(logUbZ)-exp(logLbZ)), might be useful during open node pop.
 
 	public:
 		ptrdiff_t first;      // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
 		ptrdiff_t last;       // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
+    OpenNode(TLogProb m_logLbZ, TLogProb m_logUbZ, Cost m_cost, ptrdiff_t m_first, ptrdiff_t m_last) : logLbZ(m_logLbZ),logUbZ(m_logUbZ),cost(m_cost), first(m_first), last(m_last) {} //new constructor for Z mode
 		OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_) : cost(cost_), first(first_), last(last_) {}
+    
 		bool operator<(const OpenNode &right) const {return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last)));} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
-
+  
 		Cost getCost(Cost delta = MIN_COST) const {return MAX(MIN_COST, cost - delta);}
-        TLogProb getZub() const {return logUbZ;}
-        TLogProb getZlb() const {return logLbZ;}
-        TLogProb getlogGapEpsilon() const {return logGapEpsilon;}
+    TLogProb getZub() const {return logUbZ;}
+    TLogProb getZlb() const {return logLbZ;}
         
-        void setZub(TLogProb m_logUbZ) {logUbZ=m_logUbZ;}
-        void setZlb(TLogProb m_logLbZ) {logLbZ=m_logLbZ;}
-        void setlogGapEpsilon(TLogProb m_logGapEpsilon){logGapEpsilon=m_logGapEpsilon;}
+    void setZub(TLogProb m_logUbZ) {logUbZ=m_logUbZ;}
+    void setZlb(TLogProb m_logLbZ) {logLbZ=m_logLbZ;}
+
 	};
 
 	class CPStore;
@@ -93,6 +93,7 @@ public:
 
 	void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
 	void addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta = MIN_COST);     ///< \param delta cost moved out from the cluster by soft arc consistency
+  void addOpenNode(CPStore &cp, OpenList &open, Cost lb,TLogProb logLbZ,TLogProb logUbZ,Cost delta = MIN_COST);
 	void restore(CPStore &cp, OpenNode node);
 
 protected:
@@ -127,7 +128,8 @@ protected:
 	int initialDepth;
 	void initGap(Cost newlb, Cost newub);
 	void showGap(Cost newlb, Cost newub);
-
+  void showZGap();
+  
 	// Heuristics and search methods
 	/// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
 	void initVarHeuristic();
@@ -154,6 +156,7 @@ protected:
 	void ProdSumDiffusion();
 	void PropagateNoc();
 	void enforceUb();
+  void enforceZUb();
 	void singletonConsistency();
 	void scpChoicePoint(int xIndex, Value value, Cost lb);
 	void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
@@ -182,7 +185,7 @@ protected:
 	pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL,  wcsp->getLb(), wcsp->getUb());}
 	pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
-	pair<TLogProb, TLogProb> hybridCounting(TLogProb Zlb, TLogProb Zub);
+	void hybridCounting(TLogProb Zlb, TLogProb Zub);
 	TLogProb getZGap(TLogProb m_logUbZ,TLogProb m_logLbZ);
 
 	BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);

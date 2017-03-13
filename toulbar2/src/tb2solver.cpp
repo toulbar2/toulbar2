@@ -521,18 +521,19 @@ int Solver::getMostUrgent()
 void Solver::enforceUb()
 {
 	wcsp->enforceUb();
-	if (ToulBar2::isZ) {
-		TLogProb newlogU;
-		newlogU = Zub();
-    //cout << MeanFieldZ()+ToulBar2::logZ+ToulBar2::markov_log << " <= Log(Z) <= "<<Zub()+ToulBar2::markov_log<<endl;
-		if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-			if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
-			ToulBar2::logU = newlogU;
-			THROWCONTRADICTION;
-		}
-	}
+
 }
 
+void Solver::enforceZUb()
+{
+	TLogProb newlogU;
+  newlogU = Zub();
+  if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
+    if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
+    ToulBar2::logU = newlogU;
+    THROWCONTRADICTION;
+  }
+}
 void Solver::increase(int varIndex, Value value, bool reverse)
 {
 	enforceUb();
@@ -745,6 +746,18 @@ void Solver::showGap(Cost newLb, Cost newUb)
 	}
 }
 
+void Solver::showZGap()
+{
+	if (Store::getDepth() == initialDepth) {
+    //cout << ToulBar2::GlobalLogLbZ +ToulBar2::markov_log << " <= Log(Z) <= ";
+    //cout << ToulBar2::GlobalLogUbZ +ToulBar2::markov_log << endl;
+    cout << wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) + ToulBar2::markov_log<< " <= Log(Z) <= ";
+    cout << wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ) + ToulBar2::markov_log << endl;
+    cout<<"Z chapo : " <<ToulBar2::logZ +ToulBar2::markov_log<<endl;
+	}
+}
+
+
 void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 {
 	assert(wcsp->unassigned(varIndex));
@@ -791,6 +804,9 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 	}
 	Store::restore();
 	enforceUb();
+  if (ToulBar2::isZ && ToulBar2::logepsilon) {
+    enforceZUb();
+	}
 	nbBacktracks++;
 	if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
 	if (dichotomic) {
@@ -805,7 +821,23 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 		//    	assign(varIndex, value, nbBacktracks >= hybridBFSLimit);
 	} else remove(varIndex, value, nbBacktracks >= hbfsLimit);
 	if (!ToulBar2::hbfs) showGap(wcsp->getLb(), wcsp->getUb());
-	if (nbBacktracks >= hbfsLimit) addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
+	if (nbBacktracks >= hbfsLimit){
+    if (ToulBar2::isZ) {
+      TLogProb logZlb = MeanFieldZ();
+      TLogProb logZub = Zub();
+      ToulBar2::GlobalLogLbZ = wcsp->LogSumExp(ToulBar2::GlobalLogLbZ,logZlb);
+      ToulBar2::GlobalLogUbZ = wcsp->LogSumExp(ToulBar2::GlobalLogUbZ,logZub);
+      if (logZub - logZlb > 0) {
+        if (ToulBar2::verbose >0) cout << logZlb +ToulBar2::markov_log<< " <= Log(Z("<< varIndex <<")) <=  "<<logZub+ToulBar2::markov_log<<endl;
+        addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()),logZlb,logZub);
+      }
+      else {
+        ToulBar2::logZ= wcsp->LogSumExp(ToulBar2::logZ,logZub);
+      }
+    }
+    else addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
+    
+  }
 	else recursiveSolve(lb);
 }
 
@@ -1038,7 +1070,7 @@ void Solver::newSolution()
 			//ToulBar2::Enthalpy = ToulBar2::Enthalpy -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*ToulBar2::isZCelTemp*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
 			//ToulBar2::Entropy = ToulBar2::Entropy + (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
 		//} 
-		if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0) cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
+		if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon) cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
 	}
 	if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
 		if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
@@ -1333,7 +1365,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
 
 
 
-pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
+void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 {
   // Need to adapt this solver to Z mode
 	assert(Zlb < Zub);
@@ -1342,27 +1374,25 @@ pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 		OpenList *open_ = NULL;
 		Cost delta = MIN_COST;
 	
-        // normal BFS without BTD, i.e., hybridSolve is not reentrant
-        if (cp != NULL) delete cp;
-        cp = new CPStore();
-        cp_ = cp;
-        if (open != NULL) delete open;
-        open = new OpenList();
-        open_ = open;
+    // normal BFS without BTD, i.e., hybridSolve is not reentrant
+    if (cp != NULL) delete cp;
+    cp = new CPStore();
+    cp_ = cp;
+    if (open != NULL) delete open;
+    open = new OpenList();
+    open_ = open;
 		
 		cp_->store();
 		if (open_->size() == 0 ) { // start a new list of open nodes if needed
 			nbHybridNew++;
 			// reinitialize current open list and insert empty node
-			*open_ = OpenList(MAX(MIN_COST, cub + delta), MAX(MIN_COST, cub + delta));
-			addOpenNode(*cp_, *open_, clb, delta);
+			*open_ = OpenList();
+			addOpenNode(*cp_, *open_, wcsp->getLb(),Zlb,Zub);
 		} else nbHybridContinue++;
     
 		nbHybrid++; // do not count empty root cluster
 
-		//open_->updateUb(cub, delta); // On a pas besoin de cela je pense
-		clb = MAX(clb, open_->getLb(delta));
-		while (!open_->finished()) {
+		while (!open_->finished() && (ToulBar2::GlobalLogUbZ-ToulBar2::GlobalLogLbZ>0)) {
 			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
 			int storedepthBFS = Store::getDepth();
 			try {
@@ -1371,14 +1401,15 @@ pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 				open_->pop();
 				restore(*cp_, nd);
 				Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
-				bestlb = MAX(bestlb, clb);
+        //cout <<"Sub: "<< nd.getZlb()<< " to "<< ToulBar2::GlobalLogLbZ<<endl;
+        //cout << nd.getZub()+ToulBar2::markov_log<<endl; 
+        ToulBar2::GlobalLogLbZ = wcsp->LogSubExp(ToulBar2::GlobalLogLbZ, (nd.getZlb()) ); // remove popped open node from global Z LB
+        ToulBar2::GlobalLogUbZ = wcsp->LogSubExp(ToulBar2::GlobalLogUbZ, (nd.getZub()) ); // remove popped open node from global Z UB
 				recursiveSolve(bestlb);
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
 			}
-            cub = wcsp->getUb();
-            open_->updateUb(cub);
-			
+        
 			Store::restore(storedepthBFS);
 			cp_->store();
 			if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -1386,8 +1417,7 @@ pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 				ToulBar2::hbfsGlobalLimit = 0;
 				hbfsLimit = LONGLONG_MAX;
 			}
-			clb = MAX(clb, open_->getLb(delta));
-			showGap(clb, cub);
+      if (ToulBar2::verbose >0) showZGap();
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
 				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
@@ -1396,12 +1426,9 @@ pair<TLogProb, TLogProb> Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 			}
 		}
 	} else {
-        hbfsLimit = LONGLONG_MAX;
-        recursiveSolve();
-        cub = wcsp->getUb();
-        clb = cub;
+    hbfsLimit = LONGLONG_MAX;
+    recursiveSolve();
 	}
-	return make_pair(Zlb, Zub);
 }
 
 
@@ -1513,16 +1540,17 @@ bool Solver::solve()
 
 			if (ToulBar2::isZ && ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 			if (ToulBar2::isZ) { // Compute upper bound on the root level
-        cout << MeanFieldZ() + ToulBar2::markov_log;
+        ToulBar2::GlobalLogLbZ = MeanFieldZ();
+        cout << ToulBar2::GlobalLogLbZ + ToulBar2::markov_log;
 				switch (ToulBar2::isZUB) {
 				case 2 :
 					wcsp->spanningTreeRoot();
-					ToulBar2::UplogZ = wcsp->spanningTreeZ(wcsp->getLb() + wcsp->getNegativeLb());
-					cout << " <= Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
+					ToulBar2::GlobalLogUbZ = wcsp->spanningTreeZ(wcsp->getLb() + wcsp->getNegativeLb());
+					cout << " <= Log(Z) <= " << ToulBar2::GlobalLogUbZ + ToulBar2::markov_log << endl;
 					break;
 				default:
-					ToulBar2::UplogZ = Zub();
-					cout << " <= Log(Z) <= " << ToulBar2::UplogZ + ToulBar2::markov_log << endl;
+					ToulBar2::GlobalLogUbZ = Zub();
+					cout << " <= Log(Z) <= " << ToulBar2::GlobalLogUbZ + ToulBar2::markov_log << endl;
 				}
 			}
 			if (ToulBar2::btdMode) {
@@ -1700,7 +1728,8 @@ bool Solver::solve()
 						} else {
 							initialDepth = Store::getDepth();
 							try {
-								hybridSolve();
+                if (ToulBar2::isZ) hybridCounting(ToulBar2::GlobalLogLbZ,ToulBar2::GlobalLogUbZ);
+								else hybridSolve();
 							} catch (FindNewSequence) {}
 						}
 					}
@@ -1730,14 +1759,18 @@ bool Solver::solve()
 		} else {
 			cout << "Full Partition Function" << endl;
 		}
-		cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
-		cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-		cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
-		cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-		//cout << "Enthalpy: " << ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log) << endl;
-		//cout << "Entropy: " << (ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ << endl;
-		//cout << ((ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ - ToulBar2::markov_log) - (ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log))/ToulBar2::isZCelTemp << endl;
-		return true;
+    if (ToulBar2::logepsilon){
+      cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
+      cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+      cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
+      cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+      //cout << "Enthalpy: " << ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log) << endl;
+      //cout << "Entropy: " << (ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ << endl;
+      //cout << ((ToulBar2::Entropy / Exp(ToulBar2::logZ + ToulBar2::markov_log) ) - ToulBar2::logZ - ToulBar2::markov_log) - (ToulBar2::Enthalpy / Exp(ToulBar2::logZ + ToulBar2::markov_log))/ToulBar2::isZCelTemp << endl;
+      return true;
+    } else{
+      cout <<"Log(Z) = "<<wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) + ToulBar2::markov_log<<endl;
+    }
 	}
 	if (ToulBar2::allSolutions) {
 		if (ToulBar2::cpd) {
@@ -1992,6 +2025,19 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
 	}
 	assert(cp.start <= idx);
 	open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx));
+
+	cp.stop = max(cp.stop, idx);
+}
+
+void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb,TLogProb logLbZ,TLogProb logUbZ,Cost delta)
+{
+	ptrdiff_t idx = cp.index;
+	if (ToulBar2::verbose >= 1) {
+		if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+		cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
+	}
+	assert(cp.start <= idx);
+	open.push(OpenNode(logLbZ,logUbZ,MAX(MIN_COST, lb + delta), cp.start, idx));
 
 	cp.stop = max(cp.stop, idx);
 }
