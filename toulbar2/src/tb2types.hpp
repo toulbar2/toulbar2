@@ -378,7 +378,8 @@ public:
 	static TLogProb logZ;
 	static TLogProb Entropy;
 	static TLogProb Enthalpy;
-	static TLogProb UplogZ;
+	static TLogProb GlobalLogUbZ; // Upper bound on Z.
+  static TLogProb GlobalLogLbZ; // Upper bound on Z.
 	static TLogProb logU; // upper bound on rejected potentials
 	static TProb logepsilon;
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
