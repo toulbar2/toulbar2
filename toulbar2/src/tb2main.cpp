@@ -218,6 +218,7 @@ enum {
 	OPT_ZCELTEMP,
 	OPT_ZUB,
 	OPT_epsilon,
+    OPT_sigma,
 	OPT_GUMBEL,
 	OPT_RUN,
   OPT_normZ,
@@ -384,6 +385,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_OPT			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
 	{ OPT_ZUB,	(char *) "-zub", 				SO_REQ_SEP		},     // Choose Upper bound number for computing Z
 	{ OPT_epsilon,	(char *) "-epsilon", 			SO_OPT		},   // approximation parameter for computing Z
+	{ OPT_sigma,	(char *) "-sigma", 			SO_OPT		},   // approximation parameter for computing Z
 	{ OPT_GUMBEL,	(char *) "-gum", 			SO_NONE		},   // Apply gumbel perturbation on cost matrix
 	{ OPT_prodsumDiffusion,	(char *) "-MC", 				SO_REQ_SEP		},
   { OPT_normZ,	(char *) "--normZ", 				SO_OPT		},
@@ -706,8 +708,10 @@ void help_msg(char *toulbar2filename)
 	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
-	cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is 0.001)" << endl;
+	cout << "   -logz -epsilon=[float] : approximation factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
 	cout << endl;
+	cout << "   -logz -hbfs -sigma=[float] : limit factor for hbfs counting, set to 0 by default (exact computation)" << endl;
+    cout<<  endl;
 	cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix" << endl;
 	cout << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
@@ -1380,12 +1384,24 @@ int _tmain(int argc, TCHAR *argv[])
 			}
 			// Set epsilon for epsilon approximation of Z
 			if (args.OptionId() == OPT_epsilon) {
+                ToulBar2::logepsilon = -Log(1000); // default is 0.001
 				if (args.OptionArg() != NULL) {
 					ToulBar2::logepsilon = -Log(stold(args.OptionArg()));
 					cout << "New assignment for epsilon = " << Exp(ToulBar2::logepsilon)  <<  endl;
 				}
 
 			}
+			
+            // Set sigma for HBFS-counting limit
+			if (args.OptionId() == OPT_sigma) {
+                ToulBar2::logsigma = 0; // default is 0 (no limit)
+				if (args.OptionArg() != NULL) {
+					ToulBar2::logsigma = -Log(stold(args.OptionArg()));
+					cout << "New assignment for sigma = " << Exp(ToulBar2::logsigma)  <<  endl;
+				}
+
+			}
+
 			if (args.OptionId() == OPT_prodsumDiffusion) {
 				ToulBar2::prodsumDiffusion = 2;
 				int nit = atoi(args.OptionArg());

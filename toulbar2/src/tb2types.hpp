@@ -379,15 +379,16 @@ public:
 	static TLogProb Entropy;
 	static TLogProb Enthalpy;
 	static TLogProb GlobalLogUbZ; // Upper bound on Z.
-  static TLogProb GlobalLogLbZ; // Upper bound on Z.
+    static TLogProb GlobalLogLbZ; // Upper bound on Z.
 	static TLogProb logU; // upper bound on rejected potentials
-	static TProb logepsilon;
+	static TLogProb logepsilon; // epsilon for Z* pruning
+    static TLogProb logsigma; // sigma set for HBFS-Counting
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
 	static string Trie_File;
 	static bool isTrie_File;
 
-  static TLogProb ubE;
-  static TLogProb Normalizing_Constant;
+    static TLogProb ubE;
+    static TLogProb Normalizing_Constant;
 
 	static bool uaieval;
 

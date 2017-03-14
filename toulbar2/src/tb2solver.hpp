@@ -128,7 +128,7 @@ protected:
 	int initialDepth;
 	void initGap(Cost newlb, Cost newub);
 	void showGap(Cost newlb, Cost newub);
-  void showZGap();
+    void showZGap();
   
 	// Heuristics and search methods
 	/// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
@@ -156,7 +156,7 @@ protected:
 	void ProdSumDiffusion();
 	void PropagateNoc();
 	void enforceUb();
-  void enforceZUb();
+    void enforceZUb();
 	void singletonConsistency();
 	void scpChoicePoint(int xIndex, Value value, Cost lb);
 	void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
