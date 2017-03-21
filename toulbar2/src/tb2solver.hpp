@@ -49,7 +49,7 @@ public:
 	public:
 		OpenList(Cost lb, Cost ub) : clb(lb), cub(ub) {}
 		OpenList() : clb(MAX_COST), cub(MAX_COST) {} /// \warning use also this method to clear an open list
-
+    
 		bool finished() const {assert(clb <= cub); return (empty() || CUT(top().getCost(), clb));}
 		Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta)));}
 
@@ -186,8 +186,8 @@ protected:
 	pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
 	void hybridCounting(TLogProb Zlb, TLogProb Zub);
-	TLogProb getZGap(TLogProb m_logUbZ,TLogProb m_logLbZ);
-
+  pair<TLogProb,TLogProb> GetOpen_LB_UB (OpenList &open);
+  
 	BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
 	BigInteger sharpBTD(Cluster *cluster);
 	void approximate(BigInteger &nbsol, TreeDecomposition *td);

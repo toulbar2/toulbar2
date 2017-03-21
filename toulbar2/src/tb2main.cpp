@@ -708,9 +708,9 @@ void help_msg(char *toulbar2filename)
 	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
 	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
-	cout << "   -logz -epsilon=[float] : approximation factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
+	cout << "   -logz -epsilon=1/[float] : approximation factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
 	cout << endl;
-	cout << "   -logz -hbfs -sigma=[float] : limit factor for hbfs counting, set to 0 by default (exact computation)" << endl;
+	cout << "   -logz -hbfs -sigma=1/[float] : limit factor for hbfs counting, set to 0 by default (exact computation)" << endl;
     cout<<  endl;
 	cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix" << endl;
 	cout << endl;
@@ -1394,7 +1394,7 @@ int _tmain(int argc, TCHAR *argv[])
 			
             // Set sigma for HBFS-counting limit
 			if (args.OptionId() == OPT_sigma) {
-                ToulBar2::logsigma = 0; // default is 0 (no limit)
+                ToulBar2::logsigma = -Log(1000); // default is 0.001 (no limit)
 				if (args.OptionArg() != NULL) {
 					ToulBar2::logsigma = -Log(stold(args.OptionArg()));
 					cout << "New assignment for sigma = " << Exp(ToulBar2::logsigma)  <<  endl;

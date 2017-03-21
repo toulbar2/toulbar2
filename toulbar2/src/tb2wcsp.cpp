@@ -304,8 +304,8 @@ void tb2init()
 	ToulBar2::GlobalLogLbZ = -numeric_limits<TLogProb>::infinity();
   
 	ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-	ToulBar2::logepsilon = 0;
-    ToulBar2::logsigma = 0;
+	ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logsigma = -numeric_limits<TLogProb>::infinity();
 	ToulBar2::Berge_Dec = 0;
 	ToulBar2::nbvar = 0;
 
@@ -3401,14 +3401,14 @@ void WCSP::setDACOrder(vector<int> &order)
 
 Cost WCSP::Prob2Cost(TProb p) const
 {
-	if (p == 0.0) return getUb();
+	if (p == 0.0) return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
 	TLogProb res = -Log(p) * ToulBar2::NormFactor;
 	if (res > to_double(MAX_COST)) {
 		cerr << "Overflow when converting probability to cost." << endl;
 		exit(EXIT_FAILURE);
 	}
 	Cost c = (Cost) res;
-	if (c > getUb()) return getUb();
+	if (c > MAX_COST/2) return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
 	return c;
 }
 
@@ -3437,8 +3437,8 @@ TProb WCSP::Cost2Prob(Cost c) const
 
 Cost  WCSP::LogSumExp(Cost c1, Cost c2) const // log[exp(c1) + exp(c2)]
 {
-	if (c1 >= getUb()) return c2;
-	else if (c2 >= getUb()) return c1;
+	if (c1 >= MAX_COST/2) return c2;
+	else if (c2 >= MAX_COST/2) return c1;
 	else if (c1 == c2) return c1 + LogProb2Cost(Log(2.));
 	else {
 		if (c1 < c2) return c1 + LogProb2Cost(Log1p(Exp(Cost2LogProb(c2 - c1))));
@@ -3449,7 +3449,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const // log[exp(c1) + exp(c2)
 {
 	TLogProb logc2 = Cost2LogProb(c2);
 	if (logc1 == -numeric_limits<TLogProb>::infinity()) return logc2;
-	else if (c2 >= getUb()) return logc1;
+	else if (c2 >= MAX_COST/2) return logc1;
 	else {
 		if (logc1 >= logc2) return logc1 + (Log1p(Exp(logc2 - logc1)));
 		else return logc2 + (Log1p(Exp(logc1 - logc2)));
@@ -3470,7 +3470,10 @@ TLogProb WCSP::LogSubExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) - 
 {
   if (logc1 == logc2) return -numeric_limits<TLogProb>::infinity();
   else if (logc1 > logc2) return logc1 + (Log(1-Exp(logc2 - logc1)));
-  else return logc2 + (Log(1-Exp(logc1 - logc2)));
+  else{
+    cerr<<"My oh my ! Try to Logarithm a negative number"<<endl;
+    exit(0);
+  }
 }
 
 //----------------------------------------
