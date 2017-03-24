@@ -1394,10 +1394,10 @@ int _tmain(int argc, TCHAR *argv[])
 			
             // Set sigma for HBFS-counting limit
 			if (args.OptionId() == OPT_sigma) {
-                ToulBar2::logsigma = -Log(1000); // default is 0.001 (no limit)
+                ToulBar2::sigma = 1/1000; // default is 0.001 
 				if (args.OptionArg() != NULL) {
-					ToulBar2::logsigma = -Log(stold(args.OptionArg()));
-					cout << "New assignment for sigma = " << Exp(ToulBar2::logsigma)  <<  endl;
+					ToulBar2::sigma = 1/stold(args.OptionArg());
+					cout << "New assignment for sigma = " << ToulBar2::sigma  <<  endl;
 				}
 
 			}

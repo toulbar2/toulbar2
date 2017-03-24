@@ -11,6 +11,7 @@
 #include "tb2constraint.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
+#include <quadmath.h>
 
 class NaryConstraint;
 class VACExtension;

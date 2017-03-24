@@ -165,7 +165,7 @@ TLogProb ToulBar2::GlobalLogUbZ;
 TLogProb ToulBar2::GlobalLogLbZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
-TLogProb ToulBar2::logsigma;
+TProb ToulBar2::sigma;
 TrieNum *ToulBar2::trieZ;
 string ToulBar2::Trie_File;
 bool ToulBar2::isTrie_File = false;
@@ -305,7 +305,7 @@ void tb2init()
   
 	ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
 	ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logsigma = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::sigma = 0;
 	ToulBar2::Berge_Dec = 0;
 	ToulBar2::nbvar = 0;
 

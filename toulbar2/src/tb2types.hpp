@@ -32,7 +32,7 @@
 
 #include "tb2utils.hpp"
 #include "tb2integer.hpp"
-
+#include <quadmath.h>
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
@@ -169,6 +169,35 @@ typedef double TLogProb;
 typedef Double TProb;
 typedef Double TLogProb;
 #endif
+
+
+//~ typedef __float128 TProb;
+//~ typedef __float128 TLogProb;
+//~ inline std::ostream& operator<< (std::ostream& os, const __float128& f) {
+	  //~ char* y = new char[1000];
+      //~ quadmath_snprintf(y, 1000, "%.30Qg", f) ;
+      //~ os.precision(30);
+      //~ os<<y;
+      //~ delete[] y;
+      //~ return os;
+//~ }
+//~ inline std::istream& operator>> (std::istream& is, const __float128& f) {
+	  //~ char* y = new char[1000];
+      //~ quadmath_snprintf(y, 1000, "%.30Qg", f) ;
+      //~ is.precision(30);
+      //~ is>>y;
+      //~ delete[] y;
+      //~ return is;
+//~ }
+
+//~ inline __float128 my_abs( __float128 x ){return fabsq( x );}
+//~ inline __float128 my_sqrt( __float128 x ){return sqrtq( x );}
+//~ inline __float128 my_pow( __float128 x , __float128 y ){return powq( x , y );}
+//~ inline __float128 my_Exp( __float128 x ){return expq( x );}  
+//~ inline __float128 my_Log( __float128 x ){return logq( x );} 
+//~ inline __float128 my_Log10( __float128 x ){return log10q( x );}
+//~ inline __float128 my_Log1p( __float128 x ){return log1pq( x );}
+
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8*sizeof(Cost)-2)
@@ -382,7 +411,7 @@ public:
     static TLogProb GlobalLogLbZ; // Upper bound on Z.
 	static TLogProb logU; // upper bound on rejected potentials
 	static TLogProb logepsilon; // epsilon for Z* pruning
-    static TLogProb logsigma; // sigma set for HBFS-Counting
+    static TProb sigma; // sigma set for HBFS-Counting
 	static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
 	static string Trie_File;
 	static bool isTrie_File;

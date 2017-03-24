@@ -373,8 +373,16 @@ void Solver::showZGap()
     //cout << ToulBar2::GlobalLogUbZ +ToulBar2::markov_log << endl;
     cout << wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) + ToulBar2::markov_log<< " <= Log(Z) <= ";
     cout << wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) + ToulBar2::markov_log << endl;
-    cout<<"Z chapo : " <<ToulBar2::logZ +ToulBar2::markov_log<<endl;
+    //cout<<"Z chapo : " <<ToulBar2::logZ +ToulBar2::markov_log<<endl;
 	}
+}
+
+void TimeZOut(){	
+WeightedCSP *wcsp=new WCSP(0,NULL);
+cout << wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) + ToulBar2::markov_log<< " <= Log(Z) <= ";
+cout << wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) + ToulBar2::markov_log << endl;
+cout <<"Epsilon : "<<Exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
+exit(0);
 }
 
 void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
@@ -382,6 +390,7 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
   // Need to adapt this solver to Z mode
   assert(Zlb < Zub);
   if (ToulBar2::hbfs) {
+	ToulBar2::timeOut=TimeZOut;
     CPStore *cp_ = NULL;
     OpenList *open_ = NULL;
     Cost delta = MIN_COST;
@@ -405,7 +414,6 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
     nbHybrid++; // do not count empty root cluster
         
     while (!open_->empty() ){
-      //cout<<"before DFS:"<<ToulBar2::GlobalLogLbZ<<" " <<ToulBar2::GlobalLogUbZ<<" Comp : "<<ToulBar2::GlobalLogUbZ-ToulBar2::GlobalLogLbZ<<"   "<<ToulBar2::logsigma<<endl;
       hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
       int storedepthBFS = Store::getDepth();
       try {
@@ -428,8 +436,7 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
         
       Store::restore(storedepthBFS);
       cp_->store();
-      //cout<<"after DFS:"<<ToulBar2::GlobalLogLbZ<<" " <<ToulBar2::GlobalLogUbZ<<" Comp : "<<ToulBar2::GlobalLogUbZ-ToulBar2::GlobalLogLbZ<<"   "<<ToulBar2::logsigma<<endl;
-      //cout<<endl;
+
       if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 	ToulBar2::hbfs = 0;
 	ToulBar2::hbfsGlobalLimit = 0;
@@ -438,16 +445,12 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
       pair<TLogProb,TLogProb> LB_UB = GetOpen_LB_UB(*open);
       ToulBar2::GlobalLogLbZ = get<0>(LB_UB);
       ToulBar2::GlobalLogUbZ = get<1>(LB_UB);
-      //cout<< wcsp->LogSubExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ)+ ToulBar2::markov_log,wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)+ ToulBar2::markov_log)<< " "<<ToulBar2::logsigma <<endl;
       if (ToulBar2::verbose >=1) showZGap();
-      if (wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)==wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU)) break;
-
-      //Aucun sens car si Z chapo < logsigma on aura toujours cela de vérifier... 
-      //if (wcsp->LogSubExp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU)+ ToulBar2::markov_log,wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)+ ToulBar2::markov_log)<= ToulBar2::logsigma) break;
           
-      // if LogUb - LogLb < epsilon then finish
-      //cout<< wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<< " "<<Exp(ToulBar2::logsigma) <<endl;
-      if (wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<= Exp(ToulBar2::logsigma)) break;
+      // if LogUb - LogLb < log(1+epsilon) then finish
+      //cout <<"Epsilon : "<<Exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
+      if (wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<= Log1p(ToulBar2::sigma)) break;
+      if (wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) < Log(ToulBar2::sigma)) break;
       if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 	assert(nbNodes > 0);
 	if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
