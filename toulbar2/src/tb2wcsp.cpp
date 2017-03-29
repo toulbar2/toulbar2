@@ -2996,7 +2996,7 @@ void WCSP::variableElimination(EnumeratedVariable *var)
 		project(csum, var);
 	} else {
 		if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
-			Cost clogz = getUb();
+			Cost clogz = MAX_COST;
 			for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 				clogz = LogSumExp(clogz, var->getCost(*itv));
 			}
