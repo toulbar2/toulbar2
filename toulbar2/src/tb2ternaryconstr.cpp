@@ -274,7 +274,12 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
         TreeDecomposition* td = wcsp->getTreeDec();
         if(td) td->addDelta(cluster,x,value,cost);
-        deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
+
+        Cost result;
+        if (Add(deltaCostsX[x->toIndex(value)],cost,&result))
+            throw Overflow();
+        else
+            deltaCostsX[x->toIndex(value)] = result;
     }
 
     Cost oldcost = x->getCost(value);
@@ -292,7 +297,13 @@ void  TernaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, v
     assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
     TreeDecomposition* td = wcsp->getTreeDec();
     if(td) td->addDelta(cluster,x,value,-cost);
-    deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
+
+    Cost result;
+    if (Sub(deltaCostsX[x->toIndex(value)],cost,&result))
+        throw Overflow();
+    else
+        deltaCostsX[x->toIndex(value)] = result;   
+
     x->extend(value, cost);
 }
 
