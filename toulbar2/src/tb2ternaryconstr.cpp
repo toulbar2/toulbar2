@@ -270,12 +270,17 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
 {
 	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
-	// hard ternary constraint costs are not changed
-	if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
-		TreeDecomposition *td = wcsp->getTreeDec();
-		if (td) td->addDelta(cluster, x, value, cost);
-		deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
-	}
+    // hard ternary constraint costs are not changed
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+        TreeDecomposition* td = wcsp->getTreeDec();
+        if(td) td->addDelta(cluster,x,value,cost);
+
+        Cost result;
+        if (Add(deltaCostsX[x->toIndex(value)],cost,&result))
+            throw Overflow();
+        else
+            deltaCostsX[x->toIndex(value)] = result;
+    }
 
 	Cost oldcost = x->getCost(value);
 	x->project(value, cost);
@@ -289,11 +294,17 @@ bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, 
 
 void  TernaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
-	assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
-	TreeDecomposition *td = wcsp->getTreeDec();
-	if (td) td->addDelta(cluster, x, value, -cost);
-	deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
-	x->extend(value, cost);
+    assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,-cost);
+
+    Cost result;
+    if (Sub(deltaCostsX[x->toIndex(value)],cost,&result))
+        throw Overflow();
+    else
+        deltaCostsX[x->toIndex(value)] = result;   
+
+    x->extend(value, cost);
 }
 
 pair< pair<Cost, Cost>, pair<Cost, Cost> > TernaryConstraint::getMaxCost(int varIndex, Value a, Value b)

@@ -79,19 +79,25 @@ void BinaryConstraint::dump(ostream &os, bool original)
  */
 bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
-	assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
-	// hard binary constraint costs are not changed
-	if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
-		TreeDecomposition *td = wcsp->getTreeDec();
-		if (td) td->addDelta(cluster, x, value, cost);
-		deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
-		assert(getCost(x, (EnumeratedVariable *) getVarDiffFrom(x), value, getVarDiffFrom(x)->getInf()) >= MIN_COST);
-		assert(getCost(x, (EnumeratedVariable *) getVarDiffFrom(x), value, getVarDiffFrom(x)->getSup()) >= MIN_COST);
-	}
+    // hard binary constraint costs are not changed
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+        TreeDecomposition* td = wcsp->getTreeDec();
+        if(td) td->addDelta(cluster,x,value,cost);
 
-	Cost oldcost = x->getCost(value);
-	x->project(value, cost);
+        Cost result;
+        if (Add(cost, deltaCostsX[x->toIndex(value)],&result))
+            throw Overflow();
+        else
+            deltaCostsX[x->toIndex(value)] = result;
+        
+        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getInf()) >= MIN_COST);
+        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getSup()) >= MIN_COST);
+    }
+
+    Cost oldcost = x->getCost(value);
+    x->project(value, cost);
 #ifdef DEECOMPLETE
 	getVarDiffFrom(x)->queueDEE();
 #endif
@@ -106,8 +112,13 @@ void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vec
 	TreeDecomposition *td = wcsp->getTreeDec();
 	if (td) td->addDelta(cluster, x, value, -cost);
 
-	deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
-	x->extend(value, cost);
+    Cost result;
+    if (Sub(deltaCostsX[x->toIndex(value)],cost,&result))
+        throw Overflow();
+    else        
+        deltaCostsX[x->toIndex(value)] = result;
+    
+    x->extend(value, cost);
 }
 
 void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)

@@ -29,17 +29,18 @@ Constraint::Constraint(WCSP *w, int elimCtrIndex) : WCSPLink(w, elimCtrIndex), c
 }
 
 /// \return size of the cartesian product of all domains in the constraint scope.
-/// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long Constraint::getDomainSizeProduct()
 {
-	if (arity() == 0) return 0;
-	Long cartesianProduct = 1;
-	for (int i = 0; i < arity(); i++) {
-		// trap overflow numbers
-		if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE) return LONGLONG_MAX;
-		cartesianProduct *= getVar(i)->getDomainSize();
-	}
-	return cartesianProduct;
+    if (arity()==0) return 0;  // Why ?  Should be 1 ?
+    Long cartesianProduct = 1;
+
+    for (int i=0; i<arity(); i++) {
+        if (__builtin_smulll_overflow(cartesianProduct,
+                                      getVar(i)->getDomainSize(),
+                                      &cartesianProduct))
+            return LONGLONG_MAX;
+    }
+    return cartesianProduct;
 }
 
 void Constraint::conflict()
