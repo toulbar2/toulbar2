@@ -17,8 +17,9 @@
 #include "tb2store.hpp"
 
 template <class T>
-struct DLink
+class DLink
 {
+public:
     bool removed;       // true if the corresponding element has been removed
     DLink *next;
     DLink *prev;

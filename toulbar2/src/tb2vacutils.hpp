@@ -101,12 +101,15 @@ public:
     void dequeueVAC2();
 
     // virtual void assign(Value newValue);
+    using EnumeratedVariable::remove;
     virtual void remove(Value value);
     virtual void removeFast(Value value);
     // virtual void extendAll(Cost cost);
     // virtual void project (Value value, Cost cost);
     // virtual void extend (Value value, Cost cost);
+    using EnumeratedVariable::increase;
     virtual void increase (Value newInf);
+    using EnumeratedVariable::decrease;
     virtual void decrease (Value newSup);
 
     void decreaseCost(Value v, Cost c);

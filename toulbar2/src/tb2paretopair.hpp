@@ -136,7 +136,7 @@ inline ParetoPair string2Cost(char *ptr) {int p=0,q=0; sscanf(ptr, "(%d,%d)", &p
 inline int cost2log2(int x)
 {
     if (x==0) return -1;
-    register int l2 = 0;
+    int l2 = 0;
     x>>=1;
     for (; x != 0; x >>=1)
     {

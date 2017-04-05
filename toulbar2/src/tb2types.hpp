@@ -426,7 +426,8 @@ class Separator;
 class TreeDecomposition;
 
 
-struct ConstraintLink {
+class ConstraintLink {
+public:
     Constraint *constr;
     int scopeIndex;
 };

@@ -9,7 +9,7 @@
 #include "toulbar2lib.hpp"
 #include "tb2store.hpp"
 
-template <class T> struct DLink;
+template <class T> class DLink;
 template <class T> class BTList;
 
 const double epsilon = 1e-6; // 1./100001.

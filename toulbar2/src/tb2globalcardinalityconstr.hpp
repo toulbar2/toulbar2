@@ -19,7 +19,6 @@ private:
     }
     //JP Start// This array stores the repestive weight of each bound
     map<Value, pair<int, int> > weights;
-    int nvalues;
     int nDistinctDomainValue;
     //JP End//
 public:
