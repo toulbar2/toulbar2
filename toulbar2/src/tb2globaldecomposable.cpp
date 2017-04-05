@@ -244,7 +244,7 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
     vector<Cost>final_states_costs(automaton->getNbStates(),top);
 
     list< pair<int,Cost> > acceptingStates = automaton->getAcceptingStates();
-    if (acceptingStates.size()>=0) {
+    if (acceptingStates.size() > 0) {
 
         for (list<pair<int,Cost> >::iterator it = acceptingStates.begin(); it !=  acceptingStates.end() ; ++it ) {
             pair<int,Cost> accept = *it;
