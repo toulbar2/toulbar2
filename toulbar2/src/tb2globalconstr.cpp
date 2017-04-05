@@ -120,28 +120,38 @@ void GlobalConstraint::assign(int varIndex)
 	}
 }
 
-void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed)
-{
-	if (deconnected()) return;
-	assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] project(" << getName() << ", " << getVar(index)->getName() << ", " << value << ", " << cost << ")" << endl), true));
-	EnumeratedVariable *x = (EnumeratedVariable *)getVar(index);
-	// hard binary constraint costs are not changed
-	if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
-		TreeDecomposition *td = wcsp->getTreeDec();
-		if (td) td->addDelta(cluster, x, value, cost);
-		deltaCost[index][x->toIndex(value)] += cost;  // Warning! Possible overflow???
-	}
-	x->project(value, cost, delayed);
+void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed) {
+    if (deconnected()) return;
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] project(" << getName() << ", " << getVar(index)->getName() << ", " << value << ", " << cost << ")" << endl), true));
+    EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
+    // hard binary constraint costs are not changed
+    if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
+        TreeDecomposition* td = wcsp->getTreeDec();
+        if(td) td->addDelta(cluster,x,value,cost);
+
+        Cost result;
+        if (Add(deltaCost[index][x->toIndex(value)],cost,&result))
+            throw Overflow();
+        else
+            deltaCost[index][x->toIndex(value)] = result;
+        
+    }
+    x->project(value, cost, delayed);
 }
 
-void GlobalConstraint::extend(int index, Value value, Cost cost)
-{
-	assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] extend(" << getName() << "," << getVar(index)->getName() << "," << value << ", " << cost << ")" << endl), true));
-	EnumeratedVariable *x = (EnumeratedVariable *)getVar(index);
-	TreeDecomposition *td = wcsp->getTreeDec();
-	if (td) td->addDelta(cluster, x, value, -cost);
-	deltaCost[index][x->toIndex(value)] -= cost;  // Warning! Possible overflow???
-	x->extend(value, cost);
+void GlobalConstraint::extend(int index, Value value, Cost cost) {
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << "] extend(" << getName() << "," << getVar(index)->getName() << "," << value << ", " << cost << ")" << endl), true));
+    EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if(td) td->addDelta(cluster,x,value,-cost);
+    
+        Cost result;
+        if (Sub(deltaCost[index][x->toIndex(value)],cost,&result))
+            throw Overflow();
+        else
+            deltaCost[index][x->toIndex(value)] = result;
+
+    x->extend(value, cost);
 }
 
 // function used for propagation
