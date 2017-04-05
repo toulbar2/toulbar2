@@ -17,11 +17,13 @@
 #include "tb2store.hpp"
 
 template <class T>
-struct DLink {
-	bool removed;       // true if the corresponding element has been removed
-	DLink *next;
-	DLink *prev;
-	T content;
+class DLink
+{
+public:
+    bool removed;       // true if the corresponding element has been removed
+    DLink *next;
+    DLink *prev;
+    T content;
 
 public:
 	DLink<T>() : removed(true), next(NULL), prev(NULL) {}

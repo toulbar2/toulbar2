@@ -18,9 +18,10 @@ private:
 
 	bool initialized;
 
-	void clear();
-	void record(Value *tuple);
-	void findSupport(int var, bool &changed);
+    void clear();
+    void record(Value *tuple);
+    using GlobalConstraint::findSupport;
+    void findSupport(int var, bool &changed);
 
 protected:
 	DPGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);

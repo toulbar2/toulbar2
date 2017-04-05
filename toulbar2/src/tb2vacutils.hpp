@@ -39,93 +39,90 @@ private:
 
 public:
 
-	VACVariable(WCSP *wcsp, string n, Value iinf, Value isup);
-	VACVariable(WCSP *wcsp, string n, Value *d, int dsize);
-	~VACVariable();
+    VACVariable (WCSP *wcsp, string n, Value iinf, Value isup);
+    VACVariable (WCSP *wcsp, string n, Value *d, int dsize);
+    ~VACVariable ();
 
-	void reset();
+    void reset ();
 
-	bool removeVAC(Value v);
-	bool increaseVAC(Value newInf);
-	bool decreaseVAC(Value supInf);
+    bool removeVAC(Value v);
+    bool increaseVAC(Value newInf);
+    bool decreaseVAC(Value supInf);
 
-	int 	getMaxK(Long timeStamp)
-	{
-		if (maxk_timeStamp < timeStamp) return 0;
-		else return maxk;
-	}
+    int 	getMaxK( Long timeStamp ) {
+        if(maxk_timeStamp < timeStamp) return 0;
+        else return maxk;
+    }
 
-	int 	getK(Value v, Long timeStamp)
-	{
-		if (k_timeStamp[toIndex(v)] < timeStamp) return 0;
-		else return k[toIndex(v)];
-	}
-	void 	setK(Value v, int c, Long timeStamp)
-	{
-		k[toIndex(v)] = c;
-		k_timeStamp[toIndex(v)] = timeStamp;
-		if (maxk_timeStamp < timeStamp) {
-			maxk = 0;
-			maxk_timeStamp = timeStamp;
-		}
-	}
+    int 	getK( Value v, Long timeStamp ) {
+        if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
+        else return k[toIndex(v)];
+    }
+    void 	setK( Value v, int c, Long timeStamp ) {
+        k[toIndex(v)] = c;
+        k_timeStamp[toIndex(v)] = timeStamp;
+        if(maxk_timeStamp < timeStamp) {
+            maxk = 0;
+            maxk_timeStamp = timeStamp;
+        }
+    }
 
-	void	addToK(Value v, int c, Long timeStamp)
-	{
-		if (k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
-		else k[toIndex(v)] += c;
-		if (maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
-		else if (maxk < k[toIndex(v)]) maxk = k[toIndex(v)];
-		maxk_timeStamp = timeStamp;
-		k_timeStamp[toIndex(v)] = timeStamp;
-	}
+    void	addToK(Value v, int c, Long timeStamp ) {
+        if(k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
+        else k[toIndex(v)] += c;
+        if(maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
+        else if(maxk < k[toIndex(v)]) maxk = k[toIndex(v)];
+        maxk_timeStamp = timeStamp;
+        k_timeStamp[toIndex(v)] = timeStamp;
+    }
 
-	bool  isMarked(Value v, Long timeStamp) { return (mark[toIndex(v)] >= timeStamp); }
-	void  setMark(Value v, Long timeStamp)  { mark[toIndex(v)] = timeStamp; }
+    bool  isMarked( Value v, Long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
+    void  setMark( Value v, Long timeStamp )  { mark[toIndex(v)] = timeStamp; }
 
-	int   getKiller(Value v) { return killer[toIndex(v)]; }
-	void  setKiller(Value v, int i) { killer[toIndex(v)] = i; }
-	void  killedOne() { killed = killed + 1; }
+    int   getKiller( Value v ) { return killer[toIndex(v)]; }
+    void  setKiller( Value v, int i ) { killer[toIndex(v)] = i; }
+    void  killedOne() { killed = killed+1; }
 
 
-	Cost getVACCost(Value v)
-	{
-		Cost c = getCost(v);
-		if (isNull(c)) return MIN_COST;
-		else return c;
-	}
+    Cost getVACCost( Value v ) {
+        Cost c = getCost(v);
+        if(isNull(c)) return MIN_COST;
+        else return c;
+    }
 
-	void setThreshold(Cost c) { myThreshold = c; }
-	Cost getThreshold() { return myThreshold; }
+    void setThreshold (Cost c) { myThreshold = c; }
+    Cost getThreshold () { return myThreshold; }
 
-	bool isSimplyNull(Cost c);
-	bool isNull(Cost c);
+    bool isSimplyNull(Cost c);
+    bool isNull (Cost c);
 
-	void queueVAC();
-	void queueSeekSupport();
-	void queueVAC2();
-	void dequeueVAC2();
+    void queueVAC();
+    void queueSeekSupport();
+    void queueVAC2();
+    void dequeueVAC2();
 
-	// virtual void assign(Value newValue);
-	virtual void remove(Value value);
-	virtual void removeFast(Value value);
-	// virtual void extendAll(Cost cost);
-	// virtual void project (Value value, Cost cost);
-	// virtual void extend (Value value, Cost cost);
-	virtual void increase(Value newInf);
-	virtual void decrease(Value newSup);
+    // virtual void assign(Value newValue);
+    using EnumeratedVariable::remove;
+    virtual void remove(Value value);
+    virtual void removeFast(Value value);
+    // virtual void extendAll(Cost cost);
+    // virtual void project (Value value, Cost cost);
+    // virtual void extend (Value value, Cost cost);
+    using EnumeratedVariable::increase;
+    virtual void increase (Value newInf);
+    using EnumeratedVariable::decrease;
+    virtual void decrease (Value newSup);
 
-	void decreaseCost(Value v, Cost c);
-	void VACproject(Value v, const Cost c); /**< Increases unary cost and may queue for NC enforcing */
-	void VACextend(Value v, const Cost c);  /**< Decreases unary cost and may queue for NC enforcing */
+    void decreaseCost(Value v, Cost c);
+    void VACproject(Value v, const Cost c); /**< Increases unary cost and may queue for NC enforcing */
+    void VACextend(Value v, const Cost c);  /**< Decreases unary cost and may queue for NC enforcing */
 
-	bool averaging();  /**< For Min-Sum diffusion */
+    bool averaging();  /**< For Min-Sum diffusion */
 
-	friend ostream &operator<< (ostream &os, VACVariable &v)
-	{
-		return os;
-	}
-	void KilledOne();
+    friend ostream& operator<< (ostream& os, VACVariable &v) {
+        return os;
+    }
+    void KilledOne();
 };
 
 

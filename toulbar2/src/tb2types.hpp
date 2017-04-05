@@ -447,10 +447,10 @@ class Cluster;
 class Separator;
 class TreeDecomposition;
 
-
-struct ConstraintLink {
-	Constraint *constr;
-	int scopeIndex;
+class ConstraintLink {
+public:
+    Constraint *constr;
+    int scopeIndex;
 };
 
 class WCSPLink

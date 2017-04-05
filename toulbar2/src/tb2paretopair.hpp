@@ -157,13 +157,14 @@ inline ParetoPair string2Cost(char *ptr) {int p = 0, q = 0; sscanf(ptr, "(%d,%d)
 
 inline int cost2log2(int x)
 {
-	if (x == 0) return -1;
-	register int l2 = 0;
-	x >>= 1;
-	for (; x != 0; x >>= 1) {
-		++ l2;
-	}
-	return (l2);
+    if (x==0) return -1;
+    int l2 = 0;
+    x>>=1;
+    for (; x != 0; x >>=1)
+    {
+        ++ l2;
+    }
+    return (l2);
 }
 
 inline int cost2log2glb(const ParetoPair &r) {return  cost2log2(min(r.p, r.q));}

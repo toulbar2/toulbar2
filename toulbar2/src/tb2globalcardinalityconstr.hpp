@@ -9,20 +9,19 @@
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint
 {
 private:
-	map<Value, pair<int, int> > bound;
-	void buildIndex();
-	size_t GetGraphAllocatedSize();
-	void buildGraph(Graph &g);
-	Cost constructFlow(Graph &g);
-	pair<int, int> mapto(int varindex, Value val)
-	{
-		return make_pair(varindex + 1, mapval[val]);
-	}
-	//JP Start// This array stores the repestive weight of each bound
-	map<Value, pair<int, int> > weights;
-	int nvalues;
-	int nDistinctDomainValue;
-	//JP End//
+    map<Value, pair<int, int> > bound;
+    void buildIndex();
+    size_t GetGraphAllocatedSize();
+    void buildGraph(Graph &g);
+    Cost constructFlow(Graph &g);
+    pair<int,int> mapto(int varindex, Value val) {
+        return make_pair(varindex+1, mapval[val]);
+    }
+    //JP Start// This array stores the repestive weight of each bound
+    map<Value, pair<int, int> > weights;
+    int nDistinctDomainValue;
+    //JP End//
+
 public:
 	//JP Start// New type
 	static const int EMPTY = -1;
