@@ -202,8 +202,9 @@ public:
 	void print(ostream &os);
   
   vector<TProb> MFdistrib;
-  void UpdateUniformMFdistrib();
+  void initMFdistrib();
   void UpdateMFdistrib();
+  void showMFdistrib();
   
 };
 

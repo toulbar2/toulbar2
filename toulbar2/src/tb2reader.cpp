@@ -796,8 +796,8 @@ void WCSP::read_random(int n, int m, vector<int> &p, int seed, bool forceSubModu
 void WCSP::read_uai2008(const char *fileName)
 {
 	// Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
-	ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
-	if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
+	ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(- ToulBar2::resolution)));
+	if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) /  ToulBar2::resolution) {
 		cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
 		exit(EXIT_FAILURE);
 	} else if (ToulBar2::verbose >= 1) {
@@ -963,10 +963,8 @@ void WCSP::read_uai2008(const char *fileName)
 		TProb maxp = 0.;
 		for (k = 0; k < ntuples; k++) {
 			file >> p;
-			if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai ==2) // LG format
-				p /= ToulBar2::isZCelTemp;
-			else if (ToulBar2::isZCelTemp > 0) // uai format
-				p = Exp(Log(p)/ToulBar2::isZCelTemp);
+			if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai ==2) p /= ToulBar2::isZCelTemp;
+			else if (ToulBar2::isZCelTemp > 0) p = Exp(Log(p)/ToulBar2::isZCelTemp);
 				
 			assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
 			costsProb.push_back(p);
@@ -1000,8 +998,13 @@ void WCSP::read_uai2008(const char *fileName)
 			p = costsProb[k];
 			Cost cost;
 			// ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
-			if (markov) cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
-			else        cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
+			//if (maxp>1){
+				//cout<< "Div : "<< p<<" by " <<maxp<<" equal to "<<log(p / maxp)<<endl;
+				if (markov) cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
+				else        cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
+			//}else{
+			//	cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb) p ) : Prob2Cost(p));
+			//}
 			costs[ictr].push_back(cost);
 			if (cost < minc) minc = cost;
 			if (cost > maxc && cost < getUb()) maxc = cost;
@@ -1022,17 +1025,11 @@ void WCSP::read_uai2008(const char *fileName)
 		++it;
 	}
 
-	file >> varname;
-	if (file) {
+	//file >> varname;
+	if (file && !ToulBar2::seq) {
 		cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
 	}
 
-	updateUb(upperbound);
-
-
-
-	//~ file>>dummy;
-	//~ cout<<dummy<<endl;
 	if (file) {
 		if (ToulBar2::seq) {
 			Cpd *cpd = new Cpd;
@@ -1069,6 +1066,7 @@ void WCSP::read_uai2008(const char *fileName)
 			unaryconstrs[iunaryctr].costs.clear();
 			for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
 				if (ToulBar2::seq) {
+					cout<<ToulBar2::seq->get_mask()[ictr - 1][a]<<endl;
 					if (ToulBar2::seq->get_mask()[ictr - 1][a]) {
 						unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
 					} else {
@@ -1130,10 +1128,11 @@ void WCSP::read_uai2008(const char *fileName)
 	}
 
   if (ToulBar2::ubE){
-    cout<< "updateub from "<<ub<<" to: "<<LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log)<<endl;
+    cout<< "Update ub on cost from "<<ub<<" to: "<<LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log)<<endl;
     updateUb(LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log));
   }
 	sortConstraints();
+	
 	// apply basic initial propagation AFTER complete network loading
 	increaseLb(inclowerbound);
 

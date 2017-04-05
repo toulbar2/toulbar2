@@ -55,7 +55,7 @@ void EnumeratedVariable::init()
 	queueDEE();
   
   for(iterator iter = begin(); iter != end(); ++iter) {
-    MFdistrib.push_back( 1 / ((double) getDomainSize())); // initialize with uniform probability
+    MFdistrib.push_back( 1.0 ); // initialize with 1
   }
 }
 
@@ -1055,10 +1055,13 @@ void EnumeratedVariable::eliminate()
 			}
 		} else {
 			if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
-				Cost clogz = wcsp->getUb();
+				Cost clogz = MAX_COST;
+				//cout<< wcsp->Cost2Prob(clogz) << " ";
 				for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
 					clogz = wcsp->LogSumExp(clogz, getCost(*itv));
+					//cout<< wcsp->Cost2Prob(getCost(*itv)) << " ";
 				}
+				//cout<<endl;
 				if (clogz < MIN_COST) wcsp->decreaseLb(clogz);
 				else wcsp->increaseLb(clogz);
 			}
@@ -1521,14 +1524,19 @@ bool EnumeratedVariable::verify()
 }
 
 
-void EnumeratedVariable::UpdateUniformMFdistrib(){
+void EnumeratedVariable::initMFdistrib(){
   MFdistrib.clear();
-  for(iterator iter = begin(); iter != end(); ++iter) {
-    MFdistrib.push_back( 1 / ((double) getDomainSize())); // initialize with uniform probability
+  for(iterator iter = begin(); iter != end(); ++iter) {  
+    MFdistrib.push_back( 1 / ((double) getDomainSize())); // uniform probability
   }
-  //cout << endl;
 }
 
+void EnumeratedVariable::showMFdistrib(){
+  for(iterator iter = begin(); iter != end(); ++iter) {  
+    cout<<MFdistrib[toCurrentIndex(*iter)]<<" "; // show probability
+  }
+  cout << endl;
+}
 
 void EnumeratedVariable::UpdateMFdistrib(){
   TProb q=0;
@@ -1536,39 +1544,43 @@ void EnumeratedVariable::UpdateMFdistrib(){
   TLogProb logZi=-numeric_limits<TLogProb>::infinity();
   MFdistrib.clear();
 
-
-  for(iterator it = begin(); it != end(); ++it) {
-	q =  wcsp->Cost2LogProb(getCost(*it)) ;
-    for (ConstraintList::iterator cter = getConstrs()->begin(); cter != getConstrs()->end(); ++cter) {
+  //~ cout<< "Var :"<<getName() <<endl;
+  for(iterator it = begin(); it != end(); ++it) { // for every values in variable i (this)
+	q =  getCost(*it);
+	//~ cout <<wcsp->getUb()<<" < ? "<<getCost(*it)<<"/"<<wcsp->Cost2Prob(getCost(*it))<< "/"<< wcsp->Cost2LogProb(getCost(*it))<< " + "<<endl;
+    for (ConstraintList::iterator cter = getConstrs()->begin(); cter != getConstrs()->end(); ++cter) { // For each Variable connnected to i (this)
       Constraint *c = (*cter).constr;
 	  if(c->arity() == 2 && !c->isSep()) {
 	    BinaryConstraint *bctr = (BinaryConstraint *) c;
 	    if (bctr != NULL){
 		  EnumeratedVariable *y = (EnumeratedVariable *) c->getVar(1 - (*cter).scopeIndex);
-      //cout<<"Var :"<<y->getName()<<endl;
-		  for(iterator ity = y->begin(); ity != y->end(); ++ity) {
-        //cout << y->MFdistrib[y->toCurrentIndex(*ity)] << ' '<<wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity)))<<endl;
-		    q += y->MFdistrib[y->toCurrentIndex(*ity)] * wcsp->Cost2LogProb(bctr->getCost(this, y, toCurrentIndex(*it), y->toCurrentIndex(*ity))) ;
+		  //~ cout<<"Var :"<<y->getName()<<endl;
+		  for(iterator ity = y->begin(); ity != y->end(); ++ity) { // For every value in j connected to value in i (this) 
+			if(wcsp->Cost2Prob(bctr->getCost(this, y, *it, *ity))==0) continue; // if p=0 then we consider log(p)=0 in order to not take in account impossible proba
+			//~ cout << y->toCurrentIndex(*ity)<<" "<<y->MFdistrib[y->toCurrentIndex(*ity)] << ' '<<bctr->getCost(this, y, *it,*ity)<<"/"<<wcsp->Cost2Prob(bctr->getCost(this, y, *it, *ity))<<"/"<<wcsp->Cost2LogProb(bctr->getCost(this, y, *it, *ity))<<endl;
+		    q += y->MFdistrib[y->toCurrentIndex(*ity)] * bctr->getCost(this, y, *it, *ity);
 		  }
-      //cout<<endl;
+		  //~ cout<<endl;
 		}
 	  }
 	}
-    //cout<<"Q "<<q << endl;
+	q = wcsp->Cost2LogProb(q);
+    //~ cout<<"Q "<<q << endl;
     Unnormalize.push_back(q); 
   }
-  //cout<<endl;
+  //~ cout<<endl;
   
   
   for(auto& qi : Unnormalize){
     logZi = wcsp->LogSumExp(logZi,qi);	 
   }
   
+  //~ cout<<"q("<<getName()<<") : ";
   for(auto& q : Unnormalize){
-	//cout<< Exp(q-logZi) << ' ';
+	//~ cout<< Exp(q-logZi) << ' ';
     MFdistrib.push_back(Exp(q-logZi));	 
   }
-  //cout<<endl;
+  //~ cout<<endl;
   
 }
 

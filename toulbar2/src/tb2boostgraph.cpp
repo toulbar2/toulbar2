@@ -318,7 +318,7 @@ void WCSP::spanningTreeRoot()
 			//cout << "parent[" << i << "] = no parent" << endl;
 		}
 	}
-	if (ToulBar2::verbose >= 1) { // Write the pourcentage of costs taken over the all costs
+	if (ToulBar2::verbose >= 4) { // Write the pourcentage of costs taken over the all costs
 		if (tightok) cout << " MSTZ(" << 100.0 * tight / alltight << "%)";
 		cout << endl;
 	}

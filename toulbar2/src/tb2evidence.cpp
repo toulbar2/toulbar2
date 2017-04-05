@@ -137,54 +137,68 @@ TLogProb Solver::Zub()  // Calculate an uper-bound on Z before exploration (step
 
 TLogProb Solver::MeanFieldZ() // Compute a lower bound on logZ using MF approximation
 {
-  TLogProb newLogL; // New Lower Bound on Z
-  TLogProb SumUnaryCost=0;
-  TLogProb SumBinaryCost=0;
+	//~ cout<<"Cout "<<wcsp->getLb()<< " "<<wcsp->getNegativeLb()<<" "<<ToulBar2::markov_log<<endl;
+	//~ cout<<"Log "<<wcsp->Cost2LogProb(wcsp->getLb())<< " "<<wcsp->Cost2LogProb(wcsp->getNegativeLb())<<" "<<ToulBar2::markov_log<<endl;
+	//~ cout<<"Prob "<<wcsp->Cost2Prob(wcsp->getLb())<< " "<<wcsp->Cost2Prob(wcsp->getNegativeLb())<<" "<<exp(ToulBar2::markov_log)<<endl;
+
+  TLogProb newLogL=wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) ; // New Lower Bound on Z init to c_0
   TLogProb q_i;
   TLogProb q_j;
-  unsigned int n_conv=1; 
+  unsigned int n_conv=1;
+  
+  for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
+	if (wcsp->unassigned(i)) {
+        EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+        y->initMFdistrib();
+      }
+  }
+   
   for (unsigned int k=0; k<n_conv;k++){
     for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
       if (wcsp->unassigned(i)) {
         EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
         y->UpdateMFdistrib();
-        //y->UpdateUniformMFdistrib();
       }
     }
   }
-  
-   for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
-     if (wcsp->unassigned(i)) {
-       EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
-       //cout <<"Var "<<y->getName()<< " Dom "<<y->getDomainSize()<<" "<<y->MFdistrib.size()<<" "<<y->getDomainInitSize()<<endl;
-       
-       for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) {
-	 q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
-	 if (q_i == 0) continue;
-	 //cout <<y->toCurrentIndex(*ity)<<"   "<< q_i<<endl;
-	 SumUnaryCost += (q_i* (wcsp->Cost2LogProb(y->getCost(*ity)) - Log(q_i))); // Sum over the domain of i.
-       }
-       
-	    for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) {        
-	      if (wcsp->unassigned(j)) {
-		EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // get the variable j;
-		BinaryConstraint *bctr = x->getConstr(y);// get constr that link i to j
-		if (bctr != NULL) {
-		  for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on y values
-		    for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
-		      q_i=y->MFdistrib[y->toCurrentIndex(*ity)] ;
-		      q_j=x->MFdistrib[x->toCurrentIndex(*itx)] ;
-		      TLogProb pbin = wcsp->Cost2LogProb(bctr->getCost(y, x, *ity, *itx)); // get the binary cost linking "y,ity" and "x,itx"
-		      SumBinaryCost += q_i*q_j*pbin;
-              }
-		  }
+
+  //~ for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on the unassigned variables
+	//~ if (wcsp->unassigned(i)) {
+        //~ EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i);  // get the variable i
+        //~ y->showMFdistrib();
+      //~ }
+  //~ }
+
+   for (unsigned int i = 0; i < wcsp->numberOfVariables() ; i++) { // Loop on variable i
+	 if (wcsp->unassigned(i)) {
+		EnumeratedVariable *x = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(i); // variable i = x
+		for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) { // Loop on x values
+			q_i=x->MFdistrib[x->toCurrentIndex(*itx)] ; // get q_i(x_i)
+			//cout << x->getName() << " " <<x->toCurrentIndex(*itx) << " "<<q_i<<endl;
+			if (q_i == 0 ) continue; // if q_i(x_i) = 0 then the whole contribution is equal to 0
+			else newLogL += - q_i*Log(q_i); // Subtract the entropy q_i(x_i) * log(q_i(x_i))
+			TLogProb newContribution = wcsp->Cost2LogProb(x->getCost(*itx)) ;
+			for (unsigned int j = i + 1; j < wcsp->numberOfVariables(); j++) { // Loop on variable i
+				if (wcsp->unassigned(j)) {
+					EnumeratedVariable *y = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(j); // variable j = y;
+					BinaryConstraint *bctr = y->getConstr(x);// get constr that link i to j
+					if (bctr != NULL) {
+						for (EnumeratedVariable::iterator ity = y->begin(); ity != y->end(); ++ity) { // Loop on y values
+							if(wcsp->Cost2Prob(bctr->getCost(x, y, *itx, *ity))==0) continue; // if p=0 then we consider log(p)=0 in order to not take in account impossible proba
+							q_j=y->MFdistrib[y->toCurrentIndex(*ity)] ; //get q_j(x_j)
+							newContribution += q_j * wcsp->Cost2LogProb(bctr->getCost(x, y, *itx, *ity)); // Contribution q_j(x_j) * c_ij(x_i,x_j)
+							//~ cout << x->getName() << " "<< y->getName()<< " ";
+							//~ cout << x->toCurrentIndex(*itx) << " "<< y->toCurrentIndex(*ity)<<" ";
+							//~ cout << q_i << " "<<q_j<<" ";
+						}
+					}
+				}
+			}
+			newLogL += q_i * newContribution;
 		}
-	      }
-	    }
-     }
+	 } 
    }
    
-   newLogL = wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) +SumUnaryCost + SumBinaryCost; 
    return newLogL;
 }
 
@@ -448,7 +462,7 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
       if (ToulBar2::verbose >=1) showZGap();
           
       // if LogUb - LogLb < log(1+epsilon) then finish
-      //cout <<"Epsilon : "<<Exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
+      //cout <<"Epsilon : "<<exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
       if (wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<= Log1p(ToulBar2::sigma)) break;
       if (wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ) < Log(ToulBar2::sigma)) break;
       if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)

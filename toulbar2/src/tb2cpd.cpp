@@ -26,13 +26,20 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 			line.str().clear();
 			continue;
 		}
+		
 		while (line >> current_char) {
 			//       line >> ws;
-			rot2aa_var.push_back(current_char);
-			//       cout << "Push: " << current_char << endl;getchar();
+			if (!isspace(current_char)) rot2aa_var.push_back(current_char);
+			      //cout << "Push: " << current_char << endl;//getchar();
 		}
-		rotamers2aa.push_back(rot2aa_var);
+		if (rot2aa_var.size() != 0) rotamers2aa.push_back(rot2aa_var);
 	}
+	//~ for (int i=0;i<rotamers2aa.size();i++){
+		//~ for(int j=0;j<rotamers2aa[i].size();j++){
+			//~ cout<< rotamers2aa[i][j];
+		//~ }
+		//~ cout<<endl;
+	//~ }
 	if (rotamers2aa.size() != vars.size()) {
 		cout << "Wrong variable number " << rotamers2aa.size() << " " << vars.size() << endl;
 		throw 1;
@@ -40,7 +47,7 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 		for (size_t i = 0; i < rotamers2aa.size(); i++) {
             unsigned int initsize = dynamic_cast<EnumeratedVariable *>(vars[i])->getDomainInitSize();
 			if (rotamers2aa[i].size() != initsize) {
-				cout << "Wrong domain size " << rotamers2aa[i].size() << " " << initsize << endl;
+				cout << "Wrong domain size " << rotamers2aa[i].size() << " " << initsize << " of variable "<<dynamic_cast<EnumeratedVariable *>(vars[i])->getName()<<endl;
 				throw 2;
 			}
         }
