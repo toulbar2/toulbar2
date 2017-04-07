@@ -188,8 +188,7 @@ inline Double Log1p(Double x) {return log(1. + x);}
 	    }
 	    return (l2);
 	}
-	return (l2);
-}
+
 inline int cost2log2glb(Long x) {return cost2log2(x);}
 inline int cost2log2gub(Long x) {return cost2log2(x);}
 #endif
