@@ -13,16 +13,15 @@
  */
 
 /// \return size of the cartesian product of all initial domains in the constraint scope.
+/// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long AbstractNaryConstraint::getDomainInitSizeProduct()
 {
-    if (arity_==0) return 0;  // Why ? should be 1 here.
+    if (arity_==0) return 0;
     Long cartesianProduct = 1;
-    
     for (int i=0; i<arity_; i++) {
-        if (__builtin_smulll_overflow(cartesianProduct,
-                                      scope[i]->getDomainInitSize(),
-                                      &cartesianProduct))
-            return LONGLONG_MAX;
+        // trap overflow numbers
+        if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE) return LONGLONG_MAX;
+        cartesianProduct *= scope[i]->getDomainInitSize();
     }
     return cartesianProduct;
 }
