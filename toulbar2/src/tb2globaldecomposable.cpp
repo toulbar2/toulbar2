@@ -266,6 +266,8 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
         if ( ToulBar2::verbose > 1 )  {
             cout << "DEBUG>> wregular last q varname = "<<  q_last <<endl;
         }
+    } else {
+        throw Contradiction();
     }
     /*
 				//################################################### lecture des transition ????
