@@ -72,9 +72,10 @@ class WeightedClause : public AbstractNaryConstraint
 
 public:
     // warning! give the negation of the clause as input
-    WeightedClause(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in, String tuple_in) : AbstractNaryConstraint(wcsp, scope_in, arity_in),
+    WeightedClause(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in = MIN_COST, String tuple_in = String()) : AbstractNaryConstraint(wcsp, scope_in, arity_in),
         cost(cost_in), tuple(tuple_in), lb(MIN_COST), support(0), nonassigned(arity_in)
     {
+        if (tuple_in.empty() && arity_in>0) tuple = String(arity_in, CHAR_FIRST);
         deltaCosts = vector<StoreCost>(arity_in,StoreCost(MIN_COST));
         Char* tbuf = new Char [arity_in+1];
         tbuf[arity_in] = '\0';
@@ -86,7 +87,6 @@ public:
         evalTuple = String(tbuf);
         delete [] tbuf;
     }
-    WeightedClause(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in) : WeightedClause(wcsp, scope_in, arity_in, MIN_COST, String(arity_in, CHAR_FIRST)) {}
 
     virtual ~WeightedClause() {}
 
