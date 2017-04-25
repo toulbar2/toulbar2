@@ -96,7 +96,6 @@ public:
     }
 
     bool extension() const FINAL {return false;}    // TODO: allows functional variable elimination but not other preprocessing
-
     void reconnect() {
         if (deconnected()) {
             nonassigned = arity_;
@@ -121,6 +120,12 @@ public:
                 }
             }
         }
+    }
+
+    bool universal() {
+        if (cost != MIN_COST || lb != MIN_COST) return false;
+        for(int i=0;i<arity_;i++) if (deltaCosts[i] != MIN_COST) return false;
+        return true;
     }
 
     Cost eval( const String& s ) {
