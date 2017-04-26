@@ -608,7 +608,7 @@ void createWCSP()
 	  }
 	  unaryconstrs[u].var->findSupport();
     }	
-	wcsp->sortConstraints();
+    wcsp->sortConstraints();
     f.close();
 
     nDoms.clear();
