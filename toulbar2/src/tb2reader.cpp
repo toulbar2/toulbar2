@@ -748,7 +748,6 @@ void WCSP::read_wcsp(const char *fileName)
         }
     }
 
-    sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
 
@@ -756,6 +755,7 @@ void WCSP::read_wcsp(const char *fileName)
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
 
     if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
@@ -1056,13 +1056,13 @@ void WCSP::read_uai2008(const char *fileName)
         cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
     }
 
-    sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
     if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 
     int nevi = 0;
@@ -1339,13 +1339,13 @@ void WCSP::read_wcnf(const char *fileName)
         cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
     }
 
-    sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
 
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
     cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
@@ -1495,8 +1495,6 @@ void WCSP::read_qpbo(const char *fileName)
         }
     }
 
-    sortConstraints();
-
     // create weighted unary clauses
     for (int i=0; i<n; i++) {
         if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
@@ -1506,6 +1504,7 @@ void WCSP::read_qpbo(const char *fileName)
             postUnaryConstraint(i, costs);
         }
     }
+    sortConstraints();
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
 

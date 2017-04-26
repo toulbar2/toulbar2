@@ -510,15 +510,15 @@ void Pedigree::buildWCSP(const char *fileName, WCSP *wcsp)
             }
         }
     }
-    wcsp->sortConstraints();
 
     // apply basic initial propagation AFTER complete network loading
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a]);
+            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
         }
         unaryconstrs[u].var->findSupport();
     }
+    wcsp->sortConstraints();
 
     if (ToulBar2::verbose >= 0) {
         cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
@@ -719,15 +719,15 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
             var->queueNC();
         }
     }
-    wcsp->sortConstraints();
 
     // apply basic initial propagation AFTER complete network loading
     for (unsigned int u=0; u<unaryconstrs.size(); u++) {
         for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a]);
+            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
         }
         unaryconstrs[u].var->findSupport();
     }
+    wcsp->sortConstraints();
 
     if (ToulBar2::verbose >= 0) {
         int nbtypings = genotypes.size();
