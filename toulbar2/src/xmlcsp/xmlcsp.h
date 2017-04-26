@@ -599,16 +599,16 @@ void createWCSP()
 	  ++itr;
 	}
   	
-	wcsp->sortConstraints();
 	// apply basic initial propagation AFTER complete network loading
 	wcsp->increaseLb(inclowerbound);
     
 	for (unsigned int u=0; u<unaryconstrs.size(); u++) {
 	  for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-		if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a]);
+		if (unaryconstrs[u].costs[a] > MIN_COST) unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a], true);
 	  }
 	  unaryconstrs[u].var->findSupport();
     }	
+	wcsp->sortConstraints();
     f.close();
 
     nDoms.clear();

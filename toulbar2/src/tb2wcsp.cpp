@@ -1246,7 +1246,7 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs) {
         }
     }
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        if (costs[a] > MIN_COST) x->project(x->toValue(a), costs[a]);
+        if (costs[a] > MIN_COST) x->project(x->toValue(a), costs[a], true);
     }
     x->findSupport();
     x->queueNC();
