@@ -55,7 +55,7 @@
                         ${My_Source}/tb2vacutils.cpp
                         ${My_Source}/tb2variable.cpp
                         ${My_Source}/tb2wcsp.cpp
-                        ${My_Source}/tb2evidence.cpp
+                        ${My_Source}/tb2logZ.cpp
                         ${My_Source}/tb2trienum.cpp
 			${My_Source}/tb2seq.cpp
 			${My_Source}/tb2gumdistrib.cpp
@@ -122,7 +122,7 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/tb2vacutils.*pp
                         ${My_Source}/tb2variable.*pp
                         ${My_Source}/tb2wcsp.*pp
-                        ${My_Source}/tb2evidence.*pp
+                        ${My_Source}/tb2logZ.*pp
                         ${My_Source}/tb2trienum.*pp
                         ${My_Source}/tb2seq.*pp
 			${My_Source}/tb2gumdistrib.*pp

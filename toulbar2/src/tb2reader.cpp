@@ -1027,7 +1027,10 @@ void WCSP::read_uai2008(const char *fileName)
 
 	//file >> varname;
 	if (file && !ToulBar2::seq) {
-		cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+		//file>>varname;
+		//cout<<varname<<endl;
+		if(varname.find_first_not_of(" \t\n\v\f\r") != std::string::npos) cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+
 	}
 
 	if (file) {
@@ -1066,14 +1069,13 @@ void WCSP::read_uai2008(const char *fileName)
 			unaryconstrs[iunaryctr].costs.clear();
 			for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
 				if (ToulBar2::seq) {
-					cout<<ToulBar2::seq->get_mask()[ictr - 1][a]<<endl;
-					if (ToulBar2::seq->get_mask()[ictr - 1][a]) {
+					if (ToulBar2::seq->get_mask()[ictr][a]) {
 						unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
 					} else {
 						if (ToulBar2::verbose >= 1) {
 							cout << "Eliminating: " << ictr << " " << a << endl;
 							if (ToulBar2::verbose >= 4) {
-								cout << ictr << ' ' << a << " MASK " << ToulBar2::seq->get_mask()[ictr - 1][a] << endl;
+								cout << ictr << ' ' << a << " MASK " << ToulBar2::seq->get_mask()[ictr][a] << endl;
 							}
 						}
 						unaryconstrs[iunaryctr].costs.push_back(MAX_COST);

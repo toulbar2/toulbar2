@@ -15,6 +15,7 @@ public:
 	std::vector < std::vector <bool> > get_mask() {return mask;}
 	void generate_mask(std::vector < std::vector < char > > rots);
 	void mask_variable(vector< vector<Cost> > m_cost);
+	void show_mask();
 
 private:
 	std::string sequence;

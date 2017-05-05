@@ -366,6 +366,11 @@ Cost tb2checkOptions(Cost ub)
 	if (ToulBar2::allSolutions || ToulBar2::isZ) {
 		ToulBar2::DEE = 0;
 	}
+  if (ToulBar2::isZ && ToulBar2::isZUB < 0){
+    cout << "Warning! Upperbound level minimum is 0, for exact computing set epsilon or sigma to 0" << endl;
+    cout << "Setting upper bound level to 0"<<endl;
+    ToulBar2::isZUB = 0;
+  }
 	if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
 		cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
 		ToulBar2::lds = 0;
@@ -427,7 +432,13 @@ Cost tb2checkOptions(Cost ub)
 		cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
 		ToulBar2::DEE = 0;
 	}
-
+  if (ToulBar2::isZ && ToulBar2::sigma>0 && !ToulBar2::hbfs){
+    cout<< "Warning sigma option is useless without HBFS counting !"<<endl;
+  }
+  if (ToulBar2::isZ && (ToulBar2::sigma>0 || ToulBar2::hbfs) && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity()){
+    cout << "Warning! Cannot perform Z-star algorithm with HBFS counting ! Existing..."<<endl;
+    exit(EXIT_FAILURE);
+  }
 	return ub;
 }
 

@@ -790,7 +790,7 @@ bool EnumeratedVariable::elimVar(BinaryConstraint *ctr)
 			if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost, curcost);
 			else if (curcost < mincost) mincost = curcost;
 		}
-		if (ToulBar2::isZ) {
+		if (ToulBar2::isZ) { 
 			if (mincost < negcost) negcost = mincost;
 			mycosts[x->toIndex(*iter1)] = mincost;
 		} else if (mincost > MIN_COST) {
@@ -806,7 +806,7 @@ bool EnumeratedVariable::elimVar(BinaryConstraint *ctr)
 			Cost mincost = mycosts[x->toIndex(*iter1)] - negcost;
 			assert(mincost >= MIN_COST);
 			if (mincost > MIN_COST) {
-				if (td) td->addDelta(cluster, x, *iter1, mincost);
+				if (td) td->addDelta(cluster, x, *iter1, mincost); // Prend en Compte les Delta??
 				if (x->getSupport() == *iter1) supportBroken = true;
 				x->project(*iter1, mincost);
 			}
@@ -1071,7 +1071,7 @@ void EnumeratedVariable::eliminate()
 				for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
 					clogz = wcsp->LogSumExp(clogz, getCost(*itv));
 				}
-				if (clogz < MIN_COST) wcsp->decreaseLb(clogz);
+				if (clogz < 0) wcsp->decreaseLb(clogz);
 				else wcsp->increaseLb(clogz);
 			}
 		}

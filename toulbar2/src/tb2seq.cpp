@@ -46,3 +46,12 @@ void Seq::mask_variable(vector< vector<Cost> > m_cost)
 		}
 	}
 }
+
+void Seq::show_mask(){
+	for (size_t i = 0; i < mask.size(); i++) {
+		for (size_t j = 0; j < mask[i].size(); j++) {
+			cout << mask[i][j] << " " ;
+		}
+		cout<<endl;
+	}
+}

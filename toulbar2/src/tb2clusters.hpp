@@ -43,6 +43,8 @@ typedef map<String, TPairSol> TSols;
 typedef pair<Cost, BigInteger>	TPairSG;
 typedef map<String, TPairSG> TSGoods;
 
+// for LogZ (LZ) computing :
+typedef map<String, TLogProb> TLZGoods;
 
 
 
@@ -61,6 +63,7 @@ private:
 
 	TNoGoods  					  nogoods;
 	TSGoods						  sgoods;	// for solution counting
+  TLZGoods            lzgoods; // for LogZ computing
 	TSols  						  solutions;
 	DLink<Separator *>            linkSep; // link to insert the separator in PendingSeparator list
 
@@ -85,6 +88,10 @@ public:
 	void setSg(Cost c, BigInteger nb);
 	BigInteger getSg(Cost &res, BigInteger &nb);
 
+  void setLz(TLogProb logz);
+  void add2Lz(TLogProb logz);
+  TLogProb getLz(TLogProb &logz);
+  
 	void solRec(Cost ub);
 	bool solGet(TAssign &a, String &sol);
 
@@ -143,6 +150,10 @@ private:
 
 	StoreBigInteger     countElimVars;
 	int 			  	  num_part; //for approximation: number of the corresponding partition
+  
+  TLogProb logZ; //Current partition function of the cluster
+  TLogProb logZub; //Current upper bound on the partition function of the cluster
+  TLogProb logZlb; //Current lower bound on the partition function of the cluster
 
 public:
 	Cluster(TreeDecomposition *tdin);
@@ -236,6 +247,14 @@ public:
 	void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
 	void          getElimVarOrder(vector<int> &elimVarOrder);
 
+  void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);}
+  void add2logZ(TLogProb logz){if (sep) sep->add2Lz(logz);}
+  TLogProb getlogZ(){TLogProb logZ_;return sep->getLz(logZ_);}
+  //~ TLogProb getlogZub(){return logZub;}
+  //~ TLogProb getlogZlb(){return logZlb;}
+  //~ void setlogZub(TLogProb newlogZub){logZub=newlogZub;}
+  //~ void setlogZlb(TLogProb newlogZlb){logZlb=newlogZlb;}
+  
 	TVars::iterator beginVars() { return vars.begin(); }
 	TVars::iterator endVars()   { return vars.end(); }
 	TVars::iterator beginVarsTree() { return varsTree.begin(); }

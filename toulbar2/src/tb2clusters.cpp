@@ -244,6 +244,73 @@ void Separator::setSg(Cost c, BigInteger nb)
 	sgoods[t] = TPairSG(MAX(MIN_COST, c + deltares), nb);
 }
 
+void Separator::setLz(TLogProb logz)
+{
+	int i = 0;
+	WCSP *wcsp = cluster->getWCSP();
+	Cost deltares = MIN_COST;
+	//if (ToulBar2::verbose >= 1)	
+  cout << "( ";
+	TVars::iterator it = vars.begin();
+	while (it != vars.end()) {
+		assert(wcsp->assigned(*it));
+		Value val = wcsp->getValue(*it);
+		//if (ToulBar2::verbose >= 1)	
+    cout << "(" << *it << "," << val << ") ";
+		t[i] = val + CHAR_FIRST;
+		deltares += delta[i][val];
+		++it;
+		i++;
+	}
+  assert(deltares >= MIN_COST);
+  cout << " < C" << cluster->getId() << " , ";
+  Cout << t;
+  cout << ",delta: "<<deltares << ", set lzgoods from " << lzgoods[t]<<" to "<<logz<<" >";
+  TNoGoods::iterator itng = nogoods.find(t);
+  if (itng == nogoods.end()) {
+    //if (ToulBar2::verbose >= 1) 
+    cout << ") Learn #good with " << logz << " logZ" << endl; // /" << cluster->getVarsTree().size() << endl;
+    lzgoods[t] = logz;
+  }
+  else{
+    cout<<"already existing !"<<endl;
+    exit(0);
+  }
+}
+
+void Separator::add2Lz(TLogProb logz) // Add solution to logz of the separator.
+{
+	int i = 0;
+	WCSP *wcsp = cluster->getWCSP();
+	Cost deltares = MIN_COST;
+	if (ToulBar2::verbose >= 1)	cout << "( ";
+	TVars::iterator it = vars.begin();
+	while (it != vars.end()) {
+		assert(wcsp->assigned(*it));
+		Value val = wcsp->getValue(*it);
+		if (ToulBar2::verbose >= 1)	cout << "(" << *it << "," << val << ") ";
+		t[i] = val + CHAR_FIRST;
+		deltares += delta[i][val];
+		++it;
+		i++;
+	}
+	assert(deltares >= MIN_COST);
+  TLZGoods::iterator itng = lzgoods.find(t);
+  cout << " < C" << cluster->getId() << " , ";
+  Cout << t;
+  cout << ",delta: "<<deltares << ", add logz " << logz << " to " << lzgoods[t]<<" >"<<endl;
+  if (itng == lzgoods.end()) {
+    cout <<"No exist: ";
+    lzgoods[t] = logz;
+    cout<<"lzgood = "<<lzgoods[t]<<endl;
+  }
+  else{
+    cout <<"Already exist: ";
+    lzgoods[t] = wcsp->LogSumExp(lzgoods[t],logz);
+    cout<<"lzgood = "<<lzgoods[t]<<endl;
+  }
+}
+
 Cost Separator::getCurrentDelta()
 {
 	int i = 0;
@@ -350,6 +417,41 @@ BigInteger Separator::getSg(Cost &res, BigInteger &nb)
 		return nb = -1;
 	}
 }
+
+TLogProb Separator::getLz(TLogProb &logz)
+{
+	int i = 0;
+	Cost deltares = MIN_COST; // cost that run away from the cluster
+	//if (ToulBar2::verbose >= 1) 
+  cout << "( ";
+	TVars::iterator it = vars.begin();
+	while (it != vars.end()) {
+		assert(cluster->getWCSP()->assigned(*it));
+		Value val = cluster->getWCSP()->getValue(*it);
+		//if (ToulBar2::verbose >= 1) 
+    cout << "(" << *it << "," << val << ") ";
+		t[i] = val + CHAR_FIRST;	 // build the tuple
+		deltares -= delta[i][val];      // delta structure
+		++it;
+		i++;
+	}
+	TLZGoods::iterator itlz = lzgoods.find(t);
+  cout << " < C" << cluster->getId() << " , ";
+  Cout << t;
+  cout << ",delta: "<<deltares <<">";
+	if (itlz != lzgoods.end()) {
+		TLogProb p = itlz->second;
+		//if (ToulBar2::verbose >= 1)	
+    cout << ") Use #good with LogZ = " << p << " LogZ on cluster " << cluster->getId() << endl;
+		logz = p + wcsp->Cost2LogProb(deltares); // ? a vérifier pour les deltas ?
+		return logz;
+	} else {
+		//if (ToulBar2::verbose >= 1)	
+    cout << ") NOT FOUND for cluster " <<  cluster->getId() << endl;
+		return logz = -numeric_limits<TLogProb>::infinity();
+	}
+}
+
 
 bool Separator::solGet(TAssign &a, String &sol)
 {
@@ -481,12 +583,15 @@ void Separator::print(ostream &os)
  */
 
 Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(-1), parent(NULL), sep(NULL),
-	lb(MIN_COST), ub(MAX_COST), lbRDS(MIN_COST),
+	lb(MIN_COST), ub(MAX_COST), lbRDS(MIN_COST), 
 	active(true),
 	countElimVars(1),
 	cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0)
 {
 	instance = clusterCounter++;
+  logZ = -numeric_limits<TLogProb>::infinity();
+  logZub = -numeric_limits<TLogProb>::infinity();
+  logZlb = -numeric_limits<TLogProb>::infinity();
 }
 
 Cluster::~Cluster()

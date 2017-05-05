@@ -193,6 +193,9 @@ protected:
 	BigInteger sharpBTD(Cluster *cluster);
 	void approximate(BigInteger &nbsol, TreeDecomposition *td);
 
+  TLogProb binaryChoicePointBTDZ(Cluster *cluster, int varIndex, Value value);
+  TLogProb BTD_sharpZ(Cluster *cluster);
+  
 public:
 	Solver(Cost initUpperBound);
 	~Solver();

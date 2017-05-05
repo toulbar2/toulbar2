@@ -700,15 +700,17 @@ void help_msg(char *toulbar2filename)
 	cout << "---------------------------------------------------------------------------------------" << endl;
 	cout << "------------------------- Computation of Partition Function ---------------------------" << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
-	cout << "   -logz : computes approximation of log(Z) (i.e. probability of evidence or PR task)" << endl;
+	cout << "   -logz : computes log(Z) (i.e. probability of evidence or PR task)" << endl;
 	cout << "           for graphical models only (problem file extension .uai or .LG)" << endl;
+  cout << "           using by default (-zub=1 -hbfs -sigma=0 -ztmp=1)"<<endl;
 	cout << endl;
 	cout << "   -logz -ztmp : -logz and divide the Energy by the RT constant (25°C degrees)." << endl;
 	cout << endl;
 	cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
-	cout << "                           use -zub=-1 to have full computation of partition function " << endl;
 	cout << endl;
-	cout << "   -logz -epsilon=1/[float] : approximation factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
+	cout << "   -logz -epsilon=1/[float] : Run Z-star algorithm." <<endl;
+  cout<<  "                              Approximation epsilon factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
+  cout << "                              Set to 0 for exact computation"<<endl;
 	cout << endl;
 	cout << "   -logz -hbfs -sigma=1/[float] : limit factor for hbfs counting, set to 0 by default (exact computation)" << endl;
     cout<<  endl;
@@ -1384,12 +1386,17 @@ int _tmain(int argc, TCHAR *argv[])
 			}
 			// Set epsilon for epsilon approximation of Z
 			if (args.OptionId() == OPT_epsilon) {
-                ToulBar2::logepsilon = -Log(1000); // default is 0.001
 				if (args.OptionArg() != NULL) {
-					ToulBar2::logepsilon = -Log(stold(args.OptionArg()));
-					cout << "New assignment for epsilon = " << Exp(ToulBar2::logepsilon)  <<  endl;
+          long double epsilon_tmp=stold(args.OptionArg());
+          if (epsilon_tmp > 0){ 
+            ToulBar2::logepsilon = -Log(stold(args.OptionArg()));
+            cout << "New assignment for epsilon = " << Exp(ToulBar2::logepsilon)  <<  endl;
+          }
 				}
-
+        else { 
+          ToulBar2::logepsilon = -Log(1000); 
+          cout << "Default assignment for epsilon = " << Exp(ToulBar2::logepsilon)  <<  endl;
+          }
 			}
 			
             // Set sigma for HBFS-counting limit
