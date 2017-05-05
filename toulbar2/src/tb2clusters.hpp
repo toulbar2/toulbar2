@@ -90,7 +90,7 @@ public:
 
   void setLz(TLogProb logz);
   void add2Lz(TLogProb logz);
-  TLogProb getLz(TLogProb &logz);
+  TLogProb getLz();
   
 	void solRec(Cost ub);
 	bool solGet(TAssign &a, String &sol);
@@ -154,6 +154,7 @@ private:
   TLogProb logZ; //Current partition function of the cluster
   TLogProb logZub; //Current upper bound on the partition function of the cluster
   TLogProb logZlb; //Current lower bound on the partition function of the cluster
+  bool logZset=false; // Did the cluster has been already count ?
 
 public:
 	Cluster(TreeDecomposition *tdin);
@@ -247,9 +248,10 @@ public:
 	void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
 	void          getElimVarOrder(vector<int> &elimVarOrder);
 
-  void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);}
+  bool islogZset(){return logZset;}
+  void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);logZset=true;}
   void add2logZ(TLogProb logz){if (sep) sep->add2Lz(logz);}
-  TLogProb getlogZ(){TLogProb logZ_;return sep->getLz(logZ_);}
+  TLogProb getlogZ(){return sep->getLz();}
   //~ TLogProb getlogZub(){return logZub;}
   //~ TLogProb getlogZlb(){return logZlb;}
   //~ void setlogZub(TLogProb newlogZub){logZub=newlogZub;}

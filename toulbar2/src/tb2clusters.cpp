@@ -270,11 +270,11 @@ void Separator::setLz(TLogProb logz)
   if (itng == nogoods.end()) {
     //if (ToulBar2::verbose >= 1) 
     cout << ") Learn #good with " << logz << " logZ" << endl; // /" << cluster->getVarsTree().size() << endl;
-    lzgoods[t] = logz;
+    lzgoods[t] = logz - wcsp->Cost2LogProb(deltares);
   }
   else{
     cout<<"already existing !"<<endl;
-    exit(0);
+    exit(0); 
   }
 }
 
@@ -418,7 +418,7 @@ BigInteger Separator::getSg(Cost &res, BigInteger &nb)
 	}
 }
 
-TLogProb Separator::getLz(TLogProb &logz)
+TLogProb Separator::getLz()
 {
 	int i = 0;
 	Cost deltares = MIN_COST; // cost that run away from the cluster
@@ -443,12 +443,11 @@ TLogProb Separator::getLz(TLogProb &logz)
 		TLogProb p = itlz->second;
 		//if (ToulBar2::verbose >= 1)	
     cout << ") Use #good with LogZ = " << p << " LogZ on cluster " << cluster->getId() << endl;
-		logz = p + wcsp->Cost2LogProb(deltares); // ? a vérifier pour les deltas ?
-		return logz;
+		return (p - wcsp->Cost2LogProb(deltares)); // delta
 	} else {
 		//if (ToulBar2::verbose >= 1)	
     cout << ") NOT FOUND for cluster " <<  cluster->getId() << endl;
-		return logz = -numeric_limits<TLogProb>::infinity();
+    return (-numeric_limits<TLogProb>::infinity());
 	}
 }
 

@@ -397,6 +397,7 @@ TLogProb Solver::binaryChoicePointBTDZ(Cluster *cluster, int varIndex, Value val
 {
   TLogProb logZcluster = -numeric_limits<TLogProb>::infinity();
 	if (ToulBar2::interrupted) throw TimeOut();
+  TreeDecomposition *td = wcsp->getTreeDec();
 	assert(wcsp->unassigned(varIndex));
 	assert(wcsp->canbe(varIndex, value));
 	bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < wcsp->getDomainSize(varIndex));
@@ -408,9 +409,11 @@ TLogProb Solver::binaryChoicePointBTDZ(Cluster *cluster, int varIndex, Value val
 		else increasing = false;
 	}
 	try {
+    
 		Store::store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
-
+		//assert(wcsp->getLb() == cluster->getLbRec());
+		//wcsp->setUb(cub);
 		lastConflictVar = varIndex;
 		if (dichotomic) {
 			if (increasing) decrease(varIndex, middle);
@@ -431,10 +434,11 @@ TLogProb Solver::binaryChoicePointBTDZ(Cluster *cluster, int varIndex, Value val
 		Store::store();
 		assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
 		if (dichotomic) {
-			if (increasing) increase(varIndex, middle + 1);
-			else decrease(varIndex, middle);
-		} 
-    else remove(varIndex, value);
+			if (increasing) increase(varIndex, middle + 1, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
+			else decrease(varIndex, middle, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
+		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
+    
+    if (!ToulBar2::hbfs && cluster == td->getRoot() && initialDepth + 1 == Store::getDepth()) {initialDepth++;};
 
 		TLogProb logres = BTD_sharpZ(cluster);
 		logZcluster = wcsp->LogSumExp(logZcluster,logres); // Normaly sum but here we are in the logdomain so logsomexp
@@ -452,7 +456,8 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
 	TLogProb logZcluster = -numeric_limits<TLogProb>::infinity();
   TLogProb logres=-numeric_limits<TLogProb>::infinity();
 	TCtrs totalList;
-	if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************" << endl;
+	//if (ToulBar2::verbose >= 1) 
+  cout << "[" << Store::getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************" << endl;
 
 	int varIndex = -1;
 	if (ToulBar2::Static_variable_ordering) varIndex = getNextUnassignedVar(cluster);
@@ -467,7 +472,8 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
     //~ logZcluster =  wcsp->Cost2LogProb(cluster->getLb()+ wcsp->getNegativeLb());
     //cout<<"Add "<<logZcluster<<" on cluster "<<cluster->getId()<<endl;
     //cluster->add2logZ(logZcluster); // Add solution to the logZcluster
-		if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " logZ= " << logZcluster << endl;
+		//if (ToulBar2::verbose >= 1) 
+    cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " logZ= " << logZcluster << endl;
     
 		for (TClusters::iterator iter = cluster->beginSortedEdges(); iter != cluster->endSortedEdges(); ++iter) {
 			// Solves each cluster son
@@ -483,22 +489,25 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
       //~ else {
 				//~ lbSon = c->getLbRec();
 			//~ }
-      //logres=c->getlogZ();
-      //cout<<"getlogZ : "<<logres<<" begin of cluster  "<<c->getId()<<endl;
-      //if ( logres == -numeric_limits<TLogProb>::infinity()){ // if already computed don't go there
+      if (!c->islogZset()){ // if already computed don't go there BOOL REMINDER
         try {
             Store::store();
             wcsp->propagate();
             logres = BTD_sharpZ(c);
-            //cout<<"setlogZ : "<<logres<<" ending of  cluster "<<c->getId()<<endl;
-            //c->setlogZ(logres);
+            cout<<"setlogZ : "<<logres<<" ending of  cluster "<<c->getId()<<endl;
+            c->setlogZ(logres);
         } catch (Contradiction) {
+            cout<<"Catch Contradiction"<<endl;
             wcsp->whenContradiction();
             logres = -numeric_limits<TLogProb>::infinity();
-            //c->setlogZ(logres);
+            c->setlogZ(logres);
         }
-      //}
-      Store::restore();
+        Store::restore();
+      }
+      else{
+        logres=c->getlogZ();
+        cout<<"getlogZ : "<<logres<<" of cluster  "<<c->getId()<<endl;
+      }
       logZcluster += logres; // normally we need to multiply but here we are in the log domain e.g Z = Z*res <=> log(Z) = log(Z) + log(res)
     }
 		return logZcluster;
@@ -512,7 +521,8 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
 		} else {
 			logZcluster = binaryChoicePointBTDZ(cluster, varIndex, wcsp->getInf(varIndex));
 		}
-		if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " return " << logZcluster << endl;
+		//if (ToulBar2::verbose >= 1) 
+    cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " return " << logZcluster << endl;
 		return logZcluster;
 	}
 }

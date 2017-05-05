@@ -1657,13 +1657,17 @@ bool Solver::solve()
 							} else {
                 cout<<"Entering BTD sharpZ (testing phase)"<<endl;
                  //~ ToulBar2::logZ = BTD_sharpZ(start);
+                 Store::store();
+                 td->setCurrentCluster(start);
+                 wcsp->propagate();
+                 initialDepth = Store::getDepth();
                  ToulBar2::logZ = BTD_sharpZ(start) + wcsp->Cost2LogProb(wcsp->getNegativeLb());
                  //~ ToulBar2::logZ = wcsp->LogSumExp(BTD_sharpZ(start) , wcsp->getNegativeLb());
 							}
 						} else {
 							initialDepth = Store::getDepth();
 							try {
-                                if (ToulBar2::isZ) hybridCounting(ToulBar2::GlobalLogLbZ,ToulBar2::GlobalLogUbZ);
+                if (ToulBar2::isZ) hybridCounting(ToulBar2::GlobalLogLbZ,ToulBar2::GlobalLogUbZ);
 								else hybridSolve();
 							} catch (FindNewSequence) {}
 						}
