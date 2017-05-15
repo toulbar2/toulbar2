@@ -150,13 +150,13 @@ protected:
 	void remove(int varIndex, Value value, bool reverse = false);
 	void remove(int varIndex, ValueCost *array, int first, int last, bool reverse = false);
 	void conflict() {}
-	TLogProb Zub(); //Compute Upper Bound for evidence
-	TLogProb MeanFieldZ(); //Compute Lower Bound for evidence
+	TLogProb Zub(Cluster *cluster = NULL); //Compute Upper Bound for evidence
+	TLogProb MeanFieldZ(Cluster *cluster = NULL); //Compute Lower Bound for evidence
 	TLogProb GumofThrone(); //Compute Z with GumBel perturbation method (cf Tamir Hazan)
 	void ProdSumDiffusion();
 	void PropagateNoc();
 	void enforceUb();
-    void enforceZUb();
+  void enforceZUb(Cluster *cluster = NULL);
 	void singletonConsistency();
 	void scpChoicePoint(int xIndex, Value value, Cost lb);
 	void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);

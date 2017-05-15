@@ -525,17 +525,6 @@ void Solver::enforceUb()
 
 }
 
-void Solver::enforceZUb()
-{
-	TLogProb newlogU;
-    newlogU = Zub();
-    if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
-        if (ToulBar2::verbose >= 1) cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
-        ToulBar2::logU = newlogU;
-        ToulBar2::GlobalLogUbZ=wcsp->LogSumExp(ToulBar2::GlobalLogUbZ,ToulBar2::logU);
-        THROWCONTRADICTION;
-    }
-}
 void Solver::increase(int varIndex, Value value, bool reverse)
 {
 	enforceUb();
@@ -591,7 +580,6 @@ void Solver::assign(int varIndex, Value value, bool reverse)
 				if (wcsp->getTreeDec()->getCurrentCluster()->open->size() > 0) cout << " [" << wcsp->getTreeDec()->getCurrentCluster()->open->getLb(delta) << "," << wcsp->getUb() << "]/" << wcsp->getTreeDec()->getCurrentCluster()->open->size() << "/" << wcsp->getTreeDec()->getCurrentCluster()->cp->size() << " " << (100. * (wcsp->getUb() - wcsp->getTreeDec()->getCurrentCluster()->open->getLb(delta)) / wcsp->getUb()) << "%";
 			} else {
 				if (open->size() > 0) cout << " [" << open->getLb() << "," << wcsp->getUb() << "]/" << open->size() << "/" << cp->size() << "/" << nbNodes << " " << (100. * (wcsp->getUb() - open->getLb()) / wcsp->getUb()) << "%";
-        // changer affichage du gap pour le mode Z.
       }
 		}
 		cout << " " << Exp(((Cost)(*((StoreCost *) searchSize))) / 10e6);
@@ -1697,6 +1685,7 @@ bool Solver::solve()
 			cout << "Using upper bound number " << ToulBar2::isZUB << endl ;
 		}
     if (ToulBar2::logepsilon>-numeric_limits<TLogProb>::infinity()){ // Zstar mode
+      assert(ToulBar2::logU < ToulBar2::logepsilon + ToulBar2::logZ);
       cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
       cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
       cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";

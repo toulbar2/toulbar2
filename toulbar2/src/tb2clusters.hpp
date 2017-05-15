@@ -36,6 +36,7 @@ typedef set<Cluster *, CmpClusterStruct>       TClustersSorted;
 typedef triplet<Cost, Cost, Solver::OpenList >     TPairNG;
 typedef pair<Cost, String>   TPairSol;
 
+
 typedef map<String, TPairNG>  TNoGoods;
 typedef map<String, TPairSol> TSols;
 
@@ -44,8 +45,10 @@ typedef pair<Cost, BigInteger>	TPairSG;
 typedef map<String, TPairSG> TSGoods;
 
 // for LogZ (LZ) computing :
-typedef map<String, TLogProb> TLZGoods;
-
+typedef pair<TLogProb,bool> TPairLz; // < logZ Count, iscount >
+typedef triplet<TLogProb,int,bool> TripletLz; // < logZ Count, number of sol, iscount > 
+typedef map<String, TPairLz> TLZGoods;
+typedef map<String, TripletLz> TLZGoodsBis;
 
 
 
@@ -64,6 +67,7 @@ private:
 	TNoGoods  					  nogoods;
 	TSGoods						  sgoods;	// for solution counting
   TLZGoods            lzgoods; // for LogZ computing
+  TLZGoodsBis         lzgoodsbis; 
 	TSols  						  solutions;
 	DLink<Separator *>            linkSep; // link to insert the separator in PendingSeparator list
 
@@ -90,7 +94,8 @@ public:
 
   void setLz(TLogProb logz);
   void add2Lz(TLogProb logz);
-  TLogProb getLz();
+  TPairLz getLz();
+  TripletLz getLzBis();
   
 	void solRec(Cost ub);
 	bool solGet(TAssign &a, String &sol);
@@ -154,7 +159,8 @@ private:
   TLogProb logZ; //Current partition function of the cluster
   TLogProb logZub; //Current upper bound on the partition function of the cluster
   TLogProb logZlb; //Current lower bound on the partition function of the cluster
-  bool logZset=false; // Did the cluster has been already count ?
+  Cost negcost; // current cluster negative cost
+  TLogProb logU=-numeric_limits<TLogProb>::infinity(); // Current cluster accumulation of upperbound on the sub-tree that we eliminate
 
 public:
 	Cluster(TreeDecomposition *tdin);
@@ -218,6 +224,7 @@ public:
 	Cost			getLb()  { return lb; }
 	void			setLb(Cost c)  { lb = c; }
 	void 			increaseLb(Cost addToLb) { lb += addToLb; }
+  void      decraseLb(Cost addToNegLb) { negcost += addToNegLb;} // Negcost for each cluster
 	Cost          getUb() const { return ub; }
 	void          setUb(Cost c) {ub = c;}
 	Cost		    getLbRDS() { Cost delta = getCurrentDelta(); return MAX(lbRDS - delta, MIN_COST); }
@@ -248,14 +255,15 @@ public:
 	void 			setWCSP2Cluster();   // sets the WCSP to the cluster problem, deconnecting the rest
 	void          getElimVarOrder(vector<int> &elimVarOrder);
 
-  bool islogZset(){return logZset;}
-  void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);logZset=true;}
+  void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);}
   void add2logZ(TLogProb logz){if (sep) sep->add2Lz(logz);}
-  TLogProb getlogZ(){return sep->getLz();}
-  //~ TLogProb getlogZub(){return logZub;}
-  //~ TLogProb getlogZlb(){return logZlb;}
-  //~ void setlogZub(TLogProb newlogZub){logZub=newlogZub;}
-  //~ void setlogZlb(TLogProb newlogZlb){logZlb=newlogZlb;}
+  TPairLz getlogZ(){return sep->getLz();}
+  TripletLz getlogZBis(){return sep->getLzBis();}
+
+  unsigned int getNbOfAssignation(); // do not work at all...
+  unsigned int MaxDomainSize();
+  TLogProb getlogU(){return logU;}
+  void setlogU(TLogProb newlogU){logU = newlogU;}
   
 	TVars::iterator beginVars() { return vars.begin(); }
 	TVars::iterator endVars()   { return vars.end(); }

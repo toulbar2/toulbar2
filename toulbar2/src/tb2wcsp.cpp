@@ -436,7 +436,7 @@ Cost tb2checkOptions(Cost ub)
     cout<< "Warning sigma option is useless without HBFS counting !"<<endl;
   }
   if (ToulBar2::isZ && (ToulBar2::sigma>0 || ToulBar2::hbfs) && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity()){
-    cout << "Warning! Cannot perform Z-star algorithm with HBFS counting ! Existing..."<<endl;
+    cout << "Warning! Cannot perform Z-star algorithm with HBFS counting ! Exit..."<<endl;
     exit(EXIT_FAILURE);
   }
 	return ub;
