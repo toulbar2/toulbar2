@@ -186,8 +186,8 @@ protected:
 	pair<Cost, Cost> russianDollSearch(Cluster *c, Cost cub);
 
 	void hybridCounting(TLogProb Zlb, TLogProb Zub);
+  void hybridCounting(Cluster *cluster, TLogProb Zlb, TLogProb Zub);
   pair<TLogProb,TLogProb> GetOpen_LB_UB (OpenList &open);
-  //void TimeZOut();
   
 	BigInteger binaryChoicePointSBTD(Cluster *cluster, int varIndex, Value value);
 	BigInteger sharpBTD(Cluster *cluster);

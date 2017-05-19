@@ -484,7 +484,7 @@ Cluster::Cluster(TreeDecomposition *tdin) : td(tdin), wcsp(tdin->getWCSP()), id(
 	lb(MIN_COST), ub(MAX_COST), lbRDS(MIN_COST), 
 	active(true),
 	countElimVars(1),
-	cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0)
+	cp(NULL), open(NULL), hbfsGlobalLimit(LONGLONG_MAX), hbfsLimit(LONGLONG_MAX), nbBacktracks(0),negCost(0)
 {
 	instance = clusterCounter++;
   logZ = -numeric_limits<TLogProb>::infinity();

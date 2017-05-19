@@ -46,9 +46,7 @@ typedef map<String, TPairSG> TSGoods;
 
 // for LogZ (LZ) computing :
 typedef pair<TLogProb,bool> TPairLz; // < logZ Count, iscount >
-typedef triplet<TLogProb,int,bool> TripletLz; // < logZ Count, number of sol, iscount > 
 typedef map<String, TPairLz> TLZGoods;
-typedef map<String, TripletLz> TLZGoodsBis;
 
 
 
@@ -67,7 +65,6 @@ private:
 	TNoGoods  					  nogoods;
 	TSGoods						  sgoods;	// for solution counting
   TLZGoods            lzgoods; // for LogZ computing
-  TLZGoodsBis         lzgoodsbis; 
 	TSols  						  solutions;
 	DLink<Separator *>            linkSep; // link to insert the separator in PendingSeparator list
 
@@ -95,7 +92,6 @@ public:
   void setLz(TLogProb logz);
   void add2Lz(TLogProb logz);
   TPairLz getLz();
-  TripletLz getLzBis();
   
 	void solRec(Cost ub);
 	bool solGet(TAssign &a, String &sol);
@@ -159,8 +155,8 @@ private:
   TLogProb logZ; //Current partition function of the cluster
   TLogProb logZub; //Current upper bound on the partition function of the cluster
   TLogProb logZlb; //Current lower bound on the partition function of the cluster
-  Cost negcost; // current cluster negative cost
   TLogProb logU=-numeric_limits<TLogProb>::infinity(); // Current cluster accumulation of upperbound on the sub-tree that we eliminate
+  StoreCost negCost; // shifting value to be added to problem lowerbound when computing the partition function
 
 public:
 	Cluster(TreeDecomposition *tdin);
@@ -223,8 +219,10 @@ public:
 
 	Cost			getLb()  { return lb; }
 	void			setLb(Cost c)  { lb = c; }
-	void 			increaseLb(Cost addToLb) { lb += addToLb; }
-  void      decraseLb(Cost addToNegLb) { negcost += addToNegLb;} // Negcost for each cluster
+	void 			increaseLb(Cost cost) { assert(cost >= MIN_COST);lb += cost; }
+	void      decreaseLb(Cost cost) { assert(cost <= MIN_COST); negCost += cost; }	// manages negative costs in probabilistic inference
+  Cost      getNegativeLb() const { return negCost; }								// manages negative costs in probabilistic inference
+
 	Cost          getUb() const { return ub; }
 	void          setUb(Cost c) {ub = c;}
 	Cost		    getLbRDS() { Cost delta = getCurrentDelta(); return MAX(lbRDS - delta, MIN_COST); }
@@ -258,9 +256,7 @@ public:
   void setlogZ(TLogProb logz){if (sep) sep->setLz(logz);}
   void add2logZ(TLogProb logz){if (sep) sep->add2Lz(logz);}
   TPairLz getlogZ(){return sep->getLz();}
-  TripletLz getlogZBis(){return sep->getLzBis();}
 
-  unsigned int getNbOfAssignation(); // do not work at all...
   unsigned int MaxDomainSize();
   TLogProb getlogU(){return logU;}
   void setlogU(TLogProb newlogU){logU = newlogU;}

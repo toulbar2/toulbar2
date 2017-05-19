@@ -811,7 +811,11 @@ bool EnumeratedVariable::elimVar(BinaryConstraint *ctr)
 				x->project(*iter1, mincost);
 			}
 		}
-		if (negcost < 0) wcsp->decreaseLb(negcost);
+		if (negcost < 0){ 
+      if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar binary"<<endl;
+      wcsp->decreaseLb(negcost);
+      if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
+    }
 	}
 	if (supportBroken) {  x->findSupport();  }
 
@@ -876,7 +880,9 @@ bool EnumeratedVariable::elimVar(ConstraintLink  xylink,  ConstraintLink xzlink)
 				yznew->addcost(*itery, *iterz, -negcost);
 			}
 		}
+    if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar binary constr"<<endl;
 		wcsp->decreaseLb(negcost);
+    if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
 	}
 
 	if (yz) {
@@ -991,7 +997,9 @@ bool EnumeratedVariable::elimVar(TernaryConstraint *xyz)
 				yz->addcost(*itery, *iterz, -negcost);
 			}
 		}
+    //~ if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar ternary constr"<<endl;
 		wcsp->decreaseLb(negcost);
+    //~ if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
 	}
 
 	if (y->unassigned() && z->unassigned()) yz->reconnect();
@@ -1006,6 +1014,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint *xyz)
 
 void EnumeratedVariable::eliminate()
 {
+  TreeDecomposition *td = wcsp->getTreeDec();
 	if (isSep_) return;
 	if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars) return;
 	if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && wcspIndex < ToulBar2::nbvar) return;
@@ -1020,7 +1029,7 @@ void EnumeratedVariable::eliminate()
 			if (ToulBar2::verbose >= 1) cout << "Generic variable elimination of " << getName() << " stopped (" << (Double) wcsp->elimSpace / 1024. / 1024. << " + " << (Double)(sizeof(Char) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
 			return;
 		}
-		wcsp->variableElimination(this);
+    wcsp->variableElimination(this);
 		return;
 	}
 
@@ -1071,9 +1080,17 @@ void EnumeratedVariable::eliminate()
 				for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
 					clogz = wcsp->LogSumExp(clogz, getCost(*itv));
 				}
-				if (clogz < 0) wcsp->decreaseLb(clogz);
-				else wcsp->increaseLb(clogz);
-			}
+				if (clogz < 0){
+         if (ToulBar2::verbose >= 1) cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + clogz << endl;
+         wcsp->decreaseLb(clogz);
+         if (td) wcsp->td->getCluster(getCluster())->decreaseLb(clogz);
+       }
+			else{
+         if (ToulBar2::verbose >= 1) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + clogz << endl;
+         wcsp->increaseLb(clogz);
+         if (td) wcsp->td->getCluster(getCluster())->increaseLb(clogz);
+       }
+  		}
 		}
 	}
 	assert(getDegree() == 0);

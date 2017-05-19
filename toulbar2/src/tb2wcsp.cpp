@@ -2971,6 +2971,7 @@ void WCSP::project(Constraint *&ctr_inout, EnumeratedVariable *var)
 
 void WCSP::variableElimination(EnumeratedVariable *var)
 {
+  //~ TreeDecomposition *td = getTreeDec();
 	int degree = var->getTrueDegree();
 	if (ToulBar2::verbose >= 1) cout << endl << "Generic variable elimination of " << var->getName() << "    degree: "
 		                                 << var->getDegree() << " true degree: " << degree << " max elim size: " << var->getMaxElimSize() << endl;
@@ -3011,8 +3012,14 @@ void WCSP::variableElimination(EnumeratedVariable *var)
 			for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
 				clogz = LogSumExp(clogz, var->getCost(*itv));
 			}
-			if (clogz < 0) decreaseLb(clogz);
-			else increaseLb(clogz);
+			if (clogz < 0){
+         decreaseLb(clogz);
+         //~ if (td) cout<<var->getCluster()<<endl;
+       }
+			else{
+         increaseLb(clogz);
+         //~ if (td) cout<<var->getCluster()<<endl;
+       }
 		}
 	}
 	assert(var->getDegree() == 0);

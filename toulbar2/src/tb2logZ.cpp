@@ -12,16 +12,15 @@ void Solver::enforceZUb(Cluster *cluster)
       //~ cout<< ToulBar2::logU<<endl;
       //~ newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub(cluster)); // DOES NOT GIVE EPSILON APPROXIMATION
       //~ newlogU = wcsp->LogSumExp(cluster->getlogU(),Zub(cluster)); //Compute Cluster upper bound
-      newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub());
-      TripletLz logZcluster = cluster->getlogZBis();
+      //~ newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub());
       //if (ToulBar2::verbose >= 0)  cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " log Z "<< logZcluster.first << " Log(eps x Z) : " << logZcluster.first + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
-      if (newlogU < ToulBar2::logepsilon + logZcluster.first) {
-          if (ToulBar2::verbose >= 1)  cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " log Z "<< logZcluster.first << " Log(eps x Z) : " << logZcluster.first + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
+      //~ if (newlogU < ToulBar2::logepsilon + logZcluster.first) {
+          //~ if (ToulBar2::verbose >= 1)  cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " log Z "<< logZcluster.first << " Log(eps x Z) : " << logZcluster.first + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
           //~ cluster->setlogU(newlogU);
           //~ ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU,newlogU); //FAIL
-          ToulBar2::logU = newlogU; //FAIL
-          THROWCONTRADICTION;
-      }
+          //~ ToulBar2::logU = newlogU; //FAIL
+          //~ THROWCONTRADICTION;
+      //~ }
     }
     else{
     newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub());
@@ -426,7 +425,6 @@ exit(0);
 
 void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
 {
-  // Need to adapt this solver to Z mode
   assert(Zlb < Zub);
   if (ToulBar2::hbfs) {
 	ToulBar2::timeOut=TimeZOut;
@@ -476,9 +474,9 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
       cp_->store();
 
       if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-	ToulBar2::hbfs = 0;
-	ToulBar2::hbfsGlobalLimit = 0;
-	hbfsLimit = LONGLONG_MAX;
+        ToulBar2::hbfs = 0;
+        ToulBar2::hbfsGlobalLimit = 0;
+        hbfsLimit = LONGLONG_MAX;
       }
       pair<TLogProb,TLogProb> LB_UB = GetOpen_LB_UB(*open);
       ToulBar2::GlobalLogLbZ = get<0>(LB_UB);
@@ -489,10 +487,10 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
       //cout <<"Epsilon : "<<exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
       if (wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<= Log1p(ToulBar2::sigma)) break;
       if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-	assert(nbNodes > 0);
-	if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
-	else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha && ToulBar2::hbfs >= 2) ToulBar2::hbfs /= 2;
-	if (ToulBar2::debug >= 2) cout << "HBFS backtrack limit: " << ToulBar2::hbfs << endl;
+        assert(nbNodes > 0);
+        if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
+        else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha && ToulBar2::hbfs >= 2) ToulBar2::hbfs /= 2;
+      if (ToulBar2::debug >= 2) cout << "HBFS backtrack limit: " << ToulBar2::hbfs << endl;
       }
     }
     //cout<<"open size after finished : "<<open_->size()<<" "<<open_->empty()<<endl;
@@ -500,20 +498,6 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
     hbfsLimit = LONGLONG_MAX;
     recursiveSolve();
   }
-}
-
-unsigned int Cluster::getNbOfAssignation(){
-  
-  unsigned int NbOfAssign=1;
-  TVars::iterator it = vars.begin();
-	while (it != vars.end()) {
-    EnumeratedVariable *var = (EnumeratedVariable *)((WCSP *) wcsp)->getVar(*it);
-      if (!var->isSep()){
-      NbOfAssign *= var->getDomainSize();
-    }
-    ++it;
-  }
-  return NbOfAssign;
 }
 
 
@@ -548,46 +532,7 @@ TPairLz Separator::getLz()
 	}
 }
 
-TripletLz Separator::getLzBis()
-{
-	int i = 0;
-	Cost deltares = MIN_COST; // cost that run away from the cluster
-	if (ToulBar2::verbose >= 1) cout << "( ";
-	TVars::iterator it = vars.begin();
-	while (it != vars.end()) {
-		assert(cluster->getWCSP()->assigned(*it));
-		Value val = cluster->getWCSP()->getValue(*it);
-		if (ToulBar2::verbose >= 1) cout << "(" << *it << "," << val << ") ";
-		t[i] = val + CHAR_FIRST;	 // build the tuple
-		deltares -= delta[i][val];      // delta structure
-		++it;
-		i++;
-	}
-  int totalValue = cluster->getNbOfAssignation();
-	TLZGoodsBis::iterator itlz = lzgoodsbis.find(t);
-  if (ToulBar2::verbose >=1){
-  cout << " < C" << cluster->getId() << " , ";
-  Cout << t;
-  cout << ",delta: "<<deltares <<">";
-  }
-	if (itlz != lzgoodsbis.end()) {
-		TLogProb p = (itlz->second).first;
-    int nbsolution = (itlz->second).second;
-    bool isCount = (itlz->second).third;
-    if (totalValue == nbsolution || isCount){
-      assert(nbsolution==totalValue); // check if the cluster is really already count, maybe test is wrong with on-the-fly VE ?
-      if (ToulBar2::verbose >= 1)	cout << ") Use #good with LogZ = " << p - wcsp->Cost2LogProb(deltares) << " LogZ on cluster " << cluster->getId() << endl;
-      return make_triplet((p - wcsp->Cost2LogProb(deltares)),totalValue,true); 
-    }
-    else{
-      if (ToulBar2::verbose>=1) cout<<")"<<endl;
-      return make_triplet((p - wcsp->Cost2LogProb(deltares)),nbsolution,false);
-    }
-	} else {
-		if (ToulBar2::verbose >= 1)	cout << ") NOT FOUND for cluster " <<  cluster->getId() << endl;
-    return make_triplet(-numeric_limits<TLogProb>::infinity(),0,false);
-	}
-}
+
 void Separator::setLz(TLogProb logz)
 {
 	int i = 0;
@@ -637,23 +582,21 @@ void Separator::add2Lz(TLogProb logz) // Add solution to logz of the separator.
 		++it;
 		i++;
 	}
-  TLZGoodsBis::iterator itng = lzgoodsbis.find(t);
+  TLZGoods::iterator itng = lzgoods.find(t);
   if (ToulBar2::verbose >=1){
   cout << " < C" << cluster->getId() << " , ";
   Cout << t;
   cout << ",delta: "<<deltares << ",";
   }
-  if (itng == lzgoodsbis.end()) { // There isn't any logZ count
+  if (itng == lzgoods.end()) { // There isn't any logZ count
     if (ToulBar2::verbose >=1) cout <<" No exist: ";
-    lzgoodsbis[t].first = logz - wcsp->Cost2LogProb(deltares); // init logZ count
-    lzgoodsbis[t].second = 1; // init nb of sol 
-    if (ToulBar2::verbose >=1) cout<<"lzgood = "<<lzgoodsbis[t].first- wcsp->Cost2LogProb(deltares)<<endl;
+    lzgoods[t].first = logz - wcsp->Cost2LogProb(deltares); // init logZ count
+    if (ToulBar2::verbose >=1) cout<<"lzgood = "<<lzgoods[t].first- wcsp->Cost2LogProb(deltares)<<endl;
   }
   else{ // add to current count
     if (ToulBar2::verbose >=1) cout <<" Already exist: ";
     itng->second.first= wcsp->LogSumExp(itng->second.first,logz - wcsp->Cost2LogProb(deltares));
-    itng->second.second += 1;
-    if (ToulBar2::verbose >=1)cout<<"add logz " << logz - wcsp->Cost2LogProb(deltares)<< " to " << lzgoodsbis[t].first<<" >"<<endl;
+    if (ToulBar2::verbose >=1)cout<<"add logz " << logz - wcsp->Cost2LogProb(deltares)<< " to " << lzgoods[t].first<<" >"<<endl;
   }
 }
 
@@ -705,8 +648,11 @@ TLogProb Solver::binaryChoicePointBTDZ(Cluster *cluster, int varIndex, Value val
 		} else remove(varIndex, value, cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit);
     
     if (!ToulBar2::hbfs && cluster == td->getRoot() && initialDepth + 1 == Store::getDepth()) {initialDepth++;};
-
-		TLogProb logres = BTD_sharpZ(cluster);
+    //~ if (cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit) { // if backtrack fuel is empty then add to open list
+        //~ addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta()); 
+		//~ } else {
+      TLogProb logres = BTD_sharpZ(cluster);
+		//~ }
 		logZcluster = wcsp->LogSumExp(logZcluster,logres); // Normaly sum but here we are in the logdomain so logsomexp
 	} catch (Contradiction) {
 		wcsp->whenContradiction();
@@ -721,7 +667,6 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
 	TreeDecomposition *td = wcsp->getTreeDec();
 	TLogProb logZcluster = -numeric_limits<TLogProb>::infinity();
   TLogProb logres=-numeric_limits<TLogProb>::infinity();
-  TLogProb logresbis;
 	TCtrs totalList;
 	if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] recursive solve     cluster: " << cluster->getId() << " **************************************************************" << endl;
 
@@ -734,26 +679,27 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
 
 	if (varIndex < 0) {
 		// Current cluster is completely assigned
-    logZcluster =  wcsp->Cost2LogProb(cluster->getLb());
-    if (ToulBar2::verbose >= 1) cout<<"Add "<<logZcluster<<" on cluster "<<cluster->getId()<<endl;
-    cluster->add2logZ(logZcluster); // Add solution to the logZcluster
+    cout<<"C"<<cluster->getId()<<" lb "<<cluster->getLb()<<" neglb "<<cluster->getNegativeLb()<<endl;
+    logZcluster =  wcsp->Cost2LogProb(cluster->getLb()+cluster->getNegativeLb());
+    
+    if(ToulBar2::hbfs){
+      if (ToulBar2::verbose >= 1) cout<<"Add "<<logZcluster<<" on cluster "<<cluster->getId()<<endl;
+      cluster->add2logZ(logZcluster); // Add solution to the logZcluster
+    }
     
 		for (TClusters::iterator iter = cluster->beginSortedEdges(); iter != cluster->endSortedEdges(); ++iter) {
 			// Solves each cluster son
 			Cluster *c = *iter;
       td->setCurrentCluster(c);
-      if (ToulBar2::verbose >= 0) cout << "[" << Store::getDepth() << "] C" << c->getId() <<" Nb Vars "<<c->getNbVars()<<" Nb of solution "<< c->getNbOfAssignation()<< endl;
-      TLogProb ZubCluster = Zub(c);
-      TLogProb ZlbCluster = MeanFieldZ(c);
-      if (ToulBar2::verbose >= 1) cout<<ZlbCluster<<" <= Z(C"<<c->getId()<<") <= "<< ZubCluster <<endl;
+      if (ToulBar2::verbose >= 1) cout << "[" << Store::getDepth() << "] C" << c->getId() << endl;
+      //~ TLogProb ZubCluster = Zub(c);
+      //~ TLogProb ZlbCluster = MeanFieldZ(c);
+      //~ if (ToulBar2::verbose >= 1) cout<<ZlbCluster<<" <= Z(C"<<c->getId()<<") <= "<< ZubCluster <<endl;
       TPairLz ClusterCount = c->getlogZ();
-      TripletLz ClusterCountBis = c->getlogZBis();
       
       bool isCount = ClusterCount.second;
-      if (ToulBar2::verbose >= 0) cout << "Current (before set) state of cluster C"<<c->getId()<<" "<<ClusterCountBis.first<< " "<<ClusterCountBis.second<<" "<<ClusterCountBis.third<<endl;
       if (isCount) { // if already counted 
         logres=ClusterCount.first;
-        logresbis = ClusterCountBis.first;
         if (ToulBar2::verbose >= 1) cout<<"getlogZ : "<<logres<<" of cluster  "<<c->getId()<<endl;
       }
       else{ 
@@ -761,11 +707,10 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
             Store::store();
             wcsp->propagate();
             logres = BTD_sharpZ(c);
-            if (ToulBar2::verbose >= 1) cout<<"setlogZ : "<<logres<<" ending of  cluster "<<c->getId()<<endl;
-            c->setlogZ(logres);
-            ClusterCountBis = c->getlogZBis();
-            if (ToulBar2::verbose >= 0) cout << "Current (after set) state of cluster C"<<c->getId()<<" "<<ClusterCountBis.first<< " "<<ClusterCountBis.second<<" "<<ClusterCountBis.third<<endl;
-            logres = ClusterCountBis.first;
+            if(!ToulBar2::hbfs){
+              if (ToulBar2::verbose >= 1) cout<<"setlogZ : "<<logres<<" ending of  cluster "<<c->getId()<<endl;
+              c->setlogZ(logres);
+            }
         } catch (Contradiction) {
             if (ToulBar2::verbose >= 1) cout<<"Catch Contradiction"<<endl;
             wcsp->whenContradiction();
@@ -791,3 +736,102 @@ TLogProb Solver::BTD_sharpZ(Cluster *cluster)
 		return logZcluster;
 	}
 }
+
+//~ void Solver::hybridCounting(Cluster *cluster, TLogProb Zlb, TLogProb Zub)
+//~ {
+  //~ assert(Zlb < Zub);
+  //~ if (ToulBar2::verbose >= 1 && cluster) cout << "hybridSolve C" << cluster->getId() << " " << Zlb << " " << Zub << endl;
+  //~ if (ToulBar2::hbfs) {
+	//~ ToulBar2::timeOut=TimeZOut;
+    //~ CPStore *cp_ = NULL;
+    //~ OpenList *open_ = NULL;
+    //~ Cost delta = MIN_COST;
+    //~ // BFS with BTD on current cluster (can be root or not)
+    //~ assert(cluster->cp);
+    //~ cp_ = cluster->cp;
+    //~ if (cluster == wcsp->getTreeDec()->getRoot()) {
+      //~ if (!cluster->open) cluster->open = new OpenList();
+      //~ cluster->setUb(cub); // global problem upper bound
+    //~ } else {
+      //~ delta = cluster->getCurrentDelta();
+      //~ if (!cluster->open) {
+        //~ //cluster->nogoodRec(clb, MAX_COST, &cluster->open); // create an initial empty open list
+        //~ //cluster->setUb(MAX_COST); // no initial solution found for this cluster
+      //~ }
+    //~ }
+    //~ assert(cluster->open);
+    //~ open_ = cluster->open;
+
+    //~ cp_->store();
+    //~ if (open_->size() == 0) { // start a new list of open nodes if needed
+      //~ if (cluster->getNbVars() > 0) nbHybridNew++;
+      //~ // reinitialize current open list and insert empty node
+      //~ *open_ = OpenList();
+      //~ addOpenNode(*cp_, *open_, wcsp->getLb(),Zlb,Zub);
+    //~ } else if (cluster->getNbVars() > 0) nbHybridContinue++;
+    
+    //~ if (cluster->getNbVars() > 0) nbHybrid++; // do not count empty root cluster
+    //~ cluster->hbfsGlobalLimit = ((ToulBar2::hbfsGlobalLimit > 0) ? (nbBacktracks + ToulBar2::hbfsGlobalLimit) : LONGLONG_MAX);
+
+    //~ while (!open_->empty() && nbBacktracks <= cluster->hbfsGlobalLimit){
+      //~ cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+      //~ assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
+      //~ assert(cluster->isActive());
+      //~ int storedepthBFS = Store::getDepth();
+      //~ try {
+        //~ Store::store();
+        //~ //cout<<"open size before pop : "<<open_->size()<<endl;
+        //~ OpenNode nd = open_->top();
+        //~ open_->pop();
+        //~ if (wcsp->getTreeDec() && ToulBar2::verbose >= 1 ){
+          //~ cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+          //~ cout << "[ " << nd.getCost(delta) << ", " << cub <<  "] ( " << open_->size() << "+1 still open)" << endl;
+        //~ }
+        //~ restore(*cp_, nd);
+        //~ Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+        //~ //cout <<"Sub LB : "<< nd.getZlb()<< " to : "<< ToulBar2::GlobalLogLbZ<<" "<<(ToulBar2::GlobalLogLbZ>nd.getZlb())<<endl;
+        //~ //cout <<"Sub UB : "<< nd.getZub()<< " to : "<< ToulBar2::GlobalLogUbZ<<" "<<(ToulBar2::GlobalLogUbZ>nd.getZub())<<endl;
+        //~ //cout <<endl; 
+        //~ //ToulBar2::GlobalLogLbZ = wcsp->LogSubExp(ToulBar2::GlobalLogLbZ, (nd.getZlb()) ); // remove pop open node from global Z LB
+        //~ //ToulBar2::GlobalLogUbZ = wcsp->LogSubExp(ToulBar2::GlobalLogUbZ, (nd.getZub()) ); // remove pop open node from global Z UB
+        //~ //cout<<endl;
+        //~ pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
+        //~ open_->updateClosedNodesLb(res.first, delta);
+        //~ open_->updateUb(res.second, delta);
+				
+      //~ } catch (Contradiction) {
+        //~ wcsp->whenContradiction();
+      //~ }
+        
+      //~ Store::restore(storedepthBFS);
+      //~ cp_->store();
+
+      //~ if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+        //~ ToulBar2::hbfs = 0;
+        //~ ToulBar2::hbfsGlobalLimit = 0;
+        //~ cluster->hbfsGlobalLimit = LONGLONG_MAX;
+        //~ cluster->hbfsLimit = LONGLONG_MAX;
+      //~ }
+      //~ pair<TLogProb,TLogProb> LB_UB = GetOpen_LB_UB(*open);
+      //~ ToulBar2::GlobalLogLbZ = get<0>(LB_UB);
+      //~ ToulBar2::GlobalLogUbZ = get<1>(LB_UB);
+      //~ if (ToulBar2::verbose >=1) showZGap();
+          
+      //~ // if LogUb - LogLb < log(1+epsilon) then finish
+      //~ //cout <<"Epsilon : "<<exp(wcsp->LogSumExp(wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ),ToulBar2::logU) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ))-1<<endl;
+      //~ if (wcsp->LogSumExp(ToulBar2::logZ ,ToulBar2::GlobalLogUbZ) - wcsp->LogSumExp(ToulBar2::logZ,ToulBar2::GlobalLogLbZ)<= Log1p(ToulBar2::sigma)) break;
+      //~ if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+        //~ assert(nbNodes > 0);
+        //~ if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta && ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit) ToulBar2::hbfs *= 2;
+        //~ else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha && ToulBar2::hbfs >= 2) ToulBar2::hbfs /= 2;
+      //~ if (ToulBar2::debug >= 2) cout << "HBFS backtrack limit: " << ToulBar2::hbfs << endl;
+      //~ }
+    //~ }
+    //~ //cout<<"open size after finished : "<<open_->size()<<" "<<open_->empty()<<endl;
+  //~ } else {
+			//~ cluster->hbfsGlobalLimit = LONGLONG_MAX;
+			//~ cluster->hbfsLimit = LONGLONG_MAX;
+			//~ pair<Cost, Cost> res = recursiveSolve(cluster, clb, cub);
+  //~ }
+//~ }
+

@@ -51,12 +51,18 @@ void Constraint::conflict()
 void Constraint::projectLB(Cost cost)
 {
 	if (cost == 0) return;
-	if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
-	if (cost < MIN_COST)  wcsp->decreaseLb(cost);
-	else wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
-	if (wcsp->td) {
+	if (cost < MIN_COST){  
+    if (ToulBar2::verbose >= 1) cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + cost << endl;
+    wcsp->decreaseLb(cost);
+  }
+	else{ 
+    if (ToulBar2::verbose >= 1) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
+    wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
+	}
+  if (wcsp->td) {
 		if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
-		wcsp->td->getCluster(getCluster())->increaseLb(cost);
+		if (cost >= MIN_COST) wcsp->td->getCluster(getCluster())->increaseLb(cost);
+    else wcsp->td->getCluster(getCluster())->decreaseLb(cost);
 	}
 }
 
