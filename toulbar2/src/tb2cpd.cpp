@@ -15,9 +15,11 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 {
 	istringstream line;
 	string s;
+
 	file.unget();
 	while (file) {
 		vector<char> rot2aa_var;
+        
 		char current_char;
 		getline(file, s, '\n');
 		line.str(s);
@@ -28,9 +30,7 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 		}
 		
 		while (line >> current_char) {
-			//       line >> ws;
 			if (!isspace(current_char)) rot2aa_var.push_back(current_char);
-			      //cout << "Push: " << current_char << endl;//getchar();
 		}
 		if (rot2aa_var.size() != 0) rotamers2aa.push_back(rot2aa_var);
 	}
@@ -52,6 +52,37 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
 			}
         }
 	}
+
+    
+    for (auto &rv : rotamers2aa) {
+        
+        vector<Value> leftidx_var;
+        vector<Value> rightidx_var;
+
+        char prev_char = '0';
+        size_t pos = 0;
+
+        for (size_t i = 0; i < rv.size(); i++) {
+            if (rv[i] != prev_char) {
+                prev_char = rv[i];
+                pos = i;
+            }
+            leftidx_var.push_back(pos);
+        }
+        
+        prev_char = '0';
+        for (int i = rv.size()-1; i >= 0; i--) {
+            if (rv[i] != prev_char) {
+                prev_char = rv[i];
+                pos = i;
+            }
+            rightidx_var.push_back(pos);
+        }
+
+        LeftAA.push_back(leftidx_var);
+        reverse(rightidx_var.begin(), rightidx_var.end());
+        RightAA.push_back(rightidx_var);
+    }
 }
 
 
@@ -71,7 +102,6 @@ void Cpd::printSequences()
 
 void Cpd::printSequence(const vector<Variable *> &vars, Cost _cost)
 {
-	//  cpdtrie->print_tree();
 	string sequence;
 	for (size_t i = 0; i < vars.size(); i++) {
 		sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);

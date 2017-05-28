@@ -17,9 +17,13 @@ public:
 	int getTotalSequences() { return cpdtrie->getTotalSequences();}
 	vector< vector<char> > &getRotamers2AA() { return rotamers2aa; }
 	char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value];}
+	Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value];}
+	Value getRight(int varIndex, Value value) { return RightAA[varIndex][value];}
 	size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size();}
 private:
 	vector< vector<char> > rotamers2aa;
+	vector< vector<Value> > LeftAA;
+	vector< vector<Value> > RightAA;
 	TrieCpd *cpdtrie;
 };
 

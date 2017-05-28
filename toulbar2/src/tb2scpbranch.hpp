@@ -23,7 +23,7 @@ public:
 	//  tuple<size_t,size_t> getBounds(size_t var_index);
 	tuple<size_t, size_t> getBounds(int varIndex, Value value);
 	size_t moveAAFirst(ValueCost *sorted, int domsize, Value left, Value right);
-	bool multipleAA(int varIndex, ValueCost *stored, int domsize);
+	bool multipleAA(int varIndex, Value *stored, int domsize);
 	// void keep(size_t begin, size_t end, size_t var_index);
 	// void remove(size_t begin, size_t end, size_t var_index);
 	// void remove(size_t index, size_t var_index);

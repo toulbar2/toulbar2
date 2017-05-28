@@ -261,10 +261,9 @@ int Solver::getNextScpCandidate()
 {
 	for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
 		unsigned int domsize = wcsp->getDomainSize(*iter);
-		//size_t left,right;
-		ValueCost sorted[domsize];
-		wcsp->getEnumDomainAndCost(*iter, sorted);
-		if (ToulBar2::scpbranch->multipleAA(*iter, sorted, domsize))
+		Value values[domsize];
+		wcsp->getEnumDomain(*iter, values);
+		if (ToulBar2::scpbranch->multipleAA(*iter, values, domsize))
 			return *iter;
 	}
 	int varIndex = -1;
@@ -675,17 +674,17 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
 	tie(left, right) = ToulBar2::scpbranch->getBounds(varIndex, value);
 	size_t middle;
 	middle = ToulBar2::scpbranch->moveAAFirst(sorted, domsize, left, right);
-	//char type = ToulBar2::cpd->getAA(varIndex, sorted[0].value);
+
 	try {
 		Store::store();
 		lastConflictVar = varIndex;
-		if (middle != domsize)
+		if (middle != domsize) // it's a SCP split
 			remove(varIndex, sorted, middle, domsize - 1);
 		else assign(varIndex, value);
 		lastConflictVar = -1;
 		recursiveSolve(lb);
 	} catch (FindNewSequence) {
-		if (middle == domsize) {
+		if (middle == domsize) { // not a SCP split, we backtrack
 			Store::restore();
 			enforceUb();
 			nbBacktracks++;
@@ -694,6 +693,7 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
 	} catch (Contradiction) {
 		wcsp->whenContradiction();
 	}
+    
 	Store::restore();
 	enforceUb();
 	nbBacktracks++;
