@@ -216,7 +216,7 @@ public:
 	void dump_wcsp(const char *fileName, bool original = true);
 	void read_solution(const char *fileName, bool updateValueHeuristic = true);
 	void parse_solution(const char *certificate);
-
+    void mutate(char *mutationString);
 	Cost getSolution(vector<Value> &solution);
 
 	friend void setvalue(int wcspId, int varIndex, Value value, void *solver);

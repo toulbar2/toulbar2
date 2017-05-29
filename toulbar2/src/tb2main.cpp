@@ -145,6 +145,7 @@ enum {
 	OPT_problemsaved_filename,
 	OPT_PARTIAL_ASSIGNMENT,
 	NO_OPT_PARTIAL_ASSIGNMENT,
+    OPT_MUTATE,
 	OpT_showSolutions,
 	OPT_writeSolution,
 	OPT_pedigreePenalty,
@@ -295,6 +296,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_minProperVarSize,	(char *) "-X",             			SO_REQ_SEP 	},
 	{ OPT_PARTIAL_ASSIGNMENT,	(char *) "-x",             			SO_OPT 	 	},
 	{ NO_OPT_PARTIAL_ASSIGNMENT, (char *) "-x:",                        SO_NONE     },
+    { OPT_MUTATE,	(char *) "--mut",             			SO_REQ_SEP 	 	},
 	{ OPT_boostingBTD,	(char *) "-E",             			SO_NONE    	},
 	{ OPT_varOrder,	(char *) "-O",             			SO_REQ_SEP 	},       // filename of variable order
 	{ OPT_problemsaved_filename, (char *) "--save",                       SO_REQ_SEP  },       // filename of saved problem
@@ -659,6 +661,7 @@ void help_msg(char *toulbar2filename)
 	cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
 #endif
 	cout << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl << endl;
+    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, strating at variable pos." << endl << endl;
 	cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
 	cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
@@ -754,8 +757,10 @@ int _tmain(int argc, TCHAR *argv[])
 
 	setlocale(LC_ALL, "C");
 	bool certificate = false;
+    bool mutate = false;
 	char *certificateFilename = NULL;
 	char *certificateString = NULL;
+    char *mutationString = NULL;
 	char buf [512];
 	char *CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
 	Cost ub = MAX_COST;
@@ -916,11 +921,16 @@ int _tmain(int argc, TCHAR *argv[])
 				updateValueHeuristic = false;
 			}
 
+            // restricts aminoacid sequence
+            if (args.OptionId() == OPT_MUTATE) {
+                mutate = true;
+                mutationString = args.OptionArg() ;
+            }
+
 			// show Solutions
 			if (args.OptionId() == OPT_showSolutions) {
 				ToulBar2::showSolutions = true;
 			}
-
 
 
 			//#############################################
@@ -1833,6 +1843,9 @@ int _tmain(int argc, TCHAR *argv[])
 			if (certificateFilename != NULL) solver->read_solution(certificateFilename, updateValueHeuristic);
 			else solver->parse_solution(certificateString);
 		}
+        if (mutate) {
+            solver->mutate(mutationString);
+        }
 		if (ToulBar2::dumpWCSP == 1) {
 			string problemname = ToulBar2::problemsaved_filename;
 			if (ToulBar2::uaieval) {

@@ -81,6 +81,36 @@ void Solver::read_random(int n, int m, vector<int> &p, int seed, bool forceSubMo
 	wcsp->read_random(n, m, p, seed, forceSubModular, globalname);
 }
 
+void Solver::mutate(char *mutationString)
+{
+    char * p;
+    int pos;
+
+    p = strtok(mutationString,":");
+
+    if (p != NULL) {
+        pos = atoi(p);
+        p = strtok(NULL,":");
+
+        if (p!=NULL) {
+            if (pos+strlen(p) > wcsp->numberOfVariables()) {
+                cerr << "Mutation position and string go beyond the end of the protein sequence!" << endl;
+                exit(EXIT_FAILURE);
+            }
+            else {
+                for (size_t i = 0; i < strlen(p); i++)
+                    for (size_t v = 0; v < wcsp->getDomainInitSize(pos+i); v++) {
+                        if (ToulBar2::cpd->getAA(pos+i,v) != p[i] &&
+                            wcsp->canbe(pos+i, v)) {
+                            wcsp->remove(pos+i,v);
+                        }
+                    }
+                wcsp->propagate();
+            }
+        }
+    }
+}
+
 void Solver::read_solution(const char *filename, bool updateValueHeuristic)
 {
 	// open the file
