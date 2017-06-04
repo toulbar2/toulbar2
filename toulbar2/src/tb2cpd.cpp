@@ -126,6 +126,15 @@ void Cpd::readPSMatrix(const char* filename)
             PSM[i][j] -= minscore;
 }
 
+void Cpd::fillPSMbiases(size_t varIndex, vector<Cost> &biases)
+{
+    for (char c : rotamers2aa[varIndex]) {
+        int bias = PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
+        biases.push_back((Cost)bias);
+    }
+}
+
+
 void Cpd::readPSSMatrix(const char* filename)
 {
     ifstream file;
@@ -163,6 +172,15 @@ void Cpd::readPSSMatrix(const char* filename)
     for (auto &v : PSSM)
         for (auto &i : v)
             i -= minscore;
+}
+
+
+void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost> &biases)
+{
+    for (char c : rotamers2aa[varIndex]) {
+        int bias = PSSM[varIndex][PSSMIdx.find(c)->second];
+        biases.push_back((Cost)bias);
+    }
 }
 
 void Cpd::storeSequence(const vector<Variable *> &vars, Cost _cost)

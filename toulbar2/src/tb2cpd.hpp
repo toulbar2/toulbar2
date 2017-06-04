@@ -12,6 +12,8 @@ public:
 	void read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int);   ///< \brief read rotamer to amino acid correspondence
 	void readPSMatrix(const char *filename);
 	void readPSSMatrix(const char *filename);
+	void fillPSMbiases(size_t varIndex, vector<Cost> &biases);
+	void fillPSSMbiases(size_t varIndex, vector<Cost> &biases);
 	void storeSequence(const vector<Variable *> &vars, Cost _cost);
 	void printSequences();
 	void printSequence(const vector<Variable *> &vars, Cost _cost);
@@ -22,7 +24,8 @@ public:
 	Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value];}
 	Value getRight(int varIndex, Value value) { return RightAA[varIndex][value];}
 	size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size();}
-	string nativeSequence;
+	char *nativeSequence = NULL;
+	bool isPSSMlen() {return PSSM.size();};
 	double PSMBias = 0.0;
 	double PSSMBias = 0.0;
 private:

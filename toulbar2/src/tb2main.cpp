@@ -784,8 +784,6 @@ int _tmain(int argc, TCHAR *argv[])
 	setlocale(LC_ALL, "C");
 	bool certificate = false;
     bool mutate = false;
-    char *psmatrix = NULL;
-    char *pssmatrix = NULL;
 	char *certificateFilename = NULL;
 	char *certificateString = NULL;
     char *mutationString = NULL;
