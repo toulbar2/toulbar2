@@ -1404,12 +1404,12 @@ int _tmain(int argc, TCHAR *argv[])
             
             // get psm bias
             if (args.OptionId() == OPT_PSMBIAS) {
-                ToulBar2::cpd->PSSMBias =atof(args.OptionArg());
+                ToulBar2::cpd->PSMBias =atoi(args.OptionArg());
             }
 
             // get pssm bias
             if (args.OptionId() == OPT_PSSMBIAS) {
-                ToulBar2::cpd->PSSMBias = atof(args.OptionArg());
+                ToulBar2::cpd->PSSMBias = atoi(args.OptionArg());
             }
             
 			// discrete integration for computing the partition function Z
@@ -1895,6 +1895,8 @@ int _tmain(int argc, TCHAR *argv[])
         if (mutate) {
             solver->mutate(mutationString);
         }
+        if (ToulBar2::cpd)
+            solver->applyCompositionalBiases();
         
 		if (ToulBar2::dumpWCSP == 1) {
 			string problemname = ToulBar2::problemsaved_filename;

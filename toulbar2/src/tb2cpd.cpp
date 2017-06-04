@@ -116,6 +116,7 @@ void Cpd::readPSMatrix(const char* filename)
         file >> s; // skip AA
         for (int j = 0; j < 24; j++) {
             file >> PSM[i][j];
+            PSM[i][j] = -PSM[i][j];
             minscore = min(minscore,PSM[i][j]);
         }
     }
@@ -129,7 +130,7 @@ void Cpd::readPSMatrix(const char* filename)
 void Cpd::fillPSMbiases(size_t varIndex, vector<Cost> &biases)
 {
     for (char c : rotamers2aa[varIndex]) {
-        int bias = PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
+        int bias = PSMBias*PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
         biases.push_back((Cost)bias);
     }
 }
@@ -162,6 +163,7 @@ void Cpd::readPSSMatrix(const char* filename)
         for (int j = 0; j < 20; j++) {
             int  score;
             file >> score;
+            score = -score;
             minscore = min(minscore,score);
             scores.push_back(score);
         }
@@ -178,7 +180,7 @@ void Cpd::readPSSMatrix(const char* filename)
 void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost> &biases)
 {
     for (char c : rotamers2aa[varIndex]) {
-        int bias = PSSM[varIndex][PSSMIdx.find(c)->second];
+        int bias = PSSMBias*PSSM[varIndex][PSSMIdx.find(c)->second];
         biases.push_back((Cost)bias);
     }
 }
