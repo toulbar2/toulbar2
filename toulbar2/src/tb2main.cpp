@@ -661,7 +661,7 @@ void help_msg(char *toulbar2filename)
 	cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
 #endif
 	cout << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl << endl;
-    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, strating at variable pos." << endl << endl;
+    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl << endl;
 	cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
 	cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
