@@ -145,7 +145,6 @@ enum {
 	OPT_problemsaved_filename,
 	OPT_PARTIAL_ASSIGNMENT,
 	NO_OPT_PARTIAL_ASSIGNMENT,
-    OPT_MUTATE,
 	OpT_showSolutions,
 	OPT_writeSolution,
 	OPT_pedigreePenalty,
@@ -211,8 +210,16 @@ enum {
 	OPT_EDAC,
 	OPT_ub,
 	OPT_ub_energy,
-
-	// Z option
+    
+    // CPD options
+    OPT_MUTATE,
+    OPT_PSMBIAS,
+    OPT_PSSMBIAS,
+    OPT_PSMATRIX,
+    OPT_PSSMATRIX,
+    OPT_NATIVE,
+    
+	// Z options
 	OPT_Z,
 	OPT_SUBZ,
 	OPT_ZSHOW,
@@ -296,7 +303,6 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_minProperVarSize,	(char *) "-X",             			SO_REQ_SEP 	},
 	{ OPT_PARTIAL_ASSIGNMENT,	(char *) "-x",             			SO_OPT 	 	},
 	{ NO_OPT_PARTIAL_ASSIGNMENT, (char *) "-x:",                        SO_NONE     },
-    { OPT_MUTATE,	(char *) "--mut",             			SO_REQ_SEP 	 	},
 	{ OPT_boostingBTD,	(char *) "-E",             			SO_NONE    	},
 	{ OPT_varOrder,	(char *) "-O",             			SO_REQ_SEP 	},       // filename of variable order
 	{ OPT_problemsaved_filename, (char *) "--save",                       SO_REQ_SEP  },       // filename of saved problem
@@ -382,6 +388,15 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ MENDEL_OPT_ESTIMAT_FREQ,	(char *) "-probdata", 			SO_NONE			}, //  probs depending on the frequencies found in the current pedigree problem
 	{ MENDEL_OPT_ALLOCATE_FREQ,	(char *) "-problist", 			SO_MULTI		}, // read probability distribution from command line
 
+    // CPD options
+    { OPT_MUTATE,	(char *) "--mut",             			SO_REQ_SEP 	 	},
+    { OPT_PSMBIAS,	(char *) "--psmbias",             			SO_REQ_SEP 	 	},
+    { OPT_PSSMBIAS,	(char *) "--pssmbias",             			SO_REQ_SEP 	 	},
+    { OPT_PSMATRIX,	(char *) "--psm",             			SO_REQ_SEP 	 	},
+    { OPT_PSSMATRIX,	(char *) "--pssm",             			SO_REQ_SEP 	 	},
+    { OPT_NATIVE,	(char *) "--native",             			SO_REQ_SEP 	 	},
+ 
+    // Z options
 	{ OPT_Z,	(char *) "-logz", 				SO_NONE			},      // compute log partition function (log Z)
 	{ OPT_SUBZ,	(char *) "-subz", 				SO_OPT			},      // compute a rapid LB on log partition function (log Z)
 	{ OPT_ZCELTEMP,	(char *) "-ztmp", 				SO_OPT			},     // compute log partition function (log Z) for computing K (divide Energy by RT = (1.9891/1000.0 * 298.15))
@@ -661,7 +676,6 @@ void help_msg(char *toulbar2filename)
 	cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
 #endif
 	cout << "   -x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl << endl;
-    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl << endl;
 	cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
 	cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
 	cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
@@ -700,8 +714,20 @@ void help_msg(char *toulbar2filename)
 	cout << endl;
 	cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
 	cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+
+    cout << "---------------------------------------------------------------------------------------" << endl;
+	cout << "----------------------------------- Protein Design ------------------------------------" << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
-	cout << "------------------------- Computation of Partition Function ---------------------------" << endl;
+    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl << endl;
+    cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)." << endl << endl;
+    cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl << endl;
+    cout << "   --psmbias=[penalty] : multiplier for native similarity bias (default is 0)." << endl << endl;
+    cout << "   --pssmbias=[penalty] : multiplier for PSSM bias (default is 0)." << endl << endl;
+    cout << "   --native=[sequence] : native sequence." << endl << endl;
+    
+
+    cout << "---------------------------------------------------------------------------------------" << endl;
+	cout << "--------------------------- Computation of Partition Function -------------------------" << endl;
 	cout << "---------------------------------------------------------------------------------------" << endl;
 	cout << "   -logz : computes log(Z) (i.e. probability of evidence or PR task)" << endl;
 	cout << "           for graphical models only (problem file extension .uai or .LG)" << endl;
@@ -758,6 +784,8 @@ int _tmain(int argc, TCHAR *argv[])
 	setlocale(LC_ALL, "C");
 	bool certificate = false;
     bool mutate = false;
+    char *psmatrix = NULL;
+    char *pssmatrix = NULL;
 	char *certificateFilename = NULL;
 	char *certificateString = NULL;
     char *mutationString = NULL;
@@ -811,7 +839,6 @@ int _tmain(int argc, TCHAR *argv[])
 	// declare our options parser, pass in the arguments from main
 	// as well as our array of valid options.
 	CSimpleOpt args(argc, argv, g_rgOptions);
-
 
 	while (args.Next()) {
 
@@ -921,12 +948,6 @@ int _tmain(int argc, TCHAR *argv[])
 				updateValueHeuristic = false;
 			}
 
-            // restricts aminoacid sequence
-            if (args.OptionId() == OPT_MUTATE) {
-                mutate = true;
-                mutationString = args.OptionArg() ;
-            }
-
 			// show Solutions
 			if (args.OptionId() == OPT_showSolutions) {
 				ToulBar2::showSolutions = true;
@@ -962,7 +983,6 @@ int _tmain(int argc, TCHAR *argv[])
 			}
 
 			// approximate counting
-
 			if (args.OptionId() == OPT_approximateCountingBTD) {
 				ToulBar2::approximateCountingBTD = true;
 				ToulBar2::allSolutions = LONGLONG_MAX;
@@ -1348,21 +1368,52 @@ int _tmain(int argc, TCHAR *argv[])
 					if (ToulBar2::debug) cout << "dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)"  << endl;
 
 				}
-
-
 			}
+            
 			//   Z: debug mode (save problem at each node if verbosity option set!)
-
 			//		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
-
+            
 			if (args.OptionId() == OPT_debug) {
 				if (args.OptionArg() != NULL) { ToulBar2::debug = atoi(args.OptionArg());}
 				else ToulBar2::debug = 1;
 				if (ToulBar2::debug) cout << "debug level = " << ToulBar2::debug << endl;
-
-
 			}
+            
+ 			////////////////////////////////////////////////////////////////////////////////////////
+			/////				Protein Design
+			////////////////////////////////////////////////////////////////////////////////////////
+           
+            // restricts aminoacid sequence
+            if (args.OptionId() == OPT_MUTATE) {
+                mutate = true;
+                mutationString = args.OptionArg() ;
+            }
+            
+            // define native sequence
+            if (args.OptionId() == OPT_NATIVE) {
+                ToulBar2::cpd->nativeSequence = args.OptionArg() ;
+            }
+            
+            // get PSMatrix name
+            if (args.OptionId() == OPT_PSMATRIX) {
+                ToulBar2::cpd->readPSMatrix(args.OptionArg());
+            }
+            
+            // get PSSM filename
+            if (args.OptionId() == OPT_PSSMATRIX) {
+                ToulBar2::cpd->readPSSMatrix(args.OptionArg());
+            }
+            
+            // get psm bias
+            if (args.OptionId() == OPT_PSMBIAS) {
+                ToulBar2::cpd->PSSMBias =atof(args.OptionArg());
+            }
 
+            // get pssm bias
+            if (args.OptionId() == OPT_PSSMBIAS) {
+                ToulBar2::cpd->PSSMBias = atof(args.OptionArg());
+            }
+            
 			// discrete integration for computing the partition function Z
 			if (args.OptionId() == OPT_Z) {
 				ToulBar2::isZ = true;
@@ -1846,6 +1897,7 @@ int _tmain(int argc, TCHAR *argv[])
         if (mutate) {
             solver->mutate(mutationString);
         }
+        
 		if (ToulBar2::dumpWCSP == 1) {
 			string problemname = ToulBar2::problemsaved_filename;
 			if (ToulBar2::uaieval) {

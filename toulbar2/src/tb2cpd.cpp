@@ -1,6 +1,16 @@
 #include "tb2cpd.hpp"
 #include <sstream>
 
+const map<char,int> Cpd::PSMIdx = {{'A', 0}, {'R' , 1},  {'N', 2}, {'D', 3}, {'C', 4}, {'Q', 5},
+                                   {'E', 6},  {'G', 7},  {'H', 8},  {'I', 9},  {'L', 10},  {'K', 11},
+                                   {'M', 12},  {'F', 13},  {'P', 14},  {'S', 15},  {'T', 16},  {'W', 17},
+                                   {'Y', 18},  {'V', 19},  {'B', 20},  {'Z', 21},  {'X', 22},  {'*', 23}};
+
+const map<char,int> Cpd::PSSMIdx = {{'A', 0}, {'G' , 1},  {'I', 2}, {'L', 3}, {'V', 4}, {'M', 5},
+                                    {'F', 6},  {'W', 7},  {'P', 8},  {'C', 9},  {'S', 10},  {'T', 11},
+                                    {'Y', 12},  {'N', 13},  {'Q', 14},  {'H', 15},  {'K', 16},  {'R', 17},
+                                    {'D', 18},  {'E', 19}};
+
 Cpd::Cpd()
 {
 	cpdtrie = new TrieCpd();
@@ -85,6 +95,75 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
     }
 }
 
+void Cpd::readPSMatrix(const char* filename)
+{
+    ifstream file;
+    file.open(filename);
+    
+    if (!file.is_open()) {
+        cerr << "Could not open PSSM file, aborting." << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    string s;
+	istringstream line;
+    int minscore = std::numeric_limits<int>::max();
+        
+    do getline(file, s); //Skip comments and AA line
+    while (s[0] == '#');
+    
+    for (int i = 0; i < 24; i++) {
+        file >> s; // skip AA
+        for (int j = 0; j < 24; j++) {
+            file >> PSM[i][j];
+            minscore = min(minscore,PSM[i][j]);
+        }
+    }
+
+    // renormalize to have only penalties
+    for (int i = 0; i < 24; i++) 
+        for (int j = 0; j < 24; j++) 
+            PSM[i][j] -= minscore;
+}
+
+void Cpd::readPSSMatrix(const char* filename)
+{
+    ifstream file;
+    file.open(filename);
+
+    if (!file.is_open()) {
+        cerr << "Could not open PSSM file, aborting." << endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    string s;
+	istringstream line;
+    int minscore = std::numeric_limits<int>::max();
+
+    getline(file, s); //Skip header line
+    
+    while (file) {
+        int pos;
+        vector<int> scores;
+        char cons;
+        file >> pos;
+        file >> cons;
+
+        scores.clear();
+        for (int j = 0; j < 20; j++) {
+            int  score;
+            file >> score;
+            minscore = min(minscore,score);
+            scores.push_back(score);
+        }
+        PSSM.push_back(scores);
+    }
+    
+    // renormalize to have only penalties
+    for (auto &v : PSSM)
+        for (auto &i : v)
+            i -= minscore;
+}
 
 void Cpd::storeSequence(const vector<Variable *> &vars, Cost _cost)
 {

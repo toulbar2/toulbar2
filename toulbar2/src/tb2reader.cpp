@@ -790,9 +790,6 @@ void WCSP::read_random(int n, int m, vector<int> &p, int seed, bool forceSubModu
 	}
 }
 
-
-
-
 void WCSP::read_uai2008(const char *fileName)
 {
 	// Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
