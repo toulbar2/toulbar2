@@ -113,7 +113,7 @@ void Solver::mutate(char *mutationString)
 
 void Solver::applyCompositionalBiases()
 {
-    if (ToulBar2::cpd->PSMBias != 0.0)
+    if (ToulBar2::cpd->PSMBias != 0.0) {
         if (ToulBar2::cpd->nativeSequence == NULL) {
             cerr << "Cannot bias energy based on similarity matrix without native sequence." << endl;
             exit(EXIT_FAILURE);
@@ -125,8 +125,9 @@ void Solver::applyCompositionalBiases()
                 wcsp->postUnary(varIndex, biases);
             }
         }
+    }
 
-    if (ToulBar2::cpd->PSSMBias != 0.0)
+    if (ToulBar2::cpd->PSSMBias != 0.0) {
         if (ToulBar2::cpd->isPSSMlen() != wcsp->numberOfVariables()) {
             cerr << "The number of variable is not equal to the PSSM length." << endl;
             exit(EXIT_FAILURE);
@@ -138,6 +139,7 @@ void Solver::applyCompositionalBiases()
                 wcsp->postUnary(varIndex, biases);
             }
         }
+    }
 }
 
 void Solver::read_solution(const char *filename, bool updateValueHeuristic)
