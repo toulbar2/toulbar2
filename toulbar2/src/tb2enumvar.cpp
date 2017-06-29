@@ -812,7 +812,7 @@ bool EnumeratedVariable::elimVar(BinaryConstraint *ctr)
 			}
 		}
 		if (negcost < 0){ 
-      if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar binary"<<endl;
+      if (ToulBar2::verbose >= 2) cout<<"Negcost increasing by elimvar binary"<<endl;
       wcsp->decreaseLb(negcost);
       if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
     }
@@ -880,7 +880,7 @@ bool EnumeratedVariable::elimVar(ConstraintLink  xylink,  ConstraintLink xzlink)
 				yznew->addcost(*itery, *iterz, -negcost);
 			}
 		}
-    if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar binary constr"<<endl;
+    if (ToulBar2::verbose >= 2) cout<<"Negcost increasing by elimvar binary constr"<<endl;
 		wcsp->decreaseLb(negcost);
     if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
 	}
@@ -997,7 +997,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint *xyz)
 				yz->addcost(*itery, *iterz, -negcost);
 			}
 		}
-    //~ if (ToulBar2::verbose >= 0) cout<<"Negcost increasing by elimvar ternary constr"<<endl;
+    //~ if (ToulBar2::verbose >= 2) cout<<"Negcost increasing by elimvar ternary constr"<<endl;
 		wcsp->decreaseLb(negcost);
     //~ if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
 	}

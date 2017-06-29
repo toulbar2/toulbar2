@@ -8,7 +8,7 @@
 void Solver::enforceZUb(Cluster *cluster)
 {
     TLogProb newlogU;
-    if (cluster){
+    //~ if (cluster){
       //~ cout<< ToulBar2::logU<<endl;
       //~ newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub(cluster)); // DOES NOT GIVE EPSILON APPROXIMATION
       //~ newlogU = wcsp->LogSumExp(cluster->getlogU(),Zub(cluster)); //Compute Cluster upper bound
@@ -21,16 +21,16 @@ void Solver::enforceZUb(Cluster *cluster)
           //~ ToulBar2::logU = newlogU; //FAIL
           //~ THROWCONTRADICTION;
       //~ }
-    }
-    else{
+    //~ }
+    //~ else{
     newlogU = wcsp->LogSumExp(ToulBar2::logU,Zub());
-      if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
+      if (wcsp->LogSumExp(newlogU,ToulBar2::logZ) < Log(1 + exp(ToulBar2::logepsilon)) + ToulBar2::logZ) {
           if (ToulBar2::verbose >= 1)  cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " log Z "<< ToulBar2::logZ << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
           ToulBar2::logU = newlogU;
           ToulBar2::GlobalLogUbZ=wcsp->LogSumExp(ToulBar2::GlobalLogUbZ,ToulBar2::logU);
           THROWCONTRADICTION;
       }
-    }
+    //~ }
 }
 
 TLogProb Solver::Zub(Cluster *cluster)  // Calculate an upper bound on Z (on a cluster if specified)
