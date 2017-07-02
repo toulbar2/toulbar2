@@ -32,7 +32,6 @@
 
 #include "tb2utils.hpp"
 #include "tb2integer.hpp"
-#include <quadmath.h>
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
