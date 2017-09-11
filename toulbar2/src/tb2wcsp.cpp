@@ -52,6 +52,7 @@ int ToulBar2::verbose;
 int ToulBar2::debug;
 bool ToulBar2::showSolutions;
 char *ToulBar2::writeSolution;
+FILE *ToulBar2::solutionFile;
 Long ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
 bool ToulBar2::approximateCountingBTD;
@@ -181,6 +182,7 @@ void tb2init()
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
+    ToulBar2::solutionFile = NULL;
     ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;
     ToulBar2::approximateCountingBTD = false;

@@ -285,7 +285,7 @@ CSimpleOpt::SOption g_rgOptions[] =
     { OPT_problemsaved_filename,        (char*) "--save",                       SO_REQ_SEP  }, // filename of saved problem
     { OPT_showSolutions,         		(char*) "-s",             			SO_NONE    	},//print solution found
     { OPT_showSolutions,         		(char*) "--show",          			SO_NONE    	},//print solution found
-    { OPT_writeSolution,        		(char*) "-w",       			  	SO_OPT  	}, //  depending of value write last solution found in filename "sol" in different format
+    { OPT_writeSolution,        		(char*) "-w",       			  	SO_OPT  	}, //  write last/all solutions found in file (default filename "sol")
 
     { OPT_pedigreePenalty,       		(char*) "-u",       			   	SO_REQ_SEP  	}, // int ..
     { OPT_allSolutions,	  		(char*) "-a",       			  	SO_OPT		}, // counting option ...print solution found
@@ -564,7 +564,7 @@ void help_msg(char *toulbar2filename)
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
-    cout << "   -w=[filename] : writes last solution found in filename (or \"sol\" if no parameter is given)" << endl;
+    cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -902,10 +902,9 @@ int _tmain(int argc, TCHAR * argv[])
 
 
             //#############################################
-            if (args.OptionId() == OPT_writeSolution )
-
-            {
+            if (args.OptionId() == OPT_writeSolution ) {
                 ToulBar2::writeSolution = (char *) "sol";
+                
                 if(args.OptionArg() != NULL) {
                     char *tmpFile = new char[strlen(args.OptionArg())+1];
                     strcpy(tmpFile,args.OptionArg());
@@ -913,7 +912,6 @@ int _tmain(int argc, TCHAR * argv[])
                     else ToulBar2::writeSolution = tmpFile;
                 }
             }
-
 
             if ( args.OptionId() == OPT_pedigreePenalty)
             {
@@ -1819,7 +1817,7 @@ int _tmain(int argc, TCHAR * argv[])
     }
     if (ToulBar2::verbose >= 0) cout << "end." << endl;
     if (ToulBar2::uai || ToulBar2::uaieval) ToulBar2::solution_file.close();
-
+    
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];
 	  string strfile(argv[1]);

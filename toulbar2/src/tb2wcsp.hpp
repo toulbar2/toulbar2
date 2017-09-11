@@ -371,8 +371,11 @@ public:
     void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
 
     const vector<Value> &getSolution() {return solution;}
-    void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {solution[i] = ((sol!=NULL)?(*sol)[i]:getValue(i));}}
-    void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << solution[i];}}
+    void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {Value v = ((sol!=NULL) ? (*sol)[i] : getValue(i));
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);}}
+    
+    void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << solution[i] << (i < numberOfVariables()-1 ? " " : "");}}
+    void printSolution(FILE * f) {for (unsigned int i=0; i<numberOfVariables(); i++) {fprintf(f,"%d", solution[i]); if(i < numberOfVariables()-1) fprintf(f," ");}}
     void printSolutionMaxSAT(ostream &os) {os << "v"; for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << ((solution[i])?((int) i+1):-((int) i+1));} ; os << endl;}
 
     void print(ostream& os);								///< \brief print current domains and active cost functions (see \ref verbosity)

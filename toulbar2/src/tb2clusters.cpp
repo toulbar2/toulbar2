@@ -2130,32 +2130,18 @@ void TreeDecomposition::newSolution( Cost lb )
             }
         }
     }
-    if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution(&a);
+    if (!ToulBar2::isZ) wcsp->setSolution(&a);
 
     if (ToulBar2::showSolutions) {
-        TAssign::iterator it = a.begin();
-        while(it != a.end()) {
-            Value v = it->second;
-            cout << v << " ";
-            ++it;
-        }
+        wcsp->printSolution(cout);
         cout << endl;
     }
 
     if (ToulBar2::writeSolution) {
-        ofstream file(ToulBar2::writeSolution);
-        if (!file) {
-            cerr << "Could not write file " << "solution" << endl;
-            exit(EXIT_FAILURE);
-        }
-        TAssign::iterator it = a.begin();
-        while(it != a.end()) {
-            Value v = it->second;
-            file << v << " ";
-            ++it;
-        }
-        file << endl;
+        wcsp->printSolution(ToulBar2::solutionFile);
+        fprintf(ToulBar2::solutionFile,"\n");
     }
+    
     if (ToulBar2::maxsateval) {
         cout << "o " << lb << endl;
     }
