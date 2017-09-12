@@ -30,8 +30,10 @@
 // uncomment if using large enumerated domains with BTD or in nary cost functions
 //#define WIDE_STRING
 
-#include "tb2integer.hpp"
 #include "tb2utils.hpp"
+
+//Must be included after tb2utils.hpp
+#include "tb2integer.hpp"
 
 /// Domain value (can be positive or negative integers)
 typedef int Value;

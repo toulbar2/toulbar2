@@ -2,8 +2,10 @@
  * ****** System dependent functions.
  */
 
-#include "tb2system.hpp"
 #include "tb2types.hpp"
+
+//Must be included after tb2types.hpp
+#include "tb2system.hpp"
 
 /* --------------------------------------------------------------------
 // Timer management functions
