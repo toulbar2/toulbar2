@@ -1,6 +1,6 @@
 /** \file tb2queue.hpp
  *  \brief Propagation queue with time stamping.
- * 
+ *
  */
 
 #ifndef TB2QUEUE_HPP_
@@ -11,15 +11,14 @@
 
 typedef enum {NOTHING_EVENT=0, INCREASE_EVENT=1, DECREASE_EVENT=2} EventType;
 
-struct VariableWithTimeStamp 
-{
+struct VariableWithTimeStamp {
     Variable *var;
     Long timeStamp;
     int incdec;
 };
 
 class Queue : private BTList<VariableWithTimeStamp>
-{  
+{
     // make it private because we don't want copy nor assignment
     Queue(const Queue &s);
     Queue& operator=(const Queue &s);
@@ -32,7 +31,7 @@ public:
 
     void clear() {BTList<VariableWithTimeStamp>::clear();}
 
-    void push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp);   
+    void push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp);
     void push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp);
 
     void remove(DLink<VariableWithTimeStamp> *elt);

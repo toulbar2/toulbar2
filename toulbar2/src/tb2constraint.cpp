@@ -60,7 +60,7 @@ void Constraint::projectLB(Cost cost)
 
 void Constraint::assigns()
 {
-    for(int i=0;connected() && i<arity();i++) if (getVar(i)->assigned()) assign(i);
+    for(int i=0; connected() && i<arity(); i++) if (getVar(i)->assigned()) assign(i);
 }
 
 void Constraint::sumScopeIncluded( Constraint* ctr )
@@ -91,15 +91,16 @@ void Constraint::sumScopeIncluded( Constraint* ctr )
 }
 
 
-void Constraint::assignCluster() {
+void Constraint::assignCluster()
+{
     TreeDecomposition* td = wcsp->getTreeDec();
     if(!td) return;
     Cluster* lowest = td->getRoot();
-    for(int i=0;i<arity();i++) if (getVar(i)->unassigned() || isSep()) { // keep separator Constraint::cluster unchanged
-        Variable* x = getVar(i);
-        Cluster* c = td->getCluster( x->getCluster() );
-        if(lowest->isDescendant(c)) lowest = c;
-    }
+    for(int i=0; i<arity(); i++) if (getVar(i)->unassigned() || isSep()) { // keep separator Constraint::cluster unchanged
+            Variable* x = getVar(i);
+            Cluster* c = td->getCluster( x->getCluster() );
+            if(lowest->isDescendant(c)) lowest = c;
+        }
     cluster = lowest->getId();
 }
 
@@ -194,15 +195,16 @@ bool Constraint::verifySeparate(Constraint * ctr1, Constraint * ctr2)
     String tuple;
     Cost cost, c1,c2;
     firstlex();
-    if(ToulBar2::verbose >= 3) { cout << "[ ";
-    for(int i = 0; i< arity(); ++i)
-        cout << getVar(i)->getName() << " ";
-    cout << " ]\n" ;
+    if(ToulBar2::verbose >= 3) {
+        cout << "[ ";
+        for(int i = 0; i< arity(); ++i)
+            cout << getVar(i)->getName() << " ";
+        cout << " ]\n" ;
     }
-    while(nextlex(tuple,cost)){
+    while(nextlex(tuple,cost)) {
         c1 = ctr1->evalsubstr(tuple,this);
         c2 = ctr2->evalsubstr(tuple,this);
-        if(ToulBar2::verbose >= 3){
+        if(ToulBar2::verbose >= 3) {
             for(int i = 0; i< arity(); ++i)
                 cout << tuple[i] - CHAR_FIRST << " ";
             //cout << endl;
@@ -245,7 +247,7 @@ bool Constraint::decompose()
     return sep;
 }
 
-Constraint *Constraint::copy() 
+Constraint *Constraint::copy()
 {
     int scope[arity()];
     for (int i=0; i<arity(); i++) scope[i] = getVar(i)->wcspIndex;

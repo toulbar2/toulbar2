@@ -33,7 +33,8 @@ class RegularFlowConstraint;
  *
  */
 
-class WCSP FINAL : public WeightedCSP {
+class WCSP FINAL : public WeightedCSP
+{
     static int wcspCounter; 			///< count the number of instances of WCSP class
     int instance; 						///< instance number
     string name; 						///< problem name
@@ -134,7 +135,8 @@ public:
 
     /// \brief sets problem upper bound when a new solution is found
     /// \warning side-effect: adjusts maximum number of buckets (see \ref ncbucket) if called before adding variables to a problem
-    void updateUb(Cost newUb) {
+    void updateUb(Cost newUb)
+    {
         if (newUb < ub) {
             ub = newUb;
             if (vars.size()==0) NCBucketSize = cost2log2gub(ub) + 1;
@@ -142,7 +144,8 @@ public:
     }
 
     /// \brief enforces problem upper bound when exploring an alternative search node
-    void enforceUb() {
+    void enforceUb()
+    {
         if (CUT(((((Cost)lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?
                  ((Cost)lb + ToulBar2::costMultiplier):
                  (Cost)lb),
@@ -153,7 +156,8 @@ public:
 
     /// \brief sets problem upper bound and asks for propagation
     /// \deprecated
-    void decreaseUb(Cost newUb) {
+    void decreaseUb(Cost newUb)
+    {
         if (newUb < ub) {
             if (CUT(((((Cost)lb % ((Cost) ceil(ToulBar2::costMultiplier))) != MIN_COST)?((Cost)lb + ToulBar2::costMultiplier):(Cost)lb), newUb)) THROWCONTRADICTION;
             ub = newUb;
@@ -163,7 +167,8 @@ public:
 
     /// \brief increases problem lower bound thanks to \e eg soft local consistencies
     /// \param addLb increment value to be \b added to the problem lower bound
-    void increaseLb(Cost addLb) {
+    void increaseLb(Cost addLb)
+    {
         assert(addLb >= MIN_COST);
         if (addLb > MIN_COST) {
             //		   incWeightedDegree(addLb);
@@ -206,7 +211,8 @@ public:
     bool unassigned(int varIndex) const {return vars[varIndex]->unassigned();}
     bool canbe(int varIndex, Value v) const {return vars[varIndex]->canbe(v);}
     bool cannotbe(int varIndex, Value v) const {return vars[varIndex]->cannotbe(v);}
-    Value nextValue(int varIndex, Value v) const {
+    Value nextValue(int varIndex, Value v) const
+    {
         if (enumerated(varIndex)) {
             EnumeratedVariable::iterator iter = ((EnumeratedVariable *) vars[varIndex])->lower_bound(v+1);
             if (iter != ((EnumeratedVariable *) vars[varIndex])->end()) return *iter;
@@ -227,13 +233,15 @@ public:
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
     /// \note this function is equivalent but faster than a sequence of \ref WCSP::assign. it is particularly useful for Local Search methods such as Large Neighborhood Search.
-    void assignLS(vector<int>& varIndexes, vector<Value>& newValues) {
+    void assignLS(vector<int>& varIndexes, vector<Value>& newValues)
+    {
         assert(varIndexes.size()==newValues.size());
         unsigned int size = varIndexes.size();
         assignLS(&varIndexes[0], &newValues[0], size, true);
     }
 
-    void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate) {
+    void assignLS(int *varIndexes, Value *newValues, unsigned int size, bool dopropagate)
+    {
         ConstraintSet delayedctrs;
         for (unsigned int i=0; i<size; i++) vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
         for (ConstraintSet::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it) if (!(*it)->isGlobal()) {if ((*it)->isSep()) (*it)->assigns(); else (*it)->propagate();}
@@ -255,7 +263,8 @@ public:
     void resetWeightedDegree(int varIndex) {vars[varIndex]->resetWeightedDegree();}				///< \brief initialize weighted degree heuristic
     void revise(Constraint *c) {lastConflictConstr = c;}										///< \internal last conflict heuristic
     /// \internal last conflict heuristic
-    void conflict() {
+    void conflict()
+    {
         if (lastConflictConstr) {
             if (ToulBar2::verbose>=2) cout << "Last conflict on " << *lastConflictConstr << endl;
             lastConflictConstr->incConflictWeight(lastConflictConstr);
@@ -263,7 +272,8 @@ public:
         }
     }
     /// \internal \deprecated
-    void incWeightedDegree(Long incval) {
+    void incWeightedDegree(Long incval)
+    {
         if (lastConflictConstr) {
             lastConflictConstr->incConflictWeight(incval);
         }
@@ -275,10 +285,12 @@ public:
 
     unsigned int numberOfVariables() const {return vars.size();}	///< \brief current number of created variables
     /// \brief returns current number of unassigned variables
-    unsigned int numberOfUnassignedVariables() const {
+    unsigned int numberOfUnassignedVariables() const
+    {
         int res = 0;
         for (unsigned int i=0; i<vars.size(); i++) if (unassigned(i)) res++;
-        return res;}
+        return res;
+    }
     unsigned int numberOfConstraints() const {return constrs.size();}	///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const;				///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const;		///< \brief current number of binary cost functions
@@ -288,9 +300,9 @@ public:
     Value getDomainSizeSum();										///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
-    void cartProd(BigInteger& cartesianProduct) {
-        for(vector<Variable*>::iterator it=vars.begin(); it!=vars.end();it++)
-        {
+    void cartProd(BigInteger& cartesianProduct)
+    {
+        for(vector<Variable*>::iterator it=vars.begin(); it!=vars.end(); it++) {
             Variable * x = *it;
             mpz_mul_si(cartesianProduct.integer, cartesianProduct.integer, x->getDomainSize());
         }
@@ -330,30 +342,30 @@ public:
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string &name, int *constrcounter = NULL);
 
     int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<Value> &values, int lb, int ub);///< \brief post a soft among cost function
+                   const vector<Value> &values, int lb, int ub);///< \brief post a soft among cost function
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
     void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            int nbStates,
-            const vector<WeightedObj<int> > &initial_States,
-            const vector<WeightedObj<int> > &accepting_States,
-            const vector<DFATransition > &Wtransitions ); ///< \brief post a soft or weighted regular cost function
+                     int nbStates,
+                     const vector<WeightedObj<int> > &initial_States,
+                     const vector<WeightedObj<int> > &accepting_States,
+                     const vector<DFATransition > &Wtransitions ); ///< \brief post a soft or weighted regular cost function
     void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
     int postWAllDiff(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a soft alldifferent cost function
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<BoundedObj<Value> > &values); ///< \brief post a soft global cardinality cost function
+                 const vector<BoundedObj<Value> > &values); ///< \brief post a soft global cardinality cost function
     void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
     int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
     void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function
     void postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \brief post a combination of a same and gcc cost function decomposed as a cost function network
     int postWGrammarCNF(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            int nbSymbols,
-            int startSymbol,
-            const vector<CFGProductionRule> WRuleToTerminal ); ///< \brief post a soft/weighted grammar cost function with the dynamic programming propagator and grammar in Chomsky normal form
+                        int nbSymbols,
+                        int startSymbol,
+                        const vector<CFGProductionRule> WRuleToTerminal ); ///< \brief post a soft/weighted grammar cost function with the dynamic programming propagator and grammar in Chomsky normal form
     int postMST(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost); ///< \brief post a Spanning Tree hard constraint
     int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
+                      const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
@@ -371,9 +383,14 @@ public:
     void solution_UAI(Cost res, bool opt = false );				///< \brief output solution in UAI 2008 output format
 
     const vector<Value> &getSolution() {return solution;}
-    void setSolution(TAssign *sol = NULL) {for (unsigned int i=0; i<numberOfVariables(); i++) {Value v = ((sol!=NULL) ? (*sol)[i] : getValue(i));
-            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);}}
-    
+    void setSolution(TAssign *sol = NULL)
+    {
+        for (unsigned int i=0; i<numberOfVariables(); i++) {
+            Value v = ((sol!=NULL) ? (*sol)[i] : getValue(i));
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);
+        }
+    }
+
     void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << solution[i] << (i < numberOfVariables()-1 ? " " : "");}}
     void printSolution(FILE * f) {for (unsigned int i=0; i<numberOfVariables(); i++) {fprintf(f,"%d", solution[i]); if(i < numberOfVariables()-1) fprintf(f," ");}}
     void printSolutionMaxSAT(ostream &os) {os << "v"; for (unsigned int i=0; i<numberOfVariables(); i++) {os << " " << ((solution[i])?((int) i+1):-((int) i+1));} ; os << endl;}
@@ -388,7 +405,8 @@ public:
 
     Variable   *getVar(int varIndex) const {return vars[varIndex];}
     vector< vector<int> > *getListSuccessors() {return &listofsuccessors;}
-    Constraint *getCtr(int ctrIndex) const {
+    Constraint *getCtr(int ctrIndex) const
+    {
         if (ctrIndex>=0) {
             return constrs[ctrIndex];
         } else {
@@ -405,7 +423,8 @@ public:
 
     VariableList* getNCBucket( int ibucket ) { return &NCBuckets[ibucket]; }
     int getNCBucketSize() const {return NCBucketSize;}
-    void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt) {
+    void changeNCBucket(int oldBucket, int newBucket, DLink<Variable *> *elt)
+    {
         assert(newBucket < NCBucketSize);
         if (oldBucket >= 0) NCBuckets[oldBucket].erase(elt, true);
         if (newBucket >= 0) NCBuckets[newBucket].push_back(elt, true);

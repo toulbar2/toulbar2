@@ -2,11 +2,13 @@
 
 /// DECOMPOSABLE COST FUNCTION /////////////////////////////////////////
 
-DecomposableGlobalCostFunction::DecomposableGlobalCostFunction() : arity(0), scope(NULL), label("empty") {
+DecomposableGlobalCostFunction::DecomposableGlobalCostFunction() : arity(0), scope(NULL), label("empty")
+{
     ToulBar2::Berge_Dec=1;
 }
 
-DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _arity, int* _scope) : arity(_arity), label("empty"){
+DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _arity, int* _scope) : arity(_arity), label("empty")
+{
     scope = new int[arity];
     for (unsigned int variable = 0 ; variable < _arity ; ++variable) {
         scope[variable] = _scope[variable];
@@ -14,12 +16,14 @@ DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _ari
     ToulBar2::Berge_Dec=1;
 }
 
-DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction() {
+DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
+{
     delete [] scope;
 }
 
-DecomposableGlobalCostFunction* 
-DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream &file) {
+DecomposableGlobalCostFunction*
+DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream &file)
+{
     //cout << "Creating a " << type << " global cost function " << endl;
     if (type == "wamong")               return new WeightedAmong(_arity,_scope,file);
     if (type == "wvaramong")            return new WeightedVarAmong(_arity,_scope,file);
@@ -37,18 +41,37 @@ DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, in
     return 0;
 }
 
-void 
-DecomposableGlobalCostFunction::color(int i) {
+void
+DecomposableGlobalCostFunction::color(int i)
+{
     switch (i) {
-    case 1 : cout << "\033[41m"; break;
-    case 2 : cout << "\033[42m"; break;
-    case 3 : cout << "\033[43m"; break;
-    case 4 : cout << "\033[44m"; break;
-    case 5 : cout << "\033[45m"; break;
-    case 6 : cout << "\033[46m"; break;
-    case 7 : cout << "\033[47m"; break;
-    case 8 : cout << "\033[40m\033[37m"; break;
-    default : cout << "\033[0m"; break;
+    case 1 :
+        cout << "\033[41m";
+        break;
+    case 2 :
+        cout << "\033[42m";
+        break;
+    case 3 :
+        cout << "\033[43m";
+        break;
+    case 4 :
+        cout << "\033[44m";
+        break;
+    case 5 :
+        cout << "\033[45m";
+        break;
+    case 6 :
+        cout << "\033[46m";
+        break;
+    case 7 :
+        cout << "\033[47m";
+        break;
+    case 8 :
+        cout << "\033[40m\033[37m";
+        break;
+    default :
+        cout << "\033[0m";
+        break;
     };
 }
 
@@ -56,10 +79,12 @@ DecomposableGlobalCostFunction::color(int i) {
 
 WeightedAmong::WeightedAmong() : DecomposableGlobalCostFunction() {}
 
-WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope)
+{
 }
 
-WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     unsigned int nbValue;
     file >> nbValue;
@@ -71,12 +96,14 @@ WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope, istream &file) : 
     file >> lb >> ub;
 }
 
-WeightedAmong::~WeightedAmong() {
+WeightedAmong::~WeightedAmong()
+{
     values.clear();
 }
 
 void
-WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp) {
+WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
+{
     bool VERBOSE = false;
     bool VVERBOSE = false;
     int nbVariableCFN = wcsp->numberOfVariables();
@@ -122,8 +149,8 @@ WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp) {
                 //							+ (value) 			* (varCj->getDomainInitSize())
                 //							+ (nextCounter);
                 unsigned long position =  (counterPosition) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
-										        +  (valuePosition) 			* (varCj->getDomainInitSize())
-										        +  (nextCounter);
+                                          +  (valuePosition) 			* (varCj->getDomainInitSize())
+                                          +  (nextCounter);
                 if (VVERBOSE)  cout << position << "/" << tableSize << endl;
                 ternaryCosts[position] = 0;
 
@@ -137,7 +164,7 @@ WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp) {
     if (VERBOSE) {color(5); cout << "post unary constraint on " << addVariablesIndex[arity]; color(0); cout << endl;}
     vector<Cost> unaryCosts(arity+1,top);
     for (int i = 0 ; i <= arity ; i++) {
-        int gap = max( 0 , max( int(lb - i), int(i - ub) ) );
+        int gap = max( 0, max( int(lb - i), int(i - ub) ) );
         if (semantics == "hard") {
             if (((unsigned int) i) >= lb && ((unsigned int) i)  <= ub) unaryCosts[i] = 0;
             else unaryCosts[i] = min(top,baseCost);
@@ -149,13 +176,14 @@ WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp) {
     wcsp->postUnary(addVariablesIndex[arity],unaryCosts);
 }
 
-Cost 
-WeightedAmong::evaluate(int* tuple) {
+Cost
+WeightedAmong::evaluate(int* tuple)
+{
     int occurency = 0;
     for (int var = 0 ; var < arity ; var++) {
         if(values.find(tuple[var]) != values.end()) occurency++;
     }
-    int gap = max( 0 , max( int(lb - occurency), int(occurency - ub) ) );
+    int gap = max( 0, max( int(lb - occurency), int(occurency - ub) ) );
     if (gap) {
         if (semantics == "hard") return baseCost;
         if (semantics == "lin" || semantics == "var")  return baseCost * gap;
@@ -164,8 +192,9 @@ WeightedAmong::evaluate(int* tuple) {
     return 0;
 }
 
-void 
-WeightedAmong::display() {
+void
+WeightedAmong::display()
+{
     cout << "WAmong (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -186,16 +215,19 @@ WeightedRegular::WeightedRegular() : DecomposableGlobalCostFunction(), automaton
 
 WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope),automaton(0) {}
 
-WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     automaton = new WFA(file);
 }
 
-WeightedRegular::~WeightedRegular() {
+WeightedRegular::~WeightedRegular()
+{
     delete automaton;
 }
 
 void
-WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
+WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
+{
     ToulBar2::Berge_Dec=1;
     //automaton->display();
     Cost top = wcsp->getUb();
@@ -213,13 +245,14 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
         if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular q0 index "<< q0 << " domain = " << domsize+1 << endl;
         wcsp->makeEnumeratedVariable(varname,(Value) 0, (Value) domsize);			// add q0 variable
         if ( ToulBar2::verbose > 1 ) cout << "wregular add varname =" << varname <<"=> var index "<<  wcsp->numberOfVariables() << " domain size = " << domsize+1 << endl;
-    } else { exit(EXIT_FAILURE);
+    } else {
+        exit(EXIT_FAILURE);
     }
     //################################################initial state ##############################################
     if (automaton->getInitialStates().size() > 0 ) {
         vector<Cost> initial_states_costs(automaton->getNbStates(),top);
         list< pair<int,Cost> > initialStates = automaton->getInitialStates();
-        for (list<pair<int,Cost> >::iterator it = initialStates.begin(); it !=  initialStates.end() ; ++it){
+        for (list<pair<int,Cost> >::iterator it = initialStates.begin(); it !=  initialStates.end() ; ++it) {
             pair<int,Cost> initial = *it;
             //cout << initial.first << " " << initial.second << endl;
             initial_states_costs[initial.first]=initial.second;
@@ -254,7 +287,7 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
             EnumeratedVariable* Qv  = (EnumeratedVariable *) wcsp->getVar(q_last); // get domaine size of last qi var
             unsigned long DomVar=Qv->getDomainInitSize();
 
-            if(t_index < DomVar){
+            if(t_index < DomVar) {
                 final_states_costs[t_index]=ucost;
             } else {
                 cout <<"wregular tuple error " << t_index << "out of domain" << DomVar << endl;
@@ -270,39 +303,39 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
         throw Contradiction();
     }
     /*
-				//################################################### lecture des transition ????
-				if ( ToulBar2::verbose > 1 ) 
-				cout << "DEBUG>>wregular final number of Unary constraint Post after q0 and qi post : " << numberOfConstraints()  << endl;
-				//==================
-				// transition stat reading 
-				//==================
-				int nb_transition;
-				vector<unsigned int> VQi;
-				vector<unsigned int> VQj;
-				vector<unsigned int> VXi;
-				vector<Cost> transition_costs;
-				file >> nb_transition;
-				if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular transitions number :  " <<  nb_transition <<endl;
-				for( int s = 0 ; s < nb_transition ; s++)
-				{
-					int qi;
-					int xi;
-					int qj;
-					Cost transition_COST;
-					file >> qi;
-					file >> xi;
-					file >> qj;
-					file >> transition_COST;
-					VQi.push_back(qi);
-					VXi.push_back(xi);
-					VQj.push_back(qj);
-					transition_costs.push_back(transition_COST);
+    			//################################################### lecture des transition ????
+    			if ( ToulBar2::verbose > 1 )
+    			cout << "DEBUG>>wregular final number of Unary constraint Post after q0 and qi post : " << numberOfConstraints()  << endl;
+    			//==================
+    			// transition stat reading
+    			//==================
+    			int nb_transition;
+    			vector<unsigned int> VQi;
+    			vector<unsigned int> VQj;
+    			vector<unsigned int> VXi;
+    			vector<Cost> transition_costs;
+    			file >> nb_transition;
+    			if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular transitions number :  " <<  nb_transition <<endl;
+    			for( int s = 0 ; s < nb_transition ; s++)
+    			{
+    				int qi;
+    				int xi;
+    				int qj;
+    				Cost transition_COST;
+    				file >> qi;
+    				file >> xi;
+    				file >> qj;
+    				file >> transition_COST;
+    				VQi.push_back(qi);
+    				VXi.push_back(xi);
+    				VQj.push_back(qj);
+    				transition_costs.push_back(transition_COST);
 
-					if ( ToulBar2::verbose > 1 ) {
-					cout << "DEBUG>> wregular read transition table qi =" << qi << " xi =" << xi << " qj =" << qj << " cost=" << transition_COST << endl;
-					cout << "DEBUG>> wregular scope xi " << scopeIndex[xi] <<endl;
-					}
-				}
+    				if ( ToulBar2::verbose > 1 ) {
+    				cout << "DEBUG>> wregular read transition table qi =" << qi << " xi =" << xi << " qj =" << qj << " cost=" << transition_COST << endl;
+    				cout << "DEBUG>> wregular scope xi " << scopeIndex[xi] <<endl;
+    				}
+    			}
      */
     //##################################################ajout ternaire#############################
     for ( int q = 0 ; q < arity ; q++) {
@@ -353,8 +386,9 @@ WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp) {
     if ( ToulBar2::verbose >=1 ) cout << "DEBUG>> wregular Total number of constraints after wregular posting " << wcsp->numberOfConstraints()  << endl;
 }
 
-void 
-WeightedRegular::display() {
+void
+WeightedRegular::display()
+{
     cout << "WRegular (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -362,8 +396,7 @@ WeightedRegular::display() {
     cout << endl;
     if (automaton) {
         automaton->display();
-    }
-    else {
+    } else {
         cout << "no automaton associated" << endl;
     }
 }
@@ -374,15 +407,17 @@ WeightedSum::WeightedSum() : DecomposableGlobalCostFunction() {}
 
 WeightedSum::WeightedSum(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
 
-WeightedSum::WeightedSum(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedSum::WeightedSum(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     file >> comparator >> rightRes;
 }
 
 WeightedSum::~WeightedSum() {}
 
-void 
-WeightedSum::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
+{
     int nbVariableCFN = wcsp->numberOfVariables();
     //cout << nbVariableCFN << endl;
 
@@ -429,8 +464,8 @@ WeightedSum::addToCostFunctionNetwork(WCSP* wcsp) {
                     if (counter_j == (counter_i + value)) {
                         //cout << counter_i << " + " << value << " = " << counter_j << endl;
                         unsigned long position =  (valueCiPosition) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
-												         + (valueXPosition) 		* (varCj->getDomainInitSize())
-												         + (valueCjPosition);
+                                                  + (valueXPosition) 		* (varCj->getDomainInitSize())
+                                                  + (valueCjPosition);
                         ternaryCosts[position] = 0;
                     }
                 }
@@ -443,7 +478,7 @@ WeightedSum::addToCostFunctionNetwork(WCSP* wcsp) {
     //cout << "\033[46m" << "post unary constraint on " << addVariablesIndex[arity] << "\033[0m" << endl;
     int sizeLast = cumulUP - cumulDOWN + 1;
     //cout << cumulDOWN << " -> " << cumulUP << " :: " << sizeLast << endl;
-    vector<Cost> unaryCosts(sizeLast ,top);
+    vector<Cost> unaryCosts(sizeLast,top);
     int positionVar = 0;
 
     for (int i = cumulDOWN ; i <= cumulUP ; i++) {
@@ -488,8 +523,9 @@ WeightedSum::addToCostFunctionNetwork(WCSP* wcsp) {
 
 }
 
-Cost 
-WeightedSum::evaluate(int* tuple) {
+Cost
+WeightedSum::evaluate(int* tuple)
+{
     int sum = 0;
     for (int var = 0 ; var < arity ; var++) {
         sum += tuple[var];
@@ -504,14 +540,16 @@ WeightedSum::evaluate(int* tuple) {
         if (sum != rightRes) return baseCost;
     }
     if (comparator == "<" || comparator == "<=") {
-        int newRightRes = rightRes; if (comparator == "<") newRightRes--;
+        int newRightRes = rightRes;
+        if (comparator == "<") newRightRes--;
         int gap = max(0,sum - newRightRes);
         if (semantics == "hard") return min(gap*baseCost,baseCost);
         if (semantics == "lin" || semantics == "var")  return gap*baseCost;
         if (semantics == "quad") return gap*gap*baseCost;
     }
     if (comparator == ">" || comparator == ">=") {
-        int newRightRes = rightRes; if (comparator == ">") newRightRes++;
+        int newRightRes = rightRes;
+        if (comparator == ">") newRightRes++;
         int gap = max(0,newRightRes - sum);
         if (semantics == "hard") return min(gap*baseCost,baseCost);
         if (semantics == "lin" || semantics == "var")  return gap*baseCost;
@@ -520,8 +558,9 @@ WeightedSum::evaluate(int* tuple) {
     return 0;
 }
 
-void 
-WeightedSum::display() {
+void
+WeightedSum::display()
+{
     cout << "WSum (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -537,15 +576,17 @@ WeightedVarSum::WeightedVarSum() : DecomposableGlobalCostFunction() {}
 
 WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
 
-WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     file >> comparator;
 }
 
 WeightedVarSum::~WeightedVarSum() {}
 
-void 
-WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
+{
     int nbVariableCFN = wcsp->numberOfVariables();
 
     /// -- new variables : counters -- ///
@@ -599,8 +640,8 @@ WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
                     if (counter_j == (counter_i + value)) {
 
                         unsigned long position =  (valueCiPosition) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
-												         + (valueXPosition) 		* (varCj->getDomainInitSize())
-												         + (valueCjPosition);
+                                                  + (valueXPosition) 		* (varCj->getDomainInitSize())
+                                                  + (valueCjPosition);
                         //cout << counter_i << " + " << value << " = " << counter_j <<  " ==> "  << position << endl;
                         ternaryCosts[position] = 0;
                     }
@@ -624,7 +665,7 @@ WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
     unsigned int lastVariableSize = lastVariable->getDomainInitSize();
     unsigned int costSize = lastCounterSize * lastVariableSize;
     //cout << lastCounterSize << "*" << lastVariableSize << " => " << costSize << endl;
-    vector<Cost> binaryCosts(costSize ,top);
+    vector<Cost> binaryCosts(costSize,top);
 
     for (unsigned int positionLastCounter = 0 ; positionLastCounter < lastCounterSize ; positionLastCounter++) {
         for (unsigned int positionLastVariable = 0; positionLastVariable < lastVariableSize ; positionLastVariable++) {
@@ -660,8 +701,9 @@ WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp) {
 }
 
 
-void 
-WeightedVarSum::display() {
+void
+WeightedVarSum::display()
+{
     cout << "WVarSum (" << arity << ") : ";
     for (int variable = 0 ; variable < arity-1 ; ++variable) {
         cout << scope[variable] << " ";
@@ -676,7 +718,8 @@ WeightedOverlap::WeightedOverlap() : DecomposableGlobalCostFunction() {}
 
 WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
 
-WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     file >> comparator >> rightRes;
     //display();
@@ -684,8 +727,9 @@ WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope, istream &file
 
 WeightedOverlap::~WeightedOverlap() {}
 
-void 
-WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
+{
     int nbVariableCFN = wcsp->numberOfVariables();
 
     // -- new variables : counters OVERLAP -- //
@@ -722,8 +766,8 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
                 if (vX == vY && vY != 0)  vO = 1;
                 //cout << "X=" << vX << " Y=" << vY << " O=" << vO << endl;
                 unsigned long position =  (valueXPosition) 		* (varY->getDomainInitSize()*varO->getDomainInitSize())
-										        + (valueYPosition) 		* (varO->getDomainInitSize())
-										        + (vO);
+                                          + (valueYPosition) 		* (varO->getDomainInitSize())
+                                          + (vO);
                 ternaryCosts[position] = 0;
             }
         }
@@ -761,8 +805,8 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
                     nextCounter++;
                 }
                 unsigned long position =  (counter) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
-											        + (value) 			* (varCj->getDomainInitSize())
-											        + (nextCounter);
+                                          + (value) 			* (varCj->getDomainInitSize())
+                                          + (nextCounter);
                 ternaryCosts[position] = 0;
             }
         }
@@ -772,7 +816,7 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
 
     // -- unary constraints : final variable -- //
     //cout << "\033[45m" << "post unary constraint on " << addVariablesIndex[arity] << "\033[0m" << endl;
-    vector<Cost> unaryCosts(arity/2+1 ,top);
+    vector<Cost> unaryCosts(arity/2+1,top);
     if (comparator == "==") {
         for (int i = 0 ; i <= arity/2 ; i++) {
             if (i == rightRes) unaryCosts[i] = 0;
@@ -783,50 +827,47 @@ WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp) {
                 if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
             }
         }
-    } else
-        if (comparator == "!=") {
-            for (int i = 0 ; i <= arity/2 ; i++) {
-                if (i != rightRes) unaryCosts[i] = 0;
-                else {
-                    unaryCosts[i] = baseCost;
-                }
+    } else if (comparator == "!=") {
+        for (int i = 0 ; i <= arity/2 ; i++) {
+            if (i != rightRes) unaryCosts[i] = 0;
+            else {
+                unaryCosts[i] = baseCost;
             }
-        } else
-            if (comparator == "<" || comparator == "<=") {
-                int newRightRes = rightRes;
-                if (comparator == "<") newRightRes--;
+        }
+    } else if (comparator == "<" || comparator == "<=") {
+        int newRightRes = rightRes;
+        if (comparator == "<") newRightRes--;
 
-                for (int i = 0 ; i <= arity/2 ; i++) {
-                    if (i <= newRightRes) unaryCosts[i] = 0;
-                    else {
-                        int gap = max(0,i - newRightRes);
-                        if (semantics == "hard") unaryCosts[i] = baseCost;
-                        if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
-                        if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
-                    }
-                }
-            } else
-                if (comparator == ">" || comparator == ">=") {
-                    int newRightRes = rightRes;
-                    if (comparator == ">") newRightRes++;
+        for (int i = 0 ; i <= arity/2 ; i++) {
+            if (i <= newRightRes) unaryCosts[i] = 0;
+            else {
+                int gap = max(0,i - newRightRes);
+                if (semantics == "hard") unaryCosts[i] = baseCost;
+                if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
+                if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
+            }
+        }
+    } else if (comparator == ">" || comparator == ">=") {
+        int newRightRes = rightRes;
+        if (comparator == ">") newRightRes++;
 
-                    for (int i = 0 ; i <= arity/2 ; i++) {
-                        if (i >= newRightRes) unaryCosts[i] = 0;
-                        else {
-                            int gap = max(0,newRightRes - i);
-                            if (semantics == "hard") unaryCosts[i] = baseCost;
-                            if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
-                            if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
-                        }
-                    }
-                }
-                else cout << "comparator " << comparator << " not handle yet" << endl;
+        for (int i = 0 ; i <= arity/2 ; i++) {
+            if (i >= newRightRes) unaryCosts[i] = 0;
+            else {
+                int gap = max(0,newRightRes - i);
+                if (semantics == "hard") unaryCosts[i] = baseCost;
+                if (semantics == "lin" || semantics == "var")  unaryCosts[i] = gap*baseCost;
+                if (semantics == "quad")  unaryCosts[i] = gap*gap*baseCost;
+            }
+        }
+    } else cout << "comparator " << comparator << " not handle yet" << endl;
     //cout << "control " << addVariablesAmong[arity/2] << endl;
     wcsp->postUnary(addVariablesAmong[arity/2],unaryCosts);
 }
 
-Cost 
-WeightedOverlap::evaluate(int* tuple) {
+Cost
+WeightedOverlap::evaluate(int* tuple)
+{
     int occurency = 0;
     for (int var = 0 ; var < arity/2 ; var++) {
         if(tuple[var] && tuple[var] == tuple[var+arity/2]) {
@@ -845,14 +886,16 @@ WeightedOverlap::evaluate(int* tuple) {
         if (occurency != rightRes) return baseCost;
     }
     if (comparator == "<" || comparator == "<=") {
-        int newRightRes = rightRes; if (comparator == "<") newRightRes--;
+        int newRightRes = rightRes;
+        if (comparator == "<") newRightRes--;
         int gap = max(0,occurency - newRightRes);
         if (semantics == "hard") return min(gap*baseCost,baseCost);
         if (semantics == "lin" || semantics == "var")  return gap*baseCost;
         if (semantics == "quad") return gap*gap*baseCost;
     }
     if (comparator == ">" || comparator == ">=") {
-        int newRightRes = rightRes; if (comparator == ">") newRightRes++;
+        int newRightRes = rightRes;
+        if (comparator == ">") newRightRes++;
         int gap = max(0,newRightRes - occurency);
         if (semantics == "hard") return min(gap*baseCost,baseCost);
         if (semantics == "lin" || semantics == "var")  return gap*baseCost;
@@ -861,8 +904,9 @@ WeightedOverlap::evaluate(int* tuple) {
     return 0;
 }
 
-void 
-WeightedOverlap::display() {
+void
+WeightedOverlap::display()
+{
     cout << "WOverlap (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -887,10 +931,12 @@ WeightedOverlap::display() {
 
 WeightedVarAmong::WeightedVarAmong() : DecomposableGlobalCostFunction() {}
 
-WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope)
+{
 }
 
-WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     unsigned int nbValue;
     file >> nbValue;
@@ -903,13 +949,15 @@ WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream &fi
     index=scope[arity-1];
 }
 
-WeightedVarAmong::~WeightedVarAmong() {
+WeightedVarAmong::~WeightedVarAmong()
+{
     values.clear();
 }
 
 //TODO writing the other semantics
 void
-WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp) {
+WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
+{
     bool VERBOSE = false;
     int nbVariableCFN = wcsp->numberOfVariables();
     Cost top = wcsp->getUb();
@@ -947,8 +995,8 @@ WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp) {
                     nextCounter++;
                 }
                 unsigned long position =  (counterPosition) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
-											        + (valuePosition) 			* (varCj->getDomainInitSize())
-											        + (nextCounter);
+                                          + (valuePosition) 			* (varCj->getDomainInitSize())
+                                          + (nextCounter);
                 ternaryCosts[position] = 0;
             }
         }
@@ -984,8 +1032,9 @@ WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp) {
     wcsp->postBinaryConstraint(indexCount, indexLast, binaryCosts);
 }
 
-void 
-WeightedVarAmong::display() {
+void
+WeightedVarAmong::display()
+{
     cout << "WVarAmong (" << arity << ") : ";
     for (int variable = 0 ; variable < arity-1 ; ++variable) {
         cout << scope[variable] << " ";
@@ -1005,7 +1054,8 @@ WeightedAllDifferent::WeightedAllDifferent() : DecomposableGlobalCostFunction() 
 
 WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
 
-WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     //display();
 }
@@ -1013,15 +1063,16 @@ WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope, ist
 WeightedAllDifferent::~WeightedAllDifferent() {}
 
 void
-WeightedAllDifferent::addToCostFunctionNetwork(WCSP* wcsp) {
+WeightedAllDifferent::addToCostFunctionNetwork(WCSP* wcsp)
+{
     // Counting the number of value
     int inf = ((EnumeratedVariable *) wcsp->getVar(scope[0]))->getInf();
     int sup = ((EnumeratedVariable *) wcsp->getVar(scope[0]))->getSup();
     for (int variable = 0 ; variable < arity ; ++variable) {
         int tinf = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getInf();
         int tsup = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getSup();
-        inf = min ( inf , tinf );
-        sup = max (sup , tsup );
+        inf = min ( inf, tinf );
+        sup = max (sup, tsup );
     }
 
     // Adding WeightedAmong over each variable
@@ -1035,8 +1086,9 @@ WeightedAllDifferent::addToCostFunctionNetwork(WCSP* wcsp) {
     }
 }
 
-void 
-WeightedAllDifferent::display() {
+void
+WeightedAllDifferent::display()
+{
     cout << "WeightedAllDifferent (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -1052,7 +1104,8 @@ WeightedGcc::WeightedGcc() : DecomposableGlobalCostFunction() {}
 
 WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
 
-WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     int nbValueToWatch;
     file >> nbValueToWatch;
@@ -1068,8 +1121,9 @@ WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream &file) : Deco
 
 WeightedGcc::~WeightedGcc() {}
 
-void 
-WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub) {
+void
+WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
+{
     map<Value, pair<unsigned int, unsigned int> >::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
@@ -1079,8 +1133,9 @@ WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub) {
     bounds[value] = make_pair(lb,ub);
 }
 
-void 
-WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp)
+{
     //	int nbcounters = bounds.size();
     //	int counter = 0;
     //	int counters[nbcounters];
@@ -1148,8 +1203,9 @@ void WeightedGcc::rec_sum_counters(WCSP *wcsp, int *cscope, int carity, int totl
     }
 }
 
-void 
-WeightedGcc::display() {
+void
+WeightedGcc::display()
+{
     cout << "WeightedGcc (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -1168,7 +1224,8 @@ WeightedGcc::display() {
 
 WeightedSame::WeightedSame() : DecomposableGlobalCostFunction() {}
 WeightedSame::WeightedSame(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
-WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     if (_arity % 2 == 1 ) {
         cerr << "WeightedSame::Constructor the scope must be even" << endl;
@@ -1178,8 +1235,9 @@ WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream &file) : De
 }
 WeightedSame::~WeightedSame() {}
 
-void 
-WeightedSame::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
+{
     Cost top = wcsp->getUb();
 
     // Counting the number of value
@@ -1188,8 +1246,8 @@ WeightedSame::addToCostFunctionNetwork(WCSP* wcsp) {
     for (int variable = 0 ; variable < arity ; ++variable) {
         int tinf = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getInf();
         int tsup = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getSup();
-        inf = min ( inf , tinf );
-        sup = max (sup , tsup );
+        inf = min ( inf, tinf );
+        sup = max (sup, tsup );
     }
     int nbValue = sup - inf + 1;
 
@@ -1263,8 +1321,9 @@ WeightedSame::addToCostFunctionNetwork(WCSP* wcsp) {
 
 }
 
-void 
-WeightedSame::display() {
+void
+WeightedSame::display()
+{
     cout << "WeightedSame (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";
@@ -1279,7 +1338,8 @@ WeightedSame::display() {
 
 WeightedSameGcc::WeightedSameGcc() : DecomposableGlobalCostFunction() {}
 WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope) : DecomposableGlobalCostFunction(_arity,_scope) {}
-WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope) {
+WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream &file) : DecomposableGlobalCostFunction(_arity,_scope)
+{
     file >> semantics >> baseCost;
     file >> nbValueToWatch;
     for (int idvalue = 0 ; idvalue < nbValueToWatch ; idvalue++) {
@@ -1296,8 +1356,9 @@ WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream &file
 }
 WeightedSameGcc::~WeightedSameGcc() {}
 
-void 
-WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub) {
+void
+WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
+{
     map<Value, pair<unsigned int, unsigned int> >::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
@@ -1307,8 +1368,9 @@ WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub) {
     bounds[value] = make_pair(lb,ub);
 }
 
-void 
-WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
+void
+WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
+{
     Cost top = wcsp->getUb();
 
     // Counting the number of value
@@ -1317,8 +1379,8 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
     for (int variable = 0 ; variable < arity ; ++variable) {
         int tinf = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getInf();
         int tsup = ((EnumeratedVariable *) wcsp->getVar(scope[variable]))->getSup();
-        inf = min ( inf , tinf );
-        sup = max (sup , tsup );
+        inf = min ( inf, tinf );
+        sup = max (sup, tsup );
     }
     int nbValue = sup - inf + 1;
 
@@ -1401,11 +1463,12 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
             unsigned int lb = (bound.second).first;
             unsigned int ub = (bound.second).second;
 
-            { //LEFT
-                vector<Cost> unaryCosts(arity+1 ,0);
+            {
+                //LEFT
+                vector<Cost> unaryCosts(arity+1,0);
                 for (int count=0 ; count <= arity ; count++) {
                     Cost currentCost = 0;
-                    int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
+                    int gap = max( 0, max( int(lb - count), int(count - ub) ) );
                     if (gap && semantics == "hard") currentCost = baseCost;
                     if (semantics == "lin" || semantics == "dec") 		currentCost = baseCost*gap;
                     if (semantics == "quad") 		currentCost = baseCost*gap*gap;
@@ -1413,11 +1476,12 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
                 }
                 wcsp->postUnary(newVariable[positionVar][0],unaryCosts);
             }
-            { //RIGHT
-                vector<Cost> unaryCosts(arity+1 ,0);
+            {
+                //RIGHT
+                vector<Cost> unaryCosts(arity+1,0);
                 for (int count=0 ; count <= arity ; count++) {
                     Cost currentCost = 0;
-                    int gap = max( 0 , max( int(lb - count), int(count - ub) ) );
+                    int gap = max( 0, max( int(lb - count), int(count - ub) ) );
                     if (gap && semantics == "hard") currentCost = baseCost;
                     if (semantics == "lin" || semantics == "dec") 		currentCost = baseCost*gap;
                     if (semantics == "quad") 		currentCost = baseCost*gap*gap;
@@ -1433,8 +1497,9 @@ WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp) {
 
 }
 
-void 
-WeightedSameGcc::display() {
+void
+WeightedSameGcc::display()
+{
     cout << "WeightedSameGcc (" << arity << ") : ";
     for (int variable = 0 ; variable < arity ; ++variable) {
         cout << scope[variable] << " ";

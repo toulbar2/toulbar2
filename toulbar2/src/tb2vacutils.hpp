@@ -9,7 +9,8 @@
 #include "tb2ternaryconstr.hpp"
 
 
-class VACVariable : public EnumeratedVariable {
+class VACVariable : public EnumeratedVariable
+{
 
 public:
 
@@ -48,16 +49,19 @@ public:
     bool increaseVAC(Value newInf);
     bool decreaseVAC(Value supInf);
 
-    int 	getMaxK( Long timeStamp ) {
+    int 	getMaxK( Long timeStamp )
+    {
         if(maxk_timeStamp < timeStamp) return 0;
         else return maxk;
     }
 
-    int 	getK( Value v, Long timeStamp ) {
+    int 	getK( Value v, Long timeStamp )
+    {
         if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
         else return k[toIndex(v)];
     }
-    void 	setK( Value v, int c, Long timeStamp ) {
+    void 	setK( Value v, int c, Long timeStamp )
+    {
         k[toIndex(v)] = c;
         k_timeStamp[toIndex(v)] = timeStamp;
         if(maxk_timeStamp < timeStamp) {
@@ -66,7 +70,8 @@ public:
         }
     }
 
-    void	addToK(Value v, int c, Long timeStamp ) {
+    void	addToK(Value v, int c, Long timeStamp )
+    {
         if(k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
         else k[toIndex(v)] += c;
         if(maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
@@ -83,7 +88,8 @@ public:
     void  killedOne() { killed = killed+1; }
 
 
-    Cost getVACCost( Value v ) {
+    Cost getVACCost( Value v )
+    {
         Cost c = getCost(v);
         if(isNull(c)) return MIN_COST;
         else return c;
@@ -118,7 +124,8 @@ public:
 
     bool averaging();  /**< For Min-Sum diffusion */
 
-    friend ostream& operator<< (ostream& os, VACVariable &v) {
+    friend ostream& operator<< (ostream& os, VACVariable &v)
+    {
         return os;
     }
     void KilledOne();
@@ -128,7 +135,8 @@ public:
 /**
  * A class that stores information about a binary cost function
  */
-class VACBinaryConstraint : public BinaryConstraint {
+class VACBinaryConstraint : public BinaryConstraint
+{
 
 private:
 
@@ -155,7 +163,8 @@ public:
 
     bool isNull (Cost c);
 
-    Cost getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w) {
+    Cost getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w)
+    {
         Cost c = getCost(xx, yy, v, w);
         if(isNull(c)) return MIN_COST;
         else return c;
@@ -165,7 +174,8 @@ public:
 
     bool revise (VACVariable* var, Value v);  /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
-    friend ostream& operator<< (ostream& os, VACBinaryConstraint &c) {
+    friend ostream& operator<< (ostream& os, VACBinaryConstraint &c)
+    {
         return os;
     }
 };
@@ -174,7 +184,8 @@ public:
 /**
  * A class that stores information about a ternary cost function
  */
-class VACTernaryConstraint : public TernaryConstraint {
+class VACTernaryConstraint : public TernaryConstraint
+{
 
 private:
 
@@ -201,7 +212,8 @@ public:
 
     bool isNull (Cost c);
 
-    Cost getVACCost(VACVariable *xx, VACVariable *yy, VACVariable *zz, Value u, Value v, Value w) {
+    Cost getVACCost(VACVariable *xx, VACVariable *yy, VACVariable *zz, Value u, Value v, Value w)
+    {
         Cost c = getCost(xx, yy, zz, u, v, w);
         if(isNull(c)) return MIN_COST;
         else return c;
@@ -211,7 +223,8 @@ public:
 
     bool revise (VACVariable* var, Value v);  /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
-    friend ostream& operator<< (ostream& os, VACTernaryConstraint &c) {
+    friend ostream& operator<< (ostream& os, VACTernaryConstraint &c)
+    {
         return os;
     }
 };

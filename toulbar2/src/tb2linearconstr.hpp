@@ -11,7 +11,7 @@
 #include <vector>
 
 
-class LinearConstraint : public GlobalConstraint 
+class LinearConstraint : public GlobalConstraint
 {
 protected:
 
@@ -33,22 +33,25 @@ protected:
     // compute the projection from the linear program. store the projected cost in
     // the map delta
     virtual void findProjection(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta);
-    void findProjection(int varindex, map<Value, Cost> &delta) {
+    void findProjection(int varindex, map<Value, Cost> &delta)
+    {
         findProjection(mip, cost, varindex, delta);
     }
 
     // check whether the linear program corresponding to the current domains
     // remove any edge which is corresponded to an infeasible assignment
     virtual void checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv);
-    void checkRemoved(vector<int> &rmv) {
+    void checkRemoved(vector<int> &rmv)
+    {
         checkRemoved(mip, cost, rmv);
     }
 
     virtual void changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas);
     virtual void changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas);
-    virtual void undoExtend() {
+    virtual void undoExtend()
+    {
         cost = bucost;
-        for (int i = 0; i < count; i++){
+        for (int i = 0; i < count; i++) {
             mip.objCoeff(i, buObj[i]);
         }
     }
@@ -57,7 +60,8 @@ protected:
     virtual Cost buildMIP(MIP &mip) {return 0;}
     inline Cost buildMIP() {return buildMIP(mip);}
 
-    inline void augmentMIP(int varindex, map<Value, Cost> &delta) {
+    inline void augmentMIP(int varindex, map<Value, Cost> &delta)
+    {
         augmentStructure(mip, cost, varindex, delta);
     }
 
@@ -73,13 +77,14 @@ protected:
 
     // compute the cost according to the original cost struture
     virtual Cost evalOriginal(const String& s) {return MIN_COST;}
-    virtual Cost getMinCost () {
+    virtual Cost getMinCost ()
+    {
         return cost;
     }
 
 public:
     LinearConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int
-            arity_in);
+                     arity_in);
 
     ~LinearConstraint() { }
 

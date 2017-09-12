@@ -1,6 +1,6 @@
 /** \file tb2btqueue.hpp
  *  \brief Backtrackable propagation queue.
- * 
+ *
  */
 
 #ifndef TB2BTQUEUE_HPP_
@@ -12,7 +12,7 @@
  * A backtrackable queue
  */
 class BTQueue : public BTList<Variable *>
-{  
+{
     // make it private because we don't want copy nor assignment
     BTQueue(const BTQueue &s);
     BTQueue& operator=(const BTQueue &s);
@@ -25,7 +25,7 @@ public:
 
     void clear() {BTList<Variable *>::clear();}
 
-    void push(DLink<Variable *> *elt);   
+    void push(DLink<Variable *> *elt);
 
     void remove(DLink<Variable *> *elt);
 

@@ -4,9 +4,9 @@
 #include "tb2clusters.hpp"
 
 NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval, Long nbtuples)
-: AbstractNaryConstraint(wcsp, scope_in, arity_in), pf(NULL), costs(NULL), costSize(0), default_cost(defval), nonassigned(arity_in), filters(NULL)
+    : AbstractNaryConstraint(wcsp, scope_in, arity_in), pf(NULL), costs(NULL), costSize(0), default_cost(defval), nonassigned(arity_in), filters(NULL)
 {
-    for(int i=0;i<arity_in;i++) {
+    for(int i=0; i<arity_in; i++) {
         conflictWeights.push_back(0);
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         if(domsize + CHAR_FIRST > (unsigned int)std::numeric_limits<Char>::max()) {
@@ -25,7 +25,7 @@ NaryConstraint::NaryConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int ar
 }
 
 NaryConstraint::NaryConstraint(WCSP *wcsp)
-: AbstractNaryConstraint(wcsp), pf(NULL), costs(NULL), costSize(0), default_cost(wcsp->getUb()), nonassigned(0), filters(NULL)
+    : AbstractNaryConstraint(wcsp), pf(NULL), costs(NULL), costSize(0), default_cost(wcsp->getUb()), nonassigned(0), filters(NULL)
 {
     pf = new TUPLES;
 }
@@ -37,7 +37,8 @@ NaryConstraint::~NaryConstraint()
 }
 
 // USED ONLY DURING SEARCH
-void NaryConstraint::assign(int varIndex) {
+void NaryConstraint::assign(int varIndex)
+{
     if (connected(varIndex)) {
         deconnect(varIndex);
         nonassigned = nonassigned - 1;
@@ -153,7 +154,7 @@ void NaryConstraint::fillFilters()
 {
     if(filters == NULL) {
         filters = new ConstraintSet;
-        for(int i=0;i<arity_;i++) {
+        for(int i=0; i<arity_; i++) {
             EnumeratedVariable* v = (EnumeratedVariable*) getVar(i);
             for (ConstraintList::iterator iter=v->getConstrs()->begin(); iter != v->getConstrs()->end(); ++iter) {
                 Constraint* ctr = (*iter).constr;
@@ -163,7 +164,8 @@ void NaryConstraint::fillFilters()
     }
 }
 
-Cost NaryConstraint::eval( const String& tin, EnumeratedVariable** scope_in ) {
+Cost NaryConstraint::eval( const String& tin, EnumeratedVariable** scope_in )
+{
     String t(tin);
     if(scope_in) {
         for(int i = 0; i < arity_; i++) {
@@ -174,7 +176,8 @@ Cost NaryConstraint::eval( const String& tin, EnumeratedVariable** scope_in ) {
     return eval(t);
 }
 
-Cost NaryConstraint::eval( const String& s ) {
+Cost NaryConstraint::eval( const String& s )
+{
     if (pf) {
         TUPLES& f = *pf;
         TUPLES::iterator  it = f.find(s);
@@ -205,7 +208,7 @@ void NaryConstraint::keepAllowedTuples( Cost df )
         vector<unsigned int> t(a, 0);
         for(ptrdiff_t idx = 0; idx < costSize; idx++) {
             bool ok = true;
-            for(int i=0;i<a && ok;i++) {
+            for(int i=0; i<a && ok; i++) {
                 EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
                 ok = ok && var->canbe( var->toValue(t[i]) );
             }
@@ -221,10 +224,11 @@ void NaryConstraint::keepAllowedTuples( Cost df )
     default_cost = df;
 }
 
-bool NaryConstraint::consistent( const String& t ) {
+bool NaryConstraint::consistent( const String& t )
+{
     int a = arity_;
     bool ok = true;
-    for(int i=0;i<a && ok;i++) {
+    for(int i=0; i<a && ok; i++) {
         EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
         ok = ok && var->canbe( var->toValue(t[i] - CHAR_FIRST) );
     }
@@ -260,14 +264,15 @@ void NaryConstraint::first(EnumeratedVariable * vx, EnumeratedVariable * vz)
     it_values.clear();
     EnumeratedVariable* var;
     it_values.push_back( vx->begin() );
-    for(int i=0;i<arity_;i++) {
+    for(int i=0; i<arity_; i++) {
         var = (EnumeratedVariable*) getVar(i);
         if(var != vx && var != vz) it_values.push_back( var->begin() );
     }
     it_values.push_back( vz->begin() );
 }
 
-bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * vz){
+bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * vz)
+{
     int a = arity_, i = a-1, k;
     bool finished = false;
     bool neweq = true;
@@ -303,9 +308,9 @@ bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * 
     //if(it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
     if(ToulBar2::verbose >= 1) cout << vz->getName() << " ] ? ";// << endl;
 
-    while( sev &&  itvznext != vz->end()){
+    while( sev &&  itvznext != vz->end()) {
         first(vx,vz);
-        while(sev && it_values[ordre[0]] != scope_in[ordre[0]]->end()){
+        while(sev && it_values[ordre[0]] != scope_in[ordre[0]]->end()) {
             if(it_values[ordre[a-2]] == itvzfirst/*vz->begin()*/) ++it_values[ordre[a-2]];
             //if(it_values[ordre[a-2]] != vz->end()){
             for(int j = 0; j < a; j++) {
@@ -317,16 +322,16 @@ bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * 
             // etude de la difference
             c1 = eval(t1,scope_in);
             c = eval(t,scope_in);
-            if(!universe(c, c1, wcsp->getUb())){
+            if(!universe(c, c1, wcsp->getUb())) {
 
                 if(ToulBar2::verbose >= 3) {if(!neweq) cout << "= \n"; else cout << endl;}
-                if(ToulBar2::verbose >= 3){
+                if(ToulBar2::verbose >= 3) {
                     cout << "C";
-                    for(unsigned int j=0;j<t.size();j++) {
+                    for(unsigned int j=0; j<t.size(); j++) {
                         cout << t[j] - CHAR_FIRST << "." ;
                     }
                     cout << " - C";
-                    for(unsigned int j=0;j<t1.size();j++) {
+                    for(unsigned int j=0; j<t1.size(); j++) {
                         cout << t1[j] - CHAR_FIRST << "." ;
                     }
                     cout << " = " << c << " - " << c1;
@@ -334,8 +339,7 @@ bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * 
                 if(neweq) {diff = squareminus(c,c1,wcsp->getUb()); neweq = false; }
                 else sev = (diff == squareminus(c,c1,wcsp->getUb()));
                 if(ToulBar2::verbose >= 3) cout << " = " << squareminus(c,c1,wcsp->getUb())  << endl;
-            }
-            else if(ToulBar2::verbose >= 3) cout << "universe\n";
+            } else if(ToulBar2::verbose >= 3) cout << "universe\n";
             finished = false;
             i = a-1;
             while(sev && !finished) {
@@ -348,7 +352,7 @@ bool NaryConstraint::separability(EnumeratedVariable * vx, EnumeratedVariable * 
                         it_values[ordre[i]] = var->begin();
                         if(i == a-1) neweq = true;
                         i--;
-                    }else finished = true;
+                    } else finished = true;
                 }
             }
             if(it_values[ordre[a-2]] == itvzfirst/*vz->begin()*/ && it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
@@ -406,13 +410,12 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
     subscopeZ[a-2] = vz;
 
     // creation de la nouvelle contrainte
-    if(a == 4){
+    if(a == 4) {
         int size = subscopeX[0]->getDomainInitSize()*subscopeX[1]->getDomainInitSize()*subscopeX[2]->getDomainInitSize();
         vector<Cost> costs(size,0);
         existX = subscopeX[0]->getConstr(subscopeX[1],subscopeX[2]);
         naryx = wcsp->newTernaryConstr(subscopeX[0],subscopeX[1],subscopeX[2],costs);
-    }
-    else{
+    } else {
         index = wcsp->postNaryConstraintBegin(scopeX,a-1,wcsp->getUb(),size()/vz->getDomainInitSize());
         naryx = wcsp->getCtr(index);
     }
@@ -425,7 +428,7 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
             cout << scopeX[j] << " ";
         cout << " ]"  << endl;
     }
-    while(it_values[0] != scope_in[0]->end()){
+    while(it_values[0] != scope_in[0]->end()) {
         for(int j = 0; j < a-1; j++) {
             t[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
             tX[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
@@ -442,8 +445,8 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
             finished = it_values[i] != scope_in[i]->end();
             if(!finished) {
                 if(i == a-1) {
-                    if(ToulBar2::verbose >= 3){
-                        for(unsigned int j=0;j<tX.size();j++) {
+                    if(ToulBar2::verbose >= 3) {
+                        for(unsigned int j=0; j<tX.size(); j++) {
                             cout << tX[j] - CHAR_FIRST<< " ";
                         }
                         cout << "  " << minCost << endl;
@@ -454,7 +457,7 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
                 if(i>0) {
                     it_values[i] = scope_in[i]->begin();
                     i--;
-                }else finished = true;
+                } else finished = true;
             }
         }
 
@@ -462,19 +465,18 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 
 
     if(ToulBar2::verbose >= 3) cout << "-----------------------------------" << endl;
-    if(a == 4){
+    if(a == 4) {
 
         int size = subscopeZ[0]->getDomainInitSize()*subscopeZ[1]->getDomainInitSize()*subscopeZ[2]->getDomainInitSize();
         vector<Cost> costs(size,0);
         existZ = subscopeZ[0]->getConstr(subscopeZ[1],subscopeZ[2]);
         naryz = wcsp->newTernaryConstr(subscopeZ[0],subscopeZ[1],subscopeZ[2],costs);
-    }
-    else {
+    } else {
         index = wcsp->postNaryConstraintBegin(scopeZ,a-1,wcsp->getUb(),size()/vx->getDomainInitSize());
         naryz = wcsp->getCtr(index);
     }
 
-    if(ToulBar2::verbose >= 3){
+    if(ToulBar2::verbose >= 3) {
         cout << "[ ";
         for(int j = 0; j < a-1; j++)
             cout << scopeZ[j] << " ";
@@ -484,27 +486,27 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
 
     Cost diffcost;
     Cost cX;
-    while(it_values[1] != scope_in[1]->end()){
+    while(it_values[1] != scope_in[1]->end()) {
         for(int j = 1; j < a; j++) {
             t[j] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
             tZ[j-1] = scope_in[j]->toIndex(*it_values[j]) + CHAR_FIRST;
         }
         //t[0] = scope_in[0]->toIndex(*it_values[0]) + CHAR_FIRST;
         EnumeratedVariable::iterator it = scope_in[0]->begin();
-        do{
+        do {
             t[0] = scope_in[0]->toIndex(*it) + CHAR_FIRST;
             cost = eval(t, scope_in);
             cX = naryx->evalsubstr(t,naryx);
             diffcost = squareminus(cost,cX, wcsp->getUb());
             ++it;
             //cout << t[0]-CHAR_FIRST << endl;
-        }while(it != scope_in[0]->end() && cost >= wcsp->getUb() && cX >= wcsp->getUb());
+        } while(it != scope_in[0]->end() && cost >= wcsp->getUb() && cX >= wcsp->getUb());
 
         cost = eval(t, scope_in);
         Cost cX = naryx->evalsubstr(t,naryx);
         diffcost = squareminus(cost,cX, wcsp->getUb());
-        if(ToulBar2::verbose >= 3){
-            for(unsigned int j=0;j<tZ.size();j++) {
+        if(ToulBar2::verbose >= 3) {
+            for(unsigned int j=0; j<tZ.size(); j++) {
                 cout << tZ[j] - CHAR_FIRST<< " ";
             }
 
@@ -521,7 +523,7 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
                 if(i>1) {
                     it_values[i] = scope_in[i]->begin();
                     i--;
-                }else finished = true;
+                } else finished = true;
             }
         }
 
@@ -530,15 +532,15 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
     if(ToulBar2::verbose >= 3) cout << "-----------------------------------" << endl;
     assert(verifySeparate(naryx,naryz));
 
-    if(!naryx->universal()){
+    if(!naryx->universal()) {
         if(ToulBar2::verbose == 1) {
             cout << "\n[ ";
             for(int j = 0; j < a-1; j++)
                 cout << scopeX[j] << " ";
             cout << " ]"  << endl;
         }
-        if(a == 4){
-            if(existX && !existX->universal()){
+        if(a == 4) {
+            if(existX && !existX->universal()) {
                 ((TernaryConstraint*) naryx)->addCosts(existX);
                 existX->deconnect();
             }
@@ -546,15 +548,15 @@ void NaryConstraint::separate(EnumeratedVariable *vx, EnumeratedVariable *vz)
         naryx->reconnect();
         naryx->propagate();
     } else naryx->deconnect();
-    if(!naryz->universal()){
-        if(ToulBar2::verbose == 1){
+    if(!naryz->universal()) {
+        if(ToulBar2::verbose == 1) {
             cout << "[ ";
             for(int j = 0; j < a-1; j++)
                 cout << scopeZ[j] << " ";
             cout << " ]"  << endl;
         }
-        if(a == 4){
-            if(existZ && !existZ->universal()){
+        if(a == 4) {
+            if(existZ && !existZ->universal()) {
                 ((TernaryConstraint*) naryz)->addCosts(existZ);
                 existZ->deconnect();
             }
@@ -705,8 +707,7 @@ void NaryConstraint::insertSum( const String& t1, Cost c1, Constraint* ctr1, con
         if((pos1 >= 0) && (pos2 >= 0)) {
             if(t1[pos1] != t2[pos2])  return;
             t[pos] = t1[pos1];
-        }
-        else if(pos1 >= 0) t[pos] = t1[pos1];
+        } else if(pos1 >= 0) t[pos] = t1[pos1];
         else if(pos2 >= 0) t[pos] = t2[pos2];
 
         Cost unaryc = v->getCost( v->toValue(t[pos] - CHAR_FIRST)  );
@@ -898,7 +899,7 @@ void NaryConstraint::project( EnumeratedVariable* x )
         vector<unsigned int> t(a, 0);
         for(ptrdiff_t idx = 0; idx < costSize; idx++) {
             bool ok = true;
-            for(int i=0;i<a && ok;i++) {
+            for(int i=0; i<a && ok; i++) {
                 EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
                 ok = ok && var->canbe( var->toValue(t[i]) );
             }
@@ -1028,8 +1029,8 @@ void NaryConstraint::project( EnumeratedVariable* x )
 // Projects out all variables except x,y
 // and gives the result at fproj
 void NaryConstraint::projectxy( EnumeratedVariable* x,
-        EnumeratedVariable* y,
-        TUPLES& fproj)
+                                EnumeratedVariable* y,
+                                TUPLES& fproj)
 {
     assert(CUT(default_cost,wcsp->getUb()));
 
@@ -1111,11 +1112,11 @@ void NaryConstraint::projectxy( EnumeratedVariable* x,
 //}
 
 
-inline bool cmp_pairvars(pair<EnumeratedVariable* ,EnumeratedVariable* > pv1, pair<EnumeratedVariable* ,EnumeratedVariable* > pv2) 
-{ 
+inline bool cmp_pairvars(pair<EnumeratedVariable*,EnumeratedVariable* > pv1, pair<EnumeratedVariable*,EnumeratedVariable* > pv2)
+{
     return (pv1.first->wcspIndex < pv2.first->wcspIndex ||
             (pv1.first->wcspIndex == pv2.first->wcspIndex &&
-                    pv1.second->wcspIndex < pv2.second->wcspIndex));
+             pv1.second->wcspIndex < pv2.second->wcspIndex));
 }
 void NaryConstraint::preprojectall2()
 {
@@ -1151,7 +1152,7 @@ void NaryConstraint::preprojectall2()
                 xy[ a * sizey + b ]	= it->second;
                 it++;
             }
-            if(fproj.size() > 0 || default_cost > MIN_COST){
+            if(fproj.size() > 0 || default_cost > MIN_COST) {
                 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
             }
             if (deconnected()) return;
@@ -1205,7 +1206,7 @@ void NaryConstraint::print(ostream& os)
 
     int unassigned_ = 0;
     Long totaltuples = 1;
-    for(int i = 0; i < arity_;i++) {
+    for(int i = 0; i < arity_; i++) {
         if(scope[i]->unassigned()) unassigned_++;
         os << scope[i]->wcspIndex;
         if(i < arity_-1) os << ",";
@@ -1214,7 +1215,7 @@ void NaryConstraint::print(ostream& os)
     os << ")    ";
     if (ToulBar2::weightedDegree) {
         os << "/" << getConflictWeight();
-        for(int i = 0; i < arity_;i++) {
+        for(int i = 0; i < arity_; i++) {
             os << "," << conflictWeights[i];
         }
     }
@@ -1226,10 +1227,10 @@ void NaryConstraint::print(ostream& os)
     //	assert(nonassigned == unassigned_); // not valid when used with assignLS
 
     /*TSCOPE::iterator it = scope_inv.begin();
-	while(it != scope_inv.end()) {
-		os << "(" << it->first << ",idx: " << it->second << ") ";
-		++it;
-	}*/
+    while(it != scope_inv.end()) {
+    	os << "(" << it->first << ",idx: " << it->second << ") ";
+    	++it;
+    }*/
     os << endl;
 
 
@@ -1242,7 +1243,7 @@ void NaryConstraint::print(ostream& os)
                 Cost c =  it->second;
                 it++;
                 os << "<";
-                for(unsigned int i=0;i<t.size();i++) {
+                for(unsigned int i=0; i<t.size(); i++) {
                     os << t[i] - CHAR_FIRST;
                     if (i<t.size()-1) os << " ";
                 }
@@ -1264,7 +1265,7 @@ void NaryConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+        for(int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
         os << " " << default_cost << " " << size() << endl;
         if (pf) {
             TUPLES::iterator  it = pf->begin();
@@ -1272,7 +1273,7 @@ void NaryConstraint::dump(ostream& os, bool original)
                 String t = it->first;
                 Cost c =  it->second;
                 it++;
-                for(unsigned int i=0;i<t.size();i++) {
+                for(unsigned int i=0; i<t.size(); i++) {
                     os << scope[i]->toValue(t[i] - CHAR_FIRST) << " ";
                 }
                 os << c << endl;
@@ -1281,7 +1282,7 @@ void NaryConstraint::dump(ostream& os, bool original)
             int a = arity_;
             vector<unsigned int> t(a, 0);
             for(ptrdiff_t idx = 0; idx < costSize; idx++) {
-                for(int i=0;i<a;i++) {
+                for(int i=0; i<a; i++) {
                     os << ((EnumeratedVariable *) getVar(i))->toValue(t[i]) << " ";
                 }
                 os << costs[idx] << endl;
@@ -1306,7 +1307,7 @@ void NaryConstraint::dump(ostream& os, bool original)
         os << " " << default_cost << " " << nbtuples << endl;
         first();
         while (next(tuple,cost)) {
-            for(unsigned int i=0;i<tuple.size();i++) {
+            for(unsigned int i=0; i<tuple.size(); i++) {
                 if (scope[i]->unassigned()) os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i] - CHAR_FIRST)) << " ";
             }
             os << ((original)?cost:min(wcsp->getUb(),cost)) << endl;

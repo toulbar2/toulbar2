@@ -1,7 +1,8 @@
 #include "tb2mipsolver.hpp"
 using namespace std;
 
-MIP::MIP():solver(NULL) {    
+MIP::MIP():solver(NULL)
+{
 #ifdef ILOGCPLEX
     solver = new IlogMIP();
 #endif
@@ -11,13 +12,15 @@ MIP::MIP():solver(NULL) {
     }
 }
 
-MIP::~MIP(){
+MIP::~MIP()
+{
     delete solver;
 }
 
 #ifdef ILOGCPLEX
 
-IlogMIP::IlogMIP(){
+IlogMIP::IlogMIP()
+{
     model = (IloModel*)malloc(sizeof(IloModel));
     *model = IloModel(env);
 
@@ -50,7 +53,8 @@ IlogMIP::IlogMIP(){
     called = 0;
 }
 
-void IlogMIP::clear(){
+void IlogMIP::clear()
+{
 
     cplex->clear();
     model->end();
@@ -70,68 +74,78 @@ void IlogMIP::clear(){
     objValue = 0;
 }
 
-void IlogMIP::end(){
+void IlogMIP::end()
+{
     model->add(*var);
     model->add(*obj);
     model->add(*con);
     cplex->extract(*model);
 }
 
-void IlogMIP::addRows(int n){
-    for (int i = 0; i < n; i++){
+void IlogMIP::addRows(int n)
+{
+    for (int i = 0; i < n; i++) {
         con->add(IloRange(env, -IloInfinity, IloInfinity));
         rowCount++;
     }
 } // add n new inequalities to the linear program
 
-void IlogMIP::addInt(int n){
-    for (int i = 0; i < n; i++){
+void IlogMIP::addInt(int n)
+{
+    for (int i = 0; i < n; i++) {
         var->add(IloNumVar(env, 0.0, IloInfinity));
         cols.push_back(0);
         colCount++;
     }
 } // add n integer variables to the linear program
 
-void IlogMIP::addBool(int n){
-    for (int i = 0; i < n; i++){
+void IlogMIP::addBool(int n)
+{
+    for (int i = 0; i < n; i++) {
         var->add(IloNumVar(env, 0.0, 0.0));
         cols.push_back(0);
         colCount++;
     }
 } // add n boolean variables to the linear program
 
-void IlogMIP::addCols(int n){
-    for (int i = 0; i < n; i++){
+void IlogMIP::addCols(int n)
+{
+    for (int i = 0; i < n; i++) {
         var->add(IloNumVar(env, 0.0, IloInfinity));
         cols.push_back(0);
         colCount++;
     }
 } // add n numeric variables to the linear program
 
-void IlogMIP::rowBound(int n, int lower, int upper){
+void IlogMIP::rowBound(int n, int lower, int upper)
+{
 
     (*con)[n].setBounds(lower, upper);
 } // set the bounds of a variable
 
-void IlogMIP::rowLowerBound(int n, int lower){
+void IlogMIP::rowLowerBound(int n, int lower)
+{
     (*con)[n].setLB(lower);
 } // set the lower bound of a variable
 
 
-void IlogMIP::rowUpperBound(int n, int upper){
+void IlogMIP::rowUpperBound(int n, int upper)
+{
     (*con)[n].setUB(upper);
 } // set the upper bound of a variable
 
-void IlogMIP::rowCoeff(int n, int count, int indexes[], double values[]){
-    for (int i = 0; i < count; i++){
+void IlogMIP::rowCoeff(int n, int count, int indexes[], double values[])
+{
+    for (int i = 0; i < count; i++) {
         (*con)[n].setLinearCoef((*var)[indexes[i]], values[i]);
     }
 } // set the coefficients of the variables of a row
 
 
-int IlogMIP::sol(int var1){
+int IlogMIP::sol(int var1)
+{
 
-    if (ceil((*sols)[var1]) - (*sols)[var1] < 0.000001){
+    if (ceil((*sols)[var1]) - (*sols)[var1] < 0.000001) {
         return ceil((*sols)[var1]);
     } else {
         return floor((*sols)[var1]);
@@ -140,19 +154,23 @@ int IlogMIP::sol(int var1){
 } // return the value of a variable (rounded down)
 
 
-int IlogMIP::solValue(){
+int IlogMIP::solValue()
+{
     return objValue;
 } // return the minimal of the current linear program
 
-int IlogMIP::colUpperBound(int var1){
+int IlogMIP::colUpperBound(int var1)
+{
     return (*var)[var1].getUB();
 } // return the lower bound of a value
 
-void IlogMIP::colUpperBound(int var1, int i){
+void IlogMIP::colUpperBound(int var1, int i)
+{
     (*var)[var1].setUB(i);
 } // set the upper bound of a value
 
-int IlogMIP::augment(int var1){
+int IlogMIP::augment(int var1)
+{
     (*var)[var1].setLB(1);
     solve();
     int cost = solValue();
@@ -161,22 +179,25 @@ int IlogMIP::augment(int var1){
     return cost;
 } // compute the minimal when a value is used
 
-int IlogMIP::objCoeff(int var1){
+int IlogMIP::objCoeff(int var1)
+{
     return cols[var1];
 } // get the coefficient of a variable in the objective function
 
-void IlogMIP::objCoeff(int var1, int i){
+void IlogMIP::objCoeff(int var1, int i)
+{
     cols[var1] = i;
     obj->setLinearCoef((*var)[var1], i);
 } // set the coefficient of a variable in the objective function
 
 
-int IlogMIP::solve(){
+int IlogMIP::solve()
+{
 
     unsigned t0 = clock();
     cplex->solve();
     called += clock() - t0;
-    if (cplex->getStatus() != IloAlgorithm::Optimal){
+    if (cplex->getStatus() != IloAlgorithm::Optimal) {
         std::cout << "Solution status = " << cplex->getStatus() << std::endl;
         cout << "IlogMIP solver error." << endl;
         cout << *con << endl;
@@ -187,13 +208,13 @@ int IlogMIP::solve(){
     }
 
 
-    if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001){
+    if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001) {
         objValue = floor(cplex->getObjValue());
     } else {
         objValue = ceil(cplex->getObjValue());
     }
 
-    if (objValue < 0){
+    if (objValue < 0) {
         objValue = 0;
     }
 
@@ -203,38 +224,45 @@ int IlogMIP::solve(){
     return objValue;
 } // solve the current linear program for the minimal and store the values of the variables in the solution
 
-int IlogMIP::sol(int varindex, int value){
+int IlogMIP::sol(int varindex, int value)
+{
     return sol(mapvar[varindex][value]);
 } // check if the current solution is using this value
 
-void IlogMIP::removeValue(int varindex, int value){
+void IlogMIP::removeValue(int varindex, int value)
+{
     colUpperBound(mapvar[varindex][value], 0);
 } // remove the value from the domain of the variable
 
-int IlogMIP::augment(int varindex, int value){
-    if (sol(varindex, value) == 1){
+int IlogMIP::augment(int varindex, int value)
+{
+    if (sol(varindex, value) == 1) {
         return solValue();
     } else {
         return augment(mapvar[varindex][value]);
     }
 } // return the minimum cost when this value is used
 
-int IlogMIP::coeff(int varindex, int value){
+int IlogMIP::coeff(int varindex, int value)
+{
     return objCoeff(mapvar[varindex][value]);
 } // return the cost projected on this value
 
-void IlogMIP::increaseCoeff(int varindex, int value, int newCoeff){
+void IlogMIP::increaseCoeff(int varindex, int value, int newCoeff)
+{
     int var1 = mapvar[varindex][value];
     cols[var1] += newCoeff;
     obj->setLinearCoef((*var)[var1], cols[var1]);
 } // increase the cost projected on this value
 
 
-void IlogMIP::backup(){
+void IlogMIP::backup()
+{
     *buObjExpr = obj->getExpr();
 } // backup the current solution (used before extensions)
 
-int IlogMIP::restore(){
+int IlogMIP::restore()
+{
     obj->setExpr(*buObjExpr);
     return solve();
 } // restore the solution to the saved one

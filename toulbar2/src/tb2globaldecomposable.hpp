@@ -16,7 +16,8 @@
 
 using namespace std;
 
-class DecomposableGlobalCostFunction {
+class DecomposableGlobalCostFunction
+{
 protected:
     int 		arity;
     int*	 	scope;
@@ -39,7 +40,8 @@ public:
     void color(int);
 };
 
-class WeightedAmong : public DecomposableGlobalCostFunction {
+class WeightedAmong : public DecomposableGlobalCostFunction
+{
 private:
     set<int> 	values;
     string 		semantics;
@@ -62,7 +64,8 @@ public:
     void display();
 };
 
-class WeightedRegular : public DecomposableGlobalCostFunction{
+class WeightedRegular : public DecomposableGlobalCostFunction
+{
 private:
     WFA* automaton;
 public:
@@ -78,7 +81,8 @@ public:
     void display();
 };
 
-class WeightedSum : public DecomposableGlobalCostFunction{
+class WeightedSum : public DecomposableGlobalCostFunction
+{
 private:
     string 	comparator;
     int 	rightRes;
@@ -101,7 +105,8 @@ public:
 };
 
 
-class WeightedOverlap : public DecomposableGlobalCostFunction{
+class WeightedOverlap : public DecomposableGlobalCostFunction
+{
 private:
     string 	semantics;
     Cost 	baseCost;
@@ -125,7 +130,8 @@ public:
 
 
 // WeightedAmong with a Variable as right member
-class WeightedVarAmong : public DecomposableGlobalCostFunction {
+class WeightedVarAmong : public DecomposableGlobalCostFunction
+{
 private:
     set<int> 	values;
     string 		semantics;
@@ -148,7 +154,8 @@ public:
 };
 
 
-class WeightedVarSum : public DecomposableGlobalCostFunction{
+class WeightedVarSum : public DecomposableGlobalCostFunction
+{
 private:
     string 				comparator;
     unsigned 	int 	index;
@@ -175,7 +182,8 @@ public:
 
 
 // WeightedAllDifferent using several WeightedAmongs
-class WeightedAllDifferent : public DecomposableGlobalCostFunction{
+class WeightedAllDifferent : public DecomposableGlobalCostFunction
+{
 private:
     string 	semantics;
     Cost 	baseCost;
@@ -197,7 +205,8 @@ public:
 
 
 //WeightedGcc using several WeightedAmongs
-class WeightedGcc : public DecomposableGlobalCostFunction{
+class WeightedGcc : public DecomposableGlobalCostFunction
+{
 private:
     string 	semantics;
     Cost 	baseCost;
@@ -222,7 +231,8 @@ public:
 
 
 // WeightedSame using several WeightedAmongs
-class WeightedSame : public DecomposableGlobalCostFunction{
+class WeightedSame : public DecomposableGlobalCostFunction
+{
 private:
     string 	semantics;
     Cost 	baseCost;
@@ -244,7 +254,8 @@ public:
 
 
 // WeightedSameGcc using several WeightedAmongs and Unary
-class WeightedSameGcc : public DecomposableGlobalCostFunction{
+class WeightedSameGcc : public DecomposableGlobalCostFunction
+{
 private:
     string 	semantics;
     Cost 	baseCost;

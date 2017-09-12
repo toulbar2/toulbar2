@@ -9,7 +9,7 @@
 #include "tb2globalconstr.hpp"
 #include "tb2graph.hpp"
 
-class FlowBasedGlobalConstraint : public GlobalConstraint 
+class FlowBasedGlobalConstraint : public GlobalConstraint
 {
 protected:
 
@@ -27,21 +27,24 @@ protected:
     map<Value, int> mapval;
 
     // mapto : map the assignment to the corresponding edge in the network
-    virtual pair<int,int> mapto(int varindex, Value val) {
+    virtual pair<int,int> mapto(int varindex, Value val)
+    {
         return make_pair(varindex+1, mapval[val]);
     }
 
     // compute the projection from the network. store the projected cost in
     // the map delta
     virtual void findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta);
-    void findProjection(int varindex, map<Value, Cost> &delta) {
+    void findProjection(int varindex, map<Value, Cost> &delta)
+    {
         findProjection(*graph, cost, varindex, delta);
     }
 
     // check whether the network corresponding to the current domains
     // remove any edge which is corresponded to an infeasible assignment
     virtual void checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv);
-    void checkRemoved(vector<int> &rmv) {
+    void checkRemoved(vector<int> &rmv)
+    {
         checkRemoved(*graph, cost, rmv);
     }
 
@@ -53,7 +56,8 @@ protected:
     virtual size_t GetGraphAllocatedSize() = 0;
     virtual void buildGraph(Graph &g) = 0;
     //inline void buildGraph() {buildGraph(graph);}
-    inline void augmentGraph(int varindex, map<Value, Cost> &delta) {
+    inline void augmentGraph(int varindex, map<Value, Cost> &delta)
+    {
         augmentStructure(*graph, cost, varindex, delta);
         graph->removeNegativeCycles(cost);
     }
@@ -72,13 +76,14 @@ protected:
 
     // compute the cost according to the original cost structure
     virtual Cost evalOriginal(const String& s) {return MIN_COST;}
-    virtual Cost getMinCost () {
+    virtual Cost getMinCost ()
+    {
         return cost;
     }
 
 public:
     FlowBasedGlobalConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int
-            arity_in);
+                              arity_in);
 
     ~FlowBasedGlobalConstraint() { }
 
@@ -90,7 +95,7 @@ public:
     //void propagate();
 
     // check whether the consistency is achieved
-    bool verify(){return true;}
+    bool verify() {return true;}
 
 #ifndef NDEBUG
     bool isStrongNIC();

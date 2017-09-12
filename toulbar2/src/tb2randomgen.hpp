@@ -7,7 +7,8 @@
 
 #include "tb2wcsp.hpp"
 
-class naryRandom {
+class naryRandom
+{
 public:
 
     WCSP& wcsp;

@@ -10,7 +10,8 @@
 #include "tb2globalconstr.hpp"
 using namespace std;
 
-class DPGlobalConstraint : public GlobalConstraint {
+class DPGlobalConstraint : public GlobalConstraint
+{
 private:
     vector<bool> * zero;
     vector<Cost> * preUnaryCosts;
@@ -28,7 +29,8 @@ protected:
 
     virtual void initMemoization() {}
 
-    virtual void initStructure() {
+    virtual void initStructure()
+    {
         if (!initialized) {
             initMemoization();
             initialized = true;

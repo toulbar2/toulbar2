@@ -12,7 +12,7 @@
  */
 
 BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab) :
-        AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize())
+    AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize())
 {
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST));
     deltaCostsY = vector<StoreCost>(sizeY,StoreCost(MIN_COST));

@@ -1,6 +1,6 @@
 /** \file tb2bep.hpp
  *  \brief BEP benchmark: selecting and scheduling earth observations for agile satellite
- * 
+ *
  */
 
 #ifndef TB2BEP_HPP_
@@ -8,7 +8,8 @@
 
 #include "tb2wcsp.hpp"
 
-class BEP {
+class BEP
+{
 public:
     int size;
     vector<int> duration;

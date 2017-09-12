@@ -83,54 +83,68 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline Cost MIN(Cost a, Cost b) {
+inline Cost MIN(Cost a, Cost b)
+{
     return min(a, b);
 }
-inline Cost MAX(Cost a, Cost b) {
+inline Cost MAX(Cost a, Cost b)
+{
     return max(a, b);
 }
-inline Cost GLB(Cost a, Cost b) {
+inline Cost GLB(Cost a, Cost b)
+{
     return MIN(a, b);
 }
-inline Cost LUB(Cost a, Cost b) {
+inline Cost LUB(Cost a, Cost b)
+{
     return MAX(a, b);
 }
-inline bool GLB(Cost *a, Cost b) {
+inline bool GLB(Cost *a, Cost b)
+{
     if (b < *a) {
         *a = b;
         return true;
     } else
         return false;
 }
-inline bool LUB(Cost *a, Cost b) {
+inline bool LUB(Cost *a, Cost b)
+{
     if (b > *a) {
         *a = b;
         return true;
     } else
         return false;
 }
-inline bool GLBTEST(Cost a, Cost b) {
+inline bool GLBTEST(Cost a, Cost b)
+{
     return (b < a);
 }
-inline bool LUBTEST(Cost a, Cost b) {
+inline bool LUBTEST(Cost a, Cost b)
+{
     return (b > a);
 }
-inline bool DACTEST(Cost a, Cost b) {
+inline bool DACTEST(Cost a, Cost b)
+{
     return (a == 0 && b > 0);
 }
-inline bool SUPPORTTEST(Cost a, Cost b) {
+inline bool SUPPORTTEST(Cost a, Cost b)
+{
     return false;
 }
-inline bool SUPPORTTEST(Cost a) {
+inline bool SUPPORTTEST(Cost a)
+{
     return false;
 }
-inline bool CUT(Cost lb, Cost ub) {
+inline bool CUT(Cost lb, Cost ub)
+{
     return lb >= ub;
 }
-inline bool CSP(Cost lb, Cost ub) {
+inline bool CSP(Cost lb, Cost ub)
+{
     return (ub - lb) <= 1;
 }
-inline void initCosts(Cost ub) {
+inline void initCosts(Cost ub)
+{
 }
 #endif
 
@@ -180,7 +194,7 @@ typedef map<int, Value> TAssign;
 
 // A value with weight
 template<class Object>
-struct WeightedObj{
+struct WeightedObj {
     Object val;
     Cost weight;
 
@@ -189,7 +203,7 @@ struct WeightedObj{
 
 // A value with upper and lower limit
 template<class Object>
-struct BoundedObj{
+struct BoundedObj {
     Object val;
     unsigned int upper;
     unsigned int lower;
@@ -205,7 +219,7 @@ struct DFATransition {
     unsigned int weight;
 
     DFATransition(int start_, Value symbol_, int end_, Cost weight_ = MIN_COST)
-    : start(start_), end(end_), symbol(symbol_), weight(weight_) {}
+        : start(start_), end(end_), symbol(symbol_), weight(weight_) {}
 
 };
 
@@ -262,7 +276,8 @@ struct ValueCost {
 };
 
 ///contains all global variables (mainly solver's command-line options)
-class ToulBar2 {
+class ToulBar2
+{
 protected:
     virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
 public:
@@ -390,9 +405,11 @@ public:
 extern IloSolver IlogSolver;
 #define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0);})
 #else
-class Contradiction {
+class Contradiction
+{
 public:
-    Contradiction() {
+    Contradiction()
+    {
         if (ToulBar2::verbose >= 2)
             cout << "... contradiction!" << endl;
     }
@@ -421,18 +438,21 @@ class Separator;
 class TreeDecomposition;
 
 
-class ConstraintLink {
+class ConstraintLink
+{
 public:
     Constraint *constr;
     int scopeIndex;
 };
 
-class WCSPLink {
+class WCSPLink
+{
 public:
     WCSP * const wcsp;
     int wcspIndex;
     WCSPLink(WCSP *w, int index) :
-        wcsp(w), wcspIndex(index) {
+        wcsp(w), wcspIndex(index)
+    {
     }
 };
 
@@ -448,8 +468,7 @@ template<class T> bool compareWCSPIndex(const T *lhs, const T *rhs)
     return left < right;
 }
 template<class T>
-struct Compare
-{
+struct Compare {
     typedef bool (*compare_t)(const T *, const T *);
 };
 template<class T> class Set : public set<T *, typename Compare<T>::compare_t  >

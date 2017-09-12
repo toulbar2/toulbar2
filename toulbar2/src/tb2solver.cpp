@@ -28,10 +28,10 @@ WeightedCSPSolver *WeightedCSPSolver::makeWeightedCSPSolver(Cost initUpperBound)
 }
 
 Solver::Solver(Cost initUpperBound) : nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(NULL),
-        allVars(NULL), unassignedVars(NULL), lastConflictVar(-1),
-        nbSol(0.), nbSGoods(0), nbSGoodsUse(0), cp(NULL), open(NULL),
-        hbfsLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(0), nbRecomputationNodes(0),
-        initialLowerBound(MIN_COST), globalLowerBound(MIN_COST), globalUpperBound(MAX_COST), initialDepth(0)
+    allVars(NULL), unassignedVars(NULL), lastConflictVar(-1),
+    nbSol(0.), nbSGoods(0), nbSGoodsUse(0), cp(NULL), open(NULL),
+    hbfsLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(0), nbRecomputationNodes(0),
+    initialLowerBound(MIN_COST), globalLowerBound(MIN_COST), globalUpperBound(MAX_COST), initialDepth(0)
 {
     searchSize = new StoreCost(MIN_COST);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void *) this);
@@ -579,7 +579,8 @@ void Solver::assign(int varIndex, Value value, bool reverse)
         }
         cout << " " << exp(((Cost) (*((StoreCost *) searchSize)))/10e6);
         if (wcsp->getTreeDec()) cout << " C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
-        if (isatty(fileno(stdout))) cout << "         "; else cout << endl;
+        if (isatty(fileno(stdout))) cout << "         ";
+        else cout << endl;
         cout.flush();
     }
     if (ToulBar2::verbose >= 1) {
@@ -706,9 +707,11 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         lastConflictVar = varIndex;
         if (dichotomic) {
             if (ToulBar2::dichotomicBranching==1) {
-                if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+                if (increasing) decrease(varIndex, middle);
+                else increase(varIndex, middle+1);
             } else if (ToulBar2::dichotomicBranching==2) {
-                if (increasing) remove(varIndex, sorted, middle, domsize-1); else remove(varIndex, sorted, 0, middle-1);
+                if (increasing) remove(varIndex, sorted, middle, domsize-1);
+                else remove(varIndex, sorted, 0, middle-1);
             }
             //    	} else if (reverse) {
             //    		remove(varIndex, value);
@@ -724,9 +727,11 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
     if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
     if (dichotomic) {
         if (ToulBar2::dichotomicBranching==1) {
-            if (increasing) increase(varIndex, middle+1, nbBacktracks >= hbfsLimit); else decrease(varIndex, middle, nbBacktracks >= hbfsLimit);
+            if (increasing) increase(varIndex, middle+1, nbBacktracks >= hbfsLimit);
+            else decrease(varIndex, middle, nbBacktracks >= hbfsLimit);
         } else if (ToulBar2::dichotomicBranching==2) {
-            if (increasing) remove(varIndex, sorted, 0, middle-1, nbBacktracks >= hbfsLimit); else remove(varIndex, sorted, middle, domsize-1, nbBacktracks >= hbfsLimit);
+            if (increasing) remove(varIndex, sorted, 0, middle-1, nbBacktracks >= hbfsLimit);
+            else remove(varIndex, sorted, middle, domsize-1, nbBacktracks >= hbfsLimit);
         }
         //    } else if (reverse) {
         //    	assign(varIndex, value, nbBacktracks >= hybridBFSLimit);
@@ -762,9 +767,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
             lastConflictVar = varIndex;
             if (dichotomic) {
                 if	(ToulBar2::dichotomicBranching==1) {
-                    if (increasing) increase(varIndex, middle+1); else decrease(varIndex, middle);
+                    if (increasing) increase(varIndex, middle+1);
+                    else decrease(varIndex, middle);
                 } else if (ToulBar2::dichotomicBranching==2) {
-                    if (increasing) remove(varIndex, sorted, 0, middle-1); else remove(varIndex, sorted, middle, domsize-1);
+                    if (increasing) remove(varIndex, sorted, 0, middle-1);
+                    else remove(varIndex, sorted, middle, domsize-1);
                 }
             } else remove(varIndex, value);
             lastConflictVar = -1;
@@ -778,9 +785,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         if (ToulBar2::restart>0 && nbBacktracks > nbBacktracksLimit) throw NbBacktracksOut();
         if (dichotomic) {
             if (ToulBar2::dichotomicBranching==1) {
-                if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+                if (increasing) decrease(varIndex, middle);
+                else increase(varIndex, middle+1);
             } else if (ToulBar2::dichotomicBranching==2) {
-                if (increasing) remove(varIndex, sorted, middle, domsize-1); else remove(varIndex, sorted, 0, middle-1);
+                if (increasing) remove(varIndex, sorted, middle, domsize-1);
+                else remove(varIndex, sorted, 0, middle-1);
             }
         } else assign(varIndex, value);
         if (!ToulBar2::limited) showGap(wcsp->getLb(), wcsp->getUb());
@@ -790,9 +799,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         lastConflictVar = varIndex;
         if (dichotomic) {
             if	(ToulBar2::dichotomicBranching==1) {
-                if (increasing) decrease(varIndex, middle); else increase(varIndex, middle+1);
+                if (increasing) decrease(varIndex, middle);
+                else increase(varIndex, middle+1);
             } else if (ToulBar2::dichotomicBranching==2) {
-                if (increasing) remove(varIndex, sorted, middle, domsize-1); else remove(varIndex, sorted, 0, middle-1);
+                if (increasing) remove(varIndex, sorted, middle, domsize-1);
+                else remove(varIndex, sorted, 0, middle-1);
             }
         } else assign(varIndex, value);
         lastConflictVar = -1;
@@ -962,8 +973,7 @@ void Solver::newSolution()
             else if(!ToulBar2::bayesian) cout << "New solution: " <<  wcsp->getLb() << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
             else cout << "New solution: " <<  wcsp->getLb() << " log10like: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)/Log(10.) << " prob: " << wcsp->Cost2Prob( wcsp->getLb() + wcsp->getNegativeLb() ) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
         }
-    }
-    else {
+    } else {
         if(ToulBar2::xmlflag) {
             cout << "o " << wcsp->getLb() << endl; //" ";
             //	((WCSP*)wcsp)->solution_XML();
@@ -1018,7 +1028,7 @@ void Solver::newSolution()
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile,"\n");
     }
-    
+
     if((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
     }
@@ -1216,7 +1226,8 @@ pair<Cost,Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub)
     return make_pair(clb,cub);
 }
 
-Long luby(Long r) {
+Long luby(Long r)
+{
     int j = cost2log2(r+1);
     if (r+1 == (1L << j)) return (1L << (j-1));
     else return luby(r - (1L << j) + 1);
@@ -1227,7 +1238,7 @@ bool Solver::solve()
     // Last-minute compatibility checks for ToulBar2 selected options
     wcsp->setUb(tb2checkOptions(wcsp->getUb()));
 
-    if (ToulBar2::writeSolution){
+    if (ToulBar2::writeSolution) {
         ToulBar2::solutionFile = fopen(ToulBar2::writeSolution,"w");
         if (!ToulBar2::solutionFile) {
             cerr << "Could not open file " << ToulBar2::writeSolution << endl;
@@ -1273,8 +1284,7 @@ bool Solver::solve()
         }
     }
 
-    if (CSP(wcsp->getLb(), wcsp->getUb()))
-    {
+    if (CSP(wcsp->getLb(), wcsp->getUb())) {
         ToulBar2::LcLevel = LC_AC;
     }
 
@@ -1459,18 +1469,18 @@ bool Solver::solve()
                             td->setCurrentCluster(start);
                             if (start==td->getRoot()) start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decompostion root cluster
                             switch(ToulBar2::btdMode) {
-                            case 0:case 1: {
+                            case 0:
+                            case 1: {
                                 if(ToulBar2::allSolutions) {
                                     timeDeconnect = 0.;
                                     BigInteger cartesianProduct = 1;
                                     nbSol=(wcsp->numberOfConnectedConstraints() == 0)?(wcsp->cartProd(cartesianProduct),cartesianProduct):sharpBTD(start);
-                                    if(ToulBar2::approximateCountingBTD && nbSol>0. && td->getRoot()->getNbVars()==0)
-                                    { //if there are several parts
+                                    if(ToulBar2::approximateCountingBTD && nbSol>0. && td->getRoot()->getNbVars()==0) {
+                                        //if there are several parts
                                         approximate(nbSol,td);
                                     }
                                     // computation of maximal separator size
-                                    for(int i=0;i<td->getNbOfClusters();i++)
-                                    {
+                                    for(int i=0; i<td->getNbOfClusters(); i++) {
                                         if(td->getCluster(i)->sepSize()>tailleSep)
                                             tailleSep=td->getCluster(i)->sepSize();
                                     }
@@ -1495,8 +1505,10 @@ bool Solver::solve()
                                     } while (res.first < res.second);
                                     assert(res.first == res.second);
                                 }
-                                break; }
-                            case 2:case 3: {
+                                break;
+                            }
+                            case 2:
+                            case 3: {
                                 pair<Cost, Cost> res = make_pair(wcsp->getLb(), ub);
                                 do {//TODO: set up for optimality gap pretty print
                                     res = russianDollSearch(start, res.second);
@@ -1506,10 +1518,12 @@ bool Solver::solve()
                                 ub = start->getLbRDS();
                                 assert(ub == res.second);
                                 wcsp->setUb(ub);
-                                break; }
+                                break;
+                            }
                             default: {
                                 cerr << "Unknown search method B" << ToulBar2::btdMode << endl;
-                                exit(EXIT_FAILURE); }
+                                exit(EXIT_FAILURE);
+                            }
                             }
                             if(ToulBar2::debug) start->printStatsRec();
                             if (ToulBar2::verbose >=0 && nbHybrid>=1) cout << "HBFS open list restarts: " <<  (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
@@ -1606,16 +1620,14 @@ void Solver::approximate(BigInteger &nbsol, TreeDecomposition* td)
 {
     BigInteger cartesianProduct = 1;
     wcsp->cartProd(cartesianProduct);
-    for(map<int, BigInteger>:: iterator it = ubSol.begin(); it != ubSol.end(); ++it){
+    for(map<int, BigInteger>:: iterator it = ubSol.begin(); it != ubSol.end(); ++it) {
         (it->second) *= cartesianProduct;
     }
     BigInteger nbSolInter = nbsol*cartesianProduct;
     BigInteger subCartesianProduct = 1.;
-    for( int i = 0; i< td->getNbOfClusters();i++)
-    {
+    for( int i = 0; i< td->getNbOfClusters(); i++) {
         BigInteger ssCartProd = 1.;
-        if((td->getCluster(i)->getParent()!=NULL) && (td->getCluster(i)->getParent()->getParent()==NULL))
-        {
+        if((td->getCluster(i)->getParent()!=NULL) && (td->getCluster(i)->getParent()->getParent()==NULL)) {
             /* on considere seulement les clusters fils de la racine */
             Cluster * c = td->getCluster(i);
             c->cartProduct(ssCartProd);
@@ -1630,8 +1642,7 @@ void Solver::approximate(BigInteger &nbsol, TreeDecomposition* td)
     // the minimum upper bound of solutions number
     cout << "\nCartesian product \t\t   :    " << cartesianProduct << endl;
     BigInteger minUBsol = cartesianProduct;
-    for(map<int, BigInteger> :: iterator it = ubSol.begin(); it != ubSol.end(); ++it)
-    {
+    for(map<int, BigInteger> :: iterator it = ubSol.begin(); it != ubSol.end(); ++it) {
         if(it->second < minUBsol) minUBsol = it->second;
     }
     cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
@@ -1746,7 +1757,7 @@ int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol)
     Solver solver(MAX_COST);
 
     ToulBar2::startCpuTime = cpuTime();
-    return solver.solve_symmax2sat(n , m, posx, posy, cost, sol);
+    return solver.solve_symmax2sat(n, m, posx, posy, cost, sol);
 }
 
 
@@ -1870,7 +1881,8 @@ void Solver::restore(CPStore &cp, OpenNode nd)
                 wcsp->remove(cp[idx].varIndex, cp[idx].value);
                 addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
             } else addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
-            break; }
+            break;
+        }
         case CP_REMOVE: {
             if (cp[idx].reverse && idx < nd.last-1) {
                 addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
@@ -1878,7 +1890,8 @@ void Solver::restore(CPStore &cp, OpenNode nd)
                 wcsp->remove(cp[idx].varIndex, cp[idx].value);
                 addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
             }
-            break; }
+            break;
+        }
         case CP_INCREASE: {
             if (cp[idx].reverse && idx < nd.last-1) {
                 wcsp->decrease(cp[idx].varIndex, cp[idx].value - 1);
@@ -1887,20 +1900,22 @@ void Solver::restore(CPStore &cp, OpenNode nd)
                 wcsp->increase(cp[idx].varIndex, cp[idx].value);
                 addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value, false);
             }
-            break; }
+            break;
+        }
         case CP_DECREASE: {
             if (cp[idx].reverse && idx < nd.last-1) {
                 wcsp->increase(cp[idx].varIndex, cp[idx].value + 1);
                 addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value + 1, false);
-            }
-            else {
+            } else {
                 wcsp->decrease(cp[idx].varIndex, cp[idx].value);
                 addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value, false);
             }
-            break; }
+            break;
+        }
         default: {
             cerr << "unknown choice point for hybrid best first search!!!" << endl;
-            exit(EXIT_FAILURE); }
+            exit(EXIT_FAILURE);
+        }
         }
     }
     wcsp->propagate();

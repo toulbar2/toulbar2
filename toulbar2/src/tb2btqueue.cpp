@@ -5,19 +5,22 @@
 #include "tb2btqueue.hpp"
 #include "tb2variable.hpp"
 
-void BTQueue::push(DLink<Variable *> *elt) {
+void BTQueue::push(DLink<Variable *> *elt)
+{
     if (!inBTList(elt)) {
         push_back(elt, true);
     }
 }
 
-void BTQueue::remove(DLink<Variable *> *elt) {
+void BTQueue::remove(DLink<Variable *> *elt)
+{
     if (inBTList(elt)) {
         erase(elt, true);
     }
 }
 
-Variable* BTQueue::pop_back() {
+Variable* BTQueue::pop_back()
+{
     assert(!empty());
     DLink<Variable *> *elt = BTList<Variable *>::pop_back(true);
     return elt->content;
@@ -45,7 +48,7 @@ void BTQueue::print(ostream& os)
         }
     }
     os << endl;
-}  
+}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

@@ -370,7 +370,7 @@ void WCSP::read_wcsp(const char *fileName)
             maxarity = max(maxarity,arity);
             if (ToulBar2::verbose >= 3) cout << "read " << arity << "-ary cost function " << ic << " on";
             int scopeIndex[arity]; // replace arity by MAX_ARITY in case of compilation problem
-            for(i=0;i<arity;i++) {
+            for(i=0; i<arity; i++) {
                 file >> j;
                 if (ToulBar2::verbose >= 3) cout << " " << j;
                 scopeIndex[i] = j;
@@ -383,8 +383,7 @@ void WCSP::read_wcsp(const char *fileName)
                 if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else { // monolithic global cost functions
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             } else {
@@ -400,8 +399,7 @@ void WCSP::read_wcsp(const char *fileName)
                     }
                     ntuples = sharedSize[reusedconstr];
                 }
-                if((defval != MIN_COST) || (ntuples > 0))
-                {
+                if((defval != MIN_COST) || (ntuples > 0)) {
                     Cost tmpcost = defval*K;
                     if(CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST*getUb()) && getUb()<(MAX_COST / MEDIUM_COST)) tmpcost *= MEDIUM_COST;
                     int naryIndex = postNaryConstraintBegin(scopeIndex,arity,tmpcost,ntuples);
@@ -412,7 +410,7 @@ void WCSP::read_wcsp(const char *fileName)
                     vector<Cost> costs;
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
-                            for(i=0;i<arity;i++) {
+                            for(i=0; i<arity; i++) {
                                 file >> j;
                                 buf[i] = j + CHAR_FIRST;
                             }
@@ -516,8 +514,7 @@ void WCSP::read_wcsp(const char *fileName)
                 if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else { // monolithic global cost functions
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             }
@@ -620,8 +617,7 @@ void WCSP::read_wcsp(const char *fileName)
                     if (funcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
-                    }
-                    else { // monolithic global cost functions
+                    } else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, funcname, file, &nbconstr);
                     }
                 }
@@ -641,8 +637,7 @@ void WCSP::read_wcsp(const char *fileName)
                     if (gcname.substr(0,1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
-                    }
-                    else { // monolithic global cost functions
+                    } else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                     }
                 } else {
@@ -726,8 +721,7 @@ void WCSP::read_wcsp(const char *fileName)
         if (seen[unaryconstrs[u].var->wcspIndex] == -1) {
             seen[unaryconstrs[u].var->wcspIndex] = newunaryconstrs.size();
             newunaryconstrs.push_back(unaryconstrs[u]);
-        }
-        else {
+        } else {
             for (unsigned int i=0; i<unaryconstrs[u].var->getDomainInitSize(); i++) {
                 if (newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] < getUb()) {
                     if (unaryconstrs[u].costs[i] < getUb()) newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] += unaryconstrs[u].costs[i];
@@ -860,7 +854,7 @@ void WCSP::read_uai2008(const char *fileName)
             int scopeIndex[MAX_ARITY];
             if (ToulBar2::verbose >= 3) cout << "read nary cost function on ";
 
-            for(i=0;i<arity;i++) {
+            for(i=0; i<arity; i++) {
                 file >> j;
                 scopeIndex[i] = j;
                 if (ToulBar2::verbose >= 3) cout << j << " ";
@@ -868,8 +862,7 @@ void WCSP::read_uai2008(const char *fileName)
             if (ToulBar2::verbose >= 3) cout << endl;
             lctrs.push_back( postNaryConstraintBegin(scopeIndex,arity,MIN_COST,LONGLONG_MAX) );
             assert(lctrs.back() >= 0);
-        }
-        else if (arity == 3) {
+        } else if (arity == 3) {
             file >> i;
             file >> j;
             file >> k;
@@ -891,8 +884,7 @@ void WCSP::read_uai2008(const char *fileName)
             }
             lctrs.push_back( postTernaryConstraint(i,j,k,costs) );
             assert(lctrs.back() >= 0);
-        }
-        else if (arity == 2) {
+        } else if (arity == 2) {
             file >> i;
             file >> j;
             if (ToulBar2::verbose >= 3) cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
@@ -910,8 +902,7 @@ void WCSP::read_uai2008(const char *fileName)
             }
             lctrs.push_back( postBinaryConstraint(i,j,costs) );
             assert(lctrs.back() >= 0);
-        }
-        else if (arity == 1) {
+        } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3) cout << "read unary cost function " << ic << " on " << i << endl;
             x = (EnumeratedVariable *) vars[i];
@@ -1008,7 +999,8 @@ void WCSP::read_uai2008(const char *fileName)
         switch(arity) {
         case 0: {
             inclowerbound += costs[ictr][0];
-            break; }
+            break;
+        }
 
         case 1: {
             unaryconstrs[iunaryctr].costs.clear();
@@ -1017,7 +1009,8 @@ void WCSP::read_uai2008(const char *fileName)
             }
             iunaryctr++;
             if (ToulBar2::verbose >= 3) cout << "read unary costs."  << endl;
-            break; }
+            break;
+        }
 
         case 2: {
             bctr = (BinaryConstraint*) ctr;
@@ -1025,7 +1018,8 @@ void WCSP::read_uai2008(const char *fileName)
             y = (EnumeratedVariable*) bctr->getVar(1);
             postBinaryConstraint( x->wcspIndex, y->wcspIndex, costs[ictr] );
             if (ToulBar2::verbose >= 3) cout << "read binary costs."  << endl;
-            break; }
+            break;
+        }
 
         case 3: {
             tctr = (TernaryConstraint*) ctr;
@@ -1034,7 +1028,8 @@ void WCSP::read_uai2008(const char *fileName)
             z = (EnumeratedVariable*) tctr->getVar(2);
             postTernaryConstraint( x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr] );
             if (ToulBar2::verbose >= 3) cout << "read ternary costs." << endl;
-            break; }
+            break;
+        }
 
         default: {
             nctr = (NaryConstraint*) ctr;
@@ -1047,7 +1042,8 @@ void WCSP::read_uai2008(const char *fileName)
             }
             if (ToulBar2::verbose >= 3) cout << "read arity " << arity << " table costs."  << endl;
             postNaryConstraintEnd(nctr->wcspIndex);
-            break; }
+            break;
+        }
         }
         ictr++;
         ++it;

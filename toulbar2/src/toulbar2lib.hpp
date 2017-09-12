@@ -67,10 +67,11 @@
  *
  */
 
-class WeightedCSP {
+class WeightedCSP
+{
 public:
     static WeightedCSP *makeWeightedCSP(Cost upperBound, void *solver = NULL);	///< \brief Weighted CSP factory
-    
+
     virtual ~WeightedCSP() {}
 
     virtual int getIndex() const = 0;       ///< \brief instantiation occurrence number of current WCSP object
@@ -226,7 +227,7 @@ public:
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
     virtual int postWAmong(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<Value> &values, int lb, int ub) =0;
+                           const vector<Value> &values, int lb, int ub) =0;
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) =0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
     virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) =0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
 
@@ -242,10 +243,10 @@ public:
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
     virtual int postWRegular(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            int nbStates,
-            const vector<WeightedObj<int> > &initial_States,
-            const vector<WeightedObj<int> > &accepting_States,
-            const vector<DFATransition > &Wtransitions ) =0;
+                             int nbStates,
+                             const vector<WeightedObj<int> > &initial_States,
+                             const vector<WeightedObj<int> > &accepting_States,
+                             const vector<DFATransition > &Wtransitions ) =0;
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) =0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
     /// \brief post a soft alldifferent cost function
@@ -265,7 +266,7 @@ public:
     /// \param baseCost the scaling factor of the violation
     /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<BoundedObj<Value> > &values)=0;
+                         const vector<BoundedObj<Value> > &values)=0;
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) =0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 
     /// \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
@@ -295,9 +296,9 @@ public:
     ///  - if \a order in \a CFGProductionRule is set to 3, it is classified as weighted A -> BC, where A,B,C  the index of the nonterminal symbols.
     ///  - if \a order in \a CFGProductionRule is set to values greater than 3, it is ignored.
     virtual int postWGrammarCNF(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            int nbSymbols,
-            int startSymbol,
-            const vector<CFGProductionRule> WRuleToTerminal ) =0;
+                                int nbSymbols,
+                                int startSymbol,
+                                const vector<CFGProductionRule> WRuleToTerminal ) =0;
 
     /// \brief post a Spanning Tree hard constraint
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -315,7 +316,7 @@ public:
     /// \param baseCost if a variable-value pair does not exist in \a weightFunction, its weight will be mapped to baseCost.
     /// \param weightFunction a vector of WeightedVarValPair containing a mapping from variable-value pairs to their weights.
     virtual int postMaxWeight(int* scopeIndex, int arity, const string &semantics, const string &propagator, Cost baseCost,
-            const vector<WeightedVarValPair> weightFunction) =0;
+                              const vector<WeightedVarValPair> weightFunction) =0;
 
     /// \brief post a soft linear constraint with unit coefficients
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable

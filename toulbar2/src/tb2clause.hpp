@@ -22,13 +22,15 @@ class WeightedClause : public AbstractNaryConstraint
 
     Value getTuple(int i) {return scope[i]->toValue(tuple[i]-CHAR_FIRST);}
     Value getClause(int i) {return scope[i]->toValue(!(tuple[i]-CHAR_FIRST));}
-    void projectLB(Cost c) {
+    void projectLB(Cost c)
+    {
         lb += c;
         assert(lb <= cost);
         Constraint::projectLB(c);
     }
-    void extend(Cost c) {
-        for(int i=0;i<arity_;i++) {
+    void extend(Cost c)
+    {
+        for(int i=0; i<arity_; i++) {
             EnumeratedVariable *x =scope[i];
             if (x->unassigned()) {
                 deltaCosts[i] += c;
@@ -40,12 +42,13 @@ class WeightedClause : public AbstractNaryConstraint
         }
         projectLB(c);
     }
-    void satisfied(int varIndex) {
+    void satisfied(int varIndex)
+    {
         nonassigned = 0;
         assert(scope[varIndex]->assigned());
         assert(scope[varIndex]->getValue() == getClause(varIndex));
         assert(deltaCosts[varIndex] == lb);
-        for(int i=0;i<arity_;i++) {
+        for(int i=0; i<arity_; i++) {
             EnumeratedVariable *x =scope[i];
             assert(deconnected(i));
             if (i != varIndex) {
@@ -79,7 +82,7 @@ public:
         deltaCosts = vector<StoreCost>(arity_in,StoreCost(MIN_COST));
         Char* tbuf = new Char [arity_in+1];
         tbuf[arity_in] = '\0';
-        for(int i=0;i<arity_in;i++) {
+        for(int i=0; i<arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize()==2);
             tbuf[i] = CHAR_FIRST;
             conflictWeights.push_back(0);
@@ -96,7 +99,8 @@ public:
     }
 
     bool extension() const FINAL {return false;}    // TODO: allows functional variable elimination but not other preprocessing
-    void reconnect() {
+    void reconnect()
+    {
         if (deconnected()) {
             nonassigned = arity_;
             AbstractNaryConstraint::reconnect();
@@ -104,9 +108,10 @@ public:
     }
     int getNonAssigned() const {return nonassigned;}
 
-    Long getConflictWeight() const {return Constraint::getConflictWeight();} 
-    Long getConflictWeight(int varIndex) const {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) {
+    Long getConflictWeight() const {return Constraint::getConflictWeight();}
+    Long getConflictWeight(int varIndex) const {assert(varIndex>=0); assert(varIndex<arity_); return conflictWeights[varIndex]+Constraint::getConflictWeight();}
+    void incConflictWeight(Constraint *from)
+    {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
         if (from==this) {
@@ -122,16 +127,18 @@ public:
         }
     }
 
-    bool universal() {
+    bool universal()
+    {
         if (cost != MIN_COST || lb != MIN_COST) return false;
-        for(int i=0;i<arity_;i++) if (deltaCosts[i] != MIN_COST) return false;
+        for(int i=0; i<arity_; i++) if (deltaCosts[i] != MIN_COST) return false;
         return true;
     }
 
-    Cost eval( const String& s ) {
+    Cost eval( const String& s )
+    {
         Cost res = -lb;
         bool istuple = true;
-        for(int i=0;i<arity_;i++) {
+        for(int i=0; i<arity_; i++) {
             if (tuple[i] != s[i]) {
                 res += deltaCosts[i];
                 istuple = false;
@@ -146,18 +153,21 @@ public:
 
 //    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST,MAX_COST),make_pair(MAX_COST,MAX_COST)); }
 
-    Cost getMaxFiniteCost() {
+    Cost getMaxFiniteCost()
+    {
         Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
         if (CUT(sumdelta, wcsp->getUb())) return MAX_COST;
         if (CUT(cost, wcsp->getUb())) return sumdelta;
         else return max(sumdelta, cost-lb);
     }
-    void setInfiniteCost(Cost ub) {
+    void setInfiniteCost(Cost ub)
+    {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST))?(max(LARGE_COST, ub * MEDIUM_COST)):ub);
         if (CUT(cost, ub)) cost = mult_ub;
     }
 
-    void assign(int varIndex) {
+    void assign(int varIndex)
+    {
         if (connected(varIndex)) {
             deconnect(varIndex);
             nonassigned = nonassigned - 1;
@@ -177,9 +187,10 @@ public:
     }
 
     // propagates the minimum between the remaining clause weight and unary costs of all literals to the problem lower bound
-    void propagate() {
+    void propagate()
+    {
         Cost mincost = (connected() && scope[support]->unassigned())?scope[support]->getCost(getClause(support)):MAX_COST;
-        for(int i=0;connected() && i<arity_;i++) {
+        for(int i=0; connected() && i<arity_; i++) {
             EnumeratedVariable *x = scope[i];
             if (x->assigned()) {
                 assign(i);
@@ -196,7 +207,8 @@ public:
         }
     };
 
-    bool verify() {
+    bool verify()
+    {
         String t;
         Cost c;
         firstlex();
@@ -208,36 +220,39 @@ public:
     void increase(int index) {}
     void decrease(int index) {}
     void remove(int index) {}
-    void projectFromZero(int index) {
+    void projectFromZero(int index)
+    {
         if (index == support && cost > lb) propagate();
     }
 
-    void print(ostream& os) {
+    void print(ostream& os)
+    {
         os << endl << this << " clause(";
 
         int unassigned_ = 0;
-        for(int i = 0; i < arity_;i++) {
+        for(int i = 0; i < arity_; i++) {
             if(scope[i]->unassigned()) unassigned_++;
             if (getClause(i)==0) os << "-";
             os << scope[i]->wcspIndex;
             if(i < arity_-1) os << ",";
         }
         os << ") s:" << support << " / " << cost << " - " << lb << " (";
-        for(int i = 0; i < arity_;i++) {
+        for(int i = 0; i < arity_; i++) {
             os << deltaCosts[i];
             if(i < arity_-1) os << ",";
         }
         os << ") ";
         if (ToulBar2::weightedDegree) {
             os << "/" << getConflictWeight();
-            for(int i = 0; i < arity_;i++) {
+            for(int i = 0; i < arity_; i++) {
                 os << "," << conflictWeights[i];
             }
         }
         os << " arity: " << arity_;
         os << " unassigned: " << (int) nonassigned << "/" << unassigned_ << endl;
     }
-    void dump(ostream& os, bool original = true) {
+    void dump(ostream& os, bool original = true)
+    {
         Cost maxdelta = MIN_COST;
         for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
             Cost d = (*it);
@@ -245,10 +260,10 @@ public:
         }
         if (original) {
             os << arity_;
-            for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+            for(int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
             if (maxdelta==MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
-                for(int i=0;i<arity_;i++) {
+                for(int i=0; i<arity_; i++) {
                     os << scope[i]->toValue(tuple[i] - CHAR_FIRST) << " ";
                 }
                 os << cost << endl;
@@ -258,7 +273,7 @@ public:
                 Cost c;
                 firstlex();
                 while (nextlex(t,c)) {
-                    for(int i=0;i<arity_;i++) {
+                    for(int i=0; i<arity_; i++) {
                         os << scope[i]->toValue(t[i] - CHAR_FIRST) << " ";
                     }
                     os << c << endl;
@@ -269,7 +284,7 @@ public:
             for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
             if (maxdelta==MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
-                for(int i=0;i<arity_;i++) {
+                for(int i=0; i<arity_; i++) {
                     if (scope[i]->unassigned()) os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i] - CHAR_FIRST)) << " ";
                 }
                 os << min(wcsp->getUb(),cost) << endl;
@@ -279,7 +294,7 @@ public:
                 Cost c;
                 firstlex();
                 while (nextlex(t,c)) {
-                    for(int i=0;i<arity_;i++) {
+                    for(int i=0; i<arity_; i++) {
                         if (scope[i]->unassigned()) os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i] - CHAR_FIRST)) << " ";
                     }
                     os << min(wcsp->getUb(),c) << endl;

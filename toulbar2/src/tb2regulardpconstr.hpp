@@ -12,7 +12,8 @@
 #include <string>
 using namespace std;
 
-class RegularDPConstraint : public DPGlobalConstraint {
+class RegularDPConstraint : public DPGlobalConstraint
+{
 private:
 
     struct DFA : public WeightedAutomaton {
@@ -24,34 +25,41 @@ private:
         vector<pair<int, int> > *invTransition;
         int nstate;
 
-        DFA() {
+        DFA()
+        {
         }
 
-        void setNumStates(int size) {
+        void setNumStates(int size)
+        {
             transition = new vector<pair<int, int> >[size];
             invTransition = new vector<pair<int, int> >[size];
             nstate = size;
         }
 
-        void addInitialState(int begin) {
+        void addInitialState(int begin)
+        {
             init.push_back(begin);
         }
 
-        void addFinalState(int end) {
+        void addFinalState(int end)
+        {
             final.push_back(end);
         }
 
-        int size() {
+        int size()
+        {
             return nstate;
         }
 
-        void addTransition(int start, int ch, int end, int weight) {
+        void addTransition(int start, int ch, int end, int weight)
+        {
             transition[start].push_back(make_pair(ch, end));
             invTransition[end].push_back(make_pair(ch, start));
             symbol.push_back(ch);
         }
 
-        void finalize() {
+        void finalize()
+        {
             sort(symbol.begin(), symbol.end());
             symbol.erase(unique(symbol.begin(), symbol.end()), symbol.end());
             for (vector<int>::iterator i = symbol.begin(); i != symbol.end(); i++) {
@@ -59,7 +67,8 @@ private:
             }
         }
 
-        void dump(ostream& os, bool original) {
+        void dump(ostream& os, bool original)
+        {
             assert(original); //TODO: case original is false
             os << nstate << endl;
             os << init.size();
@@ -77,7 +86,8 @@ private:
             }
         }
 
-        void print() {
+        void print()
+        {
             cout << "start state : ";
             for (vector<int>::iterator i = init.begin(); i != init.end(); i++) cout << *i << " ";
             cout << endl;
@@ -110,7 +120,8 @@ private:
     int top;
 
     template <class T>
-    void resizeTable(T** &table, int width, int heigth) {
+    void resizeTable(T** &table, int width, int heigth)
+    {
         table = new T*[width];
         for (int i = 0; i <= arity(); i++) {
             table[i] = new T[heigth];
@@ -118,7 +129,8 @@ private:
     }
 
     template <class T>
-    void deleteTable(T** &table) {
+    void deleteTable(T** &table)
+    {
         for (int i = 0; i <= arity(); i++) delete[] table[i];
         delete[] table;
         table = NULL;
@@ -133,7 +145,7 @@ protected:
     Cost minCostOriginal();
     Cost minCostOriginal(int var, Value val, bool changed);
     Result minCost(int var, Value val, bool changed);
-    
+
     void initMemoization();
 
 public:
@@ -143,7 +155,8 @@ public:
     Cost eval(const String& s);
     void read(istream & file);
     WeightedAutomaton* getWeightedAutomaton() {return &dfa;}
-    string getName() {
+    string getName()
+    {
         return "sregulardp";
     }
 

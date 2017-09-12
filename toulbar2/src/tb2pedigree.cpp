@@ -7,7 +7,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
 
-void Pedigree::iniProb( WCSP* wcsp ) {
+void Pedigree::iniProb( WCSP* wcsp )
+{
     TProb TopProb = 0.;
 
     ToulBar2::NormFactor = (-1/Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
@@ -33,38 +34,37 @@ void Pedigree::iniProb( WCSP* wcsp ) {
         if(individual.typed) {
             if(individual.mother && individual.father) {
                 TopProb += -Log(0.25) * ToulBar2::NormFactor;
-            }
-            else if(individual.mother || individual.father) {
+            } else if(individual.mother || individual.father) {
                 TopProb += -Log(0.50) * ToulBar2::NormFactor;
-            }
-            else
-            {
+            } else {
                 TProb minp = 1.;
-                switch(ToulBar2::foundersprob_class)
-                {
-                case 0:  TopProb += -Log(1./(nballeles * nballeles)) * ToulBar2::NormFactor;
-                break;
+                switch(ToulBar2::foundersprob_class) {
+                case 0:
+                    TopProb += -Log(1./(nballeles * nballeles)) * ToulBar2::NormFactor;
+                    break;
 
-                case 1:  for (map<int,int>::iterator iter = freqalleles.begin(); iter != freqalleles.end(); ++iter) {
-                    TProb p = (TProb) (iter->second * iter->second)/ (TProb)(genotypes.size() * genotypes.size() * 4);
-                    if(p < minp) minp = p;
-                }
-
-                TopProb += -Log(minp) * ToulBar2::NormFactor;
-                break;
-
-                default: foundersprob.clear();
-                assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
-                for (int i=1; i<=nballeles; i++) { /* i = first allele of child  */
-                    for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
-                        // case i!=j must be counted twice (i,j and j,i)
-                        foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);
+                case 1:
+                    for (map<int,int>::iterator iter = freqalleles.begin(); iter != freqalleles.end(); ++iter) {
+                        TProb p = (TProb) (iter->second * iter->second)/ (TProb)(genotypes.size() * genotypes.size() * 4);
+                        if(p < minp) minp = p;
                     }
-                }
-                for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
-                    if(*iter < minp) minp = *iter;
-                }
-                TopProb += -Log(minp) * ToulBar2::NormFactor;
+
+                    TopProb += -Log(minp) * ToulBar2::NormFactor;
+                    break;
+
+                default:
+                    foundersprob.clear();
+                    assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+                    for (int i=1; i<=nballeles; i++) { /* i = first allele of child  */
+                        for (int j=i; j<=nballeles; j++) { /* j = second allele of child */
+                            // case i!=j must be counted twice (i,j and j,i)
+                            foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);
+                        }
+                    }
+                    for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
+                        if(*iter < minp) minp = *iter;
+                    }
+                    TopProb += -Log(minp) * ToulBar2::NormFactor;
                 }
             }
         }
@@ -235,14 +235,14 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
         if (pedigree[individuals[individual]].father==0 && pedigree[individuals[individual]].mother==0) {
             pedigree[individuals[individual]].generation = 1;
         } else if (pedigree[individuals[individual]].father>0 && pedigree[individuals[individual]].mother>0 &&
-                pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1 &&
-                pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
+                   pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1 &&
+                   pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
             pedigree[individuals[individual]].generation = max(pedigree[individuals[pedigree[individuals[individual]].father]].generation, pedigree[individuals[pedigree[individuals[individual]].mother]].generation) + 1;
         } else if (pedigree[individuals[individual]].father>0 && pedigree[individuals[individual]].mother==0 &&
-                pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1) {
+                   pedigree[individuals[pedigree[individuals[individual]].father]].generation!=-1) {
             pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].father]].generation + 1;
         } else if (pedigree[individuals[individual]].father==0 && pedigree[individuals[individual]].mother>0 &&
-                pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
+                   pedigree[individuals[pedigree[individuals[individual]].mother]].generation!=-1) {
             pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].mother]].generation + 1;
         }
 
@@ -278,8 +278,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
             alleles[allele1] = nballeles;
             freqalleles[ allele1 ] = 1;
             if(allele1 > maxallele) maxallele =  allele1;
-        }
-        else { freqalleles[ allele1 ]++; }
+        } else { freqalleles[ allele1 ]++; }
 
 
         if (alleles.count(allele2)==0) {
@@ -287,8 +286,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
             alleles[allele2] = nballeles;
             freqalleles[ allele2 ] = 1;
             if(allele2 > maxallele) maxallele =  allele2;
-        }
-        else { freqalleles[ allele2 ]++; }
+        } else { freqalleles[ allele2 ]++; }
 
 
         if (allele1>0 || allele2>0) {
@@ -300,7 +298,7 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     if(ToulBar2::consecutiveAllele) {
         cout << "Make alleles consecutive and supose 4 allele." << endl;
         maxallele = 4;
-        for(int i=1;i<=maxallele;i++) {
+        for(int i=1; i<=maxallele; i++) {
             map<int,int>::iterator it = alleles.find(i);
             if(it == alleles.end()) {
                 nballeles++;
@@ -380,7 +378,8 @@ void Pedigree::readPedigree(const char *fileName, WCSP *wcsp)
     assert(wcsp->numberOfConstraints() == 0);
 }
 
-int Pedigree::convertgen( int allele1, int allele2 ) {
+int Pedigree::convertgen( int allele1, int allele2 )
+{
     int nballeles = alleles.size() - 1;
     int bongen = 0;
 
@@ -394,7 +393,8 @@ int Pedigree::convertgen( int allele1, int allele2 ) {
         for (int j=i; j<=nballeles; j++) {
             if((i==allele1) && (j==allele2)) return bongen;
             bongen++;
-        }}
+        }
+    }
     return -1;
 }
 
@@ -578,35 +578,38 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
 
     int i,j;
     switch(ToulBar2::foundersprob_class) {
-    case 0: foundersprob.clear();
-    for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
-        for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-            foundersprob.push_back( ((i!=j)?2.:1.)/(TProb)(nballeles * nballeles) );
+    case 0:
+        foundersprob.clear();
+        for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
+            for (j=i; j<=nballeles; j++) { /* j = second allele of child */
+                foundersprob.push_back( ((i!=j)?2.:1.)/(TProb)(nballeles * nballeles) );
+            }
         }
-    }
-    break;
+        break;
 
-    case 1: foundersprob.clear();
-    for (map<int,int>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
-        allelesInv[iter->second] = iter->first;
-    }
-    for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
-        for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-            // case i!=j must be counted twice (i,j and j,i)
-            foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)freqalleles[ allelesInv[i] ] * (TProb)freqalleles[ allelesInv[j] ] / (TProb)(nbtypings * nbtypings * 4) );
+    case 1:
+        foundersprob.clear();
+        for (map<int,int>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
+            allelesInv[iter->second] = iter->first;
         }
-    }
-    break;
+        for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
+            for (j=i; j<=nballeles; j++) { /* j = second allele of child */
+                // case i!=j must be counted twice (i,j and j,i)
+                foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)freqalleles[ allelesInv[i] ] * (TProb)freqalleles[ allelesInv[j] ] / (TProb)(nbtypings * nbtypings * 4) );
+            }
+        }
+        break;
 
-    default: foundersprob.clear();
-    assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
-    for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
-        for (j=i; j<=nballeles; j++) { /* j = second allele of child */
-            // case i!=j must be counted twice (i,j and j,i)
-            foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);
+    default:
+        foundersprob.clear();
+        assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+        for (i=1; i<=nballeles; i++) { /* i = first allele of child  */
+            for (j=i; j<=nballeles; j++) { /* j = second allele of child */
+                // case i!=j must be counted twice (i,j and j,i)
+                foundersprob.push_back((TProb)((i!=j)?2.:1.) * (TProb)ToulBar2::allelefreqdistrib[i-1] * (TProb)ToulBar2::allelefreqdistrib[j-1]);
+            }
         }
-    }
-    break;
+        break;
     }
     if (ToulBar2::verbose >= 1) {
         cout << "Genotype prior:" << endl;
@@ -678,13 +681,16 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
                     Cost penalty = 0;
                     if (typed) {
                         if(theone) p = 1. - ToulBar2::errorg;
-                        else	   {p = ToulBar2::errorg / (TProb)(domsize-1);
-                        penalty = pedigree[individuals[individual]].nbtyped; }
-                    }
-                    else if(halftyped) {
+                        else	   {
+                            p = ToulBar2::errorg / (TProb)(domsize-1);
+                            penalty = pedigree[individuals[individual]].nbtyped;
+                        }
+                    } else if(halftyped) {
                         if(posible) p = (1. - ToulBar2::errorg) / (TProb)nballeles;
-                        else {p = ToulBar2::errorg / (TProb)(domsize - nballeles);
-                        penalty = pedigree[individuals[individual]].nbtyped; }
+                        else {
+                            p = ToulBar2::errorg / (TProb)(domsize - nballeles);
+                            penalty = pedigree[individuals[individual]].nbtyped;
+                        }
                     }
                     if (ToulBar2::pedigreePenalty>0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty>ToulBar2::pedigreePenalty)?wcsp->Cost2LogProb(-((penalty>0)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST))/Log(10.):0.) << " log10like " << -((penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST) << " cost" << endl;
                     unaryconstr.costs.push_back((typed && fixed && !theone)?wcsp->getUb():(wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty>0 && penalty>ToulBar2::pedigreePenalty)?wcsp->Prob2Cost(to_double(penalty)):MIN_COST)) );
@@ -708,8 +714,7 @@ void Pedigree::buildWCSP_bayesian( const char *fileName, WCSP *wcsp )
             } else {
                 wcsp->postBinaryConstraint(pedigree[id_mother].varindex,pedigree[individuals[individual]].varindex,costs2);
             }
-        }
-        else {
+        } else {
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = var;
             for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
@@ -752,8 +757,7 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
         exit(EXIT_FAILURE);
     }
 
-    for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it )
-    {
+    for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it ) {
         Individual& ind = *it;
         int allele1 = ind.genotype.allele1;
         int allele2 = ind.genotype.allele2;
@@ -761,8 +765,7 @@ void Pedigree::printCorrectSol(WCSP *wcsp)
             map<int,int>::iterator it = gencorrects.find(ind.individual);
             if(it != gencorrects.end()) file << " " << it->second;
             else file << " " << convertgen(allele1, allele2);
-        }
-        else file << " " << -1;
+        } else file << " " << -1;
     }
     file << endl;
 }
@@ -780,8 +783,7 @@ void Pedigree::printSol(WCSP *wcsp)
         exit(EXIT_FAILURE);
     }
 
-    for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it )
-    {
+    for(vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it ) {
         Individual& ind = *it;
         if(ind.typed) file << " " << wcsp->getValue(ind.varindex);
         else file << " " << -1;

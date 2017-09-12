@@ -1,8 +1,9 @@
 #include "tb2alldiffconstr.hpp"
 #include "tb2wcsp.hpp"
 
-AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, 
-        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in) {
+AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in,
+                                     int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
+{
     buildIndex();
 
     modeEnum["var"] = AllDiffConstraint::VAR;
@@ -10,9 +11,10 @@ AllDiffConstraint::AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in,
     modeEnum["decbi"] = AllDiffConstraint::DECBI;
 }
 
-void AllDiffConstraint::buildIndex() {
+void AllDiffConstraint::buildIndex()
+{
     vector<Value> D;
-    for (int i=0;i<arity_;i++) {
+    for (int i=0; i<arity_; i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             D.push_back(*iterx);
@@ -20,13 +22,14 @@ void AllDiffConstraint::buildIndex() {
     }
     sort(D.begin(), D.end());
     D.erase(unique(D.begin(), D.end()), D.end());
-    for (vector<Value>::iterator i = D.begin(); i != D.end();i++) {
+    for (vector<Value>::iterator i = D.begin(); i != D.end(); i++) {
         mapval[*i] = arity_+(int)(i-D.begin())+1;
     }
     //graph.setSize(arity_+D.size()+2);
 }
 
-void AllDiffConstraint::read(istream &file) {
+void AllDiffConstraint::read(istream &file)
+{
 
     // Only two pararmeters for control :
 
@@ -38,35 +41,37 @@ void AllDiffConstraint::read(istream &file) {
     file >> def;
     //cout << "str = " << str << endl;
     /*if (str == "var") {
-		mode = VAR;
-	} else if (str == "dec") {
-		mode = DEC;
-	} else if (str == "decbi") {
-		mode = DECBI;
-		decompose();
-	} else {
-		cout << "unknown mode?\n";
-		exit(0);
-	}*/
+    	mode = VAR;
+    } else if (str == "dec") {
+    	mode = DEC;
+    } else if (str == "decbi") {
+    	mode = DECBI;
+    	decompose();
+    } else {
+    	cout << "unknown mode?\n";
+    	exit(0);
+    }*/
     setSemantics(str);
 
 }
 
-void AllDiffConstraint::organizeConfig() {
+void AllDiffConstraint::organizeConfig()
+{
     if (mode == DECBI) decompose();
 }
 
-Cost AllDiffConstraint::evalOriginal( const String& s ) {
+Cost AllDiffConstraint::evalOriginal( const String& s )
+{
     Cost tuple_cost = 0;
     if (mode == DEC) {
-        for (unsigned int i=0;i<s.length();i++) {
-            for (unsigned int j=i+1;j<s.length();j++) {
+        for (unsigned int i=0; i<s.length(); i++) {
+            for (unsigned int j=i+1; j<s.length(); j++) {
                 if (s[i] == s[j]) tuple_cost += def;
             }
         }
     } else {
         set<char> count;
-        for (unsigned int i=0;i<s.length();i++) {
+        for (unsigned int i=0; i<s.length(); i++) {
             count.insert(s[i]);
         }
         tuple_cost = (s.length() - count.size())*def;
@@ -74,15 +79,17 @@ Cost AllDiffConstraint::evalOriginal( const String& s ) {
     return tuple_cost;
 }
 
-size_t AllDiffConstraint::GetGraphAllocatedSize() {
+size_t AllDiffConstraint::GetGraphAllocatedSize()
+{
     return mapval.size() + arity_  + 2;
 }
 
-void AllDiffConstraint::buildGraph(Graph &g) {
+void AllDiffConstraint::buildGraph(Graph &g)
+{
 
     // if (g.size() == 0) g.setSize(mapval.size() + arity_  + 2);
     // g.clearEdge();
-    for (int i=0;i<arity_;i++) {
+    for (int i=0; i<arity_; i++) {
         g.addEdge(0, i+1, 0);
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         for (EnumeratedVariable::iterator j = x->begin(); j != x->end(); ++j) {
@@ -109,7 +116,7 @@ void AllDiffConstraint::buildGraph(Graph &g) {
 /*void AllDiffConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
 	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
+	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
 			k != graph[varindex+1].end(); k++) {
 		if (k->adj > 0) {
 			for (map<Value, Cost>::iterator i = mapval.begin();i !=
@@ -120,7 +127,7 @@ void AllDiffConstraint::buildGraph(Graph &g) {
 	}
 	for (map<Value, Cost>::iterator i = mapval.begin();i !=
 			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
+		for (vector<List_Node >::iterator k = graph[i->second].begin();
 				k != graph[i->second].end(); k++) {
 			if (k->adj == varindex+1) {
 				domain.push_back(i->first);
@@ -130,10 +137,11 @@ void AllDiffConstraint::buildGraph(Graph &g) {
 
 }*/
 
-void AllDiffConstraint::decompose() {
+void AllDiffConstraint::decompose()
+{
     deconnect();
-    for (int i=0;i<arity_;i++) {
-        for (int j=i+1;j<arity_;j++) {
+    for (int i=0; i<arity_; i++) {
+        for (int j=i+1; j<arity_; j++) {
             EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
             EnumeratedVariable* y = (EnumeratedVariable*)getVar(j);
             vector<Cost> costs;
@@ -159,8 +167,7 @@ void AllDiffConstraint::decompose() {
                 ctr->reconnect();
                 ctr->addCosts(x,y,costs);
                 ctr->propagate();
-            }
-            else {
+            } else {
                 if (!ToulBar2::vac) {
                     ctr = new BinaryConstraint(wcsp, x, y, costs);
                 } else {
@@ -175,7 +182,7 @@ void AllDiffConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for(int i = 0; i < arity_;i++) os << " " << scope[i]->wcspIndex;
+        for(int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
         for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();

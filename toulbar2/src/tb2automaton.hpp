@@ -13,12 +13,13 @@
 
 using namespace std;
 
-class WeightedAutomaton {
+class WeightedAutomaton
+{
 public:
     virtual void setNumStates(int nStates) = 0;
     virtual void addInitialState(int begin) = 0;
     virtual void addFinalState(int end) = 0;
-    virtual void addTransition(int start, int symbol, int end, int weight) = 0;				
+    virtual void addTransition(int start, int symbol, int end, int weight) = 0;
 };
 
 struct WTransition {
@@ -27,19 +28,22 @@ struct WTransition {
     unsigned int symbol;
     Cost weight;
 
-    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int  _weight) {
+    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int  _weight)
+    {
         start = _start;
         end = _end;
         symbol = _symbol;
         weight = _weight;
     }
 
-    void display() {
+    void display()
+    {
         cout << start << " x " << symbol << " --("<<weight <<")--> " << end << endl;
     }
 };
 
-class WFA{
+class WFA
+{
 private:
     unsigned int nbStates;
     list<pair<int,Cost> > initialStates;

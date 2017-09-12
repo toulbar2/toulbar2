@@ -4,7 +4,7 @@
  *      \defgroup VAC Virtual Arc Consistency enforcing
  *  The three phases of VAC are enforced in three different "Pass".
  *  Bool(P) is never built. Instead specific functions (getVACCost) booleanize the WCSP on the fly.
- *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration) 
+ *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration)
  *  All the counter data-structures (k) are timestamped to avoid clearing them at each iteration.
  *  \note Simultaneously AC (and potentially DAC, EAC) are maintained by proper queuing.
  *  \see <em> Soft Arc Consistency Revisited. </em> Cooper et al. Artificial Intelligence. 2010.
@@ -15,18 +15,21 @@
 #include <list>
 #include <algorithm>
 
-class tVACStat {
+class tVACStat
+{
 public:
 
     int var;
     Cost sumlb;
     Long nlb;
 
-    tVACStat(int varin) {
+    tVACStat(int varin)
+    {
         var = varin;
         sumlb = MIN_COST;
         nlb = 0;
-    }};
+    }
+};
 
 bool cmp_function(tVACStat * v1, tVACStat * v2)
 {
@@ -34,7 +37,7 @@ bool cmp_function(tVACStat * v1, tVACStat * v2)
 }
 
 VACExtension::VACExtension(WCSP * w):wcsp(w), VAC2(&Store::storeVariable), nbIterations(0),
-        inconsistentVariable(-1)
+    inconsistentVariable(-1)
 {
     queueP = new stack < pair < int, int > >;
     queueR = new stack < pair < int, int > >;
@@ -223,7 +226,7 @@ bool VACExtension::propagate()
                 for (unsigned int i = 0;
                         i < wcsp->numberOfVariables(); i++) {
                     ((VACVariable *) wcsp->getVar(i))->
-                            queueSeekSupport();
+                    queueSeekSupport();
                 }
             }
             // remember first arc consistent domain values in Bool(P) before restoring domains
@@ -231,13 +234,13 @@ bool VACExtension::propagate()
             int nbassignedzero = 0;
             while (!SeekSupport.empty()) {
                 VACVariable *x =
-                        (VACVariable *) SeekSupport.pop();
+                    (VACVariable *) SeekSupport.pop();
                 if (x->assigned()) nbassigned++;
                 pair < VACVariable *, Value > p;
                 p.first = x;
                 p.second = x->getSup() + 1;
                 for (EnumeratedVariable::iterator iterX =
-                        x->begin(); iterX != x->end(); ++iterX) {
+                            x->begin(); iterX != x->end(); ++iterX) {
                     if (x->getCost(*iterX) == MIN_COST) {
                         if (x->assigned()) nbassignedzero++;
                         p.second = *iterX;
@@ -255,10 +258,10 @@ bool VACExtension::propagate()
             enforcePass2();
             if (ToulBar2::verbose > 0)
                 cout << "VAC Lb: " << wcsp->
-                getLb() << "    incvar: " <<
-                inconsistentVariable << "    minlambda: " <<
-                minlambda << "      itThreshold: " <<
-                itThreshold << endl;
+                     getLb() << "    incvar: " <<
+                     inconsistentVariable << "    minlambda: " <<
+                     minlambda << "      itThreshold: " <<
+                     itThreshold << endl;
             util = enforcePass3();
         } else {
             nextScaleCost();
@@ -269,23 +272,23 @@ bool VACExtension::propagate()
     if (ToulBar2::vacValueHeuristic && acSupportOK) {
         // update current unary support if possible && needed
         for (vector < pair < VACVariable *, Value > >::iterator iter =
-                acSupport.begin(); iter != acSupport.end(); ++iter) {
+                    acSupport.begin(); iter != acSupport.end(); ++iter) {
             VACVariable *x = iter->first;
             if (x->canbe(iter->second)) {
                 assert(x->getCost(iter->second) == MIN_COST);
                 if (ToulBar2::verbose > 0
                         && x->getSupport() != iter->second)
                     cout << "CHANGE SUPPORT " << x->
-                    getName() << " from " << x->
-                    getSupport() << " to " << iter->
-                    second << endl;
+                         getName() << " from " << x->
+                         getSupport() << " to " << iter->
+                         second << endl;
                 x->setSupport(iter->second);
             } else {
                 if (ToulBar2::verbose > 0)
                     cout << "WARNING: BAD AC SUPPORT " <<
-                    iter->
-                    second << " FOR VARIABLE " << *x <<
-                    endl;
+                         iter->
+                         second << " FOR VARIABLE " << *x <<
+                         endl;
             }
         }
     }
@@ -361,9 +364,9 @@ void VACExtension::enforcePass1()
         }
 
         /*for (list<Constraint*>::iterator itl = l.begin(); itl != l.end(); ++itl) {
-		   cij = (VACConstraint *) *itl;
-		   if(enforcePass1(xj,cij)) return;
-		   } */
+           cij = (VACConstraint *) *itl;
+           if(enforcePass1(xj,cij)) return;
+           } */
     }
     inconsistentVariable = -1;
 }
@@ -388,21 +391,21 @@ bool VACExtension::checkPass1() const
                 cij = (VACBinaryConstraint *) c;
                 xj = (VACVariable *) cij->getVarDiffFrom(xi);
                 for (EnumeratedVariable::iterator iti =
-                        xi->begin(); iti != xi->end(); ++iti) {
+                            xi->begin(); iti != xi->end(); ++iti) {
                     Value v = *iti;
                     supportFound = false;
                     for (EnumeratedVariable::iterator itj =
-                            xj->begin(); itj != xj->end();
+                                xj->begin(); itj != xj->end();
                             ++itj) {
                         Value w = *itj;
                         if ((xi->getVACCost(v) ==
                                 MIN_COST)
                                 && (xj->getVACCost(w) ==
-                                        MIN_COST)
-                                        && (cij->
-                                                getVACCost(xi, xj, v,
-                                                        w) ==
-                                                                MIN_COST)) {
+                                    MIN_COST)
+                                && (cij->
+                                    getVACCost(xi, xj, v,
+                                               w) ==
+                                    MIN_COST)) {
                             supportFound = true;
                             break;
                         }
@@ -471,16 +474,16 @@ void VACExtension::enforcePass2()
                     if (xj->getKiller(w) == i
                             && xj->isMarked(w, nbIterations))
                         tmpK +=
-                                xj->getK(w, nbIterations);
+                            xj->getK(w, nbIterations);
                     if (!CUT
                             (wcsp->getLb() + costij,
-                                    wcsp->getUb())) {
+                             wcsp->getUb())) {
                         if ((costij / tmpK) < minlambda) {
                             minlambda =
-                                    costij / tmpK;
+                                costij / tmpK;
                             if (minlambda < UNIT_COST) {	//A cost function bottleneck here !
                                 bneckCost =
-                                        costij;
+                                    costij;
                                 bneckCF = cij;
                                 bneckVar = -1;
                             }
@@ -495,38 +498,38 @@ void VACExtension::enforcePass2()
                     }
                 } else {
                     int tmpK =
-                            xi->getK(v,
-                                    nbIterations) -
-                                    cij->getK(xj, w, nbIterations);
+                        xi->getK(v,
+                                 nbIterations) -
+                        cij->getK(xj, w, nbIterations);
                     if (tmpK > 0) {
                         xj->addToK(w, tmpK,
-                                nbIterations);
+                                   nbIterations);
                         cij->setK(xj, w,
-                                xi->getK(v,
-                                        nbIterations),
-                                        nbIterations);
+                                  xi->getK(v,
+                                           nbIterations),
+                                  nbIterations);
                         Cost cost = xj->getVACCost(w);
                         if (cost == MIN_COST)
                             xj->setMark(w,
-                                    nbIterations);
+                                        nbIterations);
                         else if (!CUT
-                                (wcsp->getLb() + cost,
-                                        wcsp->getUb())) {
+                                 (wcsp->getLb() + cost,
+                                  wcsp->getUb())) {
                             tmplambda =
-                                    cost / xj->getK(w,
-                                            nbIterations);
+                                cost / xj->getK(w,
+                                                nbIterations);
                             if (tmplambda <
                                     minlambda) {
                                 minlambda =
-                                        tmplambda;
+                                    tmplambda;
                                 if (minlambda < UNIT_COST) {	// A unary cost bottleneck here
                                     bneckVar
-                                    = j;
+                                        = j;
                                     bneckCF
-                                    =
+                                        =
                                             NULL;
                                     bneckCost
-                                    =
+                                        =
                                             cost;
                                 }
                             }
@@ -541,17 +544,17 @@ void VACExtension::enforcePass2()
     //}
     if (ToulBar2::verbose > 1)
         cout << "minLambda: " << minlambda << "\t\t (lb = " << wcsp->
-        getLb() << ", ub = " << wcsp->getUb() << ")" << endl;
+             getLb() << ", ub = " << wcsp->getUb() << ")" << endl;
 }
 
 bool VACExtension::enforcePass3()
 {
     bool util = (minlambda >= UNIT_COST);
     /*if(util) {
-	   Cost ub = wcsp->getUb();
-	   Cost lb = wcsp->getLb();
-	   util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
-	   } */
+       Cost ub = wcsp->getUb();
+       Cost lb = wcsp->getLb();
+       util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
+       } */
     Cost lambda = minlambda;
 
     //if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
@@ -606,7 +609,7 @@ bool VACExtension::enforcePass3()
             Value v = *iti;
             if (cij->getK(xi, v, nbIterations) != 0) {
                 Cost ecost =
-                        lambda * cij->getK(xi, v, nbIterations);
+                    lambda * cij->getK(xi, v, nbIterations);
                 cij->setK(xi, v, 0, nbIterations);
                 cij->VACextend(xi, v, ecost);
                 // extention from unary to binary cost function may break soft AC/DAC in both directions due to isNull/itThreshold
@@ -640,9 +643,9 @@ bool VACExtension::enforcePass3()
 
 // void VACExtension::updateStat(Cost lambda)
 // {
-//   //tVACStat* v = heapAccess[inconsistentVariable];  
+//   //tVACStat* v = heapAccess[inconsistentVariable];
 //   if(varAssign >= 0) {
-//    tVACStat* v = heapAccess[varAssign];  
+//    tVACStat* v = heapAccess[varAssign];
 //    v->sumlb += lambda;
 //    v->nlb++;
 //   }
@@ -651,14 +654,14 @@ bool VACExtension::enforcePass3()
 // Cost VACExtension::getVarCostStat( int i )
 // {
 //   tVACStat* v = heap[i];
-//   return v->sumlb;   
+//   return v->sumlb;
 // }
 
 // Long VACExtension::getVarTimesStat( int i )
 // {
-//   if(i < 0) return 0; 
+//   if(i < 0) return 0;
 //   tVACStat* v = heap[i];
-//   return v->nlb; 
+//   return v->nlb;
 // }
 
 void VACExtension::afterPreprocessing()
@@ -694,8 +697,8 @@ void VACExtension::updateSingleton()
     set < int >s2(singletonI);
     singletonI.clear();
     set_intersection(s1.begin(), s1.end(),
-            s2.begin(), s2.end(),
-            inserter(singletonI, singletonI.begin()));
+                     s2.begin(), s2.end(),
+                     inserter(singletonI, singletonI.begin()));
     singleton.clear();
 }
 
@@ -752,21 +755,21 @@ void VACExtension::printStat(bool ini)
     if (ToulBar2::verbose >= 0) {
         long double mean = to_double(sumlb) / (long double)nlb;
         cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb
-                << "     cyclesize: " << (double)sumvars /
-                (double)nlb << "     k: " << (double)sumk /
-                (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
+             << "     cyclesize: " << (double)sumvars /
+             (double)nlb << "     k: " << (double)sumk /
+             (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
         if (ini)
             cout << "Lb after VAC: " << wcsp->getLb() << endl;
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
-	   vector<tVACStat*>::iterator it = heap.begin();
-	   while(it != heap.end()) {
-	   tVACStat* v = *it;
-	   if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") "; 
-	   ++it;
-	   }
-	   cout << endl; */
+       vector<tVACStat*>::iterator it = heap.begin();
+       while(it != heap.end()) {
+       tVACStat* v = *it;
+       if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") ";
+       ++it;
+       }
+       cout << endl; */
 
     sumk = 0;
     theMaxK = 0;
@@ -784,9 +787,9 @@ void VACExtension::printTightMatrix()
         for (unsigned int j = 0; j < wcsp->numberOfVariables(); j++) {
             if (i != j) {
                 EnumeratedVariable *x =
-                        (EnumeratedVariable *) wcsp->getVar(i);
+                    (EnumeratedVariable *) wcsp->getVar(i);
                 EnumeratedVariable *y =
-                        (EnumeratedVariable *) wcsp->getVar(j);
+                    (EnumeratedVariable *) wcsp->getVar(j);
                 Constraint *bctr = x->getConstr(y);
                 double t = 0;
                 if (bctr)
@@ -819,7 +822,7 @@ void VACExtension::minsumDiffusion()
                     i++)
                 if (wcsp->unassigned(i)) {
                     VACVariable *evar =
-                            (VACVariable *) wcsp->getVar(i);
+                        (VACVariable *) wcsp->getVar(i);
                     if (evar->averaging()) {
                         change = true;
                         nchanged++;
@@ -833,7 +836,7 @@ void VACExtension::minsumDiffusion()
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
             if (wcsp->unassigned(i)) {
                 EnumeratedVariable *evar =
-                        (EnumeratedVariable *) wcsp->getVar(i);
+                    (EnumeratedVariable *) wcsp->getVar(i);
                 evar->findSupport();
             }
         for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++)

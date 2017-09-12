@@ -84,7 +84,7 @@ public:
     void addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta = MIN_COST);     ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore &cp, OpenNode node);
 
-    protected:
+protected:
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
@@ -168,7 +168,7 @@ public:
     BigInteger sharpBTD(Cluster *cluster);
     void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
-    public:
+public:
     Solver(Cost initUpperBound);
     ~Solver();
 

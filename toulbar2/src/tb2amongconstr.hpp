@@ -13,7 +13,8 @@
 
 using namespace std;
 
-class AmongConstraint : public DPGlobalConstraint {
+class AmongConstraint : public DPGlobalConstraint
+{
 private:
 
     template <class Source>
@@ -32,7 +33,8 @@ private:
     UnaryTableCell *minBarU, *minU;
 
     template <class T>
-    void resizeTable(T** &table, int width, int heigth) {
+    void resizeTable(T** &table, int width, int heigth)
+    {
         assert(width >= arity()+1);
         table = new T*[width];
         for (int i = 0; i <= arity(); i++) {
@@ -41,7 +43,8 @@ private:
     }
 
     template <class T>
-    void deleteTable(T** &table) {
+    void deleteTable(T** &table)
+    {
         for (int i = 0; i <= arity(); i++) delete[] table[i];
         delete[] table;
         table = NULL;
@@ -76,7 +79,8 @@ public:
     void addBoundingValue(Value value) {V.insert(value);}
     virtual void initMemoization();
 
-    string getName() {
+    string getName()
+    {
         string name = "samong";
         name += "_" + to_string(lb) + "_" + to_string(ub) + "_" + to_string(V.size());
         for (set<int>::iterator iter = V.begin(); iter != V.end(); ++iter) name += "_" + to_string(*iter);

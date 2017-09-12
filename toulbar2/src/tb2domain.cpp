@@ -6,7 +6,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 Domain::Domain(Value inf, Value sup) : BTList<Value>(&Store::storeDomain), initSize(sup - inf + 1), distanceToZero(inf)
@@ -33,7 +33,7 @@ void Domain::init(Value inf, Value sup)
     assert( sup - inf + 1 <= MAX_DOMAIN_SIZE );
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     assert(distanceToZero == 0);
-#endif    
+#endif
     all = new DLink<Value>[sup-inf+1];
     for (int idx=0; idx<sup-inf+1; idx++) {
         all[idx].content = idx + inf;
@@ -56,7 +56,7 @@ ostream& operator<<(ostream& os, Domain &l)
     }
     os << " }";
     return os;
-}    
+}
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

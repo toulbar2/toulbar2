@@ -8,7 +8,8 @@
 #include "tb2flowbasedconstr.hpp"
 #include "tb2automaton.hpp"
 
-class RegularFlowConstraint : public FlowBasedGlobalConstraint {
+class RegularFlowConstraint : public FlowBasedGlobalConstraint
+{
 private:
 
     struct DFA : public WeightedAutomaton {
@@ -20,28 +21,34 @@ private:
 
         DFA() : transition(NULL), nstate(0) {}
 
-        void setNumStates(int size) {
+        void setNumStates(int size)
+        {
             transition = new vector<pair<int, int> >[size];
             nstate = size;
         }
 
-        void addInitialState(int begin) {
+        void addInitialState(int begin)
+        {
             init.push_back(begin);
         }
 
-        void addFinalState(int end) {
+        void addFinalState(int end)
+        {
             final.push_back(end);
         }
 
-        int size() {
+        int size()
+        {
             return nstate;
         }
 
-        void addTransition(int start, int ch, int end, int weight) {
+        void addTransition(int start, int ch, int end, int weight)
+        {
             transition[start].push_back(make_pair(ch, end));
         }
 
-        int getNextState(int start, int ch) {
+        int getNextState(int start, int ch)
+        {
             int next = -1;
             for (vector<pair<int, int> >::iterator i = transition[start].begin();
                     i != transition[start].end(); i++) {
@@ -50,7 +57,8 @@ private:
             return next;
         }
 
-        set<int> getSymbolNeed(int start, int end) {
+        set<int> getSymbolNeed(int start, int end)
+        {
             set<int> require;
             for (vector<pair<int, int> >::iterator i = transition[start].begin();
                     i != transition[start].end(); i++) {
@@ -59,7 +67,8 @@ private:
             return require;
         }
 
-        void dump(ostream& os, bool original) {
+        void dump(ostream& os, bool original)
+        {
             assert(original); //TODO: case original is false
             os << nstate << endl;
             os << init.size();
@@ -77,7 +86,8 @@ private:
             }
         }
 
-        void print() {
+        void print()
+        {
             cout << "start state : ";
             for (vector<int>::iterator i = init.begin(); i != init.end(); i++) cout << *i << " ";
             cout << endl;
@@ -91,7 +101,7 @@ private:
         }
     };
 
-    template<class Element> 
+    template<class Element>
     struct min_priority_queue: public priority_queue<Element, vector<Element>, greater<Element> > {};
 
     static const int EDIT = 1;
@@ -114,11 +124,13 @@ private:
     vector<set<int> > curdomain;
     vector<vector<vector<pair<int, int> > > > mapedge;
 
-    pair<int, int> mapto(int varindex, Value val) {
+    pair<int, int> mapto(int varindex, Value val)
+    {
         return make_pair(0, 0);
     }
 
-    Cost constructFlow(Graph &graph) {        
+    Cost constructFlow(Graph &graph)
+    {
         computeShortestPath(graph, cost);
         return cost;
     }
@@ -135,10 +147,11 @@ private:
     Cost evalOriginal(const String& s);
 
 
-    public:
+public:
     RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int arity_in);
 
-    ~RegularFlowConstraint() {
+    ~RegularFlowConstraint()
+    {
     }
 
     string getName();
@@ -148,9 +161,10 @@ private:
     WeightedAutomaton* getWeightedAutomaton() {return &dfa;}
     void organizeConfig();
 
-    virtual Cost getMinCost() {
-        return constructFlow(*graph);     
-    }    
+    virtual Cost getMinCost()
+    {
+        return constructFlow(*graph);
+    }
 
     void dump(ostream& os, bool original);
 //    void print(ostream& os);

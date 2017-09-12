@@ -1,6 +1,6 @@
 /** \file tb2globalconstr.hpp
  *  \brief Global Constraint using enumerated variables with parameters read from file
- * 
+ *
  */
 
 #ifndef TB2GLOBALCONSTR_HPP_
@@ -18,7 +18,7 @@ using namespace std;
 class GlobalConstraint : public AbstractGlobalConstraint
 {
 
-protected:	
+protected:
 
     vector<StoreCost> *deltaCost; // the cost transferred from/to nary-constraint, must be backtractable
     vector<StoreCost> *extendedCost; // the cost extended nary-constraint, must be backtractable
@@ -49,18 +49,24 @@ protected:
     virtual void checkRemoved(vector<int> &rmv) {}
     // extend the cost stored in deltas[i] from the unary constraint of
     // supports[i] to the constraint struture
-    virtual void changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas){}
-    virtual void changeAfterExtend(int support, map<Value, Cost> &delta){
-        vector<int> supports; supports.push_back(support);
-        vector<map<Value, Cost> > deltas; deltas.push_back(delta);
+    virtual void changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas) {}
+    virtual void changeAfterExtend(int support, map<Value, Cost> &delta)
+    {
+        vector<int> supports;
+        supports.push_back(support);
+        vector<map<Value, Cost> > deltas;
+        deltas.push_back(delta);
         changeAfterExtend(supports, deltas);
     }
     // project the cost stored in deltas[i] to the unary constraint of
     // supports[i] from the constraint struture
-    virtual void changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas){}
-    virtual void changeAfterProject(int support, map<Value, Cost> &delta){
-        vector<int> supports; supports.push_back(support);
-        vector<map<Value, Cost> > deltas; deltas.push_back(delta);
+    virtual void changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas) {}
+    virtual void changeAfterProject(int support, map<Value, Cost> &delta)
+    {
+        vector<int> supports;
+        supports.push_back(support);
+        vector<map<Value, Cost> > deltas;
+        deltas.push_back(delta);
         changeAfterProject(supports, deltas);
     }
     void project(int index, Value value, Cost cost, bool delayed = false);
@@ -105,30 +111,35 @@ public:
     //virtual void getCostsWithUnary(int index, map<Value, Cost> &costs);
     virtual void propagateEAC();
     virtual void findFullSupportEAC(int index);
-    virtual void linkCostProvidingPartition(int index, Variable* support) {
+    virtual void linkCostProvidingPartition(int index, Variable* support)
+    {
         int sindex = -1;
-        for (int i=0;i<arity_ && sindex == -1;i++) {
+        for (int i=0; i<arity_ && sindex == -1; i++) {
             if (getVar(i) == support) sindex = i;
         }
         if ((sindex != index) && (index != -1)) {
             fullySupportedSet[index].insert(sindex);
         }
     }
-    virtual void showCostProvidingPartition(int i) {
+    virtual void showCostProvidingPartition(int i)
+    {
         cout << getVar(i)->getName() << ": ";
         for (set<int>::iterator j = fullySupportedSet[i].begin(); j !=
-                fullySupportedSet[i].end();j++) {
+                fullySupportedSet[i].end(); j++) {
             if (getVar(*j)->unassigned()) {
                 cout << getVar(*j)->getName() << " ";
             }
-        } cout << endl;
+        }
+        cout << endl;
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
-        for (EnumeratedVariable::iterator v = x->begin();v != x->end();++v) {
+        for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             cout << EACCost[*v] << " ";
-        } cout << endl;
+        }
+        cout << endl;
     }
-    virtual void showCostProvidingPartition() {
-        for (int i=0;i<arity_;i++) {
+    virtual void showCostProvidingPartition()
+    {
+        for (int i=0; i<arity_; i++) {
             showCostProvidingPartition(i);
         }
     }
@@ -147,10 +158,10 @@ public:
     virtual bool universal() {return false;}
 
     /*virtual void valueRemoved(int index, Value value) {
-	  if (ToulBar2::consistencyLevel == FINE_IC) {
-	  propagateStrongNIC();
-	  } 
-	  }*/
+      if (ToulBar2::consistencyLevel == FINE_IC) {
+      propagateStrongNIC();
+      }
+      }*/
     // Still consider whether we should reduce to binary, as done in nary
     // constraints
     virtual void assign(int varIndex);
@@ -158,8 +169,9 @@ public:
     // function used for propagation
     virtual void remove(int index);
     virtual void projectFromZero(int index);
-    void pushAll() {
-        for (int i=0;i<arity_;i++) {
+    void pushAll()
+    {
+        for (int i=0; i<arity_; i++) {
             EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
             if (x->unassigned()) {
                 x->queueEAC1();
@@ -177,9 +189,10 @@ public:
     virtual void propagateNIC();
 
     // used for FDGAC*
-    virtual void findFullSupport(int index) {
+    virtual void findFullSupport(int index)
+    {
         vector<int> provide;
-        for (int i=index+1;i < arity_;i++)
+        for (int i=index+1; i < arity_; i++)
             if (getVar(i)->unassigned()) provide.push_back(i);
         findFullSupport(index, provide, false);
     }

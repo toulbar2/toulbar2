@@ -20,13 +20,12 @@ using namespace boost;
 
 namespace boost
 {
-    struct edge_component_t
-    {
-        enum
-        { num = 555 };
-        typedef edge_property_tag kind;
-    }
-    edge_component;
+struct edge_component_t {
+    enum
+    { num = 555 };
+    typedef edge_property_tag kind;
+}
+edge_component;
 }
 
 typedef adjacency_list< setS, vecS, undirectedS > Graph;
@@ -47,8 +46,8 @@ template <typename T>
 static void addConstraint(Constraint *c, T& g)
 {
     int a = c->arity();
-    for(int i=0;i<a;i++) {
-        for(int j=i+1;j<a;j++) {
+    for(int i=0; i<a; i++) {
+        for(int j=i+1; j<a; j++) {
             Variable* vari = c->getVar(i);
             Variable* varj = c->getVar(j);
             add_edge( vari->wcspIndex, varj->wcspIndex, g );
@@ -59,8 +58,8 @@ static void addConstraint(Constraint *c, T& g)
 static void addConstraint(Constraint *c, DirectedGraph& g)
 {
     int a = c->arity();
-    for(int i=0;i<a;i++) {
-        for(int j=i+1;j<a;j++) {
+    for(int i=0; i<a; i++) {
+        for(int j=i+1; j<a; j++) {
             Variable* vari = c->getVar(i);
             Variable* varj = c->getVar(j);
             add_edge( vari->wcspIndex, varj->wcspIndex, g);
@@ -73,8 +72,8 @@ static void addConstraint(Constraint *c, IntWeightedGraph& g, int weight = 1)
 {
     property_map<IntWeightedGraph, edge_weight_t>::type weights = get(edge_weight, g);
     int a = c->arity();
-    for(int i=0;i<a;i++) {
-        for(int j=i+1;j<a;j++) {
+    for(int i=0; i<a; i++) {
+        for(int j=i+1; j<a; j++) {
             Variable* vari = c->getVar(i);
             Variable* varj = c->getVar(j);
             weights[add_edge( vari->wcspIndex, varj->wcspIndex, g).first] = weight;
@@ -86,8 +85,8 @@ static void addConstraint(Constraint *c, DoubleWeightedGraph& g, double maxweigh
 {
     property_map<DoubleWeightedGraph, edge_weight_t>::type weights = get(edge_weight, g);
     int a = c->arity();
-    for(int i=0;i<a;i++) {
-        for(int j=i+1;j<a;j++) {
+    for(int i=0; i<a; i++) {
+        for(int j=i+1; j<a; j++) {
             Variable* vari = c->getVar(i);
             Variable* varj = c->getVar(j);
             weights[add_edge( vari->wcspIndex, varj->wcspIndex, g).first] = maxweight - c->getTightness();
@@ -213,12 +212,12 @@ void WCSP::minimumDegreeOrderingBGL(vector<int> &order_inv)
     Vector degree(n, 0);
 
     minimum_degree_ordering(G,
-            make_iterator_property_map(&degree[0], id, degree[0]),
-            &inverse_perm[0],
-            &perm[0],
-            make_iterator_property_map(&supernode_sizes[0], id, supernode_sizes[0]),
-            delta,
-            id);
+                            make_iterator_property_map(&degree[0], id, degree[0]),
+                            &inverse_perm[0],
+                            &perm[0],
+                            make_iterator_property_map(&supernode_sizes[0], id, supernode_sizes[0]),
+                            delta,
+                            id);
 
     order_inv = inverse_perm;
     if( ToulBar2::verbose >= 1 ) {
@@ -287,7 +286,7 @@ void WCSP::spanningTreeOrderingBGL(vector<int> &order_inv)
 
     vector<bool> marked(n, false);
     for (int i = roots.size()-1; i >= 0; i--) { visit(roots[i],order_inv,marked,listofsuccessors); }
-    for (int i = n-1; i >= 0; i--) { if (!marked[i]){ visit(i,order_inv,marked,listofsuccessors); }}
+    for (int i = n-1; i >= 0; i--) { if (!marked[i]) { visit(i,order_inv,marked,listofsuccessors); }}
 
     if( ToulBar2::verbose >= 1 ) {
         cout << "Maximum spanning tree ordering:";
@@ -345,8 +344,7 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
     Graph::adjacency_iterator neighbourIt, neighbourEnd;
 
     /* initialize sets, card and size */
-    for (int v = 0; v < n; v++)
-    {
+    for (int v = 0; v < n; v++) {
         size[v] = 0;
 
         for (int i = 0; i < n; i++)
@@ -362,13 +360,11 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
     int j = 0;
     int v = 0;
 
-    while (i >= 0)
-    {
+    while (i >= 0) {
         /* choose a vertex */
         int deg = -1;
         for (int x = 0; x < n; x++)
-            if ((sets[j][x] == 1) && (degree[x] > deg))
-            {
+            if ((sets[j][x] == 1) && (degree[x] > deg)) {
                 v = x;
                 deg = degree[x];
             }
@@ -381,9 +377,8 @@ void WCSP::maximumCardinalitySearch(vector<int> &order_inv)
 
         /* update sets and size */
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices( v, G );
-        for (;neighbourIt != neighbourEnd; ++neighbourIt) {
-            if (size[*neighbourIt] >= 0)
-            {
+        for (; neighbourIt != neighbourEnd; ++neighbourIt) {
+            if (size[*neighbourIt] >= 0) {
                 sets[size[*neighbourIt]][*neighbourIt] = 0;
                 card[size[*neighbourIt]]--;
 
@@ -433,7 +428,7 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
         degree[v] = boost::degree(v, G);
         /* compute initial number of edges to add for each vertex */
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices( v, G );
-        for (;neighbourIt != neighbourEnd; ++neighbourIt) {
+        for (; neighbourIt != neighbourEnd; ++neighbourIt) {
             Graph::adjacency_iterator neighbourIt2 = neighbourIt;
             for (++neighbourIt2; neighbourIt2 != neighbourEnd; ++neighbourIt2) {
                 if (!edge(*neighbourIt, *neighbourIt2, G).second) nb_fillin[v]++;
@@ -458,7 +453,7 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
 
         /* remove vertex v from nb_fillin */
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices( v, G );
-        for (;neighbourIt != neighbourEnd; ++neighbourIt) {
+        for (; neighbourIt != neighbourEnd; ++neighbourIt) {
             if (order[*neighbourIt] == -1) {
                 Graph::adjacency_iterator neighbourIt2, neighbourEnd2;
                 boost::tie(neighbourIt2, neighbourEnd2) = adjacent_vertices( *neighbourIt, G );
@@ -469,7 +464,7 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
         }
         /* add fill-in edges to G */
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices( v, G );
-        for (;neighbourIt != neighbourEnd; ++neighbourIt) {
+        for (; neighbourIt != neighbourEnd; ++neighbourIt) {
             if (order[*neighbourIt] == -1) {
                 Graph::adjacency_iterator neighbourIt2 = neighbourIt;
                 for (++neighbourIt2; neighbourIt2 != neighbourEnd; ++neighbourIt2) {
@@ -484,8 +479,7 @@ void WCSP::minimumFillInOrdering(vector<int> &order_inv)
                         Graph::adjacency_iterator neighbourItX, neighbourEndX;
                         boost::tie(neighbourItX, neighbourEndX) = adjacent_vertices( x, G );
                         for (; neighbourItX != neighbourEndX; ++neighbourItX) {
-                            if ((order[*neighbourItX] == -1) && (*neighbourItX != y))
-                            {
+                            if ((order[*neighbourItX] == -1) && (*neighbourItX != y)) {
                                 if (!edge(y, *neighbourItX, G).second) nb_fillin[x]++;
                                 else nb_fillin[*neighbourItX]--; /* new added edge between x and y has to be removed from nb_fillin  */
                             }
@@ -553,7 +547,7 @@ void WCSP::minimumDegreeOrdering(vector<int> &order_inv)
         order_inv[i] = v;
 
         boost::tie(neighbourIt, neighbourEnd) = adjacent_vertices( v, G );
-        for (;neighbourIt != neighbourEnd; ++neighbourIt) {
+        for (; neighbourIt != neighbourEnd; ++neighbourIt) {
             if (order[*neighbourIt] == -1) {
                 degree[*neighbourIt]--;
                 Graph::adjacency_iterator neighbourIt2 = neighbourIt;

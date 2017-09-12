@@ -1,6 +1,6 @@
 /*
  * **************** Read BEP files **************************
- * 
+ *
  */
 
 #include "toulbar2lib.hpp"
@@ -70,8 +70,8 @@ void BEP::read(const char *fileName, WCSP *wcsp)
                 wcsp->postSpecialDisjunction(i,j,duration[i]+delay[i*size+j],duration[j]+delay[j*size+i],latest[i]+1,latest[j]+1,revenue[i],revenue[j]);
             } else {
                 vector<Cost> costs((latest[i]+2) * (latest[j]+2), 0);
-                for (int a=earliest[i];a<=latest[i]+1;a++) {
-                    for (int b=earliest[j];b<=latest[j]+1;b++) {
+                for (int a=earliest[i]; a<=latest[i]+1; a++) {
+                    for (int b=earliest[j]; b<=latest[j]+1; b++) {
                         if (a>latest[i] && b>latest[j]) costs[a * (latest[j]+2) + b] = revenue[i]+revenue[j];
                         else if (a>latest[i]) costs[a * (latest[j]+2) + b] = revenue[i];
                         else if (b>latest[j]) costs[a * (latest[j]+2) + b] = revenue[j];

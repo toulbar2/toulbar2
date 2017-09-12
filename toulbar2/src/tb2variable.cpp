@@ -10,16 +10,16 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : WCSPLink(w,w->numberOfVariables()), name(n), dac(w->numberOfVariables()),
-        timestamp(-1), pos(-1),
-        inf(iinf), sup(isup), constrs(&Store::storeConstraint),
-        //triangles(&Store::storeConstraint),
-        maxCost(MIN_COST), maxCostValue(iinf), 
-        NCBucket(-1),
-        cluster(-1)
+    timestamp(-1), pos(-1),
+    inf(iinf), sup(isup), constrs(&Store::storeConstraint),
+    //triangles(&Store::storeConstraint),
+    maxCost(MIN_COST), maxCostValue(iinf),
+    NCBucket(-1),
+    cluster(-1)
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -124,8 +124,8 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 
         if (getDegree() <= ToulBar2::elimDegree_ ||
                 (ToulBar2::elimDegree_preprocessing_ >= 0 &&
-                        (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
-                                getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
+                 (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
+                  getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
     }
     if (reuse) {
         assert(Store::getDepth()==0);
@@ -204,7 +204,7 @@ void Variable::conflict()
 
 /*
  * Propagation methods
- * 
+ *
  */
 
 void Variable::queueNC()
@@ -283,8 +283,7 @@ BinaryConstraint* Variable::getConstr( Variable* x )
         if ((*iter).constr->arity() == 2) {
             ctr2 = (BinaryConstraint*) (*iter).constr;
             if(ctr2->getIndex(x) >= 0) return ctr2;
-        }
-        else if ((*iter).constr->arity() == 3) {
+        } else if ((*iter).constr->arity() == 3) {
             ctr3 = (TernaryConstraint*) (*iter).constr;
             int idx = ctr3->getIndex(x);
             if(idx >= 0) {
@@ -296,7 +295,7 @@ BinaryConstraint* Variable::getConstr( Variable* x )
         }
     }
     return NULL;
-}     
+}
 
 
 BinaryConstraint* Variable::getConstr( Variable* x, int cid )
@@ -313,8 +312,7 @@ BinaryConstraint* Variable::getConstr( Variable* x, int cid )
                 res = ctr2;
                 if(res->getCluster() == cid) return res;
             }
-        }
-        else if ((*iter).constr->arity() == 3) {
+        } else if ((*iter).constr->arity() == 3) {
             ctr3 = (TernaryConstraint*) (*iter).constr;
             int idx = ctr3->getIndex(x);
             if(idx >= 0) {
@@ -328,7 +326,7 @@ BinaryConstraint* Variable::getConstr( Variable* x, int cid )
         }
     }
     return NULL;
-}     
+}
 
 
 
@@ -385,9 +383,12 @@ TernaryConstraint* Variable::existTernary()
 
 
 
-double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1max, TernaryConstraint* &tctr2max  ) {
+double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1max, TernaryConstraint* &tctr2max  )
+{
     double maxtight = -1;
-    strvar = NULL; tctr1max = NULL; tctr2max = NULL;
+    strvar = NULL;
+    tctr1max = NULL;
+    tctr2max = NULL;
 
     TernaryConstraint *tctr1 = NULL;
 
@@ -397,21 +398,30 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
             BinaryConstraint* bctr = (BinaryConstraint*) (*iter).constr;
             double bintight = bctr->getTightness();
             if(bintight > maxtight) { maxtight = bintight; strvar = wcsp->getVar(bctr->getSmallestVarIndexInScope((*iter).scopeIndex)); tctr1max = NULL; tctr2max = NULL; }
-        }
-        else if((*iter).constr->arity() == 3) {
+        } else if((*iter).constr->arity() == 3) {
             double terntight;
             tctr1 = (TernaryConstraint*) (*iter).constr;
             terntight = tctr1->getTightness() +
-                    tctr1->xy->getTightness() +
-                    tctr1->xz->getTightness() +
-                    tctr1->yz->getTightness();
+                        tctr1->xy->getTightness() +
+                        tctr1->xz->getTightness() +
+                        tctr1->yz->getTightness();
 
             Variable *x1 = NULL, *x2 = NULL;
             switch((*iter).scopeIndex) {
-            case 0: x1 = tctr1->getVar(1); x2 = tctr1->getVar(2); break;
-            case 1: x1 = tctr1->getVar(0); x2 = tctr1->getVar(2); break;
-            case 2: x1 = tctr1->getVar(0); x2 = tctr1->getVar(1); break;
-            default:;
+            case 0:
+                x1 = tctr1->getVar(1);
+                x2 = tctr1->getVar(2);
+                break;
+            case 1:
+                x1 = tctr1->getVar(0);
+                x2 = tctr1->getVar(2);
+                break;
+            case 2:
+                x1 = tctr1->getVar(0);
+                x2 = tctr1->getVar(1);
+                break;
+            default:
+                ;
             }
 
             if(terntight > maxtight) { maxtight = terntight; strvar = x1; tctr1max = tctr1; tctr1max = NULL; }
@@ -425,9 +435,9 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
 
                     if(commonvar) {
                         terntight += tctr2->getTightness() +
-                                tctr2->xy->getTightness() +
-                                tctr2->xz->getTightness() +
-                                tctr2->yz->getTightness();
+                                     tctr2->xy->getTightness() +
+                                     tctr2->xz->getTightness() +
+                                     tctr2->yz->getTightness();
 
                         if(tctr1->xy->getIndex(commonvar) >= 0) terntight -= tctr1->xy->getTightness();
                         else if(tctr1->xz->getIndex(commonvar) >= 0) terntight -= tctr1->xz->getTightness();
@@ -448,7 +458,8 @@ double Variable::strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1ma
 
 
 
-ostream& operator<<(ostream& os, Variable &var) {
+ostream& operator<<(ostream& os, Variable &var)
+{
     os << var.name; // << " #" << var.dac;
     var.print(os);
     if (ToulBar2::verbose >= 3) {

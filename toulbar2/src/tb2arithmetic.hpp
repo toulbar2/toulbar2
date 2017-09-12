@@ -30,7 +30,8 @@ public:
 
     void remove(int varIndex) {}
 
-    void assign(int varIndex) {
+    void assign(int varIndex)
+    {
         assert(connected());
         deconnect();  // Warning! deconnection has to be done before the projection
         if (permitted.find(x->getValue()) == permitted.end()) {
@@ -40,7 +41,8 @@ public:
 
     bool verify();
 
-    double  computeTightness() {
+    double  computeTightness()
+    {
         tight = (double) penalty * abs((int) permitted.size() - (int) x->getDomainSize()) / x->getDomainSize();
         return tight;
     }
@@ -70,7 +72,8 @@ public:
 
     void remove(int varIndex) {}
 
-    void assign(int varIndex) {
+    void assign(int varIndex)
+    {
         if (x->assigned() && y->assigned()) deconnect();
         propagate();
     }
@@ -144,7 +147,7 @@ class SpecialDisjunction : public AbstractBinaryConstraint<IntervalVariable, Int
     StoreCost deltaCostYsup;
 
 public:
-    SpecialDisjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy, 
+    SpecialDisjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy,
                        Value xmax, Value ymax, Cost xcost, Cost ycost);
 
     ~SpecialDisjunction() {}
@@ -153,7 +156,8 @@ public:
 
     void remove(int varIndex) {}
 
-    void assign(int varIndex) {
+    void assign(int varIndex)
+    {
         assert(connected());
         wcsp->revise(this);
         if (x->assigned() && y->assigned()) {

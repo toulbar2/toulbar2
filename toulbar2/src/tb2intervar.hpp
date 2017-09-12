@@ -1,6 +1,6 @@
 /** \file tb2variable.hpp
  *  \brief Variable with domain represented by an interval.
- * 
+ *
  */
 
 #ifndef TB2INTERVAR_HPP_
@@ -16,12 +16,13 @@ class IntervalVariable : public Variable
     void increaseFast(Value newInf);        // Do not insert in NC queue
     void decreaseFast(Value newSup);        // Do not insert in NC queue
 
-public:    
+public:
     IntervalVariable(WCSP *wcsp, string n, Value iinf, Value isup);
 
     bool enumerated() const FINAL {return false;}
 
-    unsigned int getDomainSize() const FINAL {
+    unsigned int getDomainSize() const FINAL
+    {
         return sup - inf + 1;
     }
 
@@ -37,18 +38,20 @@ public:
     void projectSupCost(Cost cost);
 
     // this method can be applied to interval or enumerated domain
-    Cost getCost(const Value value) const FINAL {
+    Cost getCost(const Value value) const FINAL
+    {
         if (value == inf) return getInfCost();
         else if (value == sup) return getSupCost();
         else return MIN_COST;
     }
 
-    void propagateNC();    
+    void propagateNC();
     bool verifyNC();
 
     class iterator;
     friend class iterator;
-    class iterator {    // : public Variable::iterator {
+    class iterator      // : public Variable::iterator {
+    {
         IntervalVariable *var;
         Value value;
     public:
@@ -56,13 +59,15 @@ public:
 
         Value operator*() const {return value;}
 
-        inline iterator &operator++() {    // Prefix form
+        inline iterator &operator++()      // Prefix form
+        {
             if (value < var->sup) ++value;
             else value = var->sup + 1;
             return *this;
         }
 
-        iterator &operator--() {    // Prefix form
+        iterator &operator--()      // Prefix form
+        {
             if (value > var->inf) --value;
             else value = var->sup + 1;
             return *this;
@@ -72,25 +77,30 @@ public:
         bool operator==(const iterator &iter) const {return value == iter.value;}
         bool operator!=(const iterator &iter) const {return value != iter.value;}
     };
-    iterator begin() {
+    iterator begin()
+    {
         return iterator(this, inf);
     }
-    iterator end() {
+    iterator end()
+    {
         return iterator(this, sup + 1);
     }
-    iterator rbegin() {
+    iterator rbegin()
+    {
         return iterator(this, sup);
     }
     iterator rend() {return end();}
 
     //Finds the first available element whose value is greater or equal to v
-    iterator lower_bound(Value v) {
+    iterator lower_bound(Value v)
+    {
         if (v <= sup) return iterator(this, max(getInf(), v));
         else return end();
     }
 
     //Finds the first available element whose value is lower or equal to v
-    iterator upper_bound(Value v) {
+    iterator upper_bound(Value v)
+    {
         if (v >= inf) return iterator(this, min(getSup(), v));
         else return end();
     }

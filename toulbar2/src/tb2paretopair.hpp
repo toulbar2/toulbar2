@@ -1,6 +1,6 @@
 /** \file tb2paretopair.hpp
  *  \brief ParetoPair numbers with basic operations.
- * 
+ *
  */
 
 #ifndef TB2PARETOPAIR_HPP_
@@ -14,7 +14,8 @@ struct ParetoPair {
 
     ParetoPair(int p_, int q_) : p(p_), q(q_) {}
 
-    ParetoPair(int p_) : p(p_), q(p_) {
+    ParetoPair(int p_) : p(p_), q(p_)
+    {
         cerr << "warning! implicit conversion from int to ParetoPair" << endl;
         exit(EXIT_FAILURE);
     }
@@ -23,94 +24,115 @@ struct ParetoPair {
 
     ParetoPair(const ParetoPair &r) : p(r.p), q(r.q) {}
 
-    ParetoPair &operator=(const ParetoPair &r) {
+    ParetoPair &operator=(const ParetoPair &r)
+    {
         p = r.p;
         q = r.q;
         return *this;
     }
-    ParetoPair &operator+=(const ParetoPair &r) {
+    ParetoPair &operator+=(const ParetoPair &r)
+    {
         p = (p +  r.p);
         q = (q + r.q);
         return *this;
     }
-    ParetoPair &operator-=(const ParetoPair &r) {
+    ParetoPair &operator-=(const ParetoPair &r)
+    {
         p = (p  - r.p);
-        q = (q  - r.q); 
+        q = (q  - r.q);
         return *this;
     }
-    ParetoPair &operator*=(const ParetoPair &r) {
+    ParetoPair &operator*=(const ParetoPair &r)
+    {
         p = (p  * r.p);
-        q = (q  * r.q); 
+        q = (q  * r.q);
         return *this;
     }
-    ParetoPair &operator/=(const ParetoPair &r) {
+    ParetoPair &operator/=(const ParetoPair &r)
+    {
         p = (p  / r.p);
-        q = (q  / r.q); 
+        q = (q  / r.q);
         return *this;
     }
     const ParetoPair operator-() const {return ParetoPair(-p,-q);}
 
-    friend const ParetoPair operator+(const ParetoPair& left, const ParetoPair& right) {
+    friend const ParetoPair operator+(const ParetoPair& left, const ParetoPair& right)
+    {
         return ParetoPair(left.p + right.p, left.q + right.q);
     }
 
-    friend const ParetoPair operator-(const ParetoPair& left, const ParetoPair& right) {
+    friend const ParetoPair operator-(const ParetoPair& left, const ParetoPair& right)
+    {
         return ParetoPair(max(0,left.p - right.p), max(0,left.q - right.q));
     }
 
 
-    friend const ParetoPair operator*(const ParetoPair& left, const ParetoPair& right) {
+    friend const ParetoPair operator*(const ParetoPair& left, const ParetoPair& right)
+    {
         return ParetoPair(left.p * right.p, left.q * right.q);
     }
 
-    friend const ParetoPair operator/(const ParetoPair& left, const ParetoPair& right) {
+    friend const ParetoPair operator/(const ParetoPair& left, const ParetoPair& right)
+    {
         return ParetoPair(left.p / right.p, left.q / right.q);
     }
 
-    friend const ParetoPair operator%(const ParetoPair& left, const ParetoPair& right) {
+    friend const ParetoPair operator%(const ParetoPair& left, const ParetoPair& right)
+    {
         return ParetoPair(left.p % right.p, left.q % right.q);
     }
 
-    friend bool operator==(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator==(const ParetoPair& left, const ParetoPair& right)
+    {
         return (left.p == right.p) & (left.q == right.q);
     }
 
-    friend bool operator!=(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator!=(const ParetoPair& left, const ParetoPair& right)
+    {
         return (left.p != right.p)  | (left.q != right.q);
     }
 
-    friend bool operator<=(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator<=(const ParetoPair& left, const ParetoPair& right)
+    {
         return (left.p <= right.p) & (left.q <= right.q);
     }
 
-    friend bool operator>=(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator>=(const ParetoPair& left, const ParetoPair& right)
+    {
         return (left.p >= right.p) & ( left.q >= right.q);
     }
 
-    friend bool operator<(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator<(const ParetoPair& left, const ParetoPair& right)
+    {
         return ((left.p <= right.p) & ( left.q < right.q)) |
-                ((left.p < right.p) & ( left.q <= right.q));
+               ((left.p < right.p) & ( left.q <= right.q));
     }
 
-    friend bool operator>(const ParetoPair& left, const ParetoPair& right) {
+    friend bool operator>(const ParetoPair& left, const ParetoPair& right)
+    {
         return ((left.p >= right.p) & ( left.q > right.q)) |
-                ((left.p > right.p) & ( left.q >= right.q));
+               ((left.p > right.p) & ( left.q >= right.q));
     }
 
     void print(ostream& os) const { os << '(' << p << ',' << q << ')'; }
 
-    friend ostream& operator<<(ostream& os, const ParetoPair &r) {
+    friend ostream& operator<<(ostream& os, const ParetoPair &r)
+    {
         os << '(' << r.p << ',' << r.q << ')';
         return os;
     }
 
-    friend istream& operator>>(istream& is, ParetoPair& r) {
+    friend istream& operator>>(istream& is, ParetoPair& r)
+    {
         char c;
-        do {is.get(c);} while (c!='(');
+        do {is.get(c);}
+        while (c!='(');
         is >> r.p;
-        do {is.get(c);} while (c!=',');
+        do {is.get(c);}
+        while (c!=',');
         is >> r.q;
-        do {is.get(c);} while (c!=')');
+        do {is.get(c);}
+        while (c!=')');
         return is;
     }
 
@@ -128,8 +150,8 @@ const ParetoPair PARETOPAIR_100 = ParetoPair(100,100);
 const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX/2)/3, (INT_MAX/2)/3);
 
 inline double to_double(const ParetoPair r) {cerr << "to_double not implemented on Paretopair"; exit(EXIT_FAILURE);}
-inline Long ceil(const ParetoPair r) {exit(EXIT_FAILURE);return 0;}
-inline Long floor(const ParetoPair r){exit(EXIT_FAILURE);return 0;}
+inline Long ceil(const ParetoPair r) {exit(EXIT_FAILURE); return 0;}
+inline Long floor(const ParetoPair r) {exit(EXIT_FAILURE); return 0;}
 inline ParetoPair randomCost(ParetoPair min, ParetoPair max) {return ParetoPair(min.p + (myrand() % (max.p - min.p + 1)), min.q + (myrand() % (max.q - min.q + 1)));}
 inline ParetoPair string2Cost(char *ptr) {int p=0,q=0; sscanf(ptr, "(%d,%d)", &p, &q); return ParetoPair(p,q);}
 
@@ -138,8 +160,7 @@ inline int cost2log2(int x)
     if (x==0) return -1;
     int l2 = 0;
     x>>=1;
-    for (; x != 0; x >>=1)
-    {
+    for (; x != 0; x >>=1) {
         ++ l2;
     }
     return (l2);

@@ -9,20 +9,20 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
-TernaryConstraint::TernaryConstraint(WCSP *wcsp, 
-        EnumeratedVariable *xx,
-        EnumeratedVariable *yy,
-        EnumeratedVariable *zz,
-        BinaryConstraint *xy_,
-        BinaryConstraint *xz_,
-        BinaryConstraint *yz_,
-        vector<Cost> &tab) :
-        AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz),
-        sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize()),
-        top(wcsp->getUb()), functionalX(true), functionalY(true), functionalZ(true)
+TernaryConstraint::TernaryConstraint(WCSP *wcsp,
+                                     EnumeratedVariable *xx,
+                                     EnumeratedVariable *yy,
+                                     EnumeratedVariable *zz,
+                                     BinaryConstraint *xy_,
+                                     BinaryConstraint *xz_,
+                                     BinaryConstraint *yz_,
+                                     vector<Cost> &tab) :
+    AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy, zz),
+    sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize()), sizeZ(zz->getDomainInitSize()),
+    top(wcsp->getUb()), functionalX(true), functionalY(true), functionalZ(true)
 {
     assert(tab.size() == sizeX * sizeY * sizeZ);
     deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST));
@@ -175,8 +175,8 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp,
 
 
 TernaryConstraint::TernaryConstraint(WCSP *wcsp) : AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>(wcsp),
-  sizeX(0), sizeY(0), sizeZ(0),
-  functionalX(false), functionalY(false), functionalZ(false)
+    sizeX(0), sizeY(0), sizeZ(0),
+    functionalX(false), functionalY(false), functionalZ(false)
 {
     //	unsigned int maxdom = wcsp->getMaxDomainSize();
     //    deltaCostsX = vector<StoreCost>(maxdom,StoreCost(MIN_COST,storeCost));
@@ -186,8 +186,8 @@ TernaryConstraint::TernaryConstraint(WCSP *wcsp) : AbstractTernaryConstraint<Enu
     //    supportY = vector< pair<Value,Value> >(maxdom);
     //    supportZ = vector< pair<Value,Value> >(maxdom);
     linkX = new DLink<ConstraintLink>;
-    linkY = new DLink<ConstraintLink>;    
-    linkZ = new DLink<ConstraintLink>;    
+    linkY = new DLink<ConstraintLink>;
+    linkZ = new DLink<ConstraintLink>;
 
     //    costs = vector<StoreCost>(maxdom*maxdom*maxdom,StoreCost(MIN_COST,storeCost));
     //    for (unsigned int a = 0; a < maxdom; a++)
@@ -264,7 +264,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
 
 /*
  * Propagation methods
- * 
+ *
  */
 bool  TernaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
 {
@@ -376,7 +376,7 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
     first(vy,vz);
     EnumeratedVariable::iterator itvyfirst = yvar->begin();
     if(ToulBar2::verbose >= 1) cout << " [ " << zvar->getName()  << " " << xvar->getName() << " " << yvar->getName() << " ] ?"; // << endl;
-    while (sep && itvyfirst != yvar->end()){
+    while (sep && itvyfirst != yvar->end()) {
         itvx = xvar->begin();
         itvy = yvar->begin();
         itvz = zvar->begin();
@@ -394,15 +394,14 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
                     c1 = getCost(xvar,yvar,zvar,*itvx, *(itvyfirst), *itvz);
                     c = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz);
 
-                    if(!universe(c, c1, wcsp->getUb())){
+                    if(!universe(c, c1, wcsp->getUb())) {
                         if(ToulBar2::verbose >= 3) {if(!neweq)  cout << "= \n"; else cout << endl;}
                         if(ToulBar2::verbose >= 3) cout << " C" << tch[2]-CHAR_FIRST << "."  << tch[0]-CHAR_FIRST << "." << tch[1]-CHAR_FIRST << " -  C" << tch[2]-CHAR_FIRST << "." << tch[0]-48  << "."  << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
 
                         if(neweq) {diff = squareminus(c,c1,wcsp->getUb()); neweq = false; }
                         else sep = (diff == squareminus(c,c1,wcsp->getUb()));
                         if(ToulBar2::verbose >= 3) cout << " = " << squareminus(c,c1,wcsp->getUb()) <<  endl;
-                    }
-                    else{
+                    } else {
                         if(ToulBar2::verbose >= 3) cout << "universe\n";
                     }
                     ++itvz;
@@ -468,7 +467,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
                 cost = getCost(xvar,yvar,zvar,*itvx, *itvy, *itvz);
                 costzx = zx->getCost(*itvz,*itvx);
                 ++itvz;
-            }while(itvz != zvar->end() && cost>= wcsp->getUb() && costzx >= wcsp->getUb() );
+            } while(itvz != zvar->end() && cost>= wcsp->getUb() && costzx >= wcsp->getUb() );
             costsXY[xvar->toIndex(*itvx)*yvar->getDomainInitSize()+yvar->toIndex(*itvy)] = squareminus(cost,costzx,wcsp->getUb());
             if(ToulBar2::verbose >= 3) cout << *itvx << " " << *itvy << " : " << squareminus(cost,costzx,wcsp->getUb()) << endl;
             ++itvy;
@@ -483,7 +482,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
     assert(verifySeparate(zx,xy));
 
     // fusion with the existing constraint (xz)
-    if(!zx->universal()){
+    if(!zx->universal()) {
         if(ToulBar2::verbose >= 1) cout << "[ " << zv << " " << xv << " ]" << endl;
         existZX->addCosts(zx);
         existZX->reconnect();
@@ -492,7 +491,7 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
     zx->deconnect();	//  unsafe to delete zx due to x and z lists of cost functions
 
     // fusion with the existing constraint (xy)
-    if(!xy->universal()){
+    if(!xy->universal()) {
         if(ToulBar2::verbose >= 1) cout << "[ " << xv << " " << yv << " ]" <<  endl;
         existXY->addCosts(xy);
         existXY->reconnect();
@@ -502,11 +501,12 @@ void TernaryConstraint::separate(EnumeratedVariable *vy, EnumeratedVariable *vz)
     deconnect();
 }
 
-void TernaryConstraint::fillxy() {
+void TernaryConstraint::fillxy()
+{
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* xy_ = NULL;
-    xy_ = x->getConstr(y); 
-    if(td && xy_ && (getCluster() != xy_->getCluster())) {  
+    xy_ = x->getConstr(y);
+    if(td && xy_ && (getCluster() != xy_->getCluster())) {
         BinaryConstraint* xy__ =  x->getConstr(y, getCluster());
         if(xy__) xy_ = xy__; // we have found another constraint of the same cluster
     }
@@ -515,14 +515,15 @@ void TernaryConstraint::fillxy() {
         xy->setCluster( getCluster() );
         if(td && xy_ && (getCluster() != xy_->getCluster())) xy->setDuplicate();
         wcsp->elimBinOrderInc();
-    } else xy = xy_; 
+    } else xy = xy_;
     if(xy->isDuplicate()) setDuplicate();
 }
 
-void TernaryConstraint::fillxz() {
+void TernaryConstraint::fillxz()
+{
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* xz_ = NULL;
-    xz_ = x->getConstr(z); 
+    xz_ = x->getConstr(z);
     if(td && xz_ && (getCluster() != xz_->getCluster())) {
         BinaryConstraint* xz__ =  x->getConstr(z, getCluster());
         if(xz__) xz_ = xz__; // we have found another constraint of the same cluster
@@ -533,14 +534,15 @@ void TernaryConstraint::fillxz() {
         if(td && xz_ && (getCluster() != xz_->getCluster())) xz->setDuplicate();
         wcsp->elimBinOrderInc();
         if(td) xz->setCluster( getCluster() );
-    } else xz = xz_; 
+    } else xz = xz_;
     if(xz->isDuplicate()) setDuplicate();
 }
 
-void TernaryConstraint::fillyz() {
+void TernaryConstraint::fillyz()
+{
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* yz_ = NULL;
-    yz_ = y->getConstr(z); 
+    yz_ = y->getConstr(z);
     if(td && yz_ && (getCluster() != yz_->getCluster())) {
         BinaryConstraint* yz__ =  y->getConstr(z, getCluster());
         if(yz__) yz_ = yz__;
@@ -550,7 +552,7 @@ void TernaryConstraint::fillyz() {
         yz->setCluster( getCluster() );
         if(td && yz_ && (getCluster() != yz_->getCluster())) yz->setDuplicate();
         wcsp->elimBinOrderInc();
-    } else yz = yz_; 
+    } else yz = yz_;
     if(yz->isDuplicate()) setDuplicate();
 }
 
@@ -567,7 +569,8 @@ void TernaryConstraint::fillElimConstrBinaries()
 
 
 
-void TernaryConstraint::setDuplicates() {
+void TernaryConstraint::setDuplicates()
+{
     assert(wcsp->getTreeDec());
     if(xy->getCluster() != cluster) {
         BinaryConstraint* xy_ =  x->getConstr(y, getCluster());
@@ -633,7 +636,8 @@ bool TernaryConstraint::verify(EnumeratedVariable *x, EnumeratedVariable *y, Enu
     return true;
 }
 
-bool TernaryConstraint::verify() {
+bool TernaryConstraint::verify()
+{
     TreeDecomposition* td = wcsp->getTreeDec();
 
     if(td) {
@@ -642,10 +646,17 @@ bool TernaryConstraint::verify() {
 
     if (ToulBar2::LcLevel==LC_DAC) {
         switch(getDACScopeIndex()) {
-        case 0: return verifyX(); break;
-        case 1: return verifyY(); break;
-        case 2: return verifyZ(); break;
-        default: return false;
+        case 0:
+            return verifyX();
+            break;
+        case 1:
+            return verifyY();
+            break;
+        case 2:
+            return verifyZ();
+            break;
+        default:
+            return false;
         }
     } else {
         return verifyX() && verifyY() && verifyZ();

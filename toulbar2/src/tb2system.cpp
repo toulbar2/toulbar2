@@ -8,8 +8,8 @@
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
-#ifdef LINUX 
-#include <unistd.h> 
+#ifdef LINUX
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/times.h>

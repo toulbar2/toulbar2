@@ -14,7 +14,8 @@ class AllDiffConstraint : public FlowBasedGlobalConstraint
 {
 private:
     void buildIndex();
-    pair<int,int> mapto(int varindex, Value val) {
+    pair<int,int> mapto(int varindex, Value val)
+    {
         return make_pair(varindex+1, mapval[val]);
     }
     //void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
@@ -28,9 +29,10 @@ public:
     string getName() {return "salldiff";}
 
     AllDiffConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int
-            arity_in);
+                      arity_in);
 
-    ~AllDiffConstraint() {
+    ~AllDiffConstraint()
+    {
     }
     Cost evalOriginal(const String& s);
 

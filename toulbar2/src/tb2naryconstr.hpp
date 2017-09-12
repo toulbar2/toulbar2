@@ -28,7 +28,8 @@ public:
 
     bool extension() const FINAL {return true;}
 
-    void reconnect() {
+    void reconnect()
+    {
         if (deconnected()) {
             nonassigned = arity_;
             AbstractNaryConstraint::reconnect();
@@ -36,9 +37,10 @@ public:
     }
     int getNonAssigned() const {return nonassigned;}
 
-    Long getConflictWeight() const {return Constraint::getConflictWeight();} 
-    Long getConflictWeight(int varIndex) const {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) {
+    Long getConflictWeight() const {return Constraint::getConflictWeight();}
+    Long getConflictWeight(int varIndex) const {assert(varIndex>=0); assert(varIndex<arity_); return conflictWeights[varIndex]+Constraint::getConflictWeight();}
+    void incConflictWeight(Constraint *from)
+    {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
         if (from==this) {
@@ -54,7 +56,8 @@ public:
         }
     }
 
-    ptrdiff_t getCostsIndex( const String& s) const {
+    ptrdiff_t getCostsIndex( const String& s) const
+    {
         ptrdiff_t index = 0;
         ptrdiff_t base = 1;
         for (int i=arity_-1; i>=0; --i) {
@@ -78,10 +81,11 @@ public:
     Cost eval( const String& s, EnumeratedVariable** scope_in );
     Cost evalsubstr( const String& s, Constraint* ctr ) FINAL {return evalsubstrAny(s,ctr);}
     Cost evalsubstr( const String& s, NaryConstraint* ctr ) FINAL {return evalsubstrAny(s,ctr);}
-    template<class T> Cost evalsubstrAny( const String& s, T* ctr ) {
+    template<class T> Cost evalsubstrAny( const String& s, T* ctr )
+    {
         int count = 0;
 
-        for(int i=0;i<arity_;i++) {
+        for(int i=0; i<arity_; i++) {
             int ind = ctr->getIndex( getVar(i) );
             if(ind >= 0) { evalTuple[i] = s[ind]; count++; }
         }
@@ -137,8 +141,9 @@ public:
 
     void assign(int varIndex);
 
-    void propagate() {
-        for(int i=0;connected() && i<arity_;i++) {
+    void propagate()
+    {
+        for(int i=0; connected() && i<arity_; i++) {
             if (getVar(i)->assigned()) assign(i);
         }
     };

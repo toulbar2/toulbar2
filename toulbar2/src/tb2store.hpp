@@ -64,7 +64,8 @@ class StoreStack
     StoreStack& operator=(const StoreStack &s);
 
 public:
-    StoreStack(int powbckmemory = STORE_SIZE)  {
+    StoreStack(int powbckmemory = STORE_SIZE)
+    {
         if (pow(2., powbckmemory) >= SIZE_MAX) {
             cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
             exit(EXIT_FAILURE);
@@ -78,30 +79,32 @@ public:
             cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for "
 #ifndef NUMBERJACK
 #if (BOOST_VERSION >= 105600)
-                << boost::typeindex::type_id<T>().pretty_name()
+                 << boost::typeindex::type_id<T>().pretty_name()
 #else
-                << typeid(T).name()
+                 << typeid(T).name()
 #endif
 #endif
                  << " stack." << endl;
         }
     }
 
-    ~StoreStack() {
+    ~StoreStack()
+    {
         delete[] pointers;
         delete[] content;
     }
 
-    void realloc() {
+    void realloc()
+    {
         T **newpointers = new T *[indexMax * 2];
         V *newcontent = new V[indexMax * 2];
         if (!newpointers || !newcontent) {
             cerr
 #ifndef NUMBERJACK
 #if (BOOST_VERSION >= 105600)
-                << boost::typeindex::type_id<T>().pretty_name()
+                    << boost::typeindex::type_id<T>().pretty_name()
 #else
-                << typeid(T).name()
+                    << typeid(T).name()
 #endif
 #endif
                     << " stack out of memory!" << endl;
@@ -119,16 +122,17 @@ public:
             cout << "c " << indexMax * (sizeof(V) + sizeof(T *)) << " Bytes allocated for "
 #ifndef NUMBERJACK
 #if (BOOST_VERSION >= 105600)
-                << boost::typeindex::type_id<T>().pretty_name()
+                 << boost::typeindex::type_id<T>().pretty_name()
 #else
-                << typeid(T).name()
+                 << typeid(T).name()
 #endif
 #endif
-                    << " stack." << endl;
+                 << " stack." << endl;
         }
     }
 
-    void store(T *x, V y) {
+    void store(T *x, V y)
+    {
         if (index > 0) {
             index++;
             if (index >= indexMax) realloc();
@@ -137,7 +141,8 @@ public:
         }
     }
 
-    void store(T *x) {
+    void store(T *x)
+    {
         if (index > 0) {
             index++;
             if (index >= indexMax) realloc();
@@ -146,7 +151,8 @@ public:
         }
     }
 
-    void store() {
+    void store()
+    {
         index++;
         if (index >= indexMax) realloc();
         pointers[index] = (T *) (intptr_t) base;
@@ -157,22 +163,26 @@ public:
     //		*adr[x] = val[x];
     //	}
 
-    void restore(Value **adr, Value *val, ptrdiff_t x) {
+    void restore(Value **adr, Value *val, ptrdiff_t x)
+    {
         *adr[x] = val[x];
     }
 
 #ifndef INT_COST
-    void restore(Cost **adr, Cost *val, ptrdiff_t x) {
+    void restore(Cost **adr, Cost *val, ptrdiff_t x)
+    {
         *adr[x] = val[x];
     }
 #endif
 
-    void restore(BigInteger **adr, BigInteger *val, ptrdiff_t x) {
+    void restore(BigInteger **adr, BigInteger *val, ptrdiff_t x)
+    {
         *adr[x] = val[x];
     }
     template<class Q> void restore(BTList<Q> **l, DLink<Q> **elt, ptrdiff_t &x);
 
-    void restore() {
+    void restore()
+    {
         if (index > 0) { // do nothing if already at depth = 0
             ptrdiff_t x, y;
 
@@ -199,10 +209,12 @@ class StoreBasic
     T v;
 
 public:
-    StoreBasic(T vv) : v(vv) {
+    StoreBasic(T vv) : v(vv)
+    {
     } ///< \warning allows conversion from T to StoreBasic<T>, which may loose the compiler when mixing T and StoreBasic<T> in the same expression: explicit cast needed e.g. in T::v1 + (T) StoreBasic<T>::v2
 
-    operator T() const {
+    operator T() const
+    {
         return v;
     } ///< allows conversion from StoreBasic to T
 
@@ -210,8 +222,9 @@ public:
 
     static void store() { mystore.store(); };
     static void restore() { mystore.restore(); };
-    
-    StoreBasic &operator=(const StoreBasic &elt) { ///< \note assignment has to be backtrackable
+
+    StoreBasic &operator=(const StoreBasic &elt)   ///< \note assignment has to be backtrackable
+    {
         if (&elt != this) {
             mystore.store(&v);
             v = elt.v;
@@ -219,17 +232,20 @@ public:
         return *this;
     }
 
-    StoreBasic &operator=(const T vv) {
+    StoreBasic &operator=(const T vv)
+    {
         mystore.store(&v);
         v = vv;
         return *this;
     }
-    StoreBasic &operator+=(const T vv) {
+    StoreBasic &operator+=(const T vv)
+    {
         mystore.store(&v);
         v += vv;
         return *this;
     }
-    StoreBasic &operator-=(const T vv) {
+    StoreBasic &operator-=(const T vv)
+    {
         mystore.store(&v);
         v -= vv;
         return *this;
@@ -256,18 +272,20 @@ protected:
 
 public:
     static int depth;
-    static StoreStack<BTList<Value> , DLink<Value> *> storeDomain;
-    static StoreStack<BTList<ConstraintLink> , DLink<ConstraintLink> *> storeConstraint;
-    static StoreStack<BTList<Variable *> , DLink<Variable *> *> storeVariable;
-    static StoreStack<BTList<Separator *> , DLink<Separator *> *> storeSeparator;
+    static StoreStack<BTList<Value>, DLink<Value> *> storeDomain;
+    static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink> *> storeConstraint;
+    static StoreStack<BTList<Variable *>, DLink<Variable *> *> storeVariable;
+    static StoreStack<BTList<Separator *>, DLink<Separator *> *> storeSeparator;
 
     /// \return the current (backtrack / tree search) depth
-    static int getDepth() {
+    static int getDepth()
+    {
         return depth;
     }
 
     /// makes a copy of the current state
-    static void store() {
+    static void store()
+    {
         depth++;
         StoreValue::store();
         StoreCost::store();
@@ -279,7 +297,8 @@ public:
     }
 
     /// restores the current state to the last copy
-    static void restore() {
+    static void restore()
+    {
         depth--;
         StoreValue::restore();
         StoreCost::restore();
@@ -291,7 +310,8 @@ public:
     }
 
     /// restore the current state to the copy made at depth \c newDepth
-    static void restore(int newDepth) {
+    static void restore(int newDepth)
+    {
         assert(depth >= newDepth);
         while (depth > newDepth) restore();
     }

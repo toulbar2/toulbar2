@@ -1,6 +1,6 @@
 /** \file tb2variable.hpp
  *  \brief Abstract Variable class extended with unary costs.
- * 
+ *
  */
 
 #ifndef TB2VARIABLE_HPP_
@@ -13,7 +13,7 @@
 #include <set>
 /*
  * Main class
- * 
+ *
  */
 
 class Variable : public WCSPLink
@@ -50,7 +50,7 @@ protected:
     Variable& operator=(const Variable &x);
 
 
-public:    
+public:
     Variable(WCSP *w, string n, Value iinf, Value isup);
 
     virtual ~Variable() {}
@@ -89,9 +89,9 @@ public:
     void sortConstraints();
     virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};
 
-    BinaryConstraint* getConstr( Variable* x ); 
-    TernaryConstraint* getConstr( Variable* x, Variable* y ); 
-    TernaryConstraint* existTernary(); 
+    BinaryConstraint* getConstr( Variable* x );
+    TernaryConstraint* getConstr( Variable* x, Variable* y );
+    TernaryConstraint* existTernary();
     double strongLinkedby( Variable* &strvar,  TernaryConstraint* &tctr1, TernaryConstraint* &tctr2  );
     void deconnect(DLink<ConstraintLink> *link, bool reuse = false);
 
@@ -108,7 +108,7 @@ public:
     Cost getMaxCost() const {return maxCost;}
     Value getMaxCostValue() const {return maxCostValue;}
 
-    virtual void propagateNC() =0;    
+    virtual void propagateNC() =0;
     virtual bool verifyNC() =0;
     virtual bool isEAC() {return true;}
     virtual bool verifyDEE() {return true;}
@@ -122,7 +122,7 @@ public:
     void propagateIncDec(int incdec);
 
     /**********************************************************************/
-    //   added for tree decomposition stuff	
+    //   added for tree decomposition stuff
     StoreInt cluster;
     void setCluster( int c ) { cluster = c; }
     int  getCluster()        { return cluster; }
@@ -139,7 +139,8 @@ public:
     //  			    position of the variable in the delta structure>
     TSepLink clusters;
 
-    void addCluster( int c, int pos ) {
+    void addCluster( int c, int pos )
+    {
         clusters.insert( pair<int,int>(c,pos) );
     }
 
@@ -149,14 +150,14 @@ public:
 
     void beginCluster() { itclusters = clusters.begin(); }
 
-    bool nextCluster(int& c, int& pos) {
+    bool nextCluster(int& c, int& pos)
+    {
         if(itclusters != clusters.end()) {
             c = (*itclusters).first;
             pos = (*itclusters).second;
             ++itclusters;
             return true;
-        }
-        else return false;
+        } else return false;
     }
 
     /*

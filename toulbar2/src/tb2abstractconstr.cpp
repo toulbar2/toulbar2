@@ -9,7 +9,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 /// \return size of the cartesian product of all initial domains in the constraint scope.
@@ -42,7 +42,7 @@ void AbstractNaryConstraint::firstlex()
 {
     it_values.clear();
     EnumeratedVariable* var;
-    for(int i=0;i<arity_;i++) {
+    for(int i=0; i<arity_; i++) {
         var = (EnumeratedVariable*) getVar(i);
         it_values.push_back( var->begin() );
     }
@@ -55,7 +55,7 @@ bool AbstractNaryConstraint::nextlex( String& t, Cost& c)
     EnumeratedVariable* var = (EnumeratedVariable*) getVar(0);
     if(it_values[0] == var->end()) return false;
 
-    for(i=0;i<a;i++) {
+    for(i=0; i<a; i++) {
         var = (EnumeratedVariable*) getVar(i);
         iterTuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
     }
@@ -162,7 +162,8 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
     }
     if (ToulBar2::verbose >= 1) {
         cout << "project clause to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
-        if(td) cout << "   cluster nary: " << getCluster() << endl; else cout << endl;
+        if(td) cout << "   cluster nary: " << getCluster() << endl;
+        else cout << endl;
         if(ctr) cout << "ctr exists" << endl;
     }
     if(!ctr || (ctr && td && cluster != ctr->getCluster())) {
@@ -189,13 +190,11 @@ void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
     if (td) ctr = x->getConstr(y, getCluster());
     if (!ctr) ctr = x->getConstr(y);
 
-    if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster())))
-    {
+    if((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster()))) {
         if (ToulBar2::verbose >= 2) cout << " exists -> fusion" << endl;
         ctr->addCosts(xy);
         xy = ctr;
-    }
-    else {
+    } else {
         if(td) {
             if(ctr) xy->setDuplicate();
             xy->setCluster( getCluster() );
@@ -216,7 +215,7 @@ void AbstractNaryConstraint::projectNary()
     bool flag = false;
 
     int i,nunassigned = 0;
-    for(i=0;i<arity_;i++) {
+    for(i=0; i<arity_; i++) {
         EnumeratedVariable* var = (EnumeratedVariable*) getVar(i);
         if(var->unassigned()) {
             unassigned[nunassigned] = var;
@@ -246,11 +245,12 @@ void AbstractNaryConstraint::projectNary()
                     Cost curcost = eval(evalTuple);
                     if (curcost > MIN_COST) flag = true;
                     xyz->setcost(x,y,z,xval,yval,zval,curcost);
-                }}}
+                }
+            }
+        }
         if(flag) projectNaryTernary(xyz);
         //else cout << "ternary empty!" << endl;
-    }
-    else if(nunassigned == 2) {
+    } else if(nunassigned == 2) {
         BinaryConstraint* xy = wcsp->newBinaryConstr(x,y,this);
         wcsp->elimBinOrderInc();
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -266,11 +266,11 @@ void AbstractNaryConstraint::projectNary()
                     Cout << evalTuple;
                     cout << " " << curcost << endl;
                 }
-            }}
+            }
+        }
         if(flag)projectNaryBinary(xy);
         //else cout << "binary empty!" << endl;
-    }
-    else if(nunassigned == 1) {
+    } else if(nunassigned == 1) {
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             Value xval = *iterx;
             evalTuple[indexs[0]] =  x->toIndex(xval) + CHAR_FIRST;
@@ -284,8 +284,7 @@ void AbstractNaryConstraint::projectNary()
             }
         }
         x->findSupport();
-    }
-    else {
+    } else {
         Cost c = eval(evalTuple);
         Constraint::projectLB(c); // warning! projectLB is not a virtual method
     }

@@ -94,7 +94,8 @@ public:
     void queueSep() { wcsp->queueSeparator(&linkSep); }
     void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
 
-    void addDelta( unsigned int posvar, Value value, Cost cost ) {
+    void addDelta( unsigned int posvar, Value value, Cost cost )
+    {
         assert( posvar < vars.size() );
         delta[posvar][value] += cost;
     }
@@ -222,12 +223,12 @@ public:
     void          resetUbRec(Cluster *rootCluster);
 
     void			sgoodRec( Cost c, BigInteger nb) { if(sep) sep->setSg(c,nb);}
-    BigInteger		sgoodGet( ){Cost c = MIN_COST; BigInteger nb; sep->getSg(c,nb); return nb; }
+    BigInteger		sgoodGet( ) {Cost c = MIN_COST; BigInteger nb; sep->getSg(c,nb); return nb; }
     BigInteger 		getCount() {return countElimVars;}
     void 			multCount(unsigned int s) {countElimVars = countElimVars * s;}
     void 			cartProduct(BigInteger& cartProd);
-    int			getPart(){return num_part;}
-    void			setPart(int num){num_part=num;}
+    int			getPart() {return num_part;}
+    void			setPart(int num) {num_part=num;}
 
     void          solutionRec(Cost c) { setUb(c); if(sep) sep->solRec(c); }
     void 		    getSolution( TAssign& sol ); // updates sol by the recorded solution found for a separator assignment also given in sol
@@ -256,7 +257,8 @@ public:
     void dump();
     void printStats() { if(!sep) return; sep->print(cout); }
 
-    void printStatsRec() {
+    void printStatsRec()
+    {
         TClusters::iterator it = beginSortedEdges();
         while(it != endSortedEdges()) {
             (*it)->sep->print(cout);
@@ -267,7 +269,8 @@ public:
 };
 
 
-class TreeDecomposition  {
+class TreeDecomposition
+{
 private:
     WCSP*			  wcsp;
     vector<Cluster*>  clusters;
@@ -340,7 +343,8 @@ public:
     void ctrSum( TCtrs& v1, TCtrs& v2, TCtrs& vout );
 
     bool isDeltaModified(int varIndex) { return deltaModified[varIndex]; }
-    Cost getLbRecRDS() {
+    Cost getLbRecRDS()
+    {
         Cluster* c = getCluster(currentCluster);
         Cost res = c->getLbRecRDS();
         return MAX(res,c->getLbRDS());

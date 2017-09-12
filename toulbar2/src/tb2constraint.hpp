@@ -29,8 +29,8 @@ public:
     virtual bool isGlobal() const {return false;} // return true if it is a global cost function (flow-based monolithic propagation)
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 
-    virtual bool connected() const {cout << "dummy connected on (" << this << ")!" << endl;return true;}
-    virtual bool deconnected() const {cout << "dummy deconnected on (" << this << ")!" << endl;return false;}
+    virtual bool connected() const {cout << "dummy connected on (" << this << ")!" << endl; return true;}
+    virtual bool deconnected() const {cout << "dummy deconnected on (" << this << ")!" << endl; return false;}
     // remove a constraint from the set of active constraints
     // (reuse=true if the constraint is empty and canbe reuse immediately)
     virtual void deconnect(bool reuse = false) {cout << "dummy deconnect on (" << this << ")!" << endl;}
@@ -95,10 +95,11 @@ public:
     virtual bool next( String& t, Cost& c) { return nextlex(t,c); }  ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
 
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta ) {}
-    virtual bool separability( EnumeratedVariable* alpha , EnumeratedVariable* beta) {return false;}
+    virtual bool separability( EnumeratedVariable* alpha, EnumeratedVariable* beta) {return false;}
     virtual void separate(EnumeratedVariable *a, EnumeratedVariable *c) {}
     bool decompose();
-    Cost squareminus(Cost c1,Cost c2, Cost top) {
+    Cost squareminus(Cost c1,Cost c2, Cost top)
+    {
         Cost c;
         if(c1>= top && c2 >= top) c = top; //c = 0;
         else if(c1 >= top) c = 3*top;
@@ -106,7 +107,8 @@ public:
         else  c = c1-c2;
         return c;
     }
-    bool universe (Cost c1, Cost c2, Cost top){
+    bool universe (Cost c1, Cost c2, Cost top)
+    {
         if(c1 >= top && c2 >= top) return true;
         else return false;
     }
@@ -138,7 +140,7 @@ public:
         bool isincluded = true;
         int a_in = ctr->arity();
         if(a_in >= arity()) return false;
-        for(int i=0;isincluded && i<a_in;i++) isincluded = isincluded && (getIndex( ctr->getVar(i) ) >= 0);
+        for(int i=0; isincluded && i<a_in; i++) isincluded = isincluded && (getIndex( ctr->getVar(i) ) >= 0);
         return isincluded;
     }
 
@@ -154,22 +156,23 @@ public:
         while(it1 != scope1.end()) { it1->second = 0; ++it1; }
         while(it2 != scope2.end()) { it2->second = 0; ++it2; }
         set_intersection( scope1.begin(), scope1.end(),
-                scope2.begin(), scope2.end(),
-                inserter(scope_out, scope_out.begin()) );
+                          scope2.begin(), scope2.end(),
+                          inserter(scope_out, scope_out.begin()) );
     }
 
 
     void scopeUnion( TSCOPE& scope_out, Constraint* ctr )
     {
         TSCOPE scope1,scope2;
-        getScope( scope1 ); ctr->getScope( scope2 );
+        getScope( scope1 );
+        ctr->getScope( scope2 );
 
         assert(arity() == (int) scope1.size());
         assert(ctr->arity() == (int) scope2.size());
 
         set_union( scope1.begin(), scope1.end(),
-                scope2.begin(), scope2.end(),
-                inserter(scope_out, scope_out.begin()) );
+                   scope2.begin(), scope2.end(),
+                   inserter(scope_out, scope_out.begin()) );
     }
 
     void scopeDifference( TSCOPE& scope_out, Constraint* ctr )
@@ -178,8 +181,8 @@ public:
         getScope( scope1 );
         ctr->getScope( scope2 );
         set_difference( scope1.begin(), scope1.end(),
-                scope2.begin(), scope2.end(),
-                inserter(scope_out, scope_out.begin()) );
+                        scope2.begin(), scope2.end(),
+                        inserter(scope_out, scope_out.begin()) );
     }
 
     int order( Constraint* ctr )
@@ -216,9 +219,10 @@ public:
     void setDuplicate()	   {isDuplicate_ = true; if (ToulBar2::verbose >= 1) { cout << *this << " set duplicate" << endl; }}
     bool isDuplicate() 	   {return isDuplicate_;}
 
-    virtual ConstraintSet subConstraint(){ConstraintSet s; return s;};
+    virtual ConstraintSet subConstraint() {ConstraintSet s; return s;};
 
-    friend ostream& operator<<(ostream& os, Constraint &c) {
+    friend ostream& operator<<(ostream& os, Constraint &c)
+    {
         c.print(os);
         return os;
     }

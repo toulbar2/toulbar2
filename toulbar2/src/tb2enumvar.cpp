@@ -72,11 +72,13 @@ void EnumeratedVariable::getDomainAndCost(ValueCost *array)
     }
 }
 
-Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue) {
+Cost EnumeratedVariable::getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue)
+{
     return (c.scopeIndex == 0)?((BinaryConstraint *) c.constr)->getCost(myvalue, itsvalue):((BinaryConstraint *) c.constr)->getCost(itsvalue, myvalue);
 }
 
-Cost EnumeratedVariable::getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue) {
+Cost EnumeratedVariable::getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue)
+{
     return (c->getIndex(this) == 0)?c->getCost(myvalue, itsvalue):c->getCost(itsvalue, myvalue);
 }
 
@@ -272,8 +274,8 @@ void EnumeratedVariable::fillEAC2(bool self)
     }
 }
 
-void EnumeratedVariable::setCostProvidingPartition() 
-{	
+void EnumeratedVariable::setCostProvidingPartition()
+{
     vector<bool> used(wcsp->numberOfVariables(), false);
     //  set<int> used;
     int maxArity = 4;
@@ -282,7 +284,7 @@ void EnumeratedVariable::setCostProvidingPartition()
         int arity = (*iter).constr->arity();
         maxArity = max(maxArity, arity);
         if (arity <= 3) {
-            for (int i=0;i<arity;i++) {
+            for (int i=0; i<arity; i++) {
                 Variable *var = (*iter).constr->getVar(i);
                 if (var != this) {
                     used[var->wcspIndex] = true;
@@ -292,12 +294,12 @@ void EnumeratedVariable::setCostProvidingPartition()
         }
     }
 
-    for (int scopeSize = maxArity;scopeSize>3;scopeSize--) {
+    for (int scopeSize = maxArity; scopeSize>3; scopeSize--) {
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
             int arity = (*iter).constr->arity();
             if (arity == scopeSize && (*iter).constr->isGlobal()) {
                 AbstractNaryConstraint *ctr = (AbstractNaryConstraint *) (*iter).constr;
-                for (int i=0;i<arity;i++) {
+                for (int i=0; i<arity; i++) {
                     Variable *var = ctr->getDACVar(i);
                     if (var != this && !used[var->wcspIndex]) {
                         //		  if (var != this && (used.find(var->wcspIndex) == used.end())) {
@@ -392,7 +394,8 @@ void EnumeratedVariable::propagateEAC()
 }
 
 void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
-{   //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
+{
+    //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
     if (a == b) return;
     Cost costa = getCost(a);
     Cost costb = getCost(b);
@@ -529,13 +532,16 @@ void EnumeratedVariable::increaseFast(Value newInf)
     if (ToulBar2::verbose >= 2) cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
-        if (newInf > sup) {THROWCONTRADICTION;
+        if (newInf > sup) {
+            THROWCONTRADICTION;
         } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) {assign(newInf);
+            if (newInf == sup) {
+                assign(newInf);
             } else {
                 inf = newInf;
-                if (watchForIncrease) queueInc(); else queueAC();
+                if (watchForIncrease) queueInc();
+                else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
@@ -552,17 +558,20 @@ void EnumeratedVariable::increase(Value newInf, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
 #endif
     if (newInf > inf) {
-        if (newInf > sup) {THROWCONTRADICTION;
+        if (newInf > sup) {
+            THROWCONTRADICTION;
         } else {
             newInf = domain.increase(newInf);
-            if (newInf == sup) {assign(newInf);
+            if (newInf == sup) {
+                assign(newInf);
             } else {
                 inf = newInf;
                 if (newInf > maxCostValue || PARTIALORDER) queueNC();           // diff with increaseFast
                 if (newInf > support || PARTIALORDER) findSupport();            // diff with increaseFast
                 queueDAC();                                     // diff with increaseFast
                 queueEAC1();                                     // diff with increaseFast
-                if (watchForIncrease) queueInc(); else queueAC();
+                if (watchForIncrease) queueInc();
+                else queueAC();
                 if (ToulBar2::setmin) (*ToulBar2::setmin)(wcsp->getIndex(), wcspIndex, newInf, wcsp->getSolver());
             }
         }
@@ -574,13 +583,16 @@ void EnumeratedVariable::decreaseFast(Value newSup)
     if (ToulBar2::verbose >= 2) cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
-        if (newSup < inf) {THROWCONTRADICTION;
+        if (newSup < inf) {
+            THROWCONTRADICTION;
         } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) {assign(newSup);
+            if (inf == newSup) {
+                assign(newSup);
             } else {
                 sup = newSup;
-                if (watchForDecrease) queueDec(); else queueAC();
+                if (watchForDecrease) queueDec();
+                else queueAC();
                 if (PARTIALORDER) queueDAC();
                 if (wcsp->isGlobal()) queueEAC1(); // unary cost partition for EAC may hide cost moves followed by value removals breaking EAC
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
@@ -597,17 +609,20 @@ void EnumeratedVariable::decrease(Value newSup, bool isDecision)
     assert(isDecision || !wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec())?wcsp->getTreeDec()->getRoot()->getUb():wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
 #endif
     if (newSup < sup) {
-        if (newSup < inf) {THROWCONTRADICTION;
+        if (newSup < inf) {
+            THROWCONTRADICTION;
         } else {
             newSup = domain.decrease(newSup);
-            if (inf == newSup) {assign(newSup);
+            if (inf == newSup) {
+                assign(newSup);
             } else {
                 sup = newSup;
                 if (newSup < maxCostValue || PARTIALORDER) queueNC();           // diff with decreaseFast
                 if (newSup < support || PARTIALORDER) findSupport();            // diff with decreaseFast
                 queueDAC();                                     // diff with decreaseFast
                 queueEAC1();                                     // diff with decreaseFast
-                if (watchForDecrease) queueDec(); else queueAC();
+                if (watchForDecrease) queueDec();
+                else queueAC();
                 if (ToulBar2::setmax) (*ToulBar2::setmax)(wcsp->getIndex(), wcspIndex, newSup, wcsp->getSolver());
             }
         }
@@ -823,15 +838,16 @@ bool EnumeratedVariable::elimVar( ConstraintLink  xylink,  ConstraintLink xzlink
 
             for (iterator iter = begin(); iter != end(); ++iter) {
                 Cost curcost = getCost(*iter) +
-                        getBinaryCost(xylink, *iter, *itery) +
-                        getBinaryCost(xzlink, *iter, *iterz);
+                               getBinaryCost(xylink, *iter, *itery) +
+                               getBinaryCost(xzlink, *iter, *iterz);
 
                 if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost,curcost);
                 else if (curcost < mincost) mincost = curcost;
             }
             if (mincost < negcost) negcost = mincost;
             yznew->setcost(*itery,*iterz,mincost); // Warning! it can set a negative cost temporally
-        }}
+        }
+    }
     assert(negcost <= MIN_COST);
     if (negcost < MIN_COST) {
         for (iterator itery = y->begin(); itery != y->end(); ++itery) {
@@ -922,15 +938,23 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
                 Cost curcost = getCost(*iter) + xyz->getCost(this,y,z,*iter,*itery,*iterz);
 
                 if(!flag_rev) {
-                    if(n2links > 0) { assert(links[0].constr->getIndex(y) >= 0);
-                    curcost += getBinaryCost(links[0], *iter, *itery); }
-                    if(n2links > 1) { assert(links[1].constr->getIndex(z) >= 0);
-                    curcost += getBinaryCost(links[1], *iter, *iterz); }
+                    if(n2links > 0) {
+                        assert(links[0].constr->getIndex(y) >= 0);
+                        curcost += getBinaryCost(links[0], *iter, *itery);
+                    }
+                    if(n2links > 1) {
+                        assert(links[1].constr->getIndex(z) >= 0);
+                        curcost += getBinaryCost(links[1], *iter, *iterz);
+                    }
                 } else {
-                    if(n2links > 0) { assert(links[0].constr->getIndex(z) >= 0);
-                    curcost += getBinaryCost(links[0], *iter, *iterz); }
-                    if(n2links > 1) { assert(links[1].constr->getIndex(y) >= 0);
-                    curcost += getBinaryCost(links[1], *iter, *itery); }
+                    if(n2links > 0) {
+                        assert(links[0].constr->getIndex(z) >= 0);
+                        curcost += getBinaryCost(links[0], *iter, *iterz);
+                    }
+                    if(n2links > 1) {
+                        assert(links[1].constr->getIndex(y) >= 0);
+                        curcost += getBinaryCost(links[1], *iter, *itery);
+                    }
                 }
                 if (ToulBar2::isZ) mincost = wcsp->LogSumExp(mincost,curcost);
                 else if (curcost < mincost) mincost = curcost;
@@ -970,7 +994,7 @@ void EnumeratedVariable::eliminate()
 
     if (ToulBar2::elimDegree_preprocessing_ >= 0 &&
             (getDegree() <= min(1,ToulBar2::elimDegree_preprocessing_) ||
-                    getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
+             getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
         if (ToulBar2::elimSpaceMaxMB && (Double) wcsp->elimSpace + (sizeof(Char)*(getTrueDegree()+1)+sizeof(Cost)) * getMaxElimSize() > (Double) ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
             if (ToulBar2::verbose >= 1) cout << "Generic variable elimination of " << getName() << " stopped (" <<  (Double) wcsp->elimSpace / 1024. / 1024. << " + " << (Double) (sizeof(Char)*(getTrueDegree()+1)+sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
             return;
@@ -979,7 +1003,7 @@ void EnumeratedVariable::eliminate()
         return;
     }
 
-    if(ToulBar2::allSolutions && ToulBar2::btdMode==1){
+    if(ToulBar2::allSolutions && ToulBar2::btdMode==1) {
         if (Store::getDepth()==0) return; // tree decomposition not available yet!
         if (getDegree() > ToulBar2::elimDegree_) return;
         assert(getDegree() == 0);
@@ -1169,7 +1193,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
         bool noduplicate = (ctr->getIndex(x) < 0);
         int scopeIndex[ctr->arity()];
         int scopeSize = 0;
-        for (int i=0;i<ctr->arity();i++) {
+        for (int i=0; i<ctr->arity(); i++) {
             if (ctr->getVar(i) == this) {
                 if (noduplicate) {
                     scopeIndex[scopeSize++] = x->wcspIndex;
@@ -1182,7 +1206,8 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
         case 0: {
             cerr << "Error: empty scope from " << *ctr << " when merging functional variable " << *this << " to variable " << *x << endl;
             exit(EXIT_FAILURE);
-            break; }
+            break;
+        }
         case 1: {
             assert(scopeIndex[0] == x->wcspIndex);
             assert(ctr->arity() == 2);
@@ -1199,7 +1224,8 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
                 if (modified) x->findSupport();
             } // else xy will be eliminated at the end of this function
-            break; }
+            break;
+        }
         case 2: {
             assert(wcsp->unassigned(scopeIndex[0]));
             assert(wcsp->unassigned(scopeIndex[1]));
@@ -1211,7 +1237,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             String oldtuple(ctr->arity(),CHAR_FIRST);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
-                    for(int i=0;i<ctr->arity();i++) {
+                    for(int i=0; i<ctr->arity(); i++) {
                         if (ctr->getVar(i) == this) {
                             oldtuple[i] = toIndex(functional[(x==u)?(*iterU):(*iterV)]) + CHAR_FIRST;
                         } else {
@@ -1227,7 +1253,8 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
             }
             if (!empty) wcsp->postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
-            break; }
+            break;
+        }
         case 3: {
             assert(wcsp->unassigned(scopeIndex[0]));
             assert(wcsp->unassigned(scopeIndex[1]));
@@ -1243,7 +1270,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
                     for (EnumeratedVariable::iterator iterW = w->begin(); iterW != w->end(); ++iterW) {
-                        for(int i=0;i<ctr->arity();i++) {
+                        for(int i=0; i<ctr->arity(); i++) {
                             if (ctr->getVar(i) == this) {
                                 oldtuple[i] = toIndex(functional[(x==u)?(*iterU):((x==v)?(*iterV):(*iterW))]) + CHAR_FIRST;
                             } else {
@@ -1260,7 +1287,8 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
                 }
             }
             if (!empty) wcsp->postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
-            break; }
+            break;
+        }
         default: {
             //	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
             //	  NaryConstraint *newctrok = (NaryConstraint*) wcsp->getCtr(res);
@@ -1301,7 +1329,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             AbstractNaryConstraint *newctr = (AbstractNaryConstraint*) newctrctr;
             String newtuple(scopeSize,CHAR_FIRST);
             EnumeratedVariable* scopeNewCtr[scopeSize];
-            for(int i=0;i<scopeSize;i++) {
+            for(int i=0; i<scopeSize; i++) {
                 scopeNewCtr[i] = (EnumeratedVariable*) newctr->getVar(i);
             }
             int posx = newctr->getIndex(x);
@@ -1314,7 +1342,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             oldctr->first();
             while (oldctr->next(tuple,cost)) {
                 if (cost != defcost) {
-                    for(int i=0;i<scopeSize;i++) {
+                    for(int i=0; i<scopeSize; i++) {
                         if (i != posx || posxold>=0) {
                             assert(oldctr->getIndex(scopeNewCtr[i])>=0);
                             newtuple[i] = tuple[oldctr->getIndex(scopeNewCtr[i])];
@@ -1357,7 +1385,8 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             assert(newctr->connected());
             if (newctr->universal()) newctr->deconnect(true);
             else newctr->propagate();
-            break; }
+            break;
+        }
         }
     }
     assert(xy->connected());

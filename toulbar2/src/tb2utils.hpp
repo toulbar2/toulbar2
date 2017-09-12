@@ -38,8 +38,7 @@ using namespace std;
 #endif
 
 template<typename T1, typename T2, typename T3>
-struct triplet
-{
+struct triplet {
     T1 first;
     T2 second;
     T3 third;
@@ -109,7 +108,8 @@ inline std::string to_string (const T& t)
 }
 
 template <typename T>
-void free_all( T & t ) {
+void free_all( T & t )
+{
     T tmp;
     t.swap( tmp );
 }
@@ -119,7 +119,8 @@ void free_all( T & t ) {
 // Cormen et al, 1990. pages 152, 158, and 184
 
 template<class T>
-int partition(T A[], int p, int r) {
+int partition(T A[], int p, int r)
+{
     T x = A[p];
     int i = p - 1;
     int j = r + 1;
@@ -139,7 +140,8 @@ int partition(T A[], int p, int r) {
 }
 
 template<class T>
-int stochastic_partition(T A[], int p, int r) {
+int stochastic_partition(T A[], int p, int r)
+{
     int i = (myrand()%(r-p+1)) + p;
     T tmp = A[p];
     A[p] = A[i];
@@ -148,7 +150,8 @@ int stochastic_partition(T A[], int p, int r) {
 }
 
 template<class T>
-T stochastic_selection(T A[], int p, int r, int i) {
+T stochastic_selection(T A[], int p, int r, int i)
+{
     if (p == r) return A[p];
     int q = stochastic_partition(A, p, r);
     int k = q - p + 1;

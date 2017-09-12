@@ -11,7 +11,8 @@
 #include <set>
 #include <algorithm>
 
-bool naryRandom::connected() {
+bool naryRandom::connected()
+{
     return true;
 }
 
@@ -51,7 +52,7 @@ void naryRandom::generateGlobalCtr( vector<int>& indexs, string globalname, Cost
             trans.push_back(DFATransition(1,i,(i%2)?0:1));
         }
         wcsp.postWRegular(scopeIndexs, arity, "var", (globalname == "sregular")?"flow":((globalname == "wregular")?"network":"DAG"), Top, 2, init, last, trans);
-   } else {
+    } else {
         cerr << "Random generator: unknown global cost function name " << globalname << endl;
         exit(-1);
     }
@@ -113,15 +114,17 @@ void naryRandom::generateTernCtr( int i, int j, int k, long nogoods, Cost costMi
 
     while(nogoods>0) {
         dice = myrand() % total_nogoods;
-        for(a=0;a<mx;a++)
-            for(b=0;b<my;b++)
-                for(c=0;c<mz;c++) {
+        for(a=0; a<mx; a++)
+            for(b=0; b<my; b++)
+                for(c=0; c<mz; c++) {
                     if(costs[my*mz*a + b*mz + c] == MIN_COST) {
                         if(dice == 0) {
                             costs[my*mz*a + b*mz + c] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
                             nogoods--;
                             total_nogoods--;
-                            a=mx;b=my;c=mz;
+                            a=mx;
+                            b=my;
+                            c=mz;
                         }
                         dice--;
                     }
@@ -193,14 +196,15 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
 
     while(nogoods>0) {
         dice = myrand() % total_nogoods;
-        for(a=0;a<mx;a++)
-            for(b=0;b<my;b++) {
+        for(a=0; a<mx; a++)
+            for(b=0; b<my; b++) {
                 if(costs[my*a+b] == MIN_COST) {
                     if(dice == 0) {
                         costs[my*a+b] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
                         nogoods--;
                         total_nogoods--;
-                        a=mx;b=my;
+                        a=mx;
+                        b=my;
                     }
                     dice--;
                 }
@@ -213,7 +217,7 @@ void naryRandom::generateBinCtr( int i, int j, long nogoods, Cost costMin, Cost 
 long naryRandom::toIndex( vector<int>& index )
 {
     long result = 1;
-    for(int i=0;i<(int)index.size();i++) result += (long) pow((double)n,i)*index[i];
+    for(int i=0; i<(int)index.size(); i++) result += (long) pow((double)n,i)*index[i];
     return result;
 }
 
@@ -221,7 +225,7 @@ long naryRandom::toIndex( vector<int>& index )
 void naryRandom::ini( vector<int>& index, int arity )
 {
     index.clear();
-    for(int i=0;i<arity;i++) index.push_back(i);
+    for(int i=0; i<arity; i++) index.push_back(i);
 }
 
 
@@ -275,12 +279,12 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
         maxa--;
     }
 
-    for(i=0;i<n;i++) {
+    for(i=0; i<n; i++) {
         string varname = to_string(i);
         wcsp.makeEnumeratedVariable(varname,0,m-1);
     }
 
-    for(arity=maxa;arity>1;arity--) {
+    for(arity=maxa; arity>1; arity--) {
         long nogoods =  (long) (((double)p[0] / 100.) * pow((double)m, arity) + 0.5);
         //long totalarraysize = (long) pow( (double)n, arity);
         long tCtrs = 1;
@@ -327,17 +331,16 @@ void naryRandom::Input( int in_n, int in_m, vector<int>& p, bool forceSubModular
     }
 
 
-    for(i=0;i<n;i++) {
+    for(i=0; i<n; i++) {
         EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
-        for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
-        {
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST), true);
         }
         x->findSupport();
     }
 
     if(forceSubModular) {
-        for(i=0;i<n;i++) {
+        for(i=0; i<n; i++) {
             EnumeratedVariable* x = (EnumeratedVariable*) wcsp.getVar(i);
             x->permuteDomain(10);
         }

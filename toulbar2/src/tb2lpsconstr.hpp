@@ -11,7 +11,7 @@
 //#define upper_bound first
 //#define lower_bound second
 
-class LPSConstraint : public LinearConstraint 
+class LPSConstraint : public LinearConstraint
 {
 private:
     int nwindows, nrows, nslacks;
@@ -29,9 +29,10 @@ public:
     static const int VALUE = 1;
     static const int VAR = 0;
     LPSConstraint(WCSP *wcsp, EnumeratedVariable** scope_in, int
-            arity_in, int *constrcounter);
+                  arity_in, int *constrcounter);
 
-    ~LPSConstraint() {
+    ~LPSConstraint()
+    {
 
     }
 

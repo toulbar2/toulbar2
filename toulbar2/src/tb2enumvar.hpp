@@ -1,6 +1,6 @@
 /** \file tb2enumvar.hpp
  *  \brief Variable with domain represented by an enumerated domain.
- * 
+ *
  */
 
 #ifndef TB2ENUMVAR_HPP_
@@ -15,7 +15,7 @@ protected:
     Domain domain;
     vector<StoreCost> costs;
     StoreCost deltaCost;
-    StoreValue support;     // Warning! the unary support has to be backtrackable 
+    StoreValue support;     // Warning! the unary support has to be backtrackable
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -34,7 +34,7 @@ protected:
     virtual void decreaseFast(Value newSup);        // Do not check for a support nor insert in NC and DAC queue
     virtual void removeFast(Value val);             // Do not check for a support nor insert in NC and DAC queue
 
-public:    
+public:
     EnumeratedVariable(WCSP *wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP *wcsp, string n, Value *d, int dsize);
 
@@ -49,8 +49,9 @@ public:
     Value toValue(unsigned int idx) const {return domain.toValue(idx);}
 #endif
     unsigned int toCurrentIndex(Value v) {return domain.toCurrentIndex(v);} // return value position in current domain
-    unsigned int getDomainSize() const FINAL {
-        if (assigned()) return 1; 
+    unsigned int getDomainSize() const FINAL
+    {
+        if (assigned()) return 1;
         else return domain.getSize(); ///< \warning can return a negative size in the case of a wrong list utilization
     }
     void getDomain(Value *array);
@@ -71,8 +72,9 @@ public:
     virtual void extend(Value value, Cost cost);
     virtual void extendAll(Cost cost);
     Value getSupport() const FINAL {return support;}
-    void setSupport(Value val) {support = val;}    
-    inline Cost getCost(const Value value) const FINAL {
+    void setSupport(Value val) {support = val;}
+    inline Cost getCost(const Value value) const FINAL
+    {
         return costs[toIndex(value)] - deltaCost;
     }
     Cost getBinaryCost(ConstraintLink c,    Value myvalue, Value itsvalue);
@@ -83,7 +85,7 @@ public:
     void projectInfCost(Cost cost);
     void projectSupCost(Cost cost);
 
-    void propagateNC();    
+    void propagateNC();
     bool verifyNC();
     void queueAC();                     // public method used also by tb2binconstr.hpp
     void queueDAC();
@@ -117,7 +119,8 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator {
+    class iterator
+    {
         EnumeratedVariable *var;
         Domain::iterator diter;
     public:
@@ -126,7 +129,8 @@ public:
 
         Value operator*() const {return *diter;}
 
-        iterator &operator++() {    // Prefix form //TODO: add a const_iterator to speed-up iterations (should be inlined?)
+        iterator &operator++()      // Prefix form //TODO: add a const_iterator to speed-up iterations (should be inlined?)
+        {
             if (var->unassigned()) ++diter;
             else {
                 if (*diter < var->getValue()) diter = var->domain.lower_bound(var->getValue());
@@ -135,7 +139,8 @@ public:
             return *this;
         }
 
-        iterator &operator--() {    // Prefix form
+        iterator &operator--()      // Prefix form
+        {
             if (var->unassigned()) --diter;
             else {
                 if (*diter > var->getValue()) diter = var->domain.lower_bound(var->getValue());
@@ -148,19 +153,22 @@ public:
         bool operator==(const iterator &iter) const {return diter == iter.diter;}
         bool operator!=(const iterator &iter) const {return diter != iter.diter;}
     };
-    iterator begin() {
+    iterator begin()
+    {
         if (assigned()) return iterator(this, domain.lower_bound(getValue()));
         else return iterator(this, domain.begin());
     }
     iterator end() {return iterator(this, domain.end());}
-    iterator rbegin() {
+    iterator rbegin()
+    {
         if (assigned()) return iterator(this, domain.upper_bound(getValue()));
         else return iterator(this, domain.rbegin());
     }
     iterator rend() {return end();}
 
     //Finds the first available element whose value is greater or equal to v
-    iterator lower_bound(Value v) {
+    iterator lower_bound(Value v)
+    {
         if (assigned()) {
             if (v <= getValue()) return iterator(this, domain.lower_bound(getValue()));
             else return end();
@@ -170,7 +178,8 @@ public:
     }
 
     //Finds the first available element whose value is lower or equal to v
-    iterator upper_bound(Value v) {
+    iterator upper_bound(Value v)
+    {
         if (assigned()) {
             if (v >= getValue()) return iterator(this, domain.upper_bound(getValue()));
             else return end();

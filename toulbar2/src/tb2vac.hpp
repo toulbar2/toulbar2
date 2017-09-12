@@ -20,7 +20,8 @@ typedef map<Cost,int> tScale;
 /**
  * The class that enforces VAC
  */
-class VACExtension {
+class VACExtension
+{
 
 private:
 
