@@ -3,9 +3,9 @@
  */
 
 #include "tb2abstractconstr.hpp"
+#include "tb2ternaryconstr.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2clusters.hpp"
-#include "tb2ternaryconstr.hpp"
 
 /*
  * Constructors and misc.

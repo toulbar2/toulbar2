@@ -3,6 +3,7 @@
  */
 
 #include "tb2types.hpp"
+#include "tb2system.hpp"
 
 //Must be included after tb2types.hpp
 #include "tb2system.hpp"
@@ -11,10 +12,10 @@
 // Timer management functions
 // -------------------------------------------------------------------- */
 #ifdef LINUX
-#include <sys/resource.h>
-#include <sys/time.h>
-#include <sys/times.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/times.h>
 
 //double cpuTime()
 //{

@@ -3,14 +3,14 @@
  *
  */
 
-#include "tb2bep.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2globaldecomposable.hpp"
-#include "tb2haplotype.hpp"
-#include "tb2naryconstr.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2randomgen.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
+#include "tb2bep.hpp"
+#include "tb2naryconstr.hpp"
+#include "tb2randomgen.hpp"
+#include "tb2globaldecomposable.hpp"
 #include <list>
 
 typedef struct {

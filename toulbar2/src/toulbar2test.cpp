@@ -4,9 +4,9 @@
  */
 
 #include "toulbar2lib.hpp"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 // INCOP default command line option

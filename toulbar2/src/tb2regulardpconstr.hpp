@@ -5,11 +5,11 @@
 #ifndef TB2REGULARDPCONSTR_HPP_
 #define TB2REGULARDPCONSTR_HPP_
 
-#include "tb2automaton.hpp"
 #include "tb2dpglobalconstr.hpp"
+#include "tb2automaton.hpp"
+#include <vector>
 #include <fstream>
 #include <string>
-#include <vector>
 using namespace std;
 
 class RegularDPConstraint : public DPGlobalConstraint {

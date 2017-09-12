@@ -3,9 +3,9 @@
  *
  */
 
-#include "tb2clusters.hpp"
-#include "tb2domain.hpp"
 #include "tb2solver.hpp"
+#include "tb2domain.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Variable ordering heuristics

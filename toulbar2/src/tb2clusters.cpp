@@ -4,12 +4,12 @@
  */
 
 #include "tb2clusters.hpp"
-#include "tb2haplotype.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 
-#include <algorithm>
 #include <list>
+#include <algorithm>
 
 /*
  * Comparison between cluster sons

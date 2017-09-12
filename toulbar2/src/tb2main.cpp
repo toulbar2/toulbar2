@@ -2,15 +2,15 @@
  * **************** Main function ***********************************
  */
 
-#include "tb2bep.hpp"
-#include "tb2haplotype.hpp"
-#include "tb2pedigree.hpp"
 #include "toulbar2lib.hpp"
+#include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
+#include "tb2bep.hpp"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -29,8 +29,8 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 #endif
 //*definition of  windows include for command line.
 #if defined(_MSC_VER) || _WIN32
-#include <tchar.h>
 #include <windows.h>
+#include <tchar.h>
 #else
 #define TCHAR char
 #define _T(x) x
@@ -38,8 +38,8 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 #define _tmain main
 #define _ttoi atoi
 #endif
-#include "SimpleGlob.h"
 #include "SimpleOpt.h"
+#include "SimpleGlob.h"
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump

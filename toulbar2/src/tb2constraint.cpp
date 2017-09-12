@@ -3,8 +3,8 @@
  */
 
 #include "tb2constraint.hpp"
-#include "tb2clusters.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Constructor

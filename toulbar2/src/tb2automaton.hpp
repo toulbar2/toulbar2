@@ -5,11 +5,11 @@
 #ifndef TB2WFA_HPP_
 #define TB2WFA_HPP_
 
-#include "tb2enumvar.hpp"
-#include "tb2types.hpp"
-#include "tb2wcsp.hpp"
 #include <iostream>
 #include <list>
+#include "tb2wcsp.hpp"
+#include "tb2types.hpp"
+#include "tb2enumvar.hpp"
 
 using namespace std;
 

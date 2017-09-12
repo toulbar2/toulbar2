@@ -1,7 +1,7 @@
 #include "tb2regulardpconstr.hpp"
+#include <vector>
 #include <fstream>
 #include <string>
-#include <vector>
 using namespace std;
 
 RegularDPConstraint::RegularDPConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)

@@ -4,15 +4,15 @@
 #ifndef TB2GLOBALDECOMPOSABLE_HPP_
 #define TB2GLOBALDECOMPOSABLE_HPP_
 
-#include "tb2automaton.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2types.hpp"
-#include "tb2wcsp.hpp"
-#include <fstream>
 #include <iostream>
+#include <fstream>
+#include <set>
 #include <list>
 #include <map>
-#include <set>
+#include "tb2wcsp.hpp"
+#include "tb2types.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2automaton.hpp"
 
 using namespace std;
 

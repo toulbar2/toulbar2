@@ -5,9 +5,9 @@
 #ifndef TB2DPGLOBALCONSTR_HPP_
 #define TB2DPGLOBALCONSTR_HPP_
 
-#include "tb2globalconstr.hpp"
-#include <algorithm>
 #include <vector>
+#include <algorithm>
+#include "tb2globalconstr.hpp"
 using namespace std;
 
 class DPGlobalConstraint : public GlobalConstraint {

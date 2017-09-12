@@ -223,8 +223,8 @@ inline int cost2log2gub(Long x) { return cost2log2(x); }
 
 // function mkdir
 #ifdef LINUX
-#include <signal.h>
 #include <sys/stat.h>
+#include <signal.h>
 #endif
 
 #ifdef WIN32

@@ -6,11 +6,11 @@
 #ifndef TB2WCSP_HPP_
 #define TB2WCSP_HPP_
 
+#include "toulbar2lib.hpp"
+#include "tb2variable.hpp"
 #include "tb2constraint.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
-#include "tb2variable.hpp"
-#include "toulbar2lib.hpp"
 
 class NaryConstraint;
 class VACExtension;

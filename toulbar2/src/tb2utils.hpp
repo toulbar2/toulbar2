@@ -17,18 +17,18 @@
 #include <ilsolver/ilosolverint.h>
 #else
 #include <assert.h>
-#include <cmath>
-#include <fstream>
-#include <iostream>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <cmath>
 #endif
 
 #include <limits>
-#include <map>
-#include <queue>
-#include <set>
-#include <sstream>
 #include <vector>
+#include <map>
+#include <sstream>
+#include <set>
+#include <queue>
 using namespace std;
 
 #ifdef NDEBUG

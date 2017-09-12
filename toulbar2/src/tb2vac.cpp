@@ -12,8 +12,8 @@
 
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
-#include <algorithm>
 #include <list>
+#include <algorithm>
 
 class tVACStat {
 public:

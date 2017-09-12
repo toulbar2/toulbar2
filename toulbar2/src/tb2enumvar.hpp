@@ -6,8 +6,8 @@
 #ifndef TB2ENUMVAR_HPP_
 #define TB2ENUMVAR_HPP_
 
-#include "tb2domain.hpp"
 #include "tb2variable.hpp"
+#include "tb2domain.hpp"
 
 class EnumeratedVariable : public Variable {
 protected:

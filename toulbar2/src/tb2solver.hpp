@@ -6,8 +6,8 @@
 #ifndef TB2SOLVER_HPP_
 #define TB2SOLVER_HPP_
 
-#include "tb2store.hpp"
 #include "toulbar2lib.hpp"
+#include "tb2store.hpp"
 
 template <class T>
 class DLink;

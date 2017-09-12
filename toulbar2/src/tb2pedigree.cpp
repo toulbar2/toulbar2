@@ -3,9 +3,9 @@
  *
  */
 
-#include "tb2pedigree.hpp"
-#include "tb2enumvar.hpp"
 #include "toulbar2lib.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2pedigree.hpp"
 
 void Pedigree::iniProb(WCSP* wcsp)
 {

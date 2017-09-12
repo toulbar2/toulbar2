@@ -1,9 +1,9 @@
 #include "tb2treeconstr.hpp"
-#include <fstream>
-#include <map>
-#include <stack>
-#include <string>
 #include <vector>
+#include <map>
+#include <fstream>
+#include <string>
+#include <stack>
 
 #include <algorithm>
 

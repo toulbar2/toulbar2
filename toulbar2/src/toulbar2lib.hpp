@@ -426,9 +426,9 @@ public:
      * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
      * \code
     #include "toulbar2lib.hpp"
+    #include <string.h>
     #include <stdio.h>
     #include <stdlib.h>
-    #include <string.h>
     #include <unistd.h>
     int main(int argc, char **argv) {
 

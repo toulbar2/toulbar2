@@ -5,8 +5,8 @@
 #ifndef TB2REGULARFLOWCONSTR_HPP_
 #define TB2REGULARFLOWCONSTR_HPP_
 
-#include "tb2automaton.hpp"
 #include "tb2flowbasedconstr.hpp"
+#include "tb2automaton.hpp"
 
 class RegularFlowConstraint : public FlowBasedGlobalConstraint {
 private:

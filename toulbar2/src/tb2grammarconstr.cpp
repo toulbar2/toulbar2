@@ -1,9 +1,9 @@
 #include "tb2grammarconstr.hpp"
-#include <fstream>
-#include <set>
-#include <stack>
-#include <string>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <stack>
+#include <set>
 using namespace std;
 
 GrammarConstraint::GrammarConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)

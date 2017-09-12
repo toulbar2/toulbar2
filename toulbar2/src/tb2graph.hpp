@@ -6,18 +6,18 @@
 #ifndef TB2GRAPH
 #define TB2GRAPH
 
-#include "tb2btlist.hpp"
-#include "tb2store.hpp"
 #include "tb2types.hpp"
+#include "tb2store.hpp"
+#include "tb2btlist.hpp"
 
+#include <iostream>
+#include <vector>
+#include <map>
+#include <set>
+#include <queue>
+#include <list>
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
-#include <list>
-#include <map>
-#include <queue>
-#include <set>
-#include <vector>
 
 //#define adj first
 //#define weight second

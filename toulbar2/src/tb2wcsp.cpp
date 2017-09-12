@@ -5,33 +5,33 @@
  */
 
 #include "tb2wcsp.hpp"
-#include "tb2arithmetic.hpp"
-#include "tb2binconstr.hpp"
-#include "tb2clusters.hpp"
 #include "tb2enumvar.hpp"
-#include "tb2haplotype.hpp"
 #include "tb2intervar.hpp"
-#include "tb2naryconstr.hpp"
-#include "tb2pedigree.hpp"
+#include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
+#include "tb2naryconstr.hpp"
+#include "tb2arithmetic.hpp"
+#include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 
-#include "tb2globalconstr.hpp"
 #include "tb2globaldecomposable.hpp"
+#include "tb2globalconstr.hpp"
 #ifdef ILOGCPLEX
 #include "tb2lpsconstr.hpp"
 #endif
-#include "tb2alldiffconstr.hpp"
-#include "tb2amongconstr.hpp"
-#include "tb2clause.hpp"
 #include "tb2flowbasedconstr.hpp"
+#include "tb2alldiffconstr.hpp"
 #include "tb2globalcardinalityconstr.hpp"
-#include "tb2grammarconstr.hpp"
-#include "tb2maxconstr.hpp"
-#include "tb2regulardpconstr.hpp"
-#include "tb2regularflowconstr.hpp"
 #include "tb2sameconstr.hpp"
+#include "tb2regularflowconstr.hpp"
+#include "tb2amongconstr.hpp"
+#include "tb2regulardpconstr.hpp"
+#include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
+#include "tb2maxconstr.hpp"
+#include "tb2clause.hpp"
 
 #include <algorithm>
 

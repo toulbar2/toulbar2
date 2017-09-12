@@ -1,6 +1,6 @@
 #include "tb2grammarutils.hpp"
-#include <algorithm>
 #include <set>
+#include <algorithm>
 
 using namespace std;
 

@@ -3,9 +3,9 @@
  *
  */
 
-#include "tb2haplotype.hpp"
-#include "tb2enumvar.hpp"
 #include "toulbar2lib.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2haplotype.hpp"
 
 // A MODIFIER POUR PLUSIEURS LOCUS (freqalleles.find(locus))
 void Haplotype::iniProb(WCSP* wcsp)

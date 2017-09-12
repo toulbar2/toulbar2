@@ -3,8 +3,8 @@
  */
 
 #include "tb2vacutils.hpp"
-#include "tb2clusters.hpp"
 #include "tb2vac.hpp"
+#include "tb2clusters.hpp"
 
 VACVariable::VACVariable(WCSP* wcsp, string n, Value iinf, Value isup)
     : EnumeratedVariable(wcsp, n, iinf, isup)

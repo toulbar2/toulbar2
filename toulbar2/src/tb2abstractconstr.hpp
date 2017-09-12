@@ -7,8 +7,8 @@
 #define TB2ABSTRACTCONSTR_HPP_
 
 #include "tb2constraint.hpp"
-#include "tb2enumvar.hpp"
 #include "tb2variable.hpp"
+#include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
 #include <set>

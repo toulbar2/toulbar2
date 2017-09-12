@@ -1,6 +1,6 @@
 #include "tb2dpglobalconstr.hpp"
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 DPGlobalConstraint::DPGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)

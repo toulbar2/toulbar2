@@ -6,8 +6,8 @@
 #ifndef TB2HAPLOTYPE_HPP_
 #define TB2HAPLOTYPE_HPP_
 
-#include "tb2pedigree.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2pedigree.hpp"
 
 struct classcomp {
     bool operator()(const pair<int, int>& lp, const pair<int, int>& rp) const

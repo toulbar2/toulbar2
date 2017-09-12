@@ -4,11 +4,11 @@
 
 #include "tb2randomgen.hpp"
 #include "tb2constraint.hpp"
-#include "tb2enumvar.hpp"
 #include "tb2variable.hpp"
+#include "tb2enumvar.hpp"
 
-#include <algorithm>
 #include <set>
+#include <algorithm>
 
 bool naryRandom::connected()
 {

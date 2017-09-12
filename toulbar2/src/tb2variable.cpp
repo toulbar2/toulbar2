@@ -3,10 +3,10 @@
  */
 
 #include "tb2variable.hpp"
-#include "tb2binconstr.hpp"
-#include "tb2clusters.hpp"
-#include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2binconstr.hpp"
+#include "tb2ternaryconstr.hpp"
+#include "tb2clusters.hpp"
 
 /*
  * Constructors and misc.

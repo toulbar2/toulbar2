@@ -2,8 +2,8 @@
 #define TB2NARYCONSTR_HPP_
 
 #include "tb2abstractconstr.hpp"
-#include "tb2enumvar.hpp"
 #include "tb2ternaryconstr.hpp"
+#include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
 #include <set>

@@ -7,14 +7,14 @@
 #ifdef BOOST
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/biconnected_components.hpp>
-#include <boost/graph/connected_components.hpp>
-#include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/graphviz.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <boost/graph/biconnected_components.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
 #include <boost/graph/minimum_degree_ordering.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
+#include <boost/graph/cuthill_mckee_ordering.hpp>
 
 using namespace boost;
 
@@ -36,8 +36,8 @@ typedef adjacency_list<setS, vecS, undirectedS, no_property,
 typedef adjacency_list<setS, vecS, undirectedS, property<vertex_color_t, default_color_type, property<vertex_degree_t, int>>> ColoredGraph;
 #endif
 
-#include "tb2binconstr.hpp"
 #include "tb2wcsp.hpp"
+#include "tb2binconstr.hpp"
 
 #ifdef BOOST
 

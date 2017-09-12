@@ -1,8 +1,8 @@
 #include "tb2regularflowconstr.hpp"
 #include "tb2wcsp.hpp"
 
-#include <functional>
 #include <queue>
+#include <functional>
 
 RegularFlowConstraint::RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in)

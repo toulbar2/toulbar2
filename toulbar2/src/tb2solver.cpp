@@ -4,11 +4,11 @@
  */
 
 #include "tb2solver.hpp"
+#include "tb2domain.hpp"
+#include "tb2pedigree.hpp"
+#include "tb2haplotype.hpp"
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
-#include "tb2domain.hpp"
-#include "tb2haplotype.hpp"
-#include "tb2pedigree.hpp"
 #include <strings.h>
 #include <unistd.h>
 

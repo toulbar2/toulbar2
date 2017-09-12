@@ -7,8 +7,8 @@
 #define TB2GLOBALCONSTR_HPP_
 
 #include "tb2abstractconstr.hpp"
-#include "tb2enumvar.hpp"
 #include "tb2naryconstr.hpp"
+#include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
 #include <map>

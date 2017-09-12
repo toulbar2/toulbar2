@@ -31,6 +31,7 @@
 //#define WIDE_STRING
 
 #include "tb2utils.hpp"
+#include "tb2integer.hpp"
 
 //Must be included after tb2utils.hpp
 #include "tb2integer.hpp"

@@ -1,10 +1,10 @@
 #ifndef GRAMMARUTILS
 #define GRAMMARUTILS
 
-#include "tb2types.hpp"
+#include <vector>
 #include <iostream>
 #include <map>
-#include <vector>
+#include "tb2types.hpp"
 
 using namespace std;
 

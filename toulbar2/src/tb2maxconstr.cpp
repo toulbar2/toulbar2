@@ -1,9 +1,9 @@
 #include "tb2maxconstr.hpp"
 #include "tb2enumvar.hpp"
-#include <algorithm>
-#include <fstream>
-#include <set>
 #include <vector>
+#include <fstream>
+#include <algorithm>
+#include <set>
 
 using namespace std;
 

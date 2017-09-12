@@ -7,8 +7,8 @@
 #define TB2TERNARYCONSTR_HPP_
 
 #include "tb2abstractconstr.hpp"
-#include "tb2binconstr.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2binconstr.hpp"
 
 struct Functor_getCostXYZ {
     TernaryConstraint& obj;

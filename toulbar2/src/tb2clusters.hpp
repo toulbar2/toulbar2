@@ -6,13 +6,13 @@
 #ifndef TB2CLUSTERS_HPP_
 #define TB2CLUSTERS_HPP_
 
+#include "tb2wcsp.hpp"
+#include "tb2solver.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2naryconstr.hpp"
-#include "tb2solver.hpp"
-#include "tb2wcsp.hpp"
 
-#include <list>
 #include <set>
+#include <list>
 
 class Cluster;
 

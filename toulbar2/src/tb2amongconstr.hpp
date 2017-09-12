@@ -6,10 +6,10 @@
 #define TB2AMONGCONSTR_HPP_
 
 #include "tb2dpglobalconstr.hpp"
-#include <fstream>
-#include <set>
-#include <string>
 #include <vector>
+#include <set>
+#include <fstream>
+#include <string>
 
 using namespace std;
 

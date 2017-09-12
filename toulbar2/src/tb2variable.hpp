@@ -7,8 +7,8 @@
 #define TB2VARIABLE_HPP_
 
 #include "tb2btlist.hpp"
-#include "tb2domain.hpp"
 #include "tb2queue.hpp"
+#include "tb2domain.hpp"
 
 #include <set>
 /*
