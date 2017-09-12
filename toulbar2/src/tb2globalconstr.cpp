@@ -129,13 +129,7 @@ void GlobalConstraint::project(int index, Value value, Cost cost, bool delayed)
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
         TreeDecomposition* td = wcsp->getTreeDec();
         if(td) td->addDelta(cluster,x,value,cost);
-
-        Cost result;
-        if (Add(deltaCost[index][x->toIndex(value)],cost,&result))
-            throw Overflow();
-        else
-            deltaCost[index][x->toIndex(value)] = result;
-
+        deltaCost[index][x->toIndex(value)] += cost;  // Warning! Possible overflow???
     }
     x->project(value, cost, delayed);
 }
@@ -146,13 +140,7 @@ void GlobalConstraint::extend(int index, Value value, Cost cost)
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(index);
     TreeDecomposition* td = wcsp->getTreeDec();
     if(td) td->addDelta(cluster,x,value,-cost);
-
-    Cost result;
-    if (Sub(deltaCost[index][x->toIndex(value)],cost,&result))
-        throw Overflow();
-    else
-        deltaCost[index][x->toIndex(value)] = result;
-
+    deltaCost[index][x->toIndex(value)] -= cost;  // Warning! Possible overflow???
     x->extend(value, cost);
 }
 

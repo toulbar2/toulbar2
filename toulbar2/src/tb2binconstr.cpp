@@ -106,12 +106,7 @@ void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vec
     TreeDecomposition *td = wcsp->getTreeDec();
     if (td) td->addDelta(cluster, x, value, -cost);
 
-    Cost result;
-    if (Sub(deltaCostsX[x->toIndex(value)],cost,&result))
-        throw Overflow();
-    else
-        deltaCostsX[x->toIndex(value)] = result;
-
+    deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
     x->extend(value, cost);
 }
 

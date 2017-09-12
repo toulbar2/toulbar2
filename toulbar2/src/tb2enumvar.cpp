@@ -144,13 +144,7 @@ void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
-
-    Cost result;
-    if (Add(costs[toIndex(value)],cost,&result))
-        throw Overflow();
-    else
-        costs[toIndex(value)] = result;
-
+    costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || LUBTEST(maxCost, newcost)) queueNC();
     if (DACTEST(oldcost, cost)) {
@@ -193,13 +187,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
 void EnumeratedVariable::extendAll(Cost cost)
 {
     assert(cost > MIN_COST);
-
-    Cost result;
-    if (Add(cost,deltaCost,&result))
-        throw Overflow();
-    else
-        deltaCost = result;
-
+    deltaCost += cost;          // Warning! Possible overflow???
     queueNC();
 }
 

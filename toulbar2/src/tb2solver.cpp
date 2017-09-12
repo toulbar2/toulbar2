@@ -1181,9 +1181,8 @@ void Solver::newSolution()
         fprintf(ToulBar2::solutionFile,"\n");
     }
 
-        if ((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
-            ((WCSP *)wcsp)->solution_UAI(wcsp->getLb());
-        }
+    if((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
+        ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
     }
     if (ToulBar2::newsolution)(*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
@@ -2036,6 +2035,20 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
 
     cp.stop = max(cp.stop, idx);
 }
+
+void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb,TLogProb logLbZ,TLogProb logUbZ,Cost delta)
+{
+        ptrdiff_t idx = cp.index;
+        if (ToulBar2::verbose >= 1) {
+                if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
+                cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
+        }
+        assert(cp.start <= idx);
+        open.push(OpenNode(logLbZ,logUbZ,MAX(MIN_COST, lb + delta), cp.start, idx));
+
+        cp.stop = max(cp.stop, idx);
+}
+
 
 //// BUG: not compatible with boosting search by variable elimination (default dummy assignment may be incompatible with restored choice point)
 //void Solver::restore(CPStore &cp, OpenNode nd)
