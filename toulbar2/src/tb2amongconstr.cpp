@@ -4,17 +4,14 @@
 
 using namespace std;
 
-AmongConstraint::AmongConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
+AmongConstraint::AmongConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
     , f(NULL)
     , invf(NULL)
     , curf(NULL)
     , minBarU(NULL)
     , minU(NULL)
-    , ub(0)
-    , lb(0)
-{
-}
+    , ub(0), lb(0) {}
 
 AmongConstraint::~AmongConstraint()
 {
@@ -23,7 +20,7 @@ AmongConstraint::~AmongConstraint()
     deleteTable(invf);
 }
 
-void AmongConstraint::read(istream& file)
+void AmongConstraint::read(istream &file)
 {
     string str;
     file >> str >> def;
@@ -42,20 +39,18 @@ void AmongConstraint::read(istream& file)
         file >> tmp;
         V.insert(tmp);
     }
+
 }
 
-void AmongConstraint::dump(ostream& os, bool original)
+void AmongConstraint::dump(ostream &os, bool original)
 {
     assert(original); //TODO: case original is false
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++)
-            os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++)
-            if (scope[i]->unassigned())
-                os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
     os << " -1 samong var " << def << " " << lb << " " << ub << endl;
     os << V.size();
@@ -94,7 +89,7 @@ Cost AmongConstraint::minCostOriginal()
     for (int i = 1; i <= n; i++) {
         int minu, minbaru;
         minu = minbaru = wcsp->getUb();
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i - 1);
+        EnumeratedVariable *x = (EnumeratedVariable *)getVar(i - 1);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             int uCost(0), baruCost(def);
             if (V.find(*v) == V.end()) {
@@ -125,13 +120,12 @@ Cost AmongConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost AmongConstraint::evalOriginal(const String& s)
+Cost AmongConstraint::evalOriginal(const String &s)
 {
     int n = arity();
     int count = 0;
     for (int i = 0; i < n; i++) {
-        if (V.find(s[i] - CHAR_FIRST) != V.end())
-            count++;
+        if (V.find(s[i] - CHAR_FIRST) != V.end()) count++;
     }
     return max(0, max(lb - count, count - ub)) * def;
 }
@@ -146,13 +140,13 @@ void AmongConstraint::recompute()
     }
 
     recomputeTable(f, invf);
+
 }
 
 DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool changed)
 {
 
-    if (changed)
-        recompute();
+    if (changed) recompute();
 
     Cost minCost = wcsp->getUb();
     Cost ucost(0), barucost(0);
@@ -161,21 +155,21 @@ DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool cha
     } else {
         barucost = def;
     }
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(var);
+    EnumeratedVariable *x = (EnumeratedVariable *)getVar(var);
     ucost -= deltaCost[var][x->toIndex(val)];
     barucost -= deltaCost[var][x->toIndex(val)];
 
     minCost = f[var][0].val + barucost + invf[var + 1][0].val;
     for (int j = 1; j <= ub; j++) {
         Cost tmpMinCost = min(f[var][j].val + barucost + invf[var + 1][j].val,
-            f[var][j - 1].val + ucost + invf[var + 1][j].val);
+                              f[var][j - 1].val + ucost + invf[var + 1][j].val);
         minCost = min(tmpMinCost, minCost);
     }
 
     return DPGlobalConstraint::Result(minCost, NULL);
 }
 
-void AmongConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable, int startRow)
+void AmongConstraint::recomputeTable(DPTableCell **table, DPTableCell **invTable, int startRow)
 {
     int n = arity();
 
@@ -226,12 +220,13 @@ void AmongConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable
             invTable[i][ub].source = 1;
         }
     }
+
 }
 
 Cost AmongConstraint::computeMinU(int var)
 {
     Cost minCost = top;
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(var);
+    EnumeratedVariable *x = (EnumeratedVariable *)getVar(var);
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
         Cost ucost = 0;
         if (V.find(*v) == V.end()) {
@@ -245,7 +240,7 @@ Cost AmongConstraint::computeMinU(int var)
 Cost AmongConstraint::computeMinBarU(int var)
 {
     Cost minCost = top;
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(var);
+    EnumeratedVariable *x = (EnumeratedVariable *)getVar(var);
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
         Cost ucost = def;
         if (V.find(*v) == V.end()) {
@@ -256,9 +251,11 @@ Cost AmongConstraint::computeMinBarU(int var)
     return minCost;
 }
 
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

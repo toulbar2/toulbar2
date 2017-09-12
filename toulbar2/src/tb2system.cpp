@@ -2,17 +2,17 @@
  * ****** System dependent functions.
  */
 
-#include "tb2system.hpp"
 #include "tb2types.hpp"
+#include "tb2system.hpp"
 
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
 #ifdef LINUX
-#include <sys/resource.h>
-#include <sys/time.h>
-#include <sys/times.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/times.h>
 
 //double cpuTime()
 //{
@@ -34,16 +34,12 @@ double cpuTime()
 
 void timeOut(int sig)
 {
-    if (ToulBar2::verbose >= 0)
-        cout << endl
-             << "Time limit expired... Aborting..." << endl;
-    if (ToulBar2::timeOut)
-        ToulBar2::timeOut();
-    else
-        exit(0);
+    if (ToulBar2::verbose >= 0) cout << endl << "Time limit expired... Aborting..." << endl;
+    if (ToulBar2::timeOut) ToulBar2::timeOut();
+    else exit(0);
 }
 
-static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };
+static struct itimerval thetimer = { {0, 0}, {0, 0} };
 
 /* set a timer (in seconds) */
 void timer(int t)
@@ -81,3 +77,4 @@ void timerStop() {}
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

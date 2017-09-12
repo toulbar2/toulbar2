@@ -11,23 +11,18 @@
 #include "tb2wcsp.hpp"
 
 struct Functor_getCost {
-    BinaryConstraint& obj;
-    inline Functor_getCost(BinaryConstraint& in)
-        : obj(in)
-    {
-    }
-    inline Cost operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy) const;
+    BinaryConstraint &obj;
+    inline Functor_getCost(BinaryConstraint &in) : obj(in) {}
+    inline Cost operator()(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) const;
 };
 struct Functor_getCostReverse {
-    BinaryConstraint& obj;
-    inline Functor_getCostReverse(BinaryConstraint& in)
-        : obj(in)
-    {
-    }
-    inline Cost operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vy, Value vx) const;
+    BinaryConstraint &obj;
+    inline Functor_getCostReverse(BinaryConstraint &in) : obj(in) {}
+    inline Cost operator()(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vy, Value vx) const;
 };
 
-class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable, EnumeratedVariable> {
+class BinaryConstraint : public AbstractBinaryConstraint<EnumeratedVariable, EnumeratedVariable>
+{
 protected:
     unsigned int sizeX;
     unsigned int sizeY;
@@ -38,46 +33,42 @@ protected:
     vector<Value> supportX;
     vector<Value> supportY;
     bool isinspanningtree = false; //pair<bool,int> isInMST
-    template <typename T>
-    void findSupport(T getCost, EnumeratedVariable* x, EnumeratedVariable* y,
-        vector<Value>& supportX, vector<StoreCost>& deltaCostsX);
-    template <typename T>
-    void findFullSupport(T getCost, EnumeratedVariable* x, EnumeratedVariable* y,
-        vector<Value>& supportX, vector<StoreCost>& deltaCostsX,
-        vector<Value>& supportY, vector<StoreCost>& deltaCostsY);
-    template <typename T>
-    void projection(T getCost, EnumeratedVariable* x, EnumeratedVariable* y, Value valueY, vector<StoreCost>& deltaCostsX);
-    template <typename T>
-    bool verify(T getCost, EnumeratedVariable* x, EnumeratedVariable* y);
+    template <typename T> void findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+                                           vector<Value> &supportX, vector<StoreCost> &deltaCostsX);
+    template <typename T> void findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+            vector<Value> &supportX, vector<StoreCost> &deltaCostsX,
+            vector<Value> &supportY, vector<StoreCost> &deltaCostsY);
+    template <typename T> void projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX);
+    template <typename T> bool verify(T getCost, EnumeratedVariable *x, EnumeratedVariable *y);
 
     // return true if unary support of x is broken
-    bool project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX);
-    void extend(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX);
+    bool project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
+    void extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX);
 
-    void findSupportX() { findSupport(Functor_getCost(*this), x, y, supportX, deltaCostsX); }
-    void findSupportY() { findSupport(Functor_getCostReverse(*this), y, x, supportY, deltaCostsY); }
-    void findFullSupportX() { findFullSupport(Functor_getCost(*this), x, y, supportX, deltaCostsX, supportY, deltaCostsY); }
-    void findFullSupportY() { findFullSupport(Functor_getCostReverse(*this), y, x, supportY, deltaCostsY, supportX, deltaCostsX); }
-    void projectX() { projection(Functor_getCost(*this), x, y, y->getValue(), deltaCostsX); }
-    void projectY() { projection(Functor_getCostReverse(*this), y, x, x->getValue(), deltaCostsY); }
-    bool verifyX() { return verify(Functor_getCost(*this), x, y); }
-    bool verifyY() { return verify(Functor_getCostReverse(*this), y, x); }
-    bool projectX(Value value, Cost cost) { return project(x, value, cost, deltaCostsX); }
-    bool projectY(Value value, Cost cost) { return project(y, value, cost, deltaCostsY); }
-    void extendX(Value value, Cost cost) { extend(x, value, cost, deltaCostsX); }
-    void extendY(Value value, Cost cost) { extend(y, value, cost, deltaCostsY); }
+    void findSupportX() {findSupport(Functor_getCost(*this), x, y, supportX, deltaCostsX);}
+    void findSupportY() {findSupport(Functor_getCostReverse(*this), y, x, supportY, deltaCostsY);}
+    void findFullSupportX() {findFullSupport(Functor_getCost(*this), x, y, supportX, deltaCostsX, supportY, deltaCostsY);}
+    void findFullSupportY() {findFullSupport(Functor_getCostReverse(*this), y, x, supportY, deltaCostsY, supportX, deltaCostsX);}
+    void projectX() {projection(Functor_getCost(*this), x, y, y->getValue(), deltaCostsX);}
+    void projectY() {projection(Functor_getCostReverse(*this), y, x, x->getValue(), deltaCostsY);}
+    bool verifyX() {return verify(Functor_getCost(*this), x, y);}
+    bool verifyY() {return verify(Functor_getCostReverse(*this), y, x);}
+    bool projectX(Value value, Cost cost) {return project(x, value, cost, deltaCostsX);}
+    bool projectY(Value value, Cost cost) {return project(y, value, cost, deltaCostsY);}
+    void extendX(Value value, Cost cost) {extend(x, value, cost, deltaCostsX);}
+    void extendY(Value value, Cost cost) {extend(y, value, cost, deltaCostsY);}
 
 public:
-    BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
+    BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab);
 
-    BinaryConstraint(WCSP* wcsp);
+    BinaryConstraint(WCSP *wcsp);
 
     ~BinaryConstraint() {}
 
-    void setIsinSpanningTree(bool is) { isinspanningtree = is; }
-    bool IsinSpanninTree() { return isinspanningtree; }
+    void setIsinSpanningTree(bool is) {isinspanningtree = is;}
+    bool IsinSpanninTree() {return isinspanningtree;}
 
-    bool extension() const FINAL { return true; }
+    bool extension() const FINAL {return true;}
 
     Cost getCost(Value vx, Value vy) const
     {
@@ -90,11 +81,11 @@ public:
         return res;
     }
 
-    Cost getCost(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy)
+    Cost getCost(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy)
     {
         unsigned int vindex[2];
-        vindex[getIndex(xx)] = xx->toIndex(vx);
-        vindex[getIndex(yy)] = yy->toIndex(vy);
+        vindex[ getIndex(xx) ] = xx->toIndex(vx);
+        vindex[ getIndex(yy) ] = yy->toIndex(vy);
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
         //if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
         res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
@@ -111,7 +102,7 @@ public:
         costs[ix * sizeY + iy] += mincost;
     }
 
-    void addcost(EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost)
+    void addcost(EnumeratedVariable *xin, EnumeratedVariable *yin, Value vx, Value vy, Cost mincost)
     {
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
@@ -129,13 +120,11 @@ public:
                 costs[a * sizeY + b] = c;
     }
 
-    void setcost(EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost)
+    void setcost(EnumeratedVariable *xin, EnumeratedVariable *yin, Value vx, Value vy, Cost mincost)
     {
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
-        if (xin == x)
-            costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
-        else
-            costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] = mincost;
+        if (xin == x) costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
+        else costs[x->toIndex(vy) * sizeY + y->toIndex(vx)] = mincost;
     }
 
     void setcost(Value vx, Value vy, Cost mincost)
@@ -144,7 +133,7 @@ public:
         costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
     }
 
-    void addCosts(EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin)
+    void addCosts(EnumeratedVariable *xin, EnumeratedVariable *yin, vector<Cost> &costsin)
     {
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
         assert(costsin.size() <= costs.size());
@@ -153,15 +142,13 @@ public:
             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
                 ix = x->toIndex(*iterx);
                 iy = y->toIndex(*itery);
-                if (xin == x)
-                    costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
-                else
-                    costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
+                if (xin == x) costs[ix * sizeY + iy] += costsin[ix * sizeY + iy];
+                else	     costs[ix * sizeY + iy] += costsin[iy * sizeX + ix];
             }
         }
     }
 
-    void addCosts(BinaryConstraint* xy)
+    void addCosts(BinaryConstraint *xy)
     {
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         assert(((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)));
@@ -182,10 +169,8 @@ public:
     void clearCosts()
     {
         assert(ToulBar2::verbose < 4 || ((cout << "clear cost (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
-        for (unsigned int i = 0; i < sizeX; i++)
-            deltaCostsX[i] = MIN_COST;
-        for (unsigned int j = 0; j < sizeY; j++)
-            deltaCostsY[j] = MIN_COST;
+        for (unsigned int i = 0; i < sizeX; i++) deltaCostsX[i] = MIN_COST;
+        for (unsigned int j = 0; j < sizeY; j++) deltaCostsY[j] = MIN_COST;
         for (unsigned int i = 0; i < sizeX; i++) {
             for (unsigned int j = 0; j < sizeY; j++) {
                 costs[i * sizeY + j] = MIN_COST;
@@ -202,50 +187,40 @@ public:
                 unsigned int iy = y->toIndex(*itery);
                 Cost cost = costs[ix * sizeY + iy];
                 Cost delta = deltaCostsX[ix] + deltaCostsY[iy];
-                if (CUT(cost - delta, ub))
-                    costs[ix * sizeY + iy] = mult_ub + delta;
+                if (CUT(cost - delta, ub)) costs[ix * sizeY + iy] = mult_ub + delta;
             }
         }
     }
 
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL
-    {
+    Cost evalsubstr(const String &s, Constraint *ctr) FINAL {
         Value vals[2];
         int count = 0;
 
-        for (int i = 0; i < 2; i++) {
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+        for (int i = 0; i < 2; i++)
+        {
+            EnumeratedVariable *var = (EnumeratedVariable *) getVar(i);
             int ind = ctr->getIndex(var);
-            if (ind >= 0) {
-                vals[i] = var->toValue(s[ind] - CHAR_FIRST);
-                count++;
-            }
+            if (ind >= 0) { vals[i] = var->toValue(s[ind] - CHAR_FIRST); count++; }
         }
-        if (count == 2)
-            return getCost(vals[0], vals[1]);
-        else
-            return MIN_COST;
+        if (count == 2) return getCost(vals[0], vals[1]);
+        else return MIN_COST;
     }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
+    Cost evalsubstr(const String &s, NaryConstraint *ctr) FINAL {return evalsubstr(s, (Constraint *) ctr);}    // NaryConstraint class undefined
 
-    Value getSupport(EnumeratedVariable* var, Value v)
+    Value getSupport(EnumeratedVariable *var, Value v)
     {
-        if (var == x)
-            return supportX[x->toIndex(v)];
-        else
-            return supportY[y->toIndex(v)];
+        if (var == x) return supportX[x->toIndex(v)];
+        else  		 return supportY[y->toIndex(v)];
     }
 
-    void setSupport(EnumeratedVariable* var, Value v, Value s)
+    void  setSupport(EnumeratedVariable *var, Value v, Value s)
     {
-        if (var == x)
-            supportX[x->toIndex(v)] = s;
-        else
-            supportY[y->toIndex(v)] = s;
+        if (var == x) supportX[x->toIndex(v)] = s;
+        else  		 supportY[y->toIndex(v)] = s;
     }
 
-    EnumeratedVariable* xvar;
-    EnumeratedVariable* yvar;
+    EnumeratedVariable *xvar;
+    EnumeratedVariable *yvar;
     EnumeratedVariable::iterator itvx;
     EnumeratedVariable::iterator itvy;
 
@@ -257,7 +232,7 @@ public:
         yvar = y;
     }
 
-    bool next(String& t, Cost& c)
+    bool next(String &t, Cost &c)
     {
         Char tch[3];
         if (itvx != xvar->end()) {
@@ -281,50 +256,45 @@ public:
     }
 
     void firstlex() { first(); }
-    bool nextlex(String& t, Cost& c) { return next(t, c); }
+    bool nextlex(String &t, Cost &c) { return next(t, c); }
 
-    void setTuple(const String& t, Cost c) FINAL
-    {
+
+    void setTuple(const String &t, Cost c) FINAL {
         Value v0 = x->toValue(t[0] - CHAR_FIRST);
         Value v1 = y->toValue(t[1] - CHAR_FIRST);
         setcost(v0, v1, c);
     }
 
-    void addtoTuple(const String& t, Cost c) FINAL
-    {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
-        addcost(v0, v1, c);
+    void addtoTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        addcost( v0, v1, c );
     }
 
-    //    void setTuple( unsigned int* t, Cost c )  {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        setcost( v0, v1, c );
-    //    }
-    //
-    //    void addtoTuple( unsigned int* t, Cost c )  {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        addcost( v0, v1, c );
-    //    }
+//    void setTuple( unsigned int* t, Cost c )  {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        setcost( v0, v1, c );
+//    }
+//
+//    void addtoTuple( unsigned int* t, Cost c )  {
+//        Value v0 = x->toValue(t[0]);
+//        Value v1 = y->toValue(t[1]);
+//        addcost( v0, v1, c );
+//    }
 
-    void fillElimConstr(EnumeratedVariable* xin, EnumeratedVariable* yin, Constraint* from1, Constraint* from2)
+
+    void fillElimConstr(EnumeratedVariable *xin, EnumeratedVariable *yin, Constraint *from1,  Constraint *from2)
     {
         x = xin;
         y = yin;
         sizeX = x->getDomainInitSize();
         sizeY = y->getDomainInitSize();
-        if (sizeX > deltaCostsX.size())
-            deltaCostsX.resize(sizeX, StoreCost(MIN_COST));
-        if (sizeY > deltaCostsY.size())
-            deltaCostsY.resize(sizeY, StoreCost(MIN_COST));
-        if (sizeX > supportX.size())
-            supportX.resize(sizeX);
-        if (sizeY > supportY.size())
-            supportY.resize(sizeY);
-        if (sizeX * sizeY > costs.size())
-            costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
+        if (sizeX > deltaCostsX.size()) deltaCostsX.resize(sizeX, StoreCost(MIN_COST));
+        if (sizeY > deltaCostsY.size()) deltaCostsY.resize(sizeY, StoreCost(MIN_COST));
+        if (sizeX > supportX.size()) supportX.resize(sizeX);
+        if (sizeY > supportY.size()) supportY.resize(sizeY);
+        if (sizeX * sizeY > costs.size()) costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
         linkX->removed = true;
         linkY->removed = true;
         linkX->content.constr = this;
@@ -338,17 +308,13 @@ public:
 
     bool project(int varIndex, Value value, Cost cost)
     {
-        if (varIndex == 0)
-            return projectX(value, cost);
-        else
-            return projectY(value, cost);
+        if (varIndex == 0) return projectX(value, cost);
+        else return projectY(value, cost);
     }
     void extend(int varIndex, Value value, Cost cost)
     {
-        if (varIndex == 0)
-            return extendX(value, cost);
-        else
-            return extendY(value, cost);
+        if (varIndex == 0) return extendX(value, cost);
+        else return extendY(value, cost);
     }
 
     void propagate()
@@ -364,69 +330,45 @@ public:
         if (getDACScopeIndex() == 0) {
             x->queueAC();
             x->queueEAC1();
-            if (ToulBar2::LcLevel >= LC_DAC)
-                y->queueDAC();
-            else
-                y->queueAC();
+            if (ToulBar2::LcLevel >= LC_DAC) y->queueDAC();
+            else y->queueAC();
         } else {
             y->queueAC();
             y->queueEAC1();
-            if (ToulBar2::LcLevel >= LC_DAC)
-                x->queueDAC();
-            else
-                x->queueAC();
+            if (ToulBar2::LcLevel >= LC_DAC) x->queueDAC();
+            else x->queueAC();
         }
     }
     void remove(int varIndex)
     {
-        if (varIndex == 0)
-            y->queueDEE();
-        else
-            x->queueDEE();
+        if (varIndex == 0) y->queueDEE();
+        else x->queueDEE();
         if (ToulBar2::LcLevel == LC_AC) {
-            if (varIndex == 0)
-                findSupportY();
-            else
-                findSupportX();
+            if (varIndex == 0) findSupportY();
+            else findSupportX();
         } else {
             if (getDACScopeIndex() == 0) {
-                if (varIndex == 0)
-                    findSupportY();
+                if (varIndex == 0) findSupportY();
             } else {
-                if (varIndex == 1)
-                    findSupportX();
+                if (varIndex == 1) findSupportX();
             }
         }
     }
     void projectFromZero(int varIndex)
     {
         if (getDACScopeIndex() == 0) {
-            if (varIndex == 1)
-                findFullSupportX();
+            if (varIndex == 1) findFullSupportX();
         } else {
-            if (varIndex == 0)
-                findFullSupportY();
+            if (varIndex == 0) findFullSupportY();
         }
     }
     //Trick! instead of doing remove(index) now, let AC queue do the job.
     //So several incdec events on the same constraint can be merged into one AC event
-    void increase(int index)
-    {
-        if (index == 0)
-            x->queueAC();
-        else
-            y->queueAC();
-    }
-    void decrease(int index)
-    {
-        if (index == 0)
-            x->queueAC();
-        else
-            y->queueAC();
-    } // Trick! instead of remove(index);
+    void increase(int index) {if (index == 0) x->queueAC(); else y->queueAC();}
+    void decrease(int index) {if (index == 0) x->queueAC(); else y->queueAC();} // Trick! instead of remove(index);
     void assign(int varIndex)
     {
-        deconnect(); // Warning! deconnection has to be done before the projection
+        deconnect();                    // Warning! deconnection has to be done before the projection
         if (varIndex == 0) {
             projectY();
         } else {
@@ -459,8 +401,7 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
-            return true;
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex()) return true;
         if (varIndex == 0) {
             unsigned int xindex = x->toIndex(a);
             if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
@@ -490,33 +431,28 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
-            return;
-        if (varIndex == 0)
-            findFullSupportX();
-        else
-            findFullSupportY();
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex()) return;
+        if (varIndex == 0) findFullSupportX();
+        else findFullSupportY();
     }
 
     bool verify()
     {
         if (ToulBar2::LcLevel == LC_DAC) {
-            if (getDACScopeIndex() == 0)
-                return verifyX();
-            else
-                return verifyY();
+            if (getDACScopeIndex() == 0) return verifyX();
+            else return verifyY();
         } else {
             return verifyX() && verifyY();
         }
     }
 
-    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int varIndex, Value a, Value b);
+    pair< pair<Cost, Cost>, pair<Cost, Cost> > getMaxCost(int varIndex, Value a, Value b);
 
     double computeTightness()
     {
         int count = 0;
         double sum = 0;
-        Cost* costs = new Cost[x->getDomainSize() * y->getDomainSize()];
+        Cost *costs = new Cost[x->getDomainSize()*y->getDomainSize()];
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                 Cost c = getCost(*iterX, *iterY);
@@ -528,56 +464,42 @@ public:
         if (ToulBar2::weightedTightness == 2) {
             tight = to_double(stochastic_selection<Cost>(costs, 0, count - 1, count / 2));
         } else {
-            tight = sum / (double)count;
+            tight = sum / (double) count;
         }
         delete[] costs;
         return tight;
     }
 
-    EnumeratedVariable* commonVar(BinaryConstraint* bctr)
+    EnumeratedVariable *commonVar(BinaryConstraint *bctr)
     {
-        if (getIndex(bctr->getVar(0)) >= 0)
-            return (EnumeratedVariable*)bctr->getVar(0);
-        else if (getIndex(bctr->getVar(1)) >= 0)
-            return (EnumeratedVariable*)bctr->getVar(1);
-        else
-            return NULL;
+        if (getIndex(bctr->getVar(0)) >= 0) return (EnumeratedVariable *) bctr->getVar(0);
+        else if (getIndex(bctr->getVar(1)) >= 0) return (EnumeratedVariable *) bctr->getVar(1);
+        else return NULL;
     }
 
-    void permute(EnumeratedVariable* xin, Value a, Value b);
+    void permute(EnumeratedVariable *xin, Value a, Value b);
 
-    bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value>& functional);
+    bool isFunctional(EnumeratedVariable *x, EnumeratedVariable *y, map<Value, Value> &functional);
 
-    void print(ostream& os);
-    void dump(ostream& os, bool original = true);
-    Long size() const FINAL { return (Long)sizeX * sizeY; }
-    Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }
+    void print(ostream &os);
+    void dump(ostream &os, bool original = true);
+    Long size() const FINAL {return (Long) sizeX * sizeY;}
+    Long space() const FINAL {return (Long) sizeof(StoreCost) * sizeX * sizeY;}
 
     friend struct Functor_getCost;
     friend struct Functor_getCostReverse;
 };
 
-inline Cost Functor_getCost::operator()(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy) const
-{
-    assert(xx == obj.x);
-    assert(yy == obj.y);
-    return obj.getCost(vx, vy);
-}
-inline Cost Functor_getCostReverse::operator()(EnumeratedVariable* yy, EnumeratedVariable* xx, Value vy, Value vx) const
-{
-    assert(xx == obj.x);
-    assert(yy == obj.y);
-    return obj.getCost(vx, vy);
-}
+inline Cost Functor_getCost::operator()(EnumeratedVariable *xx, EnumeratedVariable *yy, Value vx, Value vy) const {assert(xx == obj.x); assert(yy == obj.y); return obj.getCost(vx, vy);}
+inline Cost Functor_getCostReverse::operator()(EnumeratedVariable *yy, EnumeratedVariable *xx, Value vy, Value vx) const {assert(xx == obj.x); assert(yy == obj.y); return obj.getCost(vx, vy);}
 
 template <typename T>
-void BinaryConstraint::findSupport(T getCost, EnumeratedVariable* x, EnumeratedVariable* y,
-    vector<Value>& supportX, vector<StoreCost>& deltaCostsX)
+void BinaryConstraint::findSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+                                   vector<Value> &supportX, vector<StoreCost> &deltaCostsX)
 {
     assert(connected());
     wcsp->revise(this);
-    if (ToulBar2::verbose >= 3)
-        cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
+    if (ToulBar2::verbose >= 3) cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);
@@ -594,8 +516,7 @@ void BinaryConstraint::findSupport(T getCost, EnumeratedVariable* x, EnumeratedV
             }
             if (minCost > MIN_COST) {
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);
-                if (deconnected())
-                    return;
+                if (deconnected()) return;
             }
             supportX[xindex] = minCostValue;
         }
@@ -606,14 +527,13 @@ void BinaryConstraint::findSupport(T getCost, EnumeratedVariable* x, EnumeratedV
 }
 
 template <typename T>
-void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, EnumeratedVariable* y,
-    vector<Value>& supportX, vector<StoreCost>& deltaCostsX,
-    vector<Value>& supportY, vector<StoreCost>& deltaCostsY)
+void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable *x, EnumeratedVariable *y,
+                                       vector<Value> &supportX, vector<StoreCost> &deltaCostsX,
+                                       vector<Value> &supportY, vector<StoreCost> &deltaCostsY)
 {
     assert(connected());
     wcsp->revise(this);
-    if (ToulBar2::verbose >= 3)
-        cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
+    if (ToulBar2::verbose >= 3) cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);
@@ -635,15 +555,14 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, Enumera
                     if (GLBTEST(minCost, cost)) {
                         extend(y, *iterY, minCost - cost, deltaCostsY);
                         supportY[y->toIndex(*iterY)] = *iterX;
-                        //                         if (ToulBar2::vac) {
-                        //                             x->queueVAC2();
-                        //                             y->queueVAC2();
-                        //                         }
+//                         if (ToulBar2::vac) {
+//                             x->queueVAC2();
+//                             y->queueVAC2();
+//                         }
                     }
                 }
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);
-                if (deconnected())
-                    return;
+                if (deconnected()) return;
             }
             supportX[xindex] = minCostValue;
         }
@@ -654,7 +573,7 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, Enumera
 }
 
 template <typename T>
-void BinaryConstraint::projection(T getCost, EnumeratedVariable* x, EnumeratedVariable* y, Value valueY, vector<StoreCost>& deltaCostsX)
+void BinaryConstraint::projection(T getCost, EnumeratedVariable *x, EnumeratedVariable *y, Value valueY, vector<StoreCost> &deltaCostsX)
 {
     x->queueDEE();
     bool supportBroken = false;
@@ -671,17 +590,15 @@ void BinaryConstraint::projection(T getCost, EnumeratedVariable* x, EnumeratedVa
 }
 
 template <typename T>
-bool BinaryConstraint::verify(T getCost, EnumeratedVariable* x, EnumeratedVariable* y)
+bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariable *y)
 {
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         Cost minCost = getCost(x, y, *iterX, y->getInf());
-        if (ToulBar2::LcLevel >= LC_DAC && getDACScopeIndex() == getIndex(x))
-            minCost += y->getCost(y->getInf());
+        if (ToulBar2::LcLevel >= LC_DAC && getDACScopeIndex() == getIndex(x)) minCost += y->getCost(y->getInf());
         EnumeratedVariable::iterator iterY = y->begin();
         for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
             Cost cost = getCost(x, y, *iterX, *iterY);
-            if (ToulBar2::LcLevel >= LC_DAC && getDACScopeIndex() == getIndex(x))
-                cost += y->getCost(*iterY);
+            if (ToulBar2::LcLevel >= LC_DAC && getDACScopeIndex() == getIndex(x)) cost += y->getCost(*iterY);
             GLB(&minCost, cost);
         }
         if (minCost > MIN_COST) {
@@ -700,3 +617,4 @@ bool BinaryConstraint::verify(T getCost, EnumeratedVariable* x, EnumeratedVariab
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

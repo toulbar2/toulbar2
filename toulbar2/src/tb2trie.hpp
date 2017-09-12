@@ -5,7 +5,8 @@
 
 using namespace std;
 
-class TrieCpd {
+class TrieCpd
+{
 public:
     TrieCpd();
     ~TrieCpd();
@@ -16,10 +17,9 @@ public:
     void insert_sequence(string seq, Cost _cost);
     void print_tree();
     void print_tree(string acc);
-    size_t getTotalSequences() { return total_sequences; }
-
+    size_t getTotalSequences() {return total_sequences;}
 private:
-    vector<TrieCpd*> sons;
+    vector<TrieCpd *> sons;
     size_t sequence_count;
     static size_t total_sequences;
     Cost maxc;

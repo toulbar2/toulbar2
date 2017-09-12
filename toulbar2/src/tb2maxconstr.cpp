@@ -1,16 +1,14 @@
 #include "tb2maxconstr.hpp"
 #include "tb2enumvar.hpp"
-#include <algorithm>
-#include <fstream>
-#include <set>
 #include <vector>
+#include <fstream>
+#include <algorithm>
+#include <set>
 
 using namespace std;
 
-MaxConstraint::MaxConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
-    : DPGlobalConstraint(wcsp, scope, arity)
-    , top(MIN_COST)
-    , largest(MIN_COST)
+MaxConstraint::MaxConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity):
+    DPGlobalConstraint(wcsp, scope, arity), top(MIN_COST), largest(MIN_COST)
 {
     weightMap.resize(arity);
 }
@@ -19,7 +17,7 @@ MaxConstraint::~MaxConstraint()
 {
 }
 
-void MaxConstraint::read(istream& file)
+void MaxConstraint::read(istream &file)
 {
     //    int n = arity();
     // weightMap.resize(n);
@@ -39,27 +37,24 @@ void MaxConstraint::read(istream& file)
         unsigned int v;
         Cost w;
         file >> varID >> v >> w;
-        setAssignmentWeight((EnumeratedVariable*)(wcsp->getVar(varID)), v, w);
+        setAssignmentWeight((EnumeratedVariable *)(wcsp->getVar(varID)), v, w);
     }
+
 }
 
-void MaxConstraint::dump(ostream& os, bool original)
+void MaxConstraint::dump(ostream &os, bool original)
 {
     assert(original); //TODO: case original is false
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++)
-            os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++)
-            if (scope[i]->unassigned())
-                os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
     os << " -1 smaxdp " << def << endl;
     int ntuples = 0;
-    for (int i = 0; i < arity_; i++)
-        ntuples += weightMap[i].size();
+    for (int i = 0; i < arity_; i++) ntuples += weightMap[i].size();
     os << ntuples << endl;
     for (int i = 0; i < arity_; i++) {
         for (map<Value, Cost>::iterator it = weightMap[i].begin(); it != weightMap[i].end(); ++it) {
@@ -73,11 +68,10 @@ void MaxConstraint::initMemoization()
 {
     int n = arity();
     for (int i = 0; i < n; i++) {
-        EnumeratedVariable* x = scope[i];
+        EnumeratedVariable *x = scope[i];
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             map<Value, Cost>::iterator pos = weightMap[i].find(*it);
-            if (pos == weightMap[i].end())
-                weightMap[i][*it] = def;
+            if (pos == weightMap[i].end()) weightMap[i][*it] = def;
         }
     }
     top = max(MAX_COST, wcsp->getUb());
@@ -87,13 +81,12 @@ void MaxConstraint::initMemoization()
     best.resize(n);
 }
 
-Cost MaxConstraint::evalOriginal(const String& s)
+Cost MaxConstraint::evalOriginal(const String &s)
 {
     int largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {
-        if (largeComp < weightMap[i][s[i] - CHAR_FIRST])
-            largeComp = weightMap[i][s[i] - CHAR_FIRST];
+        if (largeComp < weightMap[i][s[i] - CHAR_FIRST]) largeComp = weightMap[i][s[i] - CHAR_FIRST];
     }
     return largeComp;
 }
@@ -106,22 +99,19 @@ Cost MaxConstraint::minCostOriginal()
 
 Cost MaxConstraint::minCostOriginal(int var, Value val, bool changed)
 {
-    if (changed)
-        findLargest();
+    if (changed) findLargest();
     return max(weightMap[var][val], largest);
 }
 
 void MaxConstraint::findLargest()
 {
     largest = 0;
-    for (int i = 0; i < arity(); i++) {
-        EnumeratedVariable* x = scope[i];
+    for (int i = 0; i <  arity(); i++) {
+        EnumeratedVariable *x = scope[i];
         Cost tmp = top;
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it)
-            if (tmp > weightMap[i][*it])
-                tmp = weightMap[i][*it];
-        if (largest < tmp)
-            largest = tmp;
+            if (tmp > weightMap[i][*it]) tmp = weightMap[i][*it];
+        if (largest < tmp) largest = tmp;
     }
 }
 
@@ -131,7 +121,7 @@ void MaxConstraint::recompute()
     int n = arity();
     sorted.clear();
     for (int i = 0; i < n; i++) {
-        EnumeratedVariable* x = scope[i];
+        EnumeratedVariable *x = scope[i];
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it)
             sorted.push_back(Entry(i, *it, weightMap[i][*it]));
     }
@@ -173,7 +163,7 @@ void MaxConstraint::recompute()
     }
 
     link.resize(m);
-    for (int i = 0; i < m; i++)
+    for (int i = 0; i < m ; i++)
         link[i] = i;
     for (int i = 0; i < n; i++) {
         query[last[i]] = m - 1;
@@ -191,8 +181,7 @@ void MaxConstraint::recompute()
             cur -= unary(curVar, curVal);
             best[var] = min(best[var], cur);
         }
-        if (stack[var].back() == i)
-            stack[var].pop_back();
+        if (stack[var].back() == i) stack[var].pop_back();
         mincosts[var][val] = min(cost[i], best[var] + unary(sorted[i].var, sorted[i].val));
         while (tree.size() != 0 && cost[*tree.rbegin()] >= cost[i]) {
             link[*tree.rbegin()] = i;
@@ -204,10 +193,10 @@ void MaxConstraint::recompute()
 
 DPGlobalConstraint::Result MaxConstraint::minCost(int var, Value val, bool changed)
 {
-    if (changed)
-        recompute();
+    if (changed) recompute();
     return DPGlobalConstraint::Result(mincosts[var][val], NULL);
 }
+
 
 Cost MaxConstraint::unary(int var, int val)
 {
@@ -226,9 +215,11 @@ int MaxConstraint::ancestor(int i)
     return ret;
 }
 
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

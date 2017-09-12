@@ -3,14 +3,14 @@
 
 #define verify
 
-LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-    int arity_in)
-    : GlobalConstraint(wcsp, scope_in, arity_in, 0)
+LinearConstraint::LinearConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
+                                   int arity_in) : GlobalConstraint(wcsp, scope_in, arity_in, 0)
 {
     initTest = false;
 }
 
-Cost LinearConstraint::solveMIP(MIP& mip)
+
+Cost LinearConstraint::solveMIP(MIP &mip)
 {
     return mip.solve();
 }
@@ -22,18 +22,20 @@ void LinearConstraint::initStructure()
 
     buObj = new int[count];
 
+
     propagate();
+
 }
 
 void LinearConstraint::end()
 {
     mip.called_time();
-    if (deconnected())
-        return;
+    if (deconnected()) return;
 }
 
-void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
+void LinearConstraint::checkRemoved(MIP &mip, Cost &cost, vector<int> &rmv)
 {
+
 
     pair<Cost, bool> result;
     vector<int> cDomain, cDomain2;
@@ -44,7 +46,8 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
         getDomainFromMIP(mip, i, cDomain); // getDomain
         sort(cDomain.begin(), cDomain.end());
 
-        EnumeratedVariable* y = (EnumeratedVariable*)getVar(i);
+
+        EnumeratedVariable *y = (EnumeratedVariable *)getVar(i);
         for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
 
             vector<int>::iterator it = find(cDomain.begin(), cDomain.end(), *v);
@@ -64,6 +67,7 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
             //deleted = true;
         }
 
+
         if (!cDomain.empty()) {
             cDomain2.clear();
             rmv.push_back(i);
@@ -82,12 +86,12 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
     }
 }
 
-void LinearConstraint::findProjection(MIP& mip, Cost& cost, int varindex, map<Value, Cost>& delta)
+void LinearConstraint::findProjection(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta)
 {
 
     pair<Cost, bool> result;
     delta.clear();
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
+    EnumeratedVariable *x = (EnumeratedVariable *)getVar(varindex);
     for (EnumeratedVariable::iterator j = x->begin(); j != x->end(); ++j) {
 
         int var1 = mapvar[varindex][*j];
@@ -97,9 +101,10 @@ void LinearConstraint::findProjection(MIP& mip, Cost& cost, int varindex, map<Va
         assert(tmp >= 0);
         delta[*j] = tmp;
     }
+
 }
 
-void LinearConstraint::augmentStructure(MIP& mip, Cost& cost, int varindex, map<Value, Cost>& delta)
+void LinearConstraint::augmentStructure(MIP &mip, Cost &cost, int varindex, map<Value, Cost> &delta)
 {
 
     for (map<Value, Cost>::iterator i = delta.begin(); i != delta.end(); i++) {
@@ -110,9 +115,10 @@ void LinearConstraint::augmentStructure(MIP& mip, Cost& cost, int varindex, map<
             cost -= i->second;
         }
     }
+
 }
 
-void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas)
+void LinearConstraint::changeAfterExtend(vector<int> &supports, vector<map<Value, Cost> > &deltas)
 {
 
     bucost = cost;
@@ -130,16 +136,18 @@ void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value
             v->second *= -1;
     }
     cost = solveMIP(mip); // solve
+
 }
 
-void LinearConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas)
+void LinearConstraint::changeAfterProject(vector<int> &supports, vector<map<Value, Cost> > &deltas)
 {
     for (unsigned int i = 0; i < supports.size(); i++) {
         augmentStructure(mip, cost, supports[i], deltas[i]);
     }
+
 }
 
-void LinearConstraint::getDomainFromMIP(MIP& mip, int varindex, vector<int>& domain)
+void LinearConstraint::getDomainFromMIP(MIP &mip, int varindex, vector<int> &domain)
 {
 
     domain.clear();
@@ -155,9 +163,11 @@ unsigned LinearConstraint::called_time()
     return mip.called_time();
 }
 
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

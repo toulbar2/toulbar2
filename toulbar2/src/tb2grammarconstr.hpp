@@ -7,22 +7,24 @@
 
 #include "tb2dpglobalconstr.hpp"
 #include "tb2grammarutils.hpp"
+#include <vector>
 #include <fstream>
 #include <string>
-#include <vector>
 using namespace std;
 
-class GrammarConstraint : public DPGlobalConstraint {
+class GrammarConstraint : public DPGlobalConstraint
+{
 private:
-    // dimension: i x j x |N|
-    Cost*** f;
-    Cost*** up;
-    bool*** marked;
 
-    Cost*** curf;
+    // dimension: i x j x |N|
+    Cost ** *f;
+    Cost ** *up;
+    bool ** *marked;
+
+    Cost ** *curf;
 
     // dimension: i x |sigma|
-    Cost** u;
+    Cost **u;
 
     // grammar, assuming in CNF
 
@@ -38,10 +40,10 @@ private:
     WCNFCFG cfg;
     Cost top;
 
-    template <class T>
-    void resizeTable(T***& table)
+    template<class T>
+    void resizeTable(T ** *&table)
     {
-        table = new T**[arity() + 1];
+        table = new T **[arity() + 1];
         for (int i = 0; i < arity() + 1; i++) {
             table[i] = new T*[arity() + 1];
             for (int j = 0; j < arity() + 1; j++) {
@@ -50,8 +52,8 @@ private:
         }
     }
 
-    template <class T>
-    void deleteTable(T***& table)
+    template<class T>
+    void deleteTable(T ** *&table)
     {
         for (int i = 0; i < arity() + 1; i++) {
             for (int j = 0; j < arity() + 1; j++) {
@@ -63,7 +65,7 @@ private:
         table = NULL;
     }
 
-    void recomputeTable(Cost*** table, Cost*** upTable = NULL);
+    void recomputeTable(Cost *** table, Cost *** upTable = NULL);
     void recompute();
 
     Cost unary(int ch, int var, Value v);
@@ -74,28 +76,30 @@ protected:
     Result minCost(int var, Value val, bool changed);
 
 public:
+
     static const int WEIGHTED = 1;
     static const int VAR = 0;
 
-    GrammarConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
+    GrammarConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity);
     virtual ~GrammarConstraint();
 
-    Cost eval(const String& s);
+    Cost eval(const String &s);
 
-    void read(istream& file);
+    void read(istream &file);
     //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
     //void setViolationMeasure(int measure) {if(configuring) mode = measure;}
-    WeightedCNFCFG* getGrammar() { return &cfg; }
+    WeightedCNFCFG *getGrammar() {return &cfg;}
     void initMemoization();
 
     string getName()
     {
         return "sgrammar";
     }
-    void dump(ostream& os, bool original = true);
+    void dump(ostream &os, bool original = true);
 };
 
 #endif /* TB2GRAMMARCCONSTR_HPP_ */
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
@@ -103,3 +107,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+
