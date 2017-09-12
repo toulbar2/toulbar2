@@ -10,21 +10,20 @@
 #include "tb2globalconstr.hpp"
 using namespace std;
 
-class DPGlobalConstraint : public GlobalConstraint
-{
+class DPGlobalConstraint : public GlobalConstraint {
 private:
-    vector<bool> * zero;
-    vector<Cost> * preUnaryCosts;
+    vector<bool>* zero;
+    vector<Cost>* preUnaryCosts;
 
     bool initialized;
 
     void clear();
-    void record(Value *tuple);
+    void record(Value* tuple);
     using GlobalConstraint::findSupport;
-    void findSupport(int var, bool &changed);
+    void findSupport(int var, bool& changed);
 
 protected:
-    DPGlobalConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
+    DPGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~DPGlobalConstraint();
 
     virtual void initMemoization() {}
@@ -50,7 +49,6 @@ protected:
     //EAC
     virtual bool isEAC(int var, Value val);
     virtual void findFullSupportEAC(int var);
-
 };
 
 #endif //TB2GLOBALCONSTR3_HPP_
@@ -61,4 +59,3 @@ protected:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
