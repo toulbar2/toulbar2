@@ -108,33 +108,33 @@
 
 tuple<size_t, size_t> Tb2ScpBranch::getBounds(int varIndex, Value value)
 {
-	return make_tuple( ToulBar2::cpd->getLeft(varIndex,value), ToulBar2::cpd->getRight(varIndex,value) );
+    return make_tuple( ToulBar2::cpd->getLeft(varIndex,value), ToulBar2::cpd->getRight(varIndex,value) );
 }
 
 size_t Tb2ScpBranch::moveAAFirst(ValueCost *sorted, int domsize, Value left, Value right)
 {
-	ValueCost tmp;
-	size_t cursor = 0;
-	for (int i = 0; i < domsize; i++) {
-		if (sorted[i].value >= left && sorted[i].value <= right) {
-			tmp = sorted[cursor];
-			sorted[cursor] = sorted[i];
-			sorted[i] = tmp;
-			cursor++;
-		}
-	}
-	return cursor;
+    ValueCost tmp;
+    size_t cursor = 0;
+    for (int i = 0; i < domsize; i++) {
+        if (sorted[i].value >= left && sorted[i].value <= right) {
+            tmp = sorted[cursor];
+            sorted[cursor] = sorted[i];
+            sorted[i] = tmp;
+            cursor++;
+        }
+    }
+    return cursor;
 }
 
 
 bool Tb2ScpBranch::multipleAA(int varIndex, Value *values, int domsize)
 {
-	char type = ToulBar2::cpd->getAA(varIndex, values[0]);
-	for (int i = domsize-1; i > 0; i--) {
-		if (ToulBar2::cpd->getAA(varIndex, values[i]) != type)
-			return true;
-	}
-	return false;
+    char type = ToulBar2::cpd->getAA(varIndex, values[0]);
+    for (int i = domsize-1; i > 0; i--) {
+        if (ToulBar2::cpd->getAA(varIndex, values[i]) != type)
+            return true;
+    }
+    return false;
 }
 
 // void Tb2ScpBranch::keep(size_t begin, size_t end, size_t var_index)

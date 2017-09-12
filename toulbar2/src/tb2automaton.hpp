@@ -16,53 +16,53 @@ using namespace std;
 class WeightedAutomaton
 {
 public:
-	virtual void setNumStates(int nStates) = 0;
-	virtual void addInitialState(int begin) = 0;
-	virtual void addFinalState(int end) = 0;
-	virtual void addTransition(int start, int symbol, int end, int weight) = 0;
+    virtual void setNumStates(int nStates) = 0;
+    virtual void addInitialState(int begin) = 0;
+    virtual void addFinalState(int end) = 0;
+    virtual void addTransition(int start, int symbol, int end, int weight) = 0;
 };
 
 struct WTransition {
-	unsigned int start;
-	unsigned int end;
-	unsigned int symbol;
-	Cost weight;
+    unsigned int start;
+    unsigned int end;
+    unsigned int symbol;
+    Cost weight;
 
-	WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int  _weight)
-	{
-		start = _start;
-		end = _end;
-		symbol = _symbol;
-		weight = _weight;
-	}
+    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int  _weight)
+    {
+        start = _start;
+        end = _end;
+        symbol = _symbol;
+        weight = _weight;
+    }
 
-	void display()
-	{
-		cout << start << " x " << symbol << " --(" << weight << ")--> " << end << endl;
-	}
+    void display()
+    {
+        cout << start << " x " << symbol << " --(" << weight << ")--> " << end << endl;
+    }
 };
 
 class WFA
 {
 private:
-	unsigned int nbStates;
-	list<pair<int, Cost> > initialStates;
-	list<pair<int, Cost> > acceptingStates;
-	list<WTransition *> transitions;
+    unsigned int nbStates;
+    list<pair<int, Cost> > initialStates;
+    list<pair<int, Cost> > acceptingStates;
+    list<WTransition *> transitions;
 
 public:
-	WFA();
-	WFA(int _nbStates);
-	WFA(istream &file);
-	WFA(int nbSymbol, string forbiddenPattern, Cost cost);
+    WFA();
+    WFA(int _nbStates);
+    WFA(istream &file);
+    WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 
-	inline unsigned int 			getNbStates() 			 	{return nbStates;}
-	inline list<pair<int, Cost> > 	&getInitialStates() 		 	{return initialStates;}
-	inline list<pair<int, Cost> >	&getAcceptingStates() 		{return acceptingStates;}
-	inline list<WTransition *>		&getTransitions() 			{return transitions;}
+    inline unsigned int 			getNbStates() 			 	{return nbStates;}
+    inline list<pair<int, Cost> > 	&getInitialStates() 		 	{return initialStates;}
+    inline list<pair<int, Cost> >	&getAcceptingStates() 		{return acceptingStates;}
+    inline list<WTransition *>		&getTransitions() 			{return transitions;}
 
 
-	void display() ;
+    void display() ;
 };
 
 #endif

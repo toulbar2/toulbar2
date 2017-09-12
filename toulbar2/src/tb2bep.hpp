@@ -11,17 +11,17 @@
 class BEP
 {
 public:
-	int size;
-	vector<int> duration;
-	vector<int> earliest;
-	vector<int> latest;
-	vector<int> revenue;
-	vector<int> delay;
+    int size;
+    vector<int> duration;
+    vector<int> earliest;
+    vector<int> latest;
+    vector<int> revenue;
+    vector<int> delay;
 
-	BEP() : size(0) {}
+    BEP() : size(0) {}
 
-	void read(const char *fileName, WCSP *wcsp);
-	void printSolution(WCSP *wcsp);
+    void read(const char *fileName, WCSP *wcsp);
+    void printSolution(WCSP *wcsp);
 };
 
 #endif /*TB2BEP_HPP_*/
