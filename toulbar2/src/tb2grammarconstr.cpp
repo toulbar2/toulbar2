@@ -1,12 +1,13 @@
 #include "tb2grammarconstr.hpp"
-#include <vector>
 #include <fstream>
-#include <string>
-#include <stack>
 #include <set>
+#include <stack>
+#include <string>
+#include <vector>
 using namespace std;
 
-GrammarConstraint::GrammarConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity) : DPGlobalConstraint(wcsp, scope, arity)
+GrammarConstraint::GrammarConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
+    : DPGlobalConstraint(wcsp, scope, arity)
 {
     modeEnum["var"] = GrammarConstraint::VAR;
     modeEnum["weight"] = GrammarConstraint::WEIGHTED;
@@ -25,7 +26,7 @@ GrammarConstraint::~GrammarConstraint(void)
     delete[] u;
 }
 
-void GrammarConstraint::read(istream & file)
+void GrammarConstraint::read(istream& file)
 {
 
     string str;
@@ -88,19 +89,21 @@ void GrammarConstraint::read(istream & file)
             exit(1);
         }
     }
-
 }
 
 void GrammarConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for(int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++)
+            os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned())
+                os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 sgrammardp " << ((mode == VAR)?"var":"weight") << " " << def << endl;
+    os << " -1 sgrammardp " << ((mode == VAR) ? "var" : "weight") << " " << def << endl;
     cfg.dump(os, original);
 }
 
@@ -110,18 +113,18 @@ void GrammarConstraint::initMemoization()
     if (mode == VAR) {
         set<int> allValues;
         for (int i = 0; i < arity(); i++) {
-            EnumeratedVariable *x = scope[i];
+            EnumeratedVariable* x = scope[i];
             for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
                 allValues.insert(*it);
             }
         }
 
-        for (set<int>::iterator it=allValues.begin(); it != allValues.end(); ++it) {
-            if (cfg.toIndex(*it) == -1) cfg.addRedundantRuleTo(*it);
+        for (set<int>::iterator it = allValues.begin(); it != allValues.end(); ++it) {
+            if (cfg.toIndex(*it) == -1)
+                cfg.addRedundantRuleTo(*it);
         }
 
         cfg.addVariableMeasure(def);
-
     }
 
     top = max(wcsp->getUb(), MAX_COST);
@@ -132,7 +135,7 @@ void GrammarConstraint::initMemoization()
     resizeTable(curf);
     resizeTable(marked);
 
-    u = new Cost*[arity()+1];
+    u = new Cost*[arity() + 1];
     for (int i = 0; i < arity(); i++) {
         u[i] = new Cost[cfg.getNumNonTerminals()];
     }
@@ -144,7 +147,7 @@ Cost GrammarConstraint::minCostOriginal()
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
             u[i][j] = top;
-            EnumeratedVariable *x = scope[i];
+            EnumeratedVariable* x = scope[i];
             for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
                 if (u[i][j] > unary(cfg.toValue(j), i, *it))
                     u[i][j] = unary(cfg.toValue(j), i, *it);
@@ -157,7 +160,6 @@ Cost GrammarConstraint::minCostOriginal()
     int minCost = curf[0][n - 1][cfg.getStartSymbol()];
 
     return minCost;
-
 }
 
 Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed)
@@ -186,7 +188,7 @@ void GrammarConstraint::recompute()
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
             u[i][j] = top;
-            EnumeratedVariable *x = scope[i];
+            EnumeratedVariable* x = scope[i];
             for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
                 if (u[i][j] > unary(cfg.toValue(j), i, *it)) {
                     u[i][j] = unary(cfg.toValue(j), i, *it);
@@ -196,21 +198,21 @@ void GrammarConstraint::recompute()
     }
 
     recomputeTable(f, up);
-
 }
 
 DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool changed)
 {
-    if (changed) recompute();
+    if (changed)
+        recompute();
 
     int n = arity();
     Cost minCost = wcsp->getUb();
 
     for (WCNFCFG::TermProdIterator r = cfg.beginTermProd();
-            r != cfg.endTermProd(); r++) {
+         r != cfg.endTermProd(); r++) {
         if ((r->to[0] == val) && marked[var][var][r->from]) {
             minCost = min(minCost,
-                          unary(r->to[0], var, val) + r->weight - up[var][var][r->from] + f[0][n - 1][cfg.getStartSymbol()]);
+                unary(r->to[0], var, val) + r->weight - up[var][var][r->from] + f[0][n - 1][cfg.getStartSymbol()]);
         }
     }
 
@@ -220,7 +222,6 @@ DPGlobalConstraint::Result GrammarConstraint::minCost(int var, Value val, bool c
 void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
 {
     int n = arity();
-
 
     for (int i = 0; i < n; i++) {
         for (int A = 0; A < cfg.getNumNonTerminals(); A++) {
@@ -291,7 +292,6 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
                                 marked[k + 1][j][r->to[1]] = true;
                                 tmp = upTable[i][j][r->from] - table[i][k][r->to[0]] - r->weight;
                                 upTable[k + 1][j][r->to[1]] = max(upTable[k + 1][j][r->to[1]], tmp);
-
                             }
                         }
                     }
@@ -303,7 +303,7 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
 
 Cost GrammarConstraint::unary(int ch, int var, Value v)
 {
-    EnumeratedVariable *x = scope[var];
+    EnumeratedVariable* x = scope[var];
     Cost ucost = (v == ch) ? (-deltaCost[var][x->toIndex(v)]) : top;
     return ucost;
 }
@@ -314,4 +314,3 @@ Cost GrammarConstraint::unary(int ch, int var, Value v)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

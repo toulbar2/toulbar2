@@ -5,24 +5,22 @@
 #ifndef TB2REGULARDPCONSTR_HPP_
 #define TB2REGULARDPCONSTR_HPP_
 
-#include "tb2dpglobalconstr.hpp"
 #include "tb2automaton.hpp"
-#include <vector>
+#include "tb2dpglobalconstr.hpp"
 #include <fstream>
 #include <string>
+#include <vector>
 using namespace std;
 
-class RegularDPConstraint : public DPGlobalConstraint
-{
+class RegularDPConstraint : public DPGlobalConstraint {
 private:
-
     struct DFA : public WeightedAutomaton {
         vector<int> init;
         vector<int> final;
         vector<int> symbol;
         map<int, int> symbolIndex;
-        vector<pair<int, int> > *transition;
-        vector<pair<int, int> > *invTransition;
+        vector<pair<int, int>>* transition;
+        vector<pair<int, int>>* invTransition;
         int nstate;
 
         DFA()
@@ -31,8 +29,8 @@ private:
 
         void setNumStates(int size)
         {
-            transition = new vector<pair<int, int> >[size];
-            invTransition = new vector<pair<int, int> >[size];
+            transition = new vector<pair<int, int>>[size];
+            invTransition = new vector<pair<int, int>>[size];
             nstate = size;
         }
 
@@ -72,16 +70,19 @@ private:
             assert(original); //TODO: case original is false
             os << nstate << endl;
             os << init.size();
-            for (vector<int>::iterator i = init.begin(); i != init.end(); i++) os << " " << *i;
+            for (vector<int>::iterator i = init.begin(); i != init.end(); i++)
+                os << " " << *i;
             os << endl;
             os << final.size();
-            for (vector<int>::iterator i = final.begin(); i != final.end(); i++) os << " " << *i;
+            for (vector<int>::iterator i = final.begin(); i != final.end(); i++)
+                os << " " << *i;
             os << endl;
             int nbtrans = 0;
-            for (int s = 0; s < nstate; s++) nbtrans += transition[s].size();
+            for (int s = 0; s < nstate; s++)
+                nbtrans += transition[s].size();
             os << nbtrans << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     os << s << " " << i->first << " " << i->second << endl;
             }
         }
@@ -89,14 +90,16 @@ private:
         void print()
         {
             cout << "start state : ";
-            for (vector<int>::iterator i = init.begin(); i != init.end(); i++) cout << *i << " ";
+            for (vector<int>::iterator i = init.begin(); i != init.end(); i++)
+                cout << *i << " ";
             cout << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     cout << s << " -" << i->first << "-> " << i->second << endl;
             }
             cout << "end state : ";
-            for (vector<int>::iterator i = final.begin(); i != final.end(); i++) cout << *i << " ";
+            for (vector<int>::iterator i = final.begin(); i != final.end(); i++)
+                cout << *i << " ";
             cout << endl;
         }
     };
@@ -109,18 +112,18 @@ private:
         Source source;
     };
 
-    typedef TableCell<pair<int, Value> > DPTableCell;
-    DPTableCell **f;
-    DPTableCell **curf;
-    DPTableCell **invf;
+    typedef TableCell<pair<int, Value>> DPTableCell;
+    DPTableCell** f;
+    DPTableCell** curf;
+    DPTableCell** invf;
 
     typedef TableCell<Value> UnaryTableCell;
-    UnaryTableCell **u;
+    UnaryTableCell** u;
 
     int top;
 
     template <class T>
-    void resizeTable(T** &table, int width, int heigth)
+    void resizeTable(T**& table, int width, int heigth)
     {
         table = new T*[width];
         for (int i = 0; i <= arity(); i++) {
@@ -129,9 +132,10 @@ private:
     }
 
     template <class T>
-    void deleteTable(T** &table)
+    void deleteTable(T**& table)
     {
-        for (int i = 0; i <= arity(); i++) delete[] table[i];
+        for (int i = 0; i <= arity(); i++)
+            delete[] table[i];
         delete[] table;
         table = NULL;
     }
@@ -149,12 +153,12 @@ protected:
     void initMemoization();
 
 public:
-    RegularDPConstraint(WCSP * wcsp, EnumeratedVariable ** scope, int arity);
+    RegularDPConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~RegularDPConstraint();
 
     Cost eval(const String& s);
-    void read(istream & file);
-    WeightedAutomaton* getWeightedAutomaton() {return &dfa;}
+    void read(istream& file);
+    WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     string getName()
     {
         return "sregulardp";
@@ -172,4 +176,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

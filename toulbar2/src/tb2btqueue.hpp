@@ -11,27 +11,29 @@
 /*
  * A backtrackable queue
  */
-class BTQueue : public BTList<Variable *>
-{
+class BTQueue : public BTList<Variable*> {
     // make it private because we don't want copy nor assignment
-    BTQueue(const BTQueue &s);
-    BTQueue& operator=(const BTQueue &s);
+    BTQueue(const BTQueue& s);
+    BTQueue& operator=(const BTQueue& s);
 
 public:
-    BTQueue(StoreStack<BTList<Variable *>, DLink<Variable *> *> *sv) : BTList<Variable *>(sv) {}
+    BTQueue(StoreStack<BTList<Variable*>, DLink<Variable*>*>* sv)
+        : BTList<Variable*>(sv)
+    {
+    }
 
-    int getSize() const {return BTList<Variable *>::getSize();}
-    bool empty() const {return BTList<Variable *>::empty();}
+    int getSize() const { return BTList<Variable*>::getSize(); }
+    bool empty() const { return BTList<Variable*>::empty(); }
 
-    void clear() {BTList<Variable *>::clear();}
+    void clear() { BTList<Variable*>::clear(); }
 
-    void push(DLink<Variable *> *elt);
+    void push(DLink<Variable*>* elt);
 
-    void remove(DLink<Variable *> *elt);
+    void remove(DLink<Variable*>* elt);
 
-    Variable *pop_back();
+    Variable* pop_back();
 
-    Variable *pop_first();
+    Variable* pop_first();
 
     void print(ostream& o);
 };
@@ -44,4 +46,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

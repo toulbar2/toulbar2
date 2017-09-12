@@ -3,24 +3,26 @@
  */
 
 #include "tb2binconstr.hpp"
-#include "tb2wcsp.hpp"
 #include "tb2clusters.hpp"
+#include "tb2wcsp.hpp"
 
 /*
  * Constructors and misc.
  *
  */
 
-BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab) :
-    AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp, xx, yy), sizeX(xx->getDomainInitSize()), sizeY(yy->getDomainInitSize())
+BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab)
+    : AbstractBinaryConstraint<EnumeratedVariable, EnumeratedVariable>(wcsp, xx, yy)
+    , sizeX(xx->getDomainInitSize())
+    , sizeY(yy->getDomainInitSize())
 {
-    deltaCostsX = vector<StoreCost>(sizeX,StoreCost(MIN_COST));
-    deltaCostsY = vector<StoreCost>(sizeY,StoreCost(MIN_COST));
+    deltaCostsX = vector<StoreCost>(sizeX, StoreCost(MIN_COST));
+    deltaCostsY = vector<StoreCost>(sizeY, StoreCost(MIN_COST));
     assert(tab.size() == sizeX * sizeY);
-    supportX = vector<Value>(sizeX,y->getInf());
-    supportY = vector<Value>(sizeY,x->getInf());
+    supportX = vector<Value>(sizeX, y->getInf());
+    supportY = vector<Value>(sizeY, x->getInf());
 
-    costs = vector<StoreCost>(sizeX*sizeY,StoreCost(MIN_COST));
+    costs = vector<StoreCost>(sizeX * sizeY, StoreCost(MIN_COST));
 
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
@@ -29,7 +31,10 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp, EnumeratedVariable *xx, Enumerate
     propagate();
 }
 
-BinaryConstraint::BinaryConstraint(WCSP *wcsp) : AbstractBinaryConstraint<EnumeratedVariable,EnumeratedVariable>(wcsp), sizeX(0), sizeY(0)
+BinaryConstraint::BinaryConstraint(WCSP* wcsp)
+    : AbstractBinaryConstraint<EnumeratedVariable, EnumeratedVariable>(wcsp)
+    , sizeX(0)
+    , sizeY(0)
 {
     //	unsigned int maxdomainsize = wcsp->getMaxDomainSize();
     //    deltaCostsX = vector<StoreCost>(maxdomainsize,StoreCost(MIN_COST,storeCost));
@@ -48,9 +53,12 @@ BinaryConstraint::BinaryConstraint(WCSP *wcsp) : AbstractBinaryConstraint<Enumer
 void BinaryConstraint::print(ostream& os)
 {
     os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
-    if (ToulBar2::weightedDegree) os << "/" << getConflictWeight();
-    if(wcsp->getTreeDec()) os << "   cluster: " << getCluster() << endl;
-    else os << endl;
+    if (ToulBar2::weightedDegree)
+        os << "/" << getConflictWeight();
+    if (wcsp->getTreeDec())
+        os << "   cluster: " << getCluster() << endl;
+    else
+        os << endl;
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -63,12 +71,12 @@ void BinaryConstraint::print(ostream& os)
 
 void BinaryConstraint::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
-    int i=0;
+    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
+    int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
-        int j=0;
+        int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
-            os << ((original)?(*iterX):i) << " " << ((original)?(*iterY):j) << " " << ((original)?getCost(*iterX, *iterY):min(wcsp->getUb(),getCost(*iterX, *iterY))) << endl;
+            os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
         }
     }
 }
@@ -77,17 +85,18 @@ void BinaryConstraint::dump(ostream& os, bool original)
  * Propagation methods
  *
  */
-bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+bool BinaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
     assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
         TreeDecomposition* td = wcsp->getTreeDec();
-        if(td) td->addDelta(cluster,x,value,cost);
-        deltaCostsX[x->toIndex(value)] += cost;  // Warning! Possible overflow???
-        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getInf()) >= MIN_COST);
-        assert(getCost(x,(EnumeratedVariable *) getVarDiffFrom(x),value,getVarDiffFrom(x)->getSup()) >= MIN_COST);
+        if (td)
+            td->addDelta(cluster, x, value, cost);
+        deltaCostsX[x->toIndex(value)] += cost; // Warning! Possible overflow???
+        assert(getCost(x, (EnumeratedVariable*)getVarDiffFrom(x), value, getVarDiffFrom(x)->getInf()) >= MIN_COST);
+        assert(getCost(x, (EnumeratedVariable*)getVarDiffFrom(x), value, getVarDiffFrom(x)->getSup()) >= MIN_COST);
     }
 
     Cost oldcost = x->getCost(value);
@@ -98,26 +107,29 @@ bool BinaryConstraint::project(EnumeratedVariable *x, Value value, Cost cost, ve
     return (x->getSupport() == value || SUPPORTTEST(oldcost, cost));
 }
 
-
-void BinaryConstraint::extend(EnumeratedVariable *x, Value value, Cost cost, vector<StoreCost> &deltaCostsX)
+void BinaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
     assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     TreeDecomposition* td = wcsp->getTreeDec();
-    if(td) td->addDelta(cluster,x,value,-cost);
+    if (td)
+        td->addDelta(cluster, x, value, -cost);
 
-    deltaCostsX[x->toIndex(value)] -= cost;  // Warning! Possible overflow???
+    deltaCostsX[x->toIndex(value)] -= cost; // Warning! Possible overflow???
     x->extend(value, cost);
 }
 
-void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)
+void BinaryConstraint::permute(EnumeratedVariable* xin, Value a, Value b)
 {
-    EnumeratedVariable *yin = y;
-    if(xin != x) yin = x;
+    EnumeratedVariable* yin = y;
+    if (xin != x)
+        yin = x;
 
     vector<Cost> aux;
-    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  aux.push_back( getCost(xin, yin, a, *ity) );
-    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)  setcost(xin, yin, a, *ity, getCost(xin, yin, b, *ity));
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)
+        aux.push_back(getCost(xin, yin, a, *ity));
+    for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity)
+        setcost(xin, yin, a, *ity, getCost(xin, yin, b, *ity));
 
     vector<Cost>::iterator itc = aux.begin();
     for (EnumeratedVariable::iterator ity = yin->begin(); ity != yin->end(); ++ity) {
@@ -126,7 +138,7 @@ void BinaryConstraint::permute(EnumeratedVariable *xin, Value a, Value b)
     }
 }
 
-bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable* yin, map<Value, Value> &functional)
+bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable* yin, map<Value, Value>& functional)
 {
     assert(xin != yin);
     assert(getIndex(xin) >= 0);
@@ -136,7 +148,7 @@ bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable*
     for (EnumeratedVariable::iterator itx = xin->begin(); isfunctional && itx != xin->end(); ++itx) {
         bool first = true;
         for (EnumeratedVariable::iterator ity = yin->begin(); isfunctional && ity != yin->end(); ++ity) {
-            if (!CUT(getCost(xin,yin,*itx,*ity) + wcsp->getLb(), wcsp->getUb())) {
+            if (!CUT(getCost(xin, yin, *itx, *ity) + wcsp->getLb(), wcsp->getUb())) {
                 if (first) {
                     functional[*itx] = *ity;
                     first = false;
@@ -147,12 +159,13 @@ bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable*
         }
         assert(!first); // assumes it is SAC already
     }
-    if (isfunctional) return true;
+    if (isfunctional)
+        return true;
     functional.clear();
     return false;
 }
 
-pair< pair<Cost,Cost>, pair<Cost,Cost> > BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
+pair<pair<Cost, Cost>, pair<Cost, Cost>> BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
 {
     //    	cout << "getMaxCost(" << getVar(varIndex)->getName() << ") " << a << " <-> " << b << endl << *this << endl;
     Cost maxcosta = MIN_COST;
@@ -165,14 +178,18 @@ pair< pair<Cost,Cost>, pair<Cost,Cost> > BinaryConstraint::getMaxCost(int varInd
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             Cost costa = getCost(a, *iterY);
             Cost costb = getCost(b, *iterY);
-            if (costa > maxcosta) maxcosta = costa;
-            if (costb > maxcostb) maxcostb = costb;
+            if (costa > maxcosta)
+                maxcosta = costa;
+            if (costb > maxcostb)
+                maxcostb = costb;
             Cost ucosty = y->getCost(*iterY);
             if (!CUT(ucostb + costb + ucosty + wcsp->getLb(), wcsp->getUb())) {
-                if (costa-costb > diffcosta) diffcosta = costa-costb;
+                if (costa - costb > diffcosta)
+                    diffcosta = costa - costb;
             }
             if (!CUT(ucosta + costa + ucosty + wcsp->getLb(), wcsp->getUb())) {
-                if (costb-costa > diffcostb) diffcostb = costb-costa;
+                if (costb - costa > diffcostb)
+                    diffcostb = costb - costa;
             }
         }
     } else {
@@ -181,20 +198,24 @@ pair< pair<Cost,Cost>, pair<Cost,Cost> > BinaryConstraint::getMaxCost(int varInd
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             Cost costa = getCost(*iterX, a);
             Cost costb = getCost(*iterX, b);
-            if (costa > maxcosta) maxcosta = costa;
-            if (costb > maxcostb) maxcostb = costb;
+            if (costa > maxcosta)
+                maxcosta = costa;
+            if (costb > maxcostb)
+                maxcostb = costb;
             Cost ucostx = x->getCost(*iterX);
             if (!CUT(ucostb + costb + ucostx + wcsp->getLb(), wcsp->getUb())) {
-                if (costa-costb > diffcosta) diffcosta = costa-costb;
+                if (costa - costb > diffcosta)
+                    diffcosta = costa - costb;
             }
             if (!CUT(ucosta + costa + ucostx + wcsp->getLb(), wcsp->getUb())) {
-                if (costb-costa > diffcostb) diffcostb = costb-costa;
+                if (costb - costa > diffcostb)
+                    diffcostb = costb - costa;
             }
         }
     }
     assert(maxcosta >= diffcosta);
     assert(maxcostb >= diffcostb);
-    return make_pair(make_pair(maxcosta,diffcosta), make_pair(maxcostb,diffcostb));
+    return make_pair(make_pair(maxcosta, diffcosta), make_pair(maxcostb, diffcostb));
 }
 
 /* Local Variables: */
@@ -203,4 +224,3 @@ pair< pair<Cost,Cost>, pair<Cost,Cost> > BinaryConstraint::getMaxCost(int varInd
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
