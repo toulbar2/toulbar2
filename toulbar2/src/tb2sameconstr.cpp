@@ -1,8 +1,9 @@
 #include "tb2sameconstr.hpp"
 #include "tb2wcsp.hpp"
 
-SameConstraint::SameConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                               int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
+SameConstraint::SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
+    int arity_in)
+    : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
 {
     buildIndex();
 }
@@ -11,7 +12,7 @@ void SameConstraint::buildIndex()
 {
     vector<Value> D;
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             D.push_back(*iterx);
         }
@@ -39,7 +40,7 @@ pair<int, int> SameConstraint::mapto(int varindex, Value val)
     }
 }
 
-void SameConstraint::read(istream &file)
+void SameConstraint::read(istream& file)
 {
     file >> def;
     int size[2];
@@ -62,7 +63,7 @@ void SameConstraint::read(istream &file)
     }
 }
 
-Cost SameConstraint::evalOriginal(const String &s)
+Cost SameConstraint::evalOriginal(const String& s)
 {
     Cost tuple_cost = 0;
     map<char, int> appear;
@@ -95,18 +96,18 @@ size_t SameConstraint::GetGraphAllocatedSize()
     return arity_ + nDistinctDomainValues + 2;
 }
 
-void SameConstraint::buildGraph(Graph &g)
+void SameConstraint::buildGraph(Graph& g)
 {
     //g.clearEdge();
     for (vector<int>::iterator i = group[0].begin(); i != group[0].end(); i++) {
-        EnumeratedVariable *x = (EnumeratedVariable *)getVar(*i);
+        EnumeratedVariable* x = (EnumeratedVariable*)getVar(*i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             g.addEdge((*i) + 1, mapval[*v], -deltaCost[*i][x->toIndex(*v)], 1, *v);
         }
         g.addEdge(0, (*i) + 1, 0);
     }
     for (vector<int>::iterator i = group[1].begin(); i != group[1].end(); i++) {
-        EnumeratedVariable *x = (EnumeratedVariable *)getVar(*i);
+        EnumeratedVariable* x = (EnumeratedVariable*)getVar(*i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             g.addEdge(mapval[*v], (*i) + 1, -deltaCost[*i][x->toIndex(*v)], 1, *v);
         }
@@ -143,17 +144,19 @@ void SameConstraint::buildGraph(Graph &g)
 
 }*/
 
-
-void SameConstraint::dump(ostream &os, bool original)
+void SameConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++)
+            os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned())
+                os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 ssame " << def << " " <<  group[0].size() << " " << group[1].size() << endl;
+    os << " -1 ssame " << def << " " << group[0].size() << " " << group[1].size() << endl;
     for (int g = 0; g < 2; g++) {
         for (unsigned int i = 0; i < group[g].size(); i++) {
             os << " " << getVar(group[g][i])->wcspIndex;
@@ -184,4 +187,3 @@ void SameConstraint::dump(ostream &os, bool original)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

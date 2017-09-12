@@ -13,8 +13,7 @@
 
 using namespace std;
 
-class WeightedAutomaton
-{
+class WeightedAutomaton {
 public:
     virtual void setNumStates(int nStates) = 0;
     virtual void addInitialState(int begin) = 0;
@@ -28,7 +27,7 @@ struct WTransition {
     unsigned int symbol;
     Cost weight;
 
-    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int  _weight)
+    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int _weight)
     {
         start = _start;
         end = _end;
@@ -42,27 +41,25 @@ struct WTransition {
     }
 };
 
-class WFA
-{
+class WFA {
 private:
     unsigned int nbStates;
-    list<pair<int, Cost> > initialStates;
-    list<pair<int, Cost> > acceptingStates;
-    list<WTransition *> transitions;
+    list<pair<int, Cost>> initialStates;
+    list<pair<int, Cost>> acceptingStates;
+    list<WTransition*> transitions;
 
 public:
     WFA();
     WFA(int _nbStates);
-    WFA(istream &file);
+    WFA(istream& file);
     WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 
-    inline unsigned int 			getNbStates() 			 	{return nbStates;}
-    inline list<pair<int, Cost> > 	&getInitialStates() 		 	{return initialStates;}
-    inline list<pair<int, Cost> >	&getAcceptingStates() 		{return acceptingStates;}
-    inline list<WTransition *>		&getTransitions() 			{return transitions;}
+    inline unsigned int getNbStates() { return nbStates; }
+    inline list<pair<int, Cost>>& getInitialStates() { return initialStates; }
+    inline list<pair<int, Cost>>& getAcceptingStates() { return acceptingStates; }
+    inline list<WTransition*>& getTransitions() { return transitions; }
 
-
-    void display() ;
+    void display();
 };
 
 #endif
@@ -73,4 +70,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

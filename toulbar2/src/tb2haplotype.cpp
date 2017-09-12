@@ -8,7 +8,7 @@
 #include "tb2haplotype.hpp"
 
 // A MODIFIER POUR PLUSIEURS LOCUS (freqalleles.find(locus))
-void Haplotype::iniProb(WCSP *wcsp)
+void Haplotype::iniProb(WCSP* wcsp)
 {
     TProb TopProb = 0.;
 
@@ -33,7 +33,7 @@ void Haplotype::iniProb(WCSP *wcsp)
     }
 
     for (vector<Individual>::iterator iter = pedigree.begin(); iter != pedigree.end(); ++iter) {
-        Individual &individual = *iter;
+        Individual& individual = *iter;
         if (individual.typed) {
             if (individual.mother && individual.father) {
                 TopProb += -Log(0.25) * ToulBar2::NormFactor;
@@ -49,7 +49,8 @@ void Haplotype::iniProb(WCSP *wcsp)
                 case 1:
                     for (map<int, int>::iterator iter = freqalleles.find(locus)->second.begin(); iter != freqalleles.find(locus)->second.end(); ++iter) {
                         TProb p = (TProb)(iter->second * iter->second) / (TProb)(genotypes.size() * genotypes.size() * 4);
-                        if (p < minp) minp = p;
+                        if (p < minp)
+                            minp = p;
                     }
 
                     TopProb += -Log(minp) * ToulBar2::NormFactor;
@@ -57,7 +58,7 @@ void Haplotype::iniProb(WCSP *wcsp)
 
                 default:
                     foundersprob.clear();
-                    assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+                    assert((int)ToulBar2::allelefreqdistrib.size() == nballeles);
                     for (int i = 1; i <= nballeles; i++) { /* i = first allele of child  */
                         for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
                             // case i!=j must be counted twice (i,j and j,i)
@@ -65,7 +66,8 @@ void Haplotype::iniProb(WCSP *wcsp)
                         }
                     }
                     for (vector<TProb>::iterator iter = foundersprob.begin(); iter != foundersprob.end(); ++iter) {
-                        if (*iter < minp) minp = *iter;
+                        if (*iter < minp)
+                            minp = *iter;
                     }
                     TopProb += -Log(minp) * ToulBar2::NormFactor;
                 }
@@ -76,17 +78,11 @@ void Haplotype::iniProb(WCSP *wcsp)
         cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
         exit(EXIT_FAILURE);
     }
-    wcsp->updateUb((Cost)((Long) TopProb));
+    wcsp->updateUb((Cost)((Long)TopProb));
 }
 
-
-
-
-
-
-
 typedef struct {
-    EnumeratedVariable *var;
+    EnumeratedVariable* var;
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
@@ -104,7 +100,7 @@ void Haplotype::typeAscendants(int individual)
     }
 }
 
-void Haplotype::read(const char *fileName, WCSP *wcsp)
+void Haplotype::read(const char* fileName, WCSP* wcsp)
 {
     double time = cpuTime();
     bayesian = false;
@@ -120,14 +116,14 @@ void Haplotype::read(const char *fileName, WCSP *wcsp)
     cout << "Reading and creating problem time :\t " << cpuTime() - time << endl;
 }
 
-void Haplotype::read_bayesian(const char *fileName, WCSP *wcsp)
+void Haplotype::read_bayesian(const char* fileName, WCSP* wcsp)
 {
     bayesian = true;
     readPedigree(fileName, wcsp);
     buildWCSP_bayesian(fileName, wcsp);
 }
 
-void Haplotype::readMap(const char *fileName)
+void Haplotype::readMap(const char* fileName)
 {
 
     Double position;
@@ -156,7 +152,6 @@ void Haplotype::readMap(const char *fileName)
     		++i;
     	}
     */
-
 }
 
 inline bool cmp_generation(Individual i1, Individual i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
@@ -182,14 +177,14 @@ int Haplotype::fixGenerationNumber(int index)
 }
 
 // warning! locus information is not used: assume that only one locus is defined in the pedigree file
-void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
+void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
 {
     int individual;
     int nbindividuals = 0;
     int nbtypings = 0;
-//  map<int, int> allelesInv;
-    map<int, map<int, int> > allelesInv; // allelesInv[locus,val]=allele
-    map<int, int> nballeles;	// nballeles[i] number of allele for the marker i
+    //  map<int, int> allelesInv;
+    map<int, map<int, int>> allelesInv; // allelesInv[locus,val]=allele
+    map<int, int> nballeles; // nballeles[i] number of allele for the marker i
     map<int, int> maxallele;
     int numal = 0;
     string strfile(fileName);
@@ -204,16 +199,18 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
     }
 
     ifstream fileErrors(errorfilename.c_str());
-    if (fileErrors) ToulBar2::consecutiveAllele = true;
-
+    if (fileErrors)
+        ToulBar2::consecutiveAllele = true;
 
     while (file) {
         int cur_family = -1;
         individual = 0;
 
         file >> cur_family;
-        if (!file) break;
-        if (family == -1) family = cur_family;
+        if (!file)
+            break;
+        if (family == -1)
+            family = cur_family;
         if (family != cur_family) {
             cerr << "Pedigree datafile contains more than one locus!" << endl;
             exit(EXIT_FAILURE);
@@ -233,8 +230,6 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
         }
 
         file >> pedigree[individuals[individual]].father;
-
-
 
         if (!file) {
             cerr << "(2) Wrong data after individual " << individual << endl;
@@ -263,15 +258,11 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
 
         if (pedigree[individuals[individual]].father == 0 && pedigree[individuals[individual]].mother == 0) {
             pedigree[individuals[individual]].generation = 1;
-        } else if (pedigree[individuals[individual]].father > 0 && pedigree[individuals[individual]].mother > 0 &&
-                   pedigree[individuals[pedigree[individuals[individual]].father]].generation != -1 &&
-                   pedigree[individuals[pedigree[individuals[individual]].mother]].generation != -1) {
+        } else if (pedigree[individuals[individual]].father > 0 && pedigree[individuals[individual]].mother > 0 && pedigree[individuals[pedigree[individuals[individual]].father]].generation != -1 && pedigree[individuals[pedigree[individuals[individual]].mother]].generation != -1) {
             pedigree[individuals[individual]].generation = max(pedigree[individuals[pedigree[individuals[individual]].father]].generation, pedigree[individuals[pedigree[individuals[individual]].mother]].generation) + 1;
-        } else if (pedigree[individuals[individual]].father > 0 && pedigree[individuals[individual]].mother == 0 &&
-                   pedigree[individuals[pedigree[individuals[individual]].father]].generation != -1) {
+        } else if (pedigree[individuals[individual]].father > 0 && pedigree[individuals[individual]].mother == 0 && pedigree[individuals[pedigree[individuals[individual]].father]].generation != -1) {
             pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].father]].generation + 1;
-        } else if (pedigree[individuals[individual]].father == 0 && pedigree[individuals[individual]].mother > 0 &&
-                   pedigree[individuals[pedigree[individuals[individual]].mother]].generation != -1) {
+        } else if (pedigree[individuals[individual]].father == 0 && pedigree[individuals[individual]].mother > 0 && pedigree[individuals[pedigree[individuals[individual]].mother]].generation != -1) {
             pedigree[individuals[individual]].generation = pedigree[individuals[pedigree[individuals[individual]].mother]].generation + 1;
         }
 
@@ -286,7 +277,10 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
             int allele = 0;
             Genotype gen;
             file >> allele;
-            if (!file) { cerr << "(5) Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
+            if (!file) {
+                cerr << "(5) Wrong data after individual " << individual << endl;
+                exit(EXIT_FAILURE);
+            }
             if (allele < 0) {
                 gen.fixed = true;
                 //pedigree[individuals[individual]].genotypes[numal].fixed = true;
@@ -297,7 +291,10 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
 
             allele = 0;
             file >> allele;
-            if (!file) { cerr << "(6) Wrong data after individual " << individual << endl; exit(EXIT_FAILURE); }
+            if (!file) {
+                cerr << "(6) Wrong data after individual " << individual << endl;
+                exit(EXIT_FAILURE);
+            }
             if (allele < 0) {
                 gen.fixed = true;
                 allele = -allele;
@@ -308,35 +305,34 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
         } while (file.peek() != '\n');
         nbloci = numal;
 
-
         for (int a = 0; a < nbloci; ++a) {
             int allele1 = pedigree[individuals[individual]].genotypes[a].allele1;
             int allele2 = pedigree[individuals[individual]].genotypes[a].allele2;
 
             if (alleles.find(a)->second.count(allele1) == 0) {
                 nballeles[a]++;
-                alleles[a].insert(pair<int, int> (allele1, nballeles[a]));
+                alleles[a].insert(pair<int, int>(allele1, nballeles[a]));
                 //alleles.insert(pair< pair<int,int>,int >(pair<int,int>(a,allele1),nballeles[a]));
                 //alleles[allele1] = nballeles;
                 freqalleles[a].insert(pair<int, int>(pair<int, int>(allele1, 1)));
 
-                if (allele1 > maxallele[a]) maxallele[a] =  allele1;
+                if (allele1 > maxallele[a])
+                    maxallele[a] = allele1;
             } else {
                 freqalleles[a].find(allele1)->second++;
                 //freqalleles.find(pair<int,int> (a,allele1))->second ++;
             }
 
-
-
             if (alleles.find(a)->second.count(allele2) == 0) {
                 nballeles[a]++;
 
-                alleles[a].insert(pair<int, int> (allele2, nballeles[a]));
+                alleles[a].insert(pair<int, int>(allele2, nballeles[a]));
                 //alleles.insert(pair<pair<int,int>,int >(pair<int,int>(a,allele2),nballeles[a]));
                 //alleles[allele1] = nballeles;
                 freqalleles[a].insert(pair<int, int>(pair<int, int>(allele2, 1)));
                 //freqalleles.insert(pair<pair<int,int>,int >(pair<int,int>(a,allele2),1));
-                if (allele2 > maxallele[a]) maxallele[a] =  allele2;
+                if (allele2 > maxallele[a])
+                    maxallele[a] = allele2;
             } else {
                 freqalleles[a].find(allele2)->second++;
                 //freqalleles.find(pair<int,int> (a,allele2))->second ++;
@@ -347,8 +343,6 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
                 genotypes.push_back(individual);
             }
         }
-
-
     }
 #ifdef MENDELSOFT
 //  if(ToulBar2::consecutiveAllele) {
@@ -367,14 +361,16 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
 
     /* re-encoding of alleles */
     map<int, int> nb;
-    if (ToulBar2::verbose >= 2) cout << "Alleles encoding:" << endl;
-    for (map<int, map<int, int> >::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
+    if (ToulBar2::verbose >= 2)
+        cout << "Alleles encoding:" << endl;
+    for (map<int, map<int, int>>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
         //if ((*iter).first.second == 0) continue;
         //nb[(*iter).first]++;
-        for (map< int, int>::iterator iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+        for (map<int, int>::iterator iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
             nb[(*iter).first]++;
             int n = nb.find((*iter).first)->second;
-            if (ToulBar2::verbose >= 2) cout << "locus " << (*iter).first << ", " << (*iter2).first /*<< ": " << n*/ << endl;
+            if (ToulBar2::verbose >= 2)
+                cout << "locus " << (*iter).first << ", " << (*iter2).first /*<< ": " << n*/ << endl;
             iter2->second = n;
             //allelesInv[nb] = (*iter).first;
             //allelesInv.insert(pair<pair<int,int>,int >(pair<int,int>((*iter).first,n),(*iter2).first));
@@ -386,12 +382,13 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
 
     if (!ToulBar2::haplotype) {
         for (int l = 0; l < nbloci; ++l) {
-            if (ToulBar2::verbose >= 1) cout << "Genotype encoding for locus " << l << " :" << endl;
+            if (ToulBar2::verbose >= 1)
+                cout << "Genotype encoding for locus " << l << " :" << endl;
             for (int i = 1; i <= nballeles[l]; i++) { /* i = first allele of child */
                 for (int j = i; j <= nballeles[l]; j++) { /* j = second allele of child */
                     Genotype geno;
-                    geno.allele1 = allelesInv.find(l)->second.find(i)->second;//allelesInv.find(pair<int,int>(l,i))->second;
-                    geno.allele2 = allelesInv.find(l)->second.find(j)->second;//allelesInv.find(pair<int,int>(l,j))->second; //[j];
+                    geno.allele1 = allelesInv.find(l)->second.find(i)->second; //allelesInv.find(pair<int,int>(l,i))->second;
+                    geno.allele2 = allelesInv.find(l)->second.find(j)->second; //allelesInv.find(pair<int,int>(l,j))->second; //[j];
                     genoconvert[l].push_back(geno);
                     if (ToulBar2::verbose >= 1) {
                         cout << genoconvert[l].size() - 1 << ": ";
@@ -403,11 +400,12 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
         }
     }
 
-
     /* individuals re-ordering by generation levels */
     for (unsigned int i = 0; i < pedigree.size(); i++) {
-        if (pedigree[i].generation == -1) fixGenerationNumber(i);
-        if (pedigree[i].generation > generations) generations = pedigree[i].generation;
+        if (pedigree[i].generation == -1)
+            fixGenerationNumber(i);
+        if (pedigree[i].generation > generations)
+            generations = pedigree[i].generation;
     }
     if (ToulBar2::generation) {
         stable_sort(pedigree.begin(), pedigree.end(), cmp_generation);
@@ -419,17 +417,12 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
     int l = 0; //  A MODIFIER POUR LA PRISE EN COMPTE DE PLUSIEURS LOCUS
     for (unsigned int i = 0; i < genotypes.size(); i++) {
         typeAscendants(genotypes[i]);
-        if (genotypes[i] >= 0 && pedigree[individuals[genotypes[i]]].father > 0 &&
-                pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotypes[l].allele1 > 0 &&
-                pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotypes[l].allele2 > 0)
+        if (genotypes[i] >= 0 && pedigree[individuals[genotypes[i]]].father > 0 && pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotypes[l].allele1 > 0 && pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].genotypes[l].allele2 > 0)
             pedigree[individuals[pedigree[individuals[genotypes[i]]].father]].nbtyped++;
-        if (genotypes[i] >= 0 && pedigree[individuals[genotypes[i]]].mother > 0 &&
-                pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotypes[l].allele1 > 0 &&
-                pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotypes[l].allele2 > 0)
+        if (genotypes[i] >= 0 && pedigree[individuals[genotypes[i]]].mother > 0 && pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotypes[l].allele1 > 0 && pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].genotypes[l].allele2 > 0)
             pedigree[individuals[pedigree[individuals[genotypes[i]]].mother]].nbtyped++;
     }
     cout << nbtyped << " informative individuals found (either genotyped or having a genotyped descendant)." << endl;
-
 
     gencorrects.clear();
     if (fileErrors) {
@@ -438,7 +431,8 @@ void Haplotype::readPedigree(const char *fileName, WCSP *wcsp)
             fileErrors >> individual;
             fileErrors >> bonallele1;
             int bonallele2 = pedigree[individuals[individual]].genotypes[numal].allele2;
-            if (bonallele1 == pedigree[individuals[individual]].genotypes[numal].allele1) cout << "error file with a mistake" << endl;
+            if (bonallele1 == pedigree[individuals[individual]].genotypes[numal].allele1)
+                cout << "error file with a mistake" << endl;
             gencorrects[individual] = convertgen(l, bonallele1, bonallele2);
         }
     }
@@ -459,17 +453,16 @@ int Haplotype::convertgen(int locus, int allele1, int allele2)
 
     for (int i = 1; i <= nballeles; i++) {
         for (int j = i; j <= nballeles; j++) {
-            if ((i == allele1) && (j == allele2)) return bongen;
+            if ((i == allele1) && (j == allele2))
+                return bongen;
             bongen++;
         }
     }
     return -1;
-
 }
 
-
 // A MODIFIER POUR PLUSIEURS LOCUS
-void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
+void Haplotype::buildWCSP(const char* fileName, WCSP* wcsp)
 {
     int locus = 0;
     ifstream file(fileName);
@@ -486,7 +479,8 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
     /* create variables */
     int nbvar = 0;
     for (int i = 0; i < nbindividuals; i++) {
-        if (pedigree[i].father == 0 && pedigree[i].mother == 0) nbfounders++;
+        if (pedigree[i].father == 0 && pedigree[i].mother == 0)
+            nbfounders++;
         if (pedigree[i].typed) {
             string varname;
             varname = to_string(pedigree[i].individual);
@@ -504,7 +498,7 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
                 for (int n = m; n <= nballeles; n++) { /* n = second allele of mother */
                     for (int i = 1; i <= nballeles; i++) { /* i = first allele of child */
                         for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
-                            costs3.push_back(((i == k && j == m) || (i == k && j == n) || (i == l && j == m) || (i == l && j == n) || (i == m && j == k) || (i == m && j == l) || (i == n && j == k) || (i == n && j == l)) ? 0 : wcsp->getUb()*MEDIUM_COST);
+                            costs3.push_back(((i == k && j == m) || (i == k && j == n) || (i == l && j == m) || (i == l && j == n) || (i == m && j == k) || (i == m && j == l) || (i == n && j == k) || (i == n && j == l)) ? 0 : wcsp->getUb() * MEDIUM_COST);
                         }
                     }
                 }
@@ -518,7 +512,7 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
         for (int l = k; l <= nballeles; l++) { /* l = second allele of father or mother */
             for (int i = 1; i <= nballeles; i++) { /* i = first allele of child */
                 for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
-                    costs2.push_back((i == k || i == l || j == k || j == l) ? 0 : wcsp->getUb()*MEDIUM_COST);
+                    costs2.push_back((i == k || i == l || j == k || j == l) ? 0 : wcsp->getUb() * MEDIUM_COST);
                 }
             }
         }
@@ -535,28 +529,32 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
         int allele2 = 0;
 
         file >> cur_locus;
-        if (!file) break;
+        if (!file)
+            break;
         file >> individual;
         file >> father;
         file >> mother;
         file >> sex;
         file >> allele1;
-        if (allele1 < 0) allele1 = -allele1;
+        if (allele1 < 0)
+            allele1 = -allele1;
         allele1 = alleles.find(locus)->second.find(allele1)->second;
         file >> allele2;
-        if (allele2 < 0) allele2 = -allele2;
+        if (allele2 < 0)
+            allele2 = -allele2;
         allele2 = alleles.find(locus)->second.find(allele2)->second;
-        if (!pedigree[individuals[individual]].typed) continue;
+        if (!pedigree[individuals[individual]].typed)
+            continue;
 
         /* add unary costs (soft constraint) if genotyping is given */
         if (allele1 > 0 || allele2 > 0) {
-            EnumeratedVariable *var = (EnumeratedVariable *) wcsp->getVar(pedigree[individuals[individual]].varindex);
+            EnumeratedVariable* var = (EnumeratedVariable*)wcsp->getVar(pedigree[individuals[individual]].varindex);
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = var;
             for (int i = 1; i <= nballeles; i++) { /* i = first allele of child */
                 for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
                     if ((allele1 > 0 && allele2 > 0 && ((i == allele1 && j == allele2) || (i == allele2 && j == allele1)))
-                            || ((allele1 == 0 || allele2 == 0) && (i == allele1 || i == allele2 || j == allele1 || j == allele2))) {
+                        || ((allele1 == 0 || allele2 == 0) && (i == allele1 || i == allele2 || j == allele1 || j == allele2))) {
                         unaryconstr.costs.push_back(0);
                     } else {
                         unaryconstr.costs.push_back((pedigree[individuals[individual]].genotypes[locus].fixed) ? wcsp->getUb() : 1);
@@ -584,7 +582,8 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
     // apply basic initial propagation AFTER complete network loading
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
+            if (unaryconstrs[u].costs[a] > 0)
+                unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
         }
         unaryconstrs[u].var->findSupport();
     }
@@ -593,12 +592,10 @@ void Haplotype::buildWCSP(const char *fileName, WCSP *wcsp)
     if (ToulBar2::verbose >= 0) {
         cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
     }
-
 }
 
-
 // A MODIFIER POUR PLUSIEURS LOCUS
-void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
+void Haplotype::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
 {
 
     int locus = 0;
@@ -616,7 +613,8 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
     /* create variables */
     int nbvar = 0;
     for (int i = 0; i < nbindividuals; i++) {
-        if (pedigree[i].father == 0 && pedigree[i].mother == 0) nbfounders++;
+        if (pedigree[i].father == 0 && pedigree[i].mother == 0)
+            nbfounders++;
         if (pedigree[i].typed) {
             string varname;
             varname = to_string(pedigree[i].individual);
@@ -635,10 +633,14 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
                     for (int i = 1; i <= nballeles; i++) { /* i = first allele of child */
                         for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
                             TProb p = 0.;
-                            if ((i == k && j == m) || (i == m && j == k)) p += 0.25;
-                            if ((i == k && j == n) || (i == n && j == k)) p += 0.25;
-                            if ((i == l && j == m) || (i == m && j == l)) p += 0.25;
-                            if ((i == l && j == n) || (i == n && j == l)) p += 0.25;
+                            if ((i == k && j == m) || (i == m && j == k))
+                                p += 0.25;
+                            if ((i == k && j == n) || (i == n && j == k))
+                                p += 0.25;
+                            if ((i == l && j == m) || (i == m && j == l))
+                                p += 0.25;
+                            if ((i == l && j == n) || (i == n && j == l))
+                                p += 0.25;
                             costs3.push_back(wcsp->Prob2Cost(p));
                         }
                     }
@@ -675,7 +677,7 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
 
     default:
         foundersprob.clear();
-        assert((int) ToulBar2::allelefreqdistrib.size() == nballeles);
+        assert((int)ToulBar2::allelefreqdistrib.size() == nballeles);
         for (i = 1; i <= nballeles; i++) { /* i = first allele of child  */
             for (j = i; j <= nballeles; j++) { /* j = second allele of child */
                 // case i!=j must be counted twice (i,j and j,i)
@@ -700,15 +702,16 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
                 for (int j = i; j <= nballeles; j++) { /* j = second allele of child */
                     TProb p = 0;
                     if (i == k || i == l || j == k || j == l) {
-                        if (k == l)   p += 1. / (TProb)nballeles;
-                        else 		p += 1. / ((TProb)nballeles + (TProb)nballeles - 1);
+                        if (k == l)
+                            p += 1. / (TProb)nballeles;
+                        else
+                            p += 1. / ((TProb)nballeles + (TProb)nballeles - 1);
                     }
                     costs2.push_back(wcsp->Prob2Cost(p));
                 }
             }
         }
     }
-
 
     /* create constraint network */
     while (file) {
@@ -721,20 +724,24 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
         int allele2 = 0;
 
         file >> cur_locus;
-        if (!file) break;
+        if (!file)
+            break;
         file >> individual;
         file >> father;
         file >> mother;
         file >> sex;
         file >> allele1;
-        if (allele1 < 0) allele1 = -allele1;
+        if (allele1 < 0)
+            allele1 = -allele1;
         allele1 = alleles.find(locus)->second.find(allele1)->second;
         file >> allele2;
-        if (allele2 < 0) allele2 = -allele2;
+        if (allele2 < 0)
+            allele2 = -allele2;
         allele2 = alleles.find(locus)->second.find(allele2)->second;
-        if (!pedigree[individuals[individual]].typed) continue;
+        if (!pedigree[individuals[individual]].typed)
+            continue;
 
-        EnumeratedVariable *var = (EnumeratedVariable *) wcsp->getVar(pedigree[individuals[individual]].varindex);
+        EnumeratedVariable* var = (EnumeratedVariable*)wcsp->getVar(pedigree[individuals[individual]].varindex);
 
         /* add unary costs (soft constraint) if genotyping is given */
         if (allele1 > 0 || allele2 > 0) {
@@ -753,19 +760,22 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
                     TProb p = 0;
                     Cost penalty = 0;
                     if (typed) {
-                        if (theone) p = 1. - ToulBar2::errorg;
-                        else	   {
+                        if (theone)
+                            p = 1. - ToulBar2::errorg;
+                        else {
                             p = ToulBar2::errorg / (TProb)(domsize - 1);
                             penalty = pedigree[individuals[individual]].nbtyped;
                         }
                     } else if (halftyped) {
-                        if (posible) p = (1. - ToulBar2::errorg) / (TProb)nballeles;
+                        if (posible)
+                            p = (1. - ToulBar2::errorg) / (TProb)nballeles;
                         else {
                             p = ToulBar2::errorg / (TProb)(domsize - nballeles);
                             penalty = pedigree[individuals[individual]].nbtyped;
                         }
                     }
-                    if (ToulBar2::pedigreePenalty > 0 && ToulBar2::verbose >= 1) cout << individual << ": "  << penalty << " nbtyped " << ((penalty > ToulBar2::pedigreePenalty) ? wcsp->Cost2LogProb(-((penalty > 0) ? wcsp->Prob2Cost(to_double(penalty)) : MIN_COST)) / Log(10.) : 0.) << " log10like " << -((penalty > ToulBar2::pedigreePenalty) ? wcsp->Prob2Cost(to_double(penalty)) : MIN_COST) << " cost" << endl;
+                    if (ToulBar2::pedigreePenalty > 0 && ToulBar2::verbose >= 1)
+                        cout << individual << ": " << penalty << " nbtyped " << ((penalty > ToulBar2::pedigreePenalty) ? wcsp->Cost2LogProb(-((penalty > 0) ? wcsp->Prob2Cost(to_double(penalty)) : MIN_COST)) / Log(10.) : 0.) << " log10like " << -((penalty > ToulBar2::pedigreePenalty) ? wcsp->Prob2Cost(to_double(penalty)) : MIN_COST) << " cost" << endl;
                     unaryconstr.costs.push_back((typed && fixed && !theone) ? wcsp->getUb() : (wcsp->Prob2Cost(p) - ((ToulBar2::pedigreePenalty > 0 && penalty > ToulBar2::pedigreePenalty) ? wcsp->Prob2Cost(to_double(penalty)) : MIN_COST)));
                 }
             }
@@ -801,7 +811,8 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
     // apply basic initial propagation AFTER complete network loading
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         for (unsigned int a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-            if (unaryconstrs[u].costs[a] > 0) unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
+            if (unaryconstrs[u].costs[a] > 0)
+                unaryconstrs[u].var->project(unaryconstrs[u].var->toValue(a), unaryconstrs[u].costs[a], true);
         }
         unaryconstrs[u].var->findSupport();
     }
@@ -810,18 +821,14 @@ void Haplotype::buildWCSP_bayesian(const char *fileName, WCSP *wcsp)
     if (ToulBar2::verbose >= 0) {
         int nbtypings = genotypes.size();
         cout << "Read pedigree with " << nbindividuals << " individuals, " << nbfounders << " founders, " << nballeles << " alleles, " << nbtypings << " genotypings and " << generations << " generations." << endl;
-        cout << "Bayesian MPE (genotyping error rate: " <<  ToulBar2::errorg << ", genotype prior: " << ToulBar2::foundersprob_class << ", precision(1-10^-p): " << ToulBar2::resolution << ", normalization: " << ToulBar2::NormFactor << ", ub: " << wcsp->getUb() << ")" << endl;
-
+        cout << "Bayesian MPE (genotyping error rate: " << ToulBar2::errorg << ", genotype prior: " << ToulBar2::foundersprob_class << ", precision(1-10^-p): " << ToulBar2::resolution << ", normalization: " << ToulBar2::NormFactor << ", ub: " << wcsp->getUb() << ")" << endl;
     }
-
-
 }
 
-void Haplotype::buildWCSP_haplotype(const char *fileName, WCSP *wcsp)
+void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
 {
     //create the sparse matrix
     sparse_matrix();
-
 
     //create Boolean variables
     for (int i = 0; i < nbloci; i++) {
@@ -834,32 +841,32 @@ void Haplotype::buildWCSP_haplotype(const char *fileName, WCSP *wcsp)
     // find total cost
     Double sumcost = 0.;
 
-    for (map<pair<int, int>, Double, classcomp >::iterator w = W.begin(); w != W.end(); ++w)
+    for (map<pair<int, int>, Double, classcomp>::iterator w = W.begin(); w != W.end(); ++w)
         sumcost += abs(w->second);
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
     wcsp->updateUb((Cost)(ToulBar2::NormFactor * sumcost));
-//	  Double constante = 0.;
-    for (map<pair<int, int>, Double, classcomp >::iterator w = W.begin(); w != W.end(); ++w) {
+    //	  Double constante = 0.;
+    for (map<pair<int, int>, Double, classcomp>::iterator w = W.begin(); w != W.end(); ++w) {
         if (w->first.first != w->first.second) {
             vector<Cost> costs(4, 0);
             if (w->second > 0) {
                 costs[1] = (Cost)(ToulBar2::NormFactor * w->second);
                 costs[2] = costs[1];
                 K += 2. * w->second;
-//				  constante += 2. * w->second;
+                //				  constante += 2. * w->second;
             } else {
                 costs[0] = (Cost)(-ToulBar2::NormFactor * w->second);
                 costs[3] = costs[0];
                 K += -2. * w->second;
-//				  constante += -2. * w->second;
+                //				  constante += -2. * w->second;
             }
             if (w->second != 0)
                 wcsp->postBinaryConstraint(w->first.first, w->first.second, costs);
         } else {
-//			  if(w->second > 0)
-//				  unaryCosts1[w->first.first] += (Cost) (multiplier * w->second);
-//			  else
-//				  unaryCosts0[w->first.first] += (Cost) (multiplier * -w->second);
+            //			  if(w->second > 0)
+            //				  unaryCosts1[w->first.first] += (Cost) (multiplier * w->second);
+            //			  else
+            //				  unaryCosts0[w->first.first] += (Cost) (multiplier * -w->second);
         }
     }
     // create weighted unary clauses
@@ -874,49 +881,56 @@ void Haplotype::buildWCSP_haplotype(const char *fileName, WCSP *wcsp)
     wcsp->sortConstraints();
     cout << "Read " << nbloci << " variables, with " << 2 << " values at most, and " << W.size() << " constraints." << endl;
     // special data structure to be initialized for variable ordering heuristics
-    if (ToulBar2::verbose == 1) cout << "pedigree ub: " << wcsp->getUb() << endl;
-
+    if (ToulBar2::verbose == 1)
+        cout << "pedigree ub: " << wcsp->getUb() << endl;
 }
 
 // A MODIFIER POUR PLUSIEURS LOCUS
-void Haplotype::printCorrectSol(WCSP *wcsp)
+void Haplotype::printCorrectSol(WCSP* wcsp)
 {
     int locus = 0;
-    if (!gencorrects.size()) return;
+    if (!gencorrects.size())
+        return;
 
     ofstream file("sol_correct");
     if (!file) {
-        cerr << "Could not write file " << "solution" << endl;
+        cerr << "Could not write file "
+             << "solution" << endl;
         exit(EXIT_FAILURE);
     }
 
     for (vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it) {
-        Individual &ind = *it;
+        Individual& ind = *it;
         int allele1 = ind.genotypes[locus].allele1;
         int allele2 = ind.genotypes[locus].allele2;
         if ((allele1 > 0) || (allele2 > 0)) {
             map<int, int>::iterator it = gencorrects.find(ind.individual);
-            if (it != gencorrects.end()) file << " " << it->second;
-            else file << " " << convertgen(locus, allele1, allele2);
-        } else file << " " << -1;
+            if (it != gencorrects.end())
+                file << " " << it->second;
+            else
+                file << " " << convertgen(locus, allele1, allele2);
+        } else
+            file << " " << -1;
     }
     file << endl;
 }
 
-
-void Haplotype::printSol(WCSP *wcsp)
+void Haplotype::printSol(WCSP* wcsp)
 {
 
     if (!ToulBar2::haplotype) {
         ofstream file("sol");
         if (!file) {
-            cerr << "Could not write file " << "solution" << endl;
+            cerr << "Could not write file "
+                 << "solution" << endl;
             exit(EXIT_FAILURE);
         }
         for (vector<Individual>::iterator it = pedigree.begin(); it != pedigree.end(); ++it) {
-            Individual &ind = *it;
-            if (ind.typed) file << " " << wcsp->getValue(ind.varindex);
-            else file << " " << -1;
+            Individual& ind = *it;
+            if (ind.typed)
+                file << " " << wcsp->getValue(ind.varindex);
+            else
+                file << " " << -1;
         }
         file << endl;
         file.close();
@@ -926,23 +940,26 @@ void Haplotype::printSol(WCSP *wcsp)
         file << "sire " << sire << endl;
         for (int locus = 0; locus < nbloci; ++locus) {
             file << " ";
-            if (wcsp->getValue(locus) == 1) file << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
-            else file << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
+            if (wcsp->getValue(locus) == 1)
+                file << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
+            else
+                file << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
         }
         file << endl;
         for (int locus = 0; locus < nbloci; ++locus) {
             file << " ";
-            if (wcsp->getValue(locus) == 0) file << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
-            else file << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
+            if (wcsp->getValue(locus) == 0)
+                file << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
+            else
+                file << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
         }
         file << endl;
         file.close();
     }
 }
 
-
 // A MODIFIER POUR PLUSIEURS LOCUS
-void Haplotype::printCorrection(WCSP *wcsp)
+void Haplotype::printCorrection(WCSP* wcsp)
 {
     int locus = 0;
     bool errorinfo = gencorrects.size() > 0;
@@ -977,7 +994,8 @@ void Haplotype::printCorrection(WCSP *wcsp)
                 if (it != gencorrects.end()) {
                     ncorrect++;
                     int allellereal = it->second;
-                    if ((allellereal == a1) && (a1 != allele1)) ncorrectok++;
+                    if ((allellereal == a1) && (a1 != allele1))
+                        ncorrectok++;
                 }
             }
             ncorrections++;
@@ -991,25 +1009,26 @@ void Haplotype::printCorrection(WCSP *wcsp)
     cout << endl;
     if (errorinfo) {
         cout << "Info errorfile: ";
-        cout << ncorrect << "/"  << ncorrections << ", " <<  ncorrectok << "/" << ncorrect << ", " << gencorrects.size() << " original" << endl;
+        cout << ncorrect << "/" << ncorrections << ", " << ncorrectok << "/" << ncorrect << ", " << gencorrects.size() << " original" << endl;
         cout << endl;
     }
 }
 
-
-void Haplotype::printGenotype(ostream &os, Value value, int locus)
+void Haplotype::printGenotype(ostream& os, Value value, int locus)
 {
     os << (genoconvert[locus])[value].allele1 << "/" << (genoconvert[locus])[value].allele2;
 }
 
-void Haplotype::printHaplotype(ostream &os, Value value, int locus)
+void Haplotype::printHaplotype(ostream& os, Value value, int locus)
 {
-    if (value == 1) os << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << "|" << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
-    else os << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << "|" << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
+    if (value == 1)
+        os << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << "|" << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << " ";
+    else
+        os << pedigree[individuals.find(sire)->second].genotypes[locus].allele2 << "|" << pedigree[individuals.find(sire)->second].genotypes[locus].allele1 << " ";
 }
 
 // A MODIFIER POUR PLUSIEURS LOCUS
-void Haplotype::save(const char *fileName, WCSP *wcsp, bool corrected, bool reduced)
+void Haplotype::save(const char* fileName, WCSP* wcsp, bool corrected, bool reduced)
 {
     int locus = 0;
     assert(!(corrected && reduced));
@@ -1022,20 +1041,21 @@ void Haplotype::save(const char *fileName, WCSP *wcsp, bool corrected, bool redu
     }
 
     for (map<int, int>::iterator iter = individuals.begin(); iter != individuals.end(); ++iter) {
-        if ((*iter).first == 0) continue;
-        if (reduced && (pedigree[(*iter).second].varindex < 0 || pedigree[(*iter).second].varindex >= (int) wcsp->numberOfVariables() || wcsp->assigned(pedigree[(*iter).second].varindex))) {
+        if ((*iter).first == 0)
+            continue;
+        if (reduced && (pedigree[(*iter).second].varindex < 0 || pedigree[(*iter).second].varindex >= (int)wcsp->numberOfVariables() || wcsp->assigned(pedigree[(*iter).second].varindex))) {
             continue;
         }
         file << family << " ";
-        if (corrected && pedigree[(*iter).second].varindex >= 0 && pedigree[(*iter).second].varindex < (int) wcsp->numberOfVariables() && wcsp->assigned(pedigree[(*iter).second].varindex)) {
+        if (corrected && pedigree[(*iter).second].varindex >= 0 && pedigree[(*iter).second].varindex < (int)wcsp->numberOfVariables() && wcsp->assigned(pedigree[(*iter).second].varindex)) {
             int sol = wcsp->getValue(pedigree[(*iter).second].varindex);
             int a1 = (genoconvert[locus])[sol].allele1;
             int a2 = (genoconvert[locus])[sol].allele2;
             int allele1 = pedigree[(*iter).second].genotypes[locus].allele1;
             int allele2 = pedigree[(*iter).second].genotypes[locus].allele2;
             if ((allele1 > 0 && allele2 > 0 && !((a1 == allele1 && a2 == allele2) || (a1 == allele2 && a2 == allele1)))
-                    || ((allele1 == 0 || allele2 == 0) && !(allele1 == 0 && allele2 == 0) && !(a1 == allele1 || a1 == allele2 || a2 == allele1 || a2 == allele2))
-                    || ToulBar2::pedigreeCorrectionMode == 2) {
+                || ((allele1 == 0 || allele2 == 0) && !(allele1 == 0 && allele2 == 0) && !(a1 == allele1 || a1 == allele2 || a2 == allele1 || a2 == allele2))
+                || ToulBar2::pedigreeCorrectionMode == 2) {
                 if (ToulBar2::pedigreeCorrectionMode > 0) {
                     pedigree[(*iter).second].genotypes[locus].allele1 = a1;
                     pedigree[(*iter).second].genotypes[locus].allele2 = a2;
@@ -1065,7 +1085,8 @@ void Haplotype::initTransmission()
     }
     assert(sire != -1);
 
-    if (ToulBar2::verbose >= 1) cout << "sire is individual " << sire << endl;
+    if (ToulBar2::verbose >= 1)
+        cout << "sire is individual " << sire << endl;
     for (vector<Individual>::iterator fils = pedigree.begin(); fils != pedigree.end(); ++fils) {
         vector<int> T;
         if ((*fils).father == sire) {
@@ -1074,46 +1095,53 @@ void Haplotype::initTransmission()
             Individual father = pedigree[individuals[(*fils).father]];
             for (int locus = 0; locus < nbloci; ++locus) {
                 int trans = 5;
-                if (father.genotypes[locus].allele1 == father.genotypes[locus].allele2) trans = 0; //T.push_back(0);
+                if (father.genotypes[locus].allele1 == father.genotypes[locus].allele2)
+                    trans = 0; //T.push_back(0);
                 else {
                     if ((*fils).genotypes[locus].allele1 == (*fils).genotypes[locus].allele2) {
                         if ((*fils).genotypes[locus].allele1 == father.genotypes[locus].allele1)
-                            trans = -1;//T.push_back(-1);
-                        else trans = 1;//T.push_back(-1);
+                            trans = -1; //T.push_back(-1);
+                        else
+                            trans = 1; //T.push_back(-1);
                     } else if (ind_mother != 0) {
                         Individual mother = pedigree[individuals[(*fils).mother]];
-                        if (mother.genotypes[locus].allele1 != 0 &&  mother.genotypes[locus].allele2 != 0) { // genotyped mother at this locus
-                            if (mother.genotypes[locus].allele1 != mother.genotypes[locus].allele2) trans = 0; //T.push_back(0);
+                        if (mother.genotypes[locus].allele1 != 0 && mother.genotypes[locus].allele2 != 0) { // genotyped mother at this locus
+                            if (mother.genotypes[locus].allele1 != mother.genotypes[locus].allele2)
+                                trans = 0; //T.push_back(0);
                             else {
                                 if ((*fils).genotypes[locus].allele1 != mother.genotypes[locus].allele1) {
                                     if ((*fils).genotypes[locus].allele1 == father.genotypes[locus].allele1)
                                         trans = -1; //T.push_back(-1);
-                                    else trans = 1;//T.push_back(-1);
+                                    else
+                                        trans = 1; //T.push_back(-1);
                                 } else if ((*fils).genotypes[locus].allele2 != mother.genotypes[locus].allele1) {
                                     if ((*fils).genotypes[locus].allele2 == father.genotypes[locus].allele1)
-                                        trans = -1;//T.push_back(-1);
-                                    else trans = 1
-                                                     ;//T.push_back(-1);
+                                        trans = -1; //T.push_back(-1);
+                                    else
+                                        trans = 1; //T.push_back(-1);
                                 }
-
                             }
-                        } else trans = 0;
-                    } else trans = 0;
-
+                        } else
+                            trans = 0;
+                    } else
+                        trans = 0;
                 }
                 T.push_back(trans);
             }
-            transmission.insert(pair<int, vector<int> >(fils->individual, T));
+            transmission.insert(pair<int, vector<int>>(fils->individual, T));
         }
     }
     if (ToulBar2::verbose > 1) {
         cout << "Transmission vectors : \n";
-        for (map<int, vector<int> >::iterator it = transmission.begin(); it != transmission.end(); ++it) {
+        for (map<int, vector<int>>::iterator it = transmission.begin(); it != transmission.end(); ++it) {
             cout << "offspring " << it->first << ":\t ";
             for (vector<int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-                if ((*it2) == 0) cout << " * ";
-                if ((*it2) == 1) cout << " " << *it2 << " " ;
-                if ((*it2) == -1) cout << *it2 << " " ;
+                if ((*it2) == 0)
+                    cout << " * ";
+                if ((*it2) == 1)
+                    cout << " " << *it2 << " ";
+                if ((*it2) == -1)
+                    cout << *it2 << " ";
             }
             cout << endl;
         }
@@ -1131,7 +1159,6 @@ void Haplotype::initTransmission()
     		file << endl;
     	}
     */
-
 }
 
 void Haplotype::sparse_matrix()
@@ -1139,7 +1166,7 @@ void Haplotype::sparse_matrix()
     int nbDesc = 0;
     for (vector<Individual>::iterator fils = pedigree.begin(); fils != pedigree.end(); ++fils) {
         if ((*fils).father == sire) {
-            int locus_prec = -1;		// first left informative locus with respect to current locus
+            int locus_prec = -1; // first left informative locus with respect to current locus
             bool first = true; // if first informative locus
             nbDesc++;
             for (int locus = 0; locus < nbloci; ++locus) {
@@ -1152,12 +1179,12 @@ void Haplotype::sparse_matrix()
                     K += log((1 - recombination_frac) * recombination_frac);
                     if (transmission.find(fils->individual)->second[locus] == transmission.find(fils->individual)->second[locus_prec]) {
                         if (W.count(pair<int, int>(locus_prec, locus)) == 0)
-                            W.insert(pair<pair<int, int>, Double >(pair<int, int>(locus_prec, locus), coef));
+                            W.insert(pair<pair<int, int>, Double>(pair<int, int>(locus_prec, locus), coef));
                         else
                             W.find(pair<int, int>(locus_prec, locus))->second += coef;
                     } else {
                         if (W.count(pair<int, int>(locus_prec, locus)) == 0)
-                            W.insert(pair<pair<int, int>, Double >(pair<int, int>(locus_prec, locus), -coef));
+                            W.insert(pair<pair<int, int>, Double>(pair<int, int>(locus_prec, locus), -coef));
                         else
                             W.find(pair<int, int>(locus_prec, locus))->second += -coef;
                         locus_prec = locus;
@@ -1171,11 +1198,11 @@ void Haplotype::sparse_matrix()
     //affichage
     if (ToulBar2::verbose >= 1) {
         cout << "sparse matrix : \n";
-        for (map< pair<int, int>, Double, classcomp >::iterator it = W.begin(); it != W.end(); ++it)
+        for (map<pair<int, int>, Double, classcomp>::iterator it = W.begin(); it != W.end(); ++it)
             if ((*it).second >= 0)
-                cout << "W" << (*it).first.first << "," << (*it).first.second << "\t =\t  " << (*it).second  << endl;
+                cout << "W" << (*it).first.first << "," << (*it).first.second << "\t =\t  " << (*it).second << endl;
             else
-                cout << "W" << (*it).first.first << "," << (*it).first.second << "\t =\t " << (*it).second  << endl;
+                cout << "W" << (*it).first.first << "," << (*it).first.second << "\t =\t " << (*it).second << endl;
         cout << "constant K =\t " << K << endl;
     }
 }
@@ -1186,4 +1213,3 @@ void Haplotype::sparse_matrix()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

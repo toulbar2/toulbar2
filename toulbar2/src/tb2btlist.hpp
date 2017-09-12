@@ -17,46 +17,59 @@
 #include "tb2store.hpp"
 
 template <class T>
-class DLink
-{
+class DLink {
 public:
-    bool removed;       // true if the corresponding element has been removed
-    DLink *next;
-    DLink *prev;
+    bool removed; // true if the corresponding element has been removed
+    DLink* next;
+    DLink* prev;
     T content;
 
 public:
-    DLink<T>() : removed(true), next(NULL), prev(NULL) {}
+    DLink<T>()
+        : removed(true)
+        , next(NULL)
+        , prev(NULL)
+    {
+    }
 };
 
 template <class T>
-class BTList
-{
-    StoreStack<BTList, DLink<T> *> *storeUndo;
+class BTList {
+    StoreStack<BTList, DLink<T>*>* storeUndo;
     int size;
-    DLink<T> *head;
-    DLink<T> *last;
+    DLink<T>* head;
+    DLink<T>* last;
 
 public:
-    BTList(StoreStack<BTList, DLink<T> *> *s) : storeUndo(s), size(0), head(NULL), last(NULL) {}
+    BTList(StoreStack<BTList, DLink<T>*>* s)
+        : storeUndo(s)
+        , size(0)
+        , head(NULL)
+        , last(NULL)
+    {
+    }
 
-    int getSize() const {return size;}
-    bool empty() const {return size == 0;}
+    int getSize() const { return size; }
+    bool empty() const { return size == 0; }
 
     // Warning! clear() is not a backtrackable operation
-    void clear() {size = 0; head = NULL; last = NULL;}
+    void clear()
+    {
+        size = 0;
+        head = NULL;
+        last = NULL;
+    }
 
-
-    bool inBTList(DLink<T> *elt)
+    bool inBTList(DLink<T>* elt)
     {
         for (iterator iter = begin(); iter != end(); ++iter) {
-            if (elt == iter.getElt()) return !elt->removed;
+            if (elt == iter.getElt())
+                return !elt->removed;
         }
         return false;
     }
 
-
-    void push_back(DLink<T> *elt, bool backtrack)
+    void push_back(DLink<T>* elt, bool backtrack)
     {
         assert(!inBTList(elt));
         size++;
@@ -70,9 +83,9 @@ public:
         }
         last = elt;
         last->next = NULL;
-        if (backtrack) storeUndo->store(this, NULL);
+        if (backtrack)
+            storeUndo->store(this, NULL);
     }
-
 
     void undoPushBack()
     {
@@ -89,7 +102,7 @@ public:
         }
     }
 
-    void erase(DLink<T> *elt, bool backtrack)
+    void erase(DLink<T>* elt, bool backtrack)
     {
         assert(!elt->removed);
         size--;
@@ -98,19 +111,21 @@ public:
             assert(!elt->prev->removed);
             assert(elt->prev->next == elt);
             elt->prev->next = elt->next;
-        } else head = elt->next;
+        } else
+            head = elt->next;
         if (elt->next != NULL) {
             assert(!elt->next->removed);
             assert(elt->next->prev == elt);
             elt->next->prev = elt->prev;
-        } else last = elt->prev;
+        } else
+            last = elt->prev;
         if (backtrack) {
             storeUndo->store(this, elt->prev);
             storeUndo->store(this, elt);
         }
     }
 
-    void undoErase(DLink<T> *elt, DLink<T> *prev)
+    void undoErase(DLink<T>* elt, DLink<T>* prev)
     {
         assert(elt->removed);
         size++;
@@ -119,12 +134,16 @@ public:
             assert(!prev->removed);
             elt->prev = prev;
             elt->next = prev->next;
-            if (prev->next != NULL) prev->next->prev = elt;
-            else last = elt;
+            if (prev->next != NULL)
+                prev->next->prev = elt;
+            else
+                last = elt;
             prev->next = elt;
         } else {
-            if (head != NULL) head->prev = elt;
-            else last = elt;
+            if (head != NULL)
+                head->prev = elt;
+            else
+                last = elt;
             elt->prev = NULL;
             elt->next = head;
             head = elt;
@@ -132,37 +151,39 @@ public:
     }
 
     // deprecated method to be used with erase(..) storing just one element
-//    void undoErase(DLink<T> *elt) {
-//        assert(elt->removed);
-//        size++;
-//        elt->removed = false;
-//        if (elt->prev != NULL) {
-//            assert(!elt->prev->removed);
-//            assert(elt->prev->next == elt->next);
-//            elt->prev->next = elt;
-//        } else head = elt;
-//        if (elt->next != NULL) {
-//            assert(!elt->next->removed);
-//            assert(elt->next->prev == elt->prev);
-//            elt->next->prev = elt;
-//        } else last = elt;
-//    }
+    //    void undoErase(DLink<T> *elt) {
+    //        assert(elt->removed);
+    //        size++;
+    //        elt->removed = false;
+    //        if (elt->prev != NULL) {
+    //            assert(!elt->prev->removed);
+    //            assert(elt->prev->next == elt->next);
+    //            elt->prev->next = elt;
+    //        } else head = elt;
+    //        if (elt->next != NULL) {
+    //            assert(!elt->next->removed);
+    //            assert(elt->next->prev == elt->prev);
+    //            elt->next->prev = elt;
+    //        } else last = elt;
+    //    }
 
-    DLink<T> *pop_back(bool backtrack)
+    DLink<T>* pop_back(bool backtrack)
     {
         assert(last != NULL);
-        DLink<T> *oldlast = last;
+        DLink<T>* oldlast = last;
         erase(last, backtrack);
         return oldlast;
     }
 
+    class iterator {
+        DLink<T>* elt;
 
-    class iterator
-    {
-        DLink<T> *elt;
     public:
         iterator() { elt = NULL; }
-        iterator(DLink<T> *e) : elt(e) {}
+        iterator(DLink<T>* e)
+            : elt(e)
+        {
+        }
 
         T operator*() const
         {
@@ -170,9 +191,9 @@ public:
             return elt->content;
         }
 
-        DLink<T> *getElt() const {return elt;}
+        DLink<T>* getElt() const { return elt; }
 
-        iterator &operator++()      // Prefix form
+        iterator& operator++() // Prefix form
         {
             if (elt != NULL) {
                 while (elt->next != NULL && elt->next->removed) {
@@ -184,7 +205,7 @@ public:
             return *this;
         }
 
-        iterator &operator--()      // Prefix form
+        iterator& operator--() // Prefix form
         {
             if (elt != NULL) {
                 while (elt->prev != NULL && elt->prev->removed) {
@@ -197,29 +218,28 @@ public:
         }
 
         // To see if you're at the end:
-        bool operator==(const iterator &iter) const {return elt == iter.elt;}
-        bool operator!= (const iterator &iter) const {return elt != iter.elt;}
+        bool operator==(const iterator& iter) const { return elt == iter.elt; }
+        bool operator!=(const iterator& iter) const { return elt != iter.elt; }
     };
 
-
-
-    iterator begin() {return iterator(head);}
-    iterator end() {return iterator(NULL);}
-    iterator rbegin() {return iterator(last);}
-    iterator rend() {return end();}
-
+    iterator begin() { return iterator(head); }
+    iterator end() { return iterator(NULL); }
+    iterator rbegin() { return iterator(last); }
+    iterator rend() { return end(); }
 };
 
 typedef BTList<ConstraintLink> ConstraintList;
-typedef BTList<Variable *> VariableList;
-typedef BTList<Separator *> SeparatorList;
+typedef BTList<Variable*> VariableList;
+typedef BTList<Separator*> SeparatorList;
 
 /*
  * For internal use only! Interaction between tb2store and tb2btlist
  *
  */
 
-template <class T, class V> template <class Q> void StoreStack<T, V>::restore(BTList<Q> **l, DLink<Q> **elt, ptrdiff_t &x)
+template <class T, class V>
+template <class Q>
+void StoreStack<T, V>::restore(BTList<Q>** l, DLink<Q>** elt, ptrdiff_t& x)
 {
     if (elt[x] == NULL) {
         l[x]->undoPushBack();
@@ -238,4 +258,3 @@ template <class T, class V> template <class Q> void StoreStack<T, V>::restore(BT
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

@@ -3,7 +3,9 @@
 #include <algorithm>
 using namespace std;
 
-DPGlobalConstraint::DPGlobalConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity) : GlobalConstraint(wcsp, scope, arity, 0), initialized(false)
+DPGlobalConstraint::DPGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
+    : GlobalConstraint(wcsp, scope, arity, 0)
+    , initialized(false)
 {
     zero = new vector<bool>[arity];
     for (int i = 0; i < arity; i++)
@@ -27,14 +29,16 @@ void DPGlobalConstraint::clear()
     }
 }
 
-void DPGlobalConstraint::record(Value *tuple)
+void DPGlobalConstraint::record(Value* tuple)
 {
-    if (tuple == NULL) return;
+    if (tuple == NULL)
+        return;
     for (int i = 0; i < arity(); i++)
         zero[i][scope[i]->toIndex(tuple[i])] = true;
     if (ToulBar2::verbose >= 3) {
         cout << "tuple(";
-        for (int i = 0 ; i < arity(); i++) cout << tuple[i] << ",";
+        for (int i = 0; i < arity(); i++)
+            cout << tuple[i] << ",";
         cout << ")" << endl;
     }
     delete[] tuple;
@@ -58,8 +62,9 @@ void DPGlobalConstraint::propagateStrongNIC()
     Cost lb = wcsp->getLb();
     bool changed = true;
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable *x = scope[i];
-        if (x->assigned()) continue;
+        EnumeratedVariable* x = scope[i];
+        if (x->assigned())
+            continue;
         bool first = true;
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             Cost cost = minCostOriginal(i, *it, changed && first) - projectedCost;
@@ -82,12 +87,14 @@ void DPGlobalConstraint::propagateAC()
     //Cost thisUb;
     //thisUb = wcsp->getUb();
     for (int i = 0; i < arity(); i++) {
-        EnumeratedVariable *x = scope[i];
+        EnumeratedVariable* x = scope[i];
         bool first = true;
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
-            if (zero[i][x->toIndex(*it)]) continue;
+            if (zero[i][x->toIndex(*it)])
+                continue;
             Result r = minCost(i, *it, changed && first);
-            if (changed && first) changed = false;
+            if (changed && first)
+                changed = false;
             first = false;
 
             Cost cost = r.first;
@@ -104,31 +111,33 @@ void DPGlobalConstraint::propagateAC()
                 extend(i, *it, -cost);
                 changed = true;
             }
-            if (x->canbe(*it)) record(r.second);
+            if (x->canbe(*it))
+                record(r.second);
         }
         x->findSupport();
     }
 }
 
-void DPGlobalConstraint::findSupport(int var, bool &changed)
+void DPGlobalConstraint::findSupport(int var, bool& changed)
 {
-    EnumeratedVariable *x = scope[var];
+    EnumeratedVariable* x = scope[var];
     bool first = true;
     vector<Value> remove;
 
     for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
         Cost cost;
-        Result r = pair<Cost, Value *>(0, NULL);
+        Result r = pair<Cost, Value*>(0, NULL);
         if (zero[var][x->toIndex(*it)]) {
             cost = 0;
         } else {
             r = minCost(var, *it, changed && first);
-            if (changed && first) changed = false;
+            if (changed && first)
+                changed = false;
             first = false;
             cost = r.first;
         }
         //deltaCost[var][x->toIndex(*it)] += x->getCost(*it);
-        deltaCost[var][x->toIndex(*it)] += 	preUnaryCosts[var][x->toIndex(*it)];
+        deltaCost[var][x->toIndex(*it)] += preUnaryCosts[var][x->toIndex(*it)];
         //Cost delta = cost - x->getCost(*it);
         Cost delta = cost - preUnaryCosts[var][x->toIndex(*it)];
         if (delta > 0) {
@@ -137,20 +146,22 @@ void DPGlobalConstraint::findSupport(int var, bool &changed)
         } else if (delta < 0) {
             extend(var, *it, -delta);
         }
-        if (!zero[var][x->toIndex(*it)] && x->getCost(*it) + wcsp->getLb() < wcsp->getUb()) record(r.second);
+        if (!zero[var][x->toIndex(*it)] && x->getCost(*it) + wcsp->getLb() < wcsp->getUb())
+            record(r.second);
     }
     x->findSupport();
-    changed = true;  //Detect any change in variable domain or unary costs
+    changed = true; //Detect any change in variable domain or unary costs
 }
 
 void DPGlobalConstraint::propagateDAC()
 {
-    if (ToulBar2::verbose >= 3) cout << "propagateDAC for " << *this << endl;
+    if (ToulBar2::verbose >= 3)
+        cout << "propagateDAC for " << *this << endl;
 
     clear();
 
     for (int ii = 0; ii < arity_; ii++) {
-        EnumeratedVariable *x = scope_dac[ii];
+        EnumeratedVariable* x = scope_dac[ii];
         int i = scope_inv[x->wcspIndex];
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             if (x->unassigned()) {
@@ -162,21 +173,19 @@ void DPGlobalConstraint::propagateDAC()
 
     bool changed = true;
     for (int ii = 0; ii < arity_; ii++) {
-        EnumeratedVariable *x = scope_dac[ii];
+        EnumeratedVariable* x = scope_dac[ii];
         int i = scope_inv[x->wcspIndex];
         if (x->unassigned()) {
             findSupport(i, changed);
         }
     }
-
 }
 
 bool DPGlobalConstraint::isEAC(int var, Value val)
 {
 
-    for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it) {
-        EnumeratedVariable *x = scope[*it];
+    for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
+        EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {
             for (EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt) {
                 deltaCost[*it][x->toIndex(*jt)] -= x->getCost(*jt);
@@ -184,9 +193,8 @@ bool DPGlobalConstraint::isEAC(int var, Value val)
         }
     }
     bool ret = (minCost(var, val, true).first == 0);
-    for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it) {
-        EnumeratedVariable *x = scope[*it];
+    for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
+        EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {
             for (EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt) {
                 deltaCost[*it][x->toIndex(*jt)] += x->getCost(*jt);
@@ -203,9 +211,8 @@ void DPGlobalConstraint::findFullSupportEAC(int var)
 
     clear();
     //fullySupportedSet[var].insert(var);
-    for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it) {
-        EnumeratedVariable *x = scope[*it];
+    for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
+        EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {
             for (EnumeratedVariable::iterator jt = x->begin(); jt != x->end(); ++jt) {
                 /* fix the problem in EAC */
@@ -215,19 +222,17 @@ void DPGlobalConstraint::findFullSupportEAC(int var)
         }
     }
     //fullySupportedSet[var].erase(var);
-    EnumeratedVariable *cur = scope[var];
+    EnumeratedVariable* cur = scope[var];
     for (EnumeratedVariable::iterator jt = cur->begin(); jt != cur->end(); ++jt) {
         /* fix the problem in EAC */
         preUnaryCosts[var][cur->toIndex(*jt)] = cur->getCost(*jt);
         deltaCost[var][cur->toIndex(*jt)] -= cur->getCost(*jt);
     }
 
-
     bool changed = true;
     findSupport(var, changed);
-    for (set<int>::iterator it = fullySupportedSet[var].begin(); it !=
-            fullySupportedSet[var].end(); ++it) {
-        EnumeratedVariable *x = scope[*it];
+    for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
+        EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {
             findSupport(*it, changed);
         }
@@ -240,4 +245,3 @@ void DPGlobalConstraint::findFullSupportEAC(int var)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

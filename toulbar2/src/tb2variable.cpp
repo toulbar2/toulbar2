@@ -13,13 +13,21 @@
  *
  */
 
-Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : WCSPLink(w, w->numberOfVariables()), name(n), dac(w->numberOfVariables()),
-    timestamp(-1), pos(-1),
-    inf(iinf), sup(isup), constrs(&Store::storeConstraint),
+Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
+    : WCSPLink(w, w->numberOfVariables())
+    , name(n)
+    , dac(w->numberOfVariables())
+    , timestamp(-1)
+    , pos(-1)
+    , inf(iinf)
+    , sup(isup)
+    , constrs(&Store::storeConstraint)
+    ,
     //triangles(&Store::storeConstraint),
-    maxCost(MIN_COST), maxCostValue(iinf),
-    NCBucket(-1),
-    cluster(-1)
+    maxCost(MIN_COST)
+    , maxCostValue(iinf)
+    , NCBucket(-1)
+    , cluster(-1)
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -38,23 +46,25 @@ Variable::Variable(WCSP *w, string n, Value iinf, Value isup) : WCSPLink(w, w->n
     isSep_ = false;
 }
 
-DLink<ConstraintLink> *Variable::link(Constraint *c, int index)
+DLink<ConstraintLink>* Variable::link(Constraint* c, int index)
 {
     ConstraintLink e;
     e.constr = c;
     e.scopeIndex = index;
-    DLink<ConstraintLink> *elt = new DLink<ConstraintLink>;
+    DLink<ConstraintLink>* elt = new DLink<ConstraintLink>;
     elt->content = e;
-//    if (c->isTriangle()) triangles.push_back(elt,true);
-//    else
+    //    if (c->isTriangle()) triangles.push_back(elt,true);
+    //    else
     constrs.push_back(elt, true);
     return elt;
 }
 
 int Variable::getCurrentVarId()
 {
-    if (assigned()) return -1;
-    if (wcsp->getNbNodes() > timestamp) wcsp->updateCurrentVarsId();
+    if (assigned())
+        return -1;
+    if (wcsp->getNbNodes() > timestamp)
+        wcsp->updateCurrentVarsId();
     assert(pos >= 0);
     assert(wcsp->getNbNodes() == timestamp);
     return pos;
@@ -66,66 +76,73 @@ void Variable::setCurrentVarId(int idx)
     timestamp = wcsp->getNbNodes();
 }
 
-int cmpConstraint(const void *p1, const void *p2)
+int cmpConstraint(const void* p1, const void* p2)
 {
-    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
-    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
+    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
     int v1 = c1->content.constr->getSmallestVarIndexInScope(c1->content.scopeIndex);
     int v2 = c2->content.constr->getSmallestVarIndexInScope(c2->content.scopeIndex);
-    if (v1 < v2) return -1;
-    else if (v1 > v2) return 1;
-    else return 0;
+    if (v1 < v2)
+        return -1;
+    else if (v1 > v2)
+        return 1;
+    else
+        return 0;
 }
 
-int cmpConstraintDAC(const void *p1, const void *p2)
+int cmpConstraintDAC(const void* p1, const void* p2)
 {
-    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
-    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
+    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
     int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
     int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
-    if (v1 < v2) return 1;
-    else if (v1 > v2) return -1;
-    else return 0;
+    if (v1 < v2)
+        return 1;
+    else if (v1 > v2)
+        return -1;
+    else
+        return 0;
 }
 
-int cmpConstraintTightness(const void *p1, const void *p2)
+int cmpConstraintTightness(const void* p1, const void* p2)
 {
-    DLink<ConstraintLink> *c1 = *((DLink<ConstraintLink> **) p1);
-    DLink<ConstraintLink> *c2 = *((DLink<ConstraintLink> **) p2);
+    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
+    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
     double v1 = c1->content.constr->getTightness();
     double v2 = c2->content.constr->getTightness();
-    if (v1 < v2) return 1;
-    else if (v1 > v2) return -1;
-    else return 0;
+    if (v1 < v2)
+        return 1;
+    else if (v1 > v2)
+        return -1;
+    else
+        return 0;
 }
 
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();
-    DLink<ConstraintLink> **sorted = new DLink<ConstraintLink> *[size];  // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+    DLink<ConstraintLink>** sorted = new DLink<ConstraintLink>*[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
     int i = 0;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         sorted[i++] = iter.getElt();
     }
-    qsort(sorted, size, sizeof(DLink<ConstraintLink> *), cmpConstraintDAC);
+    qsort(sorted, size, sizeof(DLink<ConstraintLink>*), cmpConstraintDAC);
     for (int i = 0; i < size; i++) {
         constrs.erase(sorted[i], true);
         constrs.push_back(sorted[i], true);
     }
-    delete [] sorted;
+    delete[] sorted;
 }
 
-void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
+void Variable::deconnect(DLink<ConstraintLink>* link, bool reuse)
 {
     if (!link->removed) {
-//        if (link->content.constr->isTriangle()) getTriangles()->erase(link, true);
-//        else
+        //        if (link->content.constr->isTriangle()) getTriangles()->erase(link, true);
+        //        else
         getConstrs()->erase(link, true);
 
-        if (getDegree() <= ToulBar2::elimDegree_ ||
-                (ToulBar2::elimDegree_preprocessing_ >= 0 &&
-                 (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) ||
-                  getTrueDegree() <= ToulBar2::elimDegree_preprocessing_))) queueEliminate();
+        if (getDegree() <= ToulBar2::elimDegree_ || (ToulBar2::elimDegree_preprocessing_ >= 0 && (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) || getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)))
+            queueEliminate();
     }
     if (reuse) {
         assert(Store::getDepth() == 0);
@@ -136,37 +153,43 @@ void Variable::deconnect(DLink<ConstraintLink> *link, bool reuse)
 
 int Variable::getTrueDegree()
 {
-//	if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
-//    TSCOPE scope1,scope2,scope3;
+    //	if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
+    //    TSCOPE scope1,scope2,scope3;
     set<int> scope1;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if ((*iter).constr->isSep())
+            continue;
         for (int k = 0; k < (*iter).constr->arity(); k++) {
             scope1.insert((*iter).constr->getVar(k)->wcspIndex);
         }
-//		(*iter).constr->getScope(scope2);
-//		for (TSCOPE::iterator iter2=scope2.begin(); iter2 != scope2.end(); ++iter2) {
-//		   scope1.insert( iter2->first );
-//		}
-//     	set_union( scope1.begin(), scope1.end(),
-//	  		   	   scope2.begin(), scope2.end(),
-//			  	   inserter(scope3, scope3.begin()) );
-//		scope1 = scope3;
-//		scope3.clear();
+        //		(*iter).constr->getScope(scope2);
+        //		for (TSCOPE::iterator iter2=scope2.begin(); iter2 != scope2.end(); ++iter2) {
+        //		   scope1.insert( iter2->first );
+        //		}
+        //     	set_union( scope1.begin(), scope1.end(),
+        //	  		   	   scope2.begin(), scope2.end(),
+        //			  	   inserter(scope3, scope3.begin()) );
+        //		scope1 = scope3;
+        //		scope3.clear();
     }
-    if (scope1.size() >= 1) return scope1.size() - 1;
-    else return 0;
+    if (scope1.size() >= 1)
+        return scope1.size() - 1;
+    else
+        return 0;
 }
 
 Double Variable::getMaxElimSize()
 {
-    if (getDegree() == 0) return getDomainSize();
-    if (getDegree() == 1) return (*constrs.begin()).constr->size();
+    if (getDegree() == 0)
+        return getDomainSize();
+    if (getDegree() == 1)
+        return (*constrs.begin()).constr->size();
     //  if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!
     //    TSCOPE scope1,scope2,scope3;
     map<int, unsigned int> scope1;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if ((*iter).constr->isSep())
+            continue;
         for (int k = 0; k < (*iter).constr->arity(); k++) {
             scope1[(*iter).constr->getVar(k)->wcspIndex] = (*iter).constr->getVar(k)->getDomainSize();
         }
@@ -182,9 +205,10 @@ Long Variable::getWeightedDegree()
 {
     Long res = 0;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-//    	if((*iter).constr->isSep()) continue;
+        //    	if((*iter).constr->isSep()) continue;
         res += (*iter).constr->getConflictWeight((*iter).scopeIndex);
-        if ((*iter).constr->isSep()) res--; // do not count unused separators
+        if ((*iter).constr->isSep())
+            res--; // do not count unused separators
     }
     return res;
 }
@@ -192,7 +216,8 @@ Long Variable::getWeightedDegree()
 void Variable::resetWeightedDegree()
 {
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if ((*iter).constr->isSep())
+            continue;
         (*iter).constr->resetConflictWeight();
     }
 }
@@ -230,7 +255,8 @@ void Variable::queueEliminate()
 void Variable::changeNCBucket(int newBucket)
 {
     if (NCBucket != newBucket) {
-        if (ToulBar2::verbose >= 3) cout << "changeNCbucket " << getName() << ": " << NCBucket << " -> " << newBucket << endl;
+        if (ToulBar2::verbose >= 3)
+            cout << "changeNCbucket " << getName() << ": " << NCBucket << " -> " << newBucket << endl;
         wcsp->changeNCBucket(NCBucket, newBucket, &linkNCBucket);
         NCBucket = newBucket;
     }
@@ -242,7 +268,8 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
     maxCostValue = a;
     assert(cost >= MIN_COST);
     if (maxCost != cost) {
-        if (cost > maxCost) queueDEE();
+        if (cost > maxCost)
+            queueDEE();
         maxCost = cost;
         int newbucket = min(cost2log2gub(cost), wcsp->getNCBucketSize() - 1);
         changeNCBucket(newbucket);
@@ -251,18 +278,24 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 
 void Variable::projectLB(Cost cost)
 {
-    if (cost == 0) return;
+    if (cost == 0)
+        return;
     if (cost < MIN_COST) {
-        if (ToulBar2::verbose >= 0) cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + cost << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + cost << endl;
         wcsp->decreaseLb(cost);
     } else {
-        if (ToulBar2::verbose >= 2) cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
+        if (ToulBar2::verbose >= 2)
+            cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
         wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
     }
     if (wcsp->td) {
-        if (ToulBar2::verbose >= 2) cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
-        if (cost >= MIN_COST) wcsp->td->getCluster(getCluster())->increaseLb(cost);
-        else wcsp->td->getCluster(getCluster())->decreaseLb(cost);
+        if (ToulBar2::verbose >= 2)
+            cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
+        if (cost >= MIN_COST)
+            wcsp->td->getCluster(getCluster())->increaseLb(cost);
+        else
+            wcsp->td->getCluster(getCluster())->decreaseLb(cost);
     }
 }
 
@@ -279,138 +312,146 @@ void Variable::propagateIncDec(int incdec)
 }
 
 // Looks for the constraint that links this variable with x
-BinaryConstraint *Variable::getConstr(Variable *x)
+BinaryConstraint* Variable::getConstr(Variable* x)
 {
-    BinaryConstraint *ctr2;
-    TernaryConstraint *ctr3;
+    BinaryConstraint* ctr2;
+    TernaryConstraint* ctr3;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
+        if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
 
         if ((*iter).constr->arity() == 2) {
-            ctr2 = (BinaryConstraint *)(*iter).constr;
-            if (ctr2->getIndex(x) >= 0) return ctr2;
+            ctr2 = (BinaryConstraint*)(*iter).constr;
+            if (ctr2->getIndex(x) >= 0)
+                return ctr2;
         } else if ((*iter).constr->arity() == 3) {
-            ctr3 = (TernaryConstraint *)(*iter).constr;
+            ctr3 = (TernaryConstraint*)(*iter).constr;
             int idx = ctr3->getIndex(x);
             if (idx >= 0) {
                 int idt = (*iter).scopeIndex;
-                if ((0 != idx) && (0 != idt)) return ctr3->yz;
-                else if ((1 != idx) && (1 != idt)) return ctr3->xz;
-                else return ctr3->xy;
+                if ((0 != idx) && (0 != idt))
+                    return ctr3->yz;
+                else if ((1 != idx) && (1 != idt))
+                    return ctr3->xz;
+                else
+                    return ctr3->xy;
             }
         }
     }
     return NULL;
 }
 
-
-BinaryConstraint *Variable::getConstr(Variable *x, int cid)
+BinaryConstraint* Variable::getConstr(Variable* x, int cid)
 {
-    BinaryConstraint *res;
-    BinaryConstraint *ctr2;
-    TernaryConstraint *ctr3;
+    BinaryConstraint* res;
+    BinaryConstraint* ctr2;
+    TernaryConstraint* ctr3;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
+        if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
 
         if ((*iter).constr->arity() == 2) {
-            ctr2 = (BinaryConstraint *)(*iter).constr;
+            ctr2 = (BinaryConstraint*)(*iter).constr;
             if (ctr2->getIndex(x) >= 0) {
                 res = ctr2;
-                if (res->getCluster() == cid) return res;
+                if (res->getCluster() == cid)
+                    return res;
             }
         } else if ((*iter).constr->arity() == 3) {
-            ctr3 = (TernaryConstraint *)(*iter).constr;
+            ctr3 = (TernaryConstraint*)(*iter).constr;
             int idx = ctr3->getIndex(x);
             if (idx >= 0) {
                 int idt = (*iter).scopeIndex;
-                if ((0 != idx) && (0 != idt)) res = ctr3->yz;
-                else if ((1 != idx) && (1 != idt)) res = ctr3->xz;
-                else res = ctr3->xy;
+                if ((0 != idx) && (0 != idt))
+                    res = ctr3->yz;
+                else if ((1 != idx) && (1 != idt))
+                    res = ctr3->xz;
+                else
+                    res = ctr3->xy;
 
-                if (res && res->getCluster() == cid) return res;
+                if (res && res->getCluster() == cid)
+                    return res;
             }
         }
     }
     return NULL;
 }
-
-
 
 // Looks for the ternary constraint that links this variable with x and y
-TernaryConstraint *Variable::getConstr(Variable *x, Variable *y)
+TernaryConstraint* Variable::getConstr(Variable* x, Variable* y)
 {
-    TernaryConstraint *ctr;
+    TernaryConstraint* ctr;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
+        if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
 
         if ((*iter).constr->arity() == 3) {
-            ctr = (TernaryConstraint *)(*iter).constr;
-            if ((ctr->getIndex(x)  >= 0) && (ctr->getIndex(y)  >= 0)) return ctr;
+            ctr = (TernaryConstraint*)(*iter).constr;
+            if ((ctr->getIndex(x) >= 0) && (ctr->getIndex(y) >= 0))
+                return ctr;
         }
     }
     return NULL;
 }
 
-TernaryConstraint *Variable::getConstr(Variable *x, Variable *y, int cid)
+TernaryConstraint* Variable::getConstr(Variable* x, Variable* y, int cid)
 {
-    TernaryConstraint *ctr = NULL;
+    TernaryConstraint* ctr = NULL;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
+        if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
 
         if ((*iter).constr->arity() == 3) {
-            ctr = (TernaryConstraint *)(*iter).constr;
-            if ((ctr->getIndex(x)  >= 0) && (ctr->getIndex(y)  >= 0)) {
-                if (ctr->getCluster() == cid) return ctr;
+            ctr = (TernaryConstraint*)(*iter).constr;
+            if ((ctr->getIndex(x) >= 0) && (ctr->getIndex(y) >= 0)) {
+                if (ctr->getCluster() == cid)
+                    return ctr;
             }
         }
     }
     return NULL;
 }
 
-
-
 // returns a ternary constraint if the current variable is linked to one
-TernaryConstraint *Variable::existTernary()
+TernaryConstraint* Variable::existTernary()
 {
-    TernaryConstraint *ctr;
+    TernaryConstraint* ctr;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep()) continue;
+        if ((*iter).constr->isSep())
+            continue;
         if ((*iter).constr->extension() && (*iter).constr->arity() == 3) {
-            ctr = (TernaryConstraint *)(*iter).constr;
+            ctr = (TernaryConstraint*)(*iter).constr;
             return ctr;
         }
     }
     return NULL;
 }
 
-
-
-
-
-
-
-double Variable::strongLinkedby(Variable *&strvar,  TernaryConstraint *&tctr1max, TernaryConstraint *&tctr2max)
+double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max, TernaryConstraint*& tctr2max)
 {
     double maxtight = -1;
     strvar = NULL;
     tctr1max = NULL;
     tctr2max = NULL;
 
-    TernaryConstraint *tctr1 = NULL;
+    TernaryConstraint* tctr1 = NULL;
 
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep() || (*iter).constr->isGlobal()) continue;
+        if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
         if ((*iter).constr->arity() == 2) {
-            BinaryConstraint *bctr = (BinaryConstraint *)(*iter).constr;
+            BinaryConstraint* bctr = (BinaryConstraint*)(*iter).constr;
             double bintight = bctr->getTightness();
-            if (bintight > maxtight) { maxtight = bintight; strvar = wcsp->getVar(bctr->getSmallestVarIndexInScope((*iter).scopeIndex)); tctr1max = NULL; tctr2max = NULL; }
+            if (bintight > maxtight) {
+                maxtight = bintight;
+                strvar = wcsp->getVar(bctr->getSmallestVarIndexInScope((*iter).scopeIndex));
+                tctr1max = NULL;
+                tctr2max = NULL;
+            }
         } else if ((*iter).constr->arity() == 3) {
             double terntight;
-            tctr1 = (TernaryConstraint *)(*iter).constr;
-            terntight = tctr1->getTightness() +
-                        tctr1->xy->getTightness() +
-                        tctr1->xz->getTightness() +
-                        tctr1->yz->getTightness();
+            tctr1 = (TernaryConstraint*)(*iter).constr;
+            terntight = tctr1->getTightness() + tctr1->xy->getTightness() + tctr1->xz->getTightness() + tctr1->yz->getTightness();
 
             Variable *x1 = NULL, *x2 = NULL;
             switch ((*iter).scopeIndex) {
@@ -426,30 +467,41 @@ double Variable::strongLinkedby(Variable *&strvar,  TernaryConstraint *&tctr1max
                 x1 = tctr1->getVar(0);
                 x2 = tctr1->getVar(1);
                 break;
-            default:
-                ;
+            default:;
             }
 
-            if (terntight > maxtight) { maxtight = terntight; strvar = x1; tctr1max = tctr1; tctr1max = NULL; }
+            if (terntight > maxtight) {
+                maxtight = terntight;
+                strvar = x1;
+                tctr1max = tctr1;
+                tctr1max = NULL;
+            }
 
             for (ConstraintList::iterator iter2 = iter; iter2 != constrs.end(); ++iter2) {
                 if ((*iter2).constr->arity() == 3) {
-                    TernaryConstraint *tctr2 = (TernaryConstraint *)(*iter2).constr;
-                    Variable *commonvar = NULL;
-                    if (tctr2->getIndex(x1) >= 0) commonvar = x1;
-                    else if (tctr2->getIndex(x2) >= 0) commonvar = x2;
+                    TernaryConstraint* tctr2 = (TernaryConstraint*)(*iter2).constr;
+                    Variable* commonvar = NULL;
+                    if (tctr2->getIndex(x1) >= 0)
+                        commonvar = x1;
+                    else if (tctr2->getIndex(x2) >= 0)
+                        commonvar = x2;
 
                     if (commonvar) {
-                        terntight += tctr2->getTightness() +
-                                     tctr2->xy->getTightness() +
-                                     tctr2->xz->getTightness() +
-                                     tctr2->yz->getTightness();
+                        terntight += tctr2->getTightness() + tctr2->xy->getTightness() + tctr2->xz->getTightness() + tctr2->yz->getTightness();
 
-                        if (tctr1->xy->getIndex(commonvar) >= 0) terntight -= tctr1->xy->getTightness();
-                        else if (tctr1->xz->getIndex(commonvar) >= 0) terntight -= tctr1->xz->getTightness();
-                        else if (tctr1->yz->getIndex(commonvar) >= 0) terntight -= tctr1->yz->getTightness();
+                        if (tctr1->xy->getIndex(commonvar) >= 0)
+                            terntight -= tctr1->xy->getTightness();
+                        else if (tctr1->xz->getIndex(commonvar) >= 0)
+                            terntight -= tctr1->xz->getTightness();
+                        else if (tctr1->yz->getIndex(commonvar) >= 0)
+                            terntight -= tctr1->yz->getTightness();
 
-                        if (terntight > maxtight) { maxtight = terntight; strvar = commonvar; tctr1max = tctr1; tctr2max = tctr2; }
+                        if (terntight > maxtight) {
+                            maxtight = terntight;
+                            strvar = commonvar;
+                            tctr1max = tctr1;
+                            tctr2max = tctr2;
+                        }
                     }
                 }
             }
@@ -459,12 +511,7 @@ double Variable::strongLinkedby(Variable *&strvar,  TernaryConstraint *&tctr1max
     return maxtight;
 }
 
-
-
-
-
-
-ostream &operator<<(ostream &os, Variable &var)
+ostream& operator<<(ostream& os, Variable& var)
 {
     os << var.name; // << " #" << var.dac;
     var.print(os);
@@ -482,4 +529,3 @@ ostream &operator<<(ostream &os, Variable &var)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

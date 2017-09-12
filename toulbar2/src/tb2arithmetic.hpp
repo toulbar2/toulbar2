@@ -14,15 +14,14 @@
 
 /** semantic: \f$soft(penalty, x \in SetOfValues) : (x \in SetOfValues)?0:penalty\f$
  */
-class Unary : public AbstractUnaryConstraint<IntervalVariable>
-{
+class Unary : public AbstractUnaryConstraint<IntervalVariable> {
     set<Value> permitted;
     Cost penalty;
     StoreValue deltaValueXinf;
     StoreValue deltaValueXsup;
 
 public:
-    Unary(WCSP *wcsp, IntervalVariable *xx, Value *d, int dsize, Cost penalty);
+    Unary(WCSP* wcsp, IntervalVariable* xx, Value* d, int dsize, Cost penalty);
 
     ~Unary() {}
 
@@ -33,7 +32,7 @@ public:
     void assign(int varIndex)
     {
         assert(connected());
-        deconnect();  // Warning! deconnection has to be done before the projection
+        deconnect(); // Warning! deconnection has to be done before the projection
         if (permitted.find(x->getValue()) == permitted.end()) {
             projectLB(penalty);
         }
@@ -41,20 +40,19 @@ public:
 
     bool verify();
 
-    double  computeTightness()
+    double computeTightness()
     {
-        tight = (double) penalty * abs((int) permitted.size() - (int) x->getDomainSize()) / x->getDomainSize();
+        tight = (double)penalty * abs((int)permitted.size() - (int)x->getDomainSize()) / x->getDomainSize();
         return tight;
     }
 
-    void print(ostream &os);
-    void dump(ostream &os, bool original = true);
+    void print(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic: \f$soft(x \geq y + cst) : max( (y + cst - x \leq deltamax)?(y + cst - x):top , 0)\f$
  */
-class Supxyc : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable>
-{
+class Supxyc : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable> {
     Value cst;
     Value deltamax;
     StoreCost deltaCost;
@@ -64,7 +62,7 @@ class Supxyc : public AbstractBinaryConstraint<IntervalVariable, IntervalVariabl
     StoreCost deltaCostYsup;
 
 public:
-    Supxyc(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value c, Value delta);
+    Supxyc(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy, Value c, Value delta);
 
     ~Supxyc() {}
 
@@ -74,22 +72,22 @@ public:
 
     void assign(int varIndex)
     {
-        if (x->assigned() && y->assigned()) deconnect();
+        if (x->assigned() && y->assigned())
+            deconnect();
         propagate();
     }
 
     bool verify();
 
-    double  computeTightness() { return 0; }
+    double computeTightness() { return 0; }
 
-    void print(ostream &os);
-    void dump(ostream &os, bool original = true);
+    void print(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic: \f$soft(penalty, x \geq y + csty \vee y \geq x + cstx) : (x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  */
-class Disjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable>
-{
+class Disjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable> {
     Value cstx;
     Value csty;
     Cost penalty;
@@ -99,8 +97,8 @@ class Disjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVa
     StoreValue deltaValueYsup;
 
 public:
-    Disjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy,
-                Cost penalty);
+    Disjunction(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy, Value cxx, Value cyy,
+        Cost penalty);
 
     ~Disjunction() {}
 
@@ -110,10 +108,10 @@ public:
 
     bool verify();
 
-    double  computeTightness() { return 0; }
+    double computeTightness() { return 0; }
 
-    void print(ostream &os);
-    void dump(ostream &os, bool original = true);
+    void print(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 /** semantic:
@@ -128,8 +126,7 @@ public:
  * - \f$y=yinfty: cost = costy\f$ (task y unselected)
  * - else \f$cost = UB\f$ (task x and y must be selected but cannot be scheduled)
  */
-class SpecialDisjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable>
-{
+class SpecialDisjunction : public AbstractBinaryConstraint<IntervalVariable, IntervalVariable> {
     Value cstx;
     Value csty;
     Value xinfty;
@@ -147,8 +144,8 @@ class SpecialDisjunction : public AbstractBinaryConstraint<IntervalVariable, Int
     StoreCost deltaCostYsup;
 
 public:
-    SpecialDisjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy,
-                       Value xmax, Value ymax, Cost xcost, Cost ycost);
+    SpecialDisjunction(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy, Value cxx, Value cyy,
+        Value xmax, Value ymax, Cost xcost, Cost ycost);
 
     ~SpecialDisjunction() {}
 
@@ -228,10 +225,10 @@ public:
 
     bool verify();
 
-    double  computeTightness() { return 0; }
+    double computeTightness() { return 0; }
 
-    void print(ostream &os);
-    void dump(ostream &os, bool original = true);
+    void print(ostream& os);
+    void dump(ostream& os, bool original = true);
 };
 
 #endif /*TB2ARITHMETIC_HPP_*/
@@ -242,4 +239,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

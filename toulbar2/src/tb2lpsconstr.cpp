@@ -1,8 +1,10 @@
 #include "tb2lpsconstr.hpp"
 #include "tb2wcsp.hpp"
 
-LPSConstraint::LPSConstraint(WCSP *wcsp, EnumeratedVariable **scope_in,
-                             int arity_in, int *constrcounter) : LinearConstraint(wcsp, scope_in, arity_in), wcspconstrcounter(constrcounter)
+LPSConstraint::LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
+    int arity_in, int* constrcounter)
+    : LinearConstraint(wcsp, scope_in, arity_in)
+    , wcspconstrcounter(constrcounter)
 {
     buildIndex();
 }
@@ -14,7 +16,7 @@ void LPSConstraint::buildIndex()
     count2 = 0; // number of possible domains (union all possible domains)
     mapvar = new map<Value, int>[arity_];
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             D.push_back(*iterx);
             mapvar[i].insert(pair<Value, int>(*iterx, count++));
@@ -30,29 +32,31 @@ void LPSConstraint::buildIndex()
     }
 }
 
-void LPSConstraint::read(istream &file)
+void LPSConstraint::read(istream& file)
 {
 
     string str;
     int nvalues, low, high, windowsi, d;
     file >> nwindows;
 #ifndef ILOGCPLEX
-    if (wcspconstrcounter)(*wcspconstrcounter) = (*wcspconstrcounter) + nwindows;
+    if (wcspconstrcounter)
+        (*wcspconstrcounter) = (*wcspconstrcounter) + nwindows;
     cout << "Warning! slinear global cost function skipped... (recompile ToulBar2 with ILOGCPLEX flag)" << endl;
     deconnect();
-    if (arity_ != (int) wcsp->numberOfVariables()) exit(1);
+    if (arity_ != (int)wcsp->numberOfVariables())
+        exit(1);
     return;
 #endif
     nrows = 0;
     nslacks = 0;
-    windowVars = (int **)malloc(sizeof(int *)*nwindows);
-    group = (int **)malloc(sizeof(int *)*nwindows);
+    windowVars = (int**)malloc(sizeof(int*) * nwindows);
+    group = (int**)malloc(sizeof(int*) * nwindows);
 
     string typeID, defstr;
     for (int i = 0; i < nwindows; i++) {
         file >> windowsi;
         windowSize.push_back(windowsi);
-        windowVars[i] = (int *)malloc(sizeof(int) * windowsi);
+        windowVars[i] = (int*)malloc(sizeof(int) * windowsi);
         for (int j = 0; j < windowsi; j++) {
             file >> d;
             windowVars[i][j] = d;
@@ -88,7 +92,7 @@ void LPSConstraint::read(istream &file)
                 sumlow.push_back(low);
                 sumhigh.push_back(high);
 
-                group[i] = (int *)malloc(sizeof(int) * count2);
+                group[i] = (int*)malloc(sizeof(int) * count2);
                 for (int j = 0; j < count2; j++) {
                     group[i][j] = 0;
                 }
@@ -107,7 +111,7 @@ void LPSConstraint::read(istream &file)
                         cerr << "Error occur in reading sgcc" << endl;
                         exit(1);
                     }
-                    group[i] = (int *)malloc(sizeof(int) * count2);
+                    group[i] = (int*)malloc(sizeof(int) * count2);
                     for (int k = 0; k < count2; k++) {
                         group[i][k] = 0;
                     }
@@ -118,7 +122,7 @@ void LPSConstraint::read(istream &file)
                         i++;
                         nwindows++;
                         windowSize.push_back(windowsi);
-                        windowVars[i] = (int *)malloc(sizeof(int) * windowsi);
+                        windowVars[i] = (int*)malloc(sizeof(int) * windowsi);
                         for (int k = 0; k < windowsi; k++) {
                             windowVars[i][k] = windowVars[i - 1][k];
                         }
@@ -132,7 +136,7 @@ void LPSConstraint::read(istream &file)
                 sumlow.push_back(low);
                 sumhigh.push_back(high);
 
-                group[i] = (int *)malloc(sizeof(int) * (low + high));
+                group[i] = (int*)malloc(sizeof(int) * (low + high));
                 for (int k = 0; k < low + high; k++) {
                     group[i][k] = -1;
                 }
@@ -174,7 +178,7 @@ void LPSConstraint::read(istream &file)
                 }
                 sumlow.push_back(low);
                 sumhigh.push_back(high);
-                group[i] = (int *)malloc(sizeof(int) * count2);
+                group[i] = (int*)malloc(sizeof(int) * count2);
                 for (int j = 0; j < count2; j++) {
                     group[i][j] = 0;
                 }
@@ -186,9 +190,9 @@ void LPSConstraint::read(istream &file)
                 nrows += 1;
                 nslacks += 2;
                 file >> d >> nvalues;
-                sumlow.push_back(d);   //abused the sumlow array
+                sumlow.push_back(d); //abused the sumlow array
                 sumhigh.push_back(0);
-                group[i] = (int *)malloc(sizeof(int) * count2);
+                group[i] = (int*)malloc(sizeof(int) * count2);
                 for (int j = 0; j < count2; j++) {
                     group[i][j] = 0;
                 }
@@ -202,7 +206,7 @@ void LPSConstraint::read(istream &file)
                 file >> d;
                 sumlow.push_back(d); //abused the sumlow array
                 sumhigh.push_back(0);
-                group[i] = (int *)malloc(sizeof(int) * d * 2);
+                group[i] = (int*)malloc(sizeof(int) * d * 2);
                 for (int j = 0; j < d; j++) {
                     file >> low >> high;
                     group[i][j] = low;
@@ -216,7 +220,7 @@ void LPSConstraint::read(istream &file)
     }
 }
 
-Cost LPSConstraint::evalOriginal(const String &s)
+Cost LPSConstraint::evalOriginal(const String& s)
 {
 
     Cost cost = 0;
@@ -301,10 +305,9 @@ Cost LPSConstraint::evalOriginal(const String &s)
         }
     }
     return cost;
-
 }
 
-Cost LPSConstraint::buildMIP(MIP &mip)
+Cost LPSConstraint::buildMIP(MIP& mip)
 {
 
     mip.clear();
@@ -312,9 +315,9 @@ Cost LPSConstraint::buildMIP(MIP &mip)
     mip.addBool(count);
     mip.addInt(nslacks);
 
-    double *vars;
-    double *var2;
-    int *idxs;
+    double* vars;
+    double* var2;
+    int* idxs;
     vars = new double[count + nslacks];
     var2 = new double[count + nslacks];
     idxs = new int[count + nslacks];
@@ -332,7 +335,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                     vars[j] = 0;
                 }
                 for (int j = 0; j < windowSize[i]; j++) {
-                    EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][j]);
+                    EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
                     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
                         if (k == *v) {
                             vars[mapvar[windowVars[i][j]][*v]] = 1;
@@ -351,7 +354,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                 vars[j] = 0;
             }
             for (int j = 0; j < windowSize[i]; j++) {
-                EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][j]);
+                EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
                 for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
 
                     vars[mapvar[windowVars[i][j]][*v]] = group[i][*v];
@@ -372,7 +375,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                     vars[j] = 0;
                 }
                 for (int j = 0; j < windowSize[i]; j++) {
-                    EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][j]);
+                    EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
                     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
                         if (k == *v) {
                             if (group[i][j] == 0) {
@@ -398,7 +401,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                 vars[j] = 0;
             }
             for (int j = 0; j < windowSize[i]; j++) {
-                EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][j]);
+                EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
                 for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
                     vars[mapvar[windowVars[i][j]][*v]] = group[i][*v];
                 }
@@ -417,13 +420,13 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                 vars[j] = 0;
             }
             for (int j = 0; j < windowSize[i]; j++) {
-                EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][j]);
+                EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
                 for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
 
                     vars[mapvar[windowVars[i][j]][*v]] = group[i][*v];
                 }
             }
-            EnumeratedVariable *x = (EnumeratedVariable *)getVar(sumlow[i]);
+            EnumeratedVariable* x = (EnumeratedVariable*)getVar(sumlow[i]);
             for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
                 vars[mapvar[sumlow[i]][*v]] = -(*v);
             }
@@ -444,7 +447,7 @@ Cost LPSConstraint::buildMIP(MIP &mip)
                 for (int j = 0; j < sumlow[i]; j++) {
                     int k = l - group[i][j + sumlow[i]];
                     while (k < l) {
-                        EnumeratedVariable *x = (EnumeratedVariable *)getVar(windowVars[i][group[i][j]]);
+                        EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][group[i][j]]);
                         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
                             if (k == *v) {
                                 vars[mapvar[windowVars[i][group[i][j]]][*v]] = 1;
@@ -474,14 +477,12 @@ Cost LPSConstraint::buildMIP(MIP &mip)
         }
     }
 
-
-
     for (int i = 0; i < arity_; i++) {
         mip.addRows(1);
         for (int j = 0; j < count + nslacks; j++) {
             var2[j] = 0;
         }
-        EnumeratedVariable *x = (EnumeratedVariable *)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             mip.colUpperBound(mapvar[i][*v], 1);
             var2[mapvar[i][*v]] = 1;
@@ -491,48 +492,52 @@ Cost LPSConstraint::buildMIP(MIP &mip)
         mip.rowBound(i + nrows, 1, 1);
     }
 
-
     mip.end();
     mip.solve();
     return mip.solValue();
-
 }
 
-Cost LPSConstraint::solveMIP(MIP &mip)
+Cost LPSConstraint::solveMIP(MIP& mip)
 {
 
     return mip.solValue();
 }
 
-
-void LPSConstraint::dump(ostream &os, bool original)
+void LPSConstraint::dump(ostream& os, bool original)
 {
     int nvalues = 1;
 
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++)
+            os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned())
+                os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 slinear" << endl << ((mode == VAR) ? "var" : "dec") << " " << def << " " <<  nvalues << endl;
+    os << " -1 slinear" << endl
+       << ((mode == VAR) ? "var" : "dec") << " " << def << " " << nvalues << endl;
 
     os << "bounds " << sumlow[0] << " " << sumhigh[0] << endl;
 }
 
-void LPSConstraint::print(ostream &os)
+void LPSConstraint::print(ostream& os)
 {
     int nvalues = 1;
 
     os << "slinear(";
     for (int i = 0; i < arity_; i++) {
         os << scope[i]->wcspIndex;
-        if (i < arity_ - 1) os << ",";
+        if (i < arity_ - 1)
+            os << ",";
     }
     os << ")[" << ((mode == VAR) ? "var" : "dec") << "," << def << "," << nvalues;
 
-    os << "," << "bounds" << "," << sumlow[0] << "," << sumhigh[0];
+    os << ","
+       << "bounds"
+       << "," << sumlow[0] << "," << sumhigh[0];
 
     os << "]";
 }
@@ -543,4 +548,3 @@ void LPSConstraint::print(ostream &os)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

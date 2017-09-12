@@ -16,8 +16,7 @@
  *
  */
 
-class Variable : public WCSPLink
-{
+class Variable : public WCSPLink {
 protected:
     string name;
     int dac;
@@ -29,13 +28,13 @@ protected:
     StoreValue sup;
 
     ConstraintList constrs;
-//    ConstraintList triangles;
+    //    ConstraintList triangles;
 
     // incremental NC data
     StoreCost maxCost;
     StoreValue maxCostValue;
     StoreInt NCBucket;
-    DLink< Variable * > linkNCBucket;
+    DLink<Variable*> linkNCBucket;
 
     DLink<VariableWithTimeStamp> linkNCQueue;
     DLink<VariableWithTimeStamp> linkIncDecQueue;
@@ -46,54 +45,57 @@ protected:
     void conflict();
 
     // make it private because we don't want copy nor assignment
-    Variable(const Variable &x);
-    Variable &operator=(const Variable &x);
-
+    Variable(const Variable& x);
+    Variable& operator=(const Variable& x);
 
 public:
-    Variable(WCSP *w, string n, Value iinf, Value isup);
+    Variable(WCSP* w, string n, Value iinf, Value isup);
 
     virtual ~Variable() {}
 
     virtual bool enumerated() const = 0;
 
-    string getName() const {return name;}
-    int getDACOrder() const {return dac;}
-    void setDACOrder(int order) {dac = order;}
-    Value getInf() const {return inf;}
-    Value getSup() const {return sup;}
-    Value getValue() const {assert(assigned()); return inf;}
+    string getName() const { return name; }
+    int getDACOrder() const { return dac; }
+    void setDACOrder(int order) { dac = order; }
+    Value getInf() const { return inf; }
+    Value getSup() const { return sup; }
+    Value getValue() const
+    {
+        assert(assigned());
+        return inf;
+    }
     virtual unsigned int getDomainSize() const = 0;
     int getCurrentVarId();
     void setCurrentVarId(int idx);
 
-    bool assigned() const {return inf == sup;}
-    bool unassigned() const {return inf != sup;}
-    virtual bool canbe(Value v) const {return v >= inf && v <= sup;}
-    virtual bool cannotbe(Value v) const {return v < inf || v > sup;}
+    bool assigned() const { return inf == sup; }
+    bool unassigned() const { return inf != sup; }
+    virtual bool canbe(Value v) const { return v >= inf && v <= sup; }
+    virtual bool cannotbe(Value v) const { return v < inf || v > sup; }
 
     virtual void increase(Value newInf, bool isDecision = false) = 0;
     virtual void decrease(Value newSup, bool isDecision = false) = 0;
     virtual void remove(Value remValue, bool isDecision = false) = 0;
     virtual void assign(Value newValue, bool isDecision = false) = 0;
-    virtual void assignLS(Value newValue, ConstraintSet &delayedCtrs) = 0;
+    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs) = 0;
 
-//    ConstraintList *getTriangles() {return &triangles;}
-    ConstraintList *getConstrs() {return &constrs;}
-    int getDegree() {return constrs.getSize();}
+    //    ConstraintList *getTriangles() {return &triangles;}
+    ConstraintList* getConstrs() { return &constrs; }
+    int getDegree() { return constrs.getSize(); }
     int getTrueDegree();
     Double getMaxElimSize(); /// \brief returns estimated size of the resulting cost function (including this variable) to eliminate itself
     Long getWeightedDegree();
     void resetWeightedDegree();
-    DLink<ConstraintLink> *link(Constraint *c, int index);
+    DLink<ConstraintLink>* link(Constraint* c, int index);
     void sortConstraints();
-    virtual void eliminate() {cout << "variable elimination not implemented!" << endl;};
+    virtual void eliminate() { cout << "variable elimination not implemented!" << endl; };
 
-    BinaryConstraint *getConstr(Variable *x);
-    TernaryConstraint *getConstr(Variable *x, Variable *y);
-    TernaryConstraint *existTernary();
-    double strongLinkedby(Variable *&strvar,  TernaryConstraint *&tctr1, TernaryConstraint *&tctr2);
-    void deconnect(DLink<ConstraintLink> *link, bool reuse = false);
+    BinaryConstraint* getConstr(Variable* x);
+    TernaryConstraint* getConstr(Variable* x, Variable* y);
+    TernaryConstraint* existTernary();
+    double strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1, TernaryConstraint*& tctr2);
+    void deconnect(DLink<ConstraintLink>* link, bool reuse = false);
 
     void projectLB(Cost cost);
 
@@ -103,15 +105,15 @@ public:
     virtual void projectSupCost(Cost cost) = 0;
     virtual Cost getCost(const Value value) const = 0;
 
-    virtual Value getSupport() const {return inf;}      // If there is no defined support then return inf
+    virtual Value getSupport() const { return inf; } // If there is no defined support then return inf
 
-    Cost getMaxCost() const {return maxCost;}
-    Value getMaxCostValue() const {return maxCostValue;}
+    Cost getMaxCost() const { return maxCost; }
+    Value getMaxCostValue() const { return maxCostValue; }
 
     virtual void propagateNC() = 0;
     virtual bool verifyNC() = 0;
-    virtual bool isEAC() {return true;}
-    virtual bool verifyDEE() {return true;}
+    virtual bool isEAC() { return true; }
+    virtual bool verifyDEE() { return true; }
 
     void queueNC();
     void queueInc();
@@ -125,17 +127,16 @@ public:
     //   added for tree decomposition stuff
     StoreInt cluster;
     void setCluster(int c) { cluster = c; }
-    int  getCluster()        { return cluster; }
+    int getCluster() { return cluster; }
 
-    BinaryConstraint *getConstr(Variable *x, int cid);
-    TernaryConstraint *getConstr(Variable *x, Variable *y, int cid);
-
+    BinaryConstraint* getConstr(Variable* x, int cid);
+    TernaryConstraint* getConstr(Variable* x, Variable* y, int cid);
 
     bool isSep_;
-    void setSep() 		   {isSep_ = true;}
-    bool isSep() 		   {return isSep_;}
+    void setSep() { isSep_ = true; }
+    bool isSep() { return isSep_; }
 
-    typedef set< pair<int, int> >   TSepLink;  // set of pairs <cluster in wihch the variable appears,
+    typedef set<pair<int, int>> TSepLink; // set of pairs <cluster in wihch the variable appears,
     //  			    position of the variable in the delta structure>
     TSepLink clusters;
 
@@ -150,14 +151,15 @@ public:
 
     void beginCluster() { itclusters = clusters.begin(); }
 
-    bool nextCluster(int &c, int &pos)
+    bool nextCluster(int& c, int& pos)
     {
         if (itclusters != clusters.end()) {
             c = (*itclusters).first;
             pos = (*itclusters).second;
             ++itclusters;
             return true;
-        } else return false;
+        } else
+            return false;
     }
 
     /*
@@ -186,9 +188,9 @@ public:
         virtual iterator upper_bound(Value v) =0;
     */
 
-    virtual void print(ostream &os) = 0;
+    virtual void print(ostream& os) = 0;
 
-    friend ostream &operator<<(ostream &os, Variable &var);
+    friend ostream& operator<<(ostream& os, Variable& var);
 };
 
 #endif /*TB2VARIABLE_HPP_*/
@@ -199,4 +201,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

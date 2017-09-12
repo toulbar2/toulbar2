@@ -1,7 +1,8 @@
 #include "tb2mipsolver.hpp"
 using namespace std;
 
-MIP::MIP(): solver(NULL)
+MIP::MIP()
+    : solver(NULL)
 {
 #ifdef ILOGCPLEX
     solver = new IlogMIP();
@@ -21,25 +22,25 @@ MIP::~MIP()
 
 IlogMIP::IlogMIP()
 {
-    model = (IloModel *)malloc(sizeof(IloModel));
+    model = (IloModel*)malloc(sizeof(IloModel));
     *model = IloModel(env);
 
-    var = (IloNumVarArray *)malloc(sizeof(IloNumVarArray));
+    var = (IloNumVarArray*)malloc(sizeof(IloNumVarArray));
     *var = IloNumVarArray(env);
 
-    obj = (IloObjective *)malloc(sizeof(IloObjective));
-    *obj = IloObjective(env, 0,  IloObjective::Minimize);
+    obj = (IloObjective*)malloc(sizeof(IloObjective));
+    *obj = IloObjective(env, 0, IloObjective::Minimize);
 
-    con = (IloRangeArray *)malloc(sizeof(IloRangeArray));
+    con = (IloRangeArray*)malloc(sizeof(IloRangeArray));
     *con = IloRangeArray(env);
 
-    cplex = (IloCplex *)malloc(sizeof(IloCplex));
+    cplex = (IloCplex*)malloc(sizeof(IloCplex));
     *cplex = IloCplex(env);
 
-    sols = (IloNumArray *)malloc(sizeof(IloNumArray));
+    sols = (IloNumArray*)malloc(sizeof(IloNumArray));
     *sols = IloNumArray(env);
 
-    buObjExpr = (IloNumExprArg *)malloc(sizeof(IloNumExprArg));
+    buObjExpr = (IloNumExprArg*)malloc(sizeof(IloNumExprArg));
     *buObjExpr = IloNumExprArg();
 
     cols.clear();
@@ -62,7 +63,7 @@ void IlogMIP::clear()
     con->endElements();
     *con = IloRangeArray(env);
     obj->end();
-    *obj = IloObjective(env, 0,  IloObjective::Minimize);
+    *obj = IloObjective(env, 0, IloObjective::Minimize);
     var->endElements();
     *var = IloNumVarArray(env);
     sols->clear();
@@ -128,7 +129,6 @@ void IlogMIP::rowLowerBound(int n, int lower)
     (*con)[n].setLB(lower);
 } // set the lower bound of a variable
 
-
 void IlogMIP::rowUpperBound(int n, int upper)
 {
     (*con)[n].setUB(upper);
@@ -141,7 +141,6 @@ void IlogMIP::rowCoeff(int n, int count, int indexes[], double values[])
     }
 } // set the coefficients of the variables of a row
 
-
 int IlogMIP::sol(int var1)
 {
 
@@ -152,7 +151,6 @@ int IlogMIP::sol(int var1)
     }
 
 } // return the value of a variable (rounded down)
-
 
 int IlogMIP::solValue()
 {
@@ -190,7 +188,6 @@ void IlogMIP::objCoeff(int var1, int i)
     obj->setLinearCoef((*var)[var1], i);
 } // set the coefficient of a variable in the objective function
 
-
 int IlogMIP::solve()
 {
 
@@ -207,7 +204,6 @@ int IlogMIP::solve()
         exit(0);
     }
 
-
     if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001) {
         objValue = floor(cplex->getObjValue());
     } else {
@@ -217,7 +213,6 @@ int IlogMIP::solve()
     if (objValue < 0) {
         objValue = 0;
     }
-
 
     cplex->getValues(*sols, *var);
 
@@ -255,7 +250,6 @@ void IlogMIP::increaseCoeff(int varindex, int value, int newCoeff)
     obj->setLinearCoef((*var)[var1], cols[var1]);
 } // increase the cost projected on this value
 
-
 void IlogMIP::backup()
 {
     *buObjExpr = obj->getExpr();
@@ -275,4 +269,3 @@ int IlogMIP::restore()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

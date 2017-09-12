@@ -1,17 +1,15 @@
 #include "tb2cpd.hpp"
 #include <sstream>
 
-const map<char,int> Cpd::PSMIdx = {{'A', 0}, {'R', 1},  {'N', 2}, {'D', 3}, {'C', 4}, {'Q', 5},
-    {'E', 6},  {'G', 7},  {'H', 8},  {'I', 9},  {'L', 10},  {'K', 11},
-    {'M', 12},  {'F', 13},  {'P', 14},  {'S', 15},  {'T', 16},  {'W', 17},
-    {'Y', 18},  {'V', 19},  {'B', 20},  {'Z', 21},  {'X', 22},  {'*', 23}
-};
+const map<char, int> Cpd::PSMIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
+    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 },
+    { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
+    { 'Y', 18 }, { 'V', 19 }, { 'B', 20 }, { 'Z', 21 }, { 'X', 22 }, { '*', 23 } };
 
-const map<char,int> Cpd::PSSMIdx = {{'A', 0}, {'G', 1},  {'I', 2}, {'L', 3}, {'V', 4}, {'M', 5},
-    {'F', 6},  {'W', 7},  {'P', 8},  {'C', 9},  {'S', 10},  {'T', 11},
-    {'Y', 12},  {'N', 13},  {'Q', 14},  {'H', 15},  {'K', 16},  {'R', 17},
-    {'D', 18},  {'E', 19}
-};
+const map<char, int> Cpd::PSSMIdx = { { 'A', 0 }, { 'G', 1 }, { 'I', 2 }, { 'L', 3 }, { 'V', 4 }, { 'M', 5 },
+    { 'F', 6 }, { 'W', 7 }, { 'P', 8 }, { 'C', 9 }, { 'S', 10 }, { 'T', 11 },
+    { 'Y', 12 }, { 'N', 13 }, { 'Q', 14 }, { 'H', 15 }, { 'K', 16 }, { 'R', 17 },
+    { 'D', 18 }, { 'E', 19 } };
 
 Cpd::Cpd()
 {
@@ -23,7 +21,7 @@ Cpd::~Cpd()
     delete cpdtrie;
 }
 
-void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
+void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars) throw(int)
 {
     istringstream line;
     string s;
@@ -42,9 +40,11 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
         }
 
         while (line >> current_char) {
-            if (!isspace(current_char)) rot2aa_var.push_back(current_char);
+            if (!isspace(current_char))
+                rot2aa_var.push_back(current_char);
         }
-        if (rot2aa_var.size() != 0) rotamers2aa.push_back(rot2aa_var);
+        if (rot2aa_var.size() != 0)
+            rotamers2aa.push_back(rot2aa_var);
     }
     //~ for (int i=0;i<rotamers2aa.size();i++){
     //~ for(int j=0;j<rotamers2aa[i].size();j++){
@@ -57,16 +57,15 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
         throw 1;
     } else {
         for (size_t i = 0; i < rotamers2aa.size(); i++) {
-            unsigned int initsize = dynamic_cast<EnumeratedVariable *>(vars[i])->getDomainInitSize();
+            unsigned int initsize = dynamic_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize();
             if (rotamers2aa[i].size() != initsize) {
-                cout << "Wrong domain size " << rotamers2aa[i].size() << " " << initsize << " of variable "<<dynamic_cast<EnumeratedVariable *>(vars[i])->getName()<<endl;
+                cout << "Wrong domain size " << rotamers2aa[i].size() << " " << initsize << " of variable " << dynamic_cast<EnumeratedVariable*>(vars[i])->getName() << endl;
                 throw 2;
             }
         }
     }
 
-
-    for (auto &rv : rotamers2aa) {
+    for (auto& rv : rotamers2aa) {
 
         vector<Value> leftidx_var;
         vector<Value> rightidx_var;
@@ -83,7 +82,7 @@ void Cpd::read_rotamers2aa(ifstream &file, vector<Variable *> &vars) throw (int)
         }
 
         prev_char = '0';
-        for (int i = rv.size()-1; i >= 0; i--) {
+        for (int i = rv.size() - 1; i >= 0; i--) {
             if (rv[i] != prev_char) {
                 prev_char = rv[i];
                 pos = i;
@@ -111,7 +110,8 @@ void Cpd::readPSMatrix(const char* filename)
     istringstream line;
     int minscore = std::numeric_limits<int>::max();
 
-    do getline(file, s); //Skip comments and AA line
+    do
+        getline(file, s); //Skip comments and AA line
     while (s[0] == '#');
 
     for (int i = 0; i < 24; i++) {
@@ -119,7 +119,7 @@ void Cpd::readPSMatrix(const char* filename)
         for (int j = 0; j < 24; j++) {
             file >> PSM[i][j];
             PSM[i][j] = -PSM[i][j];
-            minscore = min(minscore,PSM[i][j]);
+            minscore = min(minscore, PSM[i][j]);
         }
     }
 
@@ -129,14 +129,13 @@ void Cpd::readPSMatrix(const char* filename)
             PSM[i][j] -= minscore;
 }
 
-void Cpd::fillPSMbiases(size_t varIndex, vector<Cost> &biases)
+void Cpd::fillPSMbiases(size_t varIndex, vector<Cost>& biases)
 {
     for (char c : rotamers2aa[varIndex]) {
-        int bias = PSMBias*PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
+        int bias = PSMBias * PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
         biases.push_back((Cost)bias);
     }
 }
-
 
 void Cpd::readPSSMatrix(const char* filename)
 {
@@ -163,31 +162,30 @@ void Cpd::readPSSMatrix(const char* filename)
 
         scores.clear();
         for (int j = 0; j < 20; j++) {
-            int  score;
+            int score;
             file >> score;
             score = -score;
-            minscore = min(minscore,score);
+            minscore = min(minscore, score);
             scores.push_back(score);
         }
         PSSM.push_back(scores);
     }
 
     // renormalize to have only penalties
-    for (auto &v : PSSM)
-        for (auto &i : v)
+    for (auto& v : PSSM)
+        for (auto& i : v)
             i -= minscore;
 }
 
-
-void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost> &biases)
+void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost>& biases)
 {
     for (char c : rotamers2aa[varIndex]) {
-        int bias = PSSMBias*PSSM[varIndex][PSSMIdx.find(c)->second];
+        int bias = PSSMBias * PSSM[varIndex][PSSMIdx.find(c)->second];
         biases.push_back((Cost)bias);
     }
 }
 
-void Cpd::storeSequence(const vector<Variable *> &vars, Cost _cost)
+void Cpd::storeSequence(const vector<Variable*>& vars, Cost _cost)
 {
     string sequence;
     for (size_t i = 0; i < vars.size(); i++) {
@@ -201,7 +199,7 @@ void Cpd::printSequences()
     cpdtrie->print_tree();
 }
 
-void Cpd::printSequence(const vector<Variable *> &vars, Cost _cost)
+void Cpd::printSequence(const vector<Variable*>& vars, Cost _cost)
 {
     string sequence;
     for (size_t i = 0; i < vars.size(); i++) {
@@ -210,7 +208,7 @@ void Cpd::printSequence(const vector<Variable *> &vars, Cost _cost)
     cout << "New sequence: " << sequence << " Cost: " << _cost << endl;
 }
 
-void Cpd::printSequence(TAssign &vars)
+void Cpd::printSequence(TAssign& vars)
 {
     //  cpdtrie->print_tree();
     string sequence;

@@ -32,10 +32,9 @@ void WCNFCFG::addVariableMeasure(int violationCost)
 
     sort(nonTermProd.begin(), nonTermProd.end());
     nonTermProd.erase(unique(nonTermProd.begin(), nonTermProd.end()), nonTermProd.end());
-
 }
 
-void WCNFCFG::print(ostream &ofs)
+void WCNFCFG::print(ostream& ofs)
 {
     for (vector<WCNFRule>::iterator p = nonTermProd.begin(); p != nonTermProd.end(); ++p) {
         ofs << p->from << "->" << p->to[0] << " " << p->to[1] << ": " << p->weight << "\n";
@@ -45,18 +44,22 @@ void WCNFCFG::print(ostream &ofs)
     }
 }
 
-void WCNFCFG::dump(ostream &os, bool original)
+void WCNFCFG::dump(ostream& os, bool original)
 {
     assert(original); //TODO: case original is false
     os << nNonTerminals << " " << nTerminals << " " << startSymbol << endl;
     os << nonTermProd.size() + termProd.size() << endl;
     for (vector<WCNFRule>::iterator p = nonTermProd.begin(); p != nonTermProd.end(); ++p) {
-        if (p->weight == 0) os << "1 " << p->from << " " << p->to[0] << " " << p->to[1] << endl;
-        else os << "3 " << p->from << " " << p->to[0] << " " << p->to[1] << " " << p->weight << endl;
+        if (p->weight == 0)
+            os << "1 " << p->from << " " << p->to[0] << " " << p->to[1] << endl;
+        else
+            os << "3 " << p->from << " " << p->to[0] << " " << p->to[1] << " " << p->weight << endl;
     }
     for (vector<WCNFRule>::iterator p = termProd.begin(); p != termProd.end(); ++p) {
-        if (p->weight == 0) os << "0 " << p->from << " " << p->to[0] << endl;
-        else os << "2 " << p->from << " " << p->to[0] << " " << p->weight << endl;
+        if (p->weight == 0)
+            os << "0 " << p->from << " " << p->to[0] << endl;
+        else
+            os << "2 " << p->from << " " << p->to[0] << " " << p->weight << endl;
     }
 }
 
@@ -66,4 +69,3 @@ void WCNFCFG::dump(ostream &os, bool original)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
