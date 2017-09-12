@@ -1,16 +1,11 @@
 #include "tb2regularflowconstr.hpp"
 #include "tb2wcsp.hpp"
 
-#include <functional>
 #include <queue>
+#include <functional>
 
-RegularFlowConstraint::RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-    int arity_in)
-    : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
-    , subdef(0)
-    , insdef(0)
-    , deldef(0)
-    , epsilonChar(0)
+RegularFlowConstraint::RegularFlowConstraint(WCSP *wcsp, EnumeratedVariable** scope_in,
+        int arity_in) : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in), subdef(0), insdef(0), deldef(0), epsilonChar(0)
 {
 
     tempdomain.resize(arity_);
@@ -18,14 +13,13 @@ RegularFlowConstraint::RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** sc
     curdomain.resize(arity_);
 
     mapedge.resize(arity_);
-    for (int i = 0; i < arity_; i++)
-        mapedge[i].resize(((EnumeratedVariable*)getVar(i))->getDomainInitSize());
+    for (int i = 0; i < arity_; i++) mapedge[i].resize(((EnumeratedVariable*) getVar(i))->getDomainInitSize());
 
     modeEnum["var"] = RegularFlowConstraint::VAR;
     modeEnum["edit"] = RegularFlowConstraint::EDIT;
 }
 
-void RegularFlowConstraint::read(istream& file)
+void RegularFlowConstraint::read(istream &file)
 {
 
     string str;
@@ -65,6 +59,7 @@ void RegularFlowConstraint::read(istream& file)
         dfa.symbol.insert(symbol);
         dfa.addTransition(start, symbol, end, 0);
     }
+
 }
 
 void RegularFlowConstraint::organizeConfig()
@@ -93,7 +88,7 @@ void RegularFlowConstraint::organizeConfig()
         for (int s = 0; s < dfa.size(); s++) {
             g.shortest_path(s, table[s]);
         } */
-        vector<vector<Cost>> weightTable;
+        vector<vector<Cost> > weightTable;
         weightTable.resize(dfa.size());
         for (int start = 0; start < dfa.size(); start++) {
             weightTable[start].resize(dfa.size());
@@ -101,23 +96,22 @@ void RegularFlowConstraint::organizeConfig()
             for (int end = 0; end < dfa.size(); end++) {
                 if (start != end) {
                     set<int> sym = dfa.getSymbolNeed(start, end);
-                    if (!sym.empty())
-                        weightTable[start][end] = insdef;
+                    if (!sym.empty()) weightTable[start][end] = insdef;
                 }
             }
         }
 
-        min_priority_queue<pair<int, Cost>> q;
+        min_priority_queue<pair<int,Cost> > q;
 
         table.resize(dfa.size());
         //g.shortest_path(s, table[s]);
         for (int s = 0; s < dfa.size(); s++) {
-            vector<Cost>& d = table[s];
+            vector<Cost> &d = table[s];
             d.resize(dfa.size());
             fill_n(d.begin(), dfa.size(), MAX_COST);
-            q.push(make_pair(0, s));
+            q.push(make_pair(0,s));
             while (!q.empty()) {
-                pair<int, Cost> ele = q.top();
+                pair<int,Cost> ele = q.top();
                 q.pop();
                 for (int i = 0; i < dfa.size(); i++) {
                     Cost tmp = ele.first + d[s];
@@ -128,9 +122,11 @@ void RegularFlowConstraint::organizeConfig()
                 }
             }
         }
+
     }
 
     buildWeightedDFATable();
+
 }
 
 void RegularFlowConstraint::buildWeightedDFATable()
@@ -140,41 +136,40 @@ void RegularFlowConstraint::buildWeightedDFATable()
 
     set<Value> sigma;
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*) getVar(i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
             sigma.insert(*v);
         }
     }
 
-    epsilonChar = (*(dfa.symbol.begin())) - 1;
+    epsilonChar = (*(dfa.symbol.begin()))-1;
     costTb.resize(nstate);
 
     // [start][char][end]
-    for (int i = 0; i < nstate; i++) {
-        for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
-             it != dfa.transition[i].end(); it++) {
+    for (int i=0; i<nstate; i++) {
+        for (vector<pair<int, int> >::iterator it = dfa.transition[i].begin();
+                it != dfa.transition[i].end(); it++) {
             for (set<int>::iterator jt = sigma.begin();
-                 jt != sigma.end(); jt++) {
-                if (costTb[i].find(*jt) != costTb[i].end())
-                    costTb[i][*jt].insert(make_pair((int)it->second, (Cost)subdef));
+                    jt != sigma.end(); jt++) {
+                if (costTb[i].find(*jt) != costTb[i].end()) costTb[i][*jt].insert(make_pair((int) it->second, (Cost) subdef));
                 else {
                     map<int, Cost> inner;
-                    inner.insert(make_pair((int)it->second, (Cost)subdef));
+                    inner.insert(make_pair((int) it->second, (Cost) subdef));
                     costTb[i].insert(make_pair(*jt, inner));
                 }
             }
-            costTb[i][it->first][it->second] = (Cost)0;
+            costTb[i][it->first][it->second] = (Cost) 0;
         }
     }
 
     if (insdef > 0) {
-        for (int i = 0; i < nstate; i++) {
-            for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
-                 it != dfa.transition[i].end(); it++) {
+        for (int i=0; i<nstate; i++) {
+            for (vector<pair<int, int> >::iterator it = dfa.transition[i].begin();
+                    it != dfa.transition[i].end(); it++) {
                 costTb[i][epsilonChar][it->second] = insdef;
             }
             for (set<int>::iterator jt = sigma.begin();
-                 jt != sigma.end(); jt++) {
+                    jt != sigma.end(); jt++) {
                 map<int, Cost>::iterator pos = costTb[i][*jt].find(i);
                 if (pos == costTb[i][*jt].end()) {
                     costTb[i][*jt][i] = deldef;
@@ -184,12 +179,13 @@ void RegularFlowConstraint::buildWeightedDFATable()
             }
         }
     }
+
 }
 
 Cost RegularFlowConstraint::evalOriginal(const String& s)
 {
 
-    typedef pair<Cost, pair<int, int>> Element;
+    typedef pair<Cost,pair<int,int> > Element;
     //priority_queue<Element, vector<Element>, greater<Element> > minqueue;
     min_priority_queue<Element> minqueue;
     for (vector<int>::iterator i = dfa.init.begin(); i != dfa.init.end(); i++) {
@@ -206,13 +202,13 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
 
         if (curIndex == arity_) {
             if (find(dfa.final.begin(), dfa.final.end(), curState) != dfa.final.end()) {
-                myResult = weight;
+                myResult = 	weight;
                 break;
             }
         } else {
             int curValue = s[curIndex] - CHAR_FIRST;
             for (map<int, Cost>::iterator i = costTb[curState][curValue].begin();
-                 i != costTb[curState][curValue].end(); i++) {
+                    i != costTb[curState][curValue].end(); i++) {
                 int nextWeight = weight + i->second;
                 int nextState = i->first;
                 int nextIndex = curIndex + 1;
@@ -221,7 +217,7 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
 
             if (insdef > 0) {
                 for (map<int, Cost>::iterator i = costTb[curState][epsilonChar].begin();
-                     i != costTb[curState][epsilonChar].end(); i++) {
+                        i != costTb[curState][epsilonChar].end(); i++) {
                     int nextWeight = weight + i->second;
                     int nextState = i->first;
                     int nextIndex = curIndex;
@@ -229,20 +225,22 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
                 }
             }
         }
+
     }
 
     return myResult;
+
 }
 
 size_t RegularFlowConstraint::GetGraphAllocatedSize()
 {
-    return dfa.size() * (arity_ + 1) + 2;
+    return dfa.size()*(arity_ + 1) + 2;
 }
 
-void RegularFlowConstraint::buildGraph(Graph& g)
+void RegularFlowConstraint::buildGraph(Graph &g)
 {
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*) getVar(i);
         tempdomain[i].clear();
         predomain[i].clear();
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
@@ -255,9 +253,10 @@ void RegularFlowConstraint::buildGraph(Graph& g)
     /* g.print();
 
     exit(0);*/
+
 }
 
-void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
+void RegularFlowConstraint::buildGraphBasic(Graph &g, bool needRebuildIndex)
 {
 
     //if (g.size() == 0) g.setSize(dfa.size()*(arity_ + 1) + 2);
@@ -268,24 +267,22 @@ void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
     }
     if (needRebuildIndex) {
         for (int i = 0; i < arity_; i++) {
-            for (unsigned int j = 0; j < mapedge[i].size(); j++)
-                mapedge[i][j].clear();
+            for (unsigned int j = 0; j < mapedge[i].size(); j++) mapedge[i][j].clear();
         }
     }
 
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
+        EnumeratedVariable* x = (EnumeratedVariable*) getVar(i);
         for (int start = 0; start < dfa.size(); start++) {
             for (int end = 0; end < dfa.size(); end++) {
                 set<int> sym = dfa.getSymbolNeed(start, end);
                 if (sym.size() != 0) {
-                    for (set<int>::iterator v = tempdomain[i].begin(); v != tempdomain[i].end(); v++) {
+                    for (set<int>::iterator v = tempdomain[i].begin(); v !=
+                            tempdomain[i].end(); v++) {
                         Cost w = -deltaCost[i][x->toIndex(*v)];
-                        if (sym.find(*v) == sym.end())
-                            w += subdef;
+                        if (sym.find(*v) == sym.end()) w += subdef;
                         g.addEdge(i * dfa.size() + start + 1, (i + 1) * dfa.size() + end + 1, w, 1, *v, false);
-                        if (needRebuildIndex)
-                            mapedge[i][x->toIndex(*v)].push_back(make_pair(i * dfa.size() + start + 1, (i + 1) * dfa.size() + end + 1));
+                        if (needRebuildIndex) mapedge[i][x->toIndex(*v)].push_back(make_pair(i * dfa.size() + start + 1, (i + 1) * dfa.size() + end + 1));
                     }
                     if (insdef > 0)
                         g.addEdge(i * dfa.size() + start + 1, i * dfa.size() + end + 1, insdef, 1, INS_TAG, false);
@@ -296,15 +293,15 @@ void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
 
     if (deldef > 0) {
         for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
+            EnumeratedVariable* x = (EnumeratedVariable*) getVar(i);
             for (int start = 0; start < dfa.size(); start++) {
                 vector<Cost> weight = g.getWeight(i * dfa.size() + start + 1, (i + 1) * dfa.size() + start + 1);
                 if (weight.empty()) {
-                    for (set<int>::iterator v = tempdomain[i].begin(); v != tempdomain[i].end(); v++) {
+                    for (set<int>::iterator v = tempdomain[i].begin(); v !=
+                            tempdomain[i].end(); v++) {
                         Cost w = -deltaCost[i][x->toIndex(*v)];
                         g.addEdge(i * dfa.size() + start + 1, (i + 1) * dfa.size() + start + 1, deldef + w, 1, *v, false);
-                        if (needRebuildIndex)
-                            mapedge[i][x->toIndex(*v)].push_back(make_pair(i * dfa.size() + start + 1, (i + 1) * dfa.size() + start + 1));
+                        if (needRebuildIndex) mapedge[i][x->toIndex(*v)].push_back(make_pair(i * dfa.size() + start + 1, (i + 1) * dfa.size() + start + 1));
                     }
                 }
             }
@@ -312,30 +309,30 @@ void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
     }
 
     for (vector<int>::iterator i = dfa.final.begin(); i != dfa.final.end(); i++) {
-        g.addEdge((arity_)*dfa.size() + (*i) + 1, g.size() - 1, 0, 1, NO_TAG, false);
+        g.addEdge((arity_) * dfa.size() + (*i) + 1, g.size() - 1, 0, 1, NO_TAG, false);
     }
+
 }
 
-void RegularFlowConstraint::findProjection(Graph& graph, StoreCost& cost, int varindex, map<Value, Cost>& delta)
+void RegularFlowConstraint::findProjection(Graph &graph, StoreCost &cost, int varindex, map<Value, Cost> &delta)
 {
 
     //pair<int, bool> result;
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
+    EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);
 
     computeShortestPath(graph, cost);
 
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
         Cost mincost = INF;
-        vector<pair<int, int>>& edges = mapedge[varindex][x->toIndex(*v)];
-        for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {
+        vector<pair<int, int> > &edges = mapedge[varindex][x->toIndex(*v)];
+        for (vector<pair<int, int> >::iterator i = edges.begin(); i !=
+                edges.end(); i++) {
             pair<int, int> edge = *i;
             vector<Cost> weight = graph.getWeight(edge.first, edge.second, *v);
-            if (weight.size() > 1)
-                cout << "multiple edges?\n";
+            if (weight.size() > 1) cout << "multiple edges?\n";
             if (!weight.empty()) {
                 Cost t = weight[0] + fromSource[edge.first] + toSink[edge.second];
-                if (mincost > t)
-                    mincost = t;
+                if (mincost > t) mincost = t;
             }
         }
         if (mincost == INF) {
@@ -344,49 +341,53 @@ void RegularFlowConstraint::findProjection(Graph& graph, StoreCost& cost, int va
             delta[*v] = mincost;
         }
     }
+
 }
 
-void RegularFlowConstraint::checkRemoved(Graph& graph, StoreCost& cost, vector<int>& rmv)
+void RegularFlowConstraint::checkRemoved(Graph &graph, StoreCost &cost, vector<int> &rmv)
 {
 
     //for (int varindex = 0; varindex < arity_; varindex++) {
     for (vector<int>::iterator i = rmv.begin(); i != rmv.end(); i++) {
         int varindex = *i;
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
+        EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);
         for (unsigned int valIndex = 0; valIndex < mapedge[varindex].size(); valIndex++) {
             if (x->cannotbe(x->toValue(valIndex))) {
-                vector<pair<int, int>>& edges = mapedge[varindex][valIndex];
-                for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {
+                vector<pair<int, int> > &edges = mapedge[varindex][valIndex];
+                for (vector<pair<int, int> >::iterator i = edges.begin(); i !=
+                        edges.end(); i++) {
                     pair<int, int> edge = *i;
                     graph.removeEdge(edge.first, edge.second, x->toValue(valIndex));
                 }
             }
         }
     }
+
 }
 
-void RegularFlowConstraint::augmentStructure(Graph& g, StoreCost& cost, int varindex, map<Value, Cost>& delta)
+void RegularFlowConstraint::augmentStructure(Graph &g, StoreCost &cost, int varindex, map<Value, Cost> &delta)
 {
 
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
+    EnumeratedVariable* x = (EnumeratedVariable*) getVar(varindex);
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-        vector<pair<int, int>>& edges = mapedge[varindex][x->toIndex(*v)];
-        for (vector<pair<int, int>>::iterator e = edges.begin(); e != edges.end(); e++) {
+        vector<pair<int, int> > &edges = mapedge[varindex][x->toIndex(*v)];
+        for (vector<pair<int, int> >::iterator e = edges.begin(); e !=
+                edges.end(); e++) {
             vector<Cost> weight = g.getWeight(e->first, e->second, *v);
             if (weight.size() != 0) {
                 g.increaseCost(e->first, e->second, -delta[*v], *v);
             }
         }
     }
+
 }
 
-void RegularFlowConstraint::computeShortestPath(Graph& g, StoreCost& cost)
+void RegularFlowConstraint::computeShortestPath(Graph &g, StoreCost &cost)
 {
 
     fromSource.resize(g.size());
     toSink.resize(g.size());
-    for (unsigned int i = 0; i < fromSource.size(); i++)
-        fromSource[i] = toSink[i] = INF;
+    for (unsigned int i = 0; i < fromSource.size(); i++) fromSource[i] = toSink[i] = INF;
     for (vector<int>::iterator i = dfa.init.begin(); i != dfa.init.end(); i++) {
         fromSource[(*i) + 1] = MIN_COST;
     }
@@ -410,13 +411,13 @@ void RegularFlowConstraint::computeShortestPath(Graph& g, StoreCost& cost)
     }
     toSink[g.size() - 1] = MIN_COST;
     for (vector<int>::iterator i = dfa.final.begin(); i != dfa.final.end(); i++) {
-        toSink[dfa.size() * (arity_) + (*i) + 1] = MIN_COST;
+        toSink[dfa.size()*(arity_)+(*i) + 1] = MIN_COST;
     }
     if (insdef > 0) {
         for (int j = 0; j < dfa.size(); j++) {
-            int s = (arity_)*dfa.size() + j + 1;
+            int s = (arity_) * dfa.size() + j + 1;
             for (int k = 0; k < dfa.size(); k++) {
-                int e = (arity_)*dfa.size() + k + 1;
+                int e = (arity_) * dfa.size() + k + 1;
                 if (toSink[e] > toSink[s] + table[j][k]) {
                     toSink[e] = toSink[s] + table[j][k];
                 }
@@ -441,21 +442,19 @@ void RegularFlowConstraint::computeShortestPath(Graph& g, StoreCost& cost)
         }
     }
     //cost = graph.augment(0, graph.size() - 1, false).first;
+
 }
 
 void RegularFlowConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++)
-            os << " " << scope[i]->wcspIndex;
+        for(int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++)
-            if (scope[i]->unassigned())
-                os << " " << scope[i]->getCurrentVarId();
+        for(int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 sregular " << ((insdef == 0 && deldef == 0) ? "var" : "edit") << " " << def << endl;
+    os << " -1 sregular " << ((insdef==0 && deldef==0)?"var":"edit") << " " << def << endl;
     dfa.dump(os, original);
 }
 
@@ -484,3 +483,4 @@ string RegularFlowConstraint::getName()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

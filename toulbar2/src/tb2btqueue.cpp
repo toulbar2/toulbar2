@@ -5,14 +5,14 @@
 #include "tb2btqueue.hpp"
 #include "tb2variable.hpp"
 
-void BTQueue::push(DLink<Variable*>* elt)
+void BTQueue::push(DLink<Variable *> *elt)
 {
     if (!inBTList(elt)) {
         push_back(elt, true);
     }
 }
 
-void BTQueue::remove(DLink<Variable*>* elt)
+void BTQueue::remove(DLink<Variable *> *elt)
 {
     if (inBTList(elt)) {
         erase(elt, true);
@@ -22,15 +22,15 @@ void BTQueue::remove(DLink<Variable*>* elt)
 Variable* BTQueue::pop_back()
 {
     assert(!empty());
-    DLink<Variable*>* elt = BTList<Variable*>::pop_back(true);
+    DLink<Variable *> *elt = BTList<Variable *>::pop_back(true);
     return elt->content;
 }
 
-Variable* BTQueue::pop_first()
+Variable *BTQueue::pop_first()
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<Variable*>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<Variable *> *elt = iter.getElt();
     erase(elt, true);
     return elt->content;
 }
@@ -38,10 +38,10 @@ Variable* BTQueue::pop_first()
 void BTQueue::print(ostream& os)
 {
     os << "Queue: ";
-    iterator iter = begin();
-    if (iter != end()) {
+    iterator iter=begin();
+    if(iter != end()) {
         Variable* var = iter.getElt()->content;
-        os << var->getName();
+        os << var->getName() ;
         for (++iter; iter != end(); ++iter) {
             var = iter.getElt()->content;
             os << " " << var->getName();
@@ -56,3 +56,4 @@ void BTQueue::print(ostream& os)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

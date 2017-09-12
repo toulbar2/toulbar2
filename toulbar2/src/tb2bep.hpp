@@ -8,7 +8,8 @@
 
 #include "tb2wcsp.hpp"
 
-class BEP {
+class BEP
+{
 public:
     int size;
     vector<int> duration;
@@ -17,13 +18,10 @@ public:
     vector<int> revenue;
     vector<int> delay;
 
-    BEP()
-        : size(0)
-    {
-    }
+    BEP() : size(0) {}
 
-    void read(const char* fileName, WCSP* wcsp);
-    void printSolution(WCSP* wcsp);
+    void read(const char *fileName, WCSP *wcsp);
+    void printSolution(WCSP *wcsp);
 };
 
 #endif /*TB2BEP_HPP_*/
@@ -34,3 +32,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

@@ -24,7 +24,7 @@ struct BigInteger {
         mpz_set_d(integer, d_);
     }
 
-    BigInteger(const BigInteger& i)
+    BigInteger(const BigInteger &i)
     {
         mpz_init(integer);
         mpz_set(integer, i.integer);
@@ -34,27 +34,27 @@ struct BigInteger {
         mpz_clear(integer);
     }
 
-    BigInteger& operator=(const BigInteger& i)
+    BigInteger &operator=(const BigInteger &i)
     {
         mpz_set(integer, i.integer);
         return *this;
     }
-    BigInteger& operator+=(const BigInteger& i)
+    BigInteger &operator+=(const BigInteger &i)
     {
         mpz_add(integer, integer, i.integer);
         return *this;
     }
-    BigInteger& operator-=(const BigInteger& i)
+    BigInteger &operator-=(const BigInteger &i)
     {
         mpz_sub(integer, integer, i.integer);
         return *this;
     }
-    BigInteger& operator*=(const BigInteger& i)
+    BigInteger &operator*=(const BigInteger &i)
     {
         mpz_mul(integer, integer, i.integer);
         return *this;
     }
-    BigInteger& operator/=(const BigInteger& i)
+    BigInteger &operator/=(const BigInteger &i)
     {
         assert(i.integer != 0);
         mpz_div(integer, integer, i.integer);
@@ -67,28 +67,28 @@ struct BigInteger {
         return i;
     }
     friend const BigInteger operator+(const BigInteger& left,
-        const BigInteger& right)
+                                      const BigInteger& right)
     {
         BigInteger i;
         mpz_add(i.integer, left.integer, right.integer);
         return i;
     }
     friend const BigInteger operator-(const BigInteger& left,
-        const BigInteger& right)
+                                      const BigInteger& right)
     {
         BigInteger i;
         mpz_sub(i.integer, left.integer, right.integer);
         return i;
     }
     friend const BigInteger operator*(const BigInteger& left,
-        const BigInteger& right)
+                                      const BigInteger& right)
     {
         BigInteger i;
         mpz_mul(i.integer, left.integer, right.integer);
         return i;
     }
     friend const BigInteger operator/(const BigInteger& left,
-        const BigInteger& right)
+                                      const BigInteger& right)
     {
         BigInteger i;
         assert(right != 0);
@@ -122,10 +122,10 @@ struct BigInteger {
 
     void print(ostream& os) const
     {
-        char* p = NULL;
+        char*p = NULL;
         p = mpz_get_str(p, 10, integer);
         if (strlen(p) > 300)
-        //if(strlen(p)-1>=6)
+            //if(strlen(p)-1>=6)
         {
             os << p[0] << '.';
             for (int i = 1; i <= 5; i++)
@@ -135,10 +135,10 @@ struct BigInteger {
             else
                 os << "e+" << strlen(p) - 1;
         } else
-            os << mpz_get_d(integer); //p;
+            os << mpz_get_d(integer);//p;
         //os << mpz_get_d(integer);
     }
-    friend ostream& operator<<(ostream& os, const BigInteger& i)
+    friend ostream& operator<<(ostream& os, const BigInteger &i)
     {
         i.print(os);
         return os;
@@ -155,9 +155,11 @@ struct BigInteger {
 
 #endif
 
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

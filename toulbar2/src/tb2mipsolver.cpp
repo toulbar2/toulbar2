@@ -1,8 +1,7 @@
 #include "tb2mipsolver.hpp"
 using namespace std;
 
-MIP::MIP()
-    : solver(NULL)
+MIP::MIP():solver(NULL)
 {
 #ifdef ILOGCPLEX
     solver = new IlogMIP();
@@ -29,7 +28,7 @@ IlogMIP::IlogMIP()
     *var = IloNumVarArray(env);
 
     obj = (IloObjective*)malloc(sizeof(IloObjective));
-    *obj = IloObjective(env, 0, IloObjective::Minimize);
+    *obj = IloObjective(env, 0,  IloObjective::Minimize);
 
     con = (IloRangeArray*)malloc(sizeof(IloRangeArray));
     *con = IloRangeArray(env);
@@ -63,7 +62,7 @@ void IlogMIP::clear()
     con->endElements();
     *con = IloRangeArray(env);
     obj->end();
-    *obj = IloObjective(env, 0, IloObjective::Minimize);
+    *obj = IloObjective(env, 0,  IloObjective::Minimize);
     var->endElements();
     *var = IloNumVarArray(env);
     sols->clear();
@@ -129,6 +128,7 @@ void IlogMIP::rowLowerBound(int n, int lower)
     (*con)[n].setLB(lower);
 } // set the lower bound of a variable
 
+
 void IlogMIP::rowUpperBound(int n, int upper)
 {
     (*con)[n].setUB(upper);
@@ -141,6 +141,7 @@ void IlogMIP::rowCoeff(int n, int count, int indexes[], double values[])
     }
 } // set the coefficients of the variables of a row
 
+
 int IlogMIP::sol(int var1)
 {
 
@@ -151,6 +152,7 @@ int IlogMIP::sol(int var1)
     }
 
 } // return the value of a variable (rounded down)
+
 
 int IlogMIP::solValue()
 {
@@ -172,7 +174,7 @@ int IlogMIP::augment(int var1)
     (*var)[var1].setLB(1);
     solve();
     int cost = solValue();
-    assert(sol(var1) == 1);
+    assert(sol(var1)==1);
     (*var)[var1].setLB(0);
     return cost;
 } // compute the minimal when a value is used
@@ -187,6 +189,7 @@ void IlogMIP::objCoeff(int var1, int i)
     cols[var1] = i;
     obj->setLinearCoef((*var)[var1], i);
 } // set the coefficient of a variable in the objective function
+
 
 int IlogMIP::solve()
 {
@@ -204,6 +207,7 @@ int IlogMIP::solve()
         exit(0);
     }
 
+
     if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001) {
         objValue = floor(cplex->getObjValue());
     } else {
@@ -213,6 +217,7 @@ int IlogMIP::solve()
     if (objValue < 0) {
         objValue = 0;
     }
+
 
     cplex->getValues(*sols, *var);
 
@@ -250,6 +255,7 @@ void IlogMIP::increaseCoeff(int varindex, int value, int newCoeff)
     obj->setLinearCoef((*var)[var1], cols[var1]);
 } // increase the cost projected on this value
 
+
 void IlogMIP::backup()
 {
     *buObjExpr = obj->getExpr();
@@ -269,3 +275,4 @@ int IlogMIP::restore()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

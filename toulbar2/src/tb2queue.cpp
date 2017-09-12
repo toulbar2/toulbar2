@@ -5,7 +5,8 @@
 #include "tb2queue.hpp"
 #include "tb2variable.hpp"
 
-void Queue::push(DLink<VariableWithTimeStamp>* elt, Long curTimeStamp)
+
+void Queue::push(DLink<VariableWithTimeStamp> *elt, Long curTimeStamp)
 {
     if (elt->content.timeStamp < curTimeStamp) {
         elt->content.timeStamp = curTimeStamp;
@@ -13,13 +14,13 @@ void Queue::push(DLink<VariableWithTimeStamp>* elt, Long curTimeStamp)
     }
 }
 
-void Queue::push(DLink<VariableWithTimeStamp>* elt, EventType incdec, Long curTimeStamp)
+void Queue::push(DLink<VariableWithTimeStamp> *elt, EventType incdec, Long curTimeStamp)
 {
     elt->content.incdec |= incdec;
     push(elt, curTimeStamp);
 }
 
-void Queue::remove(DLink<VariableWithTimeStamp>* elt)
+void Queue::remove(DLink<VariableWithTimeStamp> *elt)
 {
     elt->content.timeStamp = -1;
     elt->content.incdec = NOTHING_EVENT;
@@ -29,24 +30,26 @@ void Queue::remove(DLink<VariableWithTimeStamp>* elt)
 Variable* Queue::pop()
 {
     assert(!empty());
-    DLink<VariableWithTimeStamp>* elt = pop_back(false);
+    DLink<VariableWithTimeStamp> *elt = pop_back(false);
     elt->content.timeStamp = -1;
     elt->content.incdec = NOTHING_EVENT;
     return elt->content.var;
 }
 
-Variable* Queue::pop(int* incdec)
+Variable* Queue::pop(int *incdec)
 {
     assert(!empty());
     *incdec = (*rbegin()).incdec;
     return pop();
 }
 
-Variable* Queue::pop_min()
+
+
+Variable *Queue::pop_min()
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<VariableWithTimeStamp>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->getDACOrder() < pos) {
@@ -60,11 +63,11 @@ Variable* Queue::pop_min()
     return elt->content.var;
 }
 
-Variable* Queue::pop_min(int* incdec)
+Variable *Queue::pop_min(int *incdec)
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<VariableWithTimeStamp>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->getDACOrder() < pos) {
@@ -79,11 +82,11 @@ Variable* Queue::pop_min(int* incdec)
     return elt->content.var;
 }
 
-Variable* Queue::pop_max()
+Variable *Queue::pop_max()
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<VariableWithTimeStamp>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->getDACOrder() > pos) {
@@ -97,11 +100,11 @@ Variable* Queue::pop_max()
     return elt->content.var;
 }
 
-Variable* Queue::pop_max(int* incdec)
+Variable *Queue::pop_max(int *incdec)
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<VariableWithTimeStamp>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     int pos = (*iter).var->getDACOrder();
     for (++iter; iter != end(); ++iter) {
         if ((*iter).var->getDACOrder() > pos) {
@@ -116,22 +119,23 @@ Variable* Queue::pop_max(int* incdec)
     return elt->content.var;
 }
 
-Variable* Queue::pop_first()
+Variable *Queue::pop_first()
 {
     assert(!empty());
-    iterator iter = begin();
-    DLink<VariableWithTimeStamp>* elt = iter.getElt();
+    iterator iter=begin();
+    DLink<VariableWithTimeStamp> *elt = iter.getElt();
     erase(elt, false);
     elt->content.timeStamp = -1;
     elt->content.incdec = NOTHING_EVENT;
     return elt->content.var;
 }
+
 
 void Queue::print(ostream& os)
 {
     os << "Queue: ";
-    iterator iter = begin();
-    if (iter != end()) {
+    iterator iter=begin();
+    if(iter != end()) {
         VariableWithTimeStamp vts = iter.getElt()->content;
         os << "<var:" << vts.var->getName() << ",node:" << vts.timeStamp << "> ";
         for (++iter; iter != end(); ++iter) {
@@ -148,3 +152,4 @@ void Queue::print(ostream& os)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

@@ -5,17 +5,15 @@
 #include "tb2arithmetic.hpp"
 #include "tb2wcsp.hpp"
 
+
 /*
  * Constructors and misc.
  *
  */
 
-Unary::Unary(WCSP* wcsp, IntervalVariable* xx, Value* d, int dsize, Cost c)
-    : AbstractUnaryConstraint<IntervalVariable>(wcsp, xx)
-    , permitted(d, d + dsize)
-    , penalty(c)
-    , deltaValueXinf(xx->getSup() + 1)
-    , deltaValueXsup(xx->getSup() + 1)
+Unary::Unary(WCSP *wcsp, IntervalVariable *xx, Value *d, int dsize, Cost c) :
+    AbstractUnaryConstraint<IntervalVariable>(wcsp, xx), permitted(d, d+dsize), penalty(c),
+    deltaValueXinf(xx->getSup()+1), deltaValueXsup(xx->getSup()+1)
 {
     xx->queueInc();
     xx->queueDec();
@@ -24,29 +22,25 @@ Unary::Unary(WCSP* wcsp, IntervalVariable* xx, Value* d, int dsize, Cost c)
 void Unary::print(ostream& os)
 {
     os << this << " " << x->getName() << " var in {";
-    for (set<Value>::iterator it = permitted.begin(); it != permitted.end(); ++it) {
+    for (set<Value>::iterator it=permitted.begin(); it != permitted.end(); ++it) {
         os << " " << *it;
     }
-    os << " } (" << penalty << ")" << endl;
+    os  << " } (" << penalty << ")" << endl;
 }
 
 void Unary::dump(ostream& os, bool original)
 {
-    os << "1 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << penalty << " " << permitted.size() << endl;
-    for (set<Value>::iterator it = permitted.begin(); it != permitted.end(); ++it) {
+    os << "1 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << penalty << " " << permitted.size() << endl;
+    for (set<Value>::iterator it=permitted.begin(); it != permitted.end(); ++it) {
         os << *it << " 0" << endl;
     }
 }
 
-Supxyc::Supxyc(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy, Value c, Value delta)
-    : AbstractBinaryConstraint<IntervalVariable, IntervalVariable>(wcsp, xx, yy)
-    , cst(c)
-    , deltamax(delta)
-    , deltaCost(MIN_COST)
-    , deltaValueXinf(xx->getSup() + 1)
-    , deltaValueYsup(yy->getSup() + 1)
-    , deltaCostXinf(MIN_COST)
-    , deltaCostYsup(MIN_COST)
+Supxyc::Supxyc(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value c, Value delta) :
+    AbstractBinaryConstraint<IntervalVariable,IntervalVariable>(wcsp, xx, yy),
+    cst(c), deltamax(delta), deltaCost(MIN_COST),
+    deltaValueXinf(xx->getSup()+1), deltaValueYsup(yy->getSup()+1),
+    deltaCostXinf(MIN_COST), deltaCostYsup(MIN_COST)
 {
     xx->queueInc();
     xx->queueDec();
@@ -61,19 +55,15 @@ void Supxyc::print(ostream& os)
 
 void Supxyc::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " -1 >= " << cst << " " << deltamax << endl;
+    os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 >= " << cst << " " << deltamax << endl;
 }
 
-Disjunction::Disjunction(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy, Value cxx, Value cyy,
-    Cost cost)
-    : AbstractBinaryConstraint<IntervalVariable, IntervalVariable>(wcsp, xx, yy)
-    , cstx(cxx)
-    , csty(cyy)
-    , penalty(cost)
-    , deltaValueXinf(xx->getSup() + 1)
-    , deltaValueYinf(yy->getSup() + 1)
-    , deltaValueXsup(xx->getSup() + 1)
-    , deltaValueYsup(yy->getSup() + 1)
+Disjunction::Disjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy, Value cxx, Value cyy,
+                         Cost cost) :
+    AbstractBinaryConstraint<IntervalVariable,IntervalVariable>(wcsp, xx, yy),
+    cstx(cxx), csty(cyy), penalty(cost),
+    deltaValueXinf(xx->getSup()+1),deltaValueYinf(yy->getSup()+1),
+    deltaValueXsup(xx->getSup()+1),deltaValueYsup(yy->getSup()+1)
 {
     xx->queueInc();
     xx->queueDec();
@@ -83,33 +73,24 @@ Disjunction::Disjunction(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy,
 
 void Disjunction::print(ostream& os)
 {
-    os << this << " " << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << " (" << penalty << ")" << endl;
+    os << this << " " << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << " ("  << penalty<< ")" << endl;
 }
 
 void Disjunction::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " -1 disj " << cstx << " " << csty << " " << penalty << endl;
+    os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 disj " << cstx << " " << csty << " " << penalty << endl;
 }
 
-SpecialDisjunction::SpecialDisjunction(WCSP* wcsp, IntervalVariable* xx, IntervalVariable* yy,
-    Value cxx, Value cyy, Value xmax, Value ymax,
-    Cost xcost, Cost ycost)
-    : AbstractBinaryConstraint<IntervalVariable, IntervalVariable>(wcsp, xx, yy)
-    , cstx(cxx)
-    , csty(cyy)
-    , xinfty(xmax)
-    , yinfty(ymax)
-    , costx(xcost)
-    , costy(ycost)
-    , deltaCost(MIN_COST)
-    , deltaValueXinf(xx->getSup() + 1)
-    , deltaValueYinf(yy->getSup() + 1)
-    , deltaValueXsup(xx->getSup() + 1)
-    , deltaValueYsup(yy->getSup() + 1)
-    , deltaCostXinf(MIN_COST)
-    , deltaCostYinf(MIN_COST)
-    , deltaCostXsup(MIN_COST)
-    , deltaCostYsup(MIN_COST)
+SpecialDisjunction::SpecialDisjunction(WCSP *wcsp, IntervalVariable *xx, IntervalVariable *yy,
+                                       Value cxx, Value cyy, Value xmax, Value ymax,
+                                       Cost xcost, Cost ycost) :
+    AbstractBinaryConstraint<IntervalVariable,IntervalVariable>(wcsp, xx, yy),
+    cstx(cxx), csty(cyy), xinfty(xmax), yinfty(ymax), costx(xcost), costy(ycost),
+    deltaCost(MIN_COST),
+    deltaValueXinf(xx->getSup()+1),deltaValueYinf(yy->getSup()+1),
+    deltaValueXsup(xx->getSup()+1),deltaValueYsup(yy->getSup()+1),
+    deltaCostXinf(MIN_COST), deltaCostYinf(MIN_COST),
+    deltaCostXsup(MIN_COST), deltaCostYsup(MIN_COST)
 {
     xx->queueInc();
     xx->queueDec();
@@ -119,12 +100,12 @@ SpecialDisjunction::SpecialDisjunction(WCSP* wcsp, IntervalVariable* xx, Interva
 
 void SpecialDisjunction::print(ostream& os)
 {
-    os << this << " " << x->getName() << " < " << xinfty << " and " << y->getName() << " < " << yinfty << " and (" << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << ") (" << costx << "," << costy << ")" << endl;
+    os << this << " " << x->getName() << " < " << xinfty << " and " << y->getName() << " < " << yinfty << " and (" << x->getName() << " >= " << y->getName() << " + " << csty << " or " << y->getName() << " >= " << x->getName() << " + " << cstx << ") ("  << costx << "," << costy << ")" << endl;
 }
 
 void SpecialDisjunction::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " -1 sdisj " << cstx << " " << csty << " " << xinfty << " " << yinfty << " " << costx << " " << costy << endl;
+    os << "2 " << ((original)?(x->wcspIndex):x->getCurrentVarId()) << " " << ((original)?(y->wcspIndex):y->getCurrentVarId()) << " -1 sdisj " << cstx << " " << csty << " " << xinfty << " " << yinfty << " " << costx << " " << costy << endl;
 }
 
 /*
@@ -148,11 +129,9 @@ void Unary::propagate()
         projectLB(penalty);
     } else {
         // propagate hard constraint
-        if (CUT(wcsp->getLb() + penalty, wcsp->getUb())) {
-            if (x->getInf() < *itinf)
-                x->increase(*itinf);
-            if (x->getSup() > *itsup)
-                x->decrease(*itsup);
+        if (CUT(wcsp->getLb()+penalty, wcsp->getUb())) {
+            if (x->getInf() < *itinf) x->increase(*itinf);
+            if (x->getSup() > *itsup) x->decrease(*itsup);
         }
         // BAC* propagation (increase unary costs of domain bounds)
         Value xinf = x->getInf();
@@ -195,13 +174,11 @@ void Supxyc::propagate()
     } else {
         // propagate hard constraint
         Cost gap = wcsp->getUb() - wcsp->getLb() - 1 + deltaCost;
-        Value newInf = ceil(y->getInf() + cst - ((gap < deltamax) ? gap : deltamax));
-        if (x->getInf() < newInf)
-            x->increase(newInf);
+        Value newInf = ceil(y->getInf() + cst - ((gap < deltamax)?gap:deltamax));
+        if (x->getInf() < newInf) x->increase(newInf);
 
-        Value newSup = floor(x->getSup() - cst + ((gap < deltamax) ? gap : deltamax));
-        if (y->getSup() > newSup)
-            y->decrease(newSup);
+        Value newSup = floor(x->getSup() - cst + ((gap < deltamax)?gap:deltamax));
+        if (y->getSup() > newSup) y->decrease(newSup);
 
         // IC0 propagatation (increase global lower bound)
         Cost cost = y->getInf() + cst - x->getSup() - deltaCost;
@@ -249,23 +226,20 @@ void Supxyc::propagate()
 
 bool Supxyc::verify()
 {
-    Cost cmin = MIN_COST;
-    Cost cxinf = MIN_COST;
-    Cost cysup = MIN_COST;
+    Cost cmin=MIN_COST;
+    Cost cxinf=MIN_COST;
+    Cost cysup=MIN_COST;
 
     cmin = y->getInf() + cst - x->getSup() - deltaCost;
-    if (cmin > MIN_COST)
-        cout << "cmin=" << cmin << endl;
+    if (cmin > MIN_COST) cout << "cmin=" << cmin << endl;
     cxinf = y->getInf() + cst - x->getInf() - deltaCost
-        - ((y->getInf() == deltaValueYsup) ? (Cost)deltaCostYsup : MIN_COST)
-        - ((x->getInf() == deltaValueXinf) ? (Cost)deltaCostXinf : MIN_COST);
-    if (cxinf > MIN_COST)
-        cout << "cxinf=" << cxinf << endl;
+            - ((y->getInf() == deltaValueYsup)?(Cost)deltaCostYsup:MIN_COST)
+            - ((x->getInf() == deltaValueXinf)?(Cost)deltaCostXinf:MIN_COST);
+    if (cxinf > MIN_COST) cout << "cxinf=" << cxinf << endl;
     cysup = y->getSup() + cst - x->getSup() - deltaCost
-        - ((y->getSup() == deltaValueYsup) ? (Cost)deltaCostYsup : MIN_COST)
-        - ((x->getSup() == deltaValueXinf) ? (Cost)deltaCostXinf : MIN_COST);
-    if (cysup > MIN_COST)
-        cout << "cysup=" << cysup << endl;
+            - ((y->getSup() == deltaValueYsup)?(Cost)deltaCostYsup:MIN_COST)
+            - ((x->getSup() == deltaValueXinf)?(Cost)deltaCostXinf:MIN_COST);
+    if (cysup > MIN_COST) cout << "cysup=" << cysup << endl;
     bool icbac = (cmin <= MIN_COST) && (cysup <= MIN_COST) && (cxinf <= MIN_COST);
     if (!icbac) {
         print(cout);
@@ -292,35 +266,27 @@ void Disjunction::propagate()
         // IC0 propagatation (increase global lower bound if always unsatisfied)
         deconnect();
         if (x->unassigned()) {
-            if (x->getInf() == deltaValueXinf)
-                x->projectInfCost(-penalty);
-            if (x->getSup() == deltaValueXsup)
-                x->projectSupCost(-penalty);
+            if (x->getInf() == deltaValueXinf) x->projectInfCost(-penalty);
+            if (x->getSup() == deltaValueXsup) x->projectSupCost(-penalty);
         }
         if (y->unassigned()) {
-            if (y->getInf() == deltaValueYinf)
-                y->projectInfCost(-penalty);
-            if (y->getSup() == deltaValueYsup)
-                y->projectSupCost(-penalty);
+            if (y->getInf() == deltaValueYinf) y->projectInfCost(-penalty);
+            if (y->getSup() == deltaValueYsup) y->projectSupCost(-penalty);
         }
         projectLB(penalty);
     } else {
         // propagate hard constraint
-        if (CUT(wcsp->getLb() + penalty, wcsp->getUb())) {
+        if (CUT(wcsp->getLb()+penalty, wcsp->getUb())) {
             if (x->getSup() < y->getInf() + csty) {
                 Value newInf = x->getInf() + cstx;
-                if (y->getInf() < newInf)
-                    y->increase(newInf);
+                if (y->getInf() < newInf) y->increase(newInf);
                 Value newSup = y->getSup() - cstx;
-                if (x->getSup() > newSup)
-                    x->decrease(newSup);
+                if (x->getSup() > newSup) x->decrease(newSup);
             } else if (y->getSup() < x->getInf() + cstx) {
                 Value newInf = y->getInf() + csty;
-                if (x->getInf() < newInf)
-                    x->increase(newInf);
+                if (x->getInf() < newInf) x->increase(newInf);
                 Value newSup = x->getSup() - csty;
-                if (y->getSup() > newSup)
-                    y->decrease(newSup);
+                if (y->getSup() > newSup) y->decrease(newSup);
             }
         }
 
@@ -381,55 +347,55 @@ void SpecialDisjunction::propagate()
         cout << "deltaCost= " << deltaCost << " dxinf=" << deltaValueXinf << " dxsup=" << deltaValueXsup << " dyinf=" << deltaValueYinf << " dysup=" << deltaValueYsup << endl;
     }
     wcsp->revise(this);
-    if (x->getSup() > xinfty)
-        x->decrease(xinfty);
-    if (y->getSup() > yinfty)
-        y->decrease(yinfty);
-    if ((x->getSup() < xinfty && y->getSup() < yinfty && (x->getInf() >= y->getSup() + csty || y->getInf() >= x->getSup() + cstx)) || (x->getInf() >= xinfty && y->getSup() < yinfty) || (y->getInf() >= yinfty && x->getSup() < xinfty)) {
+    if (x->getSup()>xinfty) x->decrease(xinfty);
+    if (y->getSup()>yinfty) y->decrease(yinfty);
+    if ((x->getSup() < xinfty && y->getSup() < yinfty &&
+            (x->getInf() >= y->getSup() + csty || y->getInf() >= x->getSup() + cstx)) ||
+            (x->getInf() >= xinfty && y->getSup() < yinfty) ||
+            (y->getInf() >= yinfty && x->getSup() < xinfty)) {
         // deconnect the constraint if always satisfied
         assert(x->getInf() < xinfty || y->getSup() >= yinfty || deltaCost == costx);
         assert(y->getInf() < yinfty || x->getSup() >= xinfty || deltaCost == costy);
         deconnect();
-    } else if (x->getSup() < xinfty && y->getSup() < yinfty && x->getSup() < y->getInf() + csty && y->getSup() < x->getInf() + cstx) {
+    } else if (x->getSup() < xinfty && y->getSup() < yinfty &&
+               x->getSup() < y->getInf() + csty && y->getSup() < x->getInf() + cstx) {
         // backtrack if the constraint if always unsatisfied
         THROWCONTRADICTION;
     } else {
         if (x->getInf() < xinfty && y->getInf() < yinfty) {
             // IC0 propagatation (increase global lower bound)
-            if (min(x->getSup(), xinfty - 1) < y->getInf() + csty && min(y->getSup(), yinfty - 1) < x->getInf() + cstx) {
-                Cost cost = min(costx, costy) - deltaCost;
+            if (min(x->getSup(),xinfty-1) < y->getInf() + csty &&
+                    min(y->getSup(),yinfty-1) < x->getInf() + cstx) {
+                Cost cost = min(costx,costy) - deltaCost;
                 if (cost > MIN_COST) {
                     deltaCost += cost;
                     projectLB(cost);
                 }
             }
             // propagate hard constraint
-            if ((x->getSup() < xinfty || CUT(wcsp->getLb() + costx - deltaCost, wcsp->getUb())) && min(x->getSup(), xinfty - 1) < y->getInf() + csty) {
+            if ((x->getSup() < xinfty || CUT(wcsp->getLb()+costx-deltaCost, wcsp->getUb())) &&
+                    min(x->getSup(),xinfty-1) < y->getInf() + csty) {
                 Value newInf = min(x->getInf() + cstx, yinfty);
-                if (y->getInf() < newInf)
-                    y->increase(newInf);
+                if (y->getInf() < newInf) y->increase(newInf);
                 if (y->getSup() < yinfty) {
                     Value newSup = y->getSup() - cstx;
-                    if (x->getSup() > newSup)
-                        x->decrease(newSup);
+                    if (x->getSup() > newSup) x->decrease(newSup);
                 }
             }
-            if ((y->getSup() < yinfty || CUT(wcsp->getLb() + costy - deltaCost, wcsp->getUb())) && min(y->getSup(), yinfty - 1) < x->getInf() + cstx) {
+            if ((y->getSup() < yinfty || CUT(wcsp->getLb()+costy-deltaCost, wcsp->getUb())) &&
+                    min(y->getSup(),yinfty-1) < x->getInf() + cstx) {
                 Value newInf = min(y->getInf() + csty, xinfty);
-                if (x->getInf() < newInf)
-                    x->increase(newInf);
+                if (x->getInf() < newInf) x->increase(newInf);
                 if (x->getSup() < xinfty) {
                     Value newSup = x->getSup() - csty;
-                    if (y->getSup() > newSup)
-                        y->decrease(newSup);
+                    if (y->getSup() > newSup) y->decrease(newSup);
                 }
             }
             // BAC* propagation (increase unary costs of domain bounds)
             if (x->unassigned() && y->getInf() < yinfty) {
                 Value xinf = x->getInf();
-                Cost cost = -((Cost)deltaCost);
-                if (xinf < y->getInf() + csty && xinf > min(y->getSup(), yinfty - 1) - cstx)
-                    cost += costy;
+                Cost cost = -((Cost) deltaCost);
+                if (xinf < y->getInf() + csty && xinf > min(y->getSup(),yinfty-1) - cstx) cost += costy;
                 if (xinf == deltaValueXinf) {
                     Cost delta = cost - deltaCostXinf;
                     if (delta != MIN_COST) {
@@ -444,11 +410,9 @@ void SpecialDisjunction::propagate()
             }
             if (x->unassigned() && y->getInf() < yinfty) {
                 Value xsup = x->getSup();
-                Cost cost = -((Cost)deltaCost);
-                if (xsup == xinfty)
-                    cost += costx;
-                else if (xsup < y->getInf() + csty && xsup > min(y->getSup(), yinfty - 1) - cstx)
-                    cost += costy;
+                Cost cost = -((Cost) deltaCost);
+                if (xsup==xinfty) cost += costx;
+                else if (xsup < y->getInf() + csty && xsup > min(y->getSup(),yinfty-1) - cstx) cost += costy;
                 if (xsup == deltaValueXsup) {
                     Cost delta = cost - deltaCostXsup;
                     if (delta != MIN_COST) {
@@ -463,9 +427,8 @@ void SpecialDisjunction::propagate()
             }
             if (y->unassigned() && x->getInf() < xinfty) {
                 Value yinf = y->getInf();
-                Cost cost = -((Cost)deltaCost);
-                if (yinf < x->getInf() + cstx && yinf > min(x->getSup(), xinfty - 1) - csty)
-                    cost += costx;
+                Cost cost = -((Cost) deltaCost);
+                if (yinf < x->getInf() + cstx && yinf > min(x->getSup(),xinfty-1) - csty) cost += costx;
                 if (yinf == deltaValueYinf) {
                     Cost delta = cost - deltaCostYinf;
                     if (delta != MIN_COST) {
@@ -480,11 +443,9 @@ void SpecialDisjunction::propagate()
             }
             if (y->unassigned() && x->getInf() < xinfty) {
                 Value ysup = y->getSup();
-                Cost cost = -((Cost)deltaCost);
-                if (ysup == yinfty)
-                    cost += costy;
-                else if (ysup < x->getInf() + cstx && ysup > min(x->getSup(), xinfty - 1) - csty)
-                    cost += costx;
+                Cost cost = -((Cost) deltaCost);
+                if (ysup==yinfty) cost += costy;
+                else if (ysup < x->getInf() + cstx && ysup > min(x->getSup(),xinfty-1) - csty) cost += costx;
                 if (ysup == deltaValueYsup) {
                     Cost delta = cost - deltaCostYsup;
                     if (delta != MIN_COST) {
@@ -503,7 +464,7 @@ void SpecialDisjunction::propagate()
 
 bool SpecialDisjunction::verify()
 {
-    bool support = (x->getSup() >= xinfty || y->getSup() >= yinfty || x->getSup() >= y->getInf() + csty || y->getSup() >= x->getInf() + cstx);
+    bool support = (x->getSup()>=xinfty || y->getSup()>=yinfty || x->getSup() >= y->getInf() + csty || y->getSup() >= x->getInf() + cstx);
     Value xinf = x->getInf();
     Value yinf = y->getInf();
     Value xsup = x->getSup();
@@ -529,3 +490,4 @@ bool SpecialDisjunction::verify()
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

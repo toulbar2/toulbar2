@@ -8,101 +8,98 @@
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 
-class VACVariable : public EnumeratedVariable {
+
+class VACVariable : public EnumeratedVariable
+{
 
 public:
+
 private:
-    VACExtension* vac; /**< Ref. to the VAC data-structures */
 
-    vector<Long> mark; /**< The boolean M used to mark values whose deletion is needed to wipe-out */
-    vector<Long> k_timeStamp; /**< timestamp for the counter k (one per value) */
-    vector<int> k; /**< Number of cost requests per value for all cost functions */
-    vector<int> killer; /**< The killer of each value : the other variable index (binary case)*/
+    VACExtension* vac;         /**< Ref. to the VAC data-structures */
 
-    int killed; /**< How many values did this variable killed ? HEUR */
-    int maxk; /**< The Max number of cost requests seen on this variable, used for stats */
-    Long maxk_timeStamp; /**< timestamp for maxk */
+    vector<Long>  mark;        /**< The boolean M used to mark values whose deletion is needed to wipe-out */
+    vector<Long>  k_timeStamp; /**< timestamp for the counter k (one per value) */
+    vector<int>   k;           /**< Number of cost requests per value for all cost functions */
+    vector<int>   killer;      /**< The killer of each value : the other variable index (binary case)*/
+
+    int  killed;               /**< How many values did this variable killed ? HEUR */
+    int  maxk;                 /**< The Max number of cost requests seen on this variable, used for stats */
+    Long maxk_timeStamp;       /**< timestamp for maxk */
+
 
     StoreCost myThreshold; /** The local thresold used to break loops */
     //Cost 	        myThreshold;
 
     DLink<VariableWithTimeStamp> linkVACQueue;
     DLink<VariableWithTimeStamp> linkSeekSupport;
-    DLink<Variable*> linkVAC2Queue;
+    DLink<Variable *>            linkVAC2Queue;
 
-    void init();
+    void init ();
 
 public:
-    VACVariable(WCSP* wcsp, string n, Value iinf, Value isup);
-    VACVariable(WCSP* wcsp, string n, Value* d, int dsize);
-    ~VACVariable();
 
-    void reset();
+    VACVariable (WCSP *wcsp, string n, Value iinf, Value isup);
+    VACVariable (WCSP *wcsp, string n, Value *d, int dsize);
+    ~VACVariable ();
+
+    void reset ();
 
     bool removeVAC(Value v);
     bool increaseVAC(Value newInf);
     bool decreaseVAC(Value supInf);
 
-    int getMaxK(Long timeStamp)
+    int 	getMaxK( Long timeStamp )
     {
-        if (maxk_timeStamp < timeStamp)
-            return 0;
-        else
-            return maxk;
+        if(maxk_timeStamp < timeStamp) return 0;
+        else return maxk;
     }
 
-    int getK(Value v, Long timeStamp)
+    int 	getK( Value v, Long timeStamp )
     {
-        if (k_timeStamp[toIndex(v)] < timeStamp)
-            return 0;
-        else
-            return k[toIndex(v)];
+        if(k_timeStamp[toIndex(v)] < timeStamp) return 0;
+        else return k[toIndex(v)];
     }
-    void setK(Value v, int c, Long timeStamp)
+    void 	setK( Value v, int c, Long timeStamp )
     {
         k[toIndex(v)] = c;
         k_timeStamp[toIndex(v)] = timeStamp;
-        if (maxk_timeStamp < timeStamp) {
+        if(maxk_timeStamp < timeStamp) {
             maxk = 0;
             maxk_timeStamp = timeStamp;
         }
     }
 
-    void addToK(Value v, int c, Long timeStamp)
+    void	addToK(Value v, int c, Long timeStamp )
     {
-        if (k_timeStamp[toIndex(v)] < timeStamp)
-            k[toIndex(v)] = c;
-        else
-            k[toIndex(v)] += c;
-        if (maxk_timeStamp < timeStamp)
-            maxk = k[toIndex(v)];
-        else if (maxk < k[toIndex(v)])
-            maxk = k[toIndex(v)];
+        if(k_timeStamp[toIndex(v)] < timeStamp) k[toIndex(v)] = c;
+        else k[toIndex(v)] += c;
+        if(maxk_timeStamp < timeStamp) maxk = k[toIndex(v)];
+        else if(maxk < k[toIndex(v)]) maxk = k[toIndex(v)];
         maxk_timeStamp = timeStamp;
         k_timeStamp[toIndex(v)] = timeStamp;
     }
 
-    bool isMarked(Value v, Long timeStamp) { return (mark[toIndex(v)] >= timeStamp); }
-    void setMark(Value v, Long timeStamp) { mark[toIndex(v)] = timeStamp; }
+    bool  isMarked( Value v, Long timeStamp ) { return (mark[toIndex(v)] >= timeStamp); }
+    void  setMark( Value v, Long timeStamp )  { mark[toIndex(v)] = timeStamp; }
 
-    int getKiller(Value v) { return killer[toIndex(v)]; }
-    void setKiller(Value v, int i) { killer[toIndex(v)] = i; }
-    void killedOne() { killed = killed + 1; }
+    int   getKiller( Value v ) { return killer[toIndex(v)]; }
+    void  setKiller( Value v, int i ) { killer[toIndex(v)] = i; }
+    void  killedOne() { killed = killed+1; }
 
-    Cost getVACCost(Value v)
+
+    Cost getVACCost( Value v )
     {
         Cost c = getCost(v);
-        if (isNull(c))
-            return MIN_COST;
-        else
-            return c;
+        if(isNull(c)) return MIN_COST;
+        else return c;
     }
 
-    void setThreshold(Cost c) { myThreshold = c; }
-    Cost getThreshold() { return myThreshold; }
+    void setThreshold (Cost c) { myThreshold = c; }
+    Cost getThreshold () { return myThreshold; }
 
     bool isSimplyNull(Cost c);
-    bool isNull(Cost c);
+    bool isNull (Cost c);
 
     void queueVAC();
     void queueSeekSupport();
@@ -117,112 +114,116 @@ public:
     // virtual void project (Value value, Cost cost);
     // virtual void extend (Value value, Cost cost);
     using EnumeratedVariable::increase;
-    virtual void increase(Value newInf);
+    virtual void increase (Value newInf);
     using EnumeratedVariable::decrease;
-    virtual void decrease(Value newSup);
+    virtual void decrease (Value newSup);
 
     void decreaseCost(Value v, Cost c);
     void VACproject(Value v, const Cost c); /**< Increases unary cost and may queue for NC enforcing */
-    void VACextend(Value v, const Cost c); /**< Decreases unary cost and may queue for NC enforcing */
+    void VACextend(Value v, const Cost c);  /**< Decreases unary cost and may queue for NC enforcing */
 
-    bool averaging(); /**< For Min-Sum diffusion */
+    bool averaging();  /**< For Min-Sum diffusion */
 
-    friend ostream& operator<<(ostream& os, VACVariable& v)
+    friend ostream& operator<< (ostream& os, VACVariable &v)
     {
         return os;
     }
     void KilledOne();
 };
 
+
 /**
  * A class that stores information about a binary cost function
  */
-class VACBinaryConstraint : public BinaryConstraint {
+class VACBinaryConstraint : public BinaryConstraint
+{
 
 private:
-    vector<int> kX; /**< The k_XY(X,v) counters: nb. of cost request on X,v by this cost function */
-    vector<int> kY; /**< The k_XY(Y,v) counters: nb. of cost request on Y,v by this cost function */
-    vector<Long> kX_timeStamp;
-    vector<Long> kY_timeStamp;
+
+    vector<int>  kX;             /**< The k_XY(X,v) counters: nb. of cost request on X,v by this cost function */
+    vector<int>  kY;             /**< The k_XY(Y,v) counters: nb. of cost request on Y,v by this cost function */
+    vector<Long>  kX_timeStamp;
+    vector<Long>  kY_timeStamp;
 
     StoreCost myThreshold; /** The local thresold used to break loops */
 
 public:
-    VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
-    VACBinaryConstraint(WCSP* wcsp);
-    ~VACBinaryConstraint();
+
+    VACBinaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, vector<Cost> &tab);
+    VACBinaryConstraint (WCSP *wcsp);
+    ~VACBinaryConstraint ();
 
     void VACfillElimConstr();
 
-    int getK(VACVariable* var, Value v, Long timeStamp);
-    void setK(VACVariable* var, Value v, int c, Long timeStamp);
+    int getK (VACVariable* var, Value v, Long timeStamp);
+    void setK (VACVariable* var, Value v, int c, Long timeStamp);
 
-    void setThreshold(Cost c) { myThreshold = c; }
-    Cost getThreshold() { return myThreshold; }
+    void setThreshold (Cost c) { myThreshold = c; }
+    Cost getThreshold () { return myThreshold; }
 
-    bool isNull(Cost c);
+    bool isNull (Cost c);
 
-    Cost getVACCost(VACVariable* xx, VACVariable* yy, Value v, Value w)
+    Cost getVACCost(VACVariable *xx, VACVariable *yy, Value v, Value w)
     {
         Cost c = getCost(xx, yy, v, w);
-        if (isNull(c))
-            return MIN_COST;
-        else
-            return c;
+        if(isNull(c)) return MIN_COST;
+        else return c;
     }
     void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
-    void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
+    void VACextend (VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
 
-    bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
+    bool revise (VACVariable* var, Value v);  /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
-    friend ostream& operator<<(ostream& os, VACBinaryConstraint& c)
+    friend ostream& operator<< (ostream& os, VACBinaryConstraint &c)
     {
         return os;
     }
 };
 
+
 /**
  * A class that stores information about a ternary cost function
  */
-class VACTernaryConstraint : public TernaryConstraint {
+class VACTernaryConstraint : public TernaryConstraint
+{
 
 private:
-    vector<int> kX; /**< The k_XYZ(X,v) counters: nb. of cost request on X,v by this cost function */
-    vector<int> kY; /**< The k_XYZ(Y,v) counters: nb. of cost request on Y,v by this cost function */
-    vector<int> kZ; /**< The k_XYZ(Z,v) counters: nb. of cost request on Z,v by this cost function */
-    vector<Long> kX_timeStamp;
-    vector<Long> kY_timeStamp;
-    vector<Long> kZ_timeStamp;
+
+    vector<int>  kX;             /**< The k_XYZ(X,v) counters: nb. of cost request on X,v by this cost function */
+    vector<int>  kY;             /**< The k_XYZ(Y,v) counters: nb. of cost request on Y,v by this cost function */
+    vector<int>  kZ;             /**< The k_XYZ(Z,v) counters: nb. of cost request on Z,v by this cost function */
+    vector<Long>  kX_timeStamp;
+    vector<Long>  kY_timeStamp;
+    vector<Long>  kZ_timeStamp;
 
     StoreCost myThreshold; /** The local thresold used to break loops */
 
 public:
-    VACTernaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz, vector<Cost>& tab);
-    VACTernaryConstraint(WCSP* wcsp);
-    ~VACTernaryConstraint();
 
-    int getK(VACVariable* var, Value v, Long timeStamp);
-    void setK(VACVariable* var, Value v, int c, Long timeStamp);
+    VACTernaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, EnumeratedVariable *zz, BinaryConstraint *xy, BinaryConstraint *xz, BinaryConstraint *yz, vector<Cost> &tab);
+    VACTernaryConstraint (WCSP *wcsp);
+    ~VACTernaryConstraint ();
 
-    void setThreshold(Cost c) { myThreshold = c; }
-    Cost getThreshold() { return myThreshold; }
+    int getK (VACVariable* var, Value v, Long timeStamp);
+    void setK (VACVariable* var, Value v, int c, Long timeStamp);
 
-    bool isNull(Cost c);
+    void setThreshold (Cost c) { myThreshold = c; }
+    Cost getThreshold () { return myThreshold; }
 
-    Cost getVACCost(VACVariable* xx, VACVariable* yy, VACVariable* zz, Value u, Value v, Value w)
+    bool isNull (Cost c);
+
+    Cost getVACCost(VACVariable *xx, VACVariable *yy, VACVariable *zz, Value u, Value v, Value w)
     {
         Cost c = getCost(xx, yy, zz, u, v, w);
-        if (isNull(c))
-            return MIN_COST;
-        else
-            return c;
+        if(isNull(c)) return MIN_COST;
+        else return c;
     }
     void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
-    void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
+    void VACextend (VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
 
-    bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
+    bool revise (VACVariable* var, Value v);  /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
-    friend ostream& operator<<(ostream& os, VACTernaryConstraint& c)
+    friend ostream& operator<< (ostream& os, VACTernaryConstraint &c)
     {
         return os;
     }
@@ -236,3 +237,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+
