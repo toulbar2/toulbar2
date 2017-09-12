@@ -3,12 +3,12 @@
  *
  */
 
-#include "toulbar2lib.hpp"
 #include "tb2bep.hpp"
+#include "toulbar2lib.hpp"
 
 const bool BAC = true;
 
-void BEP::read(const char *fileName, WCSP *wcsp)
+void BEP::read(const char* fileName, WCSP* wcsp)
 {
     Cost top = MIN_COST;
 
@@ -56,7 +56,8 @@ void BEP::read(const char *fileName, WCSP *wcsp)
     for (int i = 0; i < size; i++) {
         string varname = "t";
         varname += to_string(i + 1);
-        if (BAC) wcsp->makeIntervalVariable(varname, earliest[i], latest[i] + 1);
+        if (BAC)
+            wcsp->makeIntervalVariable(varname, earliest[i], latest[i] + 1);
         else {
             wcsp->makeEnumeratedVariable(varname, 0, latest[i] + 1);
             wcsp->increase(i, earliest[i]);
@@ -72,10 +73,14 @@ void BEP::read(const char *fileName, WCSP *wcsp)
                 vector<Cost> costs((latest[i] + 2) * (latest[j] + 2), 0);
                 for (int a = earliest[i]; a <= latest[i] + 1; a++) {
                     for (int b = earliest[j]; b <= latest[j] + 1; b++) {
-                        if (a > latest[i] && b > latest[j]) costs[a * (latest[j] + 2) + b] = revenue[i] + revenue[j];
-                        else if (a > latest[i]) costs[a * (latest[j] + 2) + b] = revenue[i];
-                        else if (b > latest[j]) costs[a * (latest[j] + 2) + b] = revenue[j];
-                        else costs[a * (latest[j] + 2) + b] = (((a >= b + duration[j] + delay[j * size + i]) || (b >= a + duration[i] + delay[i * size + j])) ? 0 : wcsp->getUb() * MEDIUM_COST);
+                        if (a > latest[i] && b > latest[j])
+                            costs[a * (latest[j] + 2) + b] = revenue[i] + revenue[j];
+                        else if (a > latest[i])
+                            costs[a * (latest[j] + 2) + b] = revenue[i];
+                        else if (b > latest[j])
+                            costs[a * (latest[j] + 2) + b] = revenue[j];
+                        else
+                            costs[a * (latest[j] + 2) + b] = (((a >= b + duration[j] + delay[j * size + i]) || (b >= a + duration[i] + delay[i * size + j])) ? 0 : wcsp->getUb() * MEDIUM_COST);
                     }
                 }
                 wcsp->postBinaryConstraint(i, j, costs);
@@ -89,7 +94,7 @@ void BEP::read(const char *fileName, WCSP *wcsp)
     }
 }
 
-void BEP::printSolution(WCSP *wcsp)
+void BEP::printSolution(WCSP* wcsp)
 {
     cout << "Id \t\tRev\t\tTime\t\tMin\t\tMax\t\tDuration\tDelay\t\tSlack" << endl;
     int cost = 0;
@@ -111,14 +116,17 @@ void BEP::printSolution(WCSP *wcsp)
                 cout << "\t\t" << ToulBar2::bep->delay[lastcurr * ToulBar2::bep->size + curr];
                 int slack = time - max(ToulBar2::bep->earliest[curr], (lasttime + ToulBar2::bep->duration[lastcurr] + ToulBar2::bep->delay[lastcurr * ToulBar2::bep->size + curr]));
                 cout << "\t\t" << slack;
-                if (slack < 0) cout << " " << "**********";
+                if (slack < 0)
+                    cout << " "
+                         << "**********";
             }
             cout << endl;
             cost += ToulBar2::bep->revenue[curr];
             nbphotos++;
             lasttime = time;
             lastcurr = curr;
-        } else break;
+        } else
+            break;
     }
     cout << "Gain = " << cost << "\t\tNbPhotos = " << nbphotos << endl;
 }
@@ -129,4 +137,3 @@ void BEP::printSolution(WCSP *wcsp)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

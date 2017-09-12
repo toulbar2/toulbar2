@@ -1,8 +1,8 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<iostream>
-#include<vector>
 #include "tb2trie.hpp"
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
 
 using namespace std;
 
@@ -170,7 +170,7 @@ bool TrieCpd::present(char aa)
 
 void TrieCpd::insert(char aa)
 {
-    TrieCpd *son = new TrieCpd();
+    TrieCpd* son = new TrieCpd();
     sons[aa2int(aa)] = son;
 }
 
@@ -212,6 +212,6 @@ void TrieCpd::print_tree(string acc)
     }
     if (leaf) {
         total_sequences++;
-        cout << acc << " min cost: " << minc << " max cost: " << maxc  << " this sequence occured " << sequence_count << " times" << endl;
+        cout << acc << " min cost: " << minc << " max cost: " << maxc << " this sequence occured " << sequence_count << " times" << endl;
     }
 }

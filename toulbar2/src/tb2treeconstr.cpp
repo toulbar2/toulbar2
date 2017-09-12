@@ -1,19 +1,22 @@
 #include "tb2treeconstr.hpp"
-#include <vector>
-#include <map>
 #include <fstream>
-#include <string>
+#include <map>
 #include <stack>
+#include <string>
+#include <vector>
 
 #include <algorithm>
 
 using namespace std;
 
-TreeConstraint::TreeConstraint(WCSP *wcsp, EnumeratedVariable **scope, int arity) : DPGlobalConstraint(wcsp, scope, arity),
-    curTreeCost(0), minTreeEdgeCost(0), maxTreeEdgeCost(0), ccTreeRoot(NULL)
+TreeConstraint::TreeConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
+    : DPGlobalConstraint(wcsp, scope, arity)
+    , curTreeCost(0)
+    , minTreeEdgeCost(0)
+    , maxTreeEdgeCost(0)
+    , ccTreeRoot(NULL)
 {
 }
-
 
 TreeConstraint::~TreeConstraint(void) {}
 
@@ -27,10 +30,11 @@ void TreeConstraint::initMemoization()
     int n = arity();
 
     for (int i = 0; i < n; i++) {
-        EnumeratedVariable *x = scope[i];
+        EnumeratedVariable* x = scope[i];
         int varId = -1;
-        for (int j = 0; j < (int) wcsp->numberOfVariables() && varId == -1; j++) {
-            if (getVar(j) == x) varId = j;
+        for (int j = 0; j < (int)wcsp->numberOfVariables() && varId == -1; j++) {
+            if (getVar(j) == x)
+                varId = j;
         }
         if (varId < 0) {
             cerr << "variable " << x->getName() << " not found" << endl;
@@ -43,7 +47,7 @@ void TreeConstraint::initMemoization()
     }
 
     for (int i = 0; i < n; i++) {
-        EnumeratedVariable *x = scope[i];
+        EnumeratedVariable* x = scope[i];
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             if (val2VarIndex.find(*it) == val2VarIndex.end()) {
                 cerr << "Error invalid MST()" << endl;
@@ -53,12 +57,12 @@ void TreeConstraint::initMemoization()
     }
 
     p.resize(n);
-
 }
 
 Cost TreeConstraint::minCostOriginal()
 {
-    if (curTreeCost >= wcsp->getUb()) return wcsp->getUb();
+    if (curTreeCost >= wcsp->getUb())
+        return wcsp->getUb();
     return 0;
 }
 
@@ -68,14 +72,14 @@ Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost TreeConstraint::eval(const String &s)
+Cost TreeConstraint::eval(const String& s)
 {
 
     int n = arity();
     int root = -1;
     int nRoot = 0;
 
-    vector<vector<int> > edgeList;
+    vector<vector<int>> edgeList;
     edgeList.resize(n);
 
     for (int i = 0; i < n; i++) {
@@ -88,7 +92,8 @@ Cost TreeConstraint::eval(const String &s)
         }
     }
 
-    if (nRoot != 1) return wcsp->getUb();
+    if (nRoot != 1)
+        return wcsp->getUb();
 
     bool isLoopBack = false;
 
@@ -112,30 +117,32 @@ Cost TreeConstraint::eval(const String &s)
         }
     }
 
-    if (isLoopBack) return wcsp->getUb();
+    if (isLoopBack)
+        return wcsp->getUb();
 
     bool allvisit = true;
     for (int i = 0; i < n; i++) {
-        if (!visited[i]) allvisit = false;
+        if (!visited[i])
+            allvisit = false;
     }
 
-    if (!allvisit) return wcsp->getUb();
+    if (!allvisit)
+        return wcsp->getUb();
 
     return 0;
-
 }
 
 DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool changed)
 {
 
-    if (changed) curTreeCost = recomputeCurMST();
+    if (changed)
+        curTreeCost = recomputeCurMST();
 
     bool consistent = true;
     if (curTreeCost >= wcsp->getUb()) {
         consistent = false;
-    } else if (treeEdge.find(make_pair(var, val2VarIndex[val])) == treeEdge.end() &&
-               treeEdge.find(make_pair(val2VarIndex[val], var)) == treeEdge.end()) {
-        EnumeratedVariable *x = scope[var];
+    } else if (treeEdge.find(make_pair(var, val2VarIndex[val])) == treeEdge.end() && treeEdge.find(make_pair(val2VarIndex[val], var)) == treeEdge.end()) {
+        EnumeratedVariable* x = scope[var];
         if (x->getCost(val) + curTreeCost - maxTreeEdgeCost > wcsp->getUb()) {
             consistent = false;
         } else if (x->getCost(val) + curTreeCost - minTreeEdgeCost > wcsp->getUb()) {
@@ -143,7 +150,8 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
             int v = val2VarIndex[val];
             CCTreeNodePtr lca = ((pos[u] < pos[v]) ? inorder[RMQ.query(pos[u], pos[v])] : inorder[RMQ.query(pos[v], pos[u])]);
             int maxWeight = lca->weight;
-            if (x->getCost(val) + curTreeCost - maxWeight > wcsp->getUb()) consistent = false;
+            if (x->getCost(val) + curTreeCost - maxWeight > wcsp->getUb())
+                consistent = false;
         }
     }
 
@@ -151,16 +159,14 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
         return DPGlobalConstraint::Result(0, NULL);
     else
         return DPGlobalConstraint::Result(wcsp->getUb(), NULL);
-
 }
-
 
 int TreeConstraint::recomputeCurMST()
 {
     int n = arity();
     vector<Edge> edgeList;
     for (int i = 0; i < n; i++) {
-        EnumeratedVariable *x = scope[i];
+        EnumeratedVariable* x = scope[i];
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             if (i != val2VarIndex[*it]) {
                 edgeList.push_back(Edge(val2VarIndex[*it], i, x->getCost(*it)));
@@ -170,7 +176,7 @@ int TreeConstraint::recomputeCurMST()
     return recomputeMST(edgeList);
 }
 
-int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
+int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge>& edgeList)
 {
 
     int n = arity();
@@ -201,8 +207,10 @@ int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
         if (findParent(e->u, p) != findParent(e->v, p)) {
             unionSet(e->u, e->v, p);
             treeCost += e->weight;
-            if (minTreeEdgeCost > e->weight) minTreeEdgeCost = e->weight;
-            if (maxTreeEdgeCost < e->weight) maxTreeEdgeCost = e->weight;
+            if (minTreeEdgeCost > e->weight)
+                minTreeEdgeCost = e->weight;
+            if (maxTreeEdgeCost < e->weight)
+                maxTreeEdgeCost = e->weight;
             treeEdge.insert(make_pair(e->u, e->v));
             joinCCTrees(e->u, e->v, e->weight);
         }
@@ -210,12 +218,15 @@ int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
 
     int root = findParent(0, p);
     for (int i = 1; i < n; i++) {
-        if (findParent(i, p) != root) {treeCost = wcsp->getUb();}
+        if (findParent(i, p) != root) {
+            treeCost = wcsp->getUb();
+        }
     }
 
     if (treeCost < wcsp->getUb()) {
         for (vector<CCTreeNodePtr>::iterator it = ccTree.begin(); it != ccTree.end(); it++) {
-            if ((*it)->parent == PtrNULL()) ccTreeRoot = *it;
+            if ((*it)->parent == PtrNULL())
+                ccTreeRoot = *it;
         }
         InorderTransveral(ccTreeRoot);
         pos.resize(ccTree.size());
@@ -228,13 +239,14 @@ int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge> &edgeList)
     return treeCost;
 }
 
-int TreeConstraint::findParent(int index, vector<int> &p)
+int TreeConstraint::findParent(int index, vector<int>& p)
 {
-    while (index != p[index]) index = p[index];
+    while (index != p[index])
+        index = p[index];
     return index;
 }
 
-void TreeConstraint::unionSet(int u, int v, vector<int> &p)
+void TreeConstraint::unionSet(int u, int v, vector<int>& p)
 {
     int uRoot = findParent(u, p);
     int vRoot = findParent(v, p);
@@ -261,14 +273,15 @@ void TreeConstraint::joinCCTrees(int u, int v, Cost weight)
     vRoot->parent = newRootNode;
 
     ccTree.push_back(newRootNode);
-
 }
 
 TreeConstraint::CCTreeNodePtr TreeConstraint::findRoot(TreeConstraint::CCTreeNodePtr node)
 {
 
-    if (node->parent == PtrNULL()) return node;
-    if (node->parent == node) return node;
+    if (node->parent == PtrNULL())
+        return node;
+    if (node->parent == node)
+        return node;
     CCTreeNodePtr parent = findRoot(node->parent);
     node->parent = parent;
     return parent;
@@ -293,14 +306,17 @@ TreeConstraint::CCTreeNodePtr TreeConstraint::createNewNode()
     return &(nodeStore.back());
 }
 
-void TreeConstraint::dump(ostream &os, bool original)
+void TreeConstraint::dump(ostream& os, bool original)
 {
     if (original) {
         os << arity_;
-        for (int i = 0; i < arity_; i++) os << " " << scope[i]->wcspIndex;
+        for (int i = 0; i < arity_; i++)
+            os << " " << scope[i]->wcspIndex;
     } else {
         os << nonassigned;
-        for (int i = 0; i < arity_; i++) if (scope[i]->unassigned()) os << " " << scope[i]->getCurrentVarId();
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned())
+                os << " " << scope[i]->getCurrentVarId();
     }
     os << " -1 smstdp" << endl;
 }
@@ -311,4 +327,3 @@ void TreeConstraint::dump(ostream &os, bool original)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

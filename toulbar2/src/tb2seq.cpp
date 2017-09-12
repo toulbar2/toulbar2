@@ -1,6 +1,6 @@
+#include "tb2seq.hpp"
 #include <iostream>
 #include <vector>
-#include "tb2seq.hpp"
 
 using namespace std;
 
@@ -16,10 +16,10 @@ Seq::Seq(string fname)
     }
 }
 
-void Seq::generate_mask(vector < vector < char > > rots)
+void Seq::generate_mask(vector<vector<char>> rots)
 {
 
-    vector < bool > varmask;
+    vector<bool> varmask;
     if (rots.size() == sequence.size()) {
         for (size_t i = 0; i < sequence.size(); i++) {
             for (size_t j = 0; j < rots[i].size(); j++) {
@@ -37,12 +37,13 @@ void Seq::generate_mask(vector < vector < char > > rots)
     }
 }
 
-void Seq::mask_variable(vector< vector<Cost> > m_cost)
+void Seq::mask_variable(vector<vector<Cost>> m_cost)
 {
 
     for (size_t i = 0; i < m_cost.size(); i++) {
         for (size_t j = 0; j < m_cost[i].size(); j++) {
-            if (!mask[i][j]) cout << "Switching : " << m_cost[i][j] << " to TOP" << endl;
+            if (!mask[i][j])
+                cout << "Switching : " << m_cost[i][j] << " to TOP" << endl;
         }
     }
 }
@@ -51,8 +52,8 @@ void Seq::show_mask()
 {
     for (size_t i = 0; i < mask.size(); i++) {
         for (size_t j = 0; j < mask[i].size(); j++) {
-            cout << mask[i][j] << " " ;
+            cout << mask[i][j] << " ";
         }
-        cout<<endl;
+        cout << endl;
     }
 }

@@ -30,8 +30,8 @@
 // uncomment if using large enumerated domains with BTD or in nary cost functions
 //#define WIDE_STRING
 
-#include "tb2utils.hpp"
 #include "tb2integer.hpp"
+#include "tb2utils.hpp"
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
@@ -57,22 +57,36 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline bool Add(Cost a, Cost b, Cost *c) {return __builtin_sadd_overflow(a,b,c);}
-inline bool Sub(Cost a, Cost b, Cost *c) {return __builtin_ssub_overflow(a,b,c);}
-inline bool Mul(Cost a, Cost b, Cost *c) {return __builtin_smul_overflow(a,b,c);}
-inline Cost MIN(Cost a, Cost b) {return min(a,b);}
-inline Cost MAX(Cost a, Cost b) {return max(a,b);}
-inline Cost GLB(Cost a, Cost b) {return MIN(a,b);}
-inline Cost LUB(Cost a, Cost b) {return MAX(a,b);}
-inline bool GLB(Cost *a, Cost b) {if (b < *a) {*a = b; return true;} else return false;}
-inline bool LUB(Cost *a, Cost b) {if (b > *a) {*a = b; return true;} else return false;}
-inline bool GLBTEST(Cost a, Cost b) {return (b < a);}
-inline bool LUBTEST(Cost a, Cost b) {return (b > a);}
-inline bool DACTEST(Cost a, Cost b) {return (a == 0 && b > 0);}
-inline bool SUPPORTTEST(Cost a, Cost b) {return false;}
-inline bool SUPPORTTEST(Cost a) {return false;}
-inline bool CUT(Cost lb, Cost ub) {return lb >= ub;}
-inline bool CSP(Cost lb, Cost ub) {return (ub - lb) <= 1;}
+inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
+inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
+inline bool GLB(Cost* a, Cost b)
+{
+    if (b < *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool LUB(Cost* a, Cost b)
+{
+    if (b > *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool GLBTEST(Cost a, Cost b) { return (b < a); }
+inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
+inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
+inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
+inline bool SUPPORTTEST(Cost a) { return false; }
+inline bool CUT(Cost lb, Cost ub) { return lb >= ub; }
+inline bool CSP(Cost lb, Cost ub) { return (ub - lb) <= 1; }
 inline void initCosts(Cost ub) {}
 #endif
 
@@ -85,22 +99,36 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline bool Add(Cost a, Cost b, Cost *c) {return __builtin_saddll_overflow(a,b,c);}
-inline bool Sub(Cost a, Cost b, Cost *c) {return __builtin_ssubll_overflow(a,b,c);}
-inline bool Mul(Cost a, Cost b, Cost *c) {return __builtin_smulll_overflow(a,b,c);}
+inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddll_overflow(a, b, c); }
+inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubll_overflow(a, b, c); }
+inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smulll_overflow(a, b, c); }
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
 inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
-inline bool GLB(Cost *a, Cost b) { if (b < *a) {*a = b;	return true;} else return false;}
-inline bool LUB(Cost *a, Cost b) { if (b > *a) {*a = b; return true;} else return false;}
+inline bool GLB(Cost* a, Cost b)
+{
+    if (b < *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool LUB(Cost* a, Cost b)
+{
+    if (b > *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
 inline bool GLBTEST(Cost a, Cost b) { return (b < a); }
 inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
 inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
 inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
-inline bool CUT(Cost lb, Cost ub) {	return lb >= ub; }
-inline bool CSP(Cost lb, Cost ub) {	return (ub - lb) <= 1; }
+inline bool CUT(Cost lb, Cost ub) { return lb >= ub; }
+inline bool CSP(Cost lb, Cost ub) { return (ub - lb) <= 1; }
 inline void initCosts(Cost ub) {}
 #endif
 
@@ -125,7 +153,6 @@ typedef double TLogProb;
 typedef Double TProb;
 typedef Double TLogProb;
 #endif
-
 
 //~ typedef __float128 TProb;
 //~ typedef __float128 TLogProb;
@@ -154,9 +181,8 @@ typedef Double TLogProb;
 //~ inline __float128 my_Log10( __float128 x ){return log10q( x );}
 //~ inline __float128 my_Log1p( __float128 x ){return log1pq( x );}
 
-
 const int STORE_SIZE = 16;
-#define INTEGERBITS (8*sizeof(Cost)-2)
+#define INTEGERBITS (8 * sizeof(Cost) - 2)
 
 const int MAX_ELIM_BIN = 1000000000;
 const int MAX_ARITY = 1000;
@@ -178,22 +204,31 @@ typedef map<int, Value> TAssign;
  */
 
 // A value with weight
-template<class Object>
+template <class Object>
 struct WeightedObj {
     Object val;
     Cost weight;
 
-    WeightedObj(const Object &val_, Cost weight_ = MIN_COST) : val(val_), weight(weight_) {}
+    WeightedObj(const Object& val_, Cost weight_ = MIN_COST)
+        : val(val_)
+        , weight(weight_)
+    {
+    }
 };
 
 // A value with upper and lower limit
-template<class Object>
+template <class Object>
 struct BoundedObj {
     Object val;
     unsigned int upper;
     unsigned int lower;
 
-    BoundedObj(const Object &val_, unsigned int upper_, unsigned int lower_ = 0) : val(val_), upper(upper_), lower(lower_) {}
+    BoundedObj(const Object& val_, unsigned int upper_, unsigned int lower_ = 0)
+        : val(val_)
+        , upper(upper_)
+        , lower(lower_)
+    {
+    }
 };
 
 // A transition in DFA
@@ -204,8 +239,12 @@ struct DFATransition {
     unsigned int weight;
 
     DFATransition(int start_, Value symbol_, int end_, Cost weight_ = MIN_COST)
-        : start(start_), end(end_), symbol(symbol_), weight(weight_) {}
-
+        : start(start_)
+        , end(end_)
+        , symbol(symbol_)
+        , weight(weight_)
+    {
+    }
 };
 
 // A production rule in CFG
@@ -213,8 +252,7 @@ struct CFGProductionRule {
     int from;
     unsigned int weight;
     int order;
-    int *to;
-
+    int* to;
 };
 
 // A variable-value pair with weight
@@ -229,13 +267,17 @@ struct WeightedVarValPair {
  *
  */
 
-typedef void (*externalevent)(int wcspId, int varIndex, Value value, void *solver);
-typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost, void *solver);
-typedef void (*externalsolution)(int wcspId, void *solver);
+typedef void (*externalevent)(int wcspId, int varIndex, Value value, void* solver);
+typedef void (*externalcostevent)(int wcspId, int varIndex, Cost cost, void* solver);
+typedef void (*externalsolution)(int wcspId, void* solver);
 typedef void (*externalfunc)();
 
 typedef enum {
-    ELIM_NONE = 0, MAX_CARD = 1, MIN_FILL = 2, MIN_DEGREE = 3, ELIM_MAX
+    ELIM_NONE = 0,
+    MAX_CARD = 1,
+    MIN_FILL = 2,
+    MIN_DEGREE = 3,
+    ELIM_MAX
 } ElimOrderType;
 
 class Seq;
@@ -259,14 +301,13 @@ typedef enum {
 struct ValueCost {
     Value value;
     Cost cost;
-    friend bool operator<(const ValueCost &u, const ValueCost &v) {return u.cost < v.cost;}
-    friend bool operator>(const ValueCost &u, const ValueCost &v) {return u.cost > v.cost;}
-    friend bool operator==(const ValueCost &u, const ValueCost &v) {return u.cost == v.cost;}
+    friend bool operator<(const ValueCost& u, const ValueCost& v) { return u.cost < v.cost; }
+    friend bool operator>(const ValueCost& u, const ValueCost& v) { return u.cost > v.cost; }
+    friend bool operator==(const ValueCost& u, const ValueCost& v) { return u.cost == v.cost; }
 };
 
 ///contains all global variables (mainly solver's command-line options)
-class ToulBar2
-{
+class ToulBar2 {
 protected:
     virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
 public:
@@ -274,7 +315,7 @@ public:
     static int verbose;
     static int debug;
     static bool showSolutions;
-    static char *writeSolution;
+    static char* writeSolution;
     static FILE* solutionFile;
     static Long allSolutions;
     static int dumpWCSP;
@@ -283,7 +324,7 @@ public:
     static int dichotomicBranching;
     static unsigned int dichotomicBranchingSize;
     static bool sortDomains;
-    static map<int, ValueCost *> sortedDomains;
+    static map<int, ValueCost*> sortedDomains;
     static int elimDegree;
     static int elimDegree_preprocessing;
     static int elimDegree_;
@@ -296,7 +337,7 @@ public:
     static bool costfuncSeparate;
     static int preprocessNary;
     static bool QueueComplexity;
-    static bool Static_variable_ordering;// flag for static variable ordering during search (dynamic ordering is default value)
+    static bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
     static bool lastConflict;
     static int weightedDegree;
     static int weightedTightness;
@@ -313,10 +354,10 @@ public:
     static externalevent removevalue;
     static externalcostevent setminobj;
     static externalsolution newsolution;
-    static Pedigree *pedigree;
-    static Haplotype *haplotype;
-    static Cpd *cpd;
-    static Tb2ScpBranch *scpbranch;
+    static Pedigree* pedigree;
+    static Haplotype* haplotype;
+    static Cpd* cpd;
+    static Tb2ScpBranch* scpbranch;
     static string map_file;
     static bool bayesian;
     static int uai;
@@ -337,12 +378,12 @@ public:
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;
     static bool vacValueHeuristic;
-    static BEP *bep;
+    static BEP* bep;
     static LcLevelType LcLevel;
     static bool wcnf;
     static bool qpbo;
 
-    static char *varOrder;
+    static char* varOrder;
     static int btdMode;
     static int btdSubTree;
     static int btdRootCluster;
@@ -360,7 +401,7 @@ public:
     static int isZUB;
     static bool stop; // STOP TB2 (TMP way)
     static bool isGumbel;
-    static Seq *seq;
+    static Seq* seq;
     static TLogProb logZ;
     static TLogProb Entropy;
     static TLogProb Enthalpy;
@@ -369,7 +410,7 @@ public:
     static TLogProb logU; // upper bound on rejected potentials
     static TLogProb logepsilon; // epsilon for Z* pruning
     static TProb sigma; // sigma set for HBFS-Counting
-    static TrieNum *trieZ; // Trie over preprocessing Optimum Energies
+    static TrieNum* trieZ; // Trie over preprocessing Optimum Energies
     static string Trie_File;
     static bool isTrie_File;
 
@@ -413,10 +454,9 @@ public:
 
 #ifdef ILOGLUE
 extern IloSolver IlogSolver;
-#define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0);})
+#define THROWCONTRADICTION ({if (ToulBar2::verbose >= 2) cout << "... contradiction!" << endl; if (ToulBar2::weightedDegree) conflict(); IlogSolver.fail(0); })
 #else
-class Contradiction
-{
+class Contradiction {
 public:
     Contradiction()
     {
@@ -424,7 +464,12 @@ public:
             cout << "... contradiction!" << endl;
     }
 };
-#define THROWCONTRADICTION {if (ToulBar2::weightedDegree) conflict(); throw Contradiction();}
+#define THROWCONTRADICTION            \
+    {                                 \
+        if (ToulBar2::weightedDegree) \
+            conflict();               \
+        throw Contradiction();        \
+    }
 #endif
 
 /*
@@ -447,43 +492,48 @@ class Cluster;
 class Separator;
 class TreeDecomposition;
 
-class ConstraintLink
-{
+class ConstraintLink {
 public:
-    Constraint *constr;
+    Constraint* constr;
     int scopeIndex;
 };
 
-class WCSPLink
-{
+class WCSPLink {
 public:
-    WCSP *const wcsp;
+    WCSP* const wcsp;
     int wcspIndex;
-    WCSPLink(WCSP *w, int index) :
-        wcsp(w), wcspIndex(index)
+    WCSPLink(WCSP* w, int index)
+        : wcsp(w)
+        , wcspIndex(index)
     {
     }
 };
 
 /// < \brief allows to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
-template<class T> bool compareWCSPIndex(const T *lhs, const T *rhs)
+template <class T>
+bool compareWCSPIndex(const T* lhs, const T* rhs)
 {
     assert(lhs);
     assert(rhs);
     int left = lhs->wcspIndex;
     int right = rhs->wcspIndex;
-    if (left < 0) left = MAX_ELIM_BIN - left;   // makes elimTernConstraints after elimBinConstraints after original constraints
-    if (right < 0) right = MAX_ELIM_BIN - right;
+    if (left < 0)
+        left = MAX_ELIM_BIN - left; // makes elimTernConstraints after elimBinConstraints after original constraints
+    if (right < 0)
+        right = MAX_ELIM_BIN - right;
     return left < right;
 }
-template<class T>
+template <class T>
 struct Compare {
-    typedef bool (*compare_t)(const T *, const T *);
+    typedef bool (*compare_t)(const T*, const T*);
 };
-template<class T> class Set : public set<T *, typename Compare<T>::compare_t  >
-{
+template <class T>
+class Set : public set<T*, typename Compare<T>::compare_t> {
 public:
-    Set() : set<T *, typename Compare<T>::compare_t >(compareWCSPIndex<T>) {}
+    Set()
+        : set<T*, typename Compare<T>::compare_t>(compareWCSPIndex<T>)
+    {
+    }
 };
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
@@ -496,4 +546,3 @@ typedef Set<Variable> VariableSet;
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
