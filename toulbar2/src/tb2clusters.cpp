@@ -1452,28 +1452,42 @@ void TreeDecomposition::makeRootedRec(Cluster *c,  TClusters &visited)
 int TreeDecomposition::makeRooted()
 {
     TClusters visited;
-    roots.clear();
-    Cluster *root;
+    bool isalreadyrooted = (roots.size()>0);
+    Cluster* root = NULL;
+    list<Cluster *> temproots;
+    if (isalreadyrooted) {
+        temproots = roots;
+    }
 
     bool selected = false;
     while (visited.size() < clusters.size()) {
+        if (isalreadyrooted) {
+            if (temproots.size() > 0) {
+                root = temproots.front();
+                temproots.pop_front();
+            } else {
+                //Error, some clusters are missing in the decomposition tree
+                cerr << "Input tree decomposition file is not valid! (may-be cycles within cluster parents)" << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else {
         if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)clusters.size()) {
             root = getCluster(ToulBar2::btdRootCluster);
             selected = true;
         } else root = getBiggerCluster(visited);
-
         roots.push_back(root);
-        visited.insert(root);
         while (reduceHeight(root, NULL));
         if (ToulBar2::splitClusterMaxSize >= 1) splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
         if (ToulBar2::maxSeparatorSize >= 0 || ToulBar2::minProperVarSize >= 2) mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
         if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1) boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
         while (reduceHeight(root, NULL));
+        }
+        visited.insert(root);
         makeRootedRec(root, visited);
         makeDescendants(root);
     }
 
-    // if it is a forest
+    // if it is a forest then create a unique meta-root cluster with empty separators with its children
     if (roots.size() > 1) {
         root = new Cluster(this);
         root->setId(clusters.size());
@@ -1538,6 +1552,7 @@ void TreeDecomposition::buildFromCovering(string filename)
         }
     }
     clusters.clear();
+    roots.clear();
 
     map<int, int> clusterIds;
     int nbclusters = 0;
@@ -1576,6 +1591,8 @@ void TreeDecomposition::buildFromCovering(string filename)
         if (num_parent >= 0) {
             C->addEdge(clusters[clusterIds[num_parent]]);
             clusters[clusterIds[num_parent]]->addEdge(C);
+        } else {
+            roots.push_back(C);
         }
 
         for (TVars::iterator iter = C->getVars().begin(); iter != C->getVars().end(); iter++) {
@@ -1601,14 +1618,13 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     // buildFromOrderNext(order);
     // if (ToulBar2::btdMode == 3) pathFusions(order); // bug: it assumes cluster.size() == order.size()
-    // else treeFusions(); // we assume there is no cluster included into another
+    // else treeFusions(); // we assume there is no cluster separator included into another cluster separator in the input tree decomposition
 
     for (unsigned int i = 0; i < clusters.size(); i++) {
         Cluster *c = clusters[i];
         if (c) c->getDescendants().clear();
     }
 
-    if (ToulBar2::btdRootCluster == -1) ToulBar2::btdRootCluster = 0;
     int h = makeRooted();
 
     if (ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
@@ -1862,6 +1878,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int> &order)
         c->getDescendants().clear();
     }
 
+    roots.clear();
     int h = makeRooted();
     if (ToulBar2::verbose >= 0) cout << "Tree decomposition height : " << h << endl;
     if (!ToulBar2::approximateCountingBTD) {
@@ -2096,7 +2113,7 @@ void TreeDecomposition::newSolution(Cost lb)
     wcsp->restoreSolution(root);
     root->getSolution(a);
 
-    if (ToulBar2::elimDegree > 0 && root->getNbVars() == 0) {
+    if ((ToulBar2::elimDegree>0 || ToulBar2::elimDegree_preprocessing>0 || ToulBar2::preprocessFunctional>0) && root->getNbVars() == 0) {
         // recorded solutions in clusters containing a single variable eliminated in preprocessing may be wrong due to variable elimination in preprocessing; must be recovered after complete assignment and restoreSolution
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->enumerated(i)) {
@@ -2111,15 +2128,10 @@ void TreeDecomposition::newSolution(Cost lb)
             }
         }
     }
-    if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution(&a);
+    if (!ToulBar2::isZ) wcsp->setSolution(&a);
 
     if (ToulBar2::showSolutions) {
-        TAssign::iterator it = a.begin();
-        while (it != a.end()) {
-            Value v = it->second;
-            cout << v << " ";
-            ++it;
-        }
+        wcsp->printSolution(cout);
         cout << endl;
         if (ToulBar2::cpd) {
             ToulBar2::cpd->printSequence(a);
@@ -2127,19 +2139,10 @@ void TreeDecomposition::newSolution(Cost lb)
     }
 
     if (ToulBar2::writeSolution) {
-        ofstream file(ToulBar2::writeSolution);
-        if (!file) {
-            cerr << "Could not write file " << "solution" << endl;
-            exit(EXIT_FAILURE);
-        }
-        TAssign::iterator it = a.begin();
-        while (it != a.end()) {
-            Value v = it->second;
-            file << v << " ";
-            ++it;
-        }
-        file << endl;
+        wcsp->printSolution(ToulBar2::solutionFile);
+        fprintf(ToulBar2::solutionFile,"\n");
     }
+
     if (ToulBar2::maxsateval) {
         cout << "o " << lb << endl;
     }

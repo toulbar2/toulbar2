@@ -36,6 +36,7 @@
 #include "tb2grammarconstr.hpp"
 #include "tb2treeconstr.hpp"
 #include "tb2maxconstr.hpp"
+#include "tb2clause.hpp"
 
 #include <algorithm>
 
@@ -56,6 +57,7 @@ int ToulBar2::verbose;
 int ToulBar2::debug;
 bool ToulBar2::showSolutions;
 char *ToulBar2::writeSolution;
+FILE *ToulBar2::solutionFile;
 Long ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
 bool ToulBar2::approximateCountingBTD;
@@ -204,6 +206,7 @@ void tb2init()
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
+    ToulBar2::solutionFile = NULL;
     ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;
     ToulBar2::approximateCountingBTD = false;
@@ -230,7 +233,7 @@ void tb2init()
     ToulBar2::minsumDiffusion = 0;
     ToulBar2::prodsumDiffusion = 0;
     ToulBar2::Static_variable_ordering = false;
-    ToulBar2::weightedDegree = 10000;
+    ToulBar2::weightedDegree = 1000000;
     ToulBar2::weightedTightness = 0;
     ToulBar2::MSTDAC = false;
     ToulBar2::DEE = 1;
@@ -667,11 +670,17 @@ int WCSP::postNaryConstraintBegin(int *scopeIndex, int arity, Cost defval, Long 
     for (int i = 0; i < arity; i++) for (int j = i + 1; j < arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     EnumeratedVariable **scopeVars = new EnumeratedVariable*[arity];
-    for (int i = 0; i < arity; i++)
+    bool binary = true;
+    for (int i = 0; i < arity; i++) {
         scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
-    NaryConstraint *ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
-    delete[] scopeVars;
-
+        if (scopeVars[i]->getDomainInitSize() != 2) binary = false;
+    }
+    AbstractNaryConstraint *ctr = NULL;
+    if (binary && nbtuples==1 && defval==MIN_COST && arity > 3) {
+        ctr = new WeightedClause(this, scopeVars, arity);
+    } else {
+        ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
+    }
     if (arity > 3) {
         if (isDelayedNaryCtr) delayedNaryCtr.push_back(ctr->wcspIndex);
         else {
@@ -685,6 +694,7 @@ int WCSP::postNaryConstraintBegin(int *scopeIndex, int arity, Cost defval, Long 
             }
         }
     }
+    delete[] scopeVars;
     return ctr->wcspIndex;
 }
 
@@ -697,10 +707,9 @@ int WCSP::postNaryConstraintBegin(int *scopeIndex, int arity, Cost defval, Long 
 void WCSP::postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost cost)
 {
     if (ToulBar2::vac) histogram(cost);
-    Constraint *ctrctr = getCtr(ctrindex);
-    assert(ctrctr->extension()); // must be an NaryConstraint
-    assert(arity == ctrctr->arity());
-    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
+    Constraint *ctr = getCtr(ctrindex);
+//    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
+    assert(arity == ctr->arity());
     String s(arity, CHAR_FIRST);
     for (int i = 0; i < arity; i++) s[i] = ((EnumeratedVariable *) ctr->getVar(i))->toIndex(tuple[i]) + CHAR_FIRST;
     ctr->setTuple(s, cost);
@@ -715,16 +724,15 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value *tuple, int arity, Cost c
 void WCSP::postNaryConstraintTuple(int ctrindex, const String &tuple, Cost cost)
 {
     if (ToulBar2::vac) histogram(cost);
-    Constraint *ctrctr = getCtr(ctrindex);
-    assert(ctrctr->extension()); // must be an NaryConstraint
-    NaryConstraint *ctr = (NaryConstraint *) ctrctr;
+    Constraint *ctr = getCtr(ctrindex);
+//    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
     ctr->setTuple(tuple, cost);
 }
 
 void WCSP::postNaryConstraintEnd(int ctrindex)
 {
     AbstractNaryConstraint *ctr = (AbstractNaryConstraint *) getCtr(ctrindex);
-    if (ctr->arity() <= 3) ctr->projectNaryBeforeSearch();
+    if (ctr->arity()<=3) ctr->projectNaryBeforeSearch();
     else if (!isDelayedNaryCtr) ctr->propagate();
 }
 
@@ -1278,7 +1286,7 @@ void WCSP::postUnary(int xIndex, vector<Cost> &costs)
         }
     }
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        if (costs[a] > MIN_COST) x->project(x->toValue(a), costs[a]);
+        if (costs[a] > MIN_COST) x->project(x->toValue(a), costs[a], true);
     }
     x->findSupport();
     x->queueNC();
@@ -2530,7 +2538,7 @@ void WCSP::restoreSolution(Cluster *c)
         if (z) vz = getValue(z->wcspIndex);
         if (ctr) {ctr->firstlex(); ctr->nextlex(tctr, cctr); xctrindex = ctr->getIndex(x); assert(xctrindex >= 0);}
 
-        int minv = -1;
+        Value minv = WRONG_VAL;
         Cost mincost = MAX_COST;
         for (unsigned int vxi = 0; vxi < x->getDomainInitSize(); vxi++) {
             Value vx = x->toValue(vxi);
@@ -2557,6 +2565,7 @@ void WCSP::restoreSolution(Cluster *c)
             }
         }
         //cout << i << ": elim " << x->getName() << "_" << minv << ", y= " << ((y)?y->getName():"-") << "_" << vy << ", z= " << ((z)?z->getName():"-") << "_" << vz << endl;
+        assert(minv != WRONG_VAL);
         x->assignWhenEliminated(minv);
     }
 }
@@ -2971,7 +2980,6 @@ void WCSP::project(Constraint *&ctr_inout, EnumeratedVariable *var)
 
 void WCSP::variableElimination(EnumeratedVariable *var)
 {
-    //~ TreeDecomposition *td = getTreeDec();
     int degree = var->getTrueDegree();
     if (ToulBar2::verbose >= 1) cout << endl << "Generic variable elimination of " << var->getName() << "    degree: "
                                          << var->getDegree() << " true degree: " << degree << " max elim size: " << var->getMaxElimSize() << endl;

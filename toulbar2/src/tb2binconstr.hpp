@@ -265,10 +265,10 @@ public:
         setcost(v0, v1, c);
     }
 
-    void addtoTuple(const String &t, Cost c) FINAL {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
-        addcost(v0, v1, c);
+    void addtoTuple( const String& t, Cost c ) FINAL {
+        Value v0 = x->toValue(t[0]-CHAR_FIRST);
+        Value v1 = y->toValue(t[1]-CHAR_FIRST);
+        addcost( v0, v1, c );
     }
 
 //    void setTuple( unsigned int* t, Cost c )  {

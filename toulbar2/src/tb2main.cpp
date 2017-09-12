@@ -308,7 +308,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_problemsaved_filename, (char *) "--save",                       SO_REQ_SEP  },       // filename of saved problem
     { OPT_showSolutions,	(char *) "-s",             			SO_NONE    	},         //print solution found
     { OPT_showSolutions,	(char *) "--show",          			SO_NONE    	},         //print solution found
-    { OPT_writeSolution,	(char *) "-w",       			  	SO_OPT  	},         //  depending of value write last solution found in filename "sol" in different format
+    { OPT_writeSolution,        		(char*) "-w",       			  	SO_OPT  	}, //  write last/all solutions found in file (default filename "sol")
 
     { OPT_pedigreePenalty,	(char *) "-u",       			   	SO_REQ_SEP  	},        // int ..
     { OPT_allSolutions,	(char *) "-a",       			  	SO_OPT		},    // counting option ...print solution found
@@ -585,8 +585,8 @@ void help_msg(char *toulbar2filename)
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
     cout << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl << endl;
     cout << "   *.order  : variable elimination order" << endl;
-    cout << "   *.cov  : tree decomposition given by a list of clusters in topological order," << endl;
-    cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root cluster, followed by a list of variable indexes" << endl;
+    cout << "   *.cov  : tree decomposition given by a list of clusters in topological order of a rooted forest," << endl;
+    cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl << endl;
 #endif
@@ -596,7 +596,7 @@ void help_msg(char *toulbar2filename)
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
-    cout << "   -w=[filename] : writes last solution found in filename (or \"sol\" if no parameter is given)" << endl;
+    cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -689,8 +689,8 @@ void help_msg(char *toulbar2filename)
     cout << endl << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order, each line contains a cluster number, " << endl;
-    cout << "      followed by a cluster parent number with -1 for the root cluster, followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
+    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
+    cout << "      followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
     cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
@@ -953,10 +953,9 @@ int _tmain(int argc, TCHAR *argv[])
 
 
             //#############################################
-            if (args.OptionId() == OPT_writeSolution)
-
-            {
+            if (args.OptionId() == OPT_writeSolution ) {
                 ToulBar2::writeSolution = (char *) "sol";
+
                 if (args.OptionArg() != NULL) {
                     char *tmpFile = new char[strlen(args.OptionArg()) + 1];
                     strcpy(tmpFile, args.OptionArg());
@@ -964,7 +963,6 @@ int _tmain(int argc, TCHAR *argv[])
                     else ToulBar2::writeSolution = tmpFile;
                 }
             }
-
 
             if (args.OptionId() == OPT_pedigreePenalty) {
                 ToulBar2::pedigreePenalty = 1;
@@ -1029,7 +1027,7 @@ int _tmain(int argc, TCHAR *argv[])
                 } else {
                     ToulBar2::weightedTightness = 2;
                 }
-                if (ToulBar2::weightedTightness && !ToulBar2::weightedDegree) ToulBar2::weightedDegree = 10000;
+                if (ToulBar2::weightedTightness && !ToulBar2::weightedDegree) ToulBar2::weightedDegree = 1000000;
             } else if (args.OptionId() == NO_OPT_weightedTightness) { ToulBar2::weightedTightness = 0; }
 
             // weitghted Degree (var ordering )
@@ -1459,12 +1457,14 @@ int _tmain(int argc, TCHAR *argv[])
             // Set sigma for HBFS-counting limit
             if (args.OptionId() == OPT_sigma) {
                 ToulBar2::sigma = 1/1000; // default is 0.001
+
                 if (args.OptionArg() != NULL) {
                     ToulBar2::sigma = 1/stold(args.OptionArg());
                     cout << "New assignment for sigma = " << ToulBar2::sigma  <<  endl;
                 }
 
             }
+
 
             if (args.OptionId() == OPT_prodsumDiffusion) {
                 ToulBar2::prodsumDiffusion = 2;
@@ -1482,6 +1482,7 @@ int _tmain(int argc, TCHAR *argv[])
                 cout << "Normalize Constant = " << ToulBar2::Normalizing_Constant << " passed in  command line" << endl;
                 //cout << ToulBar2::resolution<< endl;
             }
+
 
             if (args.OptionId() == OPT_learning) {
                 ToulBar2::learning = true;
@@ -1746,6 +1747,12 @@ int _tmain(int argc, TCHAR *argv[])
                 //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
                 ToulBar2::varOrder = new char [ strlen(buf) + 1 ];
                 sprintf(ToulBar2::varOrder, "%s", buf);
+
+                if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
+                    cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
+                    exit(EXIT_FAILURE);
+                }
+
                 if (ToulBar2::btdMode == 0) ToulBar2::btdMode = 1;
             }
 

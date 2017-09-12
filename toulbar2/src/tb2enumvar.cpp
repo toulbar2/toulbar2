@@ -1363,7 +1363,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint *xy, map<Value, Value> &functi
             int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost, (noduplicate) ? oldctr->size() * x->getDomainInitSize() / getDomainInitSize() : oldctr->size() / getDomainInitSize());
             Constraint *newctrctr = wcsp->getCtr(res);
             assert(newctrctr->arity() == scopeSize);
-            NaryConstraint *newctr = (NaryConstraint *) newctrctr;
+            AbstractNaryConstraint *newctr = (AbstractNaryConstraint*) newctrctr;
             String newtuple(scopeSize, CHAR_FIRST);
             EnumeratedVariable *scopeNewCtr[scopeSize];
             for (int i = 0; i < scopeSize; i++) {
@@ -1611,6 +1611,14 @@ void EnumeratedVariable::UpdateMFdistrib()
     //~ cout<<endl;
 
 }
+
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
 
 
 /* Local Variables: */

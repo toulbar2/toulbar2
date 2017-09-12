@@ -271,7 +271,8 @@ void Solver::dump_wcsp(const char *fileName, bool original)
 Cost Solver::getSolution(vector<Value> &solution)
 {
     assert(wcsp->getSolution().size() == wcsp->numberOfVariables());
-    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) solution.push_back(wcsp->getSolution()[i]);
+    for (unsigned int i=0; i<wcsp->numberOfVariables(); i++)
+        solution.push_back(wcsp->getSolution()[i]);
     return wcsp->getUb();
 }
 
@@ -579,7 +580,6 @@ int Solver::getMostUrgent()
 void Solver::enforceUb()
 {
     wcsp->enforceUb();
-
 }
 
 void Solver::increase(int varIndex, Value value, bool reverse)
@@ -1123,7 +1123,7 @@ void Solver::newSolution()
     }
 
     wcsp->restoreSolution();
-    if (!ToulBar2::allSolutions && !ToulBar2::isZ) wcsp->setSolution();
+    if (!ToulBar2::isZ) wcsp->setSolution();
 
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
@@ -1166,24 +1166,20 @@ void Solver::newSolution()
     if (ToulBar2::writeSolution) {
         if (ToulBar2::pedigree) {
             string problemname = ToulBar2::problemsaved_filename;
-            if (problemname.rfind(".wcsp") != string::npos) problemname.replace(problemname.rfind(".wcsp"), 5, ".pre");
-            ToulBar2::pedigree->save((problemname.find("problem.pre") == 0) ? "problem_corrected.pre" : problemname.c_str(), (WCSP *) wcsp, true, false);
+            if (problemname.rfind( ".wcsp" ) != string::npos)
+                problemname.replace( problemname.rfind( ".wcsp" ), 5, ".pre" );
+            ToulBar2::pedigree->save((problemname.find( "problem.pre" )==0) ?
+                                     "problem_corrected.pre" :
+                                     problemname.c_str(), (WCSP *) wcsp, true, false);
             ToulBar2::pedigree->printSol((WCSP *) wcsp);
             ToulBar2::pedigree->printCorrectSol((WCSP *) wcsp);
         } else if (ToulBar2::haplotype) {
             ToulBar2::haplotype->printSol((WCSP *) wcsp);
         }
-        //        else {
-        ofstream file(ToulBar2::writeSolution);
-        if (!file) {
-            cerr << "Could not write file " << "solution" << endl;
-            exit(EXIT_FAILURE);
-        }
-        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-            file << " " << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-        }
-        file << endl;
-        //        }
+        if (!ToulBar2::allSolutions)  rewind(ToulBar2::solutionFile);
+        wcsp->printSolution(ToulBar2::solutionFile);
+        fprintf(ToulBar2::solutionFile,"\n");
+    }
 
         if ((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
             ((WCSP *)wcsp)->solution_UAI(wcsp->getLb());
@@ -1408,6 +1404,14 @@ bool Solver::solve()
     // Last-minute compatibility checks for ToulBar2 selected options
     wcsp->setUb(tb2checkOptions(wcsp->getUb()));
 
+    if (ToulBar2::writeSolution) {
+        ToulBar2::solutionFile = fopen(ToulBar2::writeSolution,"w");
+        if (!ToulBar2::solutionFile) {
+            cerr << "Could not open file " << ToulBar2::writeSolution << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1)    {
         cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
         ToulBar2::btdMode = 0;
@@ -1425,9 +1429,25 @@ bool Solver::solve()
             }
         }
     }
-    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder) && ToulBar2::btdMode >= 3) {
-        cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
-        ToulBar2::btdMode = 2;
+    if (((WCSP *) wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
+        if (ToulBar2::btdMode >= 3) {
+            cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
+            ToulBar2::btdMode = 2;
+        }
+        if (ToulBar2::btdMode >= 1) {
+            if (ToulBar2::elimDegree_preprocessing > 0) {
+                cout << "Warning! Cannot apply variable elimination in preprocessing with a given tree decomposition file." << endl;
+                ToulBar2::elimDegree_preprocessing = 0;
+            }
+            if (ToulBar2::elimDegree > 0) {
+                cout << "Warning! Cannot apply variable elimination during search with a given tree decomposition file." << endl;
+                ToulBar2::elimDegree = 0;
+            }
+            if (ToulBar2::preprocessFunctional > 0) {
+                cout << "Warning! Cannot apply functional variable elimination with a given tree decomposition file." << endl;
+                ToulBar2::preprocessFunctional = 0;
+            }
+        }
     }
 
     if (CSP(wcsp->getLb(), wcsp->getUb())) {
@@ -1723,6 +1743,12 @@ bool Solver::solve()
         }
     } catch (NbSolutionsOut) {}
 
+    if (ToulBar2::writeSolution) {
+        if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
+            exit(EXIT_FAILURE);
+        fclose(ToulBar2::solutionFile);
+    }
+
     ToulBar2::DEE_ = 0;
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1) cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
@@ -1905,8 +1931,6 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
         }
     }
 
-    wcsp->sortConstraints();
-
     // create weighted unary clauses
     for (int i = 0; i < n; i++) {
         if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
@@ -1916,6 +1940,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost, 
             wcsp->postUnary(i, costs);
         }
     }
+    wcsp->sortConstraints();
 
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " cost functions." << endl;
     // dump_wcsp("mydebug.wcsp", true);
@@ -2008,19 +2033,6 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta)
     }
     assert(cp.start <= idx);
     open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx));
-
-    cp.stop = max(cp.stop, idx);
-}
-
-void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb,TLogProb logLbZ,TLogProb logUbZ,Cost delta)
-{
-    ptrdiff_t idx = cp.index;
-    if (ToulBar2::verbose >= 1) {
-        if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-        cout << "add open node " << lb << " + " << delta << " (" << cp.start << ", " << idx << ")" << endl;
-    }
-    assert(cp.start <= idx);
-    open.push(OpenNode(logLbZ,logUbZ,MAX(MIN_COST, lb + delta), cp.start, idx));
 
     cp.stop = max(cp.stop, idx);
 }

@@ -399,8 +399,16 @@ public:
     TrieNum *read_TRIE(const char *fileName); // read the TB2 all solution file (temp wtd)
 
     const vector<Value> &getSolution() {return solution;}
-    void setSolution(TAssign *sol = NULL) {for (unsigned int i = 0; i < numberOfVariables(); i++) {solution[i] = ((sol != NULL) ? (*sol)[i] : getValue(i));}}
-    void printSolution(ostream &os) {for (unsigned int i = 0; i < numberOfVariables(); i++) {os << " " << solution[i];}}
+    void setSolution(TAssign *sol = NULL)
+    {
+        for (unsigned int i=0; i<numberOfVariables(); i++) {
+            Value v = ((sol!=NULL) ? (*sol)[i] : getValue(i));
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);
+        }
+    }
+
+    void printSolution(ostream &os) {for (unsigned int i=0; i<numberOfVariables(); i++) {os << solution[i] << (i < numberOfVariables()-1 ? " " : "");}}
+    void printSolution(FILE * f) {for (unsigned int i=0; i<numberOfVariables(); i++) {fprintf(f,"%d", solution[i]); if(i < numberOfVariables()-1) fprintf(f," ");}}
     void printSolutionMaxSAT(ostream &os) {os << "v"; for (unsigned int i = 0; i < numberOfVariables(); i++) {os << " " << ((solution[i]) ? ((int) i + 1) : -((int) i + 1));} ; os << endl;}
 
     void print(ostream &os);								///< \brief print current domains and active cost functions (see \ref verbosity)
@@ -520,7 +528,7 @@ public:
 
     TreeDecomposition *td;
     TreeDecomposition *getTreeDec()  { return td; }
-    bool isAlreadyTreeDec(char *filename); ///< \brief finds if the given file is a variable ordering or a tree decomposition
+    static bool isAlreadyTreeDec(char *filename); ///< \brief finds if the given file is a variable ordering or a tree decomposition
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char *elimVarOrderFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char *treeDecFilename, vector<int> &elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
@@ -542,7 +550,6 @@ public:
     TLogProb LogSumExp(TLogProb logc1, Cost c2) const;
     TLogProb LogSumExp(TLogProb logc1, TLogProb logc2) const;
     TLogProb LogSubExp(TLogProb logc1, TLogProb logc2) const;
-
 };
 
 #endif /*TB2WCSP_HPP_*/

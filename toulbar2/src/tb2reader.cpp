@@ -763,7 +763,6 @@ void WCSP::read_wcsp(const char *fileName)
         }
     }
 
-    sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
 
@@ -771,6 +770,7 @@ void WCSP::read_wcsp(const char *fileName)
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
 
     if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 }
@@ -793,8 +793,8 @@ void WCSP::read_random(int n, int m, vector<int> &p, int seed, bool forceSubModu
 void WCSP::read_uai2008(const char *fileName)
 {
     // Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
-    ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(- ToulBar2::resolution)));
-    if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) /  ToulBar2::resolution) {
+    ToulBar2::NormFactor = (-1.0/Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
+    if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS)-1)/(TLogProb)ToulBar2::resolution) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
         exit(EXIT_FAILURE);
     } else if (ToulBar2::verbose >= 1) {
@@ -1130,7 +1130,6 @@ void WCSP::read_uai2008(const char *fileName)
         cout<< "Update ub on cost from "<<ub<<" to: "<<LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log)<<endl;
         updateUb(LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log));
     }
-    sortConstraints();
 
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
@@ -1138,6 +1137,7 @@ void WCSP::read_uai2008(const char *fileName)
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
     if (ToulBar2::verbose >= 0) cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity  << "." << endl;
 
     int nevi = 0;
@@ -1367,7 +1367,7 @@ void WCSP::read_wcnf(const char *fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
-            int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 0);
+            int index = postNaryConstraintBegin(scopeIndex,arity,MIN_COST,1);
             String tup = buf;
             postNaryConstraintTuple(index, tup, cost * K);
             postNaryConstraintEnd(index);
@@ -1416,13 +1416,13 @@ void WCSP::read_wcnf(const char *fileName)
         cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
     }
 
-    sortConstraints();
     // apply basic initial propagation AFTER complete network loading
     increaseLb(inclowerbound);
 
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
+    sortConstraints();
     cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity  << "." << endl;
 }
 
@@ -1572,8 +1572,6 @@ void WCSP::read_qpbo(const char *fileName)
         }
     }
 
-    sortConstraints();
-
     // create weighted unary clauses
     for (int i = 0; i < n; i++) {
         if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
@@ -1583,8 +1581,10 @@ void WCSP::read_qpbo(const char *fileName)
             postUnaryConstraint(i, costs);
         }
     }
+    sortConstraints();
     if (ToulBar2::verbose >= 0) cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
 }
+
 
 TrieNum *WCSP::read_TRIE(const char *fileName)
 {

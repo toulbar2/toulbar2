@@ -1,7 +1,7 @@
 SRCSFULL = $(wildcard tb2*.cpp incop/*.cpp ToulbarVersion.cpp)
 
-# Remove the first character in the following line if compile with BOOST Graph library
-BOOST = -I. -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB
+# Comment the following line if BOOST Graph library uninstalled
+BOOST = -DBOOST
 
 # Same thing for XML
 #XML = XMLFLAG
@@ -25,7 +25,6 @@ LIBSRCS = $(SRCS:tb2main.cpp=)
 LIBOBJS = $(LIBSRCS:.cpp=.o)
 
 CC = g++
-ICC = icc
 
 # Library compatible with Ilog Solver:
 # In order to link ToulBar2 with Ilog Solver, uncomment the following two lines starting with ILOGFLAGS and ILOGLIBS, and uncomment #define INT_COST (also adding comment to #define LONGLONG_COST) in tb2types.hpp
@@ -56,15 +55,9 @@ CFLAGS = -g -Wall -std=c++11 -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLON
 
 OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
-# -O1 -DNDEBUG
-# -O2 -DNDEBUG
-
-ICCFLAGS = 
-#-O3 -ipo -static -DNDEBUG
 
 PFLAGS = 
-
-# -pg -g3 # use these options to catch numerical overflows
+# -pg -g3
 
 BUILD = $(CC) -shared
 
@@ -74,12 +67,11 @@ BUILD = $(CC) -shared
 %.o : %.cpp %.hpp
 	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
-toulbar2: $(OBJS)
-	$(CC) $(OBJS) -o $@ $(PFLAGS)
-#	$(CC) $(OBJS) -o $@ $(PFLAGS) -static -static-libgcc
+%.o : %.cpp %.h
+	$(CC) $(OFLAGS) $(CFLAGS) $(LIBFLAGS) -c -o $@  $< $(PFLAGS)
 
-toulbar2i: $(SRCS)
-	$(ICC) $(SRCS) -o $@ $(ICCFLAGS) $(CFLAGS)
+toulbar2: $(OBJS)
+	$(CC) $(OBJS) -o $@ $(PFLAGS) -static -static-libgcc
 
 libtb2.so: LIBFLAGS = -fPIC
 libtb2.so: $(LIBOBJS)
@@ -92,6 +84,6 @@ iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp
 
 clean:
-	-rm -f *.o toulbar2 toulbar2i libtb2.so iloglue toulbar2test
+	-rm -f *.o incop/*.o toulbar2 libtb2.so iloglue toulbar2test
 
 all: toulbar2

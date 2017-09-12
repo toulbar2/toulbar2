@@ -353,6 +353,7 @@ public:
     virtual const vector<Value> &getSolution() = 0;				///< \brief returns current best solution
     virtual void setSolution(TAssign *sol = NULL) = 0;			///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution(ostream &os) = 0;					///< \brief prints current best solution
+    virtual void printSolution(FILE *f) =0;					    ///< \brief prints current best solution
 
     virtual void print(ostream &os) = 0;							///< \brief print current domains and active cost functions (see \ref verbosity)
     virtual void dump(ostream &os, bool original = true) = 0;	///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes

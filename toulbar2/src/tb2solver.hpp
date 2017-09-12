@@ -243,12 +243,6 @@ public:
     TimeOut() {ToulBar2::limited = true; if (ToulBar2::verbose >= 2) cout << "... time limit reached!" << endl;}
 };
 
-class Overflow
-{
-public:
-    Overflow() {cout << "Overflow detected. Cost too large for the current Cost type, exiting!" << endl; exit(1);}
-};
-
 
 int solveSymMax2SAT(int n, int m, int *posx, int *posy, double *cost, int *sol);
 extern "C" int solvesymmax2sat_(int *n, int *m, int *posx, int *posy, double *cost, int *sol);

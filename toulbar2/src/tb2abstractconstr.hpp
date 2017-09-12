@@ -13,7 +13,7 @@
 
 #include <set>
 
-// Warning! Constraint reconnect() may interfer with variable constraints list iterator used by EnumerateVariable assign method. Do not reconnect a constraint with assigned variables in project functions.
+// Warning! Constraint reconnect() may interfere with variable constraints list iterator used by EnumerateVariable assign method. Do not reconnect a constraint with assigned variables in project functions.
 
 template<class T1>
 class AbstractUnaryConstraint : public Constraint
@@ -380,6 +380,7 @@ protected:
 
     vector<EnumeratedVariable::iterator> it_values; // used by firstlex/nextlex and for separator decomposition tests
     String iterTuple;
+    String evalTuple;
 
 public:
     AbstractNaryConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in) : Constraint(wcsp), arity_(arity_in)
@@ -395,6 +396,7 @@ public:
             scope_dac[i] = var;
             links[i] = var->link(this, i);
             iterTuple.append(1, CHAR_FIRST);
+            evalTuple.append(1, CHAR_FIRST);
         }
         setDACScopeIndex();
     }
@@ -541,6 +543,10 @@ public:
     bool nextlex(String &t, Cost &c);
 
     void projectNaryBeforeSearch();
+    // USE ONLY DURING SEARCH when less than three unassigned variables remain:
+    void projectNaryTernary(TernaryConstraint* xyz);
+    void projectNaryBinary(BinaryConstraint* xy);
+    void projectNary();
 };
 
 #define AbstractGlobalConstraint AbstractNaryConstraint
