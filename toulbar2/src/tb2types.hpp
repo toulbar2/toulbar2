@@ -57,9 +57,9 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
-inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
-inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+#inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+#inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+#inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
