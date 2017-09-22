@@ -29,7 +29,7 @@ ________________________________________________________
 	-MatchRegex		=> file default regular expression (./MatchRegexp.txt)
 
 	-score			=> scoring flag trigger score calculation ( uai score require -baseline file ) (default off)
-        -baseline 		=> filename contening  reference result for score calculation ( file structure = instance_name;log10Like)
+        -baseline 		=> filename contening  reference result for score calculation ( file structure = instance_name;energy)
 
         -fregexp		=> regular expresion for test output selection ( regexp on  filename) exp
         -timeout 		=> timeout  in second ( ex: -timeout 30 ) used in average calculation or for replacing execussion time for unterminated test.

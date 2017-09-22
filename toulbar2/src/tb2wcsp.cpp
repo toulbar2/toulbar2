@@ -100,7 +100,7 @@ Haplotype* ToulBar2::haplotype;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
-ofstream ToulBar2::solution_file;
+ofstream ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
 bool ToulBar2::uai_firstoutput;
@@ -273,7 +273,7 @@ void tb2init()
     ToulBar2::isZ = false;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logepsilon = -Log(1000);
+    ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
     ToulBar2::Berge_Dec = 0;
     ToulBar2::nbvar = 0;
 
@@ -3263,7 +3263,7 @@ void WCSP::variableElimination(EnumeratedVariable* var)
         project(csum, var);
     } else {
         if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
-            Cost clogz = getUb();
+            Cost clogz = MAX_COST;
             for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
                 clogz = LogSumExp(clogz, var->getCost(*itv));
             }
@@ -3713,26 +3713,30 @@ void WCSP::setDACOrder(vector<int>& order)
 Cost WCSP::Prob2Cost(TProb p) const
 {
     if (p == 0.0)
-        return getUb();
+        return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
     TLogProb res = -Log(p) * ToulBar2::NormFactor;
     if (res > to_double(MAX_COST)) {
         cerr << "Overflow when converting probability to cost." << endl;
         exit(EXIT_FAILURE);
     }
     Cost c = (Cost)res;
-    if (c > getUb())
-        return getUb();
+    if (c > MAX_COST / 2)
+        return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
     return c;
 }
 
 Cost WCSP::LogProb2Cost(TLogProb p) const
 {
     TLogProb res = -p * ToulBar2::NormFactor;
+    Cost c;
     if (res > to_double(MAX_COST / 2)) {
-        cout << "Warning: converting -loglike/energy " << -p << " to Top\n";
-        return getUb();
+        c = (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
+//        if (ToulBar2::verbose >= 2) {
+//            cout << "Warning: converting energy " << -p << " to Top\n";
+//        }
     } else
-        return (Cost)res;
+        c = (Cost)res;
+    return c;
 }
 
 TLogProb WCSP::Cost2LogProb(Cost c) const
@@ -3745,11 +3749,11 @@ TProb WCSP::Cost2Prob(Cost c) const
     return Exp(-to_double(c) / ToulBar2::NormFactor);
 }
 
-Cost WCSP::LogSumExp(Cost c1, Cost c2) const
+Cost WCSP::LogSumExp(Cost c1, Cost c2) const // log[exp(c1) + exp(c2)]
 {
-    if (c1 >= getUb())
+    if (c1 >= MAX_COST / 2)
         return c2;
-    else if (c2 >= getUb())
+    else if (c2 >= MAX_COST / 2)
         return c1;
     else if (c1 == c2)
         return c1 + LogProb2Cost(Log(2.));
@@ -3760,12 +3764,12 @@ Cost WCSP::LogSumExp(Cost c1, Cost c2) const
             return c2 + LogProb2Cost(Log1p(Exp(Cost2LogProb(c1 - c2))));
     }
 }
-TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const
+TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const // log[exp(c1) + exp(c2)]
 {
     TLogProb logc2 = Cost2LogProb(c2);
     if (logc1 == -numeric_limits<TLogProb>::infinity())
         return logc2;
-    else if (c2 >= getUb())
+    else if (c2 >= MAX_COST / 2)
         return logc1;
     else {
         if (logc1 >= logc2)
@@ -3775,7 +3779,8 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const
     }
 }
 
-TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const
+TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + exp(c2)]
+
 {
     if (logc1 == -numeric_limits<TLogProb>::infinity())
         return logc2;

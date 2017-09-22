@@ -519,7 +519,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << endl;
 #endif
-    cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task)" << endl;
+    cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
     cout << "   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
@@ -674,7 +674,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-    cout << "   -epsilon=[float] : approximation factor for computing the partition function (default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
+    cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
@@ -1393,7 +1393,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_epsilon) {
                 if (args.OptionArg() != NULL) {
-                    ToulBar2::logepsilon = -Log(atol(args.OptionArg()));
+                    ToulBar2::logepsilon = -Log(atof(args.OptionArg()));
                     if (ToulBar2::debug)
                         cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon) << endl;
                 }
@@ -1701,9 +1701,9 @@ int _tmain(int argc, TCHAR* argv[])
             filename += "MPE";
         ToulBar2::solution_uai_filename = filename;
         if (!ToulBar2::uaieval) {
-            ToulBar2::solution_file.open(ToulBar2::solution_uai_filename.c_str());
-            ToulBar2::solution_file << ((ToulBar2::isZ) ? "PR" : "MPE") << endl;
-            ToulBar2::solution_file.flush();
+            ToulBar2::solution_uai_file.open(ToulBar2::solution_uai_filename.c_str());
+            ToulBar2::solution_uai_file << ((ToulBar2::isZ) ? "PR" : "MPE") << endl;
+            ToulBar2::solution_uai_file.flush();
         }
         delete[] tmpPath;
         delete[] tmpFile;
@@ -1811,10 +1811,10 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::uai_firstoutput)
                     ToulBar2::uai_firstoutput = false;
                 else
-                    ToulBar2::solution_file << "-BEGIN-" << endl;
-                ToulBar2::solution_file << "1" << endl;
-                ToulBar2::solution_file << -numeric_limits<TProb>::infinity() << endl;
-                ToulBar2::solution_file.flush();
+                    ToulBar2::solution_uai_file << "-BEGIN-" << endl;
+                ToulBar2::solution_uai_file << "1" << endl;
+                ToulBar2::solution_uai_file << -numeric_limits<TProb>::infinity() << endl;
+                ToulBar2::solution_uai_file.flush();
             }
             cout << "Log(Z)= ";
             cout << -numeric_limits<TProb>::infinity() << endl;
@@ -1827,7 +1827,7 @@ int _tmain(int argc, TCHAR* argv[])
     if (ToulBar2::verbose >= 0)
         cout << "end." << endl;
     if (ToulBar2::uai || ToulBar2::uaieval)
-        ToulBar2::solution_file.close();
+        ToulBar2::solution_uai_file.close();
 
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];

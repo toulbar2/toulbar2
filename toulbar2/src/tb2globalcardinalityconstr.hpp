@@ -3,7 +3,7 @@
  */
 
 //#include "glpk.h"
-#include "stddef.h"
+//#include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
 
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint {
@@ -17,7 +17,7 @@ private:
     {
         return make_pair(varindex + 1, mapval[val]);
     }
-    //JP Start// This array stores the repestive weight of each bound
+    //JP Start// This array stores the respective weight of each bound
     map<Value, pair<int, int>> weights;
     int nDistinctDomainValue;
     //JP End//

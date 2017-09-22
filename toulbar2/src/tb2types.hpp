@@ -391,14 +391,14 @@ public:
     static bool xmlflag;
     static TLogProb markov_log;
     static string evidence_file;
-    static ofstream solution_file;
+    static ofstream solution_uai_file;
     static string solution_uai_filename;
     static string problemsaved_filename;
     static bool uai_firstoutput;
     static bool isZ;
     static TLogProb logZ;
     static TLogProb logU; // upper bound on rejected potentials
-    static TProb logepsilon;
+    static TLogProb logepsilon;
     static bool uaieval;
 
     static double startCpuTime;

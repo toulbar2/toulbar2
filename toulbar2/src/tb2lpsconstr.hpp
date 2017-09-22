@@ -5,7 +5,7 @@
 #ifndef TB2LPSCONSTR_HPP_
 #define TB2LPSCONSTR_HPP_
 
-#include "stddef.h"
+//#include "stddef.h"
 #include "tb2linearconstr.hpp"
 
 //#define upper_bound first

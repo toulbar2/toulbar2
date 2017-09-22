@@ -170,7 +170,7 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
             ctr = ctr_;
     }
     if (ToulBar2::verbose >= 1) {
-        cout << "project clause to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
+        cout << "project constraint to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
         if (td)
             cout << "   cluster nary: " << getCluster() << endl;
         else

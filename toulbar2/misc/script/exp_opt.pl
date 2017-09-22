@@ -53,7 +53,7 @@ ________________________________________________________
 
         -timeout            => timeout  in second ( ex: -timeout 30 )
         -score              => score flag ( require baseline file )   (default OFF)
-        -baseline           => tyref result for score calculation ( structure = filename;log10Like)
+        -baseline           => tyref result for score calculation ( structure = filename;energy)
         -exec               =>  execussion flag ( exec ctest command for each element defined in the command line option ( -opt_file filename ) (default exec is OFF) 
         -njob               =>  thread number usd by ctest for test execusion ( ex: -njob 4 ==> 4 jobs are launched simultantely)
 ________________________________________________________

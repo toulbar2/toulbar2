@@ -1204,7 +1204,7 @@ void EnumeratedVariable::eliminate()
             }
         } else {
             if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
-                Cost clogz = wcsp->getUb();
+                Cost clogz = MAX_COST;
                 for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
                     clogz = wcsp->LogSumExp(clogz, getCost(*itv));
                 }

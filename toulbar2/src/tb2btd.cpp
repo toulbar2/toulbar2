@@ -580,7 +580,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     if (!ToulBar2::bayesian)
                         cout << "New solution: " << csol << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
                     else
-                        cout << "New solution: " << csol << " log10like: " << (wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) / Log(10.) << " prob: " << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                        cout << "New solution: " << csol << " energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
                 }
                 if (cluster == td->getRoot())
                     td->newSolution(csol);
@@ -628,7 +628,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         return make_pair(bestlb, cub);
     } else {
         // Enumerates cluster proper variables
-        *((StoreCost*)searchSize) += ((Cost)(10e6 * log(wcsp->getDomainSize(varIndex))));
+        *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
         if (wcsp->enumerated(varIndex)) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));

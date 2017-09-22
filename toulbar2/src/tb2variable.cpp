@@ -278,11 +278,15 @@ void Variable::setMaxUnaryCost(Value a, Cost cost)
 
 void Variable::projectLB(Cost cost)
 {
-    if (cost == 0)
+    if (cost == MIN_COST)
         return;
     if (ToulBar2::verbose >= 2)
         cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
-    wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
+    if (cost < MIN_COST) {
+        wcsp->decreaseLb(cost);
+    } else {
+        wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
+    }
     if (wcsp->td) {
         if (ToulBar2::verbose >= 2)
             cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
