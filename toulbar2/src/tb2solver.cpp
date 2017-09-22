@@ -1979,14 +1979,12 @@ bool Solver::solve()
         if (ToulBar2::verbose >= 1)
             cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
         if (ToulBar2::uai) {
-            if (ToulBar2::uai_firstoutput)
-                ToulBar2::uai_firstoutput = false;
-            else
-                ToulBar2::solution_file << "-BEGIN-" << endl;
-            ToulBar2::solution_file << "1" << endl;
-            ToulBar2::solution_file << (ToulBar2::logZ + ToulBar2::markov_log) << endl;
-            ToulBar2::solution_file.flush();
+            rewind(ToulBar2::solution_uai_file);
+            fprintf(ToulBar2::solution_uai_file, "PR\n");
+            fprintf(ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
+            fprintf(ToulBar2::solution_uai_file, "\n");
         }
+
         if (0 <= ToulBar2::isZUB && ToulBar2::isZUB <= 3 && ToulBar2::verbose >= 1) {
             cout << "Using upper bound number " << ToulBar2::isZUB << endl;
         }

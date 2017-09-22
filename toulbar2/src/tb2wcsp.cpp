@@ -107,10 +107,9 @@ Tb2ScpBranch* ToulBar2::scpbranch;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
-ofstream ToulBar2::solution_file;
+FILE* ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
-bool ToulBar2::uai_firstoutput;
 TLogProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
 string ToulBar2::map_file;
@@ -256,9 +255,9 @@ void tb2init()
 
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
+    ToulBar2::solution_uai_file = NULL;
     ToulBar2::solution_uai_filename = "sol";
     ToulBar2::problemsaved_filename = "problem.wcsp";
-    ToulBar2::uai_firstoutput = true;
     ToulBar2::markov_log = 0;
     ToulBar2::xmlflag = false;
     ToulBar2::maxsateval = false;

@@ -5,6 +5,15 @@
 #include "tb2types.hpp"
 #include "tb2system.hpp"
 
+//Must be included after tb2types.hpp
+#include "tb2system.hpp"
+
+#ifdef LONGDOUBLE_PROB
+const char* PrintFormatProb = "%Lf";
+#else
+const char* PrintFormatProb = "%lf";
+#endif
+
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
