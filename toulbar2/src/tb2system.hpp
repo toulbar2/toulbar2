@@ -12,6 +12,8 @@
 #define FINAL
 #endif
 
+extern const char* PrintFormatProb;
+
 double cpuTime(); ///< \brief return CPU time in seconds with high resolution (microseconds) if available
 void timeOut(int sig);
 void timer(int t); ///< \brief set a timer (in seconds)

@@ -1700,10 +1700,10 @@ int _tmain(int argc, TCHAR* argv[])
         else
             filename += "MPE";
         ToulBar2::solution_uai_filename = filename;
-        if (!ToulBar2::uaieval) {
-            ToulBar2::solution_uai_file.open(ToulBar2::solution_uai_filename.c_str());
-            ToulBar2::solution_uai_file << ((ToulBar2::isZ) ? "PR" : "MPE") << endl;
-            ToulBar2::solution_uai_file.flush();
+        ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
+        if (!ToulBar2::solution_uai_file) {
+            cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
+            exit(EXIT_FAILURE);
         }
         delete[] tmpPath;
         delete[] tmpFile;
@@ -1808,13 +1808,10 @@ int _tmain(int argc, TCHAR* argv[])
             cout << "No solution found by initial propagation!" << endl;
         if (ToulBar2::isZ) {
             if (ToulBar2::uai) {
-                if (ToulBar2::uai_firstoutput)
-                    ToulBar2::uai_firstoutput = false;
-                else
-                    ToulBar2::solution_uai_file << "-BEGIN-" << endl;
-                ToulBar2::solution_uai_file << "1" << endl;
-                ToulBar2::solution_uai_file << -numeric_limits<TProb>::infinity() << endl;
-                ToulBar2::solution_uai_file.flush();
+                rewind(ToulBar2::solution_uai_file);
+                fprintf(ToulBar2::solution_uai_file, "PR\n");
+                fprintf(ToulBar2::solution_uai_file, PrintFormatProb, -numeric_limits<TProb>::infinity());
+                fprintf(ToulBar2::solution_uai_file, "\n");
             }
             cout << "Log(Z)= ";
             cout << -numeric_limits<TProb>::infinity() << endl;
@@ -1826,8 +1823,11 @@ int _tmain(int argc, TCHAR* argv[])
     }
     if (ToulBar2::verbose >= 0)
         cout << "end." << endl;
-    if (ToulBar2::uai || ToulBar2::uaieval)
-        ToulBar2::solution_uai_file.close();
+    if (ToulBar2::uai || ToulBar2::uaieval) {
+        if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
+            exit(EXIT_FAILURE);
+        fclose(ToulBar2::solution_uai_file);
+    }
 
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];
