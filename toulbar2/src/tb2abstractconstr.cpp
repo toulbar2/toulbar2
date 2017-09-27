@@ -61,11 +61,11 @@ bool AbstractNaryConstraint::nextlex(String& t, Cost& c)
     if (it_values[0] == var->end())
         return false;
 
+    t.resize(a);
     for (i = 0; i < a; i++) {
         var = (EnumeratedVariable*)getVar(i);
-        iterTuple[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
+        t[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
     }
-    t = iterTuple;
     c = eval(t);
 
     // and now increment

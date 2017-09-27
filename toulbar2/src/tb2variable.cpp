@@ -320,11 +320,11 @@ BinaryConstraint* Variable::getConstr(Variable* x)
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
 
-        if ((*iter).constr->arity() == 2) {
+        if ((*iter).constr->isBinary()) {
             ctr2 = (BinaryConstraint*)(*iter).constr;
             if (ctr2->getIndex(x) >= 0)
                 return ctr2;
-        } else if ((*iter).constr->arity() == 3) {
+        } else if ((*iter).constr->isTernary()) {
             ctr3 = (TernaryConstraint*)(*iter).constr;
             int idx = ctr3->getIndex(x);
             if (idx >= 0) {
@@ -350,14 +350,14 @@ BinaryConstraint* Variable::getConstr(Variable* x, int cid)
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
 
-        if ((*iter).constr->arity() == 2) {
+        if ((*iter).constr->isBinary()) {
             ctr2 = (BinaryConstraint*)(*iter).constr;
             if (ctr2->getIndex(x) >= 0) {
                 res = ctr2;
                 if (res->getCluster() == cid)
                     return res;
             }
-        } else if ((*iter).constr->arity() == 3) {
+        } else if ((*iter).constr->isTernary()) {
             ctr3 = (TernaryConstraint*)(*iter).constr;
             int idx = ctr3->getIndex(x);
             if (idx >= 0) {
@@ -385,7 +385,7 @@ TernaryConstraint* Variable::getConstr(Variable* x, Variable* y)
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
 
-        if ((*iter).constr->arity() == 3) {
+        if ((*iter).constr->isTernary()) {
             ctr = (TernaryConstraint*)(*iter).constr;
             if ((ctr->getIndex(x) >= 0) && (ctr->getIndex(y) >= 0))
                 return ctr;
@@ -401,7 +401,7 @@ TernaryConstraint* Variable::getConstr(Variable* x, Variable* y, int cid)
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
 
-        if ((*iter).constr->arity() == 3) {
+        if ((*iter).constr->isTernary()) {
             ctr = (TernaryConstraint*)(*iter).constr;
             if ((ctr->getIndex(x) >= 0) && (ctr->getIndex(y) >= 0)) {
                 if (ctr->getCluster() == cid)
@@ -419,7 +419,7 @@ TernaryConstraint* Variable::existTernary()
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         if ((*iter).constr->isSep())
             continue;
-        if ((*iter).constr->extension() && (*iter).constr->arity() == 3) {
+        if ((*iter).constr->isTernary()) {
             ctr = (TernaryConstraint*)(*iter).constr;
             return ctr;
         }
@@ -448,7 +448,7 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
                 tctr1max = NULL;
                 tctr2max = NULL;
             }
-        } else if ((*iter).constr->arity() == 3) {
+        } else if ((*iter).constr->isTernary()) {
             double terntight;
             tctr1 = (TernaryConstraint*)(*iter).constr;
             terntight = tctr1->getTightness() + tctr1->xy->getTightness() + tctr1->xz->getTightness() + tctr1->yz->getTightness();
@@ -478,7 +478,7 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
             }
 
             for (ConstraintList::iterator iter2 = iter; iter2 != constrs.end(); ++iter2) {
-                if ((*iter2).constr->arity() == 3) {
+                if ((*iter2).constr->isTernary()) {
                     TernaryConstraint* tctr2 = (TernaryConstraint*)(*iter2).constr;
                     Variable* commonvar = NULL;
                     if (tctr2->getIndex(x1) >= 0)

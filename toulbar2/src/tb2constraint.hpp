@@ -25,6 +25,9 @@ public:
     virtual ~Constraint() {}
 
     virtual bool extension() const { return false; } // return true if the cost function is defined in extension (with explicit tuples)
+    virtual bool isBinary() const { return false; } // return true if the cost function class is a BinaryConstraint
+    virtual bool isTernary() const { return false; } // return true if the cost function class is a TernaryConstraint
+    virtual bool isNary() const { return false; } // return true if the cost function class is a NaryConstraint
     virtual bool isGlobal() const { return false; } // return true if it is a global cost function (flow-based monolithic propagation)
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 

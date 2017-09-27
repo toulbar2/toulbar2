@@ -78,6 +78,7 @@ public:
     bool IsinSpanninTree() { return isinspanningtree; }
 
     bool extension() const FINAL { return true; }
+    bool isBinary() const FINAL { return true; }
 
     Cost getCost(Value vx, Value vy) const
     {

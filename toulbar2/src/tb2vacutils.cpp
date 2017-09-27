@@ -285,7 +285,7 @@ bool VACVariable::averaging()
     if (itc != getConstrs()->end())
         ctr = (*itc).constr;
     while (ctr) {
-        if (ctr->arity() == 2 && !ctr->isSep()) {
+        if (ctr->isBinary() && !ctr->isSep()) {
             BinaryConstraint* bctr = (BinaryConstraint*)ctr;
             x = (EnumeratedVariable*)bctr->getVarDiffFrom((Variable*)this);
             for (iterator it = begin(); it != end(); ++it) {
@@ -311,7 +311,7 @@ bool VACVariable::averaging()
                     change = true;
                 }
             }
-        } else if (ctr->arity() == 3 && !ctr->isSep()) {
+        } else if (ctr->isTernary() && !ctr->isSep()) {
             TernaryConstraint* tctr = (TernaryConstraint*)ctr;
             x = (EnumeratedVariable*)tctr->getVar(0);
             if (x == this)
@@ -344,7 +344,7 @@ bool VACVariable::averaging()
                     change = true;
                 }
             }
-        } else if (ctr->arity() >= 4 && ctr->extension() && !ctr->isSep()) {
+        } else if (ctr->isNary() && !ctr->isSep()) {
             NaryConstraint* nctr = (NaryConstraint*)ctr;
             for (iterator it = begin(); it != end(); ++it) {
                 Cost cu = getCost(*it);

@@ -1749,7 +1749,7 @@ void TreeDecomposition::buildFromCovering(string filename)
             Constraint* ctr = wcsp->getCtr(i);
             ctr->assignCluster();
             if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->arity() == 3) {
+                if (ctr->isTernary()) {
                     TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                     tctr->xy->setCluster(tctr->getCluster());
                     tctr->xz->setCluster(tctr->getCluster());
@@ -1762,7 +1762,7 @@ void TreeDecomposition::buildFromCovering(string filename)
                 Constraint* ctr = wcsp->elimBinConstrs[i];
                 ctr->assignCluster();
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->xy->setCluster(tctr->getCluster());
                         tctr->xz->setCluster(tctr->getCluster());
@@ -1775,7 +1775,7 @@ void TreeDecomposition::buildFromCovering(string filename)
                 Constraint* ctr = wcsp->elimTernConstrs[i];
                 ctr->assignCluster();
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->xy->setCluster(tctr->getCluster());
                         tctr->xz->setCluster(tctr->getCluster());
@@ -1787,7 +1787,7 @@ void TreeDecomposition::buildFromCovering(string filename)
         for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
             Constraint* ctr = wcsp->getCtr(i);
             if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->arity() == 3) {
+                if (ctr->isTernary()) {
                     TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                     tctr->setDuplicates();
                     assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
@@ -1798,7 +1798,7 @@ void TreeDecomposition::buildFromCovering(string filename)
             if (wcsp->elimTernConstrs[i]->connected()) {
                 Constraint* ctr = wcsp->elimTernConstrs[i];
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->setDuplicates();
                         assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
@@ -2014,7 +2014,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
             Constraint* ctr = wcsp->getCtr(i);
             ctr->assignCluster();
             if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->arity() == 3) {
+                if (ctr->isTernary()) {
                     TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                     tctr->xy->setCluster(tctr->getCluster());
                     tctr->xz->setCluster(tctr->getCluster());
@@ -2027,7 +2027,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
                 Constraint* ctr = wcsp->elimBinConstrs[i];
                 ctr->assignCluster();
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->xy->setCluster(tctr->getCluster());
                         tctr->xz->setCluster(tctr->getCluster());
@@ -2040,7 +2040,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
                 Constraint* ctr = wcsp->elimTernConstrs[i];
                 ctr->assignCluster();
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->xy->setCluster(tctr->getCluster());
                         tctr->xz->setCluster(tctr->getCluster());
@@ -2052,7 +2052,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
         for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
             Constraint* ctr = wcsp->getCtr(i);
             if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->arity() == 3) {
+                if (ctr->isTernary()) {
                     TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                     tctr->setDuplicates();
                     assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
@@ -2063,7 +2063,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
             if (wcsp->elimTernConstrs[i]->connected()) {
                 Constraint* ctr = wcsp->elimTernConstrs[i];
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->setDuplicates();
                         assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());

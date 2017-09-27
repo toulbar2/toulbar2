@@ -310,7 +310,7 @@ void EnumeratedVariable::setCostProvidingPartition()
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         int arity = (*iter).constr->arity();
         maxArity = max(maxArity, arity);
-        if (arity <= 3) {
+        if ((*iter).constr->isBinary() || (*iter).constr->isTernary()) {
             for (int i = 0; i < arity; i++) {
                 Variable* var = (*iter).constr->getVar(i);
                 if (var != this) {
@@ -351,7 +351,7 @@ bool EnumeratedVariable::isEAC(Value a)
 #ifndef NDEBUG
                 if (ToulBar2::verbose >= 4) {
                     cout << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl;
-                    if ((*iter).constr->arity() == 3) {
+                    if ((*iter).constr->isTernary()) {
                         TernaryConstraint* c = (TernaryConstraint*)(*iter).constr;
                         if (c->xy->connected())
                             cout << *c->xy;
@@ -1366,7 +1366,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
         Constraint* ctr = (*iter).constr;
         if (!ctr->extension() || ctr->isSep())
             return false;
-        if (mult > 1.1 && ctr->extension() && (ctr->arity() >= 4) && (mult * ((NaryConstraint*)ctr)->size() > MAX_NB_TUPLES))
+        if (mult > 1.1 && ctr->isNary() && (mult * ((NaryConstraint*)ctr)->size() > MAX_NB_TUPLES))
             return false;
     }
     return true;
@@ -1623,7 +1623,7 @@ bool EnumeratedVariable::verify()
                 continue;
             if (ctr2->isGlobal() || ctr2->arity() > 3)
                 continue;
-            if (ctr1->arity() == 3 && ctr2->arity() == 2) {
+            if (ctr1->isTernary() && ctr2->isBinary()) {
                 TernaryConstraint* tctr1 = (TernaryConstraint*)ctr1;
                 BinaryConstraint* bctr2 = (BinaryConstraint*)ctr2;
                 if ((tctr1->getIndex(bctr2->getVar(0)) >= 0) && (tctr1->getIndex(bctr2->getVar(1)) >= 0)) {
@@ -1655,7 +1655,7 @@ bool EnumeratedVariable::verify()
                     }
                 }
             }
-            if (ctr1->arity() == 2 && ctr2->arity() == 3) {
+            if (ctr1->isBinary() && ctr2->isTernary()) {
                 BinaryConstraint* bctr1 = (BinaryConstraint*)ctr1;
                 TernaryConstraint* tctr2 = (TernaryConstraint*)ctr2;
                 if ((tctr2->getIndex(bctr1->getVar(0)) >= 0) && (tctr2->getIndex(bctr1->getVar(1)) >= 0)) {
@@ -1684,7 +1684,7 @@ bool EnumeratedVariable::verify()
                     }
                 }
             }
-            if (ctr1->arity() == 3 && ctr2->arity() == 3) {
+            if (ctr1->isTernary() && ctr2->isTernary()) {
                 TernaryConstraint* tctr1 = (TernaryConstraint*)ctr1;
                 TernaryConstraint* tctr2 = (TernaryConstraint*)ctr2;
                 BinaryConstraint* bctr1 = tctr1->commonBinary(tctr2);
@@ -1709,7 +1709,7 @@ bool EnumeratedVariable::verify()
                     }
                 }
             }
-            if (ctr1->arity() == 2 && ctr2->arity() == 2) {
+            if (ctr1->isBinary() && ctr2->isBinary()) {
                 BinaryConstraint* bctr1 = (BinaryConstraint*)ctr1;
                 BinaryConstraint* bctr2 = (BinaryConstraint*)ctr2;
                 if ((bctr1->getIndex(bctr2->getVar(0)) >= 0) && (bctr1->getIndex(bctr2->getVar(1)) >= 0)) {

@@ -637,7 +637,7 @@ void VACExtension::afterPreprocessing()
     int discarded = 0;
     for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
         Constraint* c = wcsp->getCtr(i);
-        if (c->connected() && (c->arity() <= 3) && !c->isSep()) {
+        if (c->connected() && (c->isBinary() || c->isTernary()) && !c->isSep()) {
             if (c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
                 c->deconnect();
                 discarded++;

@@ -705,12 +705,12 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
             binary = false;
     }
     AbstractNaryConstraint* ctr = NULL;
-    if (binary && nbtuples == 1 && defval == MIN_COST && arity > 3) {
+    if (binary && nbtuples == 1 && defval == MIN_COST && arity > NARYPROJECTIONSIZE) {
         ctr = new WeightedClause(this, scopeVars, arity);
     } else {
         ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
     }
-    if (arity > 3) {
+    if (arity > NARYPROJECTIONSIZE) {
         if (isDelayedNaryCtr)
             delayedNaryCtr.push_back(ctr->wcspIndex);
         else {
@@ -767,7 +767,7 @@ void WCSP::postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost)
 void WCSP::postNaryConstraintEnd(int ctrindex)
 {
     AbstractNaryConstraint* ctr = (AbstractNaryConstraint*)getCtr(ctrindex);
-    if (ctr->arity() <= 3)
+    if (ctr->arity() <= NARYPROJECTIONSIZE)
         ctr->projectNaryBeforeSearch();
     else if (!isDelayedNaryCtr)
         ctr->propagate();
@@ -1641,7 +1641,7 @@ void WCSP::processTernary()
 
     vector<TernaryConstraint*> ternaries;
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->extension() && constrs[i]->arity() == 3) {
+        if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isTernary()) {
             TernaryConstraint* t = (TernaryConstraint*)constrs[i];
             ternaries.push_back(t);
         }
@@ -1770,9 +1770,7 @@ void WCSP::preprocessing()
 
     if (ToulBar2::preprocessNary > 0) {
         for (unsigned int i = 0; i < constrs.size(); i++) {
-            if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
-                                                                                                    <= ToulBar2::preprocessNary)
-                && constrs[i]->extension()) {
+            if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
                 NaryConstraint* nary = (NaryConstraint*)constrs[i];
                 if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
                     nary->keepAllowedTuples(getUb());
@@ -3011,7 +3009,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     Constraint* ctr = NULL;
     vector<Cost> costs;
 
-    if (arityU > 3) { // || isGlobal()) {
+    if (arityU > NARYPROJECTIONSIZE) { // || isGlobal()) {
         ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size()); //TODO: improve estimated number of tuples
         ctr = getCtr(ctrIndex);
         assert(ctr->extension());
@@ -3040,6 +3038,9 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         }
     } else if (arityU == 3) {
         EnumeratedVariable* z = scopeU[2];
+        EnumeratedVariable* scopeTernary[3]= {x,y,z};
+        String t;
+        t.resize(3);
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
             for (vyi = 0; vyi < y->getDomainInitSize(); vyi++)
                 for (vzi = 0; vzi < z->getDomainInitSize(); vzi++) {
@@ -3049,17 +3050,51 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                     Cost costsum = Top;
                     if (x->canbe(vx) && y->canbe(vy) && z->canbe(vz)) {
                         costsum = MIN_COST;
-                        if (arityI == 1)
+                        if (arityI == 1) {
+                            assert(ctr1->isBinary());
+                            assert(ctr2->isBinary());
                             costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy)
                                 + ((BinaryConstraint*)ctr2)->getCost(x, z, vx, vz);
-                        else if (arityI == 2)
-                            costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy)
-                                + ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                        else if (arityI == 3)
-                            costsum += ((TernaryConstraint*)ctr1)->getCost(x, y, z, vx, vy, vz)
-                                + ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                        else
+                        } else if (arityI == 2) {
+                            assert(ctr1->isBinary());
+                            Cost c = MIN_COST;
+                            if (ctr2->isTernary()) {
+                                c = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
+                            } else {
+                                assert(ctr2->isNary());
+                                t[0] = vxi + CHAR_FIRST;
+                                t[1] = vyi + CHAR_FIRST;
+                                t[2] = vzi + CHAR_FIRST;
+                                c = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            }
+                            costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy) + c;
+                        } else if (arityI == 3) {
+                            assert(ctr1->isTernary());
+                            assert(ctr2->isTernary());
+                            Cost c1 = MIN_COST;
+                            Cost c2 = MIN_COST;
+                            if (ctr1->isTernary()) {
+                                c1 = ((TernaryConstraint*)ctr1)->getCost(x, y, z, vx, vy, vz);
+                            } else {
+                                assert(ctr1->isNary());
+                                t[0] = vxi + CHAR_FIRST;
+                                t[1] = vyi + CHAR_FIRST;
+                                t[2] = vzi + CHAR_FIRST;
+                                c1 = ((NaryConstraint*)ctr1)->eval(t, scopeTernary);
+                            }
+                            if (ctr2->isTernary()) {
+                                c2 = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
+                            } else {
+                                assert(ctr2->isNary());
+                                t[0] = vxi + CHAR_FIRST;
+                                t[1] = vyi + CHAR_FIRST;
+                                t[2] = vzi + CHAR_FIRST;
+                                c2 = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            }
+                            costsum += c1 + c2;
+                        } else {
                             assert(false);
+                        }
                         if (costsum > Top)
                             costsum = Top;
                     }
@@ -3452,7 +3487,7 @@ void WCSP::ternaryCompletion()
                             if (z->wcspIndex > y->wcspIndex)
                                 for (ConstraintList::iterator it3 = z->getConstrs()->begin(); it3 != z->getConstrs()->end(); ++it3) {
                                     Constraint* ctr3 = (*it3).constr;
-                                    if (ctr2 != ctr3 && ctr3->arity() == 2) {
+                                    if (ctr2 != ctr3 && ctr3->isBinary()) {
                                         BinaryConstraint* bctr3 = (BinaryConstraint*)ctr3;
                                         EnumeratedVariable* xx = (EnumeratedVariable*)bctr3->getVarDiffFrom(z);
                                         if (x == xx) {
@@ -3585,7 +3620,7 @@ void WCSP::buildTreeDecomposition()
         for (unsigned int i = 0; i < numberOfConstraints(); i++) {
             Constraint* ctr = getCtr(i);
             if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->arity() == 3 && ctr->extension()) {
+                if (ctr->isTernary()) {
                     TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                     tctr->setDuplicates();
                     assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
@@ -3596,7 +3631,7 @@ void WCSP::buildTreeDecomposition()
             if (elimTernConstrs[i]->connected()) {
                 Constraint* ctr = elimTernConstrs[i];
                 if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->arity() == 3 && ctr->extension()) {
+                    if (ctr->isTernary()) {
                         TernaryConstraint* tctr = (TernaryConstraint*)ctr;
                         tctr->setDuplicates();
                         assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());

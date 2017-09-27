@@ -315,6 +315,7 @@ public:
     ~TernaryConstraint() {}
 
     bool extension() const FINAL { return true; }
+    bool isTernary() const FINAL { return true; }
 
     Cost getCost(Value vx, Value vy, Value vz) const
     {

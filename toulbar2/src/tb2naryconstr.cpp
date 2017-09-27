@@ -59,13 +59,13 @@ void NaryConstraint::assign(int varIndex)
         deconnect(varIndex);
         nonassigned = nonassigned - 1;
 
-        if (size() <= 4 && universal()) { // check if it is satisfied (clause)
+        if (size() <= NARYDECONNECTSIZE && universal()) { // check if it is satisfied (clause)
             //	  cout << "nary cost function satisfied: " << this << endl;
             deconnect();
             return;
         }
 
-        if (nonassigned <= 3) {
+        if (nonassigned <= NARYPROJECTIONSIZE) {
             //	  cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
             deconnect();
             projectNary();
@@ -153,9 +153,7 @@ void NaryConstraint::expand()
     costSize = sz;
     std::fill(costs, costs + sz, default_cost);
     for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
-        String t = it->first;
-        Cost c = it->second;
-        costs[getCostsIndex(t)] = c;
+        costs[getCostsIndex(it->first)] = it->second;
     }
     delete pf;
     pf = NULL;
@@ -186,14 +184,13 @@ void NaryConstraint::fillFilters()
 
 Cost NaryConstraint::eval(const String& tin, EnumeratedVariable** scope_in)
 {
-    String t(tin);
     if (scope_in) {
         for (int i = 0; i < arity_; i++) {
             int pos = getIndex(scope_in[i]);
-            t[pos] = tin[i];
+            evalTuple[pos] = tin[i];
         }
-    }
-    return eval(t);
+        return eval(evalTuple);
+    } else return eval(tin);
 }
 
 Cost NaryConstraint::eval(const String& s)
@@ -310,7 +307,9 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
     vector<int> ordre(a, -1);
     EnumeratedVariable* var;
     EnumeratedVariable* scope_in[a];
-    String t1(iterTuple), t(iterTuple);
+    String t1, t;
+    t1.resize(a);
+    t.resize(a);
 
     EnumeratedVariable::iterator itvzfirst = vz->begin();
     EnumeratedVariable::iterator itvznext = itvzfirst;
@@ -1019,9 +1018,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
     if (negcost < 0) {
         if (pf) {
             for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
-                String t = (*it).first;
-                Cost c = (*it).second;
-                (*pf)[t] = c - negcost;
+                (*pf)[(*it).first] = (*it).second - negcost;
             }
         } else {
             for (ptrdiff_t idx = 0; idx < costSize; idx++) {
@@ -1053,7 +1050,6 @@ void NaryConstraint::project(EnumeratedVariable* x)
     }
     scope_inv.erase(x->wcspIndex);
     arity_--;
-    iterTuple.resize(arity_);
     evalTuple.resize(arity_);
 }
 
@@ -1301,7 +1297,8 @@ void NaryConstraint::print(ostream& os)
             os << "," << conflictWeights[i];
         }
     }
-    os << " |f| = " << size() << " / " << totaltuples;
+    if (pf) os << " |f| = " << size() << " / " << totaltuples;
+    else os << " |f| = " << size();
     os << "   default_cost: " << default_cost;
     os << "   arity: " << arity_;
     os << "   unassigned: " << (int)nonassigned << "/" << unassigned_ << "         ";
