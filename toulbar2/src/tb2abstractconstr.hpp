@@ -467,7 +467,6 @@ protected:
     DLink<ConstraintLink>** links;
 
     vector<EnumeratedVariable::iterator> it_values; // used by firstlex/nextlex and for separator decomposition tests
-    String iterTuple;
     String evalTuple;
 
 public:
@@ -485,7 +484,6 @@ public:
             scope[i] = var;
             scope_dac[i] = var;
             links[i] = var->link(this, i);
-            iterTuple.append(1, CHAR_FIRST);
             evalTuple.append(1, CHAR_FIRST);
         }
         setDACScopeIndex();

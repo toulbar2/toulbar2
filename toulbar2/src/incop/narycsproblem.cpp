@@ -250,7 +250,7 @@ int  wcspdata_constraint_read(WCSP *wcsp, int nbconst, vector<INCOP::NaryVariabl
 		if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && !wcsp->getCtr(i)->isGlobal() && wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary) {
 			int arity = 0;
 			int numvar = 0;
-			arity = ((wcsp->getCtr(i)->arity() <= 3) ? wcsp->getCtr(i)->arity() : (int)((NaryConstraint *) wcsp->getCtr(i))->getNonAssigned());
+			arity = ((wcsp->getCtr(i)->isNary()) ? ((int)((NaryConstraint *) wcsp->getCtr(i))->getNonAssigned()) : wcsp->getCtr(i)->arity());
 			INCOP::NaryConstraint *ct = new INCOP::NaryConstraint(arity);
 			vct->push_back(ct);
 			for (int j = 0 ; j < wcsp->getCtr(i)->arity() ; j++) if (wcsp->getCtr(i)->getVar(j)->unassigned()) {

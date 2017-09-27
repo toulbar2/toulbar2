@@ -48,6 +48,10 @@ const Value MIN_VAL = -(INT_MAX / 2);
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
 
+// For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
+const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
+const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
+
 const int MAX_BRANCH_SIZE = 1000000;
 const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;

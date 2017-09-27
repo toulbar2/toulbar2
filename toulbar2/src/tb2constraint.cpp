@@ -93,7 +93,7 @@ void Constraint::sumScopeIncluded(Constraint* ctr)
         while (nextlex(t, c)) {
             Cost cplus = ctr->evalsubstr(t, this);
             if (c + cplus < Top) {
-                if (arity() > 3 && getDefCost() > MIN_COST)
+                if (isNary() && getDefCost() > MIN_COST)
                     setTuple(t, c + cplus);
                 else
                     addtoTuple(t, cplus);
@@ -257,7 +257,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 bool Constraint::decompose()
 {
     bool sep = false;
-    if (extension() && !universal() && (arity() == 3 || (arity() >= 4 && (getDefCost() > MIN_COST || ((NaryConstraint*)this)->size() > 1)))) {
+    if (extension() && !universal() && arity() >= 3 && arity() <= ToulBar2::preprocessNary && (isTernary() || getDefCost() > MIN_COST || ((NaryConstraint*)this)->size() > 1)) {
         TSCOPE scopeinv;
         getScope(scopeinv);
         EnumeratedVariable* vx = NULL;

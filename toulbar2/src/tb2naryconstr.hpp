@@ -25,6 +25,7 @@ public:
     virtual ~NaryConstraint();
 
     bool extension() const FINAL { return true; }
+    bool isNary() const FINAL { return true; }
 
     void reconnect()
     {

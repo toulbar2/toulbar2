@@ -374,7 +374,7 @@ void WCSP::read_wcsp(const char* fileName)
         bool shared = (arity < 0);
         if (shared)
             arity = -arity;
-        if (arity > 3) {
+        if (arity > NARYPROJECTIONSIZE) {
             maxarity = max(maxarity, arity);
             if (ToulBar2::verbose >= 3)
                 cout << "read " << arity << "-ary cost function " << ic << " on";
