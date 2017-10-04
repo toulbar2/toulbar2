@@ -312,7 +312,7 @@ public:
     }
 
     void whenContradiction(); ///< \brief after a contradiction, resets propagation queues and increases \ref WCSP::nbNodes
-    void propagate(); ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
+    void propagate(bool trws = false); ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
     bool verify(); ///< \brief checks the propagation fix point is reached \warning might change EAC supports
 
     unsigned int numberOfVariables() const { return vars.size(); } ///< \brief current number of created variables
@@ -555,8 +555,9 @@ public:
     Constraint* getElimTernCtr(int elimTernIndex) const { return elimTernConstrs[elimTernIndex]; }
 
     BinaryConstraint* newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint* from1 = NULL, Constraint* from2 = NULL);
+    BinaryConstraint* newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs);
     TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint* from1 = NULL);
-    TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs);
+    TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost>& costs);
 
     void eliminate();
     void restoreSolution(Cluster* c = NULL);
@@ -588,7 +589,9 @@ public:
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char* elimVarOrderFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char* treeDecFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
-    void setDACOrder(vector<int>& elimVarOrder);
+    void setDACOrder(vector<int>& elimVarOrder, bool trws = false); ///< \brief change DAC order and propagate from scratch using pseudo-TRWS (aka iterative DAC) if true
+    void initTRWS();
+    void clearTRWS();
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp
     //

@@ -180,6 +180,8 @@ enum {
     OPT_costThreshold,
     OPT_costThresholdPre,
     OPT_costMultiplier,
+    OPT_trws,
+    NO_OPT_trws,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -346,6 +348,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
+    { OPT_trws, (char*)"-trws", SO_REQ_SEP },
+    { NO_OPT_trws, (char*)"-trws:", SO_NONE },
 
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -692,8 +696,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -V : VAC-based value ordering heuristic";
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
-    cout << endl
-         << endl;
+    cout << endl;
+    cout << "   -trws=[float] : TRWS-like algorithm in preprocessing until the relative lower bound increase is below a given threshold (default value is " << ToulBar2::trws << ")" << endl;
+    cout << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
     cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
@@ -1179,6 +1184,17 @@ int _tmain(int argc, TCHAR* argv[])
                 double co = atof(args.OptionArg());
                 if (co > MIN_COST)
                     ToulBar2::costMultiplier = co;
+            }
+
+            if (args.OptionId() == OPT_trws) {
+                double co = atof(args.OptionArg());
+                if (co > 0.)
+                    ToulBar2::trws = co;
+                else
+                    ToulBar2::trws = 0.;
+            }
+            if (args.OptionId() == NO_OPT_trws) {
+                ToulBar2::trws = 0.;
             }
 
             if (args.OptionId() == OPT_singletonConsistency)

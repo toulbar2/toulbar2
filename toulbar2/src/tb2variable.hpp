@@ -19,7 +19,7 @@
 class Variable : public WCSPLink {
 protected:
     string name;
-    int dac;
+    int dac; // DAC order
 
     Long timestamp;
     int pos; // current position in the list of unassigned variables

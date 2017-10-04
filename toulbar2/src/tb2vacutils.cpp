@@ -389,8 +389,8 @@ bool VACVariable::averaging()
  *   A class that stores information about a binary cost function
  */
 
-VACBinaryConstraint::VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab)
-    : BinaryConstraint(wcsp, xx, yy, tab)
+VACBinaryConstraint::VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab, bool propagate)
+    : BinaryConstraint(wcsp, xx, yy, tab, propagate)
     , myThreshold(MIN_COST)
 {
     for (unsigned int a = 0; a < xx->getDomainInitSize(); a++) {

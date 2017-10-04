@@ -22,6 +22,7 @@ void RegularDPConstraint::read(istream& file)
 {
     string str;
     file >> str >> def;
+    def *= ToulBar2::costMultiplier;
 
     // input the automaton
     int nstate;

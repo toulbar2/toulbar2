@@ -27,6 +27,7 @@ void AmongConstraint::read(istream& file)
 {
     string str;
     file >> str >> def;
+    def *= ToulBar2::costMultiplier;
 
     if (str != "var") {
         cout << "Error in reading samong()\n";
