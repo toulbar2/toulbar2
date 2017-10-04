@@ -147,7 +147,7 @@ public:
     virtual void sortConstraints() = 0;
 
     virtual void whenContradiction() = 0; ///< \brief after a contradiction, resets propagation queues
-    virtual void propagate() = 0; ///< \brief propagates until a fix point is reached (or throws a contradiction)
+    virtual void propagate(bool trws = false) = 0; ///< \brief propagates until a fix point is reached (or throws a contradiction)
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
 
     virtual unsigned int numberOfVariables() const = 0; ///< \brief number of created variables

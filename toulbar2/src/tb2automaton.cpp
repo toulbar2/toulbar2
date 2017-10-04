@@ -24,7 +24,7 @@ WFA::WFA(istream& file)
         Cost weight;
         file >> init >> weight;
         //cout << "reading INIT = " << init << " " << weight << endl;
-        pair<int, Cost> initSt = make_pair(init, weight);
+        pair<int, Cost> initSt = make_pair(init, weight * ToulBar2::costMultiplier);
         //cout << initSt.first << " " << initSt.second << endl;
         initialStates.push_back(initSt);
     }
@@ -35,7 +35,7 @@ WFA::WFA(istream& file)
         Cost weight;
         file >> accept >> weight;
         //cout << "reading ACCEPT = " << accept << " " << weight << endl;
-        pair<int, Cost> acceptSt = make_pair(accept, weight);
+        pair<int, Cost> acceptSt = make_pair(accept, weight * ToulBar2::costMultiplier);
         //cout << acceptSt.first << " " << acceptSt.second << endl;
         acceptingStates.push_back(acceptSt);
     }
@@ -45,7 +45,7 @@ WFA::WFA(istream& file)
         Cost weight;
         file >> start >> symbol >> end >> weight;
         //cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
-        transitions.push_back(new WTransition(start, end, symbol, weight));
+        transitions.push_back(new WTransition(start, end, symbol, weight * ToulBar2::costMultiplier));
     }
 }
 
