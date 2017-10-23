@@ -216,7 +216,7 @@ enum {
     OPT_PSMATRIX,
     OPT_PSSMATRIX,
     OPT_NATIVE,
-
+    OPT_BESTCONF,
     // Z options
     OPT_Z,
     OPT_SUBZ,
@@ -392,7 +392,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_PSMATRIX, (char*)"--psm", SO_REQ_SEP },
     { OPT_PSSMATRIX, (char*)"--pssm", SO_REQ_SEP },
     { OPT_NATIVE, (char*)"--native", SO_REQ_SEP },
-
+    { OPT_BESTCONF, (char*)"--bestconf", SO_NONE },
     // Z options
     { OPT_Z, (char*)"-logz", SO_NONE }, // compute log partition function (log Z)
     { OPT_SUBZ, (char*)"-subz", SO_OPT }, // compute a rapid LB on log partition function (log Z)
@@ -1508,6 +1508,11 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cpd->PSSMBias = atoi(args.OptionArg());
             }
 
+            // Do we want best sequence/conformation for enumerations ?
+            if (args.OptionId() == OPT_BESTCONF) {
+                ToulBar2::bestconf = true;
+            }
+
             // discrete integration for computing the partition function Z
             if (args.OptionId() == OPT_Z) {
                 ToulBar2::isZ = true;
@@ -1602,6 +1607,7 @@ int _tmain(int argc, TCHAR* argv[])
 
                 if (args.OptionArg() != NULL) {
                     ub = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
+                    ToulBar2::enumUB = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
                 }
                 if (ToulBar2::debug)
                     cout << "UB =" << ub << " passed in  command line" << endl;

@@ -399,6 +399,8 @@ public:
     static bool isZ;
     static float isZCelTemp;
     static int isZUB;
+    static Cost enumUB;
+    static bool bestconf;
     static bool stop; // STOP TB2 (TMP way)
     static bool isGumbel;
     static Seq* seq;

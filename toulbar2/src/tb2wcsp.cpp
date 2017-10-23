@@ -161,6 +161,8 @@ bool ToulBar2::isGumbel;
 float ToulBar2::isZCelTemp;
 int ToulBar2::isZUB;
 TLogProb ToulBar2::logZ;
+Cost ToulBar2::enumUB;
+bool ToulBar2::bestconf;
 TProb ToulBar2::Entropy;
 TProb ToulBar2::Enthalpy;
 TLogProb ToulBar2::GlobalLogUbZ;

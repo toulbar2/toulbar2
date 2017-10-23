@@ -828,6 +828,8 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
     }
 
     Store::restore();
+    if (ToulBar2::bestconf && middle != domsize)
+        wcsp->setUb(ToulBar2::enumUB);
     enforceUb();
     nbBacktracks++;
     if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
@@ -837,9 +839,6 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
     else
         remove(varIndex, value, nbBacktracks >= hbfsLimit);
     try {
-        // if (!ToulBar2::hbfs) showGap(wcsp->getLb(), wcsp->getUb());
-        //if (nbBacktracks >= hbfsLimit) addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
-        //else
         recursiveSolve(lb);
     } catch (FindNewSequence) {
         if (middle == domsize) {
@@ -1333,7 +1332,12 @@ void Solver::newSolution()
         if (nbSol >= ToulBar2::allSolutions)
             throw NbSolutionsOut();
         if (ToulBar2::scpbranch)
-            throw FindNewSequence();
+            {
+                if (ToulBar2::bestconf)
+                    wcsp->updateUb(wcsp->getLb());
+                else
+                    throw FindNewSequence();
+            }
     }
 }
 
