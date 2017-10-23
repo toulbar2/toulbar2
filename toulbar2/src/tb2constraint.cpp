@@ -44,18 +44,18 @@ Long Constraint::getDomainSizeProduct()
     Long cartesianProduct = 1;
 
     for (int i = 0; i < arity(); i++) {
-// trap overflow numbers
+        // trap overflow numbers
 #if __GNUC__ >= 5
         if (__builtin_smulll_overflow(cartesianProduct,
-                getVar(i)->getDomainSize(),
-                &cartesianProduct))
+                                      getVar(i)->getDomainSize(),
+                                      &cartesianProduct))
             return LONGLONG_MAX;
-    }
 #else
         if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
             return LONGLONG_MAX;
-        cartesianProduct *= scope[i]->getDomainInitSize();
+        cartesianProduct *= scope[i]->getDomainInitSize();  
 #endif
+    }
     return cartesianProduct;
 }
 

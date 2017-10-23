@@ -1230,16 +1230,13 @@ void Solver::newSolution()
         wcsp->updateUb(wcsp->getLb());
     else if (!ToulBar2::btdMode)
         nbSol += 1.;
+    
     if (ToulBar2::isZ) { // Add new solutions to logZ
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
-        //cout<< ToulBar2::logZ +ToulBar2::markov_log<<endl;
-        //if (ToulBar2::isZCelTemp>0){
-        //ToulBar2::Enthalpy = ToulBar2::Enthalpy -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*ToulBar2::isZCelTemp*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
-        //ToulBar2::Entropy = ToulBar2::Entropy + (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)*(wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb())*Exp(ToulBar2::markov_log));
-        //}
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
             cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
     }
+    
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
@@ -1251,10 +1248,10 @@ void Solver::newSolution()
         }
     } else {
         if (ToulBar2::xmlflag) {
-            cout << "o " << wcsp->getLb() << endl; //" ";
-            //	((WCSP*)wcsp)->solution_XML();
+            cout << "o " << wcsp->getLb() << endl;
         }
     }
+    
     if (ToulBar2::maxsateval) {
         cout << "o " << wcsp->getLb() << endl;
     }
@@ -1264,9 +1261,7 @@ void Solver::newSolution()
         wcsp->setSolution();
 
     if (ToulBar2::showSolutions) {
-        if (ToulBar2::verbose >= 2)
-            cout << *wcsp << endl;
-
+        if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
         if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai && !ToulBar2::isZ) {
             cout << nbSol << " solution(" << wcsp->getLb() << "): ";
         } else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai && !ToulBar2::isZ && ToulBar2::Normalizing_Constant == -numeric_limits<TLogProb>::infinity()) {
@@ -1278,10 +1273,8 @@ void Solver::newSolution()
         }
         if (ToulBar2::cpd) {
             ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
-            if (!ToulBar2::allSolutions)
-                ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
+            ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
         } else {
-
             if (!ToulBar2::isZ) {
                 for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                     cout << " ";
@@ -1300,9 +1293,11 @@ void Solver::newSolution()
         if (ToulBar2::bep)
             ToulBar2::bep->printSolution((WCSP*)wcsp);
     }
+    
     if (ToulBar2::pedigree) {
         ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
     }
+    
     if (ToulBar2::writeSolution) {
         if (ToulBar2::pedigree) {
             string problemname = ToulBar2::problemsaved_filename;
@@ -1323,11 +1318,13 @@ void Solver::newSolution()
     if ((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
     }
+    
     if (ToulBar2::newsolution)
         (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
     if (ToulBar2::restart == 0 && !ToulBar2::lds && !ToulBar2::isZ)
         throw NbBacktracksOut();
+    
     if (ToulBar2::allSolutions) {
         if (nbSol >= ToulBar2::allSolutions)
             throw NbSolutionsOut();
@@ -1604,10 +1601,12 @@ bool Solver::solve()
         cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
         ToulBar2::btdMode = 0;
     }
+    
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
         ToulBar2::elimDegree_preprocessing = -1;
     }
+    
     if (ToulBar2::incop_cmd.size() > 0) {
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
@@ -1617,6 +1616,7 @@ bool Solver::solve()
             }
         }
     }
+    
     if (((WCSP*)wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
         if (ToulBar2::btdMode >= 3) {
             cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
@@ -1718,6 +1718,7 @@ bool Solver::solve()
 
             if (ToulBar2::verbose >= 1)
                 cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << " " << wcsp->Cost2LogProb(wcsp->getNegativeLb()) << " " << wcsp->Cost2Prob(wcsp->getNegativeLb()) << endl;
+
             if (ToulBar2::isZ) { // Compute upper bound on the root level
                 //cout<< ToulBar2::logZ << endl;
                 ToulBar2::GlobalLogLbZ = MeanFieldZ();
@@ -2010,6 +2011,7 @@ bool Solver::solve()
             return true;
         }
     }
+
     if (ToulBar2::allSolutions) {
         if (ToulBar2::cpd) {
             ToulBar2::cpd->printSequences();
@@ -2032,11 +2034,6 @@ bool Solver::solve()
         cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
         cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         return true;
-
-        // else if (!ToulBar2::btdMode)
-        //   {
-        //     ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
-        //   }
     }
     //  Store::restore();         // see above for Store::store()
 

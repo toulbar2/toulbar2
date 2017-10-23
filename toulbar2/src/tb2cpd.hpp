@@ -8,7 +8,7 @@ class Cpd {
 public:
     Cpd();
     ~Cpd();
-    void read_rotamers2aa(ifstream& file, vector<Variable*>& vars) throw(int); ///< \brief read rotamer to amino acid correspondence
+    void read_rotamers2aa(ifstream& file, vector<Variable*>& vars); ///< \brief read rotamer to amino acid correspondence
     void readPSMatrix(const char* filename);
     void readPSSMatrix(const char* filename);
     void fillPSMbiases(size_t varIndex, vector<Cost>& biases);
@@ -17,7 +17,7 @@ public:
     void printSequences();
     void printSequence(const vector<Variable*>& vars, Cost _cost);
     void printSequence(TAssign& vars);
-    int getTotalSequences() { return cpdtrie->getTotalSequences(); }
+    int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
@@ -31,6 +31,7 @@ public:
 private:
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
     const static map<char, int> PSSMIdx; // converts AA char to indices in PsiBlast PSSMatrix
+    TrieCpd cpdtrie;
     vector<vector<char>> rotamers2aa;
     vector<vector<Value>> LeftAA;
     vector<vector<Value>> RightAA;
@@ -59,7 +60,6 @@ private:
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 },
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 } };
     vector<vector<int>> PSSM;
-    TrieCpd* cpdtrie;
 };
 
 #endif

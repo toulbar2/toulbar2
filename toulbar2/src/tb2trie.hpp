@@ -5,25 +5,51 @@
 
 using namespace std;
 
+class TrieLeaf;
+class TrieNode {
+public:
+    TrieNode();
+    ~TrieNode();
+    void insert_sequence(string seq, unsigned int pos, Cost _cost);
+    vector<TrieNode*> sons;
+    bool present(char aa);
+    void insertNode(char aa);
+    void insertLeaf(char aa);
+    int aa2int(char aa);
+    char int2aa(unsigned int i);
+    void print_tree(string acc);
+private:
+    TrieLeaf* getLeaf(char aa);
+    static const string i2a;
+};
+
+class TrieLeaf : public TrieNode {
+public:
+    TrieLeaf();
+    ~TrieLeaf();
+    unsigned long sequence_count;
+    Cost minc;
+    Cost maxc;
+};
+
 class TrieCpd {
 public:
-    TrieCpd();
-    ~TrieCpd();
-    int aa2int(char aa);
-    char int2aa(int i);
-    bool present(char aa);
-    void insert(char aa);
+    TrieCpd() {};
+    ~TrieCpd() {};
     void insert_sequence(string seq, Cost _cost);
     void print_tree();
-    void print_tree(string acc);
     size_t getTotalSequences() { return total_sequences; }
 
 private:
-    vector<TrieCpd*> sons;
-    size_t sequence_count;
     static size_t total_sequences;
-    Cost maxc;
-    Cost minc;
+    TrieNode root;
 };
 
 #endif
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */

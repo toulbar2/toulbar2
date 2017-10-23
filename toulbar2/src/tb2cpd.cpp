@@ -13,15 +13,13 @@ const map<char, int> Cpd::PSSMIdx = { { 'A', 0 }, { 'G', 1 }, { 'I', 2 }, { 'L',
 
 Cpd::Cpd()
 {
-    cpdtrie = new TrieCpd();
 }
 
 Cpd::~Cpd()
 {
-    delete cpdtrie;
 }
 
-void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars) throw(int)
+void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars) 
 {
     istringstream line;
     string s;
@@ -189,40 +187,44 @@ void Cpd::storeSequence(const vector<Variable*>& vars, Cost _cost)
 {
     string sequence;
     for (size_t i = 0; i < vars.size(); i++) {
-        sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
+        char aa = rotamers2aa[i][vars[i]->getValue()];
+        if (aa != '*')
+            sequence.push_back(aa);
     }
-    cpdtrie->insert_sequence(sequence, _cost);
+    cpdtrie.insert_sequence(sequence, _cost);
 }
 
 void Cpd::printSequences()
 {
-    cpdtrie->print_tree();
+    cpdtrie.print_tree();
 }
 
 void Cpd::printSequence(const vector<Variable*>& vars, Cost _cost)
 {
     string sequence;
+    cout << "New rotamers:";
     for (size_t i = 0; i < vars.size(); i++) {
-        sequence.push_back(rotamers2aa[i][vars[i]->getValue()]);
+        char aa = rotamers2aa[i][vars[i]->getValue()];
+        if (aa != '*') {
+            sequence.push_back(aa);
+            cout << " " << vars[i]->getValue();
+        }
     }
-    cout << "New sequence: " << sequence << " Cost: " << _cost << endl;
+    cout << "\nNew sequence: " << sequence << " Cost: " << _cost << endl;
 }
 
 void Cpd::printSequence(TAssign& vars)
 {
-    //  cpdtrie->print_tree();
     string sequence;
-    // TAssign::iterator it = vars.begin();
-    // while(it != vars.end())
-    //   {
-    //     sequence.push_back(rotamers2aa[it->first][it->second]);
-    //     ++it;
-    //   }
+    cout << "New rotamers:";
     for (size_t i = 0; i < vars.size(); i++) {
-        sequence.push_back(rotamers2aa[i][vars[i]]);
+        char aa = rotamers2aa[i][vars[i]];
+        if (aa != '*') {
+            sequence.push_back(aa);
+            cout << " " << vars[i];
+        }
     }
-
-    cout << "New sequence: " << sequence << endl;
+    cout << "\nNew sequence: " << sequence << endl;
 }
 
 /* Local Variables: */
