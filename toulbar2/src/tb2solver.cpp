@@ -1331,13 +1331,12 @@ void Solver::newSolution()
     if (ToulBar2::allSolutions) {
         if (nbSol >= ToulBar2::allSolutions)
             throw NbSolutionsOut();
-        if (ToulBar2::scpbranch)
-            {
-                if (ToulBar2::bestconf)
-                    wcsp->updateUb(wcsp->getLb());
-                else
-                    throw FindNewSequence();
-            }
+        if (ToulBar2::scpbranch) {
+            if (ToulBar2::bestconf)
+                wcsp->updateUb(wcsp->getLb());
+            else
+                throw FindNewSequence();
+        }
     }
 }
 

@@ -43,14 +43,14 @@ Long Constraint::getDomainSizeProduct()
         return 0; // Why ?  Should be 1 ?
     Long cartesianProduct = 1;
 
-    #if __GNUC__ >= 5
+#if __GNUC__ >= 5
     for (int i = 0; i < arity(); i++) {
         if (__builtin_smulll_overflow(cartesianProduct,
                 getVar(i)->getDomainSize(),
                 &cartesianProduct))
             return LONGLONG_MAX;
     }
-    #endif
+#endif
     return cartesianProduct;
 }
 
