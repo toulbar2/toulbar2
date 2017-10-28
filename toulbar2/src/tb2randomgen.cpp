@@ -69,9 +69,6 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
     int* scopeIndexs = new int[arity];
     Char* tuple = new Char[arity + 1];
-    Cost Top = wcsp.getUb();
-    if (costMax < Top)
-        Top = costMax;
 
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];

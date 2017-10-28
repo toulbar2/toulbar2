@@ -508,7 +508,7 @@ static void Pedi_Args(CSimpleOpt& args, int nMultiArgs)
     }
 }
 
-/* return current binary path extract from or argv[0] or from the env var $path the env var $path */
+/* return current binary path extracted from argv[0] or from the env var $path */
 
 char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 {
@@ -541,6 +541,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
         }
         tok = strtok(NULL, PATH_DELIM);
     }
+    free(path);
     buffer[0] = 0;
     return NULL;
 }
@@ -1873,7 +1874,6 @@ int _tmain(int argc, TCHAR* argv[])
                 cout << "loading solution in file: " << glob.File(n) << endl;
 
                 certificate = true;
-                certificateFilename = new char[256];
                 certificateFilename = glob.File(n);
                 certificateString = (char*)""; // ensure the search will continue starting from this solution
             }

@@ -282,7 +282,7 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
                 for (WCNFCFG::NonTermProdIterator r = cfg.beginNonTermProd(); r != cfg.endNonTermProd(); ++r) {
                     if (marked[i][j][r->from]) {
                         for (int k = i; k < j; k++) {
-                            Cost tmp = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
+                            Cost tmp; // = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
                             //if (tmp <= upTable[i][j][r->from])
                             {
                                 marked[i][k][r->to[0]] = true;

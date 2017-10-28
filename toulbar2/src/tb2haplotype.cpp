@@ -1187,7 +1187,6 @@ void Haplotype::sparse_matrix()
                             W.insert(pair<pair<int, int>, Double>(pair<int, int>(locus_prec, locus), -coef));
                         else
                             W.find(pair<int, int>(locus_prec, locus))->second += -coef;
-                        locus_prec = locus;
                     }
                     locus_prec = locus;
                 }

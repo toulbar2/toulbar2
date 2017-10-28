@@ -278,7 +278,8 @@ void WCSP::read_wcsp(const char* fileName)
 {
     char* Nfile2;
     Nfile2 = strdup(fileName);
-    name = to_string(basename(Nfile2));
+    name = string(basename(Nfile2));
+    free(Nfile2);
 
     if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);

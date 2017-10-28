@@ -301,7 +301,7 @@ void NaryConstraint::first(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz)
 {
-    int a = arity_, i = a - 1, k;
+    int a = arity_, i, k;
     bool finished = false;
     bool neweq = true;
     bool sev = true; // false if vx and vz are not separable
@@ -545,7 +545,6 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
             t[0] = scope_in[0]->toIndex(*it) + CHAR_FIRST;
             cost = eval(t, scope_in);
             cX = naryx->evalsubstr(t, naryx);
-            diffcost = squareminus(cost, cX, wcsp->getUb());
             ++it;
             //cout << t[0]-CHAR_FIRST << endl;
         } while (it != scope_in[0]->end() && cost >= wcsp->getUb() && cX >= wcsp->getUb());

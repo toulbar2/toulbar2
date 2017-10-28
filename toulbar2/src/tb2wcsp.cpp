@@ -1678,7 +1678,7 @@ void WCSP::processTernary()
 
 void WCSP::preprocessing()
 {
-    Cost previouslb = getLb();
+    Cost previouslb;
 
     Eliminate.clear();
     if (ToulBar2::elimDegree_preprocessing <= -3) {
@@ -2675,7 +2675,7 @@ void WCSP::propagate()
                             propagateAC();
                         assert(IncDec.empty());
 
-                        Cost oldLb = getLb();
+                        Cost oldLb;
                         bool cont = true;
                         while (cont) {
                             oldLb = getLb();
@@ -3076,7 +3076,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                 Value vy = y->toValue(vyi);
                 Cost costsum = Top;
                 if (x->canbe(vx) && y->canbe(vy)) {
-                    Cost costsum = bctr1->getCost(x, y, vx, vy) + bctr2->getCost(x, y, vx, vy);
+                    costsum = bctr1->getCost(x, y, vx, vy) + bctr2->getCost(x, y, vx, vy);
                     if (costsum > Top)
                         costsum = Top;
                 }
@@ -3424,12 +3424,11 @@ void WCSP::ternaryCompletion()
     if (numberOfUnassignedVariables() < 3)
         return;
 
-    Double nbunvars = numberOfUnassignedVariables();
-    Double connectivity = 2. * numberOfConnectedBinaryConstraints() / (nbunvars * (nbunvars - 1));
-    Double domsize = medianDomainSize();
-    Double size = domsize;
-    size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
-
+    // Double nbunvars = numberOfUnassignedVariables();
+    // Double connectivity = 2. * numberOfConnectedBinaryConstraints() / (nbunvars * (nbunvars - 1));
+    // Double domsize = medianDomainSize();
+    // Double size = domsize;
+    // size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
     //if (ToulBar2::debug>=2) cout << "MAX ESTIMATED RPC SIZE: " << size << " (" << nbunvars << "," << connectivity <<")" << endl;
     //if (size > 1024. * 1024. * ToulBar2::preprocessTernaryRPC) {
     //cout << "Restricted path consistency disabled (" << size/1024./1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB)" << endl;
