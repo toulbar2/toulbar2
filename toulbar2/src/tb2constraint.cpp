@@ -53,7 +53,7 @@ Long Constraint::getDomainSizeProduct()
 #else
         if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
             return LONGLONG_MAX;
-        cartesianProduct *= scope[i]->getDomainInitSize();  
+        cartesianProduct *= getVar(i)->getDomainSize();  
 #endif
     }
     return cartesianProduct;
