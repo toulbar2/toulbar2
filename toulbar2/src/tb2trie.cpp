@@ -7,7 +7,7 @@
 using namespace std;
 
 const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWY";
-size_t TrieCpd::total_sequences = 0;
+size_t TrieNode::total_sequences = 0;
 
 int TrieNode::aa2int(char aa)
 {
@@ -32,7 +32,6 @@ char TrieNode::int2aa(unsigned int i)
 void TrieCpd::insert_sequence(string seq, Cost _cost)
 {
     root.insert_sequence(seq, 0, _cost);
-    total_sequences++;
 }
 
 void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost) {
@@ -107,6 +106,7 @@ void TrieNode::insertNode(char aa)
 void TrieNode::insertLeaf(char aa)
 {
     sons[aa2int(aa)] = new TrieLeaf();
+    total_sequences++;
 }
 
 TrieLeaf* TrieNode::getLeaf(char aa)
