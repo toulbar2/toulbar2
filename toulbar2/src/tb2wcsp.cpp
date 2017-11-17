@@ -1724,15 +1724,15 @@ void WCSP::preprocessing()
 
     if (ToulBar2::trws > 0) {
         // TRWS-like algorithm: propagates with DAC only using reverse/normal DAC order successively
-        initTRWS();
+        int iter = 0;
         do {
+            iter++;
             previouslb = getLb();
             setDACOrder(revelimorder, true);
             setDACOrder(elimorder, true);
             if (ToulBar2::verbose >= 0 && getLb() > previouslb)
-                cout << "TRWS-like lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
+                cout << "TRWS-" << iter << " lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
         } while (getLb() > previouslb && (double) (getLb() - previouslb) / getLb() > ToulBar2::trws);
-        clearTRWS();
         ToulBar2::trws = 0.; // allows VAC to be propagated if required
         setDACOrder(elimorder, false); // propagate again without TRWS and possibly with VAC
     }
@@ -2608,10 +2608,11 @@ void WCSP::propagate(bool trws)
     revise(NULL);
 
     LcLevelType previousLcLevel = ToulBar2::LcLevel;
-    bool previousQueueComplexity = ToulBar2::QueueComplexity;
-    if (trws) {// Warning! cannot set ToulBar2::vac to false here because on-the-fly variable elimination may happen and create new VACBinaryConstraints!
+    if (trws) {
+        // Warning! cannot set ToulBar2::vac to false here because on-the-fly variable elimination may happen and create new VACBinaryConstraints!
+        // Warning! do not set ToulBar2::QueueComplexity to true because it becomes very slow on large problems
         ToulBar2::LcLevel = LcLevelType::LC_DAC;
-        ToulBar2::QueueComplexity = true;
+        initTRWS();
     } else {
         if (ToulBar2::trws == 0. && ToulBar2::vac)
             vac->iniThreshold();
@@ -2731,7 +2732,7 @@ void WCSP::propagate(bool trws)
     DEE.clear(); // DEE might not be empty if verify() has modified supports
     if (trws) {
         ToulBar2::LcLevel = previousLcLevel;
-        ToulBar2::QueueComplexity = previousQueueComplexity;
+        clearTRWS();
     }
     nbNodes++;
 }
