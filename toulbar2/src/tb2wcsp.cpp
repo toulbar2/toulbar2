@@ -1724,6 +1724,7 @@ void WCSP::preprocessing()
 
     if (ToulBar2::trws > 0) {
         // TRWS-like algorithm: propagates with DAC only using reverse/normal DAC order successively
+        initTRWS();
         do {
             previouslb = getLb();
             setDACOrder(revelimorder, true);
@@ -1731,7 +1732,9 @@ void WCSP::preprocessing()
             if (ToulBar2::verbose >= 0 && getLb() > previouslb)
                 cout << "TRWS-like lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
         } while (getLb() > previouslb && (double) (getLb() - previouslb) / getLb() > ToulBar2::trws);
-        setDACOrder(elimorder, false); // propagate again without TRWS
+        clearTRWS();
+        ToulBar2::trws = 0.; // allows VAC to be propagated if required
+        setDACOrder(elimorder, false); // propagate again without TRWS and possibly with VAC
     }
     if (ToulBar2::preprocessNary > 0) {
         for (unsigned int i = 0; i < constrs.size(); i++) {
@@ -2606,16 +2609,11 @@ void WCSP::propagate(bool trws)
 
     LcLevelType previousLcLevel = ToulBar2::LcLevel;
     bool previousQueueComplexity = ToulBar2::QueueComplexity;
-    int previousVac = ToulBar2::vac;
-    int previousDEE = ToulBar2::DEE_;
-    if (trws) {
+    if (trws) {// Warning! cannot set ToulBar2::vac to false here because on-the-fly variable elimination may happen and create new VACBinaryConstraints!
         ToulBar2::LcLevel = LcLevelType::LC_DAC;
         ToulBar2::QueueComplexity = true;
-        ToulBar2::vac = 0;
-        ToulBar2::DEE_ = 0;
-        initTRWS();
     } else {
-        if (ToulBar2::vac)
+        if (ToulBar2::trws == 0. && ToulBar2::vac)
             vac->iniThreshold();
 
         for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
@@ -2682,13 +2680,13 @@ void WCSP::propagate(bool trws)
                         propagateNC();
                     }
                 } while (!Eliminate.empty());
-                if (ToulBar2::DEE_) {
+                if (!trws && ToulBar2::DEE_) {
                     propagateDEE();
                 }
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
-                if (ToulBar2::vac) {
+                if (!trws && ToulBar2::trws == 0. && ToulBar2::vac) {
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();
@@ -2697,13 +2695,13 @@ void WCSP::propagate(bool trws)
                     }
                     vac->propagate();
                 }
-            } while (ToulBar2::vac && !vac->isVAC());
+            } while (!trws && ToulBar2::trws == 0. && ToulBar2::vac && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
             || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())
             || !Eliminate.empty()
-            || (ToulBar2::vac && !vac->isVAC()));
+            || (!trws && ToulBar2::trws == 0. && ToulBar2::vac && !vac->isVAC()));
         // TO BE DONE AFTER NORMAL PROPAGATION
         if (td)
             propagateSeparator();
@@ -2732,11 +2730,8 @@ void WCSP::propagate(bool trws)
     assert(Eliminate.empty());
     DEE.clear(); // DEE might not be empty if verify() has modified supports
     if (trws) {
-        clearTRWS();
         ToulBar2::LcLevel = previousLcLevel;
         ToulBar2::QueueComplexity = previousQueueComplexity;
-        ToulBar2::vac = previousVac;
-        ToulBar2::DEE_ = previousDEE;
     }
     nbNodes++;
 }

@@ -529,7 +529,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
     cout << "   *.bep  : satellite scheduling format (CHOCO benchmark)" << endl
          << endl;
-    cout << "   *.order  : variable elimination order" << endl;
+    cout << "   *.order  : reverse variable elimination order (a file containing a list of variable indexes where the last variable will be eliminated first)" << endl;
     cout << "   *.cov  : tree decomposition given by a list of clusters in topological order of a rooted forest," << endl;
     cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
@@ -606,7 +606,8 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee:)" << endl;
+    cout << "   -trws=[float] : TRWS-like algorithm in preprocessing until the relative lower bound increase is below a given threshold (default value is " << ToulBar2::trws << ")" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -trws: -dee:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -647,12 +648,11 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
     cout << endl;
-    cout << "   -trws=[float] : TRWS-like algorithm in preprocessing until the relative lower bound increase is below a given threshold (default value is " << ToulBar2::trws << ")" << endl;
     cout << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
-    cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
-    cout << "      followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
+    cout << "   -O=[filename] : reads either a reverse variable elimination order (given by a list of variable indexes) or a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
+    cout << "      followed by a cluster parent number with -1 for the first/root(s) cluster(s), followed by a list of variable indexes) from a file. It is used for BTD-like and variable elimination methods, and also for DAC ordering." << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
     cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
@@ -1477,6 +1477,9 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "maximum spanning tree DAC ordering OFF" << endl;
                 ToulBar2::MSTDAC = false;
+                if (ToulBar2::debug)
+                    cout << "TRW-S OFF" << endl;
+                ToulBar2::trws = 0.;
                 if (ToulBar2::debug)
                     cout << "dead-end elimination OFF" << endl;
                 ToulBar2::DEE = 0;

@@ -293,6 +293,7 @@ void EnumeratedVariable::initTRWS()
         }
     }
     assert(trws <= getDegree());
+    if (getDegree() > 2 * trws) trws = getDegree() - trws;
 }
 
 void EnumeratedVariable::fillEAC2(bool self)

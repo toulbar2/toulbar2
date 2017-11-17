@@ -225,9 +225,9 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-B=[integer]}] (0) DFBB, (1) BTD~\cite{Schiex06a}, (2) RDS-BTD~\cite{Sanchez09a}, (3) RDS-BTD with
   path decomposition instead of tree decomposition~\cite{Sanchez09a} (default value is
   0)
-\item[{-O=[filename]}] reads a variable elimination order from a file
+\item[{-O=[filename]}] reads either a reverse variable elimination order (given by a list of variable indexes) from a file
   in order to build a tree decomposition (if BTD-like and/or variable
-  elimination methods are used). It is also used as a DAC ordering.
+  elimination methods are used) or reads a valid tree decomposition directly (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, followed by a cluster parent number with -1 for the first/root(s) cluster(s), followed by a list of variable indexes). It is also used as a DAC ordering.
 \item[{-O=[negative integer]}] build a tree decomposition (if BTD-like
   and/or variable elimination methods are used) and also a compatible
   DAC ordering using
