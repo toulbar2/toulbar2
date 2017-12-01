@@ -61,6 +61,8 @@
 			${My_Source}/tb2gumdistrib.cpp
 			${My_Source}/ToulbarVersion.cpp
 			${My_Source}/incop/*.cpp
+			${My_Source}/tb2jobs.cpp
+			${My_Source}/tb2sequencehandler.cpp
         )
 
 MESSAGE(STATUS "-------------\n")
@@ -129,6 +131,8 @@ MESSAGE(STATUS "-------------\n")
 			${My_Source}/ToulbarVersion.*pp
                         ${My_Source}/incop/*.h
 			${My_Source}/incop/*.cpp 
+			${My_Source}/tb2jobs.*pp
+			${My_Source}/tb2sequencehandler.*pp
         )
 
 

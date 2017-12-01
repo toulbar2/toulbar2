@@ -58,6 +58,7 @@ OPTION(STATIC "static compilation flag [default: off]" OFF)
 	OPTION(COVER_TEST "cover test [default:on]" ON)
 OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
+OPTION(USE_MPI "Defines variable USEMPI" OFF)
 mark_as_advanced(WITH_MEM_JEMALLOC BUILD_API_DOC_LATEX)
 
 ##########################################
@@ -68,6 +69,10 @@ IF(NOT CMAKE_BUILD_TYPE)
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
+
+IF(USE_MPI)
+    ADD_DEFINITIONS(-DUSEMPI)
+ENDIF(USE_MPI)
 
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
 

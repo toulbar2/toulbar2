@@ -12,6 +12,9 @@
 #include "tb2bep.hpp"
 #include "tb2clusters.hpp"
 #include "tb2trienum.hpp"
+#ifdef USEMPI
+#include "tb2jobs.hpp"
+#endif
 #include <strings.h>
 #include <unistd.h>
 #include <iomanip>
@@ -127,6 +130,24 @@ void Solver::mutate(char* mutationString)
         }
     }
 }
+
+void Solver::mutate(std::string mutationString)
+{
+    if (mutationString.size() > wcsp->numberOfVariables()) {
+        cerr << "Mutation position and string go beyond the end of the protein sequence!" << endl;
+        exit(EXIT_FAILURE);
+    } else {
+        for (size_t i = 0; i < mutationString.size(); i++)
+            for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
+                if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
+                    wcsp->remove(i, v);
+                }
+            }
+        wcsp->propagate();
+    }
+}
+
+
 
 void Solver::applyCompositionalBiases()
 {
@@ -1387,7 +1408,8 @@ void Solver::recursiveSolve(Cost lb)
             assert(lb <= wcsp->getLb());
         try {
             newSolution();
-        } catch (FindNewSequence) {
+        }
+        catch (FindNewSequence) {
             throw FindNewSequence();
         }
     }
@@ -1843,10 +1865,17 @@ bool Solver::solve()
                                 //					  		wcsp->resetWeightedDegree(*iter);
                                 //					  }
                                 initialDepth = Store::getDepth();
-                                try {
-                                    hybridSolve();
-                                } catch (FindNewSequence) {
-                                }
+                                    try {
+                                        hybridSolve();
+                                    } catch (FindNewSequence) {
+                                    }
+                                #ifdef USEMPI
+                                if (ToulBar2::jobs)
+                                    {
+                                        ToulBar2::jobs->send_results(wcsp->getUb());
+                                        wcsp->setUb(initialUpperBound);
+                                    }
+                                #endif
                             } else {
                                 try {
                                     Store::store();
@@ -1947,13 +1976,20 @@ bool Solver::solve()
                             }
                         } else {
                             initialDepth = Store::getDepth();
-                            try {
-                                if (ToulBar2::isZ)
-                                    hybridCounting(ToulBar2::GlobalLogLbZ, ToulBar2::GlobalLogUbZ);
-                                else
-                                    hybridSolve();
-                            } catch (FindNewSequence) {
-                            }
+                                try {
+                                    if (ToulBar2::isZ)
+                                        hybridCounting(ToulBar2::GlobalLogLbZ, ToulBar2::GlobalLogUbZ);
+                                    else
+                                        hybridSolve();
+                                } catch (FindNewSequence) {
+                                }
+                                #ifdef USEMPI
+                                if (ToulBar2::jobs)
+                                    {
+                                        ToulBar2::jobs->send_results(wcsp->getUb());
+                                        wcsp->setUb(initialUpperBound);
+                                    }
+                                #endif
                         }
                     }
                 } catch (NbBacktracksOut) {

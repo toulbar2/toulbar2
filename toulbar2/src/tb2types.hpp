@@ -291,6 +291,10 @@ class BEP;
 class Cpd;
 class Tb2ScpBranch;
 class TrieNum;
+#ifdef USEMPI
+class Jobs;
+#endif
+class SequenceHandler;
 
 typedef enum {
     LC_NC = 0,
@@ -362,6 +366,10 @@ public:
     static Haplotype* haplotype;
     static Cpd* cpd;
     static Tb2ScpBranch* scpbranch;
+#ifdef USEMPI
+    static Jobs* jobs;
+#endif
+    static SequenceHandler* sequence_handler;
     static string map_file;
     static bool bayesian;
     static int uai;

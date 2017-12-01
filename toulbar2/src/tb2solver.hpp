@@ -267,6 +267,7 @@ public:
     void read_solution(const char* fileName, bool updateValueHeuristic = true);
     void parse_solution(const char* certificate);
     void mutate(char* mutationString);
+    void mutate(std::string mutationString);
     void applyCompositionalBiases();
     Cost getSolution(vector<Value>& solution);
 

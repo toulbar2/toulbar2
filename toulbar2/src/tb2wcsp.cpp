@@ -17,6 +17,10 @@
 #include "tb2haplotype.hpp"
 #include "tb2cpd.hpp"
 #include "tb2scpbranch.hpp"
+#ifdef USEMPI
+#include "tb2jobs.hpp"
+#endif
+#include "tb2sequencehandler.hpp"
 #include "tb2vac.hpp"
 #include "tb2clusters.hpp"
 #include "tb2seq.hpp"
@@ -104,6 +108,10 @@ Pedigree* ToulBar2::pedigree;
 Haplotype* ToulBar2::haplotype;
 Cpd* ToulBar2::cpd;
 Tb2ScpBranch* ToulBar2::scpbranch;
+#ifdef USEMPI
+Jobs* ToulBar2::jobs;
+#endif
+SequenceHandler* ToulBar2::sequence_handler;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;

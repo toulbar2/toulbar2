@@ -7,6 +7,11 @@
 #include "tb2haplotype.hpp"
 #include "tb2cpd.hpp"
 #include "tb2scpbranch.hpp"
+#ifdef USEMPI
+#include "tb2jobs.hpp"
+#include <mpi.h>
+#endif
+#include "tb2sequencehandler.hpp"
 #include "tb2bep.hpp"
 #include "tb2seq.hpp"
 #include <string.h>
@@ -14,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -251,7 +257,11 @@ enum {
 
     // CPD options
     OPT_cpd,
-    OPT_scp
+    OPT_scp,
+
+    // MPI option
+    OPT_mpi,
+    OPT_neg
 
 };
 
@@ -418,8 +428,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_seed, (char*)"-seed", SO_REQ_SEP },
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
     // CPD options
-    { OPT_cpd, (char*)"--cpd", SO_NONE },
-    { OPT_scp, (char*)"--scpbranch", SO_NONE },
+    { OPT_cpd, (char *) "--cpd", SO_NONE },
+    { OPT_scp, (char *) "--scpbranch", SO_NONE },
+    { OPT_mpi, (char *) "--jobs", SO_OPT },
+    { OPT_neg, (char *) "--negative-sequences", SO_OPT },
 
     SO_END_OF_OPTIONS
 };
@@ -800,7 +812,10 @@ void help_msg(char* toulbar2filename)
 int _tmain(int argc, TCHAR* argv[])
 {
     tb2init();
-
+    #ifdef USEMPI
+    MPI_Init(&argc, &argv);
+    cout << "MPI Initialized" << endl;
+    #endif
     setlocale(LC_ALL, "C");
     bool certificate = false;
     bool mutate = false;
@@ -847,7 +862,8 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["seq_ext"] = ".seq";
     file_extension_map["trie_ext"] = ".trie";
     file_extension_map["treedec_ext"] = ".cov";
-
+    file_extension_map["bow_ext"] = ".bow"; // bag of wcsp ^^
+    file_extension_map["neg_ext"] = ".neg"; // sequences for negative design
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
     if (ToulBar2::verbose >= 0)
         cout << "c " << CurrentBinaryPath << "toulbar2"
@@ -858,7 +874,6 @@ int _tmain(int argc, TCHAR* argv[])
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
     CSimpleOpt args(argc, argv, g_rgOptions);
-
     while (args.Next()) {
 
         if (args.LastError() == SO_SUCCESS) {
@@ -1690,6 +1705,37 @@ int _tmain(int argc, TCHAR* argv[])
                     return 1;
                 }
             }
+            ////// MPI //////
+
+            if (args.OptionId() == OPT_mpi) {
+                #ifndef USEMPI
+                cout << "Invalid option: --jobs only available in MPI mode" << endl;
+                cout << "Regenerate Makefile with the command:" << endl;
+                cout << "cmake -D CMAKE_CXX_COMPILER=\"/usr/bin/mpiCC\" -D CMAKE_C_COMPILER=\"/usr/bin/mpicc\" -D USE_MPI=ON .." << endl;
+                exit(1);
+                #endif
+                #ifdef USEMPI
+                if (args.OptionArg() != NULL)
+                    {
+                        cout << "Reading file: " << args.OptionArg() << endl;
+                        ToulBar2::jobs = new Jobs(args.OptionArg());
+                    }
+                #endif
+            }
+            
+            if (args.OptionId() == OPT_neg) {
+              if (args.OptionArg() != NULL)
+                cout << "Reading file: " << args.OptionArg() << endl;
+              #ifdef USEMPI
+              if (ToulBar2::jobs)
+                  ToulBar2::sequence_handler = new SequenceHandler(args.OptionArg(), ToulBar2::jobs->nb_jobs());
+              else {
+                  cerr << "Can't use --negative-sequences option wihtout --jobs" << endl;
+                  return 1;
+              }            
+              #endif
+            }
+
 
         }
 
@@ -1729,6 +1775,19 @@ int _tmain(int argc, TCHAR* argv[])
 
             // wcsp input file  == first file
             //	if (strstr(glob.File(n),".wcsp"))
+
+            // list of wcsp files
+            // if (check_file_ext(glob.File(n), file_extension_map["bow_ext"])) {
+            //     if (ToulBar2::verbose >= 0) cout <<  "loading bag of wcfn files:" << glob.File(n) << endl;
+            //     strext = ".bow";
+            //     strfile = glob.File(n);
+            // }
+
+            // if (check_file_ext(glob.File(n), file_extension_map["neg_ext"])) {
+            //     if (ToulBar2::verbose >= 0) cout <<  "loading sequences for negative design:" << glob.File(n) << endl;
+            //     strext = ".neg";
+            //     strfile = glob.File(n);
+            // }
 
             if (check_file_ext(glob.File(n), file_extension_map["wcsp_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2015,9 +2074,44 @@ int _tmain(int argc, TCHAR* argv[])
         ToulBar2::bep = new BEP;
 #endif
     try {
-        if (randomproblem)
-            solver->read_random(n, m, p, seed, forceSubModular, randomglobal);
-        else
+        if (randomproblem) { 
+            solver->read_random(n, m, p, seed, forceSubModular, randomglobal);}
+        #ifdef USEMPI
+        else if (ToulBar2::jobs) {
+          // MPI mode
+          string cur_job_id;
+          while (ToulBar2::jobs->next_job(cur_job_id))
+            {
+                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
+                ToulBar2::cpd = new Cpd;
+                mpisolver->read_wcsp((char *)cur_job_id.c_str());
+                cout << "Solver successfully read job " << cur_job_id << endl;
+                if (ToulBar2::jobs)
+                  {
+                      bool found_a_sequence = true;
+                      while (found_a_sequence)
+                          {
+                              Store::store();
+                              if (ToulBar2::sequence_handler)
+                                  {
+                                      cout << "Mutating sequence to " << ToulBar2::sequence_handler->get_sequence(ToulBar2::jobs->get_current_sequence()) << endl;
+                                      mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(ToulBar2::jobs->get_current_sequence()));
+                                  }
+                              // We look for a new sequence, we can restart the search
+                              mpisolver->solve();
+                              found_a_sequence = ToulBar2::jobs->request_sequence(); // We are using MPI and need another job
+                              Store::restore();
+                          }                                
+                  }
+            }
+          if (ToulBar2::jobs->mpi_rank()==0)
+              ToulBar2::sequence_handler->report();
+          cout << "Node " << ToulBar2::jobs->mpi_rank() << " spinning off" << endl;
+          MPI_Finalize();    
+          return EXIT_SUCCESS;                  
+        }
+        #endif
+		else
             solver->read_wcsp((char*)strfile.c_str());
 
         if (certificate) {
