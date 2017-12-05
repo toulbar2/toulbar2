@@ -148,7 +148,7 @@ void Jobs::process_job_results(int slave_job, int slave_rank)
 
 void Jobs::spin_off_solver(int source)
 {
-  MPI_Send( &current_job, 1, MPI_UNSIGNED, source, 0, MPI_COMM_WORLD );
+  MPI_Send( &current_job, 1, MPI_INT, source, 0, MPI_COMM_WORLD );
 }
 
 void Jobs::send_new_sequence(int source)
@@ -192,12 +192,12 @@ void Jobs::distribute_jobs()
           if (!some_jobs_left)
             {
               // Sending tag 0, no more jobs
-              MPI_Send( &current_job, 1, MPI_UNSIGNED, status_.MPI_SOURCE, 0, MPI_COMM_WORLD );
+              MPI_Send( &current_job, 1, MPI_INT, status_.MPI_SOURCE, 0, MPI_COMM_WORLD );
               running--;
             }
           else
             {
-              MPI_Send( &current_job, 1, MPI_UNSIGNED, status_.MPI_SOURCE, 1, MPI_COMM_WORLD );
+              MPI_Send( &current_job, 1, MPI_INT, status_.MPI_SOURCE, 1, MPI_COMM_WORLD );
               MPI_Send( &current_sequence, 1, MPI_UNSIGNED, status_.MPI_SOURCE, 1, MPI_COMM_WORLD );
             }
         }
@@ -212,7 +212,7 @@ bool Jobs::request_job()
   // Send request to master
   MPI_Send(&current_job, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
   // Receive signal from master
-  MPI_Recv( & new_job, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, & status_ );
+  MPI_Recv( & new_job, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, & status_ );
   // If tag is 0, no more jobs
   if (status_.MPI_TAG==0)
     {
