@@ -37,6 +37,7 @@ class TrieCpd {
 public:
     TrieCpd() {};
     ~TrieCpd() {};
+    void init() {root.sons.clear();};
     void insert_sequence(string seq, Cost _cost);
     void print_tree();
     size_t getTotalSequences() { return root.total_sequences; }

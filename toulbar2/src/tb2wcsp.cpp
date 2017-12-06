@@ -18,7 +18,8 @@
 #include "tb2cpd.hpp"
 #include "tb2scpbranch.hpp"
 #ifdef USEMPI
-#include "tb2jobs.hpp"
+#include "tb2basejobs.hpp"
+#include "tb2negjobs.hpp"
 #endif
 #include "tb2sequencehandler.hpp"
 #include "tb2vac.hpp"
@@ -109,7 +110,7 @@ Haplotype* ToulBar2::haplotype;
 Cpd* ToulBar2::cpd;
 Tb2ScpBranch* ToulBar2::scpbranch;
 #ifdef USEMPI
-Jobs* ToulBar2::jobs;
+BaseJobs* ToulBar2::jobs;
 #endif
 SequenceHandler* ToulBar2::sequence_handler;
 bool ToulBar2::bayesian;

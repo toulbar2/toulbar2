@@ -1,5 +1,5 @@
 #ifdef USEMPI
-#include "tb2jobs.hpp"
+#include "tb2negjobs.hpp"
 #include "tb2types.hpp"
 #include <fstream>
 #include <sys/stat.h>
@@ -8,42 +8,12 @@
 // Note: current_job starts from 1
 // current_sequence starts from 0
 
-Jobs::Jobs(string jobsfile):mpi_rank_(0),
-                            current_job(0),
-                            started(false)
+Jobs::Jobs(string jobsfile):BaseJobs(jobsfile)
 {
-  init_node();
-  init_jobs(jobsfile);
-  MPI_Comm_size(MPI_COMM_WORLD, &running);
 }
 
 Jobs::~Jobs()
 {
-}
-
-
-// Loading wcsp files
-void Jobs::init_jobs(string jobsfile)
-{
-  ifstream is(jobsfile);
-  string filename;
-  while(is)
-    {
-      is >> filename;
-      if (is)
-        {
-          ifstream testif(filename);
-          if (!testif.good())
-            {
-              cout << "Couldn't find file " << filename << endl;
-              exit(1);
-            }
-          else
-            jobs.push_back(filename);
-        }
-    }
-  cout << jobs.size() << " jobs successfully initialized" << endl;
-  
 }
 
 bool Jobs::next_job(string & wcsp_id)
@@ -106,23 +76,6 @@ bool Jobs::find_next_job(int myjob)
 
 }
 
-void Jobs::init_node()
-{
-  MPI_Comm_rank (MPI_COMM_WORLD, &mpi_rank_);
-}
-
-void Jobs::shutdown_node()
-{
-  started = false;
-  current_job=0;
-}
-
-int Jobs::mpi_rank()
-{
-  return mpi_rank_;
-}
-
-
 void Jobs::send_seqid_and_cost(unsigned seqid, Cost new_cost)
 {
   MPI_Send( & seqid, 1, MPI_UNSIGNED, 0, 0, MPI_COMM_WORLD );
@@ -145,11 +98,6 @@ void Jobs::process_job_results(int slave_job, int slave_rank)
   tie(seqid, new_cost) = receive_seqid_and_cost(slave_rank);
   ToulBar2::sequence_handler->update_sequences(slave_job-1, seqid, new_cost);  // jobs start at one
 } 
-
-void Jobs::spin_off_solver(int source)
-{
-  MPI_Send( &current_job, 1, MPI_INT, source, 0, MPI_COMM_WORLD );
-}
 
 void Jobs::send_new_sequence(int source)
 {
@@ -230,10 +178,5 @@ bool Jobs::request_job()
   return true;
 }
 
-
-string Jobs::get_current_job()
-{
-  return jobs[current_job-1];
-}
 
 #endif

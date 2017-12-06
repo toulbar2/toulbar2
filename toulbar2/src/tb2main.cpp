@@ -8,7 +8,8 @@
 #include "tb2cpd.hpp"
 #include "tb2scpbranch.hpp"
 #ifdef USEMPI
-#include "tb2jobs.hpp"
+#include "tb2basejobs.hpp"
+#include "tb2negjobs.hpp"
 #include <mpi.h>
 #endif
 #include "tb2sequencehandler.hpp"
@@ -874,6 +875,11 @@ int _tmain(int argc, TCHAR* argv[])
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
     CSimpleOpt args(argc, argv, g_rgOptions);
+    // Boolean and strings for MPI options
+    bool dompi = false;
+    bool donegdesign = false;
+    string mpifile;
+    string negfile;
     while (args.Next()) {
 
         if (args.LastError() == SO_SUCCESS) {
@@ -1718,22 +1724,29 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() != NULL)
                     {
                         cout << "Reading file: " << args.OptionArg() << endl;
-                        ToulBar2::jobs = new Jobs(args.OptionArg());
+                        mpifile = args.OptionArg();
+                        dompi = true;
+                    }
+                else
+                    {
+                        cout << "Option --jobs needs a file as argument" << endl;
+                        exit(1);
                     }
                 #endif
             }
             
             if (args.OptionId() == OPT_neg) {
               if (args.OptionArg() != NULL)
-                cout << "Reading file: " << args.OptionArg() << endl;
-              #ifdef USEMPI
-              if (ToulBar2::jobs)
-                  ToulBar2::sequence_handler = new SequenceHandler(args.OptionArg(), ToulBar2::jobs->nb_jobs());
-              else {
-                  cerr << "Can't use --negative-sequences option wihtout --jobs" << endl;
-                  return 1;
-              }            
-              #endif
+                  {
+                      cout << "Reading file: " << args.OptionArg() << endl;
+                      donegdesign = true;
+                      negfile = args.OptionArg();
+                  }
+              else
+                  {
+                      cout << "Option --negative-sequences needs a file as argument" << endl;
+                      exit(1);
+                  }
             }
 
 
@@ -1750,6 +1763,22 @@ int _tmain(int argc, TCHAR* argv[])
             return 1;
         }
     }
+
+    if (dompi)
+        {
+            if (donegdesign)
+                {
+                    ToulBar2::jobs = new Jobs(mpifile);
+                    ToulBar2::sequence_handler = new SequenceHandler(negfile, ToulBar2::jobs->nb_jobs());
+                }
+            else
+                ToulBar2::jobs = new BaseJobs(mpifile);
+        }
+    else if (donegdesign)
+        {
+            cout << "Error: --negativesequences cannot be used without --jobs" << endl;
+            exit(1);
+        }
     // process any files that were passed to us on the command line.
     // send them to the globber so that all wildcards are expanded
     // into valid filenames (e.g. *.cpp -> a.cpp, b.cpp, c.cpp, etc)
@@ -2080,34 +2109,48 @@ int _tmain(int argc, TCHAR* argv[])
         else if (ToulBar2::jobs) {
           // MPI mode
           string cur_job_id;
-          while (ToulBar2::jobs->next_job(cur_job_id))
-            {
-                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
-                ToulBar2::cpd = new Cpd;
-                mpisolver->read_wcsp((char *)cur_job_id.c_str());
-                cout << "Solver successfully read job " << cur_job_id << endl;
-                if (ToulBar2::jobs)
-                  {
-                      bool found_a_sequence = true;
-                      while (found_a_sequence)
-                          {
-                              Store::store();
-                              if (ToulBar2::sequence_handler)
-                                  {
-                                      cout << "Mutating sequence to " << ToulBar2::sequence_handler->get_sequence(ToulBar2::jobs->get_current_sequence()) << endl;
-                                      mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(ToulBar2::jobs->get_current_sequence()));
-                                  }
-                              // We look for a new sequence, we can restart the search
-                              mpisolver->solve();
-                              found_a_sequence = ToulBar2::jobs->request_sequence(); // We are using MPI and need another job
-                              Store::restore();
-                          }                                
-                  }
-            }
-          if (ToulBar2::jobs->mpi_rank()==0)
+          if (ToulBar2::sequence_handler)
+              {
+                  while (ToulBar2::jobs->next_job(cur_job_id))
+                      {
+                          ToulBar2::cpd->init();
+                          WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);                                              
+                          mpisolver->read_wcsp((char *)cur_job_id.c_str());
+                          bool found_a_sequence = true;
+                          while (found_a_sequence)
+                              {
+                                  Store::store();
+                                  cout << "Mutating sequence to " << ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()) << endl;
+                                  mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()));
+                                  // We look for a new sequence, we can restart the search
+                                  mpisolver->solve();
+                                  found_a_sequence = ((Jobs*)ToulBar2::jobs)->request_sequence(); // We are using MPI and need another job
+                                  Store::restore();
+                              }                                
+                      }
+              }
+          else
+              {
+                  while (ToulBar2::jobs->next_job(cur_job_id))
+                      {
+                          ToulBar2::cpd->init();
+                          WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);                                              
+                          mpisolver->read_wcsp((char *)cur_job_id.c_str());
+                          mpisolver->solve();
+                          if (ToulBar2::dumpWCSP == 1) {
+                              string problemname = ToulBar2::problemsaved_filename;
+                              if (ToulBar2::uaieval) {
+                                  problemname = ToulBar2::solution_uai_filename;
+                                  problemname.replace(problemname.rfind(".uai.MPE"), 8, ".wcsp");
+                              }
+                              mpisolver->dump_wcsp(problemname.c_str());
+                          }
+                      }
+              }
+          if (ToulBar2::sequence_handler && ToulBar2::jobs->mpi_rank()==0)
               ToulBar2::sequence_handler->report();
-          cout << "Node " << ToulBar2::jobs->mpi_rank() << " spinning off" << endl;
-          MPI_Finalize();    
+          cout << "Node " << ToulBar2::jobs->mpi_rank() << " spinning off" << endl;          
+          MPI_Finalize();
           return EXIT_SUCCESS;                  
         }
         #endif

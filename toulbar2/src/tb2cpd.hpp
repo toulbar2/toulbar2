@@ -8,6 +8,7 @@ class Cpd {
 public:
     Cpd();
     ~Cpd();
+    void init();
     void read_rotamers2aa(ifstream& file, vector<Variable*>& vars); ///< \brief read rotamer to amino acid correspondence
     void readPSMatrix(const char* filename);
     void readPSSMatrix(const char* filename);

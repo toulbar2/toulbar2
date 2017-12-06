@@ -19,6 +19,14 @@ Cpd::~Cpd()
 {
 }
 
+void Cpd::init()
+{
+    rotamers2aa.clear();
+    LeftAA.clear();
+    RightAA.clear();
+    cpdtrie.init();
+}
+
 void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars) 
 {
     istringstream line;

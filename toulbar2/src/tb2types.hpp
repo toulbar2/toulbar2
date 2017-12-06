@@ -292,6 +292,7 @@ class Cpd;
 class Tb2ScpBranch;
 class TrieNum;
 #ifdef USEMPI
+class BaseJobs;
 class Jobs;
 #endif
 class SequenceHandler;
@@ -367,7 +368,7 @@ public:
     static Cpd* cpd;
     static Tb2ScpBranch* scpbranch;
 #ifdef USEMPI
-    static Jobs* jobs;
+    static BaseJobs* jobs;
 #endif
     static SequenceHandler* sequence_handler;
     static string map_file;

@@ -13,7 +13,7 @@
 #include "tb2clusters.hpp"
 #include "tb2trienum.hpp"
 #ifdef USEMPI
-#include "tb2jobs.hpp"
+#include "tb2negjobs.hpp"
 #endif
 #include <strings.h>
 #include <unistd.h>
@@ -1870,9 +1870,9 @@ bool Solver::solve()
                                     } catch (FindNewSequence) {
                                     }
                                 #ifdef USEMPI
-                                if (ToulBar2::jobs)
+                                if (ToulBar2::sequence_handler)
                                     {
-                                        ToulBar2::jobs->send_results(wcsp->getUb());
+                                        ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
                                         wcsp->setUb(initialUpperBound);
                                     }
                                 #endif
@@ -1984,9 +1984,9 @@ bool Solver::solve()
                                 } catch (FindNewSequence) {
                                 }
                                 #ifdef USEMPI
-                                if (ToulBar2::jobs)
+                                if (ToulBar2::sequence_handler)
                                     {
-                                        ToulBar2::jobs->send_results(wcsp->getUb());
+                                        ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
                                         wcsp->setUb(initialUpperBound);
                                     }
                                 #endif
