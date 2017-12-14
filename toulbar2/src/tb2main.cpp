@@ -1763,7 +1763,7 @@ int _tmain(int argc, TCHAR* argv[])
             return 1;
         }
     }
-
+#ifdef USEMPI
     if (dompi)
         {
             if (donegdesign)
@@ -1779,6 +1779,7 @@ int _tmain(int argc, TCHAR* argv[])
             cout << "Error: --negativesequences cannot be used without --jobs" << endl;
             exit(1);
         }
+#endif
     // process any files that were passed to us on the command line.
     // send them to the globber so that all wildcards are expanded
     // into valid filenames (e.g. *.cpp -> a.cpp, b.cpp, c.cpp, etc)
