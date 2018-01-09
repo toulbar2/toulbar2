@@ -165,7 +165,7 @@ DPGlobalConstraint::Result AmongConstraint::minCost(int var, Value val, bool cha
     ucost -= deltaCost[var][x->toIndex(val)];
     barucost -= deltaCost[var][x->toIndex(val)];
 
-    Cost minCost = minCost = f[var][0].val + barucost + invf[var + 1][0].val;
+    Cost minCost = f[var][0].val + barucost + invf[var + 1][0].val;
     for (int j = 1; j <= ub; j++) {
         Cost tmpMinCost = min(f[var][j].val + barucost + invf[var + 1][j].val,
             f[var][j - 1].val + ucost + invf[var + 1][j].val);
