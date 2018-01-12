@@ -147,8 +147,6 @@ void Solver::mutate(std::string mutationString)
     }
 }
 
-
-
 void Solver::applyCompositionalBiases()
 {
     if (ToulBar2::cpd->PSMBias != 0) {
@@ -1251,13 +1249,13 @@ void Solver::newSolution()
         wcsp->updateUb(wcsp->getLb());
     else if (!ToulBar2::btdMode)
         nbSol += 1.;
-    
+
     if (ToulBar2::isZ) { // Add new solutions to logZ
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
             cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
     }
-    
+
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
@@ -1272,7 +1270,7 @@ void Solver::newSolution()
             cout << "o " << wcsp->getLb() << endl;
         }
     }
-    
+
     if (ToulBar2::maxsateval) {
         cout << "o " << wcsp->getLb() << endl;
     }
@@ -1282,7 +1280,8 @@ void Solver::newSolution()
         wcsp->setSolution();
 
     if (ToulBar2::showSolutions) {
-        if (ToulBar2::verbose >= 2) cout << *wcsp << endl;
+        if (ToulBar2::verbose >= 2)
+            cout << *wcsp << endl;
         if (ToulBar2::allSolutions && !ToulBar2::cpd && !ToulBar2::uai && !ToulBar2::isZ) {
             cout << nbSol << " solution(" << wcsp->getLb() << "): ";
         } else if (ToulBar2::allSolutions && !ToulBar2::cpd && ToulBar2::uai && !ToulBar2::isZ && ToulBar2::Normalizing_Constant == -numeric_limits<TLogProb>::infinity()) {
@@ -1314,11 +1313,11 @@ void Solver::newSolution()
         if (ToulBar2::bep)
             ToulBar2::bep->printSolution((WCSP*)wcsp);
     }
-    
+
     if (ToulBar2::pedigree) {
         ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
     }
-    
+
     if (ToulBar2::writeSolution) {
         if (ToulBar2::pedigree) {
             string problemname = ToulBar2::problemsaved_filename;
@@ -1339,13 +1338,13 @@ void Solver::newSolution()
     if ((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
     }
-    
+
     if (ToulBar2::newsolution)
         (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 
     if (ToulBar2::restart == 0 && !ToulBar2::lds && !ToulBar2::isZ)
         throw NbBacktracksOut();
-    
+
     if (ToulBar2::allSolutions) {
         if (nbSol >= ToulBar2::allSolutions)
             throw NbSolutionsOut();
@@ -1408,8 +1407,7 @@ void Solver::recursiveSolve(Cost lb)
             assert(lb <= wcsp->getLb());
         try {
             newSolution();
-        }
-        catch (FindNewSequence) {
+        } catch (FindNewSequence) {
             throw FindNewSequence();
         }
     }
@@ -1623,12 +1621,12 @@ bool Solver::solve()
         cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
         ToulBar2::btdMode = 0;
     }
-    
+
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
         ToulBar2::elimDegree_preprocessing = -1;
     }
-    
+
     if (ToulBar2::incop_cmd.size() > 0) {
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
@@ -1638,7 +1636,7 @@ bool Solver::solve()
             }
         }
     }
-    
+
     if (((WCSP*)wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
         if (ToulBar2::btdMode >= 3) {
             cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
@@ -1865,17 +1863,16 @@ bool Solver::solve()
                                 //					  		wcsp->resetWeightedDegree(*iter);
                                 //					  }
                                 initialDepth = Store::getDepth();
-                                    try {
-                                        hybridSolve();
-                                    } catch (FindNewSequence) {
-                                    }
-                                #ifdef USEMPI
-                                if (ToulBar2::sequence_handler)
-                                    {
-                                        ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
-                                        wcsp->setUb(initialUpperBound);
-                                    }
-                                #endif
+                                try {
+                                    hybridSolve();
+                                } catch (FindNewSequence) {
+                                }
+#ifdef USEMPI
+                                if (ToulBar2::sequence_handler) {
+                                    ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
+                                    wcsp->setUb(initialUpperBound);
+                                }
+#endif
                             } else {
                                 try {
                                     Store::store();
@@ -1976,20 +1973,19 @@ bool Solver::solve()
                             }
                         } else {
                             initialDepth = Store::getDepth();
-                                try {
-                                    if (ToulBar2::isZ)
-                                        hybridCounting(ToulBar2::GlobalLogLbZ, ToulBar2::GlobalLogUbZ);
-                                    else
-                                        hybridSolve();
-                                } catch (FindNewSequence) {
-                                }
-                                #ifdef USEMPI
-                                if (ToulBar2::sequence_handler)
-                                    {
-                                        ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
-                                        wcsp->setUb(initialUpperBound);
-                                    }
-                                #endif
+                            try {
+                                if (ToulBar2::isZ)
+                                    hybridCounting(ToulBar2::GlobalLogLbZ, ToulBar2::GlobalLogUbZ);
+                                else
+                                    hybridSolve();
+                            } catch (FindNewSequence) {
+                            }
+#ifdef USEMPI
+                            if (ToulBar2::sequence_handler) {
+                                ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
+                                wcsp->setUb(initialUpperBound);
+                            }
+#endif
                         }
                     }
                 } catch (NbBacktracksOut) {

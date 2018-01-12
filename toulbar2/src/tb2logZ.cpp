@@ -24,7 +24,7 @@ void Solver::enforceZUb(Cluster* cluster)
     //~ }
     //~ else{
     newlogU = wcsp->LogSumExp(ToulBar2::logU, Zub());
-    if (wcsp->LogSumExp(newlogU, ToulBar2::logZ) < Log(1 + exp(ToulBar2::logepsilon)) + ToulBar2::logZ) {
+    if (wcsp->LogSumExp(newlogU, ToulBar2::logZ) < Log(1 + Exp(ToulBar2::logepsilon)) + ToulBar2::logZ) {
         if (ToulBar2::verbose >= 1)
             cout << "ZCUT Using bound " << ToulBar2::isZUB << " U : " << newlogU << " log Z " << ToulBar2::logZ << " Log(eps x Z) : " << ToulBar2::logZ + ToulBar2::logepsilon << " " << Store::getDepth() << endl;
         ToulBar2::logU = newlogU;

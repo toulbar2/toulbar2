@@ -27,7 +27,7 @@ void Cpd::init()
     cpdtrie.init();
 }
 
-void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars) 
+void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars)
 {
     istringstream line;
     string s;

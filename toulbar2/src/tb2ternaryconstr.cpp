@@ -181,7 +181,8 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     }
 #endif
 
-    if (propagate_) propagate();
+    if (propagate_)
+        propagate();
 }
 
 TernaryConstraint::TernaryConstraint(WCSP* wcsp)

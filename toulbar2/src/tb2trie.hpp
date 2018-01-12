@@ -19,6 +19,7 @@ public:
     char int2aa(unsigned int i);
     void print_tree(string acc);
     static size_t total_sequences;
+
 private:
     TrieLeaf* getLeaf(char aa);
     static const string i2a;
@@ -35,9 +36,9 @@ public:
 
 class TrieCpd {
 public:
-    TrieCpd() {};
-    ~TrieCpd() {};
-    void init() {root.sons.clear();};
+    TrieCpd(){};
+    ~TrieCpd(){};
+    void init() { root.sons.clear(); };
     void insert_sequence(string seq, Cost _cost);
     void print_tree();
     size_t getTotalSequences() { return root.total_sequences; }

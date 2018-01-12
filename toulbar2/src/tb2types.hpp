@@ -32,6 +32,7 @@
 
 #include "tb2utils.hpp"
 #include "tb2integer.hpp"
+#include <quadmath.h>
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
@@ -148,6 +149,11 @@ const Cost LARGE_COST = PARETOPAIR_100;
 const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
+#ifdef QUAD_PROB
+typedef __float128 TProb;
+typedef __float128 TLogProb;
+#endif
+
 #ifdef DOUBLE_PROB
 typedef double TProb;
 typedef double TLogProb;
@@ -158,32 +164,38 @@ typedef Double TProb;
 typedef Double TLogProb;
 #endif
 
-//~ typedef __float128 TProb;
-//~ typedef __float128 TLogProb;
-//~ inline std::ostream& operator<< (std::ostream& os, const __float128& f) {
-//~ char* y = new char[1000];
-//~ quadmath_snprintf(y, 1000, "%.30Qg", f) ;
-//~ os.precision(30);
-//~ os<<y;
-//~ delete[] y;
-//~ return os;
-//~ }
-//~ inline std::istream& operator>> (std::istream& is, const __float128& f) {
-//~ char* y = new char[1000];
-//~ quadmath_snprintf(y, 1000, "%.30Qg", f) ;
-//~ is.precision(30);
-//~ is>>y;
-//~ delete[] y;
-//~ return is;
-//~ }
+#ifdef QUAD_PROB
+inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+{
+    char* y = new char[1000];
+    quadmath_snprintf(y, 1000, "%.30Qg", f);
 
-//~ inline __float128 my_abs( __float128 x ){return fabsq( x );}
-//~ inline __float128 my_sqrt( __float128 x ){return sqrtq( x );}
-//~ inline __float128 my_pow( __float128 x , __float128 y ){return powq( x , y );}
-//~ inline __float128 my_Exp( __float128 x ){return expq( x );}
-//~ inline __float128 my_Log( __float128 x ){return logq( x );}
-//~ inline __float128 my_Log10( __float128 x ){return log10q( x );}
-//~ inline __float128 my_Log1p( __float128 x ){return log1pq( x );}
+    os.precision(30);
+    os << y;
+    delete[] y;
+    return os;
+}
+
+inline std::istream& operator>>(std::istream& is, const __float128& f)
+{
+    char* y = new char[1000];
+    quadmath_snprintf(y, 1000, "%.30Qg", f);
+    is.precision(30);
+    is >> y;
+    delete[] y;
+    return is;
+}
+
+const __float128 Ten_Quad = strtoflt128("10", NULL);
+//inline __float128 abs( __float128 x ){return fabsq( x );}
+//inline __float128 sqrt( __float128 x ){return sqrtq( x );}
+inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
+inline __float128 Exp(__float128 x) { return expq(x); }
+inline __float128 Exp10(__float128 x) { return powq(Ten_Quad, x); }
+inline __float128 Log(__float128 x) { return logq(x); }
+inline __float128 Log10(__float128 x) { return log10q(x); }
+inline __float128 Log1p(__float128 x) { return log1pq(x); }
+#endif
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)

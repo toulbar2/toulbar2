@@ -1009,7 +1009,6 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
         return -1;
     if (file) {
         gc->read(file);
-
     }
     gc->init();
     return gc->wcspIndex;
@@ -1435,7 +1434,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
         vector<Cost> costs;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a))*ToulBar2::costMultiplier)) : getUb(), MIN_COST));
+                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a)) * ToulBar2::costMultiplier)) : getUb(), MIN_COST));
             }
         }
         return postBinaryConstraint(xIndex, yIndex, costs);
@@ -1790,7 +1789,7 @@ void WCSP::preprocessing()
             setDACOrder(elimorder, true);
             if (ToulBar2::verbose >= 0 && getLb() > previouslb)
                 cout << "TRWS-like lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
-        } while (getLb() > previouslb && (double) (getLb() - previouslb) / getLb() > ToulBar2::trws);
+        } while (getLb() > previouslb && (double)(getLb() - previouslb) / getLb() > ToulBar2::trws);
         setDACOrder(elimorder, false); // propagate again without TRWS
     }
     if (ToulBar2::preprocessNary > 0) {
@@ -3103,7 +3102,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         }
     } else if (arityU == 3) {
         EnumeratedVariable* z = scopeU[2];
-        EnumeratedVariable* scopeTernary[3]= {x,y,z};
+        EnumeratedVariable* scopeTernary[3] = { x, y, z };
         String t;
         t.resize(3);
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
@@ -3808,14 +3807,16 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
 void WCSP::clearTRWS()
 {
     for (unsigned int i = 0; i < numberOfVariables(); i++) {
-        if (vars[i]->enumerated()) ((EnumeratedVariable *) vars[i])->clearTRWS();
+        if (vars[i]->enumerated())
+            ((EnumeratedVariable*)vars[i])->clearTRWS();
     }
 }
 
 void WCSP::initTRWS()
 {
     for (unsigned int i = 0; i < numberOfVariables(); i++) {
-        if (vars[i]->enumerated()) ((EnumeratedVariable *) vars[i])->initTRWS();
+        if (vars[i]->enumerated())
+            ((EnumeratedVariable*)vars[i])->initTRWS();
     }
 }
 

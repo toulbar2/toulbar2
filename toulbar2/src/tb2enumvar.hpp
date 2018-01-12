@@ -15,7 +15,7 @@ protected:
     vector<StoreCost> costs;
     StoreCost deltaCost;
     StoreValue support; // Warning! the unary support has to be backtrackable
-    int trws;  // TRW-S number of cost functions that can extend and project this variable cost following the DAC ordering
+    int trws; // TRW-S number of cost functions that can extend and project this variable cost following the DAC ordering
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -92,7 +92,8 @@ public:
     inline Cost getCostTRWS(const Value value) const
     {
         Cost c = costs[toIndex(value)] - deltaCost;
-        if (trws>1) c = (c+trws-1) / trws;
+        if (trws > 1)
+            c = (c + trws - 1) / trws;
         return c;
     }
     Cost getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue);
@@ -112,8 +113,8 @@ public:
     void findSupport();
     bool verify();
     void initTRWS();
-    void clearTRWS() {trws = 0;}
-    int getTRWS() const {return trws;}
+    void clearTRWS() { trws = 0; }
+    int getTRWS() const { return trws; }
 
     void queueEAC1();
     void queueEAC2();

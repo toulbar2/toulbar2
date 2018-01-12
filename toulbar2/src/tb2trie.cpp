@@ -11,9 +11,10 @@ size_t TrieNode::total_sequences = 0;
 
 int TrieNode::aa2int(char aa)
 {
-    for(std::size_t i = 0; i < i2a.size(); ++i)
-        if (aa == i2a[i]) return i;
-    
+    for (std::size_t i = 0; i < i2a.size(); ++i)
+        if (aa == i2a[i])
+            return i;
+
     cout << "Error, unrecognized residue: " << aa << endl;
     exit(1);
 }
@@ -22,8 +23,7 @@ char TrieNode::int2aa(unsigned int i)
 {
     if (i < i2a.length()) {
         return i2a[i];
-    }
-    else {
+    } else {
         cout << "Error, index out of range: " << i << endl;
         exit(1);
     }
@@ -34,17 +34,18 @@ void TrieCpd::insert_sequence(string seq, Cost _cost)
     root.insert_sequence(seq, 0, _cost);
 }
 
-void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost) {
-    if (pos+1 < seq.length()) {
+void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost)
+{
+    if (pos + 1 < seq.length()) {
         if (!present(seq[pos])) {
             insertNode(seq[pos]);
         }
-        sons[aa2int(seq[pos])]->insert_sequence(seq, pos+1, _cost);
+        sons[aa2int(seq[pos])]->insert_sequence(seq, pos + 1, _cost);
     } else {
         if (!present(seq[pos])) {
             insertLeaf(seq[pos]);
         }
-        TrieLeaf *leaf = getLeaf(seq[pos]);
+        TrieLeaf* leaf = getLeaf(seq[pos]);
         leaf->sequence_count++;
         leaf->maxc = std::max(leaf->maxc, _cost);
         leaf->minc = std::min(leaf->minc, _cost);
@@ -59,12 +60,11 @@ void TrieCpd::print_tree()
 void TrieNode::print_tree(string acc)
 {
     if (sons.size() == 0) {
-        TrieLeaf *imaleaf = static_cast<TrieLeaf*>(this);
+        TrieLeaf* imaleaf = static_cast<TrieLeaf*>(this);
         cout << acc << " min cost: " << imaleaf->minc << " max cost: " << imaleaf->maxc
              << " occurred " << imaleaf->sequence_count << " times" << endl;
-    }
-    else {
-        for (size_t i = 0; i < 20; i++) 
+    } else {
+        for (size_t i = 0; i < 20; i++)
             if (sons[i] != NULL) {
                 acc.push_back(int2aa(i));
                 sons[i]->print_tree(acc);
@@ -91,7 +91,6 @@ TrieNode::~TrieNode()
     for (size_t i = 0; i < sons.size(); i++)
         delete sons[i];
 }
-
 
 bool TrieNode::present(char aa)
 {
