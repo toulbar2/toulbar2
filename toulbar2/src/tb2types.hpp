@@ -169,29 +169,25 @@ inline std::ostream& operator<<(std::ostream& os, const __float128& f)
 {
     char* y = new char[1000];
     quadmath_snprintf(y, 1000, "%.30Qg", f);
-
-    os.precision(30);
     os << y;
     delete[] y;
     return os;
 }
 
-inline std::istream& operator>>(std::istream& is, const __float128& f)
+inline std::istream& operator>>(std::istream& is, __float128& f)
 {
     char* y = new char[1000];
-    quadmath_snprintf(y, 1000, "%.30Qg", f);
-    is.precision(30);
     is >> y;
+    f = strtoflt128 (y, NULL);
     delete[] y;
     return is;
 }
 
-const __float128 Ten_Quad = strtoflt128("10", NULL);
 //inline __float128 abs( __float128 x ){return fabsq( x );}
 //inline __float128 sqrt( __float128 x ){return sqrtq( x );}
 inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
 inline __float128 Exp(__float128 x) { return expq(x); }
-inline __float128 Exp10(__float128 x) { return powq(Ten_Quad, x); }
+inline __float128 Exp10(__float128 x) { return powq(10, x); } // Assumes 10 is representable. 
 inline __float128 Log(__float128 x) { return logq(x); }
 inline __float128 Log10(__float128 x) { return log10q(x); }
 inline __float128 Log1p(__float128 x) { return log1pq(x); }
