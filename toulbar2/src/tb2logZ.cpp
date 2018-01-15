@@ -391,16 +391,14 @@ bool EnumeratedVariable::Normalization()
 
 pair<TLogProb, TLogProb> Solver::GetOpen_LB_UB(OpenList& open)
 {
-
-    OpenList copy_open = open;
     TLogProb OpenLB = -numeric_limits<TLogProb>::infinity(); //init
     TLogProb OpenUB = -numeric_limits<TLogProb>::infinity(); //init
 
-    while (!copy_open.empty()) {
-        OpenNode nd = copy_open.top();
-        copy_open.pop();
-        OpenLB = wcsp->LogSumExp(OpenLB, nd.getZlb());
-        OpenUB = wcsp->LogSumExp(OpenUB, nd.getZub());
+    auto it = open.begin();
+
+    for (; it != open.end(); it++ ) {
+        OpenLB = wcsp->LogSumExp(OpenLB, (*it).getZlb());
+        OpenUB = wcsp->LogSumExp(OpenUB, (*it).getZub());
     }
     pair<TLogProb, TLogProb> LB_UB(OpenLB, OpenUB);
 

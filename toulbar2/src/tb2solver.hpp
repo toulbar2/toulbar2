@@ -93,6 +93,8 @@ public:
         }
 
         size_type capacity() const { return c.capacity(); }
+        priority_queue::container_type::iterator begin() { return c.begin(); }
+        priority_queue::container_type::iterator end() { return c.end(); }
     };
 
     typedef enum {

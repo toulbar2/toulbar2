@@ -1056,9 +1056,7 @@ void WCSP::read_uai2008(const char* fileName)
                 cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
             else
                 cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
-            //}else{
-            //	cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb) p ) : Prob2Cost(p));
-            //}
+          
             costs[ictr].push_back(cost);
             if (cost < minc)
                 minc = cost;
