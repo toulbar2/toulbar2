@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWY";
+const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWYZ";
 size_t TrieNode::total_sequences = 0;
 
 int TrieNode::aa2int(char aa)
