@@ -7,6 +7,8 @@
 using namespace std;
 
 const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWYZ";
+const size_t TrieNode::numAA = i2a.length();
+    
 size_t TrieNode::total_sequences = 0;
 
 int TrieNode::aa2int(char aa)
@@ -36,6 +38,8 @@ void TrieCpd::insert_sequence(string seq, Cost _cost)
 
 void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost)
 {
+    cout << seq << " " << pos << " " << _cost << endl;
+    
     if (pos + 1 < seq.length()) {
         if (!present(seq[pos])) {
             insertNode(seq[pos]);
@@ -64,7 +68,7 @@ void TrieNode::print_tree(string acc)
         cout << acc << " min cost: " << imaleaf->minc << " max cost: " << imaleaf->maxc
              << " occurred " << imaleaf->sequence_count << " times" << endl;
     } else {
-        for (size_t i = 0; i < 20; i++)
+        for (size_t i = 0; i < TrieNode::numAA; i++)
             if (sons[i] != NULL) {
                 acc.push_back(int2aa(i));
                 sons[i]->print_tree(acc);
@@ -75,7 +79,7 @@ void TrieNode::print_tree(string acc)
 
 TrieNode::TrieNode()
 {
-    sons.resize(20, NULL);
+    sons.resize(TrieNode::numAA, NULL);
 }
 
 TrieLeaf::TrieLeaf()

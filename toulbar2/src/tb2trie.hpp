@@ -23,6 +23,7 @@ public:
 private:
     TrieLeaf* getLeaf(char aa);
     static const string i2a;
+    static const size_t numAA;
 };
 
 class TrieLeaf : public TrieNode {
