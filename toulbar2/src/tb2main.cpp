@@ -746,18 +746,12 @@ void help_msg(char* toulbar2filename)
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "----------------------------------- Protein Design ------------------------------------" << endl;
     cout << "---------------------------------------------------------------------------------------" << endl;
-    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl
-         << endl;
-    cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)." << endl
-         << endl;
-    cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl
-         << endl;
-    cout << "   --psmbias=[penalty] : multiplier for native similarity bias (default is 0)." << endl
-         << endl;
-    cout << "   --pssmbias=[penalty] : multiplier for PSSM bias (default is 0)." << endl
-         << endl;
-    cout << "   --native=[sequence] : native sequence." << endl
-         << endl;
+    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos."  << endl;
+    cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)."    << endl;
+    cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl;
+    cout << "   --psmbias=[penalty] : multiplier for native similarity bias (default is 0)." << endl;
+    cout << "   --pssmbias=[penalty] : multiplier for PSSM bias (default is 0)." << endl;
+    cout << "   --native=[sequence] : native sequence."  << endl;
 
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "--------------------------- Computation of Partition Function -------------------------" << endl;
