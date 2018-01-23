@@ -373,7 +373,6 @@ public:
     virtual Cost LogSumExp(Cost c1, Cost c2) const = 0;
     virtual TLogProb LogSumExp(TLogProb logc1, Cost c2) const = 0;
     virtual TLogProb LogSumExp(TLogProb logc1, TLogProb logc2) const = 0;
-    virtual TLogProb LogSubExp(TLogProb logc1, TLogProb logc2) const = 0;
 
     virtual TLogProb spanningTreeZ(Cost) = 0;
     virtual void spanningTreeRoot() = 0;

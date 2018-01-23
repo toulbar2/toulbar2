@@ -56,15 +56,29 @@ public:
     class OpenList : public priority_queue<OpenNode> {
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
         Cost cub; // current cluster upper bound (independent of any soft arc consistency cost moves)
+        TLogProb gLogLbZ; // Running sum of lower bounds on Z over all nodes
+        TLogProb gLogUbZ; // Running sum of lower bounds on Z over all nodes
+        TLogProb pGLogLbZ; // A precedent running sum of lower bounds on Z over all nodes
+        TLogProb pGLogUbZ; // A precedent running sum of lower bounds on Z over all nodes
+
     public:
         OpenList(Cost lb, Cost ub)
             : clb(lb)
             , cub(ub)
+            , gLogLbZ(-numeric_limits<TLogProb>::infinity())
+            , gLogUbZ(-numeric_limits<TLogProb>::infinity())
+            , pGLogLbZ(0)
+            , pGLogUbZ(0)
+
         {
         }
         OpenList()
             : clb(MAX_COST)
             , cub(MAX_COST)
+            , gLogLbZ(-numeric_limits<TLogProb>::infinity())
+            , gLogUbZ(-numeric_limits<TLogProb>::infinity())
+            , pGLogLbZ(0)
+            , pGLogUbZ(0)
         {
         } /// \warning use also this method to clear an open list
 
@@ -74,6 +88,19 @@ public:
             return (empty() || CUT(top().getCost(), clb));
         }
         Cost getLb(Cost delta = MIN_COST) const { return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta))); }
+
+        void addToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSumExp(gLogLbZ,m_logLbZ); }
+        void addToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSumExp(gLogUbZ,m_logUbZ); }
+        void subToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSubExp(gLogLbZ,m_logLbZ); }
+        void subToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSubExp(gLogUbZ,m_logUbZ); }
+        pair< TLogProb, TLogProb > getInternalBounds() { return make_pair(gLogLbZ,gLogUbZ); }
+        bool derivedZLbs() {
+          const TLogProb delta = Log(10.0);
+          return ((pGLogLbZ - gLogLbZ > delta) or (pGLogUbZ - gLogUbZ > delta));
+        }
+        void updateZLBs(TLogProb l, TLogProb u) {pGLogLbZ = gLogLbZ = l; pGLogUbZ = gLogUbZ = u;}
+
+        void popZ() { subToZLb(top().getZlb()); subToZUb(top().getZub()); pop(); }
 
         Cost getClosedNodesLb(Cost delta = MIN_COST) const { return MAX(MIN_COST, clb - delta); }
         void setClosedNodesLb(Cost lb, Cost delta = MIN_COST)

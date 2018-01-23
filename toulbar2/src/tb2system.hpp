@@ -12,6 +12,10 @@
 #define FINAL
 #endif
 
+#ifdef QUAD_PROB
+#include <quadmath.h>
+#endif
+
 extern const char* PrintFormatProb;
 
 double cpuTime(); ///< \brief return CPU time in seconds with high resolution (microseconds) if available
@@ -89,44 +93,69 @@ inline double Pow(double x, double y)
 inline double Exp10(double x) { return exp10(x); }
 inline double Exp(double x) { return exp(x); }
 inline double Log10(double x) { return log10(x); }
+inline double Expm1(double x) { return expm1(x); }
 inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log1p(x); }
 #endif
 #ifdef WINDOWS
-inline double Pow(double x, double y)
-{
-    return pow(x, y);
-}
+inline double Pow(double x, double y) { return pow(x, y); }
 inline double Exp10(double x) { return pow(10., x); }
 inline double Exp(double x) { return exp(x); }
 inline double Log10(double x) { return log(x) / log(10.); }
 inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log(1. + x); }
+inline double Expm1(double x) { return exp(x)-1.; }
 #endif
 #endif
 
 #ifdef LONGDOUBLE_PROB
 #ifdef LINUX
-inline Double Pow(Double x, Double y)
-{
-    return powl(x, y);
-}
+inline Double Pow(Double x, Double y) { return powl(x, y); }
 inline Double Exp10(Double x) { return powl(10.l, (Double)x); }
 inline Double Exp(Double x) { return expl(x); }
 inline Double Log10(Double x) { return log10l(x); }
+inline Double Expm1(Double x) { return expm1l(x); }
 inline Double Log(Double x) { return logl(x); }
 inline Double Log1p(Double x) { return log1pl(x); }
 #endif
 #ifdef WINDOWS
-inline Double Pow(Double x, Double y)
-{
-    return pow(x, y);
-}
+inline Double Pow(Double x, Double y) { return pow(x, y); }
 inline Double Exp10(Double x) { return pow(10., x); }
 inline Double Log10(Double x) { return log(x) / log(10.); }
 inline Double Log(Double x) { return log(x); }
 inline Double Log1p(Double x) { return log(1. + x); }
+inline Double Expm1(Double x) { return exp(x)-1.; }
 #endif
+#endif
+
+#ifdef QUAD_PROB
+inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+{
+    char* y = new char[1000];
+    quadmath_snprintf(y, 1000, "%.30Qg", f);
+    os << y;
+    delete[] y;
+    return os;
+}
+
+inline std::istream& operator>>(std::istream& is, __float128& f)
+{
+    char* y = new char[1000];
+    is >> y;
+    f = strtoflt128 (y, NULL);
+    delete[] y;
+    return is;
+}
+
+//inline __float128 abs( __float128 x ){return fabsq( x );}
+//inline __float128 sqrt( __float128 x ){return sqrtq( x );}
+inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
+inline __float128 Exp(__float128 x) { return expq(x); }
+inline __float128 Exp10(__float128 x) { return powq(10, x); } // Assumes 10 is representable.
+inline __float128 Expm1(__float128 x) { return expm1q(x); } // Assumes 10 is representable.
+inline __float128 Log(__float128 x) { return logq(x); }
+inline __float128 Log10(__float128 x) { return log10q(x); }
+inline __float128 Log1p(__float128 x) { return log1pq(x); }
 #endif
 
 #ifdef INT_COST

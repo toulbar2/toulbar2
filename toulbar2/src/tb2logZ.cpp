@@ -391,18 +391,27 @@ bool EnumeratedVariable::Normalization()
 
 pair<TLogProb, TLogProb> Solver::GetOpen_LB_UB(OpenList& open)
 {
-    TLogProb OpenLB = -numeric_limits<TLogProb>::infinity(); //init
-    TLogProb OpenUB = -numeric_limits<TLogProb>::infinity(); //init
+  //  if (open.derivedZLbs()) {
+      TLogProb OpenLB = -numeric_limits<TLogProb>::infinity(); //init
+      TLogProb OpenUB = -numeric_limits<TLogProb>::infinity(); //init
 
-    auto it = open.begin();
+      for (auto it = open.begin(); it != open.end(); it++ ) {
+          OpenLB = GLogSumExp(OpenLB, (*it).getZlb());
+          OpenUB = GLogSumExp(OpenUB, (*it).getZub());
+        }
+    open.updateZLBs(OpenLB,OpenUB);
+    //    cout << "R " << OpenLB << " " <<  OpenUB << "\n";
+    return make_pair(OpenLB, OpenUB);
+  // }
+  // else {
+  //   TLogProb gOpenLB;
+  //   TLogProb gOpenUB;
+  //   tie(gOpenLB,gOpenUB) = open.getInternalBounds();
 
-    for (; it != open.end(); it++ ) {
-        OpenLB = wcsp->LogSumExp(OpenLB, (*it).getZlb());
-        OpenUB = wcsp->LogSumExp(OpenUB, (*it).getZub());
-    }
-    pair<TLogProb, TLogProb> LB_UB(OpenLB, OpenUB);
+  //   cout << gOpenLB << " " << gOpenUB << "\n";
 
-    return LB_UB;
+  //   return make_pair(gOpenLB, gOpenUB);
+  // }
 }
 
 void Solver::showZGap()
@@ -463,7 +472,7 @@ void Solver::hybridCounting(TLogProb Zlb, TLogProb Zub)
                 Store::store();
                 //cout<<"open size before pop : "<<open_->size()<<endl;
                 OpenNode nd = open_->top();
-                open_->pop();
+                open_->popZ();
                 restore(*cp_, nd);
                 Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
                 //cout <<"Sub LB : "<< nd.getZlb()<< " to : "<< ToulBar2::GlobalLogLbZ<<" "<<(ToulBar2::GlobalLogLbZ>nd.getZlb())<<endl;

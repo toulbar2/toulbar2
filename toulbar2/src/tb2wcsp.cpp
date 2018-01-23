@@ -3960,18 +3960,6 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + 
     }
 }
 
-TLogProb WCSP::LogSubExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) - exp(c2)]
-{
-    if (logc1 == logc2)
-        return -numeric_limits<TLogProb>::infinity();
-    else if (logc1 > logc2)
-        return logc1 + (Log(1 - Exp(logc2 - logc1)));
-    else {
-        cerr << "My oh my ! Try to Logarithm a negative number" << endl;
-        exit(0);
-    }
-}
-
 //----------------------------------------
 //procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;

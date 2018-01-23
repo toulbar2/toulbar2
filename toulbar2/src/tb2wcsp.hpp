@@ -608,7 +608,6 @@ public:
     Cost LogSumExp(Cost c1, Cost c2) const;
     TLogProb LogSumExp(TLogProb logc1, Cost c2) const;
     TLogProb LogSumExp(TLogProb logc1, TLogProb logc2) const;
-    TLogProb LogSubExp(TLogProb logc1, TLogProb logc2) const;
 };
 
 #endif /*TB2WCSP_HPP_*/

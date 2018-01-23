@@ -164,34 +164,32 @@ typedef Double TProb;
 typedef Double TLogProb;
 #endif
 
-#ifdef QUAD_PROB
-inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) + exp(c2)]
 {
-    char* y = new char[1000];
-    quadmath_snprintf(y, 1000, "%.30Qg", f);
-    os << y;
-    delete[] y;
-    return os;
+    if (logc1 == -numeric_limits<TLogProb>::infinity())
+        return logc2;
+    else if (logc2 == -numeric_limits<TLogProb>::infinity())
+        return logc1;
+    else {
+        if (logc1 >= logc2)
+            return logc1 + (Log1p(Exp(logc2 - logc1)));
+        else
+            return logc2 + (Log1p(Exp(logc1 - logc2)));
+    }
 }
 
-inline std::istream& operator>>(std::istream& is, __float128& f)
+inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) - exp(c2)]
 {
-    char* y = new char[1000];
-    is >> y;
-    f = strtoflt128 (y, NULL);
-    delete[] y;
-    return is;
+    if (logc1 == logc2)
+        return -numeric_limits<TLogProb>::infinity();
+    else if (logc1 > logc2)
+        return logc1 + (Log(-Expm1(logc2 - logc1)));
+    else {
+        cerr << "My oh my ! Try to Logarithm a negative number" << endl;
+        exit(0);
+    }
 }
 
-//inline __float128 abs( __float128 x ){return fabsq( x );}
-//inline __float128 sqrt( __float128 x ){return sqrtq( x );}
-inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
-inline __float128 Exp(__float128 x) { return expq(x); }
-inline __float128 Exp10(__float128 x) { return powq(10, x); } // Assumes 10 is representable. 
-inline __float128 Log(__float128 x) { return logq(x); }
-inline __float128 Log10(__float128 x) { return log10q(x); }
-inline __float128 Log1p(__float128 x) { return log1pq(x); }
-#endif
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)

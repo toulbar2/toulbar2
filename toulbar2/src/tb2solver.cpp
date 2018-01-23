@@ -2318,6 +2318,8 @@ void Solver::addOpenNode(CPStore& cp, OpenList& open, Cost lb, TLogProb logLbZ, 
     }
     assert(cp.start <= idx);
     open.push(OpenNode(logLbZ, logUbZ, MAX(MIN_COST, lb + delta), cp.start, idx));
+    open.addToZLb(logLbZ);
+    open.addToZUb(logUbZ);
 
     cp.stop = max(cp.stop, idx);
 }
