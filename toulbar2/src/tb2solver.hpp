@@ -237,6 +237,7 @@ protected:
     void enforceUb();
     void enforceZUb(Cluster* cluster = NULL);
     void singletonConsistency();
+    void scpHBFSChoicePoint(int xIndex, Value value, Cost lb);
     void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);

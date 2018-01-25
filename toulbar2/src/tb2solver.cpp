@@ -811,6 +811,83 @@ int cmpValueCost(const void* p1, const void* p2)
     else
         return 0;
 }
+// Trial to shift to an HBFS friendly SCP ChoicePoint method. The idea is 
+// to avoid moving values and split around the selected amino-acid possibly
+// with 2 choice poibts (one on the lft and another on the right).
+
+enum SCPType { inc, dec, scp };
+void Solver::scpHBFSChoicePoint(int varIndex, Value value, Cost lb)
+{
+    assert(wcsp->unassigned(varIndex));
+    assert(wcsp->canbe(varIndex, value));
+    if (ToulBar2::interrupted)
+        throw TimeOut();
+    int left, right;
+    tie(left, right) = ToulBar2::scpbranch->getBounds(varIndex, value);
+    enum SCPType branching;
+    // there is room on the left, branch on the right side first and left later (decreasing)
+    if (left > wcsp->getInf(varIndex)) branching = SCPType::dec;
+    // there is room on the right, branch on the left side first and right later (increasing)
+    else if (right < wcsp->getSup(varIndex)) branching = SCPType::inc;
+    // no room, so we have a single AA (SC packing mode)
+    else branching = SCPType::scp;
+    //    cout << "IS LR VB " <<  wcsp->getInf(varIndex) << ":" << wcsp->getSup(varIndex)
+    //         << " " << left << ":" << right
+    //         << " " << value << ":" << branching << std::endl;
+    try {
+        Store::store();
+        lastConflictVar = varIndex;
+        switch (branching) {
+        case SCPType::scp :
+            assign(varIndex, value);
+            break;
+        case SCPType::dec : // decreasing SCP split
+            increase(varIndex, left);
+            break;
+        case SCPType::inc : // increasing SCP split
+            decrease(varIndex, right);
+        }
+        lastConflictVar = -1;
+        recursiveSolve(lb);
+    } catch (FindNewSequence) {
+        if (branching == SCPType::scp) { // not a SCP split, we backtrack
+            Store::restore();
+            enforceUb();
+            nbBacktracks++;
+            throw FindNewSequence();
+        }
+    } catch (Contradiction) {
+        wcsp->whenContradiction();
+    }
+
+    Store::restore();
+    if (ToulBar2::bestconf && branching != SCPType::scp) // SCP split
+        wcsp->setUb(ToulBar2::enumUB);
+    enforceUb();
+    nbBacktracks++;
+    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+        throw NbBacktracksOut();
+    switch (branching) {
+    case SCPType:: scp :
+        remove(varIndex, value, nbBacktracks >= hbfsLimit);
+        break;
+    case SCPType::dec :
+        decrease(varIndex, left-1,  nbBacktracks >= hbfsLimit);
+        break;
+    case SCPType::inc :
+        increase(varIndex, right+1 , nbBacktracks >= hbfsLimit);
+    }
+    try {
+        recursiveSolve(lb);
+    } catch (FindNewSequence) {
+        if (branching == SCPType::scp) {
+            Store::restore();
+            enforceUb();
+            nbBacktracks++;
+            throw FindNewSequence();
+        }
+    }
+}
 
 void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
 {

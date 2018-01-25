@@ -37,9 +37,7 @@ void TrieCpd::insert_sequence(string seq, Cost _cost)
 }
 
 void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost)
-{
-    cout << seq << " " << pos << " " << _cost << endl;
-    
+{    
     if (pos + 1 < seq.length()) {
         if (!present(seq[pos])) {
             insertNode(seq[pos]);
