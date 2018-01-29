@@ -2,6 +2,7 @@
  * **************** Generic solver *******************
  *
  */
+bool const scpHbfsMsg = true;
 
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
@@ -364,25 +365,49 @@ int Solver::getNextUnassignedVar()
 
 int Solver::getNextScpCandidate()
 {
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar)) {
+        unsigned int domsize = wcsp->getDomainSize(lastConflictVar);
+        Value values[domsize];
+        wcsp->getEnumDomain(lastConflictVar, values);
+        if (ToulBar2::scpbranch->multipleAA(lastConflictVar, values, domsize))
+            return lastConflictVar;
+    }
+
+    int varIndex = -1;
+    Cost worstUnaryCost = MIN_COST;
+    double best = MAX_VAL - MIN_VAL;
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-        unsigned int domsize = wcsp->getDomainSize(*iter);
+        Cost unarymediancost = MIN_COST;
+        int domsize = wcsp->getDomainSize(*iter);
         Value values[domsize];
         wcsp->getEnumDomain(*iter, values);
-        if (ToulBar2::scpbranch->multipleAA(*iter, values, domsize))
-            return *iter;
+        if (ToulBar2::scpbranch->multipleAA(*iter, values, domsize)) {
+            if (ToulBar2::weightedTightness) {
+                ValueCost array[domsize];
+                wcsp->getEnumDomainAndCost(*iter, array);
+                unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            }
+            double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+            if (varIndex < 0 || heuristic < best - epsilon * best
+                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+                best = heuristic;
+                varIndex = *iter;
+                worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+            }
+        }
     }
-    int varIndex = -1;
-    if (ToulBar2::Static_variable_ordering)
-        varIndex = getNextUnassignedVar();
-    else if (ToulBar2::weightedDegree && ToulBar2::lastConflict)
-        varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized() : getVarMinDomainDivMaxWeightedDegreeLastConflict());
-    else if (ToulBar2::lastConflict)
-        varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeLastConflictRandomized() : getVarMinDomainDivMaxDegreeLastConflict());
-    else if (ToulBar2::weightedDegree)
-        varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxWeightedDegreeRandomized() : getVarMinDomainDivMaxWeightedDegree());
-    else
-        varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized() : getVarMinDomainDivMaxDegree());
-
+    if (varIndex < 0) {
+        if (ToulBar2::Static_variable_ordering)
+            varIndex = getNextUnassignedVar();
+        else if (ToulBar2::weightedDegree && ToulBar2::lastConflict)
+            varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized() : getVarMinDomainDivMaxWeightedDegreeLastConflict());
+        else if (ToulBar2::lastConflict)
+            varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeLastConflictRandomized() : getVarMinDomainDivMaxDegreeLastConflict());
+        else if (ToulBar2::weightedDegree)
+            varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxWeightedDegreeRandomized() : getVarMinDomainDivMaxWeightedDegree());
+        else
+            varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized() : getVarMinDomainDivMaxDegree());
+    }
     return varIndex;
 }
 
@@ -811,12 +836,12 @@ int cmpValueCost(const void* p1, const void* p2)
     else
         return 0;
 }
+
 // Trial to shift to an HBFS friendly SCP ChoicePoint method. The idea is 
 // to avoid moving values and split around the selected amino-acid possibly
 // with 2 choice poibts (one on the lft and another on the right).
-
 enum SCPType { inc, dec, scp };
-void Solver::scpHBFSChoicePoint(int varIndex, Value value, Cost lb)
+void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
@@ -831,9 +856,6 @@ void Solver::scpHBFSChoicePoint(int varIndex, Value value, Cost lb)
     else if (right < wcsp->getSup(varIndex)) branching = SCPType::inc;
     // no room, so we have a single AA (SC packing mode)
     else branching = SCPType::scp;
-    //    cout << "IS LR VB " <<  wcsp->getInf(varIndex) << ":" << wcsp->getSup(varIndex)
-    //         << " " << left << ":" << right
-    //         << " " << value << ":" << branching << std::endl;
     try {
         Store::store();
         lastConflictVar = varIndex;
@@ -865,6 +887,7 @@ void Solver::scpHBFSChoicePoint(int varIndex, Value value, Cost lb)
         wcsp->setUb(ToulBar2::enumUB);
     enforceUb();
     nbBacktracks++;
+    
     if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
     switch (branching) {
@@ -877,67 +900,12 @@ void Solver::scpHBFSChoicePoint(int varIndex, Value value, Cost lb)
     case SCPType::inc :
         increase(varIndex, right+1 , nbBacktracks >= hbfsLimit);
     }
+
     try {
         recursiveSolve(lb);
-    } catch (FindNewSequence) {
+        } 
+    catch (FindNewSequence) {
         if (branching == SCPType::scp) {
-            Store::restore();
-            enforceUb();
-            nbBacktracks++;
-            throw FindNewSequence();
-        }
-    }
-}
-
-void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
-{
-    assert(wcsp->unassigned(varIndex));
-    assert(wcsp->canbe(varIndex, value));
-    if (ToulBar2::interrupted)
-        throw TimeOut();
-    unsigned int domsize = wcsp->getDomainSize(varIndex);
-    size_t left, right;
-    ValueCost sorted[domsize];
-    wcsp->getEnumDomainAndCost(varIndex, sorted);
-    tie(left, right) = ToulBar2::scpbranch->getBounds(varIndex, value);
-    size_t middle;
-    middle = ToulBar2::scpbranch->moveAAFirst(sorted, domsize, left, right);
-
-    try {
-        Store::store();
-        lastConflictVar = varIndex;
-        if (middle != domsize) // it's a SCP split
-            remove(varIndex, sorted, middle, domsize - 1);
-        else
-            assign(varIndex, value);
-        lastConflictVar = -1;
-        recursiveSolve(lb);
-    } catch (FindNewSequence) {
-        if (middle == domsize) { // not a SCP split, we backtrack
-            Store::restore();
-            enforceUb();
-            nbBacktracks++;
-            throw FindNewSequence();
-        }
-    } catch (Contradiction) {
-        wcsp->whenContradiction();
-    }
-
-    Store::restore();
-    if (ToulBar2::bestconf && middle != domsize)
-        wcsp->setUb(ToulBar2::enumUB);
-    enforceUb();
-    nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
-        throw NbBacktracksOut();
-    if (middle != domsize)
-        remove(varIndex, sorted, 0, middle - 1, nbBacktracks >= hbfsLimit);
-    else
-        remove(varIndex, value, nbBacktracks >= hbfsLimit);
-    try {
-        recursiveSolve(lb);
-    } catch (FindNewSequence) {
-        if (middle == domsize) {
             Store::restore();
             enforceUb();
             nbBacktracks++;
@@ -1356,6 +1324,9 @@ void Solver::newSolution()
     if (!ToulBar2::isZ)
         wcsp->setSolution();
 
+    if (ToulBar2::cpd) 
+        ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
+
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2)
             cout << *wcsp << endl;
@@ -1369,7 +1340,6 @@ void Solver::newSolution()
             cout << nbSol << " Log(Z) " << ToulBar2::logZ + ToulBar2::markov_log;
         }
         if (ToulBar2::cpd) {
-            ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
             ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
         } else {
             if (!ToulBar2::isZ) {

@@ -235,7 +235,7 @@ void tb2init()
     ToulBar2::binaryBranching = true;
     ToulBar2::lastConflict = true;
     ToulBar2::dichotomicBranching = 1;
-    ToulBar2::dichotomicBranchingSize = 10;
+    ToulBar2::dichotomicBranchingSize = 2;
     ToulBar2::sortDomains = false;
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
