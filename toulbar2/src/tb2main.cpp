@@ -1702,7 +1702,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::cpd)
                     ToulBar2::scpbranch = new Tb2ScpBranch;
                 else {
-                    cerr << "Can't use --scpbranch option wihtout --cpd" << endl;
+                    cerr << "Can't use --scpbranch option without --cpd" << endl;
                     return 1;
                 }
             }
