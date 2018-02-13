@@ -11,6 +11,120 @@ const map<char, int> Cpd::PSSMIdx = { { 'A', 0 }, { 'G', 1 }, { 'I', 2 }, { 'L',
     { 'Y', 12 }, { 'N', 13 }, { 'Q', 14 }, { 'H', 15 }, { 'K', 16 }, { 'R', 17 },
     { 'D', 18 }, { 'E', 19 } };
 
+const map<char, int> AminoMRF::AminoMRFIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
+    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 },
+    { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
+    { 'Y', 18 }, { 'V', 19 } };
+
+// AminoMRF Class
+// Read MRF trained from multiple alignment. The MRF (alignment) should have
+// exactly the same number of variables/columns as the currently solved design problem.
+AminoMRF::AminoMRF(int nvar, const char* filename)
+{
+    constexpr int NumNatAA = 20;
+
+    ifstream file;
+    file.open(filename);
+
+    if (!file.is_open()) {
+        cerr << "Could not open alignment MRF file, aborting." << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    string s;
+    do
+        getline(file, s); //Skip comments
+    while (s[0] == '#');
+
+    TLogProb LP;
+    // read unaries
+    for (int n = 0; n < nvar; n++) {
+        TLogProb minscore = std::numeric_limits<TLogProb>::max();
+        for (int i = 0; i < NumNatAA; i++) {
+            file >> LP;
+            unaries[n].push_back(LP);
+            minscore = min(minscore, LP);
+        }
+        for (int i = 0; i < NumNatAA; i++) {
+            unaries[n][i] -= minscore;
+        }
+    }
+
+    // read binaries
+    for (int n = 0; n < nvar; n++) {
+        for (int m = n+1; m < nvar; m++) {
+            TLogProb minscore = std::numeric_limits<TLogProb>::max();
+            pair<int,int> pv (n,m);
+            for (int i = 0; i < NumNatAA; i++) {
+                for (int j = 0; i < NumNatAA; j++) {
+                    file >> LP;
+                    binaries[pv][i].push_back(LP);
+                    minscore = min(minscore, LP);
+                }
+            }
+            for (int i = 0; i < NumNatAA; i++) {
+                for (int j = 0; i < NumNatAA; j++) {
+                    binaries[pv][i][j] -= minscore;
+                }
+            }
+        }
+    }
+}
+
+AminoMRF::~AminoMRF()
+{}
+
+TLogProb AminoMRF::getUnary(int var, int AAidx)
+{
+    return unaries[var][AAidx];
+}
+
+TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
+{
+    if (var1 > var2) {
+        swap(var1,var2);
+        swap(AAidx1,AAidx2);
+    }
+
+    pair<int,int> pv(var1, var2);
+
+    return binaries[pv][AAidx1][AAidx2];
+}
+
+void AminoMRF::Penalize(WCSP* pb, TLogProb CMRFBias)
+{
+    // process unaries
+    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++){
+        vector<Cost> biases;
+        for (char c : ToulBar2::cpd->getRotamers2AA()[varIdx]) {
+            int valIdx = AminoMRFIdx.find(c)->second;
+            Cost bias = CMRFBias * unaries[varIdx][valIdx];
+            biases.push_back(bias);
+        }
+        pb->postUnaryConstraint(varIdx,biases);
+    }
+
+    // process binaries
+    for (size_t varIdx1 = 0; varIdx1 < pb->numberOfVariables()-1; varIdx1++){
+        for (size_t varIdx2 = varIdx1+1; varIdx2 < pb->numberOfVariables(); varIdx2++){
+            vector<Cost> biases;
+            pair<int, int> pv (varIdx1, varIdx2);
+
+            for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
+                for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
+                    int valIdx1 = AminoMRFIdx.find(c1)->second;
+                    int valIdx2 = AminoMRFIdx.find(c2)->second;
+
+                    Cost bias = CMRFBias * binaries[pv][valIdx1][valIdx2];
+                    biases.push_back(bias);
+                }
+                pb->postBinaryConstraint(varIdx1,varIdx2,biases);
+            }
+        }
+    }
+}
+
+// CPD Class 
 Cpd::Cpd()
 {
 }

@@ -4,6 +4,24 @@
 #include "tb2wcsp.hpp"
 #include "tb2trie.hpp"
 
+// Storing an MRF to capture evolutionary information
+// could be a WCSP but simpler: all variables have 20 values (hard encoded) and
+// the number of variables should be exactly the same as in the designed protein.
+// So it's not compatible with rigid positions for now.
+class AminoMRF {
+    public:
+    AminoMRF(int nbvar, const char* filename); // read from file
+    ~AminoMRF();
+    TLogProb getUnary(int var, int AAidx);
+    TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
+    void Penalize(WCSP* pb, TLogProb biasStrength);
+
+    private:
+    map<int, vector<TLogProb>> unaries;
+    map<pair<int,int>, vector<vector<TLogProb>> > binaries;
+    static const map<char, int> AminoMRFIdx;
+};
+
 class Cpd {
 public:
     Cpd();
@@ -12,6 +30,7 @@ public:
     void read_rotamers2aa(ifstream& file, vector<Variable*>& vars); ///< \brief read rotamer to amino acid correspondence
     void readPSMatrix(const char* filename);
     void readPSSMatrix(const char* filename);
+    void readEvolMat(const char* filename);
     void fillPSMbiases(size_t varIndex, vector<Cost>& biases);
     void fillPSSMbiases(size_t varIndex, vector<Cost>& biases);
     void storeSequence(const vector<Variable*>& vars, Cost _cost);
