@@ -158,7 +158,7 @@ void Solver::applyCompositionalBiases()
             for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
                 vector<Cost> biases;
                 ToulBar2::cpd->fillPSMbiases(varIndex, biases);
-                wcsp->postUnary(varIndex, biases);
+                wcsp->postUnaryConstraint(varIndex, biases);
             }
         }
     }
@@ -171,7 +171,7 @@ void Solver::applyCompositionalBiases()
             for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
                 vector<Cost> biases;
                 ToulBar2::cpd->fillPSSMbiases(varIndex, biases);
-                wcsp->postUnary(varIndex, biases);
+                wcsp->postUnaryConstraint(varIndex, biases);
             }
         }
     }
