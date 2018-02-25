@@ -391,27 +391,27 @@ bool EnumeratedVariable::Normalization()
 
 pair<TLogProb, TLogProb> Solver::GetOpen_LB_UB(OpenList& open)
 {
-  //  if (open.derivedZLbs()) {
-      TLogProb OpenLB = -numeric_limits<TLogProb>::infinity(); //init
-      TLogProb OpenUB = -numeric_limits<TLogProb>::infinity(); //init
+    //  if (open.derivedZLbs()) {
+    TLogProb OpenLB = -numeric_limits<TLogProb>::infinity(); //init
+    TLogProb OpenUB = -numeric_limits<TLogProb>::infinity(); //init
 
-      for (auto it = open.begin(); it != open.end(); it++ ) {
-          OpenLB = GLogSumExp(OpenLB, (*it).getZlb());
-          OpenUB = GLogSumExp(OpenUB, (*it).getZub());
-        }
-    open.updateZLBs(OpenLB,OpenUB);
+    for (auto it = open.begin(); it != open.end(); it++) {
+        OpenLB = GLogSumExp(OpenLB, (*it).getZlb());
+        OpenUB = GLogSumExp(OpenUB, (*it).getZub());
+    }
+    open.updateZLBs(OpenLB, OpenUB);
     //    cout << "R " << OpenLB << " " <<  OpenUB << "\n";
     return make_pair(OpenLB, OpenUB);
-  // }
-  // else {
-  //   TLogProb gOpenLB;
-  //   TLogProb gOpenUB;
-  //   tie(gOpenLB,gOpenUB) = open.getInternalBounds();
+    // }
+    // else {
+    //   TLogProb gOpenLB;
+    //   TLogProb gOpenUB;
+    //   tie(gOpenLB,gOpenUB) = open.getInternalBounds();
 
-  //   cout << gOpenLB << " " << gOpenUB << "\n";
+    //   cout << gOpenLB << " " << gOpenUB << "\n";
 
-  //   return make_pair(gOpenLB, gOpenUB);
-  // }
+    //   return make_pair(gOpenLB, gOpenUB);
+    // }
 }
 
 void Solver::showZGap()

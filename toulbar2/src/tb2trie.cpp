@@ -8,7 +8,7 @@ using namespace std;
 
 const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWYZ";
 const size_t TrieNode::numAA = i2a.length();
-    
+
 size_t TrieNode::total_sequences = 0;
 
 int TrieNode::aa2int(char aa)
@@ -37,7 +37,7 @@ void TrieCpd::insert_sequence(string seq, Cost _cost)
 }
 
 void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost)
-{    
+{
     if (pos + 1 < seq.length()) {
         if (!present(seq[pos])) {
             insertNode(seq[pos]);

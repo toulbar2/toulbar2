@@ -788,7 +788,7 @@ void WCSP::read_wcsp(const char* fileName)
     unaryconstrs = newunaryconstrs;
     if (ToulBar2::sortDomains) {
         if (maxarity > 2) {
-            cout << "Warning! Cannot sort domains in preprocesing with non-binary cost functions." << endl;
+            cout << "Warning! Cannot sort domains in preprocessing with non-binary cost functions." << endl;
         } else {
             ToulBar2::sortedDomains.clear();
             for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
@@ -1056,7 +1056,7 @@ void WCSP::read_uai2008(const char* fileName)
                 cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
             else
                 cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
-          
+
             costs[ictr].push_back(cost);
             if (cost < minc)
                 minc = cost;

@@ -79,6 +79,13 @@ void initCosts(Cost c)
 }
 #endif
 
+void requireCpd()
+{
+    if (ToulBar2::cpd == NULL) {
+        ToulBar2::cpd = new Cpd;
+    }
+}
+
 /* read upper bound from given file */
 string read_UB(char* ubfilename)
 {
@@ -224,6 +231,8 @@ enum {
     OPT_PSMATRIX,
     OPT_PSSMATRIX,
     OPT_NATIVE,
+    OPT_AMINOMRF,
+    OPT_AMINOMRFBIAS,
     OPT_BESTCONF,
     // Z options
     OPT_Z,
@@ -406,6 +415,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_PSMATRIX, (char*)"--psm", SO_REQ_SEP },
     { OPT_PSSMATRIX, (char*)"--pssm", SO_REQ_SEP },
     { OPT_NATIVE, (char*)"--native", SO_REQ_SEP },
+    { OPT_AMINOMRF, (char*)"--aminoMRF", SO_REQ_SEP },
+    { OPT_AMINOMRFBIAS, (char*)"--aminoMRFbias", SO_REQ_SEP },
     { OPT_BESTCONF, (char*)"--bestconf", SO_NONE },
     // Z options
     { OPT_Z, (char*)"-logz", SO_NONE }, // compute log partition function (log Z)
@@ -746,12 +757,14 @@ void help_msg(char* toulbar2filename)
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "----------------------------------- Protein Design ------------------------------------" << endl;
     cout << "---------------------------------------------------------------------------------------" << endl;
-    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos."  << endl;
-    cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)."    << endl;
+    cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl;
+    cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)." << endl;
     cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl;
-    cout << "   --psmbias=[penalty] : multiplier for native similarity bias (default is 0)." << endl;
-    cout << "   --pssmbias=[penalty] : multiplier for PSSM bias (default is 0)." << endl;
-    cout << "   --native=[sequence] : native sequence."  << endl;
+    cout << "   --psmbias=[weight] : multiplier for native similarity bias (default is 0)." << endl;
+    cout << "   --pssmbias=[weight] : multiplier for PSSM bias (default is 0)." << endl;
+    cout << "   --native=[sequence] : native sequence." << endl;
+    cout << "   --aminoMRF=[filepath] : path to an additive MRF over all positions and amino acids" << endl;
+    cout << "   --aminoMRFbias=[weight] : multiplier  for the amino RMF biases (raw CMCpred format)" << endl;
 
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "--------------------------- Computation of Partition Function -------------------------" << endl;
@@ -759,19 +772,13 @@ void help_msg(char* toulbar2filename)
     cout << "   -logz : computes log(Z) (i.e. probability of evidence or PR task)" << endl;
     cout << "           for graphical models only (problem file extension .uai or .LG)" << endl;
     cout << "           using by default (-zub=1 -hbfs -sigma=0 -ztmp=1)" << endl;
-    cout << endl;
     cout << "   -logz -ztmp : -logz and divide the Energy by the RT constant (25°C degrees)." << endl;
-    cout << endl;
     cout << "   -logz -zub=[integer] : -logz computes log of probability of evidence with pruning upper bound 0, 1 or 2 (default value is 1)" << endl;
-    cout << endl;
     cout << "   -logz -epsilon=1/[float] : Run Z-star algorithm." << endl;
     cout << "                              Approximation epsilon factor for computing the partition function (1000 is the default value (for 0.001))" << endl;
     cout << "                              Set to 0 for exact computation" << endl;
-    cout << endl;
     cout << "   -logz -hbfs -sigma=1/[float] : limit factor for hbfs counting, set to 0 by default (exact computation)" << endl;
-    cout << endl;
     cout << "   -gum : Apply random perturbation following Gumbel distribution on the cost matrix" << endl;
-    cout << endl;
     cout << "---------------------------------------------------------------------------------------" << endl;
 
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
@@ -783,7 +790,6 @@ void help_msg(char* toulbar2filename)
     cout << "       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions" << endl;
     cout << "                                          :p2 is the num of binary cost functions to include" << endl;
     cout << "                                          :the seed parameter is optional (and will overwrite -seed)" << endl;
-
     cout << "   or:                                                                               " << endl;
     cout << "       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl;
     cout << "                                          t1 is the tightness in percentage % of random cost functions" << endl;
@@ -1518,31 +1524,49 @@ int _tmain(int argc, TCHAR* argv[])
 
             // define native sequence
             if (args.OptionId() == OPT_NATIVE) {
+                requireCpd();
                 ToulBar2::cpd->nativeSequence = args.OptionArg();
             }
 
             // get PSMatrix name
             if (args.OptionId() == OPT_PSMATRIX) {
+                requireCpd();
                 ToulBar2::cpd->readPSMatrix(args.OptionArg());
             }
 
             // get PSSM filename
             if (args.OptionId() == OPT_PSSMATRIX) {
+                requireCpd();
                 ToulBar2::cpd->readPSSMatrix(args.OptionArg());
+            }
+
+            // get AminoMRF filename
+            if (args.OptionId() == OPT_AMINOMRF) {
+                requireCpd();
+                ToulBar2::cpd->AminoMat = new AminoMRF(args.OptionArg());
             }
 
             // get psm bias
             if (args.OptionId() == OPT_PSMBIAS) {
+                requireCpd();
                 ToulBar2::cpd->PSMBias = atoi(args.OptionArg());
             }
 
             // get pssm bias
             if (args.OptionId() == OPT_PSSMBIAS) {
+                requireCpd();
                 ToulBar2::cpd->PSSMBias = atoi(args.OptionArg());
+            }
+
+            // get pssm bias
+            if (args.OptionId() == OPT_AMINOMRFBIAS) {
+                requireCpd();
+                ToulBar2::cpd->AminoMRFBias = atoi(args.OptionArg());
             }
 
             // Do we want best sequence/conformation for enumerations ?
             if (args.OptionId() == OPT_BESTCONF) {
+                requireCpd();
                 ToulBar2::bestconf = true;
             }
 
@@ -1696,16 +1720,14 @@ int _tmain(int argc, TCHAR* argv[])
 
             ///////////////// CPD options //////////////
             if (args.OptionId() == OPT_cpd) {
-                ToulBar2::cpd = new Cpd;
+                requireCpd();
             }
+
             if (args.OptionId() == OPT_scp) {
-                if (ToulBar2::cpd)
-                    ToulBar2::scpbranch = new Tb2ScpBranch;
-                else {
-                    cerr << "Can't use --scpbranch option without --cpd" << endl;
-                    return 1;
-                }
+                requireCpd();
+                ToulBar2::scpbranch = new Tb2ScpBranch;
             }
+
             ////// MPI //////
 
             if (args.OptionId() == OPT_mpi) {
@@ -2144,6 +2166,7 @@ int _tmain(int argc, TCHAR* argv[])
             else
                 solver->parse_solution(certificateString);
         }
+
         if (mutate) {
             solver->mutate(mutationString);
         }

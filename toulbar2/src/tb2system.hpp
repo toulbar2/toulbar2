@@ -98,19 +98,25 @@ inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log1p(x); }
 #endif
 #ifdef WINDOWS
-inline double Pow(double x, double y) { return pow(x, y); }
+inline double Pow(double x, double y)
+{
+    return pow(x, y);
+}
 inline double Exp10(double x) { return pow(10., x); }
 inline double Exp(double x) { return exp(x); }
 inline double Log10(double x) { return log(x) / log(10.); }
 inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log(1. + x); }
-inline double Expm1(double x) { return exp(x)-1.; }
+inline double Expm1(double x) { return exp(x) - 1.; }
 #endif
 #endif
 
 #ifdef LONGDOUBLE_PROB
 #ifdef LINUX
-inline Double Pow(Double x, Double y) { return powl(x, y); }
+inline Double Pow(Double x, Double y)
+{
+    return powl(x, y);
+}
 inline Double Exp10(Double x) { return powl(10.l, (Double)x); }
 inline Double Exp(Double x) { return expl(x); }
 inline Double Log10(Double x) { return log10l(x); }
@@ -119,12 +125,15 @@ inline Double Log(Double x) { return logl(x); }
 inline Double Log1p(Double x) { return log1pl(x); }
 #endif
 #ifdef WINDOWS
-inline Double Pow(Double x, Double y) { return pow(x, y); }
+inline Double Pow(Double x, Double y)
+{
+    return pow(x, y);
+}
 inline Double Exp10(Double x) { return pow(10., x); }
 inline Double Log10(Double x) { return log(x) / log(10.); }
 inline Double Log(Double x) { return log(x); }
 inline Double Log1p(Double x) { return log(1. + x); }
-inline Double Expm1(Double x) { return exp(x)-1.; }
+inline Double Expm1(Double x) { return exp(x) - 1.; }
 #endif
 #endif
 
@@ -142,7 +151,7 @@ inline std::istream& operator>>(std::istream& is, __float128& f)
 {
     char* y = new char[1000];
     is >> y;
-    f = strtoflt128 (y, NULL);
+    f = strtoflt128(y, NULL);
     delete[] y;
     return is;
 }

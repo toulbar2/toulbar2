@@ -164,7 +164,7 @@ typedef Double TProb;
 typedef Double TLogProb;
 #endif
 
-inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) + exp(c2)]
+inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) + exp(c2)]
 {
     if (logc1 == -numeric_limits<TLogProb>::infinity())
         return logc2;
@@ -178,7 +178,7 @@ inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) + exp
     }
 }
 
-inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) - exp(c2)]
+inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) - exp(c2)]
 {
     if (logc1 == logc2)
         return -numeric_limits<TLogProb>::infinity();
@@ -189,7 +189,6 @@ inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2)  // log[exp(c1) - exp
         exit(0);
     }
 }
-
 
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)

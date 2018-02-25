@@ -89,18 +89,28 @@ public:
         }
         Cost getLb(Cost delta = MIN_COST) const { return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta))); }
 
-        void addToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSumExp(gLogLbZ,m_logLbZ); }
-        void addToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSumExp(gLogUbZ,m_logUbZ); }
-        void subToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSubExp(gLogLbZ,m_logLbZ); }
-        void subToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSubExp(gLogUbZ,m_logUbZ); }
-        pair< TLogProb, TLogProb > getInternalBounds() { return make_pair(gLogLbZ,gLogUbZ); }
-        bool derivedZLbs() {
-          const TLogProb delta = Log(10.0);
-          return ((pGLogLbZ - gLogLbZ > delta) or (pGLogUbZ - gLogUbZ > delta));
+        void addToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSumExp(gLogLbZ, m_logLbZ); }
+        void addToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSumExp(gLogUbZ, m_logUbZ); }
+        void subToZLb(TLogProb m_logLbZ) { gLogLbZ = GLogSubExp(gLogLbZ, m_logLbZ); }
+        void subToZUb(TLogProb m_logUbZ) { gLogUbZ = GLogSubExp(gLogUbZ, m_logUbZ); }
+        pair<TLogProb, TLogProb> getInternalBounds() { return make_pair(gLogLbZ, gLogUbZ); }
+        bool derivedZLbs()
+        {
+            const TLogProb delta = Log(10.0);
+            return ((pGLogLbZ - gLogLbZ > delta) or (pGLogUbZ - gLogUbZ > delta));
         }
-        void updateZLBs(TLogProb l, TLogProb u) {pGLogLbZ = gLogLbZ = l; pGLogUbZ = gLogUbZ = u;}
+        void updateZLBs(TLogProb l, TLogProb u)
+        {
+            pGLogLbZ = gLogLbZ = l;
+            pGLogUbZ = gLogUbZ = u;
+        }
 
-        void popZ() { subToZLb(top().getZlb()); subToZUb(top().getZub()); pop(); }
+        void popZ()
+        {
+            subToZLb(top().getZlb());
+            subToZUb(top().getZub());
+            pop();
+        }
 
         Cost getClosedNodesLb(Cost delta = MIN_COST) const { return MAX(MIN_COST, clb - delta); }
         void setClosedNodesLb(Cost lb, Cost delta = MIN_COST)

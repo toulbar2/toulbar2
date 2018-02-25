@@ -19,7 +19,7 @@ const map<char, int> AminoMRF::AminoMRFIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 
 // AminoMRF Class
 // Read MRF trained from multiple alignment. The MRF (alignment) should have
 // exactly the same number of variables/columns as the currently solved design problem.
-AminoMRF::AminoMRF(int nvar, const char* filename)
+AminoMRF::AminoMRF(const char* filename)
 {
     constexpr int NumNatAA = 20;
 
@@ -31,48 +31,76 @@ AminoMRF::AminoMRF(int nvar, const char* filename)
         exit(EXIT_FAILURE);
     }
 
-    string s;
-    do
-        getline(file, s); //Skip comments
-    while (s[0] == '#');
-
     TLogProb LP;
+    int nv = 0;
     // read unaries
-    for (int n = 0; n < nvar; n++) {
+    bool binariesReached = false;
+    string s;
+
+    while (!binariesReached) {
+        getline(file, s);
+        if (s[0] == '#') {
+            binariesReached = true;
+            break;
+        }
+
+        stringstream ss(s);
+        ss.ignore();
+
         TLogProb minscore = std::numeric_limits<TLogProb>::max();
         for (int i = 0; i < NumNatAA; i++) {
-            file >> LP;
-            unaries[n].push_back(LP);
+            ss >> LP;
+            unaries[nv].push_back(LP);
             minscore = min(minscore, LP);
         }
         for (int i = 0; i < NumNatAA; i++) {
-            unaries[n][i] -= minscore;
+            unaries[nv][i] -= minscore;
         }
+        nv++;
     }
 
+    nVar = nv;
+
     // read binaries
-    for (int n = 0; n < nvar; n++) {
-        for (int m = n+1; m < nvar; m++) {
-            TLogProb minscore = std::numeric_limits<TLogProb>::max();
-            pair<int,int> pv (n,m);
-            for (int i = 0; i < NumNatAA; i++) {
-                for (int j = 0; i < NumNatAA; j++) {
-                    file >> LP;
-                    binaries[pv][i].push_back(LP);
-                    minscore = min(minscore, LP);
-                }
-            }
-            for (int i = 0; i < NumNatAA; i++) {
-                for (int j = 0; i < NumNatAA; j++) {
-                    binaries[pv][i][j] -= minscore;
-                }
+    int n, m;
+    nPot = 0;
+    do {
+        while (s[0] != '#' && getline(file, s)) {
+        }
+        if (file.eof())
+            break;
+
+        stringstream ss(s);
+        s.clear();
+        ss.ignore();
+
+        ss >> n;
+        ss >> m;
+
+        TLogProb minscore = std::numeric_limits<TLogProb>::max();
+        pair<int, int> pv(n, m);
+        for (int i = 0; i < NumNatAA; i++) {
+            binaries[pv].resize(NumNatAA);
+            for (int j = 0; j < NumNatAA; j++) {
+                file >> LP;
+                binaries[pv][i].push_back(LP);
+                minscore = min(minscore, LP);
             }
         }
-    }
+
+        for (int i = 0; i < NumNatAA; i++) {
+            for (int j = 0; j < NumNatAA; j++) {
+                binaries[pv][i][j] -= minscore;
+            }
+        }
+        nPot++;
+    } while (!file.eof());
+    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " correlated pairs\n";
 }
 
 AminoMRF::~AminoMRF()
-{}
+{
+}
 
 TLogProb AminoMRF::getUnary(int var, int AAidx)
 {
@@ -82,49 +110,67 @@ TLogProb AminoMRF::getUnary(int var, int AAidx)
 TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
 {
     if (var1 > var2) {
-        swap(var1,var2);
-        swap(AAidx1,AAidx2);
+        swap(var1, var2);
+        swap(AAidx1, AAidx2);
     }
 
-    pair<int,int> pv(var1, var2);
+    pair<int, int> pv(var1, var2);
 
     return binaries[pv][AAidx1][AAidx2];
 }
 
-void AminoMRF::Penalize(WCSP* pb, TLogProb CMRFBias)
+void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
+    // check residue numbers
+    if (pb->numberOfVariables() != nVar) {
+        cerr << "Loaded evolutionary MRF and energy matrix do not have the same number of residues\nAborting\n";
+        exit(1);
+    }
+
     // process unaries
-    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++){
+    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        bool warn = true;
         vector<Cost> biases;
+
         for (char c : ToulBar2::cpd->getRotamers2AA()[varIdx]) {
             int valIdx = AminoMRFIdx.find(c)->second;
+            if (unaries[varIdx][valIdx] == 0.0)
+                warn = false;
             Cost bias = CMRFBias * unaries[varIdx][valIdx];
+
             biases.push_back(bias);
         }
-        pb->postUnaryConstraint(varIdx,biases);
+        if (warn) {
+            cout << "WARNING: the preferred amino acid has been excluded from design at residue " << varIdx + 1 << endl;
+        }
+        pb->postUnaryConstraint(varIdx, biases);
     }
 
     // process binaries
-    for (size_t varIdx1 = 0; varIdx1 < pb->numberOfVariables()-1; varIdx1++){
-        for (size_t varIdx2 = varIdx1+1; varIdx2 < pb->numberOfVariables(); varIdx2++){
-            vector<Cost> biases;
-            pair<int, int> pv (varIdx1, varIdx2);
+    for (auto const& bincf : binaries) {
+        int varIdx1 = bincf.first.first;
+        int varIdx2 = bincf.first.second;
+        bool warn = true;
+        vector<Cost> biases;
 
-            for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
-                for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
-                    int valIdx1 = AminoMRFIdx.find(c1)->second;
-                    int valIdx2 = AminoMRFIdx.find(c2)->second;
-
-                    Cost bias = CMRFBias * binaries[pv][valIdx1][valIdx2];
-                    biases.push_back(bias);
-                }
-                pb->postBinaryConstraint(varIdx1,varIdx2,biases);
+        for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
+            for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx2]) {
+                int valIdx1 = AminoMRFIdx.find(c1)->second;
+                int valIdx2 = AminoMRFIdx.find(c2)->second;
+                if (bincf.second[valIdx1][valIdx2] == 0.0)
+                    warn = false;
+                Cost bias = CMRFBias * bincf.second[valIdx1][valIdx2];
+                biases.push_back(bias);
             }
         }
+        if (warn) {
+            cout << "WARNING: the preferred amino acid pair has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
+        }
+        pb->postBinaryConstraint(varIdx1, varIdx2, biases);
     }
 }
 
-// CPD Class 
+// CPD Class
 Cpd::Cpd()
 {
 }
@@ -139,6 +185,7 @@ void Cpd::init()
     LeftAA.clear();
     RightAA.clear();
     cpdtrie.init();
+    AminoMat = NULL;
 }
 
 void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars)
@@ -227,7 +274,6 @@ void Cpd::readPSMatrix(const char* filename)
     }
 
     string s;
-    istringstream line;
     int minscore = std::numeric_limits<int>::max();
 
     do
@@ -268,7 +314,6 @@ void Cpd::readPSSMatrix(const char* filename)
     }
 
     string s;
-    istringstream line;
     int minscore = std::numeric_limits<int>::max();
 
     getline(file, s); //Skip header line

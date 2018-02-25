@@ -9,16 +9,18 @@
 // the number of variables should be exactly the same as in the designed protein.
 // So it's not compatible with rigid positions for now.
 class AminoMRF {
-    public:
-    AminoMRF(int nbvar, const char* filename); // read from file
+public:
+    AminoMRF(const char* filename); // read from file
     ~AminoMRF();
+    size_t nVar;
+    size_t nPot;
     TLogProb getUnary(int var, int AAidx);
     TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
-    void Penalize(WCSP* pb, TLogProb biasStrength);
+    void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
-    private:
+private:
     map<int, vector<TLogProb>> unaries;
-    map<pair<int,int>, vector<vector<TLogProb>> > binaries;
+    map<pair<int, int>, vector<vector<TLogProb>>> binaries;
     static const map<char, int> AminoMRFIdx;
 };
 
@@ -44,9 +46,11 @@ public:
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
     size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size(); }
     char* nativeSequence = NULL;
+    AminoMRF* AminoMat;
     bool isPSSMlen() { return PSSM.size(); };
     int PSMBias = 0;
     int PSSMBias = 0;
+    TLogProb AminoMRFBias = 0.0;
 
 private:
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
