@@ -122,10 +122,15 @@ TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
     // check residue numbers
-    if (pb->numberOfVariables() != nVar) {
-        cerr << "Loaded evolutionary MRF and energy matrix do not have the same number of residues\nAborting\n";
+    if (pb->numberOfVariables() < nVar) {
+        cerr << "The loaded evolutionary MRF has more variables than the number of variables in the problem\nAborting\n";
         exit(1);
     }
+    if (pb->numberOfVariables() > nVar) {
+        cout << "WARNING: the loaded evolutionary MRF has less variables than in the problem. Extra variables won't be penalized\n";
+        exit(1);
+    }
+    
 
     // process unaries
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
