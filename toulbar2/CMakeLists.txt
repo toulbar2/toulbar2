@@ -274,6 +274,9 @@ include(${My_cmake_script}/source_files.cmake)
 ##########################################
 IF(Boost)
   include(${My_cmake_script}/Boost_option.cmake)
+  link_directories(${Boost_LIBRARY_DIR})
+  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+  SET (all_depends  ${all_depends} "boost-graph")
 ENDIF(Boost)
 
 ##########################################
