@@ -25,6 +25,7 @@ void MaxConstraint::read(istream& file)
     // weightMap.resize(n);
 
     file >> def;
+    def *= ToulBar2::costMultiplier;
     /*for(int i = 0; i < n; i++){
     	EnumeratedVariable * x = scope[i];
         for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it)

@@ -925,7 +925,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
+        postWAllDiff(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
@@ -938,15 +938,17 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
             file >> d >> low >> high;
             values.push_back(BoundedObj<Value>(d, high, low));
         }
-        postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
+        postWGcc(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost, values);
         return -1;
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL)
         return -1;
-    if (file)
+    if (file) {
         gc->read(file);
+
+    }
     gc->init();
     return gc->wcspIndex;
 }
@@ -1371,7 +1373,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
         vector<Cost> costs;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)(y->toValue(b) + cst - x->toValue(a))) : getUb(), MIN_COST));
+                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a))*ToulBar2::costMultiplier)) : getUb(), MIN_COST));
             }
         }
         return postBinaryConstraint(xIndex, yIndex, costs);
@@ -1692,6 +1694,14 @@ void WCSP::preprocessing()
         else
             elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
+    } else {
+#ifdef BOOST
+        if (ToulBar2::MSTDAC) {
+            vector<int> order;
+            spanningTreeOrderingBGL(order);
+            setDACOrder(order);
+        }
+#endif
     }
     vector<int> elimorder(numberOfVariables(), -1);
     vector<int> revelimorder(numberOfVariables(), -1);
@@ -1709,6 +1719,7 @@ void WCSP::preprocessing()
     //		cout << " " << elimorder[i];
     //	}
     //	cout << endl;
+
     do {
         previouslb = getLb();
         setDACOrder(revelimorder);
@@ -1721,10 +1732,11 @@ void WCSP::preprocessing()
         for (unsigned int i = 0; i < constrs.size(); i++) {
             if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
                 NaryConstraint* nary = (NaryConstraint*)constrs[i];
-                if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
-                    nary->keepAllowedTuples(getUb());
+                Long nbtuples = nary->getDomainSizeProduct();
+                if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
+                    nary->keepAllowedTuples(getUb()); // can be very slow!
                     nary->preprojectall2();
-                    //			if (nary->connected()) nary->preproject3();
+                    //			if (nary->connected() && nary->size() >= 4) nary->preproject3();
                 }
             }
         }
@@ -2586,7 +2598,7 @@ void WCSP::propagate()
     revise(NULL);
     if (ToulBar2::vac)
         vac->iniThreshold();
-
+ 
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->init();
     }
@@ -2810,7 +2822,8 @@ void WCSP::initElimConstrs()
 // Function that adds a new binary constraint from the pool of fake constraints
 BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint* from1, Constraint* from2)
 {
-    int newIndex = (int)elimBinOrder;
+    unsigned int newIndex = (int)elimBinOrder;
+    assert(newIndex < elimBinConstrs.size());
     BinaryConstraint* ctr = (BinaryConstraint*)elimBinConstrs[newIndex];
     ctr->fillElimConstr(x, y, from1, from2);
     if (ToulBar2::vac)
@@ -2819,18 +2832,30 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     return ctr;
 }
 
+// warning! Do not propagate this new binary cost function
+BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs)
+{
+    if (!ToulBar2::vac) {
+        return new BinaryConstraint(this, x, y, costs);
+    } else {
+        return new VACBinaryConstraint(this, x, y, costs);
+    }
+}
+
 // warning! you must create beforehand three binary constraints in fake pool (elimBinConstrs)
 // if they do not exist in the main pool (constrs)
 TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint* from1)
 {
-    int newIndex = (int)elimTernOrder;
+    unsigned int newIndex = (int)elimTernOrder;
+    assert(newIndex < elimTernConstrs.size());
     TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[newIndex];
     ctr->fillElimConstr(x, y, z, from1);
     ctr->isDuplicate_ = false;
     return ctr;
 }
 
-TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs)
+// warning! Do not propagate this new ternary cost function
+TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost>& costs)
 {
     unsigned int a, b;
     vector<Cost> zerocostsxy;
