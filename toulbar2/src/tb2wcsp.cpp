@@ -2616,12 +2616,14 @@ void WCSP::propagate()
             do {
                 do {
                     eliminate();
+                    int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
                                                                                       || ToulBar2::LcLevel >= LC_FDAC)
                                                                                      && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
                                && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
+                        eac_iter++;
                         propagateIncDec();
                         if (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()))
                             propagateEAC();
@@ -2658,6 +2660,7 @@ void WCSP::propagate()
                                 }
                         }
                         propagateNC();
+                        if (ToulBar2::LcLevel == LC_EDAC && eac_iter > MAX_EAC_ITER) {EAC1.clear(); cout << "c automatically switch from EDAC to FDAC." << endl; ToulBar2::LcLevel = LC_FDAC; break;} // avoids pathological cases with too many very slow lower bound increase by EAC
                     }
                 } while (!Eliminate.empty());
                 if (ToulBar2::DEE_) {
