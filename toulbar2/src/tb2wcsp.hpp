@@ -537,8 +537,9 @@ public:
     Constraint* getElimTernCtr(int elimTernIndex) const { return elimTernConstrs[elimTernIndex]; }
 
     BinaryConstraint* newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint* from1 = NULL, Constraint* from2 = NULL);
+    BinaryConstraint* newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs);
     TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint* from1 = NULL);
-    TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs);
+    TernaryConstraint* newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost>& costs);
 
     void eliminate();
     void restoreSolution(Cluster* c = NULL);
@@ -570,7 +571,7 @@ public:
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char* elimVarOrderFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char* treeDecFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
-    void setDACOrder(vector<int>& elimVarOrder);
+    void setDACOrder(vector<int>& elimVarOrder); ///< \brief change DAC order and propagate from scratch
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp
     //

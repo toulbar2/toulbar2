@@ -303,6 +303,7 @@ typedef enum {
     LC_EDAC = 4,
     LC_THEMAX
 } LcLevelType;
+const int MAX_EAC_ITER = 10000;
 
 struct ValueCost {
     Value value;
