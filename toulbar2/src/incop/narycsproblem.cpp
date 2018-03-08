@@ -22,7 +22,8 @@ extern ofstream *ofile;  // le fichier de sortie
 extern Stat_GWW *Statistiques;
 
 #include "tb2solver.hpp"
-#include "tb2wcsp.hpp"
+#include "tb2naryconstr.hpp"
+
 
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst) : CSProblem(nbvar, nbconst) {;}
 
@@ -248,10 +249,10 @@ int  wcspdata_constraint_read(WCSP *wcsp, int nbconst, vector<INCOP::NaryVariabl
 	for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
 		if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && !wcsp->getCtr(i)->isGlobal() && wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary) {
 			int arity = 0;
-            for (int j = 0 ; j < wcsp->getCtr(i)->arity() ; j++) if (wcsp->getCtr(i)->getVar(j)->unassigned()) arity++;
+			int numvar = 0;
+			arity = ((wcsp->getCtr(i)->isNary()) ? ((int)((NaryConstraint *) wcsp->getCtr(i))->getNonAssigned()) : wcsp->getCtr(i)->arity());
 			INCOP::NaryConstraint *ct = new INCOP::NaryConstraint(arity);
 			vct->push_back(ct);
-			int numvar = 0;
 			for (int j = 0 ; j < wcsp->getCtr(i)->arity() ; j++) if (wcsp->getCtr(i)->getVar(j)->unassigned()) {
 					numvar = wcsp->getCtr(i)->getVar(j)->getCurrentVarId();
 					ct->constrainedvariables.push_back(numvar);

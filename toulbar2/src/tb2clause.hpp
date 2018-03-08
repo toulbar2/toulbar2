@@ -5,7 +5,6 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2clusters.hpp"
 #include <numeric>
 
 // warning! we assume binary variables
