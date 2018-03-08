@@ -123,7 +123,6 @@ int ToulBar2::pedigreeCorrectionMode;
 int ToulBar2::pedigreePenalty;
 
 int ToulBar2::vac;
-double ToulBar2::trws;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 double ToulBar2::costMultiplier;
@@ -245,7 +244,6 @@ void tb2init()
     ToulBar2::pedigreePenalty = 0;
 
     ToulBar2::vac = 0;
-    ToulBar2::trws = 0.001;
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::costMultiplier = UNIT_COST;
@@ -927,7 +925,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        postWAllDiff(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost);
+        postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
@@ -940,17 +938,15 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
             file >> d >> low >> high;
             values.push_back(BoundedObj<Value>(d, high, low));
         }
-        postWGcc(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost, values);
+        postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL)
         return -1;
-    if (file) {
+    if (file)
         gc->read(file);
-
-    }
     gc->init();
     return gc->wcspIndex;
 }
@@ -1375,7 +1371,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
         vector<Cost> costs;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a))*ToulBar2::costMultiplier)) : getUb(), MIN_COST));
+                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)(y->toValue(b) + cst - x->toValue(a))) : getUb(), MIN_COST));
             }
         }
         return postBinaryConstraint(xIndex, yIndex, costs);
@@ -1696,14 +1692,6 @@ void WCSP::preprocessing()
         else
             elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
-    } else {
-#ifdef BOOST
-        if (ToulBar2::MSTDAC) {
-            vector<int> order;
-            spanningTreeOrderingBGL(order);
-            setDACOrder(order);
-        }
-#endif
     }
     vector<int> elimorder(numberOfVariables(), -1);
     vector<int> revelimorder(numberOfVariables(), -1);
@@ -1721,27 +1709,22 @@ void WCSP::preprocessing()
     //		cout << " " << elimorder[i];
     //	}
     //	cout << endl;
+    do {
+        previouslb = getLb();
+        setDACOrder(revelimorder);
+        setDACOrder(elimorder);
+        if (ToulBar2::verbose >= 0 && getLb() > previouslb)
+            cout << "Reverse DAC lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
+    } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
 
-    if (ToulBar2::trws > 0) {
-        // TRWS-like algorithm: propagates with DAC only using reverse/normal DAC order successively
-        do {
-            previouslb = getLb();
-            setDACOrder(revelimorder, true);
-            setDACOrder(elimorder, true);
-            if (ToulBar2::verbose >= 0 && getLb() > previouslb)
-                cout << "TRWS-like lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
-        } while (getLb() > previouslb && (double) (getLb() - previouslb) / getLb() > ToulBar2::trws);
-        setDACOrder(elimorder, false); // propagate again without TRWS
-    }
     if (ToulBar2::preprocessNary > 0) {
         for (unsigned int i = 0; i < constrs.size(); i++) {
             if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
                 NaryConstraint* nary = (NaryConstraint*)constrs[i];
-                Long nbtuples = nary->getDomainSizeProduct();
-                if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
-                    nary->keepAllowedTuples(getUb()); // can be very slow!
+                if (nary->size() >= 2 || nary->getDefCost() > MIN_COST) {
+                    nary->keepAllowedTuples(getUb());
                     nary->preprojectall2();
-                    //			if (nary->connected() && nary->size() >= 4) nary->preproject3();
+                    //			if (nary->connected()) nary->preproject3();
                 }
             }
         }
@@ -2593,40 +2576,25 @@ void WCSP::eliminate()
 /// -# returns to #1 until all the previous queues are empty (and problem is VAC if enable)
 /// -# exploits goods in pending separators for BTD-like methods
 ///
-/// \warning If TRWS is true then only bounded variable elimination and DAC propagation occurs
-///
 /// Queues are first-in / first-out lists of variables (avoiding multiple insertions).
 /// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
-void WCSP::propagate(bool trws)
+void WCSP::propagate()
 {
     if (ToulBar2::interrupted)
         throw TimeOut();
     revise(NULL);
+    if (ToulBar2::vac)
+        vac->iniThreshold();
 
-    LcLevelType previousLcLevel = ToulBar2::LcLevel;
-    bool previousQueueComplexity = ToulBar2::QueueComplexity;
-    int previousVac = ToulBar2::vac;
-    int previousDEE = ToulBar2::DEE_;
-    if (trws) {
-        ToulBar2::LcLevel = LcLevelType::LC_DAC;
-        ToulBar2::QueueComplexity = true;
-        ToulBar2::vac = 0;
-        ToulBar2::DEE_ = 0;
-        initTRWS();
-    } else {
-        if (ToulBar2::vac)
-            vac->iniThreshold();
-
-        for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-            (*(it))->init();
-        }
-        if (isGlobal() && ToulBar2::LcLevel >= LC_EDAC) {
-            for (unsigned int i = 0; i < vars.size(); i++) {
-                EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
-                if (x->unassigned()) {
-                    x->setCostProvidingPartition(); // For EAC propagation
-                }
+    for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
+        (*(it))->init();
+    }
+    if (isGlobal() && ToulBar2::LcLevel >= LC_EDAC) {
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+            if (x->unassigned()) {
+                x->setCostProvidingPartition(); // For EAC propagation
             }
         }
     }
@@ -2653,31 +2621,29 @@ void WCSP::propagate(bool trws)
                             propagateAC();
                         assert(IncDec.empty());
 
-                        if (!trws) {
-                            Cost oldLb = getLb();
-                            bool cont = true;
-                            while (cont) {
-                                oldLb = getLb();
-                                cont = false;
-                                for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-                                    if (ToulBar2::interrupted)
-                                        throw TimeOut();
-                                    (*(it))->propagate();
-                                    if (ToulBar2::LcLevel == LC_SNIC)
-                                        if (!IncDec.empty())
-                                            cont = true; //For detecting value removal during SNIC enforcement
-                                    propagateIncDec();
-                                }
+                        Cost oldLb = getLb();
+                        bool cont = true;
+                        while (cont) {
+                            oldLb = getLb();
+                            cont = false;
+                            for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
+                                if (ToulBar2::interrupted)
+                                    throw TimeOut();
+                                (*(it))->propagate();
                                 if (ToulBar2::LcLevel == LC_SNIC)
-                                    if (!NC.empty() || objectiveChanged)
-                                        cont = true; //For detecting value removal and upper bound change
-                                propagateNC();
-                                if (ToulBar2::LcLevel == LC_SNIC)
-                                    if (oldLb != getLb() || !AC.empty()) {
-                                        cont = true;
-                                        AC.clear(); //For detecting value removal and lower bound change
-                                    }
+                                    if (!IncDec.empty())
+                                        cont = true; //For detecting value removal during SNIC enforcement
+                                propagateIncDec();
                             }
+                            if (ToulBar2::LcLevel == LC_SNIC)
+                                if (!NC.empty() || objectiveChanged)
+                                    cont = true; //For detecting value removal and upper bound change
+                            propagateNC();
+                            if (ToulBar2::LcLevel == LC_SNIC)
+                                if (oldLb != getLb() || !AC.empty()) {
+                                    cont = true;
+                                    AC.clear(); //For detecting value removal and lower bound change
+                                }
                         }
                         propagateNC();
                     }
@@ -2710,12 +2676,10 @@ void WCSP::propagate(bool trws)
     } while (objectiveChanged);
     revise(NULL);
 
-    if (!trws) {
-        for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-            (*(it))->end();
-        }
+    for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
+        (*(it))->end();
     }
-    assert(trws || verify());
+    assert(verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
@@ -2731,13 +2695,6 @@ void WCSP::propagate(bool trws)
     assert(EAC2.empty());
     assert(Eliminate.empty());
     DEE.clear(); // DEE might not be empty if verify() has modified supports
-    if (trws) {
-        clearTRWS();
-        ToulBar2::LcLevel = previousLcLevel;
-        ToulBar2::QueueComplexity = previousQueueComplexity;
-        ToulBar2::vac = previousVac;
-        ToulBar2::DEE_ = previousDEE;
-    }
     nbNodes++;
 }
 
@@ -2853,8 +2810,7 @@ void WCSP::initElimConstrs()
 // Function that adds a new binary constraint from the pool of fake constraints
 BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint* from1, Constraint* from2)
 {
-    unsigned int newIndex = (int)elimBinOrder;
-    assert(newIndex < elimBinConstrs.size());
+    int newIndex = (int)elimBinOrder;
     BinaryConstraint* ctr = (BinaryConstraint*)elimBinConstrs[newIndex];
     ctr->fillElimConstr(x, y, from1, from2);
     if (ToulBar2::vac)
@@ -2863,30 +2819,18 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     return ctr;
 }
 
-// warning! Do not propagate this new binary cost function
-BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs)
-{
-    if (!ToulBar2::vac) {
-        return new BinaryConstraint(this, x, y, costs, false);
-    } else {
-        return new VACBinaryConstraint(this, x, y, costs, false);
-    }
-}
-
 // warning! you must create beforehand three binary constraints in fake pool (elimBinConstrs)
 // if they do not exist in the main pool (constrs)
 TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint* from1)
 {
-    unsigned int newIndex = (int)elimTernOrder;
-    assert(newIndex < elimTernConstrs.size());
+    int newIndex = (int)elimTernOrder;
     TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[newIndex];
     ctr->fillElimConstr(x, y, z, from1);
     ctr->isDuplicate_ = false;
     return ctr;
 }
 
-// warning! Do not propagate this new ternary cost function
-TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost>& costs)
+TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, vector<Cost> costs)
 {
     unsigned int a, b;
     vector<Cost> zerocostsxy;
@@ -2941,7 +2885,7 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
         }
     }
 
-    TernaryConstraint* ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs, false);
+    TernaryConstraint* ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
     return ctr;
 }
 
@@ -3743,22 +3687,8 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
     }
 }
 
-void WCSP::clearTRWS()
-{
-    for (unsigned int i = 0; i < numberOfVariables(); i++) {
-        if (vars[i]->enumerated()) ((EnumeratedVariable *) vars[i])->clearTRWS();
-    }
-}
-
-void WCSP::initTRWS()
-{
-    for (unsigned int i = 0; i < numberOfVariables(); i++) {
-        if (vars[i]->enumerated()) ((EnumeratedVariable *) vars[i])->initTRWS();
-    }
-}
-
 /// \param order variable elimination order (reverse of DAC order)
-void WCSP::setDACOrder(vector<int>& order, bool trws)
+void WCSP::setDACOrder(vector<int>& order)
 {
     if (order.size() != numberOfVariables()) {
         cerr << "DAC order has incorrect number of variables." << endl;
@@ -3797,7 +3727,7 @@ void WCSP::setDACOrder(vector<int>& order, bool trws)
         if (ctr->connected())
             ctr->propagate();
     }
-    propagate(trws);
+    propagate();
     // recompute all tightness: too slow???
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected())

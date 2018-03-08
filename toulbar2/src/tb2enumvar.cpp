@@ -19,7 +19,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , domain(iinf, isup)
     , deltaCost(MIN_COST)
     , support(iinf)
-    , trws(0)
     , watchForIncrease(false)
     , watchForDecrease(false)
 {
@@ -31,7 +30,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , domain(d, dsize)
     , deltaCost(MIN_COST)
     , support(min(d, dsize))
-    , trws(0)
     , watchForIncrease(false)
     , watchForDecrease(false)
 {
@@ -98,7 +96,6 @@ void EnumeratedVariable::print(ostream& os)
         os << " [" << inf << "," << sup << "]";
     }
     os << "/" << getDegree();
-    os << "(" << trws << ")";
     if (ToulBar2::weightedDegree)
         os << "/" << getWeightedDegree();
     if (unassigned()) {
@@ -282,17 +279,6 @@ void EnumeratedVariable::propagateDAC()
     for (ConstraintList::iterator iter = constrs.rbegin(); iter != constrs.rend(); --iter) {
         (*iter).constr->projectFromZero((*iter).scopeIndex);
     }
-}
-
-void EnumeratedVariable::initTRWS()
-{
-    trws = 0;
-    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->getSmallestDACIndexInScope((*iter).scopeIndex) < getDACOrder()) {
-            trws += 1;
-        }
-    }
-    assert(trws <= getDegree());
 }
 
 void EnumeratedVariable::fillEAC2(bool self)
@@ -1444,9 +1430,9 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             break;
         }
         case 3: {
-//            assert(wcsp->unassigned(scopeIndex[0]));
-//            assert(wcsp->unassigned(scopeIndex[1]));
-//            assert(wcsp->unassigned(scopeIndex[2]));
+            assert(wcsp->unassigned(scopeIndex[0]));
+            assert(wcsp->unassigned(scopeIndex[1]));
+            assert(wcsp->unassigned(scopeIndex[2]));
 
             EnumeratedVariable* u = (EnumeratedVariable*)wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);

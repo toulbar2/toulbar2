@@ -624,7 +624,7 @@ void WCSP::read_wcsp(const char* fileName)
                     file >> funcparam1;
                     file >> funcparam2;
                     file >> funcparam3;
-                    postDisjunction(i, j, funcparam1, funcparam2, funcparam3 * K);
+                    postDisjunction(i, j, funcparam1, funcparam2, funcparam3);
                 } else if (funcname == "sdisj") {
                     Value funcparam3;
                     Value funcparam4;
@@ -636,7 +636,7 @@ void WCSP::read_wcsp(const char* fileName)
                     file >> funcparam4;
                     file >> funcparam5;
                     file >> funcparam6;
-                    postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, funcparam5 * K, funcparam6 * K);
+                    postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, funcparam5, funcparam6);
                 } else {
                     int scopeIndex[2];
                     scopeIndex[0] = i;

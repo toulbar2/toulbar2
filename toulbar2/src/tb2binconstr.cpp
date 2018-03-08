@@ -11,7 +11,7 @@
  *
  */
 
-BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab, bool propagate_)
+BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab)
     : AbstractBinaryConstraint<EnumeratedVariable, EnumeratedVariable>(wcsp, xx, yy)
     , sizeX(xx->getDomainInitSize())
     , sizeY(yy->getDomainInitSize())
@@ -28,7 +28,7 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
 
-    if (propagate_) propagate();
+    propagate();
 }
 
 BinaryConstraint::BinaryConstraint(WCSP* wcsp)

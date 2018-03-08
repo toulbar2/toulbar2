@@ -148,7 +148,7 @@ private:
     StoreCost myThreshold; /** The local thresold used to break loops */
 
 public:
-    VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab, bool propagate = true);
+    VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
     VACBinaryConstraint(WCSP* wcsp);
     ~VACBinaryConstraint();
 

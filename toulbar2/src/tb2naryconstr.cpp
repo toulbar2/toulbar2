@@ -417,11 +417,9 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
     int a = arity_;
     String t(a, '0'), tX(a - 1, '0'), tZ(a - 1, '0');
     int index, k;
-    EnumeratedVariable* var = NULL;
-    Constraint *existX = NULL;
-    Constraint *existZ = NULL;
-    Constraint *naryx = NULL;
-    Constraint *naryz = NULL;
+    EnumeratedVariable* var;
+    TernaryConstraint *existX = NULL, *existZ = NULL;
+    Constraint *naryz, *naryx;
     EnumeratedVariable* scope_in[a];
     EnumeratedVariable* subscopeX[a - 1];
     EnumeratedVariable* subscopeZ[a - 1];
@@ -458,12 +456,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
     subscopeZ[a - 2] = vz;
 
     // creation de la nouvelle contrainte
-    if (a == 3) {
-        int size = subscopeX[0]->getDomainInitSize() * subscopeX[1]->getDomainInitSize();
-        vector<Cost> costs(size, 0);
-        existX = subscopeX[0]->getConstr(subscopeX[1]);
-        naryx = wcsp->newBinaryConstr(subscopeX[0], subscopeX[1], costs);
-    } else if (a == 4) {
+    if (a == 4) {
         int size = subscopeX[0]->getDomainInitSize() * subscopeX[1]->getDomainInitSize() * subscopeX[2]->getDomainInitSize();
         vector<Cost> costs(size, 0);
         existX = subscopeX[0]->getConstr(subscopeX[1], subscopeX[2]);
@@ -519,12 +512,8 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
     if (ToulBar2::verbose >= 3)
         cout << "-----------------------------------" << endl;
-    if (a == 3) {
-        int size = subscopeZ[0]->getDomainInitSize() * subscopeZ[1]->getDomainInitSize();
-        vector<Cost> costs(size, 0);
-        existZ = subscopeZ[0]->getConstr(subscopeZ[1]);
-        naryz = wcsp->newBinaryConstr(subscopeZ[0], subscopeZ[1], costs);
-    } else if (a == 4) {
+    if (a == 4) {
+
         int size = subscopeZ[0]->getDomainInitSize() * subscopeZ[1]->getDomainInitSize() * subscopeZ[2]->getDomainInitSize();
         vector<Cost> costs(size, 0);
         existZ = subscopeZ[0]->getConstr(subscopeZ[1], subscopeZ[2]);
@@ -598,26 +587,16 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
                 cout << scopeX[j] << " ";
             cout << " ]" << endl;
         }
-        if (a == 3) {
-            assert(naryx->isBinary());
+        if (a == 4) {
             if (existX && !existX->universal()) {
-                assert(existX->isBinary());
-                ((BinaryConstraint*)naryx)->addCosts((BinaryConstraint*)existX);
-                existX->deconnect();
-            }
-        } else if (a == 4) {
-            assert(naryx->isTernary());
-            if (existX && !existX->universal()) {
-                assert(existX->isTernary());
-                ((TernaryConstraint*)naryx)->addCosts((TernaryConstraint*)existX);
+                ((TernaryConstraint*)naryx)->addCosts(existX);
                 existX->deconnect();
             }
         }
         naryx->reconnect();
         naryx->propagate();
-    } else {
+    } else
         naryx->deconnect();
-    }
     if (!naryz->universal()) {
         if (ToulBar2::verbose == 1) {
             cout << "[ ";
@@ -625,26 +604,16 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
                 cout << scopeZ[j] << " ";
             cout << " ]" << endl;
         }
-        if (a == 3) {
-            assert(naryz->isBinary());
+        if (a == 4) {
             if (existZ && !existZ->universal()) {
-                assert(existZ->isBinary());
-                ((BinaryConstraint*)naryz)->addCosts((BinaryConstraint*)existZ);
-                existZ->deconnect();
-            }
-        } else if (a == 4) {
-            assert(naryz->isTernary());
-            if (existZ && !existZ->universal()) {
-                assert(existZ->isTernary());
-                ((TernaryConstraint*)naryz)->addCosts((TernaryConstraint*)existZ);
+                ((TernaryConstraint*)naryz)->addCosts(existZ);
                 existZ->deconnect();
             }
         }
         naryz->reconnect();
         naryz->propagate();
-    } else {
+    } else
         naryz->deconnect();
-    }
     deconnect();
 }
 

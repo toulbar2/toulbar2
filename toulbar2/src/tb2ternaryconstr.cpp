@@ -19,8 +19,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     BinaryConstraint* xy_,
     BinaryConstraint* xz_,
     BinaryConstraint* yz_,
-    vector<Cost>& tab,
-    bool propagate_)
+    vector<Cost>& tab)
     : AbstractTernaryConstraint<EnumeratedVariable, EnumeratedVariable, EnumeratedVariable>(wcsp, xx, yy, zz)
     , sizeX(xx->getDomainInitSize())
     , sizeY(yy->getDomainInitSize())
@@ -181,7 +180,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     }
 #endif
 
-    if (propagate_) propagate();
+    propagate();
 }
 
 TernaryConstraint::TernaryConstraint(WCSP* wcsp)

@@ -31,7 +31,6 @@ void GrammarConstraint::read(istream& file)
 
     string str;
     file >> str >> def;
-    def *= ToulBar2::costMultiplier;
 
     /*if (str == "var") mode = VAR;
     else mode = WEIGHTED;*/

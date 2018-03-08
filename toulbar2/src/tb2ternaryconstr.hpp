@@ -297,8 +297,7 @@ public:
         BinaryConstraint* xy,
         BinaryConstraint* xz,
         BinaryConstraint* yz,
-        vector<Cost>& tab,
-        bool propagate = true);
+        vector<Cost>& tab);
 
     TernaryConstraint(WCSP* wcsp);
 
@@ -1440,7 +1439,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                 for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
                     Value valZ = getFunctionZ(x, y, *iterX, *iterY);
                     if (valZ != WRONG_VAL && z->canbe(valZ)) {
-                        Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, valZ) + y->getCostTRWS(*iterY) + z->getCostTRWS(valZ);
+                        Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, valZ) + y->getCost(*iterY) + z->getCost(valZ);
                         if (GLB(&minCost, cost)) {
                             support = make_pair(*iterY, valZ);
                         }
@@ -1450,7 +1449,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                 for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
                     Value valY = getFunctionY(x, z, *iterX, *iterZ);
                     if (valY != WRONG_VAL && y->canbe(valY)) {
-                        Cost cost = getCostWithBinaries(x, y, z, *iterX, valY, *iterZ) + y->getCostTRWS(valY) + z->getCostTRWS(*iterZ);
+                        Cost cost = getCostWithBinaries(x, y, z, *iterX, valY, *iterZ) + y->getCost(valY) + z->getCost(*iterZ);
                         if (GLB(&minCost, cost)) {
                             support = make_pair(valY, *iterZ);
                         }
@@ -1459,7 +1458,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
             } else {
                 for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
                     for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
-                        Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, *iterZ) + y->getCostTRWS(*iterY) + z->getCostTRWS(*iterZ);
+                        Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, *iterZ) + y->getCost(*iterY) + z->getCost(*iterZ);
                         if (GLB(&minCost, cost)) {
                             support = make_pair(*iterY, *iterZ);
                         }
@@ -1482,7 +1481,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                         for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
                             Cost cost = getCost(x, y, z, *iterX, *iterY, *iterZ);
                             if (LUBTEST(cost, minCost)) {
-                                Cost zcost = z->getCostTRWS(*iterZ);
+                                Cost zcost = z->getCost(*iterZ);
                                 Cost xycost = (xy->connected()) ? xy->getCost(x, y, *iterX, *iterY) : MIN_COST;
                                 Cost xzcost = (xz->connected()) ? xz->getCost(x, z, *iterX, *iterZ) : MIN_COST;
                                 Cost yzcost = (yz->connected()) ? yz->getCost(y, z, *iterY, *iterZ) : MIN_COST;

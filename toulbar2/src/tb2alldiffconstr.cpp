@@ -40,7 +40,6 @@ void AllDiffConstraint::read(istream& file)
     // 2) the cost of the violation edge : assume to be a constant function
     // mapping to def
     file >> def;
-    def *= ToulBar2::costMultiplier;
     //cout << "str = " << str << endl;
     /*if (str == "var") {
     	mode = VAR;

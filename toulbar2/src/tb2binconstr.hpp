@@ -68,7 +68,7 @@ protected:
     void extendY(Value value, Cost cost) { extend(y, value, cost, deltaCostsY); }
 
 public:
-    BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab, bool propagate = true);
+    BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
 
     BinaryConstraint(WCSP* wcsp);
 
@@ -618,10 +618,10 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, Enumera
         Value support = supportX[xindex];
         if (y->cannotbe(support) || getCost(x, y, *iterX, support) + y->getCost(support) > MIN_COST) {
             Value minCostValue = y->getInf();
-            Cost minCost = getCost(x, y, *iterX, minCostValue) + y->getCostTRWS(minCostValue);
+            Cost minCost = getCost(x, y, *iterX, minCostValue) + y->getCost(minCostValue);
             EnumeratedVariable::iterator iterY = y->begin();
             for (++iterY; minCost > MIN_COST && iterY != y->end(); ++iterY) {
-                Cost cost = getCost(x, y, *iterX, *iterY) + y->getCostTRWS(*iterY);
+                Cost cost = getCost(x, y, *iterX, *iterY) + y->getCost(*iterY);
                 if (GLB(&minCost, cost)) {
                     minCostValue = *iterY;
                 }

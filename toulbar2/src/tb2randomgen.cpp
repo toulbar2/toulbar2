@@ -23,7 +23,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     int* scopeIndexs = new int[arity];
     Cost Top = wcsp.getUb();
     if (costMax < Top)
-        Top = ToulBar2::costMultiplier * costMax;
+        Top = costMax;
 
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];
