@@ -206,7 +206,7 @@ bool VACExtension::propagate()
 
     breakCycles = 0;
 
-    static vector<pair<VACVariable*, Value>> acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
+    vector<pair<VACVariable*, Value>> acSupport;
     bool acSupportOK = false;
 
     while ((!util || isvac) && itThreshold != MIN_COST) {
