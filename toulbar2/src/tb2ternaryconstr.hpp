@@ -1430,8 +1430,6 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
              << *this << *xy << *xz << *yz;
     bool supportBroken = false;
     bool supportReversed = (getIndexY > getIndexZ);
-    bool extendY = false;
-    bool extendZ = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);
         pair<Value, Value> support = (supportReversed) ? make_pair(supportX[xindex].second, supportX[xindex].first) : make_pair(supportX[xindex].first, supportX[xindex].second);
@@ -1495,7 +1493,6 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                         assert(costfromy <= y->getCost(*iterY));
                         if (costfromy > MIN_COST) {
                             assert(x->unassigned() && y->unassigned());
-                            extendY = true;
                             xy->reconnect(); // must be done before using the constraint
                             xy->extend(xy->getIndex(y), *iterY, costfromy);
                         }
@@ -1517,7 +1514,6 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                         assert(costfromz <= z->getCost(*iterZ));
                         if (costfromz > MIN_COST) {
                             assert(x->unassigned() && z->unassigned());
-                            extendZ = true;
                             xz->reconnect(); // must be done before using the constraint
                             xz->extend(xz->getIndex(z), *iterZ, costfromz);
                         }
@@ -1617,8 +1613,6 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                 supportZ[zindex] = make_pair(support.first, *iterX);
         }
     }
-    if (extendY) y->decTRWS();
-    if (extendZ) z->decTRWS();
     if (supportBroken) {
         x->findSupport();
     }

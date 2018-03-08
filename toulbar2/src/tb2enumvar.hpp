@@ -112,8 +112,6 @@ public:
     bool verify();
     void initTRWS();
     void clearTRWS() {trws = 0;}
-    void incTRWS() {trws++;}
-    void decTRWS() {if (trws>1) trws--;}
     int getTRWS() const {return trws;}
 
     void queueEAC1();

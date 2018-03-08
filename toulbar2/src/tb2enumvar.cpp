@@ -287,17 +287,13 @@ void EnumeratedVariable::propagateDAC()
 void EnumeratedVariable::initTRWS()
 {
     trws = 0;
-    int degree = 0;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isBinary() || (*iter).constr->isTernary()) {
-            if ((*iter).constr->getSmallestDACIndexInScope((*iter).scopeIndex) < getDACOrder()) {
-                incTRWS();
-            }
-            degree++;
+        if ((*iter).constr->getSmallestDACIndexInScope((*iter).scopeIndex) < getDACOrder()) {
+            trws += 1;
         }
     }
-    assert(trws <= degree);
-    if (degree > 2 * trws) trws = degree - trws;
+    assert(trws <= getDegree());
+    if (getDegree() > 2 * trws) trws = getDegree() - trws;
 }
 
 void EnumeratedVariable::fillEAC2(bool self)
