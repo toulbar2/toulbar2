@@ -947,7 +947,6 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istre
         return -1;
     if (file) {
         gc->read(file);
-
     }
     gc->init();
     return gc->wcspIndex;
@@ -1373,7 +1372,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
         vector<Cost> costs;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a))*ToulBar2::costMultiplier)) : getUb(), MIN_COST));
+                costs.push_back(max((y->toValue(b) + cst - x->toValue(a) <= delta) ? ((Cost)((y->toValue(b) + cst - x->toValue(a)) * ToulBar2::costMultiplier)) : getUb(), MIN_COST));
             }
         }
         return postBinaryConstraint(xIndex, yIndex, costs);
@@ -2598,7 +2597,7 @@ void WCSP::propagate()
     revise(NULL);
     if (ToulBar2::vac)
         vac->iniThreshold();
- 
+
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->init();
     }
@@ -2660,7 +2659,12 @@ void WCSP::propagate()
                                 }
                         }
                         propagateNC();
-                        if (ToulBar2::LcLevel == LC_EDAC && eac_iter > MAX_EAC_ITER) {EAC1.clear(); cout << "c automatically switch from EDAC to FDAC." << endl; ToulBar2::LcLevel = LC_FDAC; break;} // avoids pathological cases with too many very slow lower bound increase by EAC
+                        if (ToulBar2::LcLevel == LC_EDAC && eac_iter > MAX_EAC_ITER) {
+                            EAC1.clear();
+                            cout << "c automatically switch from EDAC to FDAC." << endl;
+                            ToulBar2::LcLevel = LC_FDAC;
+                            break;
+                        } // avoids pathological cases with too many very slow lower bound increase by EAC
                     }
                 } while (!Eliminate.empty());
                 if (ToulBar2::DEE_) {
@@ -3015,7 +3019,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         }
     } else if (arityU == 3) {
         EnumeratedVariable* z = scopeU[2];
-        EnumeratedVariable* scopeTernary[3]= {x,y,z};
+        EnumeratedVariable* scopeTernary[3] = { x, y, z };
         String t;
         t.resize(3);
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
@@ -3793,9 +3797,9 @@ Cost WCSP::LogProb2Cost(TLogProb p) const
     Cost c;
     if (res > to_double(MAX_COST / 2)) {
         c = (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
-//        if (ToulBar2::verbose >= 2) {
-//            cout << "Warning: converting energy " << -p << " to Top\n";
-//        }
+        //        if (ToulBar2::verbose >= 2) {
+        //            cout << "Warning: converting energy " << -p << " to Top\n";
+        //        }
     } else
         c = (Cost)res;
     return c;

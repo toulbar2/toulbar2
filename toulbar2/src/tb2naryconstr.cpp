@@ -190,7 +190,8 @@ Cost NaryConstraint::eval(const String& tin, EnumeratedVariable** scope_in)
             evalTuple[pos] = tin[i];
         }
         return eval(evalTuple);
-    } else return eval(tin);
+    } else
+        return eval(tin);
 }
 
 Cost NaryConstraint::eval(const String& s)
@@ -418,10 +419,10 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
     String t(a, '0'), tX(a - 1, '0'), tZ(a - 1, '0');
     int index, k;
     EnumeratedVariable* var = NULL;
-    Constraint *existX = NULL;
-    Constraint *existZ = NULL;
-    Constraint *naryx = NULL;
-    Constraint *naryz = NULL;
+    Constraint* existX = NULL;
+    Constraint* existZ = NULL;
+    Constraint* naryx = NULL;
+    Constraint* naryz = NULL;
     EnumeratedVariable* scope_in[a];
     EnumeratedVariable* subscopeX[a - 1];
     EnumeratedVariable* subscopeZ[a - 1];
@@ -1329,8 +1330,10 @@ void NaryConstraint::print(ostream& os)
             os << "," << conflictWeights[i];
         }
     }
-    if (pf) os << " |f| = " << size() << " / " << totaltuples;
-    else os << " |f| = " << size();
+    if (pf)
+        os << " |f| = " << size() << " / " << totaltuples;
+    else
+        os << " |f| = " << size();
     os << "   default_cost: " << default_cost;
     os << "   arity: " << arity_;
     os << "   unassigned: " << (int)nonassigned << "/" << unassigned_ << "         ";

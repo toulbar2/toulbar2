@@ -1178,12 +1178,12 @@ void WCSP::solution_UAI(Cost res, bool opt)
     rewind(ToulBar2::solution_uai_file);
     fprintf(ToulBar2::solution_uai_file, "MPE\n");
     //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
-//    if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
-//        cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
-//        cout << "s " << -(Cost2LogProb(res) + ToulBar2::markov_log) << endl;
-//        cout << numberOfVariables();
-//        printSolution(cout);
-//    }
+    //    if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
+    //        cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
+    //        cout << "s " << -(Cost2LogProb(res) + ToulBar2::markov_log) << endl;
+    //        cout << numberOfVariables();
+    //        printSolution(cout);
+    //    }
     fprintf(ToulBar2::solution_uai_file, "%d ", numberOfVariables());
     printSolution(ToulBar2::solution_uai_file);
     fprintf(ToulBar2::solution_uai_file, "\n");

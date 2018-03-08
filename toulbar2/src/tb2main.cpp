@@ -1686,7 +1686,8 @@ int _tmain(int argc, TCHAR* argv[])
     if (ToulBar2::uai || ToulBar2::uaieval) {
         char* tmpPath = new char[strlen(argv[0]) + 1];
         strcpy(tmpPath, argv[0]);
-        if (strcmp(tmpPath,"toulbar2") == 0) strcpy(tmpPath, ".");
+        if (strcmp(tmpPath, "toulbar2") == 0)
+            strcpy(tmpPath, ".");
         char* tmpFile = new char[strlen(strfile.c_str()) + 1];
         strcpy(tmpFile, strfile.c_str());
         string filename(tmpPath);

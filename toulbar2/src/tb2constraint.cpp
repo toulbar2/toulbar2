@@ -67,7 +67,7 @@ void Constraint::projectLB(Cost cost)
         wcsp->decreaseLb(cost);
     } else {
         wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
-   }
+    }
     if (wcsp->td) {
         if (ToulBar2::verbose >= 2)
             cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
