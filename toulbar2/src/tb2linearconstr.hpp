@@ -78,8 +78,7 @@ protected:
     }
 
 public:
-    LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                    arity_in);
+    LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~LinearConstraint() {}
 

@@ -27,8 +27,7 @@ private:
 public:
     static const int VALUE = 1;
     static const int VAR = 0;
-    LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                 arity_in,
+    LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in,
         int* constrcounter);
 
     ~LPSConstraint()

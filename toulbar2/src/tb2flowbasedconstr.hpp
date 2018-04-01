@@ -80,8 +80,7 @@ protected:
     }
 
 public:
-    FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                             arity_in);
+    FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~FlowBasedGlobalConstraint() {}
 

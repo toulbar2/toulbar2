@@ -129,7 +129,6 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     if (pb->numberOfVariables() > nVar) {
         cout << "WARNING: the loaded evolutionary MRF has less variables than in the problem. Extra variables won't be penalized\n";
     }
-    
 
     // process unaries
     for (size_t varIdx = 0; varIdx < nVar; varIdx++) {

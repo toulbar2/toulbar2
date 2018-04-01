@@ -2695,9 +2695,7 @@ void WCSP::propagate(bool trws)
             do {
                 do {
                     eliminate();
-                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
-                                                                                      || ToulBar2::LcLevel >= LC_FDAC)
-                                                                                     && !AC.empty())
+                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
                                && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
