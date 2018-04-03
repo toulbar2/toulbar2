@@ -10,7 +10,7 @@ class TrieNode {
 public:
     TrieNode();
     ~TrieNode();
-    void insert_sequence(string seq, unsigned int pos, Cost _cost);
+    void insert_sequence(string seq, unsigned int pos, Double energy);
     vector<TrieNode*> sons;
     bool present(char aa);
     void insertNode(char aa);
@@ -31,8 +31,8 @@ public:
     TrieLeaf();
     ~TrieLeaf();
     unsigned long sequence_count;
-    Cost minc;
-    Cost maxc;
+    Double mine;
+    Double maxe;
 };
 
 class TrieCpd {
@@ -40,7 +40,7 @@ public:
     TrieCpd(){};
     ~TrieCpd(){};
     void init() { root.sons.clear(); };
-    void insert_sequence(string seq, Cost _cost);
+    void insert_sequence(string seq, Double energy);
     void print_tree();
     size_t getTotalSequences() { return root.total_sequences; }
 

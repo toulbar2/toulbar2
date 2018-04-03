@@ -37,9 +37,9 @@ public:
     void readEvolMat(const char* filename);
     void fillPSMbiases(size_t varIndex, vector<Cost>& biases);
     void fillPSSMbiases(size_t varIndex, vector<Cost>& biases);
-    void storeSequence(const vector<Variable*>& vars, Cost _cost);
+    void storeSequence(const vector<Variable*>& vars, Double energy);
     void printSequences();
-    void printSequence(const vector<Variable*>& vars, Cost _cost);
+    void printSequence(const vector<Variable*>& vars, Double energy);
     void printSequence(TAssign& vars);
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }

@@ -1341,9 +1341,10 @@ void Solver::newSolution()
     if (!ToulBar2::isZ)
         wcsp->setSolution();
 
-    if (ToulBar2::cpd)
-        ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getLb());
-
+    if (ToulBar2::cpd) {
+        cout << "Energy " << wcsp->getDLb() << endl;
+        ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getDLb());
+    }
     if (ToulBar2::showSolutions) {
         if (ToulBar2::verbose >= 2)
             cout << *wcsp << endl;
@@ -1357,7 +1358,7 @@ void Solver::newSolution()
             cout << nbSol << " Log(Z) " << ToulBar2::logZ + ToulBar2::markov_log;
         }
         if (ToulBar2::cpd) {
-            ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getLb());
+            ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getDLb());
         } else {
             if (!ToulBar2::isZ) {
                 for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {

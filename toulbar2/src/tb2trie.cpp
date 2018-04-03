@@ -31,26 +31,26 @@ char TrieNode::int2aa(unsigned int i)
     }
 }
 
-void TrieCpd::insert_sequence(string seq, Cost _cost)
+void TrieCpd::insert_sequence(string seq, Double energy)
 {
-    root.insert_sequence(seq, 0, _cost);
+    root.insert_sequence(seq, 0, energy);
 }
 
-void TrieNode::insert_sequence(string seq, unsigned int pos, Cost _cost)
+void TrieNode::insert_sequence(string seq, unsigned int pos, Double energy)
 {
     if (pos + 1 < seq.length()) {
         if (!present(seq[pos])) {
             insertNode(seq[pos]);
         }
-        sons[aa2int(seq[pos])]->insert_sequence(seq, pos + 1, _cost);
+        sons[aa2int(seq[pos])]->insert_sequence(seq, pos + 1, energy);
     } else {
         if (!present(seq[pos])) {
             insertLeaf(seq[pos]);
         }
         TrieLeaf* leaf = getLeaf(seq[pos]);
         leaf->sequence_count++;
-        leaf->maxc = std::max(leaf->maxc, _cost);
-        leaf->minc = std::min(leaf->minc, _cost);
+        leaf->maxe = std::max(leaf->maxe, energy);
+        leaf->mine = std::min(leaf->mine, energy);
     }
 }
 
@@ -63,7 +63,7 @@ void TrieNode::print_tree(string acc)
 {
     if (sons.size() == 0) {
         TrieLeaf* imaleaf = static_cast<TrieLeaf*>(this);
-        cout << acc << " min cost: " << imaleaf->minc << " max cost: " << imaleaf->maxc
+        cout << acc << " min cost: " << imaleaf->mine << " max cost: " << imaleaf->maxe
              << " occurred " << imaleaf->sequence_count << " times" << endl;
     } else {
         for (size_t i = 0; i < TrieNode::numAA; i++)
@@ -84,8 +84,8 @@ TrieLeaf::TrieLeaf()
 {
     sons.clear();
     sequence_count = 0;
-    minc = MAX_COST;
-    maxc = 0;
+    mine = -log(0.0);
+    maxe = -mine;
 }
 
 TrieNode::~TrieNode()

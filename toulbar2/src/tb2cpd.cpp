@@ -1,5 +1,6 @@
 #include "tb2cpd.hpp"
 #include <sstream>
+#include <iomanip>
 
 const map<char, int> Cpd::PSMIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
     { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 },
@@ -358,7 +359,7 @@ void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost>& biases)
     }
 }
 
-void Cpd::storeSequence(const vector<Variable*>& vars, Cost _cost)
+void Cpd::storeSequence(const vector<Variable*>& vars, Double energy)
 {
     string sequence;
     for (size_t i = 0; i < vars.size(); i++) {
@@ -366,7 +367,7 @@ void Cpd::storeSequence(const vector<Variable*>& vars, Cost _cost)
         if (aa != '*')
             sequence.push_back(aa);
     }
-    cpdtrie.insert_sequence(sequence, _cost);
+    cpdtrie.insert_sequence(sequence, energy);
 }
 
 void Cpd::printSequences()
@@ -374,7 +375,7 @@ void Cpd::printSequences()
     cpdtrie.print_tree();
 }
 
-void Cpd::printSequence(const vector<Variable*>& vars, Cost _cost)
+void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
 {
     string sequence;
     cout << "New rotamers:";
@@ -385,7 +386,7 @@ void Cpd::printSequence(const vector<Variable*>& vars, Cost _cost)
             cout << " " << vars[i]->getValue();
         }
     }
-    cout << "\nNew sequence: " << sequence << " Cost: " << _cost << endl;
+    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy << endl;
 }
 
 void Cpd::printSequence(TAssign& vars)

@@ -749,7 +749,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 void CFNStreamReader::enforceUB(Cost ub) {
 
     Cost shift = wcsp->negCost / ToulBar2::costMultiplier;
-    ub += shift;
+    ub -= shift;
 
     if (ub < MIN_COST) ub = MIN_COST;
     if (ub < MAX_COST / ToulBar2::costMultiplier)
@@ -762,7 +762,7 @@ void CFNStreamReader::enforceUB(Cost ub) {
 
     //TODO needs a decimal decoder w/o lineNumber
     if (ToulBar2::externalUB.length() != 0) {
-        ub = decimalToCost(ToulBar2::externalUB,0)+wcsp->negCost;
+        ub = decimalToCost(ToulBar2::externalUB,0)-wcsp->negCost;
         wcsp->updateUb(ub);
     }
 }

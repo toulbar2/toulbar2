@@ -2181,10 +2181,8 @@ int _tmain(int argc, TCHAR* argv[])
         else
             solver->read_wcsp((char*)strfile.c_str());
 
-        // UBs need to be scaled/shifted
-        Cost ub;
-
-        ub = tb2checkOptions(ub);
+        // TODO Need to fetch UB
+        Cost ub = tb2checkOptions(MAX_COST);
         //TODO: If --show_options then dump ToulBar2 object here
 
 
