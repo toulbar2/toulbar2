@@ -6,6 +6,8 @@
 #ifndef TB2WCSP_HPP_
 #define TB2WCSP_HPP_
 
+#include <sstream>
+
 #include "toulbar2lib.hpp"
 #include "tb2variable.hpp"
 #include "tb2constraint.hpp"
@@ -71,6 +73,7 @@ class WCSP FINAL : public WeightedCSP {
     // make it private because we don't want copy nor assignment
     WCSP(const WCSP& wcsp);
     WCSP& operator=(const WCSP& wcsp);
+    friend class CFNStreamReader;
 
 public:
     /// \brief variable elimination information used in backward phase to get a solution during search
@@ -130,6 +133,9 @@ public:
 
     Cost getLb() const { return lb; } ///< \brief gets problem lower bound
     Cost getUb() const { return ub; } ///< \brief gets problem upper bound
+
+    Double getDLb() const { return Cost2DCost(lb); }
+    Double getDUb() const { return Cost2DCost(ub); }
 
     void setLb(Cost newLb) { lb = newLb; } ///< \internal sets problem lower bound
     void setUb(Cost newUb) { ub = newUb; } ///< \internal sets problem upper bound
@@ -381,7 +387,7 @@ public:
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
-    int postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
+    int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
 
@@ -598,9 +604,10 @@ public:
     void visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int>>& listofsuccessors);
 
     // -----------------------------------------------------------
-    // Functions dealing with probabilities
+    // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
 
+    Double Cost2DCost(const Cost& c) const { return ((Double)(c + negCost) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); }
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;

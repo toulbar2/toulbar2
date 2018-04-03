@@ -15,7 +15,7 @@ set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
-set (MAINTAINER "David Allouche <david.allouche@toulouse.inra.fr>") #used in packaging
+set (MAINTAINER "David Allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
 set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
 
 ##########################################
@@ -25,9 +25,9 @@ set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in pa
 project("toulbar2")
 
 MESSAGE(STATUS "##########################################")
-	MESSAGE(STATUS " project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
-	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR} ")
-	MESSAGE(STATUS " MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
+MESSAGE(STATUS "source:${CMAKE_CURRENT_SOURCE_DIR} ")
+MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
 include(CMakeDependentOption)

@@ -13,6 +13,11 @@
 #include "tb2randomgen.hpp"
 #include "tb2globaldecomposable.hpp"
 #include <list>
+#include <map>
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include "tb2trienum.hpp"
@@ -274,6 +279,1030 @@ typedef struct {
  \endcode
  **/
 
+class CFNStreamReader {
+
+public:
+    CFNStreamReader(istream& stream, WCSP* wcsp);
+    ~CFNStreamReader();
+
+    std::pair<int, string> getNextToken();
+    void skipOBrace(); // checks if next token is an opening brace and spits an error otherwise.
+    void skipCBrace(); // checks if next token is a  closing brace and spits an error otherwise.
+    void testJSONTag(const std::pair<int, string>& token, const string& tag);
+    void skipJSONTag(const string& tag);
+    void testAndSkipFirstOBrace();
+    bool isCost(const string& str);
+    Cost decimalToCost(const string& decimalToken, unsigned int lineNumber);
+
+    // WCSP2 reading methods
+    Cost readHeader();
+    void readVariables();
+    bool readVariable(unsigned int varIndex);
+    int readDomain(std::vector<string>& valueNames);
+    int getValueIdx(int variableIdx, const string& token, int lineNumber);
+    void readScope(vector<int>& scope);
+    void readCostFunctions();
+    void readZeroAryCostFunction(bool all, Cost defaultCost);
+    void readUnaryCostFunction(const vector<int>& scope, bool all, Cost defaultCost);
+    void readBinaryCostFunction();
+    void readTernaryCostFunction();
+    void readNaryCostFunction(vector<int>& scope, bool all, Cost defaultCost);
+    void readArithmeticCostFunction();
+    void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
+    std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
+    void enforceUB(Cost ub);
+
+    std::map<std::string, int> varNameToIdx;
+    std::vector<std::map<std::string, int>> varValNameToIdx;
+    std::map<std::string, std::vector<std::vector<int>>> tableShares;
+
+private:
+    istream& iStream;
+    WCSP* wcsp;
+    bool getNextLine();
+    unsigned int lineCount;
+    string currentLine;
+    boost::char_separator<char> sep;
+    boost::tokenizer<boost::char_separator<char>>* tok;
+    boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
+    bool JSONMode;
+};
+
+CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
+    : iStream(stream)
+    , wcsp(wcsp)
+{
+    this->lineCount = 0;
+    this->JSONMode = false;
+    this->tok = nullptr;
+    this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
+}
+
+// Reads a line. Skips comment lines starting with '#'.
+// TODO skip // too.
+bool CFNStreamReader::getNextLine()
+{
+    string line;
+    lineCount++;
+    std::getline(iStream, line);
+
+    while (line == "" || line.at(0) == '#') {
+        if (std::getline(iStream, line))
+            lineCount++;
+        else
+            return false;
+    }
+    size_t posJSONcomments = line.find("//");
+    if (posJSONcomments == string::npos) {
+        this->currentLine = line;
+        return true;
+    } else if (posJSONcomments != 0) {
+        this->currentLine = line.substr(0, posJSONcomments);
+        return true;
+    } else
+        return getNextLine(); // tail recurse
+}
+
+std::pair<int, string> CFNStreamReader::getNextToken()
+{
+    if (tok != nullptr) {
+        if (tok_iter != tok->end()) {
+            string token = *tok_iter;
+            tok_iter = std::next(tok_iter);
+            return make_pair(lineCount, token);
+        } else {
+            delete tok;
+            tok = nullptr;
+            return getNextToken();
+        }
+    } else {
+        if (this->getNextLine()) {
+            tok = new boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
+            tok_iter = tok->begin();
+            return getNextToken();
+        } else {
+            return make_pair(-1, "");
+        }
+    }
+}
+
+CFNStreamReader::~CFNStreamReader() {}
+
+// Test opening and closing braces.
+bool inline isOBrace(const string& token)
+{
+    return ((token == "{") || (token == "["));
+}
+bool inline isCBrace(const string& token)
+{
+    return ((token == "}") || (token == "]"));
+}
+
+// checks if the next token is an opening brace
+// and yells otherwise
+void CFNStreamReader::skipOBrace()
+{
+    int l;
+    string token;
+
+    std::tie(l, token) = this->getNextToken();
+    if (!isOBrace(token)) {
+        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
+        exit(1);
+    }
+}
+// checks if the next token is a closing brace
+// and yells otherwise
+void CFNStreamReader::skipCBrace()
+{
+    int l;
+    string token;
+
+    std::tie(l, token) = this->getNextToken();
+    if (!isCBrace(token)) {
+        cerr << "Error: expected a '} or ']' instead of '" << token << "' at line " << l << endl;
+        exit(1);
+    }
+}
+
+// Tests if a read token is the expected (JSON) tag and yells otherwise.
+inline void CFNStreamReader::testJSONTag(const std::pair<int, string>& token, const string& tag)
+{
+
+    if (token.second != tag) {
+        cerr << "Error: expected '" << tag << "' instead of '" << token.second << "' at line " << token.first << endl;
+        exit(1);
+    }
+}
+
+// In JSON mode, checks is the next token is the expected (JSON) tag and yells otherwise.
+inline void CFNStreamReader::skipJSONTag(const string& tag)
+{
+
+    if (JSONMode) {
+        testJSONTag(this->getNextToken(), tag);
+    }
+}
+
+// Checks for the first internal opening brace.
+// If it is preceded by a "problem" tag, activates JSON tag checking.
+void CFNStreamReader::testAndSkipFirstOBrace()
+{
+    int l;
+    string token;
+
+    std::tie(l, token) = this->getNextToken();
+    if (token == "problem") {
+        JSONMode = true;
+        std::tie(l, token) = this->getNextToken();
+    }
+
+    if (!isOBrace(token)) {
+        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
+        exit(1);
+    }
+}
+
+// Tests if the token starts with a digit, '+, '-' or "." (is a Cost)
+bool CFNStreamReader::isCost(const string& str)
+{
+    // Test if the first char of a string is a decimal digit, point or +/- sign.
+    return (string("0123456789-+.").find(str[0]) != string::npos);
+}
+
+// Converts the decimal Token to a cost and yells if unfeasible.
+// the conversion uses the upper bound precision and Toulbar2::costMultiplier for scaling
+// but does not shift cost using negCost.
+Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lineNumber)
+{
+    size_t dotFound = decimalToken.find('.');
+    if (dotFound == std::string::npos) {
+        try {
+            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * pow(10, ToulBar2::decimalPoint);
+        } catch (const std::invalid_argument&) {
+            cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
+            exit(1);
+        }
+    }
+
+    string integerPart = decimalToken.substr(0, dotFound);
+    string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
+    int shift = ToulBar2::decimalPoint - decimalPart.size();
+
+    Cost cost;
+    try {
+        cost = std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint);
+        cost += (cost >= 0) ? (std::stoll(decimalPart) * pow(10, shift)) : -(std::stoll(decimalPart) * pow(10, shift));
+    }
+    catch (const std::invalid_argument&) {
+        cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
+        exit(1);
+    }
+    return (Cost)(cost * ToulBar2::costMultiplier);
+}
+
+// Reads the problem header (problem name and UB) and returns UB
+// Starts: at the beginning of the stream
+// Ends  : after the closing brace of the header
+Cost CFNStreamReader::readHeader()
+{
+    int lineNumber;
+    string token;
+
+    skipOBrace();
+    testAndSkipFirstOBrace(); // check if we are in JSON mode
+    skipJSONTag("name");
+    std::tie(lineNumber, token) = this->getNextToken();
+
+    // TODO pas de méthode WCSP pour écrire le nom du problème
+    if (ToulBar2::verbose >= 1)
+        cout << "Read problem: " << token << endl;
+
+    skipJSONTag("upperbound");
+    Cost upperBound;
+
+    std::tie(lineNumber, token) = this->getNextToken();
+    string integerPart = token.substr(0, token.find('.'));
+    string decimalPart = token.substr(token.find('.') + 1);
+
+    try {
+        upperBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
+        upperBound += ((upperBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
+    } catch (const std::invalid_argument&) {
+        cerr << "Error: invalid upper bound '" << token << "' at line " << lineNumber << endl;
+        exit(1);
+    }
+
+    ToulBar2::decimalPoint = decimalPart.size();
+
+    if (ToulBar2::verbose >= 1)
+        cout << "Read upperbound: " << upperBound << " with precision " << ToulBar2::decimalPoint << endl;
+    skipCBrace();
+
+    return upperBound;
+}
+
+// Reads the variables and domains and creates them.
+// Starts: after the opening brace of the variables list.
+// Ends:   after the closing brace of the variables list.
+void CFNStreamReader::readVariables()
+{
+    skipJSONTag("variables");
+    // Check first opening brace
+    skipOBrace();
+
+    unsigned int nVar = 0;
+    while (readVariable(nVar)) {
+        nVar++;
+    }
+    if (ToulBar2::cpd)
+        ToulBar2::cpd->computeAAbounds();
+}
+
+// Reads the description of the ith variable, creates it and returns true if successful
+// Starts: after the opening brace of all variables or closing brace of previous variable.
+// Ends:   after the closing brace of all variables or of the variable read otherwise.
+bool CFNStreamReader::readVariable(unsigned int i)
+{
+    string varName;
+    int domainSize = 0;
+    vector<string> valueNames;
+
+    string token;
+    int lineNumber;
+    std::tie(lineNumber, token) = this->getNextToken();
+
+    if (isCBrace(token)) { // End of variable list
+        return false;
+    }
+
+    // A domain or domain size is there: the variable has no name
+    // we create an integer name that cannot clash with user names
+    if (isOBrace(token) || isdigit(token[0])) {
+        varName = to_string(i);
+    } else {
+        varName = token;
+        std::tie(lineNumber, token) = this->getNextToken();
+    }
+    // This is a list of symbols, read it
+    if (isOBrace(token)) {
+        domainSize = readDomain(valueNames);
+    } else { // Just a domain size
+        try {
+            domainSize = stoi(token);
+        } catch (std::invalid_argument&) {
+            cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
+        }
+    }
+
+    if (ToulBar2::verbose >= 1)
+        cout << "Variable " << varName << " with domain size " << domainSize << " read" << endl;
+    // Create the toulbar2 variable and store its name in the variable map.
+    // TODO: check interval variables
+    unsigned int varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
+        cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
+        exit(1);
+    }
+    // set the value names (if any) in the Variable.values map 
+    varValNameToIdx.resize(varValNameToIdx.size() + 1);
+    assert(varValNameToIdx.size() == varIndex + 1);
+    for (unsigned int i = 0; i < valueNames.size(); ++i) {
+        if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[i], i)).second) {
+            cerr << "Error: duplicated value name '" << valueNames[i] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            exit(1);
+        }
+    }
+
+    for (unsigned int i = 0; i < valueNames.size(); ++i) 
+        wcsp->getVar(varIndex)->newValueName(valueNames[i]);
+
+    if (ToulBar2::cpd) {
+        vector<char> rots;
+        for (const auto &vname : valueNames) {
+            assert(vname.size() > 0);
+            rots.push_back(vname[0]);
+        }
+        ToulBar2::cpd->newRotamerArray(rots);
+    }
+
+    return true;
+}
+
+// Reads a domain defined as a set of symbolic values in the valueNames vector and returns domain size.
+// Starts: after the domain opening brace has been read.
+// Ends:   after the domain closing brace has been read.
+int CFNStreamReader::readDomain(std::vector<string>& valueNames)
+{
+    int l;
+    string token;
+    std::tie(l, token) = this->getNextToken();
+
+    while (!isCBrace(token)) {
+        if (isdigit(token[0])) { // not a symbol !
+            cerr << "Error: value name '" << token << "' starts with a digit at line " << l << endl;
+            exit(1);
+        } else {
+            valueNames.push_back(token);
+        }
+        std::tie(l, token) = this->getNextToken();
+    }
+    return valueNames.size();
+}
+
+// Reads a cost function table for the scope given.
+// If all is set, a lexicographically ordered list of costs is expected.
+// ELse, a list of tuples with their cost is expectd and all other tuples get the defaultCost
+std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost)
+{
+    int lineNumber;
+    string token;
+    minCost = MAX_COST;
+
+    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+        defaultCost *= MEDIUM_COST;
+
+    // Create a vector filled with defaultCost values
+    std::vector<Cost> costVector;
+    long unsigned int costVecSize = 1;
+    for (auto i : scope) {
+        costVecSize *= wcsp->getDomainInitSize(i);
+    }
+    costVector.resize(costVecSize);
+    fill(costVector.begin(), costVector.end(), defaultCost);
+
+    std::tie(lineNumber, token) = this->getNextToken();
+    if (!all) { // will be a tuple:cost table
+        int arity = scope.size();
+        int scopeIdx = 0; // position in the scope
+        int tableIdx = 0; // position in the cost table
+        unsigned long int nbCostInserted = 0;
+
+        while (!isCBrace(token)) {
+            // if we have read a full tuple and cost
+            if (scopeIdx == arity) {
+                Cost cost = decimalToCost(token, lineNumber);
+                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                    cost *= MEDIUM_COST;
+                // the same tuple has already been defined.
+                if (costVector[tableIdx] != defaultCost) {
+                    cerr << "Error: tuple on scope [ ";
+                    for (int i : scope)
+                        cout << i << " ";
+                    cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
+                    exit(1);
+                } else {
+                    costVector[tableIdx] = cost;
+                }
+                nbCostInserted++;
+                minCost = min(cost, minCost);
+            } else {
+                // striding in the costs array
+                if (scopeIdx != 0) {
+                    tableIdx *= wcsp->getDomainInitSize(scope[scopeIdx]);
+                }
+                unsigned int valueIdx = getValueIdx(scope[scopeIdx], token, lineNumber);
+                assert(valueIdx >= 0 && valueIdx < wcsp->getDomainInitSize(scope[scopeIdx]));
+                tableIdx += valueIdx;
+            }
+            // If we just finished a tuple reset indices
+            if (scopeIdx == arity) {
+                scopeIdx = tableIdx = 0;
+            } else {
+                scopeIdx++;
+            }
+            std::tie(lineNumber, token) = this->getNextToken();
+        }
+
+        if (nbCostInserted < costVecSize) // there are some defaultCost remaining
+            minCost = min(defaultCost, minCost);
+    }
+    // al is true: we expect a full costs list
+    else {
+        unsigned int tableIdx = 0;
+        while (!isCBrace(token)) {
+            Cost cost = decimalToCost(token, lineNumber);
+
+            if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                cost *= MEDIUM_COST;
+
+            minCost = min(cost, minCost);
+
+            costVector[tableIdx] = cost;
+            tableIdx++;
+
+            std::tie(lineNumber, token) = this->getNextToken();
+        }
+        assert(tableIdx == costVector.size());
+    }
+
+    // make all costs non negative and remember the shift
+    for (Cost& c : costVector) {
+        c -= minCost;
+    }
+
+    wcsp->negCost -= minCost;
+    skipCBrace();
+    return costVector;
+}
+
+void CFNStreamReader::enforceUB(Cost ub) {
+
+    Cost shift = wcsp->negCost / ToulBar2::costMultiplier;
+    ub += shift;
+
+    if (ub < MIN_COST) ub = MIN_COST;
+    if (ub < MAX_COST / ToulBar2::costMultiplier)
+        ub = ub * ToulBar2::costMultiplier;
+    else {
+        cerr << "Error: upper bound generate Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << endl;
+        exit(1);   
+    }
+    wcsp->updateUb(ub);
+
+    //TODO needs a decimal decoder w/o lineNumber
+    if (ToulBar2::externalUB.length() != 0) {
+        ub = decimalToCost(ToulBar2::externalUB,0)+wcsp->negCost;
+        wcsp->updateUb(ub);
+    }
+}
+
+// Returns the index of the value name for the given variable
+int CFNStreamReader::getValueIdx(int variableIdx, const string& token, int lineNumber)
+{
+    if (not isdigit(token[0])) {
+        std::map<std::string, int>::iterator it;
+
+        if ((it = varValNameToIdx[variableIdx].find(token)) != varValNameToIdx[variableIdx].end()) {
+            return it->second;
+        } else {
+            cerr << "Error: value name '" << token << "' not in the domain of variable '" << wcsp->getName(variableIdx) << "' at line " << lineNumber << endl;
+            exit(1);
+        }
+    } else {
+        int valueIdx = -1;
+        try {
+            valueIdx = stoi(token);
+        } catch (std::invalid_argument&) {
+            cerr << "Error: value '" << token << "' is not a proper name/index for variable " << wcsp->getName(variableIdx) << " at line " << lineNumber << endl;
+            exit(1);
+        }
+        if (valueIdx < 0 || (unsigned)valueIdx >= wcsp->getDomainInitSize(variableIdx)) {
+            cerr << "Error: value '" << token << "' out of range of variable " << wcsp->getName(variableIdx) << " at line " << lineNumber << endl;
+            exit(1);
+        }
+        return valueIdx;
+    }
+}
+
+// Reads a scope.
+// Starts: after the opening brace of the scope.
+// Ends:   after the closing brace of the scope.
+void CFNStreamReader::readScope(vector<int>& scope)
+{
+    int lineNumber;
+    string token;
+
+    std::tie(lineNumber, token) = this->getNextToken();
+    while (!isCBrace(token)) {
+        // It's a name, convert to index
+        if (not isdigit(token[0])) {
+            map<string, int>::iterator it;
+            if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
+                scope.push_back(it->second);
+            } else {
+                cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
+                exit(1);
+            }
+        } else {
+            int varIdx = -1;
+            try {
+                varIdx = stoi(token);
+            } catch (std::invalid_argument&) {
+                cerr << "Error: not a variable name or idex " << varIdx << " at line " << lineNumber << endl;
+                exit(1);
+            }
+            if (varIdx < 0 || (unsigned)varIdx >= wcsp->numberOfVariables()) {
+                cerr << "Error: unknown variable index " << varIdx << " at line " << lineNumber << endl;
+                exit(1);
+            } else {
+                scope.push_back(varIdx);
+            }
+        }
+        // prepare for next iteration (will ultimately read final CBrace)
+        std::tie(lineNumber, token) = this->getNextToken();
+    }
+}
+// Reads all cost functions.
+// Starts: after the opening brace of all cost functions.
+// Ends:   at the end of file or after the closing brace of the problem.
+void CFNStreamReader::readCostFunctions()
+{
+    int lineNumber;
+    string token;
+
+    skipJSONTag("functions");
+    skipOBrace();
+
+    std::tie(lineNumber, token) = this->getNextToken(); // start the token pump!
+
+    while ((lineNumber != -1) && !isCBrace(token)) {
+        //  Read function name (if any) and move after next OBrace
+        string funcName;
+        if (!isOBrace(token)) {
+            funcName = token;
+            skipOBrace();
+        }
+        // Reads a scope
+        skipJSONTag("scope");
+        skipOBrace();
+
+        //  Read variable names/indices until CBrace
+        vector<int> scope;
+        readScope(scope);
+
+        bool isShared = false;
+        // Test if function is shared
+        if (funcName.size() != 0) {
+            isShared = (tableShares.find(funcName) != tableShares.end());
+        } else { // If no function name, generate one
+            funcName = "f(";
+            for (const auto& var : scope) {
+                funcName += this->wcsp->getVar(var)->getName();
+                funcName += ",";
+            }
+            funcName[funcName.size() - 1] = ')';
+        }
+
+        if (ToulBar2::verbose >= 1)
+            cout << "Cost function header for " << funcName << " read" << endl;
+
+        //  Test if a defaultCost is there (and tuples will be expected later)
+        bool skipDefaultCost = false;
+        Cost defaultCost = MIN_COST;
+        std::tie(lineNumber, token) = this->getNextToken();
+
+        if (JSONMode) {
+            if (token == "defaultcost") {
+                // read the defaultCost
+                std::tie(lineNumber, token) = this->getNextToken();
+            } else {
+                skipDefaultCost = true;
+            }
+        } else {
+            skipDefaultCost = !isCost(token);
+        }
+
+        if (!skipDefaultCost) { // Set default cost and skip to next token
+            defaultCost = decimalToCost(token, lineNumber);
+            std::tie(lineNumber, token) = this->getNextToken();
+        }
+
+        // Discriminate between global/shared and table cost functions
+        bool isGlobal = false;
+        bool isReused = false;
+
+        if (JSONMode) {
+            if (token == "type") { // This is a global/arithmetic
+                isGlobal = true;
+                // read type
+                std::tie(lineNumber, token) = this->getNextToken();
+                skipJSONTag("params");
+                skipOBrace();
+                // ready to read params (after OBrace)
+            } else if (token != "costs") {
+                cerr << "Error: expected tag 'costs' instead of '" << token << "' at line " << lineNumber << endl;
+                exit(1);
+            } else { // cost table: can be reused or explicit
+                std::tie(lineNumber, token) = this->getNextToken();
+                isReused = !isOBrace(token); // no brace, so reused
+                if (isReused) {
+                    if (!skipDefaultCost) {
+                        cerr << "Error: function " << funcName << " sharing cost tables with " << token << " cannot have default costs at line " << lineNumber << endl;
+                        exit(1);
+                    }
+                    tableShares[token].push_back(scope);
+                    skipCBrace();
+                }
+            }
+        } else if (!isOBrace(token)) { // Non JSON. No OBrace means reused or global (type)
+            string token2;
+            int lineNumber2;
+            std::tie(lineNumber2, token2) = this->getNextToken();
+            if (isOBrace(token2)) { // parameters are there, so global
+                isGlobal = true;
+            } else if (!isCBrace(token2)) { // reused, nothing expected after the shared fname
+                cerr << "Error: expected closing brace after type at line " << lineNumber2 << endl;
+            } else {
+                if (!skipDefaultCost) {
+                    cerr << "Error: function " << funcName << " sharing cost tables with " << token << " cannot have default costs at line " << lineNumber << endl;
+                    exit(1);
+                }
+                isReused = true;
+                tableShares[token].push_back(scope);
+            }
+        }
+
+        // Table cost function
+        if (!isGlobal && !isReused) {
+            if (scope.size() == 0) {
+                this->readZeroAryCostFunction(skipDefaultCost, defaultCost);
+            } else if (scope.size() > NARYPROJECTIONSIZE) {
+                this->readNaryCostFunction(scope, skipDefaultCost, defaultCost);
+            } else {
+                Cost minCost;
+                vector<Cost> costs = this->readFunctionCostTable(scope, skipDefaultCost, defaultCost, minCost);
+
+                switch (scope.size()) {
+                case 1:
+                    this->wcsp->postUnaryConstraint(scope[0], costs);
+                    if (isShared) {
+                        unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
+                        for (const auto& s : tableShares[funcName]) {
+                            if ((s.size() == 1) && wcsp->getDomainInitSize(s[0]) == domSize) {
+                                this->wcsp->postUnaryConstraint(s[0], costs);
+                                wcsp->negCost -= minCost;
+                                cout << "BCost shift is " << wcsp->negCost << endl;
+                                // TODO must remember name too
+                            }
+                        }
+                    }
+                    break;
+                case 2: {
+                    int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
+                    this->wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (isShared) {
+                        unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
+                        unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
+                        for (const auto& s : tableShares[funcName]) {
+                            if ((s.size() == 2) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1) {
+                                this->wcsp->postBinaryConstraint(s[0], s[1], costs);
+                                wcsp->negCost -= minCost;
+                                cout << "CCost shift is " << wcsp->negCost << endl;
+                            }
+                            // TODO must remember name too
+                        }
+                    }
+                } break;
+                case 3: {
+                    int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
+                    this->wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (isShared) {
+                        unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
+                        unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
+                        unsigned int domSize2 = wcsp->getDomainInitSize(scope[2]);
+                        for (const auto& s : tableShares[funcName]) {
+                            if ((s.size() == 3) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1 && wcsp->getDomainInitSize(s[2]) == domSize2) {
+                                this->wcsp->postTernaryConstraint(s[0], s[1], s[2], costs);
+                                wcsp->negCost -= minCost;
+                                cout << "DCost shift is " << wcsp->negCost << endl;
+                                // TODO must remember name too
+                            }
+                        }
+                    }
+                } break;
+                }
+            }
+        } else if (isReused) {
+            if ((scope.size() <= 1) || (scope.size() > NARYPROJECTIONSIZE) || isGlobal) {
+                cerr << "Error: only unary, binary and ternary cost functions can share cost tables for '" << funcName << " at line " << lineNumber << endl;
+                exit(1);
+            }
+        } else if (isGlobal) {
+            this->readGlobalCostFunction(scope, token, lineNumber);
+        }
+        std::tie(lineNumber, token) = this->getNextToken();
+    } // end of while (token != closing braces = EOF)
+
+    // All cost functions posted
+}
+
+// Reads a 0ary function.
+// Starts: after the cost table OBrace
+// Ends:   after the function CBrace
+void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
+{
+    string token;
+    int lineNumber;
+
+    std::tie(lineNumber, token) = this->getNextToken();
+    Cost zeroAryCost = 0;
+
+    if (!isCBrace(token)) { // We have a cost
+        zeroAryCost = decimalToCost(token, lineNumber);
+        skipCBrace();
+    } else {
+        if (all) { // We should have a cost
+            cerr << "Error: no cost or default cost given for 0 arity function at line " << lineNumber << endl;
+            exit(1);
+        } else
+            zeroAryCost = defaultCost;
+    }
+    if (zeroAryCost < 0) {
+        wcsp->negCost += zeroAryCost;
+        zeroAryCost = 0;
+    }
+    wcsp->increaseLb(zeroAryCost);
+    skipCBrace(); // read final function CBrace
+}
+
+// Reads a Nary cost function
+// Starts:
+// Ends  :
+void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost defaultCost)
+{
+    int lineNumber;
+    string token;
+    Cost minCost = MAX_COST;
+
+    // Compute the cardinality of the cartesian product as unsigned long and floating point (log)
+    // the unsigned long may overflow but all tuples cannot be available in this case
+    long double logCard = 0.0;
+    unsigned long card = 1;
+    for (auto i : scope) {
+        logCard += log(wcsp->getDomainInitSize(i));
+        card *= wcsp->getDomainInitSize(i);
+    }
+
+    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+        defaultCost *= MEDIUM_COST;
+
+    Char buf[MAX_ARITY];
+    String tup;
+    map<String, Cost> costFunction;
+    unsigned int arity = scope.size();
+    unsigned long int nbTuples = 0;
+    int scopeArray[arity];
+    for (unsigned int i = 0; i < scope.size(); i++) {
+        scopeArray[i] = scope[i];
+    }
+
+    // Start reading
+    std::tie(lineNumber, token) = this->getNextToken();
+    if (not all) {
+        unsigned int scopeIdx = 0; // Index of the cost table tuple
+        while (!isCBrace(token)) {
+            // We have read a full tuple: finish the tuple
+            if (scopeIdx == arity) {
+                buf[scopeIdx] = '\0';
+                tup = buf;
+                Cost cost = decimalToCost(token, lineNumber);
+                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                    cost *= MEDIUM_COST;
+
+                if (not costFunction.insert(pair<String, Cost>(tup, cost)).second) {
+                    cerr << "Error: tuple on scope [ ";
+                    for (int i : scope)
+                        cout << i << " ";
+                    cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
+                    exit(1);
+                } else {
+                    nbTuples++;
+                    minCost = min(cost, minCost);
+                }
+            } else {
+                unsigned int valueIdx = getValueIdx(scope[scopeIdx], token, lineNumber);
+                assert(valueIdx >= 0 && valueIdx < wcsp->getDomainInitSize(scope[scopeIdx]));
+                buf[scopeIdx] = valueIdx + CHAR_FIRST; // fill String
+            }
+
+            scopeIdx = ((scopeIdx == arity) ? 0 : scopeIdx + 1);
+            std::tie(lineNumber, token) = this->getNextToken();
+        }
+        // Is there any remaining default cost (either too many tuples or less than we need)
+        if ((logCard > log(std::numeric_limits<unsigned long>::max())) || nbTuples < card) {
+            minCost = min(minCost, defaultCost);
+        }
+
+        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
+        for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
+            this->wcsp->postNaryConstraintTuple(naryIndex, it->first, it->second - minCost); // For each tuple
+        }
+        this->wcsp->postNaryConstraintEnd(naryIndex);
+    }
+    // all tuples in lexico order
+    else {
+        if (ToulBar2::verbose >= 3) {
+            cout << "read nary cost function on ";
+            for (unsigned int i = 0; i < arity; i++) {
+                cout << scope[i] << " ";
+            }
+            cout << endl;
+        }
+
+        int cfIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, MIN_COST, LONGLONG_MAX);
+        NaryConstraint* nctr = (NaryConstraint*)this->wcsp->getCtr(cfIndex);
+        Cost cost;
+        vector<Cost> costs;
+
+        // Read all costs
+        while (!isCBrace(token)) {
+            costs.push_back(decimalToCost(token, lineNumber));
+            minCost = min(minCost, cost);
+            nbTuples++;
+            std::tie(lineNumber, token) = this->getNextToken();
+        }
+
+        // Test if all tuples have been read
+        if ((logCard > log(std::numeric_limits<unsigned long>::max())) || nbTuples < card) {
+            cerr << "Error : incorrect number of tuples for scope : ";
+            for (unsigned int i = 0; i < arity; i++) {
+                cout << scope[i] << " ";
+            }
+            cout << endl;
+            exit(1);
+        }
+
+        int j = 0;
+        nctr->firstlex();
+        while (nctr->nextlex(tup, cost)) {
+            this->wcsp->postNaryConstraintTuple(cfIndex, tup, costs[j]);
+            j++;
+        }
+        if (ToulBar2::verbose >= 3)
+            cout << "read arity " << arity << " table costs." << endl;
+        this->wcsp->postNaryConstraintEnd(nctr->wcspIndex);
+    }
+    wcsp->negCost -= minCost;
+    cout << "ECost shift is " << wcsp->negCost << endl;
+    skipCBrace(); // Function final CBrace read.
+}
+
+// Reads a global/artithmetic cost function
+// Starts: after the OBrace of parameters
+// Ends:
+void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& funcName, int line)
+{
+    unsigned int arity = scope.size();
+    const vector<string> arithmeticFuncNames = { ">=", ">", "<=", "<", "=", "disj", "sdisj" };
+    if (find(arithmeticFuncNames.begin(), arithmeticFuncNames.end(), funcName) != arithmeticFuncNames.end()) {
+        if (arity != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
+            exit(1);
+        }
+    }
+
+    pair<int, string> token = this->getNextToken();
+    vector<pair<int, string>> funcParams;
+
+    while (!isCBrace(token.second)) {
+        funcParams.push_back(token);
+        token = this->getNextToken();
+    }
+
+    if (funcName == ">=") {
+        if (funcParams.size() != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        try {
+            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+    } else if (funcName == ">") {
+        if (funcParams.size() != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        try {
+            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+    } else if (funcName == "<=") {
+        if (funcParams.size() != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        try {
+            wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second), stoi(funcParams[1].second));
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+    } else if (funcName == "<") {
+        if (funcParams.size() != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        try {
+            wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+    } else if (funcName == "=") {
+        if (funcParams.size() != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        try {
+            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
+            wcsp->postSupxyc(scope[1], scope[0], -stoi(funcParams[0].second), stoi(funcParams[1].second));
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+    } else if (funcName == "disj") {
+        if (funcParams.size() != 3) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        Cost cost = this->decimalToCost(funcParams[2].second, funcParams[2].first);
+        try {
+            wcsp->postDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second), cost);
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+    } else if (funcName == "sdisj") {
+        if (funcParams.size() != 6) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+            exit(1);
+        }
+        Cost cost1 = this->decimalToCost(funcParams[4].second, funcParams[4].first);
+        Cost cost2 = this->decimalToCost(funcParams[5].second, funcParams[4].first);
+        try {
+            wcsp->postSpecialDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second),
+                stoi(funcParams[2].second), stoi(funcParams[3].second), cost1, cost2);
+        } catch (std::invalid_argument&) {
+            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+            exit(1);
+        }
+
+        // True global cost function
+    } else {
+        int scopeArray[arity];
+        for (unsigned int i = 0; i < scope.size(); i++) {
+            scopeArray[i] = scope[i];
+        }
+
+        stringstream stream;
+        for (auto const& token : funcParams) {
+            stream << std::get<1>(token) << " ";
+        }
+
+        if (funcName[0] == 'w') {
+            DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray, stream);
+            decomposableGCF->addToCostFunctionNetwork(this->wcsp);
+
+        } else { // monolithic global cost functions
+            int nbconstr; // unused int for pointer ref
+            this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, stream, &nbconstr);
+        }
+    }
+    skipCBrace();
+}
+
+// TB2 entry point for WCSP reading (not only wcsp format)
 void WCSP::read_wcsp(const char* fileName)
 {
     char* Nfile2;
@@ -281,6 +1310,37 @@ void WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
+    if (ToulBar2::cfn) {
+        ifstream stream(fileName);
+        CFNStreamReader fileReader(stream, this);
+        Cost upperBound = fileReader.readHeader();
+        fileReader.readVariables();
+        fileReader.readCostFunctions();
+        fileReader.enforceUB(upperBound);
+        return;
+    } else if (ToulBar2::cfngz) {
+#ifdef BOOST
+        ifstream file(fileName, std::ios_base::in | std::ios_base::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::gzip_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
+        CFNStreamReader fileReader(stream, this);
+        Cost upperBound = fileReader.readHeader();
+        fileReader.readVariables();
+        fileReader.readCostFunctions();
+        fileReader.enforceUB(upperBound);
+        return;
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd compressed files." << endl; 
+        exit(1);
+#endif
+    }
+
+    if (ToulBar2::externalUB.length() != 0) {
+        updateUb(string2Cost(ToulBar2::externalUB.c_str()));
+    }
+    
     if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
         return;
@@ -309,6 +1369,9 @@ void WCSP::read_wcsp(const char* fileName)
         read_qpbo(fileName);
         return;
     }
+    // --------------------------
+    // TOOLBAR WCSP LEGACY PARSER
+
     string pbname;
     int nbvar, nbval, nbconstr;
     int nbvaltrue = 0;
@@ -341,6 +1404,7 @@ void WCSP::read_wcsp(const char* fileName)
         exit(EXIT_FAILURE);
     }
 
+    // ---------- PROBLEM HEADER ----------
     // read problem name and sizes
     file >> pbname;
     file >> nbvar;
@@ -385,6 +1449,9 @@ void WCSP::read_wcsp(const char* fileName)
         bool shared = (arity < 0);
         if (shared)
             arity = -arity;
+
+        // ARITY > 3
+
         if (arity > NARYPROJECTIONSIZE) {
             maxarity = max(maxarity, arity);
             if (ToulBar2::verbose >= 3)
@@ -474,6 +1541,9 @@ void WCSP::read_wcsp(const char* fileName)
                     postNaryConstraintEnd(naryIndex);
                 }
             }
+
+            // ARITY 3
+
         } else if (arity == 3) {
             maxarity = max(maxarity, arity);
             file >> i;
@@ -551,6 +1621,9 @@ void WCSP::read_wcsp(const char* fileName)
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             }
+
+            // ARITY 2
+
         } else if (arity == 2) {
             maxarity = max(maxarity, arity);
             file >> i;
@@ -660,6 +1733,9 @@ void WCSP::read_wcsp(const char* fileName)
                     }
                 }
             }
+
+            // ARITY 1
+
         } else if (arity == 1) {
             maxarity = max(maxarity, arity);
             file >> i;
@@ -736,6 +1812,9 @@ void WCSP::read_wcsp(const char* fileName)
                 postUnaryConstraint(i, dom, ntuples, defval);
                 delete[] dom;
             }
+
+            // ARITY 0
+
         } else if (arity == 0) {
             file >> defval;
             file >> ntuples;
@@ -870,7 +1949,7 @@ void WCSP::read_uai2008(const char* fileName)
     if (ToulBar2::verbose >= 3)
         cout << "Reading " << uaitype << "  file." << endl;
 
-    bool markov = uaitype == string("MARKOV");
+    bool markov = (uaitype == string("MARKOV"));
     //bool bayes = uaitype == string("BAYES");
 
     file >> nbvar;
@@ -1014,8 +2093,7 @@ void WCSP::read_uai2008(const char* fileName)
 
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
             costsProb.push_back(p);
-            if (p > maxp)
-                maxp = p;
+            maxp = max(maxp, p);
         }
         if (ToulBar2::uai == 1 && maxp == 0.)
             THROWCONTRADICTION;
@@ -1218,12 +2296,9 @@ void WCSP::read_uai2008(const char* fileName)
     if (!fevid) {
         string strevid(string(fileName) + string(".evid"));
         fevid.open(strevid.c_str());
-        if (ToulBar2::verbose > 0)
-            cerr << "No evidence file specified. Trying " << strevid << endl;
-        if (ToulBar2::verbose > 0) {
-            if (!fevid)
-                cerr << "No evidence file. " << endl;
-        }
+        cerr << "No evidence file specified. Trying " << strevid << endl;
+        if (!fevid)
+            cerr << "No evidence file. " << endl;
     }
     if (fevid) {
         vector<int> variables;

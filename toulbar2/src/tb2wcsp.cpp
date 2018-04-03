@@ -60,6 +60,7 @@ int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
 int ToulBar2::debug;
+string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
 char* ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
@@ -113,6 +114,8 @@ Tb2ScpBranch* ToulBar2::scpbranch;
 BaseJobs* ToulBar2::jobs;
 #endif
 SequenceHandler* ToulBar2::sequence_handler;
+bool ToulBar2::cfn;
+bool ToulBar2::cfngz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
@@ -143,6 +146,7 @@ double ToulBar2::trws;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 double ToulBar2::costMultiplier;
+unsigned int ToulBar2::decimalPoint;
 Cost ToulBar2::relaxThreshold;
 
 ElimOrderType ToulBar2::elimOrderType;
@@ -263,6 +267,8 @@ void tb2init()
     ToulBar2::haplotype = NULL;
     ToulBar2::cpd = NULL;
 
+    ToulBar2::cfn = false;
+    ToulBar2::cfngz = false;
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
     ToulBar2::solution_uai_file = NULL;
@@ -981,7 +987,7 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
 /// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
 /// \param file problem file (\see \ref wcspformat)
 /// \deprecated should use postWXXX methods
-int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter)
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter)
 {
     if (gcname == "salldiffdp") {
         string semantics;
@@ -1689,7 +1695,7 @@ void WCSP::processTernary()
 
 void WCSP::preprocessing()
 {
-    Cost previouslb;
+    Cost previouslb = getLb();
 
     Eliminate.clear();
     if (ToulBar2::elimDegree_preprocessing <= -3) {
@@ -3874,6 +3880,7 @@ void WCSP::setDACOrder(vector<int>& order, bool trws)
 // -----------------------------------------------------------
 // Functions for dealing with probabilities
 // Warning: ToulBar2::NormFactor has to be initialized
+
 
 Cost WCSP::Prob2Cost(TProb p) const
 {

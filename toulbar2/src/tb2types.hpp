@@ -92,12 +92,28 @@ inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
 inline bool CUT(Cost lb, Cost ub) { return lb >= ub; }
 inline bool CSP(Cost lb, Cost ub) { return (ub - lb) <= 1; }
-inline void initCosts(Cost ub) {}
+inline void initCosts() {}
 #endif
 
 #ifdef LONGLONG_COST
 const bool PARTIALORDER = false;
 typedef Long Cost;
+struct DCost {
+    Cost c;
+
+    DCost(Cost ic) { c = ic; };
+    friend ostream& operator<<(ostream& os, const DCost& r)
+    {
+        os << r.c;
+        return os;
+    }
+    friend istream& operator>>(istream& is, DCost& r)
+    {
+        is >> r.c;
+        return is;
+    }
+};
+
 const Cost MIN_COST = 0;
 const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
@@ -134,7 +150,7 @@ inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
 inline bool CUT(Cost lb, Cost ub) { return lb >= ub; }
 inline bool CSP(Cost lb, Cost ub) { return (ub - lb) <= 1; }
-inline void initCosts(Cost ub) {}
+inline void initCosts() {}
 #endif
 
 #ifdef PARETOPAIR_COST
@@ -328,6 +344,7 @@ public:
     static string version;
     static int verbose;
     static int debug;
+    static string externalUB;
     static bool showSolutions;
     static char* writeSolution;
     static FILE* solutionFile;
@@ -377,6 +394,8 @@ public:
 #endif
     static SequenceHandler* sequence_handler;
     static string map_file;
+    static bool cfn;
+    static bool cfngz;
     static bool bayesian;
     static int uai;
     static int resolution;
@@ -393,6 +412,7 @@ public:
     static Cost costThreshold;
     static Cost costThresholdPre;
     static double costMultiplier;
+    static unsigned int decimalPoint;
     static Cost relaxThreshold;
     static ElimOrderType elimOrderType;
     static bool singletonConsistency;

@@ -234,12 +234,17 @@ void Cpd::read_rotamers2aa(ifstream& file, vector<Variable*>& vars)
             }
         }
     }
+    computeAAbounds();
+}
+
+void Cpd::computeAAbounds() {
+
+    LeftAA.clear();
+    RightAA.clear();
 
     for (auto& rv : rotamers2aa) {
-
-        vector<Value> leftidx_var;
-        vector<Value> rightidx_var;
-
+        
+        vector<Value> leftidx_var, rightidx_var; 
         char prev_char = '0';
         size_t pos = 0;
 

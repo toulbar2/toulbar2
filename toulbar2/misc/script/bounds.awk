@@ -17,7 +17,7 @@ FNR==1{start=$1}
 }
 
 /New solution:/ {
-  if (match($0,"log10like")) {
+  if (match($0,"log10like") || match($0,"energy")) {
     print $1,$(NF-10) >> "ub" N;
   } else {
     print $1,$(NF-6) >> "ub" N;
@@ -33,7 +33,7 @@ FNR==1{start=$1}
 } 
 
 /Optimum:/{
- if (match($0,"log10like")) {
+ if (match($0,"log10like") || match($0,"energy")) {
   if (match($0,"DEE")) {
     print $1,$(NF-18) >> "ub" N;
     print $1,$(NF-18) >> "lb" N;

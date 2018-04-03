@@ -29,7 +29,9 @@ public:
     Cpd();
     ~Cpd();
     void init();
-    void read_rotamers2aa(ifstream& file, vector<Variable*>& vars); ///< \brief read rotamer to amino acid correspondence
+    void read_rotamers2aa(ifstream& file, vector<Variable*>& vars); ///< \brief read rotamer to amino acid array from wcsp file
+    void computeAAbounds(); ///< \brief compute beg/end of each AA in the rotamer array
+    void newRotamerArray(const vector<char>& rots) { rotamers2aa.push_back(rots); }; 
     void readPSMatrix(const char* filename);
     void readPSSMatrix(const char* filename);
     void readEvolMat(const char* filename);

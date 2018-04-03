@@ -12,3 +12,4 @@ seconds;1;[and]\s(\d+.\d*|\d+)\s+(seconds.);0
 Pretime;1;[Preprocessing Time]\s+[:]\s*(\d+.\d*|\d+)\s+(seconds);0 
 Solution;1;New solution:\s(\d+);0
 logLike;1;log10like:\s([+-]\d*.\d*)\s;0
+energy;1;energy:\s([+-]\d*.\d*)\s;0

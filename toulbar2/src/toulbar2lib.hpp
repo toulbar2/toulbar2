@@ -74,11 +74,14 @@ public:
     virtual ~WeightedCSP() {}
 
     virtual int getIndex() const = 0; ///< \brief instantiation occurrence number of current WCSP object
-    virtual string getName() const = 0; ///< \brief WCSP filename (without its extension)
+    virtual string getName() const = 0; ///< \brief get WCSP problem name (defaults to filename with no extension)
     virtual void* getSolver() const = 0; ///< \brief special hook to access solver information
 
     virtual Cost getLb() const = 0; ///< \brief gets problem lower bound
     virtual Cost getUb() const = 0; ///< \brief gets problem upper bound
+
+    virtual Double getDLb() const = 0;
+    virtual Double getDUb() const = 0;
 
     /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) = 0;
@@ -215,7 +218,7 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
 
-    virtual int postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter = NULL) = 0; ///< \deprecated Please use the postWxxx methods instead
+    virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL) = 0; ///< \deprecated Please use the postWxxx methods instead
 
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -363,9 +366,10 @@ public:
     virtual void dump(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
 
     // -----------------------------------------------------------
-    // Functions dealing with probabilities
+    // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
 
+    virtual Double Cost2DCost(const Cost& c) const = 0;
     virtual Cost Prob2Cost(TProb p) const = 0;
     virtual TProb Cost2Prob(Cost c) const = 0;
     virtual TLogProb Cost2LogProb(Cost c) const = 0;

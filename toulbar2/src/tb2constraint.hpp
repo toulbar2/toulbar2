@@ -11,6 +11,8 @@
 
 class Constraint : public WCSPLink {
     Long conflictWeight;
+
+    string name;
     Constraint* fromElim1; // remember the original constraint(s) from which this constraint is derived
     Constraint* fromElim2; // it can be from variable elimination during search or n-ary constraint projection
 
@@ -49,6 +51,9 @@ public:
     virtual int arity() const = 0;
     virtual Variable* getVar(int scopeIndex) const = 0;
     virtual int getIndex(Variable* var) const = 0;
+
+    string getName() { return this->name; };
+    void setName(const string& name) { this->name = name; };
 
     void conflict();
     virtual Long getConflictWeight() const { return conflictWeight; }

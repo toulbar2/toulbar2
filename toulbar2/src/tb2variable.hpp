@@ -19,8 +19,9 @@
 class Variable : public WCSPLink {
 protected:
     string name;
-    int dac; // DAC order
+    vector<string> valueNames;
 
+    int dac; // DAC order
     Long timestamp;
     int pos; // current position in the list of unassigned variables
 
@@ -56,6 +57,8 @@ public:
     virtual bool enumerated() const = 0;
 
     string getName() const { return name; }
+    void newValueName(const string& vname) { valueNames.push_back(vname); }
+    string &getValueNme(int idx) { return valueNames[idx]; }
     int getDACOrder() const { return dac; }
     void setDACOrder(int order) { dac = order; }
     Value getInf() const { return inf; }
