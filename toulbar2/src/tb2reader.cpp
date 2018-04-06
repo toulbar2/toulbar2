@@ -1039,7 +1039,7 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
             zeroAryCost = defaultCost;
     }
     if (zeroAryCost < 0) {
-        wcsp->negCost += zeroAryCost;
+        wcsp->negCost -= zeroAryCost;
         zeroAryCost = 0;
     }
     wcsp->increaseLb(zeroAryCost);
