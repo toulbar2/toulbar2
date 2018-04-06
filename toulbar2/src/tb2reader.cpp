@@ -1115,6 +1115,8 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         }
 
         int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
+        NaryConstraint* nary = (NaryConstraint*)this->wcsp->getCtr(naryIndex);
+        
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
             this->wcsp->postNaryConstraintTuple(naryIndex, it->first, it->second - minCost); // For each tuple
         }
@@ -1164,7 +1166,6 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         this->wcsp->postNaryConstraintEnd(nctr->wcspIndex);
     }
     wcsp->negCost -= minCost;
-    cout << "ECost shift is " << wcsp->negCost << endl;
     skipCBrace(); // Function final CBrace read.
 }
 
@@ -1317,7 +1318,9 @@ void WCSP::read_wcsp(const char* fileName)
         fileReader.readVariables();
         fileReader.readCostFunctions();
         fileReader.enforceUB(upperBound);
+        sortConstraints(); //TODO domain sorting and delayed unaries ?
         return;
+        
     } else if (ToulBar2::cfngz) {
 #ifdef BOOST
         ifstream file(fileName, std::ios_base::in | std::ios_base::binary);
@@ -1330,6 +1333,7 @@ void WCSP::read_wcsp(const char* fileName)
         fileReader.readVariables();
         fileReader.readCostFunctions();
         fileReader.enforceUB(upperBound);
+        sortConstraints(); //TODO domain sorting and delayed unaries ?
         return;
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd compressed files." << endl; 
@@ -1846,6 +1850,7 @@ void WCSP::read_wcsp(const char* fileName)
         }
     }
 
+    //TODO isolate this in a method to share with the CFN format
     // merge unarycosts if they are on the same variable
     vector<int> seen(nbvar, -1);
     vector<TemporaryUnaryConstraint> newunaryconstrs;
