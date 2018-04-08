@@ -589,7 +589,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     std::tie(lineNumber, token) = this->getNextToken();
 
     if (isCBrace(token)) { // End of variable list
-        return false;
+        return 0;
     }
 
     // A domain or domain size is there: the variable has no name
@@ -642,7 +642,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         ToulBar2::cpd->newRotamerArray(rots);
     }
 
-    return true;
+    return domainSize;
 }
 
 // Reads a domain defined as a set of symbolic values in the valueNames vector and returns domain size.
