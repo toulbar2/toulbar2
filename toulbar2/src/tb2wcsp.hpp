@@ -607,7 +607,7 @@ public:
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
 
-    Double Cost2DCost(const Cost& c) const { return ((Double)(c + negCost) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); }
+    Double Cost2DCost(const Cost& c) const { return ((Double)(c - negCost) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); }
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;

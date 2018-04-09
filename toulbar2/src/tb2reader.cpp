@@ -296,12 +296,12 @@ public:
 
     // WCSP2 reading methods
     Cost readHeader();
-    void readVariables();
-    bool readVariable(unsigned int varIndex);
+    pair<unsigned,unsigned> readVariables();
+    unsigned readVariable(unsigned int varIndex);
     int readDomain(std::vector<string>& valueNames);
     int getValueIdx(int variableIdx, const string& token, int lineNumber);
     void readScope(vector<int>& scope);
-    void readCostFunctions();
+    pair<unsigned,unsigned> readCostFunctions();
     void readZeroAryCostFunction(bool all, Cost defaultCost);
     void readUnaryCostFunction(const vector<int>& scope, bool all, Cost defaultCost);
     void readBinaryCostFunction();
@@ -338,10 +338,18 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     this->JSONMode = false;
     this->tok = nullptr;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
+    Cost upperBound = readHeader();
+    unsigned nvar,nval;
+    tie(nvar,nval) = readVariables();
+    unsigned ncf,maxarity;
+    tie(ncf,maxarity) = readCostFunctions();
+    enforceUB(upperBound);
+    wcsp->sortConstraints(); //TODO domain sorting and delayed unaries ?
+    if (ToulBar2::verbose >= 0)
+        cout << "Read " << nvar << " variables, with " << nval << " values at most, and " << ncf << " cost functions, with maximum arity " << maxarity << "." << endl;
 }
 
-// Reads a line. Skips comment lines starting with '#'.
-// TODO skip // too.
+// Reads a line. Skips comment lines starting with '#' and // too.
 bool CFNStreamReader::getNextLine()
 {
     string line;
@@ -365,6 +373,7 @@ bool CFNStreamReader::getNextLine()
         return getNextLine(); // tail recurse
 }
 
+// Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
 {
     if (tok != nullptr) {
@@ -388,17 +397,13 @@ std::pair<int, string> CFNStreamReader::getNextToken()
     }
 }
 
-CFNStreamReader::~CFNStreamReader() {}
+CFNStreamReader::~CFNStreamReader() {
+    // TODO clear vectors / maps
+}
 
-// Test opening and closing braces.
-bool inline isOBrace(const string& token)
-{
-    return ((token == "{") || (token == "["));
-}
-bool inline isCBrace(const string& token)
-{
-    return ((token == "}") || (token == "]"));
-}
+// Utilities: test opening and closing braces.
+bool inline isOBrace(const string& token) { return ((token == "{") || (token == "[")); }
+bool inline isCBrace(const string& token) { return ((token == "}") || (token == "]")); }
 
 // checks if the next token is an opening brace
 // and yells otherwise
@@ -430,7 +435,6 @@ void CFNStreamReader::skipCBrace()
 // Tests if a read token is the expected (JSON) tag and yells otherwise.
 inline void CFNStreamReader::testJSONTag(const std::pair<int, string>& token, const string& tag)
 {
-
     if (token.second != tag) {
         cerr << "Error: expected '" << tag << "' instead of '" << token.second << "' at line " << token.first << endl;
         exit(1);
@@ -440,7 +444,6 @@ inline void CFNStreamReader::testJSONTag(const std::pair<int, string>& token, co
 // In JSON mode, checks is the next token is the expected (JSON) tag and yells otherwise.
 inline void CFNStreamReader::skipJSONTag(const string& tag)
 {
-
     if (JSONMode) {
         testJSONTag(this->getNextToken(), tag);
     }
@@ -503,7 +506,7 @@ Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lin
     return (Cost)(cost * ToulBar2::costMultiplier);
 }
 
-// Reads the problem header (problem name and UB) and returns UB
+// Reads the problem header (problem name and global Bound) and returns the bound
 // Starts: at the beginning of the stream
 // Ends  : after the closing brace of the header
 Cost CFNStreamReader::readHeader()
@@ -520,51 +523,64 @@ Cost CFNStreamReader::readHeader()
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << token << endl;
 
-    skipJSONTag("upperbound");
-    Cost upperBound;
+    skipJSONTag("mustbe");
+    Cost pbBound;
 
     std::tie(lineNumber, token) = this->getNextToken();
-    string integerPart = token.substr(0, token.find('.'));
-    string decimalPart = token.substr(token.find('.') + 1);
+    if ((token[0] == '<') || token[0] == '>') {
+        string integerPart = token.substr(1, token.find('.'));
+        string decimalPart = token.substr(token.find('.') + 1);
 
-    try {
-        upperBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
-        upperBound += ((upperBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
-    } catch (const std::invalid_argument&) {
-        cerr << "Error: invalid upper bound '" << token << "' at line " << lineNumber << endl;
+        try {
+            pbBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
+            pbBound += ((pbBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
+        } catch (const std::invalid_argument&) {
+            cerr << "Error: invalid global bound '" << token << "' at line " << lineNumber << endl;
+            exit(1);
+        }
+        ToulBar2::decimalPoint = decimalPart.size();
+    }
+    else {
+        cerr << "Error: global bound '" << token << "' misses upper/lower bound indicator at line " << lineNumber << endl;
         exit(1);
     }
-
-    ToulBar2::decimalPoint = decimalPart.size();
+    
+    if (token[0] == '>') {
+        ToulBar2::costMultiplier *= -1.0;
+    }
 
     if (ToulBar2::verbose >= 1)
-        cout << "Read upperbound: " << upperBound << " with precision " << ToulBar2::decimalPoint << endl;
+        cout << "Read bound: " << pbBound << " with precision " << ToulBar2::decimalPoint << endl;
     skipCBrace();
 
-    return upperBound;
+    return pbBound;
 }
 
 // Reads the variables and domains and creates them.
 // Starts: after the opening brace of the variables list.
 // Ends:   after the closing brace of the variables list.
-void CFNStreamReader::readVariables()
+pair <unsigned, unsigned> CFNStreamReader::readVariables()
 {
     skipJSONTag("variables");
     // Check first opening brace
     skipOBrace();
 
-    unsigned int nVar = 0;
-    while (readVariable(nVar)) {
+    unsigned domsize;
+    unsigned maxdomsize = 0;
+    unsigned nVar = 0;
+    while ((domsize = readVariable(nVar)) != 0) {
+        maxdomsize = max(maxdomsize,domsize);
         nVar++;
     }
     if (ToulBar2::cpd)
         ToulBar2::cpd->computeAAbounds();
+    return make_pair(nVar, maxdomsize);
 }
 
-// Reads the description of the ith variable, creates it and returns true if successful
+// Reads the description of the ith variable, creates it and returns the domain size (> 0 iff successful)
 // Starts: after the opening brace of all variables or closing brace of previous variable.
 // Ends:   after the closing brace of all variables or of the variable read otherwise.
-bool CFNStreamReader::readVariable(unsigned int i)
+unsigned CFNStreamReader::readVariable(unsigned i)
 {
     string varName;
     int domainSize = 0;
@@ -575,7 +591,7 @@ bool CFNStreamReader::readVariable(unsigned int i)
     std::tie(lineNumber, token) = this->getNextToken();
 
     if (isCBrace(token)) { // End of variable list
-        return false;
+        return 0;
     }
 
     // A domain or domain size is there: the variable has no name
@@ -628,7 +644,7 @@ bool CFNStreamReader::readVariable(unsigned int i)
         ToulBar2::cpd->newRotamerArray(rots);
     }
 
-    return true;
+    return domainSize;
 }
 
 // Reads a domain defined as a set of symbolic values in the valueNames vector and returns domain size.
@@ -748,25 +764,27 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     return costVector;
 }
 
-void CFNStreamReader::enforceUB(Cost ub) {
+// bound is the raw bound from the header (unshifted, unscaled)
+void CFNStreamReader::enforceUB(Cost bound) {
 
-    Cost shift = wcsp->negCost / ToulBar2::costMultiplier;
-    ub -= shift;
+    Cost shifted = bound + wcsp->negCost / ToulBar2::costMultiplier;
+    if (ToulBar2::costMultiplier < 0.0) shifted = -shifted; // shifted unscaled upper bound
 
-    if (ub < MIN_COST) ub = MIN_COST;
-    if (ub < MAX_COST / ToulBar2::costMultiplier)
-        ub = ub * ToulBar2::costMultiplier;
+    if (shifted < (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
+        bound = (bound * ToulBar2::costMultiplier) + wcsp->negCost;
     else {
-        cerr << "Error: upper bound generate Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << endl;
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << endl;
         exit(1);   
     }
-    wcsp->updateUb(ub);
+
+    // if the shifted bound is less than zero, we equivalently set it to zero
+    if (shifted < MIN_COST) bound = MIN_COST;
 
     //TODO needs a decimal decoder w/o lineNumber
-    if (ToulBar2::externalUB.length() != 0) {
-        ub = decimalToCost(ToulBar2::externalUB,0)-wcsp->negCost;
-        wcsp->updateUb(ub);
-    }
+    if (ToulBar2::externalUB.length() != 0) 
+        bound = min(bound, decimalToCost(ToulBar2::externalUB,0) + wcsp->negCost);
+
+    wcsp->updateUb(bound);
 }
 
 // Returns the index of the value name for the given variable
@@ -838,10 +856,12 @@ void CFNStreamReader::readScope(vector<int>& scope)
 // Reads all cost functions.
 // Starts: after the opening brace of all cost functions.
 // Ends:   at the end of file or after the closing brace of the problem.
-void CFNStreamReader::readCostFunctions()
+pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
 {
     int lineNumber;
     string token;
+    unsigned nbcf = 0;
+    unsigned maxarity = 0;
 
     skipJSONTag("functions");
     skipOBrace();
@@ -862,6 +882,8 @@ void CFNStreamReader::readCostFunctions()
         //  Read variable names/indices until CBrace
         vector<int> scope;
         readScope(scope);
+        maxarity = max(maxarity,static_cast<unsigned>(scope.size()));
+        nbcf++;
 
         bool isShared = false;
         // Test if function is shared
@@ -1016,7 +1038,7 @@ void CFNStreamReader::readCostFunctions()
         std::tie(lineNumber, token) = this->getNextToken();
     } // end of while (token != closing braces = EOF)
 
-    // All cost functions posted
+    return make_pair(nbcf,maxarity);
 }
 
 // Reads a 0ary function.
@@ -1041,7 +1063,7 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
             zeroAryCost = defaultCost;
     }
     if (zeroAryCost < 0) {
-        wcsp->negCost += zeroAryCost;
+        wcsp->negCost -= zeroAryCost;
         zeroAryCost = 0;
     }
     wcsp->increaseLb(zeroAryCost);
@@ -1116,7 +1138,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             minCost = min(minCost, defaultCost);
         }
 
-        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
+        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);        
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
             this->wcsp->postNaryConstraintTuple(naryIndex, it->first, it->second - minCost); // For each tuple
         }
@@ -1166,7 +1188,6 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         this->wcsp->postNaryConstraintEnd(nctr->wcspIndex);
     }
     wcsp->negCost -= minCost;
-    cout << "ECost shift is " << wcsp->negCost << endl;
     skipCBrace(); // Function final CBrace read.
 }
 
@@ -1524,29 +1545,33 @@ void WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::cfn) {
         ifstream stream(fileName);
-        CFNStreamReader fileReader(stream, this);
-        Cost upperBound = fileReader.readHeader();
-        fileReader.readVariables();
-        fileReader.readCostFunctions();
-        fileReader.enforceUB(upperBound);
+        if (stream.is_open()) 
+            CFNStreamReader fileReader(stream, this);
+        else {
+            cerr << "Error: no '" << fileName << "' file found." << endl;
+            exit(1);
+        }
         return;
+        
     } else if (ToulBar2::cfngz) {
-#ifdef BOOST
         ifstream file(fileName, std::ios_base::in | std::ios_base::binary);
-        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-        inbuf.push(boost::iostreams::gzip_decompressor());
-        inbuf.push(file);
-        std::istream stream(&inbuf);
-        CFNStreamReader fileReader(stream, this);
-        Cost upperBound = fileReader.readHeader();
-        fileReader.readVariables();
-        fileReader.readCostFunctions();
-        fileReader.enforceUB(upperBound);
-        return;
+        if (file.is_open()) {
+#ifdef BOOST            
+            boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+            inbuf.push(boost::iostreams::gzip_decompressor());
+            inbuf.push(file);
+            std::istream stream(&inbuf);
+            CFNStreamReader fileReader(stream, this);
 #else
-        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd compressed files." << endl; 
-        exit(1);
+            cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd compressed files." << endl; 
+            exit(1);
 #endif
+        }
+        else {
+            cerr << "Error: no '" << fileName << "' file found." << endl;
+            exit(1);
+        }            
+        return;
     }
 
     if (ToulBar2::externalUB.length() != 0) {
@@ -2058,6 +2083,7 @@ void WCSP::read_wcsp(const char* fileName)
         }
     }
 
+    //TODO isolate this in a method to share with the CFN format
     // merge unarycosts if they are on the same variable
     vector<int> seen(nbvar, -1);
     vector<TemporaryUnaryConstraint> newunaryconstrs;
@@ -2079,7 +2105,8 @@ void WCSP::read_wcsp(const char* fileName)
     unaryconstrs = newunaryconstrs;
     if (ToulBar2::sortDomains) {
         if (maxarity > 2) {
-            cout << "Warning! Cannot sort domains in preprocessing with non-binary cost functions." << endl;
+            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+            exit(1);
         } else {
             ToulBar2::sortedDomains.clear();
             for (unsigned int u = 0; u < unaryconstrs.size(); u++) {

@@ -104,21 +104,11 @@ string read_UB(char* ubfilename)
     }
 }
 
-/* get ending sbsrting */
-//bool getExt(char* fileName, const char* ext)
+// chek if a filename end as ext
 bool check_file_ext(const string fileName, const string ext)
 {
-    // Finds the last persiod character of the string
-    int period = fileName.find_last_of(ext[0]);
-    if (period < 0)
-        return false;
-    string found_ext = fileName.substr(period);
-    if (found_ext == ext) {
-        return true;
-    } else {
-        //cout <<"ext " << ext << "not found in "<< fileName << endl;
-        return false;
-    }
+    size_t extLen = ext.length();
+    return ((extLen <= fileName.length()) && (fileName.substr(fileName.length() - extLen) == ext));
 }
 
 enum {
