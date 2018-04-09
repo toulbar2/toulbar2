@@ -309,6 +309,8 @@ public:
     void readNaryCostFunction(vector<int>& scope, bool all, Cost defaultCost);
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
+
+    stringstream generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, const string& GCFTemplate);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
     void enforceUB(Cost ub);
 
@@ -1182,104 +1184,161 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         }
     }
 
-    pair<int, string> token = this->getNextToken();
-    vector<pair<int, string>> funcParams;
+    map<string, string> GCFTemplates;
 
-    while (!isCBrace(token.second)) {
-        funcParams.push_back(token);
-        token = this->getNextToken();
+    GCFTemplates.insert(std::pair<string, string> ("salldiff", "KC") );
+    //GCFTemplates.insert(std::pair<string, string> ("ssame", "C[N]+[N]+") );
+    GCFTemplates.insert(std::pair<string, string> ("sregular", "KC:nb_states:N:start:[N]+:end:[N]+:transition:[NVN]+") );
+    GCFTemplates.insert(std::pair<string, string> ("sregulardp", "KC:nb_states:N:start:[N]+:end:[N]+:transition:[NVN]+") );
+    GCFTemplates.insert(std::pair<string, string> ("sgrammar", "KC") );
+    GCFTemplates.insert(std::pair<string, string> ("sgrammardp", "KC") );
+    GCFTemplates.insert(std::pair<string, string> ("samong", "KCNN[V]+") );
+    GCFTemplates.insert(std::pair<string, string> ("samongdp", "KCNN[V]+") );
+    GCFTemplates.insert(std::pair<string, string> ("salldiffdp", "KC") );
+    GCFTemplates.insert(std::pair<string, string> ("sgccdp", "KC[VNN]+") );
+    //GCFTemplates.insert(std::pair<string, string> ("max", "todo") );
+    //GCFTemplates.insert(std::pair<string, string> ("smaxdp", "todo") );
+    GCFTemplates.insert(std::pair<string, string> ("MST", "K") );
+    GCFTemplates.insert(std::pair<string, string> ("smstdp", "K") );
+    GCFTemplates.insert(std::pair<string, string> ("wregular", ":nb_state:N:start:[NC]+:end:[NC]+:transition:[NCVC]+") );
+    GCFTemplates.insert(std::pair<string, string> ("walldiff", "KC") );
+    GCFTemplates.insert(std::pair<string, string> ("wgcc", "KC[VNN]+") );
+    GCFTemplates.insert(std::pair<string, string> ("wsame", "KC") );
+    GCFTemplates.insert(std::pair<string, string> ("wsamegcc", "KC[VNN]+") );
+    //GCFTemplates.insert(std::pair<string, string> ("wamong", "KC[V]+NN") );
+    GCFTemplates.insert(std::pair<string, string> ("wvaramong", "KC[V]+") );
+    GCFTemplates.insert(std::pair<string, string> ("woverlap", "KCKN") );
+    GCFTemplates.insert(std::pair<string, string> ("wsum", "KCKN") );
+
+    map<string, string>::iterator it;
+    if ( (it = GCFTemplates.find(funcName)) != GCFTemplates.end() ) {
+
+        // Reads function using template and generates the corresponding stream
+        stringstream paramsStream = this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName] );
+
+        int scopeArray[arity];
+        for (unsigned int i = 0; i < scope.size(); i++) {
+            scopeArray[i] = scope[i];
+        }
+
+        if (funcName[0] == 'w') {
+            cout << "Factory DGCF" << endl;
+            //DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray, paramsStream);
+            //decomposableGCF->addToCostFunctionNetwork(this->wcsp);
+
+        } else { // monolithic global cost functions
+            int nbconstr; // unused int for pointer ref
+            cout << "Post Global Constraint" << endl;
+            //this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr);
+        }
+        
+    // Arithmetic function
+    } else {
+
+        pair<int, string> token = this->getNextToken();
+        vector<pair<int, string>> funcParams;
+
+        while (!isCBrace(token.second)) {
+            funcParams.push_back(token);
+            token = this->getNextToken();
+        }
+
+        if (funcName == ">=") {
+            if (funcParams.size() != 2) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            try {
+                cout << "Will post arithmetic function : " << funcName << " " << scope[0] << " " << scope[1] << " " << stoi(funcParams[0].second) << " " << stoi(funcParams[1].second) << endl;
+                // postSupxyc(int xIndex, int yIndex, Value cst, Value delta = MAX_VAL - MIN_VAL)
+                wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        } else if (funcName == ">") {
+            if (funcParams.size() != 2) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            try {
+                wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        } else if (funcName == "<=") {
+            if (funcParams.size() != 2) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            try {
+                wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second), stoi(funcParams[1].second));
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        } else if (funcName == "<") {
+            if (funcParams.size() != 2) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            try {
+                wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        } else if (funcName == "=") {
+            if (funcParams.size() != 2) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            try {
+                wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
+                wcsp->postSupxyc(scope[1], scope[0], -stoi(funcParams[0].second), stoi(funcParams[1].second));
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+        } else if (funcName == "disj") {
+            if (funcParams.size() != 3) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            Cost cost = this->decimalToCost(funcParams[2].second, funcParams[2].first);
+            try {
+                wcsp->postDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second), cost);
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        } else if (funcName == "sdisj") {
+            if (funcParams.size() != 6) {
+                cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
+                exit(1);
+            }
+            Cost cost1 = this->decimalToCost(funcParams[4].second, funcParams[4].first);
+            Cost cost2 = this->decimalToCost(funcParams[5].second, funcParams[4].first);
+            try {
+                wcsp->postSpecialDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second),
+                    stoi(funcParams[2].second), stoi(funcParams[3].second), cost1, cost2);
+            } catch (std::invalid_argument&) {
+                cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
+                exit(1);
+            }
+
+        }
+        skipCBrace();
     }
 
-    if (funcName == ">=") {
-        if (funcParams.size() != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        try {
-            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
-    } else if (funcName == ">") {
-        if (funcParams.size() != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        try {
-            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
-    } else if (funcName == "<=") {
-        if (funcParams.size() != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        try {
-            wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second), stoi(funcParams[1].second));
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
-    } else if (funcName == "<") {
-        if (funcParams.size() != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        try {
-            wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
-    } else if (funcName == "=") {
-        if (funcParams.size() != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        try {
-            wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
-            wcsp->postSupxyc(scope[1], scope[0], -stoi(funcParams[0].second), stoi(funcParams[1].second));
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-    } else if (funcName == "disj") {
-        if (funcParams.size() != 3) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        Cost cost = this->decimalToCost(funcParams[2].second, funcParams[2].first);
-        try {
-            wcsp->postDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second), cost);
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
-    } else if (funcName == "sdisj") {
-        if (funcParams.size() != 6) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-            exit(1);
-        }
-        Cost cost1 = this->decimalToCost(funcParams[4].second, funcParams[4].first);
-        Cost cost2 = this->decimalToCost(funcParams[5].second, funcParams[4].first);
-        try {
-            wcsp->postSpecialDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second),
-                stoi(funcParams[2].second), stoi(funcParams[3].second), cost1, cost2);
-        } catch (std::invalid_argument&) {
-            cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-            exit(1);
-        }
-
         // True global cost function
-    } else {
+    /*} else {
         int scopeArray[arity];
         for (unsigned int i = 0; i < scope.size(); i++) {
             scopeArray[i] = scope[i];
@@ -1290,6 +1349,14 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
             stream << std::get<1>(token) << " ";
         }
 
+        // Debug :
+        cout << "True global : FuncName : '" << funcName << "' arity : '" << arity << "' scopeArray : '";
+        for (int sc : scopeArray) {
+            cout << sc << " ";
+        }
+        cout << "'" << endl;
+        cout << "Stream : '" << stream.str() << "'" << endl;
+
         if (funcName[0] == 'w') {
             DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray, stream);
             decomposableGCF->addToCostFunctionNetwork(this->wcsp);
@@ -1298,9 +1365,154 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, stream, &nbconstr);
         }
-    }
-    skipCBrace();
+    }*/
+    //skipCBrace();
 }
+
+stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const string& funcType, const string& GCFTemplate) {
+
+    stringstream stream;
+    cout << "We entered Stream Generator : " << funcType << ". Template = " << GCFTemplate << endl;
+    int lineNumber;
+    string token;
+    vector<char> repeatedSymbols;
+    unsigned int numberOfTuplesRead = 0;
+    bool isOpenedBrace = false;
+
+    for (unsigned int i=0; i < GCFTemplate.size(); i++) {
+
+        if (isOpenedBrace) {
+            if (GCFTemplate[i] != ']') {
+                repeatedSymbols.push_back(GCFTemplate[i]);
+            }
+            else {
+                isOpenedBrace = false;
+            }
+        }
+        else if (GCFTemplate[i] == 'K') {
+
+            // Read keyword and add it to stream
+            std::tie(lineNumber, token) = this->getNextToken();
+            //cout << "Keyword here : " << token << endl;
+            stream << token << " ";
+ 
+        }
+        else if (GCFTemplate[i] == 'C') {
+
+            // Read cost, transform it to cost and add it to stream
+            std::tie(lineNumber, token) = this->getNextToken();
+            //cout << "Cost here : " << token << endl;
+            Cost cost = decimalToCost(token, lineNumber);
+            stream << cost << " ";
+
+        }
+        else if (GCFTemplate[i] == 'V') {
+
+            // Read value and add it to stream
+            std::tie(lineNumber, token) = this->getNextToken();
+            //cout << "Value here : " << token << endl;
+            stream << token << " ";
+
+        }
+        else if (GCFTemplate[i] == 'N') {
+
+            // Read number and add it to stream
+            std::tie(lineNumber, token) = this->getNextToken();
+            //cout << "Number here : " << token << endl;
+            stream << token << " ";
+
+        }
+        else if (GCFTemplate[i] == ':') {
+            string jsonTag = GCFTemplate.substr(i, (GCFTemplate.find_first_of(':', i+1) + 1) - i );
+            i += jsonTag.size() - 1;
+
+            // Remove two : symbols
+            jsonTag = jsonTag.substr(1, jsonTag.size() - 2);
+            //cout << "JSONTag : " << jsonTag << endl;
+
+            skipJSONTag(jsonTag);
+
+        }
+        else if (GCFTemplate[i] == '[') {
+
+            isOpenedBrace = true;
+
+        }
+        else if (GCFTemplate[i] == ']') {
+            
+        }
+        else if (GCFTemplate[i] == '+') {
+
+            string repeatedContent = "";
+
+            //cout << "+ now read all that was repeated : " << endl;
+
+            std::tie(lineNumber, token) = this->getNextToken();
+            isOBrace(token);
+
+            // Read first [
+            std::tie(lineNumber, token) = this->getNextToken();
+            while (token != "]") {
+                
+                isOBrace(token);
+
+                for (char symbol : repeatedSymbols) {
+
+                    std::tie(lineNumber, token) = this->getNextToken();
+
+                    if (symbol == 'N') {
+
+                        //cout << "Token should be N : " << token << endl;
+                        repeatedContent += token + " ";
+
+                    }
+
+                    else if (symbol == 'V') {
+
+                        //cout << "Token should be V : " << token << endl;
+                        repeatedContent += token + " ";
+                    }
+
+                    else if (symbol == 'C') {
+
+                        //cout << "Token should be C : " << token << endl;
+                        // TODO : translate to cost, update superDelta ?
+                        repeatedContent += std::to_string( decimalToCost(token, lineNumber) ) + " ";
+                    }
+
+                }
+
+                std::tie(lineNumber, token) = this->getNextToken();
+                isCBrace(token);
+                numberOfTuplesRead++;
+
+                // Read potential last ] or next tuple
+                std::tie(lineNumber, token) = this->getNextToken();
+            }
+            // Compute size and print it before the list
+
+            //cout << "Number of tuple read : " << numberOfTuplesRead << endl;
+
+            repeatedContent = std::to_string(numberOfTuplesRead) + " " + repeatedContent;
+            //cout << "Rdy for stream : " << repeatedContent << endl;
+
+            stream << repeatedContent << " ";
+
+            // Reset vector for future usage
+            numberOfTuplesRead = 0;
+            repeatedSymbols.clear();
+        }
+    }
+
+    // End of params
+    skipCBrace();
+    // End of function
+    skipCBrace();
+    
+    cout << "Return stream : '" << stream.str()  << "'" << endl;
+    return stream;
+}
+
 
 // TB2 entry point for WCSP reading (not only wcsp format)
 void WCSP::read_wcsp(const char* fileName)
