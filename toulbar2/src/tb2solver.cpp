@@ -241,7 +241,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     }
     wcsp->assignLS(variables, values);
     if (ToulBar2::verbose >= 0)
-        cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+        cout << " Solution cost: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "," << wcsp->getDUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
     assert(wcsp->numberOfUnassignedVariables() == 0);
     if (ToulBar2::verifyOpt) {
         ToulBar2::verifiedOptimum = wcsp->getLb();
@@ -313,7 +313,7 @@ void Solver::parse_solution(const char* certificate)
     }
     wcsp->assignLS(variables, values);
     if (ToulBar2::verbose >= 0)
-        cout << " Solution cost: [" << wcsp->getLb() << "," << wcsp->getUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+        cout << " Solution cost: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "," << wcsp->getDUb() << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
 
     //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     //    Store::restore(depth);

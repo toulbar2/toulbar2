@@ -44,6 +44,7 @@
 #include "tb2clause.hpp"
 
 #include <algorithm>
+#include <iomanip>
 
 /*
  * Global variables with their default value
@@ -2160,7 +2161,7 @@ void WCSP::printNCBuckets()
 
 void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
+    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -2756,7 +2757,7 @@ void WCSP::propagate(bool trws)
                     if (vac->firstTime()) {
                         vac->init();
                         if (ToulBar2::verbose >= 0)
-                            cout << "Lb before VAC: " << getLb() << endl;
+                            cout << "Lb before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
                     }
                     vac->propagate();
                 }
@@ -3515,7 +3516,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         increaseLb(minc);
         if (ToulBar2::verbose >= 1)
             cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << ","
-                 << z->wcspIndex << ")  newLb: " << getLb() << endl;
+                 << z->wcspIndex << ")  newLb: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
         added = true;
     }
     return added;

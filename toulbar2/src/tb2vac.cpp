@@ -14,6 +14,7 @@
 #include "tb2clusters.hpp"
 #include <list>
 #include <algorithm>
+#include <iomanip>
 
 class tVACStat {
 public:
@@ -257,7 +258,7 @@ bool VACExtension::propagate()
         if (!isvac) {
             enforcePass2();
             if (ToulBar2::verbose > 0)
-                cout << "VAC Lb: " << wcsp->getLb() << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda << "      itThreshold: " << itThreshold << endl;
+                cout << "VAC Lb: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "    incvar: " << inconsistentVariable << "    minlambda: " << minlambda << "      itThreshold: " << itThreshold << endl;
             util = enforcePass3();
         } else {
             nextScaleCost();
@@ -514,7 +515,7 @@ void VACExtension::enforcePass2()
     //  maxK = wcsp->getUb() - wcsp->getLb();
     //}
     if (ToulBar2::verbose > 1)
-        cout << "minLambda: " << minlambda << "\t\t (lb = " << wcsp->getLb() << ", ub = " << wcsp->getUb() << ")" << endl;
+        cout << "minLambda: " << minlambda << "\t\t (lb = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << ", ub = " << wcsp->getDUb() << ")" << endl;
 }
 
 bool VACExtension::enforcePass3()
@@ -721,10 +722,10 @@ void VACExtension::printStat(bool ini)
 {
     if (ToulBar2::verbose >= 0) {
         long double mean = to_double(sumlb) / (long double)nlb;
-        cout << "VAC mean lb/incr: " << mean << "     total increments: " << nlb
+        cout << "VAC mean lb/incr: " << std::setprecision(1) << mean << "     total increments: " << nlb
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
         if (ini)
-            cout << "Lb after VAC: " << wcsp->getLb() << endl;
+            cout << "Lb after VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << endl;
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
@@ -776,7 +777,7 @@ void VACExtension::minsumDiffusion()
         int maxit = ToulBar2::minsumDiffusion;
         cout << "MinSumDiffusion: " << endl;
         cout << "   max iterations " << maxit << endl;
-        cout << "   C0 = " << wcsp->getLb() << endl;
+        cout << "   C0 = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << endl;
         int ntimes = 0;
         while (change && (ntimes < maxit)) {
             change = false;
@@ -812,7 +813,7 @@ void VACExtension::minsumDiffusion()
                 && !wcsp->getElimTernCtr(i)->isSep())
                 wcsp->getElimTernCtr(i)->propagate();
         wcsp->propagate();
-        cout << "   C0 = " << wcsp->getLb() << endl;
+        cout << "   C0 = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << endl;
         //    printTightMatrix();
     }
 }
