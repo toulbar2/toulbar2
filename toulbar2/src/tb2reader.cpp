@@ -303,9 +303,6 @@ public:
     void readScope(vector<int>& scope);
     pair<unsigned,unsigned> readCostFunctions();
     void readZeroAryCostFunction(bool all, Cost defaultCost);
-    void readUnaryCostFunction(const vector<int>& scope, bool all, Cost defaultCost);
-    void readBinaryCostFunction();
-    void readTernaryCostFunction();
     void readNaryCostFunction(vector<int>& scope, bool all, Cost defaultCost);
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
@@ -317,6 +314,7 @@ public:
     std::map<std::string, int> varNameToIdx;
     std::vector<std::map<std::string, int>> varValNameToIdx;
     std::map<std::string, std::vector<std::vector<int>>> tableShares;
+    vector<TemporaryUnaryConstraint> unaryCFs;
 
 private:
     istream& iStream;
@@ -343,6 +341,11 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     tie(nvar,nval) = readVariables();
     unsigned ncf,maxarity;
     tie(ncf,maxarity) = readCostFunctions();
+
+    for (auto& cf : unaryCFs) {
+        wcsp->postUnaryConstraint(cf.var->wcspIndex, cf.costs);
+    }
+ 
     enforceUB(upperBound);
     wcsp->sortConstraints(); //TODO domain sorting and delayed unaries ?
     if (ToulBar2::verbose >= 0)
@@ -490,14 +493,15 @@ Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lin
         }
     }
 
-    string integerPart = decimalToken.substr(0, dotFound);
+    bool negative = (decimalToken[0] == '-');
+    string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound)) ;
     string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
     int shift = ToulBar2::decimalPoint - decimalPart.size();
 
     Cost cost;
     try {
         cost = std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint);
-        cost += (cost >= 0) ? (std::stoll(decimalPart) * pow(10, shift)) : -(std::stoll(decimalPart) * pow(10, shift));
+        cost += (negative) ? -(std::stoll(decimalPart) * pow(10, shift)) : (std::stoll(decimalPart) * pow(10, shift));
     }
     catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
@@ -761,6 +765,10 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 
     wcsp->negCost -= minCost;
     skipCBrace();
+
+ //    for (size_t i = 0; i < costVector.size(); i++)
+ //       cout << i << " " << costVector[i] << endl ;
+
     return costVector;
 }
 
@@ -979,18 +987,37 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
 
                 switch (scope.size()) {
                 case 1:
-                    this->wcsp->postUnaryConstraint(scope[0], costs);
-                    if (isShared) {
-                        unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
-                        for (const auto& s : tableShares[funcName]) {
-                            if ((s.size() == 1) && wcsp->getDomainInitSize(s[0]) == domSize) {
-                                this->wcsp->postUnaryConstraint(s[0], costs);
-                                wcsp->negCost -= minCost;
-                                cout << "BCost shift is " << wcsp->negCost << endl;
-                                // TODO must remember name too
+                    if (wcsp->getVar(scope[0])->enumerated()) {
+                        TemporaryUnaryConstraint unarycf;
+                        unarycf.var = (EnumeratedVariable*)wcsp->getVar(scope[0]);
+                        assert(costs.size() == unarycf.var->getDomainInitSize());
+                        unarycf.costs = costs;
+                        unaryCFs.push_back(unarycf);
+                        //this->wcsp->postUnaryConstraint(scope[0], costs);
+                        if (isShared) {
+                            unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
+                            for (const auto& s : tableShares[funcName]) {
+                                if ((s.size() == 1) && wcsp->getVar(s[0])->enumerated() && wcsp->getDomainInitSize(s[0]) == domSize) {
+                                    TemporaryUnaryConstraint unarycf;
+                                    unarycf.var = (EnumeratedVariable*)wcsp->getVar(s[0]);
+                                    assert(costs.size() == unarycf.var->getDomainInitSize());
+                                    unarycf.costs = costs;
+                                    unaryCFs.push_back(unarycf);
+                                    //this->wcsp->postUnaryConstraint(s[0], costs);
+                                    wcsp->negCost -= minCost;
+                                    // TODO must remember name too
+                                }
+                                else {
+                                    cerr << "Error: cannot share cost function '" << funcName << "' with function of incompatible signature." << endl;
+                                    exit(1);
+                                    // TODO print info on the incompatible function
+                                }
                             }
                         }
                     }
+                    else {
+                        //TODO (interval)
+                        }
                     break;
                 case 2: {
                     int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
@@ -1002,7 +1029,6 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                             if ((s.size() == 2) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1) {
                                 this->wcsp->postBinaryConstraint(s[0], s[1], costs);
                                 wcsp->negCost -= minCost;
-                                cout << "CCost shift is " << wcsp->negCost << endl;
                             }
                             // TODO must remember name too
                         }
@@ -1019,7 +1045,6 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                             if ((s.size() == 3) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1 && wcsp->getDomainInitSize(s[2]) == domSize2) {
                                 this->wcsp->postTernaryConstraint(s[0], s[1], s[2], costs);
                                 wcsp->negCost -= minCost;
-                                cout << "DCost shift is " << wcsp->negCost << endl;
                                 // TODO must remember name too
                             }
                         }
