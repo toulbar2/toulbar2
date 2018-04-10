@@ -500,13 +500,14 @@ Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lin
 
     Cost cost;
     try {
-        cost = std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint);
-        cost += (negative) ? -(std::stoll(decimalPart) * pow(10, shift)) : (std::stoll(decimalPart) * pow(10, shift));
+        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint)) + (std::stoll(decimalPart) * pow(10, shift));
     }
     catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
         exit(1);
     }
+    if (negative) cost = -cost;
+ //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
     return (Cost)(cost * ToulBar2::costMultiplier);
 }
 
@@ -766,8 +767,8 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     wcsp->negCost -= minCost;
     skipCBrace();
 
- //    for (size_t i = 0; i < costVector.size(); i++)
- //       cout << i << " " << costVector[i] << endl ;
+//    for (size_t i = 0; i < costVector.size(); i++)
+//       cout << i << " " << costVector[i] << endl ;
 
     return costVector;
 }
