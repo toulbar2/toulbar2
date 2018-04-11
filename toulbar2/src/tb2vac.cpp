@@ -725,7 +725,7 @@ void VACExtension::printStat(bool ini)
         cout << "VAC mean lb/incr: " << std::setprecision(1) << mean << "     total increments: " << nlb
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
         if (ini)
-            cout << "Lb after VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << endl;
+            cout << "Bound after VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << endl;
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
