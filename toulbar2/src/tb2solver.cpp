@@ -936,7 +936,7 @@ void Solver::initGap(Cost newLb, Cost newUb)
     initialDepth = Store::getDepth();
 }
 
-void Solver::showGap(Cost newLb, Cost newUb)
+void Solver::showGap(Cost newLb, Cost newUb) // TODO change to cope with maximization
 {
     if (newLb > newUb)
         newLb = newUb;
