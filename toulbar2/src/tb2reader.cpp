@@ -1295,7 +1295,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     GCFTemplates.insert(std::pair<string, string> ("wsamegcc", ":metric:K:cost:C:bounds:[vNN]+") );
     GCFTemplates.insert(std::pair<string, string> ("wamong", ":metric:K:cost:C:values:[v]+:min:N:max:N") );
     GCFTemplates.insert(std::pair<string, string> ("wvaramong", ":metric:K:cost:C:values:[v]+") );
-    GCFTemplates.insert(std::pair<string, string> ("woverlap", ":metric:K:costs:C:comparator:K:to:N") );
+    GCFTemplates.insert(std::pair<string, string> ("woverlap", ":metric:K:cost:c:comparator:K:to:N") );
     GCFTemplates.insert(std::pair<string, string> ("wsum", ":metric:K:cost:C:comparator:K:to:N") );
     GCFTemplates.insert(std::pair<string, string> ("wvarsum", ":metric:K:cost:C:comparator:K") );
 
