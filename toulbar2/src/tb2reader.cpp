@@ -1649,9 +1649,10 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     }
 
     // SUBSTRACT MIN COST TO negCost
-    wcsp->negCost -= minCost;
-    if (ToulBar2::verbose >= 1)
-        cout << "Substract to negCost : " << minCost << endl;
+    if(funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
+        wcsp->negCost -= ((scope.size()+2) * minCost);
+    }
+    else wcsp->negCost -= minCost;
 
     // STREAM DEBUG
     if (ToulBar2::verbose >= 1)
