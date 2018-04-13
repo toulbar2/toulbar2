@@ -1273,7 +1273,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
     // TODO : move outside of here for cleaner code
     map<string, string> GCFTemplates;
-    GCFTemplates.insert(std::pair<string, string> ("salldiff", ":metric:K:cost:C") );
+    GCFTemplates.insert(std::pair<string, string> ("salldiff", ":metric:K:cost:c") );
     GCFTemplates.insert(std::pair<string, string> ("sgcc", ":metric:K") ); // Read first keyword then special case processing
     GCFTemplates.insert(std::pair<string, string> ("ssame", "SPECIAL") ); // Special case processing
     GCFTemplates.insert(std::pair<string, string> ("sregular", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+") );
@@ -1440,7 +1440,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     // -------------------- Function reading using template
 
     stringstream stream;
-    int lineNumber;
+    int lineNumber = -1;
     string token;
     vector<char> repeatedSymbols;
     unsigned int numberOfTuplesRead = 0;
@@ -1479,15 +1479,13 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                     GCFTemplate = "K:cost:C:bounds:[vNNCC]+";
                 }
             }
-
         }
         // ---------- Read cost, transform it to cost and add it to stream
-        else if (GCFTemplate[i] == 'C') {
+        else if (GCFTemplate[i] == 'C'|| GCFTemplate[i] == 'c') {
 
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = decimalToCost(token, lineNumber);
-            streamContentVec.push_back( std::make_pair('C', std::to_string(cost) ) );
-
+            streamContentVec.push_back( std::make_pair(GCFTemplate[i], std::to_string(cost) ) );
         }
         // ---------- Read variable and add it to stream
         else if (GCFTemplate[i] == 'V') {
@@ -1503,9 +1501,8 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                     exit(1);
                 }
             }
-            
+    
             streamContentVec.push_back( std::make_pair('V', token ) );
-
         }
         // ---------- Read value and add it to stream
         else if (GCFTemplate[i] == 'v') {
@@ -1631,7 +1628,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     
     // FIND MIN COST
     for (pair<char, string> streamContentPair : streamContentVec) {
-        if (streamContentPair.first == 'C') {
+        if (streamContentPair.first == 'C' || streamContentPair.first == 'c') {
             Cost currentCost = (Cost)std::stoll(streamContentPair.second );
             if ( currentCost < minCost)
                 minCost = currentCost;
@@ -1648,9 +1645,15 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
         stream << streamContentVec[i].second << " ";
     }
 
-    // SUBSTRACT MIN COST TO negCost
+    // Correct for negative costs
     if(funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
         wcsp->negCost -= ((scope.size()+2) * minCost);
+    }
+    else if (funcType == "salldiff"){
+        if (minCost < 0) {
+            cerr << "Error: salldiff at line " << lineNumber << "uses negative costs." << endl;
+            exit(1); 
+        }
     }
     else wcsp->negCost -= minCost;
 

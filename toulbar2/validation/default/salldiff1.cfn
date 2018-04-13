@@ -1,0 +1,9 @@
+{  problem: {name: MyAllDiff, mustbe: <12.000 }
+   variables: {v1: [a b c] v2: [a b c] v3: [a b c] v4: [a b c]}
+   functions: {
+       salldliff1 : { scope: [v1 v2 v3 v4]
+		      type : salldiff
+		      params : { metric: var cost: 0.7 }
+		    }
+   }
+}
