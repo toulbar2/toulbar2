@@ -1485,6 +1485,9 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
 
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = decimalToCost(token, lineNumber);
+            if (GCFTemplate[i] == 'c' && cost <0) {
+
+            }
             streamContentVec.push_back( std::make_pair(GCFTemplate[i], std::to_string(cost) ) );
         }
         // ---------- Read variable and add it to stream
@@ -1627,13 +1630,15 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     }
     
     // FIND MIN COST
+    bool minUpdated = false;
     for (pair<char, string> streamContentPair : streamContentVec) {
-        if (streamContentPair.first == 'C' || streamContentPair.first == 'c') {
+        if (streamContentPair.first == 'C') {
             Cost currentCost = (Cost)std::stoll(streamContentPair.second );
-            if ( currentCost < minCost)
-                minCost = currentCost;
+            minCost = MIN(currentCost,minCost);
+            minUpdated = true;
         }
     }
+    if (!minUpdated) minCost = 0;
 
     // WRITE ALL TO STREAM AND SUBSTRACT MIN COST TO ALL COSTS
     for (unsigned int i = 0; i < streamContentVec.size(); i++) {
@@ -1648,12 +1653,6 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     // Correct for negative costs
     if(funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
         wcsp->negCost -= ((scope.size()+2) * minCost);
-    }
-    else if (funcType == "salldiff"){
-        if (minCost < 0) {
-            cerr << "Error: salldiff at line " << lineNumber << "uses negative costs." << endl;
-            exit(1); 
-        }
     }
     else wcsp->negCost -= minCost;
 
@@ -1693,6 +1692,10 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
     skipJSONTag("cost");
     std::tie(lineNumber, token) = this->getNextToken();
     Cost cost = decimalToCost(token, lineNumber);
+    if (cost < 0) {
+        cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
+        exit(1);
+    }
     // Read Nb Symbols
     skipJSONTag("nb_symbols");
     std::tie(lineNumber, token) = this->getNextToken();
@@ -1725,7 +1728,12 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
         if (metric == "weight") {
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
-            terminal_rule += std::to_string(decimalToCost(token, lineNumber) ) + " ";
+            Cost tcost = decimalToCost(token, lineNumber);
+            if (cost < 0) {
+                cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
+                exit(1);
+            }           
+            terminal_rule += std::to_string(tcost) + " ";
         }
 
         terminal_rules.push_back(terminal_rule);
@@ -1760,7 +1768,12 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
         if (metric == "weight") {
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
-            non_terminal_rule += std::to_string(decimalToCost(token, lineNumber) ) + " ";
+            Cost tcost = decimalToCost(token, lineNumber);
+            if (cost < 0) {
+                cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
+                exit(1);
+            }           
+            non_terminal_rule += std::to_string(tcost) + " ";
         }
 
         non_terminal_rules.push_back(non_terminal_rule);
@@ -1818,6 +1831,7 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope) {
     skipJSONTag("cost");
     std::tie(lineNumber, token) = this->getNextToken();
     Cost cost = decimalToCost(token, lineNumber);
+    // TODO Cost should be >= 0
 
     skipJSONTag("vars1");
     std::tie(lineNumber, token) = this->getNextToken();
@@ -1868,7 +1882,7 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope) {
 
     stringstream stream;
 
-    // Cost had no impact on negCost here
+    // Cost has no impact on negCost here
     stream << cost << " ";
     stream << variables1.size() << " " << variables2.size() << " ";
     for (string var1 : variables1)
