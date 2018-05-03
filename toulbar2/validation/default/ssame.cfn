@@ -1,0 +1,14 @@
+{  problem: {name: MySSame, mustbe: <12.000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b c]}
+   functions: {
+       remab  : { scope: [v4] costs : [7 6.5 0]}
+       ssame1 : { scope: [v1 v2 v3 v4]
+		  type : ssame
+		  params : { 
+		      cost : 6.2
+		      vars1 : [v1 v2]
+		      vars2 : [v3 v4]
+		  }
+		}
+   }
+}
