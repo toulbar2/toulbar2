@@ -86,7 +86,7 @@ void GrammarConstraint::read(istream& file)
             break;
         }
         default:
-            cerr << "Error occur in reading grammar()" << endl;
+            cerr << "Error occurred in reading grammar()" << endl;
             exit(1);
         }
     }

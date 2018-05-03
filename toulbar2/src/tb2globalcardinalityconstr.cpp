@@ -49,7 +49,7 @@ void GlobalCardinalityConstraint::read(istream& file)
     if (strcmp(str.c_str(), "dec") 	== 0) mode = VALUE;
     if (strcmp(str.c_str(), "wdec") == 0) mode = WVALUE;
     if (mode == EMPTY) {
-    	cerr << "Error occur in reading gcc() : No violation measure" << endl;
+    	cerr << "Error occurred in reading gcc() : No violation measure" << endl;
     	exit(1);
     }*/
     setSemantics(str);
@@ -62,7 +62,7 @@ void GlobalCardinalityConstraint::read(istream& file)
         int d, high, low;
         file >> d >> low >> high;
         if (high < low) {
-            cout << "Error occur in reading gcc: upper bound " << high << " smaller than lower bound " << low << endl;
+            cout << "Error occurred in reading gcc: upper bound " << high << " smaller than lower bound " << low << endl;
             THROWCONTRADICTION;
         }
         //JP Start//
@@ -104,7 +104,7 @@ void GlobalCardinalityConstraint::organizeConfig()
 
     if ((mode == VAR) && ((arity_ < sumlow) || (arity_ > sumhigh))) {
         if (ToulBar2::verbose >= 0) {
-            cout << "Error occur in gcc() model using variable-based measure : " << endl;
+            cout << "Error occurred in gcc() model using variable-based measure : " << endl;
             cout << "sum of lower bound is too high / sum of upper bound is too low compared to arity." << endl;
             cout << "sum high = " << sumhigh << endl;
             cout << "sum low = " << sumlow << endl;
