@@ -1,0 +1,9 @@
+{  problem: {name: MySGCCP, mustbe: <12.000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+       sgcc2 : { scope: [v1 v2 v3 v4]
+		 type : sgcc
+		 params : {metric: wdec cost: 6 bounds: [[1 5 6 1 0.1 0.25]] }
+	       }
+   }
+}
