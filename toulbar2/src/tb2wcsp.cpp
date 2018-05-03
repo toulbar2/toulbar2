@@ -2757,7 +2757,7 @@ void WCSP::propagate(bool trws)
                     if (vac->firstTime()) {
                         vac->init();
                         if (ToulBar2::verbose >= 0)
-                            cout << "Lb before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
+                            cout << "Bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
                     }
                     vac->propagate();
                 }

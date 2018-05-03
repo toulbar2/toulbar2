@@ -1274,7 +1274,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     // TODO : move outside of here for cleaner code
     map<string, string> GCFTemplates;
     GCFTemplates.insert(std::pair<string, string> ("salldiff", ":metric:K:cost:c") );
-    GCFTemplates.insert(std::pair<string, string> ("sgcc", ":metric:K") ); // Read first keyword then special case processing
+    GCFTemplates.insert(std::pair<string, string> ("sgcc", ":metric:K:cost:c:bounds:[vNN]+") ); // Read first keyword then special case processing
     GCFTemplates.insert(std::pair<string, string> ("ssame", "SPECIAL") ); // Special case processing
     GCFTemplates.insert(std::pair<string, string> ("sregular", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+") );
     GCFTemplates.insert(std::pair<string, string> ("sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+") );
@@ -1465,18 +1465,12 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             streamContentVec.push_back( std::make_pair('K', token) );
 
             // Special case of sgcc
-            if (i == 0 && funcType == "sgcc") {
-                if (token == "var" || token == "dec") {
+            if (funcType == "sgcc") {
+                if (token == "wdec") {
                     if (ToulBar2::verbose >= 2)
-                        cout << "Updating template (var or dec) : " << "K:cost:C:bounds:[vNN]+" << endl;
+                        cout << "Updating template (wdec) : " << ":metric:K:cost:c:bounds:[vNNcc]+" << endl;
 
-                    GCFTemplate = "K:cost:C:bounds:[vNN]+";
-                }
-                else if (token == "wdec") {
-                    if (ToulBar2::verbose >= 2)
-                        cout << "Updating template (wdec) : " << "K:cost:C:bounds:[vNNCC]+" << endl;
-
-                    GCFTemplate = "K:cost:C:bounds:[vNNCC]+";
+                    GCFTemplate = ":metric:K:cost:c:bounds:[vNNcc]+";
                 }
             }
         }
@@ -1485,7 +1479,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
 
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = decimalToCost(token, lineNumber);
-            if (GCFTemplate[i] == 'c' && cost <0) {
+            if (GCFTemplate[i] == 'c' && cost < 0) {
 
             }
             streamContentVec.push_back( std::make_pair(GCFTemplate[i], std::to_string(cost) ) );
