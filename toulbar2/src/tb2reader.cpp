@@ -1278,14 +1278,14 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"ssame", "SPECIAL"},                       // Special case processing
         {"sregular", ":metric:K:cost:c:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
         {"sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
-        {"sgrammar", "SPECIAL"},   // Special case proces},
+        {"sgrammar", "SPECIAL"},   // Special case processing
         {"sgrammardp", "SPECIAL"}, // Special case processing
-        {"samong", ":metric:K:cost:CNN[v]+"},
-        {"samongdp", ":metric:K:cost:CNN[v]+"},
-        {"salldiffdp", ":metric:K:cost:C"},
-        {"sgccdp", ":metric:K:cost:C:bounds:[vNN]+"},
-        {"max", ":cost:C:tuples:[VvC]+"},
-        {"smaxdp", ":defaultcost:C:tuples:[VvC]+"},
+        {"samong", ":metric:K:cost:c:lb:N:ub:N:values:[v]+"},
+        {"samongdp", ":metric:K:cost:c:lb:N:ub:N:values:[v]+"},
+        {"salldiffdp", ":metric:K:cost:c"},
+        {"sgccdp", ":metric:K:cost:c:bounds:[vNN]+"},
+        {"max",    ":defaultcost:c:tuples:[Vvc]+"},
+        {"smaxdp", ":defaultcost:c:tuples:[Vvc]+"},
         {"MST", ":metric:K"},
         {"smstdp", ":metric:K"},
         {"wregular", ":nb_state:N:starts:[NC]+:ends:[NC]+:transitions:[NvNC]+"},
@@ -1472,7 +1472,8 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = decimalToCost(token, lineNumber);
             if (GCFTemplate[i] == 'c' && cost < 0) {
-                //TODO
+                cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
+                exit(1);
             }
             streamContentVec.push_back( std::make_pair(GCFTemplate[i], std::to_string(cost) ) );
         }
@@ -1579,8 +1580,9 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                     }
                     else if ((symbol == 'C') || (symbol == 'c')) {
                         Cost c = decimalToCost(token, lineNumber);
-                        if (symbol == 'c') {
-                            // TODO check sign
+                        if (symbol == 'c' && c < 0) {
+                            cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
+                            exit(1);
                         }
                         repeatedContentVec.push_back( std::make_pair('C', std::to_string(c)));
                     }

@@ -1,0 +1,18 @@
+{  problem: {name: MySamongDP, mustbe: <12.00000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+       u1 : {scope: [v1] costs: [2 0]}
+       u2 : {scope: [v2] costs: [3 0]}
+       u3 : {scope: [v3] costs: [4 0]}
+       samong1 : { scope: [v1 v2 v3 v4]
+		       type : samongdp
+		       params: {
+			   metric : var
+			   cost : 1.012
+			   lb: 2
+			   ub: 2
+			   values: [0]
+		       }
+		     }
+   }
+}
