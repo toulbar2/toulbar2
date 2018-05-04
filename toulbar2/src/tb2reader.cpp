@@ -1257,13 +1257,14 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     skipCBrace(); // Function final CBrace read.
 }
 
-// Reads a global/artithmetic cost function
+// Reads a global/arithmetic cost function
 // Starts: after the OBrace of parameters
-// Ends:
+// Ends: 
 void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& funcName, int line)
 {
     unsigned int arity = scope.size();
     const vector<string> arithmeticFuncNames = { ">=", ">", "<=", "<", "=", "disj", "sdisj" };
+    
     if (find(arithmeticFuncNames.begin(), arithmeticFuncNames.end(), funcName) != arithmeticFuncNames.end()) {
         if (arity != 2) {
             cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
@@ -1271,59 +1272,54 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         }
     }
 
-    // TODO : move outside of here for cleaner code
-    map<string, string> GCFTemplates;
-    GCFTemplates.insert(std::pair<string, string> ("salldiff", ":metric:K:cost:c") );
-    GCFTemplates.insert(std::pair<string, string> ("sgcc", ":metric:K:cost:c:bounds:[vNN]+") ); // Read first keyword then special case processing
-    GCFTemplates.insert(std::pair<string, string> ("ssame", "SPECIAL") ); // Special case processing
-    GCFTemplates.insert(std::pair<string, string> ("sregular", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+") );
-    GCFTemplates.insert(std::pair<string, string> ("sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+") );
-    GCFTemplates.insert(std::pair<string, string> ("sgrammar", "SPECIAL") ); // Special case processing
-    GCFTemplates.insert(std::pair<string, string> ("sgrammardp", "SPECIAL") ); // Special case processing
-    GCFTemplates.insert(std::pair<string, string> ("samong", ":metric:K:cost:CNN[v]+") );
-    GCFTemplates.insert(std::pair<string, string> ("samongdp", ":metric:K:cost:CNN[v]+") );
-    GCFTemplates.insert(std::pair<string, string> ("salldiffdp", ":metric:K:cost:C") );
-    GCFTemplates.insert(std::pair<string, string> ("sgccdp", ":metric:K:cost:C:bounds:[vNN]+") );
-    GCFTemplates.insert(std::pair<string, string> ("max", ":cost:C:tuples:[VvC]+") );
-    GCFTemplates.insert(std::pair<string, string> ("smaxdp", ":defaultcost:C:tuples:[VvC]+") );
-    GCFTemplates.insert(std::pair<string, string> ("MST", ":metric:K") );
-    GCFTemplates.insert(std::pair<string, string> ("smstdp", ":metric:K") );
-    GCFTemplates.insert(std::pair<string, string> ("wregular", ":nb_state:N:starts:[NC]+:ends:[NC]+:transitions:[NvNC]+") );
-    GCFTemplates.insert(std::pair<string, string> ("walldiff", ":metric:K:cost:C") );
-    GCFTemplates.insert(std::pair<string, string> ("wgcc", ":metric:K:cost:C:bounds:[vNN]+") );
-    GCFTemplates.insert(std::pair<string, string> ("wsame", ":metric:K:cost:C") );
-    GCFTemplates.insert(std::pair<string, string> ("wsamegcc", ":metric:K:cost:C:bounds:[vNN]+") );
-    GCFTemplates.insert(std::pair<string, string> ("wamong", ":metric:K:cost:C:values:[v]+:min:N:max:N") );
-    GCFTemplates.insert(std::pair<string, string> ("wvaramong", ":metric:K:cost:C:values:[v]+") );
-    GCFTemplates.insert(std::pair<string, string> ("woverlap", ":metric:K:cost:c:comparator:K:to:N") );
-    GCFTemplates.insert(std::pair<string, string> ("wsum", ":metric:K:cost:C:comparator:K:to:N") );
-    GCFTemplates.insert(std::pair<string, string> ("wvarsum", ":metric:K:cost:C:comparator:K") );
+    map<string, string> GCFTemplates = {
+        {"salldiff", ":metric:K:cost:c"},
+        {"sgcc", ":metric:K:cost:c:bounds:[vNN]+"}, // Read first keyword then special case processing
+        {"ssame", "SPECIAL"},                       // Special case processing
+        {"sregular", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
+        {"sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
+        {"sgrammar", "SPECIAL"},   // Special case proces},
+        {"sgrammardp", "SPECIAL"}, // Special case processing
+        {"samong", ":metric:K:cost:CNN[v]+"},
+        {"samongdp", ":metric:K:cost:CNN[v]+"},
+        {"salldiffdp", ":metric:K:cost:C"},
+        {"sgccdp", ":metric:K:cost:C:bounds:[vNN]+"},
+        {"max", ":cost:C:tuples:[VvC]+"},
+        {"smaxdp", ":defaultcost:C:tuples:[VvC]+"},
+        {"MST", ":metric:K"},
+        {"smstdp", ":metric:K"},
+        {"wregular", ":nb_state:N:starts:[NC]+:ends:[NC]+:transitions:[NvNC]+"},
+        {"walldiff", ":metric:K:cost:C"},
+        {"wgcc", ":metric:K:cost:C:bounds:[vNN]+"},
+        {"wsame", ":metric:K:cost:C"},
+        {"wsamegcc", ":metric:K:cost:C:bounds:[vNN]+"},
+        {"wamong", ":metric:K:cost:C:values:[v]+:min:N:max:N"},
+        {"wvaramong", ":metric:K:cost:C:values:[v]+"},
+        {"woverlap", ":metric:K:cost:c:comparator:K:to:N"},
+        {"wsum", ":metric:K:cost:C:comparator:K:to:N"},
+        {"wvarsum", ":metric:K:cost:C:comparator:K"}};
 
-    map<string, string>::iterator it;
-    if ( (it = GCFTemplates.find(funcName)) != GCFTemplates.end() ) {
-
+    auto it = GCFTemplates.find(funcName);
+    if (it != GCFTemplates.end()) {
         // Reads function using template and generates the corresponding stream
         stringstream paramsStream = this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName] );
 
         int scopeArray[arity];
-        for (unsigned int i = 0; i < scope.size(); i++) {
+        for (unsigned int i = 0; i < arity; i++) {
             scopeArray[i] = scope[i];
         }
 
-        if (funcName[0] == 'w') {
-            //cout << "Factory DGCF" << endl;
-            DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray, paramsStream);
-            decomposableGCF->addToCostFunctionNetwork(this->wcsp);
-
-        } else { // monolithic global cost functions
+        if (funcName[0] == 'w') { // decomposable 
+            DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray,
+                                                        paramsStream)->addToCostFunctionNetwork(this->wcsp);
+        } else { // monolithic 
             int nbconstr; // unused int for pointer ref
-            //cout << "Post Global Constraint" << endl;
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr);
         }
-        
+    }
     // Arithmetic function
-    } else {
-
+    else {
+        
         pair<int, string> token = this->getNextToken();
         vector<pair<int, string>> funcParams;
 
@@ -1338,7 +1334,6 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 exit(1);
             }
             try {
-                // postSupxyc(int xIndex, int yIndex, Value cst, Value delta = MAX_VAL - MIN_VAL)
                 wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
@@ -1429,16 +1424,14 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const string& funcType, string GCFTemplate) {
 
     // -------------------- Special cases are treated separately
-
     if (funcType == "sgrammar" || funcType == "sgrammardp") {
         return this->generateGCFStreamSgrammar(scope);
     }
     else if (funcType == "ssame") {
         return this->generateGCFStreamSsame(scope);
     }
-
+    
     // -------------------- Function reading using template
-
     stringstream stream;
     int lineNumber = -1;
     string token;
@@ -1447,8 +1440,8 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     bool isOpenedBrace = false;
     vector<pair<char, string> > streamContentVec;
 
-    // Main loop : read template string char by char, and read the CFN file accordingly to the pattern
-    for (unsigned int i=0; i < GCFTemplate.size(); i++) {
+    // Main loop: read template string char by char, and read the CFN file accordingly to the pattern
+    for (unsigned int i = 0; i < GCFTemplate.size(); i++) {
 
         if (isOpenedBrace) {
             if (GCFTemplate[i] != ']') {
@@ -1469,7 +1462,6 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                 if (token == "wdec") {
                     if (ToulBar2::verbose >= 2)
                         cout << "Updating template (wdec) : " << ":metric:K:cost:c:bounds:[vNNcc]+" << endl;
-
                     GCFTemplate = ":metric:K:cost:c:bounds:[vNNcc]+";
                 }
             }
@@ -1480,7 +1472,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = decimalToCost(token, lineNumber);
             if (GCFTemplate[i] == 'c' && cost < 0) {
-
+                //TODO
             }
             streamContentVec.push_back( std::make_pair(GCFTemplate[i], std::to_string(cost) ) );
         }
@@ -1490,8 +1482,8 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             std::tie(lineNumber, token) = this->getNextToken();
 
             if (not isdigit(token[0])) {
-                map<string, int>::iterator it;
-                if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
+                auto it = varNameToIdx.find(token);
+                if (it != varNameToIdx.end()) {
                     token = it->second;
                 } else {
                     cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
@@ -1508,6 +1500,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             // V0 : value MUST be a number
             for (char c : token) {
                 if (!isdigit(c)) {
+                    // TODO: better error report
                     exit(1);
                 }
             }
@@ -1520,6 +1513,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             std::tie(lineNumber, token) = this->getNextToken();
             for (char c : token) {
                 if (!isdigit(c)) {
+                    // TODO: better error report
                     exit(1);
                 }
             }
@@ -1527,14 +1521,14 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
         }
         // ---------- Read JSON tag
         else if (GCFTemplate[i] == ':') {
-            string jsonTag = GCFTemplate.substr(i, (GCFTemplate.find_first_of(':', i+1) + 1) - i ); // extract ':jsonTag:'
-            i += jsonTag.size() - 1; // Increase i according to length of token read
-            jsonTag = jsonTag.substr(1, jsonTag.size() - 2); // Remove the two ':' char
+            auto idx = GCFTemplate.find_first_of(':', i+1);
+            string jsonTag = GCFTemplate.substr(i+1, idx - i -1); // extract 'jsonTag'
+            i += jsonTag.size() + 1; // Increase i according to length of token read
             skipJSONTag(jsonTag);
         }
         // ---------- Entering a repeated section
         else if (GCFTemplate[i] == '[') {
-
+            
             isOpenedBrace = true;
         }
         // Read function repeated section
@@ -1548,20 +1542,20 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             // Each tuple is separated with []. Read first [
             std::tie(lineNumber, token) = this->getNextToken();
             while (token != "]") {
-                
                 isOBrace(token);
 
                 for (char symbol : repeatedSymbols) {
 
                     std::tie(lineNumber, token) = this->getNextToken();
                     if (symbol == 'N') {
+                        // TODO better check needed
                         repeatedContentVec.push_back( std::make_pair('N', token ) );
                     }
                     else if (symbol == 'V') {
                         // If variable name (string)
                         if (not isdigit(token[0])) {
-                            map<string, int>::iterator it;
-                            if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
+                            auto it = varNameToIdx.find(token);
+                            if (it != varNameToIdx.end()) {
                                 token = std::to_string(it->second);
                             } else {
                                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
@@ -1574,26 +1568,29 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                         // V0 : value MUST be a number
                         for (char c : token) {
                             if (!isdigit(c)) {
+                                // TODO: better error reporting
                                 exit(1);
                             }
                         }
                         repeatedContentVec.push_back( std::make_pair('v', token ) );
                     }
-                    else if (symbol == 'C') {
-
-                        repeatedContentVec.push_back( std::make_pair('C', std::to_string(decimalToCost(token, lineNumber))) );
+                    else if ((symbol == 'C') || (symbol == 'c')) {
+                        Cost c = decimalToCost(token, lineNumber);
+                        if (symbol == 'c') {
+                            // TODO check sign
+                        }
+                        repeatedContentVec.push_back( std::make_pair('C', std::to_string(c)));
                     }
                 }
 
-                std::tie(lineNumber, token) = this->getNextToken();
-                isCBrace(token);
+                skipCBrace();
                 numberOfTuplesRead++; // Number of tuples between [] read
 
                 // Read next tuple or final ]
                 std::tie(lineNumber, token) = this->getNextToken();
             }
 
-            // Add number of tuples before the list 
+            // Add number of tuples before the list
             streamContentVec.push_back( std::make_pair('N', std::to_string(numberOfTuplesRead)) );
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {

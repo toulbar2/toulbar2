@@ -3,7 +3,10 @@
    functions: {
        sgcc2 : { scope: [v1 v2 v3 v4]
 		 type : sgcc
-		 params : {metric: wdec cost: 6 bounds: [[1 5 6 1 0.1 0.25]] }
+		 params : {metric: wdec
+		 	   cost: 0.5
+			   bounds: [[0 0 4 0.2 0.2]
+			            [1 0 4 0.2 0.1]]}
 	       }
    }
 }
