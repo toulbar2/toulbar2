@@ -1276,7 +1276,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"salldiff", ":metric:K:cost:c"},
         {"sgcc", ":metric:K:cost:c:bounds:[vNN]+"}, // Read first keyword then special case processing
         {"ssame", "SPECIAL"},                       // Special case processing
-        {"sregular", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
+        {"sregular", ":metric:K:cost:c:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
         {"sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
         {"sgrammar", "SPECIAL"},   // Special case proces},
         {"sgrammardp", "SPECIAL"}, // Special case processing
@@ -1536,17 +1536,20 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
 
             vector<pair<char, string> > repeatedContentVec; // Function repeated params
             // [ delimiting the start of the list
-            std::tie(lineNumber, token) = this->getNextToken();
-            isOBrace(token);
+            skipOBrace();
+            // Inside the list of parameter tuples
 
-            // Each tuple is separated with []. Read first [
             std::tie(lineNumber, token) = this->getNextToken();
             while (token != "]") {
-                isOBrace(token);
-
+                // Each (non unary) tuple is inside []. Skip first [
+                if (repeatedSymbols.size() > 1) {
+                    if (!isOBrace(token)){
+                    // TODO Complain
+                    }
+                    else std::tie(lineNumber, token) = this->getNextToken();
+                }
                 for (char symbol : repeatedSymbols) {
 
-                    std::tie(lineNumber, token) = this->getNextToken();
                     if (symbol == 'N') {
                         // TODO better check needed
                         repeatedContentVec.push_back( std::make_pair('N', token ) );
@@ -1581,13 +1584,16 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                         }
                         repeatedContentVec.push_back( std::make_pair('C', std::to_string(c)));
                     }
+                    std::tie(lineNumber, token) = this->getNextToken();
                 }
 
-                skipCBrace();
-                numberOfTuplesRead++; // Number of tuples between [] read
-
-                // Read next tuple or final ]
-                std::tie(lineNumber, token) = this->getNextToken();
+                if (repeatedSymbols.size() > 1) {
+                    if (!isCBrace(token)) {
+                        // TODO Complain
+                    }
+                    else std::tie(lineNumber, token) = this->getNextToken();
+                }
+                numberOfTuplesRead++; // Number of tuples read
             }
 
             // Add number of tuples before the list
