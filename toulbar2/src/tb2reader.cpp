@@ -386,7 +386,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         wcsp->postUnaryConstraint(cf.var->wcspIndex, cf.costs);
     }
  
-    wcsp->sortConstraints(); //TODO domain sorting and delayed unaries ?
+    wcsp->sortConstraints();
 
     if (ToulBar2::verbose >= 0)
         cout << "Read " << nvar << " variables, with " << nval << " values at most, and " << ncf << " cost functions, with maximum arity " << maxarity << "." << endl;
@@ -674,7 +674,6 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     if (ToulBar2::verbose >= 1)
         cout << "Variable " << varName << " with domain size " << domainSize << " read" << endl;
     // Create the toulbar2 variable and store its name in the variable map.
-    // TODO: check interval variables
     unsigned int varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
@@ -1519,7 +1518,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             // V0 : value MUST be a number
             for (char c : token) {
                 if (!isdigit(c)) {
-                    // TODO: better error report
+                    cerr << "Error: value index required at line " << lineNumber << " but read " << token << endl;
                     exit(1);
                 }
             }
@@ -1532,7 +1531,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
             std::tie(lineNumber, token) = this->getNextToken();
             for (char c : token) {
                 if (!isdigit(c)) {
-                    // TODO: better error report
+                    cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
                     exit(1);
                 }
             }
@@ -1563,14 +1562,20 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                 // Each (non unary) tuple is inside []. Skip first [
                 if (repeatedSymbols.size() > 1) {
                     if (!isOBrace(token)){
-                    // TODO Complain
+                        cerr << "Error: expected '[/{' but read " << token << " at line " << lineNumber << endl;
+                        exit(1);
                     }
                     else std::tie(lineNumber, token) = this->getNextToken();
                 }
                 for (char symbol : repeatedSymbols) {
 
                     if (symbol == 'N') {
-                        // TODO better check needed
+                        for (char c : token) {
+                            if (!isdigit(c)) {
+                                cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
+                                exit(1);
+                            }
+                        }
                         repeatedContentVec.push_back( std::make_pair('N', token ) );
                     }
                     else if (symbol == 'V') {
@@ -1590,7 +1595,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                         // V0 : value MUST be a number
                         for (char c : token) {
                             if (!isdigit(c)) {
-                                // TODO: better error reporting
+                                cerr << "Error: value index required at line " << lineNumber << " but read " << token << endl;
                                 exit(1);
                             }
                         }
@@ -1609,7 +1614,8 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
 
                 if (repeatedSymbols.size() > 1) {
                     if (!isCBrace(token)) {
-                        // TODO Complain
+                        cerr << "Error: expected ']/}' but read " << token << " at line " << lineNumber << endl;
+                        exit(1);
                     }
                     else std::tie(lineNumber, token) = this->getNextToken();
                 }
