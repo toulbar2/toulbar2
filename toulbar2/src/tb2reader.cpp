@@ -1607,7 +1607,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
                             exit(1);
                         }
-                        repeatedContentVec.push_back( std::make_pair('C', std::to_string(c)));
+                        repeatedContentVec.push_back( std::make_pair(symbol, std::to_string(c)));
                     }
                     std::tie(lineNumber, token) = this->getNextToken();
                 }
