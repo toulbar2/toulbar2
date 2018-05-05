@@ -1276,14 +1276,6 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& funcName, int line)
 {
     unsigned int arity = scope.size();
-    const vector<string> arithmeticFuncNames = { ">=", ">", "<=", "<", "=", "disj", "sdisj" };
-    
-    if (find(arithmeticFuncNames.begin(), arithmeticFuncNames.end(), funcName) != arithmeticFuncNames.end()) {
-        if (arity != 2) {
-            cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
-            exit(1);
-        }
-    }
 
     map<string, string> GCFTemplates = {
         {"salldiff", ":metric:K:cost:c"},
@@ -1332,7 +1324,18 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     }
     // Arithmetic function
     else {
-        
+        const set<string> arithmeticFuncNames = { ">=", ">", "<=", "<", "=", "disj", "sdisj" };
+    
+        if (arithmeticFuncNames.find(funcName) == arithmeticFuncNames.end()) {
+            cerr << "Error: unknown global cost function: " << funcName << " at line " << line << endl;
+            exit(1);
+        }
+
+        if (arity != 2) {
+            cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
+            exit(1);
+        }
+
         pair<int, string> token = this->getNextToken();
         vector<pair<int, string>> funcParams;
 
