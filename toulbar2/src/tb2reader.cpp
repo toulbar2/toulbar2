@@ -1289,15 +1289,15 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"MST", ":metric:K"},
         {"smstdp", ":metric:K"},
         {"wregular", ":nb_state:N:starts:[NC]+:ends:[NC]+:transitions:[NvNC]+"},
-        {"walldiff", ":metric:K:cost:C"},
-        {"wgcc", ":metric:K:cost:C:bounds:[vNN]+"},
-        {"wsame", ":metric:K:cost:C"},
-        {"wsamegcc", ":metric:K:cost:C:bounds:[vNN]+"},
+        {"walldiff", ":metric:K:cost:c"},
+        {"wgcc", ":metric:K:cost:c:bounds:[vNN]+"},
+        {"wsame", ":metric:K:cost:c"},
+        {"wsamegcc", ":metric:K:cost:c:bounds:[vNN]+"},
         {"wamong", ":metric:K:cost:c:values:[v]+:min:N:max:N"},
         {"wvaramong", ":metric:K:cost:c:values:[v]+"},
         {"woverlap", ":metric:K:cost:c:comparator:K:to:N"},
-        {"wsum", ":metric:K:cost:C:comparator:K:to:N"},
-        {"wvarsum", ":metric:K:cost:C:comparator:K"}};
+        {"wsum", ":metric:K:cost:c:comparator:K:to:N"},
+        {"wvarsum", ":metric:K:cost:c:comparator:K"}};
 
     auto it = GCFTemplates.find(funcName);
     if (it != GCFTemplates.end()) {
