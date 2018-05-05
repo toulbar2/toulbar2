@@ -540,7 +540,8 @@ Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lin
 
     Cost cost;
     try {
-        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint)) + (std::stoll(decimalPart) * pow(10, shift));
+        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint));
+        if (decimalPart.size()) cost += std::stoll(decimalPart) * pow(10, shift);
     }
     catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
@@ -573,20 +574,32 @@ Cost CFNStreamReader::readHeader()
 
     std::tie(lineNumber, token) = this->getNextToken();
     if ((token[0] == '<') || token[0] == '>') {
+
+        auto pos = token.find('.');
         string integerPart = token.substr(1, token.find('.'));
-        string decimalPart = token.substr(token.find('.') + 1);
+        string decimalPart;
+
+        if (pos == string::npos) {
+            ToulBar2::decimalPoint = 0;
+        } else {
+            decimalPart = token.substr(token.find('.') + 1);
+            ToulBar2::decimalPoint = decimalPart.size();
+        }
 
         try {
-            pbBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
-            pbBound += ((pbBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
+            if (pos != string::npos) {
+                pbBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
+                pbBound += ((pbBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
+            } else {
+                pbBound = std::stoll(integerPart);
+            }
         } catch (const std::invalid_argument&) {
             cerr << "Error: invalid global bound '" << token << "' at line " << lineNumber << endl;
             exit(1);
         }
-        ToulBar2::decimalPoint = decimalPart.size();
     }
     else {
-        cerr << "Error: global bound '" << token << "' misses upper/lower bound indicator at line " << lineNumber << endl;
+        cerr << "Error: global bound '" << token << "' misses upper/lower bound comparator at line " << lineNumber << endl;
         exit(1);
     }
     
