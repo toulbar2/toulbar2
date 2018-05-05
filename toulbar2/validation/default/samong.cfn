@@ -9,8 +9,8 @@
 		       params: {
 			   metric : var
 			   cost : 1.012
-			   lb: 2
-			   ub: 2
+			   min: 2
+			   max: 2
 			   values: [0]
 		       }
 		     }

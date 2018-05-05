@@ -1280,8 +1280,8 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"sregulardp", ":metric:K:cost:C:nb_states:N:starts:[N]+:ends:[N]+:transitions:[NvN]+"},
         {"sgrammar", "SPECIAL"},   // Special case processing
         {"sgrammardp", "SPECIAL"}, // Special case processing
-        {"samong", ":metric:K:cost:c:lb:N:ub:N:values:[v]+"},
-        {"samongdp", ":metric:K:cost:c:lb:N:ub:N:values:[v]+"},
+        {"samong", ":metric:K:cost:c:min:N:max:N:values:[v]+"},
+        {"samongdp", ":metric:K:cost:c:min:N:max:N:values:[v]+"},
         {"salldiffdp", ":metric:K:cost:c"},
         {"sgccdp", ":metric:K:cost:c:bounds:[vNN]+"},
         {"max",    ":defaultcost:c:tuples:[Vvc]+"},
@@ -1293,8 +1293,8 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"wgcc", ":metric:K:cost:C:bounds:[vNN]+"},
         {"wsame", ":metric:K:cost:C"},
         {"wsamegcc", ":metric:K:cost:C:bounds:[vNN]+"},
-        {"wamong", ":metric:K:cost:C:values:[v]+:min:N:max:N"},
-        {"wvaramong", ":metric:K:cost:C:values:[v]+"},
+        {"wamong", ":metric:K:cost:c:values:[v]+:min:N:max:N"},
+        {"wvaramong", ":metric:K:cost:c:values:[v]+"},
         {"woverlap", ":metric:K:cost:c:comparator:K:to:N"},
         {"wsum", ":metric:K:cost:C:comparator:K:to:N"},
         {"wvarsum", ":metric:K:cost:C:comparator:K"}};
