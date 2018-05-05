@@ -796,7 +796,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     // al is true: we expect a full costs list
     else {
         unsigned int tableIdx = 0;
-        while (!isCBrace(token)) {
+        while (tableIdx < costVecSize) {
             Cost cost = decimalToCost(token, lineNumber);
 
             if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
@@ -809,7 +809,9 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 
             std::tie(lineNumber, token) = this->getNextToken();
         }
-        assert(tableIdx == costVector.size());
+        if (tableIdx != costVecSize) {
+            cerr << "Error: incorrect number of costs in cost table ending at line " << lineNumber << endl;
+        }
     }
 
     // make all costs non negative and remember the shift

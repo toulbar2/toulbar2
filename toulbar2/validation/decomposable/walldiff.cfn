@@ -1,14 +1,14 @@
-{  problem: {name: MyWAllDiff, mustbe: <2.00 }
-   variables: {v1: [a b c] v2: [a b c] v3: [a b c] v4: [a b c]}
+{  problem: {name: MyWAllDiff, mustbe: <3.00 }
+   variables: {v1: [a b c] v2: [a b c] v3: [a b c] v4: [a b]}
    functions: {
-   rema : { scope [v1] costs: [0.1 10 10]}
-   rema : { scope [v2] costs: [10 0.2 10]}
-   rema : { scope [v3] costs: [10 10 0.3]}
+   rema1 : { scope [v1] costs: [0.1 1 1]}
+   rema2 : { scope [v2] costs: [1 0.2 1]}
+   rema3 : { scope [v3] costs: [1 1 0.3]}
    mywa : { scope: [v1 v2 v3 v4]
-	     type : walldifferent
+	     type : walldiff
 	     params: {
 		 metric: lin
-		 cost: 3.3
+		 cost: 0.8
 	     }
 	   }
    }
