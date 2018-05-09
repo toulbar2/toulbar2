@@ -33,39 +33,6 @@ graphical models:
 
 https://github.com/toulbar2/toulbar2
 
-Latest src/debian/windows x86_64 releases:
-* 2018: [src1_0]/[deb1_0]/[win1_0] with unified parallel decomposition guided variable neighborhood search and clique cuts
-* 2016: [src0_9_8]/[deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
-* 2015: [src0_9_7]/[deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
-* 2014: [src0_9_6]/[deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
-* 2012: [src0_9_5]/[deb0_9_5]/[win0_9_5] with soft global decomposable cost functions
-* 2011: [src0_9_4]/[deb0_9_4]/[win0_9_4] with more preprocessing techniques
-* 2010: [src0_9_3]/[deb0_9_3]/[win0_9_3] with soft global cost functions
-
-[src1_0]:
-[src0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1455/toulbar2.0.9.8.0-Release-sources.tar.gz
-[src0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1380/toulbar2.0.9.7.0-Release-sources.tar.gz
-[src0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1292/toulbar2.0.9.6.0-Release-sources.tar.gz
-[src0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1142/toulbar2.0.9.5.0-Release-sources.tar.gz
-[src0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1019/toulbar2.0.9.4.0-Release-sources.tar.gz
-[src0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/975/toulbar2.0.9.3.0-Release-sources.tar.gz
-
-[deb1_0]:
-[deb0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/964/toulbar2.0.9.3.0-Release-i686.deb
-[deb0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1008/toulbar2.0.9.4.0-Release-i686.deb
-[deb0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1134/toulbar2.0.9.5.0-Release-x86_64.deb
-[deb0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1281/toulbar2.0.9.6.0-Release-i686.deb
-[deb0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1371/toulbar2.0.9.7.0-Release-x86_64.deb
-[deb0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1448/toulbar2.0.9.8.0-Release-x86_64.deb
-
-[win1_0]:
-[win0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/962/toulbar2.0.9.3.0-Release-i686.exe
-[win0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1006/toulbar2.0.9.4.0-Release-i686.exe
-[win0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1129/toulbar2.0.9.5.0-Release-i686.exe
-[win0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1279/toulbar2.0.9.6.0-Release-i686.exe
-[win0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1374/toulbar2.0.9.7.0-Release-x86_64.exe
-[win0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1446/toulbar2.0.9.8.0-Release-x86_64.exe
-
 
 ## Installation
 
