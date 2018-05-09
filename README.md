@@ -33,7 +33,7 @@ graphical models:
 
 https://github.com/toulbar2/toulbar2
 
-Download the latest release from GitHub using tag versions, e.g.,
+Download the latest release from GitHub or similarly use tag versions, e.g.,
 
     git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
 
