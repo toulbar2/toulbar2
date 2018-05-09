@@ -33,6 +33,10 @@ graphical models:
 
 https://github.com/toulbar2/toulbar2
 
+Download the latest release from GitHub using tag versions, e.g.,
+
+    git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
+
 
 ## Installation
 
@@ -64,8 +68,12 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
      -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -lgmp -static
 
 Replace flag LONGLONG_COST by INT_COST to reduce memory usage by two (but costs must be smaller than 10^8).
+
 Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
+    bash
+    cd src
+    echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
      -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -DOPENMPI -lgmp
 
