@@ -1,7 +1,7 @@
 ROOT=`git rev-parse --show-toplevel`
 cd $ROOT
-FILE=$ROOT/toulbar2/src/ToulbarVersion.hpp
-PCKGVER=$ROOT/toulbar2/src/MyCPackConf.cmake
+FILE=$ROOT/src/ToulbarVersion.hpp
+PCKGVER=$ROOT/src/MyCPackConf.cmake
 VERSION=`git describe --abbrev=0 --tags`
 MAJOR=`echo $VERSION| cut -d"." -f1`
 MINOR=`echo $VERSION| cut -d"." -f2`
