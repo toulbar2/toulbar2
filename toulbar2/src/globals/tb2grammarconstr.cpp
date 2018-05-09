@@ -1,10 +1,4 @@
 #include "tb2grammarconstr.hpp"
-#include <vector>
-#include <fstream>
-#include <string>
-#include <stack>
-#include <set>
-using namespace std;
 
 GrammarConstraint::GrammarConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)

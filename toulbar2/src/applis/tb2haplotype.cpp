@@ -183,7 +183,7 @@ void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
     int nbindividuals = 0;
     int nbtypings = 0;
     //  map<int, int> allelesInv;
-    map<int, map<int, int>> allelesInv; // allelesInv[locus,val]=allele
+    map<int, map<int, int> > allelesInv; // allelesInv[locus,val]=allele
     map<int, int> nballeles; // nballeles[i] number of allele for the marker i
     map<int, int> maxallele;
     int numal = 0;
@@ -363,7 +363,7 @@ void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
     map<int, int> nb;
     if (ToulBar2::verbose >= 2)
         cout << "Alleles encoding:" << endl;
-    for (map<int, map<int, int>>::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
+    for (map<int, map<int, int> >::iterator iter = alleles.begin(); iter != alleles.end(); ++iter) {
         //if ((*iter).first.second == 0) continue;
         //nb[(*iter).first]++;
         for (map<int, int>::iterator iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
@@ -1128,12 +1128,12 @@ void Haplotype::initTransmission()
                 }
                 T.push_back(trans);
             }
-            transmission.insert(pair<int, vector<int>>(fils->individual, T));
+            transmission.insert(pair<int, vector<int> >(fils->individual, T));
         }
     }
     if (ToulBar2::verbose > 1) {
         cout << "Transmission vectors : \n";
-        for (map<int, vector<int>>::iterator it = transmission.begin(); it != transmission.end(); ++it) {
+        for (map<int, vector<int> >::iterator it = transmission.begin(); it != transmission.end(); ++it) {
             cout << "offspring " << it->first << ":\t ";
             for (vector<int>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
                 if ((*it2) == 0)

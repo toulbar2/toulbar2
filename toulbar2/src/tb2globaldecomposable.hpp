@@ -220,7 +220,7 @@ private:
     string semantics;
     Cost baseCost;
     int nbValueToWatch;
-    map<Value, pair<unsigned int, unsigned int>> bounds;
+    map<Value, pair<unsigned int, unsigned int> > bounds;
 
 public:
     WeightedGcc();
@@ -273,7 +273,7 @@ private:
     string semantics;
     Cost baseCost;
     int nbValueToWatch;
-    map<Value, pair<unsigned int, unsigned int>> bounds;
+    map<Value, pair<unsigned int, unsigned int> > bounds;
 
 public:
     WeightedSameGcc();

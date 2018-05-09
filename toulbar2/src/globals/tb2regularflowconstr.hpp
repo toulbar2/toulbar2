@@ -6,7 +6,6 @@
 #define TB2REGULARFLOWCONSTR_HPP_
 
 #include "tb2flowbasedconstr.hpp"
-#include "tb2automaton.hpp"
 
 class RegularFlowConstraint : public FlowBasedGlobalConstraint {
 private:
@@ -14,7 +13,7 @@ private:
         vector<int> init;
         vector<int> final;
         set<int> symbol;
-        vector<pair<int, int>>* transition;
+        vector<pair<int, int> >* transition;
         int nstate;
 
         DFA()
@@ -25,7 +24,7 @@ private:
 
         void setNumStates(int size)
         {
-            transition = new vector<pair<int, int>>[size];
+            transition = new vector<pair<int, int> >[size];
             nstate = size;
         }
 
@@ -52,7 +51,7 @@ private:
         int getNextState(int start, int ch)
         {
             int next = -1;
-            for (vector<pair<int, int>>::iterator i = transition[start].begin();
+            for (vector<pair<int, int> >::iterator i = transition[start].begin();
                  i != transition[start].end(); i++) {
                 if (i->first == ch)
                     next = i->second;
@@ -63,7 +62,7 @@ private:
         set<int> getSymbolNeed(int start, int end)
         {
             set<int> require;
-            for (vector<pair<int, int>>::iterator i = transition[start].begin();
+            for (vector<pair<int, int> >::iterator i = transition[start].begin();
                  i != transition[start].end(); i++) {
                 if (i->second == end)
                     require.insert(i->first);
@@ -88,7 +87,7 @@ private:
                 nbtrans += transition[s].size();
             os << nbtrans << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     os << s << " " << i->first << " " << i->second << endl;
             }
         }
@@ -100,7 +99,7 @@ private:
                 cout << *i << " ";
             cout << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     cout << s << " -" << i->first << "-> " << i->second << endl;
             }
             cout << "end state : ";
@@ -111,7 +110,7 @@ private:
     };
 
     template <class Element>
-    struct min_priority_queue : public priority_queue<Element, vector<Element>, greater<Element>> {
+    struct min_priority_queue : public priority_queue<Element, vector<Element>, greater<Element> > {
     };
 
     static const int EDIT = 1;
@@ -121,17 +120,17 @@ private:
 
     int subdef, insdef, deldef;
     DFA dfa;
-    typedef vector<map<int, map<int, Cost>>> CostTable; //[start][char][end]
+    typedef vector<map<int, map<int, Cost> > > CostTable; //[start][char][end]
     CostTable costTb;
     int epsilonChar;
 
     vector<Cost> fromSource;
     vector<Cost> toSink;
-    vector<vector<Cost>> table;
-    vector<set<int>> tempdomain;
-    vector<set<int>> predomain;
-    vector<set<int>> curdomain;
-    vector<vector<vector<pair<int, int>>>> mapedge;
+    vector<vector<Cost> > table;
+    vector<set<int> > tempdomain;
+    vector<set<int> > predomain;
+    vector<set<int> > curdomain;
+    vector<vector<vector<pair<int, int> > > > mapedge;
 
     pair<int, int> mapto(int varindex, Value val)
     {

@@ -1,5 +1,4 @@
 #include "tb2mipsolver.hpp"
-using namespace std;
 
 MIP::MIP()
     : solver(NULL)

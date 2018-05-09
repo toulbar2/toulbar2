@@ -1,11 +1,5 @@
 #include "tb2maxconstr.hpp"
 #include "tb2enumvar.hpp"
-#include <vector>
-#include <fstream>
-#include <algorithm>
-#include <set>
-
-using namespace std;
 
 MaxConstraint::MaxConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)

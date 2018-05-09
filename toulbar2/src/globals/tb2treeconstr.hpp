@@ -7,14 +7,6 @@
 
 #include "tb2dpglobalconstr.hpp"
 
-#include <vector>
-#include <map>
-#include <set>
-#include <fstream>
-#include <string>
-
-using namespace std;
-
 //\brief Special query for Tree global constraint
 template <class T>
 class RangeMinQuery {
@@ -25,7 +17,7 @@ private:
     int n;
     vector<int> pow2array;
     vector<int> log2array;
-    vector<vector<int>> M;
+    vector<vector<int> > M;
 
 public:
     RangeMinQuery()
@@ -122,7 +114,7 @@ private:
 
     int minTreeEdgeCost;
     int maxTreeEdgeCost;
-    set<pair<int, int>> treeEdge;
+    set<pair<int, int> > treeEdge;
 
     struct CCTreeNode; // Forward declaration
     vector<CCTreeNode> nodeStore;

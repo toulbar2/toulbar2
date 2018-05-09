@@ -1,12 +1,7 @@
 #ifndef GRAMMARUTILS
 #define GRAMMARUTILS
 
-#include <vector>
-#include <iostream>
-#include <map>
 #include "tb2types.hpp"
-
-using namespace std;
 
 class WeightedCNFCFG {
 public:

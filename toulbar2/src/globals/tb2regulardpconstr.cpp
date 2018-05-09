@@ -1,8 +1,4 @@
 #include "tb2regulardpconstr.hpp"
-#include <vector>
-#include <fstream>
-#include <string>
-using namespace std;
 
 RegularDPConstraint::RegularDPConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
@@ -140,7 +136,7 @@ DPGlobalConstraint::Result RegularDPConstraint::minCost(int var, Value val, bool
 
     int minCost = wcsp->getUb();
     for (int qk = 0; qk < dfa.size(); qk++) {
-        for (vector<pair<int, int>>::iterator qj = dfa.transition[qk].begin(); qj != dfa.transition[qk].end(); qj++) {
+        for (vector<pair<int, int> >::iterator qj = dfa.transition[qk].begin(); qj != dfa.transition[qk].end(); qj++) {
             int curCost = f[var][qk].val + unary(qj->first, var, val) + invf[var + 1][qj->second].val;
             if (minCost > curCost)
                 minCost = curCost;
@@ -170,7 +166,7 @@ void RegularDPConstraint::recomputeTable(DPTableCell** table, DPTableCell** invT
         for (int j = 0; j < dfa.size(); j++) {
             table[i][j].val = top;
             table[i][j].source = make_pair(-1, -1);
-            for (vector<pair<int, int>>::iterator qk = dfa.invTransition[j].begin(); qk != dfa.invTransition[j].end(); qk++) {
+            for (vector<pair<int, int> >::iterator qk = dfa.invTransition[j].begin(); qk != dfa.invTransition[j].end(); qk++) {
                 int curCost = table[i - 1][qk->second].val + u[i][dfa.symbolIndex[qk->first]].val;
                 if (table[i][j].val > curCost) {
                     table[i][j].val = curCost;
@@ -189,7 +185,7 @@ void RegularDPConstraint::recomputeTable(DPTableCell** table, DPTableCell** invT
         for (int i = n - 1; i >= 0; i--) {
             for (int j = 0; j < dfa.size(); j++) {
                 invTable[i][j].val = top;
-                for (vector<pair<int, int>>::iterator qj = dfa.transition[j].begin(); qj != dfa.transition[j].end(); qj++) {
+                for (vector<pair<int, int> >::iterator qj = dfa.transition[j].begin(); qj != dfa.transition[j].end(); qj++) {
                     int curCost = invTable[i + 1][qj->second].val + u[i + 1][dfa.symbolIndex[qj->first]].val;
                     if (invTable[i][j].val > curCost) {
                         invTable[i][j].val = curCost;

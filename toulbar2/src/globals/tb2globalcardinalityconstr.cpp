@@ -84,7 +84,7 @@ void GlobalCardinalityConstraint::organizeConfig()
 
     int sumlow = 0, sumhigh = 0;
 
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++) {
         sumlow += i->second.lower_bound;
         sumhigh += i->second.upper_bound;
     }
@@ -122,7 +122,7 @@ Cost GlobalCardinalityConstraint::evalOriginal(const String& s)
     for (unsigned int i = 0; i < s.length(); i++) {
         appear[s[i] - CHAR_FIRST]++;
     }
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++) {
         if (appear[i->first] < i->second.lower_bound) {
             //JP Start// Alteration
             Cost lshortage = i->second.lower_bound - appear[i->first];
@@ -262,7 +262,7 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();
     }
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++)
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++)
         nvalues++;
     os << " -1 sgcc"
        << " ";
@@ -273,7 +273,7 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original)
     if (mode == WVALUE)
         os << "wdec";
     os << " " << def << " " << nvalues << endl;
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++) {
         os << i->first << " " << i->second.lower_bound << " " << i->second.upper_bound;
         if (mode == WVALUE)
             os << " " << weights[i->first].first << " " << weights[i->first].second;
@@ -285,10 +285,10 @@ string GlobalCardinalityConstraint::getName()
 {
     string name = "sgcc";
     int nvalues = 0;
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++)
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++)
         nvalues++;
     name += "[" + to_string(nvalues);
-    for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
+    for (map<Value, pair<int, int> >::iterator i = bound.begin(); i != bound.end(); i++) {
         name += "," + to_string(i->first) + "," + to_string(i->second.lower_bound) + "," + to_string(i->second.upper_bound);
         if (mode == WVALUE)
             name += "," + to_string(weights[i->first].first) + "," + to_string(weights[i->first].second);

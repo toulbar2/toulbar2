@@ -30,32 +30,65 @@
  */
 
 /* different types of instance */
-typedef enum {CSP_INSTANCE,WCSP_INSTANCE,QCSP_INSTANCE} InstanceType;
+typedef enum { CSP_INSTANCE,
+    WCSP_INSTANCE,
+    QCSP_INSTANCE } InstanceType;
 
 /* different definitions of relations */
-typedef enum {REL_CONFLICT,REL_SUPPORT,REL_SOFT} RelType;
+typedef enum { REL_CONFLICT,
+    REL_SUPPORT,
+    REL_SOFT } RelType;
 
 /* different ways to represent an expression */
-typedef enum {TREE,PREFIX,INFIX_C,POSTFIX,MATHML} Syntax;
+typedef enum { TREE,
+    PREFIX,
+    INFIX_C,
+    POSTFIX,
+    MATHML } Syntax;
 
 /* different type of nodes in an AST (abstract syntax tree) */
-typedef enum 
-  {
+typedef enum {
     VAR,
     /* constants */
-    CST_BOOL,CST_INT,
+    CST_BOOL,
+    CST_INT,
     /* data structures */
-    LIST,DICT,
+    LIST,
+    DICT,
     /* operators */
-    F_NEG,F_ABS,F_ADD,F_SUB,F_MUL,F_DIV,F_MOD,F_POW,
-    F_IF,F_MIN,F_MAX,
-    F_EQ,F_NE,F_GE,F_GT,F_LE,F_LT,
-    F_NOT,F_AND,F_OR,F_XOR,F_IFF,
+    F_NEG,
+    F_ABS,
+    F_ADD,
+    F_SUB,
+    F_MUL,
+    F_DIV,
+    F_MOD,
+    F_POW,
+    F_IF,
+    F_MIN,
+    F_MAX,
+    F_EQ,
+    F_NE,
+    F_GE,
+    F_GT,
+    F_LE,
+    F_LT,
+    F_NOT,
+    F_AND,
+    F_OR,
+    F_XOR,
+    F_IFF,
     /* symbolic constants */
-    SYMB_NIL,SYMB_EQ,SYMB_NE,SYMB_GE,SYMB_GT,SYMB_LE,SYMB_LT,
+    SYMB_NIL,
+    SYMB_EQ,
+    SYMB_NE,
+    SYMB_GE,
+    SYMB_GT,
+    SYMB_LE,
+    SYMB_LT,
 
     /* for internal use by the parser */
     _DICTKEY
-  } NodeType;
+} NodeType;
 
 #endif

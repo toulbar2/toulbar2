@@ -1,7 +1,6 @@
 #include "tb2regularflowconstr.hpp"
 #include "tb2wcsp.hpp"
 
-#include <queue>
 #include <functional>
 
 RegularFlowConstraint::RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
@@ -94,7 +93,7 @@ void RegularFlowConstraint::organizeConfig()
         for (int s = 0; s < dfa.size(); s++) {
             g.shortest_path(s, table[s]);
         } */
-        vector<vector<Cost>> weightTable;
+        vector<vector<Cost> > weightTable;
         weightTable.resize(dfa.size());
         for (int start = 0; start < dfa.size(); start++) {
             weightTable[start].resize(dfa.size());
@@ -108,7 +107,7 @@ void RegularFlowConstraint::organizeConfig()
             }
         }
 
-        min_priority_queue<pair<int, Cost>> q;
+        min_priority_queue<pair<int, Cost> > q;
 
         table.resize(dfa.size());
         //g.shortest_path(s, table[s]);
@@ -152,7 +151,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
 
     // [start][char][end]
     for (int i = 0; i < nstate; i++) {
-        for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
+        for (vector<pair<int, int> >::iterator it = dfa.transition[i].begin();
              it != dfa.transition[i].end(); it++) {
             for (set<int>::iterator jt = sigma.begin();
                  jt != sigma.end(); jt++) {
@@ -170,7 +169,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
 
     if (insdef > 0) {
         for (int i = 0; i < nstate; i++) {
-            for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
+            for (vector<pair<int, int> >::iterator it = dfa.transition[i].begin();
                  it != dfa.transition[i].end(); it++) {
                 costTb[i][epsilonChar][it->second] = insdef;
             }
@@ -190,7 +189,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
 Cost RegularFlowConstraint::evalOriginal(const String& s)
 {
 
-    typedef pair<Cost, pair<int, int>> Element;
+    typedef pair<Cost, pair<int, int> > Element;
     //priority_queue<Element, vector<Element>, greater<Element> > minqueue;
     min_priority_queue<Element> minqueue;
     for (vector<int>::iterator i = dfa.init.begin(); i != dfa.init.end(); i++) {
@@ -327,8 +326,8 @@ void RegularFlowConstraint::findProjection(Graph& graph, StoreCost& cost, int va
 
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
         Cost mincost = INF;
-        vector<pair<int, int>>& edges = mapedge[varindex][x->toIndex(*v)];
-        for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {
+        vector<pair<int, int> >& edges = mapedge[varindex][x->toIndex(*v)];
+        for (vector<pair<int, int> >::iterator i = edges.begin(); i != edges.end(); i++) {
             pair<int, int> edge = *i;
             vector<Cost> weight = graph.getWeight(edge.first, edge.second, *v);
             if (weight.size() > 1)
@@ -356,8 +355,8 @@ void RegularFlowConstraint::checkRemoved(Graph& graph, StoreCost& cost, vector<i
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
         for (unsigned int valIndex = 0; valIndex < mapedge[varindex].size(); valIndex++) {
             if (x->cannotbe(x->toValue(valIndex))) {
-                vector<pair<int, int>>& edges = mapedge[varindex][valIndex];
-                for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {
+                vector<pair<int, int> >& edges = mapedge[varindex][valIndex];
+                for (vector<pair<int, int> >::iterator i = edges.begin(); i != edges.end(); i++) {
                     pair<int, int> edge = *i;
                     graph.removeEdge(edge.first, edge.second, x->toValue(valIndex));
                 }
@@ -371,8 +370,8 @@ void RegularFlowConstraint::augmentStructure(Graph& g, StoreCost& cost, int vari
 
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
     for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-        vector<pair<int, int>>& edges = mapedge[varindex][x->toIndex(*v)];
-        for (vector<pair<int, int>>::iterator e = edges.begin(); e != edges.end(); e++) {
+        vector<pair<int, int> >& edges = mapedge[varindex][x->toIndex(*v)];
+        for (vector<pair<int, int> >::iterator e = edges.begin(); e != edges.end(); e++) {
             vector<Cost> weight = g.getWeight(e->first, e->second, *v);
             if (weight.size() != 0) {
                 g.increaseCost(e->first, e->second, -delta[*v], *v);

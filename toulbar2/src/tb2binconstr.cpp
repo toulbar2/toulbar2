@@ -165,7 +165,7 @@ bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable*
     return false;
 }
 
-pair<pair<Cost, Cost>, pair<Cost, Cost>> BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
+pair<pair<Cost, Cost>, pair<Cost, Cost> > BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
 {
     //    	cout << "getMaxCost(" << getVar(varIndex)->getName() << ") " << a << " <-> " << b << endl << *this << endl;
     Cost maxcosta = MIN_COST;

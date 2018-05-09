@@ -302,8 +302,8 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
     //################################################initial state ##############################################
     if (automaton->getInitialStates().size() > 0) {
         vector<Cost> initial_states_costs(automaton->getNbStates(), top);
-        list<pair<int, Cost>> initialStates = automaton->getInitialStates();
-        for (list<pair<int, Cost>>::iterator it = initialStates.begin(); it != initialStates.end(); ++it) {
+        list<pair<int, Cost> > initialStates = automaton->getInitialStates();
+        for (list<pair<int, Cost> >::iterator it = initialStates.begin(); it != initialStates.end(); ++it) {
             pair<int, Cost> initial = *it;
             //cout << initial.first << " " << initial.second << endl;
             initial_states_costs[initial.first] = initial.second;
@@ -330,10 +330,10 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         cout << "DEBUG>> wregular Final number of variables : " << wcsp->numberOfVariables() << endl;
     vector<Cost> final_states_costs(automaton->getNbStates(), top);
 
-    list<pair<int, Cost>> acceptingStates = automaton->getAcceptingStates();
+    list<pair<int, Cost> > acceptingStates = automaton->getAcceptingStates();
     if (acceptingStates.size() > 0) {
 
-        for (list<pair<int, Cost>>::iterator it = acceptingStates.begin(); it != acceptingStates.end(); ++it) {
+        for (list<pair<int, Cost> >::iterator it = acceptingStates.begin(); it != acceptingStates.end(); ++it) {
             pair<int, Cost> accept = *it;
             int unsigned t_index = accept.first;
             Cost ucost = accept.second;
@@ -1274,7 +1274,7 @@ WeightedGcc::~WeightedGcc() {}
 
 void WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
 {
-    map<Value, pair<unsigned int, unsigned int>>::iterator it;
+    map<Value, pair<unsigned int, unsigned int> >::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedGcc::setBounds | Value " << value << " is already watch" << endl;
@@ -1291,8 +1291,8 @@ void WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp)
     //	int clb[nbcounters];
     //	int cub[nbcounters];
     //	int cscope[nbcounters];
-    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
 
         //Adding a wamong
         Value value = bound.first;
@@ -1360,8 +1360,8 @@ void WeightedGcc::display()
     }
     cout << endl;
     cout << semantics << " " << baseCost << endl;
-    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
         cout << bound.first << " [" << (bound.second).first << ":" << (bound.second).second << "]" << endl;
     }
 }
@@ -1520,7 +1520,7 @@ WeightedSameGcc::~WeightedSameGcc() {}
 
 void WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
 {
-    map<Value, pair<unsigned int, unsigned int>>::iterator it;
+    map<Value, pair<unsigned int, unsigned int> >::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedSameGcc::setBounds | Value " << value << " is already watch" << endl;
@@ -1619,10 +1619,10 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
     // Adding Unary Constraints (GCC PART)
     for (int value = inf; value <= sup; value++) {
 
-        map<Value, pair<unsigned int, unsigned int>>::iterator it;
+        map<Value, pair<unsigned int, unsigned int> >::iterator it;
         it = bounds.find(value);
         if (it != bounds.end()) {
-            pair<Value, pair<unsigned int, unsigned int>> bound = *it;
+            pair<Value, pair<unsigned int, unsigned int> > bound = *it;
             unsigned int lb = (bound.second).first;
             unsigned int ub = (bound.second).second;
 
@@ -1675,8 +1675,8 @@ void WeightedSameGcc::display()
     }
     cout << endl;
     cout << semantics << " " << baseCost << endl;
-    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
         cout << bound.first << " [" << (bound.second).first << ":" << (bound.second).second << "]" << endl;
     }
 }

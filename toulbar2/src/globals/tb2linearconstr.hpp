@@ -8,7 +8,6 @@
 
 #include "tb2globalconstr.hpp"
 #include "tb2mipsolver.hpp"
-#include <vector>
 
 class LinearConstraint : public GlobalConstraint {
 protected:
@@ -41,8 +40,8 @@ protected:
         checkRemoved(mip, cost, rmv);
     }
 
-    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas);
-    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas);
+    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost> >& deltas);
+    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost> >& deltas);
     virtual void undoExtend()
     {
         cost = bucost;

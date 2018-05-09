@@ -7,10 +7,6 @@
 
 #include "tb2dpglobalconstr.hpp"
 #include "tb2grammarutils.hpp"
-#include <vector>
-#include <fstream>
-#include <string>
-using namespace std;
 
 class GrammarConstraint : public DPGlobalConstraint {
 private:

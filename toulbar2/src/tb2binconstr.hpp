@@ -508,7 +508,7 @@ public:
         }
     }
 
-    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int varIndex, Value a, Value b);
+    pair<pair<Cost, Cost>, pair<Cost, Cost> > getMaxCost(int varIndex, Value a, Value b);
 
     double computeTightness()
     {

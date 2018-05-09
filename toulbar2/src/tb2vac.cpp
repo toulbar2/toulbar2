@@ -40,8 +40,8 @@ VACExtension::VACExtension(WCSP* w)
     , nbIterations(0)
     , inconsistentVariable(-1)
 {
-    queueP = new stack<pair<int, int>>;
-    queueR = new stack<pair<int, int>>;
+    queueP = new stack<pair<int, int> >;
+    queueR = new stack<pair<int, int> >;
     minlambda = MAX_COST;
     sumlb = MIN_COST;
     sumvars = 0;
@@ -206,7 +206,7 @@ bool VACExtension::propagate()
 
     breakCycles = 0;
 
-    static vector<pair<VACVariable*, Value>> acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
+    static vector<pair<VACVariable*, Value> > acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
     bool acSupportOK = false;
 
     while ((!util || isvac) && itThreshold != MIN_COST) {
@@ -267,7 +267,7 @@ bool VACExtension::propagate()
 
     if (ToulBar2::vacValueHeuristic && acSupportOK) {
         // update current unary support if possible && needed
-        for (vector<pair<VACVariable*, Value>>::iterator iter = acSupport.begin(); iter != acSupport.end(); ++iter) {
+        for (vector<pair<VACVariable*, Value> >::iterator iter = acSupport.begin(); iter != acSupport.end(); ++iter) {
             VACVariable* x = iter->first;
             if (x->canbe(iter->second)) {
                 assert(x->getCost(iter->second) == MIN_COST);

@@ -39,78 +39,68 @@
  *
  * This is also the representation of a symbolic constant.
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
+    NodeType type;
 } C_AST;
-
 
 /*
  * representation of a variable (necessarily a leaf in the tree)
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
-  char *varName;
-  int idVar;
+    NodeType type;
+    char* varName;
+    int idVar;
 } C_AST_VarNode;
 
 /*
  * representation of a constant (boolean or integer -- necessarily a
  * leaf in the tree)
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
-  int val;
+    NodeType type;
+    int val;
 } C_AST_CstNode;
 
 /*
  * representation of a function 
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
-  int nbarg;
-  C_AST *args[];
+    NodeType type;
+    int nbarg;
+    C_AST* args[];
 } C_AST_FxNode;
 
 /*
  * representation of a list 
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
-  int size; /* number of items in the list */
-  C_AST *items[];
+    NodeType type;
+    int size; /* number of items in the list */
+    C_AST* items[];
 } C_AST_ListNode;
 
 /*
  * entry in a dictionary
  */
-typedef
-struct 
+typedef struct
 {
-  char *key;
-  C_AST *value;
+    char* key;
+    C_AST* value;
 } C_AST_DictEntry;
 
 /*
  * representation of a dictionary 
  */
-typedef
-struct 
+typedef struct
 {
-  NodeType type;
-  int size; /* number of items in the dictionary */
-  C_AST_DictEntry items[];
+    NodeType type;
+    int size; /* number of items in the dictionary */
+    C_AST_DictEntry items[];
 } C_AST_DictNode;
-
-
 
 #endif

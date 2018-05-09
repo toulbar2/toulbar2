@@ -1,8 +1,4 @@
 #include "tb2amongconstr.hpp"
-#include <algorithm>
-#include <sstream>
-
-using namespace std;
 
 AmongConstraint::AmongConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)

@@ -44,8 +44,8 @@ struct WTransition {
 class WFA {
 private:
     unsigned int nbStates;
-    list<pair<int, Cost>> initialStates;
-    list<pair<int, Cost>> acceptingStates;
+    list<pair<int, Cost> > initialStates;
+    list<pair<int, Cost> > acceptingStates;
     list<WTransition*> transitions;
 
 public:
@@ -55,8 +55,8 @@ public:
     WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 
     inline unsigned int getNbStates() { return nbStates; }
-    inline list<pair<int, Cost>>& getInitialStates() { return initialStates; }
-    inline list<pair<int, Cost>>& getAcceptingStates() { return acceptingStates; }
+    inline list<pair<int, Cost> >& getInitialStates() { return initialStates; }
+    inline list<pair<int, Cost> >& getAcceptingStates() { return acceptingStates; }
     inline list<WTransition*>& getTransitions() { return transitions; }
 
     void display();

@@ -1,7 +1,4 @@
 #include "tb2dpglobalconstr.hpp"
-#include <vector>
-#include <algorithm>
-using namespace std;
 
 DPGlobalConstraint::DPGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : GlobalConstraint(wcsp, scope, arity, 0)
@@ -107,7 +104,7 @@ void DPGlobalConstraint::propagateAC()
                 changed = true;
             } else if (cost < 0) {
                 /* Should not happen*/
-                printf("Warning: AC propagation get negative cost\n");
+                cout << "Warning: AC propagation get negative cost!" << endl;
                 extend(i, *it, -cost);
                 changed = true;
             }

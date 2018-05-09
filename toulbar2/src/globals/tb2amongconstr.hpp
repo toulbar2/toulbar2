@@ -6,12 +6,6 @@
 #define TB2AMONGCONSTR_HPP_
 
 #include "tb2dpglobalconstr.hpp"
-#include <vector>
-#include <set>
-#include <fstream>
-#include <string>
-
-using namespace std;
 
 class AmongConstraint : public DPGlobalConstraint {
 private:

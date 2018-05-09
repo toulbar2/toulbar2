@@ -11,9 +11,13 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-#include <map>
-#include <set>
-using namespace std;
+class WeightedAutomaton {
+public:
+    virtual void setNumStates(int nStates) = 0;
+    virtual void addInitialState(int begin) = 0;
+    virtual void addFinalState(int end) = 0;
+    virtual void addTransition(int start, int symbol, int end, int weight) = 0;
+};
 
 class GlobalConstraint : public AbstractGlobalConstraint {
 
@@ -26,7 +30,7 @@ protected:
     set<int>* fullySupportedSet;
 
     map<Value, Cost> EACCost;
-    vector<vector<Cost>> preUnaryCosts;
+    vector<vector<Cost> > preUnaryCosts;
     int currentVar;
     bool needPropagateAC, needPropagateDAC, needPropagateEAC;
 
@@ -47,23 +51,23 @@ protected:
     virtual void checkRemoved(vector<int>& rmv) {}
     // extend the cost stored in deltas[i] from the unary constraint of
     // supports[i] to the constraint struture
-    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas) {}
+    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost> >& deltas) {}
     virtual void changeAfterExtend(int support, map<Value, Cost>& delta)
     {
         vector<int> supports;
         supports.push_back(support);
-        vector<map<Value, Cost>> deltas;
+        vector<map<Value, Cost> > deltas;
         deltas.push_back(delta);
         changeAfterExtend(supports, deltas);
     }
     // project the cost stored in deltas[i] to the unary constraint of
     // supports[i] from the constraint struture
-    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas) {}
+    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost> >& deltas) {}
     virtual void changeAfterProject(int support, map<Value, Cost>& delta)
     {
         vector<int> supports;
         supports.push_back(support);
-        vector<map<Value, Cost>> deltas;
+        vector<map<Value, Cost> > deltas;
         deltas.push_back(delta);
         changeAfterProject(supports, deltas);
     }

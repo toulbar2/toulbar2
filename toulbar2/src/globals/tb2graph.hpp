@@ -10,15 +10,6 @@
 #include "tb2store.hpp"
 #include "tb2btlist.hpp"
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <set>
-#include <queue>
-#include <list>
-#include <algorithm>
-#include <assert.h>
-
 //#define adj first
 //#define weight second
 #define INF (MAX_COST >> 5)
@@ -28,8 +19,6 @@
         pt = NULL;   \
     }
 #define NO_TAG (INT_MAX >> 1)
-
-using namespace std;
 
 // BTList Wrapper for easier usage
 template <typename T>
@@ -170,7 +159,7 @@ private:
     };
 
     // native adjacent lists, storing all edges possibly appears during search
-    vector<vector<List_Node*>> adjlist;
+    vector<vector<List_Node*> > adjlist;
 
     // additional structure for speeding up traveral
     vector<Vertex*> vertexList;
@@ -256,7 +245,7 @@ public:
     // a pair <cost,exist>, where cost is the cost of the augmenting path,
     // exist returns true if such a path from s to t exists.
     pair<Cost, bool> augment(int s, int t, bool can_change);
-    pair<Cost, bool> augment(int s, int t, bool can_change, vector<pair<int, int>>& edges)
+    pair<Cost, bool> augment(int s, int t, bool can_change, vector<pair<int, int> >& edges)
     {
         pair<Cost, bool> result = augment(s, t, can_change);
         if (result.second && !can_change) {

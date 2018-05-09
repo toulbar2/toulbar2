@@ -244,11 +244,11 @@ public:
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
     virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
-        const vector<WeightedObj<int>>& initial_States,
-        const vector<WeightedObj<int>>& accepting_States,
+        const vector<WeightedObj<int> >& initial_States,
+        const vector<WeightedObj<int> >& accepting_States,
         const vector<DFATransition>& Wtransitions)
         = 0;
-    virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
+    virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
     /// \brief post a soft alldifferent cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -267,7 +267,7 @@ public:
     /// \param baseCost the scaling factor of the violation
     /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObj<Value>>& values)
+        const vector<BoundedObj<Value> >& values)
         = 0;
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) = 0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 
@@ -343,7 +343,7 @@ public:
     /// \param rightRes right-hand side value of the comparison
     virtual void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) = 0;
 
-    virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
+    virtual vector<vector<int> >* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 

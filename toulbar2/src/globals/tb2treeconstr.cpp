@@ -1,13 +1,4 @@
 #include "tb2treeconstr.hpp"
-#include <vector>
-#include <map>
-#include <fstream>
-#include <string>
-#include <stack>
-
-#include <algorithm>
-
-using namespace std;
 
 TreeConstraint::TreeConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
@@ -79,7 +70,7 @@ Cost TreeConstraint::eval(const String& s)
     int root = -1;
     int nRoot = 0;
 
-    vector<vector<int>> edgeList;
+    vector<vector<int> > edgeList;
     edgeList.resize(n);
 
     for (int i = 0; i < n; i++) {

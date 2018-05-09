@@ -222,9 +222,9 @@ protected:
     vector<Value> functionY;
     bool functionalZ;
     vector<Value> functionZ;
-    vector<pair<Value, Value>> supportX;
-    vector<pair<Value, Value>> supportY;
-    vector<pair<Value, Value>> supportZ;
+    vector<pair<Value, Value> > supportX;
+    vector<pair<Value, Value> > supportY;
+    vector<pair<Value, Value> > supportZ;
     vector<StoreCost> costsYZ;
 
     inline Value getFunctionX(Value vy, Value vz) const { return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)]; }
@@ -244,22 +244,22 @@ protected:
     void findSupport(T1 getCost, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
         EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
         int getIndexX, int getIndexY, int getIndexZ,
-        vector<pair<Value, Value>>& supportX, vector<StoreCost>& deltaCostsX,
-        vector<pair<Value, Value>>& supportY, vector<pair<Value, Value>>& supportZ);
+        vector<pair<Value, Value> >& supportX, vector<StoreCost>& deltaCostsX,
+        vector<pair<Value, Value> >& supportY, vector<pair<Value, Value> >& supportZ);
     template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
     void findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX, T4 getCostWithBinaries, T5 addCost, T6 addCostXZY, T7 addCostYZX, bool functionalX, T8 getFunctionX, bool functionalY, T9 getFunctionY, bool functionalZ, T10 getFunctionZ,
         EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
         int getIndexX, int getIndexY, int getIndexZ,
-        vector<pair<Value, Value>>& supportX, vector<StoreCost>& deltaCostsX,
-        vector<pair<Value, Value>>& supportY, vector<StoreCost>& deltaCostsY,
-        vector<pair<Value, Value>>& supportZ, vector<StoreCost>& deltaCostsZ,
+        vector<pair<Value, Value> >& supportX, vector<StoreCost>& deltaCostsX,
+        vector<pair<Value, Value> >& supportY, vector<StoreCost>& deltaCostsY,
+        vector<pair<Value, Value> >& supportZ, vector<StoreCost>& deltaCostsZ,
         BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz);
     bool verify(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z);
 
     template <typename T1, typename T2, typename T3>
     bool isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
         EnumeratedVariable* x, Value a, EnumeratedVariable* y, EnumeratedVariable* z,
-        vector<pair<Value, Value>>& supportX);
+        vector<pair<Value, Value> >& supportX);
 
     void findSupportX() { findSupport(Functor_getCostXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x, y, z, 0, 1, 2, supportX, deltaCostsX, supportY, supportZ); }
     void findSupportY() { findSupport(Functor_getCostYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y, x, z, 1, 0, 2, supportY, deltaCostsY, supportX, supportZ); }
@@ -672,7 +672,7 @@ public:
     }
 
     void fillEAC2(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
-        vector<pair<Value, Value>>& supportX)
+        vector<pair<Value, Value> >& supportX)
     {
         assert(x->canbe(x->getSupport()));
         assert(getIndex(y) < getIndex(z));
@@ -745,7 +745,7 @@ public:
 
     bool verify();
 
-    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int varIndex, Value a, Value b);
+    pair<pair<Cost, Cost>, pair<Cost, Cost> > getMaxCost(int varIndex, Value a, Value b);
 
     template <typename T1, typename T2, typename T3, typename T4>
     void projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCostYZX, bool functionalX, T4 getFunctionX, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* yzin);
@@ -1328,8 +1328,8 @@ template <typename T1, typename T2, typename T3>
 void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
     EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
     int getIndexX, int getIndexY, int getIndexZ,
-    vector<pair<Value, Value>>& supportX, vector<StoreCost>& deltaCostsX,
-    vector<pair<Value, Value>>& supportY, vector<pair<Value, Value>>& supportZ)
+    vector<pair<Value, Value> >& supportX, vector<StoreCost>& deltaCostsX,
+    vector<pair<Value, Value> >& supportY, vector<pair<Value, Value> >& supportZ)
 {
     assert(getIndex(y) < getIndex(z)); // check that support.first/.second is consistent with y/z parameters
     assert(connected());
@@ -1413,9 +1413,9 @@ template <typename T1, typename T2, typename T3, typename T4, typename T5, typen
 void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX, T4 getCostWithBinaries, T5 addCost, T6 addCostXZY, T7 addCostYZX, bool functionalX, T8 getFunctionX, bool functionalY, T9 getFunctionY, bool functionalZ, T10 getFunctionZ,
     EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
     int getIndexX, int getIndexY, int getIndexZ,
-    vector<pair<Value, Value>>& supportX, vector<StoreCost>& deltaCostsX,
-    vector<pair<Value, Value>>& supportY, vector<StoreCost>& deltaCostsY,
-    vector<pair<Value, Value>>& supportZ, vector<StoreCost>& deltaCostsZ,
+    vector<pair<Value, Value> >& supportX, vector<StoreCost>& deltaCostsX,
+    vector<pair<Value, Value> >& supportY, vector<StoreCost>& deltaCostsY,
+    vector<pair<Value, Value> >& supportZ, vector<StoreCost>& deltaCostsZ,
     BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz)
 {
     assert(connected());
@@ -1653,7 +1653,7 @@ void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCo
 template <typename T1, typename T2, typename T3>
 bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFunctionY, bool functionalZ, T3 getFunctionZ,
     EnumeratedVariable* x, Value a, EnumeratedVariable* y, EnumeratedVariable* z,
-    vector<pair<Value, Value>>& supportX)
+    vector<pair<Value, Value> >& supportX)
 {
     unsigned int xindex = x->toIndex(a);
     assert(getIndex(y) < getIndex(z));

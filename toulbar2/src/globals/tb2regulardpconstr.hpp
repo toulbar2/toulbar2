@@ -6,11 +6,6 @@
 #define TB2REGULARDPCONSTR_HPP_
 
 #include "tb2dpglobalconstr.hpp"
-#include "tb2automaton.hpp"
-#include <vector>
-#include <fstream>
-#include <string>
-using namespace std;
 
 class RegularDPConstraint : public DPGlobalConstraint {
 private:
@@ -19,8 +14,8 @@ private:
         vector<int> final;
         vector<int> symbol;
         map<int, int> symbolIndex;
-        vector<pair<int, int>>* transition;
-        vector<pair<int, int>>* invTransition;
+        vector<pair<int, int> >* transition;
+        vector<pair<int, int> >* invTransition;
         int nstate;
 
         DFA()
@@ -29,8 +24,8 @@ private:
 
         void setNumStates(int size)
         {
-            transition = new vector<pair<int, int>>[size];
-            invTransition = new vector<pair<int, int>>[size];
+            transition = new vector<pair<int, int> >[size];
+            invTransition = new vector<pair<int, int> >[size];
             nstate = size;
         }
 
@@ -82,7 +77,7 @@ private:
                 nbtrans += transition[s].size();
             os << nbtrans << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     os << s << " " << i->first << " " << i->second << endl;
             }
         }
@@ -94,7 +89,7 @@ private:
                 cout << *i << " ";
             cout << endl;
             for (int s = 0; s < nstate; s++) {
-                for (vector<pair<int, int>>::iterator i = transition[s].begin(); i != transition[s].end(); i++)
+                for (vector<pair<int, int> >::iterator i = transition[s].begin(); i != transition[s].end(); i++)
                     cout << s << " -" << i->first << "-> " << i->second << endl;
             }
             cout << "end state : ";
@@ -112,7 +107,7 @@ private:
         Source source;
     };
 
-    typedef TableCell<pair<int, Value>> DPTableCell;
+    typedef TableCell<pair<int, Value> > DPTableCell;
     DPTableCell** f;
     DPTableCell** curf;
     DPTableCell** invf;

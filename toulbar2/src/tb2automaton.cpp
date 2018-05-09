@@ -85,12 +85,12 @@ void WFA::display()
 {
     cout << "Number of states = " << nbStates << endl;
     cout << "Initial States : " << endl;
-    for (list<pair<int, Cost>>::iterator it = initialStates.begin(); it != initialStates.end(); it++) {
+    for (list<pair<int, Cost> >::iterator it = initialStates.begin(); it != initialStates.end(); it++) {
         pair<int, int> initial = *it;
         cout << initial.first << "(" << initial.second << ")" << endl;
     }
     cout << "Accepting States : " << endl;
-    for (list<pair<int, Cost>>::iterator it = acceptingStates.begin(); it != acceptingStates.end(); it++) {
+    for (list<pair<int, Cost> >::iterator it = acceptingStates.begin(); it != acceptingStates.end(); it++) {
         pair<int, int> accepting = *it;
         cout << accepting.first << "(" << accepting.second << ")" << endl;
     }

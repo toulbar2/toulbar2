@@ -28,12 +28,12 @@ struct edge_component_t {
 typedef adjacency_list<setS, vecS, undirectedS> Graph;
 typedef adjacency_list<setS, vecS, directedS> DirectedGraph;
 typedef adjacency_list<setS, vecS, undirectedS, no_property,
-    property<edge_weight_t, int, property<edge_component_t, std::size_t>>>
+    property<edge_weight_t, int, property<edge_component_t, std::size_t> > >
     IntWeightedGraph;
 typedef adjacency_list<setS, vecS, undirectedS, no_property,
-    property<edge_weight_t, double, property<edge_component_t, std::size_t>>>
+    property<edge_weight_t, double, property<edge_component_t, std::size_t> > >
     DoubleWeightedGraph;
-typedef adjacency_list<setS, vecS, undirectedS, property<vertex_color_t, default_color_type, property<vertex_degree_t, int>>> ColoredGraph;
+typedef adjacency_list<setS, vecS, undirectedS, property<vertex_color_t, default_color_type, property<vertex_degree_t, int> > > ColoredGraph;
 #endif
 
 #include "tb2wcsp.hpp"
@@ -319,7 +319,7 @@ void WCSP::spanningTreeOrderingBGL(vector<int>& order_inv)
     double tight = 0;
     bool tightok = true;
     vector<int> roots;
-    vector<vector<int>> listofsuccessors(n, vector<int>());
+    vector<vector<int> > listofsuccessors(n, vector<int>());
     if (ToulBar2::verbose >= 0)
         cout << "Maximum spanning tree ordering"; // << endl;
     for (size_t i = 0; i != p.size(); ++i) {
@@ -415,7 +415,7 @@ void WCSP::maximumCardinalitySearch(vector<int>& order_inv)
     int n = num_vertices(G);
     vector<int> inverse_perm(n, 0);
 
-    vector<vector<int>> sets(n, vector<int>(n));
+    vector<vector<int> > sets(n, vector<int>(n));
     vector<int> size(n);
     vector<int> card(n);
     vector<int> degree(n);

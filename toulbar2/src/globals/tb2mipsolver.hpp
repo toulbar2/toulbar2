@@ -200,8 +200,6 @@ public:
 #include "tb2types.hpp"
 #include <ilcplex/ilocplex.h>
 
-using namespace std;
-
 class IlogMIP : public MIP {
 private:
     IloEnv env;

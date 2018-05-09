@@ -1,8 +1,4 @@
 #include "tb2grammarutils.hpp"
-#include <set>
-#include <algorithm>
-
-using namespace std;
 
 void WCNFCFG::addVariableMeasure(int violationCost)
 {
