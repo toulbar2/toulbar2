@@ -1,6 +1,6 @@
 /** \file tb2paretopair.hpp
  *  \brief ParetoPair numbers with basic operations.
- *
+ * 
  */
 
 #ifndef TB2PARETOPAIR_HPP_

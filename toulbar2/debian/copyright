@@ -1,32 +1,14 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Toulbar2
-Source: https://mulcyber.toulouse.inra.fr/projects/toulbar2/
+Source: https://github.com/toulbar2/toulbar2
 
 Files: *
-Copyright: © INRA 2003-2016 <Thomas.Schiex@toulouse.inra.fr>
-License: GPL-3+
+Copyright: © INRA 2003-2018 <Thomas.Schiex@inra.fr>
+License: MIT
 
 Files: debian/*
-Copyright:  © INRA 2003-2016 <Thomas.Schiex@toulouse.inra.fr>
-License: GPL-3+
-
-License: GPL-3+
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-  .
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  .
-  You should have received a copy of the GNU General Public License along
-  with the Debian GNU/Linux distribution in /etc/share/common-licenses/GPL.
-  If not, see <http://www.gnu.org/licenses/>.
-  .
-  On Debian systems, the complete text of the GNU General Public License
-  can be found in /usr/share/common-licenses/GPL.
+Copyright:  © INRA 2003-2018 <Thomas.Schiex@inra.fr>
+License: MIT
 
 Files: src/SimpleGlob.h
 Copyright: 2006-2013, Brodie Thiesfield

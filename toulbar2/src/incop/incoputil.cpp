@@ -802,8 +802,7 @@ void calcul_valeur_population(OpProblem* problem, Configuration** population, in
 void executer_essai(OpProblem* problem, IncompleteAlgorithm* algo, Configuration** population, int taille, int graine1, int nessai, vector<int>* initconfig)
 {
     // graine du g�n�rateur aleatoire pour l'essai
-    srand48(graine1 + nessai);
-    srand(graine1 + nessai);
+    mysrand(graine1 + nessai);
     //    ecriture_graine(graine1+nessai,nessai);
 
     Statistiques->init_try(nessai);

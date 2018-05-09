@@ -357,39 +357,39 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         throw Contradiction();
     }
     /*
-    			//################################################### lecture des transition ????
-    			if ( ToulBar2::verbose > 1 )
-    			cout << "DEBUG>>wregular final number of Unary constraint Post after q0 and qi post : " << numberOfConstraints()  << endl;
-    			//==================
-    			// transition stat reading
-    			//==================
-    			int nb_transition;
-    			vector<unsigned int> VQi;
-    			vector<unsigned int> VQj;
-    			vector<unsigned int> VXi;
-    			vector<Cost> transition_costs;
-    			file >> nb_transition;
-    			if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular transitions number :  " <<  nb_transition <<endl;
-    			for( int s = 0 ; s < nb_transition ; s++)
-    			{
-    				int qi;
-    				int xi;
-    				int qj;
-    				Cost transition_COST;
-    				file >> qi;
-    				file >> xi;
-    				file >> qj;
-    				file >> transition_COST;
-    				VQi.push_back(qi);
-    				VXi.push_back(xi);
-    				VQj.push_back(qj);
-    				transition_costs.push_back(transition_COST);
+				//################################################### lecture des transition ????
+				if ( ToulBar2::verbose > 1 ) 
+				cout << "DEBUG>>wregular final number of Unary constraint Post after q0 and qi post : " << numberOfConstraints()  << endl;
+				//==================
+				// transition stat reading 
+				//==================
+				int nb_transition;
+				vector<unsigned int> VQi;
+				vector<unsigned int> VQj;
+				vector<unsigned int> VXi;
+				vector<Cost> transition_costs;
+				file >> nb_transition;
+				if ( ToulBar2::verbose > 1 ) cout << "DEBUG>> wregular transitions number :  " <<  nb_transition <<endl;
+				for( int s = 0 ; s < nb_transition ; s++)
+				{
+					int qi;
+					int xi;
+					int qj;
+					Cost transition_COST;
+					file >> qi;
+					file >> xi;
+					file >> qj;
+					file >> transition_COST;
+					VQi.push_back(qi);
+					VXi.push_back(xi);
+					VQj.push_back(qj);
+					transition_costs.push_back(transition_COST);
 
-    				if ( ToulBar2::verbose > 1 ) {
-    				cout << "DEBUG>> wregular read transition table qi =" << qi << " xi =" << xi << " qj =" << qj << " cost=" << transition_COST << endl;
-    				cout << "DEBUG>> wregular scope xi " << scopeIndex[xi] <<endl;
-    				}
-    			}
+					if ( ToulBar2::verbose > 1 ) {
+					cout << "DEBUG>> wregular read transition table qi =" << qi << " xi =" << xi << " qj =" << qj << " cost=" << transition_COST << endl;
+					cout << "DEBUG>> wregular scope xi " << scopeIndex[xi] <<endl;
+					}
+				}
      */
     //##################################################ajout ternaire#############################
     for (int q = 0; q < arity; q++) {

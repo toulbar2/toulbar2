@@ -1,7 +1,7 @@
 
 #include "tb2naryconstr.hpp"
 #include "tb2vac.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 NaryConstraint::NaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval, Long nbtuples)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
@@ -526,6 +526,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
         existZ = subscopeZ[0]->getConstr(subscopeZ[1]);
         naryz = wcsp->newBinaryConstr(subscopeZ[0], subscopeZ[1], costs);
     } else if (a == 4) {
+
         int size = subscopeZ[0]->getDomainInitSize() * subscopeZ[1]->getDomainInitSize() * subscopeZ[2]->getDomainInitSize();
         vector<Cost> costs(size, 0);
         existZ = subscopeZ[0]->getConstr(subscopeZ[1], subscopeZ[2]);
@@ -1341,10 +1342,10 @@ void NaryConstraint::print(ostream& os)
     //	assert(nonassigned == unassigned_); // not valid when used with assignLS
 
     /*TSCOPE::iterator it = scope_inv.begin();
-    while(it != scope_inv.end()) {
-    	os << "(" << it->first << ",idx: " << it->second << ") ";
-    	++it;
-    }*/
+	while(it != scope_inv.end()) {
+		os << "(" << it->first << ",idx: " << it->second << ") ";
+		++it;
+	}*/
     os << endl;
 
     if (ToulBar2::verbose >= 4) {

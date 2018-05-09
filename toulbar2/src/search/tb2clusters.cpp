@@ -4,12 +4,9 @@
  */
 
 #include "tb2clusters.hpp"
-#include "tb2naryconstr.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2haplotype.hpp"
-
-#include <list>
-#include <algorithm>
+#include "core/tb2naryconstr.hpp"
+//#include "applis/tb2pedigree.hpp"
+//#include "applis/tb2haplotype.hpp"
 
 /*
  * Comparison between cluster sons
@@ -373,7 +370,7 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
         if (ToulBar2::verbose >= 1)
             cout << ") Use #good  with nb = " << p.second << "solutions on cluster " << cluster->getId() << endl;
         /*		assert(res + p.first >= MIN_COST);
-        res += p.first;*/
+		res += p.first;*/
         nb = p.second;
         /*res = MAX(MIN_COST,res);*/
         return nb;
@@ -490,7 +487,7 @@ void Separator::print(ostream& os)
         totaltuples = totaltuples * scope[i]->getDomainInitSize();
     }
     os << ")    ";
-    os << " |nogoods| = " << nogoods.size() << " / " << totaltuples << " min:" << min_element(nogoods.begin(), nogoods.end(), nogoods.value_comp())->second.first << " (" << cluster->getNbBacktracksClusterTree() << " bt)";
+    os << " |nogoods| = " << nogoods.size() << " / " << totaltuples << " min:" << ((nogoods.size() == 0) ? MIN_COST : min_element(nogoods.begin(), nogoods.end(), nogoods.value_comp())->second.first) << " (" << cluster->getNbBacktracksClusterTree() << " bt)";
     if (ToulBar2::verbose >= 4) {
         os << "nogoods: {";
         TNoGoods::iterator it = nogoods.begin();
@@ -547,9 +544,7 @@ void Cluster::removeVar(Variable* x) { vars.erase(x->wcspIndex); }
 
 void Cluster::addVars(TVars& morevars)
 {
-    set_union(vars.begin(), vars.end(),
-        morevars.begin(), morevars.end(),
-        inserter(vars, vars.begin()));
+    vars.insert(morevars.begin(), morevars.end());
 }
 
 void Cluster::addCtr(Constraint* c) { ctrs.insert(c); }
@@ -573,23 +568,12 @@ void Cluster::removeEdge(Cluster* c)
 
 void Cluster::addEdges(TClusters& cls)
 {
-    set_union(edges.begin(), edges.end(),
-        cls.begin(), cls.end(),
-        inserter(edges, edges.begin()));
+    edges.insert(cls.begin(), cls.end());
 }
 
 void Cluster::addCtrs(TCtrs& ctrsin)
 {
-    set_union(ctrs.begin(), ctrs.end(),
-        ctrsin.begin(), ctrsin.end(),
-        inserter(ctrs, ctrs.begin()));
-}
-
-void Cluster::sum(TCtrs& c1, TCtrs& c2, TCtrs& ctout)
-{
-    set_union(c1.begin(), c1.end(),
-        c2.begin(), c2.end(),
-        inserter(ctout, ctout.begin()));
+    ctrs.insert(ctrsin.begin(), ctrsin.end());
 }
 
 TCtrs Cluster::getCtrsTree()
@@ -597,17 +581,22 @@ TCtrs Cluster::getCtrsTree()
     TCtrs ctrsTree;
     for (TClusters::iterator it = descendants.begin(); it != descendants.end(); ++it) {
         Cluster* c = *it;
-        c->getCtrs();
-        sum(ctrsTree, c->getCtrs(), ctrsTree);
+        ctrsTree.insert(c->getCtrs().begin(), c->getCtrs().end());
     }
     return ctrsTree;
 }
 
-void Cluster::deconnectDiff(TCtrs listCtrsTot, TCtrs listCtrs)
+bool compareCtrs(const Constraint* lhs, const Constraint* rhs)
 {
+    assert(lhs);
+    assert(rhs);
+    return lhs != rhs;
+}
 
+void Cluster::deconnectDiff(TCtrs& listCtrsTot, TCtrs& listCtrs)
+{
     TCtrs listDiff;
-    set_difference(listCtrsTot.begin(), listCtrsTot.end(), listCtrs.begin(), listCtrs.end(), inserter(listDiff, listDiff.begin()));
+    set_difference(listCtrsTot.begin(), listCtrsTot.end(), listCtrs.begin(), listCtrs.end(), inserter(listDiff, listDiff.begin()), compareCtrs);
     for (TCtrs::iterator itctr = listDiff.begin(); itctr != listDiff.end(); ++itctr) {
         Constraint* ctr = *itctr;
         ctr->deconnect();
@@ -867,24 +856,24 @@ void Cluster::print()
     }
 
     /*
-    cout << " ctrs {";
-    TCtrs::iterator itctr = beginCtrs();
-    while(itctr != endCtrs()) {
-      Constraint* ctr = *itctr;
-      cout << "( ";
-      for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
-      cout << ">C" << ctr->getCluster() << ")";
-      ++itctr;
-    }
-    cout << "}";
-    cout << " descendants {";
-    TClusters::iterator itd = beginDescendants();
-    while(itd != endDescendants()) {
+  	cout << " ctrs {";
+  	TCtrs::iterator itctr = beginCtrs();
+  	while(itctr != endCtrs()) {
+  	  Constraint* ctr = *itctr;
+  	  cout << "( ";
+  	  for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
+  	  cout << ">C" << ctr->getCluster() << ")";
+  	  ++itctr;
+  	}
+  	cout << "}";
+	cout << " descendants {";
+	TClusters::iterator itd = beginDescendants();
+	while(itd != endDescendants()) {
       cout << (*itd)->getId();
       ++itd;
       if(itd != endDescendants()) cout << ",";
-    }
-    cout << "}";
+	}
+	cout << "}";
      */
 
     cout << endl;
@@ -1332,7 +1321,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
         if (cj != father) {
             TVars cjaddedvars;
             cjaddedvars = boostingVarElimRec(cj, c, father, maxsize);
-            sum(addedVarBySons, cjaddedvars, addedVarBySons);
+            sum(addedVarBySons, cjaddedvars);
         }
     }
     if (father && c->getEdges().size() == 1) {
@@ -1341,7 +1330,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
             intersection(father->getVars(), grandfather->getVars(), fathersep);
         }
         TVars cvars;
-        sum(fathersep, addedVarBySons, fathersep);
+        sum(fathersep, addedVarBySons);
         difference(c->getVars(), fathersep, cvars);
         if (cvars.size() <= maxsize) {
             //	  	  cout << c->getId() << " which has " << cvars.size() << " vars (except whose from " << ((grandfather)?grandfather->getId():-1) << ") is merged into " << father->getId() << endl;
@@ -1354,7 +1343,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
             clusters.back()->setId(c->getId());
             clusters[c->getId()] = clusters.back();
             clusters.pop_back();
-            sum(addedVarBySons, cproper, addedVarBySons);
+            sum(addedVarBySons, cproper);
             delete c;
         }
     }
@@ -1486,14 +1475,14 @@ int TreeDecomposition::height(Cluster* r)
 void TreeDecomposition::makeDescendants(Cluster* c)
 {
     c->getDescendants().insert(c);
-    sum(c->getVarsTree(), c->getVars(), c->getVarsTree());
+    sum(c->getVarsTree(), c->getVars());
     TClusters::iterator itj = c->beginEdges();
     while (itj != c->endEdges()) {
         Cluster* cj = *itj;
         ++itj;
         makeDescendants(cj);
-        clusterSum(c->getDescendants(), cj->getDescendants(), c->getDescendants());
-        sum(c->getVarsTree(), cj->getVarsTree(), c->getVarsTree());
+        clusterSum(c->getDescendants(), cj->getDescendants());
+        sum(c->getVarsTree(), cj->getVarsTree());
     }
 }
 
@@ -1506,24 +1495,26 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited)
         cj->setParent(c);
         visited.insert(cj);
 
-        TVars cjsep;
-        intersection(c->getVars(), cj->getVars(), cjsep);
+        if (ToulBar2::searchMethod == DFBB) {
+            TVars cjsep;
+            intersection(c->getVars(), cj->getVars(), cjsep);
 
-        //------- Add the constraint separator
-        int i = 0;
-        int arity = cjsep.size();
-        EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
-        TVars::iterator it = cjsep.begin();
-        while (it != cjsep.end()) {
-            scopeVars[i] = (EnumeratedVariable*)wcsp->getVar(*it);
-            ++it;
-            i++;
+            //------- Add the constraint separator
+            int i = 0;
+            int arity = cjsep.size();
+            EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
+            TVars::iterator it = cjsep.begin();
+            while (it != cjsep.end()) {
+                scopeVars[i] = (EnumeratedVariable*)wcsp->getVar(*it);
+                ++it;
+                i++;
+            }
+            cj->setSep(new Separator(wcsp, scopeVars, arity));
+            if (ToulBar2::approximateCountingBTD)
+                cj->addCtr(cj->getSep());
+            delete[] scopeVars;
+            //-------
         }
-        cj->setSep(new Separator(wcsp, scopeVars, arity));
-        if (ToulBar2::approximateCountingBTD)
-            cj->addCtr(cj->getSep());
-        delete[] scopeVars;
-        //-------
 
         makeRootedRec(cj, visited);
         ++itj;
@@ -1564,7 +1555,7 @@ int TreeDecomposition::makeRooted()
                 splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
             if (ToulBar2::maxSeparatorSize >= 0 || ToulBar2::minProperVarSize >= 2)
                 mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
-            if (ToulBar2::boostingBTD && ToulBar2::elimDegree >= 1)
+            if (ToulBar2::boostingBTD > 0. && ToulBar2::elimDegree >= 1)
                 boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
             while (reduceHeight(root, NULL))
                 ;
@@ -1573,6 +1564,8 @@ int TreeDecomposition::makeRooted()
         makeRootedRec(root, visited);
         makeDescendants(root);
     }
+    if (ToulBar2::searchMethod != DFBB)
+        return 0;
 
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
     if (roots.size() > 1) {
@@ -1591,7 +1584,7 @@ int TreeDecomposition::makeRooted()
             root->addEdge(oneroot);
             oneroot->setParent(root);
             root->getDescendants().insert(root);
-            clusterSum(root->getDescendants(), oneroot->getDescendants(), root->getDescendants());
+            clusterSum(root->getDescendants(), oneroot->getDescendants());
         }
         roots.clear();
         roots.push_back(root);
@@ -1629,7 +1622,6 @@ int TreeDecomposition::makeRooted()
     }
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition width  : " << treewidth - 1 << endl;
-    //	if (treewidth > 30) {cout << "Sorry, cannot perform exact haplotype reconstruction! Please, try approximate methods." << endl; exit(EXIT_FAILURE);} // Warning! QTLmap specific exit
 
     return height(root);
 }
@@ -1885,7 +1877,8 @@ void TreeDecomposition::buildFromOrderForApprox()
         degreeinusedctr.push_back(x->getDegree());
     }
     time = cpuTime();
-    while (totalusedctrs.size() < wcsp->numberOfConnectedConstraints()) { //&& nbparties<4)
+    while (totalusedctrs.size() < wcsp->numberOfConnectedConstraints()) //&& nbparties<4)
+    {
         ConstraintSet currentusedctrs; // liste des contraintes contenues dans la partie courante
         TVars currentusedvars; // liste des variables contenues dans la partie courante
         TVars inusedvars; // liste des variables qui n'ont pas encore ete etudiee dans la partie courante
@@ -1920,7 +1913,8 @@ void TreeDecomposition::buildFromOrderForApprox()
         if (sizepart == 1)
             cout << endl;
         cout << "part " << sizepart << " : " << currentRevElimOrder.size() << " variables and " << currentusedctrs.size() << " constraints (really added)\n";
-        if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 3) { //affichage
+        if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 3) //affichage
+        {
             cout << "\tVariables : ";
             for (vector<Variable*>::iterator it = currentRevElimOrder.begin(); it != currentRevElimOrder.end(); it++) {
                 cout << (*it)->wcspIndex << " ";
@@ -1986,6 +1980,8 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 
     roots.clear();
     int h = makeRooted();
+    if (ToulBar2::searchMethod != DFBB)
+        return;
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
     if (!ToulBar2::approximateCountingBTD) {
@@ -2098,8 +2094,7 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
                                 scopectr.insert(x->wcspIndex);
                         }
                     }
-                    if (scopectr.size() == 0) {
-                        //all edges of the ctr are in the sub graph => the cstr is added in this current part
+                    if (scopectr.size() == 0) { //all edges of the ctr are in the sub graph => the cstr is added in this current part
                         if (included(sc, listeVars[maxvar->wcspIndex])) {
                             ConstraintSet subctr;
                             nbcstr++;
@@ -2107,11 +2102,11 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
                             totalusedctrs.insert(ctr);
                             time = cpuTime();
                             subctr = ctr->subConstraint();
-                            ctrSum(totalusedctrs, subctr, totalusedctrs);
-                            ctrSum(currentusedctrs, subctr, currentusedctrs);
+                            ctrSum(totalusedctrs, subctr);
+                            ctrSum(currentusedctrs, subctr);
                             time = time - cpuTime();
                             timetot += time;
-                            sum(currentusedvars, sc, currentusedvars);
+                            sum(currentusedvars, sc);
                             currentusedvars.insert(maxvar->wcspIndex);
                         }
                     }
@@ -2237,25 +2232,27 @@ void TreeDecomposition::newSolution(Cost lb)
         }
     }
     if (!ToulBar2::isZ)
-        wcsp->setSolution(&a);
+        wcsp->setSolution(lb, &a);
 
     if (ToulBar2::showSolutions) {
         wcsp->printSolution(cout);
         cout << endl;
     }
 
-    if (ToulBar2::writeSolution) {
+    if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
+        if (!ToulBar2::allSolutions)
+            rewind(ToulBar2::solutionFile);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }
 
+    if (ToulBar2::xmlflag) {
+        cout << "o " << lb << endl;
+    }
     if (ToulBar2::maxsateval) {
         cout << "o " << lb << endl;
     }
-    if (ToulBar2::xmlflag) {
-        cout << "o " << lb << endl;
-        wcsp->solution_XML();
-    } else if (ToulBar2::uai || ToulBar2::uaieval) {
+    if (ToulBar2::uai || ToulBar2::uaieval) {
         wcsp->solution_UAI(lb);
     }
     // warning: cannot read solution from variable assignments
@@ -2272,6 +2269,8 @@ void TreeDecomposition::newSolution(Cost lb)
 
 void TreeDecomposition::intersection(TVars& v1, TVars& v2, TVars& vout)
 {
+    assert(&vout != &v1);
+    assert(&vout != &v2);
     set_intersection(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
@@ -2279,16 +2278,23 @@ void TreeDecomposition::intersection(TVars& v1, TVars& v2, TVars& vout)
 
 void TreeDecomposition::difference(TVars& v1, TVars& v2, TVars& vout)
 {
+    assert(&vout != &v1);
+    assert(&vout != &v2);
     set_difference(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
 }
 
-void TreeDecomposition::sum(TVars& v1, TVars& v2, TVars& vout)
+void TreeDecomposition::sum(TVars v1, TVars v2, TVars& vout)
 {
     set_union(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
+}
+
+void TreeDecomposition::sum(TVars& v1, TVars& v2)
+{
+    v1.insert(v2.begin(), v2.end());
 }
 
 bool TreeDecomposition::included(TVars& v1, TVars& v2)
@@ -2300,18 +2306,28 @@ bool TreeDecomposition::included(TVars& v1, TVars& v2)
     return vout.size() == v2.size();
 }
 
-void TreeDecomposition::clusterSum(TClusters& v1, TClusters& v2, TClusters& vout)
+void TreeDecomposition::clusterSum(TClusters v1, TClusters v2, TClusters& vout)
 {
     set_union(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
 }
 
-void TreeDecomposition::ctrSum(TCtrs& v1, TCtrs& v2, TCtrs& vout)
+void TreeDecomposition::clusterSum(TClusters& v1, TClusters& v2)
+{
+    v1.insert(v2.begin(), v2.end());
+}
+
+void TreeDecomposition::ctrSum(TCtrs v1, TCtrs v2, TCtrs& vout)
 {
     set_union(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
+}
+
+void TreeDecomposition::ctrSum(TCtrs& v1, TCtrs& v2)
+{
+    v1.insert(v2.begin(), v2.end());
 }
 
 bool TreeDecomposition::verify()

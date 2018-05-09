@@ -1,7 +1,7 @@
 #include "tb2globalconstr.hpp"
-#include "tb2wcsp.hpp"
-#include "tb2vac.hpp"
-#include "tb2clusters.hpp"
+#include "core/tb2wcsp.hpp"
+#include "core/tb2vac.hpp"
+#include "search/tb2clusters.hpp"
 
 GlobalConstraint::GlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
     : AbstractGlobalConstraint(wcsp, scope_in, arity_in)
@@ -53,12 +53,12 @@ void GlobalConstraint::init()
     for (int i = 0; i < arity_; i++)
         fullySupportedSet[i].clear();
     /*if ((currentDepth == -1) || (currentDepth >= Store::getDepth())) {
-    	initStructure();
-    } else {
-    	vector<int> rmv;
-    	checkRemoved(rmv);
-    }
-    currentDepth = Store::getDepth();*/
+		initStructure();
+	} else {
+		vector<int> rmv;
+		checkRemoved(rmv);
+	}
+	currentDepth = Store::getDepth();*/
     initStructure();
     propagate();
 }
@@ -320,11 +320,11 @@ void GlobalConstraint::propagateDAC()
     }
     //vector<int> rmv; //
     /*for (int i=0;i<arity_;i++) {
-    	if (getVar(i)->unassigned()) {
-    		checkRemoved(rmv);
-    		findFullSupport(i);
-    	}
-    }*/
+		if (getVar(i)->unassigned()) {
+			checkRemoved(rmv);
+			findFullSupport(i);
+		}
+	}*/
 }
 
 void GlobalConstraint::propagateAC()
@@ -394,7 +394,7 @@ void GlobalConstraint::propagateNIC()
 			deltas.push_back(delta);
 		}
 	}
-	changeAfterExtend(support, deltas);
+	changeAfterExtend(support, deltas);		
 
 	map<Value, Cost> delta;
 	EnumeratedVariable *x = (EnumeratedVariable*)getVar(index);
@@ -575,8 +575,8 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
             for (map<Value, Cost>::iterator j = delta.begin(); j != delta.end(); j++) {
                 E[index][j->first] = min(x->getCost(j->first) - j->second, x->getCost(j->first));
                 /*if (j->second < 0) {
-                  j->second = 0;
-                  }*/
+				  j->second = 0;
+				  }*/
                 //if (E[index][j->first] > 0) extendedCost[*i][j->first] += j->second;
             }
             changeAfterProject(*i, delta);

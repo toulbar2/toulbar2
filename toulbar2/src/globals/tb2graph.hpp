@@ -1,14 +1,14 @@
 /** \file tb2graph.hpp
  *  \brief Multiple-edged Graph using the adjacent list structure for modelling the flow model
- *
+ * 
  */
 
 #ifndef TB2GRAPH
 #define TB2GRAPH
 
-#include "tb2types.hpp"
-#include "tb2store.hpp"
-#include "tb2btlist.hpp"
+#include "core/tb2types.hpp"
+#include "utils/tb2store.hpp"
+#include "utils/tb2btlist.hpp"
 
 //#define adj first
 //#define weight second
@@ -292,11 +292,11 @@ public:
     // shortest path algorithm (using Dijkstra with reweighting)
     // Not used due to error in computing potentials after argumentation
     /*void shortest_path_with_potential(int source);
-    	void shortest_path_with_potential(int source, vector<Cost> &pathCost) {
-    		shortest_path_with_potential(source);
-    		pathCost.resize(size());
-    		for (int i=0;i<size();i++) pathCost[i] = d[i];
-    	}*/
+		void shortest_path_with_potential(int source, vector<Cost> &pathCost) {
+			shortest_path_with_potential(source);
+			pathCost.resize(size());
+			for (int i=0;i<size();i++) pathCost[i] = d[i];	
+		}*/
 
     // just for checking
     void print()
@@ -324,14 +324,14 @@ public:
         {
         }
 
-        iterator& operator++() // Prefix form
-        {
+        iterator& operator++()
+        { // Prefix form
             next_edge++;
             return *this;
         }
 
-        iterator& operator--() // Prefix form
-        {
+        iterator& operator--()
+        { // Prefix form
             next_edge--;
             return *this;
         }
@@ -385,8 +385,8 @@ public:
         {
         }
 
-        edge_iterator& operator++() // Prefix form
-        {
+        edge_iterator& operator++()
+        { // Prefix form
             ++next_edge;
             return *this;
         }
@@ -436,8 +436,8 @@ public:
         {
         }
 
-        node_iterator& operator++() // Prefix form
-        {
+        node_iterator& operator++()
+        { // Prefix form
             ++next_node;
             return *this;
         }

@@ -4,8 +4,11 @@
  */
 
 #include "tb2solver.hpp"
-#include "tb2domain.hpp"
+#include "core/tb2domain.hpp"
 #include "tb2clusters.hpp"
+#ifdef OPENMPI
+#include "vns/tb2cpdgvns.hpp"
+#endif
 
 /*
  * Variable ordering heuristics
@@ -351,6 +354,10 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
     nbBacktracks++;
     if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
+#ifdef OPENMPI
+    if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
+        throw TimeOut();
+#endif
     cluster->nbBacktracks++;
     try {
         Store::store();
@@ -443,6 +450,10 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
     nbBacktracks++;
     if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
+#ifdef OPENMPI
+    if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
+        throw TimeOut();
+#endif
     try {
         Store::store();
         assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -783,11 +794,8 @@ BigInteger Solver::sharpBTD(Cluster* cluster)
                     if (ToulBar2::approximateCountingBTD) {
                         if (c->getParent() != NULL && c->getParent()->getParent() == NULL && c->getNbVars() > 1) {
                             // for this son of root, we disconnect the constraints which isn't in intersection
-                            double time = cpuTime();
                             TCtrs usefulCtrsList = c->getCtrsTree();
                             c->deconnectDiff(totalList, usefulCtrsList);
-
-                            timeDeconnect += cpuTime() - time;
                         }
                     }
                     wcsp->propagate();

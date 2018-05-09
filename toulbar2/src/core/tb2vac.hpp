@@ -5,10 +5,7 @@
 #ifndef TB2VAC_HPP_
 #define TB2VAC_HPP_
 
-#include <stack>
-#include <set>
-#include <list>
-#include "tb2btqueue.hpp"
+#include "utils/tb2btqueue.hpp"
 #include "tb2vacutils.hpp"
 
 class tVACStat;

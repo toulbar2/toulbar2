@@ -4,7 +4,7 @@
 
 #include "tb2constraint.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 /*
  * Constructor
@@ -157,6 +157,20 @@ Cost Constraint::getMinCost()
     if (getDefCost() < minc && nbtuples < getDomainSizeProduct())
         minc = getDefCost();
     return minc;
+}
+
+Cost Constraint::getCost()
+{
+    int a = arity();
+    String t(a, '0');
+    for (int i = 0; i < a; i++) {
+        Variable* var = getVar(i);
+        if (var->enumerated())
+            t[i] = ((EnumeratedVariable*)var)->toIndex(var->getValue()) + CHAR_FIRST;
+        else
+            t[i] = var->getValue() + CHAR_FIRST;
+    }
+    return evalsubstr(t, this);
 }
 
 /// \warning always returns false for cost functions in intention

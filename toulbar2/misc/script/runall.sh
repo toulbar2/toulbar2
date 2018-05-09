@@ -7,10 +7,12 @@ solver=./toulbar2
 timelimit=3600
 vmemlimit=16000000
 K=1
+problems=$1
+shift
 
 rm -f outall
 
-for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
+for e in `find $problems -regex ".*[.]wcsp" -print | sort` ; do
     dir=`dirname $e`
     base=`basename $e .wcsp`
     file=$dir/$base
@@ -36,10 +38,10 @@ for e in `find $1 -regex ".*[.]wcsp" -print | sort` ; do
     ulimit -t $timelimit > /dev/null
     ulimit -v $vmemlimit > /dev/null
 
-#    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub "${@:2}" -C=$K >> outsolver) 2> usedtime
+#    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub $* -C=$K >> outsolver) 2> usedtime
 #    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
 # UNCOMMENT PREVIOUS *OR* NEXT TWO LINES
-    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp "${@:2}" -C=$K >> outsolver) 2> usedtime
+    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp $* -C=$K >> outsolver) 2> usedtime
     cat outsolver | awk -v UB=-1 -f ./misc/script/runall.awk >> out ; cat out
 
     cat usedtime | awk '/ user /{ printf("%.2f",0.0+$1+$3); }'

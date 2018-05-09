@@ -36,8 +36,8 @@ typedef adjacency_list<setS, vecS, undirectedS, no_property,
 typedef adjacency_list<setS, vecS, undirectedS, property<vertex_color_t, default_color_type, property<vertex_degree_t, int> > > ColoredGraph;
 #endif
 
-#include "tb2wcsp.hpp"
-#include "tb2binconstr.hpp"
+#include "core/tb2wcsp.hpp"
+#include "core/tb2binconstr.hpp"
 
 #ifdef BOOST
 
@@ -160,6 +160,9 @@ int WCSP::biConnectedComponents()
 
 int WCSP::diameter()
 {
+    if (vars.size() >= LARGE_NB_VARS)
+        return -1;
+
     IntWeightedGraph G;
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);

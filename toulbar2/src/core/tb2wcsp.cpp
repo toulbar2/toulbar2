@@ -11,29 +11,27 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2naryconstr.hpp"
 #include "tb2arithmetic.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2haplotype.hpp"
+#include "applis/tb2pedigree.hpp"
+#include "applis/tb2haplotype.hpp"
 #include "tb2vac.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 #include "tb2globaldecomposable.hpp"
-#include "tb2globalconstr.hpp"
+#include "globals/tb2globalconstr.hpp"
 #ifdef ILOGCPLEX
-#include "tb2lpsconstr.hpp"
+#include "global/tb2lpsconstr.hpp"
 #endif
-#include "tb2flowbasedconstr.hpp"
-#include "tb2alldiffconstr.hpp"
-#include "tb2globalcardinalityconstr.hpp"
-#include "tb2sameconstr.hpp"
-#include "tb2regularflowconstr.hpp"
-#include "tb2amongconstr.hpp"
-#include "tb2regulardpconstr.hpp"
-#include "tb2grammarconstr.hpp"
-#include "tb2treeconstr.hpp"
-#include "tb2maxconstr.hpp"
+#include "globals/tb2flowbasedconstr.hpp"
+#include "globals/tb2alldiffconstr.hpp"
+#include "globals/tb2globalcardinalityconstr.hpp"
+#include "globals/tb2sameconstr.hpp"
+#include "globals/tb2regularflowconstr.hpp"
+#include "globals/tb2amongconstr.hpp"
+#include "globals/tb2regulardpconstr.hpp"
+#include "globals/tb2grammarconstr.hpp"
+#include "globals/tb2treeconstr.hpp"
+#include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
-
-#include <algorithm>
 
 /*
  * Global variables with their default value
@@ -128,8 +126,6 @@ Cost ToulBar2::costThresholdPre;
 double ToulBar2::costMultiplier;
 Cost ToulBar2::relaxThreshold;
 
-ElimOrderType ToulBar2::elimOrderType;
-
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
@@ -142,7 +138,7 @@ int ToulBar2::btdRootCluster;
 double ToulBar2::startCpuTime;
 
 int ToulBar2::splitClusterMaxSize;
-bool ToulBar2::boostingBTD;
+double ToulBar2::boostingBTD;
 int ToulBar2::maxSeparatorSize;
 int ToulBar2::minProperVarSize;
 
@@ -160,7 +156,32 @@ bool ToulBar2::interrupted;
 
 bool ToulBar2::learning;
 
+int ToulBar2::seed;
+
 string ToulBar2::incop_cmd;
+
+string ToulBar2::clusterFile;
+ofstream ToulBar2::vnsOutput;
+
+SearchMethod ToulBar2::searchMethod;
+
+VNSSolutionInitMethod ToulBar2::vnsInitSol;
+int ToulBar2::vnsLDSmin;
+int ToulBar2::vnsLDSmax;
+VNSInc ToulBar2::vnsLDSinc;
+int ToulBar2::vnsKmin;
+int ToulBar2::vnsKmax;
+VNSInc ToulBar2::vnsKinc;
+
+int ToulBar2::vnsLDScur;
+int ToulBar2::vnsKcur;
+VNSVariableHeuristic ToulBar2::vnsNeighborVarHeur;
+bool ToulBar2::vnsNeighborChange;
+bool ToulBar2::vnsNeighborSizeSync;
+bool ToulBar2::vnsParallelLimit;
+bool ToulBar2::vnsParallelSync;
+Cost ToulBar2::vnsOptimum;
+bool ToulBar2::vnsParallel;
 
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
@@ -249,8 +270,6 @@ void tb2init()
     ToulBar2::costMultiplier = UNIT_COST;
     ToulBar2::relaxThreshold = MIN_COST;
 
-    ToulBar2::elimOrderType = ELIM_NONE;
-
     ToulBar2::bep = NULL;
     ToulBar2::wcnf = false;
     ToulBar2::qpbo = false;
@@ -263,7 +282,7 @@ void tb2init()
     ToulBar2::startCpuTime = 0;
 
     ToulBar2::splitClusterMaxSize = 0;
-    ToulBar2::boostingBTD = false;
+    ToulBar2::boostingBTD = 0.;
     ToulBar2::maxSeparatorSize = -1;
     ToulBar2::minProperVarSize = 0;
 
@@ -281,7 +300,33 @@ void tb2init()
 
     ToulBar2::learning = false;
 
+    ToulBar2::seed = 1;
+
     ToulBar2::incop_cmd = "";
+
+    ToulBar2::searchMethod = DFBB;
+
+    ToulBar2::clusterFile = "";
+    ToulBar2::vnsOutput.setstate(std::ios::failbit);
+
+    ToulBar2::vnsInitSol = LS_INIT_DFBB;
+    ToulBar2::vnsLDSmin = 1;
+    ToulBar2::vnsLDSmax = -1;
+    ToulBar2::vnsLDSinc = VNS_MULT2;
+    ToulBar2::vnsKmin = 4;
+    ToulBar2::vnsKmax = 0;
+    ToulBar2::vnsKinc = VNS_ADD1JUMP;
+
+    ToulBar2::vnsLDScur = -1;
+    ToulBar2::vnsKcur = 0;
+    ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
+    ToulBar2::vnsNeighborChange = false;
+    ToulBar2::vnsNeighborSizeSync = false;
+    ToulBar2::vnsParallelLimit = false;
+    ToulBar2::vnsParallelSync = false;
+    ToulBar2::vnsOptimum = MIN_COST;
+    ToulBar2::vnsParallel = false;
+
     ToulBar2::hbfs = 1;
     ToulBar2::hbfsGlobalLimit = 10000;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
@@ -299,6 +344,31 @@ Cost tb2checkOptions(Cost ub)
     if (ub <= MIN_COST)
         ub = MAX_COST;
 
+    if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
+        cout << "Warning! BTD-like search methods not compatible with VNS." << endl;
+        ToulBar2::btdMode = 0;
+    }
+    if (ToulBar2::searchMethod != DFBB && ToulBar2::restart < 1) {
+        ToulBar2::restart = 1; // Force random variable selection during (LDS) search within variable neighborhood search methods
+    }
+    if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::searchMethod != DFBB) {
+        cout << "Warning! Cannot find all solutions or compute the partition function with VNS." << endl;
+        ToulBar2::allSolutions = 0;
+        ToulBar2::isZ = 0;
+    }
+    if (ToulBar2::approximateCountingBTD && ToulBar2::searchMethod != DFBB) {
+        cout << "Warning! Cannot find an approximation of solution count with VNS." << endl;
+        ToulBar2::approximateCountingBTD = false;
+        ToulBar2::allSolutions = 0;
+    }
+    if (ToulBar2::searchMethod == RPDGVNS && !ToulBar2::vnsParallelSync && ToulBar2::vnsKinc == VNS_LUBY) {
+        cout << "Warning! Luby operator not implemented for neighborhood size increment strategy in asynchronous parallel VNS-like methods, uses Add1 instead.." << endl;
+        ToulBar2::vnsKinc = VNS_ADD1;
+    }
+    if (ToulBar2::searchMethod == RPDGVNS && !ToulBar2::vnsParallelSync && ToulBar2::vnsLDSinc == VNS_LUBY) {
+        cout << "Warning! Luby operator not implemented for  discrepancy increment strategy in asynchronous parallel VNS-like methods, uses Add1 instead.." << endl;
+        ToulBar2::vnsLDSinc = VNS_ADD1;
+    }
     if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1) {
         cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
         ToulBar2::approximateCountingBTD = false;
@@ -407,6 +477,7 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , lb(MIN_COST)
     , ub(upperBound)
     , negCost(MIN_COST)
+    , solutionCost(MAX_COST)
     , NCBucketSize(cost2log2gub(upperBound) + 1)
     , NCBuckets(NCBucketSize, VariableList(&Store::storeVariable))
     , PendingSeparator(&Store::storeSeparator)
@@ -500,6 +571,8 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
         ToulBar2::minsumDiffusion = 0;
     }
     IntervalVariable* x = new IntervalVariable(this, n, iinf, isup);
+    if (maxdomainsize < isup - iinf + 1)
+        maxdomainsize = isup - iinf + 1;
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     return x->wcspIndex;
 }
@@ -632,7 +705,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     return ctr->wcspIndex;
 }
 
-/// \brief create a global cost function in extension using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
+/// \brief create a global cost function using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
 /// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
 /// \param arity size of scopeIndex
 /// \param defval default cost for any tuple
@@ -1279,7 +1352,7 @@ int WCSP::postWGrammarCNF(int* scopeIndex, int arity, const string& semantics, c
         } else if (WRuleToTerminal[i].order == 2) {
             cnf->addProduction(WRuleToTerminal[i].from, WRuleToTerminal[i].to[0], WRuleToTerminal[i].to[1], 0);
         } else {
-            printf("Either A->v or A->BC is allowed\n");
+            cout << "Warning: either A->v or A->BC is allowed!" << endl;
         }
     }
 
@@ -1511,7 +1584,7 @@ void WCSP::sortConstraints()
         setDACOrder(revdac);
     }
     // postpone costly variable elimination heuristics if too many variables
-    if (ToulBar2::varOrder && (numberOfVariables() < 10000 || ((long)((void*)ToulBar2::varOrder)) < 2 || ((long)((void*)ToulBar2::varOrder)) > 6)) {
+    if (ToulBar2::varOrder && (numberOfVariables() < LARGE_NB_VARS || ((long)((void*)ToulBar2::varOrder)) == MAX_CARD || ((long)((void*)ToulBar2::varOrder)) >= ELIM_MAX)) {
         vector<int> order;
         if (isAlreadyTreeDec(ToulBar2::varOrder))
             treeDecFile2Vector(ToulBar2::varOrder, order);
@@ -1686,7 +1759,7 @@ void WCSP::preprocessing()
     propagate();
 
     // recompute current DAC order and its reverse
-    if (ToulBar2::varOrder && numberOfVariables() >= 10000 && numberOfUnassignedVariables() < 10000 && (((long)((void*)ToulBar2::varOrder)) >= 2 && ((long)((void*)ToulBar2::varOrder)) <= 6)) {
+    if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && (((long)((void*)ToulBar2::varOrder)) >= MIN_DEGREE && ((long)((void*)ToulBar2::varOrder)) <= APPROX_MIN_DEGREE)) {
         vector<int> order;
         if (isAlreadyTreeDec(ToulBar2::varOrder))
             treeDecFile2Vector(ToulBar2::varOrder, order);
@@ -1718,7 +1791,6 @@ void WCSP::preprocessing()
     //		cout << " " << elimorder[i];
     //	}
     //	cout << endl;
-
     do {
         previouslb = getLb();
         setDACOrder(revelimorder);
@@ -1948,10 +2020,10 @@ void WCSP::setInfiniteCost()
     }
 }
 
-Value WCSP::getDomainSizeSum()
+unsigned int WCSP::getDomainSizeSum() const
 {
     //    cout << " " << connectedComponents() << endl;
-    Value sum = 0;
+    unsigned int sum = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned())
             sum += vars[i]->getDomainSize();
@@ -2052,7 +2124,7 @@ void WCSP::printNCBuckets()
             assert((*iter)->canbe((*iter)->getMaxCostValue()));
             assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost() || !LUBTEST((*iter)->getMaxCost(), (*iter)->getCost((*iter)->getMaxCostValue())));
             assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)pow(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
-            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)pow(2., bucket + 1));
+            assert(PARTIALORDER || bucket == NCBucketSize - 1 || to_double((*iter)->getMaxCost()) < (Long)pow(2., bucket + 1));
         }
         cout << endl;
     }
@@ -2377,7 +2449,7 @@ void WCSP::whenContradiction()
 void WCSP::propagateNC()
 {
     if (ToulBar2::verbose >= 2)
-        cout << "NCQueue size: " << NC.getSize() << endl;
+        cout << "NCQueue size: " << NC.getSize() << " (" << NCBucketSize << " buckets maxi)" << endl;
     while (!NC.empty()) {
         Variable* x = NC.pop();
         if (x->unassigned())
@@ -2392,7 +2464,7 @@ void WCSP::propagateNC()
 
     if (objectiveChanged) {
         objectiveChanged = false;
-        int bucket = cost2log2glb(getUb() - getLb());
+        int bucket = min(cost2log2glb(getUb() - (getLb() + rounding(UNIT_COST) - UNIT_COST)), NCBucketSize - 1);
         if (bucket < 0)
             bucket = 0;
         for (; bucket < NCBucketSize; bucket++) {
@@ -2673,7 +2745,7 @@ void WCSP::propagate()
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
-                if (ToulBar2::vac) {
+                if (ToulBar2::vac && !CSP(getLb(), getUb())) {
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();
@@ -2682,13 +2754,13 @@ void WCSP::propagate()
                     }
                     vac->propagate();
                 }
-            } while (ToulBar2::vac && !vac->isVAC());
+            } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
             || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())
             || !Eliminate.empty()
-            || (ToulBar2::vac && !vac->isVAC()));
+            || (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC()));
         // TO BE DONE AFTER NORMAL PROPAGATION
         if (td)
             propagateSeparator();
@@ -2993,7 +3065,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     if (arityU > NARYPROJECTIONSIZE) { // || isGlobal()) {
         ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size()); //TODO: improve estimated number of tuples
         ctr = getCtr(ctrIndex);
-        assert(ctr->extension());
+        assert(ctr->isNary());
         NaryConstraint* nary = (NaryConstraint*)ctr;
 
         nary->fillFilters();
@@ -3546,7 +3618,7 @@ int WCSP::getVACHeuristic()
 
 bool WCSP::isAlreadyTreeDec(char* filename)
 {
-    if (filename == NULL)
+    if (filename == NULL || (((long)((void*)filename)) > ELIM_NONE && ((long)((void*)filename)) < ELIM_MAX))
         return false;
     ifstream file;
     file.open(filename);
@@ -3665,25 +3737,31 @@ void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
 void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
 {
 #ifdef BOOST
-    if (((long)((void*)elimVarOrder)) >= 1 && ((long)((void*)elimVarOrder)) <= 6) {
+    if (((long)((void*)elimVarOrder)) > ELIM_NONE && ((long)((void*)elimVarOrder)) < ELIM_MAX) {
         switch (((long)((void*)elimVarOrder))) {
-        case 1:
+        case MAX_CARD:
             maximumCardinalitySearch(order);
             break;
-        case 2:
+        case MIN_DEGREE:
             minimumDegreeOrdering(order);
             break;
-        case 3:
+        case MIN_FILL:
             minimumFillInOrdering(order);
             break;
-        case 4:
+        case ELIM_MST:
             spanningTreeOrderingBGL(order);
             break;
-        case 5:
+        case CUTHILL_MCKEE:
             reverseCuthillMcKeeOrderingBGL(order);
             break;
-        case 6:
+        case APPROX_MIN_DEGREE:
             minimumDegreeOrderingBGL(order);
+            break;
+        case ELIM_FILE_ORDER:
+            order.clear();
+            order.reserve(vars.size());
+            for (int i = numberOfVariables() - 1; i >= 0; i--)
+                order.push_back(i);
             break;
         default: {
             cerr << "Variable elimination order " << ((long)((void*)elimVarOrder)) << " not implemented yet!" << endl;
@@ -3846,7 +3924,6 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, Cost c2) const // log[exp(c1) + exp(c2)
 }
 
 TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + exp(c2)]
-
 {
     if (logc1 == -numeric_limits<TLogProb>::infinity())
         return logc2;

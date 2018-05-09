@@ -7,7 +7,7 @@
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 /*
  * Constructors and misc.
@@ -1270,7 +1270,8 @@ static int cmpValueCost(const void* p1, const void* p2)
 /// \warning Does not work with negative domain values!
 ValueCost* EnumeratedVariable::sortDomain(vector<Cost>& costs)
 {
-    cout << "sort variable " << getName() << " (size=" << getDomainSize() << ")" << endl;
+    if (ToulBar2::verbose >= 1)
+        cout << "sort variable " << getName() << " (size=" << getDomainSize() << ")" << endl;
 
     //  // Buble-sort (too slow!!!)
     //  bool swap = false;
@@ -1495,7 +1496,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             //	  }
 
             assert(ctr->arity() >= 4);
-
+            assert(ctr->isNary());
             NaryConstraint* oldctr = (NaryConstraint*)ctr;
             Cost defcost = oldctr->getDefCost();
             int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost, (noduplicate) ? oldctr->size() * x->getDomainInitSize() / getDomainInitSize() : oldctr->size() / getDomainInitSize());

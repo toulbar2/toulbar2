@@ -6,11 +6,11 @@
 #include "tb2wcsp.hpp"
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 /*
  * Constructors and misc.
- *
+ * 
  */
 
 Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
@@ -229,7 +229,7 @@ void Variable::conflict()
 
 /*
  * Propagation methods
- *
+ * 
  */
 
 void Variable::queueNC()

@@ -3,7 +3,7 @@
         FILE(
                         GLOB
                         boost_file      
-                        ${My_Source}/tb2boostgraph.cpp
+                        ${My_Source}/utils/tb2boostgraph.cpp
 
             )
 

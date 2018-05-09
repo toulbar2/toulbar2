@@ -3,7 +3,7 @@
  */
 
 #include "tb2queue.hpp"
-#include "tb2variable.hpp"
+#include "core/tb2variable.hpp"
 
 void Queue::push(DLink<VariableWithTimeStamp>* elt, Long curTimeStamp)
 {

@@ -3,12 +3,9 @@
  */
 
 #include "tb2randomgen.hpp"
-#include "tb2constraint.hpp"
-#include "tb2variable.hpp"
-#include "tb2enumvar.hpp"
-
-#include <set>
-#include <algorithm>
+#include "core/tb2constraint.hpp"
+#include "core/tb2variable.hpp"
+#include "core/tb2enumvar.hpp"
 
 bool naryRandom::connected()
 {

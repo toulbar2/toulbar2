@@ -5,7 +5,7 @@
 #ifndef TB2RANDOMGEN_H_
 #define TB2RANDOMGEN_H_
 
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 class naryRandom {
 public:

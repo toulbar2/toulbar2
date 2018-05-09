@@ -1,6 +1,6 @@
 /** \file tb2system.hpp
  *  \brief System dependent functions.
- *
+ * 
  */
 
 #ifndef TB2SYSTEM_HPP_
@@ -62,22 +62,22 @@ const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
 typedef long double Double;
 
 #ifdef LINUX
-inline void mysrand(long seed)
+inline void mysrand(int seed)
 {
     return srand48(seed);
 }
 inline int myrand() { return lrand48(); }
 inline Long myrandl() { return (Long)((Long)lrand48() /**LONGLONG_MAX*/); }
+inline double mydrand() { return drand48(); }
 #endif
 #ifdef WINDOWS
-inline void mysrand(long seed)
+inline void mysrand(int seed)
 {
     return srand(seed);
 }
 inline int myrand() { return rand(); }
 inline Long myrandl() { return (Long)((Long)rand() /**LONGLONG_MAX*/); }
-//replace srand48(seed) by srand(seed)
-//replace drand48() by (double(rand()) / RAND_MAX)
+inline double mydrand() { return drand(); } //If compiler warning, replace by (double(rand()) / RAND_MAX);
 #endif
 
 #ifdef DOUBLE_PROB
@@ -161,19 +161,19 @@ inline int string2Cost(const char* ptr) { return atoi(ptr); }
 // and compiler g++ version < 4.0
 
 /*
-inline int cost2log2(int v)
-{
- float x;
+    inline int cost2log2(int v)
+    {
+      float x;
 
- if (v==0) return -1;
- x=(float) v;
- return (*(int*)&x >> 23) - 127;
-}
-*/
+      if (v==0) return -1;
+      x=(float) v;
+      return (*(int*)&x >> 23) - 127;
+    }
+    */
 
 inline int cost2log2(int x)
 {
-    if (x == 0)
+    if (x <= 0)
         return -1;
     int l2 = 0;
     x >>= 1;
@@ -210,7 +210,7 @@ inline Long string2Cost(const char* ptr)
 
 inline int cost2log2(Long x)
 {
-    if (x == 0)
+    if (x <= 0)
         return -1;
     int l2 = 0;
     x >>= 1;
@@ -222,6 +222,32 @@ inline int cost2log2(Long x)
 inline int cost2log2glb(Long x) { return cost2log2(x); }
 inline int cost2log2gub(Long x) { return cost2log2(x); }
 #endif
+
+//luby(0)= N/A
+//luby(1)= 1
+//luby(2)= 1
+//luby(3)= 2
+//luby(4)= 1
+//luby(5)= 1
+//luby(6)= 2
+//luby(7)= 4
+//luby(8)= 1
+//luby(9)= 1
+//luby(10)= 2
+//luby(11)= 1
+//luby(12)= 1
+//luby(13)= 2
+//luby(14)= 4
+//luby(15)= 8
+//luby(16)= 1
+inline Long luby(Long r)
+{
+    int j = cost2log2(r + 1);
+    if (r + 1 == (1L << j))
+        return (1L << (j - 1));
+    else
+        return luby(r - (1L << j) + 1);
+}
 
 // function mkdir
 #ifdef LINUX

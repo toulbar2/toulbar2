@@ -1,5 +1,5 @@
 #include "tb2maxconstr.hpp"
-#include "tb2enumvar.hpp"
+#include "core/tb2enumvar.hpp"
 
 MaxConstraint::MaxConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
@@ -21,9 +21,9 @@ void MaxConstraint::read(istream& file)
     file >> def;
     def *= ToulBar2::costMultiplier;
     /*for(int i = 0; i < n; i++){
-    	EnumeratedVariable * x = scope[i];
+		EnumeratedVariable * x = scope[i];        
         for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it)
-            weightMap[i][*it] = def;
+            weightMap[i][*it] = def; 
     }*/
 
     int nTuple;

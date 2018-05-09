@@ -5,7 +5,6 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2clusters.hpp"
 #include <numeric>
 
 // warning! we assume binary variables
@@ -108,6 +107,7 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+
     void reconnect()
     {
         if (deconnected()) {
@@ -165,6 +165,38 @@ public:
             res += cost;
         assert(res >= MIN_COST);
         return res;
+    }
+    Cost evalsubstr(const String& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    template <class T>
+    Cost evalsubstrAny(const String& s, T* ctr)
+    {
+        int count = 0;
+
+        for (int i = 0; i < arity_; i++) {
+            int ind = ctr->getIndex(getVar(i));
+            if (ind >= 0) {
+                evalTuple[i] = s[ind];
+                count++;
+            }
+        }
+        assert(count <= arity_);
+
+        Cost cost;
+        if (count == arity_)
+            cost = eval(evalTuple);
+        else
+            cost = MIN_COST;
+
+        return cost;
+    }
+    Cost getCost() FINAL
+    {
+        for (int i = 0; i < arity_; i++) {
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+        }
+        return eval(evalTuple);
     }
 
     double computeTightness() { return 1.0 * cost / getDomainSizeProduct(); }

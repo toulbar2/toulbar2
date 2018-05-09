@@ -24,7 +24,7 @@
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
 
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 
 #ifndef NUMBERJACK
 #ifdef BOOST
@@ -229,8 +229,8 @@ public:
     static void store() { mystore.store(); };
     static void restore() { mystore.restore(); };
 
-    StoreBasic& operator=(const StoreBasic& elt) ///< \note assignment has to be backtrackable
-    {
+    StoreBasic& operator=(const StoreBasic& elt)
+    { ///< \note assignment has to be backtrackable
         if (&elt != this) {
             mystore.store(&v);
             v = elt.v;

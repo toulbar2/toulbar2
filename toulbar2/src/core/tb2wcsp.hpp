@@ -44,6 +44,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<Variable*> vars; ///< list of all variables
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
+    Cost solutionCost; ///< and its cost
     vector<Constraint*> constrs; ///< list of original cost functions
     int NCBucketSize; ///< number of buckets for NC bucket sort
     vector<VariableList> NCBuckets; ///< NC buckets: vector of backtrackable lists of variables
@@ -145,8 +146,7 @@ public:
     /// \brief enforces problem upper bound when exploring an alternative search node
     void enforceUb()
     {
-        if (CUT(((((Cost)lb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? ((Cost)lb + ToulBar2::costMultiplier) : (Cost)lb),
-                ub))
+        if (CUT((Cost)lb, ub))
             THROWCONTRADICTION;
         objectiveChanged = true;
     }
@@ -156,7 +156,7 @@ public:
     void decreaseUb(Cost newUb)
     {
         if (newUb < ub) {
-            if (CUT(((((Cost)lb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? ((Cost)lb + ToulBar2::costMultiplier) : (Cost)lb), newUb))
+            if (CUT((Cost)lb, newUb))
                 THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged = true;
@@ -171,7 +171,7 @@ public:
         if (addLb > MIN_COST) {
             //		   incWeightedDegree(addLb);
             Cost newLb = lb + addLb;
-            if (CUT((((newLb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? (newLb + ToulBar2::costMultiplier) : newLb), ub))
+            if (CUT(newLb, ub))
                 THROWCONTRADICTION;
             lb = newLb;
             objectiveChanged = true;
@@ -257,7 +257,7 @@ public:
     {
         assert(varIndexes.size() == newValues.size());
         unsigned int size = varIndexes.size();
-        assignLS(&varIndexes[0], &newValues[0], size, true);
+        assignLS((size > 0) ? &varIndexes[0] : NULL, (size > 0) ? &newValues[0] : NULL, size, true);
     }
 
     void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate)
@@ -308,6 +308,28 @@ public:
         }
     }
 
+    //  set<int> lastConflictSet;
+    //  set<int> getLastConflicts(){
+    //      return lastConflictSet;
+    //  };
+    //  void registerConflicts(){
+    //      lastConflictSet=getConflictVars();
+    //  };
+    //  set<int> getConflictVars(){
+    //      set<int> conflictvar;
+    //      for(vector<Constraint*>::iterator it = constrs.begin();it!=constrs.end();++it)
+    //      {
+    //          if((*it)->getCost() > MIN_COST) // Warning!!! It should test initial costs (or without propagation)
+    //          {
+    //              TSCOPE s;
+    //              (*it)->getScope(s);
+    //              for(TSCOPE::iterator it2=s.begin(); it2!= s.end();++it2)
+    //                  conflictvar.insert((*it2).first);
+    //          }
+    //      }
+    //      return conflictvar;
+    //  }
+
     void whenContradiction(); ///< \brief after a contradiction, resets propagation queues and increases \ref WCSP::nbNodes
     void propagate(); ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
     bool verify(); ///< \brief checks the propagation fix point is reached \warning might change EAC supports
@@ -327,8 +349,8 @@ public:
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
-    int getMaxDomainSize() { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
-    Value getDomainSizeSum(); ///< \brief total sum of current domain sizes
+    int getMaxDomainSize() const { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
+    unsigned int getDomainSizeSum() const; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     void cartProd(BigInteger& cartesianProduct)
@@ -363,7 +385,7 @@ public:
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
-    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples
+    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
@@ -411,17 +433,22 @@ public:
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format
-    void solution_UAI(Cost res, bool opt = false); ///< \brief output solution in UAI 2008 output format
+    void solution_UAI(Cost res); ///< \brief output solution in UAI 2008 output format
 
-    const vector<Value>& getSolution() { return solution; }
-    void setSolution(TAssign* sol = NULL)
+    const vector<Value>& getSolution(Cost* cost_ptr)
     {
+        if (cost_ptr != NULL)
+            *cost_ptr = solutionCost;
+        return solution;
+    }
+    void setSolution(Cost cost, TAssign* sol = NULL)
+    {
+        solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);
         }
     }
-
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {

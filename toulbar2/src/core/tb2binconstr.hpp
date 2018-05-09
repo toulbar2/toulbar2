@@ -100,6 +100,13 @@ public:
         return res;
     }
 
+    Cost getCost() FINAL
+    {
+        int vX = x->getValue();
+        int vY = y->getValue();
+        return getCost(vX, vY);
+    }
+
     void addcost(Value vx, Value vy, Cost mincost)
     {
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));

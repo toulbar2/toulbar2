@@ -5,10 +5,9 @@
 #ifndef TB2MIPSOLVER_HPP_
 #define TB2MIPSOLVER_HPP_
 
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 
-class MIP //Wrapper Interface for MIP solver
-{
+class MIP { //Wrapper Interface for MIP solver
 
 private:
     MIP* solver;
@@ -119,21 +118,21 @@ public:
         return 0;
     }
 
-    virtual int objCoeff(int var1) //Get the coefficient of the variable from the MIP
-    {
+    virtual int objCoeff(int var1)
+    { //Get the coefficient of the variable from the MIP
         if (solver)
             return solver->objCoeff(var1);
         return 0;
     }
 
-    virtual void objCoeff(int var1, int i) // Set the coefficient of the variable
-    {
+    virtual void objCoeff(int var1, int i)
+    { // Set the coefficient of the variable
         if (solver)
             solver->objCoeff(var1, i);
     }
 
-    virtual int solve() //return the optimal value from the MIP
-    {
+    virtual int solve()
+    { //return the optimal value from the MIP
         if (solver)
             solver->solve();
         return 0;

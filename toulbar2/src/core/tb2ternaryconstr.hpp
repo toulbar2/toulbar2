@@ -338,6 +338,14 @@ public:
         return res;
     }
 
+    Cost getCost() FINAL
+    {
+        Value vX = x->getValue();
+        Value vY = y->getValue();
+        Value vZ = z->getValue();
+        return getCost(vX, vY, vZ);
+    }
+
     Cost getCostWithBinaries(Value vx, Value vy, Value vz) const
     {
         unsigned int ix = x->toIndex(vx);
@@ -793,8 +801,7 @@ public:
     }
 
     void extendTernary()
-    {
-        // extend binary cost functions to the ternary cost function
+    { // extend binary cost functions to the ternary cost function
         Cost c;
         bool isbincost = false;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {

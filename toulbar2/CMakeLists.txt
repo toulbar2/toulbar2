@@ -15,8 +15,8 @@ set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
-set (MAINTAINER "David Allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
-set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
+set (MAINTAINER "David Allouche <david.allouche@inra.fr>") #used in packaging 
+set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 
 ##########################################
 # PROJECT NAME
@@ -48,6 +48,7 @@ OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
 ##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
+OPTION(MPI "MPI [default: on]" OFF)
 OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
 OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
@@ -69,7 +70,8 @@ IF(NOT CMAKE_BUILD_TYPE)
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
+##SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
+SET(CMAKE_CXX_FLAGS "-Wall" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio126")
@@ -114,13 +116,18 @@ SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench
 MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY LONG_COSTS)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
 
+IF (MPI)
+  SET(Boost ON)
+  SET(STATIC OFF)
+ENDIF(MPI)
+
 ##########################################
 # static building
 ##########################################
 
 IF(STATIC)
   set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
-  MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml  option not compliant with static link)")
+  MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml and MPI options not compliant with static link)")
   SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
   
 ELSE()
@@ -171,9 +178,10 @@ IF(MENDELSOFT_ONLY)
   SET(LIBTB2 OFF)
   SET(XML OFF)
   SET(CPLEX OFF)
-  SET(boost OFF)
+  SET(Boost OFF)
+  set(MPI OFF)
   
-  #basename for packagin and versionning
+  #basename for packaging and versioning
   set (Toulbar_NAME "mendelsoft")
   #description used in the package building
   SET (Toulbar_PACKAGE_DESCRIPTION 
@@ -215,6 +223,7 @@ IF(WIN32)
   set(XML OFF)
   set(CPLEX OFF)
   set(Boost OFF)
+  set(MPI OFF)
   set(ILOG OFF)
   set(LIBTB2 OFF)
   
@@ -248,7 +257,7 @@ include(${My_cmake_script}/FindGmp.cmake)
 SET (all_depends  ${all_depends} "gmp") 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
-#CMAKE_DEPENDENT_OPTION(ILOG "ILOGLUE COMPIATION" OFF  "LIBTB2INT" OFF)
+#CMAKE_DEPENDENT_OPTION(ILOG "ILOGLUE COMPILATION" OFF  "LIBTB2INT" OFF)
 ##########################################
 INCLUDE(FindPkgConfig)
 INCLUDE(FindGit)
@@ -266,6 +275,17 @@ IF(Boost)
 ENDIF(Boost)
 
 ##########################################
+IF(MPI) 
+#  SET(CMAKE_C_COMPILER mpicc)
+#  SET(CMAKE_CXX_COMPILER mpicxx)
+#  SET(CMAKE_CXX_COMPILER /usr/mpi/gcc/openmpi-1.10.3rc4/bin/mpicxx)
+#  SET(CMAKE_SYSTEM_PREFIX_PATH /usr/mpi/gcc/openmpi-1.10.3rc4)
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+  SET (mpiflag OPENMPI)
+ENDIF(MPI)
+
+##########################################
 #  FLAG XML ON  ==> xmlcps supported
 ##########################################
 include(${My_cmake_script}/xmlcsp.cmake)
@@ -279,7 +299,19 @@ IF(TOULBAR2)
   add_executable(toulbar2${EXE} ${source_files})
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
-  TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
+  
+  IF(MPI)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES})
+    IF(MPI_COMPILE_FLAGS)
+      set_target_properties(toulbar2${EXE} PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+    ENDIF(MPI_COMPILE_FLAGS)
+    IF(MPI_LINK_FLAGS)
+      set_target_properties(toulbar2${EXE} PROPERTIES LINK_FLAGS "${MPI_LINK_FLAGS}")
+    ENDIF(MPI_LINK_FLAGS)
+  ELSE(MPI)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
+  ENDIF(MPI)
+
   INSTALL( TARGETS toulbar2${EXE} DESTINATION bin)
 ENDIF(TOULBAR2)
 

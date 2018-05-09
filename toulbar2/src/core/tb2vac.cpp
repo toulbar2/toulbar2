@@ -4,16 +4,14 @@
  *      \defgroup VAC Virtual Arc Consistency enforcing
  *  The three phases of VAC are enforced in three different "Pass".
  *  Bool(P) is never built. Instead specific functions (getVACCost) booleanize the WCSP on the fly.
- *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration)
+ *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration) 
  *  All the counter data-structures (k) are timestamped to avoid clearing them at each iteration.
  *  \note Simultaneously AC (and potentially DAC, EAC) are maintained by proper queuing.
  *  \see <em> Soft Arc Consistency Revisited. </em> Cooper et al. Artificial Intelligence. 2010.
  */
 
 #include "tb2vac.hpp"
-#include "tb2clusters.hpp"
-#include <list>
-#include <algorithm>
+#include "search/tb2clusters.hpp"
 
 class tVACStat {
 public:
@@ -154,6 +152,7 @@ void VACExtension::nextScaleCost()
 // do not need to revise all variables because we assume soft AC already done
 void VACExtension::reset()
 {
+    wcsp->revise(NULL);
     VACVariable* x;
     TreeDecomposition* td = wcsp->getTreeDec();
     clear();
@@ -217,7 +216,11 @@ bool VACExtension::propagate()
         Store::store();
         enforcePass1();
         isvac = isVAC();
-
+        if (!isvac && CSP(wcsp->getLb(), wcsp->getUb())) {
+            if (ToulBar2::weightedDegree)
+                wcsp->conflict();
+            throw Contradiction();
+        }
         if (ToulBar2::vacValueHeuristic && isvac) {
             acSupportOK = true;
             acSupport.clear();
@@ -353,9 +356,9 @@ void VACExtension::enforcePass1()
         }
 
         /*for (list<Constraint*>::iterator itl = l.begin(); itl != l.end(); ++itl) {
-           cij = (VACConstraint *) *itl;
-           if(enforcePass1(xj,cij)) return;
-           } */
+		   cij = (VACConstraint *) *itl;
+		   if(enforcePass1(xj,cij)) return;
+		   } */
     }
     inconsistentVariable = -1;
 }
@@ -521,10 +524,10 @@ bool VACExtension::enforcePass3()
 {
     bool util = (minlambda >= UNIT_COST);
     /*if(util) {
-       Cost ub = wcsp->getUb();
-       Cost lb = wcsp->getLb();
-       util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
-       } */
+	   Cost ub = wcsp->getUb();
+	   Cost lb = wcsp->getLb();
+	   util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
+	   } */
     Cost lambda = minlambda;
 
     //if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
@@ -686,11 +689,13 @@ void VACExtension::removeSingleton()
 
 void VACExtension::clear()
 {
-    while (!VAC.empty())
-        VAC.pop();
-    if (ToulBar2::vacValueHeuristic)
-        while (!SeekSupport.empty())
-            SeekSupport.pop();
+    //    while (!VAC.empty())
+    //        VAC.pop();
+    //    if (ToulBar2::vacValueHeuristic)
+    //        while (!SeekSupport.empty())
+    //            SeekSupport.pop();
+    VAC.clear();
+    SeekSupport.clear();
 }
 
 void VACExtension::queueVAC(DLink<VariableWithTimeStamp>* link)
@@ -728,13 +733,13 @@ void VACExtension::printStat(bool ini)
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
-       vector<tVACStat*>::iterator it = heap.begin();
-       while(it != heap.end()) {
-       tVACStat* v = *it;
-       if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") ";
-       ++it;
-       }
-       cout << endl; */
+	   vector<tVACStat*>::iterator it = heap.begin();
+	   while(it != heap.end()) {
+	   tVACStat* v = *it;
+	   if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") "; 
+	   ++it;
+	   }
+	   cout << endl; */
 
     sumk = 0;
     theMaxK = 0;

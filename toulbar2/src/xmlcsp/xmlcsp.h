@@ -21,7 +21,7 @@ using namespace CSPXMLParser;
 #define MAXDOMS 100000
 #define MAXDOMSIZE MAX_DOMAIN_SIZE
 #define MAXDOMSIZEZERO 1000
-#define MAX_COST_XML 499999999
+#define MAX_COST_XML MAX_COST
 
 /**
  * The methods of this class will be called by the XML parser to
@@ -216,6 +216,7 @@ public:
         preds[name] = p;
         currentP = p;
         intension = true;
+        cerr << "Warning!!! Predicate " << name << " not implemented, just skip it..." << endl;
     }
 
     virtual void addFormalParameter(int pos, const string& name,
@@ -362,11 +363,10 @@ public:
             string varname = to_string(i);
             if (ToulBar2::verbose >= 3)
                 cout << "read variable " << i << " of size " << domsize << endl;
-            int theindex = -1;
             if (domsize >= 0)
-                theindex = wcsp->makeEnumeratedVariable(varname, 0, domsize - 1);
+                wcsp->makeEnumeratedVariable(varname, 0, domsize - 1);
             else
-                theindex = wcsp->makeIntervalVariable(varname, 0, -domsize - 1);
+                wcsp->makeIntervalVariable(varname, 0, -domsize - 1);
             ++it;
             i++;
         }
@@ -388,6 +388,7 @@ public:
                 EnumeratedVariable** scopeVar = new EnumeratedVariable*[arity];
                 int* scopeIndex = new int[arity];
                 int* values = new int[arity];
+                String strvalues(arity, '0');
                 map<int, int> scopeOrder;
 
                 int index = 0;
@@ -437,25 +438,25 @@ public:
                             int* t = *itl;
                             for (int i = 0; i < r->arity; i++) {
                                 int pos = scopeOrder[scopeIndex[i]];
-                                values[i] = DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
+                                strvalues[i] = CHAR_FIRST + DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
                             }
                             if (r->type == REL_SUPPORT) {
-                                ctr->setTuple(values, MIN_COST);
+                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MIN_COST);
                             } else if (r->type == REL_CONFLICT) {
 #ifdef MAXCSP
-                                ctr->setTuple(values, UNIT_COST);
+                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, UNIT_COST);
 #else
-                                ctr->setTuple(values, MAX_COST_XML);
+                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MAX_COST_XML);
 #endif
                             } else if (r->type == REL_SOFT) {
-                                ctr->setTuple(values, t[arity]);
+                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, t[arity]);
                             } else {
-                                ctr->setTuple(values, MAX_COST_XML);
+                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MAX_COST_XML);
                             }
 
                             ++itl;
                         }
-                        ctr->propagate();
+                        wcsp->postNaryConstraintEnd(ctrIndex);
                     } else if (arity == 3) {
                         int i = scopeIndex[0];
                         int j = scopeIndex[1];
@@ -608,11 +609,7 @@ public:
         wcsp->increaseLb(inclowerbound);
 
         for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
-            for (a = 0; a < unaryconstrs[u].var->getDomainInitSize(); a++) {
-                if (unaryconstrs[u].costs[a] > MIN_COST)
-                    unaryconstrs[u].var->project(a, unaryconstrs[u].costs[a], true);
-            }
-            unaryconstrs[u].var->findSupport();
+            wcsp->postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
         }
         wcsp->sortConstraints();
         f.close();

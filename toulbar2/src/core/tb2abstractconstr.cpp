@@ -5,11 +5,11 @@
 #include "tb2abstractconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 #include "tb2binconstr.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 /*
  * Constructors and misc.
- *
+ * 
  */
 
 /// \return size of the cartesian product of all initial domains in the constraint scope.
@@ -169,8 +169,8 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
         if (ctr_)
             ctr = ctr_;
     }
-    if (ToulBar2::verbose >= 1) {
-        cout << "project constraint to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
+    if (ToulBar2::verbose >= 2) {
+        cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
         if (td)
             cout << "   cluster nary: " << getCluster() << endl;
         else
@@ -197,7 +197,7 @@ void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
     EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
     EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
 
-    if (ToulBar2::verbose >= 1)
+    if (ToulBar2::verbose >= 2)
         cout << "project nary to binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
 
     BinaryConstraint* ctr = NULL;

@@ -27,16 +27,16 @@ public:
 
     Cost evalOriginal(const String& s);
     /*void addToGroup(int gp, Variable *var) {
-    		for (int i=0;i<arity_;i++) {
-    			if (getVar(i) == var) {
-    				group[gp][size[gp]] = i;
-    				size[gp]++;
-    				break;
-    			}
-    		}
-    	}
-    	void addToGroupX(Variable *var) {addToGroup(0, var);}
-    	void addToGroupY(Variable *var) {addToGroup(1, var);}
+			for (int i=0;i<arity_;i++) {
+				if (getVar(i) == var) {
+					group[gp][size[gp]] = i;
+					size[gp]++;
+					break;
+				}
+			}
+		}
+		void addToGroupX(Variable *var) {addToGroup(0, var);}
+		void addToGroupY(Variable *var) {addToGroup(1, var);}
      */
     string getName() { return "ssame"; }
     void read(istream& file);

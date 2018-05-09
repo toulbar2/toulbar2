@@ -706,5 +706,5 @@ cost values are replaced by the global upper bound ub. Finally, the awk
 script is able to detect possible errors in the input file.
 
 Any comment or contribution to these formats should be sent to
-simon.degivry@toulouse.inra.fr <mailto:simon.degivry@toulouse.inra.fr>
+simon.de-givry@inra.fr <mailto:simon.de-givry@inra.fr>
 

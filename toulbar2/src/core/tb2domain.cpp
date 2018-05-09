@@ -6,7 +6,7 @@
 
 /*
  * Constructors and misc.
- *
+ * 
  */
 
 Domain::Domain(Value inf, Value sup)

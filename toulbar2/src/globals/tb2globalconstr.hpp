@@ -1,15 +1,15 @@
 /** \file tb2globalconstr.hpp
  *  \brief Global Constraint using enumerated variables with parameters read from file
- *
+ * 
  */
 
 #ifndef TB2GLOBALCONSTR_HPP_
 #define TB2GLOBALCONSTR_HPP_
 
-#include "tb2abstractconstr.hpp"
-#include "tb2naryconstr.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2abstractconstr.hpp"
+#include "core/tb2naryconstr.hpp"
+#include "core/tb2enumvar.hpp"
+#include "core/tb2wcsp.hpp"
 
 class WeightedAutomaton {
 public:
@@ -158,10 +158,10 @@ public:
     virtual bool universal() { return false; }
 
     /*virtual void valueRemoved(int index, Value value) {
-      if (ToulBar2::consistencyLevel == FINE_IC) {
-      propagateStrongNIC();
-      }
-      }*/
+	  if (ToulBar2::consistencyLevel == FINE_IC) {
+	  propagateStrongNIC();
+	  } 
+	  }*/
     // Still consider whether we should reduce to binary, as done in nary
     // constraints
     virtual void assign(int varIndex);

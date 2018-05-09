@@ -7,16 +7,22 @@
 #define TB2SOLVER_HPP_
 
 #include "toulbar2lib.hpp"
-#include "tb2store.hpp"
+#include "utils/tb2store.hpp"
 
 template <class T>
 class DLink;
 template <class T>
 class BTList;
 
+class NeighborhoodStructure;
+class RandomNeighborhoodChoice;
+class ClustersNeighborhoodStructure;
+class RandomClusterChoice;
+class ParallelRandomClusterChoice;
+
 const double epsilon = 1e-6; // 1./100001.
 
-class Solver FINAL : public WeightedCSPSolver {
+class Solver : public WeightedCSPSolver {
 public:
     class OpenNode {
         Cost cost; // global lower bound associated to the open node
@@ -36,7 +42,7 @@ public:
     };
 
     class CPStore;
-    class OpenList : public priority_queue<OpenNode> {
+    class OpenList FINAL : public priority_queue<OpenNode> {
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
         Cost cub; // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:
@@ -103,7 +109,7 @@ public:
         }
     };
 
-    class CPStore : public vector<ChoicePoint> {
+    class CPStore FINAL : public vector<ChoicePoint> {
     public:
         ptrdiff_t start; // beginning of the current branch
         ptrdiff_t stop; // deepest saved branch end (should be free at this position)
@@ -129,6 +135,12 @@ public:
     void restore(CPStore& cp, OpenNode node);
 
 protected:
+    friend class NeighborhoodStructure;
+    friend class RandomNeighborhoodChoice;
+    friend class ClustersNeighborhoodStructure;
+    friend class RandomClusterChoice;
+    friend class ParallelRandomClusterChoice;
+
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
@@ -143,6 +155,7 @@ protected:
     Long nbSGoodsUse; //number of #good which used
     map<int, BigInteger> ubSol; // upper bound of solution number
     double timeDeconnect; // time for the disconnection
+    int tailleSep;
 
     CPStore* cp; // choice point cache for open nodes (except BTD)
     OpenList* open; // list of open nodes (except BTD)
@@ -181,12 +194,15 @@ protected:
     void conflict() {}
     void enforceUb();
     void singletonConsistency();
+    Cost beginSolve(Cost ub);
+    Cost preprocessing(Cost ub);
+    void endSolve(bool isSolution, Cost cost, bool isComplete);
 
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    void newSolution();
+    virtual void newSolution();
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
@@ -219,11 +235,11 @@ public:
     void read_wcsp(const char* fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "");
 
-    Long getNbNodes() const { return nbNodes; }
-    Long getNbBacktracks() const { return nbBacktracks; }
+    Long getNbNodes() const FINAL { return nbNodes; }
+    Long getNbBacktracks() const FINAL { return nbBacktracks; }
     set<int> getUnassignedVars() const;
 
-    bool solve();
+    virtual bool solve();
 
     Cost narycsp(string cmd, vector<Value>& solution);
 
@@ -237,7 +253,7 @@ public:
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
 
-    WeightedCSP* getWCSP() { return wcsp; }
+    WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
 
 class NbBacktracksOut {

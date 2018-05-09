@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp incop/*.cpp ToulbarVersion.cpp)
+SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
 
 # Comment the following line if BOOST Graph library uninstalled
 BOOST = -DBOOST
@@ -11,7 +11,7 @@ BOOST = -DBOOST
 ifeq ($(BOOST),-DBOOST)
 SRCS = $(SRCSFULL)
 else
-SRCS = $(SRCSFULL:tb2boostgraph.cpp=)
+SRCS = $(SRCSFULL:utils/tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -pthread -rdynamic 
 
-CFLAGS = -g -Wall -std=c++11 -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
+CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
 # -DLINUX # compile on linux computers
 # -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
 # -DWIDE_STRING # uses wide strings (2 bytes per char instead of one) for encoding value tuples (including separators)
@@ -51,6 +51,7 @@ CFLAGS = -g -Wall -std=c++11 -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLON
 # -DNARYCHAR # pretty prints of nary constraints (including separators)
 # -DWCSPFORMATONLY # assumes positive domains starting at value 0 (as in the wcsp format file) *** Incompatible with Numberjack ***
 # -DNUMBERJACK # 
+# -DOPENMPI # enables variable neighborhood search
 # -ftrapv -g3 # catches numerical integer overflows
 
 OFLAGS = -O3 -DNDEBUG
@@ -84,6 +85,6 @@ iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp
 
 clean:
-	-rm -f *.o incop/*.o toulbar2 libtb2.so iloglue toulbar2test
+	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
 
 all: toulbar2

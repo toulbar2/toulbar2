@@ -1,6 +1,6 @@
 /** \file tb2variable.hpp
  *  \brief Variable with domain represented by an interval.
- *
+ * 
  */
 
 #ifndef TB2INTERVAR_HPP_
@@ -58,8 +58,7 @@ public:
 
     class iterator;
     friend class iterator;
-    class iterator // : public Variable::iterator {
-    {
+    class iterator { // : public Variable::iterator {
         IntervalVariable* var;
         Value value;
 
@@ -72,8 +71,8 @@ public:
 
         Value operator*() const { return value; }
 
-        inline iterator& operator++() // Prefix form
-        {
+        inline iterator& operator++()
+        { // Prefix form
             if (value < var->sup)
                 ++value;
             else
@@ -81,8 +80,8 @@ public:
             return *this;
         }
 
-        iterator& operator--() // Prefix form
-        {
+        iterator& operator--()
+        { // Prefix form
             if (value > var->inf)
                 --value;
             else

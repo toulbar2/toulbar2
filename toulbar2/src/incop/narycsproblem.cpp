@@ -20,8 +20,8 @@ extern ofstream* ofile; // le fichier de sortie
 
 extern Stat_GWW* Statistiques;
 
-#include "tb2solver.hpp"
-#include "tb2wcsp.hpp"
+#include "search/tb2solver.hpp"
+#include "core/tb2wcsp.hpp"
 
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     : CSProblem(nbvar, nbconst)

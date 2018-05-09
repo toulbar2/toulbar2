@@ -5,11 +5,11 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2vac.hpp"
-#include "tb2clusters.hpp"
+#include "search/tb2clusters.hpp"
 
 /*
  * Constructors and misc.
- *
+ * 
  */
 
 TernaryConstraint::TernaryConstraint(WCSP* wcsp,
@@ -278,7 +278,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
 
 /*
  * Propagation methods
- *
+ * 
  */
 bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {

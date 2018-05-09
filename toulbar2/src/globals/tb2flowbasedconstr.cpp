@@ -1,5 +1,5 @@
 #include "tb2flowbasedconstr.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : GlobalConstraint(wcsp, scope_in, arity_in, 0)
@@ -142,9 +142,9 @@ void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, in
                 vector<pair<int, int> > edges;
                 result = graph.augment(edge.second, edge.first, false, edges);
                 /*if (!result.second) {
-                  printf("error! no shortest path\n");
-                  exit(0);
-                  }*/
+				  printf("error! no shortest path\n");
+				  exit(0);
+				  }*/
                 //tmp = cost+result.first+weight[0];
                 tmp = cost + result.first + graph.getMinWeight(edge.first, edge.second);
                 zeroEdges[edge.first][edge.second] = true;

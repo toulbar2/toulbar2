@@ -2,31 +2,36 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2016, INRA
+    Copyright (c) 2006-2018, toulbar2 team
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
-    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
+    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)
 </pre>
  */
 
 /*! @mainpage
 
     <table>
-        <tr><th>Weighted CSP Solver     <td>toulbar2
-        <tr><th>Copyright               <td>INRA
-        <tr><th>Source                  <td>https://mulcyber.toulouse.inra.fr/projects/toulbar2/
+        <tr><th>Cost Function Network Solver     <td>toulbar2
+        <tr><th>Copyright               <td>toulbar2 team
+        <tr><th>Source                  <td>https://github.com/toulbar2/toulbar2
     </table>
 
     See the @link md_README.html README @endlink for more details.
@@ -54,7 +59,7 @@
 #ifndef TOULBAR2LIB_HPP_
 #define TOULBAR2LIB_HPP_
 
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 
 /** Abstract class WeightedCSP representing a weighted constraint satisfaction problem
  *	- problem lower and upper bounds
@@ -157,8 +162,8 @@ public:
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
-    virtual int getMaxDomainSize() = 0; ///< \brief maximum initial domain size found in all variables
-    virtual Value getDomainSizeSum() = 0; ///< \brief total sum of current domain sizes
+    virtual int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
+    virtual unsigned int getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
@@ -353,8 +358,8 @@ public:
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
 
-    virtual const vector<Value>& getSolution() = 0; ///< \brief returns current best solution
-    virtual void setSolution(TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
+    virtual const vector<Value>& getSolution(Cost* cost_ptr = NULL) = 0; ///< \brief returns current best solution and its cost
+    virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution
     virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution
 
@@ -421,7 +426,7 @@ public:
     virtual void remove(int varIndex, Value value, bool reverse = false) = 0; ///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
 
     /** \defgroup solving Solving cost function networks
-     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact B&B search method (see WeightedCSPSolver::solve).\n
+     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact search method (see WeightedCSPSolver::solve).\n
      * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files src/tb2types.hpp and src/tb2main.cpp).\n
      * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
      * \code
@@ -445,6 +450,13 @@ public:
         // Uncomment if solved using INCOP local search followed by a partial Limited Discrepancy Search with a maximum discrepancy of one
         //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
         //  ToulBar2::lds = -1;  // remove it or change to a positive value then the search continues by a complete B&B search method
+        // Uncomment the following lines if solved using Decomposition Guided Variable Neighborhood Search with min-fill cluster decomposition and absorption
+        // ToulBar2::lds = 4;
+        // ToulBar2::restart = 10000;
+        // ToulBar2::searchMethod = DGVNS;
+        // ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+        // ToulBar2::boostingBTD = 0.7;
+        // ToulBar2::varOrder = reinterpret_cast<char*>(-3);
 
         if (solver->solve()) {
             // show (sub-)optimal solution

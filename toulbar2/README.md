@@ -4,13 +4,14 @@
 ## What is toulbar2?
 
 toulbar2 is an  open-source C++ solver for cost  function networks. It
-solves  various combinatorial  optimization problems.  The constraints
-and objective function  are factorized in local  functions on discrete
-variables. Each  function returns a  cost (a finite  positive integer)
-for any  assignment of its  variables. Constraints are  represented as
-functions with costs in {0,k} where k is a large integer representing
-forbidden assignments.  toulbar2 looks for a  non-forbidden assignment
-of all variables  that minimizes the sum of all  functions. 
+solves  combinatorial optimization  problems in  various formats.  The
+constraints and  objective function are factorized  in local functions
+on discrete variables. Each function returns a cost (a finite positive
+integer)  for  any  assignment   of  its  variables.  Constraints  are
+represented  as functions  with  costs in  {0,k} where  k  is a  large
+integer  representing forbidden  assignments.   toulbar2  looks for  a
+non-forbidden assignment  of all variables  that minimizes the  sum of
+all functions.
 
 toulbar2 won  several competitions on deterministic  and probabilistic
 graphical models:
@@ -30,9 +31,10 @@ graphical models:
 
 ## Download
 
-http://mulcyber.toulouse.inra.fr/projects/toulbar2/
+https://github.com/toulbar2/toulbar2
 
 Latest src/debian/windows x86_64 releases:
+* 2018: [src1_0]/[deb1_0]/[win1_0] with unified parallel decomposition guided variable neighborhood search and clique cuts
 * 2016: [src0_9_8]/[deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
 * 2015: [src0_9_7]/[deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
 * 2014: [src0_9_6]/[deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
@@ -40,6 +42,7 @@ Latest src/debian/windows x86_64 releases:
 * 2011: [src0_9_4]/[deb0_9_4]/[win0_9_4] with more preprocessing techniques
 * 2010: [src0_9_3]/[deb0_9_3]/[win0_9_3] with soft global cost functions
 
+[src1_0]:
 [src0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1455/toulbar2.0.9.8.0-Release-sources.tar.gz
 [src0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1380/toulbar2.0.9.7.0-Release-sources.tar.gz
 [src0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1292/toulbar2.0.9.6.0-Release-sources.tar.gz
@@ -47,6 +50,7 @@ Latest src/debian/windows x86_64 releases:
 [src0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1019/toulbar2.0.9.4.0-Release-sources.tar.gz
 [src0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/975/toulbar2.0.9.3.0-Release-sources.tar.gz
 
+[deb1_0]:
 [deb0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/964/toulbar2.0.9.3.0-Release-i686.deb
 [deb0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1008/toulbar2.0.9.4.0-Release-i686.deb
 [deb0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1134/toulbar2.0.9.5.0-Release-x86_64.deb
@@ -54,6 +58,7 @@ Latest src/debian/windows x86_64 releases:
 [deb0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1371/toulbar2.0.9.7.0-Release-x86_64.deb
 [deb0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1448/toulbar2.0.9.8.0-Release-x86_64.deb
 
+[win1_0]:
 [win0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/962/toulbar2.0.9.3.0-Release-i686.exe
 [win0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1006/toulbar2.0.9.4.0-Release-i686.exe
 [win0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1129/toulbar2.0.9.5.0-Release-i686.exe
@@ -71,6 +76,7 @@ Library needed:
 
 Optional libraries:
 * libxml2-dev
+* libopenmpi-dev
 
 GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 * LINUX
@@ -79,22 +85,30 @@ GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 * LONGDOUBLE_PROB
 * NARYCHAR
 * WCSPFORMATONLY
+* BOOST
+* OPENMPI
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "0.9.8"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -std=c++11 -DNDEBUG -DLINUX \
-     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
+    echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
+    g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -lgmp -static
 
 Replace flag LONGLONG_COST by INT_COST to reduce memory usage by two (but costs must be smaller than 10^8).
+Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
+
+    mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -DOPENMPI -lgmp
+
 
 ## Authors
 
 toulbar2 was originally developped by Toulouse (INRA MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. 
 
 Additional contributions by:
+* Caen University, France (GREYC) and University of Oran, Algeria for (parallel) variable neighborhood search methods
 * The Chinese University of Hong Kong and Caen University, France (GREYC) for global cost functions
 * Marseille University, France (LSIS) for tree decomposition heuristics
 * Ecole des Ponts ParisTech, France (CERMICS/LIGM) for [INCOP][incop] local search solver
@@ -190,7 +204,15 @@ Please use one of the following references for citing toulbar2:
  D Allouche, S de Givry, G Katsirelos, T Schiex, and M Zytnicki
  In Proc. of CP-15, Cork, Ireland, 2015 
 
+* Unified parallel decomposition guided variable neighborhood search (UDGVNS/UPDGVNS)
+ Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization
+ A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
+ In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017
 
-Copyright (C) 2006-2016, INRA.
-toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
+* Clique cut global cost function (clique)
+ Clique Cuts in Weighted Constraint Satisfaction
+ S de Givry and G Katsirelos
+ In Proc. of CP-17, pages 97-113, Melbourne, Australia, 2017
 
+Copyright (C) 2006-2018, toulbar2 team.
+toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)

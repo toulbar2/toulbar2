@@ -1,12 +1,12 @@
 /** \file tb2bep.hpp
  *  \brief BEP benchmark: selecting and scheduling earth observations for agile satellite
- *
+ * 
  */
 
 #ifndef TB2BEP_HPP_
 #define TB2BEP_HPP_
 
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 class BEP {
 public:

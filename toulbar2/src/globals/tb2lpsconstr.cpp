@@ -1,5 +1,5 @@
 #include "tb2lpsconstr.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 LPSConstraint::LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in, int* constrcounter)

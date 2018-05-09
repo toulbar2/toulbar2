@@ -7,7 +7,6 @@
 #define TB2CONSTRAINT_HPP_
 
 #include "tb2types.hpp"
-#include <algorithm>
 
 class Constraint : public WCSPLink {
     Long conflictWeight;
@@ -161,15 +160,16 @@ public:
     virtual void getScope(TSCOPE& scope_inv) {}
     virtual Cost evalsubstr(const String& s, Constraint* ctr)
     {
-        cout << "dummy evalsubstr call on:" << *this << endl;
+        cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;
     }
     virtual Cost evalsubstr(const String& s, NaryConstraint* ctr)
     {
-        cout << "dummy evalsubstr call on:" << *this << endl;
+        cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;
     }
     virtual Cost getDefCost() { return MIN_COST; }
+    virtual Cost getCost(); /// \warning all variables must be properly assigned and the returned cost might be different than the original cost due to propagation
 
     virtual bool universal();
     virtual bool ishard();

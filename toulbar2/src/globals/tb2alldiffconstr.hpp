@@ -7,8 +7,8 @@
 #define TB2ALLDIFFCONSTR_HPP_
 
 #include "tb2flowbasedconstr.hpp"
-#include "tb2binconstr.hpp"
-#include "tb2vacutils.hpp"
+#include "core/tb2binconstr.hpp"
+#include "core/tb2vacutils.hpp"
 
 class AllDiffConstraint : public FlowBasedGlobalConstraint {
 private:

@@ -34,10 +34,10 @@ public:
     ~GlobalCardinalityConstraint()
     {
         /*if (ToulBar2::consistencyLevel != FINE_IC) {
-        		cout << "no. of GAC propagation = " << count << endl;
-        		cout << "no. of FDAC propagation = " << count_fdac << endl;
-        		cout << "no. of error = " << error << endl;
-        	}*/
+				cout << "no. of GAC propagation = " << count << endl;
+				cout << "no. of FDAC propagation = " << count_fdac << endl;
+				cout << "no. of error = " << error << endl;
+			}*/
     }
 
     string getName();

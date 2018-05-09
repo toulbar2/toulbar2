@@ -4,17 +4,10 @@
 #ifndef TB2GLOBALDECOMPOSABLE_HPP_
 #define TB2GLOBALDECOMPOSABLE_HPP_
 
-#include <iostream>
-#include <fstream>
-#include <set>
-#include <list>
-#include <map>
 #include "tb2wcsp.hpp"
 #include "tb2types.hpp"
 #include "tb2enumvar.hpp"
-#include "tb2automaton.hpp"
-
-using namespace std;
+#include "utils/tb2automaton.hpp"
 
 class DecomposableGlobalCostFunction {
 protected:

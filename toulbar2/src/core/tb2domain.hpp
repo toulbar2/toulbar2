@@ -1,12 +1,12 @@
 /** \file tb2domain.hpp
  *  \brief Storable enumerated domain.
- *
+ * 
  */
 
 #ifndef TB2DOMAIN_HPP_
 #define TB2DOMAIN_HPP_
 
-#include "tb2btlist.hpp"
+#include "utils/tb2btlist.hpp"
 
 extern int cmpValue(const void* v1, const void* v2);
 

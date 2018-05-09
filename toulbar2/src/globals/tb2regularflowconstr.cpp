@@ -1,5 +1,5 @@
 #include "tb2regularflowconstr.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 #include <functional>
 

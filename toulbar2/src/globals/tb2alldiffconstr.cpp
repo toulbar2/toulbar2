@@ -1,5 +1,5 @@
 #include "tb2alldiffconstr.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 AllDiffConstraint::AllDiffConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in)
@@ -43,16 +43,16 @@ void AllDiffConstraint::read(istream& file)
     def *= ToulBar2::costMultiplier;
     //cout << "str = " << str << endl;
     /*if (str == "var") {
-    	mode = VAR;
-    } else if (str == "dec") {
-    	mode = DEC;
-    } else if (str == "decbi") {
-    	mode = DECBI;
-    	decompose();
-    } else {
-    	cout << "unknown mode?\n";
-    	exit(0);
-    }*/
+		mode = VAR;
+	} else if (str == "dec") {
+		mode = DEC;
+	} else if (str == "decbi") {
+		mode = DECBI;
+		decompose();
+	} else {
+		cout << "unknown mode?\n";
+		exit(0);
+	}*/
     setSemantics(str);
 }
 
@@ -118,7 +118,7 @@ void AllDiffConstraint::buildGraph(Graph& g)
 /*void AllDiffConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
 	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
+	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
 			k != graph[varindex+1].end(); k++) {
 		if (k->adj > 0) {
 			for (map<Value, Cost>::iterator i = mapval.begin();i !=
@@ -129,7 +129,7 @@ void AllDiffConstraint::buildGraph(Graph& g)
 	}
 	for (map<Value, Cost>::iterator i = mapval.begin();i !=
 			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin();
+		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
 				k != graph[i->second].end(); k++) {
 			if (k->adj == varindex+1) {
 				domain.push_back(i->first);

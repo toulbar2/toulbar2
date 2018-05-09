@@ -1,5 +1,5 @@
 #include "tb2sameconstr.hpp"
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 
 SameConstraint::SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in)
@@ -80,15 +80,15 @@ Cost SameConstraint::evalOriginal(const String& s)
     }
     tuple_cost += sum / 2;
     /*for (int i=0;i<s.length();i++) {
-    	if (tuple_cost < wcsp->getUb()) {
-    		tuple_cost -= deltaCost[i][s[i]-CHAR_FIRST];
-    	}
-    }
-    tuple_cost -= projectedCost;
-    if (tuple_cost < 0) {
-    	cout << "Error ! " << s << " has -ve cost of " << tuple_cost << endl;
-    	exit(0);
-    }*/
+		if (tuple_cost < wcsp->getUb()) {
+			tuple_cost -= deltaCost[i][s[i]-CHAR_FIRST];
+		}
+	}
+	tuple_cost -= projectedCost;
+	if (tuple_cost < 0) {
+		cout << "Error ! " << s << " has -ve cost of " << tuple_cost << endl;
+		exit(0);
+	}*/
     return tuple_cost;
 }
 
@@ -126,7 +126,7 @@ void SameConstraint::buildGraph(Graph& g)
 /*void SameConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
 	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
+	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
 			k != graph[varindex+1].end(); k++) {
 		for (map<Value, int>::iterator i = mapval.begin();i !=
 				mapval.end();i++) {
@@ -135,7 +135,7 @@ void SameConstraint::buildGraph(Graph& g)
 	}
 	for (map<Value, int>::iterator i = mapval.begin();i !=
 			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin();
+		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
 				k != graph[i->second].end(); k++) {
 			if (k->adj == varindex+1) {
 				domain.push_back(i->first);

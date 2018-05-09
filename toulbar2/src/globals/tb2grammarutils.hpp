@@ -1,7 +1,7 @@
 #ifndef GRAMMARUTILS
 #define GRAMMARUTILS
 
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 
 class WeightedCNFCFG {
 public:
@@ -65,8 +65,8 @@ public:
 
     ~WCNFCFG() {}
 
-    void setStartSymbol(int start) // Only one start symbol
-    {
+    void setStartSymbol(int start)
+    { // Only one start symbol
         startSymbol = start;
     }
 

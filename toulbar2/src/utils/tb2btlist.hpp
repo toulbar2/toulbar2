@@ -1,14 +1,14 @@
 /** \file tb2btlist.hpp
  *  \brief Backtrackable double-linked list.
- *
- * Convention:
- *
+ * 
+ * Convention: 
+ * 
  * elements can be inserted at the end of the list only
  * these insertions can be undone in the reverse order of their insertion
- *
+ * 
  * elements can be removed in any order
  * these removals can be undone in the reverse order of their removal.
- *
+ * 
  */
 
 #ifndef TB2BTLIST_HPP_
@@ -193,8 +193,8 @@ public:
 
         DLink<T>* getElt() const { return elt; }
 
-        iterator& operator++() // Prefix form
-        {
+        iterator& operator++()
+        { // Prefix form
             if (elt != NULL) {
                 while (elt->next != NULL && elt->next->removed) {
                     elt = elt->next;
@@ -205,8 +205,8 @@ public:
             return *this;
         }
 
-        iterator& operator--() // Prefix form
-        {
+        iterator& operator--()
+        { // Prefix form
             if (elt != NULL) {
                 while (elt->prev != NULL && elt->prev->removed) {
                     elt = elt->prev;
@@ -234,7 +234,7 @@ typedef BTList<Separator*> SeparatorList;
 
 /*
  * For internal use only! Interaction between tb2store and tb2btlist
- *
+ * 
  */
 
 template <class T, class V>

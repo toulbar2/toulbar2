@@ -4,7 +4,7 @@
  */
 
 #include "toulbar2lib.hpp"
-#include "tb2enumvar.hpp"
+#include "core/tb2enumvar.hpp"
 #include "tb2haplotype.hpp"
 
 // A MODIFIER POUR PLUSIEURS LOCUS (freqalleles.find(locus))
@@ -147,10 +147,10 @@ void Haplotype::readMap(const char* fileName)
     }
     fmap.close();
     /*	int i=1;
-    for(vector<Double>::iterator it=maplocus.begin(); it!=maplocus.end();++it){
-    	cout << i << " " << *it << " " << maplocus[i-1] << endl;// *it << endl;
-    	++i;
-    }
+	for(vector<Double>::iterator it=maplocus.begin(); it!=maplocus.end();++it){
+		cout << i << " " << *it << " " << maplocus[i-1] << endl;// *it << endl;
+		++i;
+	}
      */
 }
 
@@ -1147,17 +1147,17 @@ void Haplotype::initTransmission()
         }
     }
     /*
-    ofstream file("transmission");
-    for(map<int, vector<int> >::iterator it=transmission.begin(); it!=transmission.end(); ++it){
-    	file << "offspring " << it->first << ":\t ";
-    	for(vector<int>::iterator it2 = it->second.begin();it2 != it->second.end();++it2){
-    		if((*it2) == 0 && pedigree[individuals[sons[it->first].father]].genotypes[*it2].allele1 == pedigree[individuals[sons[it->first].father]].genotypes[*it2].allele2) file << "+ ";
-    		else if((*it2) == 0) file << " * ";
-    		if((*it2) == 1) file << " " << *it2 << " " ;
-    		if((*it2) == -1) file << *it2 << " " ;
-    	}
-    	file << endl;
-    }
+	ofstream file("transmission");
+	for(map<int, vector<int> >::iterator it=transmission.begin(); it!=transmission.end(); ++it){
+		file << "offspring " << it->first << ":\t ";
+		for(vector<int>::iterator it2 = it->second.begin();it2 != it->second.end();++it2){
+			if((*it2) == 0 && pedigree[individuals[sons[it->first].father]].genotypes[*it2].allele1 == pedigree[individuals[sons[it->first].father]].genotypes[*it2].allele2) file << "+ ";
+			else if((*it2) == 0) file << " * ";
+			if((*it2) == 1) file << " " << *it2 << " " ;
+			if((*it2) == -1) file << *it2 << " " ;
+		}
+		file << endl;
+	}
      */
 }
 

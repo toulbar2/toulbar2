@@ -11,8 +11,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-#include <set>
-
 // Warning! Constraint reconnect() may interfere with variable constraints list iterator used by EnumerateVariable assign method. Do not reconnect a constraint with assigned variables in project functions.
 
 template <class T1>

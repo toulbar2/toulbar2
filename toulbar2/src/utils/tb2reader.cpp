@@ -3,15 +3,14 @@
  *
  */
 
-#include "tb2wcsp.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2haplotype.hpp"
-#include "tb2bep.hpp"
-#include "tb2naryconstr.hpp"
+#include "core/tb2wcsp.hpp"
+#include "core/tb2enumvar.hpp"
+#include "applis/tb2pedigree.hpp"
+#include "applis/tb2haplotype.hpp"
+#include "applis/tb2bep.hpp"
+#include "core/tb2naryconstr.hpp"
 #include "tb2randomgen.hpp"
-#include "tb2globaldecomposable.hpp"
-#include <list>
+#include "core/tb2globaldecomposable.hpp"
 
 typedef struct {
     EnumeratedVariable* var;
@@ -126,7 +125,7 @@ typedef struct {
  *     - salldiffdp var \e cost to express a soft alldifferent constraint with variable-based (\e var keyword) cost semantic with a given \e cost per violation (decomposes into samongdp cost functions)
  *     - sgccdp var \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with variable-based (\e var keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound (decomposes into samongdp cost functions)
  *     - max|smaxdp \e defCost \e nbtuples (\e variable \e value \e cost)* to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, \e defCost if unspecified)
- *     - MST|smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
+ *     - MST|smstdp to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
  *     .
  * - Global cost functions using a cost function network-based propagator:
  *     - wregular \e nb_states \e nb_initial_states (\e state and cost)* \e nb_final_states (\e state and cost)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a weighted regular constraint with weights on initial states, final states, and transitions, followed by the definition of a deterministic finite automaton with number of states, list of initial and final states with their costs, and list of weighted state transitions where symbols are domain values
@@ -1133,9 +1132,11 @@ void WCSP::read_uai2008(const char* fileName)
     if (!fevid) {
         string strevid(string(fileName) + string(".evid"));
         fevid.open(strevid.c_str());
-        cerr << "No evidence file specified. Trying " << strevid << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "No evidence file specified. Trying " << strevid << endl;
         if (!fevid)
-            cerr << "No evidence file. " << endl;
+            if (ToulBar2::verbose >= 0)
+                cout << "No evidence file. " << endl;
     }
     if (fevid) {
         vector<int> variables;
@@ -1167,11 +1168,13 @@ void WCSP::read_uai2008(const char* fileName)
     }
 }
 
-void WCSP::solution_UAI(Cost res, bool opt)
+void WCSP::solution_UAI(Cost res)
 {
     if (!ToulBar2::uai && !ToulBar2::uaieval)
         return;
     if (ToulBar2::isZ)
+        return;
+    if (ToulBar2::solution_uai_file == NULL)
         return;
     // UAI 2012 Challenge output format
     //	    ToulBar2::solution_file << "-BEGIN-" << endl;
@@ -1235,7 +1238,7 @@ void WCSP::solution_XML(bool opt)
 
     //ofstream fsol;
     ifstream sol;
-    sol.open("sol");
+    sol.open(ToulBar2::writeSolution);
     //if(!sol) { cout << "cannot open solution file to translate" << endl; exit(1); }
     //fsol.open("solution");
     //fsol << "SOL ";
@@ -1292,7 +1295,8 @@ void WCSP::read_wcnf(const char* fileName)
     if (format == "wcnf") {
         getline(file, strtop);
         if (string2Cost((char*)strtop.c_str()) > 0) {
-            cout << "c (Weighted) Partial Max-SAT input format" << endl;
+            if (ToulBar2::verbose >= 0)
+                cout << "c (Weighted) Partial Max-SAT input format" << endl;
             top = string2Cost((char*)strtop.c_str());
             if (top < MAX_COST / K)
                 top = top * K;
@@ -1300,10 +1304,12 @@ void WCSP::read_wcnf(const char* fileName)
                 top = MAX_COST;
             updateUb(top);
         } else {
-            cout << "c Weighted Max-SAT input format" << endl;
+            if (ToulBar2::verbose >= 0)
+                cout << "c Weighted Max-SAT input format" << endl;
         }
     } else {
-        cout << "c Max-SAT input format" << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "c Max-SAT input format" << endl;
         updateUb((nbclauses + 1) * K);
     }
 
@@ -1419,7 +1425,8 @@ void WCSP::read_wcnf(const char* fileName)
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     sortConstraints();
-    cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity << "." << endl;
+    if (ToulBar2::verbose >= 0)
+        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity << "." << endl;
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$

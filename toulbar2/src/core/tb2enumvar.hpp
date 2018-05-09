@@ -1,6 +1,6 @@
 /** \file tb2enumvar.hpp
  *  \brief Variable with domain represented by an enumerated domain.
- *
+ * 
  */
 
 #ifndef TB2ENUMVAR_HPP_
@@ -143,8 +143,8 @@ public:
 
         Value operator*() const { return *diter; }
 
-        iterator& operator++() // Prefix form //TODO: add a const_iterator to speed-up iterations (should be inlined?)
-        {
+        iterator& operator++()
+        { // Prefix form //TODO: add a const_iterator to speed-up iterations (should be inlined?)
             if (var->unassigned())
                 ++diter;
             else {
@@ -156,8 +156,8 @@ public:
             return *this;
         }
 
-        iterator& operator--() // Prefix form
-        {
+        iterator& operator--()
+        { // Prefix form
             if (var->unassigned())
                 --diter;
             else {

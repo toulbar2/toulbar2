@@ -443,10 +443,10 @@ void Graph::print(ostream& os)
 
     /*os << "==potential==\n";
 
-    for (int u=0;u<gsize;u++) {
-    	os << u << ": " << potential[u] << " ";
-    }
-    os << "\n";
+	for (int u=0;u<gsize;u++) {
+		os << u << ": " << potential[u] << " ";
+	}
+	os << "\n";
      */
     os << "==graph===\n";
 
@@ -530,19 +530,19 @@ void Graph::shortest_path_with_potential(int s) {
 
 	int n = size();
 	for (int i=0;i<n;i++) {
-		p[i] = -1;
-		d[i] = INF;
-		counter[i] = 0;
+		p[i] = -1;  
+		d[i] = INF; 
+		counter[i] = 0; 
 	}
 	d[s] = 0;   p[s] = s;
 
 	priority_queue<pair<Cost, int> > Q;
-	Q.push(make_pair(0, s));
+	Q.push(make_pair(0, s));	
 	for (int i=0;i<n;i++) {
 		int u = -1;
 		while (!Q.empty()) {
 			pair<Cost, int> top = Q.top();
-			Q.pop();
+			Q.pop();	
 			if (counter[top.second] == 0) {
 				u = top.second;
 				break;
@@ -554,7 +554,7 @@ void Graph::shortest_path_with_potential(int s) {
 						vertexList[u]->neighbor.end();++j) {
 			BTListWrapper<int> &edgeList = *(vertexList[u]->edgeList[*j]);
 			for (BTListWrapper<int>::iterator k = edgeList.begin(); k !=
-				edgeList.end();++k) {
+				edgeList.end();++k) {		
 				List_Node &edge = *(adjlist[u][*k]);
 				Cost weight = edge.weight + potential[u] - potential[edge.adj];
 				if (weight < 0) {
@@ -569,7 +569,7 @@ void Graph::shortest_path_with_potential(int s) {
 				}
 			}
 		}
-	}
+	}	
 
 	for (int i=0;i<n;i++) {
 		d[i] = d[i] - potential[s] + potential[i];
@@ -580,16 +580,16 @@ void Graph::shortest_path_with_potential(int s) {
 
 /*
    set<set<int> >& Graph::compute_scc() {
-   if (!p) p = new int[gsize];
-   if (!d) d = new Cost[gsize];
-   if (!low) low = new Cost[gsize];
-   if (!out) out = new bool[gsize];
+   if (!p) p = new int[gsize];	
+   if (!d) d = new Cost[gsize];	
+   if (!low) low = new Cost[gsize];	
+   if (!out) out = new bool[gsize];	
 
    for (int i=0;i<gsize;i++) {
    d[i] = low[i] = 0;
    p[i] = -1;
    out[i] = false;
-   }
+   }	
 
    vector<int> stk;
    scc.clear();
@@ -597,7 +597,7 @@ void Graph::shortest_path_with_potential(int s) {
 
    scc_dfs(0, ts, stk);
 
-   return scc;
+   return scc;	
 
    }
 

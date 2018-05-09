@@ -6,13 +6,10 @@
 #ifndef TB2CLUSTERS_HPP_
 #define TB2CLUSTERS_HPP_
 
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 #include "tb2solver.hpp"
-#include "tb2enumvar.hpp"
-#include "tb2naryconstr.hpp"
-
-#include <set>
-#include <list>
+#include "core/tb2enumvar.hpp"
+#include "core/tb2naryconstr.hpp"
 
 class Cluster;
 
@@ -156,7 +153,7 @@ public:
             return 0;
     }
     void deconnectSep(); // deconnect all the constraints on separator variables and assigns separator variables to their support value
-    void deconnectDiff(TCtrs listCtrsTot, TCtrs listCtrs);
+    void deconnectDiff(TCtrs& listCtrsTot, TCtrs& listCtrs);
     bool isSepVar(int i)
     {
         if (!sep)
@@ -395,10 +392,13 @@ public:
 
     void intersection(TVars& v1, TVars& v2, TVars& vout);
     void difference(TVars& v1, TVars& v2, TVars& vout);
-    void sum(TVars& v1, TVars& v2, TVars& vout);
+    void sum(TVars v1, TVars v2, TVars& vout); // copy inputs to avoid any overlap issues with output
+    void sum(TVars& v1, TVars& v2); // it assumes vout = v1
     bool included(TVars& v1, TVars& v2); // true if v1 is included in v2
-    void clusterSum(TClusters& v1, TClusters& v2, TClusters& vout);
-    void ctrSum(TCtrs& v1, TCtrs& v2, TCtrs& vout);
+    void clusterSum(TClusters v1, TClusters v2, TClusters& vout);
+    void clusterSum(TClusters& v1, TClusters& v2);
+    void ctrSum(TCtrs v1, TCtrs v2, TCtrs& vout);
+    void ctrSum(TCtrs& v1, TCtrs& v2);
 
     bool isDeltaModified(int varIndex) { return deltaModified[varIndex]; }
     Cost getLbRecRDS()

@@ -11,13 +11,12 @@ INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 
 LINK_DIRECTORIES( ${CMAKE_CURRENT_SOURCE_DIR}/${LIBRARY_OUTPUT_PATH})
 
-        set(CMAKE_CXX_FLAGS "-g -Wall -std=c++11")
+        set(CMAKE_CXX_FLAGS "-g -Wall")
 
 
         add_executable( toulbar2test ${toulbar2test_file})
         TARGET_LINK_LIBRARIES( toulbar2test tb2 gmp)
         add_dependencies(toulbar2test tb2)
-        add_dependencies(toulbar2test gmp)
         install( TARGETS toulbar2test DESTINATION bin )
 
 	set_property(

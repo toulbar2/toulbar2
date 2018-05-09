@@ -6,8 +6,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-#include <set>
-
 class NaryConstraint : public AbstractNaryConstraint {
     typedef map<String, Cost> TUPLES;
     TUPLES* pf;
@@ -106,6 +104,14 @@ public:
             cost = MIN_COST;
 
         return cost;
+    }
+    Cost getCost() FINAL
+    {
+        for (int i = 0; i < arity_; i++) {
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+        }
+        return eval(evalTuple);
     }
 
     Cost getDefCost() { return default_cost; }

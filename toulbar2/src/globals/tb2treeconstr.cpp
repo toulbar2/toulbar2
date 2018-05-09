@@ -33,8 +33,8 @@ void TreeConstraint::initMemoization()
         }
         val2VarIndex[varId] = i;
         /*for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
-        	if (*it >= maxVal) maxVal = *it;
-        }*/
+			if (*it >= maxVal) maxVal = *it;
+		}*/
     }
 
     for (int i = 0; i < n; i++) {

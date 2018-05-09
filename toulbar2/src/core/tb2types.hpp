@@ -30,11 +30,10 @@
 // uncomment if using large enumerated domains with BTD or in nary cost functions
 //#define WIDE_STRING
 
-#include "tb2utils.hpp"
-#include "tb2integer.hpp"
+#include "utils/tb2utils.hpp"
 
 //Must be included after tb2utils.hpp
-#include "tb2integer.hpp"
+#include "utils/tb2integer.hpp"
 
 /// Domain value (can be positive or negative integers)
 typedef int Value;
@@ -90,8 +89,6 @@ inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
 inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
 inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
-inline bool CUT(Cost lb, Cost ub) { return lb >= ub; }
-inline bool CSP(Cost lb, Cost ub) { return (ub - lb) <= 1; }
 inline void initCosts(Cost ub) {}
 #endif
 
@@ -156,14 +153,6 @@ inline bool SUPPORTTEST(Cost a)
 {
     return false;
 }
-inline bool CUT(Cost lb, Cost ub)
-{
-    return lb >= ub;
-}
-inline bool CSP(Cost lb, Cost ub)
-{
-    return (ub - lb) <= 1;
-}
 inline void initCosts(Cost ub)
 {
 }
@@ -171,7 +160,7 @@ inline void initCosts(Cost ub)
 
 #ifdef PARETOPAIR_COST
 const bool PARTIALORDER = true;
-#include "tb2paretopair.hpp"
+#include "utils/tb2paretopair.hpp"
 typedef ParetoPair Cost;
 const Cost MIN_COST = PARETOPAIR_MIN;
 const Cost UNIT_COST = PARETOPAIR_1;
@@ -198,6 +187,7 @@ const int MAX_ELIM_BIN = 1000000000;
 const int MAX_ARITY = 1000;
 /// Maximum number of tuples in n-ary cost functions
 const int MAX_NB_TUPLES = 1000000;
+const int LARGE_NB_VARS = 10000;
 
 typedef map<int, int> TSCOPE;
 typedef map<int, Value> TAssign;
@@ -207,6 +197,8 @@ typedef map<int, Value> TAssign;
 #else
 #define CHAR_FIRST 1
 #endif
+
+typedef unsigned int uint;
 
 /*
  * Abstract data type that help post a global cost function
@@ -285,8 +277,12 @@ typedef void (*externalfunc)();
 typedef enum {
     ELIM_NONE = 0,
     MAX_CARD = 1,
-    MIN_FILL = 2,
-    MIN_DEGREE = 3,
+    MIN_DEGREE = 2,
+    MIN_FILL = 3,
+    ELIM_MST = 4,
+    CUTHILL_MCKEE = 5,
+    APPROX_MIN_DEGREE = 6,
+    ELIM_FILE_ORDER = 7,
     ELIM_MAX
 } ElimOrderType;
 
@@ -304,6 +300,43 @@ typedef enum {
     LC_THEMAX
 } LcLevelType;
 const int MAX_EAC_ITER = 10000;
+
+typedef enum {
+    DFBB,
+    VNS,
+    DGVNS,
+    CPDGVNS,
+    RPDGVNS,
+    TREEDEC
+} SearchMethod;
+
+typedef enum {
+    LS_INIT_RANDOM = -1,
+    LS_INIT_INF = -2,
+    LS_INIT_SUP = -3,
+    LS_INIT_DFBB = -4,
+    LS_INIT_LDS0 = 0
+} VNSSolutionInitMethod;
+
+typedef enum {
+    RANDOMVAR = 0,
+    CONFLICTVARBASE = 1,
+    CONNECTEDCONFLICTVAR = 2,
+    CLUSTERRAND = 3,
+    CONFLICTVARMAXDEG = 4,
+    CLUSTERSORTED = 5,
+    SEPCLUSTERSORTED = 6,
+    SEPCLUSTERSORTEDV2 = 7,
+    MASTERCLUSTERRAND = 8,
+    PCONFLICTVAR = 9
+} VNSVariableHeuristic;
+
+typedef enum {
+    VNS_ADD1 = 1,
+    VNS_MULT2 = 2,
+    VNS_LUBY = 3,
+    VNS_ADD1JUMP = 4
+} VNSInc;
 
 struct ValueCost {
     Value value;
@@ -379,7 +412,6 @@ public:
     static Cost costThresholdPre;
     static double costMultiplier;
     static Cost relaxThreshold;
-    static ElimOrderType elimOrderType;
     static bool singletonConsistency;
     static bool vacValueHeuristic;
     static BEP* bep;
@@ -408,7 +440,7 @@ public:
     static double startCpuTime;
 
     static int splitClusterMaxSize;
-    static bool boostingBTD;
+    static double boostingBTD;
     static int maxSeparatorSize;
     static int minProperVarSize;
     static int smallSeparatorSize;
@@ -418,8 +450,32 @@ public:
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;
     static bool interrupted;
+    static int seed;
 
     static string incop_cmd;
+
+    static SearchMethod searchMethod;
+
+    static string clusterFile; // cluster tree decomposition file (without running intersection property)
+    static ofstream vnsOutput; // output file for VNS
+
+    static VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
+    static int vnsLDSmin; // discrepancy initial value
+    static int vnsLDSmax; // discrepancy maximum value
+    static VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
+    static int vnsKmin; // neighborhood initial size
+    static int vnsKmax; // neighborhood maximum size
+    static VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
+
+    static int vnsLDScur; // current discrepancy (used only for debugging display)
+    static int vnsKcur; // current neighborhood size (used only for debugging display)
+    static VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
+    static bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
+    static bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
+    static bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
+    static bool vnsParallelSync; // true if RSGDVNS else RADGVNS
+    static Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
+    static bool vnsParallel; // true if in master/slaves paradigm
 
     static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
     static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
@@ -431,6 +487,30 @@ public:
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
 };
+
+#ifdef INT_COST
+inline Cost rounding(Cost lb)
+{
+    return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
+}
+inline bool CUT(Cost lb, Cost ub) { return rounding(lb) >= ub; }
+inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
+#endif
+
+#ifdef LONGLONG_COST
+inline Cost rounding(Cost lb)
+{
+    return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
+}
+inline bool CUT(Cost lb, Cost ub)
+{
+    return rounding(lb) >= ub;
+}
+inline bool CSP(Cost lb, Cost ub)
+{
+    return CUT(lb + UNIT_COST, ub);
+}
+#endif
 
 /*
  * Backtrack exception

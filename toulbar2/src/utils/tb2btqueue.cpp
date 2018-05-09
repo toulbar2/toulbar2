@@ -3,7 +3,7 @@
  */
 
 #include "tb2btqueue.hpp"
-#include "tb2variable.hpp"
+#include "core/tb2variable.hpp"
 
 void BTQueue::push(DLink<Variable*>* elt)
 {

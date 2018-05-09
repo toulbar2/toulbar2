@@ -34,5 +34,5 @@ such that i <= j and W_ij != 0
 
 
 --- suggestions send to:
-simon.degivry@toulouse.inra.fr
+simon.de-givry@inra.fr
 INRA @ 2012

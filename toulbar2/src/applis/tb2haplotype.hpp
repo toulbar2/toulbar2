@@ -6,7 +6,7 @@
 #ifndef TB2HAPLOTYPE_HPP_
 #define TB2HAPLOTYPE_HPP_
 
-#include "tb2wcsp.hpp"
+#include "core/tb2wcsp.hpp"
 #include "tb2pedigree.hpp"
 
 struct classcomp {

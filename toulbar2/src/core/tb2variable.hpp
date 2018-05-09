@@ -1,19 +1,18 @@
 /** \file tb2variable.hpp
  *  \brief Abstract Variable class extended with unary costs.
- *
+ * 
  */
 
 #ifndef TB2VARIABLE_HPP_
 #define TB2VARIABLE_HPP_
 
-#include "tb2btlist.hpp"
-#include "tb2queue.hpp"
+#include "utils/tb2btlist.hpp"
+#include "utils/tb2queue.hpp"
 #include "tb2domain.hpp"
 
-#include <set>
 /*
  * Main class
- *
+ * 
  */
 
 class Variable : public WCSPLink {
@@ -89,7 +88,7 @@ public:
     void resetWeightedDegree();
     DLink<ConstraintLink>* link(Constraint* c, int index);
     void sortConstraints();
-    virtual void eliminate() { cout << "variable elimination not implemented!" << endl; };
+    virtual void eliminate(){};
 
     BinaryConstraint* getConstr(Variable* x);
     TernaryConstraint* getConstr(Variable* x, Variable* y);

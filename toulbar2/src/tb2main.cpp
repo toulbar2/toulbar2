@@ -3,10 +3,15 @@
  */
 
 #include "toulbar2lib.hpp"
-#include "tb2pedigree.hpp"
-#include "tb2haplotype.hpp"
-#include "tb2bep.hpp"
-#include <string.h>
+#include "applis/tb2pedigree.hpp"
+#include "applis/tb2haplotype.hpp"
+#include "applis/tb2bep.hpp"
+#include "vns/tb2vnsutils.hpp"
+#include "vns/tb2dgvns.hpp"
+#ifdef OPENMPI
+#include "vns/tb2cpdgvns.hpp"
+#include "vns/tb2rpdgvns.hpp"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -38,8 +43,8 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 #define _tmain main
 #define _ttoi atoi
 #endif
-#include "SimpleOpt.h"
-#include "SimpleGlob.h"
+#include "utils/SimpleOpt.h"
+#include "utils/SimpleGlob.h"
 
 // used for debugging purpose.
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
@@ -127,6 +132,7 @@ enum {
     OPT_cnf_ext,
     OPT_qpbo_ext,
     OPT_treedec_ext,
+    OPT_clusterdec_ext,
 
     // search option
     OPT_SEARCH_METHOD,
@@ -135,6 +141,7 @@ enum {
     OPT_splitClusterMaxSize,
     OPT_maxSeparatorSize,
     OPT_boostingBTD,
+    NO_OPT_boostingBTD,
     OPT_minProperVarSize,
     OPT_varOrder,
     OPT_problemsaved_filename,
@@ -221,7 +228,31 @@ enum {
 
     // random generator
     OPT_seed,
-    OPT_random = 1000
+    OPT_random = 1000,
+
+    // VNS Methods
+    OPT_VNS_search,
+#ifdef OPENMPI
+    OPT_CPDGVNS_search,
+    OPT_RADGVNS_search,
+    OPT_RSDGVNS_search,
+    OPT_plimit,
+#endif
+    OPT_TREEDEC_search,
+    OPT_decfile,
+    OPT_vns_output,
+    OPT_vns_sol_init,
+    OPT_lds_min,
+    OPT_lds_max,
+    OPT_lds_inc,
+    OPT_k_min,
+    OPT_k_max,
+    OPT_k_inc,
+    //    OPT_vns_restart_strategy,
+    //    OPT_vns_var_heur,
+    OPT_neighbor_change,
+    OPT_neighbor_synch,
+    OPT_optimum
 };
 
 string getExt(string FileName)
@@ -258,6 +289,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_cnf_ext, (char*)"--cnf_ext", SO_REQ_SEP },
     { OPT_qpbo_ext, (char*)"--qpbo_ext", SO_REQ_SEP },
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
+    { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
     { OPT_SEARCH_METHOD, (char*)"-B", SO_REQ_SEP }, // -B [0,1,2] search method
     { OPT_SEARCH_METHOD, (char*)"--search", SO_REQ_SEP },
@@ -271,7 +303,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_minProperVarSize, (char*)"-X", SO_REQ_SEP },
     { OPT_PARTIAL_ASSIGNMENT, (char*)"-x", SO_OPT },
     { NO_OPT_PARTIAL_ASSIGNMENT, (char*)"-x:", SO_NONE },
-    { OPT_boostingBTD, (char*)"-E", SO_NONE },
+    { OPT_boostingBTD, (char*)"-E", SO_OPT },
+    { NO_OPT_boostingBTD, (char*)"-E:", SO_NONE },
     { OPT_varOrder, (char*)"-O", SO_REQ_SEP }, // filename of variable order
     { OPT_problemsaved_filename, (char*)"--save", SO_REQ_SEP }, // filename of saved problem
     { OPT_showSolutions, (char*)"-s", SO_NONE }, //print solution found
@@ -368,6 +401,37 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_seed, (char*)"-seed", SO_REQ_SEP },
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
 
+    // VNS Methods
+    { OPT_VNS_search, (char*)"-vns", SO_NONE },
+    { OPT_VNS_search, (char*)"--vns", SO_NONE },
+    { OPT_VNS_search, (char*)"-dgvns", SO_NONE },
+    { OPT_VNS_search, (char*)"--dgvns", SO_NONE },
+#ifdef OPENMPI
+    { OPT_CPDGVNS_search, (char*)"--cpdgvns", SO_NONE },
+    { OPT_RADGVNS_search, (char*)"-radgvns", SO_NONE },
+    { OPT_RADGVNS_search, (char*)"--radgvns", SO_NONE },
+    { OPT_RSDGVNS_search, (char*)"--rsdgvns", SO_NONE },
+    { OPT_plimit, (char*)"--plimit", SO_NONE },
+#endif
+    { OPT_TREEDEC_search, (char*)"--treedec", SO_NONE },
+    { OPT_decfile, (char*)"--decfile", SO_REQ_SEP },
+    { OPT_vns_output, (char*)"--foutput", SO_REQ_SEP },
+    { OPT_vns_sol_init, (char*)"-vnsini", SO_REQ_SEP },
+    { OPT_vns_sol_init, (char*)"-ldsini", SO_REQ_SEP },
+    { OPT_vns_sol_init, (char*)"--solution-init", SO_REQ_SEP },
+    { OPT_lds_min, (char*)"-ldsmin", SO_REQ_SEP },
+    { OPT_lds_max, (char*)"-ldsmax", SO_REQ_SEP },
+    { OPT_lds_inc, (char*)"-ldsinc", SO_REQ_SEP },
+    { OPT_k_min, (char*)"-kmin", SO_REQ_SEP },
+    { OPT_k_min, (char*)"--kinit", SO_REQ_SEP },
+    { OPT_k_max, (char*)"-kmax", SO_REQ_SEP },
+    { OPT_k_max, (char*)"--kmax", SO_REQ_SEP },
+    { OPT_k_inc, (char*)"-kinc", SO_REQ_SEP },
+    //    { OPT_vns_var_heur, (char*) "--variable-heuristic", SO_REQ_SEP },
+    { OPT_neighbor_change, (char*)"--strategy", SO_NONE },
+    { OPT_neighbor_synch, (char*)"--synch", SO_NONE },
+    { OPT_optimum, (char*)"-best", SO_REQ_SEP },
+    { OPT_optimum, (char*)"--best", SO_REQ_SEP },
     SO_END_OF_OPTIONS
 };
 
@@ -528,6 +592,8 @@ void help_msg(char* toulbar2filename)
     cout << "   *.order  : variable elimination order" << endl;
     cout << "   *.cov  : tree decomposition given by a list of clusters in topological order of a rooted forest," << endl;
     cout << "      each line contains a cluster number, then a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes" << endl;
+    cout << "   *.dec  : a list of overlapping clusters without the running intersection property used by VNS-like methods," << endl;
+    cout << "      each line contains a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl
@@ -564,6 +630,7 @@ void help_msg(char* toulbar2filename)
 #ifdef LINUX
     cout << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
+    cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
     if (ToulBar2::binaryBranching)
@@ -613,14 +680,29 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::lds)
         cout << " (default option)";
     cout << endl;
-    cout << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes = " << maxrestarts << " by default)";
+    cout << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes/VNS restarts = " << maxrestarts << " by default)";
     if (ToulBar2::restart >= 0)
         cout << " (default option)";
     cout << endl;
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
-
+    cout << "   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)";
+#ifdef OPENMPI
+    //    cout << "   -cpdgvns : initial upperbound found by cooperative parallel DGVNS (usage: \"mpirun -n [NbOfProcess] toulbar2 -cpdgvns problem.wcsp\")" << endl;
+    //    cout << "   -rsdgvns : initial upperbound found by replicated synchronous DGVNS (usage: \"mpirun -n [NbOfProcess] toulbar2 -rsdgvns problem.wcsp\")" << endl;
+    cout << " (usage for parallel version: \"mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp\")";
+#endif
+    cout << endl;
+    cout << "   -vnsini=[integer] : initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (" << ToulBar2::vnsInitSol << " by default)" << endl;
+    cout << "   -ldsmin=[integer] : minimum discrepancy for VNS-like methods (" << ToulBar2::vnsLDSmin << " by default)" << endl;
+    cout << "   -ldsmax=[integer] : maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)" << endl;
+    cout << "   -ldsinc=[integer] : discrepancy increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (" << ToulBar2::vnsLDSinc << " by default)" << endl;
+    cout << "   -kmin=[integer] : minimum neighborhood size for VNS-like methods (" << ToulBar2::vnsKmin << " by default)" << endl;
+    cout << "   -kmax=[integer] : maximum neighborhood size for VNS-like methods (number of problem variables by default)" << endl;
+    cout << "   -kinc=[integer] : neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (" << ToulBar2::vnsKinc << " by default)" << endl;
+    cout << "   -best=[integer] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
+    cout << endl;
     cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
     cout << "   -z=[integer] : 1: saves original instance (by default), 2: saves after preprocessing" << endl;
@@ -650,18 +732,15 @@ void help_msg(char* toulbar2filename)
     cout << "      followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering" << endl;
 #ifdef BOOST
     cout << "   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using" << endl;
-    cout << "                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering," << endl;
-    cout << "                           (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering" << endl;
+    cout << "                           (-" << MAX_CARD << ") maximum cardinality search ordering, (-" << MIN_DEGREE << ") minimum degree ordering, (-" << MIN_FILL << ") minimum fill-in ordering," << endl;
+    cout << "                           (-" << ELIM_MST << ") maximum spanning tree ordering (see -mst), (-" << CUTHILL_MCKEE << ") reverse Cuthill-Mckee ordering, (-" << APPROX_MIN_DEGREE << ") approximate minimum degree ordering," << endl;
+    cout << "                           (-" << ELIM_FILE_ORDER << ") default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)" << endl;
 #endif
-    cout << "                  (if not specified, then use the variable order in which variables appear in the problem file)" << endl;
     cout << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
     cout << "                (use options \"-B=3 -j=1 -svo -k=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
     cout << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
     cout << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
-    cout << "   -E : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\")";
-    if (ToulBar2::boostingBTD)
-        cout << " (default option)";
-    cout << endl;
+    cout << "   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option \"-vns\") (default value is " << ToulBar2::boostingBTD << ")" << endl;
     cout << "   -R=[integer] : choice for a specific root cluster number" << endl;
     cout << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl
          << endl;
@@ -681,7 +760,6 @@ void help_msg(char* toulbar2filename)
     cout << "---------------------------" << endl;
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
-    cout << "   -seed=[integer] : random seed value (default value is 1)" << endl;
     cout << "   -random=[bench profile]  : bench profile must be specified as follow :" << endl;
     cout << "                         n and d are respectively the number of variable and the maximum domain size  of the random problem." << endl;
     cout << "			" << endl;
@@ -710,7 +788,17 @@ void help_msg(char* toulbar2filename)
 
 int _tmain(int argc, TCHAR* argv[])
 {
+#ifdef OPENMPI
+    MPIEnv env0;
+    MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &env0.ntasks);
+    MPI_Comm_rank(MPI_COMM_WORLD, &env0.myrank);
+#endif
     tb2init();
+#ifdef OPENMPI
+    if (env0.myrank != 0)
+        ToulBar2::verbose = -1;
+#endif
 
     setlocale(LC_ALL, "C");
     bool certificate = false;
@@ -729,7 +817,7 @@ int _tmain(int argc, TCHAR* argv[])
     //	ToulBar2::lds = 1;
 
     // Configuration for UAI Evaluation
-    //  ToulBar2::uaieval = true;
+    // ToulBar2::uaieval = (env0.myrank == 0);
     //  ToulBar2::verbose = 0;
     //  ToulBar2::lds = 1;
     //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -754,11 +842,12 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["cnf_ext"] = ".cnf";
     file_extension_map["qpbo_ext"] = ".qpbo";
     file_extension_map["treedec_ext"] = ".cov";
+    file_extension_map["clusterdec_ext"] = ".dec";
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
     if (ToulBar2::verbose >= 0)
         cout << "c " << CurrentBinaryPath << "toulbar2"
-             << "  version : " << ToulBar2::version << ", copyright (c) INRA 2016" << endl;
+             << "  version : " << ToulBar2::version << ", copyright (c) 2006-2018, toulbar2 team" << endl;
 
     // --------------------------simple opt ----------------------
 
@@ -783,18 +872,164 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << " New extension " << file_extension_map[force_extension] << endl;
             }
 
-            //  search algo
+            //  search algorithm
             if (args.OptionId() == OPT_SEARCH_METHOD) {
                 int mode = 0;
                 if (args.OptionArg() != NULL)
                     mode = atoi(args.OptionArg());
-                if (mode >= 0) {
+                if (mode >= 0)
                     ToulBar2::btdMode = mode;
-                } else
+                else
                     ToulBar2::btdMode = 0;
                 if (ToulBar2::debug)
                     cout << "Search Method used =  " << mode << endl;
             }
+
+            // VNS
+            if (args.OptionId() == OPT_VNS_search) {
+                //                ToulBar2::searchMethod = VNS;
+                //                ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
+                ToulBar2::lds = maxdiscrepancy;
+                ToulBar2::restart = maxrestarts;
+#ifdef OPENMPI
+                if (env0.ntasks > 1) {
+                    ToulBar2::searchMethod = RPDGVNS;
+                    ToulBar2::vnsParallel = true;
+                    ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+                    ToulBar2::vnsParallelSync = false;
+                } else {
+                    ToulBar2::searchMethod = DGVNS;
+                    ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+                }
+#else
+                ToulBar2::searchMethod = DGVNS;
+                ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+#endif
+            }
+#ifdef OPENMPI
+            if (args.OptionId() == OPT_CPDGVNS_search) {
+                ToulBar2::searchMethod = CPDGVNS;
+                ToulBar2::vnsParallel = true;
+                ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+            }
+            if (args.OptionId() == OPT_RADGVNS_search) {
+                ToulBar2::searchMethod = RPDGVNS;
+                ToulBar2::vnsParallel = true;
+                ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+                ToulBar2::vnsParallelSync = false;
+            }
+            if (args.OptionId() == OPT_RSDGVNS_search) {
+                ToulBar2::searchMethod = RPDGVNS;
+                ToulBar2::vnsParallel = true;
+                ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+                ToulBar2::vnsParallelSync = true;
+            }
+#endif
+            if (args.OptionId() == OPT_TREEDEC_search) {
+                ToulBar2::searchMethod = TREEDEC;
+            }
+            if (args.OptionId() == OPT_decfile) {
+                ToulBar2::clusterFile = args.OptionArg();
+                ifstream decfile(ToulBar2::clusterFile.c_str());
+                if (!decfile) {
+                    cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (args.OptionId() == OPT_vns_output) {
+#ifdef OPENMPI
+                if (env0.myrank == 0) {
+#endif
+                    ToulBar2::vnsOutput.clear();
+                    ToulBar2::vnsOutput.open(args.OptionArg(),
+                        ios::out | ios::trunc);
+                    if (!ToulBar2::vnsOutput) {
+                        cerr << "File " << args.OptionArg() << " cannot be open!" << endl;
+#ifdef OPENMPI
+                        for (int rank = 1; rank < env0.ntasks; ++rank) {
+                            MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
+                        }
+#endif
+                        exit(EXIT_FAILURE);
+                    }
+#ifdef OPENMPI
+                }
+#endif
+            }
+            if (args.OptionId() == OPT_vns_sol_init) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsInitSol = static_cast<VNSSolutionInitMethod>(atoi(args.OptionArg()));
+            }
+            if (args.OptionId() == OPT_lds_min) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsLDSmin = atoi(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_lds_max) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsLDSmax = atoi(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_lds_inc) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsLDSinc = static_cast<VNSInc>(atoi(args.OptionArg()));
+            }
+            if (args.OptionId() == OPT_k_min) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsKmin = atoi(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_k_max) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsKmax = atoi(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_k_inc) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsKinc = static_cast<VNSInc>(atoi(args.OptionArg()));
+            }
+            //            if (args.OptionId() == OPT_vns_restart_strategy) {
+            //                if (args.OptionArg() != NULL) {
+            //                    string type = args.OptionArg();
+            //                    if (type.compare("0") == 0) {
+            //                        ToulBar2::vnsRestart = VNS_NORESTART;
+            //                    } else if (type.compare("1") == 0) {
+            //                        ToulBar2::vnsRestart = VNS_RESET;
+            //                    } else if (type.compare("2") == 0) {
+            //                        ToulBar2::vnsRestart = VNS_RESET_INC;
+            //                    } else if (type.compare("3") == 0) {
+            //                        ToulBar2::vnsRestart = VNS_FULL_RESTART;
+            //                    } else {
+            //                        if (env0.myrank == 0) {
+            //                            cout << "Error : No implementation found for the given strategy"
+            //                                 << endl;
+            //                            cout << "Program will exit" << endl;
+            //                        }
+            //                        exit(1);
+            //                    }
+            //                } else {
+            //                    cout << "Warning : The strategy for local search method is NoRestart"
+            //                         << endl;
+            //                    cout << "specify for example --reset=2, to use ResetIncr strategy"
+            //                         << endl;
+            //                }
+            //            }
+            //            if (args.OptionId() == OPT_vns_var_heur) {
+            //                if (args.OptionArg() != NULL)
+            //                    ToulBar2::vnsNeighborVarHeur = static_cast<VNSVariableHeuristic>(atoi(args.OptionArg()));
+            //            }
+            if (args.OptionId() == OPT_neighbor_change) {
+                ToulBar2::vnsNeighborChange = true;
+            }
+            if (args.OptionId() == OPT_neighbor_synch) {
+                ToulBar2::vnsNeighborSizeSync = true;
+            }
+#ifdef OPENMPI
+            if (args.OptionId() == OPT_plimit) {
+                ToulBar2::vnsParallelLimit = true;
+            }
+#endif
+            if (args.OptionId() == OPT_optimum) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
+            }
+
             // BTD root cluster
             if (args.OptionId() == OPT_btdRootCluster) {
                 int root = atoi(args.OptionArg());
@@ -817,7 +1052,18 @@ int _tmain(int argc, TCHAR* argv[])
 
             // E : merge leaf clusters with their fathers if small local treewidth
             if (args.OptionId() == OPT_boostingBTD) {
-                ToulBar2::boostingBTD = true;
+                ToulBar2::boostingBTD = 0.7;
+                if (args.OptionArg() != NULL) {
+                    double ratio = atof(args.OptionArg());
+                    if (fabs(ratio) > 0. && fabs(ratio) <= 1.)
+                        ToulBar2::boostingBTD = ratio;
+                }
+                if (ToulBar2::debug)
+                    cout << "boostingBTD ON: " << ToulBar2::boostingBTD << endl;
+            } else if (args.OptionId() == NO_OPT_boostingBTD) {
+                ToulBar2::boostingBTD = 0.;
+                if (ToulBar2::debug)
+                    cout << "boostingBTD OFF " << ToulBar2::boostingBTD << endl;
             }
 
             //   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit)
@@ -1084,9 +1330,9 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::costThresholdPre = ct;
             }
             /*if ( (ch = strchr(argv[i],'R')) ) {
-              Cost ct = string2Cost(&ch[1]);
-              if(ct > UNIT_COST) ToulBar2::relaxThreshold = ct;
-              }*/
+			  Cost ct = string2Cost(&ch[1]);
+			  if(ct > UNIT_COST) ToulBar2::relaxThreshold = ct;
+			  }*/
 
             if (args.OptionId() == OPT_costMultiplier) {
                 double co = atof(args.OptionArg());
@@ -1189,14 +1435,16 @@ int _tmain(int argc, TCHAR* argv[])
                     comment = " (default value) ";
                 } else {
                     int maxlds = atoi(args.OptionArg());
-                    if (maxlds > 0 || maxlds < 0)
+                    if (maxlds > 0 || maxlds < 0) {
                         ToulBar2::lds = maxlds;
+                        ToulBar2::vnsLDSmin = abs(maxlds);
+                        ToulBar2::vnsLDSmax = abs(maxlds);
+                    }
                 }
                 if (ToulBar2::debug)
                     cout << "LDS ON #iter = " << ToulBar2::lds << comment << endl;
 
             } else if (args.OptionId() == NO_OPT_lds) {
-
                 ToulBar2::lds = 0;
                 if (ToulBar2::debug)
                     cout << "LDS OFF iter = " << ToulBar2::lds << endl;
@@ -1429,9 +1677,8 @@ int _tmain(int argc, TCHAR* argv[])
 
             //////////RANDOM GENERATOR///////
             if (args.OptionId() == OPT_seed) {
-                mysrand(atol(args.OptionArg()));
-            } else {
-                mysrand(1);
+                int seed = atoi(args.OptionArg());
+                ToulBar2::seed = seed;
             }
 
             if (args.OptionId() == OPT_random) {
@@ -1515,7 +1762,8 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(glob.File(n), file_extension_map["uai_ext"])) {
                 strfile = glob.File(n);
                 strext = ".uai";
-                cout << "loading uai file:  " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading uai file:  " << glob.File(n) << endl;
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
             }
@@ -1523,19 +1771,22 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(glob.File(n), file_extension_map["uai_log_ext"])) {
                 strfile = glob.File(n);
                 strext = ".LG";
-                cout << "loading uai log file:  " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading uai log file:  " << glob.File(n) << endl;
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
             }
             // UAI evidence file
             if (check_file_ext(glob.File(n), file_extension_map["evid_ext"])) {
-                cout << "loading evidence file:  " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading evidence file:  " << glob.File(n) << endl;
                 ToulBar2::evidence_file = string(glob.File(n));
             }
 
             // xml file
             if (check_file_ext(glob.File(n), file_extension_map["wcspXML_ext"])) {
-                cout << "loading xml file:" << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xml file:" << glob.File(n) << endl;
 
                 ToulBar2::xmlflag = true;
                 if (!ToulBar2::writeSolution)
@@ -1563,7 +1814,8 @@ int _tmain(int argc, TCHAR* argv[])
             // unconstrained quadratic programming file
 
             if (check_file_ext(glob.File(n), file_extension_map["qpbo_ext"])) {
-                cout << "loading quadratic pseudo-Boolean optimization file:" << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading quadratic pseudo-Boolean optimization file:" << glob.File(n) << endl;
                 ToulBar2::qpbo = true;
                 strext = ".qpbo";
                 strfile = glob.File(n);
@@ -1572,7 +1824,8 @@ int _tmain(int argc, TCHAR* argv[])
             // upperbound file
 
             if (check_file_ext(glob.File(n), file_extension_map["ub_ext"])) {
-                cout << "loading upper bound from file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading upper bound from file: " << glob.File(n) << endl;
                 string ubs;
                 ubs = read_UB(glob.File(n));
                 if (ubs.c_str() != NULL) {
@@ -1585,7 +1838,8 @@ int _tmain(int argc, TCHAR* argv[])
 
             // bep input file
             if (check_file_ext(glob.File(n), file_extension_map["bep_ext"])) {
-                cout << "loading BEP file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading BEP file: " << glob.File(n) << endl;
                 strext = ".bep";
                 strfile = glob.File(n);
             }
@@ -1596,7 +1850,8 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(glob.File(n), file_extension_map["map_ext"])) {
                 ToulBar2::map_file = string(glob.File(n));
                 ToulBar2::haplotype = new Haplotype;
-                cout << "loading map file: " << ToulBar2::map_file << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading map file: " << ToulBar2::map_file << endl;
 
                 if (glob.FileCount() < 2) {
                     cerr << "pedigree file is missing (.pre): " << endl;
@@ -1608,7 +1863,8 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(glob.File(n), file_extension_map["pre_ext"])) {
                 strfile = glob.File(n);
                 strext = ".pre";
-                cout << "loading pre file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading pre file: " << glob.File(n) << endl;
                 if (glob.FileCount() < 2)
                     ToulBar2::pedigree = new Pedigree;
             }
@@ -1617,7 +1873,8 @@ int _tmain(int argc, TCHAR* argv[])
             // filename containing variable order
             //if (strstr(glob.File(n),".order"))
             if (check_file_ext(glob.File(n), file_extension_map["order_ext"])) {
-                cout << "loading variable order in file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading variable order in file: " << glob.File(n) << endl;
                 char buf[1024];
                 sprintf(buf, "%s", glob.File(n));
                 //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
@@ -1626,10 +1883,11 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
-            // filename containing list of clusters
+            // filename containing list of clusters in topological ordering
             //if (strstr(glob.File(n),".cov"))
             if (check_file_ext(glob.File(n), file_extension_map["treedec_ext"])) {
-                cout << "loading tree decomposition in file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading tree decomposition in file: " << glob.File(n) << endl;
                 char buf[1024];
                 sprintf(buf, "%s", glob.File(n));
                 //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
@@ -1639,8 +1897,22 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
                     exit(EXIT_FAILURE);
                 }
-                if (ToulBar2::btdMode == 0)
+                if (ToulBar2::btdMode == 0 && ToulBar2::searchMethod == DFBB)
                     ToulBar2::btdMode = 1;
+                ToulBar2::clusterFile = string(ToulBar2::varOrder);
+            }
+
+            // filename containing list of clusters without the running intersection property
+            //if (strstr(glob.File(n),".dec"))
+            if (check_file_ext(glob.File(n), file_extension_map["clusterdec_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading cluster decomposition in file: " << glob.File(n) << endl;
+                ToulBar2::clusterFile = glob.File(n);
+                ifstream decfile(ToulBar2::clusterFile.c_str());
+                if (!decfile) {
+                    cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
+                    exit(EXIT_FAILURE);
+                }
             }
 
             // read assignment in file or filename of solution
@@ -1649,7 +1921,8 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl;
                     exit(-1);
                 }
-                cout << "loading solution in file: " << glob.File(n) << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading solution in file: " << glob.File(n) << endl;
 
                 certificate = true;
                 certificateFilename = new char[256];
@@ -1683,33 +1956,46 @@ int _tmain(int argc, TCHAR* argv[])
         ToulBar2::verifyOpt = false;
     }
 
-    if (ToulBar2::uai || ToulBar2::uaieval) {
-        char* tmpPath = new char[strlen(argv[0]) + 1];
-        strcpy(tmpPath, argv[0]);
-        if (strcmp(tmpPath, "toulbar2") == 0)
-            strcpy(tmpPath, ".");
-        char* tmpFile = new char[strlen(strfile.c_str()) + 1];
-        strcpy(tmpFile, strfile.c_str());
-        string filename(tmpPath);
-        filename += "/";
-        filename += basename(tmpFile);
-        size_t wcsppos = string::npos;
-        if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
-            filename.replace(wcsppos, 5, ".uai");
-        filename += ".";
-        if (ToulBar2::isZ)
-            filename += "PR";
-        else
-            filename += "MPE";
-        ToulBar2::solution_uai_filename = filename;
-        ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
-        if (!ToulBar2::solution_uai_file) {
-            cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
-            exit(EXIT_FAILURE);
+#ifdef OPENMPI
+    if (env0.myrank == 0) {
+#endif
+        if (ToulBar2::writeSolution) {
+            ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");
+            if (!ToulBar2::solutionFile) {
+                cerr << "Could not open file " << ToulBar2::writeSolution << endl;
+                exit(EXIT_FAILURE);
+            }
         }
-        delete[] tmpPath;
-        delete[] tmpFile;
+        if (ToulBar2::uai || ToulBar2::uaieval) {
+            char* tmpPath = new char[strlen(argv[0]) + 1];
+            strcpy(tmpPath, argv[0]);
+            if (strcmp(tmpPath, "toulbar2") == 0)
+                strcpy(tmpPath, ".");
+            char* tmpFile = new char[strlen(strfile.c_str()) + 1];
+            strcpy(tmpFile, strfile.c_str());
+            string filename(tmpPath);
+            filename += "/";
+            filename += basename(tmpFile);
+            size_t wcsppos = string::npos;
+            if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
+                filename.replace(wcsppos, 5, ".uai");
+            filename += ".";
+            if (ToulBar2::isZ)
+                filename += "PR";
+            else
+                filename += "MPE";
+            ToulBar2::solution_uai_filename = filename;
+            ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
+            if (!ToulBar2::solution_uai_file) {
+                cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
+                exit(EXIT_FAILURE);
+            }
+            delete[] tmpPath;
+            delete[] tmpFile;
+        }
+#ifdef OPENMPI
     }
+#endif
 
     //TODO: If --show_options then dump ToulBar2 object here
 
@@ -1724,7 +2010,6 @@ int _tmain(int argc, TCHAR* argv[])
 
     int n = 10;
     int m = 2;
-    int seed = 3;
     vector<int> p;
 #ifndef MENDELSOFT
     if (random_desc != NULL) {
@@ -1733,17 +2018,18 @@ int _tmain(int argc, TCHAR* argv[])
         if (strstr(random_desc, "binsub")) {
             forceSubModular = true;
             randomproblem = true;
-            sscanf(random_desc, "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &seed);
+            sscanf(random_desc, "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
             narities = 2;
         } else if (strstr(random_desc, "bin")) {
             randomproblem = true;
-            sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &seed);
+            sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &ToulBar2::seed);
             narities = 2;
         } else if (strstr(random_desc, "tern")) {
             randomproblem = true;
-            sscanf(random_desc, "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &seed);
+            sscanf(random_desc, "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
             narities = 3;
-        } else { // if (strstr(random_desc,"salldiff"))
+        } else // if (strstr(random_desc,"salldiff"))
+        {
             randomproblem = true;
             char* pch = strtok(random_desc, "-");
             randomglobal = string(pch);
@@ -1760,7 +2046,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             }
             narities--;
-            seed = pn[narities];
+            ToulBar2::seed = pn[narities];
         }
         if (pn[0] > 100) {
             cout << pn[0] << " tightness is a percentage" << endl;
@@ -1778,9 +2064,21 @@ int _tmain(int argc, TCHAR* argv[])
     if (strstr(strext.c_str(), ".bep") || strstr((char*)strfile.c_str(), "bEpInstance"))
         ToulBar2::bep = new BEP;
 #endif
+
+    if (ToulBar2::seed < 0) { // initialize seed using current time
+        ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
+        if (ToulBar2::verbose >= 0)
+            cout << "Initial random seed is " << ToulBar2::seed << endl;
+    }
+    mysrand(ToulBar2::seed);
+    if (ToulBar2::incop_cmd.size() > 0 && ToulBar2::seed != 1 && ToulBar2::incop_cmd.find("0 1 ") == 0) {
+        string sseed = to_string(ToulBar2::seed);
+        ToulBar2::incop_cmd.replace(2, 1, sseed);
+    }
+
     try {
         if (randomproblem)
-            solver->read_random(n, m, p, seed, forceSubModular, randomglobal);
+            solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else
             solver->read_wcsp((char*)strfile.c_str());
 
@@ -1800,6 +2098,7 @@ int _tmain(int argc, TCHAR* argv[])
         } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
 #ifdef LINUX
             signal(SIGINT, timeOut);
+            signal(SIGTERM, timeOut);
             if (timeout > 0)
                 timer(timeout);
 #endif
@@ -1825,7 +2124,13 @@ int _tmain(int argc, TCHAR* argv[])
     }
     if (ToulBar2::verbose >= 0)
         cout << "end." << endl;
-    if (ToulBar2::uai || ToulBar2::uaieval) {
+
+    if (ToulBar2::solutionFile != NULL) {
+        if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
+            exit(EXIT_FAILURE);
+        fclose(ToulBar2::solutionFile);
+    }
+    if (ToulBar2::solution_uai_file != NULL) {
         if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
             exit(EXIT_FAILURE);
         fclose(ToulBar2::solution_uai_file);
@@ -1833,11 +2138,11 @@ int _tmain(int argc, TCHAR* argv[])
 
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];
-      string strfile(argv[1]);
-      int pos = strfile.find_last_of(".");
-      string strfilewcsp = strfile.substr(0,pos) + ".ub";
-      sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
-      system(line); */
+	  string strfile(argv[1]);
+	  int pos = strfile.find_last_of(".");
+	  string strfilewcsp = strfile.substr(0,pos) + ".ub";
+	  sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
+	  system(line); */
 
     return 0;
 }

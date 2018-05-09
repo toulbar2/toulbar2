@@ -1,6 +1,6 @@
 /** \file tb2queue.hpp
  *  \brief Propagation queue with time stamping.
- *
+ * 
  */
 
 #ifndef TB2QUEUE_HPP_

@@ -10,8 +10,6 @@
 #include "tb2abstractconstr.hpp"
 #include "tb2intervar.hpp"
 
-#include <set>
-
 /** semantic: \f$soft(penalty, x \in SetOfValues) : (x \in SetOfValues)?0:penalty\f$
  */
 class Unary : public AbstractUnaryConstraint<IntervalVariable> {
