@@ -427,7 +427,7 @@ public:
 
     /** \defgroup solving Solving cost function networks
      * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact search method (see WeightedCSPSolver::solve).\n
-     * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files src/tb2types.hpp and src/tb2main.cpp).\n
+     * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files ./src/core/tb2types.hpp and ./src/tb2main.cpp).\n
      * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
      * \code
     #include "toulbar2lib.hpp"
@@ -472,7 +472,7 @@ public:
         delete solver;
     }
     \endcode
-     * \see another code example in src/toulbar2test.cpp
+     * \see another code example in ./src/toulbar2test.cpp
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 

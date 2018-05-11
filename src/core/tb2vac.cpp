@@ -689,13 +689,12 @@ void VACExtension::removeSingleton()
 
 void VACExtension::clear()
 {
-    //    while (!VAC.empty())
-    //        VAC.pop();
-    //    if (ToulBar2::vacValueHeuristic)
-    //        while (!SeekSupport.empty())
-    //            SeekSupport.pop();
-    VAC.clear();
-    SeekSupport.clear();
+    // Cannot use  VAC.clear() as it will not reset timeStamps which are based on the number of wcsp propagate calls and not VAC iterations
+    while (!VAC.empty())
+        VAC.pop();
+    if (ToulBar2::vacValueHeuristic)
+        while (!SeekSupport.empty())
+            SeekSupport.pop();
 }
 
 void VACExtension::queueVAC(DLink<VariableWithTimeStamp>* link)
