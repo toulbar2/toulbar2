@@ -5,7 +5,7 @@
 	remova    : { scope: [v4] costs: [12 0] }
 	woverlap1 : { scope: [v1 v2 v3 v4]
 		      type : woverlap
-		      params : {:metric hard :cost 2.01 :comparator > :to 1 }
+		      params : {metric: hard cost: 2.01 comparator: > to: 1 }
 		    }
     }
 }
