@@ -138,7 +138,7 @@ typedef struct {
  *     - salldiffdp var \e cost to express a soft alldifferent constraint with variable-based (\e var keyword) cost semantic with a given \e cost per violation (decomposes into samongdp cost functions)
  *     - sgccdp var \e cost \e nb_values (\e value \e lower_bound \e upper_bound)* to express a soft global cardinality constraint with variable-based (\e var keyword) cost semantic with a given \e cost per violation and for each value its lower and upper bound (decomposes into samongdp cost functions)
  *     - max|smaxdp \e defCost \e nbtuples (\e variable \e value \e cost)* to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, \e defCost if unspecified)
- *     - MST|smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
+ *     - MST|smstdp to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
  *     .
  * - Global cost functions using a cost function network-based propagator:
  *     - wregular \e nb_states \e nb_initial_states (\e state and cost)* \e nb_final_states (\e state and cost)* \e nb_transitions (\e start_state \e symbol_value \e end_state \e cost)* to express a weighted regular constraint with weights on initial states, final states, and transitions, followed by the definition of a deterministic finite automaton with number of states, list of initial and final states with their costs, and list of weighted state transitions where symbols are domain values
@@ -1292,8 +1292,8 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         {"sgccdp", ":metric:K:cost:c:bounds:[vNN]+"},
         {"max",    ":defaultcost:c:tuples:[Vvc]+"},
         {"smaxdp", ":defaultcost:c:tuples:[Vvc]+"},
-        {"MST", ":metric:K"},
-        {"smstdp", ":metric:K"},
+        {"MST", ""},
+        {"smstdp", ""},
         {"wregular", ":nb_state:N:starts:[NC]+:ends:[NC]+:transitions:[NvNC]+"},
         {"walldiff", ":metric:K:cost:c"},
         {"wgcc", ":metric:K:cost:c:bounds:[vNN]+"},
