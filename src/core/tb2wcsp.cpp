@@ -344,6 +344,14 @@ Cost tb2checkOptions(Cost ub)
     if (ub <= MIN_COST)
         ub = MAX_COST;
 
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
+        cout << "Warning! cost multiplier has no effect. See option -precision instead." << endl;
+        ToulBar2::costMultiplier = UNIT_COST;
+    }
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
+        cout << "Warning! cost multiplier not implemented." << endl;
+        ToulBar2::costMultiplier = UNIT_COST;
+    }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
         cout << "Warning! BTD-like search methods not compatible with VNS." << endl;
         ToulBar2::btdMode = 0;
