@@ -2,6 +2,7 @@
  * ****** Binary constraint applied on variables with enumerated domains ******
  */
 
+#include <functional>
 #include "tb2binconstr.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2clusters.hpp"
@@ -195,3 +196,49 @@ pair< pair<Cost,Cost>, pair<Cost,Cost> > BinaryConstraint::getMaxCost(int varInd
 	assert(maxcostb >= diffcostb);
 	return make_pair(make_pair(maxcosta,diffcosta), make_pair(maxcostb,diffcostb));
 }
+
+// Project TRW-S cost to variable
+void BinaryConstraint::trwsUpdateMessage(EnumeratedVariable *variable)
+{
+  assert(connected());
+  //if (ToulBar2::verbose >= 3) cout << "\ttrwsUpdateMessage C" << variable->getName() << "," << getVarDiffFrom(variable)->getName() << endl;
+  // step 0: be sure of the direction
+  EnumeratedVariable *othervar = (EnumeratedVariable *) getVarDiffFrom(variable);
+  unsigned int size = sizeY;
+  std::function<unsigned int (unsigned int, unsigned int)> getCostIndexX = [size](unsigned int xi, unsigned int yi) { return xi * size + yi; };
+  std::function<unsigned int (unsigned int, unsigned int)> getCostIndexY = [size](unsigned int yi, unsigned int xi) { return xi * size + yi; };
+  auto getCostIndex = (variable == x)? getCostIndexX: getCostIndexY;
+  vector<StoreCost> &thisDeltaCosts = (variable == x)? deltaCostsX: deltaCostsY;
+  vector<StoreCost> &thatDeltaCosts = (variable == x)? deltaCostsY: deltaCostsX;
+  // step 1: update message
+  Cost minMessage = numeric_limits<Cost>::max();
+  for (EnumeratedVariable::iterator iterX = variable->begin(); iterX != variable->end(); ++iterX) {
+    unsigned int xIndex = variable->toIndex(*iterX);
+    Cost minCost        = numeric_limits<Cost>::max();
+    //cout << "\t\tvalue: " << xIndex << endl;
+    for (EnumeratedVariable::iterator iterY = othervar->begin(); iterY != othervar->end(); ++iterY) {
+      unsigned int yIndex = othervar->toIndex(*iterY);
+      Cost         cost   = static_cast<Cost>(trunc(othervar->getTRWSGamma() * othervar->getCost(*iterY) - thatDeltaCosts[yIndex] + costs[getCostIndex(xIndex, yIndex)]));
+      //cout << "\t\t\tcost: " << cost << " (" << (othervar->getTRWSGamma() * othervar->getCost(*iterY)) << " - " << thatDeltaCosts[yIndex] << " + " << costs[getCostIndex(xIndex, yIndex)] << ")" << endl;
+      minCost             = min<double>(cost, minCost);
+      if (minCost <= MIN_COST) break;
+    }
+    //cout << "\t\tmin cost: " << minCost << endl;
+    if (thisDeltaCosts[xIndex] != minCost) {
+      //cout << "\t\t\tcost move " << thisDeltaCosts[xIndex] << " -> " << minCost << endl;
+      variable->project(*iterX, minCost - thisDeltaCosts[xIndex], true);
+      thisDeltaCosts[xIndex] = minCost;
+    }
+    minMessage = min<double>(minCost, minMessage);
+  }
+  // step 2: normalize messages
+  if (minMessage > MIN_COST) {
+    for (EnumeratedVariable::iterator iterX = variable->begin(); iterX != variable->end(); ++iterX) {
+      thisDeltaCosts[variable->toIndex(*iterX)] -= minMessage;
+    }
+    //cout << "\t\tprojecting " << minMessage << endl;
+    projectLB(minMessage);
+  }
+}
+
+

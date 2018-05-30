@@ -115,6 +115,7 @@ int ToulBar2::pedigreeCorrectionMode;
 int ToulBar2::pedigreePenalty;
 
 int ToulBar2::vac;
+double ToulBar2::trws;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 double ToulBar2::costMultiplier;
@@ -224,6 +225,7 @@ void tb2init()
     ToulBar2::pedigreePenalty = 0;
 
     ToulBar2::vac = 0;
+    ToulBar2::trws = 0.001;
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::costMultiplier = UNIT_COST;
@@ -703,7 +705,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string &gcname, istre
     assert(arity >= 4); // does not work for binary or ternary cost functions!!!
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
     if (gc == NULL) return -1;
-    if (file != NULL) gc->read(file);
+    if (file) gc->read(file);
     return gc->wcspIndex;
 }
 
@@ -1260,6 +1262,12 @@ void WCSP::processTernary() {
 void WCSP::preprocessing() {
     Cost previouslb = getLb();
 
+  /*
+  vector <int> order (numberOfVariables());
+  for (size_t i = 0; i < numberOfVariables(); ++i) order[vars[i]->getDACOrder()] = i;
+  if (ToulBar2::trws > 0) propagateTRWS(10000, ToulBar2::trws, order);
+  */
+
 	Eliminate.clear();
 	if (ToulBar2::elimDegree_preprocessing <= -3) {
 	  int deg = medianDegree();
@@ -1333,6 +1341,7 @@ void WCSP::preprocessing() {
         if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "Reverse DAC lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
     } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 
+  if (ToulBar2::trws > 0) propagateTRWS(10000, ToulBar2::trws, revelimorder);
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
 			if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
@@ -1960,6 +1969,76 @@ void WCSP::propagateDAC() {
 	}
 }
 
+void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &order) {
+  cout << "TRWS:" << endl;
+  cout << *this;
+  bool forwardPass = true;
+  int iter = 0;
+  Cost previouslb;
+  unsigned int nIterationLimit = 10;
+  unsigned int nIteration = 0;
+  // Preprocessing: compute gammas
+  vector <unsigned int> nCtrIn (numberOfVariables(), 0), nCtrOut (numberOfVariables(), 0);
+	for (unsigned int i = 0; i < constrs.size(); ++i) {
+    if ((constrs[i]->connected()) && (! constrs[i]->isSep()) && (constrs[i]->arity() == 2)) {
+      BinaryConstraint *binctr = (BinaryConstraint*) constrs[i];
+      ++nCtrIn[binctr->getVar(binctr->getDACScopeIndex())->getCurrentVarId()];
+      ++nCtrOut[binctr->getVar(1-binctr->getDACScopeIndex())->getCurrentVarId()];
+    }
+  }
+  for (unsigned int i = 0; i < numberOfVariables(); i++) {
+    if (vars[i]->enumerated()) {
+      EnumeratedVariable *x = (EnumeratedVariable*) getVar(i);
+      int id = x->getCurrentVarId();
+      x->setTRWSGamma(1.0 / (max<unsigned int>(nCtrIn[id], nCtrOut[id]) + 0.1));
+    }
+  }
+  do {
+    if (forwardPass) previouslb = getLb();
+    for (unsigned int i=0; i < numberOfVariables(); ++i) {
+      if (ToulBar2::interrupted) throw TimeOut();
+      unsigned int variableId = (forwardPass)? order[i]: numberOfVariables() - order[i] - 1;
+      EnumeratedVariable* x = (EnumeratedVariable*) getVar(variableId);
+      if (x->unassigned()) {
+        // step 1: normalize unary costs
+        //cout << "Step 1: X" << x->getName() << endl;
+        x->findSupport();
+        //cout << "Step 2" << endl;
+        // step 2: message update
+        for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+          Constraint *constraint = (*iter).constr;
+          if ((constraint->connected()) && (! constraint->isSep()) && (constraint->arity() == 2)) {
+            BinaryConstraint *binctr = (BinaryConstraint*) constraint;
+            EnumeratedVariable *y = (EnumeratedVariable*) binctr->getVarDiffFrom(x);
+            bool isGoodDirection = (forwardPass)? x->getDACOrder() < y->getDACOrder(): y->getDACOrder() < x->getDACOrder();
+            if (isGoodDirection) {
+              binctr->trwsUpdateMessage(y);
+            }
+          }
+        }
+      }
+    }
+    // step 3: reverse ordering
+    double change = 0.0;
+    if (! forwardPass) {
+      ++iter;
+      change = (getLb() == previouslb)? 0.0: (double) (getLb() - previouslb + 1) / (getLb() + 1);
+      if (change > ToulBar2::trws) {
+        nIteration = 0;
+      }
+      else {
+        ++nIteration;
+      }
+      if (ToulBar2::verbose >= 0)
+        cout << "TRWS " << iter << " (" << nIteration << " without change), lower bound: " << previouslb << " -> " << getLb() << " (+" << (100 * change) << "%)" << endl;
+    }
+    forwardPass = ! forwardPass;
+  } while (nIteration < nIterationLimit);
+  cout << "TRWS done\n";
+  propagate(); // propagate again without TRWS and possibly with VAC
+}
+
+
 void WCSP::fillEAC2() {
 	assert(EAC2.empty());
 	if (ToulBar2::verbose >= 2) cout << "EAC1Queue size: " << EAC1.getSize() << endl;
@@ -2082,6 +2161,7 @@ void WCSP::eliminate() {
 void WCSP::propagate() {
     if (ToulBar2::interrupted) throw TimeOut();
 	revise(NULL);
+
 	if (ToulBar2::vac) vac->iniThreshold();
 
 	for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {

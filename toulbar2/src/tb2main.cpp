@@ -185,8 +185,10 @@ enum {
 	NO_OPT_vac,
 	OPT_costThreshold,
 	OPT_costThresholdPre,
-	OPT_costMultiplier,
-	OPT_singletonConsistency,
+  OPT_costMultiplier,
+  OPT_trws,
+  NO_OPT_trws,
+  OPT_singletonConsistency,
 	NO_OPT_singletonConsistency,
 	OPT_vacValueHeuristic,
 	NO_OPT_vacValueHeuristic,
@@ -319,6 +321,8 @@ CSimpleOpt::SOption g_rgOptions[] =
 	{ OPT_costThreshold,			(char*) "-T", 				SO_REQ_SEP		},
 	{ OPT_costThresholdPre,	 		(char*) "-P", 				SO_REQ_SEP		},
 	{ OPT_costMultiplier,	 		(char*) "-C", 				SO_REQ_SEP		},
+  { OPT_trws, (char*)"-trws", SO_REQ_SEP },
+  { NO_OPT_trws, (char*)"-trws:", SO_NONE },
 
 	//preprocessing
 	{ OPT_minsumDiffusion,	 		(char*) "-M", 				SO_REQ_SEP		},
@@ -601,7 +605,8 @@ void help_msg(char *toulbar2filename)
 	if (ToulBar2::MSTDAC) cerr << " (default option)";
 	cerr << endl;
 #endif
-	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -dee:)" << endl;
+  cerr << "   -trws=[float] : TRWS-like algorithm in preprocessing until the relative lower bound increase is below a given threshold (default value is " << ToulBar2::trws << ")" << endl;
+	cerr << "   -nopre : remove all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -h: -mst: -trws: -dee:)" << endl;
 	cerr << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
 	if (ToulBar2::QueueComplexity) cerr << " (default option)";
 	cerr << endl;
@@ -1071,6 +1076,21 @@ int _tmain(int argc, TCHAR * argv[])
 			  ToulBar2::preprocessTernaryRPC = 0;
 			}
 
+      if (args.OptionId() == OPT_trws)
+      {
+        double co = atof(args.OptionArg());
+        if (co > 0.)
+          ToulBar2::trws = co;
+        else
+          ToulBar2::trws = 0.;
+      }
+      if (args.OptionId() == NO_OPT_trws)
+      {
+        ToulBar2::trws = 0.;
+      }
+
+
+
 			// elimination of functional variables
 			if ( args.OptionId() == OPT_preprocessFunctional)
 			{
@@ -1357,11 +1377,13 @@ int _tmain(int argc, TCHAR * argv[])
 				ToulBar2::preprocessFunctional  = 0;
 				if (ToulBar2::debug) cout <<"preproject of n-ary cost functions OFF" << endl;
 				ToulBar2::preprocessNary  = 0;
-			    if (ToulBar2::debug) cout << "decomposition of cost functions OFF" << endl;
+        if (ToulBar2::debug) cout << "decomposition of cost functions OFF" << endl;
 				ToulBar2::costfuncSeparate = false;
-			    if (ToulBar2::debug) cout << "maximum spanning tree DAC ordering OFF" << endl;
+        if (ToulBar2::debug) cout << "maximum spanning tree DAC ordering OFF" << endl;
 				ToulBar2::MSTDAC = false;
-			    if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
+        if (ToulBar2::debug) cout << "TRW-S OFF" << endl;
+        ToulBar2::trws = 0.;
+        if (ToulBar2::debug) cout << "dead-end elimination OFF" << endl;
 				ToulBar2::DEE = 0;
 			}
 

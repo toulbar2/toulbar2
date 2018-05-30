@@ -16,6 +16,7 @@ protected:
     vector<StoreCost> costs;
     StoreCost deltaCost;
     StoreValue support;     // Warning! the unary support has to be backtrackable 
+    double trwsGamma;  // The gamma factor used in TRW-S
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -91,6 +92,8 @@ public:
     void propagateDAC();
     void findSupport();
     bool verify();
+    void setTRWSGamma (double g) {trwsGamma = g;}
+    double getTRWSGamma () const {return trwsGamma;}
 
     void queueEAC1();
     void queueEAC2();

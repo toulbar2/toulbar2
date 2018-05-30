@@ -421,6 +421,7 @@ public:
 	void propagateIncDec();		///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
 	void propagateAC();			///< \brief ensures unary and binary and ternary arc consistency supports
 	void propagateDAC();		///< \brief ensures unary and binary and ternary directed arc consistency supports
+  void propagateTRWS(int maxiter, double convergence, vector<int>& order); ///< \brief iterates forward-backward DAC propagation until convergence
 	void fillEAC2();
 	Queue *getQueueEAC1() {return &EAC1;}
 	void propagateEAC();		///< \brief ensures unary existential arc consistency supports

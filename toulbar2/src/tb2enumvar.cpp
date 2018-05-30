@@ -936,8 +936,8 @@ bool EnumeratedVariable::elimVar( TernaryConstraint* xyz )
 void EnumeratedVariable::eliminate()
 {
 	if(isSep_) return;
-    if (ToulBar2::nbDecisionVars>0 && wcspIndex < ToulBar2::nbDecisionVars) return;
-    if (ToulBar2::allSolutions && !ToulBar2::btdMode==1 && wcspIndex < ToulBar2::nbvar) return;
+    if ((ToulBar2::nbDecisionVars>0) && (wcspIndex < ToulBar2::nbDecisionVars)) return;
+    if ((ToulBar2::allSolutions) && (! (ToulBar2::btdMode==1)) && (wcspIndex < ToulBar2::nbvar)) return;
 
 	assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster( cluster )->isActive() );
 

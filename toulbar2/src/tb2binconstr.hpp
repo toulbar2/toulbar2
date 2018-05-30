@@ -439,6 +439,8 @@ public:
 		else return NULL;
 	}
 
+  void trwsUpdateMessage (EnumeratedVariable *variable);
+
 	void permute(EnumeratedVariable *xin, Value a, Value b);
   
     bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value> &functional);
@@ -569,5 +571,4 @@ bool BinaryConstraint::verify(T getCost, EnumeratedVariable *x, EnumeratedVariab
     }
     return true;
 }
-
 #endif /*TB2BINCONSTR_HPP_*/

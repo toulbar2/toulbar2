@@ -314,6 +314,7 @@ public:
 	static int pedigreeCorrectionMode;
 	static int pedigreePenalty;
 	static int vac;
+  static double trws;
 	static Cost costThreshold;
 	static Cost costThresholdPre;
 	static double costMultiplier;
