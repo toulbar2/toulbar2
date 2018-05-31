@@ -2125,8 +2125,8 @@ void WCSP::printNCBuckets()
 
             assert((*iter)->canbe((*iter)->getMaxCostValue()));
             assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost() || !LUBTEST((*iter)->getMaxCost(), (*iter)->getCost((*iter)->getMaxCostValue())));
-            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)pow(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
-            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)pow(2., bucket + 1));
+            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
+            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)powl(2., bucket + 1));
         }
         cout << endl;
     }
@@ -3892,7 +3892,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     size_t dotFound = decimalToken.find('.');
     if (dotFound == std::string::npos) {
         try {
-            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * pow(10, ToulBar2::decimalPoint);
+            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * powl(10, ToulBar2::decimalPoint);
         } catch (const std::invalid_argument&) {
             cerr << "Error: invalid cost '" << decimalToken;
             if (lineNumber)  
@@ -3905,13 +3905,14 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
 
     bool negative = (decimalToken[0] == '-');
     string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound)) ;
-    string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
+    //string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
+    string decimalPart = decimalToken.substr(dotFound + 1);
     int shift = ToulBar2::decimalPoint - decimalPart.size();
 
     Cost cost;
     try {
-        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint));
-        if (decimalPart.size()) cost += std::stoll(decimalPart) * pow(10, shift);
+        cost = (std::stoll(integerPart) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
+        if (decimalPart.size()) cost += std::stoll(decimalPart) * powl(10, shift) * ToulBar2::costMultiplier ;
     }
     catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken;
@@ -3923,7 +3924,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     }
     if (negative) cost = -cost;
  //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
-    return (Cost)(cost * ToulBar2::costMultiplier);
+    return cost;
 }
 
 Cost WCSP::Prob2Cost(TProb p) const
