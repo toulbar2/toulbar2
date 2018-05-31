@@ -409,6 +409,8 @@ public:
     static int pedigreePenalty;
     static int vac;
     static double trws;
+    static string costThresholdS;
+    static string costThresholdPreS;
     static Cost costThreshold;
     static Cost costThresholdPre;
     static double costMultiplier;

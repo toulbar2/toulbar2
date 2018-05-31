@@ -134,8 +134,8 @@ public:
     Cost getLb() const { return lb; } ///< \brief gets problem lower bound
     Cost getUb() const { return ub; } ///< \brief gets problem upper bound
 
-    Double getDLb() const { return Cost2DCost(lb); }
-    Double getDUb() const { return Cost2DCost(ub); }
+    Double getDLb() const { return Cost2ADCost(lb); }
+    Double getDUb() const { return Cost2ADCost(ub); }
 
     void setLb(Cost newLb) { lb = newLb; } ///< \internal sets problem lower bound
     void setUb(Cost newUb) { ub = newUb; } ///< \internal sets problem upper bound
@@ -606,8 +606,9 @@ public:
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
-
-    Double Cost2DCost(const Cost& c) const { return ((Double)(c - negCost) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); }
+    Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
+    Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
+    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;

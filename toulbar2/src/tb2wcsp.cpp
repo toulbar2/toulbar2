@@ -146,6 +146,8 @@ int ToulBar2::vac;
 double ToulBar2::trws;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
+string ToulBar2::costThresholdS;
+string ToulBar2::costThresholdPreS;
 double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
 Cost ToulBar2::relaxThreshold;
@@ -1878,7 +1880,7 @@ void WCSP::preprocessing()
     if (ToulBar2::minsumDiffusion && ToulBar2::vac)
         vac->minsumDiffusion();
     if (ToulBar2::vac) {
-        if (ToulBar2::verbose >= 0)
+        if (ToulBar2::verbose >= 1)
             cout << "Preprocessing ";
         vac->printStat(true);
         //    	vac->afterPreprocessing();
@@ -2756,7 +2758,7 @@ void WCSP::propagate(bool trws)
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();
-                        if (ToulBar2::verbose >= 0)
+                        if (ToulBar2::verbose >= 1)
                             cout << "Bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
                     }
                     vac->propagate();
@@ -3881,7 +3883,48 @@ void WCSP::setDACOrder(vector<int>& order, bool trws)
 // -----------------------------------------------------------
 // Functions for dealing with probabilities
 // Warning: ToulBar2::NormFactor has to be initialized
+// Converts the decimal Token to a cost and yells if unfeasible.
+// the conversion uses the upper bound precision and Toulbar2::costMultiplier for scaling
+// but does not shift cost using negCost. The input string should not contain white chars.
 
+Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumber) const
+{
+    size_t dotFound = decimalToken.find('.');
+    if (dotFound == std::string::npos) {
+        try {
+            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * pow(10, ToulBar2::decimalPoint);
+        } catch (const std::invalid_argument&) {
+            cerr << "Error: invalid cost '" << decimalToken;
+            if (lineNumber)  
+                cerr << "' at line " << lineNumber << endl;
+            else 
+                cerr << "' in command line" << endl; 
+            exit(1);
+        }
+    }
+
+    bool negative = (decimalToken[0] == '-');
+    string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound)) ;
+    string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
+    int shift = ToulBar2::decimalPoint - decimalPart.size();
+
+    Cost cost;
+    try {
+        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint));
+        if (decimalPart.size()) cost += std::stoll(decimalPart) * pow(10, shift);
+    }
+    catch (const std::invalid_argument&) {
+        cerr << "Error: invalid cost '" << decimalToken;
+        if (lineNumber)
+            cerr << "' at line " << lineNumber << endl;
+        else 
+            cerr << "' in command line" << endl;
+        exit(1);
+    }
+    if (negative) cost = -cost;
+ //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
+    return (Cost)(cost * ToulBar2::costMultiplier);
+}
 
 Cost WCSP::Prob2Cost(TProb p) const
 {

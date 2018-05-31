@@ -243,7 +243,7 @@ enum {
 #ifndef NDEBUG
     OPT_verifyopt,
 #endif
-    // MEDELESOFT OPTION
+    // MENDELESOFT OPTION
     OPT_generation = 99,
     MENDEL_OPT_genotypingErrorRate = 100,
     MENDEL_OPT_resolution = 101,
@@ -358,8 +358,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_vac, (char*)"-A:", SO_NONE },
     { OPT_vacValueHeuristic, (char*)"-V", SO_NONE },
     { NO_OPT_vacValueHeuristic, (char*)"-V:", SO_NONE },
-    { OPT_costThreshold, (char*)"-T", SO_REQ_SEP }, //TODO CFN FORMAT
-    { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP }, //TODO CFN FORMAT
+    { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
+    { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_trws, (char*)"-trws", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
@@ -390,7 +390,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_open, (char*)"-open", SO_REQ_SEP },
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
-    { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli //TODO CFN FORMAT
+    { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
     { OPT_ub_energy, (char*)"-ubE", SO_OPT }, // init upper bound in cli (energy value) //TODO CFN FORMAT
     // MENDELSOFT
     { OPT_generation, (char*)"-g", SO_NONE }, //sort pedigree by increasing generation number and if equal by increasing individual number
@@ -608,12 +608,12 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
-    cout << "   -ub=[integer] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
+    cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
-    cout << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
     cout << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -705,9 +705,9 @@ void help_msg(char* toulbar2filename)
          << endl;
     cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
-    cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
-    cout << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
-    cout << "   -C=[float] : multiplies all costs by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
+    cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
+    cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
+    cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
     cout << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
     if (ToulBar2::singletonConsistency)
         cout << " (default option)";
@@ -1184,15 +1184,15 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_costThreshold) {
-                Cost ct = string2Cost(args.OptionArg());
-                if (ct > UNIT_COST)
-                    ToulBar2::costThreshold = ct;
+                //Cost ct = string2Cost(args.OptionArg());
+                //if (ct > UNIT_COST)
+                ToulBar2::costThresholdS = args.OptionArg();
             }
 
             if (args.OptionId() == OPT_costThresholdPre) {
-                Cost ct = string2Cost(args.OptionArg());
-                if (ct > UNIT_COST)
-                    ToulBar2::costThresholdPre = ct;
+                //Cost ct = string2Cost(args.OptionArg());
+                //if (ct > UNIT_COST)
+                ToulBar2::costThresholdPreS = args.OptionArg();
             }
             /*if ( (ch = strchr(argv[i],'R')) ) {
               Cost ct = string2Cost(&ch[1]);
@@ -1634,7 +1634,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
                 ToulBar2::resolution = 7;
                 //if (ToulBar2::verbose>0)
-                cout << "Normalize Constant = " << ToulBar2::Normalizing_Constant << " passed in  command line" << endl;
+                cout << "Normalizing constant = " << ToulBar2::Normalizing_Constant << " passed in  command line" << endl;
                 //cout << ToulBar2::resolution<< endl;
             }
 
@@ -1647,7 +1647,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::verifyOpt = true;
 #endif
 
-            // upper bound initialisation from command line
+            // upper bound initialisation from command line (Energy value)
             if (args.OptionId() == OPT_ub_energy) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::ubE = stod(args.OptionArg());
@@ -1656,13 +1656,9 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "UB =" << ToulBar2::ubE << " passed in  command line" << endl;
             }
 
-            // upper bound initialisation from command line (Energy value)
+            // upper bound initialisation from command line 
             if (args.OptionId() == OPT_ub) {
                 ToulBar2::externalUB = args.OptionArg();
-                // TODO ub = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
-                // TODO ToulBar2::enumUB = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
-                // TODO if (ToulBar2::debug)
-                // TODO    cout << "UB =" << ub << " passed in  command line" << endl;
             }
 
             // CPU timer

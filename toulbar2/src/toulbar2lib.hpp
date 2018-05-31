@@ -368,8 +368,9 @@ public:
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
-
-    virtual Double Cost2DCost(const Cost& c) const = 0;
+    virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
+    virtual Double Cost2ADCost(const Cost& c) const = 0;
+    virtual Double Cost2RDCost(const Cost& c) const = 0;
     virtual Cost Prob2Cost(TProb p) const = 0;
     virtual TProb Cost2Prob(Cost c) const = 0;
     virtual TLogProb Cost2LogProb(Cost c) const = 0;
@@ -471,7 +472,7 @@ public:
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
-    virtual void read_wcsp(const char* fileName) = 0; ///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
+    virtual void read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem

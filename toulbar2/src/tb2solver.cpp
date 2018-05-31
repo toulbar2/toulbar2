@@ -2,7 +2,6 @@
  * **************** Generic solver *******************
  *
  */
-bool const scpHbfsMsg = true;
 
 #include "tb2solver.hpp"
 #include "tb2domain.hpp"
@@ -936,7 +935,7 @@ void Solver::initGap(Cost newLb, Cost newUb)
     initialDepth = Store::getDepth();
 }
 
-void Solver::showGap(Cost newLb, Cost newUb) // TODO change to cope with maximization
+void Solver::showGap(Cost newLb, Cost newUb)
 {
     if (newLb > newUb)
         newLb = newUb;
@@ -946,8 +945,8 @@ void Solver::showGap(Cost newLb, Cost newUb) // TODO change to cope with maximiz
         globalUpperBound = MIN(globalUpperBound, newUb);
         int newgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
-            Double Dglb = wcsp->Cost2DCost(globalLowerBound);
-            Double Dgub = wcsp->Cost2DCost(globalUpperBound);
+            Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
+            Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
             cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "[ " << std::setprecision(0) << (100. * (Dgub - Dglb)) / Dgub << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         }
     }

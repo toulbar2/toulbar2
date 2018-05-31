@@ -720,7 +720,7 @@ void VACExtension::dequeueVAC2(DLink<Variable*>* link)
 
 void VACExtension::printStat(bool ini)
 {
-    if (ToulBar2::verbose >= 0) {
+    if (ToulBar2::verbose >= 1) {
         long double mean = to_double(sumlb) / (long double)nlb;
         cout << "VAC mean lb/incr: " << std::setprecision(1) << mean << "     total increments: " << nlb
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;

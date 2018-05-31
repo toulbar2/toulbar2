@@ -292,7 +292,6 @@ public:
     void skipJSONTag(const string& tag);
     void testAndSkipFirstOBrace();
     bool isCost(const string& str);
-    Cost decimalToCost(const string& decimalToken, unsigned int lineNumber);
 
     // WCSP2 reading methods
     Cost readHeader();
@@ -341,6 +340,10 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     this->tok = nullptr;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
     Cost upperBound = readHeader();
+    if (ToulBar2::costThresholdS.size())
+        ToulBar2::costThreshold = wcsp->decimalToCost(ToulBar2::costThresholdS,0);
+    if (ToulBar2::costThresholdPreS.size())
+        ToulBar2::costThresholdPre = wcsp->decimalToCost(ToulBar2::costThresholdPreS,0);
     unsigned nvar,nval;
     tie(nvar,nval) = readVariables();
     unsigned ncf,maxarity;
@@ -516,40 +519,6 @@ bool CFNStreamReader::isCost(const string& str)
 {
     // Test if the first char of a string is a decimal digit, point or +/- sign.
     return (string("0123456789-+.").find(str[0]) != string::npos);
-}
-
-// Converts the decimal Token to a cost and yells if unfeasible.
-// the conversion uses the upper bound precision and Toulbar2::costMultiplier for scaling
-// but does not shift cost using negCost.
-Cost CFNStreamReader::decimalToCost(const string& decimalToken, unsigned int lineNumber)
-{
-    size_t dotFound = decimalToken.find('.');
-    if (dotFound == std::string::npos) {
-        try {
-            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * pow(10, ToulBar2::decimalPoint);
-        } catch (const std::invalid_argument&) {
-            cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
-            exit(1);
-        }
-    }
-
-    bool negative = (decimalToken[0] == '-');
-    string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound)) ;
-    string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
-    int shift = ToulBar2::decimalPoint - decimalPart.size();
-
-    Cost cost;
-    try {
-        cost = (std::stoll(integerPart) * pow(10, ToulBar2::decimalPoint));
-        if (decimalPart.size()) cost += std::stoll(decimalPart) * pow(10, shift);
-    }
-    catch (const std::invalid_argument&) {
-        cerr << "Error: invalid cost '" << decimalToken << "' at line " << lineNumber << endl;
-        exit(1);
-    }
-    if (negative) cost = -cost;
- //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
-    return (Cost)(cost * ToulBar2::costMultiplier);
 }
 
 // Reads the problem header (problem name and global Bound) and returns the bound
@@ -756,7 +725,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         while (!isCBrace(token)) {
             // if we have read a full tuple and cost
             if (scopeIdx == arity) {
-                Cost cost = decimalToCost(token, lineNumber);
+                Cost cost = wcsp->decimalToCost(token, lineNumber);
                 if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
                 // the same tuple has already been defined.
@@ -796,7 +765,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     else {
         unsigned int tableIdx = 0;
         while (tableIdx < costVecSize) {
-            Cost cost = decimalToCost(token, lineNumber);
+            Cost cost = wcsp->decimalToCost(token, lineNumber);
 
             if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
                 cost *= MEDIUM_COST;
@@ -830,7 +799,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 // bound is the raw bound from the header (unshifted, unscaled)
 void CFNStreamReader::enforceUB(Cost bound) {
 
-    Cost shifted = bound + wcsp->negCost / ToulBar2::costMultiplier;
+    Cost shifted = bound + (wcsp->negCost / ToulBar2::costMultiplier);
     if (ToulBar2::costMultiplier < 0.0) shifted = -shifted; // shifted unscaled upper bound
 
     if (shifted < (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
@@ -840,13 +809,12 @@ void CFNStreamReader::enforceUB(Cost bound) {
         exit(1);   
     }
 
-    // if the shifted bound is less than zero, we equivalently set it to zero
+    // if the shifted/scaled bound is less than zero, we equivalently set it to zero
     if (shifted < MIN_COST) bound = MIN_COST;
-
-    //TODO needs a decimal decoder w/o lineNumber
-    if (ToulBar2::externalUB.length() != 0) 
-        bound = min(bound, decimalToCost(ToulBar2::externalUB,0) + wcsp->negCost);
-
+    if (ToulBar2::externalUB.length() != 0) {
+        bound = min(bound, wcsp->decimalToCost(ToulBar2::externalUB,0) + wcsp->negCost);
+    }
+    ToulBar2::enumUB = bound;
     wcsp->updateUb(bound);
 }
 
@@ -981,7 +949,7 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
         }
 
         if (!skipDefaultCost) { // Set default cost and skip to next token
-            defaultCost = decimalToCost(token, lineNumber);
+            defaultCost = wcsp->decimalToCost(token, lineNumber);
             std::tie(lineNumber, token) = this->getNextToken();
         }
 
@@ -1133,7 +1101,7 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
     Cost zeroAryCost = 0;
 
     if (!isCBrace(token)) { // We have a cost
-        zeroAryCost = decimalToCost(token, lineNumber);
+        zeroAryCost = wcsp->decimalToCost(token, lineNumber);
         skipCBrace();
     } else {
         if (all) { // We should have a cost
@@ -1190,7 +1158,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             if (scopeIdx == arity) {
                 buf[scopeIdx] = '\0';
                 tup = buf;
-                Cost cost = decimalToCost(token, lineNumber);
+                Cost cost = wcsp->decimalToCost(token, lineNumber);
                 if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
 
@@ -1241,7 +1209,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 
         // Read all costs
         while (!isCBrace(token)) {
-            costs.push_back(decimalToCost(token, lineNumber));
+            costs.push_back(wcsp->decimalToCost(token, lineNumber));
             minCost = min(minCost, cost);
             nbTuples++;
             std::tie(lineNumber, token) = this->getNextToken();
@@ -1410,7 +1378,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
                 exit(1);
             }
-            Cost cost = this->decimalToCost(funcParams[2].second, funcParams[2].first);
+            Cost cost = wcsp->decimalToCost(funcParams[2].second, funcParams[2].first);
             try {
                 wcsp->postDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second), cost);
             } catch (std::invalid_argument&) {
@@ -1423,8 +1391,8 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
                 exit(1);
             }
-            Cost cost1 = this->decimalToCost(funcParams[4].second, funcParams[4].first);
-            Cost cost2 = this->decimalToCost(funcParams[5].second, funcParams[4].first);
+            Cost cost1 = wcsp->decimalToCost(funcParams[4].second, funcParams[4].first);
+            Cost cost2 = wcsp->decimalToCost(funcParams[5].second, funcParams[4].first);
             try {
                 wcsp->postSpecialDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second),
                     stoi(funcParams[2].second), stoi(funcParams[3].second), cost1, cost2);
@@ -1487,7 +1455,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
         else if (GCFTemplate[i] == 'C'|| GCFTemplate[i] == 'c') {
 
             std::tie(lineNumber, token) = this->getNextToken();
-            Cost cost = decimalToCost(token, lineNumber);
+            Cost cost = wcsp->decimalToCost(token, lineNumber);
             if (GCFTemplate[i] == 'c' && cost < 0) {
                 cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
                 exit(1);
@@ -1602,7 +1570,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
                         repeatedContentVec.push_back( std::make_pair('v', token ) );
                     }
                     else if ((symbol == 'C') || (symbol == 'c')) {
-                        Cost c = decimalToCost(token, lineNumber);
+                        Cost c = wcsp->decimalToCost(token, lineNumber);
                         if (symbol == 'c' && c < 0) {
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
                             exit(1);
@@ -1714,7 +1682,7 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
     // Read cost
     skipJSONTag("cost");
     std::tie(lineNumber, token) = this->getNextToken();
-    Cost cost = decimalToCost(token, lineNumber);
+    Cost cost = wcsp->decimalToCost(token, lineNumber);
     if (cost < 0) {
         cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
         exit(1);
@@ -1751,7 +1719,7 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
         if (metric == "weight") {
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
-            Cost tcost = decimalToCost(token, lineNumber);
+            Cost tcost = wcsp->decimalToCost(token, lineNumber);
             if (cost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(1);
@@ -1791,7 +1759,7 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope) {
         if (metric == "weight") {
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
-            Cost tcost = decimalToCost(token, lineNumber);
+            Cost tcost = wcsp->decimalToCost(token, lineNumber);
             if (cost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(1);
@@ -1853,7 +1821,7 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope) {
 
     skipJSONTag("cost");
     std::tie(lineNumber, token) = this->getNextToken();
-    Cost cost = decimalToCost(token, lineNumber);
+    Cost cost = wcsp->decimalToCost(token, lineNumber);
     // TODO Cost should be >= 0
 
     skipJSONTag("vars1");
@@ -1929,17 +1897,22 @@ void WCSP::read_wcsp(const char* fileName)
     free(Nfile2);
 
     if (ToulBar2::cfn) {
-#ifdef BOOST            
+#ifdef BOOST   
         ifstream stream(fileName);
-        if (stream.is_open()) 
+        if (stream.is_open()) {
             CFNStreamReader fileReader(stream, this);
+            return;
+        }
         else {
             cerr << "Error: no '" << fileName << "' file found." << endl;
             exit(1);
         }
-        return;
-        
+#else
+            cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl; 
+            exit(1);
+#endif
     } else if (ToulBar2::cfngz) {
+#ifdef BOOST   
         ifstream file(fileName, std::ios_base::in | std::ios_base::binary);
         if (file.is_open()) {
             boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
@@ -1947,8 +1920,9 @@ void WCSP::read_wcsp(const char* fileName)
             inbuf.push(file);
             std::istream stream(&inbuf);
             CFNStreamReader fileReader(stream, this);
+            return;
 #else
-            cerr << "Error: compiling with Boost iostreams library is needed to allow to read (gzip'd) CF format files." << endl; 
+            cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl; 
             exit(1);
 #endif
         }
@@ -1956,12 +1930,17 @@ void WCSP::read_wcsp(const char* fileName)
             cerr << "Error: no '" << fileName << "' file found." << endl;
             exit(1);
         }            
-        return;
     }
 
     if (ToulBar2::externalUB.length() != 0) {
-        updateUb(string2Cost(ToulBar2::externalUB.c_str()));
+        Cost bound = string2Cost(ToulBar2::externalUB.c_str());
+        ToulBar2::enumUB = bound;
+        updateUb(bound);
     }
+    if (ToulBar2::costThresholdS.size())
+        ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
+    if (ToulBar2::costThresholdPreS.size())
+        ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
     
     if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
@@ -1991,7 +1970,7 @@ void WCSP::read_wcsp(const char* fileName)
         read_qpbo(fileName);
         return;
     }
-    // --------------------------
+        
     // TOOLBAR WCSP LEGACY PARSER
 
     string pbname;
