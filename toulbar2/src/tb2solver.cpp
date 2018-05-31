@@ -1794,9 +1794,9 @@ bool Solver::solve()
             if (ToulBar2::verbose >= 0)
                 cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
             if (ToulBar2::verbose >= 0) {
-                Double Dlb = wcsp->getDLb();
-                Double Dub = wcsp->getDUb();
-                cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(0) << 100.0 * (Dub - Dlb) / Dub << "%" << endl;
+                Double Dlb = (ToulBar2::costMultiplier >= 0 ? wcsp->getDLb() : wcsp->getDUb());
+                Double Dub = (ToulBar2::costMultiplier >= 0 ? wcsp->getDUb() : wcsp->getDLb());
+                cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(0) << 100.0 * fabsl((Dub - Dlb) / Dub) << "%" << endl;
             }
             initGap(wcsp->getLb(), wcsp->getUb());
 
