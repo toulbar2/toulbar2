@@ -311,12 +311,13 @@ public:
     stringstream generateGCFStreamSgrammar(vector<int>& scope);
     stringstream generateGCFStreamSsame(vector<int>& scope);
 
+    void readIntervalUnaryTable(int varIdx, vector<Value> &authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
     void enforceUB(Cost ub);
 
     std::map<std::string, int> varNameToIdx;
     std::vector<std::map<std::string, int>> varValNameToIdx;
-    std::map<std::string, std::vector<std::vector<int>>> tableShares;
+    std::map<std::string, std::vector<pair<string,std::vector<int>>>> tableShares;
     vector<TemporaryUnaryConstraint> unaryCFs;
 
 private:
@@ -693,6 +694,24 @@ int CFNStreamReader::readDomain(std::vector<string>& valueNames)
     }
     return valueNames.size();
 }
+// Reads list of authorized values for a unary cost function over an interval variable
+void CFNStreamReader::readIntervalUnaryTable(int varIdx, vector<Value> &authorized) {
+    int lineNumber;
+    string token;
+
+    tie(lineNumber, token) = this->getNextToken();
+    while (!isCBrace(token)) {
+        unsigned int valueIdx = getValueIdx(varIdx, token, lineNumber);
+        authorized.push_back(valueIdx);
+
+        tie(lineNumber, token) = this->getNextToken();
+        Cost cost = wcsp->decimalToCost(token, lineNumber);
+        if (cost != MIN_COST) {
+            cerr << "Error: Unary cost function with non zero non default cost at line " << lineNumber << endl;
+            exit(1);
+        }
+    }
+}
 
 // Reads a cost function table for the scope given.
 // If all is set, a lexicographically ordered list of costs is expected.
@@ -893,7 +912,7 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
     string token;
     unsigned nbcf = 0;
     unsigned maxarity = 0;
-
+    
     skipJSONTag("functions");
     skipOBrace();
 
@@ -915,8 +934,9 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
         readScope(scope);
         maxarity = max(maxarity,static_cast<unsigned>(scope.size()));
         nbcf++;
-
+        bool isUnaryInterval = (scope.size() == 1 &&  !wcsp->getVar(scope[0])->enumerated()); // Unary over interval variable are special
         bool isShared = false;
+
         // Test if function is shared
         if (funcName.size() != 0) {
             isShared = (tableShares.find(funcName) != tableShares.end());
@@ -953,6 +973,11 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
             std::tie(lineNumber, token) = this->getNextToken();
         }
 
+        if (isUnaryInterval && defaultCost == MIN_COST) {
+            cerr << "Error: unary function " << funcName << " over an interval variable must have non zero default cost at line " << lineNumber << endl;
+            exit(1);
+        }
+
         // Discriminate between global/shared and table cost functions
         bool isGlobal = false;
         bool isReused = false;
@@ -976,7 +1001,7 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                         cerr << "Error: function " << funcName << " sharing cost tables with " << token << " cannot have default costs at line " << lineNumber << endl;
                         exit(1);
                     }
-                    tableShares[token].push_back(scope);
+                    tableShares[token].push_back(make_pair(funcName,scope));
                     skipCBrace();
                 }
             }
@@ -994,7 +1019,7 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                     exit(1);
                 }
                 isReused = true;
-                tableShares[token].push_back(scope);
+                tableShares[token].push_back(make_pair(funcName,scope));
             }
         }
 
@@ -1006,7 +1031,13 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                 this->readNaryCostFunction(scope, skipDefaultCost, defaultCost);
             } else {
                 Cost minCost;
-                vector<Cost> costs = this->readFunctionCostTable(scope, skipDefaultCost, defaultCost, minCost);
+                vector<Cost> costs;
+                vector<Value> authorized; // list of authorized values for Interval Unary
+
+                if (scope.size() !=1 ||  wcsp->getVar(scope[0])->enumerated())
+                    costs = this->readFunctionCostTable(scope, skipDefaultCost, defaultCost, minCost);
+                else
+                    readIntervalUnaryTable(scope[0], authorized);
 
                 switch (scope.size()) {
                 case 1:
@@ -1019,10 +1050,10 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                         //this->wcsp->postUnaryConstraint(scope[0], costs);
                         if (isShared) {
                             unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
-                            for (const auto& s : tableShares[funcName]) {
-                                if ((s.size() == 1) && wcsp->getVar(s[0])->enumerated() && wcsp->getDomainInitSize(s[0]) == domSize) {
+                            for (const auto& ns : tableShares[funcName]) {
+                                if ((ns.second.size() == 1) && wcsp->getVar(ns.second[0])->enumerated() && wcsp->getDomainInitSize(ns.second[0]) == domSize) {
                                     TemporaryUnaryConstraint unarycf;
-                                    unarycf.var = (EnumeratedVariable*)wcsp->getVar(s[0]);
+                                    unarycf.var = (EnumeratedVariable*)wcsp->getVar(ns.second[0]);
                                     assert(costs.size() == unarycf.var->getDomainInitSize());
                                     unarycf.costs = costs;
                                     unaryCFs.push_back(unarycf);
@@ -1031,16 +1062,17 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                                     // TODO must remember name too
                                 }
                                 else {
-                                    cerr << "Error: cannot share cost function '" << funcName << "' with function of incompatible signature." << endl;
+                                    cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << " on scope { ";
+                                    for (auto v : ns.second) cerr << wcsp->getVar(v)->getName() << " ";
+                                    cerr <<  "}" << endl;
                                     exit(1);
-                                    // TODO print info on the incompatible function
                                 }
                             }
                         }
                     }
                     else {
-                        //TODO (interval)
-                        }
+                        wcsp->postUnaryConstraint(scope[0], authorized.data(), authorized.size(), defaultCost);
+                    }
                     break;
                 case 2: {
                     int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
@@ -1048,27 +1080,39 @@ pair<unsigned,unsigned> CFNStreamReader::readCostFunctions()
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
-                        for (const auto& s : tableShares[funcName]) {
-                            if ((s.size() == 2) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1) {
-                                this->wcsp->postBinaryConstraint(s[0], s[1], costs);
+                        for (const auto& ns : tableShares[funcName]) {
+                            if ((ns.second.size() == 2) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1) {
+                                cfIdx = this->wcsp->postBinaryConstraint(ns.second[0], ns.second[1], costs);
                                 wcsp->negCost -= minCost;
+                                this->wcsp->getCtr(cfIdx)->setName(ns.first);
                             }
-                            // TODO must remember name too
+                            else {
+                                cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << "' on scope { ";
+                                for (auto v : ns.second) cerr << wcsp->getVar(v)->getName() << " ";
+                                cerr <<  "}" << endl;
+                                exit(1);
+                            }
                         }
                     }
                 } break;
                 case 3: {
                     int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
-                    this->wcsp->getCtr(cfIdx)->setName(funcName);
+                    wcsp->getCtr(cfIdx)->setName(funcName);
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
                         unsigned int domSize2 = wcsp->getDomainInitSize(scope[2]);
-                        for (const auto& s : tableShares[funcName]) {
-                            if ((s.size() == 3) && wcsp->getDomainInitSize(s[0]) == domSize0 && wcsp->getDomainInitSize(s[1]) == domSize1 && wcsp->getDomainInitSize(s[2]) == domSize2) {
-                                this->wcsp->postTernaryConstraint(s[0], s[1], s[2], costs);
+                        for (const auto& ns : tableShares[funcName]) {
+                            if ((ns.second.size() == 3) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1 && wcsp->getDomainInitSize(ns.second[2]) == domSize2) {
+                                cfIdx = this->wcsp->postTernaryConstraint(ns.second[0], ns.second[1], ns.second[2], costs);
                                 wcsp->negCost -= minCost;
-                                // TODO must remember name too
+                                wcsp->getCtr(cfIdx)->setName(ns.first);
+                            }
+                            else {
+                                cerr << "Error: cannot share cost function '" << funcName << "' on scope { ";
+                                for (auto v : ns.second) cerr << wcsp->getVar(v)->getName() << " ";
+                                cerr <<  "}" << endl;
+                                exit(1);
                             }
                         }
                     }
