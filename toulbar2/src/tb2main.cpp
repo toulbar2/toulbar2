@@ -270,7 +270,7 @@ string getExt(string FileName)
 {
     // Finds the last persiod character of the string
     int period = FileName.find_last_of(".");
-    // I use  + 1 because I don't really need the to include the period
+    // I use  + 1 because I don't really need to include the period
     string ext = FileName.substr(period + 1);
     return ext;
 }
@@ -2020,8 +2020,8 @@ int _tmain(int argc, TCHAR* argv[])
     /////////////////////////////////////////
 
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
-        cout << "Warning! An optimal solution file is missing in the command line. Verifying the optimal solution is disabled." << endl;
-        ToulBar2::verifyOpt = false;
+        cerr << "Error: no optimal solution file given. Cannot verify the optimal solution." << endl;
+        exit(1);
     }
 
     if (ToulBar2::uai || ToulBar2::uaieval) {
@@ -2055,6 +2055,7 @@ int _tmain(int argc, TCHAR* argv[])
     ToulBar2::startCpuTime = cpuTime();
 
     initCosts();
+    Cost globalUb = MAX_COST;
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
     bool randomproblem = false;
@@ -2165,12 +2166,11 @@ int _tmain(int argc, TCHAR* argv[])
         }
 #endif
         else
-            solver->read_wcsp((char*)strfile.c_str());
+            globalUb = solver->read_wcsp((char*)strfile.c_str());
 
         // TODO Need to fetch UB
-        Cost ub = tb2checkOptions(MAX_COST);
+        tb2checkOptions(globalUb);
         //TODO: If --show_options then dump ToulBar2 object here
-
 
         if (certificate) {
             if (certificateFilename != NULL)

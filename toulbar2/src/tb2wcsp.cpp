@@ -354,27 +354,23 @@ void tb2init()
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
-Cost tb2checkOptions(Cost ub)
+void tb2checkOptions(Cost ub)
 {
-    if (ub <= MIN_COST)
-        ub = MAX_COST;
-
     if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1) {
-        cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
-        ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = 0;
+        cerr << "Error: BTD search mode required for approximate solution counting (use '-B=1')." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
-        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization (only in satisfaction)." << endl;
-        ub = 1;
+        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and 0/1 costs only)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
-        cout << "Warning! Hybrid best-first search not compatible with finding all solutions using BTD method in satisfaction." << endl;
-        ToulBar2::hbfs = 0;
+        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1) {
-        cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
-        ToulBar2::allSolutions = 0;
+        cerr << "Error: RDS-like method cannot currently enumerate solutions. Use DFS/HBFS search or BTD (feasibility only)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0) {
         //    if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
@@ -391,80 +387,87 @@ Cost tb2checkOptions(Cost ub)
     if (ToulBar2::allSolutions || ToulBar2::isZ) {
         ToulBar2::DEE = 0;
     }
+    //TODO: could use negative ub but will be translated.
     if (ToulBar2::isZ && ToulBar2::isZUB < 0) {
         cout << "Warning! Upperbound level minimum is 0, for exact computing set epsilon or sigma to 0" << endl;
         cout << "Setting upper bound level to 0" << endl;
         ToulBar2::isZUB = 0;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
-        ToulBar2::lds = 0;
+        cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
+        exit(1);
     }
+    // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::lds && ToulBar2::hbfs) {
-        // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
+        cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
         ToulBar2::hbfs = 0;
     }
+    // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2) {
         cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
         ToulBar2::hbfs = 0;
     }
     if (ToulBar2::restart >= 0 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
-        ToulBar2::restart = -1;
+        cerr << "Error: Randomized search with restart not compatible with BTD-like search methods." << endl;
+        exit(1);
     }
     if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
-        cout << "Warning! N-ary branching not implemented with BTD-like search methods, use binary branching instead." << endl;
-        ToulBar2::binaryBranching = true;
+        cout << "Warning! N-ary branching not implemented with BTD-like search methods (remove -b: or -B option)." << endl;
+        exit(1);
     }
     if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1) {
-        cout << "Warning! Solving only a problem rooted at a given subtree, use Russian Doll Search method for that." << endl;
-        ToulBar2::btdMode = 2;
+        cerr << "Error: cannot restrict solving to a problem rooted at a subtree, activate RDS method for that (use -B=2)." << endl;
+        exit(1);
     }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! VAC not implemented with BTD-like search methods during search, use VAC in preprocessing only." << endl;
-        ToulBar2::vac = 1; /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+        cout << "Warning! VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
+        exit(1);
     }
     if (ToulBar2::preprocessFunctional > 0 && ToulBar2::LcLevel == LC_NC) {
-        cout << "Warning! Cannot perform functional elimination with NC only." << endl;
-        ToulBar2::preprocessFunctional = 0;
+        cerr << "Error; functional elimination requires at least AC enforcing (use -k=1 or more)." << endl;
+        exit(1);
     }
+    // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::learning && ToulBar2::elimDegree >= 0) {
         cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning." << endl;
         ToulBar2::elimDegree = -1;
     }
     if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
-        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
-        ToulBar2::incop_cmd = "";
+        cout << "Error: Cannot use INCOP local search for (weighted) counting (remove -i option)." << endl;
+        exit(1);
     }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {
-        cout << "Warning! N-ary branching not implemented with hybrid best-first search, use binary branching instead (or add -hbfs: parameter)." << endl;
-        ToulBar2::binaryBranching = true;
+        cout << "Error: hybrid best-first search restricted to binary branching (remove -b: or add -hbfs: options)." << endl;
+        exit(1);
     }
     if (ToulBar2::dichotomicBranching >= 2 && ToulBar2::hbfs) {
-        cout << "Warning! Complex dichotomic branching not implemented with hybrid best-first search, use simple dichotomic branching (or add -hbfs: parameter)." << endl;
-        ToulBar2::dichotomicBranching = 1;
+        cout << "Error: general dichotomic branching not implemented with hybrid best-first search (use simple dichotomic branching or add -hbfs: parameter)." << endl;
+        exit(1);
     }
+    // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
         cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::elimDegree = -1;
         ToulBar2::elimDegree_preprocessing = -1;
     }
+    // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::verifyOpt && ToulBar2::preprocessFunctional > 0) {
         cout << "Warning! Cannot perform functional elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::preprocessFunctional = 0;
     }
+    // TODO is it possible just by default option? If not, error would be better.        
     if (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
     }
     if (ToulBar2::isZ && ToulBar2::sigma > 0 && !ToulBar2::hbfs) {
-        cout << "Warning sigma option is useless without HBFS counting !" << endl;
+        cerr << "Error: sigma option for weighted counting requires HBFS (remove -hbfs: option)." << endl;
+        exit(1);
     }
     if (ToulBar2::isZ && (ToulBar2::sigma > 0 || ToulBar2::hbfs) && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity()) {
-        cout << "Warning! Cannot perform Z-star algorithm with HBFS counting ! Exit..." << endl;
+        cerr << "Error: Z* algorithm cannot rely on HBFS for weighted counting." << endl;
         exit(EXIT_FAILURE);
     }
-    return ub;
 }
 
 /*

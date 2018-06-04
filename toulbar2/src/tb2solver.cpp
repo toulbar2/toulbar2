@@ -91,10 +91,10 @@ void Solver::initVarHeuristic()
     ToulBar2::setvalue = setvalue;
 }
 
-void Solver::read_wcsp(const char* fileName)
+Cost Solver::read_wcsp(const char* fileName)
 {
     ToulBar2::setvalue = NULL;
-    wcsp->read_wcsp(fileName);
+    return wcsp->read_wcsp(fileName);
 }
 
 void Solver::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
@@ -1671,7 +1671,7 @@ Long luby(Long r)
 bool Solver::solve()
 {
     // Last-minute compatibility checks for ToulBar2 selected options
-    wcsp->setUb(tb2checkOptions(wcsp->getUb()));
+    tb2checkOptions(wcsp->getUb());
 
     if (ToulBar2::writeSolution) {
         ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");

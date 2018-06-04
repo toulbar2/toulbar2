@@ -86,10 +86,10 @@ SET (CELAR6-SUB0.wcsp
 )
 SET (pedigree1.wcsp
     "-b"
-    "-b:"
-    "-b: -v"
-    "-b: -v=1"
-    "-b: -v=1"
+    "-b: -hbfs:"
+    "-b: -v -hbfs:"
+    "-b: -v=1 -hbfs:"
+    "-b: -v=1 -hbfs:"
     "-e"
     "-e:"
     "-e=2"
@@ -148,12 +148,12 @@ SET (CELAR7-SUB0.wcsp
 )
 
 SET (zebre-ext.wcsp
-    "-D"
+    "-D -hbfs:"
     "-a"
-    "-a -B=1"
-    "-a -B=1 -D"
-    "-D"
+    "-a -B=1 -hbfs:"
+    "-a -B=1 -D -hbfs:"
+    "-D -hbfs:"
     "-a"
-    "-a -B=1"
-    "-a -B=1 -D"
+    "-a -B=1 -hbfs:"
+    "-a -B=1 -D -hbfs:"
 )

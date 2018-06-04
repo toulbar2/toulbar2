@@ -353,7 +353,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     // all negCosts are collected. We should be fine enforcing the UB
     enforceUB(upperBound);
 
-    // merge unarycosts if they are on the same variable
+    // merge unary cost functions if they are on the same variable
     vector<int> seen(nvar, -1);
     vector<TemporaryUnaryConstraint> newunaryCFs;
     for (unsigned int u = 0; u < unaryCFs.size(); u++) {
@@ -1932,8 +1932,9 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope) {
 }
 
 
-// TB2 entry point for WCSP reading (not only wcsp format)
-void WCSP::read_wcsp(const char* fileName)
+// TB2 entry point for WCSP reading (not only wcsp format).
+// Returns the global UB obtained form both the file and command line in internal Cost units
+Cost WCSP::read_wcsp(const char* fileName)
 {
     char* Nfile2;
     Nfile2 = strdup(fileName);
@@ -1945,7 +1946,7 @@ void WCSP::read_wcsp(const char* fileName)
         ifstream stream(fileName);
         if (stream.is_open()) {
             CFNStreamReader fileReader(stream, this);
-            return;
+            return getUb();
         }
         else {
             cerr << "Error: no '" << fileName << "' file found." << endl;
@@ -1964,7 +1965,7 @@ void WCSP::read_wcsp(const char* fileName)
             inbuf.push(file);
             std::istream stream(&inbuf);
             CFNStreamReader fileReader(stream, this);
-            return;
+            return getUb();
 #else
             cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl; 
             exit(1);
@@ -1981,6 +1982,7 @@ void WCSP::read_wcsp(const char* fileName)
         ToulBar2::enumUB = bound;
         updateUb(bound);
     }
+    
     if (ToulBar2::costThresholdS.size())
         ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
     if (ToulBar2::costThresholdPreS.size())
@@ -1988,31 +1990,31 @@ void WCSP::read_wcsp(const char* fileName)
     
     if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
-        return;
+        return getUb();
     } else if (ToulBar2::pedigree) {
         if (!ToulBar2::bayesian)
             ToulBar2::pedigree->read(fileName, this);
         else
             ToulBar2::pedigree->read_bayesian(fileName, this);
-        return;
+        return getUb();
     } else if (ToulBar2::uai) {
         read_uai2008(fileName);
         if (ToulBar2::isTrie_File) { // read all-solution tb2 file (temporary way to do)
             ToulBar2::trieZ = read_TRIE(fileName);
         }
-        return;
+        return getUb();
     } else if (ToulBar2::xmlflag) {
         read_XML(fileName);
-        return;
+        return getUb();
     } else if (ToulBar2::bep) {
         ToulBar2::bep->read(fileName, this);
-        return;
+        return getUb();
     } else if (ToulBar2::wcnf) {
         read_wcnf(fileName);
-        return;
+        return getUb();
     } else if (ToulBar2::qpbo) {
         read_qpbo(fileName);
-        return;
+        return getUb();
     }
         
     // TOOLBAR WCSP LEGACY PARSER
@@ -2534,6 +2536,7 @@ void WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::verbose >= 0)
         cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
+    return getUb();
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)

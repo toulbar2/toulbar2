@@ -351,7 +351,7 @@ public:
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
-    virtual void read_wcsp(const char* fileName) = 0; ///< \brief load problem in native wcsp format (\ref wcspformat)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief load problem in all format supported by toulbar2. Returns the UB known to the solver before solving (file and command line).
     virtual void read_uai2008(const char* fileName) = 0; ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
@@ -472,7 +472,7 @@ public:
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
-    virtual void read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem
@@ -517,7 +517,7 @@ public:
 extern void tb2init();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
 /// \return new initial upper bound (if options assume it is a satisfaction problem instead of optimization)
-extern Cost tb2checkOptions(Cost initialUpperBound);
+extern void tb2checkOptions(Cost initialUpperBound);
 #endif /*TOULBAR2LIB_HPP_*/
 
 /* Local Variables: */
