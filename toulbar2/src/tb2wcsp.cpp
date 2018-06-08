@@ -1262,12 +1262,6 @@ void WCSP::processTernary() {
 void WCSP::preprocessing() {
     Cost previouslb = getLb();
 
-  /*
-  vector <int> order (numberOfVariables());
-  for (size_t i = 0; i < numberOfVariables(); ++i) order[vars[i]->getDACOrder()] = i;
-  if (ToulBar2::trws > 0) propagateTRWS(10000, ToulBar2::trws, order);
-  */
-
 	Eliminate.clear();
 	if (ToulBar2::elimDegree_preprocessing <= -3) {
 	  int deg = medianDegree();
@@ -1970,8 +1964,6 @@ void WCSP::propagateDAC() {
 }
 
 void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &order) {
-  cout << "TRWS:" << endl;
-  cout << *this;
   bool forwardPass = true;
   int iter = 0;
   Cost previouslb;
