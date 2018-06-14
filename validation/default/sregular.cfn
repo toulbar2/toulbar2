@@ -1,0 +1,19 @@
+{  problem: {name: MySregular, mustbe: <12.000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+       rema   : { scope: [v1] costs: [2 0]}
+       remb   : { scope: [v4] costs: [0 3]}
+       sreg   : { scope: [v1 v2 v3 v4]
+		  type : sregular
+		  params : { 
+		      metric: var
+		      cost: 1.0
+		      nb_states: 2
+		      starts: [0]
+		      ends: [0 1]
+		      transitions: [[0 0 0][0 1 1][1 1 1]]
+		  }
+		}
+   }
+}
+# automata for 0*1*

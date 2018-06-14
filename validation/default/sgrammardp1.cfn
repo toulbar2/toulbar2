@@ -1,0 +1,28 @@
+{  problem: {name: MySgrammarDP, mustbe: <1.00000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+       u2 : {scope: [v2] costs: [2 0.234]}
+       sgrammardp1 : { scope: [v1 v2 v3 v4]
+		       type : sgrammardp
+		       params: {
+			   metric : var
+			   cost : 1.012
+			   nb_symbols : 4
+			   nb_values : 2
+			   start : 0
+			   terminals : [ [1 0] [3 1] ]
+			   non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
+		       }
+		     }
+   }
+}
+# start is A
+# B -> a
+# D -> b
+# A -> A A
+# A -> B C
+# A -> B D
+# C -> A D
+# Two perfect parses, we force the second with u2
+# parses to: A-> B C -> B (A D) -> B (B D) D -> 0 0 1 1
+# parses to: A-> A A -> (B D) (B D) -> 0 1 0 1

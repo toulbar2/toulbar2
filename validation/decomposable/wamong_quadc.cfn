@@ -1,0 +1,19 @@
+{  problem: {name: MyWAmongLin, mustbe: <2.00 }
+   variables: {v1: [a b c] v2: [a b c] v3: [a b c] v4: [a b c]}
+   functions: {
+   rema : { scope [v1] costs: [0 10 10]}
+   rema : { scope [v2] costs: [10 0 10]}
+   rema : { scope [v3] costs: [10 10 0]}
+   rema : { scope [v1] costs: [0.1 0.2 0.3]}
+   mywa : { scope: [v1 v2 v3 v4]
+	     type : wamong
+	     params: {
+		 metric: quad
+		 cost: 1
+ 		 values: [0]
+		 min: 2
+		 max: 2
+	     }
+	   }
+   }
+}

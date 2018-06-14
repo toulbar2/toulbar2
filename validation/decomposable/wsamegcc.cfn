@@ -1,0 +1,17 @@
+{  problem: {name: MyWsamegcc, mustbe: <2.2 }
+   variables: {v1: [a b c] v2: [a b c d] v3: [a b c] v4: [a b c]}
+   functions: {
+   rema1 : { scope [v1] costs: [0.1 1 1]}
+   rema2 : { scope [v2] costs: [1 0.2 1 0]}
+   rema3 : { scope [v3] costs: [1 1 0.3]}
+   rema4 : { scope [v3] costs: [0 0.1 0.3]}
+   mywa : { scope: [v1 v2 v3 v4]
+	     type : wsamegcc
+	     params: {
+		 metric: lin
+		 cost: 3.3
+		 bounds: [[0 0 1][1 0 1][2 0 1][3 0 0]]
+	     }
+	   }
+   }
+}

@@ -1,0 +1,14 @@
+{  problem: {name: MyWRegular, mustbe: <12.000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+     wr1 : { scope: [v1 v2 v4 v3]
+	     type : wregular
+	     params: {
+		 nb_state : 4
+ 		 starts : [[0 0.0][1 0.5]]
+		 ends : [[2 -1.0] [3 0.0]]
+ 		 transitions : [[0 0 1 0.5][0 1 2 0.0][2 0 2 1.0][1 1 3 -1.0]]
+	     }	
+	   }
+   }
+}

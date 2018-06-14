@@ -1,0 +1,18 @@
+{  problem: {name: MyWsum, mustbe: <2.0 }
+   variables: {v1: 3 v2: 3 v3: 3 v4: 3}
+   functions: {
+   rem1   :  { scope [v1] costs: [0.8 0.3 0.3]}
+   rem2   :  { scope [v2] costs: [0.8 0.3 0.1]}
+   rem3   :  { scope [v3] costs: [0.8 0.3 0.1]}
+   rem4   :  { scope [v4] costs: [0.8 0.3 0.1]}
+   mywsum : { scope: [v1 v2 v3 v4]
+	     type : wsum
+	     params: {
+		 metric: hard
+		 cost: 3
+		 comparator: "=="
+		 to: 4
+	     }
+	   }
+   }
+}

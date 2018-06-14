@@ -1,0 +1,15 @@
+{  problem: {name: MyWsum, mustbe: <2.0 }
+   variables: {v1: 3 v2: 3 v3: 3 v4: 3}
+   functions: {
+   rem1   :  { scope [v1] costs: [0.3 0.2 0.1]}
+   mywsum : { scope: [v1 v2 v3 v4]
+	     type : wsum
+	     params: {
+		 metric: lin
+		 cost: 12.0
+		 comparator: "<"
+		 to: 3
+	     }
+	   }
+   }
+}

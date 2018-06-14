@@ -1,0 +1,14 @@
+{  problem: {name: MySGCCP, mustbe: <12.000 }
+   variables: {v1: [a b] v2: [a b] v3: [a b] v4: [a b]}
+   functions: {
+       unar1 : { scope: [v1] costs: [0 1]}
+       unar2 : { scope: [v2] costs: [0 0.1]}	
+       sgcc2 : { scope: [v1 v2 v3 v4]
+		 type : sgcc
+		 params : {metric: wdec
+		 	   cost: 0.5
+			   bounds: [[0 1 2 0.2 0.2]
+			            [1 3 4 0.2 0.1]]}
+	       }
+   }
+}

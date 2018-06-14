@@ -100,8 +100,8 @@ ENDIF(APPLE)
 ##########################################
 # default OPTION for toulbar2 test  phase
 ##########################################
-SET(FOPT "test-opt.cmake" CACHE string "filename containing localet  option used for validation ") 
-SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line.")
+SET(FOPT "test-opt.cmake" CACHE string "filename containing local options used for validation")
+SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_validation_dir "validation" CACHE string "default location of benchmark file")
 SET(Default_cover_dir "cover" CACHE string "default location of cover test file ")
@@ -114,7 +114,7 @@ SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command
 SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
 
 MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY LONG_COSTS)
-MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS)
+MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY)
 
 IF (MPI)
   SET(Boost ON)
@@ -272,6 +272,8 @@ include(${My_cmake_script}/source_files.cmake)
 ##########################################
 IF(Boost) 
   include(${My_cmake_script}/Boost_option.cmake)
+  link_directories(${Boost_LIBRARY_DIR})
+  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF(Boost)
 
 ##########################################

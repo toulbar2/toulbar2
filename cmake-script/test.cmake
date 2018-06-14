@@ -1,15 +1,14 @@
 #INCLUDE(CTest)
 
 
-    file ( GLOB_RECURSE
-                        validation_file
-                       validation/*.wcsp
-                                    )
+file ( GLOB_RECURSE validation_file
+  validation/*.wcsp
+  validation/*.cfn
+  validation/*.cfn.gz )
 
-###################"
-#################
+################
 # test unitaire
-###############
+################
 SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
 
 	MESSAGE(STATUS "##############TEST liste building #############")
@@ -19,8 +18,8 @@ FOREACH (UTEST ${validation_file})
 	UNSET(ENUM)
 
 
-	STRING(REPLACE ".wcsp" ".ub" UBF ${UTEST})
-	STRING(REPLACE ".wcsp" ".enum" ENUM_file ${UTEST})
+	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ".ub" UBF ${UTEST})
+	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ".enum" ENUM_file ${UTEST})
 	
 	GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH  )
 
@@ -28,13 +27,14 @@ FOREACH (UTEST ${validation_file})
 	FILE(READ ${UBF} UB)
 	STRING(REPLACE "\n" ""  TUB ${UB})
 	SET (UB ${TUB})
-	MATH(EXPR UBP "1+${TUB}")
+	  EXECUTE_PROCESS(COMMAND echo "1+(${TUB})" COMMAND bc OUTPUT_VARIABLE UBP)
         SET (OpTub "-ub" ) 
         SET (UBP "${OpTub}=${UBP}" )	
-	MESSAGE(STATUS "UB found ==> ${UBP} " )
+	  MESSAGE(STATUS "UB found ==> ${UB} " )
 
 	ELSE()
 	 UNSET(UBP)
+	  MESSAGE(STATUS "${UBF} does not exist")
 	ENDIF()
 
 	 IF (EXISTS ${ENUM_file})
@@ -66,11 +66,12 @@ FOREACH (UTEST ${validation_file})
 
 
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
-	STRING(REPLACE ".wcsp" ""  TNAME ${TMP})
+	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ""  TNAME ${TMP})
 
 	if($verbose) 
 		MESSAGE(STATUS "UBF: ${UBF}")
 		MESSAGE(STATUS "UB: ${UB}")
+		MESSAGE(STATUS "UB+1: ${UBP}")
 		MESSAGE(STATUS "TNAME: ${TNAME}")
 	endif($verbose)
 
@@ -88,4 +89,4 @@ ENDFOREACH(UTEST)
 #	MESSAGE(STATUS "\n")
 
 ENABLE_TESTING()
-###################"
+

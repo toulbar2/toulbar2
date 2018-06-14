@@ -1,0 +1,14 @@
+{  problem: {name: Mymax, mustbe: <12.000 }
+   variables: {v1: [a b c d] v2: [a b c d] v3: [a b c d] v4: [a b c d]}
+   functions: {
+       u1 : { scope: [v1] costs [0 1.3 1.3 1.3]}
+       u2 : { scope: [v2] costs [0 1.2 1.2 1.2]}
+       u3 : { scope: [v3] costs [0 1.2 1.2 1.2]}
+       u3 : { scope: [v4] costs [0 1.2 1.2 1.2]}
+       max1 : { scope: [v1 v2 v3 v4]
+		 type: max
+		 params: { defaultcost: 3
+		           tuples: [[0 0 4] [1 1 3][2 2 2][3 3 1]] }
+	       }
+   }
+}
