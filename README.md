@@ -35,7 +35,7 @@ graphical models:
 
 You can install toulbar2 directly using the package manager in Debian
 and Debian derived Linux distributions (Ubuntu, Mint,...). For the
-most recent version, it's best to compile from source.
+most recent version, compile from source.
 
 
 ## Download
@@ -54,7 +54,7 @@ Compilation requires git, cmake and a C++-11 capable compiler.
 Required library:
 * libgmp-dev
 
-Strongly advised libraries:
+Recommended libraries (default use):
 * libboost-dev
 * libboost-graph-dev
 * libboot-iostream-dev
@@ -129,7 +129,12 @@ Please use one of the following references for citing toulbar2:
 
 ##  What are the algorithms inside toulbar2?
 
-* Soft arc consistencies (NC, AC, DAC, FDAC)
+* Soft arc consistency (AC): 
+Arc consistency for Soft Constraints
+T. Schiex
+Proc. of CP'2000. Singapour, September 2000.
+
+* More soft arc consistencies (NC, DAC, FDAC):
  In the quest of the best form of local consistency for Weighted CSP
  J. Larrosa & T. Schiex
  In Proc. of IJCAI-03. Acapulco, Mexico, 2003
