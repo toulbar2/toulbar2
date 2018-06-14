@@ -1,1 +1,4 @@
-toulbar2/.vscode/.cmaketools.json
+.vscode
+build
+src/ToulbarVersion.hpp
+src/MyCPackConf.cmake
