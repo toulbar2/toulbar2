@@ -1,3 +1,4 @@
+.vscode
 build
 src/ToulbarVersion.hpp
 src/MyCPackConf.cmake
