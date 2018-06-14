@@ -128,11 +128,14 @@ public:
     string getName() const { return name; }
     void* getSolver() const { return solver; }
 
-    Cost getLb() const { return lb; } ///< \brief gets problem lower bound
-    Cost getUb() const { return ub; } ///< \brief gets problem upper bound
+    Cost getLb() const { return lb; } ///< \brief gets problem internal lower bound
+    Cost getUb() const { return ub; } ///< \brief gets problem internal upper bound
 
-    Double getDLb() const { return Cost2ADCost(lb); }
-    Double getDUb() const { return Cost2ADCost(ub); }
+    Double getDDualBound() const { return Cost2ADCost(lb); } ///< \brief gets problem dual bound as a Double representing a decimal cost (upper resp. lower bound for minimization resp. maximization)
+    Double getDPrimalBound() const { return Cost2ADCost(ub); } ///< \brief gets problem primal bound as a Double representing a decimal cost (lower resp. upper bound for minimization resp. maximization)
+
+    Double getDUb() const { return (ToulBar2::costMultiplier < 0 ? Cost2ADCost(lb) : Cost2ADCost(ub)); } ///< \brief gets problem upper bound as a Double representing a decimal cost
+    Double getDLb() const { return (ToulBar2::costMultiplier < 0 ? Cost2ADCost(ub) : Cost2ADCost(lb)); } ///< \brief gets problem lower bound as a Double representing a decimal cost
 
     void setLb(Cost newLb) { lb = newLb; } ///< \internal sets problem lower bound
     void setUb(Cost newUb) { ub = newUb; } ///< \internal sets problem upper bound

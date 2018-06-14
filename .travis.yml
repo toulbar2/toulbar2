@@ -1,0 +1,14 @@
+language: cpp
+compiler: g++
+dist: xenial
+
+addons:
+  apt:
+    packages: libboost-all-dev libgmp-dev zlib1g-dev
+
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - make test

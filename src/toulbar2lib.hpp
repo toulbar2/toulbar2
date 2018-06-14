@@ -82,12 +82,15 @@ public:
     virtual string getName() const = 0; ///< \brief get WCSP problem name (defaults to filename with no extension)
     virtual void* getSolver() const = 0; ///< \brief special hook to access solver information
 
-    virtual Cost getLb() const = 0; ///< \brief gets problem lower bound
-    virtual Cost getUb() const = 0; ///< \brief gets problem upper bound
+    virtual Cost getLb() const = 0; ///< \brief gets internal dual lower bound
+    virtual Cost getUb() const = 0; ///< \brief gets internal primal upper bound
 
-    virtual Double getDLb() const = 0;
-    virtual Double getDUb() const = 0;
-
+    virtual Double getDPrimalBound() const = 0; ///< \brief gets problem primal bound as a Double representing a decimal cost (upper resp. lower bound for minimization resp. maximization)
+    virtual Double getDDualBound() const = 0; ///< \brief gets problem dual bound as a Double representing a decimal cost (lower resp. upper bound for minimization resp. maximization)
+  
+    virtual Double getDLb() const = 0; ///< \brief gets problem lower bound as a Double representing a decimal cost
+    virtual Double getDUb() const = 0; ///< \brief gets problem upper bound as a Double representing a decimal cost
+    
     /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) = 0;
     /// \brief enforces problem upper bound when exploring an alternative search node
