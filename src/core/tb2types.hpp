@@ -31,7 +31,6 @@
 //#define WIDE_STRING
 
 #include "utils/tb2utils.hpp"
-
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
 
@@ -89,34 +88,40 @@ inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
 inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
 inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
-inline void initCosts(Cost ub) {}
+inline void initCosts() {}
 #endif
 
 #ifdef LONGLONG_COST
 const bool PARTIALORDER = false;
 typedef Long Cost;
+struct DCost {
+    Cost c;
+
+    DCost(Cost ic) { c = ic; };
+    friend ostream& operator<<(ostream& os, const DCost& r)
+    {
+        os << r.c;
+        return os;
+    }
+    friend istream& operator>>(istream& is, DCost& r)
+    {
+        is >> r.c;
+        return is;
+    }
+};
 const Cost MIN_COST = 0;
 const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
-inline Cost MIN(Cost a, Cost b)
-{
-    return min(a, b);
-}
-inline Cost MAX(Cost a, Cost b)
-{
-    return max(a, b);
-}
-inline Cost GLB(Cost a, Cost b)
-{
-    return MIN(a, b);
-}
-inline Cost LUB(Cost a, Cost b)
-{
-    return MAX(a, b);
-}
+//inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddll_overflow(a, b, c); }
+//inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubll_overflow(a, b, c); }
+//inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smulll_overflow(a, b, c); }
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
+inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
 inline bool GLB(Cost* a, Cost b)
 {
     if (b < *a) {
@@ -133,29 +138,12 @@ inline bool LUB(Cost* a, Cost b)
     } else
         return false;
 }
-inline bool GLBTEST(Cost a, Cost b)
-{
-    return (b < a);
-}
-inline bool LUBTEST(Cost a, Cost b)
-{
-    return (b > a);
-}
-inline bool DACTEST(Cost a, Cost b)
-{
-    return (a == 0 && b > 0);
-}
-inline bool SUPPORTTEST(Cost a, Cost b)
-{
-    return false;
-}
-inline bool SUPPORTTEST(Cost a)
-{
-    return false;
-}
-inline void initCosts(Cost ub)
-{
-}
+inline bool GLBTEST(Cost a, Cost b) { return (b < a); }
+inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
+inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
+inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
+inline bool SUPPORTTEST(Cost a) { return false; }
+inline void initCosts() {}
 #endif
 
 #ifdef PARETOPAIR_COST
@@ -354,6 +342,7 @@ public:
     static string version;
     static int verbose;
     static int debug;
+    static string externalUB;
     static bool showSolutions;
     static char* writeSolution;
     static FILE* solutionFile;
@@ -396,6 +385,8 @@ public:
     static Pedigree* pedigree;
     static Haplotype* haplotype;
     static string map_file;
+    static bool cfn;
+    static bool cfngz;
     static bool bayesian;
     static int uai;
     static int resolution;
@@ -408,9 +399,12 @@ public:
     static int pedigreeCorrectionMode;
     static int pedigreePenalty;
     static int vac;
+    static string costThresholdS;
+    static string costThresholdPreS;
     static Cost costThreshold;
     static Cost costThresholdPre;
     static double costMultiplier;
+    static unsigned int decimalPoint;
     static Cost relaxThreshold;
     static bool singletonConsistency;
     static bool vacValueHeuristic;

@@ -15,6 +15,7 @@ class Domain : public BTList<Value> {
     const Value distanceToZero;
     DLink<Value>* all;
 
+    vector<string> valueNames;
     void init(Value inf, Value sup);
 
     // make it private because we don't want copy nor assignment

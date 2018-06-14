@@ -63,7 +63,7 @@ void LPSConstraint::read(istream& file)
         }
         file >> d;
         if (d != -1) {
-            cerr << "Error occur in reading slinear" << endl;
+            cerr << "Error occurred in reading slinear" << endl;
             exit(1);
         } else {
             file >> typeID;
@@ -73,7 +73,7 @@ void LPSConstraint::read(istream& file)
                 file >> d;
                 subdef.push_back(d);
             } else {
-                cerr << "Error occur in reading slinear def|var" << endl;
+                cerr << "Error occurred in reading slinear def|var" << endl;
                 exit(1);
             }
             if (strcmp(windowType[i].c_str(), "salldiff") == 0) {
@@ -86,7 +86,7 @@ void LPSConstraint::read(istream& file)
                 nslacks += 2;
                 file >> low >> high >> nvalues;
                 if (high < low) {
-                    cerr << "Error occur in reading samong" << endl;
+                    cerr << "Error occurred in reading samong" << endl;
                     exit(1);
                 }
                 sumlow.push_back(low);
@@ -108,7 +108,7 @@ void LPSConstraint::read(istream& file)
                     windowType[i] = "samong";
                     file >> nvalues >> low >> high;
                     if (high < low) {
-                        cerr << "Error occur in reading sgcc" << endl;
+                        cerr << "Error occurred in reading sgcc" << endl;
                         exit(1);
                     }
                     group[i] = (int*)malloc(sizeof(int) * count2);
@@ -147,7 +147,7 @@ void LPSConstraint::read(istream& file)
                             if (group[i][k] == -1) {
                                 group[i][k] = 0;
                             } else {
-                                cerr << "Error occur in reading ssame" << endl;
+                                cerr << "Error occurred in reading ssame" << endl;
                                 exit(1);
                             }
                             break;
@@ -161,7 +161,7 @@ void LPSConstraint::read(istream& file)
                             if (group[i][k] == -1) {
                                 group[i][k] = 1;
                             } else {
-                                cerr << "Error occur in reading ssame" << endl;
+                                cerr << "Error occurred in reading ssame" << endl;
                                 exit(1);
                             }
                             break;
@@ -173,7 +173,7 @@ void LPSConstraint::read(istream& file)
                 nslacks += 2;
                 file >> low >> high >> nvalues;
                 if (high < low) {
-                    cerr << "Error occur in reading sum" << endl;
+                    cerr << "Error occurred in reading sum" << endl;
                     exit(1);
                 }
                 sumlow.push_back(low);
@@ -213,7 +213,7 @@ void LPSConstraint::read(istream& file)
                     group[i][j + d] = high;
                 }
             } else {
-                cerr << "Error occur in reading slinear: no linearization method for: " << typeID << endl;
+                cerr << "Error occurred in reading slinear: no linearization method for: " << typeID << endl;
                 exit(1);
             }
         }
@@ -251,7 +251,7 @@ Cost LPSConstraint::evalOriginal(const String& s)
                 } else if (group[i][j] == 1) {
                     appear[s[windowVars[i][j]]] -= subdef[i];
                 } else {
-                    cerr << "Error occur in reading ssame()" << endl;
+                    cerr << "Error occurred in reading ssame()" << endl;
                     exit(1);
                 }
             }
@@ -300,7 +300,7 @@ Cost LPSConstraint::evalOriginal(const String& s)
                 }
             }
         } else {
-            cerr << "Error occur in evaloriginal: Unknown ID" << endl;
+            cerr << "Error occurred in evaloriginal: Unknown ID" << endl;
             exit(1);
         }
     }
@@ -472,7 +472,7 @@ Cost LPSConstraint::buildMIP(MIP& mip)
                 rowCount++;
             }
         } else {
-            cerr << "Error occur in building mip: Unknown ID" << windowType[i] << endl;
+            cerr << "Error occurred in building mip: Unknown ID" << windowType[i] << endl;
             exit(1);
         }
     }

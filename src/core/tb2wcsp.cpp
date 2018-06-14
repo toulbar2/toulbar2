@@ -48,6 +48,7 @@ int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
 int ToulBar2::debug;
+string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
 char* ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
@@ -95,6 +96,8 @@ externalsolution ToulBar2::newsolution;
 Pedigree* ToulBar2::pedigree;
 Haplotype* ToulBar2::haplotype;
 
+bool ToulBar2::cfn;
+bool ToulBar2::cfngz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
@@ -123,7 +126,10 @@ int ToulBar2::pedigreePenalty;
 int ToulBar2::vac;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
+string ToulBar2::costThresholdS;
+string ToulBar2::costThresholdPreS;
 double ToulBar2::costMultiplier;
+unsigned int ToulBar2::decimalPoint;
 Cost ToulBar2::relaxThreshold;
 
 BEP* ToulBar2::bep;
@@ -246,6 +252,8 @@ void tb2init()
     ToulBar2::pedigree = NULL;
     ToulBar2::haplotype = NULL;
 
+    ToulBar2::cfn = false;
+    ToulBar2::cfngz = false;
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
     ToulBar2::solution_uai_file = NULL;
@@ -339,60 +347,57 @@ void tb2init()
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
-Cost tb2checkOptions(Cost ub)
+void tb2checkOptions(Cost ub)
 {
     if (ub <= MIN_COST)
         ub = MAX_COST;
 
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
-        cout << "Warning! cost multiplier has no effect. See option -precision instead." << endl;
-        ToulBar2::costMultiplier = UNIT_COST;
+        cerr << "Error: cost multiplier cannot be used with UAI and QPBO formats. Use option -precision instead." << endl;
+        exit(1);
     }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
-        cout << "Warning! cost multiplier not implemented." << endl;
-        ToulBar2::costMultiplier = UNIT_COST;
+        cerr << "Error: cost multiplier not implemented for this file format." << endl;
+        exit(1);
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
-        cout << "Warning! BTD-like search methods not compatible with VNS." << endl;
-        ToulBar2::btdMode = 0;
+        cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
+        exit(1);
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::restart < 1) {
         ToulBar2::restart = 1; // Force random variable selection during (LDS) search within variable neighborhood search methods
     }
     if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::searchMethod != DFBB) {
-        cout << "Warning! Cannot find all solutions or compute the partition function with VNS." << endl;
-        ToulBar2::allSolutions = 0;
-        ToulBar2::isZ = 0;
+        cerr << "Error: cannot find all solutions or compute a partition function with VNS. Deactivate either option." << endl;
+        exit(1);
     }
     if (ToulBar2::approximateCountingBTD && ToulBar2::searchMethod != DFBB) {
-        cout << "Warning! Cannot find an approximation of solution count with VNS." << endl;
-        ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = 0;
+        cerr << "Error: cannot compute an approximate solution count with VNS. Deactivate '-vns' for counting." << endl;
+        exit(1);
     }
     if (ToulBar2::searchMethod == RPDGVNS && !ToulBar2::vnsParallelSync && ToulBar2::vnsKinc == VNS_LUBY) {
-        cout << "Warning! Luby operator not implemented for neighborhood size increment strategy in asynchronous parallel VNS-like methods, uses Add1 instead.." << endl;
-        ToulBar2::vnsKinc = VNS_ADD1;
+        cerr << "Error: Luby operator not implemented for neighborhood growth strategy in asynchronous parallel VNS-like methods, use Add1 instead." << endl;
+        exit(1);
     }
     if (ToulBar2::searchMethod == RPDGVNS && !ToulBar2::vnsParallelSync && ToulBar2::vnsLDSinc == VNS_LUBY) {
-        cout << "Warning! Luby operator not implemented for  discrepancy increment strategy in asynchronous parallel VNS-like methods, uses Add1 instead.." << endl;
-        ToulBar2::vnsLDSinc = VNS_ADD1;
+        cerr << "Error: Luby operator not implemented for  discrepancy growth strategy in asynchronous parallel VNS-like methods, use Add1 instead." << endl;
+        exit(1);
     }
     if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1) {
-        cout << "Warning! Cannot find an approximation of solution count without BTD." << endl;
-        ToulBar2::approximateCountingBTD = false;
-        ToulBar2::allSolutions = 0;
+        cerr << "Error: BTD search mode required for approximate solution counting (use '-B=1')." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
-        cout << "Warning! Cannot find all solutions with BTD-like search methods in optimization (only in satisfaction)." << endl;
-        ub = 1;
+        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
-        cout << "Warning! Hybrid best-first search not compatible with finding all solutions using BTD method in satisfaction." << endl;
-        ToulBar2::hbfs = 0;
+        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1) {
-        cout << "Warning! Cannot find all solutions with RDS-like search methods." << endl;
-        ToulBar2::allSolutions = 0;
+        cerr << "Error: RDS-like method cannot currently enumerate solutions. Use DFS/HBFS search or BTD (feasibility only)." << endl;
+        exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0) {
         //    if (!ToulBar2::uai || ToulBar2::debug) cout << "Warning! Cannot count all solutions with variable elimination during search (except with degree 0 for #BTD)" << endl;
@@ -410,8 +415,8 @@ Cost tb2checkOptions(Cost ub)
         ToulBar2::DEE = 0;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
-        ToulBar2::lds = 0;
+        cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
+        exit(1);
     }
     if (ToulBar2::lds && ToulBar2::hbfs) {
         // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
@@ -422,40 +427,40 @@ Cost tb2checkOptions(Cost ub)
         ToulBar2::hbfs = 0;
     }
     if (ToulBar2::restart >= 0 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Randomized search with restart not compatible with BTD-like search methods." << endl;
-        ToulBar2::restart = -1;
+        cerr << "Error: Randomized search with restart not compatible with BTD-like search methods." << endl;
+        exit(1);
     }
     if (!ToulBar2::binaryBranching && ToulBar2::btdMode >= 1) {
-        cout << "Warning! N-ary branching not implemented with BTD-like search methods, use binary branching instead." << endl;
-        ToulBar2::binaryBranching = true;
+        cout << "Warning! N-ary branching not implemented with BTD-like search methods (remove -b: or -B option)." << endl;
+        exit(1);
     }
     if (ToulBar2::btdSubTree >= 0 && ToulBar2::btdMode <= 1) {
-        cout << "Warning! Solving only a problem rooted at a given subtree, use Russian Doll Search method for that." << endl;
-        ToulBar2::btdMode = 2;
+        cerr << "Error: cannot restrict solving to a problem rooted at a subtree, use RDS (-B=2)." << endl;
+        exit(1);
     }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) {
-        cout << "Warning! VAC not implemented with BTD-like search methods during search, use VAC in preprocessing only." << endl;
-        ToulBar2::vac = 1; /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+        cerr << "Warning! VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
+        exit(1);
     }
     if (ToulBar2::preprocessFunctional > 0 && ToulBar2::LcLevel == LC_NC) {
-        cout << "Warning! Cannot perform functional elimination with NC only." << endl;
-        ToulBar2::preprocessFunctional = 0;
+        cerr << "Error; functional elimination requires at least AC enforcing (use -k=1 or more)." << endl;
+        exit(1);
     }
     if (ToulBar2::learning && ToulBar2::elimDegree >= 0) {
         cout << "Warning! Cannot perform variable elimination during search with pseudo-boolean learning." << endl;
         ToulBar2::elimDegree = -1;
     }
     if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
-        cout << "Warning! Cannot use INCOP local search with solution counting or inference tasks." << endl;
-        ToulBar2::incop_cmd = "";
+        cout << "Error: Cannot use INCOP local search for (weighted) counting (remove -i option)." << endl;
+        exit(1);
     }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {
-        cout << "Warning! N-ary branching not implemented with hybrid best-first search, use binary branching instead (or add -hbfs: parameter)." << endl;
-        ToulBar2::binaryBranching = true;
+        cout << "Error: hybrid best-first search restricted to binary branching (remove -b: or add -hbfs: options)." << endl;
+        exit(1);
     }
     if (ToulBar2::dichotomicBranching >= 2 && ToulBar2::hbfs) {
-        cout << "Warning! Complex dichotomic branching not implemented with hybrid best-first search, use simple dichotomic branching (or add -hbfs: parameter)." << endl;
-        ToulBar2::dichotomicBranching = 1;
+        cout << "Error: general dichotomic branching not implemented with hybrid best-first search (use simple dichotomic branching or add -hbfs: parameter)." << endl;
+        exit(1);
     }
     if (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
         cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
@@ -470,8 +475,6 @@ Cost tb2checkOptions(Cost ub)
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
     }
-
-    return ub;
 }
 
 /*
@@ -1000,7 +1003,7 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
 /// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
 /// \param file problem file (\see \ref wcspformat)
 /// \deprecated should use postWXXX methods
-int WCSP::postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter)
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter)
 {
     if (gcname == "salldiffdp") {
         string semantics;
@@ -1886,7 +1889,7 @@ void WCSP::preprocessing()
     if (ToulBar2::minsumDiffusion && ToulBar2::vac)
         vac->minsumDiffusion();
     if (ToulBar2::vac) {
-        if (ToulBar2::verbose >= 0)
+        if (ToulBar2::verbose >= 1)
             cout << "Preprocessing ";
         vac->printStat(true);
         //    	vac->afterPreprocessing();
@@ -2131,8 +2134,8 @@ void WCSP::printNCBuckets()
 
             assert((*iter)->canbe((*iter)->getMaxCostValue()));
             assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost() || !LUBTEST((*iter)->getMaxCost(), (*iter)->getCost((*iter)->getMaxCostValue())));
-            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)pow(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
-            assert(PARTIALORDER || bucket == NCBucketSize - 1 || to_double((*iter)->getMaxCost()) < (Long)pow(2., bucket + 1));
+            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
+            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)powl(2., bucket + 1));
         }
         cout << endl;
     }
@@ -2169,7 +2172,7 @@ void WCSP::printNCBuckets()
 
 void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
+    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -2757,8 +2760,8 @@ void WCSP::propagate()
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();
-                        if (ToulBar2::verbose >= 0)
-                            cout << "Lb before VAC: " << getLb() << endl;
+                        if (ToulBar2::verbose >= 1)
+                            cout << "Bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
                     }
                     vac->propagate();
                 }
@@ -3505,7 +3508,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         increaseLb(minc);
         if (ToulBar2::verbose >= 1)
             cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << ","
-                 << z->wcspIndex << ")  newLb: " << getLb() << endl;
+                 << z->wcspIndex << ")  newLb: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
         added = true;
     }
     return added;
@@ -3861,6 +3864,51 @@ void WCSP::setDACOrder(vector<int>& order)
 // -----------------------------------------------------------
 // Functions for dealing with probabilities
 // Warning: ToulBar2::NormFactor has to be initialized
+
+// Converts the decimal Token to a cost and yells if unfeasible.
+// the conversion uses the upper bound precision and Toulbar2::costMultiplier for scaling
+// but does not shift cost using negCost. The input string should not contain white chars.
+
+Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumber) const
+{
+    size_t dotFound = decimalToken.find('.');
+    if (dotFound == std::string::npos) {
+        try {
+            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * powl(10, ToulBar2::decimalPoint);
+        } catch (const std::invalid_argument&) {
+            cerr << "Error: invalid cost '" << decimalToken;
+            if (lineNumber)
+                cerr << "' at line " << lineNumber << endl;
+            else
+                cerr << "' in command line" << endl;
+            exit(1);
+        }
+    }
+
+    bool negative = (decimalToken[0] == '-');
+    string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound));
+    //string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
+    string decimalPart = decimalToken.substr(dotFound + 1);
+    int shift = ToulBar2::decimalPoint - decimalPart.size();
+
+    Cost cost;
+    try {
+        cost = (std::stoll(integerPart) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
+        if (decimalPart.size())
+            cost += std::stoll(decimalPart) * powl(10, shift) * ToulBar2::costMultiplier;
+    } catch (const std::invalid_argument&) {
+        cerr << "Error: invalid cost '" << decimalToken;
+        if (lineNumber)
+            cerr << "' at line " << lineNumber << endl;
+        else
+            cerr << "' in command line" << endl;
+        exit(1);
+    }
+    if (negative)
+        cost = -cost;
+    //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
+    return cost;
+}
 
 Cost WCSP::Prob2Cost(TProb p) const
 {

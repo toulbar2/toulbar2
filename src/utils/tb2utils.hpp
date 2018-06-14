@@ -18,7 +18,9 @@
 #else
 #include <assert.h>
 #include <string>
+#include <sstream>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <cmath>
 #endif
@@ -33,6 +35,15 @@
 #include <stack>
 #include <algorithm>
 using namespace std;
+
+#ifdef BOOST
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#endif
 
 #ifdef NDEBUG
 #define DEBONLY(x)

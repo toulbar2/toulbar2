@@ -49,7 +49,7 @@ void GlobalCardinalityConstraint::read(istream& file)
 	if (strcmp(str.c_str(), "dec") 	== 0) mode = VALUE;
 	if (strcmp(str.c_str(), "wdec") == 0) mode = WVALUE;
 	if (mode == EMPTY) {
-		cerr << "Error occur in reading gcc() : No violation measure" << endl;
+		cerr << "Error occurred in reading gcc() : No violation measure" << endl;
 		exit(1);
 	}*/
     setSemantics(str);
@@ -62,7 +62,7 @@ void GlobalCardinalityConstraint::read(istream& file)
         int d, high, low;
         file >> d >> low >> high;
         if (high < low) {
-            cout << "Error occur in reading gcc: upper bound " << high << " smaller than lower bound " << low << endl;
+            cerr << "Error occurred in reading gcc: upper bound " << high << " smaller than lower bound " << low << endl;
             THROWCONTRADICTION;
         }
         //JP Start//
@@ -104,11 +104,11 @@ void GlobalCardinalityConstraint::organizeConfig()
 
     if ((mode == VAR) && ((arity_ < sumlow) || (arity_ > sumhigh))) {
         if (ToulBar2::verbose >= 0) {
-            cout << "Error occur in gcc() model using variable-based measure : " << endl;
-            cout << "sum of lower bound is too high / sum of upper bound is too low compared to arity." << endl;
-            cout << "sum high = " << sumhigh << endl;
-            cout << "sum low = " << sumlow << endl;
-            cout << "arity = " << arity_ << endl;
+            cerr << "Error occurred in gcc() model using variable-based measure : " << endl;
+            cerr << "sum of lower bound is too high / sum of upper bound is too low compared to arity." << endl;
+            cerr << "sum high = " << sumhigh << endl;
+            cerr << "sum low = " << sumlow << endl;
+            cerr << "arity = " << arity_ << endl;
         }
         THROWCONTRADICTION;
     }
@@ -227,7 +227,7 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph& g)
 /*void GlobalCardinalityConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
 	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
+	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
 			k != graph[varindex+1].end(); k++) {
 		if (k->adj > 0) {
 			for (map<Value, int>::iterator i = mapval.begin();i !=
@@ -238,7 +238,7 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph& g)
 	}
 	for (map<Value, int>::iterator i = mapval.begin();i !=
 			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
+		for (vector<List_Node >::iterator k = graph[i->second].begin();
 				k != graph[i->second].end(); k++) {
 			if (k->adj == varindex+1) {
 				domain.push_back(i->first);

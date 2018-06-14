@@ -1474,6 +1474,7 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
 
         wcsp->postBinaryConstraint(newVariable[value][0], newVariable[value][1], binaryCosts);
     }
+    delete[] newVariable;
 }
 
 void WeightedSame::display()

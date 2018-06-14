@@ -71,6 +71,7 @@ class WCSP FINAL : public WeightedCSP {
     // make it private because we don't want copy nor assignment
     WCSP(const WCSP& wcsp);
     WCSP& operator=(const WCSP& wcsp);
+    friend class CFNStreamReader;
 
 public:
     /// \brief variable elimination information used in backward phase to get a solution during search
@@ -129,6 +130,8 @@ public:
     Cost getLb() const { return lb; } ///< \brief gets problem lower bound
     Cost getUb() const { return ub; } ///< \brief gets problem upper bound
 
+    Double getDLb() const { return Cost2ADCost(lb); }
+    Double getDUb() const { return Cost2ADCost(ub); }
     void setLb(Cost newLb) { lb = newLb; } ///< \internal sets problem lower bound
     void setUb(Cost newUb) { ub = newUb; } ///< \internal sets problem upper bound
 
@@ -390,7 +393,7 @@ public:
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
-    int postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
+    int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
 
@@ -425,7 +428,7 @@ public:
 
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
 
-    void read_wcsp(const char* fileName); ///< \brief load problem in native wcsp format (\ref wcspformat)
+    Cost read_wcsp(const char* fileName); ///< \brief load problem in any of all formats managed by tb2. Return the global UB known to the solver at start (file and command line).
     void read_uai2008(const char* fileName); ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = ""); ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
@@ -605,9 +608,12 @@ public:
     void visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int> >& listofsuccessors);
 
     // -----------------------------------------------------------
-    // Functions dealing with probabilities
+    // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
 
+    Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
+    Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
+    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;

@@ -252,7 +252,7 @@ inline bool CSP(ParetoPair lb, ParetoPair ub)
     ParetoPair r = ub - lb;
     return (r == ParetoPair(1, 0)) || (r == ParetoPair(0, 1));
 }
-void initCosts(ParetoPair ub);
+void initCosts();
 
 #endif /*TB2PARETOPAIR_HPP_*/
 

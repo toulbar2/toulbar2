@@ -79,12 +79,14 @@ public:
     virtual ~WeightedCSP() {}
 
     virtual int getIndex() const = 0; ///< \brief instantiation occurrence number of current WCSP object
-    virtual string getName() const = 0; ///< \brief WCSP filename (without its extension)
+    virtual string getName() const = 0; ///< \brief get WCSP problem name (defaults to filename with no extension)
     virtual void* getSolver() const = 0; ///< \brief special hook to access solver information
 
     virtual Cost getLb() const = 0; ///< \brief gets problem lower bound
     virtual Cost getUb() const = 0; ///< \brief gets problem upper bound
 
+    virtual Double getDLb() const = 0;
+    virtual Double getDUb() const = 0;
     /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) = 0;
     /// \brief enforces problem upper bound when exploring an alternative search node
@@ -219,7 +221,7 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
 
-    virtual int postGlobalConstraint(int* scopeIndex, int arity, string& gcname, istream& file, int* constrcounter = NULL) = 0; ///< \deprecated Please use the postWxxx methods instead
+    virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL) = 0; ///< \deprecated Please use the postWxxx methods instead
 
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -352,7 +354,7 @@ public:
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
-    virtual void read_wcsp(const char* fileName) = 0; ///< \brief load problem in native wcsp format (\ref wcspformat)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief load problem in all format supported by toulbar2. Returns the UB known to the solver before solving (file and command line).
     virtual void read_uai2008(const char* fileName) = 0; ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
@@ -367,9 +369,12 @@ public:
     virtual void dump(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
 
     // -----------------------------------------------------------
-    // Functions dealing with probabilities
+    // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
 
+    virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
+    virtual Double Cost2ADCost(const Cost& c) const = 0;
+    virtual Double Cost2RDCost(const Cost& c) const = 0;
     virtual Cost Prob2Cost(TProb p) const = 0;
     virtual TProb Cost2Prob(Cost c) const = 0;
     virtual TLogProb Cost2LogProb(Cost c) const = 0;
@@ -476,7 +481,7 @@ public:
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
-    virtual void read_wcsp(const char* fileName) = 0; ///< \brief reads a WCSP from a file in wcsp text format (can be other formats if using specific ::ToulBar2 global variables)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem
@@ -519,7 +524,7 @@ public:
 extern void tb2init();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
 /// \return new initial upper bound (if options assume it is a satisfaction problem instead of optimization)
-extern Cost tb2checkOptions(Cost initialUpperBound);
+extern void tb2checkOptions(Cost initialUpperBound);
 #endif /*TOULBAR2LIB_HPP_*/
 
 /* Local Variables: */

@@ -52,7 +52,7 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 ostream myCout(cout.rdbuf());
 
 #ifdef PARETOPAIR_COST
-void initCosts(Cost c)
+void initCosts()
 {
     if (ToulBar2::LcLevel > LC_FDAC) {
         cerr << "EDAC not implemented on Paretopair => force to FDAC." << endl;
@@ -93,21 +93,11 @@ string read_UB(char* ubfilename)
     }
 }
 
-/* get ending sbsrting */
-//bool getExt(char* fileName, const char* ext)
+// chek if a filename end as ext
 bool check_file_ext(const string fileName, const string ext)
 {
-    // Finds the last persiod character of the string
-    int period = fileName.find_last_of(ext[0]);
-    if (period < 0)
-        return false;
-    string found_ext = fileName.substr(period);
-    if (found_ext == ext) {
-        return true;
-    } else {
-        //cout <<"ext " << ext << "not found in "<< fileName << endl;
-        return false;
-    }
+    size_t extLen = ext.length();
+    return ((extLen <= fileName.length()) && (fileName.substr(fileName.length() - extLen) == ext));
 }
 
 enum {
@@ -119,6 +109,8 @@ enum {
     // file extension option
     OPT_wcsp_ext,
     OPT_wcspXML_ext,
+    OPT_cfn_ext,
+    OPT_cfngz_ext,
     OPT_order_ext,
     OPT_uai_ext,
     OPT_uai_log_ext,
@@ -217,7 +209,7 @@ enum {
 #ifndef NDEBUG
     OPT_verifyopt,
 #endif
-    // MEDELESOFT OPTION
+    // MENDELESOFT OPTION
     OPT_generation = 99,
     MENDEL_OPT_genotypingErrorRate = 100,
     MENDEL_OPT_resolution = 101,
@@ -259,7 +251,7 @@ string getExt(string FileName)
 {
     // Finds the last persiod character of the string
     int period = FileName.find_last_of(".");
-    // I use  + 1 because I don't really need the to include the period
+    // I use  + 1 because I don't really need to include the period
     string ext = FileName.substr(period + 1);
     return ext;
 }
@@ -276,6 +268,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // file extension
     { OPT_wcsp_ext, (char*)"--wcsp_ext", SO_REQ_SEP },
     { OPT_wcspXML_ext, (char*)"--wcspXML_ext", SO_REQ_SEP },
+    { OPT_cfn_ext, (char*)"--cfn_ext", SO_REQ_SEP },
+    { OPT_cfngz_ext, (char*)"--cfngz_ext", SO_REQ_SEP },
     { OPT_order_ext, (char*)"--order_ext", SO_REQ_SEP },
     { OPT_uai_ext, (char*)"--uai_ext", SO_REQ_SEP },
     { OPT_uai_log_ext, (char*)"--uai_log_ext", SO_REQ_SEP },
@@ -378,7 +372,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
-    // MEDELSOFT
+    // MENDELSOFT
     { OPT_generation, (char*)"-g", SO_NONE }, //sort pedigree by increasing generation number and if equal by increasing individual number
     //	{ OPT_pedigree_by_MPE,  		(char*) "-y", 				SO_OPT			}, // bayesian flag
     { MENDEL_OPT_genotypingErrorRate, (char*)"-genoError", SO_REQ_SEP },
@@ -523,7 +517,7 @@ static void Pedi_Args(CSimpleOpt& args, int nMultiArgs)
     }
 }
 
-/* return current binary path extract from or argv[0] or from the env var $path the env var $path */
+/* return current binary path extracted from argv[0] or from the env var $path */
 
 char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 {
@@ -556,6 +550,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
         }
         tok = strtok(NULL, PATH_DELIM);
     }
+    free(path);
     buffer[0] = 0;
     return NULL;
 }
@@ -572,7 +567,9 @@ void help_msg(char* toulbar2filename)
     cout << endl;
 #ifndef MENDELSOFT
     cout << "Available problem formats (specified by the filename extension) are:" << endl;
-    cout << "   *.wcsp : Weighted CSP format (see SoftCSP web site)" << endl;
+    cout << "   *.wcsp : Weighted CSP format (see toulbar2 web site)" << endl;
+    cout << "   *.cfn : Cost Function Network format (see toulbar2 web site)" << endl;
+    cout << "   *.cfn.gz : gzip'd Cost Function Network format (see toulbar2 web site)" << endl;
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
@@ -601,12 +598,12 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
-    cout << "   -ub=[integer] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
+    cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
-    cout << "   -precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
     cout << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -714,9 +711,9 @@ void help_msg(char* toulbar2filename)
          << endl;
     cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
-    cout << "   -T=[integer] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
-    cout << "   -P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
-    cout << "   -C=[float] : multiplies all costs by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
+    cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
+    cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
+    cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
     cout << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
     if (ToulBar2::singletonConsistency)
         cout << " (default option)";
@@ -806,7 +803,6 @@ int _tmain(int argc, TCHAR* argv[])
     char* certificateString = NULL;
     char buf[512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
-    Cost ub = MAX_COST;
     int timeout = 0;
     bool updateValueHeuristic = true;
 
@@ -828,6 +824,8 @@ int _tmain(int argc, TCHAR* argv[])
 
     std::map<std::string, string> file_extension_map;
     file_extension_map["wcsp_ext"] = ".wcsp";
+    file_extension_map["cfn_ext"] = ".cfn";
+    file_extension_map["cfngz_ext"] = ".cfn.gz";
     file_extension_map["wcspXML_ext"] = ".xml";
     file_extension_map["order_ext"] = ".order";
     file_extension_map["ub_ext"] = ".ub";
@@ -1319,15 +1317,15 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_costThreshold) {
-                Cost ct = string2Cost(args.OptionArg());
-                if (ct > UNIT_COST)
-                    ToulBar2::costThreshold = ct;
+                //Cost ct = string2Cost(args.OptionArg());
+                //if (ct > UNIT_COST)
+                ToulBar2::costThresholdS = args.OptionArg();
             }
 
             if (args.OptionId() == OPT_costThresholdPre) {
-                Cost ct = string2Cost(args.OptionArg());
-                if (ct > UNIT_COST)
-                    ToulBar2::costThresholdPre = ct;
+                //Cost ct = string2Cost(args.OptionArg());
+                //if (ct > UNIT_COST)
+                ToulBar2::costThresholdPreS = args.OptionArg();
             }
             /*if ( (ch = strchr(argv[i],'R')) ) {
 			  Cost ct = string2Cost(&ch[1]);
@@ -1658,12 +1656,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             // upper bound initialisation from command line
             if (args.OptionId() == OPT_ub) {
-
-                if (args.OptionArg() != NULL) {
-                    ub = (args.OptionArg()) ? string2Cost(args.OptionArg()) : MAX_COST;
-                }
-                if (ToulBar2::debug)
-                    cout << "UB =" << ub << " passed in  command line" << endl;
+                ToulBar2::externalUB = args.OptionArg();
             }
 
             // CPU timer
@@ -1758,6 +1751,22 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".wcsp";
                 strfile = glob.File(n);
             }
+            // CFN file
+            if (check_file_ext(glob.File(n), file_extension_map["cfn_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading cfn file: " << glob.File(n) << endl;
+                strext = ".cfn";
+                strfile = glob.File(n);
+                ToulBar2::cfn = true;
+            }
+            // CFN gzip'd file
+            if (check_file_ext(glob.File(n), file_extension_map["cfngz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading compressed cfn file: " << glob.File(n) << endl;
+                strext = ".cfn.gz";
+                strfile = glob.File(n);
+                ToulBar2::cfngz = true;
+            }
             // uai  file
             if (check_file_ext(glob.File(n), file_extension_map["uai_ext"])) {
                 strfile = glob.File(n);
@@ -1826,10 +1835,14 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(glob.File(n), file_extension_map["ub_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading upper bound from file: " << glob.File(n) << endl;
-                string ubs;
-                ubs = read_UB(glob.File(n));
-                if (ubs.c_str() != NULL) {
-                    ub = string2Cost((char*)ubs.c_str());
+                string ubstring = read_UB(glob.File(n));
+                if (ubstring.c_str() != NULL) {
+                    if (ToulBar2::externalUB.length() != 0) {
+                        cerr << "Error: cannot set upper bound from command line and file simultaneously." << endl;
+                        exit(1);
+                    } else {
+                        ToulBar2::externalUB = ubstring;
+                    }
                 } else {
                     cerr << "error reading UB in " << glob.File(n) << endl;
                     exit(-1);
@@ -1942,7 +1955,7 @@ int _tmain(int argc, TCHAR* argv[])
         cerr << "Problem filename is missing as command line argument!" << endl;
         cerr << endl;
         help_msg(argv[0]);
-        exit(0);
+        exit(1);
     }
 
     //------------------------------tb2 option --------------
@@ -1950,10 +1963,9 @@ int _tmain(int argc, TCHAR* argv[])
     // test on initial ub cost value;
     /////////////////////////////////////////
 
-    ub = tb2checkOptions(ub);
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
-        cout << "Warning! An optimal solution file is missing in the command line. Verifying the optimal solution is disabled." << endl;
-        ToulBar2::verifyOpt = false;
+        cerr << "Error: no optimal solution file given. Cannot verify the optimal solution." << endl;
+        exit(1);
     }
 
 #ifdef OPENMPI
@@ -2001,8 +2013,9 @@ int _tmain(int argc, TCHAR* argv[])
 
     ToulBar2::startCpuTime = cpuTime();
 
-    initCosts(ub);
-    WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
+    initCosts();
+    Cost globalUb = MAX_COST;
+    WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
     bool randomproblem = false;
     bool forceSubModular = false;
@@ -2080,7 +2093,11 @@ int _tmain(int argc, TCHAR* argv[])
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else
-            solver->read_wcsp((char*)strfile.c_str());
+            globalUb = solver->read_wcsp((char*)strfile.c_str());
+
+        // TODO Need to fetch UB
+        tb2checkOptions(globalUb);
+        //TODO: If --show_options then dump ToulBar2 object here
 
         if (certificate) {
             if (certificateFilename != NULL)

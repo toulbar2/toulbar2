@@ -232,7 +232,7 @@ public:
     Solver(Cost initUpperBound);
     ~Solver();
 
-    void read_wcsp(const char* fileName);
+    Cost read_wcsp(const char* fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "");
 
     Long getNbNodes() const FINAL { return nbNodes; }
