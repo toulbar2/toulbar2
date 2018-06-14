@@ -51,6 +51,7 @@
 The available file formats are:<br/>
 </p>
 <ul>
+    <li>Cost Function Network format (<a href="https://github.com/toulbar2/toulbar2/raw/master/doc/The CFN format.pdf">.cfn/.cfn.gz</a> file extensions)</li>
   <li>Weighted Constraint Satisfaction Problem (<a href="https://github.com/toulbar2/toulbar2/raw/master/doc/wcspformat.pdf">.wcsp</a> file extension)</li>
   <li>Probabilistic Graphical Model (<a href="http://www.cs.huji.ac.il/project/PASCAL/fileFormat.php">.uai</a>/<a href="http://cs.nyu.edu/~dsontag/code/README_v2.html">.LG</a> file extension)</li>
   <li>Weigthed Partial Max-SAT (<a href="http://www.maxsat.udl.cat/08/index.php?disp=requirements">.cnf/.wcnf</a> file extension)</li>
@@ -59,6 +60,7 @@ The available file formats are:<br/>
 
 <h2>Some examples</h2>
 <ul>
+  <li>A simple 2 variables maximization problem <a href="https://github.com/toulbar2/toulbar2/raw/master/validation/default/maximization.cfn">maximization.cfn</a> in JSON-compatible CFN format, with decimal positive and negative costs. 
   <li>Random binary cost function network <a href="EXAMPLES/example.wcsp">example.wcsp</a>, with a specific variable ordering <a href="EXAMPLES/example.order">example.order</a>, a tree decomposition <a href="EXAMPLES/example.cov">example.cov</a>, and a cluster decomposition <a href="EXAMPLES/example.dec">example.dec</a></li>
   <li>Latin square 4x4 with random costs on each variable <a href="EXAMPLES/latin4.wcsp">latin4.wcsp</a></li>
   <li><a href="http://www7.inra.fr/mia/T/schiex/Doc/Export/CELAR.ps.gz">Radio link frequency assignment CELAR</a> instances <a href="EXAMPLES/scen06.wcsp">scen06.wcsp</a>, <a href="EXAMPLES/scen06.cov">scen06.cov</a>, <a href="EXAMPLES/scen06.dec">scen06.dec</a>, <a href="EXAMPLES/scen07.wcsp">scen07.wcsp</a></li>
