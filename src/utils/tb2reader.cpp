@@ -293,10 +293,10 @@ public:
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
 
-    stringstream generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate);
+    void generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate, stringstream & stream);
 
-    stringstream generateGCFStreamSgrammar(vector<int>& scope);
-    stringstream generateGCFStreamSsame(vector<int>& scope);
+    void generateGCFStreamSgrammar(vector<int>& scope, stringstream & stream);
+    void generateGCFStreamSsame(vector<int>& scope, stringstream & stream);
 
     void readIntervalUnaryTable(int varIdx, vector<Value>& authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
@@ -1299,7 +1299,9 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     auto it = GCFTemplates.find(funcName);
     if (it != GCFTemplates.end()) {
         // Reads function using template and generates the corresponding stream
-        stringstream paramsStream = this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName]);
+        stringstream paramsStream;
+        
+        this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName], paramsStream);
 
         int scopeArray[arity];
         for (unsigned int i = 0; i < arity; i++) {
@@ -1429,18 +1431,19 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     }
 }
 
-stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const string& funcType, string GCFTemplate)
+void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const string& funcType, string GCFTemplate, stringstream& stream)
 {
 
     // -------------------- Special cases are treated separately
     if (funcType == "sgrammar" || funcType == "sgrammardp") {
-        return this->generateGCFStreamSgrammar(scope);
+        this->generateGCFStreamSgrammar(scope, stream);
+        return;
     } else if (funcType == "ssame") {
-        return this->generateGCFStreamSsame(scope);
+        this->generateGCFStreamSsame(scope, stream);
+        return;
     }
 
     // -------------------- Function reading using template
-    stringstream stream;
     int lineNumber = -1;
     string token;
     vector<char> repeatedSymbols;
@@ -1671,7 +1674,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
     // STREAM DEBUG
     if (ToulBar2::verbose >= 1)
         cout << "Stream for " << funcType << ": '" << stream.str() << "'" << endl;
-    return stream;
+    return;
 }
 
 /*
@@ -1685,7 +1688,7 @@ stringstream CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, 
 * non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
 * return stream : [var|weight cost nb_symbols nb_values start_symbol nb_rules ((0 terminal_symbol value)|(1 nonterminal_in nonterminal_out_left nonterminal_out_right)|(2 terminal_symbol value weight)|(3 nonterminal_in nonterminal_out_left nonterminal_out_right weight))∗]
 */
-stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope)
+void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream &stream)
 {
 
     int lineNumber;
@@ -1802,8 +1805,6 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope)
     // End of function
     skipCBrace();
 
-    stringstream stream;
-
     // Cost had no impact on negCost here
     stream << metric << " " << cost << " " << nb_symbols << " " << nb_values << " " << start_symbol
            << " " << std::to_string(terminal_rules.size() + non_terminal_rules.size()) << " ";
@@ -1821,8 +1822,6 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope)
 
     if (ToulBar2::verbose >= 1)
         cout << "Stream for sgrammar : '" << stream.str() << "'" << endl;
-
-    return stream;
 }
 /*
 * Example :
@@ -1831,7 +1830,7 @@ stringstream CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope)
 * vars2 : [v4 v5 v6]
 * return stream : [cost list_size1 list_size2 (variable_index)∗ (variable_index)∗]
 */
-stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope)
+void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream &stream)
 {
 
     int lineNumber;
@@ -1891,8 +1890,6 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope)
     // End of function
     skipCBrace();
 
-    stringstream stream;
-
     // Cost has no impact on negCost here
     stream << cost << " ";
     stream << variables1.size() << " " << variables2.size() << " ";
@@ -1904,7 +1901,7 @@ stringstream CFNStreamReader::generateGCFStreamSsame(vector<int>& scope)
     if (ToulBar2::verbose >= 1)
         cout << "Stream for ssame : '" << stream.str() << "'" << endl;
 
-    return stream;
+    return;
 }
 
 // TB2 entry point for WCSP reading (not only wcsp format).
