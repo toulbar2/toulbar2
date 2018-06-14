@@ -1398,7 +1398,7 @@ void Solver::newSolution()
             cout << nbSol << " Log(Z) " << ToulBar2::logZ + ToulBar2::markov_log;
         }
         if (ToulBar2::cpd) {
-            ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getDualBound());
+            ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getDDualBound());
         } else {
             if (!ToulBar2::isZ) {
                 for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
