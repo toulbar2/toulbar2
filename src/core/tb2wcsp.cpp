@@ -2761,7 +2761,7 @@ void WCSP::propagate()
                     if (vac->firstTime()) {
                         vac->init();
                         if (ToulBar2::verbose >= 1)
-                            cout << "Bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
+                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
                     }
                     vac->propagate();
                 }
@@ -3508,7 +3508,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         increaseLb(minc);
         if (ToulBar2::verbose >= 1)
             cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << ","
-                 << z->wcspIndex << ")  newLb: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << endl;
+                 << z->wcspIndex << ")  newDualBound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
         added = true;
     }
     return added;
