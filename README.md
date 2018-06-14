@@ -1,6 +1,8 @@
 # toulbar2
 ## An exact solver for cost function networks
 
+[![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
+
 ## What is toulbar2?
 
 toulbar2 is an  open-source C++ solver for cost  function networks. It
