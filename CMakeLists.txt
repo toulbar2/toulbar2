@@ -301,7 +301,7 @@ IF(TOULBAR2)
   add_executable(toulbar2${EXE} ${source_files})
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
-  
+  ADD_DEPENDENCIES(toulbar2${EXE} gen_version)
   IF(MPI)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
