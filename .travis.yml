@@ -1,6 +1,6 @@
 language: cpp
 compiler: g++
-dist: bionic
+dist: xenial
 
 addons:
   apt:
