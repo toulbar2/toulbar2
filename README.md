@@ -1,19 +1,19 @@
 # toulbar2
-## An exact solver for cost function networks
+## An exact solver for cost function networks and additive graphical models 
 
 ## What is toulbar2?
 
-toulbar2 is an  open-source C++ solver for cost  function networks. It
-solves  combinatorial optimization  problems in  various formats.  The
-constraints and  objective function are factorized  in local functions
-on discrete variables. Each function returns a cost (a finite positive
-integer)  for  any  assignment   of  its  variables.  Constraints  are
-represented  as functions  with  costs in  {0,k} where  k  is a  large
-integer  representing forbidden  assignments.   toulbar2  looks for  a
-non-forbidden assignment  of all variables  that minimizes the  sum of
-all functions.
+toulbar2 is an open-source black-box C++ optimizer for cost function
+networks and discrete additive graphical models. It can read a variety
+of formats. The optimized criteria and feasibility should be provided
+factorized in local cost functions on discrete variables. Constraints
+are represented as functions that produce costs that exceed a
+user-provided primal bound.  Internally, toulbar2 handles non negative
+integers costs. Some formats (CFN, UAI,...) allow for decimal/negative
+costs. toulbar2 looks for a non-forbidden assignment of all variables
+that optimizes the sum of all functions (a decision NP-complete problem).
 
-toulbar2 won  several competitions on deterministic  and probabilistic
+toulbar2 won several competitions on deterministic and probabilistic
 graphical models:
 
 * Max-CSP 2008 Competition [CPAI08][cpai08] (winner on 2-ARY-EXT and N-ARY-EXT)
@@ -29,21 +29,34 @@ graphical models:
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
 
 
+## Installation from binaries
+
+You can install toulbar2 directly using the package manager in Debian
+and Debian derived Linux distributions (Ubuntu, Mint,...). For the
+most recent version, it's best to compile from source.
+
+
 ## Download
 
-https://github.com/toulbar2/toulbar2
-
-Download the latest release from GitHub or similarly use tag versions, e.g.,
+Download the latest release from GitHub
+(https://github.com/toulbar2/toulbar2) or similarly use tag versions,
+e.g.:
 
     git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
 
 
-## Installation
+## Installation from sources
 
-Library needed:
+Compilation requires git, cmake and a C++-11 capable compiler. 
+
+Required library:
 * libgmp-dev
+
+Strongly advised libraries:
 * libboost-dev
 * libboost-graph-dev
+* libboot-iostream-dev
+* zlib
 
 Optional libraries:
 * libxml2-dev
@@ -67,7 +80,7 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
     g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
      -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -lgmp -static
 
-Replace flag LONGLONG_COST by INT_COST to reduce memory usage by two (but costs must be smaller than 10^8).
+Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
 
 Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
@@ -99,15 +112,15 @@ Additional contributions by:
 
 Please use one of the following references for citing toulbar2:
 
- Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
+ * Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
  Barry Hurley, Barry O'Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry
  Constraints, 21(3):413-434, 2016
 
- Tractability-preserving Transformations of Global Cost Functions
+ * Tractability-preserving Transformations of Global Cost Functions
  David Allouche, Christian Bessiere, Patrice Boizumault, Simon de Givry, Patricia Gutierrez, Jimmy HM. Lee, Ka Lun Leung, Samir Loudni, Jean-Philippe Métivier, Thomas Schiex, Yi Wu
  Artificial Intelligence, 238:166-189, 2016
 
- Soft arc consistency revisited
+ * Soft arc consistency revisited
  Martin Cooper, Simon de Givry, Marti Sanchez, Thomas Schiex, Matthias Zytnicki, and Thomas Werner
  Artificial Intelligence, 174(7-8):449-478, 2010 
 
