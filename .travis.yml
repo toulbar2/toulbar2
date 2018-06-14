@@ -1,10 +1,10 @@
 language: cpp
 compiler: g++
-dist: xenial
+dist: bionic
 
 addons:
   apt:
-    packages: libboost-all-dev libgmp-dev zlib1g-dev
+    packages: libboost-all-dev libgmp-dev zlib1g-dev libjemalloc-dev
 
 script:
   - mkdir build
