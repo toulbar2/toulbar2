@@ -1,10 +1,9 @@
 #ifndef TB2BASEJOBS_HPP
 #define TB2BASEJOBS_HPP
-#ifdef USEMPI
-#include <vector>
-#include <string>
+#ifdef OPENMPI
 #include <mpi.h>
-
+#include <vector>
+#include <fstream>
 using namespace std;
 
 class BaseJobs {

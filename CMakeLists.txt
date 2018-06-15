@@ -15,8 +15,8 @@ set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
-set (MAINTAINER "David Allouche <david.allouche@toulouse.inra.fr>") #used in packaging 
-set (CONTACT "https://mulcyber.toulouse.inra.fr/projects/toulbar2/") #used in packaging
+set (MAINTAINER "David Allouche <david.allouche@inra.fr>") #used in packaging 
+set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 
 ##########################################
 # PROJECT NAME
@@ -38,28 +38,28 @@ include(CMakeDependentOption)
 
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON)
 #	OPTION(MENDELSOFT "mendelsoft compilation and packaging option [default:off]" OFF)
-	OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF)
-	OPTION(ALL_APP "dedicated applications and toulbar2 solver compilation [default: off]" OFF)
-	OPTION(MENDELSOFT_ONLY "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
-	OPTION(TOULBAR2_ONLY  "toulbar2 solver compilation ONLY  [default: on]" ON)
+OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF)
+OPTION(ALL_APP "dedicated applications and toulbar2 solver compilation [default: off]" OFF)
+OPTION(MENDELSOFT_ONLY "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
+OPTION(TOULBAR2_ONLY  "toulbar2 solver compilation ONLY  [default: on]" ON)
   OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
-	OPTION(ILOG  "ilog solver binding [default: off]" OFF)
+OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF)
-	OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
-# OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
-  OPTION(Boost "boost graph binding [default: on]" ON)
-	OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
-  OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
-	OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
-  OPTION(QUAD_PROBABILITY  "use quadmath to encode probabilities [default:on]" OFF)
-  OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
-  OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
-  OPTION(STATIC "static compilation flag [default: off]" OFF)
-	OPTION(verbose "verbose mode [default:on]" ON)
-	OPTION(COVER_TEST "cover test [default:on]" ON)
-  OPTION(BENCH "benchmarcking [default:off]" OFF)
-  OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
-  OPTION(USE_MPI "Defines variable USEMPI" OFF)
+OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
+##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
+OPTION(Boost "boost bindings [default: on]" ON)
+OPTION(MPI "MPI [default: on]" OFF)
+OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
+OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
+OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
+OPTION(QUAD_PROBABILITY  "use quadmath to encode probabilities [default:on]" OFF)
+OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
+OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
+OPTION(STATIC "static compilation flag [default: off]" OFF)
+OPTION(verbose "verbose mode [default:on]" ON)
+OPTION(COVER_TEST "cover test [default:on]" ON)
+OPTION(BENCH "benchmarcking [default:off]" OFF)
+OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 mark_as_advanced(WITH_MEM_JEMALLOC BUILD_API_DOC_LATEX)
 
 ##########################################
@@ -70,10 +70,6 @@ IF(NOT CMAKE_BUILD_TYPE)
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
-
-IF(USE_MPI)
-    ADD_DEFINITIONS(-DUSEMPI)
-ENDIF(USE_MPI)
 
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
 
@@ -120,13 +116,18 @@ SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench
 MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY QUAD_PROBABILITY LONG_COSTS)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY QUADMATH_LIBRARY)
 
+IF (MPI)
+  SET(Boost ON)
+  SET(STATIC OFF)
+ENDIF(MPI)
+
 ##########################################
 # static building
 ##########################################
 
 IF(STATIC)
 	set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
-	MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml  option not compliant with static link)")
+  MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml and MPI options not compliant with static link)")
 	SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
 
 ELSE()
@@ -177,7 +178,8 @@ IF(MENDELSOFT_ONLY)
 	SET(LIBTB2 OFF)
 	SET(XML OFF)
 	SET(CPLEX OFF)
-	SET(boost OFF)
+  SET(Boost OFF)
+  set(MPI OFF)
 
 #basename for packaging and versioning
 	set (Toulbar_NAME "mendelsoft")
@@ -221,6 +223,7 @@ IF(WIN32)
 	set(XML OFF)
 	set(CPLEX OFF)
 	set(Boost OFF)
+  	set(MPI OFF)
 	set(ILOG OFF)
 	set(LIBTB2 OFF)
 
@@ -277,6 +280,17 @@ IF(Boost)
   link_directories(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF(Boost)
+
+##########################################
+IF(MPI) 
+#  SET(CMAKE_C_COMPILER mpicc)
+#  SET(CMAKE_CXX_COMPILER mpicxx)
+#  SET(CMAKE_CXX_COMPILER /usr/mpi/gcc/openmpi-1.10.3rc4/bin/mpicxx)
+#  SET(CMAKE_SYSTEM_PREFIX_PATH /usr/mpi/gcc/openmpi-1.10.3rc4)
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+  SET (mpiflag OPENMPI)
+ENDIF(MPI)
 
 ##########################################
 #  FLAG XML ON  ==> xmlcps supported

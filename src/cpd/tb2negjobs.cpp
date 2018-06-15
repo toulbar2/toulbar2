@@ -1,7 +1,7 @@
-#ifdef USEMPI
+#ifdef OPENMPI
 #include "tb2negjobs.hpp"
-#include "tb2types.hpp"
-#include <fstream>
+#include "core/tb2types.hpp"
+
 #include <sys/stat.h>
 
 // Note: current_job starts from 1

@@ -15,7 +15,7 @@
 #include "applis/tb2haplotype.hpp"
 #include "cpd/tb2cpd.hpp"
 #include "cpd/tb2scpbranch.hpp"
-#ifdef USEMPI
+#ifdef OPENMPI
 #include "cpd/tb2basejobs.hpp"
 #include "cpd/tb2negjobs.hpp"
 #endif
@@ -106,7 +106,7 @@ Pedigree* ToulBar2::pedigree;
 Haplotype* ToulBar2::haplotype;
 Cpd* ToulBar2::cpd;
 Tb2ScpBranch* ToulBar2::scpbranch;
-#ifdef USEMPI
+#ifdef OPENMPI
 BaseJobs* ToulBar2::jobs;
 #endif
 SequenceHandler* ToulBar2::sequence_handler;

@@ -1,4 +1,4 @@
-#ifdef USEMPI
+#ifdef OPENMPI
 #include "tb2basejobs.hpp"
 
 // Note: current_job starts from 1

@@ -315,7 +315,7 @@ class BEP;
 class Cpd;
 class Tb2ScpBranch;
 class TrieNum;
-#ifdef USEMPI
+#ifdef OPENMPI
 class BaseJobs;
 class Jobs;
 #endif
@@ -430,7 +430,7 @@ public:
     static Haplotype* haplotype;
     static Cpd* cpd;
     static Tb2ScpBranch* scpbranch;
-#ifdef USEMPI
+#ifdef OPENMPI
     static BaseJobs* jobs;
 #endif
     static SequenceHandler* sequence_handler;

@@ -1,11 +1,9 @@
 #ifndef TB2JOBS_HPP
 #define TB2JOBS_HPP
-#ifdef USEMPI
-#include <vector>
-#include <string>
+#ifdef OPENMPI
 #include <mpi.h>
 #include "tb2basejobs.hpp"
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 #include "tb2sequencehandler.hpp"
 
 using namespace std;
@@ -24,7 +22,7 @@ public:
     // void shutdown_node();
     // int mpi_rank();
     void send_seqid_and_cost(unsigned seqid, Cost new_cost);
-    tuple<unsigned, Cost> receive_seqid_and_cost(int source);
+    std::tuple<unsigned, Cost> receive_seqid_and_cost(int source);
     void process_job_results(int slave_job, int slave_rank);
     //void spin_off_solver(int source);
     void send_new_sequence(int source);

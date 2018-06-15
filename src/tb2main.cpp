@@ -11,14 +11,12 @@
 #ifdef OPENMPI
 #include "vns/tb2cpdgvns.hpp"
 #include "vns/tb2rpdgvns.hpp"
-#endif
-#include "cpd/tb2cpd.hpp"
-#include "cpd/tb2scpbranch.hpp"
-#ifdef USEMPI
 #include "cpd/tb2basejobs.hpp"
 #include "cpd/tb2negjobs.hpp"
 #include <mpi.h>
 #endif
+#include "cpd/tb2cpd.hpp"
+#include "cpd/tb2scpbranch.hpp"
 #include "cpd/tb2sequencehandler.hpp"
 #include "cpd/tb2seq.hpp"
 #include <stdio.h>
@@ -265,8 +263,9 @@ enum {
     OPT_cpd,
     OPT_scp,
 
-    // MPI option
+#ifdef OPENMPI
     OPT_mpi,
+#endif
     OPT_neg,
 
     // VNS Methods
@@ -463,7 +462,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // CPD options
     { OPT_cpd, (char*)"--cpd", SO_NONE },
     { OPT_scp, (char*)"--scpbranch", SO_NONE },
+#ifdef OPENMPI
     { OPT_mpi, (char*)"--jobs", SO_OPT },
+#endif
     { OPT_neg, (char*)"--negative-sequences", SO_OPT },
 
     // VNS Methods
@@ -891,10 +892,6 @@ int _tmain(int argc, TCHAR* argv[])
     if (env0.myrank != 0)
         ToulBar2::verbose = -1;
 #endif
-#ifdef USEMPI
-    MPI_Init(&argc, &argv);
-    cout << "MPI Initialized" << endl;
-#endif
     setlocale(LC_ALL, "C");
     bool certificate = false;
     bool mutate = false;
@@ -956,7 +953,7 @@ int _tmain(int argc, TCHAR* argv[])
     // as well as our array of valid options.
     CSimpleOpt args(argc, argv, g_rgOptions);
 // Boolean and strings for MPI options
-#ifdef USEMPI
+#ifdef OPENMPI
     bool dompi = false;
     bool donegdesign = false;
 #endif
@@ -1950,15 +1947,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             ////// MPI //////
-
+#ifdef OPENMPI
             if (args.OptionId() == OPT_mpi) {
-#ifndef USEMPI
-                cout << "Invalid option: --jobs only available in MPI mode" << endl;
-                cout << "Regenerate Makefile with the command:" << endl;
-                cout << "cmake -D CMAKE_CXX_COMPILER=\"/usr/bin/mpiCC\" -D CMAKE_C_COMPILER=\"/usr/bin/mpicc\" -D USE_MPI=ON .." << endl;
-                exit(1);
-#endif
-#ifdef USEMPI
                 if (args.OptionArg() != NULL) {
                     cout << "Reading file: " << args.OptionArg() << endl;
                     mpifile = args.OptionArg();
@@ -1973,7 +1963,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_neg) {
                 if (args.OptionArg() != NULL) {
                     cout << "Reading file: " << args.OptionArg() << endl;
-#ifdef USEMPI
+#ifdef OPENMPI
                     donegdesign = true;
 #endif
                     negfile = args.OptionArg();
@@ -1995,7 +1985,7 @@ int _tmain(int argc, TCHAR* argv[])
             return 1;
         }
     }
-#ifdef USEMPI
+#ifdef OPENMPI
     if (dompi) {
         if (donegdesign) {
             ToulBar2::jobs = new Jobs(mpifile);
@@ -2400,14 +2390,14 @@ int _tmain(int argc, TCHAR* argv[])
         ToulBar2::incop_cmd.replace(2, 1, sseed);
     }
 
-#ifdef USEMPI
+#ifdef OPENMPI
     else if (ToulBar2::jobs) {
         // MPI mode
         string cur_job_id;
         if (ToulBar2::sequence_handler) {
             while (ToulBar2::jobs->next_job(cur_job_id)) {
                 ToulBar2::cpd->init();
-                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
+                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
                 mpisolver->read_wcsp((char*)cur_job_id.c_str());
                 bool found_a_sequence = true;
                 while (found_a_sequence) {
@@ -2423,7 +2413,7 @@ int _tmain(int argc, TCHAR* argv[])
         } else {
             while (ToulBar2::jobs->next_job(cur_job_id)) {
                 ToulBar2::cpd->init();
-                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(ub);
+                WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
                 mpisolver->read_wcsp((char*)cur_job_id.c_str());
                 mpisolver->solve();
                 if (ToulBar2::dumpWCSP == 1) {

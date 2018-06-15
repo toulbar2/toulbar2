@@ -11,13 +11,11 @@
 #include "cpd/tb2cpd.hpp"
 #include "cpd/tb2scpbranch.hpp"
 #include "cpd/tb2trienum.hpp"
-#ifdef USEMPI
-#include "cpd/tb2negjobs.hpp"
-#endif
 #include "tb2clusters.hpp"
 #include "vns/tb2vnsutils.hpp"
 #include "vns/tb2dgvns.hpp"
 #ifdef OPENMPI
+#include "cpd/tb2negjobs.hpp"
 #include "vns/tb2cpdgvns.hpp"
 #include "vns/tb2rpdgvns.hpp"
 #endif
@@ -2001,7 +1999,7 @@ bool Solver::solve()
                                     hybridSolve();
                                 } catch (FindNewSequence) {
                                 }
-#ifdef USEMPI
+#ifdef OPENMPI
                                 if (ToulBar2::sequence_handler) {
                                     ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
                                     wcsp->setUb(initialUpperBound);
@@ -2113,7 +2111,7 @@ bool Solver::solve()
                                     hybridSolve();
                             } catch (FindNewSequence) {
                             }
-#ifdef USEMPI
+#ifdef OPENMPI
                             if (ToulBar2::sequence_handler) {
                                 ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
                                 wcsp->setUb(initialUpperBound);
