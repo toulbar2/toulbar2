@@ -1,18 +1,18 @@
 # toulbar2
-## An exact solver for cost function networks
+## Exact optimization for cost function networks and additive graphical models 
 
 [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
 
 ## What is toulbar2?
 
-toulbar2 is an  open-source C++ solver for cost  function networks. It
-solves  various combinatorial  optimization problems.  The constraints
-and objective function  are factorized in local  functions on discrete
-variables. Each  function returns a  cost (a finite  positive integer)
-for any  assignment of its  variables. Constraints are  represented as
-functions with costs in {0,k} where k is a large integer representing
-forbidden assignments.  toulbar2 looks for a  non-forbidden assignment
-of all variables  that minimizes the sum of all  functions. 
+toulbar2 is an open-source black-box C++ optimizer for cost function
+networks and discrete additive graphical models. It can read a variety
+of formats. The optimized criteria and feasibility should be provided
+factorized in local cost functions on discrete variables. Constraints
+are represented as functions that produce costs that exceed a
+user-provided primal bound. toulbar2 looks for a non-forbidden assignment 
+of all variables that optimizes the sum of all functions (a decision 
+NP-complete problem).
 
 toulbar2 won  several competitions on deterministic  and probabilistic
 graphical models:
@@ -32,56 +32,33 @@ graphical models:
 
 ## Installation from binaries
 
-You can install toulbar2 directly using the package manager in Debian
-and Debian derived Linux distributions (Ubuntu, Mint,...). For the
-most recent version, compile from source.
+No binary version of the CPD branch of toulbar2 is offered by its maintainers.
+You have to compile from source.
 
 
 ## Download
 
-http://mulcyber.toulouse.inra.fr/projects/toulbar2/
+Download the latest release from GitHub
+(https://github.com/toulbar2/toulbar2) or similarly use tag versions,
+e.g.:
 
-Latest src/debian/windows x86_64 releases:
-* 2016: [src0_9_8]/[deb0_9_8]/[win0_9_8] with hybrid best-first search and more soft global cost functions
-* 2015: [src0_9_7]/[deb0_9_7]/[win0_9_7] with local search [INCOP][incop] solver after preprocessing
-* 2014: [src0_9_6]/[deb0_9_6]/[win0_9_6] with extra variable ordering heuristics and dominance pruning rules
-* 2012: [src0_9_5]/[deb0_9_5]/[win0_9_5] with soft global decomposable cost functions
-* 2011: [src0_9_4]/[deb0_9_4]/[win0_9_4] with more preprocessing techniques
-* 2010: [src0_9_3]/[deb0_9_3]/[win0_9_3] with soft global cost functions
+    git clone --branch cpd https://github.com/toulbar2/toulbar2.git
 
-[src0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1455/toulbar2.0.9.8.0-Release-sources.tar.gz
-[src0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1380/toulbar2.0.9.7.0-Release-sources.tar.gz
-[src0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1292/toulbar2.0.9.6.0-Release-sources.tar.gz
-[src0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1142/toulbar2.0.9.5.0-Release-sources.tar.gz
-[src0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1019/toulbar2.0.9.4.0-Release-sources.tar.gz
-[src0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/975/toulbar2.0.9.3.0-Release-sources.tar.gz
+## Installation from sources
 
-[deb0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/964/toulbar2.0.9.3.0-Release-i686.deb
-[deb0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1008/toulbar2.0.9.4.0-Release-i686.deb
-[deb0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1134/toulbar2.0.9.5.0-Release-x86_64.deb
-[deb0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1281/toulbar2.0.9.6.0-Release-i686.deb
-[deb0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1371/toulbar2.0.9.7.0-Release-x86_64.deb
-[deb0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1448/toulbar2.0.9.8.0-Release-x86_64.deb
-
-[win0_9_3]: https://mulcyber.toulouse.inra.fr/frs/download.php/962/toulbar2.0.9.3.0-Release-i686.exe
-[win0_9_4]: https://mulcyber.toulouse.inra.fr/frs/download.php/1006/toulbar2.0.9.4.0-Release-i686.exe
-[win0_9_5]: https://mulcyber.toulouse.inra.fr/frs/download.php/1129/toulbar2.0.9.5.0-Release-i686.exe
-[win0_9_6]: https://mulcyber.toulouse.inra.fr/frs/download.php/1279/toulbar2.0.9.6.0-Release-i686.exe
-[win0_9_7]: https://mulcyber.toulouse.inra.fr/frs/download.php/1374/toulbar2.0.9.7.0-Release-x86_64.exe
-[win0_9_8]: https://mulcyber.toulouse.inra.fr/frs/download.php/1446/toulbar2.0.9.8.0-Release-x86_64.exe
+Compilation requires git, cmake and a C++-11 capable compiler. 
 
 
-## Installation
-
-Library needed:
+Required libraries
 * libgmp-dev
-
-Recommended libraries (default use):
 * libboost-dev
 * libboost-graph-dev
+* libboot-iostream-dev
+* zlib
 
 Optional libraries:
 * libxml2-dev
+* libopenmpi-dev
 
 GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 * LINUX
@@ -90,22 +67,33 @@ GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 * LONGDOUBLE_PROB
 * NARYCHAR
 * WCSPFORMATONLY
+* BOOST
+* OPENMPI
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "0.9.8"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp incop/*.cpp ToulbarVersion.cpp -O3 -std=c++11 -DNDEBUG -DLINUX \
-     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -lgmp -static
+    echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
+    g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -lgmp -static
 
-Replace flag LONGLONG_COST by INT_COST to reduce memory usage by two (but costs must be smaller than 10^8).
+Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
+
+Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
+
+    bash
+    cd src
+    echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
+    mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
+     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -DOPENMPI -lgmp
 
 ## Authors
 
 toulbar2 was originally developped by Toulouse (INRA MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. 
 
 Additional contributions by:
+* Caen University, France (GREYC) and University of Oran, Algeria for (parallel) variable neighborhood search methods
 * The Chinese University of Hong Kong and Caen University, France (GREYC) for global cost functions
 * Marseille University, France (LSIS) for tree decomposition heuristics
 * Ecole des Ponts ParisTech, France (CERMICS/LIGM) for [INCOP][incop] local search solver
@@ -121,15 +109,15 @@ Additional contributions by:
 
 Please use one of the following references for citing toulbar2:
 
- Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
+ * Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization
  Barry Hurley, Barry O'Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry
  Constraints, 21(3):413-434, 2016
 
- Tractability-preserving Transformations of Global Cost Functions
+ * Tractability-preserving Transformations of Global Cost Functions
  David Allouche, Christian Bessiere, Patrice Boizumault, Simon de Givry, Patricia Gutierrez, Jimmy HM. Lee, Ka Lun Leung, Samir Loudni, Jean-Philippe Métivier, Thomas Schiex, Yi Wu
  Artificial Intelligence, 238:166-189, 2016
 
- Soft arc consistency revisited
+ * Soft arc consistency revisited
  Martin Cooper, Simon de Givry, Marti Sanchez, Thomas Schiex, Matthias Zytnicki, and Thomas Werner
  Artificial Intelligence, 174(7-8):449-478, 2010 
 
@@ -204,9 +192,27 @@ Proc. of CP'2000. Singapour, September 2000.
 * Hybrid best-first search exploiting a tree decomposition (HBFS)
  Anytime Hybrid Best-First Search with Tree Decomposition for Weighted CSP
  D Allouche, S de Givry, G Katsirelos, T Schiex, and M Zytnicki
- In Proc. of CP-15, Cork, Ireland, 2015 
+ In Proc. of CP-15, Cork, Ireland, 2015
 
+* SCP branching: Fast search algorithms for Computational Protein Design.
+S. Traoré, K.E. Roberts, D. Allouche, B. Donald, I. André, T. Schiex, S. Barbe.
+Journal of Computational Chemistry, 2016.
 
-Copyright (C) 2006-2016, INRA.
-toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.degivry@toulouse.inra.fr)
+* Guaranteed Free Energy computation (weighted model counting): Guaranteed 
+Weighted Counting for Affinity Computation: Beyond Determinism and Structure 
+C. Viricel, D. Simoncini, S. Barbe, T. Schiex. Proc. of the 22nd International 
+Conference on Principles and Practice of Constraint Programming Toulouse, 
+France. 5-9 september 2016
 
+* Unified parallel decomposition guided variable neighborhood search (UDGVNS/UPDGVNS)
+ Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization
+ A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
+ In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017
+
+* Clique cut global cost function (clique)
+ Clique Cuts in Weighted Constraint Satisfaction
+ S de Givry and G Katsirelos
+ In Proc. of CP-17, pages 97-113, Melbourne, Australia, 2017
+
+Copyright (C) 2006-2018, toulbar2 team.
+The CPD branch of toulbar2 is currently maintained by Thomas Schiex, INRA - MIAT, Toulouse, France (thomas.schiex@inra.fr). 
