@@ -1946,7 +1946,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::scpbranch = new Tb2ScpBranch;
             }
 
-            ////// MPI //////
+////// MPI //////
 #ifdef OPENMPI
             if (args.OptionId() == OPT_mpi) {
                 if (args.OptionArg() != NULL) {
@@ -1957,8 +1957,8 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "Option --jobs needs a file as argument" << endl;
                     exit(1);
                 }
-#endif
             }
+#endif
 
             if (args.OptionId() == OPT_neg) {
                 if (args.OptionArg() != NULL) {

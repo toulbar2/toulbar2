@@ -87,10 +87,10 @@ public:
 
     virtual Double getDPrimalBound() const = 0; ///< \brief gets problem primal bound as a Double representing a decimal cost (upper resp. lower bound for minimization resp. maximization)
     virtual Double getDDualBound() const = 0; ///< \brief gets problem dual bound as a Double representing a decimal cost (lower resp. upper bound for minimization resp. maximization)
-  
+
     virtual Double getDLb() const = 0; ///< \brief gets problem lower bound as a Double representing a decimal cost
     virtual Double getDUb() const = 0; ///< \brief gets problem upper bound as a Double representing a decimal cost
-    
+
     /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) = 0;
     /// \brief enforces problem upper bound when exploring an alternative search node

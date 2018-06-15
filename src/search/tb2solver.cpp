@@ -1840,11 +1840,11 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::verbose >= 0)
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
 
-            if (ToulBar2::verbose >= 0) {
-                Double Dlb = wcsp->getDLb();
-                Double Dub = wcsp->getDUb();
-                cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(0) << 100.0 * fabsl((Dub - Dlb) / Dub) << "%" << endl;
-            }
+    if (ToulBar2::verbose >= 0) {
+        Double Dlb = wcsp->getDLb();
+        Double Dub = wcsp->getDUb();
+        cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(0) << 100.0 * fabsl((Dub - Dlb) / Dub) << "%" << endl;
+    }
 
     initGap(wcsp->getLb(), wcsp->getUb());
 

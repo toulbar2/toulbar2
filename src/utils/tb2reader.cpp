@@ -297,10 +297,10 @@ public:
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
 
-    void generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate, stringstream & stream);
+    void generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate, stringstream& stream);
 
-    void generateGCFStreamSgrammar(vector<int>& scope, stringstream & stream);
-    void generateGCFStreamSsame(vector<int>& scope, stringstream & stream);
+    void generateGCFStreamSgrammar(vector<int>& scope, stringstream& stream);
+    void generateGCFStreamSsame(vector<int>& scope, stringstream& stream);
 
     void readIntervalUnaryTable(int varIdx, vector<Value>& authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
@@ -1316,7 +1316,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     if (it != GCFTemplates.end()) {
         // Reads function using template and generates the corresponding stream
         stringstream paramsStream;
-        
+
         this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName], paramsStream);
 
         int scopeArray[arity];
@@ -1704,7 +1704,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 * non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
 * return stream : [var|weight cost nb_symbols nb_values start_symbol nb_rules ((0 terminal_symbol value)|(1 nonterminal_in nonterminal_out_left nonterminal_out_right)|(2 terminal_symbol value weight)|(3 nonterminal_in nonterminal_out_left nonterminal_out_right weight))∗]
 */
-void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream &stream)
+void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream& stream)
 {
 
     int lineNumber;
@@ -1846,7 +1846,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 * vars2 : [v4 v5 v6]
 * return stream : [cost list_size1 list_size2 (variable_index)∗ (variable_index)∗]
 */
-void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream &stream)
+void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& stream)
 {
 
     int lineNumber;
