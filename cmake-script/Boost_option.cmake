@@ -1,6 +1,6 @@
 #code executed if the boost option is add
 
-FILE(GLOB boost_file ${My_Source}/tb2boostgraph.cpp)
+FILE(GLOB boost_file ${My_Source}/utils/tb2boostgraph.cpp)
 
 # list of cpp file extension 
 SET (source_files ${source_files} ${boost_file})

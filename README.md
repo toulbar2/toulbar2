@@ -1,5 +1,5 @@
 # toulbar2
-## An exact solver for cost function networks and additive graphical models 
+## Exact optimization for cost function networks and additive graphical models 
 
 [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
 
@@ -10,10 +10,9 @@ networks and discrete additive graphical models. It can read a variety
 of formats. The optimized criteria and feasibility should be provided
 factorized in local cost functions on discrete variables. Constraints
 are represented as functions that produce costs that exceed a
-user-provided primal bound.  Internally, toulbar2 handles non negative
-integers costs. Some formats (CFN, UAI,...) allow for decimal/negative
-costs. toulbar2 looks for a non-forbidden assignment of all variables
-that optimizes the sum of all functions (a decision NP-complete problem).
+user-provided primal bound. toulbar2 looks for a non-forbidden assignment 
+of all variables that optimizes the sum of all functions (a decision 
+NP-complete problem).
 
 toulbar2 won several competitions on deterministic and probabilistic
 graphical models:
