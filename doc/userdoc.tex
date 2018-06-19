@@ -115,7 +115,7 @@ toulbar2 [option parameters] <file>
 
 and \toulbar2 will start solving the optimization problem described in
 its file argument. By default, the extension of the file (either
-\texttt{.wcsp}, \texttt{.wcnf}, \texttt{.cnf}, \texttt{.qpbo},
+\texttt{.cfn}, \texttt{.cfn.gz}, \texttt{.wcsp}, \texttt{.wcnf}, \texttt{.cnf}, \texttt{.qpbo},
 \texttt{.uai}, \texttt{.LG}, \texttt{.pre} or \texttt{.bep}) is used
 to determine the nature of the file (see
 section~\ref{file-formats}). There is no specific order for the
@@ -381,6 +381,20 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \section{Input File formats}
 \label{file-formats}
 Notice that by default \toulbar2 distinguishes file formats based on their extension.
+\subsection{cfn format (.cfn and .cfn.gz file extension)}
+With this JSON compatible format, it is possible:
+\begin{itemize}
+\item to give a name to variables and functions.
+\item to associate a local label to every value that is accessible inside toulbar2 (among others for heuristics design purposes).
+\item to use decimal and possibly negative costs.
+\item to solve both minimization and maximization problems.
+\item to debug  your .cfn files: the parser gives a cause and line number when it fails.
+\item to use gzip-compressed files directly as input (.cfn.gz).
+\item to use dense descriptions for dense cost tables.
+\end{itemize}
+
+See a full description in file document CFNformat.pdf in the doc repository on GitHub or directly on the toulbar2 Web site.
+
 \subsection{wcsp format (.wcsp file extension)}
 
 It is a text format composed of a list of numerical and string terms separated by spaces. Instead of using names for making reference to variables, variable indexes are employed. The same for domain values. All indexes start at zero.

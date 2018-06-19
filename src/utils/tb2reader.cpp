@@ -343,6 +343,8 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
 
     // all negCosts are collected. We should be fine enforcing the UB
     enforceUB(upperBound);
+    if (ToulBar2::vnsOptimumS.size())
+        ToulBar2::vnsOptimum = wcsp->decimalToCost(ToulBar2::vnsOptimumS, 0) + wcsp->getNegativeLb();
 
     // merge unary cost functions if they are on the same variable
     vector<int> seen(nvar, -1);
@@ -1963,7 +1965,7 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
     }
 
-    if (ToulBar2::externalUB.length() != 0) {
+    if (ToulBar2::externalUB.size()) {
         Cost bound = string2Cost(ToulBar2::externalUB.c_str());
         ToulBar2::enumUB = bound;
         updateUb(bound);
@@ -1973,6 +1975,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
     if (ToulBar2::costThresholdPreS.size())
         ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
+    if (ToulBar2::vnsOptimumS.size())
+        ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
 
     if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);

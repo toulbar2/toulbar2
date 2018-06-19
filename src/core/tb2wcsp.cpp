@@ -144,7 +144,6 @@ string ToulBar2::costThresholdS;
 string ToulBar2::costThresholdPreS;
 double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
-Cost ToulBar2::relaxThreshold;
 
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
@@ -216,6 +215,7 @@ bool ToulBar2::vnsNeighborChange;
 bool ToulBar2::vnsNeighborSizeSync;
 bool ToulBar2::vnsParallelLimit;
 bool ToulBar2::vnsParallelSync;
+string ToulBar2::vnsOptimumS;
 Cost ToulBar2::vnsOptimum;
 bool ToulBar2::vnsParallel;
 
@@ -234,6 +234,7 @@ void tb2init()
 {
     Store::depth = 0;
 
+    ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
@@ -305,10 +306,11 @@ void tb2init()
     ToulBar2::pedigreePenalty = 0;
 
     ToulBar2::vac = 0;
+    ToulBar2::costThresholdS = "";
+    ToulBar2::costThresholdPreS = "";
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::costMultiplier = UNIT_COST;
-    ToulBar2::relaxThreshold = MIN_COST;
 
     ToulBar2::bep = NULL;
     ToulBar2::wcnf = false;
@@ -374,6 +376,7 @@ void tb2init()
     ToulBar2::vnsNeighborSizeSync = false;
     ToulBar2::vnsParallelLimit = false;
     ToulBar2::vnsParallelSync = false;
+    ToulBar2::vnsOptimumS = "";
     ToulBar2::vnsOptimum = MIN_COST;
     ToulBar2::vnsParallel = false;
 
@@ -391,8 +394,10 @@ void tb2init()
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
 void tb2checkOptions(Cost ub)
 {
-    if (ub <= MIN_COST)
-        ub = MAX_COST;
+    if (ub <= MIN_COST) {
+        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+        exit(1);
+    }
 
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
         cerr << "Error: cost multiplier cannot be used with UAI and QPBO formats. Use option -precision instead." << endl;
@@ -493,7 +498,7 @@ void tb2checkOptions(Cost ub)
         exit(1);
     }
     if (ToulBar2::preprocessFunctional > 0 && ToulBar2::LcLevel == LC_NC) {
-        cerr << "Error; functional elimination requires at least AC enforcing (use -k=1 or more)." << endl;
+        cerr << "Error: functional elimination requires at least AC enforcing (use -k=1 or more)." << endl;
         exit(1);
     }
     // TODO is it possible just by default option? If not, error would be better.
@@ -1954,7 +1959,6 @@ void WCSP::preprocessing()
         if (ToulBar2::verbose >= 1)
             cout << "Preprocessing ";
         vac->printStat(true);
-        //    	vac->afterPreprocessing();
         for (unsigned int i = 0; i < vars.size(); i++)
             vars[i]->queueEliminate();
         propagate();

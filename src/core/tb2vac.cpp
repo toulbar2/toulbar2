@@ -636,22 +636,6 @@ bool VACExtension::enforcePass3()
 //   return v->nlb;
 // }
 
-void VACExtension::afterPreprocessing()
-{
-    int discarded = 0;
-    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-        Constraint* c = wcsp->getCtr(i);
-        if (c->connected() && (c->isBinary() || c->isTernary()) && !c->isSep()) {
-            if (c->getTightness() < to_double(ToulBar2::relaxThreshold)) {
-                c->deconnect();
-                discarded++;
-            }
-        }
-    }
-    if (discarded)
-        cout << "WARNING num of discarded ctrs: " << discarded << endl;
-}
-
 void VACExtension::iniSingleton()
 {
     singletonI.clear();
