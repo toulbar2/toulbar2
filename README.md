@@ -65,22 +65,23 @@ Optional libraries:
 * libopenmpi-dev
 
 GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
-* LINUX
-* LONGLONG_COST
-* WIDE_STRING
-* LONGDOUBLE_PROB
-* NARYCHAR
-* WCSPFORMATONLY
 * BOOST
+* LINUX
+* LONGDOUBLE_PROB
+* LONGLONG_COST
+* NARYCHAR
 * OPENMPI
+* WCSPFORMATONLY
+* WIDE_STRING
+Also C++11 should be set as the language standard.
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
     bash
     cd src
     echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
-     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -lgmp -static
+    g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
+     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DWCSPFORMATONLY -DWIDE_STRING -lgmp -static
 
 Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
 
@@ -89,8 +90,8 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
     bash
     cd src
     echo '#define Toulbar_VERSION "1.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -O3 -DNDEBUG -DLINUX \
-     -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY -DBOOST -DOPENMPI -lgmp
+    mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
+     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DOPENMPI -DWCSPFORMATONLY -DWIDE_STRING -lgmp
 
 
 ## Authors

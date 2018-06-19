@@ -222,7 +222,7 @@ void CooperativeParallelDGVNS::master()
                     << endl;
                 ToulBar2::vnsOutput << "ReceiveTime " << cpuTime()
                                     << "# Confirmation" << endl;
-                ToulBar2::vnsOutput << "Cost " << bestUb << endl;
+                ToulBar2::vnsOutput << "Cost " << wcsp->Cost2ADCost(bestUb) << endl;
                 ToulBar2::vnsOutput << "Solution "
                                     << " (" << sk << " "
                                     << scluster << ") ";
@@ -327,16 +327,16 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
          it != bestSolution.end(); ++it)
         lastSolution[(*it).first] = (*it).second;
     if (ToulBar2::verbose >= 1)
-        cout << "VNS :: Initial Solution cost " << bestUb << endl;
+        cout << "VNS :: Initial Solution cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
     lastUb = bestUb;
     if (ToulBar2::verbose >= 5)
-        cout << "VNS :: Initial Solution" << bestUb << endl;
+        cout << "VNS :: Initial Solution" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
 
     //vns/lds+cp
     int k = kinit;
     //cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
     //cout << env0.myrank <<" slave 1" << endl ;
-    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"<< bestUb <<"&&"<< (cpuTime()-lbtime)<<endl ;
+    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) <<"&&"<< (cpuTime()-lbtime)<<endl ;
     for (; k <= kmax && k <= unassignedVars->getSize() && ToulBar2::vnsOptimum < bestUb;) {
         //neighborhood and partial instantiation
         //cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;

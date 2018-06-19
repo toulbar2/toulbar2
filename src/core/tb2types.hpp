@@ -405,7 +405,6 @@ public:
     static Cost costThresholdPre;
     static double costMultiplier;
     static unsigned int decimalPoint;
-    static Cost relaxThreshold;
     static bool singletonConsistency;
     static bool vacValueHeuristic;
     static BEP* bep;
@@ -468,6 +467,7 @@ public:
     static bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
     static bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
     static bool vnsParallelSync; // true if RSGDVNS else RADGVNS
+    static string vnsOptimumS;
     static Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
     static bool vnsParallel; // true if in master/slaves paradigm
 

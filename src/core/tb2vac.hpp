@@ -89,7 +89,6 @@ public:
     // Value valAssign;
     // void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
 
-    void afterPreprocessing();
     void iniSingleton();
     void updateSingleton();
     void removeSingleton();

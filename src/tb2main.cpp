@@ -568,8 +568,10 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "Available problem formats (specified by the filename extension) are:" << endl;
     cout << "   *.wcsp : Weighted CSP format (see toulbar2 web site)" << endl;
+#ifdef BOOST
     cout << "   *.cfn : Cost Function Network format (see toulbar2 web site)" << endl;
     cout << "   *.cfn.gz : gzip'd Cost Function Network format (see toulbar2 web site)" << endl;
+#endif
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
@@ -1025,7 +1027,8 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
             if (args.OptionId() == OPT_optimum) {
                 if (args.OptionArg() != NULL)
-                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
+//                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
+                    ToulBar2::vnsOptimumS = args.OptionArg();
             }
 
             // BTD root cluster
@@ -1327,10 +1330,6 @@ int _tmain(int argc, TCHAR* argv[])
                 //if (ct > UNIT_COST)
                 ToulBar2::costThresholdPreS = args.OptionArg();
             }
-            /*if ( (ch = strchr(argv[i],'R')) ) {
-			  Cost ct = string2Cost(&ch[1]);
-			  if(ct > UNIT_COST) ToulBar2::relaxThreshold = ct;
-			  }*/
 
             if (args.OptionId() == OPT_costMultiplier) {
                 double co = atof(args.OptionArg());
