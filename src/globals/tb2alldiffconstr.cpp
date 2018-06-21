@@ -32,7 +32,7 @@ void AllDiffConstraint::buildIndex()
 void AllDiffConstraint::read(istream& file)
 {
 
-    // Only two pararmeters for control :
+    // Only two parameters for control :
 
     // 1) the cost measure : "var" = mu_var ; "dec" = mu_dec
     string str;

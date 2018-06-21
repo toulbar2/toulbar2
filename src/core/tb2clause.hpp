@@ -12,7 +12,7 @@ class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
     String tuple; // forbidden assignment corresponding to the negation of the clause
     StoreCost lb; // projected cost to problem lower bound
-    vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
+    vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function (only for values that satisfy the clause)
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     String evalTuple; // temporary data structure
@@ -26,8 +26,9 @@ class WeightedClause : public AbstractNaryConstraint {
         assert(lb <= cost);
         Constraint::projectLB(c);
     }
+    // Extends unaries on values that satisfy the clause inside the clause and project to c0
     void extend(Cost c)
-    {
+    {// extension of unaries before projecting to lb:
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             if (x->unassigned()) {
@@ -42,6 +43,7 @@ class WeightedClause : public AbstractNaryConstraint {
         }
         projectLB(c);
     }
+    // assignment of varIndex satisfies the clause
     void satisfied(int varIndex)
     {
         nonassigned = 0;
@@ -54,7 +56,7 @@ class WeightedClause : public AbstractNaryConstraint {
             if (i != varIndex) {
                 Cost c = deltaCosts[i];
                 Value v = getClause(i);
-                if (c > MIN_COST) {
+                if (c > MIN_COST) {// we extended and must give back
                     deltaCosts[i] = MIN_COST;
                     if (x->unassigned()) {
                         if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
