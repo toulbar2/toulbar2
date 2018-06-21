@@ -3178,7 +3178,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                 Value vy = y->toValue(vyi);
                 Cost costsum = Top;
                 if (x->canbe(vx) && y->canbe(vy)) {
-                    Cost costsum = bctr1->getCost(x, y, vx, vy) + bctr2->getCost(x, y, vx, vy);
+                    costsum = bctr1->getCost(x, y, vx, vy) + bctr2->getCost(x, y, vx, vy);
                     if (costsum > Top)
                         costsum = Top;
                 }
