@@ -14,6 +14,7 @@
 #include "core/tb2globaldecomposable.hpp"
 #include "cpd/tb2trienum.hpp"
 #include "cpd/tb2seq.hpp"
+#include "core/tb2clqcover.hpp"
 using namespace boost;
 
 typedef struct {
@@ -2141,7 +2142,11 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                } else { // monolithic global cost functions
+                }
+                else if (gcname == "clique") {
+                    postCliqueConstraint(scopeIndex, arity, file);
+                }
+                else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             } else {
@@ -2286,7 +2291,25 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                } else { // monolithic global cost functions
+                }
+                else if (gcname == "clique") {
+                    //postCliqueConstraint(scopeIndex, arity, file);
+                    int skipread;
+                    file >> skipread;
+                    for (int a=0; a<arity; a++) {
+                      file >> skipread;
+                      for (int b=skipread; b>0; b--) file >> skipread;
+                    }
+                    assert(vars[i]->enumerated());
+                    assert(vars[j]->enumerated());
+                    assert(vars[k]->enumerated());
+                    EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
+                    EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
+                    EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
+                    vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
+                    postTernaryConstraint(i,j,k,costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
+                }
+                else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             }
