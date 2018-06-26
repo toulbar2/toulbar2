@@ -32,6 +32,7 @@
 #include "globals/tb2treeconstr.hpp"
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
+#include "tb2clqcover.hpp"
 
 /*
  * Global variables with their default value
@@ -524,6 +525,9 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
         vac = NULL;
 
     td = NULL;
+
+    auto *prop = new CliqueCoverPropagator(*this);
+    clique_cover.reset(prop);
 }
 
 WCSP::~WCSP()
@@ -1049,9 +1053,11 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     GlobalConstraint* gc = NULL;
-    EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
+
+    vector<EnumeratedVariable*> scopeVarsV(arity);
     for (int i = 0; i < arity; i++)
-        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+        scopeVarsV[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+    auto scopeVars = scopeVarsV.data();
 
     if (gcname == "salldiff") {
         gc = new AllDiffConstraint(this, scopeVars, arity);
@@ -1084,6 +1090,31 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
         globalconstrs.push_back(gc);
 
     return gc;
+}
+
+int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
+{
+#ifndef NDEBUG
+    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    vector<EnumeratedVariable*> scopeVars(arity);
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+    auto cc = new CliqueConstraint(this, scopeVars.data(), arity);
+    cc->read(file);
+    if (isDelayedNaryCtr) delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac) bctr = new BinaryConstraint(this);
+            else bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
 }
 
 // only DAG-based or network-based propagator
@@ -2770,6 +2801,8 @@ void WCSP::propagate()
                     vac->propagate();
                 }
             } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
+            if (clique_cover)
+                clique_cover->propagate();
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())

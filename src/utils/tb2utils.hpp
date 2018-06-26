@@ -7,16 +7,16 @@
 #define TB2UTILS_HPP_
 
 // these includes are needed if compiled on new g++ versions (>4.0?)
+#include <cstdint>
 #include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <libgen.h>
-#include <stdint.h>
 
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
 #else
-#include <assert.h>
+#include <cassert>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -34,6 +34,7 @@
 #include <queue>
 #include <stack>
 #include <algorithm>
+#include <numeric>
 using namespace std;
 
 #ifdef BOOST
@@ -43,6 +44,7 @@ using namespace std;
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/compressed_pair.hpp>
 #endif
 
 #ifdef NDEBUG
