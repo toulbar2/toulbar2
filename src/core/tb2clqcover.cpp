@@ -1040,7 +1040,7 @@ void CliqueConstraint::read(istream& is)
         }
     }
     if (rhs != 1) {
-        cout << "Unsupported: rhs == " << rhs << "\n";
+        cerr << "Unsupported: rhs == " << rhs << " and should be set to one.\n";
         exit(1);
     }
 }

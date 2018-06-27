@@ -327,16 +327,16 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
          it != bestSolution.end(); ++it)
         lastSolution[(*it).first] = (*it).second;
     if (ToulBar2::verbose >= 1)
-        cout << "VNS :: Initial Solution cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+        cout << "VNS :: Initial Solution cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
     lastUb = bestUb;
     if (ToulBar2::verbose >= 5)
-        cout << "VNS :: Initial Solution" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+        cout << "VNS :: Initial Solution" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
 
     //vns/lds+cp
     int k = kinit;
     //cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
     //cout << env0.myrank <<" slave 1" << endl ;
-    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) <<"&&"<< (cpuTime()-lbtime)<<endl ;
+    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
     for (; k <= kmax && k <= unassignedVars->getSize() && ToulBar2::vnsOptimum < bestUb;) {
         //neighborhood and partial instantiation
         //cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;

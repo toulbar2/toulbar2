@@ -344,7 +344,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
     int lds = ToulBar2::vnsLDSmin;
     while (npr && !stop && !complete && bestUb > ToulBar2::vnsOptimum) {
         if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << " ****** (" << nbNodes << " nodes)" << endl;
+            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB="  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
         Long rank = 1;
         int k = ToulBar2::vnsKmin;
         while (npr && !complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
@@ -685,7 +685,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
     if (ToulBar2::vnsOutput) {
         //cout << "# ------------------------------------------" << endl;
         ToulBar2::vnsOutput << "InstanceVnsBestTime " << MPI_Wtime() - startTime << endl;
-        ToulBar2::vnsOutput << "Cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+        ToulBar2::vnsOutput << "Cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
         ToulBar2::vnsOutput << "Solution ";
         for (map<int, Value>::iterator it = bestSolution.begin();
              it != bestSolution.end(); ++it)
@@ -696,7 +696,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
     } else {
         //        cout << "# ------------------------------------------" << endl;
         //        cout << "InstanceVnsBestTime " << BestTime << endl;
-        //        cout << "Cost "  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+        //        cout << "Cost "  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
         //        cout << "Solution ";
         //        for (map<int, Value>::iterator it = bestSolution.begin();
         //                it != bestSolution.end(); ++it)
@@ -706,7 +706,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
     }
     if (improved && ToulBar2::verbose >= 0) {
         if (!ToulBar2::bayesian)
-            cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << " in " << (MPI_Wtime() - startTime) << " seconds." << endl;
+            cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " in " << (MPI_Wtime() - startTime) << " seconds." << endl;
         else
             cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << MPI_Wtime() - startTime << " seconds." << endl;
     }

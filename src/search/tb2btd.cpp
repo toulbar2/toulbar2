@@ -589,7 +589,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             if (cluster == td->getRoot() || cluster == td->getRootRDS()) {
                 if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
                     if (!ToulBar2::bayesian)
-                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
                     else
                         cout << "New solution: " << csol << " Energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
                 }
