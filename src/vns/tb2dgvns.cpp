@@ -30,7 +30,7 @@ bool VNSSolver::solve()
     bestSolution.clear();
     bestUb = generateInitSolution(ToulBar2::vnsInitSol, bestSolution, complete);
     if (ToulBar2::verbose >= 1)
-        cout << "VNS: initial solution with" << ((complete) ? " optimal" : "") << " cost "  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+        cout << "VNS: initial solution with" << ((complete) ? " optimal" : "") << " cost "  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
     try {
         wcsp->updateUb(bestUb);
         wcsp->enforceUb();
@@ -96,7 +96,7 @@ bool VNSSolver::solve()
     int lds = ToulBar2::vnsLDSmin;
     while (!stop && !complete && bestUb > ToulBar2::vnsOptimum) {
         if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB="  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << " ****** (" << nbNodes << " nodes)" << endl;
+            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB="  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
         Long rank = 1;
         int k = ToulBar2::vnsKmin;
         while (!complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
@@ -169,7 +169,7 @@ bool VNSSolver::solve()
                     bestSolution[v] = lastSolution[v];
                 }
                 if (ToulBar2::verbose >= 1)
-                    cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << endl;
+                    cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
             }
         }
         if (!complete && bestUb > ToulBar2::vnsOptimum) {

@@ -121,7 +121,7 @@ private:
     BinaryConstraint* project_binary_cost(int idx, int jdx, Cost c);
 
     // when we have a small number of unassigned vars, project to a
-    // binary/unary/nulary constraint.
+    // binary/unary/nullary constraint.
     void handle_low_arity();
 
     // gather unary/binary costs to increase the lower bound. We

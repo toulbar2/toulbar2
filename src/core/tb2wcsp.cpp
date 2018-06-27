@@ -2207,7 +2207,7 @@ void WCSP::printNCBuckets()
 
 void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << endl;
+    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -2796,7 +2796,7 @@ void WCSP::propagate()
                     if (vac->firstTime()) {
                         vac->init();
                         if (ToulBar2::verbose >= 1)
-                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
+                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
                     }
                     vac->propagate();
                 }
@@ -3545,7 +3545,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         increaseLb(minc);
         if (ToulBar2::verbose >= 1)
             cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << ","
-                 << z->wcspIndex << ")  newDualBound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
+                 << z->wcspIndex << ")  newDualBound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         added = true;
     }
     return added;
