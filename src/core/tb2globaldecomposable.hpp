@@ -19,7 +19,7 @@ public:
     DecomposableGlobalCostFunction();
     DecomposableGlobalCostFunction(unsigned int _arity, int* _scope);
     ~DecomposableGlobalCostFunction();
-    static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file);
+    static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult = true);
 
     int getArity() { return arity; }
     int getVarIndex(int i) { return scope[i]; }
@@ -44,7 +44,7 @@ private:
 public:
     WeightedAmong();
     WeightedAmong(unsigned int _arity, int* _scope);
-    WeightedAmong(unsigned int _arity, int* _scope, istream& file);
+    WeightedAmong(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedAmong();
 
     inline void addValue(int _value) { values.insert(_value); }
@@ -68,7 +68,7 @@ private:
 public:
     WeightedRegular();
     WeightedRegular(unsigned int _arity, int* _scope);
-    WeightedRegular(unsigned int _arity, int* _scope, istream& file);
+    WeightedRegular(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedRegular();
 
     inline void setWFA(WFA* _automaton) { automaton = _automaton; }
@@ -92,7 +92,7 @@ private:
 public:
     WeightedSum();
     WeightedSum(unsigned int _arity, int* _scope);
-    WeightedSum(unsigned int _arity, int* _scope, istream& file);
+    WeightedSum(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedSum();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -115,7 +115,7 @@ private:
 public:
     WeightedOverlap();
     WeightedOverlap(unsigned int _arity, int* _scope);
-    WeightedOverlap(unsigned int _arity, int* _scope, istream& file);
+    WeightedOverlap(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedOverlap();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -139,7 +139,7 @@ private:
 public:
     WeightedVarAmong();
     WeightedVarAmong(unsigned int _arity, int* _scope);
-    WeightedVarAmong(unsigned int _arity, int* _scope, istream& file);
+    WeightedVarAmong(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedVarAmong();
 
     inline void addValue(int _value) { values.insert(_value); }
@@ -166,7 +166,7 @@ private:
 public:
     WeightedVarSum();
     WeightedVarSum(unsigned int _arity, int* _scope);
-    WeightedVarSum(unsigned int _arity, int* _scope, istream& file);
+    WeightedVarSum(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedVarSum();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -192,7 +192,7 @@ private:
 public:
     WeightedAllDifferent();
     WeightedAllDifferent(unsigned int _arity, int* _scope);
-    WeightedAllDifferent(unsigned int _arity, int* _scope, istream& file);
+    WeightedAllDifferent(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedAllDifferent();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -218,7 +218,7 @@ private:
 public:
     WeightedGcc();
     WeightedGcc(unsigned int _arity, int* _scope);
-    WeightedGcc(unsigned int _arity, int* _scope, istream& file);
+    WeightedGcc(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedGcc();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -245,7 +245,7 @@ private:
 public:
     WeightedSame();
     WeightedSame(unsigned int _arity, int* _scope);
-    WeightedSame(unsigned int _arity, int* _scope, istream& file);
+    WeightedSame(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedSame();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }
@@ -271,7 +271,7 @@ private:
 public:
     WeightedSameGcc();
     WeightedSameGcc(unsigned int _arity, int* _scope);
-    WeightedSameGcc(unsigned int _arity, int* _scope, istream& file);
+    WeightedSameGcc(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedSameGcc();
 
     inline void setSemantics(string _semantics) { semantics = _semantics; }

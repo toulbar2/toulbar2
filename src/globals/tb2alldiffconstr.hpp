@@ -36,7 +36,7 @@ public:
     }
     Cost evalOriginal(const String& s);
 
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     void organizeConfig();
 
     void decompose();

@@ -20,7 +20,7 @@ GrammarConstraint::~GrammarConstraint(void)
     delete[] u;
 }
 
-void GrammarConstraint::read(istream& file)
+void GrammarConstraint::read(istream& file, bool mult)
 {
 
     string str;

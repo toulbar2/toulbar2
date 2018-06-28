@@ -164,7 +164,7 @@ public:
     string getName();
 
     //Cost eval(const String& s);
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     void organizeConfig();
 

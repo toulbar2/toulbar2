@@ -42,7 +42,7 @@ public:
 
     string getName();
     Cost evalOriginal(const String& s);
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
 
     //GlobalCostFunctionParameters* getParameters() {return this;}
     void addValueAndBounds(Value value, int upper = -1, int lower = 0)
