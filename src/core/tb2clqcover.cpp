@@ -334,7 +334,7 @@ std::ostream& operator<<(ostream& os, wcsp_info i)
 }
 
 void CliqueCoverPropagator::propagate() {
-    return;
+    return; //TODO: why not using this part???
     graph_mutable<wcsp_info> gm;
 
     std::vector<Value> dom_buffer;
@@ -739,6 +739,8 @@ void CliqueConstraint::gather_binary()
         for (int j = i + 1; j != e; ++j) {
             if (!connected(current_scope_idx[j]))
                 continue;
+            if (!bc[current_scope_idx[i]][current_scope_idx[j]])
+                continue;
             auto c00 = get_binary_zero_cost(current_scope_idx[i],
                                             current_scope_idx[j]);
             extend_binary_cost(current_scope_idx[i], current_scope_idx[j], c00);
@@ -892,6 +894,8 @@ Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx)
     EnumeratedVariable *x = scope[idx];
     EnumeratedVariable *y = scope[jdx];
     auto *cons = bc[idx][jdx];
+    assert(cons);
+    assert(cons->connected());
     Cost c00{wcsp->getUb()};
     for (auto ival : nonclqvals[idx]) {
         if (!x->canbe(ival))
@@ -987,6 +991,7 @@ BinaryConstraint* CliqueConstraint::project_binary_cost(int idx, int jdx, Cost c
     EnumeratedVariable* x = scope[idx];
     EnumeratedVariable* y = scope[jdx];
     auto* cons = bc[idx][jdx];
+    assert(cons);
     assert(cons->connected());
     for (auto ival : nonclqvals[idx]) {
         if (!x->canbe(ival))
