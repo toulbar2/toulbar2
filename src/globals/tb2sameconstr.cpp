@@ -40,10 +40,10 @@ pair<int, int> SameConstraint::mapto(int varindex, Value val)
     }
 }
 
-void SameConstraint::read(istream& file)
+void SameConstraint::read(istream& file, bool mult)
 {
     file >> def;
-    def *= ToulBar2::costMultiplier;
+    if (mult) def *= ToulBar2::costMultiplier;
     int size[2];
     //cout << "def. value = " << def << endl;
     //cout << "consistency level = " << ToulBar2::consistencyLevel << endl;

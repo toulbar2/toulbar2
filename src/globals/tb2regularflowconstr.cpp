@@ -24,12 +24,12 @@ RegularFlowConstraint::RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** sc
     modeEnum["edit"] = RegularFlowConstraint::EDIT;
 }
 
-void RegularFlowConstraint::read(istream& file)
+void RegularFlowConstraint::read(istream& file, bool mult)
 {
 
     string str;
     file >> str >> def;
-    def *= ToulBar2::costMultiplier;
+    if (mult) def *= ToulBar2::costMultiplier;
     /*if (str == "var") {
         subdef = def;
         insdef = deldef = 0;

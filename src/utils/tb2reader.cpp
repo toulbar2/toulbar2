@@ -1276,6 +1276,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
+        { "clique", ":rhs:N:values:[V+]S"},
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1317,11 +1318,13 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (funcName[0] == 'w') { // decomposable
             DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray,
-                paramsStream)
+                paramsStream,false)
                 ->addToCostFunctionNetwork(this->wcsp);
-        } else { // monolithic
+        } else if (funcName == "clique"){
+            this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
+        } else {// monolithic
             int nbconstr; // unused int for pointer ref
-            this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr);
+            this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
         }
     }
     // Arithmetic function
@@ -1335,6 +1338,11 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (arity != 2) {
             cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
+            exit(1);
+        }
+
+        if (ToulBar2::costMultiplier < 0.0 || ToulBar2::decimalPoint != 0) {
+            cerr << "Error : arithmetic function " << funcName << " at line " << line << "cannot be used with decimal costs or in maximization mode." << endl;
             exit(1);
         }
 
@@ -1440,7 +1448,6 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
 void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const string& funcType, string GCFTemplate, stringstream& stream)
 {
-
     // -------------------- Special cases are treated separately
     if (funcType == "sgrammar" || funcType == "sgrammardp") {
         this->generateGCFStreamSgrammar(scope, stream);
@@ -1456,16 +1463,20 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     vector<char> repeatedSymbols;
     unsigned int numberOfTuplesRead = 0;
     bool isOpenedBrace = false;
+    bool variableRepeat = false;
     vector<pair<char, string>> streamContentVec;
 
     // Main loop: read template string char by char, and read the CFN file accordingly to the pattern
     for (unsigned int i = 0; i < GCFTemplate.size(); i++) {
 
         if (isOpenedBrace) {
-            if (GCFTemplate[i] != ']') {
+            if (GCFTemplate[i] == ']') {
+                isOpenedBrace = false;
+            } else if (GCFTemplate[i] == '+') {
+                variableRepeat = true;
                 repeatedSymbols.push_back(GCFTemplate[i]);
             } else {
-                isOpenedBrace = false;
+                repeatedSymbols.push_back(GCFTemplate[i]);
             }
         }
         // ---------- Read keyword and add it to stream
@@ -1547,13 +1558,12 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         }
         // ---------- Entering a repeated section
         else if (GCFTemplate[i] == '[') {
-
             isOpenedBrace = true;
         }
         // Read function repeated section
-        else if (GCFTemplate[i] == '+') {
-
+        else if ((GCFTemplate[i] == '+' || GCFTemplate[i] == 'S') && !isOpenedBrace) {
             vector<pair<char, string>> repeatedContentVec; // Function repeated params
+            vector<pair<char, string>> variableRepeatVec;  // Stack if internal tuples have unknown size 
             // [ delimiting the start of the list
             skipOBrace();
             // Inside the list of parameter tuples
@@ -1561,23 +1571,27 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             std::tie(lineNumber, token) = this->getNextToken();
             while (token != "]") {
                 // Each (non unary) tuple is inside []. Skip first [
-                if (repeatedSymbols.size() > 1) {
+                if (repeatedSymbols.size() > 1 || variableRepeat) {
                     if (!isOBrace(token)) {
                         cerr << "Error: expected '[/{' but read " << token << " at line " << lineNumber << endl;
                         exit(1);
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
-                for (char symbol : repeatedSymbols) {
 
+                size_t repeatIndex = 0;
+                while ((repeatIndex < repeatedSymbols.size()) && !isCBrace(token)) {
+                    if (repeatedSymbols[repeatIndex] == '+') repeatIndex = 0;
+                    char symbol = repeatedSymbols[repeatIndex];
                     if (symbol == 'N') {
                         for (char c : token) {
                             if (!isdigit(c)) {
-                                cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
+                                cerr << "Error: integer required at line " << lineNumber << " but read " << token << endl;
                                 exit(1);
                             }
                         }
-                        repeatedContentVec.push_back(std::make_pair('N', token));
+                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('N', token));
+                        else repeatedContentVec.push_back(std::make_pair('N', token));
                     } else if (symbol == 'V') {
                         // If variable name (string)
                         if (not isdigit(token[0])) {
@@ -1589,7 +1603,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(1);
                             }
                         }
-                        repeatedContentVec.push_back(std::make_pair('V', token));
+                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('V', token));
+                        else repeatedContentVec.push_back(std::make_pair('V', token));
                     } else if (symbol == 'v') {
                         // V0 : value MUST be a number
                         for (char c : token) {
@@ -1598,30 +1613,42 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(1);
                             }
                         }
-                        repeatedContentVec.push_back(std::make_pair('v', token));
+                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('v', token));
+                        else repeatedContentVec.push_back(std::make_pair('v', token));
                     } else if ((symbol == 'C') || (symbol == 'c')) {
                         Cost c = wcsp->decimalToCost(token, lineNumber);
                         if (symbol == 'c' && c < 0) {
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
                             exit(1);
                         }
-                        repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        else repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
                     }
+                    
+                    repeatIndex++;
                     std::tie(lineNumber, token) = this->getNextToken();
                 }
 
-                if (repeatedSymbols.size() > 1) {
+                if (repeatedSymbols.size() > 1 || variableRepeat) {
                     if (!isCBrace(token)) {
                         cerr << "Error: expected ']/}' but read " << token << " at line " << lineNumber << endl;
                         exit(1);
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
+                if (variableRepeat) {// we must push the size of the repeat and its contents
+                    repeatedContentVec.push_back(std::make_pair('N', std::to_string(variableRepeatVec.size())));
+                    repeatedContentVec.insert(repeatedContentVec.end(),variableRepeatVec.begin(),variableRepeatVec.end());
+                    variableRepeatVec.clear();
+                }
                 numberOfTuplesRead++; // Number of tuples read
             }
-
-            // Add number of tuples before the list
-            streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
+            if (GCFTemplate[i] == 'S' && numberOfTuplesRead != scope.size()) {
+                cerr << "Error: expected "<< scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
+                exit(1);
+            }
+            // Add number of tuples before the list if the number of expected tuples is not known
+            if (GCFTemplate[i] == '+') streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {
                 streamContentVec.push_back(std::make_pair(repContentPair.first, repContentPair.second));
@@ -1674,7 +1701,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // Correct for negative costs
     if (funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
-        wcsp->negCost -= ((scope.size() + 2) * minCost);
+        wcsp->negCost -= ((scope.size() + 2) * minCost);// TODO we could do better and compute different mins for initial/final/transitions.
     } else
         wcsp->negCost -= minCost;
 

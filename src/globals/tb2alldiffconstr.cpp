@@ -29,7 +29,7 @@ void AllDiffConstraint::buildIndex()
     //graph.setSize(arity_+D.size()+2);
 }
 
-void AllDiffConstraint::read(istream& file)
+void AllDiffConstraint::read(istream& file, bool mult)
 {
 
     // Only two pararmeters for control :
@@ -40,7 +40,7 @@ void AllDiffConstraint::read(istream& file)
     // 2) the cost of the violation edge : assume to be a constant function
     // mapping to def
     file >> def;
-    def *= ToulBar2::costMultiplier;
+    if (mult) def *= ToulBar2::costMultiplier;
     //cout << "str = " << str << endl;
     /*if (str == "var") {
 		mode = VAR;

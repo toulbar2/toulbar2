@@ -1012,13 +1012,14 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
 /// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregular, ssame)
 /// \param file problem file (\see \ref wcspformat)
 /// \deprecated should use postWXXX methods
-int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter)
+int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter, bool mult)
 {
     if (gcname == "salldiffdp") {
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        postWAllDiff(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost);
+        if (mult) baseCost *= ToulBar2::costMultiplier;
+        postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
@@ -1031,7 +1032,8 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             file >> d >> low >> high;
             values.push_back(BoundedObj<Value>(d, high, low));
         }
-        postWGcc(scopeIndex, arity, semantics, "DAG", ToulBar2::costMultiplier * baseCost, values);
+        if (mult) baseCost *= ToulBar2::costMultiplier;
+        postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
     }
 
@@ -1039,7 +1041,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
     if (gc == NULL)
         return -1;
     if (file) {
-        gc->read(file);
+        gc->read(file, mult);
     }
     gc->init();
     return gc->wcspIndex;
@@ -3924,7 +3926,6 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
 
     bool negative = (decimalToken[0] == '-');
     string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound));
-    //string decimalPart = decimalToken.substr(dotFound + 1, ToulBar2::decimalPoint);
     string decimalPart = decimalToken.substr(dotFound + 1);
     int shift = ToulBar2::decimalPoint - decimalPart.size();
 
@@ -3943,7 +3944,6 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     }
     if (negative)
         cost = -cost;
-    //   cout << "D2C " << decimalToken << " " << (cost * ToulBar2::costMultiplier) << endl;
     return cost;
 }
 

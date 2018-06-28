@@ -64,7 +64,7 @@ public:
 
     Cost evalOriginal(const String& s);
 
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     void setUpperBound(int upper) { ub = upper; }
     void setLowerBound(int lower) { lb = lower; }
     void addBoundingValue(Value value) { V.insert(value); }

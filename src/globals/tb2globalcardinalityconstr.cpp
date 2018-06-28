@@ -34,7 +34,7 @@ void GlobalCardinalityConstraint::buildIndex()
     //graph.setSize(arity_+D.size()+4);
 }
 
-void GlobalCardinalityConstraint::read(istream& file)
+void GlobalCardinalityConstraint::read(istream& file, bool mult)
 {
     // "var" => softvar
     // "dec" => softdec
@@ -55,7 +55,7 @@ void GlobalCardinalityConstraint::read(istream& file)
     setSemantics(str);
     //JP End//
     file >> def;
-    def *= ToulBar2::costMultiplier;
+    if (mult) def *= ToulBar2::costMultiplier;
     file >> nvalues;
     //JP End//
     for (int i = 0; i < nvalues; i++) {

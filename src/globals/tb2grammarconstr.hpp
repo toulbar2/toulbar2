@@ -78,7 +78,7 @@ public:
 
     Cost eval(const String& s);
 
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
     //void setViolationMeasure(int measure) {if(configuring) mode = measure;}
     WeightedCNFCFG* getGrammar() { return &cfg; }

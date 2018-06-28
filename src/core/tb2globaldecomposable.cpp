@@ -27,30 +27,30 @@ DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
 }
 
 DecomposableGlobalCostFunction*
-DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file)
+DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult)
 {
     //cout << "Creating a " << type << " global cost function " << endl;
     if (type == "wamong")
-        return new WeightedAmong(_arity, _scope, file);
+        return new WeightedAmong(_arity, _scope, file, mult);
     if (type == "wvaramong")
-        return new WeightedVarAmong(_arity, _scope, file);
+        return new WeightedVarAmong(_arity, _scope, file, mult);
     if (type == "wsum")
-        return new WeightedSum(_arity, _scope, file);
+        return new WeightedSum(_arity, _scope, file, mult);
     if (type == "wvarsum")
-        return new WeightedVarSum(_arity, _scope, file);
+        return new WeightedVarSum(_arity, _scope, file, mult);
     if (type == "woverlap")
-        return new WeightedOverlap(_arity, _scope, file);
+        return new WeightedOverlap(_arity, _scope, file, mult);
 
     if (type == "walldifferent" || type == "walldiff")
-        return new WeightedAllDifferent(_arity, _scope, file);
+        return new WeightedAllDifferent(_arity, _scope, file, mult);
     if (type == "wgcc")
-        return new WeightedGcc(_arity, _scope, file);
+        return new WeightedGcc(_arity, _scope, file, mult);
     if (type == "wregular")
-        return new WeightedRegular(_arity, _scope, file);
+        return new WeightedRegular(_arity, _scope, file, mult);
     if (type == "wsame")
-        return new WeightedSame(_arity, _scope, file);
+        return new WeightedSame(_arity, _scope, file, mult);
     if (type == "wsamegcc")
-        return new WeightedSameGcc(_arity, _scope, file);
+        return new WeightedSameGcc(_arity, _scope, file, mult);
 
     cout << type << " unknown decomposable global cost function" << endl;
     return 0;
@@ -101,11 +101,11 @@ WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope, istream& file)
+WeightedAmong::WeightedAmong(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     unsigned int nbValue;
     file >> nbValue;
     for (unsigned int value = 0; value < nbValue; ++value) {
@@ -264,7 +264,7 @@ WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope, istream& file)
+WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     automaton = new WFA(file);
@@ -469,11 +469,11 @@ WeightedSum::WeightedSum(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedSum::WeightedSum(unsigned int _arity, int* _scope, istream& file)
+WeightedSum::WeightedSum(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     file >> comparator >> rightRes;
 }
 
@@ -663,11 +663,11 @@ WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope, istream& file)
+WeightedVarSum::WeightedVarSum(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     file >> comparator;
 }
 
@@ -812,11 +812,11 @@ WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope, istream& file)
+WeightedOverlap::WeightedOverlap(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     file >> comparator >> rightRes;
     //display();
 }
@@ -1063,11 +1063,11 @@ WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream& file)
+WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     unsigned int nbValue;
     file >> nbValue;
     for (unsigned int value = 0; value < nbValue; ++value) {
@@ -1199,11 +1199,11 @@ WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope, istream& file)
+WeightedAllDifferent::WeightedAllDifferent(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     //display();
 }
 
@@ -1254,11 +1254,11 @@ WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope)
 {
 }
 
-WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream& file)
+WeightedGcc::WeightedGcc(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     int nbValueToWatch;
     file >> nbValueToWatch;
     for (int idvalue = 0; idvalue < nbValueToWatch; idvalue++) {
@@ -1376,11 +1376,11 @@ WeightedSame::WeightedSame(unsigned int _arity, int* _scope)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
 }
-WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream& file)
+WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     if (_arity % 2 == 1) {
         cerr << "WeightedSame::Constructor the scope must be even" << endl;
         exit(128);
@@ -1499,11 +1499,11 @@ WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
 }
-WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream& file)
+WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
     file >> semantics >> baseCost;
-    baseCost *= ToulBar2::costMultiplier;
+    if (mult) baseCost *= ToulBar2::costMultiplier;
     file >> nbValueToWatch;
     for (int idvalue = 0; idvalue < nbValueToWatch; idvalue++) {
         Value value;
