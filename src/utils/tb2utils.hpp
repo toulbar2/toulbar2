@@ -70,6 +70,33 @@ triplet<T1, T2, T3> make_triplet(const T1& m1, const T2& m2, const T3& m3)
     return ans;
 }
 
+template <typename T1, typename T2, typename T3>
+ostream& operator<<(ostream& os, triplet<T1, T2, T3> const& p)
+{
+    return os << "triplet{" << p.first << "," << p.second << "," << p.third << "}";
+}
+
+template <typename U, typename T>
+ostream& operator<<(ostream& os, pair<U, T> const& p)
+{
+    return os << "pair{" << p.first << "," << p.second << "}";
+}
+
+template <typename T> ostream& operator<<(ostream& os, vector<T> const& v)
+{
+    os << "v(sz=" << v.size() << ")[";
+    bool first = true;
+    for (auto&& t : v) {
+        if (first)
+            first = false;
+        else
+            os << ",";
+        os << t;
+    }
+    os << "]";
+    return os;
+}
+
 // template<class T>
 // T abs(T x) {
 //     if (x < 0) return -(x);
