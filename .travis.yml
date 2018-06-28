@@ -4,7 +4,7 @@ dist: xenial
 
 addons:
   apt:
-    packages: libboost-all-dev libgmp-dev zlib1g-dev libjemalloc-dev
+    packages: libboost-graph-dev libbbost-iostreams-dev libgmp-dev zlib1g-dev libjemalloc-dev
 
 script:
   - mkdir build
