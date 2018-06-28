@@ -1,0 +1,18 @@
+{  problem: {name: "clique", mustbe: <10 }
+   variables: {v0: 2 v1: 2 v2: 2 v3: 2}
+   functions: {
+     f01: { scope: [v0 v1] defaultcost: 0 costs: [1 1 10]}
+     f01: { scope: [v0 v2] defaultcost: 0 costs: [1 1 10]}
+     f01: { scope: [v0 v3] defaultcost: 0 costs: [1 1 10]}
+     f01: { scope: [v1 v2] defaultcost: 0 costs: [1 1 10]}
+     f01: { scope: [v1 v3] defaultcost: 0 costs: [1 1 10]}
+     f01: { scope: [v2 v3] defaultcost: 0 costs: [1 1 10]}
+     cl : { scope: [v0 v1 v2 v3]
+	     type : clique
+	     params: {
+		 rhs : 1
+ 		 values : [[1][1][1][1]]
+	     }
+	   }
+   }
+}

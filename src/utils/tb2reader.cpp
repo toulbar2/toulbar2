@@ -1337,7 +1337,13 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 paramsStream,false)
                 ->addToCostFunctionNetwork(this->wcsp);
         } else if (funcName == "clique"){
-            this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
+            string ps = paramsStream.str();
+            if (ps.size() > 1 && ps[0] == '1' && ps[1] == ' ')
+                this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
+            else {
+                cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
+                exit(1);
+            }
         } else {// monolithic
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
