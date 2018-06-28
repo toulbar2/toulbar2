@@ -38,7 +38,7 @@ public:
     void addToGroupY(Variable *var) {addToGroup(1, var);}
     */
     string getName() { return "ssame"; }
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     void addVariablesToGroup(EnumeratedVariable* variable, int groupID)
     {
 

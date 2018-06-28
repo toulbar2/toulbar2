@@ -66,7 +66,7 @@ public:
     MaxConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~MaxConstraint();
 
-    void read(istream& file);
+    void read(istream& file, bool mult = true);
     //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
     //void setViolationMeasure(int measure) {if(configuring) mode = measure;}
     void setAssignmentWeight(EnumeratedVariable* variable, Value value, Cost weight)

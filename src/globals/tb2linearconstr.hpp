@@ -81,7 +81,7 @@ public:
 
     ~LinearConstraint() {}
 
-    virtual void read(istream& file) {}
+    virtual void read(istream& file, bool mult = true) {}
     virtual void initStructure();
     virtual void end();
 

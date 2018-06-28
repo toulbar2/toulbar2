@@ -227,7 +227,7 @@ public:
 
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream &file) =0;
 
-    virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL) = 0; ///< \deprecated Please use the postWxxx methods instead
+    virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable

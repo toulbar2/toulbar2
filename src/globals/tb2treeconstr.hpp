@@ -196,7 +196,7 @@ public:
 
     Cost eval(const String& s);
 
-    void read(istream& file) {} //No parameter needed
+    void read(istream& file, bool mult = true) {} //No parameter needed
     void initMemoization();
     string getName() { return "MST"; }
     void dump(ostream& os, bool original = true);

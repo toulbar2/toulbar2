@@ -32,7 +32,7 @@ void LPSConstraint::buildIndex()
     }
 }
 
-void LPSConstraint::read(istream& file)
+void LPSConstraint::read(istream& file, bool mult = true)
 {
 
     string str;

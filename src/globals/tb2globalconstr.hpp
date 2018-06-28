@@ -150,7 +150,7 @@ public:
     virtual void decrease(int index) { ((EnumeratedVariable*)getVar(index))->queueAC(); }
 
     // read the parameter of the constraint parameter from the file
-    virtual void read(istream& file) = 0;
+    virtual void read(istream& file, bool mult = true) = 0;
 
     // return the minimum cost of the tuples
     virtual Cost getMinCost() { return 0; }
