@@ -5,8 +5,7 @@
 ##########################################
 
 cmake_minimum_required(VERSION 2.6)
-# source directory
-#do not change this variable ==> location of the toulbar2 source code
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
 set (doc_destination "share/doc")   		#path of doc installation 
