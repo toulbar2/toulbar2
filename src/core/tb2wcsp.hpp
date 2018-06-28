@@ -21,7 +21,6 @@ class AllDiffConstraint;
 class GlobalCardinalityConstraint;
 class SameConstraint;
 class RegularFlowConstraint;
-class CliqueCoverPropagator;
 
 /** Concrete class WCSP containing a weighted constraint satisfaction problem
  *	- problem lower and upper bound
@@ -69,7 +68,6 @@ class WCSP FINAL : public WeightedCSP {
     bool isDelayedNaryCtr; ///< postpone naryctr propagation after all variables have been created
     vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
     StoreInt isPartOfOptimalSolution; ///< true if the current assignment belongs to an optimal solution recorded into bestValues
-    std::unique_ptr<CliqueCoverPropagator> clique_cover;
 
     // make it private because we don't want copy nor assignment
     WCSP(const WCSP& wcsp);

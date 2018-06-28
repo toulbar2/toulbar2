@@ -6,16 +6,6 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-class CliqueCoverPropagator
-{
-public:
-    CliqueCoverPropagator(WCSP &w) : wcsp(w) {}
-
-    void propagate();
-private:
-    WCSP& wcsp;
-};
-
 /* Enforce that among the variables in scope, at most rhs_in get any
    of the values appearing in clq_in. This is isomorphic to having
    just two values, 0 (not in the clique) and 1 (in the clique), so

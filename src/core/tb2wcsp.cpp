@@ -589,9 +589,6 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
         vac = NULL;
 
     td = NULL;
-
-    auto *prop = new CliqueCoverPropagator(*this);
-    clique_cover.reset(prop);
 }
 
 WCSP::~WCSP()
@@ -2868,8 +2865,6 @@ void WCSP::propagate()
                     vac->propagate();
                 }
             } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
-            if (clique_cover)
-                clique_cover->propagate();
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
