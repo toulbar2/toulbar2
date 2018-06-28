@@ -310,17 +310,14 @@ public:
     class iterator;
     friend class iterator;
     class iterator {
-        int node;
         vector<List_Node*>::iterator next_edge;
 
     public:
         iterator()
-            : node(0)
         {
         }
-        iterator(int _node, vector<List_Node*>::iterator _start)
-            : node(_node)
-            , next_edge(_start)
+        iterator(vector<List_Node*>::iterator _start)
+            : next_edge(_start)
         {
         }
 
@@ -362,11 +359,11 @@ public:
     };
     iterator begin(int node)
     {
-        return iterator(node, adjlist[node].begin());
+        return iterator(adjlist[node].begin());
     }
     iterator end(int node)
     {
-        return iterator(node, adjlist[node].end());
+        return iterator(adjlist[node].end());
     }
 
     // iterate each in-coming edges between two nodes

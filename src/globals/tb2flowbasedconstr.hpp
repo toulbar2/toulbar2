@@ -84,7 +84,6 @@ public:
 
     ~FlowBasedGlobalConstraint() {}
 
-    virtual void read(istream& file) {}
     virtual void organizeConfig() {}
     virtual void initStructure();
     virtual void end() {}
