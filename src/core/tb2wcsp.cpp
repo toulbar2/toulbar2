@@ -102,6 +102,7 @@ bool ToulBar2::cfngz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
+string ToulBar2::stdin_format;
 FILE* ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;

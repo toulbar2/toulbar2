@@ -105,6 +105,8 @@ enum {
     OPT_debug,
     OPT_dumpWCSP,
     OPT_HELP,
+    //stdin parameter
+    OPT_stdin,
 
     // file extension option
     OPT_wcsp_ext,
@@ -264,6 +266,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_verbose, (char*)"-v", SO_OPT }, // verbose level
     { OPT_debug, (char*)"-Z", SO_OPT }, // debug level
     { OPT_dumpWCSP, (char*)"-z", SO_OPT }, // dump wcsp
+    //stdin format
+    { OPT_stdin, (char*)"--stdin", SO_REQ_SEP },
 
     // file extension
     { OPT_wcsp_ext, (char*)"--wcsp_ext", SO_REQ_SEP },
@@ -595,8 +599,10 @@ void help_msg(char* toulbar2filename)
     cout << "      each line contains a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
-    cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl
-         << endl;
+    cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
+    cout     << endl;
+    cout << "-stdin   allows to read file in cfn format from pipe . if the format is different from cfn. --stdin=foo will allows to define to flux format. ( example : cat example.uai | toulbar2 -stdin=uai)  " << endl;
+    cout << " for stdin available type format please use file extension define previousely in the current file --stdin=wcsp ...  " << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
@@ -936,6 +942,20 @@ int _tmain(int argc, TCHAR* argv[])
                     exit(EXIT_FAILURE);
                 }
             }
+
+            if (args.OptionId() == OPT_stdin) {
+// stdin format reading by default stdin type is cfn format
+                                ToulBar2::stdin_format= to_string(args.OptionArg());
+
+                if(ToulBar2::stdin_format.length()>0) {
+                ToulBar2::stdin_format= to_string(args.OptionArg());
+                } else {ToulBar2::stdin_format="cfn";}
+		cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
+            
+	     }
+
+
+
             if (args.OptionId() == OPT_vns_output) {
 #ifdef OPENMPI
                 if (env0.myrank == 0) {

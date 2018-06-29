@@ -1953,39 +1953,76 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
-    if (ToulBar2::cfn) {
+    if (ToulBar2::cfn or (ToulBar2::stdin_format.compare("cfn")==0)) {
 #ifdef BOOST
-        ifstream stream(fileName);
-        if (stream.is_open()) {
+    ifstream Rfile;
+    istream& stream = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
+    if ( ToulBar2::stdin_format.compare("cfn")==0 ) {
+            cout << "pipe reading: " << ToulBar2::stdin_format << endl;
             CFNStreamReader fileReader(stream, this);
             return getUb();
-        } else {
+
+    } else if( to_string(fileName).length()>0) {
+            Rfile.open(fileName);
+           if (!stream) {
             cerr << "Error: could not open file '" << fileName << "'." << endl;
             exit(1);
+            
+        } else {
+            CFNStreamReader fileReader(stream, this);
+            return getUb();
         }
+    }
+
+       
 #else
         cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl;
         exit(1);
 #endif
     } else if (ToulBar2::cfngz) {
 #ifdef BOOST
-        ifstream file(fileName, std::ios_base::in | std::ios_base::binary);
-        if (file.is_open()) {
-            boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-            inbuf.push(boost::iostreams::gzip_decompressor());
-            inbuf.push(file);
-            std::istream stream(&inbuf);
+    ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
+    istream& file = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+    inbuf.push(boost::iostreams::gzip_decompressor());
+               inbuf.push(file);
+               std::istream stream(&inbuf);
+
+    
+    if ( ToulBar2::stdin_format.compare("cfn.gz")==0 ) {
+        // read from instance from pipe  todo doesn work with pipe D. ALLouche
+           cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+//            inbuf.push(file);
+           CFNStreamReader fileReader(stream, this);
+            return getUb();
+            
+    } else if( to_string(fileName).length()>0) {
+              // read instance from real file
+  //              inbuf.push(file);
+    //            std::istream stream(&inbuf);
+
+           // Rfile.open(fileName);
+            cout << "file: " << fileName << endl;
+            if (!file) {
+                    cerr << "Could not open cfn.gz file : " << fileName << endl;
+                    exit(EXIT_FAILURE);
+            } else {
+            
+          //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
             return getUb();
+            }
+
+    }
+
+
+
+
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl;
         exit(1);
 #endif
-        } else {
-            cerr << "Error: no '" << fileName << "' file found." << endl;
-            exit(1);
-        }
-    }
+    } 
 
     if (ToulBar2::externalUB.size()) {
         Cost bound = string2Cost(ToulBar2::externalUB.c_str());
@@ -2050,11 +2087,17 @@ Cost WCSP::read_wcsp(const char* fileName)
     vector<vector<String> > sharedTuples;
     vector<String> emptyTuples;
 
-    // open the file
-    ifstream file(fileName);
-    if (!file) {
-        cerr << "Could not open file " << fileName << endl;
-        exit(EXIT_FAILURE);
+    ifstream Rfile;
+    istream& file = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
+    if ( ToulBar2::stdin_format.compare("wcsp")==0 ) {
+	   cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+    } else if( to_string(fileName).length()>0 and ToulBar2::stdin_format.length()==0 ) {
+	    Rfile.open(fileName);
+	    if (!file) {
+		    cerr << "Could not open wcsp file : " << fileName << endl;
+		    exit(EXIT_FAILURE);
+	    }
+
     }
 
     // ---------- PROBLEM HEADER ----------
@@ -2574,11 +2617,23 @@ void WCSP::read_uai2008(const char* fileName)
 
     // Cost inclowerbound = MIN_COST;
     string uaitype;
-    ifstream file(fileName);
+	ifstream Rfile;
+	istream& file = (ToulBar2::stdin_format.compare("uai")==0) ? cin : Rfile;
+	if ( ToulBar2::stdin_format.compare("uai")==0 ) {
+		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+	} else {
+		Rfile.open(fileName);
     if (!file) {
-        cerr << "Could not open file " << fileName << endl;
+			cerr << "Could not open file uai: " << fileName << endl;
         exit(EXIT_FAILURE);
     }
+
+	}
+
+
+
+
+
 
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
@@ -3017,11 +3072,23 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-    ifstream file(fileName);
+	string formatlabel="wcfn";
+        ifstream Rfile;
+        istream& file = (ToulBar2::stdin_format.compare(formatlabel)==0) ? cin : Rfile;
+        if ( ToulBar2::stdin_format.compare(formatlabel)==0 ) {
+                cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+        } else {
+                Rfile.open(fileName);
     if (!file) {
-        cerr << "Could not open file " << fileName << endl;
+                        cerr << "Could not open file :: " << fileName << endl;
         exit(EXIT_FAILURE);
     }
+
+        }
+
+
+
+
 
     double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
@@ -3195,11 +3262,20 @@ void WCSP::read_wcnf(const char* fileName)
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-    ifstream file(fileName);
+	ifstream Rfile;
+	istream& file = (ToulBar2::stdin_format.compare("qpbo")==0) ? cin : Rfile;
+	if ( ToulBar2::stdin_format.compare("qpbo")==0 ) {
+		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+	} else {
+		Rfile.open(fileName);
     if (!file) {
-        cerr << "Could not open file " << fileName << endl;
+			cerr << "Could not open file qpbo:: " << fileName << endl;
         exit(EXIT_FAILURE);
     }
+
+	}
+
+
 
     int n = 0;
     file >> n;
@@ -3221,7 +3297,8 @@ void WCSP::read_qpbo(const char* fileName)
     vector<double> cost(m, 0.);
     for (e = 0; e < m; e++) {
         file >> posx[e];
-        if (!file) {
+       
+        if (ToulBar2::stdin_format.compare("qpbo")!=0 and !file) {
             cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
             break;
         }

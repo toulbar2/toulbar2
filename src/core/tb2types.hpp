@@ -431,6 +431,7 @@ public:
     static TLogProb logU; // upper bound on rejected potentials
     static TLogProb logepsilon;
     static bool uaieval;
+    static string stdin_format;  // stdin format declaration
 
     static double startCpuTime;
 
