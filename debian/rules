@@ -4,9 +4,5 @@
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		-DCMAKE_BUILD_TYPE:STRING=Release
-	# RelWithDebInfo is slower
-
-override_dh_auto_test:
-	# Don't run CTest. 
-	# Ran by developpers and may timeout on slow platforms.
+		-DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -g -DNDEBUG" \
+		-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo

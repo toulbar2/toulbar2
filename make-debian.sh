@@ -1,37 +1,36 @@
 #!/bin/bash
+# The typical way to push a new version to debian is to prepare a
+# specialized git repo from the master branch and push -f it to
+# git@salsa.debian.org:science-team/toulbar2.git set as the remote.
+# The script assumes that a tag of the last-version has been set.
 
-# Prepare upstream tar ball
-# Move directories out of the way
-mv toulbar2/debian .
-mv toulbar2/lib .
+deb_ver=1
 
-# Remove possible traces of compilation
-rm toulbar2/src/MyCPackConf.cmake
-rm toulbar2/src/ToulbarVersion.hpp
-rm -rf toulbar2/build
-
-# fetch and replay
-git pull --rebase
+git clone https://github.com/toulbar2/toulbar2.git tb2-deb
+cd tb2-deb
 ver=`git tag`
 
-# Create version files. Quilt patches prevent Cmake doing it.
-./toulbar2/cmake-script/genVersionFile.sh
-tar cvfJ toulbar2_$ver.orig.tar.xz --exclude-vc toulbar2
+# Create version files. Quilt patches will prevent Cmake doing it.
+# instead genDebianVersionFile.sh will copy it from debian dir.
+./cmake-script/genVersionFile.sh
+mv src/ToulbarVersion.hpp debian
 
-# restore debian dir
-mv debian toulbar2
-cd toulbar2
+# tag upstream version 
+git tag upstream/$ver
 
-# update version
-dch -v "toulbar2-$ver-1" 
-dch -r
+# remove Windows gmp lib - bad licence, not tolerated by debian.
+git rm -r lib
+git commit -a -m"Removing windows library, useless for debian"
 
-# build source package
-debuild -S
-cd ..
+# this should now be Ok. tag with debian version
+git tag upstream/$ver-$deb_ver
+gbp dch
+dch -r -D unstable
+git commit -a -m"Updating changelog"
 
-# restore directory
-mv lib toulbar2
+# retag
+git tag upstream/$ver-$deb_ver
+git remote set-url origin git@salsa.debian.org:science-team/toulbar2.git
+git push -f
 
-# dput
-dput ppa:thomas-schiex/toulbar2 toulbar2_$ver-1_source.changes
+
