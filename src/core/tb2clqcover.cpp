@@ -419,7 +419,7 @@ void CliqueConstraint::projectFromZero(int idx)
     propagate_incremental();
 }
 
-Cost CliqueConstraint::get_zero_cost(int idx)
+Cost CliqueConstraint::get_zero_cost(int idx) // TODO remember last support and choose between smallest current domain size and clqvalue set
 {
     EnumeratedVariable *x = scope[idx];
     return std::accumulate(x->begin(), x->end(), wcsp->getUb(),
@@ -431,7 +431,7 @@ Cost CliqueConstraint::get_zero_cost(int idx)
                            });
 }
 
-Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx)
+Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx) //TODO: avoid iterate if last support still valid and zero cost
 {
     EnumeratedVariable *x = scope[idx];
     EnumeratedVariable *y = scope[jdx];
@@ -451,7 +451,7 @@ Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx)
     return c00;
 }
 
-Cost CliqueConstraint::get_one_cost(int idx)
+Cost CliqueConstraint::get_one_cost(int idx) // TODO: remember last support
 {
     EnumeratedVariable *x = scope[idx];
     return std::accumulate(x->begin(), x->end(), wcsp->getUb(),
