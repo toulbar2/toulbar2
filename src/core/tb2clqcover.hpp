@@ -2,20 +2,9 @@
 #define TB2CLQ_HPP_
 
 #include "tb2abstractconstr.hpp"
-//#include "tb2globalconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
-
-class CliqueCoverPropagator
-{
-public:
-    CliqueCoverPropagator(WCSP &w) : wcsp(w) {}
-
-    void propagate();
-private:
-    WCSP& wcsp;
-};
 
 /* Enforce that among the variables in scope, at most rhs_in get any
    of the values appearing in clq_in. This is isomorphic to having
@@ -55,9 +44,8 @@ public:
     }
 
     vector<Long> conflictWeights;   // used by weighted degree heuristics
-    Long getConflictWeight() const {return Constraint::getConflictWeight();} 
-    Long getConflictWeight(int varIndex) const {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) {
+    Long getConflictWeight(int varIndex) const override {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
+    void incConflictWeight(Constraint *from) override {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
         if (from==this) {
