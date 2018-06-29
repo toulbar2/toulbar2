@@ -9,10 +9,10 @@ Build-Depends: debhelper (>= 9),
                libboost-graph-dev,
                libboost-iostreams-dev,
                libjemalloc-dev
-Standards-Version: 3.9.8
+Standards-Version: 4.1.4.2
+Homepage: http://www.inra.fr/mia/T/toulbar2
 Vcs-Browser: https://salsa.debian.org/science-team/toulbar2
 Vcs-Git: https://salsa.debian.org/science-team/toulbar2.git
-Homepage: http://www.inra.fr/mia/T/toulbar2
 
 Package: toulbar2
 Architecture: any
