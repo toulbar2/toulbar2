@@ -3,7 +3,7 @@ Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.
 Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
 Section: science
 Priority: optional
-Build-Depends: debhelper (>= 11),
+Build-Depends: debhelper (>= 10),
                cmake, bc,
                libgmp-dev,
                libboost-graph-dev,
