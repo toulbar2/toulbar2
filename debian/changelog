@@ -3,7 +3,7 @@ toulbar2 (1.0.0-1) unstable; urgency=medium
   * New major release. Includes DGVNS parallelized search method,
   new JSON compatible CFN input format that allows for negative or
   decimal costs as well as maximization, and clique cover global
-  constraint.
+  constraint (Closes: #831148).
 
  -- Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>  Thu, 28 Jun 2018 17:35:05 +0200
 
