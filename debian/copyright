@@ -10,7 +10,7 @@ Files: debian/*
 Copyright:  © INRA 2003-2018 <Thomas.Schiex@toulouse.inra.fr>
 License: MIT
 
-Files: src/Simple*.h
+Files: src/utils/Simple*.h
 Copyright: 2006-2013, Brodie Thiesfield
 License: MIT
 
