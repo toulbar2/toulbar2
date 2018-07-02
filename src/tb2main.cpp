@@ -601,8 +601,7 @@ void help_msg(char* toulbar2filename)
          << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
     cout     << endl;
-    cout << "-stdin   allows to read file in cfn format from pipe . if the format is different from cfn. --stdin=foo will allows to define to flux format. ( example : cat example.uai | toulbar2 -stdin=uai)  " << endl;
-    cout << " for stdin available type format please use file extension define previousely in the current file --stdin=wcsp ...  " << endl;
+    cout << "   --stdin : read file from pipe (assuming CFN format). If the format is not cfn, --stdin=foo sets the format to 'foo' (Example: cat example.uai | toulbar2 --stdin=uai)" << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;

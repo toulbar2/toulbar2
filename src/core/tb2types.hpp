@@ -571,7 +571,7 @@ public:
     }
 };
 
-/// < \brief allows to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
+/// < \brief allows one to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
 template <class T>
 bool compareWCSPIndex(const T* lhs, const T* rhs)
 {

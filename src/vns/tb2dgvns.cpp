@@ -79,7 +79,7 @@ bool VNSSolver::solve()
         h = new RandomClusterChoice();
         break;
     default:
-        cerr << "Unkown Neighborhood Structure" << endl;
+        cerr << "Unknown Neighborhood Structure" << endl;
         exit(EXIT_FAILURE);
     }
     h->init(wcsp, this);

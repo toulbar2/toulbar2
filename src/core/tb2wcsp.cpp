@@ -2194,7 +2194,7 @@ void WCSP::printNCBuckets()
  * -# (level=4) shows also current list of cost functions for each variable and reports more details on arc EPT operations (showing all changes in cost functions)
  * -# (level=5) reports more details on cost functions defined in extension giving their content (cost table by first increasing values in the current domain of the last variable in the scope)
  *
- * For debugging purposes, another option "-Z=level" allows to monitor the search:
+ * For debugging purposes, another option "-Z=level" allows one to monitor the search:
  * -# (level 1) shows current search depth (number of search choices from the root of the search tree) and reports statistics on nogoods for BTD-like methods
  * -# (level 2) idem
  * -# (level 3) also saves current problem into a file before each search choice
