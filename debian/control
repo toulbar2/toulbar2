@@ -3,7 +3,7 @@ Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.
 Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
 Section: science
 Priority: optional
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 11),
                cmake, bc,
                libgmp-dev,
                libboost-graph-dev,
@@ -19,6 +19,6 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends}
 Description: Exact combinatorial optimization for Graphical Models
-Toulbar2 is  an exact discrete optimization tool for Graphical Models
-such as Cost Function Networks, Markov Random Fields, Weighted Constraint
-Satisfaction Problems and Bayesian Nets.
+ Toulbar2 is  an exact discrete optimization tool for Graphical Models
+ such as Cost Function Networks, Markov Random Fields, Weighted Constraint
+ Satisfaction Problems and Bayesian Nets.
