@@ -1,5 +1,5 @@
 .vscode
-compile_commands.json
+.pc
 build
 src/ToulbarVersion.hpp
 src/MyCPackConf.cmake

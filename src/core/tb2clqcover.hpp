@@ -44,9 +44,8 @@ public:
     }
 
     vector<Long> conflictWeights;   // used by weighted degree heuristics
-    Long getConflictWeight() const {return Constraint::getConflictWeight();} 
-    Long getConflictWeight(int varIndex) const {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) {
+    Long getConflictWeight(int varIndex) const override {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
+    void incConflictWeight(Constraint *from) override {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
         if (from==this) {

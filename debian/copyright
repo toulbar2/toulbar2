@@ -1,16 +1,16 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Toulbar2
-Source: https://github.com/toulbar2/toulbar2
+Source: https://github.com/toulbar2/toulbar2/
 
 Files: *
 Copyright: © INRA 2003-2018 <Thomas.Schiex@inra.fr>
 License: MIT
 
 Files: debian/*
-Copyright:  © INRA 2003-2018 <Thomas.Schiex@inra.fr>
+Copyright:  © INRA 2003-2018 <Thomas.Schiex@toulouse.inra.fr>
 License: MIT
 
-Files: src/SimpleGlob.h
+Files: src/utils/Simple*.h
 Copyright: 2006-2013, Brodie Thiesfield
 License: MIT
 

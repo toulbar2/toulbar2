@@ -431,6 +431,7 @@ public:
     static TLogProb logU; // upper bound on rejected potentials
     static TLogProb logepsilon;
     static bool uaieval;
+    static string stdin_format;  // stdin format declaration
 
     static double startCpuTime;
 
@@ -570,7 +571,7 @@ public:
     }
 };
 
-/// < \brief allows to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
+/// < \brief allows one to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
 template <class T>
 bool compareWCSPIndex(const T* lhs, const T* rhs)
 {

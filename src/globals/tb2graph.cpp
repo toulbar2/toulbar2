@@ -237,7 +237,6 @@ pair<int, Cost> Graph::minCostFlow(int s, int t)
     //int n = size();
     Cost flow = 0;
     Cost cost = 0;
-    pair<Cost, bool> result;
     bool stopped = false;
 
     //shortest_path(s);

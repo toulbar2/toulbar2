@@ -1,2 +1,4 @@
-version=3
-https://mulcyber.toulouse.inra.fr/frs/?group_id=29 /frs/download\.php/\d+/toulbar2_([\d\.]*)\.orig\.tar\.xz
+version=4
+opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%toulbar2-$1.tar.gz%" \
+     https://github.com/toulbar2/toulbar2/tags \
+     (?:.*?/)?v?(\d[\d.]*)\.tar\.gz debian uupdate

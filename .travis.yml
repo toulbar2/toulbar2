@@ -1,10 +1,10 @@
 language: cpp
-compiler: g++
-dist: xenial
+compiler: clang
+dist: trusty
 
 addons:
   apt:
-    packages: libboost-all-dev libgmp-dev zlib1g-dev libjemalloc-dev
+    packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev libjemalloc-dev
 
 script:
   - mkdir build
