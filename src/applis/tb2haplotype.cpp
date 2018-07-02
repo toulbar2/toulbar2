@@ -346,7 +346,7 @@ void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
     }
 #ifdef MENDELSOFT
 //  if(ToulBar2::consecutiveAllele) {
-//  	cout << "Make alleles consecutive and supose 4 allele." << endl;
+//  	cout << "Make alleles consecutive and suppose 4 allele." << endl;
 //    maxallele = 4;
 //  	for(int i=1;i<=maxallele;i++) {
 //  		map<int,int>::iterator it = alleles.find(i);

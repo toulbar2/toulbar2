@@ -1,7 +1,7 @@
 
 
 #include "tb2wcsp.hpp"
-// We supose that the XMLCSP library is placed in the directory
+// We suppose that the XMLCSP library is placed in the directory
 // xmlcsp from toulbar2, so tb2wcsp.hpp is in the parent directory
 
 #include <iostream>
