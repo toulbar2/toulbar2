@@ -1,4 +1,4 @@
-toulbar2 (1.0.0-1) unstable; urgency=medium
+toulbar2 (1.0.0+dfsg-1) unstable; urgency=medium
 
   * New major release. Includes DGVNS parallelized search method,
   new JSON compatible CFN input format that allows for negative or
