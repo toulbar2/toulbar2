@@ -10,11 +10,11 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
-int CliqueConstraint::nextid{0};
+int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-                                   int arity_in, vector<vector<int>> clq_in,
-                                   int rhs_in)
+    int arity_in, vector<vector<int> > clq_in,
+    int rhs_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
     , clqvals(clq_in)
     , rhs(rhs_in)
@@ -31,7 +31,7 @@ CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
             assert(static_cast<size_t>(v) < inclq[i].size());
             inclq[i][v] = true;
         }
-        auto *x = scope[i];
+        auto* x = scope[i];
         if (x->assigned()) {
             if (inclq[i][x->getValue()]) {
                 num1 += 1;
@@ -55,7 +55,7 @@ CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
 }
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-                                   int arity_in)
+    int arity_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
     , lb(MIN_COST)
     , all0(MIN_COST)
@@ -75,7 +75,7 @@ std::ostream& CliqueConstraint::printstate(std::ostream& os)
        << " id = " << id << " connected = " << connected()
        << " depth = " << Store::getDepth() << "\n";
     for (int i = 0; i != arity_; ++i) {
-        auto *x = scope[i];
+        auto* x = scope[i];
         if (connected(i))
             os << " * ";
         else
@@ -86,7 +86,7 @@ std::ostream& CliqueConstraint::printstate(std::ostream& os)
             os << "*****";
         os << "\n";
     }
-    return  os;
+    return os;
 }
 
 void CliqueConstraint::propagate()
@@ -101,7 +101,7 @@ void CliqueConstraint::propagate()
 void CliqueConstraint::propagate_incremental()
 {
     ++run;
-    static const bool debug{false};
+    static const bool debug{ false };
 
     if (!connected())
         return;
@@ -114,7 +114,7 @@ void CliqueConstraint::propagate_incremental()
     get_current_scope(current_scope, current_scope_idx);
     if (debug)
         cout << "carity = " << carity << "\n"
-             << state{this} << "\n";
+             << state{ this } << "\n";
 
     handle_low_arity();
     if (!connected()) // handle_low_arity may disconnect
@@ -124,17 +124,18 @@ void CliqueConstraint::propagate_incremental()
     wcsp->revise(this);
     gather_unary_0s();
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (!td) gather_binary(); // Warning! does not work with tree decomposition-based methods
+    if (!td)
+        gather_binary(); // Warning! does not work with tree decomposition-based methods
     gather_unary_1s();
 
     if (debug) {
-        cout << "After propagate, state\n" << state{this} << "\n";
+        cout << "After propagate, state\n"
+             << state{ this } << "\n";
     }
-
 }
 
 void CliqueConstraint::get_current_scope(std::vector<EnumeratedVariable*>& s,
-                                         std::vector<int>& s_idx)
+    std::vector<int>& s_idx)
 {
     // recover current scope
     s.clear();
@@ -142,7 +143,7 @@ void CliqueConstraint::get_current_scope(std::vector<EnumeratedVariable*>& s,
 
     num1 = 0;
     for (int i = 0; i < arity_; i++) {
-        EnumeratedVariable *x = scope[i];
+        EnumeratedVariable* x = scope[i];
         if (x->assigned()) {
             if (inclq[i][x->getValue()])
                 num1 += 1;
@@ -157,17 +158,17 @@ void CliqueConstraint::get_current_scope(std::vector<EnumeratedVariable*>& s,
 
 void CliqueConstraint::gather_unary_0s()
 {
-    static const bool debug{false};
+    static const bool debug{ false };
 
     if (debug)
         cout << "------------------------------\ngather_unary_0s state = \n"
-             << state{this} << "\n";
+             << state{ this } << "\n";
 
     zerocosts.clear();
     zerocosts.resize(carity);
-    Cost maxc{MIN_COST}, sumc{MIN_COST}, secondmax{MIN_COST};
+    Cost maxc{ MIN_COST }, sumc{ MIN_COST }, secondmax{ MIN_COST };
     for (int i = 0, e = current_scope.size(); i != e; ++i) {
-        auto i0{get_zero_cost(current_scope_idx[i])};
+        auto i0{ get_zero_cost(current_scope_idx[i]) };
         zerocosts[i] = i0;
         if (maxc < i0) {
             secondmax = maxc;
@@ -178,7 +179,7 @@ void CliqueConstraint::gather_unary_0s()
         maxc = std::max(maxc, i0);
         sumc += i0;
         if (debug) {
-            auto *x = current_scope[i];
+            auto* x = current_scope[i];
             cout << "var " << i << " ";
             x->print(cout);
             cout << " i0 = " << i0 << "\n";
@@ -187,7 +188,7 @@ void CliqueConstraint::gather_unary_0s()
 
     for (int i = 0, e = current_scope.size(); i != e; ++i) {
         extend_zero_cost(current_scope_idx[i],
-                         std::min(zerocosts[i], secondmax));
+            std::min(zerocosts[i], secondmax));
     }
     Cost l0 = sumc - maxc;
 
@@ -202,25 +203,26 @@ void CliqueConstraint::gather_unary_0s()
     Cost fixedsumc = sumc - maxc + secondmax;
     for (int i = 0, e = current_scope.size(); i != e; ++i)
         project_one_cost(current_scope_idx[i],
-                         fixedsumc - std::min(zerocosts[i], secondmax) - l0);
+            fixedsumc - std::min(zerocosts[i], secondmax) - l0);
 }
 
 void CliqueConstraint::gather_unary_1s()
 {
-    Cost min1cost{wcsp->getUb()};
+    Cost min1cost{ wcsp->getUb() };
     for (int i = 0, e = current_scope.size(); i != e; ++i)
         min1cost = std::min(get_one_cost(current_scope_idx[i]), min1cost);
 
-    Cost extra{std::min(min1cost, (Cost)all0)};
+    Cost extra{ std::min(min1cost, (Cost)all0) };
     if (extra > MIN_COST) {
         TreeDecomposition* td = wcsp->getTreeDec();
         all0 -= extra;
         assert(all0 >= 0);
         for (int i = 0, e = current_scope.size(); i != e; ++i) {
-            auto *x = current_scope[i];
+            auto* x = current_scope[i];
             for (auto v : clqvals[current_scope_idx[i]])
                 if (x->canbe(v)) {
-                    if(td) td->addDelta(cluster,x,v,-extra);                  
+                    if (td)
+                        td->addDelta(cluster, x, v, -extra);
                     x->extend(v, extra);
                 }
         }
@@ -270,8 +272,8 @@ void CliqueConstraint::gather_binary()
         initialize_binary();
     }
 
-    Cost sum{MIN_COST};
-    Cost maxe{MIN_COST};
+    Cost sum{ MIN_COST };
+    Cost maxe{ MIN_COST };
     vector<Cost>& extra = binary_extra;
     extra.clear();
     extra.resize(current_scope.size());
@@ -284,12 +286,12 @@ void CliqueConstraint::gather_binary()
             if (!bc[current_scope_idx[i]][current_scope_idx[j]])
                 continue;
             auto c00 = get_binary_zero_cost(current_scope_idx[i],
-                                            current_scope_idx[j]);
+                current_scope_idx[j]);
             extend_binary_cost(current_scope_idx[i], current_scope_idx[j], c00);
             sum += c00;
             extra[i] += c00;
             extra[j] += c00;
-            maxe = std::max({maxe, extra[i], extra[j]});
+            maxe = std::max({ maxe, extra[i], extra[j] });
         }
     }
 
@@ -303,9 +305,9 @@ void CliqueConstraint::gather_binary()
 void CliqueConstraint::assign(int idx)
 {
     ++run;
-    static const bool debug{false};
+    static const bool debug{ false };
 
-    auto *x = scope[idx];
+    auto* x = scope[idx];
 
     if (debug)
         cout << "In assign " << idx << "=" << x->getValue() << " run = " << run
@@ -323,21 +325,22 @@ void CliqueConstraint::assign(int idx)
 
     if (num1 == rhs) {
         if (debug)
-            cout << "disconnecting, state = \n" << state{this} << "\n";
+            cout << "disconnecting, state = \n"
+                 << state{ this } << "\n";
         deconnect();
     }
 
     if (debug)
         cout << "After assign of " << idx << " state = \n"
-             << state{this} << "\n";
+             << state{ this } << "\n";
 }
 
 void CliqueConstraint::handle_low_arity()
 {
-    static const bool debug{false};
+    static const bool debug{ false };
 
     if (debug)
-        cout << "in handle_low_arity state = " << state{this} << "\n";
+        cout << "in handle_low_arity state = " << state{ this } << "\n";
 
     if (carity > 3)
         return;
@@ -384,7 +387,7 @@ void CliqueConstraint::handle_low_arity()
 
 void CliqueConstraint::remove(int idx)
 {
-    static const bool debug{false};
+    static const bool debug{ false };
 
     if (!connected(idx))
         return;
@@ -408,44 +411,44 @@ void CliqueConstraint::decrease(int idx)
 
 void CliqueConstraint::projectFromZero(int idx)
 {
-    static const bool debug{false};
+    static const bool debug{ false };
 
     if (!connected(idx))
         return;
 
     if (debug)
-        cout << "In projectFromZero state = " << state{this} << "\n";
+        cout << "In projectFromZero state = " << state{ this } << "\n";
 
     propagate_incremental();
 }
 
 Cost CliqueConstraint::get_zero_cost(int idx) // TODO remember last support and choose between smallest current domain size and clqvalue set
 {
-    EnumeratedVariable *x = scope[idx];
+    EnumeratedVariable* x = scope[idx];
     return std::accumulate(x->begin(), x->end(), wcsp->getUb(),
-                           [&](Cost m, int val) {
-                               if (!inclq[idx][val])
-                                   return std::min(m, x->getCost(val));
-                               else
-                                   return m;
-                           });
+        [&](Cost m, int val) {
+            if (!inclq[idx][val])
+                return std::min(m, x->getCost(val));
+            else
+                return m;
+        });
 }
 
 Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx) //TODO: avoid iterate if last support still valid and zero cost
 {
-    EnumeratedVariable *x = scope[idx];
-    EnumeratedVariable *y = scope[jdx];
-    auto *cons = bc[idx][jdx];
+    EnumeratedVariable* x = scope[idx];
+    EnumeratedVariable* y = scope[jdx];
+    auto* cons = bc[idx][jdx];
     assert(cons);
     assert(cons->connected());
-    Cost c00{wcsp->getUb()};
+    Cost c00{ wcsp->getUb() };
     for (auto ival : nonclqvals[idx]) {
         if (!x->canbe(ival))
             continue;
         for (auto jval : nonclqvals[jdx]) {
             if (!y->canbe(jval))
                 continue;
-            c00 = std::min(c00, cons->getCost(x,y,ival,jval));
+            c00 = std::min(c00, cons->getCost(x, y, ival, jval));
         }
     }
     return c00;
@@ -453,14 +456,14 @@ Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx) //TODO: avoid iter
 
 Cost CliqueConstraint::get_one_cost(int idx) // TODO: remember last support
 {
-    EnumeratedVariable *x = scope[idx];
+    EnumeratedVariable* x = scope[idx];
     return std::accumulate(x->begin(), x->end(), wcsp->getUb(),
-                           [&](Cost m, int val) {
-                               if (inclq[idx][val])
-                                   return std::min(m, x->getCost(val));
-                               else
-                                   return m;
-                           });
+        [&](Cost m, int val) {
+            if (inclq[idx][val])
+                return std::min(m, x->getCost(val));
+            else
+                return m;
+        });
 }
 
 void CliqueConstraint::extend_zero_cost(int var, Cost c)
@@ -468,10 +471,11 @@ void CliqueConstraint::extend_zero_cost(int var, Cost c)
     if (c == MIN_COST)
         return;
     TreeDecomposition* td = wcsp->getTreeDec();
-    auto *x = scope[var];
-    for(auto q = x->begin(), e = x->end(); q != e; ++q) {
+    auto* x = scope[var];
+    for (auto q = x->begin(), e = x->end(); q != e; ++q) {
         if (!inclq[var][*q]) {
-            if(td) td->addDelta(cluster,x,*q,-c);
+            if (td)
+                td->addDelta(cluster, x, *q, -c);
             x->extend(*q, c);
         }
     }
@@ -481,7 +485,7 @@ void CliqueConstraint::project_zero_cost(int var, Cost c)
 {
     if (c == MIN_COST)
         return;
-    auto *x = scope[var];
+    auto* x = scope[var];
     if (x->assigned()) {
         deconnect(var);
         if (!inclq[var][x->getValue()])
@@ -494,7 +498,8 @@ void CliqueConstraint::project_zero_cost(int var, Cost c)
     }
     for (auto v : nonclqvals[var])
         if (x->canbe(v)) {
-            if(td) td->addDelta(cluster,x,v,c);
+            if (td)
+                td->addDelta(cluster, x, v, c);
             x->project(v, c, true);
         }
     x->findSupport();
@@ -504,7 +509,7 @@ void CliqueConstraint::project_one_cost(int var, Cost c)
 {
     if (c == MIN_COST)
         return;
-    auto *x = scope[var];
+    auto* x = scope[var];
     if (x->assigned()) {
         deconnect(var);
         if (inclq[var][x->getValue()])
@@ -517,7 +522,8 @@ void CliqueConstraint::project_one_cost(int var, Cost c)
     }
     for (auto v : clqvals[var])
         if (x->canbe(v)) {
-            if(td) td->addDelta(cluster,x,v,c);
+            if (td)
+                td->addDelta(cluster, x, v, c);
             x->project(v, c, true);
         }
     x->findSupport();
@@ -560,15 +566,15 @@ void CliqueConstraint::read(istream& is)
     is >> rhs;
     for (int i = 0; i != arity_; ++i) {
         conflictWeights.push_back(0);
-        int nv{0};
+        int nv{ 0 };
         is >> nv;
         inclq[i].resize(scope[i]->getDomainInitSize());
         for (int j = 0; j != nv; ++j) {
-          int val{0};
-          is >> val;
-          assert(static_cast<size_t>(val) < inclq[i].size());
-          inclq[i][val] = true;
-          clqvals[i].push_back(val);
+            int val{ 0 };
+            is >> val;
+            assert(static_cast<size_t>(val) < inclq[i].size());
+            inclq[i][val] = true;
+            clqvals[i].push_back(val);
         }
         auto* x = scope[i];
         if (x->assigned()) {
@@ -598,4 +604,3 @@ void CliqueConstraint::read(istream& is)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

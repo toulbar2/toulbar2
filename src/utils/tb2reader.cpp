@@ -298,18 +298,18 @@ public:
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
 
-    void generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate, stringstream & stream);
+    void generateGCFStreamFromTemplate(vector<int>& scope, const string& funcName, string GCFTemplate, stringstream& stream);
 
-    void generateGCFStreamSgrammar(vector<int>& scope, stringstream & stream);
-    void generateGCFStreamSsame(vector<int>& scope, stringstream & stream);
+    void generateGCFStreamSgrammar(vector<int>& scope, stringstream& stream);
+    void generateGCFStreamSsame(vector<int>& scope, stringstream& stream);
 
     void readIntervalUnaryTable(int varIdx, vector<Value>& authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
     void enforceUB(Cost ub);
 
     std::map<std::string, int> varNameToIdx;
-    std::vector<std::map<std::string, int>> varValNameToIdx;
-    std::map<std::string, std::vector<pair<string, std::vector<int>>>> tableShares;
+    std::vector<std::map<std::string, int> > varValNameToIdx;
+    std::map<std::string, std::vector<pair<string, std::vector<int> > > > tableShares;
     vector<TemporaryUnaryConstraint> unaryCFs;
 
 private:
@@ -319,8 +319,8 @@ private:
     unsigned int lineCount;
     string currentLine;
     boost::char_separator<char> sep;
-    boost::tokenizer<boost::char_separator<char>>* tok;
-    boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
+    boost::tokenizer<boost::char_separator<char> >* tok;
+    boost::tokenizer<boost::char_separator<char> >::iterator tok_iter;
     bool JSONMode;
 };
 
@@ -429,7 +429,7 @@ std::pair<int, string> CFNStreamReader::getNextToken()
         }
     } else {
         if (this->getNextLine()) {
-            tok = new boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
+            tok = new boost::tokenizer<boost::char_separator<char> >(currentLine, sep);
             tok_iter = tok->begin();
             return getNextToken();
         } else {
@@ -1276,7 +1276,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "clique", ":rhs:N:values:[V+]S"},
+        { "clique", ":rhs:N:values:[V+]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1308,7 +1308,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     if (it != GCFTemplates.end()) {
         // Reads function using template and generates the corresponding stream
         stringstream paramsStream;
-        
+
         this->generateGCFStreamFromTemplate(scope, funcName, GCFTemplates[funcName], paramsStream);
 
         int scopeArray[arity];
@@ -1318,9 +1318,9 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (funcName[0] == 'w') { // decomposable
             DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray,
-                paramsStream,false)
+                paramsStream, false)
                 ->addToCostFunctionNetwork(this->wcsp);
-        } else if (funcName == "clique"){
+        } else if (funcName == "clique") {
             string ps = paramsStream.str();
             if (ps.size() > 1 && ps[0] == '1' && ps[1] == ' ')
                 this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
@@ -1328,7 +1328,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
                 exit(EXIT_FAILURE);
             }
-        } else {// monolithic
+        } else { // monolithic
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
         }
@@ -1353,7 +1353,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         }
 
         pair<int, string> token = this->getNextToken();
-        vector<pair<int, string>> funcParams;
+        vector<pair<int, string> > funcParams;
 
         while (!isCBrace(token.second)) {
             funcParams.push_back(token);
@@ -1470,7 +1470,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     unsigned int numberOfTuplesRead = 0;
     bool isOpenedBrace = false;
     bool variableRepeat = false;
-    vector<pair<char, string>> streamContentVec;
+    vector<pair<char, string> > streamContentVec;
 
     // Main loop: read template string char by char, and read the CFN file accordingly to the pattern
     for (unsigned int i = 0; i < GCFTemplate.size(); i++) {
@@ -1568,8 +1568,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         }
         // Read function repeated section
         else if ((GCFTemplate[i] == '+' || GCFTemplate[i] == 'S') && !isOpenedBrace) {
-            vector<pair<char, string>> repeatedContentVec; // Function repeated params
-            vector<pair<char, string>> variableRepeatVec;  // Stack if internal tuples have unknown size 
+            vector<pair<char, string> > repeatedContentVec; // Function repeated params
+            vector<pair<char, string> > variableRepeatVec; // Stack if internal tuples have unknown size
             // [ delimiting the start of the list
             skipOBrace();
             // Inside the list of parameter tuples
@@ -1587,7 +1587,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
                 size_t repeatIndex = 0;
                 while ((repeatIndex < repeatedSymbols.size()) && !isCBrace(token)) {
-                    if (repeatedSymbols[repeatIndex] == '+') repeatIndex = 0;
+                    if (repeatedSymbols[repeatIndex] == '+')
+                        repeatIndex = 0;
                     char symbol = repeatedSymbols[repeatIndex];
                     if (symbol == 'N') {
                         for (char c : token) {
@@ -1596,8 +1597,10 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('N', token));
-                        else repeatedContentVec.push_back(std::make_pair('N', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('N', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('N', token));
                     } else if (symbol == 'V') {
                         // If variable name (string)
                         if (not isdigit(token[0])) {
@@ -1609,8 +1612,10 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('V', token));
-                        else repeatedContentVec.push_back(std::make_pair('V', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('V', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('V', token));
                     } else if (symbol == 'v') {
                         // V0 : value MUST be a number
                         for (char c : token) {
@@ -1619,18 +1624,22 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('v', token));
-                        else repeatedContentVec.push_back(std::make_pair('v', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('v', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('v', token));
                     } else if ((symbol == 'C') || (symbol == 'c')) {
                         Cost c = wcsp->decimalToCost(token, lineNumber);
                         if (symbol == 'c' && c < 0) {
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
                             exit(EXIT_FAILURE);
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
-                        else repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        else
+                            repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
                     }
-                    
+
                     repeatIndex++;
                     std::tie(lineNumber, token) = this->getNextToken();
                 }
@@ -1642,19 +1651,20 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
-                if (variableRepeat) {// we must push the size of the repeat and its contents
+                if (variableRepeat) { // we must push the size of the repeat and its contents
                     repeatedContentVec.push_back(std::make_pair('N', std::to_string(variableRepeatVec.size())));
-                    repeatedContentVec.insert(repeatedContentVec.end(),variableRepeatVec.begin(),variableRepeatVec.end());
+                    repeatedContentVec.insert(repeatedContentVec.end(), variableRepeatVec.begin(), variableRepeatVec.end());
                     variableRepeatVec.clear();
                 }
                 numberOfTuplesRead++; // Number of tuples read
             }
             if (GCFTemplate[i] == 'S' && numberOfTuplesRead != scope.size()) {
-                cerr << "Error: expected "<< scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
+                cerr << "Error: expected " << scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
                 exit(EXIT_FAILURE);
             }
             // Add number of tuples before the list if the number of expected tuples is not known
-            if (GCFTemplate[i] == '+') streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
+            if (GCFTemplate[i] == '+')
+                streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {
                 streamContentVec.push_back(std::make_pair(repContentPair.first, repContentPair.second));
@@ -1707,7 +1717,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // Correct for negative costs
     if (funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
-        wcsp->negCost -= ((scope.size() + 2) * minCost);// TODO we could do better and compute different mins for initial/final/transitions.
+        wcsp->negCost -= ((scope.size() + 2) * minCost); // TODO we could do better and compute different mins for initial/final/transitions.
     } else
         wcsp->negCost -= minCost;
 
@@ -1728,7 +1738,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 * non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
 * return stream : [var|weight cost nb_symbols nb_values start_symbol nb_rules ((0 terminal_symbol value)|(1 nonterminal_in nonterminal_out_left nonterminal_out_right)|(2 terminal_symbol value weight)|(3 nonterminal_in nonterminal_out_left nonterminal_out_right weight))∗]
 */
-void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream &stream)
+void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream& stream)
 {
 
     int lineNumber;
@@ -1870,7 +1880,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 * vars2 : [v4 v5 v6]
 * return stream : [cost list_size1 list_size2 (variable_index)∗ (variable_index)∗]
 */
-void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream &stream)
+void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& stream)
 {
 
     int lineNumber;
@@ -1953,72 +1963,67 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
-    if (ToulBar2::cfn || (ToulBar2::stdin_format.compare("cfn")==0)) {
+    if (ToulBar2::cfn || (ToulBar2::stdin_format.compare("cfn") == 0)) {
 #ifdef BOOST
-    ifstream Rfile;
-    istream& stream = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
-    if ( ToulBar2::stdin_format.compare("cfn")==0 ) {
+        ifstream Rfile;
+        istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
+        if (ToulBar2::stdin_format.compare("cfn") == 0) {
             CFNStreamReader fileReader(stream, this);
             return getUb();
 
-    } else if( to_string(fileName).length()>0) {
+        } else if (to_string(fileName).length() > 0) {
             Rfile.open(fileName);
-           if (!stream) {
-            cerr << "Error: could not open file '" << fileName << "'." << endl;
-            exit(EXIT_FAILURE);
-            
-        } else {
-            CFNStreamReader fileReader(stream, this);
-            return getUb();
+            if (!stream) {
+                cerr << "Error: could not open file '" << fileName << "'." << endl;
+                exit(EXIT_FAILURE);
+
+            } else {
+                CFNStreamReader fileReader(stream, this);
+                return getUb();
+            }
         }
-    }
 #else
         cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
     } else if (ToulBar2::cfngz) {
 #ifdef BOOST
-    ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
-    istream& file = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-    inbuf.push(boost::iostreams::gzip_decompressor());
-               inbuf.push(file);
-               std::istream stream(&inbuf);
+        ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
+        istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::gzip_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
 
-    
-    if ( ToulBar2::stdin_format.compare("cfn.gz")==0 ) {
-        // read from instance from pipe  todo doesn work with pipe D. ALLouche
-//            inbuf.push(file);
-           CFNStreamReader fileReader(stream, this);
-            return getUb();
-            
-    } else if( to_string(fileName).length()>0) {
-              // read instance from real file
-  //              inbuf.push(file);
-    //            std::istream stream(&inbuf);
-
-           // Rfile.open(fileName);
-            cout << "file: " << fileName << endl;
-            if (!file) {
-                    cerr << "Could not open cfn.gz file : " << fileName << endl;
-                    exit(EXIT_FAILURE);
-            } else {
-            
-          //  inbuf.push(file);
+        if (ToulBar2::stdin_format.compare("cfn.gz") == 0) {
+            // read from instance from pipe  todo doesn work with pipe D. ALLouche
+            //            inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
             return getUb();
+
+        } else if (to_string(fileName).length() > 0) {
+            // read instance from real file
+            //              inbuf.push(file);
+            //            std::istream stream(&inbuf);
+
+            // Rfile.open(fileName);
+            cout << "file: " << fileName << endl;
+            if (!file) {
+                cerr << "Could not open cfn.gz file : " << fileName << endl;
+                exit(EXIT_FAILURE);
+            } else {
+
+                //  inbuf.push(file);
+                CFNStreamReader fileReader(stream, this);
+                return getUb();
             }
-
-    }
-
-
-
+        }
 
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-    } 
+    }
 
     if (ToulBar2::externalUB.size()) {
         Cost bound = string2Cost(ToulBar2::externalUB.c_str());
@@ -2084,16 +2089,15 @@ Cost WCSP::read_wcsp(const char* fileName)
     vector<String> emptyTuples;
 
     ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.length() >0) ? cin : Rfile;
-    if ( ToulBar2::stdin_format.compare("wcsp")==0 ) {
-//	   cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else if( to_string(fileName).length()>0 and ToulBar2::stdin_format.length()==0 ) {
-	    Rfile.open(fileName);
-	    if (!file) {
-		    cerr << "Could not open wcsp file : " << fileName << endl;
-		    exit(EXIT_FAILURE);
-	    }
-
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
+    if (ToulBar2::stdin_format.compare("wcsp") == 0) {
+        //	   cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+    } else if (to_string(fileName).length() > 0 and ToulBar2::stdin_format.length() == 0) {
+        Rfile.open(fileName);
+        if (!file) {
+            cerr << "Could not open wcsp file : " << fileName << endl;
+            exit(EXIT_FAILURE);
+        }
     }
 
     // ---------- PROBLEM HEADER ----------
@@ -2162,11 +2166,9 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else if (gcname == "clique") {
+                } else if (gcname == "clique") {
                     postCliqueConstraint(scopeIndex, arity, file);
-                }
-                else { // monolithic global cost functions
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             } else {
@@ -2309,25 +2311,24 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else if (gcname == "clique") {
+                } else if (gcname == "clique") {
                     //postCliqueConstraint(scopeIndex, arity, file);
                     int skipread;
                     file >> skipread;
-                    for (int a=0; a<arity; a++) {
-                      file >> skipread;
-                      for (int b=skipread; b>0; b--) file >> skipread;
+                    for (int a = 0; a < arity; a++) {
+                        file >> skipread;
+                        for (int b = skipread; b > 0; b--)
+                            file >> skipread;
                     }
                     assert(vars[i]->enumerated());
                     assert(vars[j]->enumerated());
                     assert(vars[k]->enumerated());
-                    EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
-                    EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
-                    EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
+                    EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+                    EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
+                    EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
                     vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
-                    postTernaryConstraint(i,j,k,costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
-                }
-                else { // monolithic global cost functions
+                    postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             }
@@ -2613,23 +2614,17 @@ void WCSP::read_uai2008(const char* fileName)
 
     // Cost inclowerbound = MIN_COST;
     string uaitype;
-	ifstream Rfile;
-	istream& file = (ToulBar2::stdin_format.compare("uai")==0) ? cin : Rfile;
-	if ( ToulBar2::stdin_format.compare("uai")==0 ) {
-//		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-	} else {
-		Rfile.open(fileName);
-    if (!file) {
-			cerr << "Could not open file uai: " << fileName << endl;
-        exit(EXIT_FAILURE);
+    ifstream Rfile;
+    istream& file = (ToulBar2::stdin_format.compare("uai") == 0) ? cin : Rfile;
+    if (ToulBar2::stdin_format.compare("uai") == 0) {
+        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+    } else {
+        Rfile.open(fileName);
+        if (!file) {
+            cerr << "Could not open file uai: " << fileName << endl;
+            exit(EXIT_FAILURE);
+        }
     }
-
-	}
-
-
-
-
-
 
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
@@ -3068,22 +3063,17 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-        ifstream Rfile;
-        istream& file = (ToulBar2::stdin_format.compare("wcnf")==0 || ToulBar2::stdin_format.compare("cnf")==0) ? cin : Rfile;
-        if ( ToulBar2::stdin_format.compare("wcnf")==0 || ToulBar2::stdin_format.compare("cnf")==0 ) {
-//                cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-        } else {
-                Rfile.open(fileName);
-    if (!file) {
-                        cerr << "Could not open file :: " << fileName << endl;
-        exit(EXIT_FAILURE);
-    }
-
+    ifstream Rfile;
+    istream& file = (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) ? cin : Rfile;
+    if (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
+        //                cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+    } else {
+        Rfile.open(fileName);
+        if (!file) {
+            cerr << "Could not open file :: " << fileName << endl;
+            exit(EXIT_FAILURE);
         }
-
-
-
-
+    }
 
     double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
@@ -3257,20 +3247,17 @@ void WCSP::read_wcnf(const char* fileName)
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-	ifstream Rfile;
-	istream& file = (ToulBar2::stdin_format.compare("qpbo")==0) ? cin : Rfile;
-	if ( ToulBar2::stdin_format.compare("qpbo")==0 ) {
-//		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-	} else {
-		Rfile.open(fileName);
-    if (!file) {
-			cerr << "Could not open file qpbo:: " << fileName << endl;
-        exit(EXIT_FAILURE);
+    ifstream Rfile;
+    istream& file = (ToulBar2::stdin_format.compare("qpbo") == 0) ? cin : Rfile;
+    if (ToulBar2::stdin_format.compare("qpbo") == 0) {
+        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
+    } else {
+        Rfile.open(fileName);
+        if (!file) {
+            cerr << "Could not open file qpbo:: " << fileName << endl;
+            exit(EXIT_FAILURE);
+        }
     }
-
-	}
-
-
 
     int n = 0;
     file >> n;
@@ -3292,7 +3279,7 @@ void WCSP::read_qpbo(const char* fileName)
     vector<double> cost(m, 0.);
     for (e = 0; e < m; e++) {
         file >> posx[e];
-       
+
         if (!file) {
             cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
             break;

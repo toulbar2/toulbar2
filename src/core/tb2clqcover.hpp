@@ -11,12 +11,11 @@
    just two values, 0 (not in the clique) and 1 (in the clique), so
    we use these terms.
 */
-class CliqueConstraint : public AbstractNaryConstraint
-{
+class CliqueConstraint : public AbstractNaryConstraint {
 public:
-    CliqueConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in,
-                     vector<vector<int>> clq_in, int rhs_in);
-    CliqueConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in);
+    CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in,
+        vector<vector<int> > clq_in, int rhs_in);
+    CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
     ~CliqueConstraint();
 
     void read(istream& file);
@@ -31,29 +30,38 @@ public:
 
     void propagate() override;
 
-    Cost eval( const String& s ) override {
+    Cost eval(const String& s) override
+    {
         bool iszerotuple = true;
-        for(int i=0;i<arity_;i++) {
-            if (inclq[i][scope[i]->toValue(s[i]-CHAR_FIRST)]) {
+        for (int i = 0; i < arity_; i++) {
+            if (inclq[i][scope[i]->toValue(s[i] - CHAR_FIRST)]) {
                 iszerotuple = false;
                 break;
             }
         }
-        if (iszerotuple) return all0;
-        else return MIN_COST;
+        if (iszerotuple)
+            return all0;
+        else
+            return MIN_COST;
     }
 
-    vector<Long> conflictWeights;   // used by weighted degree heuristics
-    Long getConflictWeight(int varIndex) const override {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) override {
+    vector<Long> conflictWeights; // used by weighted degree heuristics
+    Long getConflictWeight(int varIndex) const override
+    {
+        assert(varIndex >= 0);
+        assert(varIndex < arity_);
+        return conflictWeights[varIndex] + Constraint::getConflictWeight();
+    }
+    void incConflictWeight(Constraint* from) override
+    {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
-        if (from==this) {
+        if (from == this) {
             Constraint::incConflictWeight(1);
         } else if (deconnected()) {
-            for (int i=0; i<from->arity(); i++) {
+            for (int i = 0; i < from->arity(); i++) {
                 int index = getIndex(from->getVar(i));
-                if (index>=0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
+                if (index >= 0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
                     assert(index < arity_);
                     conflictWeights[index]++;
                 }
@@ -62,6 +70,7 @@ public:
     }
     double computeTightness() override;
     void dump(ostream&, bool) override {}
+
 private:
     // ----------------------------------------------------------------------
     // definition
@@ -69,9 +78,9 @@ private:
     // two views of values in the clique: vector<bool> per variable
     // (inclq[var][val] == true iff (var,val) is in clique) and array
     // of values in clique per variable
-    vector<vector<bool>> inclq;
-    vector<vector<int>> clqvals;
-    vector<vector<int>> nonclqvals;
+    vector<vector<bool> > inclq;
+    vector<vector<int> > clqvals;
+    vector<vector<int> > nonclqvals;
 
     // We require that we use at most rhs values among those in the
     // clique (and of course, even if rhs > 1, no more than one value
@@ -85,7 +94,7 @@ private:
     // and current_scope_idx (map from indices of current_scope to
     // indices of scope)
     void get_current_scope(std::vector<EnumeratedVariable*>& s,
-                           std::vector<int>& si);
+        std::vector<int>& si);
 
     // compute zero (resp., one) cost of a var (given by index into
     // original scope): min Cost among values that do not (resp., do)
@@ -150,14 +159,14 @@ private:
     vector<Cost> binary_extra;
 
     // binary constraints in scope
-    vector<vector<BinaryConstraint*>> bc;
-
+    vector<vector<BinaryConstraint*> > bc;
 
     std::ostream& printstate(std::ostream& os);
 
-    int run{0};
-    int id{0};
+    int run{ 0 };
+    int id{ 0 };
     static int nextid;
+
 public:
     struct state {
         CliqueConstraint* clq;
@@ -178,4 +187,3 @@ inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

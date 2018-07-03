@@ -55,7 +55,8 @@ void GlobalCardinalityConstraint::read(istream& file, bool mult)
     setSemantics(str);
     //JP End//
     file >> def;
-    if (mult) def *= ToulBar2::costMultiplier;
+    if (mult)
+        def *= ToulBar2::costMultiplier;
     file >> nvalues;
     //JP End//
     for (int i = 0; i < nvalues; i++) {

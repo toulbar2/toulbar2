@@ -82,7 +82,8 @@ ostream& operator<<(ostream& os, pair<U, T> const& p)
     return os << "pair{" << p.first << "," << p.second << "}";
 }
 
-template <typename T> ostream& operator<<(ostream& os, vector<T> const& v)
+template <typename T>
+ostream& operator<<(ostream& os, vector<T> const& v)
 {
     os << "v(sz=" << v.size() << ")[";
     bool first = true;

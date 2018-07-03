@@ -601,8 +601,6 @@ void help_msg(char* toulbar2filename)
          << endl;
     cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
     cout << endl;
-    cout << "   --stdin=[format] : read file from pipe (default format is cfn) ; e.g., cat example.uai | toulbar2 --stdin=uai" << endl;
-    cout << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
@@ -636,6 +634,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
+    cout << "   --stdin=[format] : read file from pipe (default format is cfn) ; e.g., cat example.uai | toulbar2 --stdin=uai" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
     if (ToulBar2::binaryBranching)
@@ -944,18 +943,18 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_stdin) {
-// stdin format reading by default stdin type is cfn format
-                ToulBar2::stdin_format= args.OptionArg();
-                if(ToulBar2::stdin_format.length()==0) {
-                    ToulBar2::stdin_format="cfn";
+                // stdin format reading by default stdin type is cfn format
+                ToulBar2::stdin_format = args.OptionArg();
+                if (ToulBar2::stdin_format.length() == 0) {
+                    ToulBar2::stdin_format = "cfn";
                 } else {
-                    if (ToulBar2::stdin_format.compare("bep")==0 || ToulBar2::stdin_format.compare("map")==0 || ToulBar2::stdin_format.compare("pre")==0) {
+                    if (ToulBar2::stdin_format.compare("bep") == 0 || ToulBar2::stdin_format.compare("map") == 0 || ToulBar2::stdin_format.compare("pre") == 0) {
                         cerr << "Error: cannot read this " << ToulBar2::stdin_format << " format using stdin option!" << endl;
                         exit(EXIT_FAILURE);
                     }
                 }
-//		cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
-	     }
+                //		cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
+            }
 
             if (args.OptionId() == OPT_vns_output) {
 #ifdef OPENMPI
@@ -1048,7 +1047,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
             if (args.OptionId() == OPT_optimum) {
                 if (args.OptionArg() != NULL)
-//                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
+                    //                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
                     ToulBar2::vnsOptimumS = args.OptionArg();
             }
 
@@ -1758,18 +1757,19 @@ int _tmain(int argc, TCHAR* argv[])
     string strext;
 
     if (random_desc == NULL) {
-        for (int n = 0; n < glob.FileCount() + ((ToulBar2::stdin_format.size() > 0)?1:0); ++n) {
+        for (int n = 0; n < glob.FileCount() + ((ToulBar2::stdin_format.size() > 0) ? 1 : 0); ++n) {
             string problem = "";
-            if (n < glob.FileCount()) problem = to_string(glob.File(n));
+            if (n < glob.FileCount())
+                problem = to_string(glob.File(n));
 
-            if (check_file_ext(problem, file_extension_map["wcsp_ext"]) || ToulBar2::stdin_format.compare("wcsp")==0) {
+            if (check_file_ext(problem, file_extension_map["wcsp_ext"]) || ToulBar2::stdin_format.compare("wcsp") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading wcsp file: " << problem << endl;
                 strext = ".wcsp";
                 strfile = problem;
             }
             // CFN file
-            if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn")==0) {
+            if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading cfn file: " << problem << endl;
                 strext = ".cfn";
@@ -1777,7 +1777,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cfn = true;
             }
             // CFN gzip'd file
-            if (check_file_ext(problem, file_extension_map["cfngz_ext"]) || ToulBar2::stdin_format.compare("cfn.gz")==0) {
+            if (check_file_ext(problem, file_extension_map["cfngz_ext"]) || ToulBar2::stdin_format.compare("cfn.gz") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading compressed cfn file: " << problem << endl;
                 strext = ".cfn.gz";
@@ -1785,7 +1785,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cfngz = true;
             }
             // uai  file
-            if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai")==0) {
+            if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
                 strfile = problem;
                 strext = ".uai";
                 if (ToulBar2::verbose >= 0)
@@ -1794,7 +1794,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::bayesian = true;
             }
             // uai log file
-            if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG")==0) {
+            if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG") == 0) {
                 strfile = problem;
                 strext = ".LG";
                 if (ToulBar2::verbose >= 0)
@@ -1823,7 +1823,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             // wcnf or cnf file
 
-            if (check_file_ext(problem, file_extension_map["wcnf_ext"]) || ToulBar2::stdin_format.compare("wcnf")==0 || ToulBar2::stdin_format.compare("cnf")==0) {
+            if (check_file_ext(problem, file_extension_map["wcnf_ext"]) || ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading wcnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
@@ -1839,7 +1839,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             // unconstrained quadratic programming file
 
-            if (check_file_ext(problem, file_extension_map["qpbo_ext"]) || ToulBar2::stdin_format.compare("qpbo")==0) {
+            if (check_file_ext(problem, file_extension_map["qpbo_ext"]) || ToulBar2::stdin_format.compare("qpbo") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading quadratic pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::qpbo = true;

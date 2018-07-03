@@ -1017,7 +1017,8 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        if (mult) baseCost *= ToulBar2::costMultiplier;
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
         postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
@@ -1031,7 +1032,8 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             file >> d >> low >> high;
             values.push_back(BoundedObj<Value>(d, high, low));
         }
-        if (mult) baseCost *= ToulBar2::costMultiplier;
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
     }
@@ -1057,7 +1059,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 
     vector<EnumeratedVariable*> scopeVarsV(arity);
     for (int i = 0; i < arity; i++)
-        scopeVarsV[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+        scopeVarsV[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto scopeVars = scopeVarsV.data();
 
     if (gcname == "salldiff") {
@@ -1096,21 +1098,26 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 {
 #ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
-        scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new CliqueConstraint(this, scopeVars.data(), arity);
     cc->read(file);
-    if (isDelayedNaryCtr) delayedNaryCtr.push_back(cc->wcspIndex);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
     else {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac) bctr = new BinaryConstraint(this);
-            else bctr = new VACBinaryConstraint(this);
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
         cc->propagate();

@@ -87,7 +87,7 @@ public:
 
     virtual Double getDPrimalBound() const = 0; ///< \brief gets problem primal bound as a Double representing a decimal cost (upper resp. lower bound for minimization resp. maximization)
     virtual Double getDDualBound() const = 0; ///< \brief gets problem dual bound as a Double representing a decimal cost (lower resp. upper bound for minimization resp. maximization)
-  
+
     virtual Double getDLb() const = 0; ///< \brief gets problem lower bound as a Double representing a decimal cost
     virtual Double getDUb() const = 0; ///< \brief gets problem upper bound as a Double representing a decimal cost
 
@@ -225,7 +225,7 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
 
-    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream &file) =0;
+    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0;
 
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 

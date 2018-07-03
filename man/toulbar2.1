@@ -7,7 +7,7 @@ toulbar2 \- exactly solves discrete optimization problems on graphical models
 .IR file
 .SH DESCRIPTION
 .B toulbar2
-solves discrete optimization problems defined by a graphical model including Cost Function Networks or Weighted Constraint Satisfaction Problems, Markov Random Fields (Maximum A Posteriori or MAP/MRF), Bayesian Networks (Maximum Probability Explanation or MPE/BN), Quadratic Pseudo Boolean Optimization Problems (QPBO or MAXCUT), Partial Weighted Maximum Satisfiability...
+solves discrete optimization problems defined by a graphical model including Cost Function Networks (solving the Weighted Constraint Satisfaction Problem), Markov Random Fields (solving Maximum A Posteriori or MAP/MRF), Bayesian Networks (solving Maximum Probability Explanation or MPE/BN), Quadratic Pseudo Boolean Optimization Problems (QPBO or MAXCUT), Partial Weighted Maximum Satisfiability...
 .SH OPTIONS
 .PP
 GENERAL CONTROL
@@ -20,7 +20,13 @@ Approximate zero-cost solution count with BTD.
 .TP
 .BR \-logz
 Computes the log of probability of evidence (i.e. log partition function or log(Z) or PR task).
-Restricted to stochastic graphical models only (.uai format).
+Restricted to stochastic graphical models (.uai format).
+.TP
+.BR \-seed=[\fIinteger\fR]
+Initilizes the pseudo-random generator used inside toulbar2 with a fixed non-negative integer argument. A negative argument instead specifies that the pseudo-random generator be seeded by current time (default value is 1).
+.TP
+.BR \--stdin=[\fIformat\fR]
+Indicates that the problem should be read from the standard input instead of a file (default format is cfn). Eg. cat example.uai | toulbar2 --stdin=uai
 .TP
 .BR \-timer=[\fIinteger\fR]
 Gives a cpu-time limit in seconds.
@@ -54,6 +60,9 @@ Find a maximum spanning tree ordering for DAC.
 Apply the Min Sum Diffusion algorithm (default is off, with a number of iterations of 0).
 .PP
 INITIAL UPPER BOUNDING
+.TP
+.BR \-ub=[\fIdecimal\fR]
+Gives a primal (upper in minimization mode, lower otherwise) bound on cost that a solution must satisfies. If the format file allows to specify a primal bound too, the tightest of the two bounds is used. A tight primal bound can accelerate search or be used in conjunction with -a to find all solutions of sufficient quality.
 .TP
 .BR \-l=[\fIinteger\fR]
 Activate limited discrepancy search.
@@ -122,6 +131,35 @@ Choose a specific cluster number as a root cluster.
 .BR \-I=[\fIinteger\fR] 
 Solve only a specific rooted cluster subtree (with RDS\-BTD only).
 .PP
+VNS SEARCH
+.TP
+.BR \-vns 
+unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O).
+.TP
+.BR \-vnsini=[\fIinteger\fR]
+Initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
+.TP
+.BR \-ldsmin=[\fIinteger\fR]
+Minimum discrepancy for VNS-like methods (1 by default).
+.TP
+.BR \-ldsmax=[\fIinteger\fR]
+Maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)
+.TP
+.BR \-ldsinc=[\fIinteger\fR]
+Discrepancy increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (2 by default).
+.TP
+.BR \-kmin=[\fIinteger\fR]
+Minimum neighborhood size for VNS-like methods (4 by default)
+.TP
+.BR \-kmax=[\fIinteger\fR]
+Maximum neighborhood size for VNS-like methods (number of problem variables by default).
+.TP
+.BR \-kinc=[integer]
+Neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default)
+.TP
+.BR \-best=[integer]
+Stop VNS-like methods if a better solution is found (default value is 0)
+.PP
 NODE PROCESSING & BOUNDING OPTIONS
 .TP
 .BR \-e=[\fIinteger\fR] 
@@ -147,6 +185,18 @@ Default value is 4.
 .TP
 .BR \-A=[\fIinteger\fR] 
 Enforce Virtual Arc Consistency at each search node with a search depth less than the given value (default value is 0 which enforces VAC only at root node).
+.TP
+.BR \-T=[decimal]
+Threshold cost value for VAC (default value is 1)
+.TP
+.BR \-P=[decimal]
+Threshold cost value for VAC during the preprocessing phase (default value is 1)
+.TP
+.BR \-C=[float]
+Multiplies all costs internally by this number when loading the problem (default value is 1)
+.TP
+.BR \-S
+Preprocessing only: performs singleton consistency (only in conjunction with option "-A")
 .TP
 .BR \-dee=[\fIinteger\fR]
 Enforce restricted dead\-end elimination, or value pruning by dominance rule from EAC value (dee>=1 and dee<=3) and soft neighborhood substitutability, in preprocessing (dee=2 or dee=4) or during search (dee=3).
@@ -185,6 +235,9 @@ The default d=1 splits domains in the middle of domain range while d=2 splits do
 .TP
 .BR \-sortd
 Sort domains in preprocessing based on increasing unary costs (works only for binary CFN).
+.TP
+.BR \-V
+VAC-based value ordering heuristic (default option,  only in conjunction with option "-A")
 .PP
 CONSOLE OUTPUT
 .TP
@@ -272,7 +325,7 @@ pn is the number of salldiff global cost functions (p2 and p3 still being used f
 .RE
 .RE
 .SH FILE FORMATS
-toulbar2 can read .wcsp, .uai, .LG, .pre, .cnf, .wcnf, .bep files. See the full user documentation for a description of these file formats.
+toulbar2 can read .cfn, .cfn.gz,.wcsp, .uai, .LG, .pre, .cnf, .wcnf, .bep files. See the full user documentation for a description of these file formats.
 .SH SEE ALSO
 A more complete user documentation should be available on your system, in /usr/share/doc/toulbar2/userdoc.pdf or can be otherwise downloaded from http://www.inra.fr/mia/T/toulbar2.
 .SH AUTHORS
