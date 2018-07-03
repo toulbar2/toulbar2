@@ -206,6 +206,7 @@ void tb2init()
 {
     Store::depth = 0;
 
+    ToulBar2::stdin_format = "";
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
