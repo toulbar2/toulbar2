@@ -23,7 +23,7 @@ Computes the log of probability of evidence (i.e. log partition function or log(
 Restricted to stochastic graphical models (.uai format).
 .TP
 .BR \-seed=[\fIinteger\fR]
-Initilizes the pseudo-random generator used inside toulbar2 with a fixed non-negative integer argument. A negative argument instead specifies that the pseudo-random generator be seeded by current time (default value is 1).
+Initializes the pseudo-random generator used inside toulbar2 with a fixed non-negative integer argument. A negative argument instead specifies that the pseudo-random generator be seeded by current time (default value is 1).
 .TP
 .BR \--stdin=[\fIformat\fR]
 Indicates that the problem should be read from the standard input instead of a file (default format is cfn). Eg. cat example.uai | toulbar2 --stdin=uai
@@ -62,7 +62,7 @@ Apply the Min Sum Diffusion algorithm (default is off, with a number of iteratio
 INITIAL UPPER BOUNDING
 .TP
 .BR \-ub=[\fIdecimal\fR]
-Gives a primal (upper in minimization mode, lower otherwise) bound on cost that a solution must satisfies. If the format file allows to specify a primal bound too, the tightest of the two bounds is used. A tight primal bound can accelerate search or be used in conjunction with -a to find all solutions of sufficient quality.
+Gives a primal (upper in minimization mode, lower otherwise) bound on cost that a solution must satisfies. If the file specifies a primal bound too, the tightest of the two bounds is used. A tight primal bound can accelerate search or be used in conjunction with -a to find all solutions of sufficient quality.
 .TP
 .BR \-l=[\fIinteger\fR]
 Activate limited discrepancy search.
