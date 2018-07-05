@@ -28,7 +28,7 @@ class WeightedClause : public AbstractNaryConstraint {
     }
     // Extends unaries on values that satisfy the clause inside the clause and project to c0
     void extend(Cost c)
-    {// extension of unaries before projecting to lb:
+    { // extension of unaries before projecting to lb:
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             if (x->unassigned()) {
@@ -53,10 +53,10 @@ class WeightedClause : public AbstractNaryConstraint {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             assert(deconnected(i));
-            if (i != varIndex) {
+            if (i != varIndex) { // the assigned satisfying variable is left as is. This accounts for the increase of the global lb in extend
                 Cost c = deltaCosts[i];
                 Value v = getClause(i);
-                if (c > MIN_COST) {// we extended and must give back
+                if (c > MIN_COST) { // we extended, now we give back
                     deltaCosts[i] = MIN_COST;
                     if (x->unassigned()) {
                         if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {

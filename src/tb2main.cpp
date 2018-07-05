@@ -1132,7 +1132,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
             if (args.OptionId() == OPT_optimum) {
                 if (args.OptionArg() != NULL)
-//                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
+                    //                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
                     ToulBar2::vnsOptimumS = args.OptionArg();
             }
             // BTD root cluster

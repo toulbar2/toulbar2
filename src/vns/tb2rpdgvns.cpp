@@ -344,7 +344,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
     int lds = ToulBar2::vnsLDSmin;
     while (npr && !stop && !complete && bestUb > ToulBar2::vnsOptimum) {
         if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB="  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << " ****** (" << nbNodes << " nodes)" << endl;
+            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << " ****** (" << nbNodes << " nodes)" << endl;
         Long rank = 1;
         int k = ToulBar2::vnsKmin;
         while (npr && !complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
