@@ -71,6 +71,8 @@ CliqueConstraint::~CliqueConstraint()
 
 std::ostream& CliqueConstraint::printstate(std::ostream& os)
 {
+    os << endl
+       << this << " clique cut: ";
     os << "all0 = " << all0 << " carity = " << carity << " run = " << run
        << " id = " << id << " connected = " << connected()
        << " depth = " << Store::getDepth() << "\n";
@@ -80,7 +82,7 @@ std::ostream& CliqueConstraint::printstate(std::ostream& os)
             os << " * ";
         else
             os << "   ";
-        os << "var " << i << " ";
+        os << x->getName();
         x->print(os);
         if (x->assigned() && connected(i))
             os << "*****";

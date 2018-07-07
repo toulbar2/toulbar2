@@ -44,6 +44,30 @@ public:
         else
             return MIN_COST;
     }
+    Cost evalsubstr(const String& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const String& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
+    template <class T>
+    Cost evalsubstrAny(const String& s, T* ctr)
+    {
+        int count = 0;
+
+        for (int i = 0; i < arity_; i++) {
+            int ind = ctr->getIndex(getVar(i));
+            if (ind >= 0) {
+                evalTuple[i] = s[ind];
+                count++;
+            }
+        }
+        assert(count <= arity_);
+
+        Cost cost;
+        if (count == arity_)
+            cost = eval(evalTuple);
+        else
+            cost = MIN_COST;
+
+        return cost;
+    }
 
     vector<Long> conflictWeights; // used by weighted degree heuristics
     Long getConflictWeight(int varIndex) const override
@@ -69,7 +93,7 @@ public:
         }
     }
     double computeTightness() override;
-    void dump(ostream&, bool) override {}
+    void dump(ostream&, bool) override {cerr << "warning! clique constraint cannot be dump." << endl;}
 
 private:
     // ----------------------------------------------------------------------
@@ -172,6 +196,8 @@ public:
         CliqueConstraint* clq;
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
+
+    void print(ostream& os) {printstate (os);}
 };
 
 inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)
