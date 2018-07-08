@@ -439,7 +439,15 @@ public:
 		else return NULL;
 	}
 
-  void trwsUpdateMessage (EnumeratedVariable *variable);
+  void preprocessTRWS ();
+  Cost projectTRWS (EnumeratedVariable *s, EnumeratedVariable *t, Cost deltaUnary, bool last = false);
+  void addDeltaTRWS (int side, vector < Cost > &delta) {
+    EnumeratedVariable *var = (side == 0)? x: y;
+    vector<StoreCost> &deltaCosts = (side == 0)? deltaCostsX: deltaCostsY;
+    for (unsigned int i = 0; i < var->getDomainInitSize(); ++i) {
+      deltaCosts[i] += delta[i];
+    }
+  } 
 
 	void permute(EnumeratedVariable *xin, Value a, Value b);
   

@@ -1453,5 +1453,10 @@ bool EnumeratedVariable::verify() {
 }
 
 
-
-
+Cost EnumeratedVariable::projectUnaryTRWS () {
+  Cost delta = numeric_limits<Cost>::max();
+  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
+    delta = min<Cost>(delta, getCost(*iter));
+  }
+  return delta;
+}

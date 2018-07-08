@@ -94,6 +94,14 @@ public:
     bool verify();
     void setTRWSGamma (double g) {trwsGamma = g;}
     double getTRWSGamma () const {return trwsGamma;}
+    bool isTRWSCompatible () { return (unassigned()); }
+    Cost projectUnaryTRWS ();
+    void addDeltaTRWS (vector < Cost > &delta) {
+      for (unsigned int i = 0; i < getDomainInitSize(); ++i) {
+        assert(costs[i] >= -delta[i]);
+        costs[i] += delta[i];
+      }
+    }
 
     void queueEAC1();
     void queueEAC2();
@@ -186,7 +194,7 @@ public:
     void permuteDomain(int numberOfPermutations);
     void permuteDomain(Value a, Value b);
     ValueCost *sortDomain(vector<Cost> &costs);
-    
+
     void print(ostream& os);
 };
 

@@ -222,6 +222,10 @@ public:
         c.print(os);
         return os;
     }
+
+    bool isTRWSCompatible() {
+      return ((connected()) && (! isSep()) && (arity() == 2));
+    }
 };
 
 #endif /*TB2CONSTRAINT_HPP_*/
