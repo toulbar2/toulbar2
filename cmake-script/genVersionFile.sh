@@ -6,7 +6,7 @@ then
     cd $ROOT
     FILE=$ROOT/src/ToulbarVersion.hpp
     PCKGVER=$ROOT/src/MyCPackConf.cmake
-    VERSION=`git describe --abbrev=0 --tags`
+    VERSION=`git describe --abbrev=0 --tags --always`
     MAJOR=`echo $VERSION| cut -d"." -f1`
     MINOR=`echo $VERSION| cut -d"." -f2`
     PATCH=`echo $VERSION| cut -d"." -f3`
