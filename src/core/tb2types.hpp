@@ -212,6 +212,7 @@ const int MAX_ARITY = 1000;
 const int MAX_NB_TUPLES = 1000000;
 const int LARGE_NB_VARS = 10000;
 
+const int DECIMAL_POINT = 3; // default number of digits after decimal point for printing floating-point values
 typedef map<int, int> TSCOPE;
 typedef map<int, Value> TAssign;
 
@@ -498,6 +499,7 @@ public:
     static TLogProb Normalizing_Constant;
 
     static bool uaieval;
+    static string stdin_format; // stdin format declaration
 
     static double startCpuTime;
 
@@ -636,7 +638,7 @@ public:
     }
 };
 
-/// < \brief allows to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
+/// < \brief allows one to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
 template <class T>
 bool compareWCSPIndex(const T* lhs, const T* rhs)
 {

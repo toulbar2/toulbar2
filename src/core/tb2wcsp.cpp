@@ -115,6 +115,7 @@ bool ToulBar2::cfngz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
+string ToulBar2::stdin_format;
 FILE* ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
@@ -234,6 +235,7 @@ void tb2init()
 {
     Store::depth = 0;
 
+    ToulBar2::stdin_format = "";
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
@@ -783,7 +785,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     return ctr->wcspIndex;
 }
 
-/// \brief create a global cost function in extension using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
+/// \brief create a global cost function using a default cost (tuples with a different cost will be enter later using WCSP::postNaryConstraintTuple)
 /// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
 /// \param arity size of scopeIndex
 /// \param defval default cost for any tuple
@@ -2225,7 +2227,7 @@ void WCSP::printNCBuckets()
  * -# (level=4) shows also current list of cost functions for each variable and reports more details on arc EPT operations (showing all changes in cost functions)
  * -# (level=5) reports more details on cost functions defined in extension giving their content (cost table by first increasing values in the current domain of the last variable in the scope)
  *
- * For debugging purposes, another option "-Z=level" allows to monitor the search:
+ * For debugging purposes, another option "-Z=level" allows one to monitor the search:
  * -# (level 1) shows current search depth (number of search choices from the root of the search tree) and reports statistics on nogoods for BTD-like methods
  * -# (level 2) idem
  * -# (level 3) also saves current problem into a file before each search choice
@@ -2238,7 +2240,7 @@ void WCSP::printNCBuckets()
 
 void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << endl;
+    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -2828,7 +2830,7 @@ void WCSP::propagate()
                     if (vac->firstTime()) {
                         vac->init();
                         if (ToulBar2::verbose >= 1)
-                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
+                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
                     }
                     vac->propagate();
                 }
@@ -3575,7 +3577,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
         increaseLb(minc);
         if (ToulBar2::verbose >= 1)
             cout << "new ternary(" << x->wcspIndex << "," << y->wcspIndex << ","
-                 << z->wcspIndex << ")  newDualBound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << endl;
+                 << z->wcspIndex << ")  newDualBound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         added = true;
     }
     return added;
