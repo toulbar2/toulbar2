@@ -33,7 +33,10 @@
 #include "utils/tb2utils.hpp"
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
-#include <quadmath.h>
+#ifdef QUAD_PROB 
+#include <quadmath.h> // only with gcc/g++
+#endif
+
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
