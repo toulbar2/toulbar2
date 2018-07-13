@@ -423,7 +423,7 @@ public:
     static int DEE_;
     static int nbDecisionVars;
     static int lds;
-    static bool limited;
+    static int limited;
     static Long restart;
     static externalevent setvalue;
     static externalevent setmin;
@@ -460,6 +460,8 @@ public:
     static Cost costThresholdPre;
     static double costMultiplier;
     static unsigned int decimalPoint;
+    static string deltaUbS;
+    static Cost deltaUb;
     static bool singletonConsistency;
     static bool vacValueHeuristic;
     static BEP* bep;
@@ -572,7 +574,7 @@ inline Cost rounding(Cost lb)
 }
 inline bool CUT(Cost lb, Cost ub)
 {
-    return rounding(lb) >= ub;
+    return (rounding(lb) + ToulBar2::deltaUb) >= ub;
 }
 inline bool CSP(Cost lb, Cost ub)
 {
