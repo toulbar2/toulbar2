@@ -1181,8 +1181,17 @@ void Solver::newSolution()
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else {
+            } else if (ToulBar2::cfn) {
+                // print value name and varname if verbose >1 
+                    Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
+                    string valuelabel= ((WCSP*)wcsp)->getVar(i) ->getValueName(myvalue);
+                    string varlabel= wcsp -> getName(i);
+                if(ToulBar2::verbose > 1) { cout <<  varlabel  <<":" << valuelabel <<";"; } else  {  cout << valuelabel ; }
+          
+            }         
+            else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
+              
             }
         }
         cout << endl;

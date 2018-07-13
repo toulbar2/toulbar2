@@ -560,7 +560,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 }
 
 //  current unused option letters: 	f F G H J K n N Q U W Y
-void help_msg(char* toulbar2filename)
+void help_msg(char* toulbar2filename) 
 {
     cout << "*************************" << endl;
     cout << "* ToulBar2 Help Message *" << endl;
