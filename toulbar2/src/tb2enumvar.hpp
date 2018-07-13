@@ -96,12 +96,8 @@ public:
     double getTRWSGamma () const {return trwsGamma;}
     bool isTRWSCompatible () { return (unassigned()); }
     Cost projectUnaryTRWS ();
-    void addDeltaTRWS (vector < Cost > &delta) {
-      for (unsigned int i = 0; i < getDomainInitSize(); ++i) {
-        assert(costs[i] >= -delta[i]);
-        costs[i] += delta[i];
-      }
-    }
+    Cost normalizeTRWS ();
+    Cost addDeltaTRWS (vector < Cost > &delta);
 
     void queueEAC1();
     void queueEAC2();

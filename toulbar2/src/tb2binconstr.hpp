@@ -440,14 +440,12 @@ public:
 	}
 
   void preprocessTRWS ();
+  Cost getCostTRWS (Value v1, Value v2);
   Cost projectTRWS (EnumeratedVariable *s, EnumeratedVariable *t, Cost deltaUnary, bool last = false);
-  void addDeltaTRWS (int side, vector < Cost > &delta) {
-    EnumeratedVariable *var = (side == 0)? x: y;
-    vector<StoreCost> &deltaCosts = (side == 0)? deltaCostsX: deltaCostsY;
-    for (unsigned int i = 0; i < var->getDomainInitSize(); ++i) {
-      deltaCosts[i] += delta[i];
-    }
-  } 
+  void projectTRWS (EnumeratedVariable *var, Value value, Cost cost);
+  Cost normalizeTRWS ();
+  void addDeltaTRWS (vector < Cost > &delta, Cost minCost, unsigned int side);
+  //Cost addDeltaTRWS (std::array < vector < Cost >, 2 > &delta);
 
 	void permute(EnumeratedVariable *xin, Value a, Value b);
   

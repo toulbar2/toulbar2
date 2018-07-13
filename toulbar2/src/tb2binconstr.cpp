@@ -202,7 +202,7 @@ void BinaryConstraint::preprocessTRWS () {
     unsigned int indexX = x->toIndex(*iterX);
 		for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
       unsigned int indexY = y->toIndex(*iterY);
-      costs[indexX * sizeY + indexY] += deltaCostsX[indexX] + deltaCostsY[indexY];
+      costs[indexX * sizeY + indexY] -= deltaCostsX[indexX] + deltaCostsY[indexY];
     }
   }
   for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -211,6 +211,18 @@ void BinaryConstraint::preprocessTRWS () {
   for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
     deltaCostsY[y->toIndex(*iterY)] = 0;
   }
+}
+
+Cost BinaryConstraint::getCostTRWS (Value v1, Value v2) {
+  unsigned int indexX = x->toIndex(v1);
+  unsigned int indexY = y->toIndex(v2);
+  return costs[indexX * sizeY + indexY] - (deltaCostsX[indexX] + deltaCostsY[indexY]);
+}
+
+void BinaryConstraint::projectTRWS (EnumeratedVariable *var, Value value, Cost cost) {
+  vector<StoreCost> &deltaCosts = (var == x)? deltaCostsX: deltaCostsY;
+  deltaCosts[var->toIndex(value)] += cost;
+  var->project(value, cost);
 }
 
 Cost BinaryConstraint::projectTRWS (EnumeratedVariable *s, EnumeratedVariable *t, Cost deltaUnary, bool last) {
@@ -233,7 +245,7 @@ Cost BinaryConstraint::projectTRWS (EnumeratedVariable *s, EnumeratedVariable *t
     }
     //cout << "\t\tmin cost: " << minCost << endl;
     if (minCost > tDeltaCosts[tIndex]) t->project(*tIter, minCost - tDeltaCosts[tIndex], true);
-    else                               t->extend(*tIter, tDeltaCosts[tIndex] - minCost);
+   else                               t->extend(*tIter, tDeltaCosts[tIndex] - minCost);
     tDeltaCosts[tIndex] = minCost;
     delta = min<Cost>(delta, minCost);
   }
@@ -246,6 +258,78 @@ Cost BinaryConstraint::projectTRWS (EnumeratedVariable *s, EnumeratedVariable *t
   //cout << "\t\tprojecting " << minMessage << endl;
   return delta;
 }
+
+Cost BinaryConstraint::normalizeTRWS () {
+  Cost minCost = numeric_limits<Cost>::max();
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      minCost = min<Cost>(minCost, getCostTRWS(*xIter, *yIter));
+    }
+  }
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    unsigned int ix = x->toIndex(*xIter);
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      unsigned int iy = y->toIndex(*yIter);
+      costs[ix * sizeY + iy] -= minCost;
+    }
+  }
+  return minCost;
+}
+
+void BinaryConstraint::addDeltaTRWS (vector < Cost > &delta, Cost minCost, unsigned int side) {
+  preprocessTRWS();
+  vector<StoreCost> &deltaCosts = (side == 0)? deltaCostsX: deltaCostsY;
+  EnumeratedVariable *var = dynamic_cast<EnumeratedVariable *>(getVar(side));
+  for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+    unsigned int i = var->toIndex(*iter);
+    if (delta[i] != 0) cout << "\t\tC" << x->wcspIndex << "," << y->wcspIndex << "[" << i << "] (side " << side << ") += " << delta[i] << "\n";
+    deltaCosts[i] += delta[i];
+  }
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    unsigned int ix = x->toIndex(*xIter);
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      unsigned int iy = y->toIndex(*yIter);
+      costs[ix * sizeY + iy] -= minCost;
+    }
+  }
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    unsigned int ix = x->toIndex(*xIter);
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      unsigned int iy = y->toIndex(*yIter);
+      if (costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy]) < 0) cout << "\t\tProblem!  C" << x->wcspIndex << "," << y->wcspIndex << "[" << ix << ", " << iy << "] = " << costs[ix * sizeY + iy] << " - (" << deltaCostsX[ix] << " + " << deltaCostsY[iy] << ") = " << (costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy])) << " < 0\n";
+    }
+  }
+} 
+
+/*
+Cost BinaryConstraint::addDeltaTRWS (std::array < vector < Cost >, 2 > &delta) {
+  for (int side = 0; side < 2; ++side) {
+    vector<StoreCost> &deltaCosts = (side == 0)? deltaCostsX: deltaCostsY;
+    EnumeratedVariable *var = dynamic_cast<EnumeratedVariable *>(getVar(side));
+    for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+      unsigned int i = var->toIndex(*iter);
+      if (delta[side][i] != 0) cout << "\t\tC" << x->wcspIndex << "," << y->wcspIndex << "[" << i << "] (side " << side << ") += " << delta[side][i] << "\n";
+      deltaCosts[i] += delta[side][i];
+    }
+  }
+  Cost minCost = numeric_limits<Cost>::max();
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    unsigned int ix = x->toIndex(*xIter);
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      unsigned int iy = y->toIndex(*yIter);
+      minCost = min<Cost>(minCost, costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy]));
+    }
+  }
+  for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+    unsigned int ix = x->toIndex(*xIter);
+    for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+      unsigned int iy = y->toIndex(*yIter);
+      costs[ix * sizeY + iy] -= minCost;
+    }
+  }
+  return minCost;
+} 
+*/
 
 // Project TRW-S cost to variable
 /*
