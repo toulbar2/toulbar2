@@ -80,7 +80,7 @@ bool CooperativeParallelDGVNS::solve()
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)
                 wcsp->setSolution(lastUb, &lastSolution);
-            endSolve(lastUb < MAX_COST, lastUb, true);
+            endSolve(lastUb < MAX_COST, lastUb, ToulBar2::limited);
         }
         /* Shut down MPI */
         MPI_Finalize();
@@ -98,7 +98,7 @@ bool CooperativeParallelDGVNS::solve()
         master();
         if (bestUb < MAX_COST)
             wcsp->setSolution(bestUb, &bestSolution);
-        endSolve(bestUb < MAX_COST, bestUb, false); //TODO: return complete=true if known by the master
+        endSolve(bestUb < MAX_COST, bestUb, ToulBar2::limited | 1); //TODO: return complete=true if known by the master
     } else {
         ToulBar2::showSolutions = false;
         slave();
