@@ -606,7 +606,7 @@ void help_msg(char* toulbar2filename)
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
-    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)"
+    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)"<< endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
