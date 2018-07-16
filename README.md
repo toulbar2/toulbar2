@@ -55,7 +55,6 @@ Required library:
 * libgmp-dev
 
 Recommended libraries (default use):
-* libboost-dev
 * libboost-graph-dev
 * libboot-iostream-dev
 * zlib

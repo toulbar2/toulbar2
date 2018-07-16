@@ -15,6 +15,9 @@ GENERAL CONTROL
 .BR \-a=[\fIinteger\fR]
 Finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD).
 .TP
+.BR \-agap=[\fIdecimal\fR]
+Stop search if the absolute optimality gap reduces under the given value (provides solutions with a guaranteed absolute approximation).
+.TP
 .BR \-D 
 Approximate zero-cost solution count with BTD.
 .TP

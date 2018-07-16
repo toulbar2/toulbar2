@@ -820,6 +820,11 @@ void CFNStreamReader::enforceUB(Cost bound)
     if (ToulBar2::externalUB.length() != 0) {
         bound = min(bound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
     }
+    if (ToulBar2::deltaUbS.length() != 0) {
+        ToulBar2::deltaUb = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+        if (ToulBar2::deltaUb > MIN_COST) ToulBar2::limited |= 2;
+    }
+
     wcsp->updateUb(bound);
 }
 
@@ -2029,7 +2034,10 @@ Cost WCSP::read_wcsp(const char* fileName)
         Cost bound = string2Cost(ToulBar2::externalUB.c_str());
         updateUb(bound);
     }
-
+    if (ToulBar2::deltaUbS.length() != 0) {
+        ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
+        if (ToulBar2::deltaUb > MIN_COST) ToulBar2::limited |= 2;
+    }
     if (ToulBar2::costThresholdS.size())
         ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
     if (ToulBar2::costThresholdPreS.size())

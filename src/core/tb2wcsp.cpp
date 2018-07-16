@@ -74,7 +74,7 @@ unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 int ToulBar2::lds;
-bool ToulBar2::limited;
+int ToulBar2::limited;
 Long ToulBar2::restart;
 bool ToulBar2::generation;
 int ToulBar2::minsumDiffusion;
@@ -132,6 +132,8 @@ string ToulBar2::costThresholdS;
 string ToulBar2::costThresholdPreS;
 double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
+string ToulBar2::deltaUbS;
+Cost ToulBar2::deltaUb;
 
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
@@ -233,7 +235,7 @@ void tb2init()
     ToulBar2::dichotomicBranchingSize = 10;
     ToulBar2::sortDomains = false;
     ToulBar2::lds = 0;
-    ToulBar2::limited = false;
+    ToulBar2::limited = 0;
     ToulBar2::restart = -1;
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
@@ -282,6 +284,9 @@ void tb2init()
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::costMultiplier = UNIT_COST;
+    ToulBar2::decimalPoint = 0;
+    ToulBar2::deltaUbS = "";
+    ToulBar2::deltaUb = MIN_COST;
 
     ToulBar2::bep = NULL;
     ToulBar2::wcnf = false;
