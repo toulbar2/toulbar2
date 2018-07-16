@@ -1173,7 +1173,7 @@ void Solver::newSolution()
         if (ToulBar2::allSolutions) {
             cout << std::setprecision(0) << nbSol << " solution(" << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << "): ";
         }
-
+        cout << "Sol:" ;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             cout << " ";
             if (ToulBar2::pedigree) {
@@ -1186,8 +1186,10 @@ void Solver::newSolution()
                     Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
                     string valuelabel= ((WCSP*)wcsp)->getVar(i) ->getValueName(myvalue);
                     string varlabel= wcsp -> getName(i);
-                if(ToulBar2::verbose > 1) { cout <<  varlabel  <<":" << valuelabel <<";"; } else  {  cout << valuelabel ; }
-          
+                
+                if(ToulBar2::verbose >= 1 ) { cout <<  varlabel  <<":" << valuelabel <<";"; } else  {  cout << valuelabel ; }
+                if(ToulBar2::verbose > 1) { cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));}
+
             }         
             else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
