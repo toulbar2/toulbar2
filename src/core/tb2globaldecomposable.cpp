@@ -323,7 +323,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
     //################################################accepting state ##############################################
     for (int v = 1; v < arity + 1; v++) {
         int unsigned domsize = automaton->getNbStates() - 1;
-        string varname = to_string(v + q0);
+        string varname = "WR"+to_string(v + q0);
 
 //        DEBONLY(int theindex =)
         int theindex = wcsp->makeEnumeratedVariable(varname, (Value)0, (Value)domsize); // add qi variable
