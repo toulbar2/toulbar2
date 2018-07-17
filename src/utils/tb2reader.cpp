@@ -603,7 +603,7 @@ pair<unsigned, unsigned> CFNStreamReader::readVariables()
 unsigned CFNStreamReader::readVariable(unsigned i)
 {
     string varName;
-    int domainSize = 0;
+    unsigned int domainSize = 0;
     vector<string> valueNames;
 
     string token;
@@ -628,6 +628,8 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     } else { // Just a domain size
         try {
             domainSize = stoi(token);
+            for (unsigned int i = 0; i < domainSize; i++)
+                valueNames.push_back(to_string(i));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }
