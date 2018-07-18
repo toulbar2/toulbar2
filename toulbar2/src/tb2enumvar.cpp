@@ -1452,49 +1452,19 @@ bool EnumeratedVariable::verify() {
  	return true;
 }
 
-
-Cost EnumeratedVariable::projectUnaryTRWS () {
-  Cost delta = numeric_limits<Cost>::max();
-  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
-    delta = min<Cost>(delta, getCost(*iter));
-  }
-  return delta;
-}
-
 Cost EnumeratedVariable::normalizeTRWS () {
   Cost minCost = numeric_limits<Cost>::max();
   for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
     minCost = min<Cost>(minCost, costs[toIndex(*iter)] - deltaCost);
   }
-  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
-    costs[toIndex(*iter)] -= minCost;
+  if (minCost != 0) {
+    for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
+      costs[toIndex(*iter)] -= minCost;
+    }
   }
   queueNC();
   queueAC();
   queueDAC();
   queueEAC1();
-  //queueEAC2();
-  return minCost;
-}
-
-
-Cost EnumeratedVariable::addDeltaTRWS (vector < Cost > &delta) {
-  Cost minCost = numeric_limits<Cost>::max();
-  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
-    unsigned int i = toIndex(*iter);
-    if (delta[i] != 0) cout << "\t\tX" << wcspIndex << "[" << i << "] += " << delta[i] << "\n";
-    costs[i] += delta[i];
-  }
-  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
-    minCost = min<Cost>(minCost, costs[toIndex(*iter)] - deltaCost);
-  }
-  for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
-    costs[toIndex(*iter)] -= minCost;
-  }
-  queueNC();
-  queueAC();
-  queueDAC();
-  queueEAC1();
-  //queueEAC2();
   return minCost;
 }

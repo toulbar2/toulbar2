@@ -118,7 +118,9 @@ int ToulBar2::pedigreeCorrectionMode;
 int ToulBar2::pedigreePenalty;
 
 int ToulBar2::vac;
-double ToulBar2::trws;
+double ToulBar2::trwsAccuracy;
+unsigned int ToulBar2::trwsNIter;
+unsigned int ToulBar2::trwsNIterNoChange;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 double ToulBar2::costMultiplier;
@@ -228,7 +230,9 @@ void tb2init()
     ToulBar2::pedigreePenalty = 0;
 
     ToulBar2::vac = 0;
-    ToulBar2::trws = 0.001;
+    ToulBar2::trwsAccuracy = 0.001;
+    ToulBar2::trwsNIter = 1000;
+    ToulBar2::trwsNIterNoChange = 10;
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::costMultiplier = UNIT_COST;
@@ -1338,7 +1342,7 @@ void WCSP::preprocessing() {
         if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "Reverse DAC lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
     } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 
-  if (ToulBar2::trws > 0) propagateTRWS(10000, ToulBar2::trws, revelimorder);
+  if (ToulBar2::trwsAccuracy >= 0) propagateTRWS();
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
 			if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
@@ -1966,120 +1970,141 @@ void WCSP::propagateDAC() {
 	}
 }
 
-/*
-void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardOrder) {
-  bool              forwardPass     = true;
-  bool              lastPass        = false;
-  int               iter            = 0;
-  unsigned int      nIterationLimit = 10;
-  unsigned int      nIteration      = 0;
-  Cost              previousEbound  = 0;
-  Cost              ebound          = 0;
-  vector < int >    orders[2]       = { forwardOrder, forwardOrder };
-  reverse(orders[1].begin(), orders[1].end());
-  cout << "Starting TRW-S with " << (constrs.size() + elimBinConstrs.size()) << " constraints\n";
-  // Preprocessing: compute gammas
-  for (unsigned int i = 0; i < numberOfVariables(); ++i) {
-    EnumeratedVariable* s = dynamic_cast<EnumeratedVariable *>(getVar(i));
-    int o = forwardOrder[s->wcspIndex];
-    int nCtrIn = 0, nCtrOut = 0;
-    for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
-      Constraint *constraint = (*iter).constr;
-      if (constraint->isTRWSCompatible()) {
-        BinaryConstraint *binctr = dynamic_cast<BinaryConstraint *>(constraint);
-        if (forwardOrder[binctr->getVar(1-(*iter).scopeIndex)->wcspIndex] < o) {
-          ++nCtrIn;
-        }
-        else {
-          ++nCtrOut;
-        }
-      }
-    }
-    s->setTRWSGamma(1.0 / (max<unsigned int>(nCtrIn, nCtrOut) + 0.1));
-  }
-  // Preprocessing: clear deltas
+void WCSP::propagateTRWS() {
+  auto                       getConstraintId    = [this] ( Constraint *constraint ) { int constraintId = constraint->wcspIndex; if (constraintId < 0) constraintId = this->constrs.size() - 1 - constraintId; return constraintId; };
+  size_t                     nConstraints       = constrs.size() + elimBinConstrs.size();
+  bool                       forwardPass        = true;
+  unsigned int               nIteration         = 0;
+  unsigned int               nIterationNoChange = 0;
+  Cost                       previousEbound     = 0;
+  Cost                       ebound             = 0;
+  //vector < int >             orders[2]          = { forwardOrder, forwardOrder };
+  vector < int >             orders[2]          = { vector < int > (numberOfVariables()), vector < int > (numberOfVariables())};
+  vector < unsigned int >    ranks[2]           = { vector < unsigned int > (numberOfVariables()), vector < unsigned int > (numberOfVariables())};
+  vector < vector < Cost > > m (nConstraints);
+  cout << "Starting TRW-S with C0 = " << getLb() << " and " << nConstraints << " constraints\n";
+  //reverse(orders[1].begin(), orders[1].end());
+  // Preprocessing: compute monotonic chains
   vector <Constraint *> constraints = constrs;
   constraints.insert(constraints.end(), elimBinConstrs.begin(), elimBinConstrs.end());
-  for (Constraint *constraint: constraints) {
-    if (constraint->isTRWSCompatible()) {
-      BinaryConstraint *binctr = dynamic_cast<BinaryConstraint *>(constraint);
-      binctr->preprocessTRWS();
-    }
+  unsigned int nVariableUsed = 0;
+  vector <bool> variableUsed (numberOfVariables(), false);
+  unsigned int firstVariableId = 0;
+  while (nVariableUsed != numberOfVariables()) {
+    while (variableUsed[getVar(firstVariableId)->wcspIndex]) ++firstVariableId;
+    EnumeratedVariable *firstVariable = dynamic_cast<EnumeratedVariable *>(getVar(firstVariableId));
+    variableUsed[firstVariable->wcspIndex] = true;
+    ranks[0][firstVariable->wcspIndex] = nVariableUsed;
+    orders[0][nVariableUsed++] = firstVariable->wcspIndex;
+    bool stillPath;
+    do {
+      stillPath = false;
+      for (ConstraintList::iterator iter = firstVariable->getConstrs()->begin(); (iter != firstVariable->getConstrs()->end()) && (! stillPath); ++iter) {
+        Constraint *constraint = (*iter).constr;
+        if (constraint->isTRWSCompatible()) {
+          BinaryConstraint *binaryConstraint = dynamic_cast<BinaryConstraint *>(constraint);
+          EnumeratedVariable *otherVariable = dynamic_cast<EnumeratedVariable *>(binaryConstraint->getVarDiffFrom(firstVariable));
+          if (! variableUsed[otherVariable->wcspIndex]) {
+            firstVariable = otherVariable;
+            variableUsed[firstVariable->wcspIndex] = true;
+            ranks[0][firstVariable->wcspIndex] = nVariableUsed;
+            orders[0][nVariableUsed++] = firstVariable->wcspIndex;
+            stillPath = true;
+          }
+        }
+      }
+    } while (stillPath);
   }
-  do {
-    vector < int > &order = (forwardPass) ? orders[0]: orders[1];
-    ebound = 0;
-    lastPass = (nIteration == nIterationLimit) && (! forwardPass);
-    //if (forwardPass) cout << "Starting forward loop\n";
-    //else             cout << "Starting backward loop\n";
-    for (unsigned int i = 0; i < numberOfVariables(); ++i) {
-      if (ToulBar2::interrupted) throw TimeOut();
-      EnumeratedVariable* s = dynamic_cast<EnumeratedVariable *>(getVar(order[i]));
-      if (s->isTRWSCompatible()) {
-        // step 1: normalize unary costs
-        //cout << "\tStep 1: X" << s->getName() << " (size " << s->getDomainInitSize() << ")\n";
-        Cost delta;
-        delta = s->projectUnaryTRWS();
-        ebound += delta;
-        //cout << "\tStep 2" << endl;
-        // step 2: message update
-        for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
-          Constraint *constr = (*iter).constr;
-          if (constr->isTRWSCompatible()) {
-            BinaryConstraint   *binctr = dynamic_cast<BinaryConstraint *>(constr);
-            EnumeratedVariable *t      = dynamic_cast<EnumeratedVariable*>(binctr->getVar(1-(*iter).scopeIndex));
-            if (order[s->wcspIndex] < order[t->wcspIndex]) {
-              ebound += binctr->projectTRWS(s, t, delta, lastPass);
-            }
+  orders[1] = orders[0];
+  reverse(orders[1].begin(), orders[1].end());
+  for (unsigned int i = 0; i < numberOfVariables(); ++i) {
+    ranks[1][i] = numberOfVariables() - ranks[0][i] - 1;
+  }
+  // Preprocessing: compute monotonic chains
+  /*
+    BinaryConstraint *currentConstraint = nullptr;
+    while (currentConstraint == nullptr) {
+      for (ConstraintList::iterator iter = firstVariable->getConstrs()->begin(); (iter != firstVariable->getConstrs()->end()) && (currentConstraint != nullptr); ++iter) {
+        Constraint *constraint = (*iter).constr;
+        int constraintId = getConstraintId(constraint);
+        if (! constraintUsed[constraintId]) {
+          BinaryConstraint *binaryConstraint = dynamic_cast<BinaryConstraint *>(constraint);
+          EnumeratedVariable *otherVariable = binaryConstraint->getVarDiffFrom(firstVariable);
+          if (! variableUsed[otherVariable]) {
+            currentConstraint = binaryConstraint;
+          }
+        }
+      }
+      if (currentConstraint == nullptr) {
+        firstVariable = getVar(++firstVariableId);
+      }
+    }
+    currentVariable = firstVariable;
+    while (currentConstraint != nullptr) {
+      if (! variableUsed[firstVariable->wcspIndex]) {
+        newOrder[nVariableUsed++] = firstVariable->wcspIndex;
+      }
+      EnumeratedVariable *currentVariable = currentConstraint->getVarDiffFrom(currentVariable);
+      for (ConstraintList::iterator iter = firstVariable->getConstrs()->begin(); (iter != firstVariable->getConstrs()->end()) && (currentConstraint != nullptr); ++iter) {
+        Constraint *constraint = (*iter).constr;
+        int constraintId = getConstraintId(constraint);
+        if (! constraintUsed[constraintId]) {
+          BinaryConstraint *binaryConstraint = dynamic_cast<BinaryConstraint *>(constraint);
+          EnumeratedVariable *otherVariable = binaryConstraint->getVarDiffFrom(firstVariable);
+          if (! variableUsed[otherVariable]) {
+            currentConstraint = binaryConstraint;
           }
         }
       }
     }
-    // step 3: reverse ordering
-    double change = 0.0;
-    if (! forwardPass) {
-      ++iter;
-      change     = (ebound == previousEbound)? 0.0: (double) (ebound - previousEbound + 1) / (ebound + 1);
-      nIteration = (change > ToulBar2::trws)? 0: nIteration+1;
-      if (ToulBar2::verbose >= 0)
-        cout << "TRWS " << iter << " (" << nIteration << " without change), lower bound: " << previousEbound << " -> " << ebound << " (+" << (100 * change) << "%), real LB: " << (getLb() + ebound) << endl;
-      previousEbound = ebound;
+    while (constraintUsed[firstConstraintId]) ++firstConstraintId;
+    BinaryConstraint *currentConstraint = dynamic_cast<BinaryConstraint *>(constraints[firstConstraintId]);
+    while (currentConstraint != nullptr) {
+      EnumeratedVariable *firstVariable, *currentVariable;
+      int constraintId = getConstraintId(currentConstraint);
+      constraintUsed[constraintId] = true;
+      --nConstraintUnused;
+      if (forwardOrder[currentConstraint->getVar(0)->wcspIndex] < forwardOrder[currentConstraint->getVar(1)->wcspIndex]) {
+        firstVariable   = dynamic_cast<EnumeratedVariable *>(currentConstraint->getVar(0));
+        currentVariable = dynamic_cast<EnumeratedVariable *>(currentConstraint->getVar(1));
+      }
+      else {
+        firstVariable   = dynamic_cast<EnumeratedVariable *>(currentConstraint->getVar(1));
+        currentVariable = dynamic_cast<EnumeratedVariable *>(currentConstraint->getVar(0));
+      }
+      ++nConstraintsOut[firstVariable->wcspIndex];
+      ++nConstraintsIn[currentVariable->wcspIndex];
+      currentConstraint = nullptr;
+      for (ConstraintList::iterator iter = currentVariable->getConstrs()->begin(); (iter != currentVariable->getConstrs()->end()) && (currentConstraint != nullptr); ++iter) {
+        BinaryConstraint *constraint = dynamic_cast<BinaryConstraint *>((*iter).constr);
+        int constraintId = getConstraintId(constraint);
+        if (! constraintUsed[constraintId]) {
+          Variable *otherVariable = constraint->getVarDiffFrom(currentVariable);
+          if (forwardOrder[currentVariable->wcspIndex] < forwardOrder[otherVariable->wcspIndex]) {
+            currentConstraint = constraint;
+          }
+        }
+      }
     }
-    forwardPass = ! forwardPass;
-  } while (! lastPass);
-  // step 4: translate to WCSP
-  propagate();
-}
-*/
-
-void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardOrder) {
-  size_t                     nConstraints    = constrs.size() + elimBinConstrs.size();
-  bool                       forwardPass     = true;
-  int                        iter            = 0;
-  unsigned int               nIterationLimit = 1;
-  unsigned int               nIteration      = 0;
-  Cost                       previousEbound  = 0;
-  Cost                       ebound          = 0;
-  vector < int >             orders[2]       = { forwardOrder, forwardOrder };
-  vector < vector < Cost > > m (nConstraints);
-  vector < std::array < vector < Cost >, 2 > > futureDeltaConstraints (nConstraints);
-  reverse(orders[1].begin(), orders[1].end());
-  cout << "Starting TRW-S with C0 = " << getLb() << " and " << nConstraints << " constraints\n";
-  // Preprocessing: compute gammas, create m
+  }
+  */
+  // Preprocessing: compute gammas
   for (unsigned int i = 0; i < numberOfVariables(); ++i) {
     EnumeratedVariable* s = dynamic_cast<EnumeratedVariable*>(getVar(i));
-    int o = forwardOrder[s->wcspIndex];
+    unsigned int r = ranks[0][s->wcspIndex];
     int nCtrIn = 0, nCtrOut = 0;
+    /*
     cout << "X" << s->wcspIndex << " (dom. size: " << s->getDomainInitSize() << "):";
     for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
       cout << "\t " << s->toIndex(*sIter) << ": " << s->getCost(*sIter);
     }
     cout << "\n";
+    */
     for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
       Constraint *constraint = (*iter).constr;
       if (constraint->isTRWSCompatible()) {
         BinaryConstraint *binctr = dynamic_cast<BinaryConstraint*>(constraint);
-        if (forwardOrder[binctr->getVarDiffFrom(s)->wcspIndex] < o) {
+        if (ranks[0][binctr->getVarDiffFrom(s)->wcspIndex] < r) {
           ++nCtrIn;
         }
         else {
@@ -2088,72 +2113,66 @@ void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardO
       }
     }
     s->setTRWSGamma(1.0 / (max<unsigned int>(nCtrIn, nCtrOut) + 0.1));
-    //cout << "gamma[" << s->wcspIndex << "]: " << gammas[s->wcspIndex] << "\n";
+    //cout << "X" << s->wcspIndex << ": gamma = " << s->getTRWSGamma() << "\n";
+    //s->setTRWSGamma(1.0 / (max<int>(nConstraintsIn[s->wcspIndex], nConstraintsOut[s->wcspIndex]) + 0.1));
   }
-  vector <Constraint *> constraints = constrs;
-  constraints.insert(constraints.end(), elimBinConstrs.begin(), elimBinConstrs.end());
+  // Preprocessing: create m
   for (Constraint *constr: constraints) {
     if (constr->isTRWSCompatible()) {
-      BinaryConstraint    *binctr = dynamic_cast<BinaryConstraint*>(constr);
-      EnumeratedVariable* s       = dynamic_cast<EnumeratedVariable*>(binctr->getVar(0));
-      EnumeratedVariable* t       = dynamic_cast<EnumeratedVariable*>(binctr->getVar(1));
-      Cost                minCost = numeric_limits<Cost>::max();
-      binctr->preprocessTRWS();
-      cout << "C" << s->wcspIndex << "," << t->wcspIndex << ":\n";
-      for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-        for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
-          minCost = min<Cost>(minCost, s->getCost(*sIter) + binctr->getCost(*sIter, *tIter) + t->getCost(*tIter));
-          cout << "\t" << binctr->getCost(*sIter, *tIter);
+      BinaryConstraint *binctr = dynamic_cast<BinaryConstraint*>(constr);
+      int constraintId = getConstraintId(binctr);
+      size_t mSize = max<int>((dynamic_cast<EnumeratedVariable *>(binctr->getVar(0)))->getDomainInitSize(), (dynamic_cast<EnumeratedVariable *>(binctr->getVar(1)))->getDomainInitSize());
+      m[constraintId].resize(mSize, 0);
+      /*
+      EnumeratedVariable *x = dynamic_cast<EnumeratedVariable *>(binctr->getVar(0));
+      EnumeratedVariable *y = dynamic_cast<EnumeratedVariable *>(binctr->getVar(1));
+      cout << "C" << x->wcspIndex << ", " << y->wcspIndex << ":\n";
+      for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+        for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+          cout << "\t" << binctr->getCost(*xIter, *yIter);
         }
         cout << "\n";
       }
-      int constraintId = binctr->wcspIndex;
-      if (constraintId < 0) constraintId = constrs.size() - 1 - constraintId;
-      size_t mSize = max<int>((dynamic_cast<EnumeratedVariable *>(binctr->getVar(0)))->getDomainInitSize(), (dynamic_cast<EnumeratedVariable *>(binctr->getVar(1)))->getDomainInitSize());
-      m[constraintId].resize(mSize);
-      futureDeltaConstraints[constraintId][0].resize(mSize);
-      futureDeltaConstraints[constraintId][1].resize(mSize);
-      //if (minCost != 0) cout << "\tConstraint is not normalized: min. cost is " << minCost << "\n";
-      //cout << "set size of " << constraintId << " to " << (max<int>(((EnumeratedVariable *) binctr->getVar(0))->getDomainInitSize(), ((EnumeratedVariable *) binctr->getVar(1))->getDomainInitSize())) << "\n";
+      */
     }
   }
   do {
     vector < int > &order = (forwardPass) ? orders[0]: orders[1];
-    ebound   = 0;
+    vector < unsigned int > &rank = (forwardPass) ? ranks[0]: ranks[1];
     //if (forwardPass) cout << "Starting forward loop\n";
     //else             cout << "Starting backward loop\n";
-    //if (forwardPass) previouslb = getLb();
+    ebound = 0;
     for (unsigned int i = 0; i < numberOfVariables(); ++i) {
       if (ToulBar2::interrupted) throw TimeOut();
       EnumeratedVariable* s = dynamic_cast<EnumeratedVariable*>(getVar(order[i]));
       if (s->isTRWSCompatible()) {
         // step 1: normalize unary costs
-        cout << "\tStep 1: X" << s->getName() << " (size " << s->getDomainInitSize() << ")\n";
+        //cout << "\tStep 1: X" << s->getName() << " (size " << s->getDomainInitSize() << ")\n";
         vector < Cost > thetaHat (s->getDomainInitSize(), 0);
         Cost delta = numeric_limits<Cost>::max();
         for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
           unsigned int j = s->toIndex(*sIter);
           thetaHat[j] = s->getCost(*sIter);
-          cout << "\t\tvalue " << j << ": " << thetaHat[j] << "\n";
+          //if (thetaHat[j] != 0) cout << "\t\tvalue " << j << " = " << thetaHat[j] << "\n";
           for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
             Constraint *constraint = (*iter).constr;
             if (constraint->isTRWSCompatible()) {
-              int id = constraint->wcspIndex;
-              if (id < 0) id = constrs.size() - 1 - id;
-              if (m[id][j] != 0) cout << "\t\t\t + " << m[id][j] << " from C" << constraint->getVar(0)->wcspIndex << "," << constraint->getVar(1)->wcspIndex << " (id: " << id << ")\n";
+              int id = getConstraintId(constraint);
+              //if (m[id][j] != 0) cout << "\t\t\t + " << m[id][j] << " from C" << constraint->getVar(0)->wcspIndex << "," << constraint->getVar(1)->wcspIndex << " (id: " << id << ")\n";
               thetaHat[j] += m[id][j];
             }
           }
-          if (thetaHat[j] != 0) cout << "\t\tvalue " << j << ": " << thetaHat[j] << " (" << static_cast<Cost>(trunc(s->getTRWSGamma() * thetaHat[j])) << ")\n";
+          //if (thetaHat[j] != 0) cout << "\t\tvalue " << j << ": " << thetaHat[j] << " (" << static_cast<Cost>(trunc(s->getTRWSGamma() * thetaHat[j])) << ")\n";
           delta = min<Cost>(delta, thetaHat[j]);
         }
-        if (delta != 0) cout << "\tEbound increase C" << s->wcspIndex << ": " << ebound << " -> " << (ebound+delta) << "\n";
-        for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-          unsigned int j = s->toIndex(*sIter);
-          thetaHat[j] -= delta;
+        if (delta != 0) {
+          //cout << "\tEbound increase C" << s->wcspIndex << ": " << ebound << " -> " << (ebound+delta) << "\n";
+          for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
+            unsigned int j = s->toIndex(*sIter);
+            thetaHat[j] -= delta;
+          }
+          ebound += delta;
         }
-        ebound += delta;
-        //s->findSupport();
         //cout << "\tStep 2" << endl;
         // step 2: message update
         for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
@@ -2161,43 +2180,34 @@ void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardO
           if (constraint->isTRWSCompatible()) {
             BinaryConstraint   *binctr = dynamic_cast<BinaryConstraint*>(constraint);
             EnumeratedVariable *t      = dynamic_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-            if (order[s->wcspIndex] < order[t->wcspIndex]) {
-              //binctr->trwsUpdateMessage(y);
+            //cout << "\t\tC" << s->wcspIndex << "," << t->wcspIndex << " has rank " << rank[s->wcspIndex] << " vs " << rank[t->wcspIndex] << "\n";
+            if (rank[s->wcspIndex] < rank[t->wcspIndex]) {
+              //cout << "\t\t\tfine\n";
               std::function<Cost (unsigned int, unsigned int)> getCost1 = [binctr](unsigned int x, unsigned int y) { return binctr->getCost(x, y); };
               std::function<Cost (unsigned int, unsigned int)> getCost2 = [binctr](unsigned int y, unsigned int x) { return binctr->getCost(x, y); };
               auto getCost = (s == binctr->getVar(0))? getCost1: getCost2;
-              int constraintId = constraint->wcspIndex;
-              if (constraintId < 0) constraintId = constrs.size() - 1 - constraintId;
+              int constraintId = getConstraintId(constraint);
               //cout << "\t\tC" << s->wcspIndex << "," << t->wcspIndex << " (id: " << constraintId << ", size: " << m[constraintId].size() << ")\n";
               vector < Cost > tmpM (m[constraintId].size(), numeric_limits<Cost>::max());
-              //cout << "copying vector of size " << m[constraintId].size() << "\n";
               delta = numeric_limits<Cost>::max();
               for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
                 unsigned int k = t->toIndex(*tIter);
                 for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
                   unsigned int j = s->toIndex(*sIter);
-                  //cout << "\t\t\t(" << j << ", " << k << ")\n";
                   tmpM[k] = min<Cost>(tmpM[k], static_cast<Cost>(trunc(s->getTRWSGamma() * thetaHat[j])) - m[constraintId][j] + getCost(j, k));
-                  if (tmpM[k] != 0) cout << "\t\t\t\tC " << s->wcspIndex << "," << t->wcspIndex << "(" << j << ", " << k << "): " << s->getTRWSGamma() << " * " << thetaHat[j] << " - " << m[constraintId][j] << " + " << getCost(j, k) << " = " << tmpM[k] << "\n";
+                  //if (tmpM[k] != 0) cout << "\t\t\t\tC " << s->wcspIndex << "," << t->wcspIndex << "(" << j << ", " << k << "): " << s->getTRWSGamma() << " * " << thetaHat[j] << " - " << m[constraintId][j] << " + " << getCost(j, k) << " = " << tmpM[k] << "\n";
                 }
-                if (tmpM[k] != 0) cout << "\t\t\tM" << s->wcspIndex << "->" << t->wcspIndex << "[" << k << "]: " << tmpM[k] << "\n";
+                //if (tmpM[k] != 0) cout << "\t\t\tM" << s->wcspIndex << "->" << t->wcspIndex << "[" << k << "]: " << tmpM[k] << "\n";
                 delta = min<Cost>(delta, tmpM[k]);
               }
               m[constraintId] = tmpM;
-              //cout << "vector of size " << m[constraintId].size() << endl;
-              //assert(delta >= 0);
-              //if (delta > MIN_COST) {
+              if (delta != 0) {
                 for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
                   unsigned int k = t->toIndex(*tIter);
-                  //cout << "accessing m[" << constraintId << "][" << k << "]" << endl;
                   m[constraintId][k] -= delta;
-                  //assert(m[constraintId][k] >= 0);
                 }
-                if (delta != 0) cout << "\tEbound increase C" << s->wcspIndex << "," << t->wcspIndex << ": " << ebound << " -> " << (ebound+delta) << "\n";
+                //cout << "\tEbound increase C" << s->wcspIndex << "," << t->wcspIndex << ": " << ebound << " -> " << (ebound+delta) << "\n";
                 ebound += delta;
-              //}
-              if (nIteration == nIterationLimit) {
-                futureDeltaConstraints[constraintId][constraint->getIndex(t)] = m[constraintId];
               }
             }
           }
@@ -2207,54 +2217,48 @@ void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardO
     // step 3: reverse ordering
     double change = 0.0;
     if (! forwardPass) {
-      ++iter;
-      change     = (ebound == previousEbound)? 0.0: (double) (ebound - previousEbound + 1) / (ebound + 1);
-      nIteration = (change > ToulBar2::trws)? 0: nIteration+1;
+      ++nIteration;
+      change             = (ebound == previousEbound)? 0.0: (double) (ebound - previousEbound + 1) / (getLb() + ebound + 1);
+      nIterationNoChange = (change > ToulBar2::trwsAccuracy)? 0: nIterationNoChange+1;
       if (ToulBar2::verbose >= 0)
-        //cout << "TRWS " << iter << " (" << nIteration << " without change), lower bound: " << previouslb << " -> " << getLb() << " (+" << (100 * change) << "%)" << endl;
-        cout << "TRWS " << iter << " (" << nIteration << " without change), lower bound: " << previousEbound << " -> " << ebound << " (+" << (100 * change) << "%), real LB: " << (getLb() + ebound) << endl;
+        cout << "TRWS " << nIteration << " (" << nIterationNoChange << " without change), lower bound: " << getLb() << " + " << previousEbound << " -> " << getLb() << " + " << ebound << " = " << (getLb() + ebound) << " (+" << (100 * change) << "%)" << endl;
       previousEbound = ebound;
     }
     forwardPass = ! forwardPass;
-  } while (nIteration <= nIterationLimit);
+  } while ((nIteration < ToulBar2::trwsNIter) && (nIterationNoChange < ToulBar2::trwsNIterNoChange));
   // step 4: move to WCSP
-  cout << "Step 4\n";
+  //cout << "Step 4\n";
   Cost delta = 0;
   for (unsigned int i = 0; i < numberOfVariables(); ++i) {
     if (ToulBar2::interrupted) throw TimeOut();
-    EnumeratedVariable* s = dynamic_cast<EnumeratedVariable*>(getVar(forwardOrder[i]));
+    EnumeratedVariable* s = dynamic_cast<EnumeratedVariable*>(getVar(orders[0][i]));
     if (s->isTRWSCompatible()) {
-      cout << "\tX" << s->wcspIndex << "\n";
-      //vector < Cost > deltas (s->getDomainInitSize(), 0);
+      //cout << "\tX" << s->wcspIndex << "\n";
       for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
         Constraint *constraint = (*iter).constr;
         if (constraint->isTRWSCompatible()) {
-          int constraintId = constraint->wcspIndex;
-          if (constraintId < 0) constraintId = constrs.size() - 1 - constraintId;
+          int constraintId = getConstraintId(constraint);
           BinaryConstraint *binctr = dynamic_cast<BinaryConstraint*>(constraint);
           EnumeratedVariable *t    = dynamic_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-          if (forwardOrder[s->wcspIndex] < forwardOrder[t->wcspIndex]) {
+          if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
             for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
               unsigned int j = s->toIndex(*sIter);
-              if (m[constraintId][j] != 0) cout << "\t\tproject " << m[constraintId][j] << " from C" << s->wcspIndex << "," << t->wcspIndex << " to X" << s->wcspIndex << "[" << s->toIndex(*sIter) << "]\n";
-              //deltas[j] += m[constraintId][j];
+              //if (m[constraintId][j] != 0) cout << "\t\tproject " << m[constraintId][j] << " from C" << s->wcspIndex << "," << t->wcspIndex << " to X" << s->wcspIndex << "[" << s->toIndex(*sIter) << "]\n";
               binctr->projectTRWS(s, *sIter, m[constraintId][j]);
             }
           }
         }
       }
-      //Cost c = s->addDeltaTRWS(deltas);
       Cost c = s->normalizeTRWS();
       delta += c;
-      if (c != 0) cout << "\tx" << s->wcspIndex << ": C0 += " << c << "\n";
-      //delta += var->addDeltaTRWS(futureDeltaVars[var->wcspIndex]);
+      //if (c != 0) cout << "\tx" << s->wcspIndex << ": C0 += " << c << "\n";
       for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
         Cost availableCost = static_cast<Cost>(trunc(s->getTRWSGamma() * s->getCost(*sIter)));
         for (ConstraintList::iterator constraintIter = s->getConstrs()->begin(); constraintIter != s->getConstrs()->end(); ++constraintIter) {
           BinaryConstraint   *binctr = dynamic_cast<BinaryConstraint*>((*constraintIter).constr);
           EnumeratedVariable *t      = dynamic_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-          if (forwardOrder[s->wcspIndex] < forwardOrder[t->wcspIndex]) {
-            if (availableCost != 0) cout << "\t\textend " << availableCost << " from X" << s->wcspIndex << " to C" << s->wcspIndex << "," << t->wcspIndex << "[" << s->toIndex(*sIter) << ",.]\n";
+          if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
+            //if (availableCost != 0) cout << "\t\textend " << availableCost << " from X" << s->wcspIndex << " to C" << s->wcspIndex << "," << t->wcspIndex << "[" << s->toIndex(*sIter) << ",.]\n";
             binctr->extend(binctr->getIndex(s), *sIter, availableCost);
           }
         }
@@ -2264,62 +2268,35 @@ void WCSP::propagateTRWS(int maxiter, double convergence, vector <int> &forwardO
         if (constraint->isTRWSCompatible()) {
           BinaryConstraint   *binctr = dynamic_cast<BinaryConstraint*>(constraint);
           EnumeratedVariable *t      = dynamic_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-          if (forwardOrder[s->wcspIndex] < forwardOrder[t->wcspIndex]) {
+          if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
             //binctr->trwsUpdateMessage(y);
             std::function<Cost (unsigned int, unsigned int)> getCost1 = [binctr](unsigned int x, unsigned int y) { return binctr->getCostTRWS(x, y); };
             std::function<Cost (unsigned int, unsigned int)> getCost2 = [binctr](unsigned int y, unsigned int x) { return binctr->getCostTRWS(x, y); };
             auto getCost = (s == binctr->getVar(0))? getCost1: getCost2;
-            int constraintId = constraint->wcspIndex;
-            if (constraintId < 0) constraintId = constrs.size() - 1 - constraintId;
+            int constraintId = getConstraintId(constraint);
             //cout << "\t\tC" << s->wcspIndex << "," << t->wcspIndex << " (id: " << constraintId << ", size: " << m[constraintId].size() << ")\n";
             vector < Cost > tmpM (m[constraintId].size(), numeric_limits<Cost>::max());
-            //cout << "copying vector of size " << m[constraintId].size() << "\n";
             Cost minCost = numeric_limits<Cost>::max();
             for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
               unsigned int k = t->toIndex(*tIter);
               for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                unsigned int j = s->toIndex(*sIter);
-                //cout << "\t\t\t(" << j << ", " << k << ")\n";
-                //tmpM[k] = min<Cost>(tmpM[k], getCost(*sIter, *tIter) - m[constraintId][j]);
-                //if (tmpM[k] != 0) cout << "\t\t\t\tC " << s->wcspIndex << "," << t->wcspIndex << "(" << j << ", " << k << "): " << getCost(*sIter, *tIter) << " - " << m[constraintId][j] << " = " << tmpM[k] << "\n";
                 tmpM[k] = min<Cost>(tmpM[k], getCost(*sIter, *tIter));
-                if (tmpM[k] != 0) cout << "\t\t\t\tC " << s->wcspIndex << "," << t->wcspIndex << "(" << j << ", " << k << "): " << getCost(*sIter, *tIter) << "\n";
               }
-              if (tmpM[k] != 0) cout << "\t\t\tM" << s->wcspIndex << "->" << t->wcspIndex << "[" << k << "]: " << tmpM[k] << "\n";
               minCost = min<Cost>(minCost, tmpM[k]);
             }
             for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
               unsigned int k = t->toIndex(*tIter);
-              //cout << "accessing m[" << constraintId << "][" << k << "]" << endl;
               tmpM[k] -= minCost;
-              //assert(m[constraintId][k] >= 0);
             }
             m[constraintId] = tmpM;
-            /*
-            if (minCost != 0) cout << "\tC" << binctr->getVar(0)->wcspIndex << "," << binctr->getVar(1)->wcspIndex << " (projections): C0 += " << minCost << "\n";
-            delta += minCost;
-            */
             for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
               binctr->projectTRWS(t, *tIter, m[constraintId][t->toValue(*tIter)]);
             }
-            //binctr->addDeltaTRWS(m[constraintId], minCost, binctr->getIndex(s));
             minCost = binctr->normalizeTRWS();
-            if (minCost != 0) cout << "\tC" << binctr->getVar(0)->wcspIndex << "," << binctr->getVar(1)->wcspIndex << " (costs): C0 += " << minCost << "\n";
             delta += minCost;
           }
         }
       }
-      /*
-      for (ConstraintList::iterator constraintIter = s->getConstrs()->begin(); constraintIter != s->getConstrs()->end(); ++constraintIter) {
-        BinaryConstraint   *binctr = dynamic_cast<BinaryConstraint*>((*constraintIter).constr);
-        EnumeratedVariable *t      = dynamic_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-        if (forwardOrder[s->wcspIndex] < forwardOrder[t->wcspIndex]) {
-          int constraintId = binctr->wcspIndex;
-          if (constraintId < 0) constraintId = constrs.size() - 1 - constraintId;
-          //delta += binctr->addDeltaTRWS(futureDeltaConstraints[constraintId]);
-        }
-      }
-      */
     }
   }
   cout << "TRWS done with delta = " << delta << " and C0 = " << getLb() << " --> " << (delta + getLb()) << "\n";
