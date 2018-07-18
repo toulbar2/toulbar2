@@ -9,8 +9,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
 set (doc_destination "share/doc")   		#path of doc installation 
-set (My_validation "validation")		#validation test location
-set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
@@ -101,12 +99,12 @@ ENDIF(APPLE)
 SET(FOPT "test-opt.cmake" CACHE string "filename containing local options used for validation")
 SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
-SET(Default_validation_dir "validation" CACHE string "default location of benchmark file")
-SET(Default_cover_dir "cover" CACHE string "default location of cover test file ")
+SET(Default_validation_dir "validation" CACHE string "default location of validation files")
+SET(Default_cover_dir "cover" CACHE string "default location of cover test files")
 SET(Default_regexp "end." CACHE string "default regex searched in test output")
 
-SET(Default_BenchDir "benchmarks" CACHE string "default location of benchmark file")
-SET(Default_BenchFormat "wcsp" CACHE string "default format extension for benchmark file search") 
+SET(Default_BenchDir "benchmarks" CACHE string "default location of benchmark files")
+SET(Default_BenchFormat "wcsp" CACHE string "default format extension for benchmark files search") 
 SET(Default_bench_timeout 30 CACHE INTEGER "default timeout used for benchmarking ")
 SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command line for benchmarking.")
 SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
@@ -448,7 +446,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 ##########################################
 # examples installation
 ##########################################
-install(DIRECTORY ${My_validation} DESTINATION ${doc_destination}/${Toulbar_NAME}/ PATTERN ".svn" EXCLUDE)
+install(DIRECTORY ${Default_validation_dir} DESTINATION ${doc_destination}/${Toulbar_NAME}/examples/ PATTERN ".svn" EXCLUDE)
+install(DIRECTORY ${Default_cover_dir} DESTINATION ${doc_destination}/${Toulbar_NAME}/examples/ PATTERN ".svn" EXCLUDE)
 
 ##########################################
 #  PACKAGING 
