@@ -56,7 +56,7 @@ Required library:
 
 Recommended libraries (default use):
 * libboost-graph-dev
-* libboot-iostream-dev
+* libboost-iostreams-dev
 * zlib
 
 Optional libraries:
