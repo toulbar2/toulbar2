@@ -840,7 +840,11 @@ void CFNStreamReader::enforceUB(Cost bound)
 
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUb = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        if (ToulBar2::deltaUb > MIN_COST) ToulBar2::limited |= 2;
+        if (ToulBar2::deltaUb > MIN_COST) {
+            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+            bound += ToulBar2::deltaUb;
+            ToulBar2::limited |= 2;
+        }
     }
 
     wcsp->updateUb(bound);
@@ -2037,15 +2041,18 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
     }
 
-    if (ToulBar2::externalUB.size()) {
-        Cost bound = string2Cost(ToulBar2::externalUB.c_str());
-        ToulBar2::enumUB = bound;
-        updateUb(bound);
-    }
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
-        if (ToulBar2::deltaUb > MIN_COST) ToulBar2::limited |= 2;
+        if (ToulBar2::deltaUb > MIN_COST)
+            ToulBar2::limited |= 2;
     }
+
+    if (ToulBar2::externalUB.size()) {
+        Cost bound = string2Cost(ToulBar2::externalUB.c_str());
+        updateUb(bound + ToulBar2::deltaUb);
+        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+    }
+
     if (ToulBar2::costThresholdS.size())
         ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
     if (ToulBar2::costThresholdPreS.size())
@@ -2140,7 +2147,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         top = top * K;
     else
         top = MAX_COST;
-    updateUb(top);
+
+    updateUb(top + ToulBar2::deltaUb);
 
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
@@ -3220,15 +3228,15 @@ void WCSP::read_wcnf(const char* fileName)
                 top = top * K;
             else
                 top = MAX_COST;
-            updateUb(top);
+            updateUb(top + ToulBar2::deltaUb);
         } else {
             if (ToulBar2::verbose >= 0)
             cout << "c Weighted Max-SAT input format" << endl;
         }
     } else {
         if (ToulBar2::verbose >= 0)
-        cout << "c Max-SAT input format" << endl;
-        updateUb((nbclauses + 1) * K);
+            cout << "c Max-SAT input format" << endl;
+        updateUb((nbclauses + 1) * K + ToulBar2::deltaUb);
     }
 
     // create Boolean variables
