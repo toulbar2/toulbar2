@@ -592,9 +592,12 @@ void populationsort(Configuration** population, int taille)
 /* le nom du fichier de sortie : pour les tests : resultatsxxx/concat�nation des arguments */
 void ofile_name(char* filename, int argc, char** argv)
 {
-    sprintf(filename, "%s%s", "results/", argv[2]);
-    for (int i = 3; i < argc; i++)
-        sprintf(filename, "%s-%s", filename, argv[i]);
+    unsigned offset = sprintf(filename, "%s%s", "results/", argv[2]);
+    char* slide = filename;
+    for (int i = 3; i < argc; i++) {
+        slide += offset;
+        offset = sprintf(slide, "-%s", argv[i]);
+    }
     cout << filename << endl;
 }
 
