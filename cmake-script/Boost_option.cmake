@@ -1,17 +1,19 @@
 #code executed if the boost option is add
-
 FILE(GLOB boost_file ${My_Source}/utils/tb2boostgraph.cpp)
 
 # list of cpp file extension 
 SET (source_files ${source_files} ${boost_file})
 
-
 # boost detection 
-        MESSAGE(STATUS "- boost flag on  .")
+MESSAGE(STATUS "- boost flag on  .")
+
 find_package(Boost 1.34.1 REQUIRED COMPONENTS graph iostreams)
 find_package(ZLIB)
 
-SET (all_depends ${all_depends} Boost::iostreams ${BOOST_LIBRARIES} ${ZLIB_LIBRARIES})
+MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+MESSAGE(STATUS "   Boost_LIBRARIES: ${Boost_LIBRARIES}")
+
+SET (all_depends ${all_depends} ${ZLIB_LIBRARIES} ${Boost_LIBRARIES})
 
 IF(NOT Boost_FOUND)
         MESSAGE(ERROR "#################################")
