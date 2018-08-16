@@ -1,0 +1,14 @@
+#!/bin/sh
+ROOT=`git rev-parse --show-toplevel`
+HASH=`git rev-parse --short HEAD`
+
+git checkout -- $ROOT/src/ToulbarVersion.hpp
+git checkout -- $ROOT/src/MyCPackConf.cmake
+if (grep tainted $ROOT/src/ToulbarVersion.hpp) || !(grep $HASH $ROOT/src/ToulbarVersion.hpp); then
+	$ROOT/cmake-script/genVersionFile.sh 
+	git add $ROOT/src/ToulbarVersion.hpp
+	git add $ROOT/src/MyCPackConf.cmake
+	git commit -m"[misc] Updating version files."
+	git pull --rebase
+	echo "Committing fresh version files before pushing."
+fi

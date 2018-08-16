@@ -4,6 +4,7 @@ if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1;
 then 
     ROOT=`git rev-parse --show-toplevel`
     cd $ROOT
+    git config --local core.hooksPath $ROOT/git-hooks
     FILE=$ROOT/src/ToulbarVersion.hpp
     PCKGVER=$ROOT/src/MyCPackConf.cmake
     VERSION=`git describe --abbrev=0 --tags --always`
