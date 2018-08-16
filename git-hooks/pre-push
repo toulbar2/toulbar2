@@ -1,14 +1,17 @@
 #!/bin/sh
 ROOT=`git rev-parse --show-toplevel`
-HASH=`git rev-parse --short HEAD`
+HASH=`git rev-parse --short HEAD^1`
 
 git checkout -- $ROOT/src/ToulbarVersion.hpp
 git checkout -- $ROOT/src/MyCPackConf.cmake
-if (grep tainted $ROOT/src/ToulbarVersion.hpp) || !(grep $HASH $ROOT/src/ToulbarVersion.hpp); then
-	$ROOT/cmake-script/genVersionFile.sh 
-	git add $ROOT/src/ToulbarVersion.hpp
-	git add $ROOT/src/MyCPackConf.cmake
-	git commit -m"[misc] Updating version files."
-	git pull --rebase
-	echo "Committing fresh version files before pushing."
+if grep tainted $ROOT/src/ToulbarVersion.hpp || ! grep $HASH $ROOT/src/ToulbarVersion.hpp; then
+    echo "The Toulbar2 version file is not up to date. Generating..."
+    $ROOT/cmake-script/genVersionFile.sh 
+    git add $ROOT/src/ToulbarVersion.hpp
+    git add $ROOT/src/MyCPackConf.cmake
+    echo "Committing fresh version files."
+    git commit -m"[misc] Updating version files."
+    echo "Please try to push again now."
+    exit 1
 fi
+exit 0
