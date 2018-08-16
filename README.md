@@ -199,6 +199,16 @@ Proc. of CP'2000. Singapour, September 2000.
  D Allouche, S de Givry, G Katsirelos, T Schiex, and M Zytnicki
  In Proc. of CP-15, Cork, Ireland, 2015 
 
+* SCP branching (CPD branch): Fast search algorithms for Computational Protein Design.
+S. Traoré, K.E. Roberts, D. Allouche, B. Donald, I. André, T. Schiex, S. Barbe.
+Journal of Computational Chemistry, 2016.
+
+* Guaranteed Free Energy computation (weighted model counting): Guaranteed 
+Weighted Counting for Affinity Computation: Beyond Determinism and Structure 
+C. Viricel, D. Simoncini, S. Barbe, T. Schiex. Proc. of the 22nd International 
+Conference on Principles and Practice of Constraint Programming Toulouse, 
+France. 5-9 september 2016
+
 * Unified parallel decomposition guided variable neighborhood search (UDGVNS/UPDGVNS)
  Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
