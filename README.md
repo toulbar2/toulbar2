@@ -1,7 +1,8 @@
 # toulbar2
 ## Exact optimization for cost function networks and additive graphical models 
 
-[![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
+master: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
+cpd: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=cpd)](https://travis-ci.com/toulbar2/toulbar2)
 
 ## What is toulbar2?
 
@@ -48,12 +49,14 @@ e.g.:
 
 Compilation requires git, cmake and a C++-11 capable compiler. 
 
+Required library:
+* libgmp-dev
 
 Required libraries
 * libgmp-dev
 * libboost-dev
 * libboost-graph-dev
-* libboot-iostream-dev
+* libboost-iostreams-dev
 * zlib
 
 Optional libraries:

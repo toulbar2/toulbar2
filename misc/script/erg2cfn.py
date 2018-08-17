@@ -6,6 +6,8 @@ import sys
 import string
 from numpy import *
 from functools import reduce
+import json
+from collections import OrderedDict
 
 class TokenizedFile:
     def __init__(self,f):
@@ -139,20 +141,36 @@ for scope in lscopes:
         bettertop += maxc
         ltables.append(llp)
 
+vnames = []
+for i in range(nvar):
+    vnames.append(t.gettok())
+
 lnames = []
 for i in range(nvar):
-    lnames.append(t.gettok())
+    lval = []
+    for j in range(ldomi[i]):
+        lval.append(t.gettok())
+    lnames.append(lval)
+    
+alldoms = OrderedDict()
+for i,v in enumerate(vnames):
+    alldoms[v] = lnames[i]
 
 bettertop += pow(10,-prec) #give some margin
-print('{ "problem" : {',end='')
-print('"name" : "{}", "mustbe" : "<{}"'.format(sys.argv[1],precf.format(bettertop)),'}')
-print('  "variables" : {', end='')
-print(", ".join(ldoms),'},')
-print('  "functions" : {')
+
+cfn = OrderedDict()
+header = OrderedDict()
+header["name"] = sys.argv[1]
+header["mustbe"] = "<"+precf.format(bettertop)
+cfn["problem"] = header
+cfn["variables"] = alldoms
+funcs = OrderedDict()
 for i in range(nvar):
-    scope = lscopes[i]
-    name = lnames[i]
+    func = OrderedDict()
+    func["scope"] = [vnames[v] for v in lscopes[i]]
+    name = "P_"+vnames[i]
     table = [x if x != "inf" else precf.format(bettertop) for x in ltables[i]]
-    print('    "{}" : {{"scope" : {}, "costs": ['.format(name,scope), end='')
-    print(", ".join(table),']},')
-print('}}')
+    func["costs"] = table
+    funcs[name] = func
+cfn["functions"] = funcs
+print(json.dumps(cfn))
