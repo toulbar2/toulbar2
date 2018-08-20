@@ -1,0 +1,10 @@
+{
+    "problem": { "name": "maximization", "mustbe": ">-5.0"},
+    "variables": { "v1": ["a", "b"], "v2": ["c", "d"] },
+    "functions": {
+	"c0": {"scope": [], "costs": [-6.0]},
+	"c1": {"scope": ["v1"], "costs": [1.0, 0.5]},
+	"c2": {"scope": ["v2"], "costs": [1.0, 0.5]},
+	"c12": {"scope": ["v1", "v2"], "costs": [-1.0, 0.5, -2.0, 5.5]}
+    }
+}
