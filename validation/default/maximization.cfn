@@ -1,5 +1,5 @@
 {
-    problem: { name: "maximization", mustbe: ">-5.0"},
+    problem: { name: "maximization_example", mustbe: ">-5.0"},
     variables: { "v1": ["a", "b"], "v2": ["c", "d"] },
     functions: {
 	"c0": {scope: [], costs: [-6.0]},

@@ -105,7 +105,6 @@ enum {
     OPT_debug,
     OPT_dumpWCSP,
     OPT_HELP,
-    //stdin parameter
     OPT_stdin,
 
     // file extension option
@@ -177,6 +176,7 @@ enum {
     OPT_costThreshold,
     OPT_costThresholdPre,
     OPT_costMultiplier,
+    OPT_deltaUb,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -348,6 +348,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
+    { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP},
 
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -560,7 +561,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 }
 
 //  current unused option letters: 	f F G H J K n N Q U W Y
-void help_msg(char* toulbar2filename)
+void help_msg(char* toulbar2filename) 
 {
     cout << "*************************" << endl;
     cout << "* ToulBar2 Help Message *" << endl;
@@ -605,6 +606,7 @@ void help_msg(char* toulbar2filename)
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
+    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)"<< endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
@@ -1678,6 +1680,10 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::externalUB = args.OptionArg();
             }
 
+            if (args.OptionId() == OPT_deltaUb) {
+                ToulBar2::deltaUbS = args.OptionArg();
+            }
+
             // CPU timer
             if (args.OptionId() == OPT_timer) {
                 if (args.OptionArg() != NULL) {
@@ -2108,7 +2114,6 @@ int _tmain(int argc, TCHAR* argv[])
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
 
-        // TODO Need to fetch UB
         tb2checkOptions(globalUb);
         //TODO: If --show_options then dump ToulBar2 object here
 

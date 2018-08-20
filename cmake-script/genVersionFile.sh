@@ -4,9 +4,11 @@ if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1;
 then 
     ROOT=`git rev-parse --show-toplevel`
     cd $ROOT
+    git config --local core.hooksPath $ROOT/git-hooks
     FILE=$ROOT/src/ToulbarVersion.hpp
     PCKGVER=$ROOT/src/MyCPackConf.cmake
-    VERSION=`git describe --abbrev=0 --tags`
+    VERSION=`git describe --abbrev=0 --tags --always`
+    LONG_VERSION=`git describe --tags --always`
     MAJOR=`echo $VERSION| cut -d"." -f1`
     MINOR=`echo $VERSION| cut -d"." -f2`
     PATCH=`echo $VERSION| cut -d"." -f3`
@@ -20,7 +22,7 @@ then
     fi
 
     echo "// Cmake generated version" > $FILE
-    echo "#define Toulbar_VERSION \"$VERSION-$BRANCH-$HASH$TAINTED ($CTIME)\"" >> $FILE
+    echo "#define Toulbar_VERSION \"$LONG_VERSION-$BRANCH$TAINTED ($CTIME)\"" >> $FILE
 
     echo "SET(CPACK_PACKAGE_VERSION \"$VERSION\")" > $PCKGVER
     echo "SET(CPACK_NSIS_DISPLAY_NAME \"toulbar2 $VERSION\")" >> $PCKGVER

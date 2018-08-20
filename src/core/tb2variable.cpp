@@ -59,6 +59,8 @@ DLink<ConstraintLink>* Variable::link(Constraint* c, int index)
     return elt;
 }
 
+
+
 int Variable::getCurrentVarId()
 {
     if (assigned())

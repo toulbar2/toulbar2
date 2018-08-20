@@ -170,7 +170,7 @@ void CliqueConstraint::gather_unary_0s()
     zerocosts.resize(carity);
     Cost maxc{ MIN_COST }, sumc{ MIN_COST }, secondmax{ MIN_COST };
     for (int i = 0, e = current_scope.size(); i != e; ++i) {
-        auto i0{ get_zero_cost(current_scope_idx[i]) };
+        auto i0 = get_zero_cost(current_scope_idx[i]);
         zerocosts[i] = i0;
         if (maxc < i0) {
             secondmax = maxc;
