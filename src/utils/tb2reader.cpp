@@ -844,7 +844,6 @@ void CFNStreamReader::enforceUB(Cost bound)
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
             bound += ToulBar2::deltaUb;
-            ToulBar2::limited |= 2;
         }
     }
 
@@ -2044,8 +2043,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
-        if (ToulBar2::deltaUb > MIN_COST)
-            ToulBar2::limited |= 2;
     }
 
     if (ToulBar2::externalUB.size()) {
@@ -3437,7 +3434,7 @@ void WCSP::read_qpbo(const char* fileName)
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
     }
-    updateUb((Cost)multiplier * sumcost + 1);
+    updateUb((Cost)multiplier * sumcost + 1 + ToulBar2::deltaUb);
 
     // create weighted binary clauses
     for (int e = 0; e < m; e++) {

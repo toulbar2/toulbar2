@@ -124,7 +124,7 @@ bool ReplicatedParallelDGVNS::solve()
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)
                 wcsp->setSolution(lastUb, &lastSolution);
-            endSolve(lastUb < MAX_COST, lastUb, ToulBar2::limited);
+            endSolve(lastUb < MAX_COST, lastUb, true);
         }
         /* Shut down MPI */
         MPI_Finalize();
@@ -157,10 +157,10 @@ bool ReplicatedParallelDGVNS::solve()
     if (env0.myrank == 0) {
         if (!ToulBar2::vnsParallelSync) {
             complete = radgvns();
-            endSolve(bestUb < MAX_COST, bestUb,  ToulBar2::limited | !complete);
+            endSolve(bestUb < MAX_COST, bestUb, complete);
         } else {
             complete = rsdgvns();
-            endSolve(bestUb < MAX_COST, bestUb, ToulBar2::limited | !complete);
+            endSolve(bestUb < MAX_COST, bestUb, complete);
         }
     } else {
         ToulBar2::showSolutions = false;

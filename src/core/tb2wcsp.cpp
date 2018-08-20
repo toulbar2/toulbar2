@@ -82,7 +82,7 @@ unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 int ToulBar2::lds;
-int ToulBar2::limited;
+bool ToulBar2::limited;
 Long ToulBar2::restart;
 bool ToulBar2::generation;
 int ToulBar2::minsumDiffusion;
@@ -265,7 +265,7 @@ void tb2init()
     ToulBar2::dichotomicBranchingSize = 2;
     ToulBar2::sortDomains = false;
     ToulBar2::lds = 0;
-    ToulBar2::limited = 0;
+    ToulBar2::limited = false;
     ToulBar2::restart = -1;
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
