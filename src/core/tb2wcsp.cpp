@@ -74,7 +74,7 @@ unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 int ToulBar2::lds;
-int ToulBar2::limited;
+bool ToulBar2::limited;
 Long ToulBar2::restart;
 bool ToulBar2::generation;
 int ToulBar2::minsumDiffusion;
@@ -235,7 +235,7 @@ void tb2init()
     ToulBar2::dichotomicBranchingSize = 10;
     ToulBar2::sortDomains = false;
     ToulBar2::lds = 0;
-    ToulBar2::limited = 0;
+    ToulBar2::limited = false;
     ToulBar2::restart = -1;
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
@@ -2747,9 +2747,7 @@ void WCSP::propagate()
                 do {
                     eliminate();
                     int eac_iter = 0;
-                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
-                                                                                      || ToulBar2::LcLevel >= LC_FDAC)
-                                                                                     && !AC.empty())
+                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
                                && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {

@@ -376,7 +376,7 @@ public:
     static int DEE_;
     static int nbDecisionVars;
     static int lds;
-    static int limited;
+    static bool limited;
     static Long restart;
     static externalevent setvalue;
     static externalevent setmin;
