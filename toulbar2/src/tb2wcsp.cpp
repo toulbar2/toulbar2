@@ -1342,7 +1342,8 @@ void WCSP::preprocessing() {
         if (ToulBar2::verbose >= 0 && getLb() > previouslb) cout << "Reverse DAC lower bound: " << getLb() << " (+" << 100.*(getLb()-previouslb)/getLb() << "%)" << endl;
     } while (getLb() > previouslb && 100.*(getLb()-previouslb)/getLb()>0.5);
 
-  if (ToulBar2::trwsAccuracy >= 0) propagateTRWS();
+    if (ToulBar2::trwsAccuracy >= 0) propagateTRWS();
+
 	if (ToulBar2::preprocessNary > 0) {
 		for (unsigned int i = 0; i < constrs.size(); i++) {
 			if (constrs[i]->connected() && !constrs[i]->isSep() && (constrs[i]->arity() > 3) && (constrs[i]->arity()
@@ -2300,6 +2301,7 @@ void WCSP::propagateTRWS() {
     }
   }
   cout << "TRWS done with delta = " << delta << " and C0 = " << getLb() << " --> " << (delta + getLb()) << "\n";
+  ToulBar2::trwsAccuracy = -1;
   increaseLb(delta);
   propagate(); // propagate again without TRWS and possibly with VAC
   cout << "\tAfter propagation: C0 = " << getLb() << "\n";
@@ -2485,7 +2487,7 @@ void WCSP::propagate() {
                 }
 
 				if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb())) EAC1.clear();
-				if (ToulBar2::vac) {
+				if (ToulBar2::vac && !(ToulBar2::trwsAccuracy >= 0)) {
 					//				assert(verify());
 					if (vac->firstTime()) {
 						vac->init();
