@@ -599,7 +599,7 @@ void help_msg(char* toulbar2filename)
     cout << "      each line contains a list of variable indexes" << endl;
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
-    cout << "Warning! a New file extension can be enforced using --foo_ext=\".myext\" ex: --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
+    cout << "Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=\".new\" Examples: --cfn_ext='.json' --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
     cout << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
