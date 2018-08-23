@@ -939,11 +939,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
             }
         } else
             assign(varIndex, value);
-        if (!(ToulBar2::limited & 1))
+        if (!ToulBar2::limited)
             showGap(wcsp->getLb(), wcsp->getUb());
         recursiveSolveLDS(discrepancy);
     } else {
-        ToulBar2::limited |= 1;
+        ToulBar2::limited = true;
         lastConflictVar = varIndex;
         if (dichotomic) {
             if (ToulBar2::dichotomicBranching == 1) {
@@ -1056,7 +1056,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
     if (discrepancy < size - 1)
-        ToulBar2::limited |= 1;
+        ToulBar2::limited = true;
     for (int v = min(size - 1, discrepancy); wcsp->getLb() < wcsp->getUb() && v >= 0; v--) {
         if (ToulBar2::interrupted)
             throw TimeOut();
@@ -1173,7 +1173,7 @@ void Solver::newSolution()
         if (ToulBar2::allSolutions) {
             cout << std::setprecision(0) << nbSol << " solution(" << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << "): ";
         }
-        cout << "Sol:" ;
+        cout << "Sol:";
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             cout << " ";
             if (ToulBar2::pedigree) {
@@ -1182,18 +1182,22 @@ void Solver::newSolution()
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
             } else if (ToulBar2::cfn) {
-                // print value name and varname if verbose >1 
-                    Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-                    string valuelabel= ((WCSP*)wcsp)->getVar(i) ->getValueName(myvalue);
-                    string varlabel= wcsp -> getName(i);
-                
-                if(ToulBar2::verbose >= 1 ) { cout <<  varlabel  <<":" << valuelabel <<";"; } else  {  cout << valuelabel ; }
-                if(ToulBar2::verbose > 1) { cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));}
+                // print value name and varname if verbose >1
+                Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
+                string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
+                string varlabel = wcsp->getName(i);
 
-            }         
-            else {
+                if (ToulBar2::verbose >= 1) {
+                    cout << varlabel << ":" << valuelabel << ";";
+                } else {
+                    cout << valuelabel;
+                }
+                if (ToulBar2::verbose > 1) {
+                    cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
+                }
+
+            } else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-              
             }
         }
         cout << endl;
@@ -1706,7 +1710,7 @@ bool Solver::solve()
                                 if (ToulBar2::verbose >= 0)
                                     cout << "--- [" << Store::getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << " nodes)" << endl;
                             }
-                            ToulBar2::limited &= 0;
+                            ToulBar2::limited = false;
                             enforceUb();
                             wcsp->propagate();
                             if (ToulBar2::isZ) {
@@ -1715,7 +1719,7 @@ bool Solver::solve()
                             }
                             if (discrepancy > abs(ToulBar2::lds)) {
                                 if (ToulBar2::lds < 0) {
-                                    ToulBar2::limited |= 1;
+                                    ToulBar2::limited = true;
                                     THROWCONTRADICTION;
                                 }
                                 ToulBar2::lds = 0;
@@ -1738,7 +1742,7 @@ bool Solver::solve()
                                 discrepancy *= 2;
                             else
                                 discrepancy++;
-                        } while (ToulBar2::limited & 1);
+                        } while (ToulBar2::limited);
                     } else {
                         TreeDecomposition* td = wcsp->getTreeDec();
                         if (td) {
@@ -1817,7 +1821,7 @@ bool Solver::solve()
                     }
                 } catch (NbBacktracksOut) {
                     nbbacktracksout = true;
-                    ToulBar2::limited &= 0;
+                    ToulBar2::limited = false;
                 }
                 Store::restore(storedepth);
             } while (nbbacktracksout);
@@ -1827,14 +1831,16 @@ bool Solver::solve()
     } catch (NbSolutionsOut) {
     }
     //  Store::restore();         // see above for Store::store()
-    endSolve(wcsp->getUb() < initialUpperBound, wcsp->getUb(), ToulBar2::limited);
+    endSolve(wcsp->getUb() < initialUpperBound, wcsp->getUb(), !ToulBar2::limited);
     return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getUb() < initialUpperBound);
 }
 
-void Solver::endSolve(bool isSolution, Cost cost, int isLimited)
+void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 {
-    static string solType[4] = { "Optimum: ", "Primal bound: ", "guaranteed primal bound: ", "Primal bound: "};
+    static string solType[4] = { "Optimum: ", "Primal bound: ", "guaranteed primal bound: ", "Primal bound: " };
     ToulBar2::DEE_ = 0;
+
+    int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
 
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1)
@@ -1878,11 +1884,13 @@ void Solver::endSolve(bool isSolution, Cost cost, int isLimited)
 
     if (isSolution) {
         if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
-            if (ToulBar2::haplotype) cout << endl;
-
-            if (isLimited == 2) cout << "(" << ToulBar2::deltaUbS << ")-";
             if (ToulBar2::haplotype)
-                     cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                cout << endl;
+
+            if (isLimited == 2)
+                cout << "(" << ToulBar2::deltaUbS << ")-";
+            if (ToulBar2::haplotype)
+                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else if (!ToulBar2::bayesian)
                 cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else
@@ -1891,7 +1899,8 @@ void Solver::endSolve(bool isSolution, Cost cost, int isLimited)
             if (ToulBar2::xmlflag) {
                 ((WCSP*)wcsp)->solution_XML(true);
             } else if (ToulBar2::uai && !ToulBar2::isZ) {
-                if (isLimited == 2) cout << "(" << ToulBar2::deltaUbS << ")-";
+                if (isLimited == 2)
+                    cout << "(" << ToulBar2::deltaUbS << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             } else if (ToulBar2::maxsateval && !isLimited) {
                 cout << "o " << cost << endl;

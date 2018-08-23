@@ -196,8 +196,7 @@ protected:
     void singletonConsistency();
     Cost beginSolve(Cost ub);
     Cost preprocessing(Cost ub);
-    void endSolve(bool isSolution, Cost cost, int isLimited); // bit 0: not complete, bit 1: controlled gap
-
+    void endSolve(bool isSolution, Cost cost, bool isLimited); // bit 0: not complete, bit 1: controlled gap
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);

@@ -21,7 +21,7 @@ bool VNSSolver::solve()
         wcsp->whenContradiction();
         if (lastUb < MAX_COST)
             wcsp->setSolution(lastUb, &lastSolution);
-        endSolve(lastUb < MAX_COST, lastUb, ToulBar2::limited);
+        endSolve(lastUb < MAX_COST, lastUb, true);
         return (lastUb < MAX_COST);
     }
 
@@ -42,7 +42,7 @@ bool VNSSolver::solve()
             newSolution();
             if (lastUb < MAX_COST)
                 wcsp->setSolution(lastUb, &lastSolution);
-            endSolve(lastUb < MAX_COST, lastUb, ToulBar2::limited);
+            endSolve(lastUb < MAX_COST, lastUb, true);
             return (lastUb < MAX_COST);
         }
     } catch (Contradiction) {
@@ -203,7 +203,7 @@ bool VNSSolver::solve()
 
     if (bestUb < MAX_COST)
         wcsp->setSolution(bestUb, &bestSolution);
-    endSolve(bestUb < MAX_COST, bestUb, ToulBar2::limited | !complete);
+    endSolve(bestUb < MAX_COST, bestUb, complete);
 
     return (bestUb < MAX_COST);
 }
