@@ -2046,8 +2046,13 @@ Cost WCSP::read_wcsp(const char* fileName)
     }
 
     if (ToulBar2::externalUB.size()) {
-        Cost bound = string2Cost(ToulBar2::externalUB.c_str());
-        updateUb(bound + ToulBar2::deltaUb);
+        Cost top = string2Cost(ToulBar2::externalUB.c_str());
+        double K = ToulBar2::costMultiplier;
+        if (top < MAX_COST / K)
+            top = top * K;
+        else
+            top = MAX_COST;
+        updateUb(top + ToulBar2::deltaUb);
         // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
     }
 
@@ -2219,7 +2224,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     ntuples = sharedSize[reusedconstr];
                 }
                 if ((defval != MIN_COST) || (ntuples > 0)) {
-                    Cost tmpcost = defval * K;
+                    Cost tmpcost = MULT(defval, K);
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                         tmpcost *= MEDIUM_COST;
                     int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
@@ -2236,7 +2241,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                             }
                             buf[i] = '\0';
                             file >> cost;
-                            Cost tmpcost = cost * K;
+                            Cost tmpcost = MULT(cost, K);
                             if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                                 tmpcost *= MEDIUM_COST;
                             String tup = buf;
@@ -2307,7 +2312,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
                         for (c = 0; c < z->getDomainInitSize(); c++) {
-                            Cost tmpcost = defval * K;
+                            Cost tmpcost = MULT(defval, K);
                             if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()))
                                 tmpcost *= MEDIUM_COST;
                             costs.push_back(tmpcost);
@@ -2319,7 +2324,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     file >> b;
                     file >> c;
                     file >> cost;
-                    Cost tmpcost = cost * K;
+                    Cost tmpcost = MULT(cost, K);
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                         tmpcost *= MEDIUM_COST;
                     assert(a >= 0 && a < x->getDomainInitSize());
@@ -2401,7 +2406,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                 vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
                     for (b = 0; b < y->getDomainInitSize(); b++) {
-                        Cost tmpcost = defval * K;
+                        Cost tmpcost = MULT(defval, K);
                         if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                             tmpcost *= MEDIUM_COST;
                         costs.push_back(tmpcost);
@@ -2411,7 +2416,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     file >> a;
                     file >> b;
                     file >> cost;
-                    Cost tmpcost = cost * K;
+                    Cost tmpcost = MULT(cost, K);
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                         tmpcost *= MEDIUM_COST;
                     assert(a >= 0 && a < x->getDomainInitSize());
@@ -2453,7 +2458,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     file >> funcparam1;
                     file >> funcparam2;
                     file >> funcparam3;
-                    postDisjunction(i, j, funcparam1, funcparam2, funcparam3 * K);
+                    postDisjunction(i, j, funcparam1, funcparam2, MULT(funcparam3, K));
                 } else if (funcname == "sdisj") {
                     Value funcparam3;
                     Value funcparam4;
@@ -2465,7 +2470,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     file >> funcparam4;
                     file >> funcparam5;
                     file >> funcparam6;
-                    postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, funcparam5 * K, funcparam6 * K);
+                    postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
                 } else {
                     int scopeIndex[2];
                     scopeIndex[0] = i;
@@ -2517,7 +2522,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                         continue;
                     }
                     for (a = 0; a < x->getDomainInitSize(); a++) {
-                        Cost tmpcost = defval * K;
+                        Cost tmpcost = MULT(defval, K);
                         if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                             tmpcost *= MEDIUM_COST;
                         unaryconstr.costs.push_back(tmpcost);
@@ -2525,7 +2530,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     for (k = 0; k < ntuples; k++) {
                         file >> a;
                         file >> cost;
-                        Cost tmpcost = cost * K;
+                        Cost tmpcost = MULT(cost, K);
                         if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                             tmpcost *= MEDIUM_COST;
                         assert(a >= 0 && a < x->getDomainInitSize());
@@ -2573,7 +2578,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                 file >> cost;
             else
                 cost = defval;
-            inclowerbound += cost * K;
+            inclowerbound += MULT(cost, K);
         }
     }
 
@@ -3295,7 +3300,7 @@ void WCSP::read_wcnf(const char* fileName)
         if (arity > 3) {
             int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 1);
             String tup = buf;
-            postNaryConstraintTuple(index, tup, cost * K);
+            postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
         } else if (arity == 3) {
             vector<Cost> costs;
@@ -3306,7 +3311,7 @@ void WCSP::read_wcnf(const char* fileName)
                     }
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 4 + (buf[1] - CHAR_FIRST) * 2 + (buf[2] - CHAR_FIRST)] = cost * K;
+            costs[(buf[0] - CHAR_FIRST) * 4 + (buf[1] - CHAR_FIRST) * 2 + (buf[2] - CHAR_FIRST)] = MULT(cost, K);
             postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
         } else if (arity == 2) {
             vector<Cost> costs;
@@ -3315,22 +3320,22 @@ void WCSP::read_wcnf(const char* fileName)
                     costs.push_back(MIN_COST);
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 2 + (buf[1] - CHAR_FIRST)] = cost * K;
+            costs[(buf[0] - CHAR_FIRST) * 2 + (buf[1] - CHAR_FIRST)] = MULT(cost, K);
             postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
         } else if (arity == 1) {
             EnumeratedVariable* x = (EnumeratedVariable*)vars[scopeIndex[0]];
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = x;
             if ((buf[0] - CHAR_FIRST) == 0) {
-                unaryconstr.costs.push_back(cost * K);
+                unaryconstr.costs.push_back(MULT(cost, K));
                 unaryconstr.costs.push_back(MIN_COST);
             } else {
                 unaryconstr.costs.push_back(MIN_COST);
-                unaryconstr.costs.push_back(cost * K);
+                unaryconstr.costs.push_back(MULT(cost, K));
             }
             unaryconstrs.push_back(unaryconstr);
         } else if (arity == 0) {
-            inclowerbound += cost * K;
+            inclowerbound += MULT(cost, K);
         } else {
             cerr << "Wrong clause arity " << arity << " in " << fileName << endl;
             exit(EXIT_FAILURE);

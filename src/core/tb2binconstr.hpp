@@ -68,6 +68,8 @@ protected:
     void extendY(Value value, Cost cost) { extend(y, value, cost, deltaCostsY); }
 
 public:
+    vector<Cost> trwsM;
+
     BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
 
     BinaryConstraint(WCSP* wcsp);
@@ -89,6 +91,39 @@ public:
         res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= MIN_COST);
         return res;
+    }
+    Cost getCostTRWS(Value vx, Value vy) const
+    {
+        unsigned int ix = x->toIndex(vx);
+        unsigned int iy = y->toIndex(vy);
+        return costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy]);
+    }
+    void projectTRWS(EnumeratedVariable *var, Value value, Cost cost)
+    {
+        vector<StoreCost> &deltaCosts = (var == x)? deltaCostsX: deltaCostsY;
+        deltaCosts[var->toIndex(value)] += cost;
+        var->project(value, cost, true);
+    }
+    Cost normalizeTRWS()
+    {
+        Cost minCost = numeric_limits<Cost>::max();
+        for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+            unsigned int ix = x->toIndex(*xIter);
+            for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+                unsigned int iy = y->toIndex(*yIter);
+                minCost = min<Cost>(minCost, costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy]));
+            }
+        }
+        if (minCost != MIN_COST) {
+            for (EnumeratedVariable::iterator xIter = x->begin(); xIter != x->end(); ++xIter) {
+                unsigned int ix = x->toIndex(*xIter);
+                for (EnumeratedVariable::iterator yIter = y->begin(); yIter != y->end(); ++yIter) {
+                    unsigned int iy = y->toIndex(*yIter);
+                    costs[ix * sizeY + iy] -= minCost;
+                }
+            }
+        }
+        return minCost;
     }
 
     Cost getCost(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy)
@@ -331,6 +366,8 @@ public:
             supportX.resize(sizeX);
         if (sizeY > supportY.size())
             supportY.resize(sizeY);
+        if (max(sizeX,sizeY) > trwsM.size())
+            trwsM.resize(max(sizeX,sizeY), MIN_COST);
         if (sizeX * sizeY > costs.size())
             costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
         linkX->removed = true;

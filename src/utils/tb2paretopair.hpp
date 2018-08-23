@@ -165,7 +165,7 @@ const ParetoPair PARETOPAIR_MIN = ParetoPair(0, 0);
 const ParetoPair PARETOPAIR_1 = ParetoPair(1, 1);
 const ParetoPair PARETOPAIR_3 = ParetoPair(3, 3);
 const ParetoPair PARETOPAIR_100 = ParetoPair(100, 100);
-const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX / 2) / 3, (INT_MAX / 2) / 3);
+const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX / 2) / 3 / 3, (INT_MAX / 2) / 3 / 3);
 
 inline double to_double(const ParetoPair r)
 {
@@ -222,6 +222,17 @@ inline ParetoPair MAX(ParetoPair a, ParetoPair b)
         return b;
     else
         exit(EXIT_FAILURE);
+}
+inline ParetoPair MULT(ParetoPair a, double b)
+{
+    assert(b < INT_MAX);
+    if (a >= PARETOPAIR_MAX) return PARETOPAIR_MAX;
+    else if (b <= UNIT_COST) return ParetoPair(a.p * b, a.q * b);
+    else if (a.p < PARETOPAIR_MAX.p / b && a.q < PARETOPAIR_MAX.q / b) return ParetoPair(a.p * b, a.q * b);
+    else {
+        cerr << "Error: cost multiplication overflow!" << endl;
+        exit(1);
+    }
 }
 inline ParetoPair GLB(ParetoPair a, ParetoPair b) { return ParetoPair(min(a.p, b.p), min(a.q, b.q)); }
 inline ParetoPair LUB(ParetoPair a, ParetoPair b) { return ParetoPair(max(a.p, b.p), max(a.q, b.q)); }

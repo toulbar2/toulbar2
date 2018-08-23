@@ -70,6 +70,10 @@ void GlobalCardinalityConstraint::read(istream& file, bool mult)
         int wexcess = def;
         if (mode == WVALUE) {
             file >> wshortage >> wexcess;
+            if (mult) {
+                wshortage *= ToulBar2::costMultiplier;
+                wexcess *= ToulBar2::costMultiplier;
+            }
         }
         //JP End//
         bound[d] = make_pair(high, low);

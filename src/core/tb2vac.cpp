@@ -712,8 +712,10 @@ void VACExtension::printStat(bool ini)
         long double mean = to_double(sumlb) / (long double)nlb;
         cout << "VAC mean lb/incr: " << std::setprecision(DECIMAL_POINT) << mean << "     total increments: " << nlb
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
-        if (ini)
-            cout << "Dual bound after VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+    }
+    if (ini && nlb > 0 && sumlb > MIN_COST && ToulBar2::verbose >= 0) {
+            if (ToulBar2::uai) cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (iter:" << nlb << ")" << endl;
+            else cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (iter:" << nlb << ")" << endl;
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
