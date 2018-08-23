@@ -25,7 +25,7 @@ for e in `find $problems -regex ".*[.]wcsp" -print | sort` ; do
 
     if [[ -e $ubfile ]] ; then
 	    ub=`cat $ubfile`
-	    ub=`expr $ub \* $K`
+#	    ub=`expr $ub \* $K`
         echo -n $ub > out
     else
         ub=

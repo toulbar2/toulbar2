@@ -39,7 +39,7 @@ private:
 public:
     WFA();
     WFA(int _nbStates);
-    WFA(istream& file);
+    WFA(istream& file, bool mult = true);
     WFA(int nbSymbol, string forbiddenPattern, Cost cost);
 
     inline unsigned int getNbStates() { return nbStates; }

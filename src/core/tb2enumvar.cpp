@@ -217,6 +217,31 @@ void EnumeratedVariable::findSupport()
     }
 }
 
+Cost EnumeratedVariable::normalizeTRWS()
+{
+    assert(unassigned());
+    Cost minCost = numeric_limits<Cost>::max();
+    Value newSupport = support;
+    for (EnumeratedVariable::iterator iter = begin(); iter != end(); ++iter) {
+        Cost cost = getCost(*iter);
+        if (GLB(&minCost, cost)) {
+            newSupport = *iter;
+        }
+    }
+    if (minCost != MIN_COST) {
+        deltaCost += minCost;
+    }
+    assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
+    if (support != newSupport)
+        queueDEE();
+    support = newSupport;
+    queueNC();
+    queueAC();
+    queueDAC();
+    queueEAC1();
+    return minCost;
+}
+
 void EnumeratedVariable::propagateNC()
 {
     wcsp->revise(NULL);

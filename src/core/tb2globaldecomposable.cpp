@@ -271,7 +271,7 @@ WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope)
 WeightedRegular::WeightedRegular(unsigned int _arity, int* _scope, istream& file, bool mult)
     : DecomposableGlobalCostFunction(_arity, _scope)
 {
-    automaton = new WFA(file);
+    automaton = new WFA(file, mult);
 }
 
 WeightedRegular::~WeightedRegular()

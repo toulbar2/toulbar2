@@ -9,7 +9,7 @@ WFA::WFA(int _nbStates)
     : nbStates(_nbStates)
 {
 }
-WFA::WFA(istream& file)
+WFA::WFA(istream& file, bool mult)
 {
     unsigned int _nbStates, nbTransitions, nbStatesInit, nbStatesAccept;
     file >> _nbStates;
@@ -23,8 +23,9 @@ WFA::WFA(istream& file)
         unsigned int init;
         Cost weight;
         file >> init >> weight;
+        if (mult) weight *= ToulBar2::costMultiplier;
         //cout << "reading INIT = " << init << " " << weight << endl;
-        pair<int, Cost> initSt = make_pair(init, weight * ToulBar2::costMultiplier);
+        pair<int, Cost> initSt = make_pair(init, weight);
         //cout << initSt.first << " " << initSt.second << endl;
         initialStates.push_back(initSt);
     }
@@ -34,8 +35,9 @@ WFA::WFA(istream& file)
         unsigned int accept;
         Cost weight;
         file >> accept >> weight;
+        if (mult) weight *= ToulBar2::costMultiplier;
         //cout << "reading ACCEPT = " << accept << " " << weight << endl;
-        pair<int, Cost> acceptSt = make_pair(accept, weight * ToulBar2::costMultiplier);
+        pair<int, Cost> acceptSt = make_pair(accept, weight);
         //cout << acceptSt.first << " " << acceptSt.second << endl;
         acceptingStates.push_back(acceptSt);
     }
@@ -44,8 +46,9 @@ WFA::WFA(istream& file)
         unsigned int start, end, symbol;
         Cost weight;
         file >> start >> symbol >> end >> weight;
+        if (mult) weight *= ToulBar2::costMultiplier;
         //cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
-        transitions.push_back(new WTransition(start, end, symbol, weight * ToulBar2::costMultiplier));
+        transitions.push_back(new WTransition(start, end, symbol, weight));
     }
 }
 

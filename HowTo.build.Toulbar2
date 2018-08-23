@@ -1,10 +1,11 @@
 # required package
 # depending of the flag activated in cmake
 # boost graph and libxml  may be required (warning! XML flag incompatible with STATIC compilation flag)
-# by default boost-graph is required , under debian or ubuntu you can easely install the library with
-# the following command :
+# by default boost-graph and boost-iostreams is required , under debian or ubuntu you can easely install the libraries with
+# the following commands :
 
 sudo  apt-get install libboost-graph-dev
+sudo  apt-get install libboost-iostreams-dev
 
 #obviosely if you tag the ilog flag 
 #ilog librares will be required.
@@ -12,6 +13,10 @@ sudo  apt-get install libboost-graph-dev
 # library : gmp is required
 
 sudo apt-get install libgmp3-dev
+
+# library : zlib is required
+
+sudo apt-get install zlib1g-dev
 
 # if you want to cross compile toulbar2 please upload static GMP library and header file for MinGW
 # at the following url : http://cs.nyu.edu/exact/core/gmp/

@@ -97,7 +97,7 @@ SET (pedigree1.wcsp
     "-n"
     "-n -t -i"
     "-n -t -k=1"
-    "-n -t -k=2"
+    "-n -t -k=2 -f:"
     "-n -t -k=3"
     "-n -t -o"
     "-n -t -ub=76911690 -i"

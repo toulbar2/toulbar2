@@ -175,6 +175,10 @@ enum {
     NO_OPT_vac,
     OPT_costThreshold,
     OPT_costThresholdPre,
+    OPT_trwsAccuracy,
+    OPT_trwsNIter,
+    OPT_trwsNIterNoChange,
+    NO_OPT_trws,
     OPT_costMultiplier,
     OPT_deltaUb,
     OPT_singletonConsistency,
@@ -349,6 +353,11 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP},
+    { NO_OPT_trws, (char*)"-trws:", SO_NONE },
+    { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
+    { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
+    { OPT_trwsNIter, (char*)"--trws-n-iters", SO_REQ_SEP },
+    { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
 
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -675,7 +684,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee:)" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -730,8 +739,11 @@ void help_msg(char* toulbar2filename)
     cout << "   -V : VAC-based value ordering heuristic";
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
-    cout << endl
-         << endl;
+    cout << endl;
+    cout << "   -trws=[float] : enforce TRW-S in preprocessing until given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
+    cout << "   --trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is " << ToulBar2::trwsNIter << ")" << endl;
+    cout << "   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is " << ToulBar2::trwsNIterNoChange << ")" << endl;
+    cout << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
     cout << "   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, " << endl;
@@ -1378,6 +1390,23 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::preprocessTernaryRPC = 0;
             }
 
+            if (args.OptionId() == OPT_trwsAccuracy) {
+                double co = atof(args.OptionArg());
+                if (co >= 0.)
+                    ToulBar2::trwsAccuracy = co;
+                else
+                    ToulBar2::trwsAccuracy = -1.;
+            }
+            if (args.OptionId() == OPT_trwsNIter) {
+                ToulBar2::trwsNIter = atol(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_trwsNIterNoChange) {
+                ToulBar2::trwsNIterNoChange = atol(args.OptionArg());
+            }
+            if (args.OptionId() == NO_OPT_trws) {
+                ToulBar2::trwsAccuracy = -1.;
+            }
+
             // elimination of functional variables
             if (args.OptionId() == OPT_preprocessFunctional) {
                 if (args.OptionArg() == NULL) {
@@ -1729,6 +1758,8 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "dead-end elimination OFF" << endl;
                 ToulBar2::DEE = 0;
+                if (ToulBar2::debug) cout << "TRW-S OFF" << endl;
+                ToulBar2::trwsAccuracy = -1.;
             }
 
         }

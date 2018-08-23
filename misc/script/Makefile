@@ -15,10 +15,10 @@ SRCS = $(SRCSFULL:utils/tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lxml2 -lgmp
+OBJS = $(SRCS:.cpp=.o) -lxml2 -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
 # -lxml2 -lz -lm -lpthread
 else
-OBJS = $(SRCS:.cpp=.o) -lgmp
+OBJS = $(SRCS:.cpp=.o) -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
 endif
 
 LIBSRCS = $(SRCS:tb2main.cpp=)
@@ -52,7 +52,7 @@ CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWI
 # -DWCSPFORMATONLY # assumes positive domains starting at value 0 (as in the wcsp format file) *** Incompatible with Numberjack ***
 # -DNUMBERJACK # 
 # -DOPENMPI # enables variable neighborhood search
-# -ftrapv -g3 # catches numerical integer overflows
+# -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3 # catches numerical integer overflows
 
 OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG
@@ -79,10 +79,10 @@ libtb2.so: $(LIBOBJS)
 	$(BUILD) $(LIBFLAGS) $(LIBOBJS) -o $@
 
 toulbar2test: toulbar2test.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lgmp
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
 
 iloglue: iloglue.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
 
 clean:
 	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test

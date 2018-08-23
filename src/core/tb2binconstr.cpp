@@ -21,6 +21,7 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX, y->getInf());
     supportY = vector<Value>(sizeY, x->getInf());
+    trwsM = vector<Cost>(max(sizeX,sizeY), MIN_COST);
 
     costs = vector<StoreCost>(sizeX * sizeY, StoreCost(MIN_COST));
 

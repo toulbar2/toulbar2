@@ -65,6 +65,17 @@ const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost MULT(Cost a, double b)
+{
+    assert(b < MAX_COST);
+    if (a >= MAX_COST) return MAX_COST;
+    else if (b <= UNIT_COST) return a * b;
+    else if (a < MAX_COST / b) return a * b;
+    else {
+        cerr << "Error: cost multiplication overflow!" << endl;
+        exit(1);
+    }
+}
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
 inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
 inline bool GLB(Cost* a, Cost b)
@@ -120,6 +131,17 @@ const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 //inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smulll_overflow(a, b, c); }
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost MULT(Cost a, double b)
+{
+    assert(b < MAX_COST);
+    if (a >= MAX_COST) return MAX_COST;
+    else if (b <= UNIT_COST) return a * b;
+    else if (a < MAX_COST / b) return a * b;
+    else {
+        cerr << "Error: cost multiplication overflow!" << endl;
+        exit(1);
+    }
+}
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
 inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
 inline bool GLB(Cost* a, Cost b)
@@ -405,6 +427,9 @@ public:
     static string costThresholdPreS;
     static Cost costThreshold;
     static Cost costThresholdPre;
+    static double trwsAccuracy;
+    static unsigned int trwsNIter;
+    static unsigned int trwsNIterNoChange;
     static double costMultiplier;
     static unsigned int decimalPoint;
     static string deltaUbS;

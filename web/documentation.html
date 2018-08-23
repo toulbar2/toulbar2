@@ -103,7 +103,7 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions (default option)</li>
   <li>-n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)</li>
   <li>-mst : maximum spanning tree DAC ordering</li>
-  <li>-nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee:)</li>
+  <li>-nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)</li>
   <li>-o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)</li>
   <li>-k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)</li>
   <li>-dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)</li>
@@ -130,6 +130,9 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-C=[float] : multiplies all costs by this number when loading the problem (default value is 1)</li>
   <li>-S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")</li>
   <li>-V : VAC-based value ordering heuristic (default option)</li>
+  <li>-trws=[float] : enforce TRW-S in preprocessing until a given precision is reached (default value is 0.001)</li>
+  <li>--trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is 1000)</li>
+  <li>--trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5)</li>
   <li>-B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)</li>
   <li>-O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering</li>
   <li>-O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using: (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering, (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering, (-7) default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)</li>

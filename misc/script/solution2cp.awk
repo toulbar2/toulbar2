@@ -78,12 +78,12 @@ SOLVEROUTPUT && FNR != NR && SAVESOLUTION && /^Optimum: / {
   print "# optimum = ",$2 >> filename;
 }
 
-FNR != NR && (oksol || !SOLVEROUTPUT || /^[0-9]+ solution[:] /) {
-  for (i=($2=="solution:")?3:1; i<=NF; i++) {
-	$i = domains[i-(($2=="solution:")?3:1), $i];
+FNR != NR && (oksol || !SOLVEROUTPUT || /^[0-9]+ solution/) {
+  for (i=(match($2,"solution"))?4:2; i<=NF; i++) {
+	$i = domains[i-((match($2,"solution"))?4:2), $i];
     if (SAVESOLUTION) {
-#      print "hard(",varname[i-(($2=="solution:")?3:1)],"==",$i,")" >> filename;
-      print varname[i-(($2=="solution:")?3:1)],$i >> filename;
+#      print "hard(",varname[i-((match($2,"solution"))?4:2)],"==",$i,")" >> filename;
+      print varname[i-((match($2,"solution"))?4:2)],$i >> filename;
     }
   }
   oksol = 0;

@@ -39,7 +39,7 @@ The time limit is a CPU user time limit, not wall clock time limit.
 PREPROCESSING
 .TP 
 .BR \-nopre
-Deactivates all preprocessing options (equivalent to \-e: \-p: \-t: \-f: \-dec: \-n: \-mst: \-dee:). 
+Deactivates all preprocessing options (equivalent to \-e: \-p: \-t: \-f: \-dec: \-n: \-mst: \-dee: \-trws:). 
 .TP
 .BR \-p=[\fIinteger\fR]
 Preprocessing only: activates variable elimination of variables of degree less than or equal to the given value (default value is -1, with no elimination performed).
@@ -201,6 +201,15 @@ Multiplies all costs internally by this number when loading the problem (default
 .BR \-S
 Preprocessing only: performs singleton consistency (only in conjunction with option "-A")
 .TP
+.BR \-trws=[float]
+Preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.001)
+.TP
+.BR \--trws-n-iters=[integer]
+Preprocessing only: enforce at most N iterations of TRW-S (default value is 1000)
+.TP
+.BR \--trws-n-iters-no-change=[integer]
+Preprocessing only: stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5)
+.TP
 .BR \-dee=[\fIinteger\fR]
 Enforce restricted dead\-end elimination, or value pruning by dominance rule from EAC value (dee>=1 and dee<=3) and soft neighborhood substitutability, in preprocessing (dee=2 or dee=4) or during search (dee=3).
 Default value is 1.
@@ -328,7 +337,7 @@ pn is the number of salldiff global cost functions (p2 and p3 still being used f
 .RE
 .RE
 .SH FILE FORMATS
-toulbar2 can read .cfn, .cfn.gz,.wcsp, .uai, .LG, .pre, .cnf, .wcnf, .bep files. See the full user documentation for a description of these file formats.
+toulbar2 can read .cfn, .cfn.gz, .wcsp, .uai, .LG, .cnf, .wcnf, .qpbo, .pre, .bep files. See the full user documentation for a description of these file formats.
 .SH SEE ALSO
 A more complete user documentation should be available on your system, in /usr/share/doc/toulbar2/userdoc.pdf or can be otherwise downloaded from http://www.inra.fr/mia/T/toulbar2.
 .SH AUTHORS

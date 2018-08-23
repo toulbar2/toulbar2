@@ -178,7 +178,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 
 \begin{description}
 \item[{-nopre}] deactivates all preprocessing options (equivalent to -e:
-  -p: -t: -f: -dec: -n: -mst: -dee:)
+  -p: -t: -f: -dec: -n: -mst: -dee: -trws:)
 \item[{-p=[integer]}]preprocessing only: general variable elimination
   of degree less than or equal to the given value (default value is
   -1)
@@ -198,6 +198,10 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-M=[integer]}]
   apply the Min Sum Diffusion algorithm (default is inactivated, with
   a number of iterations of 0). See~\cite{Cooper10a}.
+\item[{-trws=[float]}] 
+  preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.001). See Kolmogorov 2006.
+\item[{--trws-n-iters=[integer]}] enforce at most N iterations of TRW-S (default value is 1000).
+\item[{--trws-n-iters-no-change=[integer]}] stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5).
  \end{description}
  
 

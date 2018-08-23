@@ -33,6 +33,7 @@
 #include <list>
 #include <queue>
 #include <stack>
+#include <functional>
 #include <algorithm>
 #include <numeric>
 using namespace std;
