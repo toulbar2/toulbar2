@@ -31,6 +31,7 @@ static inline void rtrim(std::string& s)
                 .base(),
         s.end());
 }
+
 #ifdef WIDE_STRING
 typedef wchar_t Char;
 typedef wstring String;

@@ -398,7 +398,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
-    { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP},
+    { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
     { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
@@ -687,7 +687,7 @@ void help_msg(char* toulbar2filename)
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
-    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)";
+    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s : shows each solution found" << endl;
 #ifndef MENDELSOFT
@@ -1940,6 +1940,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_deltaUb) {
                 ToulBar2::deltaUbS = args.OptionArg();
+                rtrim(ToulBar2::deltaUbS);
             }
 
             // CPU timer
@@ -1987,7 +1988,8 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "dead-end elimination OFF" << endl;
                 ToulBar2::DEE = 0;
-                if (ToulBar2::debug) cout << "TRW-S OFF" << endl;
+                if (ToulBar2::debug)
+                    cout << "TRW-S OFF" << endl;
                 ToulBar2::trwsAccuracy = -1.;
             }
 
