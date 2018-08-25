@@ -1079,7 +1079,8 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        if (mult) baseCost *= ToulBar2::costMultiplier;
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
         postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
@@ -1093,7 +1094,8 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             file >> d >> low >> high;
             values.push_back(BoundedObj<Value>(d, high, low));
         }
-        if (mult) baseCost *= ToulBar2::costMultiplier;
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
     }
@@ -1119,7 +1121,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 
     vector<EnumeratedVariable*> scopeVarsV(arity);
     for (int i = 0; i < arity; i++)
-        scopeVarsV[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+        scopeVarsV[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto scopeVars = scopeVarsV.data();
 
     if (gcname == "salldiff") {
@@ -1158,21 +1160,26 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 {
 #ifndef NDEBUG
-    for(int i=0; i<arity; i++) for (int j=i+1; j<arity; j++) assert(scopeIndex[i] != scopeIndex[j]);
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
-        scopeVars[i] = (EnumeratedVariable *) vars[scopeIndex[i]];
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new CliqueConstraint(this, scopeVars.data(), arity);
     cc->read(file);
-    if (isDelayedNaryCtr) delayedNaryCtr.push_back(cc->wcspIndex);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
     else {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac) bctr = new BinaryConstraint(this);
-            else bctr = new VACBinaryConstraint(this);
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
         cc->propagate();
@@ -2798,9 +2805,7 @@ void WCSP::propagate()
                 do {
                     eliminate();
                     int eac_iter = 0;
-                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC
-                                                                                      || ToulBar2::LcLevel >= LC_FDAC)
-                                                                                     && !AC.empty())
+                    while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
                                && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
@@ -3969,9 +3974,14 @@ void WCSP::setDACOrder(vector<int>& order)
 Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumber) const
 {
     size_t dotFound = decimalToken.find('.');
+    size_t readIdx;
+
     if (dotFound == std::string::npos) {
         try {
-            return (Cost)std::stoll(decimalToken) * ToulBar2::costMultiplier * powl(10, ToulBar2::decimalPoint);
+            Cost cost = (Cost)std::stoll(decimalToken, &readIdx) * ToulBar2::costMultiplier * powl(10, ToulBar2::decimalPoint);
+            if (decimalToken[readIdx])
+                throw std::invalid_argument("Not a cost");
+            return cost;
         } catch (const std::invalid_argument&) {
             cerr << "Error: invalid cost '" << decimalToken;
             if (lineNumber)
@@ -3983,15 +3993,20 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     }
 
     bool negative = (decimalToken[0] == '-');
-    string integerPart = (negative ? decimalToken.substr(1, dotFound) : decimalToken.substr(0, dotFound));
+    string integerPart = (negative ? decimalToken.substr(1, dotFound - 1) : decimalToken.substr(0, dotFound));
     string decimalPart = decimalToken.substr(dotFound + 1);
     int shift = ToulBar2::decimalPoint - decimalPart.size();
 
     Cost cost;
     try {
-        cost = (std::stoll(integerPart) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
-        if (decimalPart.size())
-            cost += std::stoll(decimalPart) * powl(10, shift) * ToulBar2::costMultiplier;
+        cost = (std::stoll(integerPart, &readIdx) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
+        if (integerPart[readIdx])
+            throw std::invalid_argument("Not a cost");
+        if (decimalPart.size()) {
+            cost += std::stoll(decimalPart, &readIdx) * powl(10, shift) * ToulBar2::costMultiplier;
+            if (decimalPart[readIdx])
+                throw std::invalid_argument("Not a cost");
+        }
     } catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken;
         if (lineNumber)
