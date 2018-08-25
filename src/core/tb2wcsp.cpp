@@ -4207,12 +4207,10 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     Cost cost;
     try {
         cost = (std::stoll(integerPart, &readIdx) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
-        cout << (int)integerPart[readIdx] << endl;
         if (integerPart[readIdx])
             throw std::invalid_argument("Not a cost");
         if (decimalPart.size()) {
             cost += std::stoll(decimalPart, &readIdx) * powl(10, shift) * ToulBar2::costMultiplier;
-            cout << (int)decimalPart[readIdx] << endl;
             if (decimalPart[readIdx])
                 throw std::invalid_argument("Not a cost");
         }
