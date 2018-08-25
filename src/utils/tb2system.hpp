@@ -19,6 +19,15 @@ void timeOut(int sig);
 void timer(int t); ///< \brief set a timer (in seconds)
 void timerStop(); ///< \brief stop a timer
 
+static inline void rtrim(std::string& s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    })
+                .base(),
+        s.end());
+}
+
 #ifdef WIDE_STRING
 typedef wchar_t Char;
 typedef wstring String;
