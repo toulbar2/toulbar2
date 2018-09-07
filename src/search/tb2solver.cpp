@@ -1181,7 +1181,7 @@ void Solver::newSolution()
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else if (ToulBar2::cfn) {
+            } else if (ToulBar2::cfn || ToulBar2::cfngz) {
                 // print value name and varname if verbose >1
                 Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
                 string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
@@ -1543,7 +1543,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
-            wcsp->updateUb(finiteUb);
+            wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
         }
         wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
     }
@@ -1553,7 +1553,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
-            wcsp->updateUb(finiteUb);
+            wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
@@ -1564,7 +1564,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
-            wcsp->updateUb(finiteUb);
+            wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
@@ -1861,7 +1861,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::approximateCountingBTD)
             cout << "Number of solutions    : ~= " << nbSol << endl;
         else {
-            if (isLimited)
+            if (!isComplete)
                 cout << "Number of solutions    : >=  " << nbSol << endl;
             else
                 cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
