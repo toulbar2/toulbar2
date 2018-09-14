@@ -6,18 +6,14 @@
 #ifndef TB2GRAPH
 #define TB2GRAPH
 
-#include "core/tb2types.hpp"
-#include "utils/tb2store.hpp"
-#include "utils/tb2btlist.hpp"
+#include "tb2types.hpp"
+#include "tb2store.hpp"
+#include "tb2btlist.hpp"
 
 //#define adj first
 //#define weight second
 #define INF (MAX_COST >> 5)
-#define Free(pt)     \
-    if (pt) {        \
-        delete[] pt; \
-        pt = NULL;   \
-    }
+#define Free(pt) if(pt) {delete[] pt;pt=NULL;} 
 #define NO_TAG (INT_MAX >> 1)
 
 // BTList Wrapper for easier usage
@@ -28,30 +24,27 @@ private:
     StoreInt curEmpty;
     StoreInt curUsingBlkIndex;
     vector<DLink<T>*> blockStore;
-
 public:
     DLinkStore(int blkSize_)
-        : blkSize(blkSize_)
-        , curEmpty(0)
-        , curUsingBlkIndex(0)
+    : blkSize(blkSize_)
+    , curEmpty(0)
+    , curUsingBlkIndex(0)
     {
         blockStore.push_back(new DLink<T>[blkSize]);
     }
-    ~DLinkStore()
-    {
+    ~DLinkStore() {
         for (vector<DLink<int>*>::iterator it = blockStore.begin();
-             it != blockStore.end(); it++) {
-            delete[] * it;
+                it != blockStore.end(); it++) {
+            delete[] *it;
         }
         blockStore.clear();
     }
 
-    DLink<T>* allocate(const T& ele)
-    {
+    DLink<T>* allocate(const T &ele) {
         if (curEmpty >= blkSize) {
             curEmpty = 0;
             curUsingBlkIndex = curUsingBlkIndex + 1;
-            if (curUsingBlkIndex >= (int)blockStore.size()) {
+            if (curUsingBlkIndex >= (int) blockStore.size()) {
                 blockStore.push_back(new DLink<T>[blkSize]);
             }
         }
@@ -67,37 +60,28 @@ class BTListWrapper {
 private:
     BTList<T> list;
     DLinkStore<T>* dlinkStore;
-
 public:
     typedef typename BTList<T>::iterator iterator;
 
     BTListWrapper(DLinkStore<int>* dlinkStore)
-        : list(&Store::storeIndexList)
-        , dlinkStore(dlinkStore)
-    {
-    }
+    : list(&Store::storeIndexList), dlinkStore(dlinkStore) {}
 
     ~BTListWrapper() {}
 
-    size_t size()
-    {
+    size_t size() {
         return list.getSize();
     }
-    bool empty()
-    {
+    bool empty() {
         return list.getSize() == 0;
     }
-    void push_back(const T& ele)
-    {
+    void push_back(const T &ele) {
         DLink<T>* container = dlinkStore->allocate(ele);
         list.push_back(container, true);
     }
-    void remove(const T& ele)
-    {
+    void remove(const T &ele) {
         DLink<T>* target = NULL;
-        for (typename BTList<T>::iterator it = list.begin(); it != list.end()
-             && (target == NULL);
-             ++it) {
+        for(typename BTList<T>::iterator it = list.begin();it != list.end()
+        && (target == NULL);++it) {
             if (*it == ele) {
                 target = it.getElt();
             }
@@ -106,34 +90,30 @@ public:
             list.erase(target, true);
         }
     }
-    void erase(iterator& it)
-    {
+    void erase(iterator &it) {
         list.erase(it.getElt(), true);
     }
-    iterator begin() { return list.begin(); }
-    iterator end() { return list.end(); }
+    iterator begin() {return list.begin();}
+    iterator end() {return list.end();}
 };
 
 class Graph {
 
 private:
+
     // structure representing an edge
     struct List_Node {
         // entities need to backtrack
         StoreCost weight; // the weight
-        StoreCost cap; //the capacity, if cap = 0, the edge is set to "deleted"
+        StoreCost cap;    //the capacity, if cap = 0, the edge is set to "deleted"
         // entities need not backtrack
-        int adj; //the node connecting to
-        int tag; // the label of the edge
+        int adj;     //the node connecting to
+        int tag;     // the label of the edge
         int rEdgeIndex; // the pointer to the opposite edge
-        List_Node(int depth, int a = -1, Cost w = 0, Cost c = 0, int t = NO_TAG, int rIndex = -1)
-            : weight(w)
-            , cap(c)
-            , adj(a)
-            , tag(t)
-            , rEdgeIndex(rIndex)
-        {
-        }
+        List_Node (int depth, int a = -1, Cost w = 0, Cost c = 0, int t = NO_TAG, int rIndex = -1)
+        : weight(w)
+        , cap(c)
+        , adj(a), tag(t), rEdgeIndex(rIndex) {}
     };
 
     // structure representing a node
@@ -143,18 +123,16 @@ private:
         vector<BTListWrapper<EdgePtr>*> edgeList;
         BTListWrapper<int> neighbor;
 
-        Vertex(int n, int depth, DLinkStore<int>* dLinkStore)
-            : edgeList(n)
-            , neighbor(dLinkStore)
+        Vertex (int n, int depth, DLinkStore<int>* dLinkStore)
+        : edgeList(n)
+        , neighbor(dLinkStore)
         {
-            for (int i = 0; i < n; i++)
-                edgeList[i] = new BTListWrapper<int>(dLinkStore);
+            for (int i=0;i<n;i++) edgeList[i] = new BTListWrapper<int>(dLinkStore);
         }
 
         ~Vertex()
         {
-            for (unsigned int i = 0; i < edgeList.size(); i++)
-                delete edgeList[i];
+            for (unsigned int i=0;i<edgeList.size();i++) delete edgeList[i];
         }
     };
 
@@ -180,7 +158,7 @@ private:
     DLinkStore<int> intDLinkStore;
 
     // do not allow copy
-    Graph(const Graph& g);
+    Graph(const Graph &g);
 
 public:
     // constructor
@@ -194,12 +172,11 @@ public:
     // if tag != -1, multiple edge not allowed
     // if addReverse = true, the reverse edge (v,u) with weight = -w and c = 0 will be automatically added
     void addEdge(int u, int v, Cost w, Cost capacity = 1, int tag = NO_TAG,
-        bool addReverse = true)
-    {
+            bool addReverse = true) {
         addEdgeInternal(u, v, w, capacity, tag, addReverse, -1);
     }
-    int addEdgeInternal(int u, int v, Cost w, Cost capacity, int tag,
-        bool addReverse, int index);
+    int addEdgeInternal(int u, int v, Cost w, Cost capacity, int tag ,
+            bool addReverse, int index);
 
     // remove the edge from u to v with tag
     // return true if success
@@ -228,7 +205,7 @@ public:
     Cost getMinWeight(int u, int v, int tag = NO_TAG);
 
     // return the number of nodes in the graph
-    int size() const { return gsize; }
+    int size() const {return gsize;}
 
     // add a flow of flow value flowval starting from u to v following the
     // shorteat path
@@ -244,9 +221,8 @@ public:
     // return :
     // a pair <cost,exist>, where cost is the cost of the augmenting path,
     // exist returns true if such a path from s to t exists.
-    pair<Cost, bool> augment(int s, int t, bool can_change);
-    pair<Cost, bool> augment(int s, int t, bool can_change, vector<pair<int, int> >& edges)
-    {
+    pair<Cost,bool> augment(int s, int t, bool can_change);
+    pair<Cost,bool> augment(int s, int t, bool can_change, vector<pair<int,int> > &edges) {
         pair<Cost, bool> result = augment(s, t, can_change);
         if (result.second && !can_change) {
             edges.clear();
@@ -261,13 +237,12 @@ public:
 
     // remove all negative cycles in the graph by augmentation
     // cost is modified when all negative cycles are removed.
-    void removeNegativeCycles(StoreCost& cost);
+    void removeNegativeCycles(StoreCost &cost);
 
     // shortest path algorithms (using Bellmanford)
-    void shortest_path(list<int>& sources, bool& nevloop);
+    void shortest_path(list<int> &sources, bool &nevloop);
 
-    void shortest_path(int source)
-    {
+    void shortest_path(int source) {
         list<int> sources;
         bool nevLoop;
 
@@ -275,18 +250,16 @@ public:
         shortest_path(sources, nevLoop);
 
         if (nevLoop) {
-            cout << "negative loop exists from " << endl;
+            cout << "negative loop exists from " <<endl;
             print();
             exit(1);
         }
     }
 
-    void shortest_path(int source, vector<Cost>& pathCost)
-    {
+    void shortest_path(int source, vector<Cost> &pathCost) {
         shortest_path(source);
         pathCost.resize(size());
-        for (int i = 0; i < size(); i++)
-            pathCost[i] = d[i];
+        for (int i=0;i<size();i++) pathCost[i] = d[i];
     }
 
     // shortest path algorithm (using Dijkstra with reweighting)
@@ -299,71 +272,58 @@ public:
 		}*/
 
     // just for checking
-    void print()
-    {
+    void print() {
         print(cout);
     }
-    void print(ostream& os);
+    void print(ostream &os);
     void printPath(int s, int t);
 
     // iterate each in-coming edges
     class iterator;
     friend class iterator;
     class iterator {
+        int node;
         vector<List_Node*>::iterator next_edge;
-
     public:
-        iterator()
-        {
-        }
-        iterator(vector<List_Node*>::iterator _start)
-            : next_edge(_start)
-        {
-        }
+        iterator() : node(0) {}
+        iterator(int _node, vector<List_Node*>::iterator _start) :
+            node(_node), next_edge(_start) {}
 
-        iterator& operator++()
-        { // Prefix form
+        iterator &operator++() {    // Prefix form
             next_edge++;
             return *this;
         }
 
-        iterator& operator--()
-        { // Prefix form
+        iterator &operator--() {    // Prefix form
             next_edge--;
             return *this;
         }
 
-        int adjNode()
-        {
+        int adjNode() {
             return (*next_edge)->adj;
         }
 
-        Cost weight()
-        {
+        Cost weight() {
             return (*next_edge)->weight;
         }
 
-        Cost capacity()
-        {
+        Cost capacity() {
             return (*next_edge)->cap;
         }
 
-        int tag()
-        {
+        int tag() {
             return (*next_edge)->tag;
         }
 
         // To see if you're at the end:
-        bool operator==(const iterator& iter) const { return next_edge == iter.next_edge; }
-        bool operator!=(const iterator& iter) const { return next_edge != iter.next_edge; }
+        bool operator==(const iterator &iter) const {return next_edge == iter.next_edge;}
+        bool operator!=(const iterator &iter) const {return next_edge != iter.next_edge;}
     };
-    iterator begin(int node)
-    {
-        return iterator(adjlist[node].begin());
+    iterator begin(int node) {
+        return iterator(node, adjlist[node].begin());
     }
-    iterator end(int node)
-    {
-        return iterator(adjlist[node].end());
+    iterator end(int node) {
+        return iterator(node, adjlist[node].end());
     }
 
     // iterate each in-coming edges between two nodes
@@ -371,53 +331,43 @@ public:
     friend class edge_iterator;
     class edge_iterator {
         BTListWrapper<int>::iterator next_edge;
-        vector<List_Node*>& edgeInfo;
-
+        vector<List_Node*> &edgeInfo;
     public:
         //edge_iterator() {}
         edge_iterator(BTListWrapper<int>::iterator _start,
-            vector<List_Node*>& _edgeInfo)
-            : next_edge(_start)
-            , edgeInfo(_edgeInfo)
-        {
-        }
+                vector<List_Node*> &_edgeInfo)
+        : next_edge(_start)
+        , edgeInfo(_edgeInfo) {}
 
-        edge_iterator& operator++()
-        { // Prefix form
+        edge_iterator &operator++() {    // Prefix form
             ++next_edge;
             return *this;
         }
 
-        int adjNode()
-        {
+        int adjNode() {
             return edgeInfo[*next_edge]->adj;
         }
 
-        Cost weight()
-        {
+        Cost weight() {
             return edgeInfo[*next_edge]->weight;
         }
 
-        Cost capacity()
-        {
+        Cost capacity() {
             return edgeInfo[*next_edge]->cap;
         }
 
-        int tag()
-        {
+        int tag() {
             return edgeInfo[*next_edge]->tag;
         }
 
         // To see if you're at the end:
-        bool operator==(const edge_iterator& iter) const { return next_edge == iter.next_edge; }
-        bool operator!=(const edge_iterator& iter) const { return next_edge != iter.next_edge; }
+        bool operator==(const edge_iterator &iter) const {return next_edge == iter.next_edge;}
+        bool operator!=(const edge_iterator &iter) const {return next_edge != iter.next_edge;}
     };
-    edge_iterator begin(int u, int v)
-    {
+    edge_iterator begin(int u, int v) {
         return edge_iterator(vertexList[u]->edgeList[v]->begin(), adjlist[u]);
     }
-    edge_iterator end(int u, int v)
-    {
+    edge_iterator end(int u, int v) {
         return edge_iterator(vertexList[u]->edgeList[v]->end(), adjlist[u]);
     }
 
@@ -426,36 +376,34 @@ public:
     friend class node_iterator;
     class node_iterator {
         BTListWrapper<int>::iterator next_node;
-
     public:
         node_iterator(BTListWrapper<int>::iterator _start)
-            : next_node(_start)
-        {
-        }
+        : next_node(_start)
+        {}
 
-        node_iterator& operator++()
-        { // Prefix form
+        node_iterator &operator++() {    // Prefix form
             ++next_node;
             return *this;
         }
 
-        int operator*()
-        {
+        int operator*() {
             return *next_node;
         }
 
         // To see if you're at the end:
-        bool operator==(const node_iterator& iter) const { return next_node == iter.next_node; }
-        bool operator!=(const node_iterator& iter) const { return next_node != iter.next_node; }
+        bool operator==(const node_iterator &iter) const {return next_node == iter.next_node;}
+        bool operator!=(const node_iterator &iter) const {return next_node != iter.next_node;}
+
     };
-    node_iterator node_begin(int node)
-    {
+    node_iterator node_begin(int node) {
         return node_iterator(vertexList[node]->neighbor.begin());
     }
-    node_iterator node_end(int node)
-    {
+    node_iterator node_end(int node) {
         return node_iterator(vertexList[node]->neighbor.end());
     }
+
+
+
 };
 
 #endif
@@ -466,3 +414,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

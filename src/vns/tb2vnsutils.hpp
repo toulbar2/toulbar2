@@ -16,13 +16,10 @@
 
 void fusionCluster(TCDGraph::vertex_descriptor v, TCDGraph::vertex_descriptor p, TCDGraph& cg);
 void treeClusterFusion(TCDGraph::vertex_descriptor p, TCDGraph::vertex_descriptor v, TCDGraph& cg);
-void cluster_graph_absorption(TCDGraph& input, TCDGraph& output);
-void print_decomposition(ostream& os, TCDGraph& cg);
 
 class TrueRem {
 public:
-    bool operator()(Cluster_edge e)
-    {
+    bool operator()(Cluster_edge e) {
         return true;
     }
 };
@@ -30,12 +27,10 @@ public:
 class IsRemovable {
 public:
     set<Cluster_edge> removable;
-    IsRemovable(set<Cluster_edge>& s)
-    {
+    IsRemovable(set<Cluster_edge>& s) {
         removable = s;
     }
-    bool operator()(Cluster_edge e)
-    {
+    bool operator()(Cluster_edge e) {
         return removable.count(e) > 0;
     }
 };
@@ -55,21 +50,17 @@ struct StructCluster {
 
     float BestTime;
 
-    bool isIn(int variable)
-    {
+    bool isIn(int variable) {
         return belong[variable];
     }
-    bool isSeparator(int variable)
-    {
+    bool isSeparator(int variable) {
         return (belong[variable] == 2);
     }
-    bool isProper(int variable)
-    {
+    bool isProper(int variable) {
         return (belong[variable] == 1);
     }
 
-    void display()
-    {
+    void display() {
         cout << size << "\t(s=" << sizeSeparator << "/p=" << sizeProper
              << ") \t all{";
         for (int i = 0; i < size; i++) {
@@ -96,10 +87,9 @@ struct StructCluster {
         //cout << "}";
         cout << endl;
     }
-    void display2()
-    {
+    void display2() {
         ToulBar2::vnsOutput << size << "\t(s=" << sizeSeparator << "/p="
-                            << sizeProper << ") \t all{";
+                             << sizeProper << ") \t all{";
         for (int i = 0; i < size; i++) {
             if (i)
                 ToulBar2::vnsOutput << ",";
@@ -114,7 +104,7 @@ struct StructCluster {
     }
 };
 
-class TreeDecRefinement : public LocalSearch {
+class TreeDecRefinement: public LocalSearch {
 protected:
     // Decomposition
     TCDGraph m_graph;
@@ -125,20 +115,17 @@ protected:
     vector<StructCluster> clusters;
 
 public:
-    TreeDecRefinement(Cost initUpperBound)
-        : LocalSearch(initUpperBound)
-        , nbClusters(0)
-        , nbSeparators(0)
-    {
-    }
+    TreeDecRefinement(Cost initUpperBound) : LocalSearch(initUpperBound), nbClusters(0), nbSeparators(0) {}
     ~TreeDecRefinement() {}
 
-    bool solve();
+    virtual bool solveLS();
 
     // decomposition tools
     void load_decomposition();
+    void cluster_graph_absorption();
 
     //
+    void print_decomposition(TCDGraph m_graph);
     void print_dec_satistics();
     double ecart_type(vector<int> data);
 };

@@ -27,40 +27,43 @@
 
 #include <limits>
 
-namespace CSPXMLParser {
-using namespace std;
+namespace CSPXMLParser
+{
+  using namespace std;
 
-class DefaultCostRepresentation {
-public:
+  class DefaultCostRepresentation
+  {
+  public:
     // type which holds a cost
     typedef int Cost;
 
-    static void assignInfinity(Cost& c)
+    static void assignInfinity(Cost &c)
     {
-        c = numeric_limits<Cost>::max(); // max. value
+      c=numeric_limits<Cost>::max(); // max. value
     }
 
-    static bool isInfinity(const Cost& c)
+    static bool isInfinity(const Cost &c)
     {
-        return c == numeric_limits<Cost>::max();
+      return c==numeric_limits<Cost>::max();
     }
-};
+  };
 
-class AltCostRepresentation {
-public:
+  class AltCostRepresentation
+  {
+  public:
     // type which holds a cost
     typedef int Cost;
 
-    static void assignInfinity(Cost& c)
+    static void assignInfinity(Cost &c)
     {
-        c = -1; // conventional value
+      c=-1; // conventional value
     }
 
-    static bool isInfinity(const Cost& c)
+    static bool isInfinity(const Cost &c)
     {
-        return c < 0;
+      return c<0;
     }
-};
+  };
 
 } // namespace
 #endif

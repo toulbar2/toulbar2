@@ -7,12 +7,10 @@
  */
 
 #include "tb2localsearch.hpp"
-#include "core/tb2wcsp.hpp"
+#include "tb2wcsp.hpp"
 
-LocalSearch::LocalSearch(Cost initUpperBound)
-    : Solver(initUpperBound)
-    , bestUb(MAX_COST)
-    , lastUb(MAX_COST)
+LocalSearch::LocalSearch(Cost initUpperBound) :
+        Solver(initUpperBound), bestUb(MAX_COST), lastUb(MAX_COST)
 {
 }
 
@@ -29,23 +27,14 @@ void LocalSearch::newSolution()
         lastSolution[i] = wcsp->getValue(i);
     }
     lastUb = wcsp->getLb();
-    if (ToulBar2::lds)
-        throw TimeOut(); // force VNS to restart with smallest search parameters at each solution
+    if (ToulBar2::lds) throw TimeOut(); // force VNS to restart with smallest search parameters at each solution
 }
 
 /// This function generates the initial solution
 /// \param mode : the generation method
 /// \param solutionInit : a map to store the initial solution
-Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Value>& solutionInit, bool& complete)
+Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Value>& solutionInit, bool &complete)
 {
-    if (lastUb < MAX_COST && lastSolution.size() == wcsp->numberOfVariables()) { // reuse INCOP solution or any solution found
-        for (map<int, Value>::iterator it = lastSolution.begin(); it != lastSolution.end(); ++it) {
-            solutionInit[(*it).first] = (*it).second;
-        }
-        complete = (lastUb == wcsp->getLb());
-        return lastUb;
-    }
-
     Cost cost = MAX_COST;
     complete = false;
     vector<int> dumvariables;
@@ -53,40 +42,35 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
     int lds = ToulBar2::lds;
     switch (mode) {
     case LS_INIT_RANDOM:
-        if (ToulBar2::verbose >= 1)
-            cout << "solution init random" << endl;
+        if (ToulBar2::verbose >= 1) cout << "solution init random" << endl;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); ++i) {
             int res;
             Value* val = new Value[wcsp->getDomainSize(i)];
             wcsp->getEnumDomain(i, val);
             res = (myrand() % wcsp->getDomainSize(i));
             solutionInit[i] = *(val + res);
-            delete[] val;
         }
         cost = evaluate_partialInstantiation(solutionInit);
         break;
     case LS_INIT_INF:
-        if (ToulBar2::verbose >= 1)
-            cout << "solution init inf" << endl;
+        if (ToulBar2::verbose >= 1) cout << "solution init inf" << endl;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); ++i) {
             solutionInit[i] = wcsp->getInf(i);
         }
         cost = evaluate_partialInstantiation(solutionInit);
         break;
     case LS_INIT_SUP:
-        if (ToulBar2::verbose >= 1)
-            cout << "solution init sup" << endl;
+        if (ToulBar2::verbose >= 1) cout << "solution init sup" << endl;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); ++i) {
             solutionInit[i] = wcsp->getSup(i);
         }
         cost = evaluate_partialInstantiation(solutionInit);
         break;
     case LS_INIT_DFBB:
-        if (ToulBar2::verbose >= 1)
-            cout << "solution init DFBB" << endl;
+        if (ToulBar2::verbose >= 1) cout << "solution init DFBB" << endl;
         ToulBar2::lds = 1; // ensures DFBB will stop after the first solution is found if any exists
         complete = repair_recursiveSolve(dumvariables, dumvalues, wcsp->getUb()); // forbidden assignments are NOT allowed!
-        assert(complete || lastUb < MAX_COST);
+        assert(complete || lastUb < wcsp->getUb());
         for (map<int, Value>::iterator it = lastSolution.begin(); it != lastSolution.end(); ++it) {
             solutionInit[(*it).first] = (*it).second;
         }
@@ -94,9 +78,8 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
         ToulBar2::lds = lds;
         break;
     case LS_INIT_LDS0:
-    default: // search using LDS with 0 or more discrepancies
-        if (ToulBar2::verbose >= 1)
-            cout << "solution init LDS " << mode << endl;
+    default:
+        if (ToulBar2::verbose >= 1) cout << "solution init LDS " << mode << endl;
         ToulBar2::lds = 0; // ensures LDS will explore without stopping at the first solution
         complete = repair_recursiveSolve(abs(mode), dumvariables, dumvalues, wcsp->getUb()); // first, forbidden assignments are NOT allowed!
         if (!complete && lastUb == MAX_COST) {
@@ -114,7 +97,7 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
 }
 
 Cost LocalSearch::evaluate_partialInstantiation(
-    vector<int>& variables, vector<int>& values)
+        vector<int>& variables, vector<int>& values)
 {
     Cost cost = MAX_COST;
     Store::store();
@@ -146,15 +129,12 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
         int nbvar = unassignedVars->getSize();
         ToulBar2::limited = true;
         wcsp->assignLS(variables, values);
-        if (unassignedVars->getSize() == nbvar)
-            ToulBar2::limited = false;
+        if (unassignedVars->getSize() == nbvar) ToulBar2::limited = false;
         if (ToulBar2::DEE == 4)
             ToulBar2::DEE_ = 0; // only PSNS in preprocessing
         try {
-            if (discrepancy >= 0)
-                recursiveSolveLDS(discrepancy);
-            else
-                recursiveSolve();
+            if (discrepancy >= 0) recursiveSolveLDS(discrepancy);
+            else recursiveSolve();
         } catch (TimeOut) {
             ToulBar2::limited = true;
         }

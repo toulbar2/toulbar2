@@ -11,7 +11,18 @@
 #define TB2VNS_HPP_
 
 #include "tb2localsearch.hpp"
+#include <set>
+#include <queue>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <list>
+#include <iostream>
+#include <sstream>
 
+#include <algorithm>
 #include <boost/tokenizer.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -53,39 +64,62 @@ typedef set<int> zone;
 
 #ifdef BOOSTGRAPH134
 namespace boost {
-inline bool operator<(const Cluster_edge& __x, const Cluster_edge& __y)
+inline bool operator<(const Cluster_edge& __x, const Cluster_edge&__y)
 {
     return __x.get_property() < __y.get_property();
 }
 }
 #endif
 
-extern void cluster_graph_absorption(TCDGraph& input, TCDGraph& output);
-extern void print_decomposition(ostream& os, TCDGraph& cg);
-
 class NeighborhoodStructure {
 protected:
     WeightedCSP* wcsp;
     LocalSearch* l;
-
 public:
     //initialization
-    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_) = 0;
-    virtual const zone getNeighborhood(size_t neighborhood_size) = 0;
-    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const = 0;
+    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_)=0;
+    virtual const zone getNeighborhood(size_t neighborhood_size) =0;
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) =0;
     virtual ~NeighborhoodStructure() {}
     virtual const bool incrementK() { return true; }
 };
 
 // for vns/lds-cp
-class RandomNeighborhoodChoice : public NeighborhoodStructure {
+class RandomNeighborhoodChoice: public NeighborhoodStructure {
+
+protected:
+	//
+	zone last_zone;
+	// Toulbar2::AA_vector index of the last first element chosen for the last neighborhood
+	// Used for a diversification step (if < 0 this value is not considered) 
+	unsigned int last_first_selection;
+	// Choose an index according to probabilities
+	unsigned int getIndexWithProba(vector<double> proba);
+	// Select a point randomly and uniformly 
+	unsigned int randFirstChoice(zone z);
+	// Select a point according to its =1/distance from the molecule's centroid
+	unsigned int probaFirstChoice(zone z);
+	// Select a point according to its =distance from the molecule's centroid
+	unsigned int diversifyFirstChoice(zone z);
+	// Select the first point for the algorithms which build the neighborhoods
+	unsigned int getFirstElt(size_t neighborhood_size, zone z); 
+	// Build a neighborhood selecting point randomly and uniformly in the zone
+	const zone directShuffle(size_t neighborhood_size, zone z);
+	// Build a neighborhood selecting points in the zone according to their distances from the first selected element
+	const zone probaDistance(size_t neighborhood_size, zone z);
+	// Build a neighborhood with the nearest points of the first selected element
+	const zone kNearest(size_t neighborhood_size, zone z);
+	// Display data of a neighborhood and its first selected element
+	void printNeighborhood(zone z, unsigned int first_selected_elt);
+
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
-    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z);
+
 };
 
-class ClustersNeighborhoodStructure : public NeighborhoodStructure {
+class ClustersNeighborhoodStructure: public NeighborhoodStructure {
 protected:
     vector<int> clusters;
     TCDGraph m_graph;
@@ -93,43 +127,34 @@ protected:
     NeighborhoodStructure* insideHeuristic;
     uint counter;
     uint precK;
-    uint maxClusterSize;
-    uint minClusterSize;
-
 public:
     void load_decomposition();
-    void printClusters(ostream& os) { print_decomposition(os, m_graph); }
-    int getSize() const
+    const int getSize()
     {
         return clusters.size();
     }
-    int getMaxClusterSize() const
+    TCDGraph getGraph()
     {
-        return maxClusterSize;
+        return m_graph;
     }
-    int getMinClusterSize() const
-    {
-        return minClusterSize;
-    }
-    double getMeanClusterSize() const;
-    uint getMedianClusterSize() const;
 };
 
 // for dgvns
-class RandomClusterChoice : public ClustersNeighborhoodStructure {
+class RandomClusterChoice: public ClustersNeighborhoodStructure {
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
-    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z);
     virtual const bool incrementK();
+
 };
 
 // for rpdgvns
-class ParallelRandomClusterChoice : public ClustersNeighborhoodStructure {
+class ParallelRandomClusterChoice: public ClustersNeighborhoodStructure {
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
-    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z);
     // Master / Slave
     virtual const zone SlaveGetNeighborhood(uint CurrentCluster, size_t neighborhood_size);
     virtual const zone SlaveGetNeighborhood(uint CurrentCluster, uint number, size_t NeighborhoodSize);

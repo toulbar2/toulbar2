@@ -14,12 +14,9 @@
 
 class VNSSolver : public LocalSearch {
 public:
-    VNSSolver(Cost initUpperBound)
-        : LocalSearch(initUpperBound)
-    {
-    }
+    VNSSolver(Cost initUpperBound) : LocalSearch(initUpperBound){}
     ~VNSSolver() {}
-    bool solve() FINAL;
+    virtual bool solveLS();
 };
 
 #endif /* TB2DGVNS_HPP_ */

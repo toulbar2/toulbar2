@@ -27,55 +27,55 @@ inline bool MPI_interrupted()
     return flag;
 }
 
-typedef int* unit_of_work_t;
-typedef int* unit_result_t;
+typedef int* unit_of_work_t ;
+typedef int* unit_result_t ;
 
 class MPIEnv {
 public:
-    int ntasks;
-    int myrank; // rang du processus
-    int processes; // number of process to be initialize according to the number of cluster
-    int buffsize;
-    int* sendbuff;
-    int* recvbuff;
+  int ntasks;
+  int myrank; // rang du processus
+  int processes ;// number of process to be initialize according to the number of cluster
+  int buffsize ;
+  int* sendbuff;
+  int* recvbuff;
+  MPI_Comm new_comm;
+  unit_result_t aa ;
 };
 
-class NeighborhoodStructure;
-class ParallelRandomClusterChoice;
+class NeighborhoodStructure ;
+class ParallelRandomClusterChoice ;
 
 class CooperativeParallelDGVNS : public LocalSearch {
 protected:
-    MPIEnv env0;
-    vector<int> file;
-    int BestTimeS;
-    int BestTimeMS;
-
+	MPIEnv env0 ;
+	vector<int> file ;
+	int BestTimeS ;
+	int BestTimeMS ;
 public:
-    CooperativeParallelDGVNS(Cost initUpperBound, MPIEnv env0Global)
-        : LocalSearch(initUpperBound)
-    {
-        env0 = env0Global;
-        BestTimeS = 0;
-        BestTimeMS = 0;
-    }
-    ~CooperativeParallelDGVNS() {}
+	CooperativeParallelDGVNS(Cost initUpperBound, MPIEnv env0Global) : LocalSearch(initUpperBound) {
+		env0=env0Global ;
+		BestTimeS=0 ;
+		BestTimeMS=0 ;
+	 }
+	~CooperativeParallelDGVNS() {}
 
-    bool solve() FINAL;
-    // Model
-    void master();
-    void slave();
-    // Base functions
-    void VnsLdsCP(MPIEnv& env0, double btime, ParallelRandomClusterChoice* h);
-    // Clustering functions
-    uint getCluster();
+	virtual bool solveLS();
+	// Model
+	void master();
+	void slave();
+	// Base functions
+	void VnsLdsCP(MPIEnv &env0, double btime, ParallelRandomClusterChoice* h);
+	// Clustering functions
+	uint getCluster() ;
 
-    // Conversions tools
-    void SolToMsg(MPIEnv& env0, uint cluster, uint numberclu, int kinit, int kmax, Cost bestUb, int sec, int msec, map<int, int>& bestSolution);
-    void MsgToSol(MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k, int& kmax, Cost& bestUb, int& sec, int& msec, map<int, int>& bestSolution);
+	// Conversions tools
+	void SolToMsg(MPIEnv &env0, uint cluster, uint numberclu,int kinit, int kmax,Cost bestUb, int sec, int msec,map<int ,int >& bestSolution ) ;
+	void MsgToSol(MPIEnv &env0, int nov, uint &cluster, uint &numberclu,int &k, int &kmax,Cost &bestUb, int &sec, int &msec, map<int ,int >& bestSolution );
 };
 
 #endif
 #endif /* TB2CPDGVNS_HPP_ */
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

@@ -6,7 +6,7 @@
 #ifndef TB2BEP_HPP_
 #define TB2BEP_HPP_
 
-#include "core/tb2wcsp.hpp"
+#include "tb2wcsp.hpp"
 
 class BEP {
 public:
@@ -17,13 +17,10 @@ public:
     vector<int> revenue;
     vector<int> delay;
 
-    BEP()
-        : size(0)
-    {
-    }
+    BEP() : size(0) {}
 
-    void read(const char* fileName, WCSP* wcsp);
-    void printSolution(WCSP* wcsp);
+    void read(const char *fileName, WCSP *wcsp);
+    void printSolution(WCSP *wcsp);
 };
 
 #endif /*TB2BEP_HPP_*/
@@ -34,3 +31,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

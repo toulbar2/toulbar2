@@ -29,92 +29,91 @@
 #include "XMLParser_constants.h"
 #include "AST.hh"
 
-namespace CSPXMLParser {
+namespace CSPXMLParser
+{
 
 using namespace std;
 
-enum CSPDefinitionType { RelationType,
-    PredicateType,
-    GlobalConstraintType, // don't change these ones
-    DomainType,
-    VariableType,
-    ConstraintType,
-    UndefinedType }; // UndefinedType must come last
+enum CSPDefinitionType 
+  {RelationType,PredicateType,GlobalConstraintType, // don't change these ones
+   DomainType,VariableType,ConstraintType,
+   UndefinedType}; // UndefinedType must come last
 
 class AST; // Abstract Syntax Tree representing an expression
 
-class CSPParserCallback {
+class CSPParserCallback
+{
 public:
-    virtual ~CSPParserCallback() {}
+  virtual ~CSPParserCallback() {}
 
-    /**
+  /**
    * signal the beginning of parsing
    *
    * @param name: name of the instance
    */
-    virtual void beginInstance(const string& name) {}
+  virtual void beginInstance(const string & name) {}
 
-    /**
+  /**
    * this callback is called just after beginInstance() and specifies
    * the type of the instance
    *
    * @param instanceType: type of instance (CSP,WCSP,QCSP,...)
    */
-    virtual void instanceType(InstanceType instanceType) {}
+  virtual void instanceType(InstanceType instanceType) {}
 
-    /********************************************************************/
+  /********************************************************************/
 
-    /**
+  /**
    * callback called at the beginning of the domains declarations
    *
    * @param nbDomains: number of domains that will be declared
    */
-    virtual void beginDomainsSection(int nbDomains) {}
-
-    /**
+  virtual void beginDomainsSection(int nbDomains) {}
+  
+  /**
    * callback called at the beginning of the declaration of one domain
    *
    * @param name: identifier of the domain
    * @param idDomain: identifier assigned to the domain name (starting from 0)
    * @param nbValue: number of values in the domain
    */
-    virtual void beginDomain(const string& name, int idDomain, int nbValue) {}
+  virtual void beginDomain(const string & name, int idDomain, int nbValue) {}
 
-    /**
+  /**
    * add a single value to the current domain
    *
    * @param v: value to add to the domain
    */
-    virtual void addDomainValue(int v) {}
+  virtual void addDomainValue(int v) {}
 
-    /**
+  /**
    * add the range of values [first..last] to the current domain
    *
    * @param first: first value to add to the domain
    * @param last: last value to add to the domain
    */
-    virtual void addDomainValue(int first, int last) {}
+  virtual void addDomainValue(int first,int last) {}
 
-    /**
+  /**
    * ends the definition of the current domain
    */
-    virtual void endDomain() {}
+  virtual void endDomain() {}
 
-    /**
+  /**
    * end the definition of all domains
    */
-    virtual void endDomainsSection() {}
+  virtual void endDomainsSection() {}
 
-    /********************************************************************/
+  /********************************************************************/
 
-    /**
+  /**
    * callback called at the beginning of the variables declarations
    *
    * @param nbVariables: number of variables that will be declared
    */
-    virtual void beginVariablesSection(int nbVariables) {}
-
-    /**
+  virtual void beginVariablesSection(int nbVariables) {}
+  
+  /**
    * callback called to define a new variable
    *
    * @param name: identifier of the variable
@@ -122,24 +121,25 @@ public:
    * @param domain: identifier of the variable domain
    * @param idDomain: identifier assigned to the domain name (starting from 0)
    */
-    virtual void addVariable(const string& name, int idVar,
-        const string& domain, int idDomain) {}
+  virtual void addVariable(const string & name, int idVar, 
+			   const string & domain, int idDomain) {}
 
-    /**
+  /**
    * end the definition of all variables
    */
-    virtual void endVariablesSection() {}
+  virtual void endVariablesSection() {}
 
-    /********************************************************************/
 
-    /**
+  /********************************************************************/
+
+  /**
    * callback called at the beginning of the relations declarations
    *
    * @param nbRelations: number of relations that will be declared
    */
-    virtual void beginRelationsSection(int nbRelations) {}
-
-    /**
+  virtual void beginRelationsSection(int nbRelations) {}
+  
+  /**
    * callback called at the beginning of the declaration of one relation
    *
    * @param name: identifier of the relation
@@ -149,10 +149,10 @@ public:
    * @param isSupport: true if tuples represent support, false if
    *                  tuples represent conflicts
    */
-    virtual void beginRelation(const string& name, int idRel,
-        int arity, int nbTuples, RelType relType) {}
+  virtual void beginRelation(const string & name, int idRel,
+			     int arity, int nbTuples, RelType relType) {}
 
-    /**
+  /**
    * this callback is called only for soft relations, just after
    * beginRelation has been called
    *
@@ -161,105 +161,106 @@ public:
    * @param defaultCost: cost of any tuple not explicitely listed in
    * the relation
    */
-    virtual void relationDefaultCost(const string& name, int idRel,
-        int defaultCost) {}
+  virtual void relationDefaultCost(const string & name, int idRel,
+				   int defaultCost) {}
 
-    /**
+  /**
    * add a single tuple to the current relation
    *
    * @param arity: the tuple arity
    * @param tuple: tuple to add to the relation (contains arity elements)
    */
-    virtual void addRelationTuple(int arity, int tuple[]) {}
+  virtual void addRelationTuple(int arity, int tuple[]) {}
 
-    /**
+  /**
    * add a single weighted tuple to the current relation
    *
    * @param arity: the tuple arity
    * @param tuple: tuple to add to the relation (contains arity elements)
    * @param cost: the cost of this tuple
    */
-    virtual void addRelationTuple(int arity, int tuple[], int cost) {}
+  virtual void addRelationTuple(int arity, int tuple[], int cost) {}
 
-    /**
+  /**
    * ends the definition of the current relation
    */
-    virtual void endRelation() {}
+  virtual void endRelation() {}
 
-    /**
+  /**
    * end the definition of all relations
    */
-    virtual void endRelationsSection() {}
+  virtual void endRelationsSection() {}
 
-    /********************************************************************/
+  /********************************************************************/
 
-    /**
+  /**
    * callback called at the beginning of the predicates declarations
    *
    * @param nbPredicates: number of predicates that will be declared
    */
-    virtual void beginPredicatesSection(int nbPredicates) {}
-
-    /**
+  virtual void beginPredicatesSection(int nbPredicates) {}
+  
+  /**
    * callback called at the beginning of the declaration of one predicate
    *
    * @param name: identifier of the predicate
    * @param idPred: identifier assigned to the predicate name (starting from 0)
    */
-    virtual void beginPredicate(const string& name, int idPred) {}
+  virtual void beginPredicate(const string & name, int idPred) {}
 
-    /**
+  /**
    * add a formal parameter to the current predicate
    *
    * @param pos: position of the formal parameter (0=first)
    * @param name: name of the parameter
    * @param type: type of the parameter
    */
-    virtual void addFormalParameter(int pos, const string& name, const string& type) {}
+  virtual void addFormalParameter(int pos, const string & name, const string & type) {}
 
-    /**
+  /**
    * provide the expression of the current predicate
    *
    * @param tree: the abstract syntax tree representing the expression
    */
-    virtual void predicateExpression(AST* tree) {}
+  virtual void predicateExpression(AST *tree) {}
 
-    /**
+
+  /**
    * provide the expression of the current predicate
    *
    * @param expr: the string representing the expression
    */
-    virtual void predicateExpression(const string& expr) {}
+  virtual void predicateExpression(const string &expr) {}
 
-    /**
+  /**
    * ends the definition of the current predicate
    */
-    virtual void endPredicate() {}
+  virtual void endPredicate() {}
 
-    /**
+  /**
    * end the definition of all predicates
    */
-    virtual void endPredicatesSection() {}
+  virtual void endPredicatesSection() {}
 
-    /********************************************************************/
+  /********************************************************************/
 
-    /**
+  /**
    * callback called at the beginning of the constraints declarations
    *
    * @param nbConstraints: number of constraints that will be declared
    */
-    virtual void beginConstraintsSection(int nbConstraints) {}
-
-    /**
+  virtual void beginConstraintsSection(int nbConstraints) {}
+  
+  /**
    * Only for WCSP instances, this callback is called immediately
    * after the beginConstraintsSection() callback
    *
    * @param maximalCost: instanciations with a cost greater or equal
    * to this cost are not acceptable solutions
    */
-    virtual void constraintsMaximalCost(int maximalCost) {}
+  virtual void constraintsMaximalCost(int maximalCost) {}
 
-    /**
+  /**
    * Only for WCSP instances, this callback is called immediately
    * after the constraintsMaximalCost() callback
    *
@@ -267,9 +268,9 @@ public:
    * instanciation (sometimes defined as the cost of a 0-ary
    * constraint)
    */
-    virtual void constraintsInitialCost(int initialCost) {}
+  virtual void constraintsInitialCost(int initialCost) {}
 
-    /**
+  /**
    * callback called at the beginning of the declaration of one constraint
    *
    * @param name: identifier of the constraint
@@ -281,35 +282,37 @@ public:
    *             GlobalConstraintType)
    * @param id: identifier associated to the reference
    */
-    virtual void beginConstraint(const string& name, int idConstr,
-        int arity,
-        const string& reference,
-        CSPDefinitionType type, int id,
-        const ASTList& scope) {}
+  virtual void beginConstraint(const string & name, int idConstr,
+			       int arity, 
+			       const string & reference, 
+			       CSPDefinitionType type, int id,
+			       const ASTList &scope) {}
 
-    /**
+  /**
    * provides the list of parameters of the constraint
    *
    * @param args: the list of effective parameters of the constraint
    */
-    virtual void constraintParameters(const ASTList& args) {}
+  virtual void constraintParameters(const ASTList &args) {}
 
-    /**
+  /**
    * ends the definition of the current constraint
    */
-    virtual void endConstraint() {}
+  virtual void endConstraint() {}
 
-    /**
+  /**
    * end the definition of all constraints
    */
-    virtual void endConstraintsSection() {}
+  virtual void endConstraintsSection() {}
 
-    /********************************************************************/
 
-    /**
+  /********************************************************************/
+
+
+  /**
    * signal the end of parsing
    */
-    virtual void endInstance() {}
+  virtual void endInstance() {}
 };
 
 } // namespace

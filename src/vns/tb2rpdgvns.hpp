@@ -17,6 +17,7 @@ struct pr { // use it later
     int k;
     int lds;
     bool synch;
+    Long rankNeighb;
 };
 
 typedef vector<pr> PR;
@@ -26,41 +27,36 @@ protected:
     MPIEnv env0;
     vector<int> file;
     PR vecPR;
-    //    vector<bool> clusterKmax;  // clusterKmax[c] is true if cluster c has its k = kmax
+    vector<bool> clusterKmax;  // clusterKmax[c] is true if cluster c has its k = kmax
     double startTime;
-
 public:
-    ReplicatedParallelDGVNS(Cost initUpperBound, MPIEnv env0Global)
-        : LocalSearch(initUpperBound)
-        , env0(env0Global)
-        , startTime(.0)
-    {
-    }
+    ReplicatedParallelDGVNS(Cost initUpperBound, MPIEnv env0Global) : LocalSearch(initUpperBound), env0(env0Global), startTime(.0) {}
     ~ReplicatedParallelDGVNS() {}
 
-    bool solve();
+    virtual bool solveLS();
     // Model
     bool radgvns();
     bool rsdgvns();
     bool slave();
-    void NeighborhoodChange(int strategy, int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
-    void DumpBestSol(bool improved = true);
-    bool VnsLdsCP(MPIEnv& env0, ParallelRandomClusterChoice* h);
+    void NeighborhoodChange(int strategy, int p, int &c, int kinit, int kmax, int discrepancy, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
+    void DumpBestSol();
+    bool VnsLdsCP(MPIEnv &env0, ParallelRandomClusterChoice* h);
 
     // strategies
 
-    void ChangeClusterAlways(int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
-    void ChangeClusterWhenNotImproved(int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
+    void ChangeClusterAlways(int p, int &c, int kinit, int kmax, int discrepancy, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
+    void ChangeClusterWhenNotImproved(int p, int &c, int kinit, int kmax, int discrepancy, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
 
     //Conversions tools
-    void SolToMsg(MPIEnv& env0, int cluster, int k, int discrepancy, Cost bestUb, map<int, Value>& bestSolution);
-    void SolToMsg2(MPIEnv& env0, Cost bestUb, map<int, Value>& bestSolution);
-    void MsgToSol(MPIEnv& env0, int nov, int& cluster, int& k, int& discrepancy, Cost& bestUb, map<int, Value>& bestSolution);
-    void MsgToSol2(MPIEnv& env0, int nov, Cost& bestUb, map<int, Value>& bestSolution);
+    void SolToMsg(MPIEnv &env0, int cluster, int k, int discrepancy, Cost bestUb, map<int, Value>& bestSolution);
+    void SolToMsg2(MPIEnv &env0, Cost bestUb, map<int, Value>& bestSolution);
+    void MsgToSol(MPIEnv &env0, int nov, int &cluster, int &k, int &discrepancy, Cost &bestUb, map<int, Value>& bestSolution);
+    void MsgToSol2(MPIEnv &env0, int nov, Cost &bestUb, map<int, Value>& bestSolution);
 };
 
 #endif
 #endif /* TB2RPDGVNS_HPP_ */
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

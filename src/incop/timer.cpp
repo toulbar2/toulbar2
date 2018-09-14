@@ -1,5 +1,5 @@
 #include "timer.h"
-#include <iostream>
+#include<iostream>
 #include <unistd.h>
 
 #ifndef WINDOWS
@@ -7,7 +7,10 @@
 #include <sys/resource.h>
 #endif
 
+
 // extern "C" int getrusage(__rusage_who, struct rusage *rusage);
+
+
 
 /*
  *  The virtual time of day and the real time of day are calculated and
@@ -17,8 +20,8 @@
  */
 
 #ifdef WINDOWS
-void start_timers(){};
-void stop_timers(Timer type){};
+void start_timers() {};
+void stop_timers(Timer type) {};
 
 #else
 static struct rusage res;
@@ -28,15 +31,20 @@ Time virtual_ulapse, virtual_slapse;
 static Time real_time;
 Time real_lapse;
 
+
 void start_timers()
 {
-    getrusage(RUSAGE_SELF, &res);
-    virtual_utime = (Time)res.ru_utime.tv_sec + (Time)res.ru_utime.tv_usec / 1000000.0;
-    virtual_stime = (Time)res.ru_stime.tv_sec + (Time)res.ru_stime.tv_usec / 1000000.0;
+	getrusage(RUSAGE_SELF, &res);
+	virtual_utime = (Time) res.ru_utime.tv_sec +
+	                (Time) res.ru_utime.tv_usec / 1000000.0;
+	virtual_stime = (Time) res.ru_stime.tv_sec +
+	                (Time) res.ru_stime.tv_usec / 1000000.0;
 
-    gettimeofday(&tp, NULL);
-    real_time = (Time)tp.tv_sec + (Time)tp.tv_usec / 1000000.0;
+	gettimeofday(&tp, NULL);
+	real_time = (Time) tp.tv_sec +
+	            (Time) tp.tv_usec / 1000000.0;
 }
+
 
 /*
  *  Stop the stopwatch and return the time used in seconds (either
@@ -44,16 +52,19 @@ void start_timers()
  */
 void stop_timers(Timer type)
 {
-    if (type == REAL) {
-        gettimeofday(&tp, NULL);
-        real_lapse = (Time)tp.tv_sec + (Time)tp.tv_usec / 1000000.0
-            - real_time;
-    } else {
-        getrusage(RUSAGE_SELF, &res);
-        virtual_ulapse = (Time)res.ru_utime.tv_sec + (Time)res.ru_utime.tv_usec / 1000000.0
-            - virtual_utime;
-        virtual_slapse = (Time)res.ru_stime.tv_sec + (Time)res.ru_stime.tv_usec / 1000000.0
-            - virtual_stime;
-    }
+	if (type == REAL) {
+		gettimeofday(&tp, NULL);
+		real_lapse = (Time) tp.tv_sec +
+		             (Time) tp.tv_usec / 1000000.0
+		             - real_time;
+	} else {
+		getrusage(RUSAGE_SELF, &res);
+		virtual_ulapse = (Time) res.ru_utime.tv_sec +
+		                 (Time) res.ru_utime.tv_usec / 1000000.0
+		                 - virtual_utime;
+		virtual_slapse = (Time) res.ru_stime.tv_sec +
+		                 (Time) res.ru_stime.tv_usec / 1000000.0
+		                 - virtual_stime;
+	}
 }
 #endif

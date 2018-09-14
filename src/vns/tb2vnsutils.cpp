@@ -7,13 +7,14 @@
  */
 
 #include "tb2vnsutils.hpp"
-#include "core/tb2wcsp.hpp"
+#include "tb2enumvar.hpp"
+#include "tb2binconstr.hpp"
 
 void fusionCluster(TCDGraph::vertex_descriptor v, TCDGraph::vertex_descriptor p, TCDGraph& cg)
 {
     set<int> varsfusion;
     set_union(cg[v].vars.begin(), cg[v].vars.end(), cg[p].vars.begin(),
-        cg[p].vars.end(), inserter(varsfusion, varsfusion.begin()));
+            cg[p].vars.end(), inserter(varsfusion, varsfusion.begin()));
     cg[p].vars = varsfusion;
     cg[v].mark = true;
 }
@@ -23,7 +24,7 @@ void treeClusterFusion(TCDGraph::vertex_descriptor p, TCDGraph::vertex_descripto
     TCDGraph::vertex_iterator vend;
     tie(tuples::ignore, vend) = vertices(cg);
     if (degree(v, cg) > 1 || p == *vend) //on est pas sur une feuille
-    {
+                             {
         TCDGraph::adjacency_iterator a, aend;
 
         tie(a, aend) = adjacent_vertices(v, cg);
@@ -34,51 +35,51 @@ void treeClusterFusion(TCDGraph::vertex_descriptor p, TCDGraph::vertex_descripto
             }
         }
     }
-    if (p == *vend)
-        return;
+    if (p == *vend) return;
     set<int> varsinter;
     set_intersection(cg[v].vars.begin(), cg[v].vars.end(), cg[p].vars.begin(),
-        cg[p].vars.end(), inserter(varsinter, varsinter.begin()));
-    //    int size_res = cg[v].vars.size() + cg[p].vars.size() - varsinter.size();
+            cg[p].vars.end(), inserter(varsinter, varsinter.begin()));
+    int size_res = cg[v].vars.size() + cg[p].vars.size() - varsinter.size();
 
     // si absorber à 90% merge whatever
-    if ((float)varsinter.size() / (float)cg[v].vars.size() >= fabs(ToulBar2::boostingBTD)
-        || (float)varsinter.size() / (float)cg[p].vars.size() >= fabs(ToulBar2::boostingBTD)) {
+    if ((float) varsinter.size() / (float) cg[v].vars.size() >= 0.9
+        || (float) varsinter.size() / (float) cg[p].vars.size() >= 0.9) {
         fusionCluster(v, p, cg);
-        //    } else {
-        //        // si absorber à 70% merge whatever merged size <= 100
-        //        if ((float)varsinter.size() / (float)cg[v].vars.size() >= 0.7
-        //            || (float)varsinter.size() / (float)cg[p].vars.size() >= 0.7) {
-        //            if (size_res <= 100)
-        //                fusionCluster(v, p, cg);
-        //        } else {
-        //            // si absorber à 50% merge whatever merged size <= 50
-        //            if ((float)varsinter.size() / (float)cg[v].vars.size() >= 0.5
-        //                || (float)varsinter.size() / (float)cg[p].vars.size() >= 0.5) {
-        //                if (size_res <= 50)
-        //                    fusionCluster(v, p, cg);
-        //            }
-        //        }
+    } else {
+        // si absorber à 70% merge whatever merged size <= 100
+        if ((float) varsinter.size() / (float) cg[v].vars.size() >= 0.7
+            || (float) varsinter.size() / (float) cg[p].vars.size() >= 0.7) {
+            if (size_res <= 100)
+                fusionCluster(v, p, cg);
+        } else {
+            // si absorber à 50% merge whatever merged size <= 50
+            if ((float) varsinter.size() / (float) cg[v].vars.size() >= 0.5
+                || (float) varsinter.size() / (float) cg[p].vars.size()
+                   >= 0.5) {
+                if (size_res <= 50)
+                    fusionCluster(v, p, cg);
+            }
+        }
     }
 }
 
-bool TreeDecRefinement::solve()
+bool TreeDecRefinement::solveLS()
 {
     load_decomposition();
-    cluster_graph_absorption(m_graph, abs_graph);
-    print_decomposition(ToulBar2::vnsOutput, abs_graph);
+    cluster_graph_absorption();
+    print_decomposition(abs_graph);
     return true;
 }
 
-void print_decomposition(ostream& os, TCDGraph& m_graph)
+void TreeDecRefinement::print_decomposition(TCDGraph m_graph)
 {
     TCDGraph::vertex_iterator v, vend, v2;
     unsigned int i = 0;
     for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
         zone z = m_graph[i].vars;
         for (zone::iterator it = z.begin(); it != z.end(); ++it)
-            os << (int)*it << " ";
-        os << endl;
+            ToulBar2::vnsOutput << (int) *it << " ";
+        ToulBar2::vnsOutput << endl;
         i++;
     }
 }
@@ -87,8 +88,8 @@ void TreeDecRefinement::print_dec_satistics()
 {
     ToulBar2::vnsOutput << "Number of clusters = " << nbClusters << endl;
     ToulBar2::vnsOutput
-        << "Number of separator variables = " << nbSeparators << " => "
-        << double(nbSeparators) / double(wcsp->numberOfVariables()) << endl;
+            << "Number of separator variables = " << nbSeparators << " => "
+            << double(nbSeparators) / double(wcsp->numberOfVariables()) << endl;
     int imax = 0, imin = 0;
     int max_size = clusters[0].size;
     int min_size = clusters[0].size;
@@ -113,27 +114,27 @@ void TreeDecRefinement::print_dec_satistics()
     double ecartype_separators = ecart_type(data_separators);
     ToulBar2::vnsOutput << "Cluster with maximum size:" << endl;
     ToulBar2::vnsOutput << "Number of variables: " << clusters[imax].size
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Number of proper variables: " << clusters[imax].sizeProper
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Number of separators: "
-                        << clusters[imax].sizeSeparator << endl;
+                         << clusters[imax].sizeSeparator << endl;
 
     ToulBar2::vnsOutput << "Cluster with minimum size:" << endl;
     ToulBar2::vnsOutput << "Number of variables: " << clusters[imin].size
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Number of proper variables: " << clusters[imin].sizeProper
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Number of separators: "
-                        << clusters[imin].sizeSeparator << endl;
+                         << clusters[imin].sizeSeparator << endl;
 
     ToulBar2::vnsOutput << "Clusters deviation (standard deviation):" << endl;
     ToulBar2::vnsOutput << "Deviation on variables size: " << ecartype_size
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Deviation on proper variables size: " << ecartype_propers
-                        << endl;
+                         << endl;
     ToulBar2::vnsOutput << "Deviation on separators size: "
-                        << ecartype_separators << endl;
+                         << ecartype_separators << endl;
 
     ToulBar2::vnsOutput << endl;
 }
@@ -163,8 +164,7 @@ void TreeDecRefinement::load_decomposition()
 {
     if (ToulBar2::clusterFile != "") {
         bool cover = false;
-        if (ToulBar2::clusterFile.find(".cov") != string::npos)
-            cover = true;
+        if (ToulBar2::clusterFile.find(".cov") != string::npos) cover =true;
         fstream file(ToulBar2::clusterFile.c_str());
         set<int> nbvars;
         while (!file.eof()) {
@@ -207,7 +207,7 @@ void TreeDecRefinement::load_decomposition()
             ss << *v << ":(";
             bool first = true;
             for (set<int>::iterator i = m_graph[*v].vars.begin();
-                 i != m_graph[*v].vars.end(); ++i) {
+                    i != m_graph[*v].vars.end(); ++i) {
                 if (not first)
                     ss << ",";
                 ss << *i;
@@ -220,13 +220,14 @@ void TreeDecRefinement::load_decomposition()
                 set<int> v_vars = m_graph[*v].vars;
                 set<int> v2_vars = m_graph[*v2].vars;
                 set_intersection(v_vars.begin(), v_vars.end(), v2_vars.begin(),
-                    v2_vars.end(), inserter(separator, separator.begin()));
+                        v2_vars.end(), inserter(separator, separator.begin()));
 
                 if (separator.size() > 0) {
                     Cluster_edge sep;
                     tie(sep, tuples::ignore) = add_edge(*v, *v2, m_graph);
                     m_graph[sep].vars = separator;
-                    m_graph[sep].size = (float)1 / separator.size();
+                    m_graph[sep].size = (float) 1 / separator.size();
+
                 }
             }
         }
@@ -236,7 +237,7 @@ void TreeDecRefinement::load_decomposition()
     }
 }
 
-void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
+void TreeDecRefinement::cluster_graph_absorption()
 {
     TGraph::vertex_iterator vi, viend;
     TCDGraph::vertex_iterator v, vend, v2;
@@ -245,7 +246,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
     for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
         set<int> cl;
         for (set<int>::iterator i = m_graph[*v].vars.begin();
-             i != m_graph[*v].vars.end(); ++i) {
+                i != m_graph[*v].vars.end(); ++i) {
             cl.insert(*i);
         }
         TDCluster c = add_vertex(abs_graph);
@@ -259,7 +260,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
         ss << *v << ":(";
         bool first = true;
         for (set<int>::iterator i = abs_graph[*v].vars.begin();
-             i != abs_graph[*v].vars.end(); ++i) {
+                i != abs_graph[*v].vars.end(); ++i) {
             if (not first)
                 ss << ",";
             ss << *i;
@@ -272,13 +273,14 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
             set<int> v_vars = abs_graph[*v].vars;
             set<int> v2_vars = abs_graph[*v2].vars;
             set_intersection(v_vars.begin(), v_vars.end(), v2_vars.begin(),
-                v2_vars.end(), inserter(separator, separator.begin()));
+                    v2_vars.end(), inserter(separator, separator.begin()));
 
             if (separator.size() > 0) {
                 Cluster_edge sep;
                 tie(sep, tuples::ignore) = add_edge(*v, *v2, abs_graph);
                 abs_graph[sep].vars = separator;
-                abs_graph[sep].size = (float)1 / separator.size();
+                abs_graph[sep].size = (float) 1 / separator.size();
+
             }
         }
     }
@@ -291,11 +293,11 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
     set<Cluster_edge> spanning_tree;
     set<Cluster_edge> removable_edges;
     kruskal_minimum_spanning_tree(abs_graph,
-        inserter(spanning_tree, spanning_tree.begin()),
-        weight_map(get(&separator::size, abs_graph)));
+            inserter(spanning_tree, spanning_tree.begin()),
+            weight_map(get(&separator::size, abs_graph)));
     set_difference(edges.begin(), edges.end(), spanning_tree.begin(),
-        spanning_tree.end(),
-        inserter(removable_edges, removable_edges.begin()));
+            spanning_tree.end(),
+            inserter(removable_edges, removable_edges.begin()));
     remove_edge_if(IsRemovable(removable_edges), abs_graph);
     std::vector<int> component(num_vertices(abs_graph));
     int num = connected_components(abs_graph, &component[0]);
@@ -303,7 +305,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
     vector<int> maxv(num, 0);
     tie(v, vend) = vertices(abs_graph);
     for (; v != vend; ++v)
-        if (max[component[*v]] < (int)abs_graph[*v].vars.size()) {
+        if (max[component[*v]] < (int) abs_graph[*v].vars.size()) {
             max[component[*v]] = abs_graph[*v].vars.size();
             maxv[component[*v]] = *v;
         }
@@ -330,7 +332,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
         ss << *v << ":(";
         bool first = true;
         for (set<int>::iterator i = abs_graph[*v].vars.begin();
-             i != abs_graph[*v].vars.end(); ++i) {
+                i != abs_graph[*v].vars.end(); ++i) {
             if (not first)
                 ss << ",";
             ss << *i;
@@ -343,17 +345,19 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
             set<int> v_vars = abs_graph[*v].vars;
             set<int> v2_vars = abs_graph[*v2].vars;
             set_intersection(v_vars.begin(), v_vars.end(), v2_vars.begin(),
-                v2_vars.end(), inserter(separator, separator.begin()));
+                    v2_vars.end(), inserter(separator, separator.begin()));
 
             if (separator.size() > 0) {
                 Cluster_edge sep;
                 tie(sep, tuples::ignore) = add_edge(*v, *v2, abs_graph);
                 abs_graph[sep].vars = separator;
-                abs_graph[sep].size = (float)1 / separator.size();
+                abs_graph[sep].size = (float) 1 / separator.size();
+
             }
         }
     }
 }
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
