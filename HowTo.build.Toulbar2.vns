@@ -1,0 +1,77 @@
+vns with cpd heuristic  information are available in the current file contact : 
+mentener david.allouche@inra.fr
+
+i) compilation
+
+# Branch maintained by david.allouche@inra.fr)
+Mandatory package :
+#cmake - système make multiplate-forme
+#cmake-data - fichiers de données pour CMake (modules, modèles et documentation)
+#cmake-doc - Documentation supplémentaire en formats variés pour CMake
+#cmake-curses-gui - curses based user interface for CMake (ccmake)
+
+sudo  apt-get install cmake cmake-data cmake-doc cmake-curses-gui
+
+#BOOST
+sudo  apt-get install libboost-graph-dev
+sudo  apt-get install libboost-iostreams-dev
+
+# library : gmp is required
+sudo apt-get install libgmp3-dev
+# library : zlib is required
+sudo apt-get install zlib1g-dev
+
+#open mpi
+sudo apt-get install   libopenmpi-dev
+
+
+
+
+ii) launch application 
+----------------------
+
+mpi vns release doesn t support make test procedure due to mpi_run dependances.
+
+example of test case are available in validation/proteus_cpd directory
+
+after toulbar2 mpi compilation in the build directory
+
+according to following command line :
+
+
+mpirun -n 2  build/bin/Linux/toulbar2 validation/proteus_cpd/1ABO/1ABO.pdb ./validation/proteus_cpd/1ABO/20/1/1ABO_N20_V1_scptop.wcsp ./validation/proteus_cpd/1ABO/20/1/1ABO_N20_V1_btop.dec -kmin=4 -kpp_algo=1 -root_algo=0 -neighb_algo=1 -s -radgvns -best=0 -seed=1967 -vns_display_lvl=1  -forbiden_AA="PRO:GLY"
+
+
+the example use 1 thread (2 cpus ) with  luby (m=3) for k incrementation with euclidian selection of variable based on distance probability to the first element
+(first element selected by random selection). 
+
+amino acid distance is mandatory consequentely the corresponding pdb file is mandatory in argument ( in this case validation/proteus_cpd/1ABO/1ABO.pdb)
+
+heuristic can be change using the following command line paramter ( check toulbar2 -h )
+
+
+-s : shows each solution found
+ 	-seed [interger] : initialize random generators in vns with this seed + id_mpi_thread (default use timer + pid).
+	-kpp_algo [integer] : value to select the algorithm associated with the increase of k values (default is basic ++k) :
+			= 0 -> basic ++k.
+ 			= 1 -> ++k with Luby.
+ 			= 2 -> ++k keep the last neighborhood as base to build a new one.
+	-root_algo [integer] : value to select the algorithm (default full random and uniform) which select the first element in a neighborhood :
+ 			= 0 -> random and uniform.
+  			= 1 -> centre/periphery (use *.pdb parameter).
+	-neighb_algo [integer] : value to select the algorithm (default uniform shuffle) which builds neighborhoods :
+			= 0 -> shuffle.
+ 			= 1 -> 1/d proba (use *.pdb parameter).
+			= 2 -> k nearest (use *.pdb parameter).
+ 	-atom_type [string] : use this atom type (CA,CB,..) to compute the distance matrix for vns (default CA).
+ 	-forbiden_AA [string] : to read pdb file : provide a list (format = "PRO:GLY:...") of amino acids which will not be used as variables (default "GLY:PRO").
+	-vns_display_lvl [integer] : controle the messages print on sreen : 0,1,2,.. 0 is a few and 2 is a lot.
+
+
+
+
+command  : vns can be stop using a ulimit command in the test_vns.sh the current release will stop when the search will reach the gmec ( -best =xxx  ) 
+because in the current example the gmec is known it can be declare in command line option
+
+in otherwise you can stop the process using ulimit command in the command shell : ulimit -t 3600 ==> stop after 1h
+

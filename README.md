@@ -44,7 +44,7 @@ Download the latest release from GitHub
 (https://github.com/toulbar2/toulbar2) or similarly use tag versions,
 e.g.:
 
-    git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
+    git clone --branch vns_luby_dprob https://github.com/toulbar2/toulbar2.git
 
 
 ## Installation from sources
@@ -57,13 +57,13 @@ Required library:
 Recommended libraries (default use):
 * libboost-graph-dev
 * libboost-iostreams-dev
+* libopenmpi-dev
 * zlib
 
 Optional libraries:
 * libxml2-dev
-* libopenmpi-dev
 
-GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
+GNU C++ Symbols to be defined if using Linux  ccmake in command line or Eclipse/CDT IDE (no value needed):
 * BOOST
 * LINUX
 * LONGDOUBLE_PROB

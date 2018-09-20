@@ -45,7 +45,7 @@ OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
 ##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
-OPTION(MPI "MPI [default: on]" OFF)
+OPTION(MPI "MPI [default: on]" ON)
 OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
 OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
@@ -272,12 +272,17 @@ IF(Boost)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF(Boost)
 
+
+
 ##########################################
 IF(MPI) 
+  MESSAGE(STATUS "-----------MPI  on  .")
+
 #  SET(CMAKE_C_COMPILER mpicc)
 #  SET(CMAKE_CXX_COMPILER mpicxx)
 #  SET(CMAKE_CXX_COMPILER /usr/mpi/gcc/openmpi-1.10.3rc4/bin/mpicxx)
 #  SET(CMAKE_SYSTEM_PREFIX_PATH /usr/mpi/gcc/openmpi-1.10.3rc4)
+# include(${My_cmake_script}/MPI_option.cmake)
   find_package(MPI REQUIRED)
   include_directories(${MPI_INCLUDE_PATH})
   SET (mpiflag OPENMPI)

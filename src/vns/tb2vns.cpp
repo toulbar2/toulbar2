@@ -9,7 +9,7 @@
 #include "tb2vns.hpp"
 #include "tb2wcsp.hpp"
 #include "tb2pdb.hpp" 
-#include "mpi.h"
+#include <mpi.h>
 
 // loading decomposition for only a given file
 void ClustersNeighborhoodStructure::load_decomposition()
