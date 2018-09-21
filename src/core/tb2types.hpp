@@ -378,6 +378,7 @@ public:
     static unsigned int dichotomicBranchingSize;
     static bool sortDomains;
     static map<int, ValueCost*> sortedDomains;
+    static bool solutionBasedPhaseSaving;
     static int elimDegree;
     static int elimDegree_preprocessing;
     static int elimDegree_;

@@ -73,6 +73,7 @@ int ToulBar2::dichotomicBranching;
 unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
 map<int, ValueCost*> ToulBar2::sortedDomains;
+bool ToulBar2::solutionBasedPhaseSaving;
 int ToulBar2::lds;
 bool ToulBar2::limited;
 Long ToulBar2::restart;
@@ -237,6 +238,7 @@ void tb2init()
     ToulBar2::dichotomicBranching = 1;
     ToulBar2::dichotomicBranchingSize = 10;
     ToulBar2::sortDomains = false;
+    ToulBar2::solutionBasedPhaseSaving = true;
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
     ToulBar2::restart = -1;
@@ -3895,7 +3897,7 @@ void WCSP::ternaryCompletion()
             ntern++;
         }
     }
-    cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
+    if (ToulBar2::verbose >= 0) cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
 }
 
 // -----------------------------------------------------------

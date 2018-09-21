@@ -155,6 +155,8 @@ enum {
     NO_OPT_dichotomicBranching,
     OPT_sortDomains,
     NO_OPT_sortDomains,
+    OPT_solutionBasedPhaseSaving,
+    NO_OPT_solutionBasedPhaseSaving,
     OPT_weightedDegree,
     NO_OPT_weightedDegree,
     OPT_weightedTightness,
@@ -331,6 +333,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_dichotomicBranching, (char*)"-d:", SO_NONE },
     { OPT_sortDomains, (char*)"-sortd", SO_NONE },
     { NO_OPT_sortDomains, (char*)"-sortd:", SO_NONE },
+    { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
+    { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
     { NO_OPT_weightedDegree, (char*)"-q:", SO_NONE },
     { OPT_weightedTightness, (char*)"-m", SO_OPT },
@@ -664,6 +668,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -d=[integer] : searches using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
     cout << "   -sortd : sorts domains based on increasing unary costs (warning! works only for binary WCSPs)";
     if (ToulBar2::sortDomains)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -solr : solution-based phase saving";
+    if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
     cout << endl;
     cout << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
@@ -1249,6 +1257,12 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::sortDomains = true;
             } else if (args.OptionId() == NO_OPT_sortDomains) {
                 ToulBar2::sortDomains = false;
+            }
+
+            if (args.OptionId() == OPT_solutionBasedPhaseSaving) {
+                ToulBar2::solutionBasedPhaseSaving = true;
+            } else if (args.OptionId() == NO_OPT_solutionBasedPhaseSaving) {
+                ToulBar2::solutionBasedPhaseSaving = false;
             }
 
             if (args.OptionId() == OPT_weightedTightness) {

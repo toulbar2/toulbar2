@@ -369,15 +369,17 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     unaryCFs = newunaryCFs;
 
     if (ToulBar2::sortDomains) {
-        if (maxarity > 2) {
-            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
-            exit(EXIT_FAILURE);
-        } else {
-            ToulBar2::sortedDomains.clear();
-            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
-                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
-            }
-        }
+        cout << "Error: cannot sort domains in preprocessing with CFN format (remove option -sortd)." << endl;
+        exit(EXIT_FAILURE);
+//        if (maxarity > 2) {
+//            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+//            exit(EXIT_FAILURE);
+//        } else {
+//            ToulBar2::sortedDomains.clear();
+//            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
+//                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
+//            }
+//        }
     }
 
     for (auto& cf : unaryCFs) {

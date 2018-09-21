@@ -455,7 +455,8 @@ public:
         solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
-            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);
+            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving) setBestValue(i, v);
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i,v)].value : v);
         }
     }
     void printSolution(ostream& os)
