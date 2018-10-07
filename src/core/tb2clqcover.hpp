@@ -185,7 +185,7 @@ private:
     // binary constraints in scope
     vector<vector<BinaryConstraint*> > bc;
 
-    std::ostream& printstate(std::ostream& os);
+    std::ostream& printstate(std::ostream& os) override;
 
     int run{ 0 };
     int id{ 0 };
