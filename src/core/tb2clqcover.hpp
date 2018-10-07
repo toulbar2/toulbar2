@@ -185,7 +185,7 @@ private:
     // binary constraints in scope
     vector<vector<BinaryConstraint*> > bc;
 
-    std::ostream& printstate(std::ostream& os) override;
+    std::ostream& printstate(std::ostream& os);
 
     int run{ 0 };
     int id{ 0 };
@@ -197,7 +197,7 @@ public:
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
 
-    void print(ostream& os) {printstate (os);}
+    void print(ostream& os) override {printstate (os);}
 };
 
 inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)
