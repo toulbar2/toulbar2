@@ -451,6 +451,7 @@ public:
         tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
         // Create a solver object
+        initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
         WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
         // Read a problem file in wcsp format
