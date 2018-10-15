@@ -1232,7 +1232,7 @@ void Solver::newSolution()
     if (ToulBar2::maxsateval) {
         cout << "o " << wcsp->getLb() << endl;
     }
-    if ((ToulBar2::uai || ToulBar2::uaieval) && !ToulBar2::isZ) {
+    if (ToulBar2::uaieval && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
     }
 
@@ -1845,7 +1845,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1)
             cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
-        if (ToulBar2::uai) {
+        if (ToulBar2::uaieval) {
             rewind(ToulBar2::solution_uai_file);
             fprintf(ToulBar2::solution_uai_file, "PR\n");
             fprintf(ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));

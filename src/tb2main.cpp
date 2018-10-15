@@ -2045,7 +2045,7 @@ int _tmain(int argc, TCHAR* argv[])
                 exit(EXIT_FAILURE);
             }
         }
-        if (ToulBar2::uai || ToulBar2::uaieval) {
+        if (ToulBar2::uaieval) {
             char* tmpPath = new char[strlen(argv[0]) + 1];
             strcpy(tmpPath, argv[0]);
             if (strcmp(tmpPath, "toulbar2") == 0)
@@ -2191,7 +2191,7 @@ int _tmain(int argc, TCHAR* argv[])
         if (ToulBar2::verbose >= 0)
             cout << "No solution found by initial propagation!" << endl;
         if (ToulBar2::isZ) {
-            if (ToulBar2::uai) {
+            if (ToulBar2::uaieval) {
                 rewind(ToulBar2::solution_uai_file);
                 fprintf(ToulBar2::solution_uai_file, "PR\n");
                 fprintf(ToulBar2::solution_uai_file, PrintFormatProb, -numeric_limits<TProb>::infinity());
