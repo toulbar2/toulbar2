@@ -197,7 +197,7 @@ public:
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
 
-    void print(ostream& os) {printstate (os);}
+    void print(ostream& os) override {printstate (os);}
 };
 
 inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)

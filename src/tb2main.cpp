@@ -218,17 +218,17 @@ enum {
     OPT_verifyopt,
 #endif
     // MENDELESOFT OPTION
-    OPT_generation = 99,
-    MENDEL_OPT_genotypingErrorRate = 100,
-    MENDEL_OPT_resolution = 101,
-    OPT_pedigree_by_MPE = 102,
-    MENDEL_OPT_EQUAL_FREQ = 103,
-    MENDEL_OPT_ESTIMAT_FREQ = 104,
-    MENDEL_OPT_ALLOCATE_FREQ = 105,
+    OPT_generation,
+    MENDEL_OPT_genotypingErrorRate,
+    MENDEL_OPT_resolution,
+    OPT_pedigree_by_MPE,
+    MENDEL_OPT_EQUAL_FREQ,
+    MENDEL_OPT_ESTIMAT_FREQ,
+    MENDEL_OPT_ALLOCATE_FREQ,
 
     // random generator
     OPT_seed,
-    OPT_random = 1000,
+    OPT_random,
 
     // VNS Methods
     OPT_VNS_search,
