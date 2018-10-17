@@ -208,6 +208,13 @@ bool VACExtension::propagate()
     static vector<pair<VACVariable*, Value> > acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
     bool acSupportOK = false;
 
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+    	if (wcsp->getVar(i)->enumerated()) {
+    		EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
+    		xi->domSizeInBoolOfP = xi->getDomainSize();
+    	}
+    }
+
     while ((!util || isvac) && itThreshold != MIN_COST) {
         minlambda = wcsp->getUb() - wcsp->getLb();
         nbIterations++;
@@ -255,6 +262,64 @@ bool VACExtension::propagate()
             if (ToulBar2::debug && nbassignedzero > 0)
                 cout << "[" << Store::getDepth() << "] " << nbassignedzero << "/" << nbassigned - nbassignedzero << "/" << wcsp->numberOfUnassignedVariables() << " fixed/singletonnonzerocost/unassigned" << endl;
         }
+
+        if(isvac){
+			
+			int nbDomSizeZero = 0;
+			int nbDomSizeOne = 0;
+			int nbDomSizeMore = 0;
+			int nbVariablesChanged = 0;
+			
+			for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+				if (wcsp->getVar(i)->enumerated()) {
+					EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
+					bool stateBefore = xi->moreThanOne;
+					xi->moreThanOne = false;
+					xi->strictACValue = xi->getSupport();
+					xi->domSizeInBoolOfP = 0;
+					int size = xi->getDomainSize();
+					ValueCost domcost[size];
+					wcsp->getEnumDomainAndCost(i, domcost);
+					for (int v = 0; v < size; v++) {
+						if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
+							xi->domSizeInBoolOfP += 1;
+							xi->strictACValue = domcost[v].value;
+						} 
+						else {
+							//cout << "ERROR Value in Bool(P) with non-zero cost!" << ((VACVariable*)xi)->getVACCost(domcost[v].value) << " " << domcost[v].cost << endl;
+						}
+					}
+					
+					xi->moreThanOne = (xi->domSizeInBoolOfP>1) ? true : false;
+					
+					if(xi->domSizeInBoolOfP > 1){
+						nbDomSizeMore++;
+					}
+					else if(xi->domSizeInBoolOfP < 1){
+						nbDomSizeZero++;
+					}
+					else{
+						nbDomSizeOne++;
+					}
+					
+					if(stateBefore != xi->moreThanOne){
+						nbVariablesChanged++;
+					}
+				}
+			}
+			
+			//cout << "Nb Variables With BoolDomSize Zero: " << nbDomSizeZero << " One: " << nbDomSizeOne << " More Than One: " << nbDomSizeMore << endl;
+			//cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
+			
+			string fileName = "problem_";
+			fileName += to_string(wcsp->getNbNodes());
+			fileName += "_";
+			fileName += to_string(nbIterations);
+			fileName += ".wcsp";
+			//ofstream pb(fileName.c_str());
+			//wcsp->dump_strictAC(pb, true);
+		}
+
         Store::restore();
 
         if (!isvac) {

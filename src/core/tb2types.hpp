@@ -365,6 +365,8 @@ protected:
 public:
     static string version;
     static int verbose;
+    static int strictAC;
+    static int BoolDomSize;
     static int debug;
     static string externalUB;
     static bool showSolutions;

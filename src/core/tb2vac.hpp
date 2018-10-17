@@ -102,6 +102,8 @@ public:
     void printTightMatrix();
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
+    
+    Long getnbIterations();
 };
 
 #endif /*TB2VAC_HPP_*/

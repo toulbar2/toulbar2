@@ -21,6 +21,9 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , support(iinf)
     , watchForIncrease(false)
     , watchForDecrease(false)
+    , moreThanOne(false)
+    , domSizeInBoolOfP(isup-iinf+1)
+    , strictACValue(support)
 {
     init();
 }
@@ -32,6 +35,9 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , support(min(d, dsize))
     , watchForIncrease(false)
     , watchForDecrease(false)
+    , moreThanOne(false)
+    , domSizeInBoolOfP(dsize)
+    , strictACValue(support)
 {
     init();
 }

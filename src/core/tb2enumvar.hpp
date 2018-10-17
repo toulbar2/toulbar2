@@ -38,6 +38,10 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
+    bool moreThanOne;
+    int domSizeInBoolOfP;
+    Value strictACValue;
+
     bool enumerated() const FINAL { return true; }
 
     unsigned int getDomainInitSize() const { return domain.getInitSize(); }

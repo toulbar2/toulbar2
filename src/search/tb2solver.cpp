@@ -478,31 +478,80 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 {
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar))
-        return lastConflictVar;
-    int varIndex = -1;
-    Cost worstUnaryCost = MIN_COST;
-    double best = MAX_VAL - MIN_VAL;
-    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-        Cost unarymediancost = MIN_COST;
-        int domsize = wcsp->getDomainSize(*iter);
-        if (ToulBar2::weightedTightness) {
-            ValueCost array[domsize];
-            wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
-        }
-        //	   cout << *iter << " " << domsize << " " << wcsp->getWeightedDegree(*iter) << " " << unarymediancost << " " << (double) domsize / (double) (wcsp->getWeightedDegree(*iter) + 1 + unarymediancost) << endl;
-        // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        //	   double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
-            best = heuristic;
-            varIndex = *iter;
-            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        }
-    }
-    return varIndex;
+	if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar))
+		return lastConflictVar;
+	int varIndex = -1;
+	Cost worstUnaryCost = MIN_COST;
+	double best = MAX_VAL - MIN_VAL;
+	for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+		Cost unarymediancost = MIN_COST;
+		int domsize = wcsp->getDomainSize(*iter);
+		if (ToulBar2::weightedTightness) {
+			ValueCost array[domsize];
+			wcsp->getEnumDomainAndCost(*iter, array);
+			unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+		}
+		//cout << *iter << " " << domsize << " " << wcsp->getWeightedDegree(*iter) << " " << unarymediancost << " " << (double) domsize / (double) (wcsp->getWeightedDegree(*iter) + 1 + unarymediancost) << endl;
+		//remove following "+1" when isolated variables are automatically assigned
+		double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+		//double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
+		if (ToulBar2::strictAC > 0){
+			if(ToulBar2::BoolDomSize > 0){
+				heuristic = (double)(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->domSizeInBoolOfP) / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+			}
+			if ((varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
+			(  ((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
+			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)))) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne) {
+				//cout << "varIndex: " << varIndex << " *iter: " << *iter << endl;
+				best = heuristic;
+				varIndex = *iter;
+				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+			}
+		}
+		else{
+			if (varIndex < 0  ||  heuristic < best - epsilon * best
+			|| (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+				best = heuristic;
+				varIndex = *iter;
+				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+			}			
+		}
+	}
+	
+	if(varIndex != -1)
+		cout << " BRANCH ON VARIABLE " << "Original Domsize: " << wcsp->getDomainSize(varIndex) << " Bool DomSize: " << (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->domSizeInBoolOfP) << endl;
+	else{
+		//cout << " BRANCH ON VARIABLE " << varIndex/* << " " << unassignedVars->empty()*/ << endl;
+		if(ToulBar2::strictAC > 0){
+			if(!unassignedVars->empty()){
+				Cost previousLb = wcsp->getLb();
+				bool super  = false;
+				// Test Bool(P) solution
+				try {
+					Store::store();
+					vector<int> variables;
+					vector<Value> values;
+					for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+					variables.push_back(*iter);
+					values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
+					}
+					wcsp->assignLS(variables, values);
+					Cost newUb = wcsp->getLb();
+					if (newUb == previousLb) {
+					super = true;
+					//cout << "SUPER SUPER SUPER SUPER" << endl;
+					}
+					newSolution();
+				} catch (Contradiction) {
+					wcsp->whenContradiction();
+				}
+				Store::restore();
+				if (!super) varIndex = *(unassignedVars->begin());
+			}
+		}
+	}
+
+	return varIndex;
 }
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()

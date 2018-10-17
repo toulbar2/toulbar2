@@ -48,6 +48,8 @@ StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_S
 int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
+int ToulBar2::strictAC;
+int ToulBar2::BoolDomSize;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -215,6 +217,8 @@ void tb2init()
     ToulBar2::stdin_format = "";
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
+    ToulBar2::strictAC = 0;
+    ToulBar2::BoolDomSize = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;

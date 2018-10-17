@@ -183,6 +183,8 @@ enum {
     NO_OPT_trws,
     OPT_costMultiplier,
     OPT_deltaUb,
+    OPT_strictAC,
+    OPT_BoolDomSize,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -356,6 +358,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
+    { OPT_strictAC, (char*)"-strictAC", SO_NONE },
+    { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
@@ -1777,6 +1781,18 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "TRW-S OFF" << endl;
                 ToulBar2::trwsAccuracy = -1.;
+            }
+
+            if (args.OptionId() == OPT_strictAC) {
+                ToulBar2::strictAC = 1;
+                if (ToulBar2::debug)
+					cout << "Strict AC ON" << endl;
+            }
+
+            if (args.OptionId() == OPT_BoolDomSize) {
+                ToulBar2::BoolDomSize = 1;
+                if (ToulBar2::debug)
+					cout << "Using Domain Size in Bool of P" << endl;
             }
 
         }
