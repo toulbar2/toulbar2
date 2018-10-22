@@ -178,8 +178,11 @@ enum {
     OPT_costThreshold,
     OPT_costThresholdPre,
     OPT_trwsAccuracy,
+    OPT_trwsFirst,
+    OPT_trwsOrder,
     OPT_trwsNIter,
     OPT_trwsNIterNoChange,
+    OPT_trwsNIterComputeUb,
     NO_OPT_trws,
     OPT_costMultiplier,
     OPT_deltaUb,
@@ -360,8 +363,11 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
     { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
+    { OPT_trwsFirst, (char*)"--trws-first", SO_REQ_SEP },
+    { OPT_trwsOrder, (char*)"--trws-order", SO_REQ_SEP },
     { OPT_trwsNIter, (char*)"--trws-n-iters", SO_REQ_SEP },
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
+    { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
 
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -749,8 +755,11 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -trws=[float] : enforce TRW-S in preprocessing until given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
+    cout << "   --trws-first=[integer] : 0: VAC then TRW-S, 1: TRW-S then VAC (default value is " << ToulBar2::trwsFirst << ")" << endl;
+    cout << "   --trws-order=[integer] : 0: TRW-S order, 1: DAC order (default value is " << ToulBar2::trwsOrder << ")" << endl;
     cout << "   --trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is " << ToulBar2::trwsNIter << ")" << endl;
-    cout << "   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is " << ToulBar2::trwsNIterNoChange << ")" << endl;
+    cout << "   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is " << ToulBar2::trwsNIterNoChange << ", -1=never)" << endl;
+    cout << "   --trws-n-iters-compute-ub=[integer] : compute UB every N steps in TRW-S (default value is " << ToulBar2::trwsNIterComputeUb << ")" << endl;
     cout << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
@@ -1411,11 +1420,20 @@ int _tmain(int argc, TCHAR* argv[])
                 else
                     ToulBar2::trwsAccuracy = -1.;
             }
+            if (args.OptionId() == OPT_trwsFirst) {
+                ToulBar2::trwsFirst = atol(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_trwsOrder) {
+                ToulBar2::trwsOrder = atol(args.OptionArg());
+            }
             if (args.OptionId() == OPT_trwsNIter) {
                 ToulBar2::trwsNIter = atol(args.OptionArg());
             }
             if (args.OptionId() == OPT_trwsNIterNoChange) {
                 ToulBar2::trwsNIterNoChange = atol(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_trwsNIterComputeUb) {
+                ToulBar2::trwsNIterComputeUb = atol(args.OptionArg());
             }
             if (args.OptionId() == NO_OPT_trws) {
                 ToulBar2::trwsAccuracy = -1.;
