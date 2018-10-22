@@ -518,15 +518,15 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 		}
 	}
 	
-	if(varIndex != -1)
-		cout << " BRANCH ON VARIABLE " << "Original Domsize: " << wcsp->getDomainSize(varIndex) << " Bool DomSize: " << (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->domSizeInBoolOfP) << endl;
-	else{
+	//if(varIndex != -1)
+		//cout << " BRANCH ON VARIABLE " << "Original Domsize: " << wcsp->getDomainSize(varIndex) << " Bool DomSize: " << (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->domSizeInBoolOfP) << endl;
+	if(varIndex == -1){
 		//cout << " BRANCH ON VARIABLE " << varIndex/* << " " << unassignedVars->empty()*/ << endl;
 		if(ToulBar2::strictAC > 0){
 			if(!unassignedVars->empty()){
-				Cost previousLb = wcsp->getLb();
-				bool super  = false;
-				// Test Bool(P) solution
+				Cost currentUb = wcsp->getUb();
+				Cost newUb = currentUb;
+				int depth = Store::getDepth();
 				try {
 					Store::store();
 					vector<int> variables;
@@ -536,17 +536,18 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 					values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
 					}
 					wcsp->assignLS(variables, values);
-					Cost newUb = wcsp->getLb();
-					if (newUb == previousLb) {
-					super = true;
-					//cout << "SUPER SUPER SUPER SUPER" << endl;
-					}
-					newSolution();
+					nbNodes += 1;  /* increase the number of search nodes by Size*/
+					newSolution();  /* it will update ub */
+					newUb = wcsp->getUb();
 				} catch (Contradiction) {
 					wcsp->whenContradiction();
 				}
-				Store::restore();
-				if (!super) varIndex = *(unassignedVars->begin());
+				Store::restore(depth);
+				if (newUb < currentUb) {  /* a better solution has been found */
+					wcsp->enforceUb();    /* it will generate a contradiction if lb >= ub */
+					wcsp->propagate();    /* it will generate a contradiction if lb >= ub */
+				}
+				varIndex = *(unassignedVars->begin());
 			}
 		}
 	}
