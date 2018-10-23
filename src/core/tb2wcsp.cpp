@@ -2838,7 +2838,7 @@ void WCSP::propagateTRWS()
                 if (ToulBar2::uai)
                     cout << "TRW-S dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + ebound) + ToulBar2::markov_log) << " -- " << Cost2ADCost(getLb() + bestUb) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + bestUb) + ToulBar2::markov_log) << " (+" << (100 * change) << "%) (accuracy: " << (100.0 * (Cost2ADCost(getLb() + bestUb) - Cost2ADCost(getLb() + ebound)) / (Cost2ADCost(getLb() + bestUb))) << "%) (iter:" << nIteration << ")" << endl;
                 else
-                    cout << "TRW-S dual bounds: [ " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << " -- " << Cost2ADCost(getLb() + bestUb) << std::setprecision(DECIMAL_POINT) << " ] (+" << (100 * change) << "%) (accuracy: " << (100.0 * (Cost2ADCost(getLb() + bestUb) - Cost2ADCost(getLb() + ebound)) / (Cost2ADCost(getLb() + bestUb))) << "%) (iter:" << nIteration << ")" << endl;
+                    cout << "TRW-S bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << ", " << Cost2ADCost(getLb() + bestUb) << std::setprecision(DECIMAL_POINT) << "[ (+" << (100 * change) << "%) (accuracy: " << (100.0 * (Cost2ADCost(getLb() + bestUb) - Cost2ADCost(getLb() + ebound)) / (Cost2ADCost(getLb() + bestUb))) << "%) (iter:" << nIteration << ")" << endl;
             }
             previousEbound = ebound;
         }
