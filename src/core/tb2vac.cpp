@@ -781,6 +781,9 @@ void VACExtension::printStat(bool ini)
             if (ToulBar2::uai) cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (iter:" << nlb << ")" << endl;
             else cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (iter:" << nlb << ")" << endl;
     }
+    
+    cout << "Number of VAC iterations: " << nbIterations << endl;
+    
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
 	   vector<tVACStat*>::iterator it = heap.begin();
