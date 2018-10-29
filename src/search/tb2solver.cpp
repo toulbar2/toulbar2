@@ -1130,7 +1130,6 @@ void Solver::singletonConsistency()
 
 void Solver::newSolution()
 {
-    assert(unassignedVars->empty());
 #ifndef NDEBUG
     bool allVarsAssigned = true;
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {

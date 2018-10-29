@@ -285,7 +285,7 @@ bool VACVariable::averaging()
     if (itc != getConstrs()->end())
         ctr = (*itc).constr;
     while (ctr) {
-        if (ctr->isBinary() && !ctr->isSep()) {
+        if (ctr->isBinary()) {
             BinaryConstraint* bctr = (BinaryConstraint*)ctr;
             x = (EnumeratedVariable*)bctr->getVarDiffFrom((Variable*)this);
             for (iterator it = begin(); it != end(); ++it) {

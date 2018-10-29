@@ -93,9 +93,9 @@ echo -n "\\item "
 echo "Solve another WCSP using the original Russian Doll Search method~\\cite{Verfaillie96} with static variable"
 echo "ordering (following problem file) and soft arc consistency:"
 echo "\\begin{DoxyCode}"
-echo "	toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1"
+echo "	toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 -trws:"
 echo "\\end{DoxyCode}"
-echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 | awk '/^Read /{ok=1} /Solving cluster subtree 3 /{ok=1} ok{print $0} /Solving cluster subtree 2 /{ok=0;print "";print "...";print ""}'
+echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 -trws: | awk '/^Read /{ok=1} /Solving cluster subtree 3 /{ok=1} ok{print $0} /Solving cluster subtree 2 /{ok=0;print "";print "...";print ""}'
 echo "\\end{DoxyCode}}"
 
 echo -n "\\item "
@@ -192,18 +192,18 @@ echo -n "\\item "
 #echo "________________________________________________________________________________"
 echo "Download a crisp CSP file {\\em GEOM40\\_6.wcsp} (initial upper bound equal to 1). Count the number of solutions using \#BTD~\\cite{Favier09a} using a min-fill variable ordering\\footnote{Warning, cannot use BTD to find all solutions in optimization.}:"
 echo "\\begin{DoxyCode}"
-echo "	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1"
+echo "	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -ub=1 -hbfs:"
 echo "\\end{DoxyCode}"
-echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 | awk '/^Read /{ok=1} ok{print $0}'
+echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -ub=1 -hbfs: | awk '/^Read /{ok=1} ok{print $0}'
 echo "\\end{DoxyCode}}"
 
 echo -n "\\item "
 #echo "________________________________________________________________________________"
 echo "Get a quick approximation of the number of solutions of a CSP with Approx\#BTD~\\cite{Favier09a}:"
 echo "\\begin{DoxyCode}"
-echo "	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -D"
+echo "	toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -D -ub=1 -hbfs:"
 echo "\\end{DoxyCode}"
-echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -D | awk '/^Read /{ok=1} ok{print $0}'
+echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/GEOM40_6.wcsp -O=-3 -a -B=1 -D -ub=1 -hbfs: | awk '/^Read /{ok=1} ok{print $0}'
 echo "\\end{DoxyCode}}"
 
 #echo -n "\\item "

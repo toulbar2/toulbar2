@@ -132,8 +132,7 @@ Cost ToulBar2::costThresholdPre;
 string ToulBar2::costThresholdS;
 string ToulBar2::costThresholdPreS;
 double ToulBar2::trwsAccuracy;
-unsigned int ToulBar2::trwsFirst;
-unsigned int ToulBar2::trwsOrder;
+bool ToulBar2::trwsOrder;
 unsigned int ToulBar2::trwsNIter;
 unsigned int ToulBar2::trwsNIterNoChange;
 unsigned int ToulBar2::trwsNIterComputeUb;
@@ -292,8 +291,7 @@ void tb2init()
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
     ToulBar2::trwsAccuracy = 0.001;
-    ToulBar2::trwsFirst = 1;
-    ToulBar2::trwsOrder = 0;
+    ToulBar2::trwsOrder = false;
     ToulBar2::trwsNIter = 1000;
     ToulBar2::trwsNIterNoChange = 5;
     ToulBar2::trwsNIterComputeUb = 100;
@@ -1881,7 +1879,7 @@ void WCSP::preprocessing()
         }
     } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
 
-    if ((ToulBar2::trwsAccuracy >= 0) && (ToulBar2::trwsFirst == 1))
+    if (ToulBar2::trwsAccuracy >= 0)
         propagateTRWS();
 
     if (ToulBar2::preprocessNary > 0) {
@@ -1953,7 +1951,7 @@ void WCSP::preprocessing()
             processTernary();
             propagate();
             if (ToulBar2::verbose >= 0 && getLb() > previouslb)
-                cout << "PIC lower bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
+                cout << "PIC dual bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
         } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
     } else if (ToulBar2::preprocessNary > 0) {
         processTernary();
@@ -1970,9 +1968,6 @@ void WCSP::preprocessing()
             vars[i]->queueEliminate();
         propagate();
     }
-
-    if ((ToulBar2::trwsAccuracy >= 0) && (ToulBar2::trwsFirst == 0))
-        propagateTRWS();
 
     // Deconnect empty cost functions
     unsigned int nbunvar;
@@ -2616,19 +2611,23 @@ void WCSP::propagateTRWS()
     bool forwardPass = true;
     unsigned int nIteration = 0;
     unsigned int nIterationNoChange = 0;
-    Cost previousEbound = 0;
-    Cost ebound = 0;
+    Cost previousEbound = MIN_COST;
+    Cost ebound = MIN_COST;
     Cost bestUb = getUb();
-    Cost newUb  = numeric_limits<Cost>::max();
     vector<int> orders[2] = { vector<int>(numberOfVariables()), vector<int>(numberOfVariables()) };
     vector<unsigned int> ranks[2] = { vector<unsigned int>(numberOfVariables()), vector<unsigned int>(numberOfVariables()) };
     vector<Cost> tmpM(getMaxDomainSize(), numeric_limits<Cost>::max());
-    vector < Value > bestPrimal (numberOfVariables());
+    vector < Value > bestPrimalVal (numberOfVariables(), 0);
+    vector < int > bestPrimalVar (numberOfVariables(), 0);
+    for (unsigned int i = 0; i < numberOfVariables(); ++i) {
+        bestPrimalVar[i] = i;
+        bestPrimalVal[i] = getSupport(i);
+    }
 
     assert(!td); // warning! tree decomposition must be done after TRW-S
 
     // Preprocessing: compute order
-    if (ToulBar2::trwsOrder == 0) {
+    if (ToulBar2::trwsOrder) {
         // Use monotonic chains
         unsigned int nVariableUsed = 0;
         vector<bool> variableUsed(numberOfVariables(), false);
@@ -2683,6 +2682,10 @@ void WCSP::propagateTRWS()
         swap(ranks[0], ranks[1]);
     }
 
+    if (ToulBar2::trwsOrder) {
+        setDACOrder(orders[0]);
+    }
+
     // Preprocessing: compute gammas
     for (unsigned int i = 0; i < numberOfVariables(); ++i)
         if (unassigned(i) && enumerated(i)) {
@@ -2721,7 +2724,7 @@ void WCSP::propagateTRWS()
     do {
         vector<int>& order = (forwardPass) ? orders[0] : orders[1];
         vector<unsigned int>& rank = (forwardPass) ? ranks[0] : ranks[1];
-        ebound = 0;
+        ebound = MIN_COST;
         for (unsigned int i = 0; i < numberOfVariables(); ++i) {
             if (unassigned(order[i]) && enumerated(order[i])) {
                 if (ToulBar2::interrupted)
@@ -2784,8 +2787,7 @@ void WCSP::propagateTRWS()
             }
         }
         // step 3: compute ub
-        if ((!forwardPass) && (ToulBar2::trwsNIterComputeUb > 0) && (ToulBar2::trwsNIter % ToulBar2::trwsNIterComputeUb == 0)) {
-            newUb = 0;
+        if ((!forwardPass) && (ToulBar2::trwsNIterComputeUb > 0) && (nIteration > 0) && (nIteration % ToulBar2::trwsNIterComputeUb == 0)) {
             for (unsigned int i = 0; i < numberOfVariables(); ++i) {
                 if (unassigned(order[i]) && enumerated(order[i])) {
                     EnumeratedVariable* s = static_cast<EnumeratedVariable*>(getVar(order[i]));
@@ -2795,38 +2797,36 @@ void WCSP::propagateTRWS()
                         unsigned int j = s->toIndex(*sIter);
                         for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
                             Constraint* constraint = (*iter).constr;
-                            if (constraint->connected() && constraint->isBinary()) {
+                            if (constraint->isBinary()) {
                                 BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
                                 EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
                                 if (rank[s->wcspIndex] < rank[t->wcspIndex]) {
                                     cost += binctr->trwsM[j];
                                 }
                                 else {
-                                    cost += binctr->getCost(s, t, *sIter, bestPrimal[t->wcspIndex]);
+                                    cost += binctr->getCost(s, t, *sIter, bestPrimalVal[t->wcspIndex]);
                                 }
                             }
                         }
-                        if (cost < bestCost) {
+                        if (cost < bestCost || (cost == bestCost && s->getSupport()==*sIter)) {
                             bestCost = cost;
-                            bestPrimal[s->wcspIndex] = *sIter;
+                            bestPrimalVal[s->wcspIndex] = *sIter;
                         }
                     }
                 }
             }
-            for (unsigned int i = 0; i < numberOfVariables(); ++i) {
-                if (unassigned(i) && enumerated(i)) {
-                    EnumeratedVariable* s = static_cast<EnumeratedVariable*>(getVar(i));
-                    newUb += s->getCost(bestPrimal[s->wcspIndex]);
-                }
+            int depth = Store::getDepth();
+            try {
+                Store::store();
+                assignLS(bestPrimalVar, bestPrimalVal);
+                assert(numberOfUnassignedVariables() == 0);
+                ((Solver *) getSolver())->newSolution();
+                bestUb = min<Cost>(getUb(), bestUb);
+            } catch (Contradiction) {
+                whenContradiction();
             }
-            for (unsigned int i = 0; i < numberOfConstraints(); i++) {
-                Constraint* ctr = getCtr(i);
-                if (ctr->connected() && ctr->isBinary()) {
-                    BinaryConstraint* binctr = static_cast<BinaryConstraint*>(ctr);
-                    newUb += binctr->getCost(bestPrimal[binctr->getVar(0)->wcspIndex], bestPrimal[binctr->getVar(1)->wcspIndex]);
-                }
-            }
-            bestUb = min<Cost>(newUb, bestUb);
+            Store::restore(depth);
+            enforceUb();
         }
         // step 4: reverse ordering
         double change = 0.0;
@@ -2835,10 +2835,12 @@ void WCSP::propagateTRWS()
             change = (ebound == previousEbound) ? 0.0 : (double)(ebound - previousEbound + 1) / (getLb() + ebound + 1);
             nIterationNoChange = (change > ToulBar2::trwsAccuracy) ? 0 : nIterationNoChange + 1;
             if (ToulBar2::verbose >= 0 && !nIterationNoChange) {
+                Double Dglb = (ToulBar2::costMultiplier >= 0 ? Cost2ADCost(getLb() + ebound) : Cost2ADCost(bestUb));
+                Double Dgub = (ToulBar2::costMultiplier >= 0 ? Cost2ADCost(bestUb) : Cost2ADCost(getLb() + ebound));
                 if (ToulBar2::uai)
-                    cout << "TRW-S dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + ebound) + ToulBar2::markov_log) << " -- " << Cost2ADCost(getLb() + bestUb) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + bestUb) + ToulBar2::markov_log) << " (+" << (100 * change) << "%) (accuracy: " << (100.0 * (Cost2ADCost(getLb() + bestUb) - Cost2ADCost(getLb() + ebound)) / (Cost2ADCost(getLb() + bestUb))) << "%) (iter:" << nIteration << ")" << endl;
+                    cout << "TRW-S dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + ebound) + ToulBar2::markov_log) << " -- primal bound: "  << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(bestUb) + ToulBar2::markov_log) << " (+" << (100 * change) << "%) (accuracy: " << (100.0 * (bestUb - ebound - getLb()) / (bestUb + 1)) << "%) (iter:" << nIteration << ")" << endl;
                 else
-                    cout << "TRW-S bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << ", " << Cost2ADCost(getLb() + bestUb) << std::setprecision(DECIMAL_POINT) << "[ (+" << (100 * change) << "%) (accuracy: " << (100.0 * (Cost2ADCost(getLb() + bestUb) - Cost2ADCost(getLb() + ebound)) / (Cost2ADCost(getLb() + bestUb))) << "%) (iter:" << nIteration << ")" << endl;
+                    cout << "TRW-S bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << std::setprecision(DECIMAL_POINT) << "[ (+" << (100 * change) << "%) (accuracy: " << (100.0 * (bestUb - ebound - getLb()) / (bestUb + 1)) << "%) (iter:" << nIteration << ")" << endl;
             }
             previousEbound = ebound;
         }
@@ -2846,8 +2848,9 @@ void WCSP::propagateTRWS()
     } while ((nIteration < ToulBar2::trwsNIter) && (nIterationNoChange < ToulBar2::trwsNIterNoChange));
 
     // step 5: move to WCSP
+    ToulBar2::trwsAccuracy = -1; // stop TRW-S such that VAC can be done
     if (ebound <= MIN_COST) {
-        if (ToulBar2::verbose >= 0) {
+        if (ToulBar2::verbose >= 1) {
             cout << "TRW-S did not improve the lower bound." << endl;
         }
     }
@@ -2923,7 +2926,6 @@ void WCSP::propagateTRWS()
       increaseLb(delta);
       propagate(); // propagate again without TRWS and possibly with VAC
     }
-    if (ToulBar2::trwsFirst == 1) ToulBar2::trwsAccuracy = -1; // stop TRW-S such that VAC can be done
 }
 
 void WCSP::fillEAC2()
@@ -3145,8 +3147,7 @@ void WCSP::propagate()
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
-                //if (ToulBar2::vac && !(ToulBar2::trwsAccuracy >= 0) && !CSP(getLb(), getUb())) {
-                if (ToulBar2::vac && ((ToulBar2::trwsAccuracy < 0) || (ToulBar2::trwsFirst == 0)) && !CSP(getLb(), getUb())) {
+                if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && !CSP(getLb(), getUb())) {
                     //				assert(verify());
                     if (vac->firstTime()) {
                         vac->init();

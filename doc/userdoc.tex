@@ -199,11 +199,13 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   apply the Min Sum Diffusion algorithm (default is inactivated, with
   a number of iterations of 0). See~\cite{Cooper10a}.
 \item[{-trws=[float]}] 
-  preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.001). See Kolmogorov 2006.
+  preprocessing only: enforces TRW-S until a given precision is reached (default value is 0.001). See Kolmogorov 2006.
+\item[{--trws-order}] replaces DAC order by Kolmogorov's TRW-S order. 
 \item[{--trws-n-iters=[integer]}] enforce at most N iterations of TRW-S (default value is 1000).
-\item[{--trws-n-iters-no-change=[integer]}] stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5).
+\item[{--trws-n-iters-no-change=[integer]}] stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5, -1=never).
+\item[{--trws-n-iters-compute-ub=[integer]}] compute a basic upper bound every N steps during TRW-S (default value is 100)
  \end{description}
- 
+
 
 \subsection{Initial upper bounding}
 
@@ -312,7 +314,8 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   searches using dichotomic branching. The default d=1 splits domains
   in the middle of domain range while d=2 splits domains in the middle
   of the sorted domain based on unary costs. 
-\item[-sortd] sorts domains in preprocessing based on increasing unary costs ( works only for binary WCSPs).
+\item[-sortd] sorts domains in preprocessing based on increasing unary costs (works only for binary WCSPs).
+\item[-solr] solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 \end{description}
 
 \subsection{Console output}

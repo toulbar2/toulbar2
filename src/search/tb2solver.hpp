@@ -201,7 +201,6 @@ protected:
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    virtual void newSolution();
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
@@ -248,6 +247,7 @@ public:
     void read_solution(const char* fileName, bool updateValueHeuristic = true);
     void parse_solution(const char* certificate);
 
+    virtual void newSolution();
     Cost getSolution(vector<Value>& solution);
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);

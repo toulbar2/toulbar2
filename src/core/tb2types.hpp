@@ -428,9 +428,8 @@ public:
     static string costThresholdPreS;
     static Cost costThreshold;
     static Cost costThresholdPre;
-    static unsigned int trwsFirst;
     static double trwsAccuracy;
-    static unsigned int trwsOrder;
+    static bool trwsOrder;
     static unsigned int trwsNIter;
     static unsigned int trwsNIterNoChange;
     static unsigned int trwsNIterComputeUb;
