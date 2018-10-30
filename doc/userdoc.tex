@@ -11,6 +11,7 @@
 \def\ci{\perp\!\!\!\perp}
 
 \def\toulbar2{\textsc{toulbar2}}
+\def\toolbar{\textsc{toolbar}}
 \title{\toulbar2 User documentation}
 \author{The \toulbar2 developer team}
 \date{\today}
@@ -105,6 +106,31 @@ If you want to try \toulbar2 on crafted, random, or real problems,
 please look for benchmarks in the
 \href{http://costfunction.org/en/benchmark}{Cost
   Function benchmark Section}. Other benchmarks coming from various discrete optimization languages are available at \href{http://genoweb.toulouse.inra.fr/~degivry/evalgm}{Genotoul EvalGM}~\cite{Hurley16b}.
+
+\section{How do I test it ?}
+
+Some problem examples are available in the directory {\sf toulbar2/validation}. After compilation with cmake, it is possible to run a series of tests using:
+\begin{verbatim}
+make test
+\end{verbatim}
+
+For debugging \toulbar2 (compile with flag \verb!CMAKE_BUILD_TYPE="Debug"!), more test examples are available at \href{https://forgemia.inra.fr/thomas.schiex/cost-function-library}{Cost Function Library}.
+The following commands run \toulbar2 (executable must be found on your system path) on every problems with a 1-hour time limit and compare their optimum with known optima (in .ub files).
+\begin{verbatim}
+cd toulbar2
+git clone https://forgemia.inra.fr/thomas.schiex/cost-function-library.git
+./misc/script/runall.sh ./cost-function-library/trunk/validation
+\end{verbatim}
+
+Other tests on randomly generated problems can be done where optimal solutions are verified by using an older solver \href{https://forgemia.inra.fr/thomas.schiex/toolbar}{\toolbar} (executable must be found on your system path).
+\begin{verbatim}
+cd toulbar2
+git clone https://forgemia.inra.fr/thomas.schiex/toolbar.git
+cd toolbar/toolbar
+make toolbar
+cd ../..
+./misc/script/rungenerate.sh
+\end{verbatim}
 
 \section{Using it as a black box}
 
