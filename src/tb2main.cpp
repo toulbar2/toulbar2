@@ -361,7 +361,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
-    { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
+    { OPT_trwsAccuracy, (char*)"-trws", SO_OPT },
     { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
     { OPT_trwsOrder, (char*)"--trws-order", SO_NONE },
     { NO_OPT_trwsOrder, (char*)"--trws-order:", SO_NONE },
@@ -1416,11 +1416,17 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_trwsAccuracy) {
-                double co = atof(args.OptionArg());
-                if (co >= 0.)
-                    ToulBar2::trwsAccuracy = co;
-                else
-                    ToulBar2::trwsAccuracy = -1.;
+                if (args.OptionArg() == NULL) {
+                    ToulBar2::trwsAccuracy = 0.00001;
+                } else {
+                    double co = atof(args.OptionArg());
+                    if (co >= 0.)
+                        ToulBar2::trwsAccuracy = co;
+                    else
+                        ToulBar2::trwsAccuracy = -1.;
+                }
+            } else if (args.OptionId() == NO_OPT_trws) {
+                ToulBar2::trwsAccuracy = -1.;
             }
             if (args.OptionId() == OPT_trwsOrder) {
                 ToulBar2::trwsOrder = true;
@@ -1435,9 +1441,6 @@ int _tmain(int argc, TCHAR* argv[])
             }
             if (args.OptionId() == OPT_trwsNIterComputeUb) {
                 ToulBar2::trwsNIterComputeUb = atol(args.OptionArg());
-            }
-            if (args.OptionId() == NO_OPT_trws) {
-                ToulBar2::trwsAccuracy = -1.;
             }
 
             // elimination of functional variables
