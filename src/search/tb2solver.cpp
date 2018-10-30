@@ -1858,10 +1858,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     }
     if (ToulBar2::allSolutions) {
         if (ToulBar2::approximateCountingBTD)
-            cout << "Number of solutions    : ~= " << nbSol << endl;
+            cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         else {
             if (!isComplete)
-                cout << "Number of solutions    : >=  " << nbSol << endl;
+                cout << "Number of solutions    : >=  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
             else
                 cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         }
@@ -1940,13 +1940,13 @@ void Solver::approximate(BigInteger& nbsol, TreeDecomposition* td)
     if (nbsol < 1)
         nbsol = 1;
     // the minimum upper bound of solutions number
-    cout << "\nCartesian product \t\t   :    " << cartesianProduct << endl;
+    cout << "\nCartesian product \t\t   :    " << std::fixed << std::setprecision(0) << cartesianProduct << std::setprecision(DECIMAL_POINT) << endl;
     BigInteger minUBsol = cartesianProduct;
     for (map<int, BigInteger>::iterator it = ubSol.begin(); it != ubSol.end(); ++it) {
         if (it->second < minUBsol)
             minUBsol = it->second;
     }
-    cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
+    cout << "Upper bound of number of solutions : <= " << std::fixed << std::setprecision(0) << minUBsol << std::setprecision(DECIMAL_POINT) << endl;
 }
 
 // Maximize h' W h where W is expressed by all its

@@ -93,9 +93,9 @@ echo -n "\\item "
 echo "Solve another WCSP using the original Russian Doll Search method~\\cite{Verfaillie96} with static variable"
 echo "ordering (following problem file) and soft arc consistency:"
 echo "\\begin{DoxyCode}"
-echo "	toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 -trws:"
+echo "	toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1"
 echo "\\end{DoxyCode}"
-echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 -trws: | awk '/^Read /{ok=1} /Solving cluster subtree 3 /{ok=1} ok{print $0} /Solving cluster subtree 2 /{ok=0;print "";print "...";print ""}'
+echo "{\\scriptsize" ; echo "\\begin{DoxyCode}" ; toulbar2 EXAMPLES/505.wcsp -B=3 -j=1 -svo -k=1 | awk '/^Read /{ok=1} /Solving cluster subtree 3 /{ok=1} ok{print $0} /Solving cluster subtree 2 /{ok=0;print "";print "...";print ""}'
 echo "\\end{DoxyCode}}"
 
 echo -n "\\item "
@@ -109,7 +109,7 @@ echo "\\end{DoxyCode}}"
 
 echo -n "\\item "
 #echo "________________________________________________________________________________"
-echo "Download file {\\em example.dec}. Solve a WCSP using a variable neighborhood search algorithm (UDGVNS) with a given cluster decomposition:"
+echo "Download a cluster decomposition file {\\em example.dec} (each line corresponds to a cluster of variables, clusters may overlap). Solve a WCSP using a variable neighborhood search algorithm (UDGVNS) with a given cluster decomposition:"
 echo "\\begin{DoxyCode}"
 echo "	toulbar2 EXAMPLES/example.wcsp EXAMPLES/example.dec -vns"
 echo "\\end{DoxyCode}"

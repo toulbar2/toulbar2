@@ -290,7 +290,7 @@ void tb2init()
     ToulBar2::costThresholdPreS = "";
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
-    ToulBar2::trwsAccuracy = 0.001;
+    ToulBar2::trwsAccuracy = -1; // 0.001;
     ToulBar2::trwsOrder = false;
     ToulBar2::trwsNIter = 1000;
     ToulBar2::trwsNIterNoChange = 5;
@@ -446,6 +446,10 @@ void tb2checkOptions(Cost ub)
     if (ToulBar2::lds && ToulBar2::hbfs) {
         // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
         ToulBar2::hbfs = 0;
+    }
+    if (ToulBar2::lds && ToulBar2::solutionBasedPhaseSaving) {
+        // cout << "Warning! Solution based phase saving is not recommended with Limited Discrepancy Search." << endl;
+        ToulBar2::solutionBasedPhaseSaving = false;
     }
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2) {
         cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
@@ -2820,7 +2824,7 @@ void WCSP::propagateTRWS()
                 Store::store();
                 assignLS(bestPrimalVar, bestPrimalVal);
                 assert(numberOfUnassignedVariables() == 0);
-                ((Solver *) getSolver())->newSolution();
+                ((Solver *) getSolver())->Solver::newSolution();
                 bestUb = min<Cost>(getUb(), bestUb);
             } catch (Contradiction) {
                 whenContradiction();
