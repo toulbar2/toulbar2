@@ -127,6 +127,7 @@ enum {
     OPT_treedec_ext,
     OPT_clusterdec_ext,
 
+    OPT_qpbo_mult,
     // search option
     OPT_SEARCH_METHOD,
     OPT_btdRootCluster,
@@ -298,6 +299,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
+    { OPT_qpbo_mult, (char*)"-qpmult", SO_REQ_SEP },
     { OPT_SEARCH_METHOD, (char*)"-B", SO_REQ_SEP }, // -B [0,1,2] search method
     { OPT_SEARCH_METHOD, (char*)"--search", SO_REQ_SEP },
     { OPT_btdRootCluster, (char*)"-R", SO_REQ_SEP }, // root cluster used in BTD
@@ -598,7 +600,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
-    cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
+    cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
 #ifdef XMLFLAG
     cout << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
@@ -631,6 +633,7 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
     cout << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -1394,6 +1397,12 @@ int _tmain(int argc, TCHAR* argv[])
                 double co = atof(args.OptionArg());
                 if (co > MIN_COST)
                     ToulBar2::costMultiplier = co;
+            }
+
+            if (args.OptionId() == OPT_qpbo_mult) {
+                double co = atof(args.OptionArg());
+                if (co != 0.)
+                    ToulBar2::qpboQuadraticCoefMultiplier = co;
             }
 
             if (args.OptionId() == OPT_singletonConsistency)
@@ -2178,13 +2187,17 @@ int _tmain(int argc, TCHAR* argv[])
         ToulBar2::incop_cmd.replace(2, 1, sseed);
     }
 
+    tb2checkOptions();
     try {
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
+        if (globalUb <= MIN_COST) {
+            cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+            exit(1);
+        }
 
-        tb2checkOptions(globalUb);
         //TODO: If --show_options then dump ToulBar2 object here
 
         if (certificate) {

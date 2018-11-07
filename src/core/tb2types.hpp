@@ -443,6 +443,7 @@ public:
     static LcLevelType LcLevel;
     static bool wcnf;
     static bool qpbo;
+    static double qpboQuadraticCoefMultiplier;
 
     static char* varOrder;
     static int btdMode;
@@ -527,7 +528,7 @@ inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
 #ifdef LONGLONG_COST
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
+    return (((lb % max(UNIT_COST, (Cost)floor(fabs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floor(fabs(ToulBar2::costMultiplier))) : lb);
 }
 inline bool CUT(Cost lb, Cost ub)
 {

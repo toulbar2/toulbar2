@@ -1465,7 +1465,18 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 Cost Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
-    tb2checkOptions(wcsp->getUb());
+    if (ub <= MIN_COST) {
+        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
+        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
+        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
+        exit(1);
+    }
 
     if (ToulBar2::searchMethod != DFBB) {
         if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
@@ -1476,8 +1487,8 @@ Cost Solver::beginSolve(Cost ub)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
-        ToulBar2::btdMode = 0;
+        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
+        exit(1);
     }
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;

@@ -5,10 +5,9 @@ The goal is to minimize or maximize the quadratic function:
 
 X' * W * X = \sum_i=1 to N \sum_j=1 to N  W_ij * X_i * X_j  
 
-where W is a symmetric squared N*N matrix expressed by all its non-zero half (i<=j) squared matrix coefficients, X is a vector of N binary variables with domain values in {0,1} or {1,-1}, and X' is the transposed vector of X.
+where W is a symmetric squared N*N matrix expressed by all its non-zero triangle (i<=j) matrix coefficients, X is a vector of N binary variables with domain values in {0,1} or {1,-1}, and X' is the transposed vector of X.
 
-Note: for two indices i != j, coefficient W_ij = W_ji (symmetric matrix) and appears twice in the previous sum.
-
+Note: for two indices i < j, quadratic coefficient term W_ji = W_ij (symmetric matrix) and appears twice in the previous sum. W_ij is therefore multiplied by two from the original file.
 Note: coefficients can be positive or negative and are real float numbers. they are converted to fixed-point real numbers by multiplying them by 10^precision (see option -precision to modify it, default value is 7).  Infinite coefficients are forbidden.
 
 Note: depending on the sign of the number of variables in the first text line, the domain of all variables is either {0,1} or {1, -1}
@@ -35,4 +34,4 @@ such that i <= j and W_ij != 0
 
 --- suggestions send to:
 simon.de-givry@inra.fr
-INRA @ 2012
+INRA @ 2018

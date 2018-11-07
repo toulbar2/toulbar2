@@ -144,6 +144,7 @@ Cost ToulBar2::deltaUb;
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
+double ToulBar2::qpboQuadraticCoefMultiplier;
 
 char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
@@ -303,6 +304,7 @@ void tb2init()
     ToulBar2::bep = NULL;
     ToulBar2::wcnf = false;
     ToulBar2::qpbo = false;
+    ToulBar2::qpboQuadraticCoefMultiplier = 2.;
 
     ToulBar2::varOrder = NULL;
     ToulBar2::btdMode = 0;
@@ -370,13 +372,8 @@ void tb2init()
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
-void tb2checkOptions(Cost ub)
+void tb2checkOptions()
 {
-    if (ub <= MIN_COST) {
-        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-        exit(1);
-    }
-
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
         cerr << "Error: cost multiplier cannot be used with UAI and QPBO formats. Use option -precision instead." << endl;
         exit(1);
@@ -410,14 +407,6 @@ void tb2checkOptions(Cost ub)
     }
     if (ToulBar2::approximateCountingBTD && ToulBar2::btdMode != 1) {
         cerr << "Error: BTD search mode required for approximate solution counting (use '-B=1')." << endl;
-        exit(1);
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
-        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
-        exit(1);
-    }
-    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
-        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1) {
@@ -1954,8 +1943,12 @@ void WCSP::preprocessing()
             setDACOrder(elimorder);
             processTernary();
             propagate();
-            if (ToulBar2::verbose >= 0 && getLb() > previouslb)
-                cout << "PIC dual bound: " << getLb() << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
+            if (ToulBar2::verbose >= 0 && getLb() > previouslb) {
+                if (ToulBar2::uai)
+                    cout << "PIC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb()) + ToulBar2::markov_log) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
+                else
+                    cout << "PIC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
+            }
         } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
     } else if (ToulBar2::preprocessNary > 0) {
         processTernary();
