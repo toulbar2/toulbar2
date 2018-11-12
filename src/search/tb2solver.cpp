@@ -4,6 +4,7 @@
  */
 
 #include "tb2solver.hpp"
+#include "core/tb2vac.hpp"
 #include "core/tb2domain.hpp"
 #include "applis/tb2pedigree.hpp"
 #include "applis/tb2haplotype.hpp"
@@ -499,9 +500,9 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 			if(ToulBar2::BoolDomSize > 0){
 				heuristic = (double)(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->domSizeInBoolOfP) / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
 			}
-			if ((varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
+			if (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && (varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
 			(  ((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
-			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)))) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne) {
+			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))))) {
 				//cout << "varIndex: " << varIndex << " *iter: " << *iter << endl;
 				best = heuristic;
 				varIndex = *iter;
@@ -1297,6 +1298,7 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
+    //cout << "CALL TO recursiveSolve ToulBar2::RINS = " << ToulBar2::RINS << endl;
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();
@@ -1311,6 +1313,7 @@ void Solver::recursiveSolve(Cost lb)
     else
         varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized() : getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
+        //ToulBar2::useRINS = false;
         *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
         if (ToulBar2::bep)
             scheduleOrPostpone(varIndex);
@@ -1326,6 +1329,7 @@ void Solver::recursiveSolve(Cost lb)
             return binaryChoicePoint(varIndex, wcsp->getInf(varIndex), lb);
         }
     } else {
+        //ToulBar2::useRINS = true;
         assert(ToulBar2::isZ || lb <= wcsp->getLb());
         newSolution();
     }
@@ -1365,6 +1369,7 @@ void Solver::recursiveSolveLDS(int discrepancy)
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 {
+    cout << "call to Solver::hybridSolve" << endl;
     if (ToulBar2::verbose >= 1 && cluster)
         cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub << endl;
     assert(clb < cub);
@@ -1462,8 +1467,25 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     open_->updateClosedNodesLb(res.first, delta);
                     open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
-                } else
+                } else{
+                    // FULYA : HEURISTIC BURAYA
+                    if(ToulBar2::useRINS){
+                        if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
+                            cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                            ToulBar2::RINS = true;
+                            cout << "ToulBar2::RINS = true; at SOLVER" << endl;
+                            enforceUb();
+                            //cout << "call to vac::propagate from Solver" << endl;
+                            ((WCSP*)wcsp)->vac->iniThreshold();     
+                            ((WCSP*)wcsp)->vac->propagate();  // VAC done again
+                            //enforceUb(); wcsp->propagate();
+                            ToulBar2::RINS = false;
+                            cout << "ToulBar2::RINS = false; at SOLVER" << endl;
+                        }
+                    }
+                    cout << "call to recursiveSolve from Solver" << endl;
                     recursiveSolve(bestlb);
+                }
             } catch (Contradiction) {
                 wcsp->whenContradiction();
             }
@@ -1610,6 +1632,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         }
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
+
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
@@ -1618,6 +1641,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
+            cout << "after wcsp -> propagate() nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
         }
     }
     if (ToulBar2::verbose >= 0)
@@ -1625,6 +1649,21 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     // special data structure to be initialized for variable ordering heuristics
     initVarHeuristic();
+
+    if(ToulBar2::useRINS){
+        if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
+            cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+            ToulBar2::RINS = true;
+            cout << "ToulBar2::RINS = true; at preprocessing" << endl;
+            enforceUb();
+            //cout << "call to vac::propagate from Solver" << endl;
+            ((WCSP*)wcsp)->vac->iniThreshold();     
+            ((WCSP*)wcsp)->vac->propagate();  // VAC done again
+            //enforceUb(); wcsp->propagate();
+            ToulBar2::RINS = false;
+            cout << "ToulBar2::RINS = false; at preprocessing" << endl;
+        }
+    }
 
     int lds = ToulBar2::lds;
     ToulBar2::lds = 0; // avoid TimeOut exception when new solutions found
@@ -1691,7 +1730,6 @@ bool Solver::solve()
     try {
         try {
             initialUpperBound = preprocessing(initialUpperBound);
-
             Cost upperbound = MAX_COST;
             if (ToulBar2::restart >= 0) {
                 if (ToulBar2::restart > 0)

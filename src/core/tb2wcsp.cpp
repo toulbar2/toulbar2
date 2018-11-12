@@ -50,6 +50,9 @@ int WCSP::wcspCounter = 0;
 int ToulBar2::verbose;
 int ToulBar2::strictAC;
 int ToulBar2::BoolDomSize;
+bool ToulBar2::RINS;
+bool ToulBar2::useRINS;
+int ToulBar2::RINS_nbStrictACVariables;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -219,6 +222,9 @@ void tb2init()
     ToulBar2::verbose = 0;
     ToulBar2::strictAC = 0;
     ToulBar2::BoolDomSize = 0;
+    ToulBar2::RINS = false;
+    ToulBar2::useRINS = false;
+    ToulBar2::RINS_nbStrictACVariables = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
@@ -2507,6 +2513,7 @@ bool WCSP::verify()
 
 void WCSP::whenContradiction()
 {
+    //cout << "whenContradiction()" << endl;
     NC.clear();
     IncDec.clear();
     AC.clear();
@@ -3097,7 +3104,7 @@ void WCSP::propagate()
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
-    assert(verify());
+    //assert(verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());

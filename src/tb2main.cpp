@@ -185,6 +185,7 @@ enum {
     OPT_deltaUb,
     OPT_strictAC,
     OPT_BoolDomSize,
+    OPT_RINS,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -360,6 +361,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_strictAC, (char*)"-strictAC", SO_NONE },
     { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
+    { OPT_RINS, (char*)"-RINS", SO_NONE },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
@@ -1793,6 +1795,12 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::BoolDomSize = 1;
                 if (ToulBar2::debug)
 					cout << "Using Domain Size in Bool of P" << endl;
+            }
+
+            if (args.OptionId() == OPT_RINS) {
+                ToulBar2::useRINS = true;
+                if (ToulBar2::debug)
+					cout << "Using RINS-inspired heuristic" << endl;
             }
 
         }
