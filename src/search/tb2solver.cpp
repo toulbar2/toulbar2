@@ -503,7 +503,6 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 			if (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && (varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
 			(  ((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
 			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))))) {
-				//cout << "varIndex: " << varIndex << " *iter: " << *iter << endl;
 				best = heuristic;
 				varIndex = *iter;
 				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -520,7 +519,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 	}
 	
 	//if(varIndex != -1)
-		//cout << " BRANCH ON VARIABLE " << "Original Domsize: " << wcsp->getDomainSize(varIndex) << " Bool DomSize: " << (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->domSizeInBoolOfP) << endl;
+		//cout << " BRANCH ON VARIABLE " << varIndex << " Original Domsize: " << wcsp->getDomainSize(varIndex) << " Bool DomSize: " << (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->domSizeInBoolOfP) << endl;
 	if(varIndex == -1){
 		//cout << " BRANCH ON VARIABLE " << varIndex/* << " " << unassignedVars->empty()*/ << endl;
 		if(ToulBar2::strictAC > 0){
@@ -548,7 +547,10 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 					wcsp->enforceUb();    /* it will generate a contradiction if lb >= ub */
 					wcsp->propagate();    /* it will generate a contradiction if lb >= ub */
 				}
-				varIndex = *(unassignedVars->begin());
+                if(unassignedVars->empty())
+                    varIndex = -1;
+                else
+				    varIndex = *(unassignedVars->begin());
 			}
 		}
 	}
@@ -1298,7 +1300,6 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
-    //cout << "CALL TO recursiveSolve ToulBar2::RINS = " << ToulBar2::RINS << endl;
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();
@@ -1369,7 +1370,6 @@ void Solver::recursiveSolveLDS(int discrepancy)
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 {
-    cout << "call to Solver::hybridSolve" << endl;
     if (ToulBar2::verbose >= 1 && cluster)
         cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub << endl;
     assert(clb < cub);
@@ -1475,7 +1475,6 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                             ToulBar2::RINS = true;
                             cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                             enforceUb();
-                            //cout << "call to vac::propagate from Solver" << endl;
                             ((WCSP*)wcsp)->vac->iniThreshold();     
                             ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                             //enforceUb(); wcsp->propagate();
@@ -1483,7 +1482,6 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                             cout << "ToulBar2::RINS = false; at SOLVER" << endl;
                         }
                     }
-                    cout << "call to recursiveSolve from Solver" << endl;
                     recursiveSolve(bestlb);
                 }
             } catch (Contradiction) {
@@ -1656,7 +1654,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             ToulBar2::RINS = true;
             cout << "ToulBar2::RINS = true; at preprocessing" << endl;
             enforceUb();
-            //cout << "call to vac::propagate from Solver" << endl;
             ((WCSP*)wcsp)->vac->iniThreshold();     
             ((WCSP*)wcsp)->vac->propagate();  // VAC done again
             //enforceUb(); wcsp->propagate();
