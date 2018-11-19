@@ -127,6 +127,12 @@ void VACExtension::iniThreshold()
     nearIncVar = NULL;
 }
 
+void VACExtension::iniThreshold(Cost threshold)
+{
+    itThreshold = threshold;
+    nearIncVar = NULL;
+}
+
 void VACExtension::nextScaleCost()
 {
     Cost c = MAX_COST;
@@ -224,6 +230,7 @@ bool VACExtension::propagate()
         //		if (ToulBar2::verbose>=8) cout << *wcsp;
         Store::store();
         enforcePass1();
+
         isvac = isVAC();
         if (!isvac && CSP(wcsp->getLb(), wcsp->getUb())) {
             if (ToulBar2::weightedDegree)
@@ -266,14 +273,13 @@ bool VACExtension::propagate()
         }
 
         if(isvac){
-			
             //cout << "IS VAC !!!" << endl;
 
 			int nbDomSizeZero = 0;
 			ToulBar2::RINS_nbStrictACVariables = 0;
 			int nbDomSizeMore = 0;
 			int nbVariablesChanged = 0;
-			
+
 			for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
 				if (wcsp->getVar(i)->enumerated()) {
 					EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
@@ -285,7 +291,8 @@ bool VACExtension::propagate()
 					ValueCost domcost[size];
 					wcsp->getEnumDomainAndCost(i, domcost);
 					for (int v = 0; v < size; v++) {
-						if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
+                        //if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
+                        if(domcost[v].cost == MIN_COST){
 							xi->domSizeInBoolOfP += 1;
 							xi->strictACValue = domcost[v].value;
 						} 
@@ -293,7 +300,6 @@ bool VACExtension::propagate()
 							//cout << "ERROR Value in Bool(P) with non-zero cost!" << ((VACVariable*)xi)->getVACCost(domcost[v].value) << " " << domcost[v].cost << endl;
 						}
 					}
-					
 					xi->moreThanOne = (xi->domSizeInBoolOfP>1) ? true : false;
 					
 					if(xi->domSizeInBoolOfP > 1){
@@ -313,10 +319,11 @@ bool VACExtension::propagate()
 			}
 			
 			//cout << "Nb Variables With BoolDomSize Zero: " << nbDomSizeZero << " One: " << ToulBar2::RINS_nbStrictACVariables << " More Than One: " << nbDomSizeMore << endl;
-			//cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
+			//cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+            //cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
 
             if (ToulBar2::RINS) {
-
+                ToulBar2::RINS = false;
                 //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
                 int storedepth = Store::getDepth();
                 int storehbfs = ToulBar2::hbfs;
@@ -326,6 +333,7 @@ bool VACExtension::propagate()
                 int storenbBacktracksLimit = ((Solver*)(wcsp->getSolver()))->nbBacktracksLimit;
                 int storerestart = ToulBar2::restart;
                 int storenbBacktracks = ((Solver*)(wcsp->getSolver()))->nbBacktracks;
+                assert(storerestart == 0);
 
                 ToulBar2::vac = 0;
                 ToulBar2::hbfs = 0;
@@ -345,8 +353,20 @@ bool VACExtension::propagate()
                                 values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
                             }
                         }
-                        if (variables.size() > 0) wcsp->assignLS(variables, values);
+                        if (variables.size() > 0) wcsp->assignLS(variables, values, true);
                         cout << "call to recursiveSolve from VAC" << endl;
+                        for (BTList<Value>::iterator iter = ((Solver*)(wcsp->getSolver()))->unassignedVars->begin(); iter != ((Solver*)(wcsp->getSolver()))->unassignedVars->end(); ++iter) {
+                           ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->propagateNC();
+                        }
+                        /*cout << *wcsp << endl;
+                        string fileName = "problem_";
+                        fileName += to_string(wcsp->getNbNodes());
+                        fileName += "_";
+                        fileName += to_string(nbIterations);
+                        fileName += ".wcsp";
+                        ofstream pb(fileName.c_str());
+                        cout << fileName << endl;
+                        wcsp->dump(pb, true);*/
                         ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb());  // look at its search tree (if a new solution is found, UB should be updated automatically)
                     } catch (Contradiction) {
                         wcsp->whenContradiction();
@@ -360,13 +380,11 @@ bool VACExtension::propagate()
                 ToulBar2::hbfsGlobalLimit = storehbfsGlobalLimit;
                 ToulBar2::restart = storerestart;
                 ((Solver*)(wcsp->getSolver()))->hbfsLimit = storehbfsLimit;
-                ToulBar2::restart = 0;
                 ((Solver*)(wcsp->getSolver()))->nbBacktracksLimit = storenbBacktracksLimit + ((Solver*)(wcsp->getSolver()))->nbBacktracks - storenbBacktracks;
                 ToulBar2::vac = storeVac;
                 
                 //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = false" << endl;
                 wcsp->enforceUb();
-                ToulBar2::RINS = false;
             }
 			
 			string fileName = "problem_";

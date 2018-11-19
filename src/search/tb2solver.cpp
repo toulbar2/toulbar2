@@ -503,6 +503,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 			if (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && (varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
 			(  ((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
 			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))))) {
+				//cout << "varIndex: " << varIndex << " *iter: " << *iter << endl;
 				best = heuristic;
 				varIndex = *iter;
 				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -569,6 +570,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if(!wcsp->unassigned(*iter))
+            cout << *iter << " ERROR !!!!!" << endl;
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -1475,7 +1478,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                             ToulBar2::RINS = true;
                             cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                             enforceUb();
-                            ((WCSP*)wcsp)->vac->iniThreshold();     
+                            ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
                             ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                             //enforceUb(); wcsp->propagate();
                             ToulBar2::RINS = false;
@@ -1647,20 +1650,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     // special data structure to be initialized for variable ordering heuristics
     initVarHeuristic();
-
-    if(ToulBar2::useRINS){
-        if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
-            cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
-            ToulBar2::RINS = true;
-            cout << "ToulBar2::RINS = true; at preprocessing" << endl;
-            enforceUb();
-            ((WCSP*)wcsp)->vac->iniThreshold();     
-            ((WCSP*)wcsp)->vac->propagate();  // VAC done again
-            //enforceUb(); wcsp->propagate();
-            ToulBar2::RINS = false;
-            cout << "ToulBar2::RINS = false; at preprocessing" << endl;
-        }
-    }
 
     int lds = ToulBar2::lds;
     ToulBar2::lds = 0; // avoid TimeOut exception when new solutions found
@@ -1901,6 +1890,19 @@ bool Solver::solve()
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
                             initialDepth = Store::getDepth();
+                            /*if(ToulBar2::useRINS){
+                                if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
+                                    cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                                    ToulBar2::RINS = true;
+                                    cout << "ToulBar2::RINS = true; at the root" << endl;
+                                    enforceUb();
+                                    ((WCSP*)wcsp)->vac->iniThreshold();     
+                                    ((WCSP*)wcsp)->vac->propagate();  // VAC done again
+                                    //enforceUb(); wcsp->propagate();
+                                    ToulBar2::RINS = false;
+                                    cout << "ToulBar2::RINS = false; at the root" << endl;
+                                }
+                            }*/
                             hybridSolve();
                         }
                     }

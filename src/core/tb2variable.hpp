@@ -80,7 +80,7 @@ public:
     virtual void decrease(Value newSup, bool isDecision = false) = 0;
     virtual void remove(Value remValue, bool isDecision = false) = 0;
     virtual void assign(Value newValue, bool isDecision = false) = 0;
-    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs) = 0;
+    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) = 0;
 
     //    ConstraintList *getTriangles() {return &triangles;}
     ConstraintList* getConstrs() { return &constrs; }

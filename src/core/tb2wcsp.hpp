@@ -259,19 +259,20 @@ public:
     /// \brief assigns a set of variables at once and propagates
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
+    /// \param force boolean if true then apply assignLS even if the variable is already assigned
     /// \note this function is equivalent but faster than a sequence of \ref WCSP::assign. it is particularly useful for Local Search methods such as Large Neighborhood Search.
-    void assignLS(vector<int>& varIndexes, vector<Value>& newValues)
+    void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false)
     {
         assert(varIndexes.size() == newValues.size());
         unsigned int size = varIndexes.size();
-        assignLS((size > 0) ? &varIndexes[0] : NULL, (size > 0) ? &newValues[0] : NULL, size, true);
+        assignLS((size > 0) ? &varIndexes[0] : NULL, (size > 0) ? &newValues[0] : NULL, size, true, force);
     }
 
-    void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate)
+    void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false)
     {
         ConstraintSet delayedctrs;
         for (unsigned int i = 0; i < size; i++)
-            vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
+            vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs, force);
         for (ConstraintSet::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it)
             if (!(*it)->isGlobal()) {
                 if ((*it)->isSep())

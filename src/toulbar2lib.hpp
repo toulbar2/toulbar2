@@ -134,8 +134,8 @@ public:
     /// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
-    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) = 0;
-    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate) = 0;
+    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false) = 0;
+    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false) = 0;
 
     virtual Cost getUnaryCost(int varIndex, Value v) const = 0; ///< \brief unary cost associated to a domain value
     virtual Cost getMaxUnaryCost(int varIndex) const = 0; ///< \brief maximum unary cost in the domain

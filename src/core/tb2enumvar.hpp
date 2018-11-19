@@ -81,7 +81,7 @@ public:
     virtual void remove(Value value, bool isDecision = false);
     virtual void assign(Value newValue, bool isDecision = false);
     void assignWhenEliminated(Value newValue);
-    void assignLS(Value newValue, ConstraintSet& delayedCtrs);
+    void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false);
 
     virtual void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
     virtual void extend(Value value, Cost cost);
