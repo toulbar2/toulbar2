@@ -316,8 +316,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_boostingBTD, (char*)"-E:", SO_NONE },
     { OPT_varOrder, (char*)"-O", SO_REQ_SEP }, // filename of variable order
     { OPT_problemsaved_filename, (char*)"--save", SO_REQ_SEP }, // filename of saved problem
-    { OPT_showSolutions, (char*)"-s", SO_NONE }, //print solution found
-    { OPT_showSolutions, (char*)"--show", SO_NONE }, //print solution found
+    { OPT_showSolutions, (char*)"-s", SO_OPT }, //print solution found
+    { OPT_showSolutions, (char*)"--show", SO_OPT }, //print solution found
     { OPT_writeSolution, (char*)"-w", SO_OPT }, //  write last/all solutions found in file (default filename "sol")
 
     { OPT_pedigreePenalty, (char*)"-u", SO_REQ_SEP }, // int ..
@@ -629,7 +629,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
     cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation)" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
-    cout << "   -s : shows each solution found" << endl;
+    cout << "   -s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)" << endl;
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
@@ -1189,7 +1189,12 @@ int _tmain(int argc, TCHAR* argv[])
 
             // show Solutions
             if (args.OptionId() == OPT_showSolutions) {
-                ToulBar2::showSolutions = true;
+                if (args.OptionArg() != NULL) {
+                    int showType = atoi(args.OptionArg());
+                    if (showType > 0 && showType < 4)
+                        ToulBar2::showSolutions = showType;
+                } else
+                    ToulBar2::showSolutions = 1;
             }
 
             //#############################################

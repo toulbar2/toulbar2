@@ -68,9 +68,12 @@ inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
     assert(b < MAX_COST);
-    if (a >= MAX_COST) return MAX_COST;
-    else if (b <= UNIT_COST) return a * b;
-    else if (a < MAX_COST / b) return a * b;
+    if (a >= MAX_COST)
+        return MAX_COST;
+    else if (b <= UNIT_COST)
+        return a * b;
+    else if (a < MAX_COST / b)
+        return a * b;
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         exit(1);
@@ -134,9 +137,12 @@ inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
     assert(b < MAX_COST);
-    if (a >= MAX_COST) return MAX_COST;
-    else if (b <= UNIT_COST) return a * b;
-    else if (a < MAX_COST / b) return a * b;
+    if (a >= MAX_COST)
+        return MAX_COST;
+    else if (b <= UNIT_COST)
+        return a * b;
+    else if (a < MAX_COST / b)
+        return a * b;
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         exit(1);
@@ -367,7 +373,7 @@ public:
     static int verbose;
     static int debug;
     static string externalUB;
-    static bool showSolutions;
+    static int showSolutions;
     static char* writeSolution;
     static FILE* solutionFile;
     static Long allSolutions;

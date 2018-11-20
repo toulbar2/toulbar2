@@ -50,7 +50,7 @@ int WCSP::wcspCounter = 0;
 int ToulBar2::verbose;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
-bool ToulBar2::showSolutions;
+int ToulBar2::showSolutions;
 char* ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
 Long ToulBar2::allSolutions;
@@ -219,7 +219,7 @@ void tb2init()
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
-    ToulBar2::showSolutions = false;
+    ToulBar2::showSolutions = 0;
     ToulBar2::writeSolution = NULL;
     ToulBar2::solutionFile = NULL;
     ToulBar2::allSolutions = 0;
@@ -2614,8 +2614,8 @@ void WCSP::propagateTRWS()
     vector<int> orders[2] = { vector<int>(numberOfVariables()), vector<int>(numberOfVariables()) };
     vector<unsigned int> ranks[2] = { vector<unsigned int>(numberOfVariables()), vector<unsigned int>(numberOfVariables()) };
     vector<Cost> tmpM(getMaxDomainSize(), numeric_limits<Cost>::max());
-    vector < Value > bestPrimalVal (numberOfVariables(), 0);
-    vector < int > bestPrimalVar (numberOfVariables(), 0);
+    vector<Value> bestPrimalVal(numberOfVariables(), 0);
+    vector<int> bestPrimalVar(numberOfVariables(), 0);
     for (unsigned int i = 0; i < numberOfVariables(); ++i) {
         bestPrimalVar[i] = i;
         bestPrimalVal[i] = getSupport(i);
@@ -2657,8 +2657,7 @@ void WCSP::propagateTRWS()
                 }
             } while (stillPath);
         }
-    }
-    else {
+    } else {
         // Use DAC order
         for (unsigned int i = 0; i < numberOfVariables(); ++i) {
             Variable* var = getVar(i);
@@ -2799,13 +2798,12 @@ void WCSP::propagateTRWS()
                                 EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
                                 if (rank[s->wcspIndex] < rank[t->wcspIndex]) {
                                     cost += binctr->trwsM[j];
-                                }
-                                else {
+                                } else {
                                     cost += binctr->getCost(s, t, *sIter, bestPrimalVal[t->wcspIndex]);
                                 }
                             }
                         }
-                        if (cost < bestCost || (cost == bestCost && s->getSupport()==*sIter)) {
+                        if (cost < bestCost || (cost == bestCost && s->getSupport() == *sIter)) {
                             bestCost = cost;
                             bestPrimalVal[s->wcspIndex] = *sIter;
                         }
@@ -2817,7 +2815,7 @@ void WCSP::propagateTRWS()
                 Store::store();
                 assignLS(bestPrimalVar, bestPrimalVal);
                 assert(numberOfUnassignedVariables() == 0);
-                ((Solver *) getSolver())->Solver::newSolution();
+                ((Solver*)getSolver())->Solver::newSolution();
                 bestUb = min<Cost>(getUb(), bestUb);
             } catch (Contradiction) {
                 whenContradiction();
@@ -2835,7 +2833,7 @@ void WCSP::propagateTRWS()
                 Double Dglb = (ToulBar2::costMultiplier >= 0 ? Cost2ADCost(getLb() + ebound) : Cost2ADCost(bestUb));
                 Double Dgub = (ToulBar2::costMultiplier >= 0 ? Cost2ADCost(bestUb) : Cost2ADCost(getLb() + ebound));
                 if (ToulBar2::uai)
-                    cout << "TRW-S dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + ebound) + ToulBar2::markov_log) << " -- primal bound: "  << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(bestUb) + ToulBar2::markov_log) << " (+" << (100 * change) << "%) (accuracy: " << (100.0 * (bestUb - ebound - getLb()) / (bestUb + 1)) << "%) (iter:" << nIteration << ")" << endl;
+                    cout << "TRW-S dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(getLb() + ebound) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(getLb() + ebound) + ToulBar2::markov_log) << " -- primal bound: " << std::setprecision(ToulBar2::decimalPoint) << Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " energy: " << -(Cost2LogProb(bestUb) + ToulBar2::markov_log) << " (+" << (100 * change) << "%) (accuracy: " << (100.0 * (bestUb - ebound - getLb()) / (bestUb + 1)) << "%) (iter:" << nIteration << ")" << endl;
                 else
                     cout << "TRW-S bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << std::setprecision(DECIMAL_POINT) << "] (+" << (100 * change) << "%) (accuracy: " << (100.0 * (bestUb - ebound - getLb()) / (bestUb + 1)) << "%) (iter:" << nIteration << ")" << endl;
             }
@@ -2850,78 +2848,77 @@ void WCSP::propagateTRWS()
         if (ToulBar2::verbose >= 1) {
             cout << "TRW-S did not improve the lower bound." << endl;
         }
-    }
-    else {
-      Cost delta = MIN_COST;
-      for (unsigned int i = 0; i < numberOfVariables(); ++i) {
-          if (unassigned(orders[0][i]) && enumerated(orders[0][i])) {
-              if (ToulBar2::interrupted)
-                  throw TimeOut();
-              EnumeratedVariable* s = static_cast<EnumeratedVariable*>(getVar(orders[0][i]));
-              for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
-                  Constraint* constraint = (*iter).constr;
-                  if (constraint->isBinary()) {
-                      BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
-                      EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-                      if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
-                          for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                              unsigned int j = s->toIndex(*sIter);
-                              binctr->projectTRWS(s, *sIter, binctr->trwsM[j]);
-                          }
-                      }
-                  }
-              }
-              Cost c = s->normalizeTRWS();
-              delta += c;
-              for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                  Cost availableCost = static_cast<Cost>(trunc(s->getTRWSGamma() * s->getCost(*sIter)));
-                  for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
-                      Constraint* constraint = (*iter).constr;
-                      if (constraint->isBinary()) {
-                          BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
-                          EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-                          if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
-                              binctr->extend(binctr->getIndex(s), *sIter, availableCost);
-                          }
-                      }
-                  }
-              }
-              for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
-                  Constraint* constraint = (*iter).constr;
-                  if (constraint->isBinary()) {
-                      BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
-                      EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
-                      if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
-                          std::function<Cost(unsigned int, unsigned int)> getCost1 = [binctr](unsigned int x, unsigned int y) { return binctr->getCostTRWS(x, y); };
-                          std::function<Cost(unsigned int, unsigned int)> getCost2 = [binctr](unsigned int y, unsigned int x) { return binctr->getCostTRWS(x, y); };
-                          auto getCost = (s == binctr->getVar(0)) ? getCost1 : getCost2;
-                          Cost minCost = numeric_limits<Cost>::max();
-                          tmpM.resize(max(s->getDomainInitSize(), t->getDomainInitSize()), numeric_limits<Cost>::max());
-                          for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
-                              unsigned int k = t->toIndex(*tIter);
-                              tmpM[k] = numeric_limits<Cost>::max();
-                              for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                                  tmpM[k] = min<Cost>(tmpM[k], getCost(*sIter, *tIter));
-                              }
-                              minCost = min<Cost>(minCost, tmpM[k]);
-                          }
-                          for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
-                              unsigned int k = t->toIndex(*tIter);
-                              tmpM[k] -= minCost;
-                          }
-                          binctr->trwsM = tmpM;
-                          for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
-                              binctr->projectTRWS(t, *tIter, binctr->trwsM[t->toValue(*tIter)]);
-                          }
-                          minCost = binctr->normalizeTRWS();
-                          delta += minCost;
-                      }
-                  }
-              }
-          }
-      }
-      increaseLb(delta);
-      propagate(); // propagate again without TRWS and possibly with VAC
+    } else {
+        Cost delta = MIN_COST;
+        for (unsigned int i = 0; i < numberOfVariables(); ++i) {
+            if (unassigned(orders[0][i]) && enumerated(orders[0][i])) {
+                if (ToulBar2::interrupted)
+                    throw TimeOut();
+                EnumeratedVariable* s = static_cast<EnumeratedVariable*>(getVar(orders[0][i]));
+                for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
+                    Constraint* constraint = (*iter).constr;
+                    if (constraint->isBinary()) {
+                        BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
+                        EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
+                        if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
+                            for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
+                                unsigned int j = s->toIndex(*sIter);
+                                binctr->projectTRWS(s, *sIter, binctr->trwsM[j]);
+                            }
+                        }
+                    }
+                }
+                Cost c = s->normalizeTRWS();
+                delta += c;
+                for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
+                    Cost availableCost = static_cast<Cost>(trunc(s->getTRWSGamma() * s->getCost(*sIter)));
+                    for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
+                        Constraint* constraint = (*iter).constr;
+                        if (constraint->isBinary()) {
+                            BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
+                            EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
+                            if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
+                                binctr->extend(binctr->getIndex(s), *sIter, availableCost);
+                            }
+                        }
+                    }
+                }
+                for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
+                    Constraint* constraint = (*iter).constr;
+                    if (constraint->isBinary()) {
+                        BinaryConstraint* binctr = static_cast<BinaryConstraint*>(constraint);
+                        EnumeratedVariable* t = static_cast<EnumeratedVariable*>(binctr->getVarDiffFrom(s));
+                        if (ranks[0][s->wcspIndex] < ranks[0][t->wcspIndex]) {
+                            std::function<Cost(unsigned int, unsigned int)> getCost1 = [binctr](unsigned int x, unsigned int y) { return binctr->getCostTRWS(x, y); };
+                            std::function<Cost(unsigned int, unsigned int)> getCost2 = [binctr](unsigned int y, unsigned int x) { return binctr->getCostTRWS(x, y); };
+                            auto getCost = (s == binctr->getVar(0)) ? getCost1 : getCost2;
+                            Cost minCost = numeric_limits<Cost>::max();
+                            tmpM.resize(max(s->getDomainInitSize(), t->getDomainInitSize()), numeric_limits<Cost>::max());
+                            for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
+                                unsigned int k = t->toIndex(*tIter);
+                                tmpM[k] = numeric_limits<Cost>::max();
+                                for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
+                                    tmpM[k] = min<Cost>(tmpM[k], getCost(*sIter, *tIter));
+                                }
+                                minCost = min<Cost>(minCost, tmpM[k]);
+                            }
+                            for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
+                                unsigned int k = t->toIndex(*tIter);
+                                tmpM[k] -= minCost;
+                            }
+                            binctr->trwsM = tmpM;
+                            for (EnumeratedVariable::iterator tIter = t->begin(); tIter != t->end(); ++tIter) {
+                                binctr->projectTRWS(t, *tIter, binctr->trwsM[t->toValue(*tIter)]);
+                            }
+                            minCost = binctr->normalizeTRWS();
+                            delta += minCost;
+                        }
+                    }
+                }
+            }
+        }
+        increaseLb(delta);
+        propagate(); // propagate again without TRWS and possibly with VAC
     }
 }
 
@@ -3973,7 +3970,8 @@ void WCSP::ternaryCompletion()
             ntern++;
         }
     }
-    if (ToulBar2::verbose >= 0) cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
+    if (ToulBar2::verbose >= 0)
+        cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
 }
 
 // -----------------------------------------------------------
