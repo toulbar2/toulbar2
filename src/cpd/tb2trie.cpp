@@ -6,7 +6,15 @@
 
 using namespace std;
 
-const string TrieNode::i2a = "ACDEFGHIKLMNPQRSTVWYZ";
+// One letter amino acid codes.
+//  + Z is dummy one that can be used for variables that do not represent amino acids
+//  + protonated histidines:
+//     - Rosetta uses HIS (H) for both HID/HIE (chosen based on energy)
+//     - otherwise, H for HIS and g i j for HID, HIE, HIP
+//  + aspartate protonation: c e (AS1 AS2)
+//  + glutamate protonation: d f (GL1 GL2)
+// memo: lowercase letters, one before and one after the 'standard' letter
+const string TrieNode::i2a = "ACDceEdfFGHgijIKLMNPQRSTVWYZ";
 const size_t TrieNode::numAA = i2a.length();
 
 size_t TrieNode::total_sequences = 0;
