@@ -291,8 +291,7 @@ bool VACExtension::propagate()
 					ValueCost domcost[size];
 					wcsp->getEnumDomainAndCost(i, domcost);
 					for (int v = 0; v < size; v++) {
-                        //if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
-                        if(domcost[v].cost == MIN_COST){
+                        if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
 							xi->domSizeInBoolOfP += 1;
 							xi->strictACValue = domcost[v].value;
 						} 
