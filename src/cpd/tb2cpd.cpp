@@ -76,25 +76,36 @@ AminoMRF::AminoMRF(const char* filename)
         ss >> n;
         ss >> m;
 
+        // we just ignore the gap
         TLogProb minscore = std::numeric_limits<TLogProb>::max();
+        TLogProb maxscore = std::numeric_limits<TLogProb>::min();
         pair<int, int> pv(n, m);
-        for (int i = 0; i < NumNatAA; i++) {
-            binaries[pv].resize(NumNatAA);
-            for (int j = 0; j < NumNatAA; j++) {
+        for (int i = 0; i < NumNatAA + 1; i++) {
+            if (i < 20)
+                binaries[pv].resize(NumNatAA);
+
+            for (int j = 0; j < NumNatAA + 1; j++) {
                 file >> LP;
-                binaries[pv][i].push_back(LP);
-                minscore = min(minscore, LP);
+                if (i < 20 && j < 20) {
+                    binaries[pv][i].push_back(LP);
+                    minscore = min(minscore, LP);
+                    maxscore = max(maxscore, LP);
+                }
             }
         }
 
+        // renormalize globally
+        maxscore -= minscore;
         for (int i = 0; i < NumNatAA; i++) {
             for (int j = 0; j < NumNatAA; j++) {
                 binaries[pv][i][j] -= minscore;
             }
         }
-        nPot++;
+
+        if (maxscore > 1e-2)
+            nPot++;
     } while (!file.eof());
-    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " correlated pairs\n";
+    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " correlated pairs (dev > 1e-2)\n";
 }
 
 AminoMRF::~AminoMRF()
