@@ -15,13 +15,14 @@ const map<char, int> AminoMRF::AminoMRFIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 
     { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
     { 'Y', 18 }, { 'V', 19 } };
 
+const string AminoMRFs = "ARNDCQEGHILKMFPSTWYV-";
+constexpr int NumNatAA = 20;
+
 // AminoMRF Class
 // Read MRF trained from multiple alignment. The MRF (alignment) should have
 // exactly the same number of variables/columns as the currently solved design problem.
 AminoMRF::AminoMRF(const char* filename)
 {
-    constexpr int NumNatAA = 20;
-
     ifstream file;
     file.open(filename);
 
@@ -42,18 +43,18 @@ AminoMRF::AminoMRF(const char* filename)
             binariesReached = true;
             break;
         }
-
         stringstream ss(s);
-        ss.ignore();
 
         TLogProb minscore = std::numeric_limits<TLogProb>::max();
         for (int i = 0; i < NumNatAA; i++) {
             ss >> LP;
-            unaries[nv].push_back(LP);
-            minscore = min(minscore, LP);
+            unaries[nv].push_back(-LP);
+            minscore = min(minscore, -LP);
         }
         for (int i = 0; i < NumNatAA; i++) {
             unaries[nv][i] -= minscore;
+            if (unaries[nv][i] == 0.0 && ToulBar2::verbose > 0)
+                cout << "Variable " << nv << " preferred AA is " << AminoMRFs[i] << endl;
         }
         nv++;
     }
@@ -87,9 +88,9 @@ AminoMRF::AminoMRF(const char* filename)
             for (int j = 0; j < NumNatAA + 1; j++) {
                 file >> LP;
                 if (i < 20 && j < 20) {
-                    binaries[pv][i].push_back(LP);
-                    minscore = min(minscore, LP);
-                    maxscore = max(maxscore, LP);
+                    binaries[pv][i].push_back(-LP);
+                    minscore = min(minscore, -LP);
+                    maxscore = max(maxscore, -LP);
                 }
             }
         }
@@ -102,10 +103,10 @@ AminoMRF::AminoMRF(const char* filename)
             }
         }
 
-        if (maxscore > 1e-2)
+        if (maxscore > 1e-1)
             nPot++;
     } while (!file.eof());
-    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " correlated pairs (dev > 1e-2)\n";
+    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
 
 AminoMRF::~AminoMRF()
@@ -154,7 +155,12 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             biases.push_back(bias);
         }
         if (warn) {
-            cout << "WARNING: the preferred amino acid has been excluded from design at residue " << varIdx + 1 << endl;
+            cout << "WARNING: the preferred amino acid (";
+            for (int i = 0; i < NumNatAA; i++) {
+                if (unaries[varIdx][i] == 0.0)
+                    cout << AminoMRFs[i];
+            }
+            cout << ") has been excluded from design at residue " << varIdx + 1 << endl;
         }
         pb->postUnaryConstraint(varIdx, biases);
     }
@@ -176,8 +182,13 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
                 biases.push_back(bias);
             }
         }
-        if (warn) {
-            cout << "WARNING: the preferred amino acid pair has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
+        if (warn && ToulBar2::verbose > 0) {
+            cout << "WARNING: the preferred amino acid pair (";
+            for (int i = 0; i < NumNatAA; i++)
+                for (int j = 0; j < NumNatAA; j++)
+                    if (bincf.second[i][j] == 0.0)
+                        cout << "[" << AminoMRFs[i] << AminoMRFs[j] << "]";
+            cout << ") has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
         }
         pb->postBinaryConstraint(varIdx1, varIdx2, biases);
     }

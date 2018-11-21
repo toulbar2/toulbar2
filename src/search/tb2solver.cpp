@@ -1380,7 +1380,7 @@ void Solver::newSolution()
         wcsp->setSolution(wcsp->getLb());
 
     if (ToulBar2::cpd) {
-        cout << "Energy " << wcsp->getDLb() << endl;
+        //        cout << "Energy " << wcsp->getDLb() << endl;
         ToulBar2::cpd->storeSequence(wcsp->getVars(), wcsp->getDLb());
     }
     if (ToulBar2::showSolutions) {
