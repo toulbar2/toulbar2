@@ -1721,7 +1721,6 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             }
             //   Z: debug mode (save problem at each node if verbosity option set!)
-
             //		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
 
             if (args.OptionId() == OPT_debug) {
