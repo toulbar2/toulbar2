@@ -12,7 +12,7 @@ class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
     String tuple; // forbidden assignment corresponding to the negation of the clause
     StoreCost lb; // projected cost to problem lower bound
-    vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function (only for values that satisfy the clause)
+    vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     String evalTuple; // temporary data structure

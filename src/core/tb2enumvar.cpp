@@ -1254,7 +1254,7 @@ void EnumeratedVariable::eliminate()
                 for (EnumeratedVariable::iterator itv = begin(); itv != end(); ++itv) {
                     clogz = wcsp->LogSumExp(clogz, getCost(*itv));
                 }
-                if (clogz < 0) {
+                if (clogz < MIN_COST) {
                     if (ToulBar2::verbose >= 1)
                         cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + clogz << endl;
                     wcsp->decreaseLb(clogz);

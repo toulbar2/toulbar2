@@ -592,9 +592,12 @@ void populationsort(Configuration** population, int taille)
 /* le nom du fichier de sortie : pour les tests : resultatsxxx/concat�nation des arguments */
 void ofile_name(char* filename, int argc, char** argv)
 {
-    sprintf(filename, "%s%s", "results/", argv[2]);
-    for (int i = 3; i < argc; i++)
-        sprintf(filename, "%s-%s", filename, argv[i]);
+    unsigned offset = sprintf(filename, "%s%s", "results/", argv[2]);
+    char* slide = filename;
+    for (int i = 3; i < argc; i++) {
+        slide += offset;
+        offset = sprintf(slide, "-%s", argv[i]);
+    }
     cout << filename << endl;
 }
 
@@ -802,8 +805,7 @@ void calcul_valeur_population(OpProblem* problem, Configuration** population, in
 void executer_essai(OpProblem* problem, IncompleteAlgorithm* algo, Configuration** population, int taille, int graine1, int nessai, vector<int>* initconfig)
 {
     // graine du g�n�rateur aleatoire pour l'essai
-    srand48(graine1 + nessai);
-    srand(graine1 + nessai);
+    mysrand(graine1 + nessai);
     //    ecriture_graine(graine1+nessai,nessai);
 
     Statistiques->init_try(nessai);

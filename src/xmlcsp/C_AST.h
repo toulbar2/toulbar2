@@ -39,14 +39,16 @@
  *
  * This is also the representation of a symbolic constant.
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
 } C_AST;
 
 /*
  * representation of a variable (necessarily a leaf in the tree)
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
     char* varName;
     int idVar;
@@ -56,7 +58,8 @@ typedef struct {
  * representation of a constant (boolean or integer -- necessarily a
  * leaf in the tree)
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
     int val;
 } C_AST_CstNode;
@@ -64,7 +67,8 @@ typedef struct {
 /*
  * representation of a function
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
     int nbarg;
     C_AST* args[];
@@ -73,7 +77,8 @@ typedef struct {
 /*
  * representation of a list
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
     int size; /* number of items in the list */
     C_AST* items[];
@@ -82,7 +87,8 @@ typedef struct {
 /*
  * entry in a dictionary
  */
-typedef struct {
+typedef struct
+{
     char* key;
     C_AST* value;
 } C_AST_DictEntry;
@@ -90,7 +96,8 @@ typedef struct {
 /*
  * representation of a dictionary
  */
-typedef struct {
+typedef struct
+{
     NodeType type;
     int size; /* number of items in the dictionary */
     C_AST_DictEntry items[];

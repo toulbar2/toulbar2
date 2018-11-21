@@ -56,7 +56,7 @@ struct BigInteger {
     }
     BigInteger& operator/=(const BigInteger& i)
     {
-        assert(mpz_sgn(i.integer) != 0);
+        assert(i.integer != 0);
         mpz_div(integer, integer, i.integer);
         return *this;
     }

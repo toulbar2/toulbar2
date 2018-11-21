@@ -321,14 +321,14 @@ public:
         {
         }
 
-        iterator& operator++() // Prefix form
-        {
+        iterator& operator++()
+        { // Prefix form
             next_edge++;
             return *this;
         }
 
-        iterator& operator--() // Prefix form
-        {
+        iterator& operator--()
+        { // Prefix form
             next_edge--;
             return *this;
         }
@@ -382,8 +382,8 @@ public:
         {
         }
 
-        edge_iterator& operator++() // Prefix form
-        {
+        edge_iterator& operator++()
+        { // Prefix form
             ++next_edge;
             return *this;
         }
@@ -433,8 +433,8 @@ public:
         {
         }
 
-        node_iterator& operator++() // Prefix form
-        {
+        node_iterator& operator++()
+        { // Prefix form
             ++next_node;
             return *this;
         }

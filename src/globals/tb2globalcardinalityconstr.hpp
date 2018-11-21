@@ -29,7 +29,8 @@ public:
     //JP End//
     static const int VALUE = 1;
     static const int VAR = 0;
-    GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
+    GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
+                                                                               arity_in);
 
     ~GlobalCardinalityConstraint()
     {

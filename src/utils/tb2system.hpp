@@ -23,15 +23,6 @@ void timeOut(int sig);
 void timer(int t); ///< \brief set a timer (in seconds)
 void timerStop(); ///< \brief stop a timer
 
-static inline void rtrim(std::string& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    })
-                .base(),
-        s.end());
-}
-
 #ifdef WIDE_STRING
 typedef wchar_t Char;
 typedef wstring String;
@@ -75,22 +66,22 @@ const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
 typedef long double Double;
 
 #ifdef LINUX
-inline void mysrand(long seed)
+inline void mysrand(int seed)
 {
     return srand48(seed);
 }
 inline int myrand() { return lrand48(); }
 inline Long myrandl() { return (Long)((Long)lrand48() /**LONGLONG_MAX*/); }
+inline double mydrand() { return drand48(); }
 #endif
 #ifdef WINDOWS
-inline void mysrand(long seed)
+inline void mysrand(int seed)
 {
     return srand(seed);
 }
 inline int myrand() { return rand(); }
 inline Long myrandl() { return (Long)((Long)rand() /**LONGLONG_MAX*/); }
-//replace srand48(seed) by srand(seed)
-//replace drand48() by (double(rand()) / RAND_MAX)
+inline double mydrand() { return drand(); } //If compiler warning, replace by (double(rand()) / RAND_MAX);
 #endif
 
 #ifdef DOUBLE_PROB

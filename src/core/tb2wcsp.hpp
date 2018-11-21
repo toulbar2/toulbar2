@@ -154,8 +154,7 @@ public:
     /// \brief enforces problem upper bound when exploring an alternative search node
     void enforceUb()
     {
-        if (CUT(((((Cost)lb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? ((Cost)lb + ToulBar2::costMultiplier) : (Cost)lb),
-                ub))
+        if (CUT((Cost)lb, ub))
             THROWCONTRADICTION;
         objectiveChanged = true;
     }
@@ -165,7 +164,7 @@ public:
     void decreaseUb(Cost newUb)
     {
         if (newUb < ub) {
-            if (CUT(((((Cost)lb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? ((Cost)lb + ToulBar2::costMultiplier) : (Cost)lb), newUb))
+            if (CUT((Cost)lb, newUb))
                 THROWCONTRADICTION;
             ub = newUb;
             objectiveChanged = true;
@@ -180,7 +179,7 @@ public:
         if (addLb > MIN_COST) {
             //		   incWeightedDegree(addLb);
             Cost newLb = lb + addLb;
-            if (CUT((((newLb % ((Cost)ceil(ToulBar2::costMultiplier))) != MIN_COST) ? (newLb + ToulBar2::costMultiplier) : newLb), ub))
+            if (CUT(newLb, ub))
                 THROWCONTRADICTION;
             lb = newLb;
             objectiveChanged = true;
@@ -338,7 +337,7 @@ public:
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
     int getMaxDomainSize() const { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
-    Value getDomainSizeSum() const; ///< \brief total sum of current domain sizes
+    unsigned int getDomainSizeSum() const; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     void cartProd(BigInteger& cartesianProduct)
@@ -450,7 +449,8 @@ public:
         solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
-            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][v].value : v);
+            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving) setBestValue(i, v);
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i,v)].value : v);
         }
     }
 

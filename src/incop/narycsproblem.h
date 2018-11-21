@@ -60,7 +60,7 @@ public:
     vector<NaryConstraint*> constraints;
     NaryVariable();
 };
-} // namespace INCOP
+}
 
 INCOP::NaryCSProblem* weighted_narycsp_creation(int nbvar, int nbconst, int maxdomsize,
     vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct);

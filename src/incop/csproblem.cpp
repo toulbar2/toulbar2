@@ -99,7 +99,7 @@ void CSProblem::best_config_analysis()
 void CSProblem::random_configuration(Configuration* configuration)
 {
     for (int j = 0; j < nbvar; j++) {
-        int indice = (int)(drand48() * variable_domainsize(j));
+        int indice = (int)(mydrand() * variable_domainsize(j));
         configuration->config[j] = index2value(indice, j);
         //        *ofile << " j " << j << " " << configuration->config[j] << endl;
     }
@@ -108,8 +108,8 @@ void CSProblem::random_configuration(Configuration* configuration)
 /* choix aleatoire d'une variable */
 int CSProblem::random_variable(Configuration* configuration)
 {
-    //return  (int) (drand48() * nbvar);
-    return (rand() % nbvar);
+    //return  (int) (mydrand() * nbvar);
+    return (myrand() % nbvar);
 }
 
 /* cas des variables en conflit : reduction de la taille du voisinage au max(voisinage, nb var conflits * taille_domaine) */
@@ -125,8 +125,8 @@ void CSProblem::adjust_parameters(Configuration* configuration, int& maxneighbor
 int CSProblem::random_conflict_variable(Configuration* configuration)
 {
     // *ofile << "VC " << configuration->var_conflict.size() << endl;
-    // return configuration->var_conflict[(int) (drand48() * configuration->var_conflict.size())];
-    return configuration->var_conflict[rand() % configuration->var_conflict.size()];
+    // return configuration->var_conflict[(int) (mydrand() * configuration->var_conflict.size())];
+    return configuration->var_conflict[myrand() % configuration->var_conflict.size()];
 }
 
 /* choix aléatoire d'une valeur autre que la courante : renvoie l'indice de la valeur*/
@@ -135,8 +135,8 @@ int CSProblem::random_value(int var, int val)
 {
     if (variable_domainsize(var) == 1)
         return 0; // domaine a une valeur
-    // int  val_changee = (int) (drand48() * (tabdomains[domains[var]].size()-1));
-    int val_changee = rand() % (tabdomains[domains[var]].size() - 1);
+    // int  val_changee = (int) (mydrand() * (tabdomains[domains[var]].size()-1));
+    int val_changee = myrand() % (tabdomains[domains[var]].size() - 1);
     if (index2value(val_changee, var) >= val)
         val_changee++;
     return val_changee;
@@ -165,7 +165,7 @@ int CSProblem::min_conflict_value(int var, int val, Configuration* configuration
             k1 = 1;
         } else if (promises == minpromises) {
             k1++;
-            if (drand48() < 1 / (double)k1)
+            if (mydrand() < 1 / (double)k1)
                 j = i;
         }
     }

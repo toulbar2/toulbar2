@@ -169,7 +169,7 @@ public:
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
     virtual int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
-    virtual Value getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes
+    virtual unsigned int getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
     virtual void cartProd(BigInteger& cartesianProduct) = 0;
@@ -452,6 +452,7 @@ public:
         tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
         // Create a solver object
+        initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
         WeightedCSPSolver *solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
         // Read a problem file in wcsp format
@@ -532,8 +533,7 @@ public:
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
 extern void tb2init();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
-/// \return new initial upper bound (if options assume it is a satisfaction problem instead of optimization)
-extern void tb2checkOptions(Cost initialUpperBound);
+extern void tb2checkOptions();
 #endif /*TOULBAR2LIB_HPP_*/
 
 /* Local Variables: */

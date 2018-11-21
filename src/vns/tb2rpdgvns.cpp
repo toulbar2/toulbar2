@@ -719,7 +719,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }
-    if (ToulBar2::uai || ToulBar2::uaieval) {
+    if (ToulBar2::uaieval && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(bestUb);
     }
 }

@@ -33,15 +33,13 @@ namespace CSPXMLParser {
 
 using namespace std;
 
-enum CSPDefinitionType {
-    RelationType,
+enum CSPDefinitionType { RelationType,
     PredicateType,
     GlobalConstraintType, // don't change these ones
     DomainType,
     VariableType,
     ConstraintType,
-    UndefinedType
-}; // UndefinedType must come last
+    UndefinedType }; // UndefinedType must come last
 
 class AST; // Abstract Syntax Tree representing an expression
 

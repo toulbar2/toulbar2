@@ -11,8 +11,7 @@
    just two values, 0 (not in the clique) and 1 (in the clique), so
    we use these terms.
 */
-class CliqueConstraint : public AbstractNaryConstraint
-{
+class CliqueConstraint : public AbstractNaryConstraint {
 public:
     CliqueConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in,
                      vector<vector<int>> clq_in, int rhs_in);
@@ -31,7 +30,8 @@ public:
 
     void propagate() override;
 
-    Cost eval( const String& s ) override {
+    Cost eval(const String& s) override
+    {
         bool iszerotuple = true;
         for(int i=0;i<arity_;i++) {
             if (inclq[i][scope[i]->toValue(s[i]-CHAR_FIRST)]) {
@@ -39,13 +39,45 @@ public:
                 break;
             }
         }
-        if (iszerotuple) return all0;
-        else return MIN_COST;
+        if (iszerotuple)
+            return all0;
+        else
+            return MIN_COST;
+    }
+    Cost evalsubstr(const String& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const String& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
+    template <class T>
+    Cost evalsubstrAny(const String& s, T* ctr)
+    {
+        int count = 0;
+
+        for (int i = 0; i < arity_; i++) {
+            int ind = ctr->getIndex(getVar(i));
+            if (ind >= 0) {
+                evalTuple[i] = s[ind];
+                count++;
+            }
+        }
+        assert(count <= arity_);
+
+        Cost cost;
+        if (count == arity_)
+            cost = eval(evalTuple);
+        else
+            cost = MIN_COST;
+
+        return cost;
     }
 
     vector<Long> conflictWeights;   // used by weighted degree heuristics
-    Long getConflictWeight(int varIndex) const override {assert(varIndex>=0);assert(varIndex<arity_);return conflictWeights[varIndex]+Constraint::getConflictWeight();}
-    void incConflictWeight(Constraint *from) override {
+    Long getConflictWeight(int varIndex) const override
+    {
+        assert(varIndex >= 0);
+        assert(varIndex < arity_);
+        return conflictWeights[varIndex] + Constraint::getConflictWeight();
+    }
+    void incConflictWeight(Constraint* from) override
+    {
         //assert(fromElim1==NULL);
         //assert(fromElim2==NULL);
         if (from==this) {
@@ -61,7 +93,7 @@ public:
         }
     }
     double computeTightness() override;
-    void dump(ostream&, bool) override {}
+    void dump(ostream&, bool) override {cerr << "warning! clique constraint cannot be dump." << endl;}
 private:
     // ----------------------------------------------------------------------
     // definition
@@ -163,6 +195,7 @@ public:
         CliqueConstraint* clq;
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
+    void print(ostream& os) override {printstate (os);}
 };
 
 inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)

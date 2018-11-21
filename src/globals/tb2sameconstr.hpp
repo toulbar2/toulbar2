@@ -20,7 +20,8 @@ private:
     //void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
     //void augmentGraph(Graph &graph, int &cost, int varindex);
 public:
-    SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
+    SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
+                                                                  arity_in);
 
     ~SameConstraint() {}
 

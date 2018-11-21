@@ -65,8 +65,8 @@ public:
 
     ~WCNFCFG() {}
 
-    void setStartSymbol(int start) // Only one start symbol
-    {
+    void setStartSymbol(int start)
+    { // Only one start symbol
         startSymbol = start;
     }
 

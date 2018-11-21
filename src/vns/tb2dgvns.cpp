@@ -49,7 +49,7 @@ bool VNSSolver::solve()
         wcsp->whenContradiction();
         if (bestUb < MAX_COST)
             wcsp->setSolution(bestUb, &bestSolution);
-        endSolve(bestUb < MAX_COST, bestUb, ToulBar2::limited);
+        endSolve(bestUb < MAX_COST, bestUb, true);
         return (bestUb < MAX_COST);
     }
 

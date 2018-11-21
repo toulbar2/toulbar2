@@ -373,15 +373,17 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     unaryCFs = newunaryCFs;
 
     if (ToulBar2::sortDomains) {
-        if (maxarity > 2) {
-            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+        cout << "Error: cannot sort domains in preprocessing with CFN format (remove option -sortd)." << endl;
             exit(EXIT_FAILURE);
-        } else {
-            ToulBar2::sortedDomains.clear();
-            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
-                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
-            }
-        }
+//        if (maxarity > 2) {
+//            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+//            exit(EXIT_FAILURE);
+//        } else {
+//            ToulBar2::sortedDomains.clear();
+//            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
+//                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
+//            }
+//        }
     }
 
     for (auto& cf : unaryCFs) {
@@ -1353,7 +1355,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
             else {
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
-                exit(1);
+                exit(EXIT_FAILURE);
             }
         } else {// monolithic
             int nbconstr; // unused int for pointer ref
@@ -1376,7 +1378,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (ToulBar2::costMultiplier < 0.0 || ToulBar2::decimalPoint != 0) {
             cerr << "Error : arithmetic function " << funcName << " at line " << line << "cannot be used with decimal costs or in maximization mode." << endl;
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         pair<int, string> token = this->getNextToken();
@@ -1614,7 +1616,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
                 size_t repeatIndex = 0;
                 while ((repeatIndex < repeatedSymbols.size()) && !isCBrace(token)) {
-                    if (repeatedSymbols[repeatIndex] == '+') repeatIndex = 0;
+                    if (repeatedSymbols[repeatIndex] == '+')
+                        repeatIndex = 0;
                     char symbol = repeatedSymbols[repeatIndex];
                     if (symbol == 'N') {
                         for (char c : token) {
@@ -1623,8 +1626,10 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('N', token));
-                        else repeatedContentVec.push_back(std::make_pair('N', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('N', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('N', token));
                     } else if (symbol == 'V') {
                         // If variable name (string)
                         if (not isdigit(token[0])) {
@@ -1636,8 +1641,10 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('V', token));
-                        else repeatedContentVec.push_back(std::make_pair('V', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('V', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('V', token));
                     } else if (symbol == 'v') {
                         // V0 : value MUST be a number
                         for (char c : token) {
@@ -1646,16 +1653,20 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 exit(EXIT_FAILURE);
                             }
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair('v', token));
-                        else repeatedContentVec.push_back(std::make_pair('v', token));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair('v', token));
+                        else
+                            repeatedContentVec.push_back(std::make_pair('v', token));
                     } else if ((symbol == 'C') || (symbol == 'c')) {
                         Cost c = wcsp->decimalToCost(token, lineNumber);
                         if (symbol == 'c' && c < 0) {
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
-                            exit(1);
+                            exit(EXIT_FAILURE);
                         }
-                        if (variableRepeat) variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
-                        else repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        if (variableRepeat)
+                            variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                        else
+                            repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
                     }
                     
                     repeatIndex++;
@@ -1678,10 +1689,11 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             }
             if (GCFTemplate[i] == 'S' && numberOfTuplesRead != scope.size()) {
                 cerr << "Error: expected "<< scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             // Add number of tuples before the list if the number of expected tuples is not known
-            if (GCFTemplate[i] == '+') streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
+            if (GCFTemplate[i] == '+')
+                streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {
                 streamContentVec.push_back(std::make_pair(repContentPair.first, repContentPair.second));
@@ -2200,11 +2212,9 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else if (gcname == "clique") {
+                } else if (gcname == "clique") {
                     postCliqueConstraint(scopeIndex, arity, file);
-                }
-                else { // monolithic global cost functions
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             } else {
@@ -2349,14 +2359,14 @@ Cost WCSP::read_wcsp(const char* fileName)
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                }
-                else if (gcname == "clique") {
+                } else if (gcname == "clique") {
                     //postCliqueConstraint(scopeIndex, arity, file);
                     int skipread;
                     file >> skipread;
                     for (int a=0; a<arity; a++) {
                       file >> skipread;
-                      for (int b=skipread; b>0; b--) file >> skipread;
+                        for (int b = skipread; b > 0; b--)
+                            file >> skipread;
                     }
                     assert(vars[i]->enumerated());
                     assert(vars[j]->enumerated());
@@ -2366,8 +2376,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
                     vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
                     postTernaryConstraint(i,j,k,costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
-                }
-                else { // monolithic global cost functions
+                } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
             }
@@ -2660,7 +2669,7 @@ void WCSP::read_uai2008(const char* fileName)
 {
     // Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
-    if (ToulBar2::NormFactor > (Pow(2.0, (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
+    if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
         exit(EXIT_FAILURE);
     } else if (ToulBar2::verbose >= 1) {
@@ -3359,11 +3368,11 @@ void WCSP::read_wcnf(const char* fileName)
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
-/// where W is expressed by its M non-zero half squared matrix costs (can be positive or negative float numbers)
-/// \note Costs for \f$ i \neq j \f$ are multiplied by 2 by this method (symmetric N*N squared matrix)
+/// where W is expressed by its M non-zero triangle matrix terms (W_ij, i<=j, it can be positive or negative float numbers)
+/// \note Quadratic terms for \f$ i < j \f$ are multiplied by 2 (see option -qpmult to change this value) to get a symmetric N*N squared matrix
 /// \note If N is positive, then variable domain values are {0,1}
 /// \note If N is negative, then variable domain values are {1,-1} with value 1 having index 0 and value -1 having index 1 in the output solutions
-/// \note If M is positive then minimizes the quadratic function, else maximizes it
+/// \note If M is positive then minimizes the quadratic objective function, else maximizes it
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
@@ -3435,6 +3444,8 @@ void WCSP::read_qpbo(const char* fileName)
         sumcost += 2. * abs(cost[e]);
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
+    ToulBar2::costMultiplier = multiplier;
+    if (!minimize) ToulBar2::costMultiplier *= -1.0;
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
@@ -3448,37 +3459,43 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[3] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
+                        negCost += costs[0];
                     }
                 } else {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
+                        negCost += costs[0];
                     } else {
-                        costs[3] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[3] = costs[0];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[1] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[2] = costs[1];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        costs[1] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[2] = costs[1];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[3] = costs[0];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             }
@@ -3490,10 +3507,12 @@ void WCSP::read_qpbo(const char* fileName)
                         unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
                     } else {
                         unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
                         unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     } else {
                         unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
                     }
@@ -3501,15 +3520,19 @@ void WCSP::read_qpbo(const char* fileName)
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     }
                 }
             }
@@ -3526,8 +3549,9 @@ void WCSP::read_qpbo(const char* fileName)
         }
     }
     sortConstraints();
-    if (ToulBar2::verbose >= 0)
-        cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
+    if (ToulBar2::verbose >= 0) {
+        cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs (quadratic coef. multiplier: " << ToulBar2::qpboQuadraticCoefMultiplier << ", shifting value: " << -negCost << ")" << endl;
+     }
 }
 
 TrieNum* WCSP::read_TRIE(const char* fileName)

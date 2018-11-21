@@ -24,7 +24,7 @@
 #include <fstream>
 #include <cmath>
 #endif
-#include <random>
+
 #include <limits>
 #include <vector>
 #include <map>
@@ -82,7 +82,8 @@ ostream& operator<<(ostream& os, pair<U, T> const& p)
     return os << "pair{" << p.first << "," << p.second << "}";
 }
 
-template <typename T> ostream& operator<<(ostream& os, vector<T> const& v)
+template <typename T>
+ostream& operator<<(ostream& os, vector<T> const& v)
 {
     os << "v(sz=" << v.size() << ")[";
     bool first = true;
@@ -148,6 +149,15 @@ inline std::string to_string(const T& t)
     std::stringstream ss;
     ss << t;
     return ss.str();
+}
+
+static inline void rtrim(std::string& s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    })
+                .base(),
+        s.end());
 }
 
 template <typename T>

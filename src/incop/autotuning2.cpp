@@ -479,7 +479,9 @@ void autosolving1(LSAlgorithm* algo, Configuration** population, OpProblem* prob
 }
 
 // réglage de 2 parametres  : parameter1 et parameter2 (en sortie) + lancement algo avec ce reglage
-void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int& parameter1, int& parameter2, int tuningwalkrate, int tuningmaxtries, int tuningmaxtries2)
+void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int&
+                                                                                                                   parameter1,
+    int& parameter2, int tuningwalkrate, int tuningmaxtries, int tuningmaxtries2)
 {
     int bmin = 1;
     if (algo->methodname == "idwgrupk")

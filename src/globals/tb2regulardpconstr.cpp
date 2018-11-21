@@ -18,7 +18,8 @@ void RegularDPConstraint::read(istream& file, bool mult)
 {
     string str;
     file >> str >> def;
-    if (mult) def *= ToulBar2::costMultiplier;
+    if (mult)
+        def *= ToulBar2::costMultiplier;
 
     // input the automaton
     int nstate;

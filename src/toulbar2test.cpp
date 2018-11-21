@@ -27,8 +27,14 @@ int main(int argc, char* argv[])
     //	ToulBar2::lds = 1;  // option -l=1
     // uncomment if INCOP local search enable
     //	ToulBar2::incop_cmd = Incop_cmd; // option -i
+    // uncomment these four lines below if variable neighborhood search enable
+    // ToulBar2::lds = 4;
+    // ToulBar2::restart = 10000;
+    // ToulBar2::searchMethod = VNS;
+    // ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
 
     // create a problem with three 0/1 variables
+    initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
     int x = solver->getWCSP()->makeEnumeratedVariable("x", 0, 1); // note that for efficiency issue, I assume domain values start at zero (otherwise remove flag -DWCSPFORMATONLY in Makefile)
     int y = solver->getWCSP()->makeEnumeratedVariable("y", 0, 1);

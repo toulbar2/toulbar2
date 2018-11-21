@@ -1,5 +1,6 @@
 // extreme_value_distribution
 
+#include <random>
 #include "core/tb2wcsp.hpp"
 
 vector<TProb> WCSP::Gumbel_noise_vec(vector<TProb> costsProb)

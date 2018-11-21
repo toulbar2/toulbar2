@@ -28,7 +28,8 @@ public:
 
     string getName() { return "salldiff"; }
 
-    AllDiffConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
+    AllDiffConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
+                                                                     arity_in);
 
     ~AllDiffConstraint()
     {

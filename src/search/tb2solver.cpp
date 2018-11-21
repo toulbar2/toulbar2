@@ -974,7 +974,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
-            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "[ " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         }
     }
 }
@@ -1371,7 +1371,7 @@ void Solver::newSolution()
             else if (!ToulBar2::bayesian)
                 cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
             else
-                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << " log10like: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) / Log(10.) << " prob: " << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
         }
     }
 
@@ -1398,39 +1398,44 @@ void Solver::newSolution()
         }
         if (ToulBar2::cpd) {
             ToulBar2::cpd->printSequence(wcsp->getVars(), wcsp->getDDualBound());
-        } else {
-            if (!ToulBar2::isZ) {
-                for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-                    cout << " ";
-                    if (ToulBar2::pedigree) {
-                        cout << wcsp->getName(i) << ":";
-                        ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
-                    } else if (ToulBar2::haplotype) {
-                        ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
+        } else if (!ToulBar2::isZ) {
+            for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                cout << " ";
+                if (ToulBar2::pedigree) {
+                    cout << wcsp->getName(i) << ":";
+                    ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
+                } else if (ToulBar2::haplotype) {
+                    ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
+                } else if (ToulBar2::cfn || ToulBar2::cfngz) {
+                    Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
+                    string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
+                    string varlabel = wcsp->getName(i);
+
+                    switch (ToulBar2::showSolutions) {
+                    case 1:
+                        cout << myvalue;
+                        break;
+                    case 2:
+                        cout << valuelabel;
+                        break;
+                    case 3:
+                        cout << varlabel << "=" << valuelabel;
+                        break;
+                    default:
+                        break;
                     }
-                    else if (ToulBar2::cfn) {
-                        // print value name and varname if verbose >1
-                        Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-                        if (ToulBar2::verbose >= 1) {
-                            string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
-                            string varlabel = wcsp->getName(i);
-                            cout << varlabel << ":" << valuelabel << ";";
-                        } else {
-                            cout << myvalue;
-                        }
-                    } else {
-                cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->getValue(i)].value : wcsp->getValue(i));
-                    }
-                    cout << endl;
+                } else {
+                    cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                 }
             }
+            cout << endl;
         }
         if (ToulBar2::bep)
             ToulBar2::bep->printSolution((WCSP*)wcsp);
-    }
 
-    if (ToulBar2::pedigree) {
-        ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
+        if (ToulBar2::pedigree) {
+            ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
+        }
     }
 
     if (ToulBar2::writeSolution) {
@@ -1721,7 +1726,18 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 Cost Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
-    tb2checkOptions(wcsp->getUb());
+    if (ub <= MIN_COST) {
+        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
+        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
+        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
+        exit(1);
+    }
 
     if (ToulBar2::searchMethod != DFBB) {
         if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
@@ -1733,8 +1749,8 @@ Cost Solver::beginSolve(Cost ub)
     }
 
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
-        ToulBar2::btdMode = 0;
+        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
+        exit(1);
     }
 
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
@@ -1851,11 +1867,11 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
     if (ToulBar2::verbose >= 0)
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
-            if (ToulBar2::verbose >= 0) {
-                Double Dlb = wcsp->getDLb();
-                Double Dub = wcsp->getDUb();
-                cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(DECIMAL_POINT) << (100.0 * (Dub - Dlb)) / max(fabsl(Dlb), fabsl(Dub)) << "%" << endl;
-            }
+    if (ToulBar2::verbose >= 0) {
+        Double Dlb = wcsp->getDLb();
+        Double Dub = wcsp->getDUb();
+        cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "] " << std::setprecision(DECIMAL_POINT) << (100.0 * (Dub - Dlb)) / max(fabsl(Dlb), fabsl(Dub)) << "%" << endl;
+    }
     initGap(wcsp->getLb(), wcsp->getUb());
 
     if (ToulBar2::DEE == 4)
@@ -2190,17 +2206,14 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             ToulBar2::cpd->printSequences();
             cout << "Total number of sequences: " << ToulBar2::cpd->getTotalSequences() << endl;
         }
-        cout << "Number of solutions    : ";
         if (ToulBar2::approximateCountingBTD)
-            cout << "~= ";
+            cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         else {
-            if (isLimited)
-                cout << "Number of solutions    : >=  " << nbSol << endl;
+            if (!isComplete)
+                cout << "Number of solutions    : >=  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
             else
-                cout << "= ";
+                cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         }
-        cout << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
-
         if (ToulBar2::btdMode >= 1) {
             cout << "Number of #goods       :    " << nbSGoods << endl;
             cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
@@ -2236,21 +2249,17 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             if (ToulBar2::xmlflag)
                 ((WCSP*)wcsp)->solution_XML(true);
             else if (ToulBar2::uai && !ToulBar2::isZ && ToulBar2::Normalizing_Constant == -numeric_limits<TLogProb>::infinity()) {
-                ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);                
+                ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-            }
-            else if (ToulBar2::uai && !ToulBar2::isZ && ToulBar2::Normalizing_Constant > -numeric_limits<TLogProb>::infinity()) {
+            } else if (ToulBar2::uai && !ToulBar2::isZ && ToulBar2::Normalizing_Constant > -numeric_limits<TLogProb>::infinity()) {
                 ((WCSP*)wcsp)->solution_UAI(wcsp->getUb(), true);
-                if (isLimited == 2) cout << "(" << ToulBar2::deltaUbS << ")-";
+                if (isLimited == 2)
+                    cout << "(" << ToulBar2::deltaUbS << ")-";
 
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) <<
-                    std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) / Exp(ToulBar2::Normalizing_Constant) <<
-                    " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" <<
-                    ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-            }
-            else if (ToulBar2::maxsateval && !isLimited) {
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) / Exp(ToulBar2::Normalizing_Constant) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+            } else if (ToulBar2::maxsateval && !isLimited) {
                 cout << "o " << cost << endl;
                 cout << "s OPTIMUM FOUND" << endl;
                 ((WCSP*)wcsp)->printSolutionMaxSAT(cout);
@@ -2289,13 +2298,13 @@ void Solver::approximate(BigInteger& nbsol, TreeDecomposition* td)
     if (nbsol < 1)
         nbsol = 1;
     // the minimum upper bound of solutions number
-    cout << "\nCartesian product \t\t   :    " << cartesianProduct << endl;
+    cout << "\nCartesian product \t\t   :    " << std::fixed << std::setprecision(0) << cartesianProduct << std::setprecision(DECIMAL_POINT) << endl;
     BigInteger minUBsol = cartesianProduct;
     for (map<int, BigInteger>::iterator it = ubSol.begin(); it != ubSol.end(); ++it) {
         if (it->second < minUBsol)
             minUBsol = it->second;
     }
-    cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
+    cout << "Upper bound of number of solutions : <= " << std::fixed << std::setprecision(0) << minUBsol << std::setprecision(DECIMAL_POINT) << endl;
 }
 
 // Maximize h' W h where W is expressed by all its

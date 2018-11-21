@@ -42,9 +42,22 @@ double cpuTime()
 
 void timeOut(int sig)
 {
-    if (ToulBar2::verbose >= 0)
+    if (ToulBar2::verbose >= 0) {
         cout << endl
              << "Time limit expired... Aborting..." << endl;
+        cout.flush();
+    }
+
+    if (ToulBar2::solutionFile != NULL) {
+        if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
+            exit(EXIT_FAILURE);
+        fclose(ToulBar2::solutionFile);
+    }
+    if (ToulBar2::solution_uai_file != NULL) {
+        if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
+            exit(EXIT_FAILURE);
+        fclose(ToulBar2::solution_uai_file);
+    }
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
     else

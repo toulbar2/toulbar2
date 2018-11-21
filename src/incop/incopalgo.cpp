@@ -905,7 +905,7 @@ void StandardGWWAlgorithm::regrouping(Configuration** population)
             mauvaises_config.push_back(i);
     }
     for (vector<int>::iterator ci = mauvaises_config.begin(); ci != mauvaises_config.end(); ci++) {
-        int bon = (int)(drand48() * bonnes_config.size());
+        int bon = (int)(mydrand() * bonnes_config.size());
         population[*ci]->copy_element(population[bonnes_config[bon]]);
         population[*ci]->regrouped = 1;
         population[bonnes_config[bon]]->regrouped = 1;
@@ -925,7 +925,7 @@ void AdaptiveGWWAlgorithm::regrouping(Configuration** population)
     if (TRACEMODE)
         ecriture_nb_tues(nb_to_kill);
     for (int i = 0; i < nb_to_kill; i++) {
-        int bon = ((int)(drand48() * (populationsize - nb_to_kill))) + nb_to_kill;
+        int bon = ((int)(mydrand() * (populationsize - nb_to_kill))) + nb_to_kill;
         population[i]->copy_element(population[bon]);
         population[i]->regrouped = 1;
         population[bon]->regrouped = 1;
@@ -946,7 +946,7 @@ void NothresholdGWWAlgorithm::regrouping(Configuration** population)
                 val = population[i]->valuation;
             }
         {
-            int bon = (int)(drand48() * (populationsize - 1));
+            int bon = (int)(mydrand() * (populationsize - 1));
             if (bon >= mauvais)
                 bon++;
             population[mauvais]->copy_element(population[bon]);
@@ -992,8 +992,8 @@ int GreedySearch::acceptance(Move* move, Configuration* config)
 int Metropolis::acceptance(Move* move, Configuration* config)
 {
     if ((move->valuation <= config->valuation)
-        || (drand48() < exp(-(move->valuation - config->valuation) / temperature)))
-        //     (drand48() < exp(-(move->valuation  - config->valuation).to_double()/temperature)))
+        || (mydrand() < exp(-(move->valuation - config->valuation) / temperature)))
+        //     (mydrand() < exp(-(move->valuation  - config->valuation).to_double()/temperature)))
         return 1;
     else
         return 0;
@@ -1103,8 +1103,8 @@ void ThresholdAccepting::reinit(OpProblem* problem)
 int SimulatedAnnealing::acceptance(Move* move, Configuration* config)
 {
     if ((move->valuation <= config->valuation)
-        || (drand48() < exp(-(move->valuation - config->valuation) / temperature)))
-        //     (drand48() < exp(-(move->valuation  - config->valuation).to_double()/temperature)))
+        || (mydrand() < exp(-(move->valuation - config->valuation) / temperature)))
+        //     (mydrand() < exp(-(move->valuation  - config->valuation).to_double()/temperature)))
         return 1;
     else
         return 0;
@@ -1185,5 +1185,5 @@ TabuAcceptingrate::TabuAcceptingrate(int tabul, float cPd, float cP0)
 int TabuAcceptingrate::acceptance(Move* move, Configuration* config)
 {
     return (nontabumove(move)
-        && ((move->valuation < config->valuation) || ((move->valuation == config->valuation) && (drand48() < P0)) || ((drand48() < Pd))));
+        && ((move->valuation < config->valuation) || ((move->valuation == config->valuation) && (mydrand() < P0)) || ((mydrand() < Pd))));
 }

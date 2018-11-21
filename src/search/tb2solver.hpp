@@ -260,14 +260,13 @@ protected:
     void singletonConsistency();
     Cost beginSolve(Cost ub);
     Cost preprocessing(Cost ub);
-    void endSolve(bool isSolution, Cost cost, bool isLimited);
-    
+    void endSolve(bool isSolution, Cost cost, bool isComplete);
+
     void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    virtual void newSolution();
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
@@ -323,6 +322,7 @@ public:
     void mutate(char* mutationString);
     void mutate(std::string mutationString);
     void applyCompositionalBiases();
+    virtual void newSolution();
     Cost getSolution(vector<Value>& solution);
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);

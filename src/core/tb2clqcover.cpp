@@ -71,6 +71,8 @@ CliqueConstraint::~CliqueConstraint()
 
 std::ostream& CliqueConstraint::printstate(std::ostream& os)
 {
+    os << endl
+       << this << " clique cut: ";
     os << "all0 = " << all0 << " carity = " << carity << " run = " << run
        << " id = " << id << " connected = " << connected()
        << " depth = " << Store::getDepth() << "\n";
@@ -80,7 +82,7 @@ std::ostream& CliqueConstraint::printstate(std::ostream& os)
             os << " * ";
         else
             os << "   ";
-        os << "var " << i << " ";
+        os << x->getName();
         x->print(os);
         if (x->assigned() && connected(i))
             os << "*****";
@@ -124,11 +126,13 @@ void CliqueConstraint::propagate_incremental()
     wcsp->revise(this);
     gather_unary_0s();
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (!td) gather_binary(); // Warning! does not work with tree decomposition-based methods
+    if (!td)
+        gather_binary(); // Warning! does not work with tree decomposition-based methods
     gather_unary_1s();
 
     if (debug) {
-        cout << "After propagate, state\n" << state{this} << "\n";
+        cout << "After propagate, state\n"
+             << state{ this } << "\n";
     }
 
 }
@@ -167,7 +171,7 @@ void CliqueConstraint::gather_unary_0s()
     zerocosts.resize(carity);
     Cost maxc{MIN_COST}, sumc{MIN_COST}, secondmax{MIN_COST};
     for (int i = 0, e = current_scope.size(); i != e; ++i) {
-        auto i0{get_zero_cost(current_scope_idx[i])};
+        auto i0 = get_zero_cost(current_scope_idx[i]);
         zerocosts[i] = i0;
         if (maxc < i0) {
             secondmax = maxc;
@@ -220,7 +224,8 @@ void CliqueConstraint::gather_unary_1s()
             auto *x = current_scope[i];
             for (auto v : clqvals[current_scope_idx[i]])
                 if (x->canbe(v)) {
-                    if(td) td->addDelta(cluster,x,v,-extra);                  
+                    if (td)
+                        td->addDelta(cluster, x, v, -extra);
                     x->extend(v, extra);
                 }
         }
@@ -323,7 +328,8 @@ void CliqueConstraint::assign(int idx)
 
     if (num1 == rhs) {
         if (debug)
-            cout << "disconnecting, state = \n" << state{this} << "\n";
+            cout << "disconnecting, state = \n"
+                 << state{ this } << "\n";
         deconnect();
     }
 
@@ -471,7 +477,8 @@ void CliqueConstraint::extend_zero_cost(int var, Cost c)
     auto *x = scope[var];
     for(auto q = x->begin(), e = x->end(); q != e; ++q) {
         if (!inclq[var][*q]) {
-            if(td) td->addDelta(cluster,x,*q,-c);
+            if (td)
+                td->addDelta(cluster, x, *q, -c);
             x->extend(*q, c);
         }
     }
@@ -494,7 +501,8 @@ void CliqueConstraint::project_zero_cost(int var, Cost c)
     }
     for (auto v : nonclqvals[var])
         if (x->canbe(v)) {
-            if(td) td->addDelta(cluster,x,v,c);
+            if (td)
+                td->addDelta(cluster, x, v, c);
             x->project(v, c, true);
         }
     x->findSupport();
@@ -517,7 +525,8 @@ void CliqueConstraint::project_one_cost(int var, Cost c)
     }
     for (auto v : clqvals[var])
         if (x->canbe(v)) {
-            if(td) td->addDelta(cluster,x,v,c);
+            if (td)
+                td->addDelta(cluster, x, v, c);
             x->project(v, c, true);
         }
     x->findSupport();

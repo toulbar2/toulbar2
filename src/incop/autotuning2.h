@@ -66,5 +66,7 @@ public:
 void autosolving2(LSAlgorithm* algo, Configuration** configuration, OpProblem* problem, int npb, int graine1, int nbessais, double maxtime, int initwalklength);
 void autosolving1(LSAlgorithm* algo, Configuration** configuration, OpProblem* problem, int npb, int graine1, int nbessais, double maxtime, int initwalklength);
 
-void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int& parameter1, int& parameter2, int tuningwalkrate, int tuningmaxtries);
+void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int&
+                                                                                                                   parameter1,
+    int& parameter2, int tuningwalkrate, int tuningmaxtries);
 int endoslve(double maxtime);

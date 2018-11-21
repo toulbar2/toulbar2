@@ -141,6 +141,7 @@ enum {
     OPT_treedec_ext,
     OPT_clusterdec_ext,
 
+    OPT_qpbo_mult,
     // search option
     OPT_SEARCH_METHOD,
     OPT_btdRootCluster,
@@ -169,6 +170,8 @@ enum {
     NO_OPT_dichotomicBranching,
     OPT_sortDomains,
     NO_OPT_sortDomains,
+    OPT_solutionBasedPhaseSaving,
+    NO_OPT_solutionBasedPhaseSaving,
     OPT_weightedDegree,
     NO_OPT_weightedDegree,
     OPT_weightedTightness,
@@ -191,8 +194,11 @@ enum {
     OPT_costThreshold,
     OPT_costThresholdPre,
     OPT_trwsAccuracy,
+    OPT_trwsOrder,
+    NO_OPT_trwsOrder,
     OPT_trwsNIter,
     OPT_trwsNIterNoChange,
+    OPT_trwsNIterComputeUb,
     NO_OPT_trws,
     OPT_costMultiplier,
     OPT_deltaUb,
@@ -253,17 +259,17 @@ enum {
     OPT_verifyopt,
 #endif
     // MENDELESOFT OPTION
-    OPT_generation = 99,
-    MENDEL_OPT_genotypingErrorRate = 100,
-    MENDEL_OPT_resolution = 101,
-    OPT_pedigree_by_MPE = 102,
-    MENDEL_OPT_EQUAL_FREQ = 103,
-    MENDEL_OPT_ESTIMAT_FREQ = 104,
-    MENDEL_OPT_ALLOCATE_FREQ = 105,
+    OPT_generation,
+    MENDEL_OPT_genotypingErrorRate,
+    MENDEL_OPT_resolution,
+    OPT_pedigree_by_MPE,
+    MENDEL_OPT_EQUAL_FREQ,
+    MENDEL_OPT_ESTIMAT_FREQ,
+    MENDEL_OPT_ALLOCATE_FREQ,
 
     // random generator
     OPT_seed,
-    OPT_random = 1000,
+    OPT_random,
 
     // CPD options
     OPT_cpd,
@@ -339,6 +345,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
+    { OPT_qpbo_mult, (char*)"-qpmult", SO_REQ_SEP },
     { OPT_SEARCH_METHOD, (char*)"-B", SO_REQ_SEP }, // -B [0,1,2] search method
     { OPT_SEARCH_METHOD, (char*)"--search", SO_REQ_SEP },
     { OPT_btdRootCluster, (char*)"-R", SO_REQ_SEP }, // root cluster used in BTD
@@ -355,8 +362,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_boostingBTD, (char*)"-E:", SO_NONE },
     { OPT_varOrder, (char*)"-O", SO_REQ_SEP }, // filename of variable order
     { OPT_problemsaved_filename, (char*)"--save", SO_REQ_SEP }, // filename of saved problem
-    { OPT_showSolutions, (char*)"-s", SO_NONE }, //print solution found
-    { OPT_showSolutions, (char*)"--show", SO_NONE }, //print solution found
+    { OPT_showSolutions, (char*)"-s", SO_OPT }, //print solution found
+    { OPT_showSolutions, (char*)"--show", SO_OPT }, //print solution found
     { OPT_writeSolution, (char*)"-w", SO_OPT }, //  write last/all solutions found in file (default filename "sol")
 
     { OPT_pedigreePenalty, (char*)"-u", SO_REQ_SEP }, // int ..
@@ -377,6 +384,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_dichotomicBranching, (char*)"-d:", SO_NONE },
     { OPT_sortDomains, (char*)"-sortd", SO_NONE },
     { NO_OPT_sortDomains, (char*)"-sortd:", SO_NONE },
+    { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
+    { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
     { NO_OPT_weightedDegree, (char*)"-q:", SO_NONE },
     { OPT_weightedTightness, (char*)"-m", SO_OPT },
@@ -400,10 +409,13 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
-    { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
+    { OPT_trwsAccuracy, (char*)"-trws", SO_OPT },
     { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
+    { OPT_trwsOrder, (char*)"--trws-order", SO_NONE },
+    { NO_OPT_trwsOrder, (char*)"--trws-order:", SO_NONE },
     { OPT_trwsNIter, (char*)"--trws-n-iters", SO_REQ_SEP },
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
+    { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
 
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -660,7 +672,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
-    cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format" << endl;
+    cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
 #ifdef XMLFLAG
     cout << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
 #ifdef MAXCSP
@@ -668,7 +680,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << endl;
 #endif
-    cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task)" << endl;
+    cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
     cout << "   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)" << endl;
     cout << "   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
@@ -687,12 +699,13 @@ void help_msg(char* toulbar2filename)
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
-    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduses below the given value (provides guaranteed approximation)" << endl;
+    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation)" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
-    cout << "   -s : shows each solution found" << endl;
+    cout << "   -s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)" << endl;
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
     cout << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -736,6 +749,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -d=[integer] : searches using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than " << ToulBar2::dichotomicBranchingSize << " (default value is " << ToulBar2::dichotomicBranching << ")" << endl;
     cout << "   -sortd : sorts domains based on increasing unary costs (warning! works only for binary WCSPs)";
     if (ToulBar2::sortDomains)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -solr : solution-based phase saving";
+    if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
     cout << endl;
     cout << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
@@ -813,9 +830,14 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
     cout << endl;
-    cout << "   -trws=[float] : enforce TRW-S in preprocessing until given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
+    cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
+    cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
+    if (ToulBar2::trwsOrder)
+        cout << " (default option)";
+    cout << endl;
     cout << "   --trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is " << ToulBar2::trwsNIter << ")" << endl;
-    cout << "   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is " << ToulBar2::trwsNIterNoChange << ")" << endl;
+    cout << "   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is " << ToulBar2::trwsNIterNoChange << ", -1=never)" << endl;
+    cout << "   --trws-n-iters-compute-ub=[integer] : compute UB every N steps in TRW-S (default value is " << ToulBar2::trwsNIterComputeUb << ")" << endl;
     cout << endl;
 
     cout << "   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is " << ToulBar2::btdMode << ")" << endl;
@@ -1269,7 +1291,12 @@ int _tmain(int argc, TCHAR* argv[])
 
             // show Solutions
             if (args.OptionId() == OPT_showSolutions) {
-                ToulBar2::showSolutions = true;
+                if (args.OptionArg() != NULL) {
+                    int showType = atoi(args.OptionArg());
+                    if (showType > 0 && showType < 4)
+                        ToulBar2::showSolutions = showType;
+                } else
+                    ToulBar2::showSolutions = 1;
             }
 
             //#############################################
@@ -1352,6 +1379,11 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::sortDomains = false;
             }
 
+            if (args.OptionId() == OPT_solutionBasedPhaseSaving) {
+                ToulBar2::solutionBasedPhaseSaving = true;
+            } else if (args.OptionId() == NO_OPT_solutionBasedPhaseSaving) {
+                ToulBar2::solutionBasedPhaseSaving = false;
+            }
             if (args.OptionId() == OPT_weightedTightness) {
                 if (args.OptionArg() != NULL) {
                     int weightedtight = atol(args.OptionArg());
@@ -1472,6 +1504,12 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::costMultiplier = co;
             }
 
+            if (args.OptionId() == OPT_qpbo_mult) {
+                double co = atof(args.OptionArg());
+                if (co != 0.)
+                    ToulBar2::qpboQuadraticCoefMultiplier = co;
+            }
+
             if (args.OptionId() == OPT_singletonConsistency)
                 ToulBar2::singletonConsistency = true;
             if (args.OptionId() == OPT_vacValueHeuristic)
@@ -1492,11 +1530,22 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_trwsAccuracy) {
+                if (args.OptionArg() == NULL) {
+                    ToulBar2::trwsAccuracy = 0.00001;
+                } else {
                 double co = atof(args.OptionArg());
                 if (co >= 0.)
                     ToulBar2::trwsAccuracy = co;
                 else
                     ToulBar2::trwsAccuracy = -1.;
+            }
+            } else if (args.OptionId() == NO_OPT_trws) {
+                ToulBar2::trwsAccuracy = -1.;
+            }
+            if (args.OptionId() == OPT_trwsOrder) {
+                ToulBar2::trwsOrder = true;
+            } else if (args.OptionId() == NO_OPT_trwsOrder) {
+                ToulBar2::trwsOrder = false;
             }
             if (args.OptionId() == OPT_trwsNIter) {
                 ToulBar2::trwsNIter = atol(args.OptionArg());
@@ -1504,8 +1553,8 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_trwsNIterNoChange) {
                 ToulBar2::trwsNIterNoChange = atol(args.OptionArg());
             }
-            if (args.OptionId() == NO_OPT_trws) {
-                ToulBar2::trwsAccuracy = -1.;
+            if (args.OptionId() == OPT_trwsNIterComputeUb) {
+                ToulBar2::trwsNIterComputeUb = atol(args.OptionArg());
             }
 
             // elimination of functional variables
@@ -2488,13 +2537,17 @@ int _tmain(int argc, TCHAR* argv[])
         return EXIT_SUCCESS;
     }
 #endif
+    tb2checkOptions();
     try {
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
+        if (globalUb <= MIN_COST) {
+            cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+            exit(1);
+        }
 
-        tb2checkOptions(globalUb);
         //TODO: If --show_options then dump ToulBar2 object here
 
         if (certificate) {

@@ -2,18 +2,7 @@
 /** the definitions of classes of the algorithmic part + OpProblem */
 
 #include <climits>
-typedef long long Long;
-#ifdef WINDOWS
-inline double drand48()
-{
-    double(rand() / RAND_MAX);
-}
-inline void srand48(long seed) { return srand48(seed); }
-
-//replace srand48(seed) by srand(seed)
-//replace drand48() by (double(rand()) / RAND_MAX)
-
-#endif
+#include "core/tb2types.hpp"
 
 /* struct Long */
 /* { */
