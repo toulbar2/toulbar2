@@ -439,7 +439,10 @@ void Cpd::printSequence(TAssign& vars)
             cout << " " << vars[i];
         }
     }
-    cout << "\nNew sequence: " << sequence << endl;
+    cout << "\nNew sequence: " << sequence;
+    if (AminoMRFBias != 0.0)
+        cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence) << ")";
+    cout << endl;
 }
 
 /* Local Variables: */
