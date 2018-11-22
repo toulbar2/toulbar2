@@ -322,7 +322,6 @@ bool VACExtension::propagate()
             //cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
 
             if (ToulBar2::RINS) {
-                ToulBar2::RINS = false;
                 //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
                 int storedepth = Store::getDepth();
                 int storehbfs = ToulBar2::hbfs;
@@ -367,6 +366,7 @@ bool VACExtension::propagate()
                         cout << fileName << endl;
                         wcsp->dump(pb, true);*/
                         ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb());  // look at its search tree (if a new solution is found, UB should be updated automatically)
+                        ToulBar2::RINS = false;
                     } catch (Contradiction) {
                         wcsp->whenContradiction();
                     }

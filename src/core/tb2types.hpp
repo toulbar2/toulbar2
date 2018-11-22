@@ -368,8 +368,10 @@ public:
     static int strictAC;
     static int BoolDomSize;
     static bool RINS;
-    static bool useRINS;
-    static int RINS_nbStrictACVariables; 
+    static int useRINS;
+    static int RINS_nbStrictACVariables;
+    static bool RINS_newSolutionFound;
+    static double RINS_probabilty;
     static int debug;
     static string externalUB;
     static bool showSolutions;

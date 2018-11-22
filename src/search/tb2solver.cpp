@@ -1317,7 +1317,6 @@ void Solver::recursiveSolve(Cost lb)
     else
         varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized() : getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
-        //ToulBar2::useRINS = false;
         *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
         if (ToulBar2::bep)
             scheduleOrPostpone(varIndex);
@@ -1333,8 +1332,9 @@ void Solver::recursiveSolve(Cost lb)
             return binaryChoicePoint(varIndex, wcsp->getInf(varIndex), lb);
         }
     } else {
-        //ToulBar2::useRINS = true;
         assert(ToulBar2::isZ || lb <= wcsp->getLb());
+        if(ToulBar2::useRINS == 3 && ToulBar2::RINS)
+            ToulBar2::RINS_newSolutionFound = true;
         newSolution();
     }
 }
@@ -1472,17 +1472,27 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     cub = MIN(cub, res.second);
                 } else{
                     // FULYA : HEURISTIC BURAYA
-                    if(ToulBar2::useRINS){
-                        if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
-                            cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
-                            ToulBar2::RINS = true;
-                            cout << "ToulBar2::RINS = true; at SOLVER" << endl;
-                            enforceUb();
-                            ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
-                            ((WCSP*)wcsp)->vac->propagate();  // VAC done again
-                            //enforceUb(); wcsp->propagate();
-                            ToulBar2::RINS = false;
-                            cout << "ToulBar2::RINS = false; at SOLVER" << endl;
+                    double r = (double)myrand() / (double)RAND_MAX;
+                    if( (ToulBar2::useRINS == 2 && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) || 
+                        (ToulBar2::useRINS == 3 && r < ToulBar2::RINS_probabilty && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) ){
+                        ToulBar2::RINS_newSolutionFound = false;
+                        //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                        //cout << "random number  = " << r << " ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << " ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
+                        ToulBar2::RINS = true;
+                        cout << "ToulBar2::RINS = true; at SOLVER" << endl;
+                        enforceUb();
+                        ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
+                        ((WCSP*)wcsp)->vac->propagate();  // VAC done again
+                        //enforceUb(); wcsp->propagate();
+                        ToulBar2::RINS = false;
+                        cout << "ToulBar2::RINS = false; at SOLVER" << endl;
+                        if(ToulBar2::useRINS == 3){
+                            //cout << "ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
+                            if(ToulBar2::RINS_newSolutionFound)
+                                ToulBar2::RINS_probabilty = min(1.0, 2.0*ToulBar2::RINS_probabilty);
+                            else
+                                ToulBar2::RINS_probabilty = ToulBar2::RINS_probabilty/2.0;
+                            //cout << "ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << endl;
                         }
                     }
                     recursiveSolve(bestlb);
@@ -1890,19 +1900,19 @@ bool Solver::solve()
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
                             initialDepth = Store::getDepth();
-                            /*if(ToulBar2::useRINS){
-                                if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
+                            if(ToulBar2::useRINS > 0){
+                                //if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
                                     cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                                     ToulBar2::RINS = true;
-                                    cout << "ToulBar2::RINS = true; at the root" << endl;
+                                    cout << "ToulBar2::RINS = true; at root" << endl;
                                     enforceUb();
-                                    ((WCSP*)wcsp)->vac->iniThreshold();     
+                                    ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
                                     ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                                     //enforceUb(); wcsp->propagate();
                                     ToulBar2::RINS = false;
-                                    cout << "ToulBar2::RINS = false; at the root" << endl;
-                                }
-                            }*/
+                                    cout << "ToulBar2::RINS = false; at root" << endl;
+                                //}
+                            }
                             hybridSolve();
                         }
                     }
