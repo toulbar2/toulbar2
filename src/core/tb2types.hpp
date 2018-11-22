@@ -196,16 +196,19 @@ const Cost MAX_COST = PARETOPAIR_MAX;
 #ifdef QUAD_PROB
 typedef __float128 TProb;
 typedef __float128 TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)roundq(f);}
 #endif
 
 #ifdef DOUBLE_PROB
 typedef double TProb;
 typedef double TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)round(f);}
 #endif
 
 #ifdef LONGDOUBLE_PROB
 typedef Double TProb;
 typedef Double TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)roundl(f);}
 #endif
 
 inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) + exp(c2)]

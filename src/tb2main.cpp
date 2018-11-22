@@ -694,7 +694,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
     cout << "Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=\".new\" Examples: --cfn_ext='.json' --wcsp_ext='.test' --sol_ext='.sol2'  " << endl;
-    cout     << endl;
+    cout << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
@@ -1533,12 +1533,12 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() == NULL) {
                     ToulBar2::trwsAccuracy = 0.00001;
                 } else {
-                double co = atof(args.OptionArg());
-                if (co >= 0.)
-                    ToulBar2::trwsAccuracy = co;
-                else
-                    ToulBar2::trwsAccuracy = -1.;
-            }
+                    double co = atof(args.OptionArg());
+                    if (co >= 0.)
+                        ToulBar2::trwsAccuracy = co;
+                    else
+                        ToulBar2::trwsAccuracy = -1.;
+                }
             } else if (args.OptionId() == NO_OPT_trws) {
                 ToulBar2::trwsAccuracy = -1.;
             }
@@ -1871,19 +1871,19 @@ int _tmain(int argc, TCHAR* argv[])
             // get psm bias
             if (args.OptionId() == OPT_PSMBIAS) {
                 requireCpd();
-                ToulBar2::cpd->PSMBias = atoi(args.OptionArg());
+                ToulBar2::cpd->PSMBias = atof(args.OptionArg());
             }
 
             // get pssm bias
             if (args.OptionId() == OPT_PSSMBIAS) {
                 requireCpd();
-                ToulBar2::cpd->PSSMBias = atoi(args.OptionArg());
+                ToulBar2::cpd->PSSMBias = atof(args.OptionArg());
             }
 
             // get pssm bias
             if (args.OptionId() == OPT_AMINOMRFBIAS) {
                 requireCpd();
-                ToulBar2::cpd->AminoMRFBias = atoi(args.OptionArg());
+                ToulBar2::cpd->AminoMRFBias = atof(args.OptionArg());
             }
 
             // Do we want best sequence/conformation for enumerations ?

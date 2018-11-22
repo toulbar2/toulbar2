@@ -126,10 +126,10 @@ TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
     }
 
     pair<int, int> pv(var1, var2);
-
     return binaries[pv][AAidx1][AAidx2];
 }
 
+// Must be called after the problem is loaded.
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
     // check residue numbers
@@ -150,7 +150,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             int valIdx = AminoMRFIdx.find(c)->second;
             if (unaries[varIdx][valIdx] == 0.0)
                 warn = false;
-            Cost bias = CMRFBias * unaries[varIdx][valIdx];
+            Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * unaries[varIdx][valIdx]);
 
             biases.push_back(bias);
         }
@@ -178,7 +178,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
                 int valIdx2 = AminoMRFIdx.find(c2)->second;
                 if (bincf.second[valIdx1][valIdx2] == 0.0)
                     warn = false;
-                Cost bias = CMRFBias * bincf.second[valIdx1][valIdx2];
+                Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * bincf.second[valIdx1][valIdx2]);
                 biases.push_back(bias);
             }
         }

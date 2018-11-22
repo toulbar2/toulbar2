@@ -50,9 +50,9 @@ public:
     char* nativeSequence = NULL;
     AminoMRF* AminoMat;
     bool isPSSMlen() { return PSSM.size(); };
-    int PSMBias = 0;
-    int PSSMBias = 0;
-    TLogProb AminoMRFBias = 0.0;
+    float PSMBias = 0.0;
+    float PSSMBias = 0.0;
+    float AminoMRFBias = 0.0;
 
 private:
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
