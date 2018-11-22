@@ -129,6 +129,21 @@ TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
     return binaries[pv][AAidx1][AAidx2];
 }
 
+TLogProb AminoMRF::eval(const string& sequence)
+{
+    TLogProb paid = 0.0;
+    for (size_t varIdx1 = 0; varIdx1 < nVar; varIdx1++) {
+        int code1 = AminoMRFIdx.find(sequence[varIdx1])->second;
+        paid += unaries[varIdx1][code1];
+        for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nVar; varIdx2++) {
+            int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
+            pair<int, int> pv(varIdx1, varIdx2);
+            paid += binaries[pv][code1][code2];
+        }
+    }
+    return paid;
+}
+
 // Must be called after the problem is loaded.
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
@@ -260,7 +275,6 @@ void Cpd::read_rotamers2aa(istream& file, vector<Variable*>& vars)
 
 void Cpd::computeAAbounds()
 {
-
     LeftAA.clear();
     RightAA.clear();
 
@@ -407,7 +421,11 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
             cout << " " << vars[i]->getValue();
         }
     }
-    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy << endl;
+    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy;
+    if (AminoMRFBias != 0.0)
+        cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence) << ")";
+
+    cout << endl;
 }
 
 void Cpd::printSequence(TAssign& vars)

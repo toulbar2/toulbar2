@@ -16,6 +16,7 @@ public:
     size_t nPot;
     TLogProb getUnary(int var, int AAidx);
     TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
+    TLogProb eval(const string& sequence);
     void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
 private:
