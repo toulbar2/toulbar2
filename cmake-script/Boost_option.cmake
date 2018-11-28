@@ -14,7 +14,7 @@ MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "   Boost_LIBRARIES: ${Boost_LIBRARIES}")
 
 #SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
-SET (all_depends ${all_depends} ${Boost_LIBRARIES} "z")
+SET (all_depends ${all_depends} ${Boost_LIBRARIES} "z" "lzma")
 
 IF(NOT Boost_FOUND)
         MESSAGE(ERROR "#################################")

@@ -411,7 +411,8 @@ public:
     static Haplotype* haplotype;
     static string map_file;
     static bool cfn;
-    static bool cfngz;
+    static bool gz;
+    static bool xz;
     static bool bayesian;
     static int uai;
     static int resolution;

@@ -99,7 +99,8 @@ Pedigree* ToulBar2::pedigree;
 Haplotype* ToulBar2::haplotype;
 
 bool ToulBar2::cfn;
-bool ToulBar2::cfngz;
+bool ToulBar2::gz;
+bool ToulBar2::xz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
 string ToulBar2::evidence_file;
@@ -267,7 +268,8 @@ void tb2init()
     ToulBar2::haplotype = NULL;
 
     ToulBar2::cfn = false;
-    ToulBar2::cfngz = false;
+    ToulBar2::gz = false;
+    ToulBar2::xz = false;
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
     ToulBar2::solution_uai_file = NULL;
