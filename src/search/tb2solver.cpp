@@ -1172,7 +1172,7 @@ void Solver::newSolution()
         if (ToulBar2::allSolutions) {
             cout << std::setprecision(0) << nbSol << " solution(" << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << "): ";
         }
-        cout << "Sol:";
+
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             cout << " ";
             if (ToulBar2::pedigree) {
@@ -1181,20 +1181,23 @@ void Solver::newSolution()
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
             } else if (ToulBar2::cfn) {
-                // print value name and varname if verbose >1
                 Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                 string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
                 string varlabel = wcsp->getName(i);
 
-                if (ToulBar2::verbose >= 1) {
-                    cout << varlabel << ":" << valuelabel << ";";
-                } else {
+                switch (ToulBar2::showSolutions) {
+                case 1:
+                    cout << myvalue;
+                    break;
+                case 2:
                     cout << valuelabel;
+                    break;
+                case 3:
+                    cout << varlabel << "=" << valuelabel;
+                    break;
+                default:
+                    break;
                 }
-                if (ToulBar2::verbose > 1) {
-                    cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
-                }
-
             } else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
             }

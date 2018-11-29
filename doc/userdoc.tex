@@ -353,9 +353,9 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-v=[integer]}] sets the verbosity level (default 0).
 \item[{-Z=[integer]}] debug mode (save problem at each node if verbosity
   option -v=num $>= 1$ and -Z=num $>=3$)
-\item[-s] shows each solution found during search. The solution is
-  printed on one line, giving the value (integer) of each variable
-  successively in increasing file order.
+\item[{-s=[integer]}] shows each solution found during search. The solution is
+  printed on one line, giving by default (-s=1) the value (integer) of each variable
+  successively in increasing file order. For -s=2, the value name is used instead, and for -s=3, variable name=value name is printed instead.
 \end{description}
 
 \subsection{File output}
@@ -433,7 +433,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \section{Input File formats}
 \label{file-formats}
 Notice that by default \toulbar2 distinguishes file formats based on their extension.
-\subsection{cfn format (.cfn and .cfn.gz file extension)}
+\subsection{cfn format (.cfn, .cfn.gz, and .cfn.xz file extension)}
 With this JSON compatible format, it is possible:
 \begin{itemize}
 \item to give a name to variables and functions.
@@ -441,7 +441,7 @@ With this JSON compatible format, it is possible:
 \item to use decimal and possibly negative costs.
 \item to solve both minimization and maximization problems.
 \item to debug  your .cfn files: the parser gives a cause and line number when it fails.
-\item to use gzip-compressed files directly as input (.cfn.gz).
+\item to use gzip'd or xz compressed files directly as input (.cfn.gz and .cfn.xz).
 \item to use dense descriptions for dense cost tables.
 \end{itemize}
 

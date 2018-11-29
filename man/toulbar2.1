@@ -262,9 +262,9 @@ Set the verbosity level (default 0).
 .BR \-Z=[\fIinteger\fR] 
 Debug mode (save problem at each node if verbosity option \-v=num>= 1 and \-Z=num>=3).
 .TP
-.BR \-s
-Shows each solution found during search.
-The solution is printed on one line, giving the value (integer) of each variable successively in increasing order of definition in the model file.
+.BR \-s=[integer]
+Shows each solution found during search. The solution is printed on one line. The default -s=1 gives the value (integer) of each variable successively in increasing order of definition in the model file.
+For -s=2, the value name is used instead, for -s=3, variable name=valuename is printed instead.
 .PP
 FILE OUTPUT
 .TP
@@ -337,7 +337,7 @@ pn is the number of salldiff global cost functions (p2 and p3 still being used f
 .RE
 .RE
 .SH FILE FORMATS
-toulbar2 can read .cfn, .cfn.gz, .wcsp, .uai, .LG, .cnf, .wcnf, .qpbo, .pre, .bep files. See the full user documentation for a description of these file formats.
+toulbar2 can read .cfn, .wcsp, .uai, .LG, .cnf, .wcnf, .qpbo, .pre, .bep files. The files can be compressed with gzip or xz (e.g., .cfn.gz or .cfn.xz, except for pre and bep formats). See the full user documentation for a description of these file formats.
 .SH SEE ALSO
 A more complete user documentation should be available on your system, in /usr/share/doc/toulbar2/userdoc.pdf or can be otherwise downloaded from http://www.inra.fr/mia/T/toulbar2.
 .SH AUTHORS

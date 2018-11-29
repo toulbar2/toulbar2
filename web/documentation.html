@@ -48,10 +48,10 @@
 
 <h2>Input formats</h2>
 <p>
-The available file formats are:<br/>
+The available file formats (possibly compressed by gzip or xz, e.g., .cfn.gz, .wcsp.xz) are:<br/>
 </p>
 <ul>
-  <li>Cost Function Network format (<a href="https://github.com/toulbar2/toulbar2/raw/master/doc/CFNformat.pdf">.cfn/.cfn.gz</a> file extensions)</li>
+  <li>Cost Function Network format (<a href="https://github.com/toulbar2/toulbar2/raw/master/doc/CFNformat.pdf">.cfn</a> file extensions)</li>
   <li>Weighted Constraint Satisfaction Problem (<a href="https://github.com/toulbar2/toulbar2/raw/master/doc/wcspformat.pdf">.wcsp</a> file extension)</li>
   <li>Probabilistic Graphical Model (<a href="http://www.cs.huji.ac.il/project/PASCAL/fileFormat.php">.uai</a>/<a href="http://cs.nyu.edu/~dsontag/code/README_v2.html">.LG</a> file extension)</li>
   <li>Weigthed Partial Max-SAT (<a href="http://www.maxsat.udl.cat/08/index.php?disp=requirements">.cnf/.wcnf</a> file extension)</li>
@@ -72,7 +72,7 @@ The available file formats are:<br/>
   <li>Graph 6-coloring instance <a href="EXAMPLES/GEOM40_6.wcsp">GEOM40_6.wcsp</a></li>
 </ul>
 <p>
-Many more instances available <a href="http://genoweb.toulouse.inra.fr/~degivry/evalgm">here</a> and  <a href="http://costfunction.org/en/benchmark">there</a>.
+Many more instances available <a href="http://genoweb.toulouse.inra.fr/~degivry/evalgm">here</a> and  <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library">there</a>.
 </p>
 
 <h2>Command line arguments</h2>
@@ -81,13 +81,16 @@ List of optional arguments (use symbol ":" after an option to remove a default o
 </p>
 <ul>
   <li>-help : shows this help message</li>
-  <li>-ub=[integer] : initial problem upperbound (default value is 512409557603043100)</li>
+  <li>-ub=[decimal] : initial problem upperbound (default value is 512409557603043100)</li>
+  <li>-agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation)</li>
   <li>-v=[integer] : verbosity level</li>
-  <li>-s : shows each solution found</li>
+  <li>-s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)</li>
   <li>-w=[filename] : writes last/all solutions in filename (or "sol" if no parameter is given)</li>
-  <li>-precision=[integer] : probability/real precision is a conversion factor (a power of ten) for representing fixed point numbers (default value is 7)</li>
+  <li>-precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is 7)</li>
+  <li>-qpmult=[double] defines coefficient multiplier for quadratic terms when reading qpbo format (default value is 2)</li>
   <li>-timer=[integer] : CPU time limit in seconds</li>
   <li>-seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is 1)</li>
+  <li>--stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp</li>
   <li>-var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is 0)</li>
   <li>-b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)</li>
   <li>-svo : searches using a static variable ordering heuristic (same order as DAC)</li>
@@ -96,6 +99,7 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-m=[integer] : variable ordering heuristic based on mean (m=1) or median (m=2) costs (in conjunction with weighted degree heuristic -q) (default value is 0)</li>
   <li>-d=[integer] : searches using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than 10 (default value is 1)</li>
   <li>-sortd : sorts domains based on increasing unary costs (warning! works only for binary WCSPs)</li>
+  <li>-solr : solution-based phase saving (default option)</li>
   <li>-e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is 3)</li>
   <li>-p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is -1)</li>
   <li>-t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)</li>
@@ -125,14 +129,15 @@ List of optional arguments (use symbol ":" after an option to remove a default o
   <li>-x=[(,i=a)*] : assigns variable of index i to value a (multiple assignments are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file "sol" taken as a certificate or given as input filename with ".sol" extension)</li>
   <li>-M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is 0)</li>
   <li>-A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is 0)</li>
-  <li>-T=[integer] : threshold cost value for VAC (default value is 1)</li>
-  <li>-P=[integer] : threshold cost value for VAC during the preprocessing phase (default value is 1)</li>
-  <li>-C=[float] : multiplies all costs by this number when loading the problem (default value is 1)</li>
+  <li>-T=[decimal] : threshold cost value for VAC (default value is 1)</li>
+  <li>-P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is 1)</li>
+  <li>-C=[float] : multiplies all costs internally by this number when loading the problem (default value is 1)</li>
   <li>-S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")</li>
   <li>-V : VAC-based value ordering heuristic (default option)</li>
-  <li>-trws=[float] : enforce TRW-S in preprocessing until a given precision is reached (default value is 0.001)</li>
-  <li>--trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is 1000)</li>
-  <li>--trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5)</li>
+  <li>-trws=[float] : enforces TRW-S in preprocessing until a given precision is reached</li>
+  <li>--trws-n-iters=[integer] : enforces at most N iterations of TRW-S (default value is 1000)</li>
+  <li>--trws-n-iters-no-change=[integer] : stops TRW-S when N iterations did not change the lower bound up the given precision (default value is 5, -1=never)</li>
+  <li>--trws-n-iters-compute-ub=[integer] : computes UB every N steps in TRW-S (default value is 100)</li>
   <li>-B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)</li>
   <li>-O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering</li>
   <li>-O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using: (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering, (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering, (-7) default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)</li>

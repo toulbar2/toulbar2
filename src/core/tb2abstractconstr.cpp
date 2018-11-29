@@ -17,7 +17,7 @@
 Long AbstractNaryConstraint::getDomainInitSizeProduct()
 {
     if (arity_ == 0)
-        return 0;
+        return 1;
     Long cartesianProduct = 1;
     for (int i = 0; i < arity_; i++) {
         // trap overflow numbers
