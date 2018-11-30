@@ -372,6 +372,12 @@ public:
     static int RINS_nbStrictACVariables;
     static bool RINS_newSolutionFound;
     static double RINS_probabilty;
+    static int RINS_nbCalls;
+    static int RINS_nbNewSolutionFound;
+    static int RINS_nbNodesOn;
+    static int RINS_nbNodesOff;
+    static int RINS_nbBacktracksOn;
+    static int RINS_nbBacktracksOff;
     static int debug;
     static string externalUB;
     static bool showSolutions;
