@@ -413,7 +413,7 @@ void Cpd::printSequences()
 void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
 {
     string sequence;
-    cout << "New rotamers:";
+    //    cout << "New rotamers:";
     for (size_t i = 0; i < vars.size(); i++) {
         char aa = rotamers2aa[i][vars[i]->getValue()];
         if (aa != '*') {
@@ -422,9 +422,10 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
         }
     }
     cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy;
-    if (AminoMRFBias != 0.0)
-        cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence) << ")";
-
+    if (AminoMRFBias != 0.0) {
+        Double Evol = AminoMRFBias * AminoMat->eval(sequence);
+        cout << " (evol " << Evol << "E " << energy - Evol << ")";
+    }
     cout << endl;
 }
 

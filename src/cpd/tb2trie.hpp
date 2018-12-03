@@ -24,6 +24,7 @@ private:
     TrieLeaf* getLeaf(char aa);
     static const string i2a;
     static const size_t numAA;
+    static const size_t dummyAAidx;
 };
 
 class TrieLeaf : public TrieNode {
