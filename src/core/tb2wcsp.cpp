@@ -61,6 +61,7 @@ int ToulBar2::RINS_nbNodesOn;
 int ToulBar2::RINS_nbNodesOff;
 int ToulBar2::RINS_nbBacktracksOn;
 int ToulBar2::RINS_nbBacktracksOff;
+Cost ToulBar2::RINS_lastitThreshold;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -241,6 +242,7 @@ void tb2init()
     ToulBar2::RINS_nbNodesOff = 0;
     ToulBar2::RINS_nbBacktracksOn = 0;
     ToulBar2::RINS_nbBacktracksOff = 0;
+    ToulBar2::RINS_lastitThreshold = 1;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
@@ -2540,6 +2542,10 @@ void WCSP::whenContradiction()
     DEE.clear();
     objectiveChanged = false;
     nbNodes++;
+    if(ToulBar2::RINS)
+        ToulBar2::RINS_nbNodesOn++;
+    else
+        ToulBar2::RINS_nbNodesOff++;
 }
 
 ///\defgroup ncbucket NC bucket sort

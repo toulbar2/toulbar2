@@ -273,8 +273,8 @@ bool VACExtension::propagate()
         }
 
         if(isvac){
-            //cout << "IS VAC !!!" << endl;
-
+            //cout << "IS VAC !!! and itThreshold is " << itThreshold << endl;
+            ToulBar2::RINS_lastitThreshold = itThreshold;
 			int nbDomSizeZero = 0;
 			ToulBar2::RINS_nbStrictACVariables = 0;
 			int nbDomSizeMore = 0;

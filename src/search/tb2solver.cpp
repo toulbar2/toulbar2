@@ -1527,7 +1527,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         ToulBar2::RINS_nbCalls++;
                         cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                         enforceUb();
-                        ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
+                        ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);     
                         ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                         //enforceUb(); wcsp->propagate();
                         ToulBar2::RINS = false;
