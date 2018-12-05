@@ -21,7 +21,6 @@
 
 //TODO: is it need for other versions???
 #define BOOSTGRAPH134
-using namespace boost;
 
 /**
  * Basic structure
@@ -44,11 +43,11 @@ struct cluster {
     bool mark;
 };
 
-typedef property<vertex_index_t, int> variable_vertex;
-typedef adjacency_list<vecS, vecS, undirectedS, variable_vertex, no_property, graph_name_t> TGraph;
-typedef adjacency_list<vecS, vecS, undirectedS, cluster, separator> TCDGraph;
-typedef graph_traits<TCDGraph>::vertex_descriptor TDCluster;
-typedef graph_traits<TCDGraph>::edge_descriptor Cluster_edge;
+typedef boost::property<boost::vertex_index_t, int> variable_vertex;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, variable_vertex, boost::no_property, boost::graph_name_t> TGraph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, cluster, separator> TCDGraph;
+typedef boost::graph_traits<TCDGraph>::vertex_descriptor TDCluster;
+typedef boost::graph_traits<TCDGraph>::edge_descriptor Cluster_edge;
 typedef set<int> zone;
 
 #ifdef BOOSTGRAPH134
