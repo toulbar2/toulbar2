@@ -112,7 +112,7 @@ void LinearConstraint::augmentStructure(MIP& mip, Cost& cost, int varindex, map<
     }
 }
 
-void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value, Cost> >& deltas)
+void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas)
 {
 
     bucost = cost;
@@ -132,7 +132,7 @@ void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value
     cost = solveMIP(mip); // solve
 }
 
-void LinearConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost> >& deltas)
+void LinearConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas)
 {
     for (unsigned int i = 0; i < supports.size(); i++) {
         augmentStructure(mip, cost, supports[i], deltas[i]);

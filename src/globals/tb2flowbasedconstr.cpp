@@ -139,7 +139,7 @@ void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, in
                 //cout << "good\n";
                 tmp = cost;
             } else {
-                vector<pair<int, int> > edges;
+                vector<pair<int, int>> edges;
                 result = graph.augment(edge.second, edge.first, false, edges);
                 /*if (!result.second) {
 				  printf("error! no shortest path\n");
@@ -148,7 +148,7 @@ void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, in
                 //tmp = cost+result.first+weight[0];
                 tmp = cost + result.first + graph.getMinWeight(edge.first, edge.second);
                 zeroEdges[edge.first][edge.second] = true;
-                for (vector<pair<int, int> >::iterator i = edges.begin(); i != edges.end(); i++) {
+                for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {
                     zeroEdges[i->first][i->second] = true;
                 }
             }
@@ -170,7 +170,7 @@ void FlowBasedGlobalConstraint::augmentStructure(Graph& graph, StoreCost& cost, 
     }
 }
 
-void FlowBasedGlobalConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value, Cost> >& deltas)
+void FlowBasedGlobalConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas)
 {
 
     for (unsigned int i = 0; i < supports.size(); i++) {
@@ -188,7 +188,7 @@ void FlowBasedGlobalConstraint::changeAfterExtend(vector<int>& supports, vector<
     }
 }
 
-void FlowBasedGlobalConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost> >& deltas)
+void FlowBasedGlobalConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas)
 {
 
     for (unsigned int i = 0; i < supports.size(); i++) {

@@ -136,7 +136,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         if (VERBOSE) {
             color(5);
             cout << "new variable " << addVariablesIndex[newVariable] << "(" << ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]))->getDomainInitSize() << ")";
@@ -300,7 +300,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         int varIdx = wcsp->makeEnumeratedVariable(varname, (Value)0, (Value)domsize); // add q0 variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(varIdx));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         if (ToulBar2::verbose > 1)
             cout << "wregular add varname =" << varname << "=> var index " << wcsp->numberOfVariables() << " domain size = " << domsize + 1 << endl;
     } else {
@@ -309,8 +309,8 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
     //################################################initial state ##############################################
     if (automaton->getInitialStates().size() > 0) {
         vector<Cost> initial_states_costs(automaton->getNbStates(), top);
-        list<pair<int, Cost> > initialStates = automaton->getInitialStates();
-        for (list<pair<int, Cost> >::iterator it = initialStates.begin(); it != initialStates.end(); ++it) {
+        list<pair<int, Cost>> initialStates = automaton->getInitialStates();
+        for (list<pair<int, Cost>>::iterator it = initialStates.begin(); it != initialStates.end(); ++it) {
             pair<int, Cost> initial = *it;
             //cout << initial.first << " " << initial.second << endl;
             initial_states_costs[initial.first] = initial.second;
@@ -324,13 +324,13 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
     //################################################accepting state ##############################################
     for (int v = 1; v < arity + 1; v++) {
         int unsigned domsize = automaton->getNbStates() - 1;
-        string varname = "WR"+to_string(v + q0);
+        string varname = "WR" + to_string(v + q0);
 
-//        DEBONLY(int theindex =)
+        //        DEBONLY(int theindex =)
         int theindex = wcsp->makeEnumeratedVariable(varname, (Value)0, (Value)domsize); // add qi variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(theindex));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         assert(theindex == v + (int)current_var_number);
         if (ToulBar2::verbose > 1)
             cout << "DEBUG>> wregular add varname =" << varname << "=> rank " << wcsp->numberOfVariables() << " domain = " << domsize + 1 << endl;
@@ -340,10 +340,10 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         cout << "DEBUG>> wregular Final number of variables : " << wcsp->numberOfVariables() << endl;
     vector<Cost> final_states_costs(automaton->getNbStates(), top);
 
-    list<pair<int, Cost> > acceptingStates = automaton->getAcceptingStates();
+    list<pair<int, Cost>> acceptingStates = automaton->getAcceptingStates();
     if (acceptingStates.size() > 0) {
 
-        for (list<pair<int, Cost> >::iterator it = acceptingStates.begin(); it != acceptingStates.end(); ++it) {
+        for (list<pair<int, Cost>>::iterator it = acceptingStates.begin(); it != acceptingStates.end(); ++it) {
             pair<int, Cost> accept = *it;
             int unsigned t_index = accept.first;
             Cost ucost = accept.second;
@@ -503,8 +503,8 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
         string varname = "WSum" + to_string(nbVariableCFN) + "_" + to_string(newVariable);
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, cumulDOWN, cumulUP);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
-        for (unsigned int  val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+        for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
+            theVar->newValueName("q" + std::to_string(val));
         //cout << "\033[45m" << "new variable \033[0m" << addVariablesIndex[newVariable] << "("<< ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getInf()<< ":" << ":" << ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getSup() << ")" << "\033[0m" << endl;
         if (newVariable < arity) {
             cumulDOWN += ((EnumeratedVariable*)wcsp->getVar(scope[newVariable]))->getInf();
@@ -701,7 +701,7 @@ void WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, cumulDOWN, cumulUP);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         //cout << "\033[45m" << "new variable \033[0m" << addVariablesIndex[newVariable] << "("<< ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getInf()<< ":" << ":" << ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getSup() << ")" << "\033[0m" << endl;
         if (newVariable < arity) {
             cumulDOWN += ((EnumeratedVariable*)wcsp->getVar(scope[newVariable]))->getInf();
@@ -853,7 +853,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesOverlap[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, 1);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesOverlap[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         //cout << "add overlap " << newVariable << endl;
     }
 
@@ -899,7 +899,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesAmong[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesAmong[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
 
         //cout << "add among " << newVariable << endl;
     }
@@ -1125,7 +1125,7 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
 
         if (VERBOSE)
             cout << "\033[45m"
@@ -1307,7 +1307,7 @@ WeightedGcc::~WeightedGcc() {}
 
 void WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
 {
-    map<Value, pair<unsigned int, unsigned int> >::iterator it;
+    map<Value, pair<unsigned int, unsigned int>>::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedGcc::setBounds | Value " << value << " is already watch" << endl;
@@ -1324,8 +1324,8 @@ void WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp)
     //	int clb[nbcounters];
     //	int cub[nbcounters];
     //	int cscope[nbcounters];
-    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
 
         //Adding a wamong
         Value value = bound.first;
@@ -1393,8 +1393,8 @@ void WeightedGcc::display()
     }
     cout << endl;
     cout << semantics << " " << baseCost << endl;
-    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
         cout << bound.first << " [" << (bound.second).first << ":" << (bound.second).second << "]" << endl;
     }
 }
@@ -1448,12 +1448,12 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
 
         newVariable[positionVar][1] = wcsp->makeEnumeratedVariable(varnamer, 0, arity / 2);
         theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][1]));
         for (unsigned int val = 0; val <= theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
         positionVar++;
     }
 
@@ -1563,7 +1563,7 @@ WeightedSameGcc::~WeightedSameGcc() {}
 
 void WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
 {
-    map<Value, pair<unsigned int, unsigned int> >::iterator it;
+    map<Value, pair<unsigned int, unsigned int>>::iterator it;
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedSameGcc::setBounds | Value " << value << " is already watch" << endl;
@@ -1597,12 +1597,12 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
 
         newVariable[positionVar][1] = wcsp->makeEnumeratedVariable(varnamer, 0, arity / 2);
         theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][1]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->newValueName("q"+std::to_string(val));
+            theVar->newValueName("q" + std::to_string(val));
 
         positionVar++;
     }
@@ -1670,10 +1670,10 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
     // Adding Unary Constraints (GCC PART)
     for (int value = inf; value <= sup; value++) {
 
-        map<Value, pair<unsigned int, unsigned int> >::iterator it;
+        map<Value, pair<unsigned int, unsigned int>>::iterator it;
         it = bounds.find(value);
         if (it != bounds.end()) {
-            pair<Value, pair<unsigned int, unsigned int> > bound = *it;
+            pair<Value, pair<unsigned int, unsigned int>> bound = *it;
             unsigned int lb = (bound.second).first;
             unsigned int ub = (bound.second).second;
 
@@ -1726,8 +1726,8 @@ void WeightedSameGcc::display()
     }
     cout << endl;
     cout << semantics << " " << baseCost << endl;
-    for (map<Value, pair<unsigned int, unsigned int> >::iterator it = bounds.begin(); it != bounds.end(); ++it) {
-        pair<Value, pair<unsigned int, unsigned int> > bound = *it;
+    for (map<Value, pair<unsigned int, unsigned int>>::iterator it = bounds.begin(); it != bounds.end(); ++it) {
+        pair<Value, pair<unsigned int, unsigned int>> bound = *it;
         cout << bound.first << " [" << (bound.second).first << ":" << (bound.second).second << "]" << endl;
     }
 }

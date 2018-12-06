@@ -899,7 +899,7 @@ void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost base
     delete[] values;
 }
 
-void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions,
+void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions,
     vector<Cost> transitionsCosts)
 {
 #ifndef NDEBUG
@@ -1041,7 +1041,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         int nvalues;
-        vector<BoundedObj<Value> > values;
+        vector<BoundedObj<Value>> values;
         file >> semantics >> baseCost >> nvalues;
         for (int i = 0; i < nvalues; i++) {
             int d, high, low;
@@ -1173,8 +1173,8 @@ int WCSP::postWAmong(int* scopeIndex, int arity, const string& semantics, const 
 
 int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     int nbStates,
-    const vector<WeightedObj<int> >& initial_States,
-    const vector<WeightedObj<int> >& accepting_States,
+    const vector<WeightedObj<int>>& initial_States,
+    const vector<WeightedObj<int>>& accepting_States,
     const vector<DFATransition>& Wtransitions)
 {
 #ifndef NDEBUG
@@ -1183,11 +1183,11 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     if (propagator == "network") { // Warning! semantics not used
-        vector<pair<int, Cost> > initial_States_;
+        vector<pair<int, Cost>> initial_States_;
         for (unsigned int i = 0; i < initial_States.size(); i++) {
             initial_States_.push_back(pair<int, Cost>(initial_States[i].val, initial_States[i].weight));
         }
-        vector<pair<int, Cost> > accepting_States_;
+        vector<pair<int, Cost>> accepting_States_;
         for (unsigned int i = 0; i < accepting_States.size(); i++) {
             accepting_States_.push_back(pair<int, Cost>(accepting_States[i].val, accepting_States[i].weight));
         }
@@ -1249,7 +1249,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
 }
 
 int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-    const vector<BoundedObj<Value> >& values)
+    const vector<BoundedObj<Value>>& values)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -4392,7 +4392,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + 
 //procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;
 
-void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int> >& listofsuccessors)
+void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int>>& listofsuccessors)
 {
     marked[i] = true;
     for (unsigned int j = 0; j < listofsuccessors[i].size(); j++) {

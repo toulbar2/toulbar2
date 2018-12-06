@@ -32,8 +32,8 @@ private:
 
     Cost minlambda; /**< The amount of cost that will go to c0 (lambda) */
 
-    stack<pair<int, Value> >* queueP; /**< Values removed by hard AC (created in Pass1, used in Pass2) */
-    stack<pair<int, Value> >* queueR; /**< Minimal set of deletions needed to increase c0 (created in Pass2, used in Pass3) */
+    stack<pair<int, Value>>* queueP; /**< Values removed by hard AC (created in Pass1, used in Pass2) */
+    stack<pair<int, Value>>* queueR; /**< Minimal set of deletions needed to increase c0 (created in Pass2, used in Pass3) */
 
     void enforcePass1(); /**< Enforces instrumented hard AC (Phase 1) */
     bool enforcePass1(VACVariable* xj, VACBinaryConstraint* cij); /**< Revises /a xj wrt /a cij and updates /a k */

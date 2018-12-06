@@ -32,19 +32,19 @@ private:
         }
     };
 
-    vector<map<Value, Cost> > weightMap; //weight of each value
+    vector<map<Value, Cost>> weightMap; //weight of each value
     Cost top;
 
     // Data structure for computing the min. cost
     vector<Entry> sorted;
-    vector<vector<int> > stack;
+    vector<vector<int>> stack;
     vector<Cost> cost;
     vector<Cost> best;
     vector<int> last;
     vector<int> query;
     vector<int> link;
     vector<int> tree;
-    vector<map<Value, Cost> > mincosts;
+    vector<map<Value, Cost>> mincosts;
 
     Cost unary(int var, int val);
     int ancestor(int i);

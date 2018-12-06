@@ -37,9 +37,9 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     functionX = vector<Value>(sizeY * sizeZ, WRONG_VAL);
     functionY = vector<Value>(sizeX * sizeZ, WRONG_VAL);
     functionZ = vector<Value>(sizeX * sizeY, WRONG_VAL);
-    supportX = vector<pair<Value, Value> >(sizeX, make_pair(y->getInf(), z->getInf()));
-    supportY = vector<pair<Value, Value> >(sizeY, make_pair(x->getInf(), z->getInf()));
-    supportZ = vector<pair<Value, Value> >(sizeZ, make_pair(x->getInf(), y->getInf()));
+    supportX = vector<pair<Value, Value>>(sizeX, make_pair(y->getInf(), z->getInf()));
+    supportY = vector<pair<Value, Value>>(sizeY, make_pair(x->getInf(), z->getInf()));
+    supportZ = vector<pair<Value, Value>>(sizeZ, make_pair(x->getInf(), y->getInf()));
 
     //    costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
 
@@ -312,7 +312,7 @@ void TernaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, ve
     x->extend(value, cost);
 }
 
-pair<pair<Cost, Cost>, pair<Cost, Cost> > TernaryConstraint::getMaxCost(int varIndex, Value a, Value b)
+pair<pair<Cost, Cost>, pair<Cost, Cost>> TernaryConstraint::getMaxCost(int varIndex, Value a, Value b)
 {
     Cost maxcosta = MIN_COST;
     Cost diffcosta = MIN_COST;

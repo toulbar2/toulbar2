@@ -462,7 +462,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
     ConstraintLink residue = ((dee) ? DEE : DEE2[a * getDomainInitSize() + b]);
     ConstraintLink residue2 = ((dee) ? DEE : DEE2[b * getDomainInitSize() + a]);
     if (costa <= costb && residue.constr && residue.constr->connected() && residue.scopeIndex < residue.constr->arity() && residue.constr->getVar(residue.scopeIndex) == this) {
-        pair<pair<Cost, Cost>, pair<Cost, Cost> > costs = residue.constr->getMaxCost(residue.scopeIndex, a, b);
+        pair<pair<Cost, Cost>, pair<Cost, Cost>> costs = residue.constr->getMaxCost(residue.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost())
             totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost())
@@ -475,7 +475,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
             return;
     }
     if (costb <= costa && residue2.constr && (residue2.constr != residue.constr || costa > costb) && residue2.constr->connected() && residue2.scopeIndex < residue2.constr->arity() && residue2.constr->getVar(residue2.scopeIndex) == this) {
-        pair<pair<Cost, Cost>, pair<Cost, Cost> > costs = residue2.constr->getMaxCost(residue2.scopeIndex, a, b);
+        pair<pair<Cost, Cost>, pair<Cost, Cost>> costs = residue2.constr->getMaxCost(residue2.scopeIndex, a, b);
         if (totalmaxcosta <= getMaxCost())
             totalmaxcosta += costs.first.first;
         if (totalmaxcostb <= getMaxCost())
@@ -492,7 +492,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
             continue;
         if (costb <= costa && residue2.constr == (*iter).constr && residue2.scopeIndex == (*iter).scopeIndex)
             continue;
-        pair<pair<Cost, Cost>, pair<Cost, Cost> > costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
+        pair<pair<Cost, Cost>, pair<Cost, Cost>> costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
         if (costs.second.second > costa) {
             if (dee) {
                 if (costa == costb)
@@ -575,7 +575,7 @@ bool EnumeratedVariable::verifyDEE(Value a, Value b)
     Cost totalmaxcost = getCost(a);
     Cost totaldiffcost = getCost(a);
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        pair<pair<Cost, Cost>, pair<Cost, Cost> > costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
+        pair<pair<Cost, Cost>, pair<Cost, Cost>> costs = (*iter).constr->getMaxCost((*iter).scopeIndex, a, b);
         if (totalmaxcost + wcsp->getLb() < wcsp->getUb())
             totalmaxcost += costs.first.first;
         if (totaldiffcost + wcsp->getLb() < wcsp->getUb())

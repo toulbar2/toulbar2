@@ -15,7 +15,7 @@ protected:
     vector<StoreCost> costs;
     StoreCost deltaCost;
     StoreValue support; // Warning! the unary support has to be backtrackable
-    double trwsGamma;  // The gamma factor used in TRW-S
+    double trwsGamma; // The gamma factor used in TRW-S
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -91,8 +91,8 @@ public:
     Cost getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue);
     Cost getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue);
 
-    void setTRWSGamma(double g) {trwsGamma = g;}
-    double getTRWSGamma() const {return trwsGamma;}
+    void setTRWSGamma(double g) { trwsGamma = g; }
+    double getTRWSGamma() const { return trwsGamma; }
 
     Cost getInfCost() const FINAL { return costs[toIndex(getInf())] - deltaCost; }
     Cost getSupCost() const FINAL { return costs[toIndex(getSup())] - deltaCost; }

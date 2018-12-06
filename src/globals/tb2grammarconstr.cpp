@@ -25,7 +25,8 @@ void GrammarConstraint::read(istream& file, bool mult)
 
     string str;
     file >> str >> def;
-    if (mult) def *= ToulBar2::costMultiplier;
+    if (mult)
+        def *= ToulBar2::costMultiplier;
 
     /*if (str == "var") mode = VAR;
     else mode = WEIGHTED;*/
@@ -70,14 +71,16 @@ void GrammarConstraint::read(istream& file, bool mult)
         case 2: {
             int A, v, w;
             file >> A >> v >> w;
-            if (mult) w *= ToulBar2::costMultiplier;
+            if (mult)
+                w *= ToulBar2::costMultiplier;
             cfg.addProduction(A, v, w);
             break;
         }
         case 3: {
             int A, B, C, w;
             file >> A >> B >> C >> w;
-            if (mult) w *= ToulBar2::costMultiplier;
+            if (mult)
+                w *= ToulBar2::costMultiplier;
             cfg.addProduction(A, B, C, w);
             break;
         }

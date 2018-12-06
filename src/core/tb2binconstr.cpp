@@ -21,7 +21,7 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX, y->getInf());
     supportY = vector<Value>(sizeY, x->getInf());
-    trwsM = vector<Cost>(max(sizeX,sizeY), MIN_COST);
+    trwsM = vector<Cost>(max(sizeX, sizeY), MIN_COST);
 
     costs = vector<StoreCost>(sizeX * sizeY, StoreCost(MIN_COST));
 
@@ -166,7 +166,7 @@ bool BinaryConstraint::isFunctional(EnumeratedVariable* xin, EnumeratedVariable*
     return false;
 }
 
-pair<pair<Cost, Cost>, pair<Cost, Cost> > BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
+pair<pair<Cost, Cost>, pair<Cost, Cost>> BinaryConstraint::getMaxCost(int varIndex, Value a, Value b)
 {
     //    	cout << "getMaxCost(" << getVar(varIndex)->getName() << ") " << a << " <-> " << b << endl << *this << endl;
     Cost maxcosta = MIN_COST;

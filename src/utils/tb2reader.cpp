@@ -308,8 +308,8 @@ public:
     void enforceUB(Cost ub);
 
     std::map<std::string, int> varNameToIdx;
-    std::vector<std::map<std::string, int> > varValNameToIdx;
-    std::map<std::string, std::vector<pair<string, std::vector<int> > > > tableShares;
+    std::vector<std::map<std::string, int>> varValNameToIdx;
+    std::map<std::string, std::vector<pair<string, std::vector<int>>>> tableShares;
     vector<TemporaryUnaryConstraint> unaryCFs;
 
 private:
@@ -319,8 +319,8 @@ private:
     unsigned int lineCount;
     string currentLine;
     boost::char_separator<char> sep;
-    boost::tokenizer<boost::char_separator<char> >* tok;
-    boost::tokenizer<boost::char_separator<char> >::iterator tok_iter;
+    boost::tokenizer<boost::char_separator<char>>* tok;
+    boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
 };
 
@@ -371,15 +371,15 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     if (ToulBar2::sortDomains) {
         cout << "Error: cannot sort domains in preprocessing with CFN format (remove option -sortd)." << endl;
         exit(EXIT_FAILURE);
-//        if (maxarity > 2) {
-//            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
-//            exit(EXIT_FAILURE);
-//        } else {
-//            ToulBar2::sortedDomains.clear();
-//            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
-//                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
-//            }
-//        }
+        //        if (maxarity > 2) {
+        //            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+        //            exit(EXIT_FAILURE);
+        //        } else {
+        //            ToulBar2::sortedDomains.clear();
+        //            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
+        //                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
+        //            }
+        //        }
     }
 
     for (auto& cf : unaryCFs) {
@@ -431,7 +431,7 @@ std::pair<int, string> CFNStreamReader::getNextToken()
         }
     } else {
         if (this->getNextLine()) {
-            tok = new boost::tokenizer<boost::char_separator<char> >(currentLine, sep);
+            tok = new boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
             tok_iter = tok->begin();
             return getNextToken();
         } else {
@@ -1366,7 +1366,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         }
 
         pair<int, string> token = this->getNextToken();
-        vector<pair<int, string> > funcParams;
+        vector<pair<int, string>> funcParams;
 
         while (!isCBrace(token.second)) {
             funcParams.push_back(token);
@@ -1483,7 +1483,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     unsigned int numberOfTuplesRead = 0;
     bool isOpenedBrace = false;
     bool variableRepeat = false;
-    vector<pair<char, string> > streamContentVec;
+    vector<pair<char, string>> streamContentVec;
 
     // Main loop: read template string char by char, and read the CFN file accordingly to the pattern
     for (unsigned int i = 0; i < GCFTemplate.size(); i++) {
@@ -1581,8 +1581,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         }
         // Read function repeated section
         else if ((GCFTemplate[i] == '+' || GCFTemplate[i] == 'S') && !isOpenedBrace) {
-            vector<pair<char, string> > repeatedContentVec; // Function repeated params
-            vector<pair<char, string> > variableRepeatVec; // Stack if internal tuples have unknown size
+            vector<pair<char, string>> repeatedContentVec; // Function repeated params
+            vector<pair<char, string>> variableRepeatVec; // Stack if internal tuples have unknown size
             // [ delimiting the start of the list
             skipOBrace();
             // Inside the list of parameter tuples
@@ -1976,7 +1976,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
-    if (ToulBar2::cfn  && !ToulBar2::gz  && !ToulBar2::xz) {
+    if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
 #ifdef BOOST
         ifstream Rfile;
         istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
@@ -2114,15 +2114,17 @@ Cost WCSP::read_wcsp(const char* fileName)
     Cost inclowerbound = MIN_COST;
     int maxarity = 0;
     vector<int> sharedSize;
-    vector<vector<Cost> > sharedCosts;
-    vector<vector<String> > sharedTuples;
+    vector<vector<Cost>> sharedCosts;
+    vector<vector<String>> sharedTuples;
     vector<String> emptyTuples;
 
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz)?(std::ios_base::in | std::ios_base::binary):(std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz) zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz) zfile.push(boost::iostreams::lzma_decompressor());
+    if (ToulBar2::gz)
+        zfile.push(boost::iostreams::gzip_decompressor());
+    else if (ToulBar2::xz)
+        zfile.push(boost::iostreams::lzma_decompressor());
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -2658,11 +2660,13 @@ void WCSP::read_uai2008(const char* fileName)
 
     // Cost inclowerbound = MIN_COST;
     string uaitype;
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz)?(std::ios_base::in | std::ios_base::binary):(std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz) zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz) zfile.push(boost::iostreams::lzma_decompressor());
+    if (ToulBar2::gz)
+        zfile.push(boost::iostreams::gzip_decompressor());
+    else if (ToulBar2::xz)
+        zfile.push(boost::iostreams::lzma_decompressor());
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -2831,7 +2835,7 @@ void WCSP::read_uai2008(const char* fileName)
     ToulBar2::markov_log = 0; // for the MARKOV Case
 
     int ntuplesarray[lctrs.size()];
-    vector<vector<Cost> > costs;
+    vector<vector<Cost>> costs;
     costs.resize(lctrs.size());
     list<int>::iterator it = lctrs.begin();
     while (it != lctrs.end()) {
@@ -3120,11 +3124,13 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz)?(std::ios_base::in | std::ios_base::binary):(std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz) zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz) zfile.push(boost::iostreams::lzma_decompressor());
+    if (ToulBar2::gz)
+        zfile.push(boost::iostreams::gzip_decompressor());
+    else if (ToulBar2::xz)
+        zfile.push(boost::iostreams::lzma_decompressor());
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -3317,11 +3323,13 @@ void WCSP::read_wcnf(const char* fileName)
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz)?(std::ios_base::in | std::ios_base::binary):(std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz) zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz) zfile.push(boost::iostreams::lzma_decompressor());
+    if (ToulBar2::gz)
+        zfile.push(boost::iostreams::gzip_decompressor());
+    else if (ToulBar2::xz)
+        zfile.push(boost::iostreams::lzma_decompressor());
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -3400,7 +3408,8 @@ void WCSP::read_qpbo(const char* fileName)
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::costMultiplier = multiplier;
-    if (!minimize) ToulBar2::costMultiplier *= -1.0;
+    if (!minimize)
+        ToulBar2::costMultiplier *= -1.0;
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);

@@ -1983,7 +1983,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
                 ToulBar2::gz = true;
-           }
+            }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
                 strfile = problem;

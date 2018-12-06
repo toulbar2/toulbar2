@@ -95,9 +95,9 @@ public:
         unsigned int iy = y->toIndex(vy);
         return costs[ix * sizeY + iy] - (deltaCostsX[ix] + deltaCostsY[iy]);
     }
-    void projectTRWS(EnumeratedVariable *var, Value value, Cost cost)
+    void projectTRWS(EnumeratedVariable* var, Value value, Cost cost)
     {
-        vector<StoreCost> &deltaCosts = (var == x)? deltaCostsX: deltaCostsY;
+        vector<StoreCost>& deltaCosts = (var == x) ? deltaCostsX : deltaCostsY;
         deltaCosts[var->toIndex(value)] += cost;
         var->project(value, cost, true);
     }
@@ -363,8 +363,8 @@ public:
             supportX.resize(sizeX);
         if (sizeY > supportY.size())
             supportY.resize(sizeY);
-        if (max(sizeX,sizeY) > trwsM.size())
-            trwsM.resize(max(sizeX,sizeY), MIN_COST);
+        if (max(sizeX, sizeY) > trwsM.size())
+            trwsM.resize(max(sizeX, sizeY), MIN_COST);
         if (sizeX * sizeY > costs.size())
             costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
         linkX->removed = true;
@@ -552,7 +552,7 @@ public:
         }
     }
 
-    pair<pair<Cost, Cost>, pair<Cost, Cost> > getMaxCost(int varIndex, Value a, Value b);
+    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int varIndex, Value a, Value b);
 
     double computeTightness()
     {

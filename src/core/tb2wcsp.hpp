@@ -65,7 +65,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<GlobalConstraint*> globalconstrs; ///< a list of all original global constraints (also inserted in constrs)
     vector<int> delayedNaryCtr; ///< a list of all original nary constraints in extension (also inserted in constrs)
     bool isDelayedNaryCtr; ///< postpone naryctr propagation after all variables have been created
-    vector<vector<int> > listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
+    vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
     StoreInt isPartOfOptimalSolution; ///< true if the current assignment belongs to an optimal solution recorded into bestValues
 
     // make it private because we don't want copy nor assignment
@@ -113,7 +113,7 @@ public:
 
 #ifdef XMLFLAG
     map<int, int> varsDom; ///< structures for solution translation: we don't have to parse the XML file again
-    vector<vector<int> > Doms; ///< structures for solution translation: we don't have to parse the XML file again
+    vector<vector<int>> Doms; ///< structures for solution translation: we don't have to parse the XML file again
 #endif
 
     WCSP(Cost upperBound, void* solver = NULL);
@@ -409,14 +409,14 @@ public:
     void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
-        const vector<WeightedObj<int> >& initial_States,
-        const vector<WeightedObj<int> >& accepting_States,
+        const vector<WeightedObj<int>>& initial_States,
+        const vector<WeightedObj<int>>& accepting_States,
         const vector<DFATransition>& Wtransitions); ///< \brief post a soft or weighted regular cost function
-    void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
+    void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft alldifferent cost function
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObj<Value> >& values); ///< \brief post a soft global cardinality cost function
+        const vector<BoundedObj<Value>>& values); ///< \brief post a soft global cardinality cost function
     void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
     int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
     void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function
@@ -455,8 +455,9 @@ public:
         solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
-            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving) setBestValue(i, v);
-            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i,v)].value : v);
+            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
+                setBestValue(i, v);
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
     }
     void printSolution(ostream& os)
@@ -490,7 +491,7 @@ public:
     // Specific API for Variable and Constraint classes
 
     Variable* getVar(int varIndex) const { return vars[varIndex]; }
-    vector<vector<int> >* getListSuccessors() { return &listofsuccessors; }
+    vector<vector<int>>* getListSuccessors() { return &listofsuccessors; }
     Constraint* getCtr(int ctrIndex) const
     {
         if (ctrIndex >= 0) {
@@ -613,7 +614,7 @@ public:
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp
     //
-    void visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int> >& listofsuccessors);
+    void visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int>>& listofsuccessors);
 
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs

@@ -178,7 +178,7 @@ public:
     virtual bool ishard();
 
     virtual Cost getMinCost();
-    virtual pair<pair<Cost, Cost>, pair<Cost, Cost> > getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST, MAX_COST), make_pair(MAX_COST, MAX_COST)); }
+    virtual pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST, MAX_COST), make_pair(MAX_COST, MAX_COST)); }
     virtual Cost getMaxFiniteCost();
     virtual void setInfiniteCost(Cost ub) {}
 
