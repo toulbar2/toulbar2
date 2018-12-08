@@ -12,6 +12,7 @@
 
 #include "tb2localsearch.hpp"
 
+#ifdef BOOST
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/graph/graph_traits.hpp>
@@ -135,6 +136,7 @@ public:
     virtual uint getClustersSize(uint c, uint number);
 };
 
+#endif
 #endif /* TB2VNS_HPP_ */
 
 /* Local Variables: */

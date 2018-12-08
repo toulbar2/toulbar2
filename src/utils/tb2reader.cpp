@@ -285,6 +285,7 @@ typedef struct {
  \endcode
  **/
 
+#ifdef BOOST
 class CFNStreamReader {
 
 public:
@@ -1980,6 +1981,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
 
     return;
 }
+#endif
 
 // TB2 entry point for WCSP reading (not only wcsp format).
 // Returns the global UB obtained form both the file and command line in internal Cost units

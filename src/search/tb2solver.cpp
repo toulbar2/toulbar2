@@ -37,18 +37,38 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
     switch (ToulBar2::searchMethod) {
     case VNS:
     case DGVNS:
+#ifdef BOOST
         solver = new VNSSolver(ub);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
 #ifdef OPENMPI
     case CPDGVNS:
+#ifdef BOOST
         solver = new CooperativeParallelDGVNS(ub, env0);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
     case RPDGVNS:
+#ifdef BOOST
         solver = new ReplicatedParallelDGVNS(ub, env0);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
 #endif
     case TREEDEC:
+#ifdef BOOST
         solver = new TreeDecRefinement(ub);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
     default:
         solver = new Solver(ub);

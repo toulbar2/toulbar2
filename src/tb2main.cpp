@@ -248,6 +248,7 @@ enum {
     OPT_random,
 
     // VNS Methods
+#ifdef BOOST
     OPT_VNS_search,
 #ifdef OPENMPI
     OPT_CPDGVNS_search,
@@ -270,6 +271,7 @@ enum {
     OPT_neighbor_change,
     OPT_neighbor_synch,
     OPT_optimum
+#endif
 };
 
 string getExt(string FileName)
@@ -446,6 +448,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
 
     // VNS Methods
+#ifdef BOOST
     { OPT_VNS_search, (char*)"-vns", SO_NONE },
     { OPT_VNS_search, (char*)"--vns", SO_NONE },
     { OPT_VNS_search, (char*)"-dgvns", SO_NONE },
@@ -476,6 +479,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_neighbor_synch, (char*)"--synch", SO_NONE },
     { OPT_optimum, (char*)"-best", SO_REQ_SEP },
     { OPT_optimum, (char*)"--best", SO_REQ_SEP },
+#endif
     SO_END_OF_OPTIONS
 };
 
@@ -745,6 +749,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
+#ifdef BOOST
     cout << "   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)";
 #ifdef OPENMPI
     //    cout << "   -cpdgvns : initial upperbound found by cooperative parallel DGVNS (usage: \"mpirun -n [NbOfProcess] toulbar2 -cpdgvns problem.wcsp\")" << endl;
@@ -761,6 +766,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -kinc=[integer] : neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (" << ToulBar2::vnsKinc << " by default)" << endl;
     cout << "   -best=[integer] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
     cout << endl;
+#endif
     cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
     cout << "   -z=[integer] : 1: saves original instance (by default), 2: saves after preprocessing" << endl;
@@ -966,6 +972,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             // VNS
+#ifdef BOOST
             if (args.OptionId() == OPT_VNS_search) {
                 //                ToulBar2::searchMethod = VNS;
                 //                ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
@@ -1015,20 +1022,6 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
                     exit(EXIT_FAILURE);
                 }
-            }
-
-            if (args.OptionId() == OPT_stdin) {
-                // stdin format reading by default stdin type is cfn format
-                ToulBar2::stdin_format = args.OptionArg();
-                if (ToulBar2::stdin_format.length() == 0) {
-                    ToulBar2::stdin_format = "cfn";
-                } else {
-                    if (ToulBar2::stdin_format.compare("bep") == 0 || ToulBar2::stdin_format.compare("map") == 0 || ToulBar2::stdin_format.compare("pre") == 0) {
-                        cerr << "Error: cannot read this " << ToulBar2::stdin_format << " format using stdin option!" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                }
-                //		cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
             }
 
             if (args.OptionId() == OPT_vns_output) {
@@ -1124,6 +1117,21 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() != NULL)
                     //                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
                     ToulBar2::vnsOptimumS = args.OptionArg();
+            }
+#endif
+
+            if (args.OptionId() == OPT_stdin) {
+                // stdin format reading by default stdin type is cfn format
+                ToulBar2::stdin_format = args.OptionArg();
+                if (ToulBar2::stdin_format.length() == 0) {
+                    ToulBar2::stdin_format = "cfn";
+                } else {
+                    if (ToulBar2::stdin_format.compare("bep") == 0 || ToulBar2::stdin_format.compare("map") == 0 || ToulBar2::stdin_format.compare("pre") == 0) {
+                        cerr << "Error: cannot read this " << ToulBar2::stdin_format << " format using stdin option!" << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                //      cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
             }
 
             // BTD root cluster

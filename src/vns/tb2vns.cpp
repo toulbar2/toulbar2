@@ -6,6 +6,7 @@
  *      Phd. Student : LITIO, University of Oran. GREYC, University of Caen.
  */
 
+#ifdef BOOST
 #include "tb2vns.hpp"
 #include "core/tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
@@ -557,6 +558,8 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
     }
     return z.size();
 }
+
+#endif
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
