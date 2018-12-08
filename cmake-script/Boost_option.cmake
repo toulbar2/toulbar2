@@ -7,7 +7,7 @@ SET (source_files ${source_files} ${boost_file})
 # boost detection 
 MESSAGE(STATUS "- boost flag on  .")
 
-find_package(Boost 1.54.0 REQUIRED COMPONENTS graph iostreams)
+find_package(Boost 1.34.0 REQUIRED COMPONENTS graph iostreams)
 #find_package(ZLIB)
 
 MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")

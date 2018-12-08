@@ -13,6 +13,20 @@
 #include "core/tb2globaldecomposable.hpp"
 #include "core/tb2clqcover.hpp"
 
+#ifdef BOOST
+#include <boost/version.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#if (BOOST_VERSION >= 106500)
+#include <boost/iostreams/filter/lzma.hpp>
+#endif
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/compressed_pair.hpp>
+#endif
+
 typedef struct {
     EnumeratedVariable* var;
     vector<Cost> costs;
@@ -2023,6 +2037,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 #endif
     } else if (ToulBar2::cfn && ToulBar2::xz) {
 #ifdef BOOST
+#if (BOOST_VERSION >= 106500)
         ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
         istream& file = Rfile;
         boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
@@ -2039,6 +2054,10 @@ Cost WCSP::read_wcsp(const char* fileName)
             CFNStreamReader fileReader(stream, this);
             return getUb();
         }
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
         exit(EXIT_FAILURE);
@@ -2121,10 +2140,16 @@ Cost WCSP::read_wcsp(const char* fileName)
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz)
+    if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz)
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
         zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed wcsp format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -2663,10 +2688,16 @@ void WCSP::read_uai2008(const char* fileName)
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz)
+    if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz)
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
         zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed uai/LG format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -3127,10 +3158,16 @@ void WCSP::read_wcnf(const char* fileName)
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz)
+    if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz)
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
         zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed cnf/wcnf format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
     zfile.push(rfile);
     istream ifile(&zfile);
 
@@ -3326,10 +3363,16 @@ void WCSP::read_qpbo(const char* fileName)
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
-    if (ToulBar2::gz)
+    if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
-    else if (ToulBar2::xz)
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
         zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed qpbo format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
     zfile.push(rfile);
     istream ifile(&zfile);
 

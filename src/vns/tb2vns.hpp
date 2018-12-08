@@ -12,15 +12,13 @@
 
 #include "tb2localsearch.hpp"
 
+#include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/foreach.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/connected_components.hpp>
-
-//TODO: is it need for other versions???
-#define BOOSTGRAPH134
 
 /**
  * Basic structure
@@ -50,7 +48,7 @@ typedef boost::graph_traits<TCDGraph>::vertex_descriptor TDCluster;
 typedef boost::graph_traits<TCDGraph>::edge_descriptor Cluster_edge;
 typedef set<int> zone;
 
-#ifdef BOOSTGRAPH134
+#if (BOOST_VERSION >= 103400)
 namespace boost {
 inline bool operator<(const Cluster_edge& __x, const Cluster_edge& __y)
 {
