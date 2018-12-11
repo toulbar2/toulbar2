@@ -11,6 +11,7 @@
 \def\ci{\perp\!\!\!\perp}
 
 \def\toulbar2{\textsc{toulbar2}}
+\def\toolbar{\textsc{toolbar}}
 \title{\toulbar2 User documentation}
 \author{The \toulbar2 developer team}
 \date{\today}
@@ -56,6 +57,8 @@ algorithm~\cite{Katsirelos15a} that tries to quickly provide good solutions toge
 with an upper bound on the gap between the cost of each solution and
 the (unknown) optimal cost. Thus, even if it is unable to prove
 optimality, it will bound the quality of the solution provided.
+It can also apply a variable neighborhood search algorithm exploiting a problem decomposition~\cite{Ouali17}.
+This algorithm is complete (if enough CPU-time is given) and it can be run in parallel using OpenMPI.
 
 Beyond the service of providing optimal solutions, \toulbar2 can also
 exhaustively enumerate solutions below a cost threshold and
@@ -68,31 +71,33 @@ on such problems.
 \section{How do I install it ?}
 
 
-\toulbar2 is an open source solver distributed under the Gnu Public
-Library (GPL) as a set of C++ sources managed with git at
-\url{http://mulcyber.toulouse.inra.fr/projects/toulbar2}. If you want
-to use a released version, then you can download there binary archives
-as a shell archive, an rpm or a Debian package that should be easy to
-use on most Linux systems as well as an auto-installing executable for
-Windows.
+\toulbar2 is an open source solver distributed under the MIT license as a set of C++ sources managed with git at
+\url{http://github.com/toulbar2/toulbar2}. If you want
+to use a released version, then you can download there source archives of a specific release
+%%binary archives as a shell archive, an rpm or a Debian package 
+that should be easy to
+compile on most Linux systems.
+%% as well as an auto-installing executable for Windows.
 
-If you want to compile it yourself, you will need a modern C++
+If you want to compile the latest sources yourself, you will need a modern C++
 compiler, CMake, Gnu MP Bignum library, a recent version of boost
-libraries and optionally the jemalloc memory management library. You
+libraries and optionally the jemalloc memory management and OpenMPI libraries. You
 can then clone \toulbar2 on your machine and compile it by executing:
 
 \begin{verbatim}
-git clone http://mulcyber.toulouse.inra.fr/anonscm/git/toulbar2/toulbar2.git
-cd toulbar2/toulbar2
+git clone https://github.com/toulbar2/toulbar2.git
+cd toulbar2
+git checkout cpd
 mkdir build
 cd build
+# ccmake ..
 cmake ..
 make
 \end{verbatim}
 
 Finally, \toulbar2 is available in the debian-science
 section of the unstable/sid Debian version. It should therefore be
-directly installable using:
+directly installable (in a non cpd variant) using:
 
 \begin{verbatim}
 sudo apt-get install toulbar2
@@ -100,8 +105,33 @@ sudo apt-get install toulbar2
 
 If you want to try \toulbar2 on crafted, random, or real problems,
 please look for benchmarks in the
-\href{https://mulcyber.toulouse.inra.fr/projects/costfunctionlib}{Cost
-  Function Library}. Other benchmarks coming from various discrete optimization languages are available at \href{http://genoweb.toulouse.inra.fr/~degivry/evalgm}{Genotoul EvalGM}~\cite{Hurley16b}.
+\href{http://costfunction.org/en/benchmark}{Cost
+  Function benchmark Section}. Other benchmarks coming from various discrete optimization languages are available at \href{http://genoweb.toulouse.inra.fr/~degivry/evalgm}{Genotoul EvalGM}~\cite{Hurley16b}.
+
+\section{How do I test it ?}
+
+Some problem examples are available in the directory {\sf toulbar2/validation}. After compilation with cmake, it is possible to run a series of tests using:
+\begin{verbatim}
+make test
+\end{verbatim}
+
+For debugging \toulbar2 (compile with flag \verb!CMAKE_BUILD_TYPE="Debug"!), more test examples are available at \href{https://forgemia.inra.fr/thomas.schiex/cost-function-library}{Cost Function Library}.
+The following commands run \toulbar2 (executable must be found on your system path) on every problems with a 1-hour time limit and compare their optimum with known optima (in .ub files).
+\begin{verbatim}
+cd toulbar2
+git clone https://forgemia.inra.fr/thomas.schiex/cost-function-library.git
+./misc/script/runall.sh ./cost-function-library/trunk/validation
+\end{verbatim}
+
+Other tests on randomly generated problems can be done where optimal solutions are verified by using an older solver \href{https://forgemia.inra.fr/thomas.schiex/toolbar}{\toolbar} (executable must be found on your system path).
+\begin{verbatim}
+cd toulbar2
+git clone https://forgemia.inra.fr/thomas.schiex/toolbar.git
+cd toolbar/toolbar
+make toolbar
+cd ../..
+./misc/script/rungenerate.sh
+\end{verbatim}
 
 \section{Using it as a black box}
 
@@ -115,8 +145,9 @@ toulbar2 [option parameters] <file>
 
 and \toulbar2 will start solving the optimization problem described in
 its file argument. By default, the extension of the file (either
-\texttt{.cfn}, \texttt{.cfn.gz}, \texttt{.wcsp}, \texttt{.wcnf}, \texttt{.cnf}, \texttt{.qpbo},
-\texttt{.uai}, \texttt{.LG}, \texttt{.pre} or \texttt{.bep}) is used
+\texttt{.cfn}, \texttt{.cfn.gz}, \texttt{.cfn.xz}, \texttt{.wcsp}, \texttt{.wcsp.gz}, \texttt{.wcsp.xz},
+\texttt{.wcnf}, \texttt{.wcnf.gz}, \texttt{.wcnf.xz}, \texttt{.cnf}, \texttt{.cnf.gz}, \texttt{.cnf.xz}, \texttt{.qpbo}, \texttt{.qpbo.gz}, \texttt{.qpbo.xz},
+\texttt{.uai}, \texttt{.uai.gz}, \texttt{.uai.xz}, \texttt{.LG}, \texttt{.LG.gz}, \texttt{.LG.xz}, \texttt{.pre} or \texttt{.bep}) is used
 to determine the nature of the file (see
 section~\ref{file-formats}). There is no specific order for the
 options or problem file. \toulbar2 comes with decently optimized
@@ -168,6 +199,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-timer=[integer]}] give a CPU time limit in seconds. \toulbar2
   will stop after the specified CPU time has been consumed. The time
   limit is a CPU user time limit, not wall clock time limit.
+\item[{-seed=[integer]}] random seed non-negative value or use current time if a negative value is given (default value is 1)
 \end{description}
  
 \subsection{Preprocessing}
@@ -195,9 +227,11 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   apply the Min Sum Diffusion algorithm (default is inactivated, with
   a number of iterations of 0). See~\cite{Cooper10a}.
 \item[{-trws=[float]}] 
-  preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.001). See Kolmogorov 2006.
+  preprocessing only: enforces TRW-S until a given precision is reached (default value is 0.001). See Kolmogorov 2006.
+\item[{--trws-order}] replaces DAC order by Kolmogorov's TRW-S order. 
 \item[{--trws-n-iters=[integer]}] enforce at most N iterations of TRW-S (default value is 1000).
-\item[{--trws-n-iters-no-change=[integer]}] stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5).
+\item[{--trws-n-iters-no-change=[integer]}] stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5, -1=never).
+\item[{--trws-n-iters-compute-ub=[integer]}] compute a basic upper bound every N steps during TRW-S (default value is 100)
  \end{description}
  
 
@@ -205,7 +239,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 
 \begin{description}
 \item[{-l=[integer]}] limited discrepancy search~\cite{Ginsberg95}, use a negative value to stop the search after the given absolute number of discrepancies has been explored (discrepancy bound = 4 by default)
-\item[{-L=[integer]}] randomized (quasi-random variable ordering) search with restart (maximum number of nodes = 10000 by default)
+\item[{-L=[integer]}] randomized (quasi-random variable ordering) search with restart (maximum number of nodes/VNS restarts = 10000 by default)
 \item[{-i=["string"]}] initial upper bound found by INCOP local search
   solver~\cite{idwalk:cp04}. The string parameter is optional, using ``0 1 3 idwa 100000
   cv v 0 200 1 0 0'' by default with the following meaning:
@@ -215,7 +249,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-x=[(,i=a)*]}] assigns variable of index i to value a (multiple
   assignments are separated by a comma and no space) (without any
   argument, a complete assignment -- used as initial upper bound and
-  as a value heuristic -- read from default file "sol" or given directly as an additional input
+  as a value heuristic -- read from default file "sol" taken as a certificate or given directly as an additional input
   filename with ".sol" extension and without {\bf -x})
 \end{description}
 
@@ -229,9 +263,9 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-B=[integer]}] (0) DFBB, (1) BTD~\cite{Schiex06a}, (2) RDS-BTD~\cite{Sanchez09a}, (3) RDS-BTD with
   path decomposition instead of tree decomposition~\cite{Sanchez09a} (default value is
   0)
-\item[{-O=[filename]}] reads a variable elimination order from a file
+\item[{-O=[filename]}] reads either a reverse variable elimination order (given by a list of variable indexes) from a file
   in order to build a tree decomposition (if BTD-like and/or variable
-  elimination methods are used). It is also used as a DAC ordering.
+  elimination methods are used) or reads a valid tree decomposition directly (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, followed by a cluster parent number with -1 for the first/root(s) cluster(s), followed by a list of variable indexes). It is also used as a DAC ordering.
 \item[{-O=[negative integer]}] build a tree decomposition (if BTD-like
   and/or variable elimination methods are used) and also a compatible
   DAC ordering using
@@ -241,17 +275,31 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
     \item (-3) minimum fill-in ordering,
     \item (-4) maximum spanning tree ordering (see -mst), 
     \item (-5) reverse Cuthill-Mckee ordering, 
-    \item (-6) approximate minimum degree ordering
+    \item (-6) approximate minimum degree ordering,
+    \item (-7) default file ordering
     \end{itemize}
     If not specified, then use the variable order in which variables appear in the problem file.
 \item[{-j=[integer]}] splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number (use options "-B=3 -j=1 -svo -k=1" for pure RDS, use value 0 for no splitting) (default value is 0).
 \item[{-r=[integer]}] limit on the maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is -1)
 \item[{-X=[integer]}] limit on the minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is 0)
-\item[{-E}] merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e")
+\item[{-E=[float]}] merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option -vns) (default value is 0)
 \item[{-R=[integer]}] choice for a specific root cluster number
 \item[{-I=[integer]}] choice for solving only a particular rooted cluster subtree (with RDS-BTD only)
  \end{description}
  
+\subsection{Variable neighborhood search algorithms}
+
+\begin{description}
+\item[{-vns}] unified decomposition guided variable neighborhood search~\cite{Ouali17} (UDGVNS). A problem decomposition into clusters can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O. For a parallel version (UPDGVNS), use "mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp".
+\item[{-vnsini=[integer]}] initial solution for VNS-like methods found: (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
+\item[{-ldsmin=[integer]}] minimum discrepancy for VNS-like methods (1 by default)
+\item[{-ldsmax=[integer]}] maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)
+\item[{-ldsinc=[integer]}] discrepancy increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (2 by default)
+\item[{-kmin=[integer]}] minimum neighborhood size for VNS-like methods (4 by default)
+\item[{-kmax=[integer]}] maximum neighborhood size for VNS-like methods (number of problem variables by default)
+\item[{-kinc=[integer]}] neighborhood size increment strategy for VNS-like methods using: (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default)
+\item[{-best=[integer]}] stop VNS-like methods if a better solution is found (default value is 0)
+\end{description}
 
 \subsection{Node processing \& bounding options}
 
@@ -261,6 +309,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   maximum of ternary cost functions). See~\cite{Larrosa00}.
 \item[{-k=[integer]}] soft local consistency level (NC~\cite{Larrosa2002} with Strong NIC for global cost functions=0~\cite{LL2009}, (G)AC=1~\cite{Schiex00b,Larrosa2002}, D(G)AC=2~\cite{CooperFCSP}, FD(G)AC=3~\cite{Larrosa2003}, (weak) ED(G)AC=4~\cite{Heras05,LL2010}) (default value is 4). See also~\cite{Cooper10a,LL2012asa}.
 \item[{-A=[integer]}] enforces VAC~\cite{Cooper08} at each search node with a search depth less than a given value (default value is 0)
+\item[{-V}] VAC-based value ordering heuristic (default option)
 \item[{-dee=[integer]}] restricted dead-end elimination~\cite{Givry13a} (value pruning by dominance rule from EAC value (dee$>=1$ and dee$<=3$)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)
 \item[{-o}] ensures an optimal worst-case time complexity of DAC and EAC (can be slower in practice)
 \end{description}
@@ -277,7 +326,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   backjumping variable ordering heuristic~\cite{Lecoutre09}.
 \item[{-q=[integer]}] use
   weighted degree variable ordering heuristic~\cite{boussemart2004} if the number of cost
-  functions is less than the given value (default value is 10000).
+  functions is less than the given value (default value is 1000000).
 \item[{-var=[integer]}]
   searches by branching only on the first [given value]
   decision variables, assuming the remaining variables are
@@ -294,6 +343,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   in the middle of domain range while d=2 splits domains in the middle
   of the sorted domain based on unary costs. 
 \item[-sortd] sorts domains in preprocessing based on increasing unary costs ( works only for binary WCSPs).
+\item[-solr] solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 \end{description}
 
 \subsection{Console output}
@@ -304,15 +354,15 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-v=[integer]}] sets the verbosity level (default 0).
 \item[{-Z=[integer]}] debug mode (save problem at each node if verbosity
   option -v=num $>= 1$ and -Z=num $>=3$)
-\item[-s] shows each solution found during search. The solution is
-  printed on one line, giving the value (integer) of each variable
-  successively in increasing file order.
+\item[{-s=[integer]}] shows each solution found during search. The solution is
+  printed on one line, giving by default (-s=1) the value (integer) of each variable
+  successively in increasing file order. For -s=2, the value name is used instead, and for -s=3, variable name=value name is printed instead.
 \end{description}
 
 \subsection{File output}
 
 \begin{description}
-\item[{-w=[filename]}] writes last solution found in the specified
+\item[{-w=[filename]}] writes last/all solutions found in the specified
   filename (or "sol" if no parameter is given). The current directory
   is used as a relative path.
 \item[{-z=[filename]}]  saves problem in wcsp format in filename (or
@@ -334,8 +384,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   factor (a power of ten) for representing fixed point numbers
   (default value is 7)
 \item[{-epsilon=[float]}] approximation factor for computing the partition
-  function (default value is $1000$ representing
-  $\varepsilon=\frac{1}{1000}$)
+  function (greater than 1, default value is infinity)
 \end{description}
  
 \subsection{Random problem generation}
@@ -385,7 +434,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \section{Input File formats}
 \label{file-formats}
 Notice that by default \toulbar2 distinguishes file formats based on their extension.
-\subsection{cfn format (.cfn and .cfn.gz file extension)}
+\subsection{cfn format (.cfn, .cfn.gz, and .cfn.xz file extension)}
 With this JSON compatible format, it is possible:
 \begin{itemize}
 \item to give a name to variables and functions.
@@ -393,7 +442,7 @@ With this JSON compatible format, it is possible:
 \item to use decimal and possibly negative costs.
 \item to solve both minimization and maximization problems.
 \item to debug  your .cfn files: the parser gives a cause and line number when it fails.
-\item to use gzip-compressed files directly as input (.cfn.gz).
+\item to use gzip'd or xz compressed files directly as input (.cfn.gz and .cfn.xz).
 \item to use dense descriptions for dense cost tables.
 \end{itemize}
 
@@ -499,7 +548,7 @@ AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
 \item salldiffdp var {\itshape cost} to express a soft alldifferent constraint with variable-\/based ({\itshape var} keyword) cost semantic with a given {\itshape cost} per violation (decomposes into samongdp cost functions)
 \item sgccdp var {\itshape cost} {\itshape nb\-\_\-values} ({\itshape value} {\itshape lower\-\_\-bound} {\itshape upper\-\_\-bound})$\ast$ to express a soft global cardinality constraint with variable-\/based ({\itshape var} keyword) cost semantic with a given {\itshape cost} per violation and for each value its lower and upper bound (decomposes into samongdp cost functions)
 \item max$\vert$smaxdp {\itshape def\-Cost} {\itshape nbtuples} ({\itshape variable} {\itshape value} {\itshape cost})$\ast$ to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, {\itshape def\-Cost} if unspecified)
-\item M\-S\-T$\vert$smstdp hard to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
+\item M\-S\-T$\vert$smstdp to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)
 \end{DoxyItemize}
 \item Global cost functions using a cost function network-\/based propagator\-~\cite{Ficolofo2012}:
 \begin{DoxyItemize}

@@ -12,3 +12,16 @@
 	   }
    }
 }
+# This automata contains 4 states.
+#  0 and 1 are starting states (cost 0.0 and 0.5 respectively)
+#  2 and 3 are accepting/final states (cost -1.0 and 0.0 respectively)
+# There are 4 transitions:
+# Origin    Value	Target	Cost
+# 0	    0 (a)	1	0.5 (if we start with a, go to 1 cost 0.5)
+# 0	    1 (b)	2	0.0 (if we start with b, go to 2, free)
+# 2	    0 (a)	2       1.0 (loop on 2: can emit a at will, cost 1.0)
+# 1	    1 (b)	3 	-1.0 (after 1(a), accept a (b)
+# on the 4 variables here, the only accepted tuple is
+# 1 0 0 0 (or baaa) that starts in state 0 then loops over 2.
+# It has cost 2 because the loop on 2 costs 1.0 and is used 3 times, so 3.0
+# but the exit costs -1.0 so 2.0

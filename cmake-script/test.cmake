@@ -2,8 +2,12 @@
 
 file ( GLOB_RECURSE validation_file
   validation/*.wcsp
+  validation/*.wcsp.gz
+  validation/*.wcsp.xz
   validation/*.cfn
-  validation/*.cfn.gz )
+  validation/*.cfn.gz
+  validation/*.cfn.xz
+  )
 
 ################
 # test unitaire
@@ -16,9 +20,9 @@ FOREACH (UTEST ${validation_file})
         UNSET(UB) 
 	UNSET(ENUM)
 
-	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ".ub" UBF ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ".lb" LBF ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ".enum" ENUM_file ${UTEST})
+	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".ub" UBF ${UTEST})
+	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".lb" LBF ${UTEST})
+	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".enum" ENUM_file ${UTEST})
 	GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH)
 
 	IF (EXISTS ${UBF})
@@ -80,7 +84,7 @@ FOREACH (UTEST ${validation_file})
 	
 	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp|cfn.gz|cfn)$" ""  TNAME ${TMP})
+	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ""  TNAME ${TMP})
 
 	if($verbose) 
 		MESSAGE(STATUS "UBF: ${UBF}")

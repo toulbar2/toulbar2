@@ -1406,7 +1406,7 @@ void Solver::newSolution()
                     ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
                 } else if (ToulBar2::haplotype) {
                     ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-                } else if (ToulBar2::cfn || ToulBar2::cfngz) {
+                } else if (ToulBar2::cfn) {
                     Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                     string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
                     string varlabel = wcsp->getName(i);

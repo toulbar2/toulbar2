@@ -15,7 +15,20 @@
 #include "cpd/tb2trienum.hpp"
 #include "cpd/tb2seq.hpp"
 #include "core/tb2clqcover.hpp"
-using namespace boost;
+#ifdef BOOST
+#define BOOST_IOSTREAMS_NO_LIB
+#include <boost/version.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#if (BOOST_VERSION >= 106500)
+#include <boost/iostreams/filter/lzma.hpp>
+#endif
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/compressed_pair.hpp>
+#endif
 
 typedef struct {
     EnumeratedVariable* var;
@@ -275,6 +288,7 @@ typedef struct {
  \endcode
  **/
 
+#ifdef BOOST
 class CFNStreamReader {
 
 public:
@@ -374,16 +388,16 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
 
     if (ToulBar2::sortDomains) {
         cout << "Error: cannot sort domains in preprocessing with CFN format (remove option -sortd)." << endl;
-            exit(EXIT_FAILURE);
-//        if (maxarity > 2) {
-//            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
-//            exit(EXIT_FAILURE);
-//        } else {
-//            ToulBar2::sortedDomains.clear();
-//            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
-//                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
-//            }
-//        }
+        exit(EXIT_FAILURE);
+        //        if (maxarity > 2) {
+        //            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+        //            exit(EXIT_FAILURE);
+        //        } else {
+        //            ToulBar2::sortedDomains.clear();
+        //            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
+        //                ToulBar2::sortedDomains[unaryCFs[u].var->wcspIndex] = unaryCFs[u].var->sortDomain(unaryCFs[u].costs);
+        //            }
+        //        }
     }
 
     for (auto& cf : unaryCFs) {
@@ -1305,7 +1319,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "clique", ":rhs:N:values:[V+]S"},
+        { "clique", ":rhs:N:values:[V+]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1347,9 +1361,9 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (funcName[0] == 'w') { // decomposable
             DecomposableGlobalCostFunction::FactoryDGCF(funcName, arity, scopeArray,
-                paramsStream,false)
+                paramsStream, false)
                 ->addToCostFunctionNetwork(this->wcsp);
-        } else if (funcName == "clique"){
+        } else if (funcName == "clique") {
             string ps = paramsStream.str();
             if (ps.size() > 1 && ps[0] == '1' && ps[1] == ' ')
                 this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
@@ -1357,7 +1371,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
                 exit(EXIT_FAILURE);
             }
-        } else {// monolithic
+        } else { // monolithic
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
         }
@@ -1598,7 +1612,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         // Read function repeated section
         else if ((GCFTemplate[i] == '+' || GCFTemplate[i] == 'S') && !isOpenedBrace) {
             vector<pair<char, string>> repeatedContentVec; // Function repeated params
-            vector<pair<char, string>> variableRepeatVec;  // Stack if internal tuples have unknown size 
+            vector<pair<char, string>> variableRepeatVec; // Stack if internal tuples have unknown size
             // [ delimiting the start of the list
             skipOBrace();
             // Inside the list of parameter tuples
@@ -1668,7 +1682,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         else
                             repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
                     }
-                    
+
                     repeatIndex++;
                     std::tie(lineNumber, token) = this->getNextToken();
                 }
@@ -1680,15 +1694,15 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
-                if (variableRepeat) {// we must push the size of the repeat and its contents
+                if (variableRepeat) { // we must push the size of the repeat and its contents
                     repeatedContentVec.push_back(std::make_pair('N', std::to_string(variableRepeatVec.size())));
-                    repeatedContentVec.insert(repeatedContentVec.end(),variableRepeatVec.begin(),variableRepeatVec.end());
+                    repeatedContentVec.insert(repeatedContentVec.end(), variableRepeatVec.begin(), variableRepeatVec.end());
                     variableRepeatVec.clear();
                 }
                 numberOfTuplesRead++; // Number of tuples read
             }
             if (GCFTemplate[i] == 'S' && numberOfTuplesRead != scope.size()) {
-                cerr << "Error: expected "<< scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
+                cerr << "Error: expected " << scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
                 exit(EXIT_FAILURE);
             }
             // Add number of tuples before the list if the number of expected tuples is not known
@@ -1746,7 +1760,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // Correct for negative costs
     if (funcType == "wregular") { // regular: we can handle all costs. The number of transitions is known and we have one start and end state
-        wcsp->negCost -= ((scope.size() + 2) * minCost);// TODO we could do better and compute different mins for initial/final/transitions.
+        wcsp->negCost -= ((scope.size() + 2) * minCost); // TODO we could do better and compute different mins for initial/final/transitions.
     } else
         wcsp->negCost -= minCost;
 
@@ -1982,6 +1996,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
 
     return;
 }
+#endif
 
 // TB2 entry point for WCSP reading (not only wcsp format).
 // Returns the global UB obtained form both the file and command line in internal Cost units
@@ -1992,19 +2007,19 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
-    if (ToulBar2::cfn || (ToulBar2::stdin_format.compare("cfn") == 0)) {
+    if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
 #ifdef BOOST
         ifstream Rfile;
         istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
         if (ToulBar2::stdin_format.compare("cfn") == 0) {
             CFNStreamReader fileReader(stream, this);
             return getUb();
-        } else if (to_string(fileName).length() > 0) {
+        } else {
             Rfile.open(fileName);
             if (!stream) {
                 cerr << "Error: could not open file '" << fileName << "'." << endl;
                 exit(EXIT_FAILURE);
-        } else {
+            } else {
                 CFNStreamReader fileReader(stream, this);
                 return getUb();
             }
@@ -2013,393 +2028,539 @@ Cost WCSP::read_wcsp(const char* fileName)
         cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-    } else if (ToulBar2::cfngz) {
+    } else if (ToulBar2::cfn && ToulBar2::gz) {
 #ifdef BOOST
         ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
-        istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
-            boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-            inbuf.push(boost::iostreams::gzip_decompressor());
-            inbuf.push(file);
-            std::istream stream(&inbuf);
-        if (ToulBar2::stdin_format.compare("cfn.gz") == 0) {
-            // read from instance from pipe  todo doesn work with pipe D. ALLouche
-            //            inbuf.push(file);
+        istream& file = Rfile;
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::gzip_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
+        if (!file) {
+            cerr << "Could not open cfn.gz file : " << fileName << endl;
+            exit(EXIT_FAILURE);
+        } else {
+            //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
             return getUb();
-        } else if (to_string(fileName).length() > 0) {
-            // read instance from real file
-            //              inbuf.push(file);
-            //            std::istream stream(&inbuf);
-
-            // Rfile.open(fileName);
-            cout << "file: " << fileName << endl;
-            if (!file) {
-                cerr << "Could not open cfn.gz file : " << fileName << endl;
-                exit(EXIT_FAILURE);
-            } else {
-
-                //  inbuf.push(file);
-                CFNStreamReader fileReader(stream, this);
-                return getUb();
-            }
         }
 #else
-        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl;
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-        else {
-            cerr << "Error: no '" << fileName << "' file found." << endl;
+    } else if (ToulBar2::cfn && ToulBar2::xz) {
+#ifdef BOOST
+#if (BOOST_VERSION >= 106500)
+        ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
+        istream& file = Rfile;
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::lzma_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
+        if (!file) {
+            cerr << "Could not open cfn.xz file : " << fileName << endl;
             exit(EXIT_FAILURE);
+        } else {
+            //  inbuf.push(file);
+            CFNStreamReader fileReader(stream, this);
+            return getUb();
         }
-    }
-
-    if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
-    }
-
-    if (ToulBar2::externalUB.size()) {
-        Cost top = string2Cost(ToulBar2::externalUB.c_str());
-        double K = ToulBar2::costMultiplier;
-        if (top < MAX_COST / K)
-            top = top * K;
-        else
-            top = MAX_COST;
-        updateUb(top + ToulBar2::deltaUb);
-        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-    }
-
-    if (ToulBar2::costThresholdS.size())
-        ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
-    if (ToulBar2::costThresholdPreS.size())
-        ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
-    if (ToulBar2::vnsOptimumS.size())
-        ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
-
-    if (ToulBar2::haplotype) {
-        ToulBar2::haplotype->read(fileName, this);
-        return getUb();
-    } else if (ToulBar2::pedigree) {
-        if (!ToulBar2::bayesian)
-            ToulBar2::pedigree->read(fileName, this);
-        else
-            ToulBar2::pedigree->read_bayesian(fileName, this);
-        return getUb();
-    } else if (ToulBar2::uai) {
-        read_uai2008(fileName);
-        if (ToulBar2::isTrie_File) { // read all-solution tb2 file (temporary way to do)
-            ToulBar2::trieZ = read_TRIE(fileName);
-        }
-        return getUb();
-    } else if (ToulBar2::xmlflag) {
-        read_XML(fileName);
-        return getUb();
-    } else if (ToulBar2::bep) {
-        ToulBar2::bep->read(fileName, this);
-        return getUb();
-    } else if (ToulBar2::wcnf) {
-        read_wcnf(fileName);
-        return getUb();
-    } else if (ToulBar2::qpbo) {
-        read_qpbo(fileName);
-        return getUb();
-    }
-
-    // TOOLBAR WCSP LEGACY PARSER
-
-    string pbname;
-    int nbvar, nbval, nbconstr;
-    int nbvaltrue = 0;
-    Cost top;
-    int i, j, k, t, ic;
-    string varname;
-    int domsize;
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    Cost defval;
-    Cost cost;
-    int ntuples;
-    int arity;
-    string funcname;
-    Value funcparam1;
-    Value funcparam2;
-    vector<TemporaryUnaryConstraint> unaryconstrs;
-    Cost inclowerbound = MIN_COST;
-    int maxarity = 0;
-    vector<int> sharedSize;
-    vector<vector<Cost>> sharedCosts;
-    vector<vector<String>> sharedTuples;
-    vector<String> emptyTuples;
-
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("wcsp") == 0) {
-        //	   cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else if (to_string(fileName).length() > 0 and ToulBar2::stdin_format.length() == 0) {
-        Rfile.open(fileName);
-    if (!file) {
-            cerr << "Could not open wcsp file : " << fileName << endl;
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
         exit(EXIT_FAILURE);
-        }
-    }
+#endif
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+}
 
-    // ---------- PROBLEM HEADER ----------
-    // read problem name and sizes
-    file >> pbname;
-    file >> nbvar;
-    file >> nbval;
-    file >> nbconstr;
-    file >> top;
-    if (ToulBar2::verbose >= 1)
-        cout << "Read problem: " << pbname << endl;
-    ToulBar2::nbvar = nbvar;
+if (ToulBar2::deltaUbS.length() != 0) {
+    ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
+}
 
-    assert(vars.empty());
-    assert(constrs.empty());
-
+if (ToulBar2::externalUB.size()) {
+    Cost top = string2Cost(ToulBar2::externalUB.c_str());
     double K = ToulBar2::costMultiplier;
     if (top < MAX_COST / K)
         top = top * K;
     else
         top = MAX_COST;
-
     updateUb(top + ToulBar2::deltaUb);
+    // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+}
 
-    // read variable domain sizes
-    for (i = 0; i < nbvar; i++) {
-        string varname;
-        varname = to_string(i);
-        file >> domsize;
-        if (domsize > nbvaltrue)
-            nbvaltrue = domsize;
-        if (ToulBar2::verbose >= 3)
-            cout << "read variable " << i << " of size " << domsize << endl;
-        DEBONLY(int theindex =)
-        ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
-        assert(theindex == i);
+if (ToulBar2::costThresholdS.size())
+    ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
+if (ToulBar2::costThresholdPreS.size())
+    ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
+if (ToulBar2::vnsOptimumS.size())
+    ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
+
+if (ToulBar2::haplotype) {
+    ToulBar2::haplotype->read(fileName, this);
+    return getUb();
+} else if (ToulBar2::pedigree) {
+    if (!ToulBar2::bayesian)
+        ToulBar2::pedigree->read(fileName, this);
+    else
+        ToulBar2::pedigree->read_bayesian(fileName, this);
+    return getUb();
+} else if (ToulBar2::uai) {
+    read_uai2008(fileName);
+    if (ToulBar2::isTrie_File) { // read all-solution tb2 file (temporary way to do)
+        ToulBar2::trieZ = read_TRIE(fileName);
     }
+    return getUb();
+} else if (ToulBar2::xmlflag) {
+    read_XML(fileName);
+    return getUb();
+} else if (ToulBar2::bep) {
+    ToulBar2::bep->read(fileName, this);
+    return getUb();
+} else if (ToulBar2::wcnf) {
+    read_wcnf(fileName);
+    return getUb();
+} else if (ToulBar2::qpbo) {
+    read_qpbo(fileName);
+    return getUb();
+}
 
-    // read each constraint
-    for (ic = 0; ic < nbconstr; ic++) {
-        file >> arity;
-        if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
-            break;
-        }
-        bool shared = (arity < 0);
-        if (shared)
-            arity = -arity;
+// TOOLBAR WCSP LEGACY PARSER
 
-        // ARITY > 3
+string pbname;
+int nbvar, nbval, nbconstr;
+int nbvaltrue = 0;
+Cost top;
+int i, j, k, t, ic;
+string varname;
+int domsize;
+unsigned int a;
+unsigned int b;
+unsigned int c;
+Cost defval;
+Cost cost;
+int ntuples;
+int arity;
+string funcname;
+Value funcparam1;
+Value funcparam2;
+vector<TemporaryUnaryConstraint> unaryconstrs;
+Cost inclowerbound = MIN_COST;
+int maxarity = 0;
+vector<int> sharedSize;
+vector<vector<Cost>> sharedCosts;
+vector<vector<String>> sharedTuples;
+vector<String> emptyTuples;
 
-        if (arity > NARYPROJECTIONSIZE) {
-            maxarity = max(maxarity, arity);
-            if (ToulBar2::verbose >= 3)
-                cout << "read " << arity << "-ary cost function " << ic << " on";
-            int scopeIndex[arity]; // replace arity by MAX_ARITY in case of compilation problem
-            for (i = 0; i < arity; i++) {
-                file >> j;
-                if (ToulBar2::verbose >= 3)
-                    cout << " " << j;
-                scopeIndex[i] = j;
-            }
-            if (ToulBar2::verbose >= 3)
-                cout << endl;
-            file >> defval;
-            if (defval == -1) {
-                string gcname;
-                file >> gcname;
-                if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
-                    DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
-                    decomposableGCF->addToCostFunctionNetwork(this);
-                } else if (gcname == "clique") {
-                    postCliqueConstraint(scopeIndex, arity, file);
-                } else { // monolithic global cost functions
-                    postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
-                }
-            } else {
-                if (arity > MAX_ARITY) {
-                    cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
-                    exit(EXIT_FAILURE);
-                }
-                file >> ntuples;
-                int reusedconstr = -1;
-                bool reused = (ntuples < 0);
-                if (reused) {
-                    reusedconstr = -ntuples - 1;
-                    if (reusedconstr >= (int)sharedSize.size()) {
-                        cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    ntuples = sharedSize[reusedconstr];
-                }
-                if ((defval != MIN_COST) || (ntuples > 0)) {
-                    Cost tmpcost = MULT(defval, K);
-                    if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
-                        tmpcost *= MEDIUM_COST;
-                    int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
-                    NaryConstraint* nary = (NaryConstraint*)constrs[naryIndex];
+ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+    zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+    zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed wcsp format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
+zfile.push(rfile);
+istream ifile(&zfile);
 
-                    Char buf[MAX_ARITY];
-                    vector<String> tuples;
-                    vector<Cost> costs;
-                    for (t = 0; t < ntuples; t++) {
-                        if (!reused) {
-                            for (i = 0; i < arity; i++) {
-                                file >> j;
-                                buf[i] = j + CHAR_FIRST;
-                            }
-                            buf[i] = '\0';
-                            file >> cost;
-                            Cost tmpcost = MULT(cost, K);
-                            if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
-                                tmpcost *= MEDIUM_COST;
-                            String tup = buf;
-                            if (shared) {
-                                tuples.push_back(tup);
-                                costs.push_back(tmpcost);
-                            }
-                            postNaryConstraintTuple(naryIndex, tup, tmpcost);
-                        } else {
-                            postNaryConstraintTuple(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
-                        }
-                    }
-                    if (shared) {
-                        assert(ntuples == (int)costs.size());
-                        sharedSize.push_back(costs.size());
-                        sharedCosts.push_back(costs);
-                        sharedTuples.push_back(tuples);
-                    }
+if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+    cerr << "Could not open wcsp file : " << fileName << endl;
+    exit(EXIT_FAILURE);
+}
+istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcsp format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcsp file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
-                    if (ToulBar2::preprocessNary > 0) {
-                        Cost minc = nary->getMinCost();
-                        if (minc > MIN_COST) {
-                            nary->addtoTuples(-minc);
-                            if (ToulBar2::verbose >= 2)
-                                cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
-                            inclowerbound += minc;
-                        }
-                    }
-                    postNaryConstraintEnd(naryIndex);
-                }
-            }
+// ---------- PROBLEM HEADER ----------
+// read problem name and sizes
+file >> pbname;
+file >> nbvar;
+file >> nbval;
+file >> nbconstr;
+file >> top;
+if (ToulBar2::verbose >= 1)
+    cout << "Read problem: " << pbname << endl;
+ToulBar2::nbvar = nbvar;
 
-            // ARITY 3
+assert(vars.empty());
+assert(constrs.empty());
 
-        } else if (arity == 3) {
-            maxarity = max(maxarity, arity);
-            file >> i;
+double K = ToulBar2::costMultiplier;
+if (top < MAX_COST / K)
+    top = top * K;
+else
+    top = MAX_COST;
+
+updateUb(top + ToulBar2::deltaUb);
+
+// read variable domain sizes
+for (i = 0; i < nbvar; i++) {
+    string varname;
+    varname = to_string(i);
+    file >> domsize;
+    if (domsize > nbvaltrue)
+        nbvaltrue = domsize;
+    if (ToulBar2::verbose >= 3)
+        cout << "read variable " << i << " of size " << domsize << endl;
+    DEBONLY(int theindex =)
+    ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
+    assert(theindex == i);
+}
+
+// read each constraint
+for (ic = 0; ic < nbconstr; ic++) {
+    file >> arity;
+    if (!file) {
+        cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+        break;
+    }
+    bool shared = (arity < 0);
+    if (shared)
+        arity = -arity;
+
+    // ARITY > 3
+
+    if (arity > NARYPROJECTIONSIZE) {
+        maxarity = max(maxarity, arity);
+        if (ToulBar2::verbose >= 3)
+            cout << "read " << arity << "-ary cost function " << ic << " on";
+        int scopeIndex[arity]; // replace arity by MAX_ARITY in case of compilation problem
+        for (i = 0; i < arity; i++) {
             file >> j;
-            file >> k;
-            if ((i == j) || (i == k) || (k == j)) {
-                cerr << "Error: ternary cost function!" << endl;
+            if (ToulBar2::verbose >= 3)
+                cout << " " << j;
+            scopeIndex[i] = j;
+        }
+        if (ToulBar2::verbose >= 3)
+            cout << endl;
+        file >> defval;
+        if (defval == -1) {
+            string gcname;
+            file >> gcname;
+            if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
+                DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
+                decomposableGCF->addToCostFunctionNetwork(this);
+            } else if (gcname == "clique") {
+                postCliqueConstraint(scopeIndex, arity, file);
+            } else { // monolithic global cost functions
+                postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
+            }
+        } else {
+            if (arity > MAX_ARITY) {
+                cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
                 exit(EXIT_FAILURE);
             }
-            file >> defval;
-            if (defval >= MIN_COST) {
+            file >> ntuples;
+            int reusedconstr = -1;
+            bool reused = (ntuples < 0);
+            if (reused) {
+                reusedconstr = -ntuples - 1;
+                if (reusedconstr >= (int)sharedSize.size()) {
+                    cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                ntuples = sharedSize[reusedconstr];
+            }
+            if ((defval != MIN_COST) || (ntuples > 0)) {
+                Cost tmpcost = MULT(defval, K);
+                if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
+                    tmpcost *= MEDIUM_COST;
+                int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
+                NaryConstraint* nary = (NaryConstraint*)constrs[naryIndex];
+
+                Char buf[MAX_ARITY];
+                vector<String> tuples;
+                vector<Cost> costs;
+                for (t = 0; t < ntuples; t++) {
+                    if (!reused) {
+                        for (i = 0; i < arity; i++) {
+                            file >> j;
+                            buf[i] = j + CHAR_FIRST;
+                        }
+                        buf[i] = '\0';
+                        file >> cost;
+                        Cost tmpcost = MULT(cost, K);
+                        if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
+                            tmpcost *= MEDIUM_COST;
+                        String tup = buf;
+                        if (shared) {
+                            tuples.push_back(tup);
+                            costs.push_back(tmpcost);
+                        }
+                        postNaryConstraintTuple(naryIndex, tup, tmpcost);
+                    } else {
+                        postNaryConstraintTuple(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
+                    }
+                }
+                if (shared) {
+                    assert(ntuples == (int)costs.size());
+                    sharedSize.push_back(costs.size());
+                    sharedCosts.push_back(costs);
+                    sharedTuples.push_back(tuples);
+                }
+
+                if (ToulBar2::preprocessNary > 0) {
+                    Cost minc = nary->getMinCost();
+                    if (minc > MIN_COST) {
+                        nary->addtoTuples(-minc);
+                        if (ToulBar2::verbose >= 2)
+                            cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
+                        inclowerbound += minc;
+                    }
+                }
+                postNaryConstraintEnd(naryIndex);
+            }
+        }
+
+        // ARITY 3
+
+    } else if (arity == 3) {
+        maxarity = max(maxarity, arity);
+        file >> i;
+        file >> j;
+        file >> k;
+        if ((i == j) || (i == k) || (k == j)) {
+            cerr << "Error: ternary cost function!" << endl;
+            exit(EXIT_FAILURE);
+        }
+        file >> defval;
+        if (defval >= MIN_COST) {
+            assert(vars[i]->enumerated());
+            assert(vars[j]->enumerated());
+            assert(vars[k]->enumerated());
+            EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+            EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
+            EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
+            if (ToulBar2::verbose >= 3)
+                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
+            file >> ntuples;
+            if (ntuples < 0) {
+                int reusedconstr = -ntuples - 1;
+                if (reusedconstr >= (int)sharedSize.size()) {
+                    cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                ntuples = sharedSize[reusedconstr];
+                assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
+                if ((defval != MIN_COST) || (ntuples > 0))
+                    postTernaryConstraint(i, j, k, sharedCosts[reusedconstr]);
+                continue;
+            }
+            vector<Cost> costs;
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                for (b = 0; b < y->getDomainInitSize(); b++) {
+                    for (c = 0; c < z->getDomainInitSize(); c++) {
+                        Cost tmpcost = MULT(defval, K);
+                        if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()))
+                            tmpcost *= MEDIUM_COST;
+                        costs.push_back(tmpcost);
+                    }
+                }
+            }
+            for (t = 0; t < ntuples; t++) {
+                file >> a;
+                file >> b;
+                file >> c;
+                file >> cost;
+                Cost tmpcost = MULT(cost, K);
+                if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
+                    tmpcost *= MEDIUM_COST;
+                assert(a >= 0 && a < x->getDomainInitSize());
+                assert(b >= 0 && b < y->getDomainInitSize());
+                assert(c >= 0 && c < z->getDomainInitSize());
+                costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;
+            }
+            if (shared) {
+                sharedSize.push_back(costs.size());
+                sharedCosts.push_back(costs);
+                sharedTuples.push_back(emptyTuples);
+            }
+            if ((defval != MIN_COST) || (ntuples > 0))
+                postTernaryConstraint(i, j, k, costs);
+        } else if (defval == -1) {
+            int scopeIndex[3];
+            scopeIndex[0] = i;
+            scopeIndex[1] = j;
+            scopeIndex[2] = k;
+            string gcname;
+            file >> gcname;
+            if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
+                DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
+                decomposableGCF->addToCostFunctionNetwork(this);
+            } else if (gcname == "clique") {
+                //postCliqueConstraint(scopeIndex, arity, file);
+                int skipread;
+                file >> skipread;
+                for (int a = 0; a < arity; a++) {
+                    file >> skipread;
+                    for (int b = skipread; b > 0; b--)
+                        file >> skipread;
+                }
                 assert(vars[i]->enumerated());
                 assert(vars[j]->enumerated());
                 assert(vars[k]->enumerated());
                 EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
                 EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
                 EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
-                if (ToulBar2::verbose >= 3)
-                    cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-                file >> ntuples;
-                if (ntuples < 0) {
-                    int reusedconstr = -ntuples - 1;
-                    if (reusedconstr >= (int)sharedSize.size()) {
-                        cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    ntuples = sharedSize[reusedconstr];
-                    assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
-                    if ((defval != MIN_COST) || (ntuples > 0))
-                        postTernaryConstraint(i, j, k, sharedCosts[reusedconstr]);
-                    continue;
+                vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
+                postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
+            } else { // monolithic global cost functions
+                postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
+            }
+        }
+
+        // ARITY 2
+
+    } else if (arity == 2) {
+        maxarity = max(maxarity, arity);
+        file >> i;
+        file >> j;
+        if (ToulBar2::verbose >= 3)
+            cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
+        if (i == j) {
+            cerr << "Error: binary cost function with only one variable in its scope!" << endl;
+            exit(EXIT_FAILURE);
+        }
+        file >> defval;
+        if (defval >= MIN_COST) {
+            assert(vars[i]->enumerated());
+            assert(vars[j]->enumerated());
+            EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+            EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
+            file >> ntuples;
+            if (ntuples < 0) {
+                int reusedconstr = -ntuples - 1;
+                if (reusedconstr >= (int)sharedSize.size()) {
+                    cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
+                    exit(EXIT_FAILURE);
                 }
-                vector<Cost> costs;
-                for (a = 0; a < x->getDomainInitSize(); a++) {
-                    for (b = 0; b < y->getDomainInitSize(); b++) {
-                        for (c = 0; c < z->getDomainInitSize(); c++) {
-                            Cost tmpcost = MULT(defval, K);
-                            if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()))
-                                tmpcost *= MEDIUM_COST;
-                            costs.push_back(tmpcost);
-                        }
-                    }
-                }
-                for (t = 0; t < ntuples; t++) {
-                    file >> a;
-                    file >> b;
-                    file >> c;
-                    file >> cost;
-                    Cost tmpcost = MULT(cost, K);
+                ntuples = sharedSize[reusedconstr];
+                assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize()));
+                if ((defval != MIN_COST) || (ntuples > 0))
+                    postBinaryConstraint(i, j, sharedCosts[reusedconstr]);
+                continue;
+            }
+            vector<Cost> costs;
+            for (a = 0; a < x->getDomainInitSize(); a++) {
+                for (b = 0; b < y->getDomainInitSize(); b++) {
+                    Cost tmpcost = MULT(defval, K);
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                         tmpcost *= MEDIUM_COST;
-                    assert(a >= 0 && a < x->getDomainInitSize());
-                    assert(b >= 0 && b < y->getDomainInitSize());
-                    assert(c >= 0 && c < z->getDomainInitSize());
-                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;
+                    costs.push_back(tmpcost);
                 }
-                if (shared) {
-                    sharedSize.push_back(costs.size());
-                    sharedCosts.push_back(costs);
-                    sharedTuples.push_back(emptyTuples);
-                }
-                if ((defval != MIN_COST) || (ntuples > 0))
-                    postTernaryConstraint(i, j, k, costs);
-            } else if (defval == -1) {
-                int scopeIndex[3];
+            }
+            for (k = 0; k < ntuples; k++) {
+                file >> a;
+                file >> b;
+                file >> cost;
+                Cost tmpcost = MULT(cost, K);
+                if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
+                    tmpcost *= MEDIUM_COST;
+                assert(a >= 0 && a < x->getDomainInitSize());
+                assert(b >= 0 && b < y->getDomainInitSize());
+                costs[a * y->getDomainInitSize() + b] = tmpcost;
+            }
+            if (shared) {
+                sharedSize.push_back(costs.size());
+                sharedCosts.push_back(costs);
+                sharedTuples.push_back(emptyTuples);
+            }
+            if ((defval != MIN_COST) || (ntuples > 0))
+                postBinaryConstraint(i, j, costs);
+        } else {
+            file >> funcname;
+            if (funcname == ">=") {
+                file >> funcparam1;
+                file >> funcparam2;
+                postSupxyc(i, j, funcparam1, funcparam2);
+            } else if (funcname == ">") {
+                file >> funcparam1;
+                file >> funcparam2;
+                postSupxyc(i, j, funcparam1 + 1, funcparam2);
+            } else if (funcname == "<=") {
+                file >> funcparam1;
+                file >> funcparam2;
+                postSupxyc(j, i, -funcparam1, funcparam2);
+            } else if (funcname == "<") {
+                file >> funcparam1;
+                file >> funcparam2;
+                postSupxyc(j, i, -funcparam1 + 1, funcparam2);
+            } else if (funcname == "=") {
+                file >> funcparam1;
+                file >> funcparam2;
+                postSupxyc(i, j, funcparam1, funcparam2);
+                postSupxyc(j, i, -funcparam1, funcparam2);
+            } else if (funcname == "disj") {
+                Cost funcparam3;
+                file >> funcparam1;
+                file >> funcparam2;
+                file >> funcparam3;
+                postDisjunction(i, j, funcparam1, funcparam2, MULT(funcparam3, K));
+            } else if (funcname == "sdisj") {
+                Value funcparam3;
+                Value funcparam4;
+                Cost funcparam5;
+                Cost funcparam6;
+                file >> funcparam1;
+                file >> funcparam2;
+                file >> funcparam3;
+                file >> funcparam4;
+                file >> funcparam5;
+                file >> funcparam6;
+                postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
+            } else {
+                int scopeIndex[2];
                 scopeIndex[0] = i;
                 scopeIndex[1] = j;
-                scopeIndex[2] = k;
+                if (funcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
+                    DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcname, arity, scopeIndex, file);
+                    decomposableGCF->addToCostFunctionNetwork(this);
+                } else { // monolithic global cost functions
+                    postGlobalConstraint(scopeIndex, arity, funcname, file, &nbconstr);
+                }
+            }
+        }
+
+        // ARITY 1
+
+    } else if (arity == 1) {
+        maxarity = max(maxarity, arity);
+        file >> i;
+        if (ToulBar2::verbose >= 3)
+            cout << "read unary cost function " << ic << " on " << i << endl;
+        if (vars[i]->enumerated()) {
+            EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+            file >> defval;
+            if (defval == -1) {
+                int scopeIndex[1];
+                scopeIndex[0] = i;
                 string gcname;
                 file >> gcname;
                 if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                     DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                     decomposableGCF->addToCostFunctionNetwork(this);
-                } else if (gcname == "clique") {
-                    //postCliqueConstraint(scopeIndex, arity, file);
-                    int skipread;
-                    file >> skipread;
-                    for (int a=0; a<arity; a++) {
-                      file >> skipread;
-                        for (int b = skipread; b > 0; b--)
-                            file >> skipread;
-                    }
-                    assert(vars[i]->enumerated());
-                    assert(vars[j]->enumerated());
-                    assert(vars[k]->enumerated());
-                    EnumeratedVariable *x = (EnumeratedVariable *) vars[i];
-                    EnumeratedVariable *y = (EnumeratedVariable *) vars[j];
-                    EnumeratedVariable *z = (EnumeratedVariable *) vars[k];
-                    vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
-                    postTernaryConstraint(i,j,k,costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
-            }
-
-            // ARITY 2
-
-        } else if (arity == 2) {
-            maxarity = max(maxarity, arity);
-            file >> i;
-            file >> j;
-            if (ToulBar2::verbose >= 3)
-                cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
-            if (i == j) {
-                cerr << "Error: binary cost function with only one variable in its scope!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            file >> defval;
-            if (defval >= MIN_COST) {
-                assert(vars[i]->enumerated());
-                assert(vars[j]->enumerated());
-                EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
-                EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
+            } else {
                 file >> ntuples;
+                TemporaryUnaryConstraint unaryconstr;
+                unaryconstr.var = x;
                 if (ntuples < 0) {
                     int reusedconstr = -ntuples - 1;
                     if (reusedconstr >= (int)sharedSize.size()) {
@@ -2407,248 +2568,130 @@ Cost WCSP::read_wcsp(const char* fileName)
                         exit(EXIT_FAILURE);
                     }
                     ntuples = sharedSize[reusedconstr];
-                    assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize()));
-                    if ((defval != MIN_COST) || (ntuples > 0))
-                        postBinaryConstraint(i, j, sharedCosts[reusedconstr]);
+                    assert(ntuples == (int)x->getDomainInitSize());
+                    unaryconstr.costs = sharedCosts[reusedconstr];
+                    unaryconstrs.push_back(unaryconstr);
                     continue;
                 }
-                vector<Cost> costs;
                 for (a = 0; a < x->getDomainInitSize(); a++) {
-                    for (b = 0; b < y->getDomainInitSize(); b++) {
-                        Cost tmpcost = MULT(defval, K);
-                        if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
-                            tmpcost *= MEDIUM_COST;
-                        costs.push_back(tmpcost);
-                    }
+                    Cost tmpcost = MULT(defval, K);
+                    if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
+                        tmpcost *= MEDIUM_COST;
+                    unaryconstr.costs.push_back(tmpcost);
                 }
                 for (k = 0; k < ntuples; k++) {
                     file >> a;
-                    file >> b;
                     file >> cost;
                     Cost tmpcost = MULT(cost, K);
                     if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                         tmpcost *= MEDIUM_COST;
                     assert(a >= 0 && a < x->getDomainInitSize());
-                    assert(b >= 0 && b < y->getDomainInitSize());
-                    costs[a * y->getDomainInitSize() + b] = tmpcost;
+                    unaryconstr.costs[a] = tmpcost;
                 }
                 if (shared) {
-                    sharedSize.push_back(costs.size());
-                    sharedCosts.push_back(costs);
+                    sharedSize.push_back(x->getDomainInitSize());
+                    sharedCosts.push_back(unaryconstr.costs);
                     sharedTuples.push_back(emptyTuples);
                 }
-                if ((defval != MIN_COST) || (ntuples > 0))
-                    postBinaryConstraint(i, j, costs);
-            } else {
-                file >> funcname;
-                if (funcname == ">=") {
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    postSupxyc(i, j, funcparam1, funcparam2);
-                } else if (funcname == ">") {
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    postSupxyc(i, j, funcparam1 + 1, funcparam2);
-                } else if (funcname == "<=") {
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    postSupxyc(j, i, -funcparam1, funcparam2);
-                } else if (funcname == "<") {
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    postSupxyc(j, i, -funcparam1 + 1, funcparam2);
-                } else if (funcname == "=") {
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    postSupxyc(i, j, funcparam1, funcparam2);
-                    postSupxyc(j, i, -funcparam1, funcparam2);
-                } else if (funcname == "disj") {
-                    Cost funcparam3;
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    file >> funcparam3;
-                    postDisjunction(i, j, funcparam1, funcparam2, MULT(funcparam3, K));
-                } else if (funcname == "sdisj") {
-                    Value funcparam3;
-                    Value funcparam4;
-                    Cost funcparam5;
-                    Cost funcparam6;
-                    file >> funcparam1;
-                    file >> funcparam2;
-                    file >> funcparam3;
-                    file >> funcparam4;
-                    file >> funcparam5;
-                    file >> funcparam6;
-                    postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
-                } else {
-                    int scopeIndex[2];
-                    scopeIndex[0] = i;
-                    scopeIndex[1] = j;
-                    if (funcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
-                        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(funcname, arity, scopeIndex, file);
-                        decomposableGCF->addToCostFunctionNetwork(this);
-                    } else { // monolithic global cost functions
-                        postGlobalConstraint(scopeIndex, arity, funcname, file, &nbconstr);
-                    }
-                }
+                unaryconstrs.push_back(unaryconstr);
             }
-
-            // ARITY 1
-
-        } else if (arity == 1) {
-            maxarity = max(maxarity, arity);
-            file >> i;
-            if (ToulBar2::verbose >= 3)
-                cout << "read unary cost function " << ic << " on " << i << endl;
-            if (vars[i]->enumerated()) {
-                EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
-                file >> defval;
-                if (defval == -1) {
-                    int scopeIndex[1];
-                    scopeIndex[0] = i;
-                    string gcname;
-                    file >> gcname;
-                    if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
-                        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
-                        decomposableGCF->addToCostFunctionNetwork(this);
-                    } else { // monolithic global cost functions
-                        postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
-                    }
-                } else {
-                    file >> ntuples;
-                    TemporaryUnaryConstraint unaryconstr;
-                    unaryconstr.var = x;
-                    if (ntuples < 0) {
-                        int reusedconstr = -ntuples - 1;
-                        if (reusedconstr >= (int)sharedSize.size()) {
-                            cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                            exit(EXIT_FAILURE);
-                        }
-                        ntuples = sharedSize[reusedconstr];
-                        assert(ntuples == (int)x->getDomainInitSize());
-                        unaryconstr.costs = sharedCosts[reusedconstr];
-                        unaryconstrs.push_back(unaryconstr);
-                        continue;
-                    }
-                    for (a = 0; a < x->getDomainInitSize(); a++) {
-                        Cost tmpcost = MULT(defval, K);
-                        if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
-                            tmpcost *= MEDIUM_COST;
-                        unaryconstr.costs.push_back(tmpcost);
-                    }
-                    for (k = 0; k < ntuples; k++) {
-                        file >> a;
-                        file >> cost;
-                        Cost tmpcost = MULT(cost, K);
-                        if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
-                            tmpcost *= MEDIUM_COST;
-                        assert(a >= 0 && a < x->getDomainInitSize());
-                        unaryconstr.costs[a] = tmpcost;
-                    }
-                    if (shared) {
-                        sharedSize.push_back(x->getDomainInitSize());
-                        sharedCosts.push_back(unaryconstr.costs);
-                        sharedTuples.push_back(emptyTuples);
-                    }
-                    unaryconstrs.push_back(unaryconstr);
-                }
-            } else {
-                file >> defval;
-                if (defval == MIN_COST) {
-                    cerr << "Error: unary cost function with zero penalty cost!" << endl;
-                    exit(EXIT_FAILURE);
-                }
-                file >> ntuples;
-                Value* dom = new Value[ntuples];
-                for (k = 0; k < ntuples; k++) {
-                    file >> dom[k];
-                    file >> cost;
-                    if (cost != MIN_COST) {
-                        cerr << "Error: unary cost function with non-zero cost tuple!" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                }
-                postUnaryConstraint(i, dom, ntuples, defval);
-                delete[] dom;
-            }
-
-            // ARITY 0
-
-        } else if (arity == 0) {
+        } else {
             file >> defval;
-            file >> ntuples;
-            if (ToulBar2::verbose >= 3)
-                cout << "read global lower bound contribution " << ic << " of " << defval << endl;
-            if (ntuples > 1) {
-                cerr << "Error: global lower bound contribution with several tuples!" << endl;
+            if (defval == MIN_COST) {
+                cerr << "Error: unary cost function with zero penalty cost!" << endl;
                 exit(EXIT_FAILURE);
             }
-            if (ntuples == 1)
+            file >> ntuples;
+            Value* dom = new Value[ntuples];
+            for (k = 0; k < ntuples; k++) {
+                file >> dom[k];
                 file >> cost;
-            else
-                cost = defval;
-            inclowerbound += MULT(cost, K);
-        }
-    }
-
-    file >> funcname;
-    if (file) {
-        if (ToulBar2::cpd) {
-            try {
-                ToulBar2::cpd->read_rotamers2aa(file, vars);
-            } catch (int badwcsp) {
-                cerr << "Bad CPD wcsp format ! " << endl;
-                exit(1);
-            }
-        } else {
-            cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
-        }
-    }
-
-    //TODO isolate this in a method to share with the CFN format
-    // merge unarycosts if they are on the same variable
-    vector<int> seen(nbvar, -1);
-    vector<TemporaryUnaryConstraint> newunaryconstrs;
-    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
-        if (seen[unaryconstrs[u].var->wcspIndex] == -1) {
-            seen[unaryconstrs[u].var->wcspIndex] = newunaryconstrs.size();
-            newunaryconstrs.push_back(unaryconstrs[u]);
-        } else {
-            for (unsigned int i = 0; i < unaryconstrs[u].var->getDomainInitSize(); i++) {
-                if (newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] < getUb()) {
-                    if (unaryconstrs[u].costs[i] < getUb())
-                        newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] += unaryconstrs[u].costs[i];
-                    else
-                        newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] = getUb();
+                if (cost != MIN_COST) {
+                    cerr << "Error: unary cost function with non-zero cost tuple!" << endl;
+                    exit(EXIT_FAILURE);
                 }
             }
+            postUnaryConstraint(i, dom, ntuples, defval);
+            delete[] dom;
         }
-    }
-    unaryconstrs = newunaryconstrs;
-    if (ToulBar2::sortDomains) {
-        if (maxarity > 2) {
-            cerr << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+
+        // ARITY 0
+
+    } else if (arity == 0) {
+        file >> defval;
+        file >> ntuples;
+        if (ToulBar2::verbose >= 3)
+            cout << "read global lower bound contribution " << ic << " of " << defval << endl;
+        if (ntuples > 1) {
+            cerr << "Error: global lower bound contribution with several tuples!" << endl;
             exit(EXIT_FAILURE);
-        } else {
-            ToulBar2::sortedDomains.clear();
-            for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
-                ToulBar2::sortedDomains[unaryconstrs[u].var->wcspIndex] = unaryconstrs[u].var->sortDomain(unaryconstrs[u].costs);
+        }
+        if (ntuples == 1)
+            file >> cost;
+        else
+            cost = defval;
+        inclowerbound += MULT(cost, K);
+    }
+}
+
+file >> funcname;
+if (file) {
+    if (ToulBar2::cpd) {
+        try {
+            ToulBar2::cpd->read_rotamers2aa(file, vars);
+        } catch (int badwcsp) {
+            cerr << "Bad CPD wcsp format ! " << endl;
+            exit(1);
+        }
+    } else {
+        cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+    }
+}
+
+//TODO isolate this in a method to share with the CFN format
+// merge unarycosts if they are on the same variable
+vector<int> seen(nbvar, -1);
+vector<TemporaryUnaryConstraint> newunaryconstrs;
+for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+    if (seen[unaryconstrs[u].var->wcspIndex] == -1) {
+        seen[unaryconstrs[u].var->wcspIndex] = newunaryconstrs.size();
+        newunaryconstrs.push_back(unaryconstrs[u]);
+    } else {
+        for (unsigned int i = 0; i < unaryconstrs[u].var->getDomainInitSize(); i++) {
+            if (newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] < getUb()) {
+                if (unaryconstrs[u].costs[i] < getUb())
+                    newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] += unaryconstrs[u].costs[i];
+                else
+                    newunaryconstrs[seen[unaryconstrs[u].var->wcspIndex]].costs[i] = getUb();
             }
         }
     }
-
-    // apply basic initial propagation AFTER complete network loading
-    increaseLb(inclowerbound);
-
-    // unary cost functions are delayed for compatibility issue (same lowerbound found) with old toolbar solver
-    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
-        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+}
+unaryconstrs = newunaryconstrs;
+if (ToulBar2::sortDomains) {
+    if (maxarity > 2) {
+        cerr << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
+        exit(EXIT_FAILURE);
+    } else {
+        ToulBar2::sortedDomains.clear();
+        for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+            ToulBar2::sortedDomains[unaryconstrs[u].var->wcspIndex] = unaryconstrs[u].var->sortDomain(unaryconstrs[u].costs);
+        }
     }
-    sortConstraints();
+}
 
-    if (ToulBar2::verbose >= 0)
-        cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
-    return getUb();
+// apply basic initial propagation AFTER complete network loading
+increaseLb(inclowerbound);
+
+// unary cost functions are delayed for compatibility issue (same lowerbound found) with old toolbar solver
+for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+    postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+}
+sortConstraints();
+
+if (ToulBar2::verbose >= 0)
+    cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
+return getUb();
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
@@ -2677,427 +2720,448 @@ void WCSP::read_uai2008(const char* fileName)
     }
 
     string uaitype;
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("uai") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("uai") == 0) {
-        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-    if (!file) {
-            cerr << "Could not open file uai: " << fileName << endl;
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed uai/LG format files." << endl;
         exit(EXIT_FAILURE);
-        }
+#endif
     }
+    zfile.push(rfile);
+    istream ifile(&zfile);
 
-    Cost inclowerbound = MIN_COST;
-    updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
-    Cost upperbound = UNIT_COST;
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open uai file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed uai format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open uai file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
-    int nbval = 0;
-    int nbvar, nbconstr;
-    int i, j, k, ic;
+Cost inclowerbound = MIN_COST;
+updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
+Cost upperbound = UNIT_COST;
+
+int nbval = 0;
+int nbvar, nbconstr;
+int i, j, k, ic;
+string varname;
+int domsize;
+EnumeratedVariable* x;
+EnumeratedVariable* y;
+EnumeratedVariable* z;
+unsigned int a;
+unsigned int b;
+unsigned int c;
+Cost cost;
+int ntuples;
+int arity;
+int maxarity = 0;
+vector<TemporaryUnaryConstraint> unaryconstrs;
+
+list<int> lctrs;
+
+file >> uaitype;
+
+if (ToulBar2::verbose >= 3)
+    cout << "Reading " << uaitype << "  file." << endl;
+
+bool markov = (uaitype == string("MARKOV"));
+//bool bayes = uaitype == string("BAYES");
+
+file >> nbvar;
+ToulBar2::nbvar = nbvar;
+// read variable domain sizes
+for (i = 0; i < nbvar; i++) {
     string varname;
-    int domsize;
-    EnumeratedVariable* x;
-    EnumeratedVariable* y;
-    EnumeratedVariable* z;
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    Cost cost;
-    int ntuples;
-    int arity;
-    int maxarity = 0;
-    vector<TemporaryUnaryConstraint> unaryconstrs;
-
-    list<int> lctrs;
-
-    file >> uaitype;
-
+    varname = to_string(i);
+    file >> domsize;
     if (ToulBar2::verbose >= 3)
-        cout << "Reading " << uaitype << "  file." << endl;
+        cout << "read variable " << i << " of size " << domsize << endl;
+    if (domsize > nbval)
+        nbval = domsize;
+    DEBONLY(int theindex =)
+    ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
+    assert(theindex == i);
+}
 
-    bool markov = (uaitype == string("MARKOV"));
-    //bool bayes = uaitype == string("BAYES");
+file >> nbconstr;
+// read each constraint
+for (ic = 0; ic < nbconstr; ic++) {
+    file >> arity;
+    if (!file) {
+        cerr << "Warning: EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
+        break;
+    }
+    maxarity = max(maxarity, arity);
 
-    file >> nbvar;
-    ToulBar2::nbvar = nbvar;
-    // read variable domain sizes
-    for (i = 0; i < nbvar; i++) {
-        string varname;
-        varname = to_string(i);
-        file >> domsize;
-        if (ToulBar2::verbose >= 3)
-            cout << "read variable " << i << " of size " << domsize << endl;
-        if (domsize > nbval)
-            nbval = domsize;
-        DEBONLY(int theindex =)
-        ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
-        assert(theindex == i);
+    if (arity > MAX_ARITY) {
+        cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (!file) {
+        cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+        break;
     }
 
-    file >> nbconstr;
-    // read each constraint
-    for (ic = 0; ic < nbconstr; ic++) {
-        file >> arity;
-        if (!file) {
-            cerr << "Warning: EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
-            break;
-        }
-        maxarity = max(maxarity, arity);
+    if (arity > 3) {
+        int scopeIndex[MAX_ARITY];
+        if (ToulBar2::verbose >= 3)
+            cout << "read nary cost function on ";
 
-        if (arity > MAX_ARITY) {
-            cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
+        for (i = 0; i < arity; i++) {
+            file >> j;
+            scopeIndex[i] = j;
+            if (ToulBar2::verbose >= 3)
+                cout << j << " ";
+        }
+        if (ToulBar2::verbose >= 3)
+            cout << endl;
+        lctrs.push_back(postNaryConstraintBegin(scopeIndex, arity, MIN_COST, LONGLONG_MAX));
+        assert(lctrs.back() >= 0);
+    } else if (arity == 3) {
+        file >> i;
+        file >> j;
+        file >> k;
+        if ((i == j) || (i == k) || (k == j)) {
+            cerr << "Error: ternary cost function!" << endl;
             exit(EXIT_FAILURE);
         }
-        if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
-            break;
-        }
-
-        if (arity > 3) {
-            int scopeIndex[MAX_ARITY];
-            if (ToulBar2::verbose >= 3)
-                cout << "read nary cost function on ";
-
-            for (i = 0; i < arity; i++) {
-                file >> j;
-                scopeIndex[i] = j;
-                if (ToulBar2::verbose >= 3)
-                    cout << j << " ";
-            }
-            if (ToulBar2::verbose >= 3)
-                cout << endl;
-            lctrs.push_back(postNaryConstraintBegin(scopeIndex, arity, MIN_COST, LONGLONG_MAX));
-            assert(lctrs.back() >= 0);
-        } else if (arity == 3) {
-            file >> i;
-            file >> j;
-            file >> k;
-            if ((i == j) || (i == k) || (k == j)) {
-                cerr << "Error: ternary cost function!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            x = (EnumeratedVariable*)vars[i];
-            y = (EnumeratedVariable*)vars[j];
-            z = (EnumeratedVariable*)vars[k];
-            if (ToulBar2::verbose >= 3)
-                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-            vector<Cost> costs;
-            for (a = 0; a < x->getDomainInitSize(); a++) {
-                for (b = 0; b < y->getDomainInitSize(); b++) {
-                    for (c = 0; c < z->getDomainInitSize(); c++) {
-                        costs.push_back(MIN_COST);
-                    }
-                }
-            }
-            lctrs.push_back(postTernaryConstraint(i, j, k, costs));
-            assert(lctrs.back() >= 0);
-        } else if (arity == 2) {
-            file >> i;
-            file >> j;
-            if (ToulBar2::verbose >= 3)
-                cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
-            if (i == j) {
-                cerr << "Error: binary cost function with only one variable in its scope!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            x = (EnumeratedVariable*)vars[i];
-            y = (EnumeratedVariable*)vars[j];
-            vector<Cost> costs;
-            for (a = 0; a < x->getDomainInitSize(); a++) {
-                for (b = 0; b < y->getDomainInitSize(); b++) {
+        x = (EnumeratedVariable*)vars[i];
+        y = (EnumeratedVariable*)vars[j];
+        z = (EnumeratedVariable*)vars[k];
+        if (ToulBar2::verbose >= 3)
+            cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
+        vector<Cost> costs;
+        for (a = 0; a < x->getDomainInitSize(); a++) {
+            for (b = 0; b < y->getDomainInitSize(); b++) {
+                for (c = 0; c < z->getDomainInitSize(); c++) {
                     costs.push_back(MIN_COST);
                 }
             }
-            lctrs.push_back(postBinaryConstraint(i, j, costs));
-            assert(lctrs.back() >= 0);
-        } else if (arity == 1) {
-            file >> i;
-            if (ToulBar2::verbose >= 3)
-                cout << "read unary cost function " << ic << " on " << i << endl;
-            x = (EnumeratedVariable*)vars[i];
-            TemporaryUnaryConstraint unaryconstr;
-            unaryconstr.var = x;
-            unaryconstrs.push_back(unaryconstr);
-            lctrs.push_back(-1);
-        } else if (arity == 0) {
-            lctrs.push_back(-2);
         }
-    }
-
-    int iunaryctr = 0;
-    int ictr = 0;
-    Constraint* ctr = NULL;
-    TernaryConstraint* tctr = NULL;
-    BinaryConstraint* bctr = NULL;
-    NaryConstraint* nctr = NULL;
-    String s;
-
-    ToulBar2::markov_log = 0; // for the MARKOV Case
-
-    int ntuplesarray[lctrs.size()];
-    vector<vector<Cost>> costs;
-    costs.resize(lctrs.size());
-    list<int>::iterator it = lctrs.begin();
-    while (it != lctrs.end()) {
-        file >> ntuples;
-        if (!file) {
-            cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
-            break;
+        lctrs.push_back(postTernaryConstraint(i, j, k, costs));
+        assert(lctrs.back() >= 0);
+    } else if (arity == 2) {
+        file >> i;
+        file >> j;
+        if (ToulBar2::verbose >= 3)
+            cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
+        if (i == j) {
+            cerr << "Error: binary cost function with only one variable in its scope!" << endl;
+            exit(EXIT_FAILURE);
         }
-        ntuplesarray[ictr] = ntuples;
-
-        TProb p;
-        vector<TProb> costsProb;
-
-        TProb maxp = 0.;
-        for (k = 0; k < ntuples; k++) {
-            file >> p;
-            if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai == 2)
-                p /= ToulBar2::isZCelTemp;
-            else if (ToulBar2::isZCelTemp > 0)
-                p = Exp(Log(p) / ToulBar2::isZCelTemp);
-
-            assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
-            costsProb.push_back(p);
-            maxp = max(maxp, p);
-        }
-        if (ToulBar2::uai == 1 && maxp == 0.)
-            THROWCONTRADICTION;
-        if (ToulBar2::uai == 2 && maxp < -1e38)
-            THROWCONTRADICTION;
-
-        Cost minc = MAX_COST;
-        Cost maxc = MIN_COST;
-
-        if (ToulBar2::isGumbel) {
-            if (ToulBar2::verbose > 0) {
-                for (auto p : costsProb) {
-                    cout << p << ' ';
-                }
-                cout << endl;
-                cout << "CHANGE TO" << endl;
+        x = (EnumeratedVariable*)vars[i];
+        y = (EnumeratedVariable*)vars[j];
+        vector<Cost> costs;
+        for (a = 0; a < x->getDomainInitSize(); a++) {
+            for (b = 0; b < y->getDomainInitSize(); b++) {
+                costs.push_back(MIN_COST);
             }
-            costsProb = Gumbel_noise_vec(costsProb); // Apply Gumbel perturbation on the Energy Matrix
+        }
+        lctrs.push_back(postBinaryConstraint(i, j, costs));
+        assert(lctrs.back() >= 0);
+    } else if (arity == 1) {
+        file >> i;
+        if (ToulBar2::verbose >= 3)
+            cout << "read unary cost function " << ic << " on " << i << endl;
+        x = (EnumeratedVariable*)vars[i];
+        TemporaryUnaryConstraint unaryconstr;
+        unaryconstr.var = x;
+        unaryconstrs.push_back(unaryconstr);
+        lctrs.push_back(-1);
+    } else if (arity == 0) {
+        lctrs.push_back(-2);
+    }
+}
+
+int iunaryctr = 0;
+int ictr = 0;
+Constraint* ctr = NULL;
+TernaryConstraint* tctr = NULL;
+BinaryConstraint* bctr = NULL;
+NaryConstraint* nctr = NULL;
+String s;
+
+ToulBar2::markov_log = 0; // for the MARKOV Case
+
+int ntuplesarray[lctrs.size()];
+vector<vector<Cost>> costs;
+costs.resize(lctrs.size());
+list<int>::iterator it = lctrs.begin();
+while (it != lctrs.end()) {
+    file >> ntuples;
+    if (!file) {
+        cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
+        break;
+    }
+    ntuplesarray[ictr] = ntuples;
+
+    TProb p;
+    vector<TProb> costsProb;
+
+    TProb maxp = 0.;
+    for (k = 0; k < ntuples; k++) {
+        file >> p;
+        if (ToulBar2::isZCelTemp > 0 && ToulBar2::uai == 2)
+            p /= ToulBar2::isZCelTemp;
+        else if (ToulBar2::isZCelTemp > 0)
+            p = Exp(Log(p) / ToulBar2::isZCelTemp);
+
+        assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
+        costsProb.push_back(p);
+        maxp = max(maxp, p);
+    }
+    if (ToulBar2::uai == 1 && maxp == 0.)
+        THROWCONTRADICTION;
+    if (ToulBar2::uai == 2 && maxp < -1e38)
+        THROWCONTRADICTION;
+
+    Cost minc = MAX_COST;
+    Cost maxc = MIN_COST;
+
+    if (ToulBar2::isGumbel) {
+        if (ToulBar2::verbose > 0) {
             for (auto p : costsProb) {
-                if (p > maxp) {
-                    maxp = p;
-                };
-                if (ToulBar2::verbose > 0) {
-                    cout << p << ' ';
-                }
+                cout << p << ' ';
             }
-            if (ToulBar2::verbose > 0)
-                cout << endl;
+            cout << endl;
+            cout << "CHANGE TO" << endl;
         }
-
-        for (k = 0; k < ntuples; k++) {
-            p = costsProb[k];
-            Cost cost;
-            // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
-            //if (maxp>1){
-            //cout<< "Div : "<< p<<" by " <<maxp<<" equal to "<<log(p / maxp)<<endl;
-            if (markov)
-                cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
-            else
-                cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
-
-            costs[ictr].push_back(cost);
-            if (cost < minc)
-                minc = cost;
-            if (cost > maxc && cost < getUb())
-                maxc = cost;
-        }
-        upperbound += maxc;
-
-        if (ToulBar2::preprocessNary > 0 && minc > MIN_COST) {
-            for (k = 0; k < ntuples; k++) {
-                costs[ictr][k] -= minc;
+        costsProb = Gumbel_noise_vec(costsProb); // Apply Gumbel perturbation on the Energy Matrix
+        for (auto p : costsProb) {
+            if (p > maxp) {
+                maxp = p;
+            };
+            if (ToulBar2::verbose > 0) {
+                cout << p << ' ';
             }
-            if (ToulBar2::verbose >= 2)
-                cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
-            inclowerbound += minc;
         }
+        if (ToulBar2::verbose > 0)
+            cout << endl;
+    }
 
+    for (k = 0; k < ntuples; k++) {
+        p = costsProb[k];
+        Cost cost;
+        // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
+        //if (maxp>1){
+        //cout<< "Div : "<< p<<" by " <<maxp<<" equal to "<<log(p / maxp)<<endl;
         if (markov)
-            ToulBar2::markov_log += ((ToulBar2::uai > 1) ? maxp : Log(maxp));
+            cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
+        else
+            cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
 
-        ictr++;
-        ++it;
+        costs[ictr].push_back(cost);
+        if (cost < minc)
+            minc = cost;
+        if (cost > maxc && cost < getUb())
+            maxc = cost;
     }
+    upperbound += maxc;
 
-    //file >> varname;
-    if (file && !ToulBar2::seq) {
-        //file>>varname;
-        //cout<<varname<<endl;
-        if (varname.find_first_not_of(" \t\n\v\f\r") != std::string::npos)
-            cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
-    }
-
-    if (file) {
-        if (ToulBar2::seq) {
-            Cpd* cpd = new Cpd;
-            file.get();
-            cpd->read_rotamers2aa(file, vars);
-            ToulBar2::seq->generate_mask(cpd->getRotamers2AA());
-        }
-        //~ else
-        //~ {
-        //~ cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
-        //~ }
-    }
-
-    updateUb(upperbound);
-    ictr = 0;
-    it = lctrs.begin();
-    while (it != lctrs.end()) {
-        ntuples = ntuplesarray[ictr];
+    if (ToulBar2::preprocessNary > 0 && minc > MIN_COST) {
         for (k = 0; k < ntuples; k++) {
-            if (CUT(costs[ictr][k], getUb()))
-                costs[ictr][k] = getUb() * MEDIUM_COST;
+            costs[ictr][k] -= minc;
         }
+        if (ToulBar2::verbose >= 2)
+            cout << "IC0 performed for cost function " << ictr << " with initial minimum cost " << minc << endl;
+        inclowerbound += minc;
+    }
 
-        int arity;
-        if (*it == -1) {
-            ctr = NULL;
-            arity = 1;
-        } else if (*it == -2) {
-            ctr = NULL;
-            arity = 0;
-        } else {
-            assert(*it >= 0);
-            ctr = getCtr(*it);
-            arity = ctr->arity();
-        }
-        switch (arity) {
-        case 0: {
-            inclowerbound += costs[ictr][0];
-            break;
-        }
+    if (markov)
+        ToulBar2::markov_log += ((ToulBar2::uai > 1) ? maxp : Log(maxp));
 
-        case 1: {
-            unaryconstrs[iunaryctr].costs.clear();
-            for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
-                if (ToulBar2::seq) {
-                    if (ToulBar2::seq->get_mask()[ictr][a]) {
-                        unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
-                    } else {
-                        if (ToulBar2::verbose >= 1) {
-                            cout << "Eliminating: " << ictr << " " << a << endl;
-                            if (ToulBar2::verbose >= 4) {
-                                cout << ictr << ' ' << a << " MASK " << ToulBar2::seq->get_mask()[ictr][a] << endl;
-                            }
-                        }
-                        unaryconstrs[iunaryctr].costs.push_back(MAX_COST);
-                    }
-                } else {
+    ictr++;
+    ++it;
+}
+
+//file >> varname;
+if (file && !ToulBar2::seq) {
+    //file>>varname;
+    //cout<<varname<<endl;
+    if (varname.find_first_not_of(" \t\n\v\f\r") != std::string::npos)
+        cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+}
+
+if (file) {
+    if (ToulBar2::seq) {
+        Cpd* cpd = new Cpd;
+        file.get();
+        cpd->read_rotamers2aa(file, vars);
+        ToulBar2::seq->generate_mask(cpd->getRotamers2AA());
+    }
+    //~ else
+    //~ {
+    //~ cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+    //~ }
+}
+
+updateUb(upperbound);
+ictr = 0;
+it = lctrs.begin();
+while (it != lctrs.end()) {
+    ntuples = ntuplesarray[ictr];
+    for (k = 0; k < ntuples; k++) {
+        if (CUT(costs[ictr][k], getUb()))
+            costs[ictr][k] = getUb() * MEDIUM_COST;
+    }
+
+    int arity;
+    if (*it == -1) {
+        ctr = NULL;
+        arity = 1;
+    } else if (*it == -2) {
+        ctr = NULL;
+        arity = 0;
+    } else {
+        assert(*it >= 0);
+        ctr = getCtr(*it);
+        arity = ctr->arity();
+    }
+    switch (arity) {
+    case 0: {
+        inclowerbound += costs[ictr][0];
+        break;
+    }
+
+    case 1: {
+        unaryconstrs[iunaryctr].costs.clear();
+        for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
+            if (ToulBar2::seq) {
+                if (ToulBar2::seq->get_mask()[ictr][a]) {
                     unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
+                } else {
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Eliminating: " << ictr << " " << a << endl;
+                        if (ToulBar2::verbose >= 4) {
+                            cout << ictr << ' ' << a << " MASK " << ToulBar2::seq->get_mask()[ictr][a] << endl;
+                        }
+                    }
+                    unaryconstrs[iunaryctr].costs.push_back(MAX_COST);
                 }
+            } else {
+                unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
             }
-            iunaryctr++;
-            if (ToulBar2::verbose >= 3)
-                cout << "read unary costs." << endl;
-            break;
         }
-
-        case 2: {
-            bctr = (BinaryConstraint*)ctr;
-            x = (EnumeratedVariable*)bctr->getVar(0);
-            y = (EnumeratedVariable*)bctr->getVar(1);
-            postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs[ictr]);
-            if (ToulBar2::verbose >= 3)
-                cout << "read binary costs." << endl;
-            break;
-        }
-
-        case 3: {
-            tctr = (TernaryConstraint*)ctr;
-            x = (EnumeratedVariable*)tctr->getVar(0);
-            y = (EnumeratedVariable*)tctr->getVar(1);
-            z = (EnumeratedVariable*)tctr->getVar(2);
-            postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr]);
-            if (ToulBar2::verbose >= 3)
-                cout << "read ternary costs." << endl;
-            break;
-        }
-
-        default: {
-            nctr = (NaryConstraint*)ctr;
-            j = 0;
-            nctr->firstlex();
-            while (nctr->nextlex(s, cost)) {
-                //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
-                postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
-                j++;
-            }
-            if (ToulBar2::verbose >= 3)
-                cout << "read arity " << arity << " table costs." << endl;
-            postNaryConstraintEnd(nctr->wcspIndex);
-            break;
-        }
-        }
-        ictr++;
-        ++it;
-    }
-    if (ToulBar2::verbose >= 1) {
-        cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
+        iunaryctr++;
+        if (ToulBar2::verbose >= 3)
+            cout << "read unary costs." << endl;
+        break;
     }
 
-    if (ToulBar2::ubE) {
-        cout << "Update ub on cost from " << ub << " to: " << LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log) << endl;
-        updateUb(LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log));
+    case 2: {
+        bctr = (BinaryConstraint*)ctr;
+        x = (EnumeratedVariable*)bctr->getVar(0);
+        y = (EnumeratedVariable*)bctr->getVar(1);
+        postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs[ictr]);
+        if (ToulBar2::verbose >= 3)
+            cout << "read binary costs." << endl;
+        break;
     }
 
-    // apply basic initial propagation AFTER complete network loading
-    increaseLb(inclowerbound);
-
-    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
-        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+    case 3: {
+        tctr = (TernaryConstraint*)ctr;
+        x = (EnumeratedVariable*)tctr->getVar(0);
+        y = (EnumeratedVariable*)tctr->getVar(1);
+        z = (EnumeratedVariable*)tctr->getVar(2);
+        postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr]);
+        if (ToulBar2::verbose >= 3)
+            cout << "read ternary costs." << endl;
+        break;
     }
-    sortConstraints();
+
+    default: {
+        nctr = (NaryConstraint*)ctr;
+        j = 0;
+        nctr->firstlex();
+        while (nctr->nextlex(s, cost)) {
+            //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
+            postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
+            j++;
+        }
+        if (ToulBar2::verbose >= 3)
+            cout << "read arity " << arity << " table costs." << endl;
+        postNaryConstraintEnd(nctr->wcspIndex);
+        break;
+    }
+    }
+    ictr++;
+    ++it;
+}
+if (ToulBar2::verbose >= 1) {
+    cout << "MarkovShiftingValue= " << ToulBar2::markov_log << endl;
+}
+
+if (ToulBar2::ubE) {
+    cout << "Update ub on cost from " << ub << " to: " << LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log) << endl;
+    updateUb(LogProb2Cost(-ToulBar2::ubE - ToulBar2::markov_log));
+}
+
+// apply basic initial propagation AFTER complete network loading
+increaseLb(inclowerbound);
+
+for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+    postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+}
+sortConstraints();
+if (ToulBar2::verbose >= 0)
+    cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
+
+int nevi = 0;
+ifstream fevid(ToulBar2::evidence_file.c_str());
+if (!fevid) {
+    string strevid(string(fileName) + string(".evid"));
+    fevid.open(strevid.c_str());
     if (ToulBar2::verbose >= 0)
-        cout << "Read " << nbvar << " variables, with " << nbval << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
-
-    int nevi = 0;
-    ifstream fevid(ToulBar2::evidence_file.c_str());
-    if (!fevid) {
-        string strevid(string(fileName) + string(".evid"));
-        fevid.open(strevid.c_str());
+        cout << "No evidence file specified. Trying " << strevid << endl;
+    if (!fevid)
         if (ToulBar2::verbose >= 0)
-            cout << "No evidence file specified. Trying " << strevid << endl;
-        if (!fevid)
-            if (ToulBar2::verbose >= 0)
-                cout << "No evidence file. " << endl;
-    }
-    if (fevid) {
-        vector<int> variables;
-        vector<Value> values;
-        fevid >> nevi;
-        bool firstevid = true;
-        if (nevi == 0)
-            return;
-        if (nevi == 1)
-            fevid >> nevi; // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
-        while (nevi) {
-            if (!fevid) {
-                cerr << "Error: incorrect number of evidences." << endl;
-                exit(EXIT_FAILURE);
-            }
-            fevid >> i;
-            fevid >> j;
-            if (firstevid && !fevid) { // old UAI 2008 evidence format
-                variables.push_back(nevi);
-                values.push_back(i);
-                break;
-            } else
-                firstevid = false;
-            variables.push_back(i);
-            values.push_back(j);
-            nevi--;
+            cout << "No evidence file. " << endl;
+}
+if (fevid) {
+    vector<int> variables;
+    vector<Value> values;
+    fevid >> nevi;
+    bool firstevid = true;
+    if (nevi == 0)
+        return;
+    if (nevi == 1)
+        fevid >> nevi; // UAI 2010 evidence file format assumes possible multiple evidence samples, but toulbar2 will search for the first evidence sample only!
+    while (nevi) {
+        if (!fevid) {
+            cerr << "Error: incorrect number of evidences." << endl;
+            exit(EXIT_FAILURE);
         }
-        assignLS(variables, values);
+        fevid >> i;
+        fevid >> j;
+        if (firstevid && !fevid) { // old UAI 2008 evidence format
+            variables.push_back(nevi);
+            values.push_back(i);
+            break;
+        } else
+            firstevid = false;
+        variables.push_back(i);
+        values.push_back(j);
+        nevi--;
     }
+    assignLS(variables, values);
+}
 }
 
 void WCSP::solution_UAI(Cost res, bool opt)
@@ -3192,17 +3256,38 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
-        //                cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-    if (!file) {
-            cerr << "Could not open file " << fileName << endl;
-        exit(EXIT_FAILURE);
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed cnf/wcnf format files." << endl;
+            exit(EXIT_FAILURE);
+#endif
         }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcnf file : " << fileName << endl;
+        exit(EXIT_FAILURE);
     }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcnf format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcnf file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
@@ -3234,7 +3319,7 @@ void WCSP::read_wcnf(const char* fileName)
         getline(file, strtop);
         if (string2Cost((char*)strtop.c_str()) > 0) {
             if (ToulBar2::verbose >= 0)
-            cout << "c (Weighted) Partial Max-SAT input format" << endl;
+                cout << "c (Weighted) Partial Max-SAT input format" << endl;
             top = string2Cost((char*)strtop.c_str());
             if (top < MAX_COST / K)
                 top = top * K;
@@ -3243,7 +3328,7 @@ void WCSP::read_wcnf(const char* fileName)
             updateUb(top + ToulBar2::deltaUb);
         } else {
             if (ToulBar2::verbose >= 0)
-            cout << "c Weighted Max-SAT input format" << endl;
+                cout << "c Weighted Max-SAT input format" << endl;
         }
     } else {
         if (ToulBar2::verbose >= 0)
@@ -3364,7 +3449,7 @@ void WCSP::read_wcnf(const char* fileName)
     }
     sortConstraints();
     if (ToulBar2::verbose >= 0)
-    cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity << "." << endl;
+        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nbclauses << " clauses, with maximum arity " << maxarity << "." << endl;
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
@@ -3376,17 +3461,38 @@ void WCSP::read_wcnf(const char* fileName)
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("qpbo") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("qpbo") == 0) {
-        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-    if (!file) {
-        cerr << "Could not open QPBO file " << fileName << endl;
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed qpbo format files." << endl;
+            exit(EXIT_FAILURE);
+#endif
+        }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open qpbo file : " << fileName << endl;
         exit(EXIT_FAILURE);
     }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed qpbo format files." << endl;
+        exit(EXIT_FAILURE);
     }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open qpbo file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     int n = 0;
     file >> n;
@@ -3445,7 +3551,8 @@ void WCSP::read_qpbo(const char* fileName)
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::costMultiplier = multiplier;
-    if (!minimize) ToulBar2::costMultiplier *= -1.0;
+    if (!minimize)
+        ToulBar2::costMultiplier *= -1.0;
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
@@ -3551,7 +3658,7 @@ void WCSP::read_qpbo(const char* fileName)
     sortConstraints();
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs (quadratic coef. multiplier: " << ToulBar2::qpboQuadraticCoefMultiplier << ", shifting value: " << -negCost << ")" << endl;
-     }
+    }
 }
 
 TrieNum* WCSP::read_TRIE(const char* fileName)

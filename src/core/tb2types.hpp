@@ -33,7 +33,7 @@
 #include "utils/tb2utils.hpp"
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
-#ifdef QUAD_PROB 
+#ifdef QUAD_PROB
 #include <quadmath.h> // only with gcc/g++
 #endif
 
@@ -196,19 +196,19 @@ const Cost MAX_COST = PARETOPAIR_MAX;
 #ifdef QUAD_PROB
 typedef __float128 TProb;
 typedef __float128 TLogProb;
-inline Cost Round(TLogProb f) { return (Cost)roundq(f);}
+inline Cost Round(TLogProb f) { return (Cost)roundq(f); }
 #endif
 
 #ifdef DOUBLE_PROB
 typedef double TProb;
 typedef double TLogProb;
-inline Cost Round(TLogProb f) { return (Cost)round(f);}
+inline Cost Round(TLogProb f) { return (Cost)round(f); }
 #endif
 
 #ifdef LONGDOUBLE_PROB
 typedef Double TProb;
 typedef Double TLogProb;
-inline Cost Round(TLogProb f) { return (Cost)roundl(f);}
+inline Cost Round(TLogProb f) { return (Cost)roundl(f); }
 #endif
 
 inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) + exp(c2)]
@@ -473,7 +473,8 @@ public:
     static SequenceHandler* sequence_handler;
     static string map_file;
     static bool cfn;
-    static bool cfngz;
+    static bool gz;
+    static bool xz;
     static bool bayesian;
     static int uai;
     static int resolution;

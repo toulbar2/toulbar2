@@ -4,8 +4,8 @@ Source: https://github.com/toulbar2/toulbar2/
 Files-Excluded: */win32
 
 Files: *
-Copyright: © INRA 2003-2016 <Thomas.Schiex@toulouse.inra.fr>
-License: GPL-3+
+Copyright: © INRA 2003-2018 <Thomas.Schiex@inra.fr>
+License: MIT
 
 Files: debian/*
 Copyright:  © INRA 2003-2018 <Thomas.Schiex@toulouse.inra.fr>

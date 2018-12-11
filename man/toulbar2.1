@@ -48,10 +48,10 @@ Preprocessing only: activates variable elimination of variables of degree less t
 Preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB).
 .TP
 .BR \-f=[\fIinteger\fR]
-Preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is 1)
+Preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is 1).
 .TP
 .BR \-dec 
-Preprocessing only: pairwise decomposition of cost functions with arity larger than 3 into smaller arity cost functions (default: activated)
+Preprocessing only: pairwise decomposition of cost functions with arity larger than 3 into smaller arity cost functions (default: activated).
 .TP
 .BR \-n=[\fIinteger\fR]
 Preprocessing only: projects n\-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10).
@@ -72,7 +72,7 @@ Activate limited discrepancy search.
 Use a negative value to stop search after the given absolute number of discrepancies have been explored (discrepancy bound = 4 by default).
 .TP
 .BR \-L=[\fIinteger\fR] 
-Activate randomized (quasi\-random variable ordering) search with restart (maximum number of nodes = 10000 by default)
+Activate randomized (quasi\-random variable ordering) search with restart (maximum number of nodes = 10000 by default).
 .TP
 .BR \-i=[\fI"string"\fR] 
 Use initial upper bound found by INCOP local search solver.
@@ -80,7 +80,7 @@ The string parameter is optional, using "0 1 3 idwa 100000 cv v 0 200 1 0 0" by 
 .TP
 .BR \-x=[\fI(,i=a)*\fR] 
 Assigns variable of index i to value a (multiple assignments are separated by a comma and no space).
-Without any argument, a complete assignment, used as initial upper bound and as a value orderin heuristic, is read from default file "sol" or from a filename given directly as an additional input filename with ".sol" extension and without \-x
+Without any argument, a complete assignment, used as initial upper bound and as a value orderin heuristic, is read from default file "sol" or from a filename given directly as an additional input filename with ".sol" extension and without \-x.
 .PP
 TREE SEARCH ALGORITHMS AND TREE DECOMPOSITION SELECTION
 .TP
@@ -88,10 +88,10 @@ TREE SEARCH ALGORITHMS AND TREE DECOMPOSITION SELECTION
 Use hybrid best\-first search, restarting from the root after a given number of backtracks (default value is 10000).
 .TP
 .BR \-open=[\fIinteger\fR] 
-Set hybrid best\-first search limit on the number of stored open nodes (default value is \-1, no limit)
+Set hybrid best\-first search limit on the number of stored open nodes (default value is \-1, no limit).
 .TP
 .BR \-B=[\fIinteger\fR]
-Use (0) DFBB, (1) BTD, (2) RDS\-BTD, (3) RDS\-BTD with path decomposition instead of tree decomposition (default value is 0)
+Use (0) DFBB, (1) BTD, (2) RDS\-BTD, (3) RDS\-BTD with path decomposition instead of tree decomposition (default value is 0).
 .TP
 .BR \-O=[\fIfilename\fR] 
 Read a variable elimination order from a file in order to build a tree decomposition (if BTD\-like and/or variable elimination methods are used). The order is also used as a DAC ordering.
@@ -111,7 +111,7 @@ Build a tree decomposition (if BTD\-like and/or variable elimination methods are
 .PP
 (\-5) reverse Cuthill\-Mckee ordering, 
 .PP
-(\-6) approximate minimum degree ordering
+(\-6) approximate minimum degree ordering.
 .RE
 If not specified, then the order in which variables appear in the problem file is used.
 .RE
@@ -125,8 +125,8 @@ Set a limit on the maximum cluster separator size (merge cluster with its father
 .BR \-X=[\fIinteger\fR] 
 Set a limit on the minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit, default value is 0).
 .TP
-.BR \-E 
-Merges leaf clusters with their father if small local treewidth (in conjunction with option "\-e").
+.BR \-E=[\fIfloat\fR] 
+Merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e" and positive threshold value) or a ratio of number of separator variables by number of cluster variables is above a given threshold (in conjunction with option "-vns") (default value is 0).
 .TP
 .BR \-R=[\fIinteger\fR] 
 Choose a specific cluster number as a root cluster.
@@ -140,28 +140,28 @@ VNS SEARCH
 unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O).
 .TP
 .BR \-vnsini=[\fIinteger\fR]
-Initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
+Initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default).
 .TP
 .BR \-ldsmin=[\fIinteger\fR]
 Minimum discrepancy for VNS-like methods (1 by default).
 .TP
 .BR \-ldsmax=[\fIinteger\fR]
-Maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)
+Maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default).
 .TP
 .BR \-ldsinc=[\fIinteger\fR]
 Discrepancy increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (2 by default).
 .TP
 .BR \-kmin=[\fIinteger\fR]
-Minimum neighborhood size for VNS-like methods (4 by default)
+Minimum neighborhood size for VNS-like methods (4 by default).
 .TP
 .BR \-kmax=[\fIinteger\fR]
 Maximum neighborhood size for VNS-like methods (number of problem variables by default).
 .TP
-.BR \-kinc=[integer]
-Neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default)
+.BR \-kinc=[\fIinteger\fR]
+Neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default).
 .TP
-.BR \-best=[integer]
-Stop VNS-like methods if a better solution is found (default value is 0)
+.BR \-best=[\fIinteger\fR]
+Stop VNS-like methods if a better solution is found (default value is 0).
 .PP
 NODE PROCESSING & BOUNDING OPTIONS
 .TP
@@ -189,26 +189,29 @@ Default value is 4.
 .BR \-A=[\fIinteger\fR] 
 Enforce Virtual Arc Consistency at each search node with a search depth less than the given value (default value is 0 which enforces VAC only at root node).
 .TP
-.BR \-T=[decimal]
-Threshold cost value for VAC (default value is 1)
+.BR \-T=[\fIdecimal\fR]
+Threshold cost value for VAC (default value is 1).
 .TP
-.BR \-P=[decimal]
-Threshold cost value for VAC during the preprocessing phase (default value is 1)
+.BR \-P=[\fIdecimal\fR]
+Threshold cost value for VAC during the preprocessing phase (default value is 1).
 .TP
-.BR \-C=[float]
-Multiplies all costs internally by this number when loading the problem (default value is 1)
+.BR \-C=[\fIfloat\fR]
+Multiplies all costs internally by this number when loading the problem (default value is 1).
 .TP
 .BR \-S
-Preprocessing only: performs singleton consistency (only in conjunction with option "-A")
+Preprocessing only: performs singleton consistency (only in conjunction with option "-A").
 .TP
-.BR \-trws=[float]
-Preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.001)
+.BR \-trws=[\fIfloat\fR]
+Preprocessing only: enforce TRW-S until a given precision is reached (default value is 0.00001).
 .TP
-.BR \--trws-n-iters=[integer]
-Preprocessing only: enforce at most N iterations of TRW-S (default value is 1000)
+.BR \--trws-n-iters=[\fIinteger\fR]
+Preprocessing only: enforce at most N iterations of TRW-S (default value is 1000).
 .TP
-.BR \--trws-n-iters-no-change=[integer]
-Preprocessing only: stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5)
+.BR \--trws-n-iters-no-change=[\fIinteger\fR]
+Preprocessing only: stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5, -1=never).
+.TP 
+.BR \--trws-n-iters-compute-ub=[\fIinteger\fR]
+Preprocessing only: computes UB every N steps in TRW-S (default value is 100).
 .TP
 .BR \-dee=[\fIinteger\fR]
 Enforce restricted dead\-end elimination, or value pruning by dominance rule from EAC value (dee>=1 and dee<=3) and soft neighborhood substitutability, in preprocessing (dee=2 or dee=4) or during search (dee=3).
@@ -248,8 +251,11 @@ The default d=1 splits domains in the middle of domain range while d=2 splits do
 .BR \-sortd
 Sort domains in preprocessing based on increasing unary costs (works only for binary CFN).
 .TP
+.BR \-solr
+Use solution-based phase saving as a value ordering heuristic (default option).
+.TP
 .BR \-V
-VAC-based value ordering heuristic (default option,  only in conjunction with option "-A")
+VAC-based value ordering heuristic (default option,  only in conjunction with option "-A").
 .PP
 CONSOLE OUTPUT
 .TP
@@ -262,9 +268,9 @@ Set the verbosity level (default 0).
 .BR \-Z=[\fIinteger\fR] 
 Debug mode (save problem at each node if verbosity option \-v=num>= 1 and \-Z=num>=3).
 .TP
-.BR \-s
-Shows each solution found during search.
-The solution is printed on one line, giving the value (integer) of each variable successively in increasing order of definition in the model file.
+.BR \-s=[\fIinteger\fR]
+Shows each solution found during search. The solution is printed on one line. The default -s=1 gives the value (integer) of each variable successively in increasing order of definition in the model file.
+For -s=2, the value name is used instead, for -s=3, variable name=valuename is printed instead.
 .PP
 FILE OUTPUT
 .TP
@@ -278,7 +284,7 @@ The current directory is used as a relative path.
 .TP
 .BR \-z=[\fIinteger\fR]
 1: saves original instance (by default), 2: saves
-  after preprocessing (this option can be used in combination with \-z=filename)
+  after preprocessing (this option can be used in combination with \-z=filename).
 .TP
 .BR \-x=[\fI(,i=a)*\fR] 
 Assigns variable of index i to value a (multiple assignments are separated by a comma and no space).
@@ -292,6 +298,9 @@ Default value is 7.
 .TP
 .BR \-epsilon=[\fIfloat\fR] 
 Approximation factor for computing the partition function (default value is 1000 representing epsilon=1/1000).
+.TP
+.BR \-qpmult=[\fIdouble\fR]
+Coefficient multiplier for quadratic terms when reading qpbo format (default value is 2).
 .PP
 RANDOM PROBLEM GENERATION
 .TP
@@ -337,7 +346,7 @@ pn is the number of salldiff global cost functions (p2 and p3 still being used f
 .RE
 .RE
 .SH FILE FORMATS
-toulbar2 can read .cfn, .cfn.gz, .wcsp, .uai, .LG, .cnf, .wcnf, .qpbo, .pre, .bep files. See the full user documentation for a description of these file formats.
+toulbar2 can read .cfn, .wcsp, .uai, .LG, .cnf, .wcnf, .qpbo, .pre, .bep files. The files can be compressed with gzip or xz (e.g., .cfn.gz or .cfn.xz, except for pre and bep formats). See the full user documentation for a description of these file formats.
 .SH SEE ALSO
 A more complete user documentation should be available on your system, in /usr/share/doc/toulbar2/userdoc.pdf or can be otherwise downloaded from http://www.inra.fr/mia/T/toulbar2.
 .SH AUTHORS
