@@ -24,6 +24,7 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #if (BOOST_VERSION >= 106500)
 #include <boost/iostreams/filter/lzma.hpp>
+#include "lzma-cpp.inc"
 #endif
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
