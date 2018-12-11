@@ -13,6 +13,15 @@ file ( GLOB_RECURSE validation_file
 # test unitaire
 ################
 SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
+SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
+MESSAGE(STATUS "Boost " ${Boost_rev} " detected")
+IF (${Boost_rev} VERSION_GREATER "1.65.0")
+	SET (BenchMatchString ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$")
+	MESSAGE(STATUS "xz compressed file testing activated.")
+ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
+        SET (BenchMatchString ".(wcsp.gz|cfn.gz|wcsp|cfn)$")
+ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
+
 
 	MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
@@ -20,9 +29,9 @@ FOREACH (UTEST ${validation_file})
         UNSET(UB) 
 	UNSET(ENUM)
 
-	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".ub" UBF ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".lb" LBF ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ".enum" ENUM_file ${UTEST})
+	STRING(REGEX REPLACE ${BenchMatchString} ".ub" UBF ${UTEST})
+	STRING(REGEX REPLACE ${BenchMatchString} ".lb" LBF ${UTEST})
+	STRING(REGEX REPLACE ${BenchMatchString} ".enum" ENUM_file ${UTEST})
 	GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH)
 
 	IF (EXISTS ${UBF})
@@ -84,7 +93,7 @@ FOREACH (UTEST ${validation_file})
 	
 	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
-	STRING(REGEX REPLACE ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$" ""  TNAME ${TMP})
+	STRING(REGEX REPLACE ${BenchMatchString} ""  TNAME ${TMP})
 
 	if($verbose) 
 		MESSAGE(STATUS "UBF: ${UBF}")
