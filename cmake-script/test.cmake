@@ -1,13 +1,27 @@
 #INCLUDE(CTest)
 
-file ( GLOB_RECURSE validation_file
-  validation/*.wcsp
-  validation/*.wcsp.gz
-  validation/*.wcsp.xz
-  validation/*.cfn
-  validation/*.cfn.gz
-  validation/*.cfn.xz
-  )
+SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
+MESSAGE(STATUS "Boost " ${Boost_rev} " detected")
+IF (${Boost_rev} VERSION_GREATER "1.65.0")
+        SET (BenchMatchString ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$")
+	file ( GLOB_RECURSE validation_file
+	  validation/*.wcsp
+	  validation/*.wcsp.gz
+	  validation/*.wcsp.xz
+	  validation/*.cfn
+	  validation/*.cfn.gz
+	  validation/*.cfn.xz
+	  )
+        MESSAGE(STATUS "xz compressed file testing activated.")
+ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
+        SET (BenchMatchString ".(wcsp.gz|cfn.gz|wcsp|cfn)$")
+	file ( GLOB_RECURSE validation_file
+	  validation/*.wcsp
+	  validation/*.wcsp.gz
+	  validation/*.cfn
+	  validation/*.cfn.gz
+	  )
+ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
 
 ################
 # test unitaire
