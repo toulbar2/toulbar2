@@ -14,6 +14,7 @@
 #include "core/tb2clqcover.hpp"
 
 #ifdef BOOST
+#define BOOST_IOSTREAMS_NO_LIB
 #include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -21,6 +22,7 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #if (BOOST_VERSION >= 106500)
 #include <boost/iostreams/filter/lzma.hpp>
+#include "lzma-cpp.inc"
 #endif
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
