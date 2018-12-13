@@ -367,6 +367,8 @@ public:
     static int verbose;
     static int strictAC;
     static int BoolDomSize;
+    static int nbTimesIsVAC;
+    static int nbTimesIsVACitThresholdMoreThanOne;
     static bool RINS;
     static int useRINS;
     static int RINS_nbStrictACVariables;

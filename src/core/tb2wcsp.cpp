@@ -50,6 +50,8 @@ int WCSP::wcspCounter = 0;
 int ToulBar2::verbose;
 int ToulBar2::strictAC;
 int ToulBar2::BoolDomSize;
+int ToulBar2::nbTimesIsVAC;
+int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
 bool ToulBar2::RINS;
 int ToulBar2::useRINS;
 int ToulBar2::RINS_nbStrictACVariables;
@@ -231,6 +233,8 @@ void tb2init()
     ToulBar2::verbose = 0;
     ToulBar2::strictAC = 0;
     ToulBar2::BoolDomSize = 0;
+    ToulBar2::nbTimesIsVAC = 0;
+    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
     ToulBar2::RINS = false;
     ToulBar2::useRINS = 0;
     ToulBar2::RINS_nbStrictACVariables = 0;

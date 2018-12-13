@@ -479,6 +479,29 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 {
+int nbVarWithEmptyDomBool = 0;
+for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+	if (((WCSP*)wcsp)->getVar(i)->enumerated()) {
+		EnumeratedVariable* xi = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
+		int domSizeInBoolOfP = 0;
+		int size = xi->getDomainSize();
+		ValueCost domcost[size];
+		((WCSP*)wcsp)->getEnumDomainAndCost(i, domcost);
+		for (int v = 0; v < size; v++) {
+			if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
+				domSizeInBoolOfP += 1;
+			} 
+			else {
+				//cout << "ERROR Value in Bool(P) with non-zero cost!" << ((VACVariable*)xi)->getVACCost(domcost[v].value) << " " << domcost[v].cost << endl;
+			}
+		}
+		if(domSizeInBoolOfP < 1){
+			nbVarWithEmptyDomBool++;
+		}
+	}
+}
+if(nbVarWithEmptyDomBool > 0)
+cout << "Number of variables with empty domain in Bool of P " << nbVarWithEmptyDomBool << endl;
 	if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar))
 		return lastConflictVar;
 	int varIndex = -1;
@@ -565,6 +588,29 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
 {
+int nbVarWithEmptyDomBool = 0;
+for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+	if (((WCSP*)wcsp)->getVar(i)->enumerated()) {
+		EnumeratedVariable* xi = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
+		int domSizeInBoolOfP = 0;
+		int size = xi->getDomainSize();
+		ValueCost domcost[size];
+		((WCSP*)wcsp)->getEnumDomainAndCost(i, domcost);
+		for (int v = 0; v < size; v++) {
+			if(((VACVariable*)xi)->getVACCost(domcost[v].value) == MIN_COST){
+				domSizeInBoolOfP += 1;
+			} 
+			else {
+				//cout << "ERROR Value in Bool(P) with non-zero cost!" << ((VACVariable*)xi)->getVACCost(domcost[v].value) << " " << domcost[v].cost << endl;
+			}
+		}
+		if(domSizeInBoolOfP < 1){
+			nbVarWithEmptyDomBool++;
+		}
+	}
+}
+if(nbVarWithEmptyDomBool > 0)
+cout << "Number of variables with empty domain in Bool of P " << nbVarWithEmptyDomBool << endl;
     if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar))
         return lastConflictVar;
     int varIndex = -1;
@@ -1411,8 +1457,11 @@ void Solver::recursiveSolveLDS(int discrepancy)
         } else {
             binaryChoicePointLDS(varIndex, wcsp->getInf(varIndex), discrepancy);
         }
-    } else
+    } else{
+        if(ToulBar2::RINS)
+            ToulBar2::RINS_newSolutionFound = true;
         newSolution();
+    }
 }
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
@@ -1517,21 +1566,21 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                 } else{
                     // FULYA : HEURISTIC BURAYA
                     double r = (double)myrand() / (double)RAND_MAX;
-                    cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                    //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                     //cout << "random number  = " << r << " ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << " ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
                         
-                    if( (ToulBar2::useRINS == 2 && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) || 
+                    if( ((ToulBar2::useRINS == 2 || ToulBar2::useRINS == 5 || ToulBar2::useRINS == 8) && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) || 
                         (ToulBar2::useRINS == 3 && r < ToulBar2::RINS_probabilty && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) ){
                         ToulBar2::RINS_newSolutionFound = false;
                         ToulBar2::RINS = true;
                         ToulBar2::RINS_nbCalls++;
-                        cout << "ToulBar2::RINS = true; at SOLVER" << endl;
+                        //cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                         enforceUb();
                         ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);     
                         ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                         //enforceUb(); wcsp->propagate();
                         ToulBar2::RINS = false;
-                        cout << "ToulBar2::RINS = false; at SOLVER" << endl;
+                        //cout << "ToulBar2::RINS = false; at SOLVER" << endl;
                         if(ToulBar2::RINS_newSolutionFound)
                             ToulBar2::RINS_nbNewSolutionFound++;
                         if(ToulBar2::useRINS == 3){
@@ -1954,15 +2003,15 @@ bool Solver::solve()
                             initialDepth = Store::getDepth();
                             if(ToulBar2::useRINS > 0){
                                 //if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
-                                    cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                                    //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                                     ToulBar2::RINS = true;
-                                    cout << "ToulBar2::RINS = true; at root" << endl;
+                                    //cout << "ToulBar2::RINS = true; at root" << endl;
                                     enforceUb();
                                     ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
                                     ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                                     //enforceUb(); wcsp->propagate();
                                     ToulBar2::RINS = false;
-                                    cout << "ToulBar2::RINS = false; at root" << endl;
+                                    //cout << "ToulBar2::RINS = false; at root" << endl;
                                 //}
                             }
                             hybridSolve();

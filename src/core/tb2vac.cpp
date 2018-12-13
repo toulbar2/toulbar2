@@ -273,8 +273,10 @@ bool VACExtension::propagate()
         }
 
         if(isvac){
-            //cout << "IS VAC !!! and itThreshold is " << itThreshold << endl;
+            ToulBar2::nbTimesIsVAC++;
             ToulBar2::RINS_lastitThreshold = itThreshold;
+	    if(itThreshold > 1)
+    		ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
 			int nbDomSizeZero = 0;
 			ToulBar2::RINS_nbStrictACVariables = 0;
 			int nbDomSizeMore = 0;
@@ -322,6 +324,7 @@ bool VACExtension::propagate()
             //cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
 
             if (ToulBar2::RINS) {
+                        ToulBar2::RINS = false;
                 //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
                 int storedepth = Store::getDepth();
                 int storehbfs = ToulBar2::hbfs;
@@ -352,7 +355,7 @@ bool VACExtension::propagate()
                             }
                         }
                         if (variables.size() > 0) wcsp->assignLS(variables, values, true);
-                        cout << "call to recursiveSolve from VAC" << endl;
+                        //cout << "call to recursiveSolve from VAC" << endl;
                         for (BTList<Value>::iterator iter = ((Solver*)(wcsp->getSolver()))->unassignedVars->begin(); iter != ((Solver*)(wcsp->getSolver()))->unassignedVars->end(); ++iter) {
                            ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->propagateNC();
                         }
@@ -365,8 +368,10 @@ bool VACExtension::propagate()
                         ofstream pb(fileName.c_str());
                         cout << fileName << endl;
                         wcsp->dump(pb, true);*/
-                        ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb());  // look at its search tree (if a new solution is found, UB should be updated automatically)
-                        ToulBar2::RINS = false;
+			if(ToulBar2::useRINS < 7)
+	                        ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb());  // look at its search tree (if a new solution is found, UB should be updated automatically)
+			else
+				((Solver*)(wcsp->getSolver()))->recursiveSolveLDS(wcsp->getLb());
                     } catch (Contradiction) {
                         wcsp->whenContradiction();
                     }
@@ -858,7 +863,7 @@ void VACExtension::printStat(bool ini)
     }
     
     cout << "Number of VAC iterations: " << nbIterations << endl;
-    
+    cout << "Number of times is VAC: " << ToulBar2::nbTimesIsVAC << " Number of times isvac and itThreshold > 1: " << ToulBar2::nbTimesIsVACitThresholdMoreThanOne << endl;
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
 	   vector<tVACStat*>::iterator it = heap.begin();
