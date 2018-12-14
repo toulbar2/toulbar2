@@ -532,6 +532,10 @@ AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
 \item = {\itshape cst} {\itshape delta} to express soft binary constraint $x = y + cst$ with associated cost function $(|y + cst - x| \leq delta)?|y + cst - x|:UB$
 \item disj {\itshape cstx} {\itshape csty} {\itshape penalty} to express soft binary disjunctive constraint $x \geq y + csty \vee y \geq x + cstx$ with associated cost function $(x \geq y + csty \vee y \geq x + cstx)?0:penalty$
 \item sdisj {\itshape cstx} {\itshape csty} {\itshape xinfty} {\itshape yinfty} {\itshape costx} {\itshape costy} to express a special disjunctive constraint with three implicit hard constraints $x \leq xinfty$ and $y \leq yinfty$ and $x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)$ and an additional cost function $((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)$
+\item Global cost functions using a dedicated propagator\-:
+\begin{DoxyItemize}
+\item clique {\itshape 1} ({\itshape nb\-\_\-values} ({\itshape value})$\ast$)$\ast$ to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most {\itshape 1} occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
+\end{DoxyItemize}
 \item Global cost functions using a flow-\/based propagator\-:
 \begin{DoxyItemize}
 \item salldiff var$\vert$dec$\vert$decbi {\itshape cost} to express a soft alldifferent constraint with either variable-\/based ({\itshape var} keyword) or decomposition-\/based ({\itshape dec} and {\itshape decbi} keywords) cost semantic with a given {\itshape cost} per violation ({\itshape decbi} decomposes into a binary cost function complete network)
@@ -597,6 +601,11 @@ Examples\-:
 \item hard temporal disjunction $x1 \geq x2 + 2 \vee x2 \geq x1 + 1$\-:
 \begin{DoxyCode}
 2 1 2 -1 disj 1 2 UB 
+\end{DoxyCode}
+
+\item clique cut (\{x0,x1,x2,x3\}) on Boolean variables such that value 1 is used at most once\-:
+\begin{DoxyCode}
+4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 
 \end{DoxyCode}
 
 \item soft\-\_\-alldifferent(\{x0,x1,x2,x3\})\-:
