@@ -491,6 +491,10 @@ void tb2checkOptions()
         // cout << "Warning! Solution based phase saving is not recommended with Limited Discrepancy Search." << endl;
         ToulBar2::solutionBasedPhaseSaving = false;
     }
+    if (ToulBar2::scpbranch && ToulBar2::solutionBasedPhaseSaving) {
+        cout << "SCP branching is incompatible with solution-based phase saving (deactivated with -solr:)." << endl;
+        ToulBar2::solutionBasedPhaseSaving = false;
+    }
     // TODO is it possible just by default option? If not, error would be better.
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2) {
         cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
@@ -4339,7 +4343,11 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
     }
 
     bool negative = (decimalToken[0] == '-');
-    string integerPart = (negative ? decimalToken.substr(1, dotFound - 1) : decimalToken.substr(0, dotFound));
+    string integerPart;
+    if (dotFound == negative)
+        integerPart = "0";
+    else
+        integerPart = (negative ? decimalToken.substr(1, dotFound - 1) : decimalToken.substr(0, dotFound));
     string decimalPart = decimalToken.substr(dotFound + 1);
     int shift = ToulBar2::decimalPoint - decimalPart.size();
 
