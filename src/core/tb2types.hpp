@@ -381,6 +381,7 @@ public:
     static int RINS_nbBacktracksOn;
     static int RINS_nbBacktracksOff;
     static Cost RINS_lastitThreshold;
+    static double RINS_lastRatio;
     static int debug;
     static string externalUB;
     static bool showSolutions;

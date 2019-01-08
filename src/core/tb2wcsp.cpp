@@ -64,6 +64,7 @@ int ToulBar2::RINS_nbNodesOff;
 int ToulBar2::RINS_nbBacktracksOn;
 int ToulBar2::RINS_nbBacktracksOff;
 Cost ToulBar2::RINS_lastitThreshold;
+double ToulBar2::RINS_lastRatio;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -247,6 +248,7 @@ void tb2init()
     ToulBar2::RINS_nbBacktracksOn = 0;
     ToulBar2::RINS_nbBacktracksOff = 0;
     ToulBar2::RINS_lastitThreshold = 1;
+    ToulBar2::RINS_lastRatio = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;

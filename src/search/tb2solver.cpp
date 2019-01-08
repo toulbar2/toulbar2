@@ -1961,7 +1961,9 @@ bool Solver::solve()
                                     ToulBar2::RINS = true;
                                     cout << "ToulBar2::RINS = true; at root" << endl;
                                     enforceUb();
-                                    ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::costThreshold);     
+
+                                    ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
+
                                     ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                                     //enforceUb(); wcsp->propagate();
                                     ToulBar2::RINS = false;
