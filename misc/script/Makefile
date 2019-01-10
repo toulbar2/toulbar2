@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -pthread -rdynamic 
 
-CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
+CFLAGS = -std=c++11 -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
 # -DLINUX # compile on linux computers
 # -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
 # -DWIDE_STRING # uses wide strings (2 bytes per char instead of one) for encoding value tuples (including separators)
