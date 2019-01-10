@@ -1864,8 +1864,8 @@ bool Solver::solve()
     } catch (NbSolutionsOut) {
     }
     //  Store::restore();         // see above for Store::store()
-    endSolve(wcsp->getUb() < initialUpperBound, wcsp->getUb(), !ToulBar2::limited);
-    return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getUb() < initialUpperBound);
+    endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
+    return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getSolutionCost() < initialUpperBound);
 }
 
 void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)

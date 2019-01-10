@@ -444,6 +444,7 @@ public:
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format
     void solution_UAI(Cost res); ///< \brief output solution in UAI 2008 output format
 
+    const Cost getSolutionCost() {return solutionCost;}
     const vector<Value>& getSolution(Cost* cost_ptr)
     {
         if (cost_ptr != NULL)
