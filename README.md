@@ -222,5 +222,5 @@ France. 5-9 september 2016
  S de Givry and G Katsirelos
  In Proc. of CP-17, pages 97-113, Melbourne, Australia, 2017
 
-Copyright (C) 2006-2018, toulbar2 team.
+Copyright (C) 2006-2019, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)
