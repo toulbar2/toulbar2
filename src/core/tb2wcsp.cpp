@@ -1864,11 +1864,13 @@ void WCSP::preprocessing()
         if (ToulBar2::verbose >= 0)
             cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
     }
-
-    ToulBar2::RINS_saveitThresholds = true;
+    if(ToulBar2::useRINS)
+        ToulBar2::RINS_saveitThresholds = true;
     propagate();
-    ToulBar2::RINS_saveitThresholds = false;
-    vac->RINS_finditThreshold();
+    if(ToulBar2::useRINS){
+        ToulBar2::RINS_saveitThresholds = false;
+        vac->RINS_finditThreshold();
+    }
 
     // recompute current DAC order and its reverse
     if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && (((long)((void*)ToulBar2::varOrder)) >= MIN_DEGREE && ((long)((void*)ToulBar2::varOrder)) <= APPROX_MIN_DEGREE)) {
