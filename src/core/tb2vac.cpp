@@ -273,19 +273,6 @@ bool VACExtension::propagate()
 
         if(isvac){
 
-            list<Cost>::iterator it = scaleVAC.begin();
-            advance(it, 1);
-            double seuil = (double)wcsp->numberOfVariables() / (double)*it;
-            
-            ToulBar2::nbTimesIsVAC++;
-            if(itThreshold > 1)
-                ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
-
-            if( ( ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double) itThreshold ) - ToulBar2::RINS_lastRatio < seuil){
-                ToulBar2::RINS_lastRatio = ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double) itThreshold;
-                ToulBar2::RINS_lastitThreshold = itThreshold;
-            }
-
 			int nbDomSizeZero = 0;
 			ToulBar2::RINS_nbStrictACVariables = 0;
 			int nbDomSizeMore = 0;
@@ -327,7 +314,18 @@ bool VACExtension::propagate()
 					}
 				}
 			}
-			
+
+            ToulBar2::nbTimesIsVAC++;
+            if(itThreshold > 1)
+                ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
+
+            if(ToulBar2::RINS_saveitThresholds){
+                double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : ( ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double) itThreshold ); 
+                cout << "itThreshold: " << itThreshold << " ratio: " << ratio << " difference: " << (ratio - ToulBar2::RINS_lastRatio) << endl;
+                ToulBar2::RINS_itThresholds.push_back(std::make_pair(itThreshold, (ratio - ToulBar2::RINS_lastRatio)));
+                ToulBar2::RINS_lastRatio = ratio;
+            }
+
 			//cout << "Nb Variables With BoolDomSize Zero: " << nbDomSizeZero << " One: " << ToulBar2::RINS_nbStrictACVariables << " More Than One: " << nbDomSizeMore << endl;
 			//cout << ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double) itThreshold << endl;
             //cout << "Nb Variables That Changed State: " << nbVariablesChanged << endl;
@@ -335,7 +333,7 @@ bool VACExtension::propagate()
             if (ToulBar2::RINS) {
                 ToulBar2::RINS = false;
                 //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
-                //cout << "itThreshold: " << itThreshold << " nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+                cout << "itThreshold: " << itThreshold << " nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                 int storedepth = Store::getDepth();
                 int storehbfs = ToulBar2::hbfs;
                 int storehbfsGlobalLimit =  ToulBar2::hbfsGlobalLimit;
@@ -372,6 +370,9 @@ bool VACExtension::propagate()
                         for (BTList<Value>::iterator iter = ((Solver*)(wcsp->getSolver()))->unassignedVars->begin(); iter != ((Solver*)(wcsp->getSolver()))->unassignedVars->end(); ++iter) {
                            ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->propagateNC();
                         }
+                        /*string fileName = "afterAssignment.wcsp";
+                        ofstream pb(fileName.c_str());
+                        wcsp->dump(pb, true);*/
                         if(ToulBar2::useRINS < 7)
                             ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb());  // look at its search tree (if a new solution is found, UB should be updated automatically)
                         else
@@ -958,6 +959,26 @@ void VACExtension::minsumDiffusion()
         cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         //    printTightMatrix();
     }
+}
+
+void VACExtension::RINS_finditThreshold(){
+
+    cout << "call to find itThreshold" << endl;
+    double lastRatio = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size()-1].second;
+    cout << lastRatio << endl;
+    for(int i=0; i < ToulBar2::RINS_itThresholds.size(); i++){
+        cout << ToulBar2::RINS_itThresholds[i].second << " ";
+        ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second/lastRatio;
+        cout << ToulBar2::RINS_itThresholds[i].second << endl;
+    }
+    
+    int i = 0;
+
+    while(i < ToulBar2::RINS_itThresholds.size() && std::abs(ToulBar2::RINS_itThresholds[i].second) < 0.002){
+        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[i].first;
+        i++;
+    }
+
 }
 
 /* Local Variables: */

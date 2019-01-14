@@ -105,6 +105,8 @@ public:
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
     
     Long getnbIterations();
+
+    void RINS_finditThreshold();
 };
 
 #endif /*TB2VAC_HPP_*/

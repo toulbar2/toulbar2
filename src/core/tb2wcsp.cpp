@@ -65,6 +65,8 @@ int ToulBar2::RINS_nbBacktracksOn;
 int ToulBar2::RINS_nbBacktracksOff;
 Cost ToulBar2::RINS_lastitThreshold;
 double ToulBar2::RINS_lastRatio;
+bool ToulBar2::RINS_saveitThresholds;
+vector<pair<Cost, double> > ToulBar2::RINS_itThresholds;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -248,7 +250,8 @@ void tb2init()
     ToulBar2::RINS_nbBacktracksOn = 0;
     ToulBar2::RINS_nbBacktracksOff = 0;
     ToulBar2::RINS_lastitThreshold = 1;
-    ToulBar2::RINS_lastRatio = 0;
+    ToulBar2::RINS_lastRatio = 0.0000000001;
+    ToulBar2::RINS_saveitThresholds = false;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;
@@ -1862,7 +1865,10 @@ void WCSP::preprocessing()
             cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
     }
 
+    ToulBar2::RINS_saveitThresholds = true;
     propagate();
+    ToulBar2::RINS_saveitThresholds = false;
+    vac->RINS_finditThreshold();
 
     // recompute current DAC order and its reverse
     if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && (((long)((void*)ToulBar2::varOrder)) >= MIN_DEGREE && ((long)((void*)ToulBar2::varOrder)) <= APPROX_MIN_DEGREE)) {

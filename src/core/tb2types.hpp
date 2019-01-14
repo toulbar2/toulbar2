@@ -382,6 +382,8 @@ public:
     static int RINS_nbBacktracksOff;
     static Cost RINS_lastitThreshold;
     static double RINS_lastRatio;
+    static bool RINS_saveitThresholds;
+    static vector<pair<Cost, double> > RINS_itThresholds;
     static int debug;
     static string externalUB;
     static bool showSolutions;
