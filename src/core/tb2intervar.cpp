@@ -210,7 +210,7 @@ void IntervalVariable::assign(Value newValue, bool isDecision)
 }
 
 /// assign a variable with delayed constraint propagation
-void IntervalVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
+void IntervalVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force)
 {
     if (ToulBar2::verbose >= 2)
         cout << "assignLS " << *this << " -> " << newValue << endl;

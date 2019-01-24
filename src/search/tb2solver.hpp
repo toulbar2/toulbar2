@@ -140,6 +140,7 @@ protected:
     friend class ClustersNeighborhoodStructure;
     friend class RandomClusterChoice;
     friend class ParallelRandomClusterChoice;
+    friend class VACExtension;
 
     Long nbNodes;
     Long nbBacktracks;

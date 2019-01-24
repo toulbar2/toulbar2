@@ -77,6 +77,7 @@ public:
 
     void init();
     void iniThreshold(); /**< Initialize itThreshold to the strongest cost in the cost scale */
+    void iniThreshold(Cost c);
     Cost getThreshold() { return itThreshold; }
     void nextScaleCost(); /**< Sets ItThreshold to the next scale */
     void histogram(Cost c);
@@ -104,6 +105,8 @@ public:
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
     
     Long getnbIterations();
+
+    void RINS_finditThreshold();
 };
 
 #endif /*TB2VAC_HPP_*/

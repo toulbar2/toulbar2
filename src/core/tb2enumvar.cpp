@@ -852,7 +852,7 @@ void EnumeratedVariable::assign(Value newValue, bool isDecision)
     }
 }
 
-void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
+void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force)
 {
     if (ToulBar2::verbose >= 2)
         cout << "assignLS " << *this << " -> " << newValue << endl;
@@ -860,7 +860,7 @@ void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
     if (wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue)
         wcsp->setIsPartOfOptimalSolution(false);
 #endif
-    if (unassigned() || getValue() != newValue) {
+    if (force || unassigned() || getValue() != newValue) {
         if (cannotbe(newValue))
             THROWCONTRADICTION;
         changeNCBucket(-1);
