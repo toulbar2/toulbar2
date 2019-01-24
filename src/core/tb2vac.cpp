@@ -356,10 +356,9 @@ bool VACExtension::propagate()
                         // print wcsp == AC(Bool(P))
                         vector<int> variables;
                         vector<Value> values;
-
                         for (BTList<Value>::iterator iter = ((Solver*)(wcsp->getSolver()))->unassignedVars->begin(); iter != ((Solver*)(wcsp->getSolver()))->unassignedVars->end(); ++iter) {
                             if(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->domSizeInBoolOfP == 1){
-                                //cout << *((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter)) << endl;
+                                //cout << *iter << " ";
                                 variables.push_back(*iter);
                                 values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
                             }
@@ -397,13 +396,13 @@ bool VACExtension::propagate()
                 //ToulBar2::RINS = false;
             }
 			
-			string fileName = "problem_";
+			/*string fileName = "problem_";
 			fileName += to_string(wcsp->getNbNodes());
 			fileName += "_";
 			fileName += to_string(nbIterations);
 			fileName += ".wcsp";
-			//ofstream pb(fileName.c_str());
-			//wcsp->dump_strictAC(pb, true);
+			ofstream pb(fileName.c_str());
+			wcsp->dump_strictAC(pb, true);*/
 		}
 
         Store::restore();
@@ -973,8 +972,11 @@ void VACExtension::RINS_finditThreshold(){
     }
     
     int i = 0;
+    ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[0].first;
+    cout << "getUb: " << wcsp -> getUb() << endl;
 
-    while(i < ToulBar2::RINS_itThresholds.size() && std::abs(ToulBar2::RINS_itThresholds[i].second) < 0.002){
+    while(i < ToulBar2::RINS_itThresholds.size() && (std::abs(ToulBar2::RINS_itThresholds[i].second) < 0.002 || ToulBar2::RINS_lastitThreshold >= wcsp -> getUb())){
+        cout << ToulBar2::RINS_itThresholds[i].second << endl;
         ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[i].first;
         i++;
     }
