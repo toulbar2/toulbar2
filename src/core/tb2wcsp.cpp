@@ -1864,13 +1864,8 @@ void WCSP::preprocessing()
         if (ToulBar2::verbose >= 0)
             cout << "Cost function decomposition time : " << cpuTime() - time << " seconds.\n";
     }
-    if(ToulBar2::useRINS)
-        ToulBar2::RINS_saveitThresholds = true;
+
     propagate();
-    if(ToulBar2::useRINS){
-        ToulBar2::RINS_saveitThresholds = false;
-        vac->RINS_finditThreshold();
-    }
 
     // recompute current DAC order and its reverse
     if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && (((long)((void*)ToulBar2::varOrder)) >= MIN_DEGREE && ((long)((void*)ToulBar2::varOrder)) <= APPROX_MIN_DEGREE)) {
@@ -2068,6 +2063,17 @@ void WCSP::preprocessing()
         setDACOrder(order);
     }
 #endif
+
+    if(ToulBar2::vac && ToulBar2::useRINS){
+        ToulBar2::RINS_saveitThresholds = true;
+        ToulBar2::RINS_itThresholds.clear();
+        ToulBar2::RINS_lastRatio = 0.0000000001;
+//        vac->iniThreshold();
+//        vac->propagate();
+        propagate();
+        ToulBar2::RINS_saveitThresholds = false;
+        vac->RINS_finditThreshold();
+    }
 }
 
 Cost WCSP::finiteUb() const
@@ -3101,6 +3107,9 @@ void WCSP::propagate()
                                 }
                         }
                         propagateNC();
+                        if (ToulBar2::DEE_) {
+                            propagateDEE(); // DEE requires NC and can break soft AC but not VAC
+                        }
                         if (ToulBar2::LcLevel == LC_EDAC && eac_iter > MAX_EAC_ITER) {
                             EAC1.clear();
                             cout << "c automatically switch from EDAC to FDAC." << endl;
@@ -3109,20 +3118,11 @@ void WCSP::propagate()
                         } // avoids pathological cases with too many very slow lower bound increase by EAC
                     }
                 } while (!Eliminate.empty());
-                if (ToulBar2::DEE_) {
-                    propagateDEE();
-                }
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
                 if (ToulBar2::vac && !(ToulBar2::trwsAccuracy >= 0) && !CSP(getLb(), getUb())) {
-                    //				assert(verify());
-                    if (vac->firstTime()) {
-                        vac->init();
-                        if (ToulBar2::verbose >= 1)
-                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
-                    }
-                    vac->propagate();
+                    vac->propagate(); // VAC requires soft AC
                 }
             } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
@@ -3140,7 +3140,7 @@ void WCSP::propagate()
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
-    //assert(verify());
+    assert(ToulBar2::useRINS || verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
@@ -3974,13 +3974,6 @@ void WCSP::printVACStat()
 {
     if (vac)
         vac->printStat();
-}
-int WCSP::getVACHeuristic()
-{
-    if (vac)
-        return vac->getHeuristic();
-    else
-        return -1;
 }
 
 // -----------------------------------------------------------

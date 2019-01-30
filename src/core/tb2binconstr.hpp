@@ -677,10 +677,6 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, Enumera
                     if (GLBTEST(minCost, cost)) {
                         extend(y, *iterY, minCost - cost, deltaCostsY);
                         supportY[y->toIndex(*iterY)] = *iterX;
-                        //                         if (ToulBar2::vac) {
-                        //                             x->queueVAC2();
-                        //                             y->queueVAC2();
-                        //                         }
                     }
                 }
                 supportBroken |= project(x, *iterX, minCost, deltaCostsX);

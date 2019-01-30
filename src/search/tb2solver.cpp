@@ -494,24 +494,30 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 		}
 		//cout << *iter << " " << domsize << " " << wcsp->getWeightedDegree(*iter) << " " << unarymediancost << " " << (double) domsize / (double) (wcsp->getWeightedDegree(*iter) + 1 + unarymediancost) << endl;
 		//remove following "+1" when isolated variables are automatically assigned
-		double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+		Long wdeg = wcsp->getWeightedDegree(*iter);
+		double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
 		//double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
-		if (ToulBar2::strictAC > 0){
-			if(ToulBar2::BoolDomSize > 0){
-				heuristic = (double)(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->domSizeInBoolOfP) / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-			}
-			if (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && (varIndex < 0 || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne) || 
-			(  ((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
-			(heuristic < best - epsilon * best || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))))) {
-				//cout << "varIndex: " << varIndex << " *iter: " << *iter << endl;
-				best = heuristic;
-				varIndex = *iter;
-				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-			}
-		}
-		else{
-			if (varIndex < 0  ||  heuristic < best - epsilon * best
-			|| (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+		if (ToulBar2::strictAC > 0) {
+		    EnumeratedVariable *var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+		    if(ToulBar2::BoolDomSize > 0){
+		        heuristic = (double)(var->domSizeInBoolOfP) / (double)(wdeg + 1 + unarymediancost);
+		    }
+		    if (var->moreThanOne
+		        && ((varIndex < 0)
+		          // This part is obsolete because if all variables are strict AC then we do just after a greedy search on them
+//		            || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne
+//		                && !((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)
+//		            || (((((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne == ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIndex))->moreThanOne)) &&
+		            || (heuristic < best - epsilon * best)
+		            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
+		        best = heuristic;
+		        varIndex = *iter;
+		        worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+		    }
+		} else {
+			if ((varIndex < 0)
+			    || (heuristic < best - epsilon * best)
+			    || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
 				best = heuristic;
 				varIndex = *iter;
 				worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -533,9 +539,10 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 					vector<int> variables;
 					vector<Value> values;
 					for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-					variables.push_back(*iter);
-					values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
+					    variables.push_back(*iter);
+					    values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->strictACValue);
 					}
+//					cout << "Fast Greedy on size " << variables.size() << endl;
 					wcsp->assignLS(variables, values);
 					nbNodes++;
                     if(ToulBar2::RINS)
@@ -552,10 +559,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
 					wcsp->enforceUb();    /* it will generate a contradiction if lb >= ub */
 					wcsp->propagate();    /* it will generate a contradiction if lb >= ub */
 				}
-                if(unassignedVars->empty())
+                if(unassignedVars->empty()) // a new solution was found and all vars assigned by propagation
                     varIndex = -1;
-                else
-				    varIndex = *(unassignedVars->begin());
+                else {
+//                  cout << "wrong heuristic guess!" << endl;
+//				    varIndex = *(unassignedVars->begin());
+				    varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
+				    assert(varIndex != -1);
+                }
 			}
 		}
 	}
@@ -893,6 +904,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         //    	value = wcsp->getMaxUnaryCostValue(varIndex);
         //		assert(wcsp->canbe(varIndex,value));
     }
+    int storedepth = Store::getDepth();
     try {
         Store::store();
         lastConflictVar = varIndex;
@@ -917,7 +929,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-    Store::restore();
+    Store::restore(storedepth);
     enforceUb();
     nbBacktracks++;
     if(ToulBar2::RINS)
@@ -978,6 +990,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         }
     }
     if (discrepancy > 0) {
+        int storedepth = Store::getDepth();
         try {
             Store::store();
             lastConflictVar = varIndex;
@@ -1000,7 +1013,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-        Store::restore();
+        Store::restore(storedepth);
         enforceUb();
         nbBacktracks++;
         if(ToulBar2::RINS)
@@ -1078,6 +1091,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     postponeValue = max(postponeValue, xinf + 1);
     assert(postponeValue <= ToulBar2::bep->latest[varIndex] + 1);
     bool reverse = (wcsp->getUnaryCost(varIndex, xinf) > MIN_COST) ? true : false;
+    int storedepth = Store::getDepth();
     try {
         Store::store();
         if (reverse)
@@ -1088,7 +1102,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-    Store::restore();
+    Store::restore(storedepth);
     enforceUb();
     nbBacktracks++;
     if(ToulBar2::RINS)
@@ -1119,6 +1133,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
     for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {
         if (ToulBar2::interrupted)
             throw TimeOut();
+        int storedepth = Store::getDepth();
         try {
             Store::store();
             assign(varIndex, sorted[v].value);
@@ -1126,7 +1141,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-        Store::restore();
+        Store::restore(storedepth);
     }
     //delete [] sorted;
     enforceUb();
@@ -1156,6 +1171,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     for (int v = min(size - 1, discrepancy); wcsp->getLb() < wcsp->getUb() && v >= 0; v--) {
         if (ToulBar2::interrupted)
             throw TimeOut();
+        int storedepth = Store::getDepth();
         try {
             Store::store();
             assign(varIndex, sorted[v].value);
@@ -1163,7 +1179,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-        Store::restore();
+        Store::restore(storedepth);
     }
     //delete [] sorted;
     enforceUb();
@@ -1195,6 +1211,7 @@ void Solver::singletonConsistency()
             qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
             for (int a = 0; a < size; a++) {
                 deadend = false;
+                int storedepth = Store::getDepth();
                 try {
                     Store::store();
                     assign(varIndex, sorted[a].value);
@@ -1203,7 +1220,7 @@ void Solver::singletonConsistency()
                     deadend = true;
                     done = false;
                 }
-                Store::restore();
+                Store::restore(storedepth);
                 wcsp->updateSingleton();
                 //cout << "(" << varIndex << "," << a <<  ")" << endl;
                 if (deadend) {
@@ -1518,32 +1535,33 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
                 } else{
-                    // FULYA : HEURISTIC BURAYA
                     double r = (double)myrand() / (double)RAND_MAX;
                     //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                     //cout << "random number  = " << r << " ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << " ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
                         
-                    if( ((ToulBar2::useRINS == 2 || ToulBar2::useRINS == 5 || ToulBar2::useRINS == 8) && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) || 
-                        (ToulBar2::useRINS == 3 && r < ToulBar2::RINS_probabilty && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) ){
+                    if( ((ToulBar2::useRINS == -2 || ToulBar2::useRINS == -5 || ToulBar2::useRINS == -8) && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) ||
+                        (ToulBar2::useRINS == -3 && r < ToulBar2::RINS_probabilty && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) ){
                         ToulBar2::RINS_newSolutionFound = false;
-                        ToulBar2::RINS = true;
-                        ToulBar2::RINS_nbCalls++;
                         cout << "ToulBar2::RINS = true; at SOLVER" << endl;
-                        enforceUb();
+                        ToulBar2::RINS_nbCalls++;
+                        ToulBar2::RINS = true;
                         ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);     
-                        ((WCSP*)wcsp)->vac->propagate();  // VAC done again
-                        //enforceUb(); wcsp->propagate();
+                        bool foundbetterub = ((WCSP*)wcsp)->vac->propagate();  // VAC done again
                         ToulBar2::RINS = false;
                         cout << "ToulBar2::RINS = false; at SOLVER" << endl;
                         if(ToulBar2::RINS_newSolutionFound)
                             ToulBar2::RINS_nbNewSolutionFound++;
-                        if(ToulBar2::useRINS == 3){
+                        if(ToulBar2::useRINS == -3){
                             //cout << "ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
                             if(ToulBar2::RINS_newSolutionFound)
                                 ToulBar2::RINS_probabilty = min(1.0, 2.0*ToulBar2::RINS_probabilty);
                             else
                                 ToulBar2::RINS_probabilty = ToulBar2::RINS_probabilty/2.0;
                             //cout << "ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << endl;
+                        }
+                        if (foundbetterub) {
+                            enforceUb();
+                            wcsp->propagate();
                         }
                     }
                     recursiveSolve(bestlb);
@@ -1707,7 +1725,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
-            cout << "after wcsp -> propagate() nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
+//            cout << "after wcsp -> propagate() nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
         }
     }
     if (ToulBar2::verbose >= 0)
@@ -1868,6 +1886,7 @@ bool Solver::solve()
                                 initialDepth = Store::getDepth();
                                 hybridSolve();
                             } else {
+                                int storedepth = Store::getDepth();
                                 try {
                                     Store::store();
                                     initialDepth = Store::getDepth();
@@ -1875,7 +1894,7 @@ bool Solver::solve()
                                 } catch (Contradiction) {
                                     wcsp->whenContradiction();
                                 }
-                                Store::restore();
+                                Store::restore(storedepth);
                             }
                             if (discrepancy > 0)
                                 discrepancy *= 2;
@@ -1911,6 +1930,7 @@ bool Solver::solve()
                                 } else {
                                     pair<Cost, Cost> res = make_pair(wcsp->getLb(), ub);
                                     do {
+                                        int storedepth = Store::getDepth();
                                         try {
                                             Store::store();
                                             td->setCurrentCluster(start);
@@ -1923,7 +1943,7 @@ bool Solver::solve()
                                             wcsp->whenContradiction();
                                             res.first = res.second;
                                         }
-                                        Store::restore();
+                                        Store::restore(storedepth);
                                         ub = res.second;
                                         wcsp->setUb(ub);
                                     } while (res.first < res.second);
@@ -1955,19 +1975,19 @@ bool Solver::solve()
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
                             initialDepth = Store::getDepth();
-                            if(ToulBar2::useRINS > 0){
+                            if(ToulBar2::useRINS){
                                 //if((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5){
                                     //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
-                                    ToulBar2::RINS = true;
-                                    cout << "ToulBar2::RINS = true; at root" << endl;
                                     enforceUb();
-
+                                    wcsp->propagate();
+                                    cout << "ToulBar2::RINS = true; at root (backtrack: " << nbBacktracks << " nodes: "<< nbNodes << ")" << endl;
+                                    ToulBar2::RINS = true;
                                     ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
-
                                     ((WCSP*)wcsp)->vac->propagate();  // VAC done again
-                                    //enforceUb(); wcsp->propagate();
                                     ToulBar2::RINS = false;
-                                    cout << "ToulBar2::RINS = false; at root" << endl;
+                                    cout << "ToulBar2::RINS = false; at root (backtrack: " << nbBacktracks << " nodes: "<< nbNodes << ")" << endl;
+                                    enforceUb();
+                                    wcsp->propagate();
                                 //}
                             }
                             hybridSolve();
@@ -1985,8 +2005,8 @@ bool Solver::solve()
     } catch (NbSolutionsOut) {
     }
     //  Store::restore();         // see above for Store::store()
-    endSolve(wcsp->getUb() < initialUpperBound, wcsp->getUb(), !ToulBar2::limited);
-    return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getUb() < initialUpperBound);
+    endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
+    return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getSolutionCost() < initialUpperBound);
 }
 
 void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
@@ -2036,7 +2056,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
-    if (ToulBar2::useRINS > 0)
+    if (ToulBar2::useRINS)
         cout << "Number of RINS calls: " << ToulBar2::RINS_nbCalls << endl << "Number of times RINS found new solution: " << ToulBar2::RINS_nbNewSolutionFound << endl;
 
     if (isSolution) {

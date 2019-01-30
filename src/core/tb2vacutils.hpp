@@ -19,16 +19,13 @@ private:
     vector<int> k; /**< Number of cost requests per value for all cost functions */
     vector<int> killer; /**< The killer of each value : the other variable index (binary case)*/
 
-    int killed; /**< How many values did this variable killed ? HEUR */
     int maxk; /**< The Max number of cost requests seen on this variable, used for stats */
     Long maxk_timeStamp; /**< timestamp for maxk */
 
-    StoreCost myThreshold; /** The local threshold used to break loops */
-    //Cost 	        myThreshold;
+    Cost myThreshold; /** The local threshold used to break loops */
 
     DLink<VariableWithTimeStamp> linkVACQueue;
     DLink<VariableWithTimeStamp> linkSeekSupport;
-    DLink<Variable*> linkVAC2Queue;
 
     void init();
 
@@ -87,7 +84,6 @@ public:
 
     int getKiller(Value v) { return killer[toIndex(v)]; }
     void setKiller(Value v, int i) { killer[toIndex(v)] = i; }
-    void killedOne() { killed = killed + 1; }
 
     Cost getVACCost(Value v)
     {
@@ -106,16 +102,10 @@ public:
 
     void queueVAC();
     void queueSeekSupport();
-    void queueVAC2();
-    void dequeueVAC2();
 
-    // virtual void assign(Value newValue);
     using EnumeratedVariable::remove;
     virtual void remove(Value value);
     virtual void removeFast(Value value);
-    // virtual void extendAll(Cost cost);
-    // virtual void project (Value value, Cost cost);
-    // virtual void extend (Value value, Cost cost);
     using EnumeratedVariable::increase;
     virtual void increase(Value newInf);
     using EnumeratedVariable::decrease;
@@ -145,7 +135,7 @@ private:
     vector<Long> kX_timeStamp;
     vector<Long> kY_timeStamp;
 
-    StoreCost myThreshold; /** The local threshold used to break loops */
+    Cost myThreshold; /** The local threshold used to break loops */
 
 public:
     VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
@@ -194,7 +184,7 @@ private:
     vector<Long> kY_timeStamp;
     vector<Long> kZ_timeStamp;
 
-    StoreCost myThreshold; /** The local thresold used to break loops */
+    Cost myThreshold; /** The local thresold used to break loops */
 
 public:
     VACTernaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz, vector<Cost>& tab);

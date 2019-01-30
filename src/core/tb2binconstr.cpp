@@ -5,6 +5,7 @@
 #include "tb2binconstr.hpp"
 #include "tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 
 /*
  * Constructors and misc.
@@ -56,6 +57,7 @@ void BinaryConstraint::print(ostream& os)
     os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
     if (ToulBar2::weightedDegree)
         os << "/" << getConflictWeight();
+    if (wcsp->vac) cout << "[" << ((VACBinaryConstraint *) this)->getThreshold() << "]" << endl;
     if (wcsp->getTreeDec())
         os << "   cluster: " << getCluster() << endl;
     else

@@ -21,7 +21,6 @@ private:
     WCSP* wcsp; /**< Reference to the WCSP that will be processed */
     Queue VAC; /**< Non backtrackable list; AC2001 queue used for Pass1 inside VAC */
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
-    BTQueue VAC2; /**< Backtrackable list; updated during AC and EDAC */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
 
@@ -56,9 +55,6 @@ private:
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
 
-    EnumeratedVariable* nearIncVar; /**< A variable whose domain is reduced to 1 value during Pass1 -- Unused apparently */
-    Cost atThreshold; /**< The value of itThreshold when this single value variable appeared -- Unused apparently */
-
 public:
     VACExtension(WCSP* w);
     ~VACExtension();
@@ -72,8 +68,6 @@ public:
     void clear(); /**< empty VAC queue */
     void queueVAC(DLink<VariableWithTimeStamp>* link);
     void queueSeekSupport(DLink<VariableWithTimeStamp>* link);
-    void queueVAC2(DLink<Variable*>* link);
-    void dequeueVAC2(DLink<Variable*>* link);
 
     void init();
     void iniThreshold(); /**< Initialize itThreshold to the strongest cost in the cost scale */
@@ -86,19 +80,10 @@ public:
     set<int> singletonI;
     set<int> singleton;
 
-    // int varAssign;
-    // Value valAssign;
-    // void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
-
     void iniSingleton();
     void updateSingleton();
     void removeSingleton();
 
-    int getHeuristic();
-    // int  getVarACDom( int i );
-    // Cost getVarCostStat( int i );
-    // Long getVarTimesStat( int i );
-    // void updateStat(Cost lambda);
     void printStat(bool ini = false);
     void printTightMatrix();
 

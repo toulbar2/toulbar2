@@ -117,6 +117,7 @@ Cost LocalSearch::evaluate_partialInstantiation(
     vector<int>& variables, vector<int>& values)
 {
     Cost cost = MAX_COST;
+    int storedepth = Store::getDepth();
     Store::store();
     try {
         wcsp->setUb(MAX_COST);
@@ -125,7 +126,7 @@ Cost LocalSearch::evaluate_partialInstantiation(
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
-    Store::restore();
+    Store::restore(storedepth);
     return cost;
 }
 

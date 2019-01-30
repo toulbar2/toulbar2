@@ -8,6 +8,7 @@
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 #include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 
 /*
  * Constructors and misc.
@@ -105,7 +106,9 @@ void EnumeratedVariable::print(ostream& os)
     if (ToulBar2::weightedDegree)
         os << "/" << getWeightedDegree();
     if (unassigned()) {
-        os << " <";
+        os << " ";
+        if (wcsp->vac) cout << "[" << ((VACVariable *) this)->getThreshold() << "]";
+        os << "<";
         for (iterator iter = begin(); iter != end(); ++iter) {
             os << " " << getCost(*iter);
         }

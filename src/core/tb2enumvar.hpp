@@ -120,7 +120,6 @@ public:
     bool isEAC();
     void propagateEAC();
     void setCostProvidingPartition();
-    virtual void queueVAC2() {}
 
     void eliminate();
     bool elimVar(BinaryConstraint* xy);
