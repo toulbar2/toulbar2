@@ -35,7 +35,8 @@ void MaxConstraint::read(istream& file, bool mult)
         unsigned int v;
         Cost w;
         file >> varID >> v >> w;
-        if (mult) w *= ToulBar2::costMultiplier;
+        if (mult)
+            w *= ToulBar2::costMultiplier;
         setAssignmentWeight((EnumeratedVariable*)(wcsp->getVar(varID)), v, w);
     }
 }

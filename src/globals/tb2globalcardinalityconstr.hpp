@@ -8,7 +8,7 @@
 
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint {
 private:
-    map<Value, pair<int, int> > bound;
+    map<Value, pair<int, int>> bound;
     void buildIndex();
     size_t GetGraphAllocatedSize();
     void buildGraph(Graph& g);
@@ -18,7 +18,7 @@ private:
         return make_pair(varindex + 1, mapval[val]);
     }
     //JP Start// This array stores the respective weight of each bound
-    map<Value, pair<int, int> > weights;
+    map<Value, pair<int, int>> weights;
     int nDistinctDomainValue;
     //JP End//
 public:

@@ -138,7 +138,7 @@ public:
     void setSep() { isSep_ = true; }
     bool isSep() { return isSep_; }
 
-    typedef set<pair<int, int> > TSepLink; // set of pairs <cluster in wihch the variable appears,
+    typedef set<pair<int, int>> TSepLink; // set of pairs <cluster in wihch the variable appears,
     //  			    position of the variable in the delta structure>
     TSepLink clusters;
 

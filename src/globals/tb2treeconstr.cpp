@@ -70,7 +70,7 @@ Cost TreeConstraint::eval(const String& s)
     int root = -1;
     int nRoot = 0;
 
-    vector<vector<int> > edgeList;
+    vector<vector<int>> edgeList;
     edgeList.resize(n);
 
     for (int i = 0; i < n; i++) {

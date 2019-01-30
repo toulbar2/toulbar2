@@ -66,7 +66,7 @@ int ToulBar2::RINS_nbBacktracksOff;
 Cost ToulBar2::RINS_lastitThreshold;
 double ToulBar2::RINS_lastRatio;
 bool ToulBar2::RINS_saveitThresholds;
-vector<pair<Cost, double> > ToulBar2::RINS_itThresholds;
+vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -937,7 +937,7 @@ void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost base
     delete[] values;
 }
 
-void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost> > initial_States, vector<pair<int, Cost> > accepting_States, int** Wtransitions,
+void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions,
     vector<Cost> transitionsCosts)
 {
 #ifndef NDEBUG
@@ -1079,7 +1079,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         int nvalues;
-        vector<BoundedObj<Value> > values;
+        vector<BoundedObj<Value>> values;
         file >> semantics >> baseCost >> nvalues;
         for (int i = 0; i < nvalues; i++) {
             int d, high, low;
@@ -1211,8 +1211,8 @@ int WCSP::postWAmong(int* scopeIndex, int arity, const string& semantics, const 
 
 int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     int nbStates,
-    const vector<WeightedObj<int> >& initial_States,
-    const vector<WeightedObj<int> >& accepting_States,
+    const vector<WeightedObj<int>>& initial_States,
+    const vector<WeightedObj<int>>& accepting_States,
     const vector<DFATransition>& Wtransitions)
 {
 #ifndef NDEBUG
@@ -1221,11 +1221,11 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     if (propagator == "network") { // Warning! semantics not used
-        vector<pair<int, Cost> > initial_States_;
+        vector<pair<int, Cost>> initial_States_;
         for (unsigned int i = 0; i < initial_States.size(); i++) {
             initial_States_.push_back(pair<int, Cost>(initial_States[i].val, initial_States[i].weight));
         }
-        vector<pair<int, Cost> > accepting_States_;
+        vector<pair<int, Cost>> accepting_States_;
         for (unsigned int i = 0; i < accepting_States.size(); i++) {
             accepting_States_.push_back(pair<int, Cost>(accepting_States[i].val, accepting_States[i].weight));
         }
@@ -1287,7 +1287,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
 }
 
 int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-    const vector<BoundedObj<Value> >& values)
+    const vector<BoundedObj<Value>>& values)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -2064,12 +2064,12 @@ void WCSP::preprocessing()
     }
 #endif
 
-    if(ToulBar2::vac && ToulBar2::useRINS){
+    if (ToulBar2::vac && ToulBar2::useRINS) {
         ToulBar2::RINS_saveitThresholds = true;
         ToulBar2::RINS_itThresholds.clear();
         ToulBar2::RINS_lastRatio = 0.0000000001;
-//        vac->iniThreshold();
-//        vac->propagate();
+        //        vac->iniThreshold();
+        //        vac->propagate();
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
         vac->RINS_finditThreshold();
@@ -2562,7 +2562,7 @@ void WCSP::whenContradiction()
     DEE.clear();
     objectiveChanged = false;
     nbNodes++;
-    if(ToulBar2::RINS)
+    if (ToulBar2::RINS)
         ToulBar2::RINS_nbNodesOn++;
     else
         ToulBar2::RINS_nbNodesOff++;
@@ -3944,7 +3944,8 @@ void WCSP::ternaryCompletion()
             ntern++;
         }
     }
-    if (ToulBar2::verbose >= 0) cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
+    if (ToulBar2::verbose >= 0)
+        cout << "Added " << ntern << "/" << triplelist.size() << " zero-cost ternary cost functions." << endl;
 }
 
 // -----------------------------------------------------------
@@ -4356,7 +4357,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + 
 //procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;
 
-void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int> >& listofsuccessors)
+void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int>>& listofsuccessors)
 {
     marked[i] = true;
     for (unsigned int j = 0; j < listofsuccessors[i].size(); j++) {

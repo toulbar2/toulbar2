@@ -30,18 +30,18 @@ class Haplotype {
     int nbloci;
     vector<Individual> pedigree; // list of individuals
     vector<int> genotypes; // list of genotyped individuals id.
-    map<int, vector<Genotype> > genoconvert; // convert domain value to genotype
+    map<int, vector<Genotype>> genoconvert; // convert domain value to genotype
     map<int, int> individuals; // sorted list of pair<individual id, pedigree id>
-    map<int, map<int, int> > alleles; // sorted list of pair<locus number, allele number, encoding consecutive number>
+    map<int, map<int, int>> alleles; // sorted list of pair<locus number, allele number, encoding consecutive number>
     int nbtyped; // number of individuals with a genotyped descendant
     int generations;
     bool bayesian;
     vector<TProb> foundersprob;
-    map<int, map<int, int> > freqalleles; // frequencies of original alleles: freqalleles[allele number] = frequency
+    map<int, map<int, int>> freqalleles; // frequencies of original alleles: freqalleles[allele number] = frequency
     map<int, int> gencorrects;
 
     vector<Double> maplocus; // marker map
-    map<int, vector<int> > transmission; //pair <individual id, transmission vector>
+    map<int, vector<int>> transmission; //pair <individual id, transmission vector>
     map<pair<int, int>, Double, classcomp> W;
     int sire;
     Double K;

@@ -271,7 +271,7 @@ void GlobalConstraint::propagateDAC()
     if (ToulBar2::verbose >= 3)
         cout << "propagateDAC for " << *this << endl;
 
-    vector<map<Value, Cost> > deltas;
+    vector<map<Value, Cost>> deltas;
     vector<int> vars;
     vector<int> rmv;
     //checkRemoved(rmv);
@@ -417,7 +417,7 @@ bool GlobalConstraint::isEAC(int index, Value a)
         checkRemoved(rmv);
 
         vector<int> support;
-        vector<map<Value, Cost> > deltas;
+        vector<map<Value, Cost>> deltas;
         for (set<int>::iterator i = fullySupportedSet[index].begin(); i != fullySupportedSet[index].end(); i++) {
             EnumeratedVariable* x = (EnumeratedVariable*)getVar(*i);
             if (x->unassigned() && (*i != index)) {
@@ -464,7 +464,7 @@ void GlobalConstraint::findFullSupportEAC(int index)
     {
         //needPropagateEAC = false;
 
-        vector<map<Value, Cost> > deltas;
+        vector<map<Value, Cost>> deltas;
         vector<int> vars;
         vector<int> rmv;
         //vars.push_back(index);
@@ -527,7 +527,7 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
         cout << "findFullSupport for variable " << varindex << endl;
     //wcsp->revise(this);
     EnumeratedVariable* var = (EnumeratedVariable*)getVar(varindex);
-    vector<map<Value, Cost> > deltas(support.size());
+    vector<map<Value, Cost>> deltas(support.size());
     int count = 0;
     for (vector<int>::iterator i = support.begin(); i != support.end(); i++, count++) {
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(*i);
@@ -563,7 +563,7 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
     changeAfterProject(varindex, delta);
 
     //	map<Value,Cost> *E = new map<Value, Cost>[support.size()];
-    vector<map<Value, Cost> > E;
+    vector<map<Value, Cost>> E;
     E.resize(support.size());
 
     int index = 0;

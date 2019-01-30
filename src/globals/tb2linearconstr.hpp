@@ -40,8 +40,8 @@ protected:
         checkRemoved(mip, cost, rmv);
     }
 
-    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost> >& deltas);
-    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost> >& deltas);
+    virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas);
+    virtual void changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas);
     virtual void undoExtend()
     {
         cost = bucost;

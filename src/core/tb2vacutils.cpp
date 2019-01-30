@@ -100,7 +100,8 @@ void VACVariable::VACproject(Value v, const Cost c)
 void VACVariable::VACextend(Value v, const Cost c)
 {
     decreaseCost(v, c);
-    if (v == maxCostValue) queueNC();
+    if (v == maxCostValue)
+        queueNC();
     assert(canbe(getSupport()));
 }
 

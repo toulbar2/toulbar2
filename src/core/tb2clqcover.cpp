@@ -13,7 +13,7 @@
 int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-    int arity_in, vector<vector<int> > clq_in,
+    int arity_in, vector<vector<int>> clq_in,
     int rhs_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
     , clqvals(clq_in)

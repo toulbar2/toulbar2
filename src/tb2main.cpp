@@ -1790,13 +1790,13 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_strictAC) {
                 ToulBar2::strictAC = 1;
                 if (ToulBar2::debug)
-					cout << "Strict AC ON" << endl;
+                    cout << "Strict AC ON" << endl;
             }
 
             if (args.OptionId() == OPT_BoolDomSize) {
                 ToulBar2::BoolDomSize = 1;
                 if (ToulBar2::debug)
-					cout << "Using Domain Size in Bool of P" << endl;
+                    cout << "Using Domain Size in Bool of P" << endl;
             }
 
             if (args.OptionId() == OPT_RINS) {

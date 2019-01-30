@@ -14,7 +14,7 @@
 class CliqueConstraint : public AbstractNaryConstraint {
 public:
     CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in,
-        vector<vector<int> > clq_in, int rhs_in);
+        vector<vector<int>> clq_in, int rhs_in);
     CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
     ~CliqueConstraint();
 
@@ -93,7 +93,7 @@ public:
         }
     }
     double computeTightness() override;
-    void dump(ostream&, bool) override {cerr << "warning! clique constraint cannot be dump." << endl;}
+    void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; }
 
 private:
     // ----------------------------------------------------------------------
@@ -102,9 +102,9 @@ private:
     // two views of values in the clique: vector<bool> per variable
     // (inclq[var][val] == true iff (var,val) is in clique) and array
     // of values in clique per variable
-    vector<vector<bool> > inclq;
-    vector<vector<int> > clqvals;
-    vector<vector<int> > nonclqvals;
+    vector<vector<bool>> inclq;
+    vector<vector<int>> clqvals;
+    vector<vector<int>> nonclqvals;
 
     // We require that we use at most rhs values among those in the
     // clique (and of course, even if rhs > 1, no more than one value
@@ -183,7 +183,7 @@ private:
     vector<Cost> binary_extra;
 
     // binary constraints in scope
-    vector<vector<BinaryConstraint*> > bc;
+    vector<vector<BinaryConstraint*>> bc;
 
     std::ostream& printstate(std::ostream& os);
 
@@ -197,7 +197,7 @@ public:
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
 
-    void print(ostream& os) override {printstate (os);}
+    void print(ostream& os) override { printstate(os); }
 };
 
 inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)

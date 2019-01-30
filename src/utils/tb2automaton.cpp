@@ -23,7 +23,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int init;
         Cost weight;
         file >> init >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "reading INIT = " << init << " " << weight << endl;
         pair<int, Cost> initSt = make_pair(init, weight);
         //cout << initSt.first << " " << initSt.second << endl;
@@ -35,7 +36,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int accept;
         Cost weight;
         file >> accept >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "reading ACCEPT = " << accept << " " << weight << endl;
         pair<int, Cost> acceptSt = make_pair(accept, weight);
         //cout << acceptSt.first << " " << acceptSt.second << endl;
@@ -46,7 +48,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int start, end, symbol;
         Cost weight;
         file >> start >> symbol >> end >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
         transitions.push_back(new WTransition(start, end, symbol, weight));
     }
@@ -88,12 +91,12 @@ void WFA::display()
 {
     cout << "Number of states = " << nbStates << endl;
     cout << "Initial States : " << endl;
-    for (list<pair<int, Cost> >::iterator it = initialStates.begin(); it != initialStates.end(); it++) {
+    for (list<pair<int, Cost>>::iterator it = initialStates.begin(); it != initialStates.end(); it++) {
         pair<int, int> initial = *it;
         cout << initial.first << "(" << initial.second << ")" << endl;
     }
     cout << "Accepting States : " << endl;
-    for (list<pair<int, Cost> >::iterator it = acceptingStates.begin(); it != acceptingStates.end(); it++) {
+    for (list<pair<int, Cost>>::iterator it = acceptingStates.begin(); it != acceptingStates.end(); it++) {
         pair<int, int> accepting = *it;
         cout << accepting.first << "(" << accepting.second << ")" << endl;
     }
