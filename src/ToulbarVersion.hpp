@@ -1,2 +1,1 @@
-// Cmake generated version
-#define Toulbar_VERSION "1.0.0-90-g856f4db-fural/strictac (1548846078)"
+#define Toulbar_VERSION "1.0.0-85-gb3563fd-fural/strictac-tainted (1548839597)"

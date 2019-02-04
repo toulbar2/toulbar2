@@ -390,6 +390,7 @@ public:
     static double RINS_lastRatio;
     static bool RINS_saveitThresholds;
     static vector<pair<Cost, double>> RINS_itThresholds;
+    static int RINS_angle;
     static int debug;
     static string externalUB;
     static bool showSolutions;
