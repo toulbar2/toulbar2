@@ -12,16 +12,14 @@
 
 #include "tb2localsearch.hpp"
 
+#ifdef BOOST
+#include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/foreach.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/connected_components.hpp>
-
-//TODO: is it need for other versions???
-#define BOOSTGRAPH134
-using namespace boost;
 
 /**
  * Basic structure
@@ -44,14 +42,14 @@ struct cluster {
     bool mark;
 };
 
-typedef property<vertex_index_t, int> variable_vertex;
-typedef adjacency_list<vecS, vecS, undirectedS, variable_vertex, no_property, graph_name_t> TGraph;
-typedef adjacency_list<vecS, vecS, undirectedS, cluster, separator> TCDGraph;
-typedef graph_traits<TCDGraph>::vertex_descriptor TDCluster;
-typedef graph_traits<TCDGraph>::edge_descriptor Cluster_edge;
+typedef boost::property<boost::vertex_index_t, int> variable_vertex;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, variable_vertex, boost::no_property, boost::graph_name_t> TGraph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, cluster, separator> TCDGraph;
+typedef boost::graph_traits<TCDGraph>::vertex_descriptor TDCluster;
+typedef boost::graph_traits<TCDGraph>::edge_descriptor Cluster_edge;
 typedef set<int> zone;
 
-#ifdef BOOSTGRAPH134
+#if (BOOST_VERSION >= 103400)
 namespace boost {
 inline bool operator<(const Cluster_edge& __x, const Cluster_edge& __y)
 {
@@ -138,6 +136,7 @@ public:
     virtual uint getClustersSize(uint c, uint number);
 };
 
+#endif
 #endif /* TB2VNS_HPP_ */
 
 /* Local Variables: */

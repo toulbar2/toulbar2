@@ -10,6 +10,7 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
+//#define PROPAGATE_CLIQUE_WITH_BINARIES
 int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
@@ -125,9 +126,11 @@ void CliqueConstraint::propagate_incremental()
 
     wcsp->revise(this);
     gather_unary_0s();
+#ifdef PROPAGATE_CLIQUE_WITH_BINARIES
     TreeDecomposition* td = wcsp->getTreeDec();
     if (!td)
         gather_binary(); // Warning! does not work with tree decomposition-based methods
+#endif
     gather_unary_1s();
 
     if (debug) {

@@ -2,7 +2,7 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2018, toulbar2 team
+    Copyright (c) 2006-2019, toulbar2 team
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -530,8 +530,7 @@ public:
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
 extern void tb2init();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
-/// \return new initial upper bound (if options assume it is a satisfaction problem instead of optimization)
-extern void tb2checkOptions(Cost initialUpperBound);
+extern void tb2checkOptions();
 #endif /*TOULBAR2LIB_HPP_*/
 
 /* Local Variables: */

@@ -311,14 +311,14 @@ bool VACExtension::propagate()
                         }
                     }
                     xi->moreThanOne = (xi->domSizeInBoolOfP > 1) ? true : false;
-                    if(ToulBar2::strictAC == 2 && xi->domSizeInBoolOfP == 1){
+                    if (ToulBar2::strictAC == 2 && xi->domSizeInBoolOfP == 1) {
                         for (ConstraintList::iterator itc = xi->getConstrs()->begin();
-                            itc != xi->getConstrs()->end(); ++itc) {
+                             itc != xi->getConstrs()->end(); ++itc) {
                             Constraint* c = (*itc).constr;
                             if (c->isBinary()) {
                                 EnumeratedVariable* xj = (EnumeratedVariable*)(((BinaryConstraint*)c)->getVarDiffFrom(xi));
-                                if(xj->domSizeInBoolOfP > 1)
-                                    xi -> moreThanOne = true;
+                                if (xj->domSizeInBoolOfP > 1)
+                                    xi->moreThanOne = true;
                             }
                         }
                     }
@@ -915,9 +915,11 @@ void VACExtension::minsumDiffusion()
     for (int times = 0; times < 2; times++) {
         bool change = true;
         int maxit = ToulBar2::minsumDiffusion;
-        cout << "MinSumDiffusion: " << endl;
-        cout << "   max iterations " << maxit << endl;
-        cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        if (ToulBar2::verbose >= 0) {
+            cout << "MinSumDiffusion: " << endl;
+            cout << "   max iterations " << maxit << endl;
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        }
         int ntimes = 0;
         while (change && (ntimes < maxit)) {
             change = false;
@@ -935,7 +937,8 @@ void VACExtension::minsumDiffusion()
             ntimes++;
             //cout << "it " << ntimes << "   changed: " << nchanged << endl;
         }
-        cout << "   done iterations: " << ntimes << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "   done iterations: " << ntimes << endl;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
             if (wcsp->unassigned(i)) {
                 EnumeratedVariable* evar = (EnumeratedVariable*)wcsp->getVar(i);
@@ -953,7 +956,8 @@ void VACExtension::minsumDiffusion()
                 && !wcsp->getElimTernCtr(i)->isSep())
                 wcsp->getElimTernCtr(i)->propagate();
         wcsp->propagate();
-        cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         //    printTightMatrix();
     }
 }
@@ -962,14 +966,14 @@ void VACExtension::RINS_finditThreshold()
 {
 
     cout << "call to find itThreshold with size " << ToulBar2::RINS_itThresholds.size() << endl;
-    
+
     if (ToulBar2::RINS_itThresholds.size() == 0) {
         ToulBar2::RINS_lastitThreshold = ToulBar2::costThresholdPre; // ToulBar2::costThreshold
         return;
     }
 
     if (ToulBar2::RINS_itThresholds.size() < 3) {
-        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size()-1].second;
+        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].second;
         return;
     }
 
@@ -984,12 +988,11 @@ void VACExtension::RINS_finditThreshold()
     }
 
     unsigned int i = 1;
-    double stepSize = 2.0/(double)ToulBar2::RINS_itThresholds.size();
+    double stepSize = 2.0 / (double)ToulBar2::RINS_itThresholds.size();
 
     cout << "getUb: " << wcsp->getUb() << endl;
 
-    while (i < ToulBar2::RINS_itThresholds.size() &&
-           atan2(ToulBar2::RINS_itThresholds[i+1].second - ToulBar2::RINS_itThresholds[i-1].second, stepSize)*180.0/PI < (double)ToulBar2::RINS_angle) {
+    while (i < ToulBar2::RINS_itThresholds.size() && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
         cout << ToulBar2::RINS_itThresholds[i].second << endl;
         ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[i].first;
         i++;

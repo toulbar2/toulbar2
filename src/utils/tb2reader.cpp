@@ -13,6 +13,21 @@
 #include "core/tb2globaldecomposable.hpp"
 #include "core/tb2clqcover.hpp"
 
+#ifdef BOOST
+#define BOOST_IOSTREAMS_NO_LIB
+#include <boost/version.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#if (BOOST_VERSION >= 106500)
+#include <boost/iostreams/filter/lzma.hpp>
+#include "lzma-cpp.inc"
+#endif
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/compressed_pair.hpp>
+#endif
 typedef struct {
     EnumeratedVariable* var;
     vector<Cost> costs;
@@ -271,6 +286,7 @@ typedef struct {
  \endcode
  **/
 
+#ifdef BOOST
 class CFNStreamReader {
 
 public:
@@ -1966,6 +1982,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
 
     return;
 }
+#endif
 
 // TB2 entry point for WCSP reading (not only wcsp format).
 // Returns the global UB obtained form both the file and command line in internal Cost units
@@ -1976,7 +1993,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
-    if (ToulBar2::cfn || (ToulBar2::stdin_format.compare("cfn") == 0)) {
+    if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
 #ifdef BOOST
         ifstream Rfile;
         istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
@@ -1984,7 +2001,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             CFNStreamReader fileReader(stream, this);
             return getUb();
 
-        } else if (to_string(fileName).length() > 0) {
+        } else {
             Rfile.open(fileName);
             if (!stream) {
                 cerr << "Error: could not open file '" << fileName << "'." << endl;
@@ -1999,41 +2016,54 @@ Cost WCSP::read_wcsp(const char* fileName)
         cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-    } else if (ToulBar2::cfngz) {
+    } else if (ToulBar2::cfn && ToulBar2::gz) {
 #ifdef BOOST
         ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
-        istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
+        istream& file = Rfile;
         boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
         inbuf.push(boost::iostreams::gzip_decompressor());
         inbuf.push(file);
         std::istream stream(&inbuf);
 
-        if (ToulBar2::stdin_format.compare("cfn.gz") == 0) {
-            // read from instance from pipe  todo doesn work with pipe D. ALLouche
-            //            inbuf.push(file);
+        if (!file) {
+            cerr << "Could not open cfn.gz file : " << fileName << endl;
+            exit(EXIT_FAILURE);
+        } else {
+
+            //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
             return getUb();
+        }
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    } else if (ToulBar2::cfn && ToulBar2::xz) {
+#ifdef BOOST
+#if (BOOST_VERSION >= 106500)
+        ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
+        istream& file = Rfile;
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::lzma_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
 
-        } else if (to_string(fileName).length() > 0) {
-            // read instance from real file
-            //              inbuf.push(file);
-            //            std::istream stream(&inbuf);
+        if (!file) {
+            cerr << "Could not open cfn.xz file : " << fileName << endl;
+            exit(EXIT_FAILURE);
+        } else {
 
-            // Rfile.open(fileName);
-            cout << "file: " << fileName << endl;
-            if (!file) {
-                cerr << "Could not open cfn.gz file : " << fileName << endl;
-                exit(EXIT_FAILURE);
-            } else {
-
-                //  inbuf.push(file);
-                CFNStreamReader fileReader(stream, this);
-                return getUb();
-            }
+            //  inbuf.push(file);
+            CFNStreamReader fileReader(stream, this);
+            return getUb();
         }
 
 #else
-        cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CF format files." << endl;
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
     }
@@ -2111,17 +2141,38 @@ Cost WCSP::read_wcsp(const char* fileName)
     vector<vector<String>> sharedTuples;
     vector<String> emptyTuples;
 
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("wcsp") == 0) {
-        //	   cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else if (to_string(fileName).length() > 0 and ToulBar2::stdin_format.length() == 0) {
-        Rfile.open(fileName);
-        if (!file) {
-            cerr << "Could not open wcsp file : " << fileName << endl;
-            exit(EXIT_FAILURE);
-        }
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed wcsp format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
     }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcsp file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcsp format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcsp file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     // ---------- PROBLEM HEADER ----------
     // read problem name and sizes
@@ -2638,17 +2689,38 @@ void WCSP::read_uai2008(const char* fileName)
 
     // Cost inclowerbound = MIN_COST;
     string uaitype;
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("uai") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("uai") == 0) {
-        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-        if (!file) {
-            cerr << "Could not open file uai: " << fileName << endl;
-            exit(EXIT_FAILURE);
-        }
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed uai/LG format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
     }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open uai file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed uai format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open uai file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
@@ -3087,17 +3159,38 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
-        //                cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-        if (!file) {
-            cerr << "Could not open file :: " << fileName << endl;
-            exit(EXIT_FAILURE);
-        }
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed cnf/wcnf format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
     }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcnf file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcnf format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open wcnf file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
@@ -3263,25 +3356,46 @@ void WCSP::read_wcnf(const char* fileName)
 }
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
-/// where W is expressed by its M non-zero half squared matrix costs (can be positive or negative float numbers)
-/// \note Costs for \f$ i \neq j \f$ are multiplied by 2 by this method (symmetric N*N squared matrix)
+/// where W is expressed by its M non-zero triangle matrix terms (W_ij, i<=j, it can be positive or negative float numbers)
+/// \note Quadratic terms for \f$ i < j \f$ are multiplied by 2 (see option -qpmult to change this value) to get a symmetric N*N squared matrix
 /// \note If N is positive, then variable domain values are {0,1}
 /// \note If N is negative, then variable domain values are {1,-1} with value 1 having index 0 and value -1 having index 1 in the output solutions
-/// \note If M is positive then minimizes the quadratic function, else maximizes it
+/// \note If M is positive then minimizes the quadratic objective function, else maximizes it
 /// \warning It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-    ifstream Rfile;
-    istream& file = (ToulBar2::stdin_format.compare("qpbo") == 0) ? cin : Rfile;
-    if (ToulBar2::stdin_format.compare("qpbo") == 0) {
-        //		cout << "pipe reading: " << ToulBar2::stdin_format << endl;
-    } else {
-        Rfile.open(fileName);
-        if (!file) {
-            cerr << "Could not open file qpbo:: " << fileName << endl;
-            exit(EXIT_FAILURE);
-        }
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed qpbo format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
     }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open qpbo file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed qpbo format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open qpbo file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 
     int n = 0;
     file >> n;
@@ -3340,6 +3454,9 @@ void WCSP::read_qpbo(const char* fileName)
         sumcost += 2. * abs(cost[e]);
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
+    ToulBar2::costMultiplier = multiplier;
+    if (!minimize)
+        ToulBar2::costMultiplier *= -1.0;
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
@@ -3353,37 +3470,43 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[3] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
+                        negCost += costs[0];
                     }
                 } else {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
+                        negCost += costs[0];
                     } else {
-                        costs[3] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[3] = costs[0];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[1] = (Cost)(multiplier * 2. * cost[e]);
+                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[2] = costs[1];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        costs[1] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[2] = costs[1];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[3] = costs[0];
+                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             }
@@ -3395,10 +3518,12 @@ void WCSP::read_qpbo(const char* fileName)
                         unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
                     } else {
                         unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
                         unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     } else {
                         unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
                     }
@@ -3406,15 +3531,19 @@ void WCSP::read_qpbo(const char* fileName)
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
+                        negCost += (Cost)(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
+                        negCost += (Cost)(multiplier * -cost[e]);
                     }
                 }
             }
@@ -3431,8 +3560,9 @@ void WCSP::read_qpbo(const char* fileName)
         }
     }
     sortConstraints();
-    if (ToulBar2::verbose >= 0)
-        cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs." << endl;
+    if (ToulBar2::verbose >= 0) {
+        cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs (quadratic coef. multiplier: " << ToulBar2::qpboQuadraticCoefMultiplier << ", shifting value: " << -negCost << ")" << endl;
+    }
 }
 
 /* Local Variables: */

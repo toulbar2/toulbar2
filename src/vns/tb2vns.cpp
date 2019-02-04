@@ -6,9 +6,12 @@
  *      Phd. Student : LITIO, University of Oran. GREYC, University of Caen.
  */
 
+#ifdef BOOST
 #include "tb2vns.hpp"
 #include "core/tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
+
+using namespace boost;
 
 // loading decomposition for only a given file
 void ClustersNeighborhoodStructure::load_decomposition()
@@ -555,6 +558,8 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
     }
     return z.size();
 }
+
+#endif
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

@@ -8,6 +8,7 @@
 
 #include "tb2dgvns.hpp"
 #include "core/tb2wcsp.hpp"
+#ifdef BOOST
 
 bool VNSSolver::solve()
 {
@@ -207,6 +208,8 @@ bool VNSSolver::solve()
 
     return (bestUb < MAX_COST);
 }
+
+#endif
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

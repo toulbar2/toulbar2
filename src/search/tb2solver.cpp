@@ -38,18 +38,38 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
     switch (ToulBar2::searchMethod) {
     case VNS:
     case DGVNS:
+#ifdef BOOST
         solver = new VNSSolver(ub);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
 #ifdef OPENMPI
     case CPDGVNS:
+#ifdef BOOST
         solver = new CooperativeParallelDGVNS(ub, env0);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
     case RPDGVNS:
+#ifdef BOOST
         solver = new ReplicatedParallelDGVNS(ub, env0);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
 #endif
     case TREEDEC:
+#ifdef BOOST
         solver = new TreeDecRefinement(ub);
+#else
+        cerr << "Error: compiling with Boost graph library is needed to allow VNS-like search methods." << endl;
+        exit(EXIT_FAILURE);
+#endif
         break;
     default:
         solver = new Solver(ub);
@@ -585,8 +605,6 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-        if (!wcsp->unassigned(*iter))
-            cout << *iter << " ERROR !!!!!" << endl;
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -871,7 +889,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
-            cout << "Optimality gap: [ " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << " , " << Dgub << " [ " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         }
     }
 }
@@ -1247,7 +1265,6 @@ void Solver::singletonConsistency()
 
 void Solver::newSolution()
 {
-    assert(unassignedVars->empty());
 #ifndef NDEBUG
     bool allVarsAssigned = true;
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
@@ -1290,7 +1307,6 @@ void Solver::newSolution()
         if (ToulBar2::allSolutions) {
             cout << std::setprecision(0) << nbSol << " solution(" << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << "): ";
         }
-        cout << "Sol:";
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             cout << " ";
             if (ToulBar2::pedigree) {
@@ -1298,16 +1314,23 @@ void Solver::newSolution()
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else if (ToulBar2::cfn || ToulBar2::cfngz) {
-                // print value name and varname if verbose >1
+            } else if (ToulBar2::cfn) {
                 Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                 string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
                 string varlabel = wcsp->getName(i);
 
-                if (ToulBar2::verbose >= 1) {
-                    cout << varlabel << ":" << valuelabel << ";";
-                } else {
+                switch (ToulBar2::showSolutions) {
+                case 1:
+                    cout << myvalue;
+                    break;
+                case 2:
                     cout << valuelabel;
+                    break;
+                case 3:
+                    cout << varlabel << "=" << valuelabel;
+                    break;
+                default:
+                    break;
                 }
                 if (ToulBar2::verbose > 1) {
                     cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
@@ -1617,7 +1640,18 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 Cost Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
-    tb2checkOptions(wcsp->getUb());
+    if (ub <= MIN_COST) {
+        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
+        cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
+        cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
+        exit(1);
+    }
 
     if (ToulBar2::searchMethod != DFBB) {
         if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
@@ -1628,8 +1662,8 @@ Cost Solver::beginSolve(Cost ub)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
-        cout << "Warning! Cannot use BTD-like search methods with global cost functions." << endl;
-        ToulBar2::btdMode = 0;
+        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
+        exit(1);
     }
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
@@ -1724,7 +1758,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
             wcsp->propagate();
-            //            cout << "after wcsp -> propagate() nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
         }
     }
     if (ToulBar2::verbose >= 0)
@@ -1758,7 +1791,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::verbose >= 0) {
         Double Dlb = wcsp->getDLb();
         Double Dub = wcsp->getDUb();
-        cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "[ " << std::setprecision(DECIMAL_POINT) << (100.0 * (Dub - Dlb)) / max(fabsl(Dlb), fabsl(Dub)) << "%" << endl;
+        cout << "Initial lower and upper bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dlb << ", " << Dub << "] " << std::setprecision(DECIMAL_POINT) << (100.0 * (Dub - Dlb)) / max(fabsl(Dlb), fabsl(Dub)) << "%" << endl;
     }
     initGap(wcsp->getLb(), wcsp->getUb());
 
@@ -2032,10 +2065,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     }
     if (ToulBar2::allSolutions) {
         if (ToulBar2::approximateCountingBTD)
-            cout << "Number of solutions    : ~= " << nbSol << endl;
+            cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         else {
             if (!isComplete)
-                cout << "Number of solutions    : >=  " << nbSol << endl;
+                cout << "Number of solutions    : >=  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
             else
                 cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
         }
@@ -2118,13 +2151,13 @@ void Solver::approximate(BigInteger& nbsol, TreeDecomposition* td)
     if (nbsol < 1)
         nbsol = 1;
     // the minimum upper bound of solutions number
-    cout << "\nCartesian product \t\t   :    " << cartesianProduct << endl;
+    cout << "\nCartesian product \t\t   :    " << std::fixed << std::setprecision(0) << cartesianProduct << std::setprecision(DECIMAL_POINT) << endl;
     BigInteger minUBsol = cartesianProduct;
     for (map<int, BigInteger>::iterator it = ubSol.begin(); it != ubSol.end(); ++it) {
         if (it->second < minUBsol)
             minUBsol = it->second;
     }
-    cout << "Upper bound of number of solutions : <= " << minUBsol << endl;
+    cout << "Upper bound of number of solutions : <= " << std::fixed << std::setprecision(0) << minUBsol << std::setprecision(DECIMAL_POINT) << endl;
 }
 
 // Maximize h' W h where W is expressed by all its

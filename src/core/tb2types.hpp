@@ -393,7 +393,7 @@ public:
     static int RINS_angle;
     static int debug;
     static string externalUB;
-    static bool showSolutions;
+    static int showSolutions;
     static char* writeSolution;
     static FILE* solutionFile;
     static Long allSolutions;
@@ -437,7 +437,8 @@ public:
     static Haplotype* haplotype;
     static string map_file;
     static bool cfn;
-    static bool cfngz;
+    static bool gz;
+    static bool xz;
     static bool bayesian;
     static int uai;
     static int resolution;
@@ -455,8 +456,10 @@ public:
     static Cost costThreshold;
     static Cost costThresholdPre;
     static double trwsAccuracy;
+    static bool trwsOrder;
     static unsigned int trwsNIter;
     static unsigned int trwsNIterNoChange;
+    static unsigned int trwsNIterComputeUb;
     static double costMultiplier;
     static unsigned int decimalPoint;
     static string deltaUbS;
@@ -467,6 +470,7 @@ public:
     static LcLevelType LcLevel;
     static bool wcnf;
     static bool qpbo;
+    static double qpboQuadraticCoefMultiplier;
 
     static char* varOrder;
     static int btdMode;
@@ -551,7 +555,7 @@ inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
 #ifdef LONGLONG_COST
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
+    return (((lb % max(UNIT_COST, (Cost)floor(fabs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floor(fabs(ToulBar2::costMultiplier))) : lb);
 }
 inline bool CUT(Cost lb, Cost ub)
 {
