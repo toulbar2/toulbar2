@@ -67,6 +67,7 @@ Cost ToulBar2::RINS_lastitThreshold;
 double ToulBar2::RINS_lastRatio;
 bool ToulBar2::RINS_saveitThresholds;
 vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
+int ToulBar2::RINS_angle;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 bool ToulBar2::showSolutions;
@@ -252,6 +253,7 @@ void tb2init()
     ToulBar2::RINS_lastitThreshold = 1;
     ToulBar2::RINS_lastRatio = 0.0000000001;
     ToulBar2::RINS_saveitThresholds = false;
+    ToulBar2::RINS_angle = 10;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = false;
     ToulBar2::writeSolution = NULL;

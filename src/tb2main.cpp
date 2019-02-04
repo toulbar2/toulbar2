@@ -187,6 +187,7 @@ enum {
     OPT_BoolDomSize,
     OPT_RINS,
     NO_OPT_RINS,
+    OPT_RINS_angle,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -360,10 +361,11 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
-    { OPT_strictAC, (char*)"-strictAC", SO_NONE },
+    { OPT_strictAC, (char*)"-strictAC", SO_OPT },
     { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
     { OPT_RINS, (char*)"-RINS", SO_OPT },
     { NO_OPT_RINS, (char*)"-RINS:", SO_NONE },
+    { OPT_RINS_angle, (char*)"-RINSangle", SO_OPT },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_REQ_SEP },
@@ -1788,7 +1790,10 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_strictAC) {
-                ToulBar2::strictAC = 1;
+                if (args.OptionArg() == NULL)
+                    ToulBar2::strictAC = 1;
+                else
+                    ToulBar2::strictAC = atoi(args.OptionArg());
                 if (ToulBar2::debug)
                     cout << "Strict AC ON" << endl;
             }
@@ -1813,6 +1818,13 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "RINS OFF" << endl;
                 ToulBar2::useRINS = 0;
+            }
+
+            if (args.OptionId() == OPT_RINS_angle) {
+                int n = atoi(args.OptionArg());
+                ToulBar2::RINS_angle = n;
+                if (ToulBar2::debug)
+                    cout << "RINS angle is " << n << endl;
             }
 
         }

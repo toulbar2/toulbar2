@@ -871,7 +871,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
-            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "[ " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks, " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes) Time: " << cpuTime() - ToulBar2::startCpuTime << endl;
+            cout << "Optimality gap: [ " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << " , " << Dgub << " [ " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
         }
     }
 }
@@ -1270,11 +1270,11 @@ void Solver::newSolution()
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
-                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks, " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes, depth " << Store::getDepth() << ")" << endl;
+                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
             else if (!ToulBar2::bayesian)
-                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks, " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes, depth " << Store::getDepth() << ") Time: " << cpuTime() - ToulBar2::startCpuTime << endl;
+                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
             else
-                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks, " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes, depth " << Store::getDepth() << ") Time: " << cpuTime() - ToulBar2::startCpuTime << endl;
+                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
         }
     }
 
@@ -1826,7 +1826,7 @@ bool Solver::solve()
                         nbBacktracksLimit = LONGLONG_MAX;
                         ToulBar2::restart = 0;
                         if (ToulBar2::verbose >= 0)
-                            cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes)" << endl;
+                            cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
                         if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree > 0) {
                             int size = unassignedVars->getSize();
                             ValueCost sorted[size];
@@ -1844,7 +1844,7 @@ bool Solver::solve()
                     } else {
                         nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit * 100;
                         if (ToulBar2::verbose >= 0)
-                            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes)" << endl;
+                            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
                     }
                     upperbound = wcsp->getUb();
                     enforceUb();
@@ -1861,10 +1861,10 @@ bool Solver::solve()
                         do {
                             if (discrepancy > abs(ToulBar2::lds)) {
                                 if (ToulBar2::verbose >= 0)
-                                    cout << "--- [" << Store::getDepth() << "] Search with no discrepancy limit --- (" << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes)" << endl;
+                                    cout << "--- [" << Store::getDepth() << "] Search with no discrepancy limit --- (" << nbNodes << " nodes)" << endl;
                             } else {
                                 if (ToulBar2::verbose >= 0)
-                                    cout << "--- [" << Store::getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes)" << endl;
+                                    cout << "--- [" << Store::getDepth() << "] LDS " << discrepancy << " --- (" << nbNodes << " nodes)" << endl;
                             }
                             ToulBar2::limited = false;
                             enforceUb();
@@ -2025,9 +2025,9 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             fprintf(ToulBar2::solution_uai_file, "\n");
         }
         cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
         cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
         return;
     }
     if (ToulBar2::allSolutions) {
@@ -2045,7 +2045,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             cout << "Size of sep            :    " << tailleSep << endl;
         }
         cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-        cout << "... in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
+        cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         return;
     }
 
@@ -2067,18 +2067,18 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             if (isLimited == 2)
                 cout << "(" << ToulBar2::deltaUbS << ")-";
             if (ToulBar2::haplotype)
-                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else if (!ToulBar2::bayesian)
-                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
         } else {
             if (ToulBar2::xmlflag) {
                 ((WCSP*)wcsp)->solution_XML(true);
             } else if (ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << ")-";
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             } else if (ToulBar2::maxsateval && !isLimited) {
                 cout << "o " << cost << endl;
                 cout << "s OPTIMUM FOUND" << endl;
@@ -2087,7 +2087,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         }
     } else {
         if (ToulBar2::verbose >= 0)
-            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << ":" << ToulBar2::RINS_nbBacktracksOff << ":" << ToulBar2::RINS_nbBacktracksOn << " backtracks and " << nbNodes << ":" << ToulBar2::RINS_nbNodesOff << ":" << ToulBar2::RINS_nbNodesOn << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
         if (ToulBar2::maxsateval && !isLimited) {
             cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
