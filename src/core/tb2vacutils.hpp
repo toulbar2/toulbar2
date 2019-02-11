@@ -22,7 +22,7 @@ private:
     int maxk; /**< The Max number of cost requests seen on this variable, used for stats */
     Long maxk_timeStamp; /**< timestamp for maxk */
 
-    Cost myThreshold; /** The local threshold used to break loops */
+    StoreCost myThreshold; /** The local threshold used to break loops */
 
     DLink<VariableWithTimeStamp> linkVACQueue;
     DLink<VariableWithTimeStamp> linkSeekSupport;
@@ -135,7 +135,7 @@ private:
     vector<Long> kX_timeStamp;
     vector<Long> kY_timeStamp;
 
-    Cost myThreshold; /** The local threshold used to break loops */
+    StoreCost myThreshold; /** The local threshold used to break loops */
 
 public:
     VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);
@@ -184,7 +184,7 @@ private:
     vector<Long> kY_timeStamp;
     vector<Long> kZ_timeStamp;
 
-    Cost myThreshold; /** The local thresold used to break loops */
+    StoreCost myThreshold; /** The local thresold used to break loops */
 
 public:
     VACTernaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz, vector<Cost>& tab);

@@ -317,7 +317,7 @@ bool VACExtension::propagate()
                             Constraint* c = (*itc).constr;
                             if (c->isBinary()) {
                                 EnumeratedVariable* xj = (EnumeratedVariable*)(((BinaryConstraint*)c)->getVarDiffFrom(xi));
-                                if (xj->domSizeInBoolOfP > 1)
+                                if (xj->domSizeInBoolOfP > 1) // TODO: xj may be not refreshed yet
                                     xi->moreThanOne = true;
                             }
                         }

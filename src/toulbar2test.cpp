@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
     //	solver->getWCSP()->print(cout);
     //	ToulBar2::verbose = verbose;
 
+    //tb2checkOptions();
     if (solver->solve()) {
         // show optimal solution
         vector<Value> sol;
