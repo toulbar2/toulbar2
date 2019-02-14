@@ -25,6 +25,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , moreThanOne(false)
     , domSizeInBoolOfP(isup - iinf + 1)
     , strictACValue(support)
+    , RINS_lastValue(-1)
 {
     init();
 }
@@ -39,6 +40,7 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , moreThanOne(false)
     , domSizeInBoolOfP(dsize)
     , strictACValue(support)
+    , RINS_lastValue(-1)
 {
     init();
 }

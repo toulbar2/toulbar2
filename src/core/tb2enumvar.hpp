@@ -35,6 +35,7 @@ protected:
     virtual void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
 
 public:
+    Value RINS_lastValue;
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 

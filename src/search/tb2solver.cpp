@@ -896,6 +896,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
 
 void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 {
+    //cout << "varIndex: " << varIndex << " value: " << value << " cost: " << lb << endl;
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
     if (ToulBar2::interrupted)
@@ -1558,29 +1559,18 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
                 } else {
-                    double r = (double)myrand() / (double)RAND_MAX;
-                    //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
-                    //cout << "random number  = " << r << " ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << " ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
-
-                    if (((ToulBar2::useRINS == -2 || ToulBar2::useRINS == -5 || ToulBar2::useRINS == -8) && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5)) || (ToulBar2::useRINS == -3 && r < ToulBar2::RINS_probabilty && ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar > 0.5))) {
-                        ToulBar2::RINS_newSolutionFound = false;
+                    ToulBar2::RINS_HBFSnodes++;
+                    if (ToulBar2::useRINS == -1 
+                        && (ToulBar2::RINS_HBFSnodes == 1 || ToulBar2::RINS_HBFSnodes - ToulBar2::RINS_lastHBFSnode >= 100) 
+                        && (double)ToulBar2::RINS_nbStrictACVariables / (double)wcsp->numberOfVariables() > 0.0) {
                         cout << "ToulBar2::RINS = true; at SOLVER" << endl;
+                        ToulBar2::RINS_lastHBFSnode = ToulBar2::RINS_HBFSnodes;
                         ToulBar2::RINS_nbCalls++;
                         ToulBar2::RINS = true;
                         ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
                         bool foundbetterub = ((WCSP*)wcsp)->vac->propagate(); // VAC done again
                         ToulBar2::RINS = false;
                         cout << "ToulBar2::RINS = false; at SOLVER" << endl;
-                        if (ToulBar2::RINS_newSolutionFound)
-                            ToulBar2::RINS_nbNewSolutionFound++;
-                        if (ToulBar2::useRINS == -3) {
-                            //cout << "ToulBar2::RINS_newSolutionFound = " << ToulBar2::RINS_newSolutionFound << endl;
-                            if (ToulBar2::RINS_newSolutionFound)
-                                ToulBar2::RINS_probabilty = min(1.0, 2.0 * ToulBar2::RINS_probabilty);
-                            else
-                                ToulBar2::RINS_probabilty = ToulBar2::RINS_probabilty / 2.0;
-                            //cout << "ToulBar2::RINS_probabilty = " << ToulBar2::RINS_probabilty << endl;
-                        }
                         if (foundbetterub) {
                             enforceUb();
                             wcsp->propagate();

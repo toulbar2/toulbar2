@@ -342,7 +342,7 @@ bool VACExtension::propagate()
 
             if (ToulBar2::RINS_saveitThresholds) {
                 double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double)itThreshold);
-                cout << "itThreshold: " << itThreshold << " strictAC: " << ToulBar2::RINS_nbStrictACVariables << " ratio: " << ratio << endl;
+                //cout << "itThreshold: " << itThreshold << " strictAC: " << ToulBar2::RINS_nbStrictACVariables << " ratio: " << ratio << endl;
                 ToulBar2::RINS_itThresholds.push_back(std::make_pair(itThreshold, ratio));
             }
 
@@ -381,23 +381,47 @@ bool VACExtension::propagate()
                 Cost lastUB = wcsp->getUb();
                 try {
                     try {
-                        // Current WCSP is AC(Bool(P))
+                        /*string fN = "beforeAssignment.wcsp";
+                        ofstream prb(fN.c_str());
+                        wcsp->dump(prb, true);*/
                         vector<int> variables;
                         vector<Value> values;
-
                         Solver* solver = (Solver*)wcsp->getSolver();
-                        for (BTList<Value>::iterator iter = solver->unassignedVars->begin(); iter != solver->unassignedVars->end(); ++iter) {
-                            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
-                            if (var->domSizeInBoolOfP == 1) {
-                                //cout << *iter << " ";
-                                variables.push_back(*iter);
-                                values.push_back(var->strictACValue);
-                            } else {
-                                if (var->cannotbe(var->getSupport()))
-                                    var->findSupport(); // update support values
-                                var->propagateNC(); // and update maxcost values before propagate done in assignLS
+
+                        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                            if (wcsp->getVar(i)->enumerated()) {
+                                EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
+                                //cout << *xi << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
+                                int size = xi->getDomainSize();
+                                ValueCost domcost[size];
+                                wcsp->getEnumDomainAndCost(i, domcost);
+                                for (int v = 0; v < size; v++) {
+                                    if (ToulBar2::RINS_HBFSnodes == 0 && ((VACVariable*)xi)->getVACCost(domcost[v].value) > MIN_COST) {
+                                        xi->remove(domcost[v].value);
+                                    }
+                                    if (ToulBar2::RINS_HBFSnodes > 0 && ToulBar2::useRINS == -1 && domcost[v].value != xi->RINS_lastValue && ((VACVariable*)xi)->getVACCost(domcost[v].value) > MIN_COST) {
+                                        xi->remove(domcost[v].value);
+                                    }
+                                }
+                                if (xi->domSizeInBoolOfP == 1) {
+                                    if(ToulBar2::RINS_HBFSnodes == 0 || xi->RINS_lastValue == -1){
+                                        //cout << "add " << i << " to variables" << endl;
+                                        variables.push_back(i);
+                                        values.push_back(xi->strictACValue);
+                                    }
+                                    else if(xi->strictACValue == xi->RINS_lastValue){
+                                        //cout << *iter << " ";
+                                        variables.push_back(i);
+                                        values.push_back(xi->strictACValue);
+                                    }
+                                    //else update domain
+                                }
+                                if (xi->cannotbe(xi->getSupport()))
+                                    xi->findSupport(); // update support values
+                                xi->propagateNC(); // and update maxcost values before propagate done in assignLS
                             }
                         }
+
                         if (variables.size() > 0)
                             wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
                         /*string fileName = "afterAssignment.wcsp";
@@ -405,10 +429,10 @@ bool VACExtension::propagate()
                         wcsp->dump(pb, true);*/
                         if (ToulBar2::useRINS <= 1) {
                             cout << "call to recursiveSolve from VAC" << endl;
-                            ((Solver*)(wcsp->getSolver()))->recursiveSolve(wcsp->getLb()); // look at its search tree (if a new solution is found, UB should be updated automatically)
+                            solver->recursiveSolve(wcsp->getLb()); // look at its search tree (if a new solution is found, UB should be updated automatically)
                         } else {
                             cout << "call to recursiveSolveLDS from VAC" << endl;
-                            ((Solver*)(wcsp->getSolver()))->recursiveSolveLDS(ToulBar2::useRINS - 1);
+                            solver->recursiveSolveLDS(ToulBar2::useRINS - 1);
                         }
                     } catch (Contradiction) {
                         wcsp->whenContradiction();
@@ -978,29 +1002,29 @@ void VACExtension::RINS_finditThreshold()
     }
 
     double lastRatio = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].second;
-    cout << std::fixed << std::setprecision(7);
-    cout << lastRatio << endl;
+    //cout << std::fixed << std::setprecision(7);
+    //cout << lastRatio << endl;
 
     for (unsigned int i = 0; i < ToulBar2::RINS_itThresholds.size(); i++) {
-        cout << ToulBar2::RINS_itThresholds[i].second << " ";
+        //cout << ToulBar2::RINS_itThresholds[i].second << " ";
         ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
-        cout << ToulBar2::RINS_itThresholds[i].second << endl;
+        //cout << ToulBar2::RINS_itThresholds[i].second << endl;
     }
 
     unsigned int i = 1;
     double stepSize = 2.0 / (double)ToulBar2::RINS_itThresholds.size();
 
-    cout << "getUb: " << wcsp->getUb() << endl;
+    //cout << "getUb: " << wcsp->getUb() << endl;
 
     while (i < ToulBar2::RINS_itThresholds.size() && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
-        cout << ToulBar2::RINS_itThresholds[i].second << endl;
+        //cout << ToulBar2::RINS_itThresholds[i].second << endl;
         ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[i].first;
         i++;
     }
 
-    ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
+    //ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
 
-    cout << std::fixed << std::setprecision(DECIMAL_POINT);
+    //cout << std::fixed << std::setprecision(DECIMAL_POINT);
 }
 
 /* Local Variables: */
