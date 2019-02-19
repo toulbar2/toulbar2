@@ -409,8 +409,13 @@ bool VACExtension::propagate()
                 if (ToulBar2::RINS) {
                     ToulBar2::RINS = false;
                     if(ToulBar2::RINS_HBFSnodes > 0){
-                        Store::restore();
+                        Store::restore(storedepth);
                         Store::store();
+                        string fileName = "beforeAssignment_";
+                            fileName += std::to_string(ToulBar2::RINS_HBFSnodes);
+                            fileName += ".wcsp";
+                            ofstream pb(fileName.c_str());
+                            wcsp->dump(pb, true);
                     }
                     Solver* solver = (Solver*)wcsp->getSolver();
                     //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
@@ -482,11 +487,11 @@ bool VACExtension::propagate()
                             if (variables.size() > 0)
                                 wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
                             
-                            /*string fileName = "afterAssignment_";
+                            string fileName = "afterAssignment_";
                             fileName += std::to_string(ToulBar2::RINS_HBFSnodes);
                             fileName += ".wcsp";
                             ofstream pb(fileName.c_str());
-                            wcsp->dump(pb, true);*/
+                            wcsp->dump(pb, true);
                             
                             if (ToulBar2::useRINS <= 1) {
                                 cout << "call to recursiveSolve from VAC" << endl;
