@@ -1,6 +1,5 @@
 
 #include "tb2naryconstr.hpp"
-#include "tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 NaryConstraint::NaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval, Long nbtuples)

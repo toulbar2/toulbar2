@@ -3,7 +3,6 @@
  */
 
 #include "tb2vacutils.hpp"
-#include "tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 VACVariable::VACVariable(WCSP* wcsp, string n, Value iinf, Value isup)
@@ -38,122 +37,41 @@ void VACVariable::init()
     }
     linkVACQueue.content.var = this;
     linkVACQueue.content.timeStamp = -1;
+    linkVAC2Queue.content.var = this;
+    linkVAC2Queue.content.timeStamp = -1;
     linkSeekSupport.content.var = this;
     linkSeekSupport.content.timeStamp = -1;
 }
 
-bool VACVariable::increaseVAC(Value newInf)
-{
-    if (newInf > inf) {
-        if (newInf > sup)
-            return true;
-        else {
-            newInf = domain.increase(newInf);
-            inf = newInf;
-        }
-    }
-    return false;
-}
-
-bool VACVariable::decreaseVAC(Value newSup)
-{
-    if (newSup < sup) {
-        if (newSup < inf)
-            return true;
-        else {
-            newSup = domain.decrease(newSup);
-            sup = newSup;
-        }
-    }
-    return false;
-}
-
-bool VACVariable::removeVAC(Value v)
-{
-    if (v == inf)
-        return increaseVAC(v + 1);
-    else if (v == sup)
-        return decreaseVAC(v - 1);
-    else if (canbe(v))
-        domain.erase(v);
-    return false;
-}
-
-void VACVariable::decreaseCost(Value v, Cost c)
-{
-    assert(c > MIN_COST);
-    Cost cini = getCost(v);
-    if (wcsp->getLb() + cini < wcsp->getUb()) {
-        costs[toIndex(v)] -= c;
-    }
-}
-
-void VACVariable::VACproject(Value v, const Cost c)
-{
-    costs[toIndex(v)] += c;
-
-    if (CUT(wcsp->getLb() + getCost(v), wcsp->getUb())) {
-        queueNC();
-    }
-}
-
-void VACVariable::VACextend(Value v, const Cost c)
-{
-    decreaseCost(v, c);
-    if (v == maxCostValue)
-        queueNC();
-    assert(canbe(getSupport()));
-}
-
-bool VACVariable::isSimplyNull(Cost c)
-{
-    return (vac->isNull(c));
-}
-
-bool VACVariable::isNull(Cost c)
-{
-    return (vac->isNull(c) || (c < myThreshold));
-}
-
-void VACVariable::queueVAC()
-{
-    wcsp->vac->queueVAC(&linkVACQueue);
-}
-
-void VACVariable::queueSeekSupport()
-{
-    wcsp->vac->queueSeekSupport(&linkSeekSupport);
-}
-
-void VACVariable::remove(Value value)
-{
-    if (ToulBar2::singletonConsistency)
-        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
-    EnumeratedVariable::remove(value);
-}
-
-void VACVariable::removeFast(Value value)
-{
-    if (ToulBar2::singletonConsistency)
-        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
-    EnumeratedVariable::removeFast(value);
-}
-
-void VACVariable::increase(Value newInf)
-{
-    if (ToulBar2::singletonConsistency)
-        for (int i = inf; i <= newInf; i++)
-            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
-    EnumeratedVariable::increase(newInf);
-}
-
-void VACVariable::decrease(Value newSup)
-{
-    if (ToulBar2::singletonConsistency)
-        for (int i = sup; i >= newSup; i--)
-            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
-    EnumeratedVariable::decrease(newSup);
-}
+//void VACVariable::remove(Value value)
+//{
+//    if (ToulBar2::singletonConsistency)
+//        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
+//    EnumeratedVariable::remove(value);
+//}
+//
+//void VACVariable::removeFast(Value value)
+//{
+//    if (ToulBar2::singletonConsistency)
+//        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
+//    EnumeratedVariable::removeFast(value);
+//}
+//
+//void VACVariable::increase(Value newInf)
+//{
+//    if (ToulBar2::singletonConsistency)
+//        for (int i = inf; i <= newInf; i++)
+//            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
+//    EnumeratedVariable::increase(newInf);
+//}
+//
+//void VACVariable::decrease(Value newSup)
+//{
+//    if (ToulBar2::singletonConsistency)
+//        for (int i = sup; i >= newSup; i--)
+//            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
+//    EnumeratedVariable::decrease(newSup);
+//}
 
 /******************************
  * min-sum diffusion algorithm
@@ -294,18 +212,6 @@ VACBinaryConstraint::VACBinaryConstraint(WCSP* wcsp)
 {
 }
 
-void VACBinaryConstraint::VACfillElimConstr()
-{
-    for (unsigned int a = kX.size(); a < sizeX; a++) {
-        kX.push_back(0);
-        kX_timeStamp.push_back(0);
-    }
-    for (unsigned int b = kY.size(); b < sizeY; b++) {
-        kY.push_back(0);
-        kY_timeStamp.push_back(0);
-    }
-}
-
 VACBinaryConstraint::~VACBinaryConstraint()
 {
 }
@@ -346,94 +252,48 @@ void VACBinaryConstraint::VACextend(VACVariable* x, Value v, Cost c)
     x->VACextend(v, c);
 }
 
-int VACBinaryConstraint::getK(VACVariable* var, Value v, Long timeStamp)
-{
-    if (var == (VACVariable*)getVar(0)) {
-        if (kX_timeStamp[var->toIndex(v)] < timeStamp)
-            return 0;
-        else
-            return kX[var->toIndex(v)];
-    } else {
-        if (kY_timeStamp[var->toIndex(v)] < timeStamp)
-            return 0;
-        else
-            return kY[var->toIndex(v)];
-    }
-}
-
-void VACBinaryConstraint::setK(VACVariable* var, Value v, int c, Long timeStamp)
-{
-    if (var == getVar(0)) {
-        kX[var->toIndex(v)] = c;
-        kX_timeStamp[var->toIndex(v)] = timeStamp;
-    } else {
-        kY[var->toIndex(v)] = c;
-        kY_timeStamp[var->toIndex(v)] = timeStamp;
-    }
-}
-
-bool VACBinaryConstraint::isNull(Cost c)
-{
-    VACVariable* xi = (VACVariable*)getVar(0);
-    return (xi->isSimplyNull(c) || (c < myThreshold));
-}
-
 bool VACBinaryConstraint::revise(VACVariable* var, Value v)
 {
     wcsp->revise(this);
     VACVariable* xi = (VACVariable*)getVar(0);
     VACVariable* xj = (VACVariable*)getVar(1);
     Value sup = getSupport(var, v);
-    Value minsup = sup;
     if (var != xi) {
         xi = (VACVariable*)getVar(1);
         xj = (VACVariable*)getVar(0);
     }
-    Cost cost, minCost = wcsp->getUb();
+    if (ToulBar2::verbose>=8) cout << "revise C" << x->getName() << "," << y->getName() << " (" << var->getName() << "," << v << ") " << sup;
 
     if (xj->canbe(sup)) {
         if (xj->getVACCost(sup) > MIN_COST) {
             xj->removeVAC(sup);
         } else {
             if (getVACCost(xi, xj, v, sup) == MIN_COST) {
+                if (ToulBar2::verbose>=8) cout << endl;
                 return false;
             }
         }
     }
 
-    for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
+    for (EnumeratedVariable::iterator it = xj->lower_bound(sup+1); it != xj->end(); ++it) {
         Value w = *it;
         if (xj->getVACCost(w) > MIN_COST) {
             xj->removeVAC(w);
         } else {
-            cost = getVACCost(xi, xj, v, w);
-            if (cost == MIN_COST) {
+            if (getVACCost(xi, xj, v, w) == MIN_COST) {
                 setSupport(xi, v, w);
+                if (ToulBar2::verbose>=8) cout << " -> " << getSupport(xi, v) << endl;
                 return false;
-            } else if (cost < minCost) {
-                minCost = cost;
-                minsup = w;
-            }
-        }
-    }
-    // TODO: why do we need to check this part of the domain ?!?
-    for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
-        Value w = *it;
-        if (xj->getVACCost(w) > MIN_COST) {
-            xj->removeVAC(w);
-        } else {
-            cost = getVACCost(xi, xj, v, w);
-            if (cost == MIN_COST) {
-                setSupport(xi, v, w);
-                return false;
-            } else if (cost < minCost) {
-                minCost = cost;
-                minsup = w;
             }
         }
     }
 
-    setSupport(xi, v, minsup); // TODO: why do we need this support in case of domain wipe out ?!?
+    if (ToulBar2::verbose>=8) cout << " -> " << -1 << endl;
+//#ifndef NDEBUG
+//    for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {
+//        assert(getVACCost(xi, xj, v, *it) + xj->getVACCost(*it) > MIN_COST);
+//    }
+//#endif
     return true;
 }
 

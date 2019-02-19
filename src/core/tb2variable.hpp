@@ -48,6 +48,8 @@ protected:
     Variable(const Variable& x);
     Variable& operator=(const Variable& x);
 
+    friend class VACExtension;
+
 public:
     Variable(WCSP* w, string n, Value iinf, Value isup);
 
@@ -110,7 +112,9 @@ public:
     virtual Value getSupport() const { return inf; } // If there is no defined support then return inf
 
     Cost getMaxCost() const { return maxCost; }
+    void setMaxCost(Cost cost) { maxCost = cost; }
     Value getMaxCostValue() const { return maxCostValue; }
+    void setMaxCostValue(Value value) { maxCostValue = value; }
 
     virtual void propagateNC() = 0;
     virtual bool verifyNC() = 0;

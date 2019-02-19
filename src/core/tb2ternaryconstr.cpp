@@ -4,7 +4,6 @@
 
 #include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 /*

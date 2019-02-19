@@ -268,6 +268,12 @@ public:
     }
     Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
 
+    void resetSupports()
+    {
+        supportX.assign(supportX.size(), y->getInf());
+        supportY.assign(supportY.size(), x->getInf());
+    }
+
     Value getSupport(EnumeratedVariable* var, Value v)
     {
         if (var == x)

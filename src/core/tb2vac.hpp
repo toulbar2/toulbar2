@@ -5,10 +5,12 @@
 #ifndef TB2VAC_HPP_
 #define TB2VAC_HPP_
 
-#include "utils/tb2btqueue.hpp"
-#include "tb2vacutils.hpp"
+#include "utils/tb2queue.hpp"
 
 class tVACStat;
+class VACVariable;
+class VACBinaryConstraint;
+class VACTernaryConstraint;
 
 typedef map<Cost, int> tScale;
 
@@ -20,10 +22,12 @@ class VACExtension {
 private:
     WCSP* wcsp; /**< Reference to the WCSP that will be processed */
     Queue VAC; /**< Non backtrackable list; AC2001 queue used for Pass1 inside VAC */
+    Queue VAC2; /**< Non backtrackable list; AC2001 queue used for incremental VAC */
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
 
+    Cost prevItThreshold; /**< The previous cost threshold (theta) for the iterative threshold descent */
     Cost itThreshold; /**< The cost threshold (theta) for the iterative threshold descent */
     int breakCycles; /**< Number of iterations with no c0 increase */
     tScale scaleCost; /**w The list of all costs used in the WCSP ? */
@@ -41,16 +45,15 @@ private:
     bool enforcePass3(); /**< Project and extends costs to increase c0 according to the plan */
     void enforcePass3VACDecomposition(); /**< Enforces VAC decomposition pass 3 (substract cost and decrease top) */
 
-    void reset(); /**< Cleanup for next iteration: clean Q, selects variables for AC2001 queue */
+    void clear(); /**< empty all VAC queues */
+    void resetSupports(); /**< reset binary supports for AC2001 */
+    bool enqueueVAC(); /**< selects more variables for AC2001 queue ; returns false if nothing to be done */
 
-    map<int, tVACStat*> heapAccess;
-    vector<tVACStat*> heap;
     Cost sumlb;
     Long nlb;
     Long sumvars;
     int sumk;
     int theMaxK;
-
     int bneckVar;
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
@@ -61,12 +64,12 @@ public:
 
     bool firstTime() { return nbIterations == 0; } /**< Is it the first iteration ? */
 
-    bool isVAC() const; /**< Is the WCSP VAC-epsilon ? Pass1 must be enforced */
+    bool isVAC() const { return (inconsistentVariable == -1); } /**< Is the WCSP VAC-epsilon ? Pass1 must be enforced */
     bool propagate(); /**< Starts one VAC iteration */
     bool isNull(Cost c) const { return (c < itThreshold); } /**< is the Cost significant (above itThreshold aka theta) */
 
-    void clear(); /**< empty VAC queue */
     void queueVAC(DLink<VariableWithTimeStamp>* link);
+    void queueVAC2(DLink<VariableWithTimeStamp>* link);
     void queueSeekSupport(DLink<VariableWithTimeStamp>* link);
 
     void init();
@@ -89,7 +92,7 @@ public:
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
 
-    Long getnbIterations();
+    Long getNbIterations() const {return nbIterations;}
 
     void RINS_finditThreshold();
 };

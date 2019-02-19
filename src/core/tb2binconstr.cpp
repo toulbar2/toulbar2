@@ -58,11 +58,21 @@ void BinaryConstraint::print(ostream& os)
     if (ToulBar2::weightedDegree)
         os << "/" << getConflictWeight();
     if (wcsp->vac)
-        cout << "[" << ((VACBinaryConstraint*)this)->getThreshold() << "]" << endl;
+        cout << "[" << ((VACBinaryConstraint*)this)->getThreshold() << "]";
     if (wcsp->getTreeDec())
-        os << "   cluster: " << getCluster() << endl;
-    else
-        os << endl;
+        os << "   cluster: " << getCluster();
+    if (ToulBar2::verbose >= 8) {
+        os << "supportX:[";
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            os << " " << supportX[x->toIndex(*iterX)];
+        }
+        os << " ] supportY:[";
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            os << " " << supportY[y->toIndex(*iterY)];
+        }
+        os << " ]";
+    }
+    os << endl;
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
