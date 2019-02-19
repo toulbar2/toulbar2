@@ -449,8 +449,8 @@ bool VACExtension::propagate()
                             for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                                 if (wcsp->getVar(i)->enumerated()) {
                                     EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
-                                    if(xi->strictACValue != xi->RINS_lastValue)
-                                        cout << i << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
+                                    //if(xi->strictACValue != xi->RINS_lastValue)
+                                        //cout << i << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
                                     int nbValues = xi->RINS_valuesToBeRemoved.size();
                                     for (int j = 0; j < nbValues; j++) {
                                         if (ToulBar2::RINS_HBFSnodes == 0) {
