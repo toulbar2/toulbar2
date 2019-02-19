@@ -408,6 +408,10 @@ bool VACExtension::propagate()
 
                 if (ToulBar2::RINS) {
                     ToulBar2::RINS = false;
+                    if(ToulBar2::RINS_HBFSnodes > 0){
+                        Store::restore();
+                        Store::store();
+                    }
                     Solver* solver = (Solver*)wcsp->getSolver();
                     //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = true" << endl;
                     //cout << "itThreshold: " << itThreshold << " nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
@@ -446,7 +450,7 @@ bool VACExtension::propagate()
                                 if (wcsp->getVar(i)->enumerated()) {
                                     EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
                                     if(xi->strictACValue != xi->RINS_lastValue)
-                                        cout << *xi << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
+                                        cout << i << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
                                     int nbValues = xi->RINS_valuesToBeRemoved.size();
                                     for (int j = 0; j < nbValues; j++) {
                                         if (ToulBar2::RINS_HBFSnodes == 0) {
@@ -478,7 +482,9 @@ bool VACExtension::propagate()
                             if (variables.size() > 0)
                                 wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
                             
-                            /*string fileName = (ToulBar2::RINS_HBFSnodes == 0) ? "afterAssignment_root.wcsp" : "afterAssignment_search.wcsp";
+                            /*string fileName = "afterAssignment_";
+                            fileName += std::to_string(ToulBar2::RINS_HBFSnodes);
+                            fileName += ".wcsp";
                             ofstream pb(fileName.c_str());
                             wcsp->dump(pb, true);*/
                             
