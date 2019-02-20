@@ -1099,7 +1099,7 @@ void VACExtension::RINS_finditThreshold()
     }
 
     if (ToulBar2::RINS_itThresholds.size() < 3) {
-        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].second;
+        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].first;
         return;
     }
 
