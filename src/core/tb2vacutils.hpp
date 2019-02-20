@@ -27,7 +27,9 @@ private:
     StoreCost myThreshold; /** The local threshold used to break loops */
 
     DLink<VariableWithTimeStamp> linkVACQueue;
+#ifdef INCREMENTALVAC
     DLink<VariableWithTimeStamp> linkVAC2Queue;
+#endif
     DLink<VariableWithTimeStamp> linkSeekSupport;
 
     void init();
@@ -40,17 +42,21 @@ public:
     bool removeVAC(Value v)
     {
         if (v == inf) {
-            if (v == sup) return true;
+            if (v == sup)
+                return true;
             inf = domain.increase(v + 1);
         } else if (v == sup) {
-            if (v == inf) return true;
+            if (v == inf)
+                return true;
             sup = domain.decrease(v - 1);
         } else if (canbe(v)) {
             domain.erase(v);
         }
+#ifdef INCREMENTALVAC
         if (v == maxCostValue || PARTIALORDER) {
             queueNC();
         }
+#endif
         return false;
     }
 
@@ -114,9 +120,17 @@ public:
     bool isSimplyNull(Cost c) { return (vac->isNull(c)); }
     bool isNull(Cost c) { return (vac->isNull(c) || (c < myThreshold)); }
 
-    void queueVAC() { if (ToulBar2::verbose >= 8) cout << "enqueue variable " << getName() << endl; wcsp->vac->queueVAC(&linkVACQueue); }
-    void queueVAC2() { if (ToulBar2::verbose >= 8) cout << "enqueue variable " << getName() << " for next VAC iteration" << endl; wcsp->vac->queueVAC2(&linkVAC2Queue); }
-    void queueSeekSupport() { wcsp->vac->queueSeekSupport(&linkSeekSupport); }
+    void queueVAC() { wcsp->vac->queueVAC(&linkVACQueue); }
+#ifdef INCREMENTALVAC
+    void queueVAC2()
+    {
+        wcsp->vac->queueVAC2(&linkVAC2Queue);
+    }
+#endif
+    void queueSeekSupport()
+    {
+        wcsp->vac->queueSeekSupport(&linkSeekSupport);
+    }
 
     void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing */
     {
@@ -213,9 +227,9 @@ public:
         else
             return c;
     }
-
     void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
     void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
+
     bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
     friend ostream& operator<<(ostream& os, VACBinaryConstraint& c)

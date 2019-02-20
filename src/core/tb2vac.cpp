@@ -176,25 +176,27 @@ void VACExtension::resetSupports()
 }
 
 // do not need to revise all variables because we assume soft AC already done
-bool VACExtension::enqueueVAC()
+bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
 {
     wcsp->revise(NULL);
     assert(VAC.empty());
+    assert(previousThreshold == -1 || previousThreshold > threshold);
+
+#ifdef INCREMENTALVAC
     for (Queue::iterator iter = VAC2.begin(); iter != VAC2.end(); ++iter) {
-         VACVariable* x = (VACVariable*) iter.getElt()->content.var;
-         x->queueVAC();
+        VACVariable* x = (VACVariable*)iter.getElt()->content.var;
+        x->queueVAC();
     }
-    assert(prevItThreshold == -1 || prevItThreshold > itThreshold);
+#endif
     VACVariable* x;
     TreeDecomposition* td = wcsp->getTreeDec();
-    int bucket2 = cost2log2glb(prevItThreshold);
+    int bucket2 = cost2log2gub(previousThreshold);
     if (bucket2 < 0 || bucket2 >= wcsp->getNCBucketSize())
         bucket2 = wcsp->getNCBucketSize() - 1;
-    int bucket = cost2log2glb(itThreshold);
+    int bucket = cost2log2glb(threshold);
     if (bucket < 0)
         bucket = 0;
-    if (ToulBar2::verbose >= 8) cout << "prevItThreshold: " << prevItThreshold << " (" <<  bucket2 << "), itThreshold " << itThreshold  << " (" <<  bucket << ")" << endl;
-
+    //    if (ToulBar2::verbose >= 8) cout << "previousThreshold: " << previousThreshold << " (" <<  bucket2 << "), threshold " << threshold  << " (" <<  bucket << ")" << endl;
     for (; bucket <= bucket2; bucket++) {
         VariableList* varlist = wcsp->getNCBucket(bucket);
         for (VariableList::iterator iter = varlist->begin(); iter != varlist->end();) {
@@ -208,11 +210,15 @@ bool VACExtension::enqueueVAC()
                 if (td) {
                     if (td->isActiveAndInCurrentClusterSubTree(x->getCluster())) {
                         x->queueVAC();
+#ifdef INCREMENTALVAC
                         x->queueVAC2();
+#endif
                     }
                 } else {
                     x->queueVAC();
+#ifdef INCREMENTALVAC
                     x->queueVAC2();
+#endif
                 }
             }
             ++iter;
@@ -225,17 +231,11 @@ bool VACExtension::propagate()
 {
     //cout << "CALL to VAC::propagate()" << endl;
     if (Store::getDepth() >= ToulBar2::vac) {
+        inconsistentVariable = -1;
         return false;
     }
-    // if(getVarTimesStat(varAssign) > 100) {
-    //    long double m = to_double(getVarCostStat(varAssign))/getVarTimesStat(varAssign);
-    //    if(m < to_double(ToulBar2::costMultiplier)/10.) {
-    //        inconsistentVariable = -1;
-    //        return false;
-    //    }
-    // }
 
-    //              assert(verify());
+    assert(wcsp->verify());
     if (firstTime()) {
         init();
         if (ToulBar2::verbose >= 1)
@@ -258,20 +258,28 @@ bool VACExtension::propagate()
     }
 
     while (!util && itThreshold != MIN_COST) {
+        int storedepth = Store::getDepth();
+#ifdef AC2001
+        resetSupports();
+#endif
+#ifdef INCREMENTALVAC
         prevItThreshold = -1;
         clear();
-        resetSupports();
-        int storedepth = Store::getDepth();
         Store::store();
+#endif
         while (isvac && itThreshold != MIN_COST) {
-            if (ToulBar2::verbose >= 8) cout << "VAC itThreshold: " << itThreshold << endl;
+#ifndef INCREMENTALVAC
+            prevItThreshold = -1;
+            clear();
+            Store::store();
+#endif
             minlambda = wcsp->getUb() - wcsp->getLb();
             inconsistentVariable = -1;
             nbIterations++;
             //assert(wcsp->verify()); // it modifies binary supports???
-            assert(VAC.empty());
             assert(wcsp->NC.empty());
-            while (!enqueueVAC() && itThreshold != MIN_COST) {
+            assert(VAC.empty());
+            while (!enqueueVAC(itThreshold, prevItThreshold) && itThreshold != MIN_COST) {
                 prevItThreshold = itThreshold;
                 nextScaleCost();
             }
@@ -280,7 +288,10 @@ bool VACExtension::propagate()
                 inconsistentVariable = -1;
                 return false;
             }
-            if (ToulBar2::verbose >= 8) cout << "VAC itThreshold: " << itThreshold << " before enforcePass1 (prevItThreshold: " << prevItThreshold << ")" << endl << *wcsp << endl;
+            if (ToulBar2::verbose >= 4)
+                cout << "VAC itThreshold: " << itThreshold << " before enforcePass1 (prevItThreshold: " << prevItThreshold << ")" << endl;
+            if (ToulBar2::verbose >= 8)
+                cout << *wcsp << endl;
             enforcePass1();
             isvac = isVAC();
             //        cout << "and after enforcePass1" << endl << *wcsp << endl;
@@ -331,7 +342,6 @@ bool VACExtension::propagate()
 
                 for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                     if (wcsp->getVar(i)->enumerated()) {
-                        
                         EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
                         xi->moreThanOne = false;
                         xi->strictACValue = xi->getSupport();
@@ -342,26 +352,22 @@ bool VACExtension::propagate()
                         wcsp->getEnumDomainAndCost(i, domcost);
                         xi->RINS_valuesToBeRemoved.clear();
                         int currentIndex = 0;
-                        
+
                         for (int v = 0; v < initDomSize; v++) {
-                            if(currentIndex < currentDomSize && domcost[currentIndex].value == v){
+                            if (currentIndex < currentDomSize && domcost[currentIndex].value == v) {
                                 if (((VACVariable*)xi)->getVACCost(domcost[currentIndex].value) == MIN_COST) {
                                     xi->domSizeInBoolOfP += 1;
                                     xi->strictACValue = domcost[currentIndex].value;
                                 }
                                 currentIndex++;
-                            }
-                            else{
+                            } else {
                                 xi->RINS_valuesToBeRemoved.push_back(v);
                             }
-                            
                         }
-                        
                         xi->moreThanOne = (xi->domSizeInBoolOfP > 1) ? true : false;
-                        
                         if (ToulBar2::strictAC == 2 && xi->domSizeInBoolOfP == 1) {
                             for (ConstraintList::iterator itc = xi->getConstrs()->begin();
-                                    itc != xi->getConstrs()->end(); ++itc) {
+                                 itc != xi->getConstrs()->end(); ++itc) {
                                 Constraint* c = (*itc).constr;
                                 if (c->isBinary()) {
                                     EnumeratedVariable* xj = (EnumeratedVariable*)(((BinaryConstraint*)c)->getVarDiffFrom(xi));
@@ -370,11 +376,10 @@ bool VACExtension::propagate()
                                 }
                             }
                         }
-                        
                         if (ToulBar2::strictAC == 3 && xi->domSizeInBoolOfP > 1 && xi->getCost(xi->strictACValue) == MIN_COST) {
                             xi->moreThanOne = false;
                             for (ConstraintList::iterator itc = xi->getConstrs()->begin();
-                                    !xi->moreThanOne && itc != xi->getConstrs()->end(); ++itc) {
+                                 !xi->moreThanOne && itc != xi->getConstrs()->end(); ++itc) {
                                 Constraint* c = (*itc).constr;
                                 if (c->isBinary()) {
                                     BinaryConstraint* cij = ((BinaryConstraint*)c);
@@ -408,7 +413,7 @@ bool VACExtension::propagate()
 
                 if (ToulBar2::RINS) {
                     ToulBar2::RINS = false;
-                    if(ToulBar2::RINS_HBFSnodes > 0){
+                    if (ToulBar2::RINS_HBFSnodes > 0) {
                         Store::restore(storedepth);
                         Store::store();
                         /*string fileName = "beforeAssignment_";
@@ -455,7 +460,7 @@ bool VACExtension::propagate()
                                 if (wcsp->getVar(i)->enumerated()) {
                                     EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
                                     //if(xi->strictACValue != xi->RINS_lastValue)
-                                        //cout << i << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
+                                    //cout << i << " strictAC val: " << xi->strictACValue << " incumbentValue: " << xi->RINS_lastValue << endl;
                                     int nbValues = xi->RINS_valuesToBeRemoved.size();
                                     for (int j = 0; j < nbValues; j++) {
                                         if (ToulBar2::RINS_HBFSnodes == 0) {
@@ -466,12 +471,11 @@ bool VACExtension::propagate()
                                         }
                                     }
                                     if (xi->domSizeInBoolOfP == 1) {
-                                        if(ToulBar2::RINS_HBFSnodes == 0 || xi->RINS_lastValue == -1){
+                                        if (ToulBar2::RINS_HBFSnodes == 0 || xi->RINS_lastValue == -1) {
                                             //cout << "add " << i << " to variables" << endl;
                                             variables.push_back(i);
                                             values.push_back(xi->strictACValue);
-                                        }
-                                        else if(xi->strictACValue == xi->RINS_lastValue){
+                                        } else if (xi->strictACValue == xi->RINS_lastValue) {
                                             //cout << *iter << " ";
                                             variables.push_back(i);
                                             values.push_back(xi->strictACValue);
@@ -483,16 +487,13 @@ bool VACExtension::propagate()
                                     xi->propagateNC(); // and update maxcost values before propagate done in assignLS
                                 }
                             }
-
                             if (variables.size() > 0)
                                 wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
-                            
                             /*string fileName = "afterAssignment_";
                             fileName += std::to_string(ToulBar2::RINS_HBFSnodes);
                             fileName += ".wcsp";
-                            ofstream pb(fileName.c_str());
-                            wcsp->dump(pb, true);*/
-                            
+                        ofstream pb(fileName.c_str());
+                        wcsp->dump(pb, true);*/
                             if (ToulBar2::useRINS <= 1) {
                                 cout << "call to recursiveSolve from VAC" << endl;
                                 solver->recursiveSolve(wcsp->getLb()); // look at its search tree (if a new solution is found, UB should be updated automatically)
@@ -518,6 +519,7 @@ bool VACExtension::propagate()
                     //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = false" << endl;
                     //ToulBar2::RINS = false;
                     Store::restore(storedepth);
+                    inconsistentVariable = -1;
                     return (wcsp->getUb() < lastUB);
                 }
 
@@ -533,9 +535,10 @@ bool VACExtension::propagate()
             if (isvac) {
                 prevItThreshold = itThreshold;
                 nextScaleCost();
+#ifdef INCREMENTALVAC
                 if (itThreshold != MIN_COST) {
-                    while (!wcsp->NC.empty()) {
-                        EnumeratedVariable* x = (EnumeratedVariable*) wcsp->NC.pop();
+                    while (!wcsp->NC.empty()) { // update maxCost and maxCostValue after value removals by AC2001
+                        EnumeratedVariable* x = (EnumeratedVariable*)wcsp->NC.pop();
                         Cost maxcost = MIN_COST;
                         Value maxcostvalue = x->getSup() + 1;
                         // Warning! the first value must be visited because it may be removed
@@ -554,10 +557,16 @@ bool VACExtension::propagate()
                         }
                     }
                 }
+#endif
             }
-        }
-        Store::restore(storedepth);
+#ifndef INCREMENTALVAC
+            Store::restore(storedepth);
 
+#endif
+        }
+#ifdef INCREMENTALVAC
+        Store::restore(storedepth);
+#endif
         if (!isvac) {
             enforcePass2();
             if (ToulBar2::verbose > 0)
@@ -568,6 +577,8 @@ bool VACExtension::propagate()
                 throw Contradiction();
             }
             util = enforcePass3();
+        } else {
+            nextScaleCost();
         }
     }
 
@@ -596,10 +607,10 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
     bool wipeout = false;
     VACVariable* xi;
     xi = (VACVariable*)cij->getVarDiffFrom(xj);
-    if (ToulBar2::verbose >= 8) cout << "revise " << *((EnumeratedVariable *) xi) << endl;
+    //    if (ToulBar2::verbose >= 8) cout << "revise " << *((EnumeratedVariable *) xi) << endl;
     for (EnumeratedVariable::iterator it = xi->begin(); it != xi->end(); ++it) {
         Value v = *it;
-        if (ToulBar2::verbose >= 8) cout << "check variable " << xi->getName() << " with value " << v << " and cost " << xi->getVACCost(v) << endl;
+        //        if (ToulBar2::verbose >= 8) cout << "check variable " << xi->getName() << " with value " << v << " and cost " << xi->getVACCost(v) << endl;
         if (xi->getVACCost(v) > MIN_COST) {
             xi->removeVAC(v);
         } else if (cij->revise(xi, v)) {
@@ -611,7 +622,9 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
                 return true;
             }
             xi->queueVAC();
+#ifdef INCREMENTALVAC
             xi->queueVAC2();
+#endif
             if (ToulBar2::vacValueHeuristic)
                 xi->queueSeekSupport();
         }
@@ -834,7 +847,6 @@ bool VACExtension::enforcePass3()
     sumvars += queueR->size();
     maxk = 0;
 
-    if (ToulBar2::verbose >= 8) cout << *wcsp << endl;
     while (!queueR->empty()) {
         j = queueR->top().first;
         w = queueR->top().second;
@@ -952,8 +964,10 @@ void VACExtension::clear()
     // Cannot use  VAC.clear() as it will not reset timeStamps which are based on the number of wcsp propagate calls and not VAC iterations
     while (!VAC.empty())
         VAC.pop();
+#ifdef INCREMENTALVAC
     while (!VAC2.empty())
-         VAC2.pop();
+        VAC2.pop();
+#endif
     if (ToulBar2::vacValueHeuristic)
         while (!SeekSupport.empty())
             SeekSupport.pop();
@@ -964,12 +978,13 @@ void VACExtension::queueVAC(DLink<VariableWithTimeStamp>* link)
     assert(ToulBar2::vac);
     VAC.push(link, wcsp->getNbNodes());
 }
-
+#ifdef INCREMENTALVAC
 void VACExtension::queueVAC2(DLink<VariableWithTimeStamp>* link)
 {
     assert(ToulBar2::vac);
     VAC2.push(link, wcsp->getNbNodes());
 }
+#endif
 
 void VACExtension::queueSeekSupport(DLink<VariableWithTimeStamp>* link)
 {

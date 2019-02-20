@@ -7,6 +7,9 @@
 
 #include "utils/tb2queue.hpp"
 
+#define INCREMENTALVAC
+//#define AC2001
+
 class tVACStat;
 class VACVariable;
 class VACBinaryConstraint;
@@ -22,7 +25,9 @@ class VACExtension {
 private:
     WCSP* wcsp; /**< Reference to the WCSP that will be processed */
     Queue VAC; /**< Non backtrackable list; AC2001 queue used for Pass1 inside VAC */
+#ifdef INCREMENTALVAC
     Queue VAC2; /**< Non backtrackable list; AC2001 queue used for incremental VAC */
+#endif
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
@@ -46,14 +51,15 @@ private:
     void enforcePass3VACDecomposition(); /**< Enforces VAC decomposition pass 3 (substract cost and decrease top) */
 
     void clear(); /**< empty all VAC queues */
-    void resetSupports(); /**< reset binary supports for AC2001 */
-    bool enqueueVAC(); /**< selects more variables for AC2001 queue ; returns false if nothing to be done */
+    void resetSupports(); /**< reset binary supports for AC2001 optimal O(ed^2) complexity */
+    bool enqueueVAC(Cost threshold, Cost previousThreshold); /**< selects more variables for AC2001 queue having unary costs between threshold and previousThreshold ; returns false if nothing to be done */
 
     Cost sumlb;
     Long nlb;
     Long sumvars;
     int sumk;
     int theMaxK;
+
     int bneckVar;
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
@@ -69,7 +75,9 @@ public:
     bool isNull(Cost c) const { return (c < itThreshold); } /**< is the Cost significant (above itThreshold aka theta) */
 
     void queueVAC(DLink<VariableWithTimeStamp>* link);
+#ifdef INCREMENTALVAC
     void queueVAC2(DLink<VariableWithTimeStamp>* link);
+#endif
     void queueSeekSupport(DLink<VariableWithTimeStamp>* link);
 
     void init();
@@ -92,7 +100,7 @@ public:
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
 
-    Long getNbIterations() const {return nbIterations;}
+    Long getNbIterations() const { return nbIterations; }
 
     void RINS_finditThreshold();
 };

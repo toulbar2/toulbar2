@@ -37,8 +37,10 @@ void VACVariable::init()
     }
     linkVACQueue.content.var = this;
     linkVACQueue.content.timeStamp = -1;
+#ifdef INCREMENTALVAC
     linkVAC2Queue.content.var = this;
     linkVAC2Queue.content.timeStamp = -1;
+#endif
     linkSeekSupport.content.var = this;
     linkSeekSupport.content.timeStamp = -1;
 }
@@ -262,38 +264,53 @@ bool VACBinaryConstraint::revise(VACVariable* var, Value v)
         xi = (VACVariable*)getVar(1);
         xj = (VACVariable*)getVar(0);
     }
-    if (ToulBar2::verbose>=8) cout << "revise C" << x->getName() << "," << y->getName() << " (" << var->getName() << "," << v << ") " << sup;
+    //    if (ToulBar2::verbose>=8) cout << "revise C" << x->getName() << "," << y->getName() << " (" << var->getName() << "," << v << ") " << sup;
 
     if (xj->canbe(sup)) {
         if (xj->getVACCost(sup) > MIN_COST) {
             xj->removeVAC(sup);
         } else {
             if (getVACCost(xi, xj, v, sup) == MIN_COST) {
-                if (ToulBar2::verbose>=8) cout << endl;
+                //                if (ToulBar2::verbose>=8) cout << endl;
                 return false;
             }
         }
     }
 
-    for (EnumeratedVariable::iterator it = xj->lower_bound(sup+1); it != xj->end(); ++it) {
+    for (EnumeratedVariable::iterator it = xj->lower_bound(sup + 1); it != xj->end(); ++it) {
         Value w = *it;
         if (xj->getVACCost(w) > MIN_COST) {
             xj->removeVAC(w);
         } else {
             if (getVACCost(xi, xj, v, w) == MIN_COST) {
                 setSupport(xi, v, w);
-                if (ToulBar2::verbose>=8) cout << " -> " << getSupport(xi, v) << endl;
+                //                if (ToulBar2::verbose>=8) cout << " -> " << getSupport(xi, v) << endl;
                 return false;
             }
         }
     }
 
-    if (ToulBar2::verbose>=8) cout << " -> " << -1 << endl;
-//#ifndef NDEBUG
-//    for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {
-//        assert(getVACCost(xi, xj, v, *it) + xj->getVACCost(*it) > MIN_COST);
-//    }
-//#endif
+#ifndef AC2001
+    for (EnumeratedVariable::iterator it = xj->upper_bound(sup - 1); it != xj->rend(); --it) {
+        Value w = *it;
+        if (xj->getVACCost(w) > MIN_COST) {
+            xj->removeVAC(w);
+        } else {
+            if (getVACCost(xi, xj, v, w) == MIN_COST) {
+                setSupport(xi, v, w);
+                //                if (ToulBar2::verbose>=8) cout << " -> " << getSupport(xi, v) << endl;
+                return false;
+            }
+        }
+    }
+#endif
+
+    //    if (ToulBar2::verbose>=8) cout << " -> " << -1 << endl;
+    //#ifndef NDEBUG
+    //    for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {
+    //        assert(getVACCost(xi, xj, v, *it) + xj->getVACCost(*it) > MIN_COST);
+    //    }
+    //#endif
     return true;
 }
 
