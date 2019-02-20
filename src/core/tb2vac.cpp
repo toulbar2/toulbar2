@@ -274,7 +274,7 @@ bool VACExtension::propagate()
             Store::store();
 #endif
         minlambda = wcsp->getUb() - wcsp->getLb();
-            inconsistentVariable = -1;
+        inconsistentVariable = -1;
         nbIterations++;
             //assert(wcsp->verify()); // it modifies binary supports???
             assert(wcsp->NC.empty());
@@ -520,6 +520,7 @@ bool VACExtension::propagate()
                     //cout << "[" << Store::getDepth() << "," << wcsp->getNbNodes() << "]" << " VAC Propagate RINS = false" << endl;
                 //ToulBar2::RINS = false;
                 Store::restore(storedepth);
+                inconsistentVariable = -1;
                 return (wcsp->getUb() < lastUB);
             }
 
