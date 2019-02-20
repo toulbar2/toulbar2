@@ -2082,7 +2082,9 @@ void WCSP::preprocessing()
         //        vac->propagate();
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
-        vac->RINS_finditThreshold();
+        ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
+        cout << "Selected threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+        ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
     }
 }
 

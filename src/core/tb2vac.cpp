@@ -403,9 +403,11 @@ bool VACExtension::propagate()
 
                 if (ToulBar2::RINS_saveitThresholds) {
                     double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double)itThreshold);
-                    //cout << "itThreshold: " << itThreshold << " strictAC: " << ToulBar2::RINS_nbStrictACVariables << " ratio: " << ratio << endl;
+                    cout << std::fixed << std::setprecision(7);
+                    cout << "Threshold: " << itThreshold << " NbStrictAC: " << ToulBar2::RINS_nbStrictACVariables << " Ratio: " << ratio << endl;
+                    cout << std::fixed << std::setprecision(DECIMAL_POINT);
                     ToulBar2::RINS_itThresholds.push_back(std::make_pair(itThreshold, ratio));
-                }
+               }
 
                 //cout << "Nb Variables With BoolDomSize Zero: " << nbDomSizeZero << " One: " << ToulBar2::RINS_nbStrictACVariables << " More Than One: " << nbDomSizeMore << endl;
                 //cout << ((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double) itThreshold << endl;
@@ -1103,45 +1105,29 @@ void VACExtension::minsumDiffusion()
     }
 }
 
-void VACExtension::RINS_finditThreshold()
+Cost VACExtension::RINS_finditThreshold()
 {
+    Cost result = ToulBar2::costThreshold;
+    unsigned int size = ToulBar2::RINS_itThresholds.size();
 
-    cout << "call to find itThreshold with size " << ToulBar2::RINS_itThresholds.size() << endl;
+    if (size > 0) {
+        if (size < 3) {
+            return ToulBar2::RINS_itThresholds[size - 1].first;
+        }
 
-    if (ToulBar2::RINS_itThresholds.size() == 0) {
-        ToulBar2::RINS_lastitThreshold = ToulBar2::costThresholdPre; // ToulBar2::costThreshold
-        return;
+        double lastRatio = ToulBar2::RINS_itThresholds[size - 1].second;
+        for (unsigned int i = 0; i < size; i++) {
+            ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
+        }
+
+        unsigned int i = 1;
+        double stepSize = 2.0 / (double)size;
+        while (i < size-1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
+            result = ToulBar2::RINS_itThresholds[i].first;
+            i++;
+        }
     }
-
-    if (ToulBar2::RINS_itThresholds.size() < 3) {
-        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].second;
-        return;
-    }
-
-    double lastRatio = ToulBar2::RINS_itThresholds[ToulBar2::RINS_itThresholds.size() - 1].second;
-    //cout << std::fixed << std::setprecision(7);
-    //cout << lastRatio << endl;
-
-    for (unsigned int i = 0; i < ToulBar2::RINS_itThresholds.size(); i++) {
-        //cout << ToulBar2::RINS_itThresholds[i].second << " ";
-        ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
-        //cout << ToulBar2::RINS_itThresholds[i].second << endl;
-    }
-
-    unsigned int i = 1;
-    double stepSize = 2.0 / (double)ToulBar2::RINS_itThresholds.size();
-
-    //cout << "getUb: " << wcsp->getUb() << endl;
-
-    while (i < ToulBar2::RINS_itThresholds.size() && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
-        //cout << ToulBar2::RINS_itThresholds[i].second << endl;
-        ToulBar2::RINS_lastitThreshold = ToulBar2::RINS_itThresholds[i].first;
-        i++;
-    }
-
-    //ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
-
-    //cout << std::fixed << std::setprecision(DECIMAL_POINT);
+    return result;
 }
 
 /* Local Variables: */

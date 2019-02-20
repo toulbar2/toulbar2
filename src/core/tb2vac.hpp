@@ -102,7 +102,7 @@ public:
 
     Long getNbIterations() const { return nbIterations; }
 
-    void RINS_finditThreshold();
+    Cost RINS_finditThreshold();
 };
 
 #endif /*TB2VAC_HPP_*/
