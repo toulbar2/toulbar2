@@ -1113,20 +1113,19 @@ Cost VACExtension::RINS_finditThreshold()
     if (size > 0) {
         if (size < 3) {
             return ToulBar2::RINS_itThresholds[size - 1].first;
-    }
+        }
 
         double lastRatio = ToulBar2::RINS_itThresholds[size - 1].second;
         for (unsigned int i = 0; i < size; i++) {
-        ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
-    }
+            ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
+        }
 
-    unsigned int i = 1;
+        unsigned int i = 1;
         double stepSize = 2.0 / (double)size;
-        while (i < size-1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
+        while (i < size - 1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
             result = ToulBar2::RINS_itThresholds[i].first;
-        i++;
-    }
-
+            i++;
+        }
     }
     return result;
 }
