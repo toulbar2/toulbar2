@@ -59,6 +59,7 @@ private:
     Long sumvars;
     int sumk;
     int theMaxK;
+
     int bneckVar;
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;

@@ -391,6 +391,8 @@ public:
     static bool RINS_saveitThresholds;
     static vector<pair<Cost, double>> RINS_itThresholds;
     static int RINS_angle;
+    static int RINS_HBFSnodes;
+    static int RINS_lastHBFSnode;
     static int debug;
     static string externalUB;
     static int showSolutions;

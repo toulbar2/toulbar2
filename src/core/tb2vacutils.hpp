@@ -219,9 +219,9 @@ public:
         else
             return c;
     }
-
     void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
     void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
+
     bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
     friend ostream& operator<<(ostream& os, VACBinaryConstraint& c)

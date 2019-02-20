@@ -35,12 +35,14 @@ protected:
     void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
 
 public:
+    Value RINS_lastValue;
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
     bool moreThanOne;
     int domSizeInBoolOfP;
     Value strictACValue;
+    vector<Value> RINS_valuesToBeRemoved;
 
     bool enumerated() const FINAL { return true; }
 
