@@ -42,10 +42,12 @@ public:
     bool removeVAC(Value v)
     {
         if (v == inf) {
-            if (v == sup) return true;
+            if (v == sup)
+                return true;
             inf = domain.increase(v + 1);
         } else if (v == sup) {
-            if (v == inf) return true;
+            if (v == inf)
+                return true;
             sup = domain.decrease(v - 1);
         } else if (canbe(v)) {
             domain.erase(v);
@@ -120,9 +122,15 @@ public:
 
     void queueVAC() { wcsp->vac->queueVAC(&linkVACQueue); }
 #ifdef INCREMENTALVAC
-    void queueVAC2() { wcsp->vac->queueVAC2(&linkVAC2Queue); }
+    void queueVAC2()
+    {
+        wcsp->vac->queueVAC2(&linkVAC2Queue);
+    }
 #endif
-    void queueSeekSupport() { wcsp->vac->queueSeekSupport(&linkSeekSupport); }
+    void queueSeekSupport()
+    {
+        wcsp->vac->queueSeekSupport(&linkSeekSupport);
+    }
 
     void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing */
     {

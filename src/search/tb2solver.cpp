@@ -1555,8 +1555,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     cub = MIN(cub, res.second);
                 } else {
                     ToulBar2::RINS_HBFSnodes++;
-                    if (ToulBar2::useRINS == -1 
-                        && (ToulBar2::RINS_HBFSnodes == 1 || ToulBar2::RINS_HBFSnodes - ToulBar2::RINS_lastHBFSnode >= 100) 
+                    if (ToulBar2::useRINS == -1
+                        && (ToulBar2::RINS_HBFSnodes == 1 || ToulBar2::RINS_HBFSnodes - ToulBar2::RINS_lastHBFSnode >= 100)
                         && (double)ToulBar2::RINS_nbStrictACVariables / (double)wcsp->numberOfVariables() > 0.0) {
                         cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                         ToulBar2::RINS_lastHBFSnode = ToulBar2::RINS_HBFSnodes;
