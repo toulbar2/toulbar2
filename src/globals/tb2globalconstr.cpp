@@ -1,6 +1,5 @@
 #include "tb2globalconstr.hpp"
 #include "core/tb2wcsp.hpp"
-#include "core/tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 GlobalConstraint::GlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)

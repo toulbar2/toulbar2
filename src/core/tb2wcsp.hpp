@@ -72,6 +72,7 @@ class WCSP FINAL : public WeightedCSP {
     WCSP(const WCSP& wcsp);
     WCSP& operator=(const WCSP& wcsp);
     friend class CFNStreamReader;
+    friend class VACExtension;
 
 public:
     /// \brief variable elimination information used in backward phase to get a solution during search

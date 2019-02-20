@@ -15,10 +15,10 @@ SRCS = $(SRCSFULL:utils/tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lxml2 -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
-# -lxml2 -lz -lm -lpthread
+OBJS = $(SRCS:.cpp=.o) -lxml2 -lboost_graph -lboost_iostreams -lgmp -lz -llzma
+# -lxml2 -lz -llzma -lm -lpthread
 else
-OBJS = $(SRCS:.cpp=.o) -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
+OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 endif
 
 LIBSRCS = $(SRCS:tb2main.cpp=)
@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -pthread -rdynamic 
 
-CFLAGS = -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
+CFLAGS = -std=c++11 -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLONG_COST -DWIDE_STRING -DLONGDOUBLE_PROB -DNARYCHAR -DWCSPFORMATONLY
 # -DLINUX # compile on linux computers
 # -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
 # -DWIDE_STRING # uses wide strings (2 bytes per char instead of one) for encoding value tuples (including separators)
@@ -79,10 +79,10 @@ libtb2.so: $(LIBOBJS)
 	$(BUILD) $(LIBFLAGS) $(LIBOBJS) -o $@
 
 toulbar2test: toulbar2test.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 
 iloglue: iloglue.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lgmp -lz -lboost_graph -lboost_iostreams -lboost_regex
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 
 clean:
 	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
