@@ -14,10 +14,9 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 int main(int argc, char* argv[])
 {
-    mysrand(getpid());
-
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
-
+    mysrand(ToulBar2::seed); // mysrand(getpid());
+    ToulBar2::startCpuTime = cpuTime();
     ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
 
     // uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable

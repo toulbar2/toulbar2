@@ -402,7 +402,7 @@ bool VACExtension::propagate()
                     ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
 
                 if (ToulBar2::RINS_saveitThresholds) {
-                    double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double)itThreshold);
+                    double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)wcsp->numberOfVariables()) / (double)itThreshold);
                     if (ToulBar2::verbose >= 0) {
                         cout << std::fixed << std::setprecision(7);
                         cout << "Threshold: " << itThreshold << " NbStrictAC: " << ToulBar2::RINS_nbStrictACVariables << " Ratio: " << ratio << endl;

@@ -1618,6 +1618,10 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
 
 void WCSP::sortConstraints()
 {
+    if (ToulBar2::nbvar == 0) {
+        ToulBar2::nbvar = numberOfVariables(); // if nbvar is unset then choose by default all variables
+    }
+
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
