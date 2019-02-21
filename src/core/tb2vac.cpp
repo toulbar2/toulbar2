@@ -403,9 +403,11 @@ bool VACExtension::propagate()
 
                 if (ToulBar2::RINS_saveitThresholds) {
                     double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar) / (double)itThreshold);
-                    cout << std::fixed << std::setprecision(7);
-                    cout << "Threshold: " << itThreshold << " NbStrictAC: " << ToulBar2::RINS_nbStrictACVariables << " Ratio: " << ratio << endl;
-                    cout << std::fixed << std::setprecision(DECIMAL_POINT);
+                    if (ToulBar2::verbose >= 0) {
+                        cout << std::fixed << std::setprecision(7);
+                        cout << "Threshold: " << itThreshold << " NbStrictAC: " << ToulBar2::RINS_nbStrictACVariables << " Ratio: " << ratio << endl;
+                        cout << std::fixed << std::setprecision(DECIMAL_POINT);
+                    }
                     ToulBar2::RINS_itThresholds.push_back(std::make_pair(itThreshold, ratio));
                 }
 
@@ -497,10 +499,10 @@ bool VACExtension::propagate()
                         ofstream pb(fileName.c_str());
                         wcsp->dump(pb, true);*/
                             if (ToulBar2::useRINS <= 1) {
-                                cout << "call to recursiveSolve from VAC" << endl;
+                                //cout << "call to recursiveSolve from VAC" << endl;
                                 solver->recursiveSolve(wcsp->getLb()); // look at its search tree (if a new solution is found, UB should be updated automatically)
                             } else {
-                                cout << "call to recursiveSolveLDS from VAC" << endl;
+                                //cout << "call to recursiveSolveLDS from VAC" << endl;
                                 solver->recursiveSolveLDS(ToulBar2::useRINS - 1);
                             }
                         } catch (Contradiction) {
@@ -1007,9 +1009,10 @@ void VACExtension::printStat(bool ini)
         else
             cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (iter:" << nlb << ")" << endl;
     }
-
-    cout << "Number of VAC iterations: " << nbIterations << endl;
-    cout << "Number of times is VAC: " << ToulBar2::nbTimesIsVAC << " Number of times isvac and itThreshold > 1: " << ToulBar2::nbTimesIsVACitThresholdMoreThanOne << endl;
+    if (ToulBar2::verbose >= 0) {
+        cout << "Number of VAC iterations: " << nbIterations << endl;
+        cout << "Number of times is VAC: " << ToulBar2::nbTimesIsVAC << " Number of times isvac and itThreshold > 1: " << ToulBar2::nbTimesIsVACitThresholdMoreThanOne << endl;
+    }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
 	   vector<tVACStat*>::iterator it = heap.begin();
@@ -1122,7 +1125,7 @@ Cost VACExtension::RINS_finditThreshold()
 
         unsigned int i = 1;
         double stepSize = 2.0 / (double)size;
-        while (i < size - 1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)ToulBar2::RINS_angle) {
+        while (i < size - 1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)abs(ToulBar2::RINS_angle)) {
             result = ToulBar2::RINS_itThresholds[i].first;
             i++;
         }

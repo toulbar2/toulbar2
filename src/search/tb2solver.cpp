@@ -518,7 +518,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
             if (ToulBar2::BoolDomSize > 0) {
                 heuristic = (double)(var->domSizeInBoolOfP) / (double)(wdeg + 1 + unarymediancost);
             }
-            if (var->moreThanOne
+            if ((var->moreThanOne || var->cannotbe(var->strictACValue))
                 && ((varIndex < 0)
                        // This part is obsolete because if all variables are strict AC then we do just after a greedy search on them
                        //		            || (((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->moreThanOne
@@ -1558,14 +1558,14 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     if (ToulBar2::useRINS == -1
                         && (ToulBar2::RINS_HBFSnodes == 1 || ToulBar2::RINS_HBFSnodes - ToulBar2::RINS_lastHBFSnode >= 100)
                         && (double)ToulBar2::RINS_nbStrictACVariables / (double)wcsp->numberOfVariables() > 0.0) {
-                        cout << "ToulBar2::RINS = true; at SOLVER" << endl;
+                        //cout << "ToulBar2::RINS = true; at SOLVER" << endl;
                         ToulBar2::RINS_lastHBFSnode = ToulBar2::RINS_HBFSnodes;
                         ToulBar2::RINS_nbCalls++;
                         ToulBar2::RINS = true;
                         ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
                         bool foundbetterub = ((WCSP*)wcsp)->vac->propagate(); // VAC done again
                         ToulBar2::RINS = false;
-                        cout << "ToulBar2::RINS = false; at SOLVER" << endl;
+                        //cout << "ToulBar2::RINS = false; at SOLVER" << endl;
                         if (foundbetterub) {
                             enforceUb();
                             wcsp->propagate();
@@ -1997,12 +1997,12 @@ bool Solver::solve()
                                 //cout << "nbStrictACVariables / nbVariables: " << (double)ToulBar2::RINS_nbStrictACVariables / (double)ToulBar2::nbvar << endl;
                                 enforceUb();
                                 wcsp->propagate();
-                                cout << "ToulBar2::RINS = true; at root (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
+                                //cout << "ToulBar2::RINS = true; at root (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
                                 ToulBar2::RINS = true;
                                 ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
                                 ((WCSP*)wcsp)->vac->propagate(); // VAC done again
                                 ToulBar2::RINS = false;
-                                cout << "ToulBar2::RINS = false; at root (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
+                                if (ToulBar2::verbose >= 0) cout << "RINS done in preprocessing (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
                                 enforceUb();
                                 wcsp->propagate();
                                 //}
@@ -2073,9 +2073,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
-    if (ToulBar2::useRINS)
+    if (ToulBar2::verbose >= 0 && ToulBar2::useRINS) {
         cout << "Number of RINS calls: " << ToulBar2::RINS_nbCalls << endl
              << "Number of times RINS found new solution: " << ToulBar2::RINS_nbNewSolutionFound << endl;
+    }
 
     if (isSolution) {
         if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {

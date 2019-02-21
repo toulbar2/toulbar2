@@ -259,7 +259,7 @@ void tb2init()
     ToulBar2::RINS_lastitThreshold = 1;
     ToulBar2::RINS_lastRatio = 0.0000000001;
     ToulBar2::RINS_saveitThresholds = false;
-    ToulBar2::RINS_angle = 10;
+    ToulBar2::RINS_angle = -10;
     ToulBar2::RINS_HBFSnodes = 0;
     ToulBar2::RINS_lastHBFSnode = 0;
     ToulBar2::debug = 0;
@@ -2083,8 +2083,12 @@ void WCSP::preprocessing()
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
         ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
-        cout << "Selected threshold: " << ToulBar2::RINS_lastitThreshold << endl;
-        ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
+        if (ToulBar2::RINS_angle < 0) {
+            if (ToulBar2::verbose >= 0) cout << "RINS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+            ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
+        } else {
+            if (ToulBar2::verbose >= 0) cout << "RINS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+        }
     }
 }
 
