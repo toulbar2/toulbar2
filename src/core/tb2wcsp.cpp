@@ -259,7 +259,7 @@ void tb2init()
     ToulBar2::RINS_lastitThreshold = 1;
     ToulBar2::RINS_lastRatio = 0.0000000001;
     ToulBar2::RINS_saveitThresholds = false;
-    ToulBar2::RINS_angle = -10;
+    ToulBar2::RINS_angle = 10;
     ToulBar2::RINS_HBFSnodes = 0;
     ToulBar2::RINS_lastHBFSnode = 0;
     ToulBar2::debug = 0;
@@ -502,7 +502,7 @@ void tb2checkOptions()
         cerr << "Error: cannot restrict solving to a problem rooted at a subtree, use RDS (-B=2)." << endl;
         exit(1);
     }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+    if (abs(ToulBar2::vac) > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
         cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
         exit(1);
     }

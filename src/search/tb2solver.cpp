@@ -1531,6 +1531,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
             } else
                 hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
             int storedepthBFS = Store::getDepth();
+            int storeVAC = ToulBar2::vac;
             try {
                 Store::store();
                 OpenNode nd = open_->top();
@@ -1540,6 +1541,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
                     cout << "[ " << nd.getCost(delta) << ", " << cub << "] ( " << open_->size() << "+1 still open)" << endl;
                 }
+                if (ToulBar2::vac < 0 && Store::getDepth()+(nd.last - nd.first) >= abs(ToulBar2::vac)) ToulBar2::vac = 0;
                 restore(*cp_, nd);
                 Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
                 bestlb = MAX(bestlb, clb);
@@ -1571,6 +1573,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                             wcsp->propagate();
                         }
                     }
+                    if (ToulBar2::vac < 0) ToulBar2::vac = 0;
                     recursiveSolve(bestlb);
                 }
             } catch (Contradiction) {
@@ -1581,6 +1584,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                 open_->updateUb(cub);
             }
             Store::restore(storedepthBFS);
+            ToulBar2::vac = storeVAC;
             cp_->store();
             if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
                 ToulBar2::hbfs = 0;

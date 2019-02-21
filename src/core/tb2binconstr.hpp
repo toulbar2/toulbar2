@@ -489,7 +489,7 @@ public:
             if (varIndex == 0) {
                 assert(y->canbe(y->getSupport()));
                 unsigned int yindex = y->toIndex(y->getSupport());
-                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     y->queueEAC2();
                 }
             }
@@ -497,7 +497,7 @@ public:
             if (varIndex == 1) {
                 assert(x->canbe(x->getSupport()));
                 unsigned int xindex = x->toIndex(x->getSupport());
-                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     x->queueEAC2();
                 }
             }

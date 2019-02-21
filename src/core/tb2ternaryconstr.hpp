@@ -687,7 +687,7 @@ public:
         unsigned int xindex = x->toIndex(x->getSupport());
         Value ysupport = supportX[xindex].first;
         Value zsupport = supportX[xindex].second;
-        if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || getCostWithBinaries(x, y, z, x->getSupport(), ysupport, zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+        if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || getCostWithBinaries(x, y, z, x->getSupport(), ysupport, zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
             x->queueEAC2();
         }
     }

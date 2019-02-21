@@ -230,7 +230,7 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
 bool VACExtension::propagate()
 {
     //cout << "CALL to VAC::propagate()" << endl;
-    if (Store::getDepth() >= ToulBar2::vac) {
+    if (Store::getDepth() >= abs(ToulBar2::vac)) {
         inconsistentVariable = -1;
         return false;
     }
