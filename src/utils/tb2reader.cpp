@@ -574,7 +574,7 @@ Cost CFNStreamReader::readHeader()
 
         try {
             if (pos != string::npos) {
-                pbBound = (std::stoll(integerPart) * powl(10, decimalPart.size()));
+                pbBound = (std::stoll(integerPart) * (Cost)powl(10, decimalPart.size()));
                 pbBound += ((pbBound >= 0) ? std::stoll(decimalPart) : -std::stoll(decimalPart));
             } else {
                 pbBound = std::stoll(integerPart);
@@ -1282,7 +1282,8 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 
         // Read all costs
         while (!isCBrace(token)) {
-            costs.push_back(wcsp->decimalToCost(token, lineNumber));
+            cost = wcsp->decimalToCost(token, lineNumber);
+            costs.push_back(cost);
             minCost = min(minCost, cost);
             nbTuples++;
             std::tie(lineNumber, token) = this->getNextToken();

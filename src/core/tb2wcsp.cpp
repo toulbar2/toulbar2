@@ -4328,7 +4328,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
 
     if (dotFound == std::string::npos) {
         try {
-            Cost cost = (Cost)std::stoll(decimalToken, &readIdx) * ToulBar2::costMultiplier * powl(10, ToulBar2::decimalPoint);
+            Cost cost = (Cost)std::stoll(decimalToken, &readIdx) * ToulBar2::costMultiplier * (Cost)powl(10, ToulBar2::decimalPoint);
             if (decimalToken[readIdx])
                 throw std::invalid_argument("Not a cost");
             return cost;
@@ -4353,11 +4353,11 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
 
     Cost cost;
     try {
-        cost = (std::stoll(integerPart, &readIdx) * powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
+        cost = (std::stoll(integerPart, &readIdx) * (Cost)powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
         if (integerPart[readIdx])
             throw std::invalid_argument("Not a cost");
         if (decimalPart.size()) {
-            cost += std::stoll(decimalPart, &readIdx) * powl(10, shift) * ToulBar2::costMultiplier;
+            cost += std::stoll(decimalPart, &readIdx) * (Cost)powl(10, shift) * ToulBar2::costMultiplier;
             if (decimalPart[readIdx])
                 throw std::invalid_argument("Not a cost");
         }
