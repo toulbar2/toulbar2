@@ -1,4 +1,4 @@
-#code executed if the boost option is add
+#code executed if the boost option is active
 FILE(GLOB boost_file ${My_Source}/utils/tb2boostgraph.cpp)
 
 # list of cpp file extension 
@@ -22,6 +22,5 @@ IF(NOT Boost_FOUND)
 ELSE (NOT Boost_FOUND)
         MESSAGE(STATUS "boost Package configured successfully.")
         SET (boostflag BOOST)
-	
 ENDIF(NOT Boost_FOUND)
 

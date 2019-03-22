@@ -42,7 +42,7 @@ OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF)
 OPTION(ALL_APP "dedicated applications and toulbar2 solver compilation [default: off]" OFF)
 OPTION(MENDELSOFT_ONLY "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 OPTION(TOULBAR2_ONLY  "toulbar2 solver compilation ONLY  [default: on]" ON)
-  OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
+OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 #	OPTION(LIBTB2INT " lib toulbar2 compilation INT mode required with ilog and windows [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
@@ -145,23 +145,23 @@ endif(verbose)
 
 IF(ALL_APP)
   MESSAGE(STATUS "##########################################")
-        MESSAGE(STATUS " TOULBAR2 and MENDELSOFT COMPILATION AND PACKAGING ")
+  MESSAGE(STATUS " TOULBAR2 and MENDELSOFT COMPILATION AND PACKAGING ")
   MESSAGE(STATUS "##########################################")
 
 	SET(TOULBAR2_ONLY OFF)
 	SET(MENDELSOFT_ONLY OFF)
-        SET(MENDELSOFT ON)
-        SET(TOULBAR2 ON)
-        SET(ILOG OFF)
-        SET(LIBTB2 ON)
-        SET(XML ON)
-        SET(CPLEX OFF)
-        SET(boost ON)
-        set (Toulbar_NAME "toulbar2-all")
-        project(${Toulbar_NAME})
-#description used in the package building
+  SET(MENDELSOFT ON)
+  SET(TOULBAR2 ON)
+  SET(ILOG OFF)
+  SET(LIBTB2 ON)
+  SET(XML ON)
+  SET(CPLEX OFF)
+  SET(boost ON)
+  set (Toulbar_NAME "toulbar2-all")
+  project(${Toulbar_NAME})
+  #description used in the package building
 	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
-        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
+  SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 
 ENDIF(ALL_APP)
 
@@ -181,9 +181,9 @@ IF(MENDELSOFT_ONLY)
   SET(Boost OFF)
   set(MPI OFF)
 
-#basename for packaging and versioning
+  #basename for packaging and versioning
 	set (Toulbar_NAME "mendelsoft")
-#description used in the package building
+  #description used in the package building
 	SET (Toulbar_PACKAGE_DESCRIPTION
     "MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.")
   SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
@@ -191,19 +191,19 @@ IF(MENDELSOFT_ONLY)
 ENDIF(MENDELSOFT_ONLY)
 
 IF(TOULBAR2_ONLY)
-  MESSAGE(STATUS "##########################################")
-        MESSAGE(STATUS " TOULBAR2 Solver Compilation and Packaging Only")
-  MESSAGE(STATUS "##########################################")
+  MESSAGE(STATUS "###############################################")
+  MESSAGE(STATUS " TOULBAR2 Solver Compilation and Packaging Only")
+  MESSAGE(STATUS "###############################################")
 
-        SET(MENDELSOFT OFF)
-        SET(TOULBAR2 ON)
-        SET(ILOG OFF)
-        SET(LIBTB2 OFF)
-#basename for packagin and versionning
-        SET(Toulbar_NAME "toulbar2")
-#description used in the package building
+  SET(MENDELSOFT OFF)
+  SET(TOULBAR2 ON)
+  SET(ILOG OFF)
+  SET(LIBTB2 OFF)
+  #basename for packaging and versioning
+  SET(Toulbar_NAME "toulbar2")
+  #description used in the package building
 	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
-        SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
+  SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 ENDIF(TOULBAR2_ONLY)
 
 ##########################################
@@ -234,10 +234,8 @@ IF(WIN32)
 	include(${My_cmake_script}/mingw32-config.cmake)
 
 ELSE(WIN32)
-
 	SET(COST LONGLONG_COST)
 	MESSAGE(STATUS "COST ==>  long long")
-
 ENDIF(WIN32)
 
 ##########################################
@@ -335,26 +333,19 @@ ENDIF(MENDELSOFT)
 
 # we must delete INT_COST
 ##########################################
-# LIBTB2INTCOST GENERATION
+# LIBTB2 GENERATION
 ##########################################
 IF(LIBTB2)
 	IF(WIN32)
 	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
-	ENDIF(WIN32)
+  ENDIF(WIN32)
+  
 #	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
-
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
-	add_library(
-			tb2
-			${LIBTB2FILE}
-		   )
-
-	INSTALL(TARGETS tb2
-			RUNTIME DESTINATION bin
-			LIBRARY DESTINATION lib
-			ARCHIVE DESTINATION lib
-	       )
+  add_library(tb2 ${LIBTB2FILE})
+  target_link_libraries(tb2 gmp boost_iostreams lzma)
+  INSTALL(TARGETS tb2	RUNTIME DESTINATION bin	LIBRARY DESTINATION lib	ARCHIVE DESTINATION lib)
+  
 ENDIF(LIBTB2)
 
 ##########################################
@@ -364,18 +355,11 @@ IF(LIBTB2INT)
 	MESSAGE(STATUS "COMPILING LIBTB2 INT .....")
 #	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-        ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
-        SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
-	add_library(
-			tb2int
-			${LIBTB2FILE}
-		   )
+  ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
+  SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
+	add_library(tb2int ${LIBTB2FILE})
 
-	INSTALL(TARGETS tb2int
-			RUNTIME DESTINATION bin
-			LIBRARY DESTINATION lib
-			ARCHIVE DESTINATION lib
-	       )
+	INSTALL(TARGETS tb2int RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
 ENDIF(LIBTB2INT)
 
