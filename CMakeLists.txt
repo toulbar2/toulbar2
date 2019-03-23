@@ -1,12 +1,12 @@
 ##########################################
 # cmake file for toulbar2 framework building , test and packaging
-# version 0.9
-# David allouche 17/10/10
+# version 0.9 David allouche 17/10/10
 ##########################################
-
 cmake_minimum_required(VERSION 2.6)
-# source directory
-#do not change this variable ==> location of the toulbar2 source code
+enable_language(C CXX)
+project("toulbar2")
+
+# source and script directories
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed
 set (My_Source src)	# source location
 set (doc_destination "share/doc")   		#path of doc installation
@@ -14,15 +14,8 @@ set (My_validation "validation")		#validation test location
 set (My_benchmark "benchmarks")
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
-
 set (MAINTAINER "David Allouche <david.allouche@inra.fr>") #used in packaging 
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
-
-##########################################
-# PROJECT NAME
-##########################################
-
-project("toulbar2")
 
 MESSAGE(STATUS "##########################################")
 MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
@@ -88,7 +81,7 @@ IF(CPLEX)
 ENDIF(CPLEX)
 
 ##########################################
-# Compile Options on recent 64 bytes Macs.
+# Compile Options on 64 bits Macs.
 # thanks to alex rudnick
 ##########################################
 IF(APPLE)
@@ -124,24 +117,28 @@ ENDIF(MPI)
 ##########################################
 # static building
 ##########################################
-
 IF(STATIC)
+
 	set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
   MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml and MPI options not compliant with static link)")
 	SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
 
 ELSE()
+
 	SET(BUILD_SHARED_LIBS ON) #shared library building
-ENDIF(STATIC)
+
+  ENDIF(STATIC)
 
 if(verbose)
+
 	set (CMAKE_VERBOSE_MAKEFILE ON)
+
 endif(verbose)
 
 ##########################################
 # OPTION DEPENDANCES
 ##########################################
-	SET(Toulbar_NAME "toulbar2") # default project name
+SET(Toulbar_NAME "toulbar2") # default project name
 
 IF(ALL_APP)
   MESSAGE(STATUS "##########################################")
@@ -167,10 +164,10 @@ ENDIF(ALL_APP)
 
 
 IF(MENDELSOFT_ONLY)
+
   MESSAGE(STATUS "##########################################")
 	MESSAGE(STATUS " MENDELSOFT COMPILATION AND PACKAGING ONLY")
   MESSAGE(STATUS "##########################################")
-
 	SET(MENDELSOFT ON)
 	SET(TOULBAR2 OFF)
 	SET(TOULBAR2_ONLY OFF)
@@ -180,7 +177,6 @@ IF(MENDELSOFT_ONLY)
 	SET(CPLEX OFF)
   SET(Boost OFF)
   set(MPI OFF)
-
   #basename for packaging and versioning
 	set (Toulbar_NAME "mendelsoft")
   #description used in the package building
@@ -191,10 +187,10 @@ IF(MENDELSOFT_ONLY)
 ENDIF(MENDELSOFT_ONLY)
 
 IF(TOULBAR2_ONLY)
+
   MESSAGE(STATUS "###############################################")
   MESSAGE(STATUS " TOULBAR2 Solver Compilation and Packaging Only")
   MESSAGE(STATUS "###############################################")
-
   SET(MENDELSOFT OFF)
   SET(TOULBAR2 ON)
   SET(ILOG OFF)
@@ -204,7 +200,8 @@ IF(TOULBAR2_ONLY)
   #description used in the package building
 	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
   SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
-ENDIF(TOULBAR2_ONLY)
+
+  ENDIF(TOULBAR2_ONLY)
 
 ##########################################
 IF(ILOG)
@@ -216,14 +213,14 @@ SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 
 ##########################################
 IF(WIN32)
-# option used for cross compilation
-	set ( EXE ".exe")
+  # option used for cross compilation
+	set (EXE ".exe")
 	set(COST INT_COST)
 	set(LIBTB2INT OFF)
 	set(XML OFF)
 	set(CPLEX OFF)
 	set(Boost OFF)
-  	set(MPI OFF)
+  set(MPI OFF)
 	set(ILOG OFF)
 	set(LIBTB2 OFF)
 
@@ -251,7 +248,7 @@ endif()
 
 if(QUAD_PROBABILITY)
 include(${My_cmake_script}/FindQuadMath.cmake)
-SET (all_depends  ${all_depends} "quadmath")
+SET (all_depends ${all_depends} "quadmath")
 endif()
 
 MESSAGE(STATUS "search for GMP library")
@@ -267,27 +264,24 @@ INCLUDE(FindGit)
 
 # list of files used for compilation are included in source_file.cmake
 # new file need to be added to this list
-# you can also define your own list and add it to the wall list
-# for example: SET (source_files ${source_files} ${my_file_2add})
-
 include(${My_cmake_script}/source_files.cmake)
 
 ##########################################
 IF(Boost)
+
   include(${My_cmake_script}/Boost_option.cmake)
   link_directories(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-ENDIF(Boost)
+
+  ENDIF(Boost)
 
 ##########################################
 IF(MPI) 
-#  SET(CMAKE_C_COMPILER mpicc)
-#  SET(CMAKE_CXX_COMPILER mpicxx)
-#  SET(CMAKE_CXX_COMPILER /usr/mpi/gcc/openmpi-1.10.3rc4/bin/mpicxx)
-#  SET(CMAKE_SYSTEM_PREFIX_PATH /usr/mpi/gcc/openmpi-1.10.3rc4)
+
   find_package(MPI REQUIRED)
   include_directories(${MPI_INCLUDE_PATH})
   SET (mpiflag OPENMPI)
+
 ENDIF(MPI)
 
 ##########################################
@@ -336,15 +330,21 @@ ENDIF(MENDELSOFT)
 # LIBTB2 GENERATION
 ##########################################
 IF(LIBTB2)
-	IF(WIN32)
-	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
+
+  IF(WIN32)
+  
+  	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
+
   ENDIF(WIN32)
   
 #	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   add_library(tb2 ${LIBTB2FILE})
+  add_library(ctb2 ${LIBCTB2FILE})
   target_link_libraries(tb2 gmp boost_iostreams lzma)
+  target_link_libraries(ctb2 tb2)
   INSTALL(TARGETS tb2	RUNTIME DESTINATION bin	LIBRARY DESTINATION lib	ARCHIVE DESTINATION lib)
+  INSTALL(TARGETS ctb2	RUNTIME DESTINATION bin	LIBRARY DESTINATION lib	ARCHIVE DESTINATION lib)
   
 ENDIF(LIBTB2)
 
@@ -352,13 +352,12 @@ ENDIF(LIBTB2)
 # LIBTB2INTCOST GENERATION
 ##########################################
 IF(LIBTB2INT)
+
 	MESSAGE(STATUS "COMPILING LIBTB2 INT .....")
-#	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
 	add_library(tb2int ${LIBTB2FILE})
-
 	INSTALL(TARGETS tb2int RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
 ENDIF(LIBTB2INT)
@@ -416,7 +415,7 @@ ENDIF (BENCH)
 #   Doc generation
 ##########################################
 IF (BUILD_API_DOC)
-	include(${My_cmake_script}/UseDoxygen.cmake)
+    include(${My_cmake_script}/UseDoxygen.cmake)
 ENDIF (BUILD_API_DOC)
 
 ADD_CUSTOM_TARGET(man ALL)

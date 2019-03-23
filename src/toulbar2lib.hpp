@@ -2,7 +2,7 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2018, toulbar2 team
+    Copyright (c) 2006-2019, toulbar2 team
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -214,7 +214,9 @@ public:
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
+    virtual void postUnaryConstraint(int xIndex, vector<long double>& costs) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<long double>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0;

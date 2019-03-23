@@ -376,18 +376,20 @@ public:
     void postUnary(int xIndex, vector<Cost>& costs);
     int postUnary(int xIndex, Value* d, int dsize, Cost penalty);
     void postUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
+    void postUnaryConstraint(int xIndex, vector<long double>& costs);
     int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) { return postUnary(xIndex, d, dsize, penalty); }
     int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL);
     int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
+    int postBinaryConstraint(int xIndex, int yIndex, vector<long double>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
-    int postCliqueConstraint(int* scopeIndex, int arity, istream &file);
+    int postCliqueConstraint(int* scopeIndex, int arity, istream& file);
 
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 
@@ -449,8 +451,9 @@ public:
         solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
-            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving) setBestValue(i, v);
-            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i,v)].value : v);
+            if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
+                setBestValue(i, v);
+            solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
     }
 
