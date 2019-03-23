@@ -211,6 +211,7 @@ public:
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, Value* d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
+    virtual void addValueName(int xIndex, const string& name) = 0; /// \brief push back a value name for the enumerated variable
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
@@ -227,7 +228,7 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
 
-    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream &file) =0;
+    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0;
 
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 

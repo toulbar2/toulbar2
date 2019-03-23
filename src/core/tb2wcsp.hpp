@@ -371,6 +371,7 @@ public:
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value* d, int dsize);
+    void addValueName(int xIndex, const string& name);
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     void postUnary(int xIndex, vector<Cost>& costs);

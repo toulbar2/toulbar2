@@ -663,6 +663,14 @@ int WCSP::makeEnumeratedVariable(string n, Value* d, int dsize)
     return x->wcspIndex;
 }
 
+void WCSP::addValueName(int xIndex, const string& name)
+{
+    Variable* x = getVar(xIndex);
+    if (x->enumerated()) {
+        x->newValueName(name);
+    }
+}
+
 /// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 {
