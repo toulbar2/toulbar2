@@ -1,7 +1,6 @@
 #INCLUDE(CTest)
 
 SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-MESSAGE(STATUS "Boost " ${Boost_rev} " detected")
 IF (${Boost_rev} VERSION_GREATER "1.65.0")
   SET (BenchMatchString ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$")
   file ( GLOB_RECURSE validation_file
@@ -12,7 +11,7 @@ IF (${Boost_rev} VERSION_GREATER "1.65.0")
     validation/*.cfn.gz
     validation/*.cfn.xz
     )
-  MESSAGE(STATUS "xz compressed file testing activated.")
+  MESSAGE(STATUS "Boost " ${Boost_rev} " detected, xz test files will be used.")
 ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
   SET (BenchMatchString ".(wcsp.gz|cfn.gz|wcsp|cfn)$")
   file ( GLOB_RECURSE validation_file
@@ -27,7 +26,6 @@ ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
 # test unitaire
 ################
 SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
-MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
   #reset ub end enum from the previous iteration
   UNSET(UB)
@@ -71,15 +69,19 @@ FOREACH (UTEST ${validation_file})
     STRING(REPLACE "\n" "" OPT ${OPT})
     set (command_line_option ${OPT})
   ENDIF()
-  
-  MESSAGE(STATUS "${UTEST} opt = ${command_line_option} ${UBP}")
+
+  if($verbose)  
+    MESSAGE(STATUS "${UTEST} opt = ${command_line_option} ${UBP}")
+  endif($verbose)
   STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
   STRING(REGEX REPLACE ${BenchMatchString} ""  TNAME ${TMP})
 
   IF (EXISTS ${ENUMF})
     FILE(READ ${ENUMF} TENUM)
     STRING(REPLACE "\n" ""  ENUM ${TENUM})
-    MESSAGE(STATUS "Expected solution count: ${ENUM}")
+    if($verbose)
+      MESSAGE(STATUS "Expected solution count: ${ENUM}")
+    endif($verbose)
   ENDIF()
 
   if($verbose)

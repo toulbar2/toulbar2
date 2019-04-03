@@ -1,6 +1,6 @@
 ##########################################
-# cmake file for toulbar2 framework building , test and packaging
-# version 0.9 David allouche 17/10/10
+# cmake file for toulbar2
+# version 0.9 David Allouche 17/10/10
 ##########################################
 cmake_minimum_required(VERSION 2.6)
 enable_language(C CXX)
@@ -16,12 +16,10 @@ set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 set (MAINTAINER "David Allouche <david.allouche@inra.fr>") #used in packaging 
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
-
-MESSAGE(STATUS "##########################################")
-MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
+set (CMAKE_VERBOSE_MAKEFILE OFF)
+MESSAGE(STATUS "project :${PROJECT_NAME}")
 MESSAGE(STATUS "source:${CMAKE_CURRENT_SOURCE_DIR} ")
-MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
-MESSAGE(STATUS "##########################################")
+MESSAGE(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 
 include(CMakeDependentOption)
 
@@ -119,20 +117,18 @@ ENDIF(MPI)
 ##########################################
 IF(STATIC)
 
-	set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
+  set (CMAKE_CXX_FLAGS "-Wall -static -static-libgcc" )
   MESSAGE(STATUS "STATIC COMPILATION ON (warning: boost and xml and MPI options not compliant with static link)")
-	SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
+  SET(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}" CACHE BOOL "Set to OFF to build static libraries" FORCE )
 
 ELSE()
 
-	SET(BUILD_SHARED_LIBS ON) #shared library building
+  SET(BUILD_SHARED_LIBS ON) #shared library building
 
-  ENDIF(STATIC)
+ENDIF(STATIC)
 
 if(verbose)
-
-	set (CMAKE_VERBOSE_MAKEFILE ON)
-
+  set (CMAKE_VERBOSE_MAKEFILE ON)
 endif(verbose)
 
 ##########################################
@@ -141,12 +137,9 @@ endif(verbose)
 SET(Toulbar_NAME "toulbar2") # default project name
 
 IF(ALL_APP)
-  MESSAGE(STATUS "##########################################")
-  MESSAGE(STATUS " TOULBAR2 and MENDELSOFT COMPILATION AND PACKAGING ")
-  MESSAGE(STATUS "##########################################")
-
-	SET(TOULBAR2_ONLY OFF)
-	SET(MENDELSOFT_ONLY OFF)
+  MESSAGE(STATUS "Toulbar2 and Mendelsoft compilation and packaging")
+  SET(TOULBAR2_ONLY OFF)
+  SET(MENDELSOFT_ONLY OFF)
   SET(MENDELSOFT ON)
   SET(TOULBAR2 ON)
   SET(ILOG OFF)
@@ -154,10 +147,10 @@ IF(ALL_APP)
   SET(XML ON)
   SET(CPLEX OFF)
   SET(boost ON)
-  set (Toulbar_NAME "toulbar2-all")
+  SET (Toulbar_NAME "toulbar2-all")
   project(${Toulbar_NAME})
   #description used in the package building
-	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+  SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
   SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 
 ENDIF(ALL_APP)
@@ -165,22 +158,20 @@ ENDIF(ALL_APP)
 
 IF(MENDELSOFT_ONLY)
 
-  MESSAGE(STATUS "##########################################")
-	MESSAGE(STATUS " MENDELSOFT COMPILATION AND PACKAGING ONLY")
-  MESSAGE(STATUS "##########################################")
-	SET(MENDELSOFT ON)
-	SET(TOULBAR2 OFF)
-	SET(TOULBAR2_ONLY OFF)
-	SET(ILOG OFF)
-	SET(LIBTB2 OFF)
-	SET(XML OFF)
-	SET(CPLEX OFF)
+  MESSAGE(STATUS "Mendelsoft compilation and packaging only")
+  SET(MENDELSOFT ON)
+  SET(TOULBAR2 OFF)
+  SET(TOULBAR2_ONLY OFF)
+  SET(ILOG OFF)
+  SET(LIBTB2 OFF)
+  SET(XML OFF)
+  SET(CPLEX OFF)
   SET(Boost OFF)
   set(MPI OFF)
   #basename for packaging and versioning
-	set (Toulbar_NAME "mendelsoft")
+  set (Toulbar_NAME "mendelsoft")
   #description used in the package building
-	SET (Toulbar_PACKAGE_DESCRIPTION
+  SET (Toulbar_PACKAGE_DESCRIPTION
     "MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.")
   SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} is an open source software which detect Mendelian errors  in complex pedigrees using weighted constraint satisfaction techniques")
 
@@ -188,9 +179,7 @@ ENDIF(MENDELSOFT_ONLY)
 
 IF(TOULBAR2_ONLY)
 
-  MESSAGE(STATUS "###############################################")
-  MESSAGE(STATUS " TOULBAR2 Solver Compilation and Packaging Only")
-  MESSAGE(STATUS "###############################################")
+  MESSAGE(STATUS "Toulbar2 solver compilation and packaging only")
   SET(MENDELSOFT OFF)
   SET(TOULBAR2 ON)
   SET(ILOG OFF)
@@ -198,10 +187,10 @@ IF(TOULBAR2_ONLY)
   #basename for packaging and versioning
   SET(Toulbar_NAME "toulbar2")
   #description used in the package building
-	SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
+  SET(Toulbar_PACKAGE_DESCRIPTION "${Toulbar_NAME} is an open source C++ exact solver and library for graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSP.")
   SET(Toulbar_PACKAGE_SUMMARY "${Toulbar_NAME} exact solver for graphical models.")
 
-  ENDIF(TOULBAR2_ONLY)
+ENDIF(TOULBAR2_ONLY)
 
 ##########################################
 IF(ILOG)
@@ -214,25 +203,25 @@ SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 ##########################################
 IF(WIN32)
   # option used for cross compilation
-	set (EXE ".exe")
-	set(COST INT_COST)
-	set(LIBTB2INT OFF)
-	set(XML OFF)
-	set(CPLEX OFF)
-	set(Boost OFF)
+  set (EXE ".exe")
+  set(COST INT_COST)
+  set(LIBTB2INT OFF)
+  set(XML OFF)
+  set(CPLEX OFF)
+  set(Boost OFF)
   set(MPI OFF)
-	set(ILOG OFF)
-	set(LIBTB2 OFF)
+  set(ILOG OFF)
+  set(LIBTB2 OFF)
 
-	MESSAGE(STATUS "WIN32 on  .")
-	MESSAGE(STATUS "COST ==> int.")
+  MESSAGE(STATUS "WIN32 on  .")
+  MESSAGE(STATUS "COST ==> int.")
 
 # mingW32 env setup
-	include(${My_cmake_script}/mingw32-config.cmake)
+  include(${My_cmake_script}/mingw32-config.cmake)
 
 ELSE(WIN32)
-	SET(COST LONGLONG_COST)
-	MESSAGE(STATUS "COST ==>  long long")
+  SET(COST LONGLONG_COST)
+  MESSAGE(STATUS "COST ==>  long long")
 ENDIF(WIN32)
 
 ##########################################
@@ -273,7 +262,7 @@ IF(Boost)
   link_directories(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-  ENDIF(Boost)
+ENDIF(Boost)
 
 ##########################################
 IF(MPI) 
@@ -333,12 +322,12 @@ IF(LIBTB2)
 
   IF(WIN32)
   
-  	MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int .....")
+    MESSAGE(STATUS "LIBTB2  not compliant with win32 in cost=LONG / cost type is now int")
 
   ENDIF(WIN32)
   
-#	INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
-	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+# INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
+  LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   add_library(tb2 ${LIBTB2FILE})
   add_library(ctb2 ${LIBCTB2FILE})
   target_link_libraries(tb2 gmp boost_iostreams lzma)
@@ -353,12 +342,12 @@ ENDIF(LIBTB2)
 ##########################################
 IF(LIBTB2INT)
 
-	MESSAGE(STATUS "COMPILING LIBTB2 INT .....")
-	LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+  MESSAGE(STATUS "Compiling libtb2 with int costs")
+  LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
-	add_library(tb2int ${LIBTB2FILE})
-	INSTALL(TARGETS tb2int RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
+  add_library(tb2int ${LIBTB2FILE})
+  INSTALL(TARGETS tb2int RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
 ENDIF(LIBTB2INT)
 
@@ -371,8 +360,9 @@ include(${My_cmake_script}/iloglue.cmake)
 # define option
 ##########################################
 include(${My_cmake_script}/define_option.cmake)
-MESSAGE(STATUS "######## define_option passed#########################")
-
+if ($verbose)
+  MESSAGE(STATUS "define_option passed")
+endif($verbose)
 ##########################################
 # toulbar2test
 ##########################################
@@ -384,8 +374,8 @@ include(${My_cmake_script}/toulbar2test.cmake)
 IF(COVER_TEST)
 include(${My_cmake_script}/test.cmake)
 
-MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
-MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+MESSAGE(STATUS "ctest: test.cmake ==> tests script generated")
+MESSAGE(STATUS "ctest: toulbar2 default option = ${TOPT}  (-DTOPT to change it)")
 
 ##########################################
 # Cover tests

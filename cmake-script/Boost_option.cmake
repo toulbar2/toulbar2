@@ -5,13 +5,13 @@ FILE(GLOB boost_file ${My_Source}/utils/tb2boostgraph.cpp)
 SET (source_files ${source_files} ${boost_file})
 
 # boost detection 
-MESSAGE(STATUS "- boost flag on  .")
+MESSAGE(STATUS "Boost flag ON")
 find_package(Boost 1.34.1 REQUIRED COMPONENTS graph iostreams)
 find_package(ZLIB)
 find_package(LibLZMA)
 
-MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
-MESSAGE(STATUS "   Boost_LIBRARIES: ${Boost_LIBRARIES}")
+MESSAGE(STATUS "  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+MESSAGE(STATUS "  Boost_LIBRARIES: ${Boost_LIBRARIES}")
 
 SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${LIBLZMA_LIBRARIES})
 

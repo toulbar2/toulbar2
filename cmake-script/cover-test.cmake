@@ -4,9 +4,8 @@
 # and generate a new test for each entrie
 include(${My_cmake_script}/ManageString.cmake)
 SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-MESSAGE(STATUS "\n##############COVER  liste #############\n")
-	MESSAGE(STATUS " COVER TEST SCANING  ${Default_cover_dir} ")
-MESSAGE(STATUS "\n##############COVER  liste #############\n")
+MESSAGE(STATUS "Cover tests: scanning directory ${Default_cover_dir}")
+
 IF (${Boost_rev} VERSION_GREATER "1.65.0")
   file(GLOB_RECURSE cover_file 
     ${Default_cover_dir}/*.wcsp
@@ -41,12 +40,12 @@ SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmak
 
 IF (EXISTS ${COVER_OPT_file} ) 
   include (${COVER_OPT_file})
-  MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found.")
+  if ($verbose)
+    MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found.")
+  endif($verbose)
 ELSE ()
   MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found.")
 ENDIF()
-
-MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
 FOREACH (UTEST ${cover_file})
   GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH  ) # test path

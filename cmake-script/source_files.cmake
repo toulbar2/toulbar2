@@ -46,8 +46,9 @@ file(GLOB source_files
     ${My_Source}/tb2main.cpp
 )
 
-MESSAGE(STATUS "------------------------------\n")
-MESSAGE(STATUS "toulbar file = ${source_files}\n")
-MESSAGE(STATUS "------------------------------\n")
-
+if($verbose)
+  MESSAGE(STATUS "------------------------------")
+  MESSAGE(STATUS "toulbar file = ${source_files}")
+  MESSAGE(STATUS "------------------------------")
+endif($verbose)
 
