@@ -91,18 +91,18 @@ ENDIF(APPLE)
 ##########################################
 # default OPTION for toulbar2 test  phase
 ##########################################
-SET(FOPT "test-opt.cmake" CACHE string "filename containing local options used for validation")
+SET(FOPT "test-opt.cmake" CACHE STRING "filename containing local options used for validation")
 SET(Default_test_option CACHE STRING "Define toulbar2 option used in command line for testing: cf toulbar2 command line")
 SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_validation_dir "validation" CACHE string "default location of benchmark file")
-SET(Default_cover_dir "cover" CACHE string "default location of cover test file ")
-SET(Default_regexp "end." CACHE string "default regex searched in test output")
+SET(Default_cover_dir "cover" CACHE STRING "default location of cover test file ")
+SET(Default_regexp "end." CACHE STRING "default regex searched in test output")
 
-SET(Default_BenchDir "benchmarks" CACHE string "default location of benchmark file")
-SET(Default_BenchFormat "wcsp" CACHE string "default format extension for benchmark file search")
+SET(Default_BenchDir "benchmarks" CACHE STRING "default location of benchmark file")
+SET(Default_BenchFormat "wcsp" CACHE STRING "default format extension for benchmark file search")
 SET(Default_bench_timeout 30 CACHE INTEGER "default timeout used for benchmarking ")
 SET(Default_bench_option "TOULBAR2_OPTION" CACHE STRING " option used in command line for benchmarking.")
-SET(Default_bench_regexp "test ok" CACHE string "default regex searched in bench output")
+SET(Default_bench_regexp "test ok" CACHE STRING "default regex searched in bench output")
 
 MARK_AS_ADVANCED(FORCE LIBTB2 verbose Boost FOPT CMAKE_INSTALL_PREFIX Default_test_timeout WIDE_STRING LONG_PROBABILITY QUAD_PROBABILITY LONG_COSTS)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY QUADMATH_LIBRARY)
