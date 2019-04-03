@@ -52,7 +52,6 @@ IF(WIN32)
 ELSE(WIN32)
 
   IF(TOULBAR2)
-    MESSAGE(STATUS "####DEFINE OPTION ==> COST= ${COST}  XMLFLAG= ${XMLFLAG} BOOST = ${boostflag} MPI = ${mpiflag} ##########################")
     set_property(
       TARGET toulbar2
       PROPERTY COMPILE_DEFINITIONS NARYCHAR WCSPFORMATONLY ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
