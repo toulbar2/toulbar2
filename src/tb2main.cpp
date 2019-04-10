@@ -2487,19 +2487,14 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             }
 
-            // read assignment in file or filename of solution
+            // read solution filename
             if (check_file_ext(problem, file_extension_map["sol_ext"])) {
-                if (certificateString && strcmp(certificateString, "") != 0) {
-                    cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl;
-                    exit(-1);
-                }
                 if (ToulBar2::verbose >= 0)
                     cout << "loading solution in file: " << problem << endl;
 
                 certificate = true;
                 certificateFilename = new char[256];
                 sprintf(certificateFilename, "%s", problem.c_str());
-                certificateString = (char*)""; // ensure the search will continue starting from this solution
             }
         }
     }
@@ -2707,7 +2702,7 @@ int _tmain(int argc, TCHAR* argv[])
         if (certificate) {
             if (certificateFilename != NULL)
                 solver->read_solution(certificateFilename, updateValueHeuristic);
-            else
+            if (certificateString)
                 solver->parse_solution(certificateString);
         }
 
