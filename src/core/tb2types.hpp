@@ -413,190 +413,190 @@ struct ValueCost {
     friend bool operator==(const ValueCost& u, const ValueCost& v) { return u.cost == v.cost; }
 };
 
+
+
 ///contains all global variables (mainly solver's command-line options)
-class ToulBar2 {
-protected:
-    virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
-public:
-    static string version;
-    static int verbose;
-    static int debug;
-    static string externalUB;
-    static int showSolutions;
-    static char* writeSolution;
-    static FILE* solutionFile;
-    static Long allSolutions;
-    static int dumpWCSP;
-    static bool approximateCountingBTD;
-    static bool binaryBranching;
-    static int dichotomicBranching;
-    static unsigned int dichotomicBranchingSize;
-    static bool sortDomains;
-    static map<int, ValueCost*> sortedDomains;
-    static bool solutionBasedPhaseSaving;
-    static int elimDegree;
-    static int elimDegree_preprocessing;
-    static int elimDegree_;
-    static int elimDegree_preprocessing_;
-    static int elimSpaceMaxMB;
-    static int minsumDiffusion;
-    static int prodsumDiffusion;
-    static int preprocessTernaryRPC;
-    static int preprocessFunctional;
-    static bool costfuncSeparate;
-    static int preprocessNary;
-    static bool QueueComplexity;
-    static bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
-    static bool lastConflict;
-    static int weightedDegree;
-    static int weightedTightness;
-    static bool MSTDAC;
-    static int DEE;
-    static int DEE_;
-    static int nbDecisionVars;
-    static int lds;
-    static bool limited;
-    static Long restart;
-    static externalevent setvalue;
-    static externalevent setmin;
-    static externalevent setmax;
-    static externalevent removevalue;
-    static externalcostevent setminobj;
-    static externalsolution newsolution;
-    static Pedigree* pedigree;
-    static Haplotype* haplotype;
-    static Cpd* cpd;
-    static Tb2ScpBranch* scpbranch;
+namespace ToulBar2 {
+    extern string version;
+    extern int verbose;
+    extern int debug;
+    extern string externalUB;
+    extern int showSolutions;
+    extern char* writeSolution;
+    extern FILE* solutionFile;
+    extern Long allSolutions;
+    extern int dumpWCSP;
+    extern bool approximateCountingBTD;
+    extern bool binaryBranching;
+    extern int dichotomicBranching;
+    extern unsigned int dichotomicBranchingSize;
+    extern bool sortDomains;
+    extern map<int, ValueCost*> sortedDomains;
+    extern bool solutionBasedPhaseSaving;
+    extern int elimDegree;
+    extern int elimDegree_preprocessing;
+    extern int elimDegree_;
+    extern int elimDegree_preprocessing_;
+    extern int elimSpaceMaxMB;
+    extern int minsumDiffusion;
+    extern int prodsumDiffusion;
+    extern int preprocessTernaryRPC;
+    extern int preprocessFunctional;
+    extern bool costfuncSeparate;
+    extern int preprocessNary;
+    extern bool QueueComplexity;
+    extern bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
+    extern bool lastConflict;
+    extern int weightedDegree;
+    extern int weightedTightness;
+    extern bool MSTDAC;
+    extern int DEE;
+    extern int DEE_;
+    extern int nbDecisionVars;
+    extern int lds;
+    extern bool limited;
+    extern Long restart;
+    extern externalevent setvalue;
+    extern externalevent setmin;
+    extern externalevent setmax;
+    extern externalevent removevalue;
+    extern externalcostevent setminobj;
+    extern externalsolution newsolution;
+    extern Pedigree* pedigree;
+    extern Haplotype* haplotype;
+    extern Cpd* cpd;
+    extern Tb2ScpBranch* scpbranch;
 #ifdef OPENMPI
-    static BaseJobs* jobs;
+    extern BaseJobs* jobs;
 #endif
-    static SequenceHandler* sequence_handler;
-    static string map_file;
-    static bool cfn;
-    static bool gz;
-    static bool xz;
-    static bool bayesian;
-    static int uai;
-    static int resolution;
-    static TProb errorg;
-    static TLogProb NormFactor;
-    static int foundersprob_class;
-    static vector<TProb> allelefreqdistrib;
-    static bool consecutiveAllele;
-    static bool generation;
-    static int pedigreeCorrectionMode;
-    static int pedigreePenalty;
-    static int vac;
-    static string costThresholdS;
-    static string costThresholdPreS;
-    static Cost costThreshold;
-    static Cost costThresholdPre;
-    static double trwsAccuracy;
-    static bool trwsOrder;
-    static unsigned int trwsNIter;
-    static unsigned int trwsNIterNoChange;
-    static unsigned int trwsNIterComputeUb;
-    static double costMultiplier;
-    static unsigned int decimalPoint;
-    static string deltaUbS;
-    static Cost deltaUb;
-    static bool singletonConsistency;
-    static bool vacValueHeuristic;
-    static BEP* bep;
-    static LcLevelType LcLevel;
-    static bool wcnf;
-    static bool qpbo;
-    static double qpboQuadraticCoefMultiplier;
+    extern SequenceHandler* sequence_handler;
+    extern string map_file;
+    extern bool cfn;
+    extern bool gz;
+    extern bool xz;
+    extern bool bayesian;
+    extern int uai;
+    extern int resolution;
+    extern TProb errorg;
+    extern TLogProb NormFactor;
+    extern int foundersprob_class;
+    extern vector<TProb> allelefreqdistrib;
+    extern bool consecutiveAllele;
+    extern bool generation;
+    extern int pedigreeCorrectionMode;
+    extern int pedigreePenalty;
+    extern int vac;
+    extern string costThresholdS;
+    extern string costThresholdPreS;
+    extern Cost costThreshold;
+    extern Cost costThresholdPre;
+    extern double trwsAccuracy;
+    extern bool trwsOrder;
+    extern unsigned int trwsNIter;
+    extern unsigned int trwsNIterNoChange;
+    extern unsigned int trwsNIterComputeUb;
+    extern double costMultiplier;
+    extern unsigned int decimalPoint;
+    extern string deltaUbS;
+    extern Cost deltaUb;
+    extern bool singletonConsistency;
+    extern bool vacValueHeuristic;
+    extern BEP* bep;
+    extern LcLevelType LcLevel;
+    extern bool wcnf;
+    extern bool qpbo;
+    extern double qpboQuadraticCoefMultiplier;
 
-    static char* varOrder;
-    static int btdMode;
-    static int btdSubTree;
-    static int btdRootCluster;
+    extern char* varOrder;
+    extern int btdMode;
+    extern int btdSubTree;
+    extern int btdRootCluster;
 
-    static bool maxsateval;
-    static bool xmlflag;
-    static TLogProb markov_log;
-    static string evidence_file;
-    static FILE* solution_uai_file;
-    static string solution_uai_filename;
-    static string problemsaved_filename;
-    static bool isZ;
-    static float isZCelTemp;
-    static int isZUB;
-    static Cost enumUB;
-    static bool bestconf;
-    static bool stop; // STOP TB2 (TMP way)
-    static bool isGumbel;
-    static Seq* seq;
-    static TLogProb logZ;
-    static TLogProb Entropy;
-    static TLogProb Enthalpy;
-    static TLogProb GlobalLogUbZ; // Upper bound on Z.
-    static TLogProb GlobalLogLbZ; // Upper bound on Z.
-    static TLogProb logU; // upper bound on rejected potentials
-    static TLogProb logepsilon; // epsilon for Z* pruning
-    static TProb sigma; // sigma set for HBFS-Counting
-    static TrieNum* trieZ; // Trie over preprocessing Optimum Energies
-    static string Trie_File;
-    static bool isTrie_File;
+    extern bool maxsateval;
+    extern bool xmlflag;
+    extern TLogProb markov_log;
+    extern string evidence_file;
+    extern FILE* solution_uai_file;
+    extern string solution_uai_filename;
+    extern string problemsaved_filename;
+    extern bool isZ;
+    extern float isZCelTemp;
+    extern int isZUB;
+    extern Cost enumUB;
+    extern bool bestconf;
+    extern bool stop; // STOP TB2 (TMP way)
+    extern bool isGumbel;
+    extern Seq* seq;
+    extern TLogProb logZ;
+    extern TLogProb Entropy;
+    extern TLogProb Enthalpy;
+    extern TLogProb GlobalLogUbZ; // Upper bound on Z.
+    extern TLogProb GlobalLogLbZ; // Upper bound on Z.
+    extern TLogProb logU; // upper bound on rejected potentials
+    extern TLogProb logepsilon; // epsilon for Z* pruning
+    extern TProb sigma; // sigma set for HBFS-Counting
+    extern TrieNum* trieZ; // Trie over preprocessing Optimum Energies
+    extern string Trie_File;
+    extern bool isTrie_File;
 
-    static TLogProb ubE;
-    static TLogProb Normalizing_Constant;
+    extern TLogProb ubE;
+    extern TLogProb Normalizing_Constant;
 
-    static bool uaieval;
-    static string stdin_format; // stdin format declaration
+    extern bool uaieval;
+    extern string stdin_format; // stdin format declaration
 
-    static double startCpuTime;
+    extern double startCpuTime;
 
-    static int splitClusterMaxSize;
-    static double boostingBTD;
-    static int maxSeparatorSize;
-    static int minProperVarSize;
-    static int smallSeparatorSize;
+    extern int splitClusterMaxSize;
+    extern double boostingBTD;
+    extern int maxSeparatorSize;
+    extern int minProperVarSize;
+    extern int smallSeparatorSize;
 
-    static int Berge_Dec; // flag for berge acyclic decomposition
-    static int nbvar; // initial number of variable (read in the file)
-    static bool learning; // if true, perform pseudoboolean learning
-    static externalfunc timeOut;
-    static bool interrupted;
-    static int seed;
+    extern int Berge_Dec; // flag for berge acyclic decomposition
+    extern int nbvar; // initial number of variable (read in the file)
+    extern bool learning; // if true, perform pseudoboolean learning
+    extern externalfunc timeOut;
+    extern bool interrupted;
+    extern int seed;
 
-    static string incop_cmd;
+    extern string incop_cmd;
 
-    static SearchMethod searchMethod;
+    extern SearchMethod searchMethod;
 
-    static string clusterFile; // cluster tree decomposition file (without running intersection property)
-    static ofstream vnsOutput; // output file for VNS
+    extern string clusterFile; // cluster tree decomposition file (without running intersection property)
+    extern ofstream vnsOutput; // output file for VNS
 
-    static VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
-    static int vnsLDSmin; // discrepancy initial value
-    static int vnsLDSmax; // discrepancy maximum value
-    static VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
-    static int vnsKmin; // neighborhood initial size
-    static int vnsKmax; // neighborhood maximum size
-    static VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
+    extern VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
+    extern int vnsLDSmin; // discrepancy initial value
+    extern int vnsLDSmax; // discrepancy maximum value
+    extern VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
+    extern int vnsKmin; // neighborhood initial size
+    extern int vnsKmax; // neighborhood maximum size
+    extern VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
 
-    static int vnsLDScur; // current discrepancy (used only for debugging display)
-    static int vnsKcur; // current neighborhood size (used only for debugging display)
-    static VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
-    static bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
-    static bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
-    static bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
-    static bool vnsParallelSync; // true if RSGDVNS else RADGVNS
-    static string vnsOptimumS;
-    static Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
-    static bool vnsParallel; // true if in master/slaves paradigm
+    extern int vnsLDScur; // current discrepancy (used only for debugging display)
+    extern int vnsKcur; // current neighborhood size (used only for debugging display)
+    extern VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
+    extern bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
+    extern bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
+    extern bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
+    extern bool vnsParallelSync; // true if RSGDVNS else RADGVNS
+    extern string vnsOptimumS;
+    extern Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
+    extern bool vnsParallel; // true if in master/slaves paradigm
 
-    static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
-    static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
-    static Long hbfsAlpha; // inverse of minimum node redundancy goal limit
-    static Long hbfsBeta; // inverse of maximum node redundancy goal limit
-    static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
-    static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+    extern Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
+    extern Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
+    extern Long hbfsAlpha; // inverse of minimum node redundancy goal limit
+    extern Long hbfsBeta; // inverse of maximum node redundancy goal limit
+    extern ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
+    extern ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
 
-    static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
-    static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
+    extern bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
+    extern Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
 };
+
 #ifdef INT_COST
 inline Cost rounding(Cost lb)
 {
