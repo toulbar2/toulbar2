@@ -345,6 +345,7 @@ IF(LIBTB2)
     tb2
     ${LIBTB2FILE}
     )
+  target_link_libraries(tb2 gmp)
   
   INSTALL(TARGETS tb2
     RUNTIME DESTINATION bin
