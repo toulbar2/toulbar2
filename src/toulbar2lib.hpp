@@ -381,6 +381,7 @@ public:
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
     virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
+    virtual Cost DoubletoCost(const Double& c) const = 0;
     virtual Double Cost2ADCost(const Cost& c) const = 0;
     virtual Double Cost2RDCost(const Cost& c) const = 0;
     virtual Cost Prob2Cost(TProb p) const = 0;
