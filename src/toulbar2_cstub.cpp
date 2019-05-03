@@ -106,10 +106,11 @@ void tb2Dump(const int level, const char* problem)
   ToulBar2::problemsaved_filename = to_string(problem);
 }
 
-void tb2UpdateUb(WeightedCSPSolver* solver, const char* newUb)
+void tb2UpdateUb(WeightedCSPSolver* solver, const long double newUb)
 {
-    Cost ctUb = string2Cost(newUb);
-    solver->getWCSP()->updateUb(ctUb);
+  auto* prob = solver->getWCSP();
+  Cost ctUb = prob->DoubletoCost(newUb);
+  prob->updateUb(ctUb);
 }
 
 void tb2NoPre()
@@ -124,17 +125,17 @@ void tb2NoPre()
     ToulBar2::DEE = 0;
 }
 
-void tb2BtdMode(const int mode)
+void tb2BTDMode(const int mode)
 {
     ToulBar2::btdMode = mode;
 }
 
-void tb2BtdRootCluster(const int rCluster)
+void tb2BTDRootCluster(const int rCluster)
 {
     ToulBar2::btdRootCluster = rCluster;
 }
 
-void tb2BtdSubtree(const int sTree)
+void tb2BTDSubtree(const int sTree)
 {
     ToulBar2::btdSubTree = sTree;
 }
@@ -282,7 +283,7 @@ void tb2SingletonConsistency(const bool singleCons)
     ToulBar2::singletonConsistency = singleCons;
 }
 
-void tb2VacValueHeuristic(const bool vacVal)
+void tb2VACValueHeuristic(const bool vacVal)
 {
     ToulBar2::vacValueHeuristic = vacVal;
 }
