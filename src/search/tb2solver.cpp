@@ -78,7 +78,7 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
 }
 
 Solver::Solver(Cost initUpperBound)
-    : nbNodes(0)
+    : nbNodes(0) // @suppress("Symbol is not resolved")
     , nbBacktracks(0)
     , nbBacktracksLimit(LONGLONG_MAX)
     , wcsp(NULL)
@@ -102,7 +102,7 @@ Solver::Solver(Cost initUpperBound)
     , initialDepth(0)
 {
     searchSize = new StoreCost(MIN_COST);
-    wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
+    wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this); // @suppress("Invalid arguments")
 }
 
 Solver::~Solver()
@@ -205,7 +205,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     if (ToulBar2::verifyOpt) {
         ToulBar2::verifiedOptimum = wcsp->getLb();
     } else {
-        wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST));
+        wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST)); // @suppress("Invalid arguments")
     }
     Store::restore(depth);
     if (ToulBar2::verifyOpt) {
@@ -312,7 +312,7 @@ void Solver::dump_wcsp(const char* fileName, bool original)
 Cost Solver::getSolution(vector<Value>& solution)
 {
     Cost cost = MAX_COST;
-    vector<Value> sol = wcsp->getSolution(&cost);
+    vector<Value> sol = wcsp->getSolution(&cost); // @suppress("Invalid arguments")
     assert(sol.size() == wcsp->numberOfVariables());
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
         solution.push_back(sol[i]);
