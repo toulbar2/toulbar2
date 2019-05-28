@@ -1709,11 +1709,11 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open) {
 	cout << " kad : global UB = " << wcsp->getUb() << endl;
 	cout << " kad : global LB = " << open.getLb() << endl;
 
-	string epsCommand = "time ./parallel.sh -j";
+	string epsCommand = "time ./parallel.sh -j ";
 	epsCommand += to_string(open.size()); // number of process=jobs to launch in parallel = open.size() >= ToulBar2::hbfsOpenNodeLimit >> nb of cores !!!
 	epsCommand += " -r ";
-	//epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
-	epsCommand += " \"./toulbar2 ";
+	epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
+	//epsCommand += " \"./toulbar2 ";
 	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
 	epsCommand += " -x=*\" "; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
 	// then, for each node nd in OpenListe open, we have to write something like this : ",0=3,1=5,2=9"
