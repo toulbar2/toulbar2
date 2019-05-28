@@ -9,3 +9,4 @@ nbProcess.txt
 #src/MyCPackConf.cmake
 .cproject
 .project
+*_ori
