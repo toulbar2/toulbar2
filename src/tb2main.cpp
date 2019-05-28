@@ -222,6 +222,8 @@ enum {
     NO_OPT_restart,
     OPT_hbfs,
     NO_OPT_hbfs,
+    OPT_hbfs_node_dump, //david
+	OPT_EPS, //kad
     OPT_open,
     OPT_localsearch,
     NO_OPT_localsearch,
@@ -418,6 +420,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_restart, (char*)"-L:", SO_NONE },
     { OPT_hbfs, (char*)"-hbfs", SO_OPT },
     { OPT_hbfs, (char*)"-bfs", SO_OPT },
+    { OPT_hbfs_node_dump, (char*)"-hbfs_nd", SO_OPT },// flag for dump node limit
+	{ OPT_EPS, (char*)"-eps", SO_NONE },// flag for dump node limit
     { NO_OPT_hbfs, (char*)"-hbfs:", SO_NONE },
     { NO_OPT_hbfs, (char*)"-bfs:", SO_NONE },
     { OPT_open, (char*)"-open", SO_REQ_SEP },
@@ -774,8 +778,8 @@ void help_msg(char* toulbar2filename)
 #ifndef NDEBUG
     cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
 #endif
-    cout << "   -x=[(,i[=#<>]a)*] : performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple operations are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl;
-    cout << endl;
+   cout << "   -x=[(,i[=#<>]a)*] : performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple operations are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl;
+   cout << endl;
     cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
     cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
     cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
@@ -829,6 +833,7 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+    cout << "   -eps : activate embarrassingly parallel hybrid best-first search." << endl;
     cout << "---------------------------" << endl;
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
@@ -1567,6 +1572,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_QueueComplexity)
                 ToulBar2::QueueComplexity = true;
+
             if (args.OptionId() == OPT_MSTDAC)
                 ToulBar2::MSTDAC = true;
             else if (args.OptionId() == NO_OPT_MSTDAC)
@@ -1636,243 +1642,262 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfs = 0;
                 ToulBar2::hbfsGlobalLimit = 0;
             }
-            if (args.OptionId() == OPT_open) {
-                ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
-                Long openlimit = atoll(args.OptionArg());
-                if (openlimit > 0)
-                    ToulBar2::hbfsOpenNodeLimit = openlimit;
-                if (ToulBar2::hbfsGlobalLimit == 0)
-                    ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
-                ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
-                if (ToulBar2::debug)
-                    cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
-            }
+// david's option
+	    if (args.OptionId() == OPT_hbfs_node_dump) {
+		    if (args.OptionArg() == NULL) {
+			    ToulBar2::hbfs_node_dump= 1000;
+		    } else {
 
-            // local search INCOP
-            if (args.OptionId() == OPT_localsearch) {
-                if (args.OptionArg() != NULL) {
-                    ToulBar2::incop_cmd = args.OptionArg();
-                } else {
-                    ToulBar2::incop_cmd = Incop_cmd;
-                }
-            }
+			    ToulBar2::hbfs_node_dump= atoll(args.OptionArg());
+			    cout << "david : my new option defined with kad " << ToulBar2::hbfs_node_dump << endl;
+		    }
+	    }
+//kad
+	    if (args.OptionId() == OPT_EPS) {
+	   		    	ToulBar2::EPS = true;
+	   		     cout << "HBFS  Embarrassingly Parallel Search activated. " << endl;
+	   	    }
 
-            // EDAC OPTION
-            if (args.OptionId() == OPT_EDAC) {
-                ToulBar2::LcLevel = LC_EDAC;
-                LcLevelType lclevel = (LcLevelType)atoi(args.OptionArg());
-                if ((lclevel >= LC_NC) && (lclevel < LC_THEMAX))
-                    ToulBar2::LcLevel = lclevel;
-            }
+///kad
 
-            ////////////////////////////////////////////////////////////////////////////////////////
-            ////////		MEDELSOFT command line processing 	////////////////////////
-            ////////////////////////////////////////////////////////////////////////////////////////
+// fin nouvelle option
+	    if (args.OptionId() == OPT_open) {
+		    ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+		    Long openlimit = atoll(args.OptionArg());
 
-            // g  sort pedigree by increasing generation number and if equal by increasing individual number
+		    if (openlimit > 0)
+			    ToulBar2::hbfsOpenNodeLimit = openlimit;
+		    if (ToulBar2::hbfsGlobalLimit == 0)
+			    ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
+		    ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
+		    cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
+	    }
 
-            if (args.OptionId() == OPT_generation) {
-                ToulBar2::generation = true;
-                if (ToulBar2::debug)
-                    cout << "-g flag ==> sort pedigree option ON" << endl;
-            }
+	    // local search INCOP
+	    if (args.OptionId() == OPT_localsearch) {
+		    if (args.OptionArg() != NULL) {
+			    ToulBar2::incop_cmd = args.OptionArg();
+		    } else {
+			    ToulBar2::incop_cmd = Incop_cmd;
+		    }
+	    }
 
-            // bayesien -y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE
+	    // EDAC OPTION
+	    if (args.OptionId() == OPT_EDAC) {
+		    ToulBar2::LcLevel = LC_EDAC;
+		    LcLevelType lclevel = (LcLevelType)atoi(args.OptionArg());
+		    if ((lclevel >= LC_NC) && (lclevel < LC_THEMAX))
+			    ToulBar2::LcLevel = lclevel;
+	    }
 
-            if (args.OptionId() == MENDEL_OPT_genotypingErrorRate) {
-                if (args.OptionArg() != NULL) {
-                    float f;
-                    sscanf(args.OptionArg(), "%f", &f);
-                    ToulBar2::errorg = f;
-                    if (ToulBar2::debug)
-                        cout << "New assignment for genotyping Error Rate = " << ToulBar2::errorg << endl;
-                }
-            }
+	    ////////////////////////////////////////////////////////////////////////////////////////
+	    ////////		MEDELSOFT command line processing 	////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////
 
-            if (args.OptionId() == MENDEL_OPT_resolution) {
-                if (args.OptionArg() != NULL) {
-                    ToulBar2::resolution = atoi(args.OptionArg());
-                    if (ToulBar2::debug)
-                        cout << "New assignment for precision = " << ToulBar2::resolution << endl;
-                }
-            }
+	    // g  sort pedigree by increasing generation number and if equal by increasing individual number
 
-            if (args.OptionId() == OPT_pedigree_by_MPE) {
-                ToulBar2::bayesian = true;
-                if (ToulBar2::debug)
-                    cout << endl;
-                if (ToulBar2::debug)
-                    cout << "<<< Bayesian mode ON >>>" << endl;
+	    if (args.OptionId() == OPT_generation) {
+		    ToulBar2::generation = true;
+		    if (ToulBar2::debug)
+			    cout << "-g flag ==> sort pedigree option ON" << endl;
+	    }
 
-                if (ToulBar2::verbose >= 1) {
-                    cout << endl;
-                    cout << "genotypingErrorRate = " << ToulBar2::errorg << " (default value)" << endl;
-                    cout << "resolution = " << ToulBar2::resolution << " (default value)" << endl;
-                    cout << endl;
-                }
-            }
+	    // bayesien -y [genotypinpErrorRate probabilityPrecision genotypePriorMode]  : pedigree solved by Bayesian MPE
 
-            if (args.OptionId() == MENDEL_OPT_EQUAL_FREQ && ToulBar2::bayesian) {
+	    if (args.OptionId() == MENDEL_OPT_genotypingErrorRate) {
+		    if (args.OptionArg() != NULL) {
+			    float f;
+			    sscanf(args.OptionArg(), "%f", &f);
+			    ToulBar2::errorg = f;
+			    if (ToulBar2::debug)
+				    cout << "New assignment for genotyping Error Rate = " << ToulBar2::errorg << endl;
+		    }
+	    }
 
-                ToulBar2::foundersprob_class = 0;
-                if (ToulBar2::debug)
-                    cout << "equal frequencies used ( default mode)" << ToulBar2::foundersprob_class << endl;
+	    if (args.OptionId() == MENDEL_OPT_resolution) {
+		    if (args.OptionArg() != NULL) {
+			    ToulBar2::resolution = atoi(args.OptionArg());
+			    if (ToulBar2::debug)
+				    cout << "New assignment for precision = " << ToulBar2::resolution << endl;
+		    }
+	    }
 
-            } else if (args.OptionId() == MENDEL_OPT_ESTIMAT_FREQ && ToulBar2::bayesian) {
-                ToulBar2::foundersprob_class = 1;
-                if (ToulBar2::debug)
-                    cout << " => prob depending on the frequencies found in the current pedigree probleme used" << endl;
+	    if (args.OptionId() == OPT_pedigree_by_MPE) {
+		    ToulBar2::bayesian = true;
+		    if (ToulBar2::debug)
+			    cout << endl;
+		    if (ToulBar2::debug)
+			    cout << "<<< Bayesian mode ON >>>" << endl;
 
-            } else if (args.OptionId() == MENDEL_OPT_ALLOCATE_FREQ && ToulBar2::bayesian) {
-                if (ToulBar2::debug)
-                    cout << " => prob frequencies read from command line" << endl;
-                ToulBar2::foundersprob_class = 2;
-                Pedi_Args(args, -1);
-            }
+		    if (ToulBar2::verbose >= 1) {
+			    cout << endl;
+			    cout << "genotypingErrorRate = " << ToulBar2::errorg << " (default value)" << endl;
+			    cout << "resolution = " << ToulBar2::resolution << " (default value)" << endl;
+			    cout << endl;
+		    }
+	    }
 
-            ////////////////////////////////////////////////////////////////////////////////////////
-            /////				DEBUG and verbose LEVEL  management + DUMP
-            ////////////////////////////////////////////////////////////////////////////////////////
-            //verbose mode
-            //   v: verbosity level
-            if (args.OptionId() == OPT_verbose) {
-                if (args.OptionArg() != NULL) {
-                    ToulBar2::verbose = atoi(args.OptionArg());
-                } else {
-                    ToulBar2::verbose = 0;
-                }
-                if (ToulBar2::debug)
-                    cout << "verbose level = " << ToulBar2::verbose << endl;
-            }
+	    if (args.OptionId() == MENDEL_OPT_EQUAL_FREQ && ToulBar2::bayesian) {
 
-            //  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
+		    ToulBar2::foundersprob_class = 0;
+		    if (ToulBar2::debug)
+			    cout << "equal frequencies used ( default mode)" << ToulBar2::foundersprob_class << endl;
 
-            if (args.OptionId() == OPT_dumpWCSP) {
-                if (!ToulBar2::dumpWCSP)
-                    ToulBar2::dumpWCSP = 1;
-                if (args.OptionArg() != NULL) {
-                    char* tmpFile = new char[strlen(args.OptionArg()) + 1];
-                    strcpy(tmpFile, args.OptionArg());
-                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '1' || tmpFile[0] == '2'))
-                        ToulBar2::dumpWCSP = atoi(tmpFile);
-                    else
-                        ToulBar2::problemsaved_filename = to_string(tmpFile);
-                }
+	    } else if (args.OptionId() == MENDEL_OPT_ESTIMAT_FREQ && ToulBar2::bayesian) {
+		    ToulBar2::foundersprob_class = 1;
+		    if (ToulBar2::debug)
+			    cout << " => prob depending on the frequencies found in the current pedigree probleme used" << endl;
 
-                if (ToulBar2::dumpWCSP <= 1) {
-                    if (ToulBar2::debug)
-                        cout << "original problem dump in problem.wcsp (see also Graphviz and degree distribution)" << endl;
-                } else {
-                    if (ToulBar2::debug)
-                        cout << "dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)" << endl;
-                }
-            }
-            //   Z: debug mode (save problem at each node if verbosity option set!)
-            //		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
+	    } else if (args.OptionId() == MENDEL_OPT_ALLOCATE_FREQ && ToulBar2::bayesian) {
+		    if (ToulBar2::debug)
+			    cout << " => prob frequencies read from command line" << endl;
+		    ToulBar2::foundersprob_class = 2;
+		    Pedi_Args(args, -1);
+	    }
 
-            if (args.OptionId() == OPT_debug) {
-                if (args.OptionArg() != NULL) {
-                    ToulBar2::debug = atoi(args.OptionArg());
-                } else
-                    ToulBar2::debug = 1;
-                if (ToulBar2::debug)
-                    cout << "debug level = " << ToulBar2::debug << endl;
-            }
+	    ////////////////////////////////////////////////////////////////////////////////////////
+	    /////				DEBUG and verbose LEVEL  management + DUMP
+	    ////////////////////////////////////////////////////////////////////////////////////////
+	    //verbose mode
+	    //   v: verbosity level
+	    if (args.OptionId() == OPT_verbose) {
+		    if (args.OptionArg() != NULL) {
+			    ToulBar2::verbose = atoi(args.OptionArg());
+		    } else {
+			    ToulBar2::verbose = 0;
+		    }
+		    if (ToulBar2::debug)
+			    cout << "verbose level = " << ToulBar2::verbose << endl;
+	    }
 
-            // discrete integration for computing the partition function Z
-            if (args.OptionId() == OPT_Z)
-                ToulBar2::isZ = true;
+	    //  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
 
-            if (args.OptionId() == OPT_epsilon) {
-                if (args.OptionArg() != NULL) {
-                    ToulBar2::logepsilon = -Log(atof(args.OptionArg()));
-                    if (ToulBar2::debug)
-                        cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon) << endl;
-                }
-            }
+	    if (args.OptionId() == OPT_dumpWCSP) {
+		    if (!ToulBar2::dumpWCSP)
+			    ToulBar2::dumpWCSP = 1;
+		    if (args.OptionArg() != NULL) {
+			    char* tmpFile = new char[strlen(args.OptionArg()) + 1];
+			    strcpy(tmpFile, args.OptionArg());
+			    if (strlen(tmpFile) == 1 && (tmpFile[0] == '1' || tmpFile[0] == '2'))
+				    ToulBar2::dumpWCSP = atoi(tmpFile);
+			    else
+				    ToulBar2::problemsaved_filename = to_string(tmpFile);
+		    }
 
-            if (args.OptionId() == OPT_learning) {
-                ToulBar2::learning = true;
-            }
+		    if (ToulBar2::dumpWCSP <= 1) {
+			    if (ToulBar2::debug)
+				    cout << "original problem dump in problem.wcsp (see also Graphviz and degree distribution)" << endl;
+		    } else {
+			    if (ToulBar2::debug)
+				    cout << "dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)" << endl;
+		    }
+	    }
+	    //   Z: debug mode (save problem at each node if verbosity option set!)
+	    //		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
+
+	    if (args.OptionId() == OPT_debug) {
+		    if (args.OptionArg() != NULL) {
+			    ToulBar2::debug = atoi(args.OptionArg());
+		    } else
+			    ToulBar2::debug = 1;
+		    if (ToulBar2::debug)
+			    cout << "debug level = " << ToulBar2::debug << endl;
+	    }
+
+	    // discrete integration for computing the partition function Z
+	    if (args.OptionId() == OPT_Z)
+		    ToulBar2::isZ = true;
+
+	    if (args.OptionId() == OPT_epsilon) {
+		    if (args.OptionArg() != NULL) {
+			    ToulBar2::logepsilon = -Log(atof(args.OptionArg()));
+			    if (ToulBar2::debug)
+				    cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon) << endl;
+		    }
+	    }
+
+	    if (args.OptionId() == OPT_learning) {
+		    ToulBar2::learning = true;
+	    }
 
 #ifndef NDEBUG
-            if (args.OptionId() == OPT_verifyopt)
-                ToulBar2::verifyOpt = true;
+	    if (args.OptionId() == OPT_verifyopt)
+		    ToulBar2::verifyOpt = true;
 #endif
 
-            // upper bound initialisation from command line
-            if (args.OptionId() == OPT_ub) {
-                ToulBar2::externalUB = args.OptionArg();
-                rtrim(ToulBar2::externalUB);
-            }
+	    // upper bound initialisation from command line
+	    if (args.OptionId() == OPT_ub) {
+		    ToulBar2::externalUB = args.OptionArg();
+		    rtrim(ToulBar2::externalUB);
+	    }
 
-            if (args.OptionId() == OPT_deltaUb) {
-                ToulBar2::deltaUbS = args.OptionArg();
-                rtrim(ToulBar2::deltaUbS);
-            }
+	    if (args.OptionId() == OPT_deltaUb) {
+		    ToulBar2::deltaUbS = args.OptionArg();
+		    rtrim(ToulBar2::deltaUbS);
+	    }
 
-            // CPU timer
-            if (args.OptionId() == OPT_timer) {
-                if (args.OptionArg() != NULL) {
-                    timeout = atoi(args.OptionArg());
-                    if (ToulBar2::debug)
-                        cout << "TimeOut = " << timeout << endl;
-                }
-            }
+	    // CPU timer
+	    if (args.OptionId() == OPT_timer) {
+		    if (args.OptionArg() != NULL) {
+			    timeout = atoi(args.OptionArg());
+			    if (ToulBar2::debug)
+				    cout << "TimeOut = " << timeout << endl;
+		    }
+	    }
 
-            //////////RANDOM GENERATOR///////
-            if (args.OptionId() == OPT_seed) {
-                int seed = atoi(args.OptionArg());
-                ToulBar2::seed = seed;
-            }
+	    //////////RANDOM GENERATOR///////
+	    if (args.OptionId() == OPT_seed) {
+		    int seed = atoi(args.OptionArg());
+		    ToulBar2::seed = seed;
+	    }
 
-            if (args.OptionId() == OPT_random) {
+	    if (args.OptionId() == OPT_random) {
 
-                random_desc = args.OptionArg();
-            }
+		    random_desc = args.OptionArg();
+	    }
 
-            if (args.OptionId() == OPT_nopre) {
-                ToulBar2::elimDegree = -1;
-                if (ToulBar2::debug)
-                    cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
-                ToulBar2::elimDegree_preprocessing = -1;
-                if (ToulBar2::debug)
-                    cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
-                if (ToulBar2::debug)
-                    cout << "preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
-                ToulBar2::preprocessTernaryRPC = 0;
-                if (ToulBar2::debug)
-                    cout << "elimination of functional variables OFF" << endl;
-                ToulBar2::preprocessFunctional = 0;
-                if (ToulBar2::debug)
-                    cout << "preproject of n-ary cost functions OFF" << endl;
-                ToulBar2::preprocessNary = 0;
-                if (ToulBar2::debug)
-                    cout << "decomposition of cost functions OFF" << endl;
-                ToulBar2::costfuncSeparate = false;
-                if (ToulBar2::debug)
-                    cout << "maximum spanning tree DAC ordering OFF" << endl;
-                ToulBar2::MSTDAC = false;
-                if (ToulBar2::debug)
-                    cout << "dead-end elimination OFF" << endl;
-                ToulBar2::DEE = 0;
-                if (ToulBar2::debug)
-                    cout << "TRW-S OFF" << endl;
-                ToulBar2::trwsAccuracy = -1.;
-            }
+	    if (args.OptionId() == OPT_nopre) {
+		    ToulBar2::elimDegree = -1;
+		    if (ToulBar2::debug)
+			    cout << "elimDegree OFF " << ToulBar2::elimDegree << endl;
+		    ToulBar2::elimDegree_preprocessing = -1;
+		    if (ToulBar2::debug)
+			    cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
+		    if (ToulBar2::debug)
+			    cout << "preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
+		    ToulBar2::preprocessTernaryRPC = 0;
+		    if (ToulBar2::debug)
+			    cout << "elimination of functional variables OFF" << endl;
+		    ToulBar2::preprocessFunctional = 0;
+		    if (ToulBar2::debug)
+			    cout << "preproject of n-ary cost functions OFF" << endl;
+		    ToulBar2::preprocessNary = 0;
+		    if (ToulBar2::debug)
+			    cout << "decomposition of cost functions OFF" << endl;
+		    ToulBar2::costfuncSeparate = false;
+		    if (ToulBar2::debug)
+			    cout << "maximum spanning tree DAC ordering OFF" << endl;
+		    ToulBar2::MSTDAC = false;
+		    if (ToulBar2::debug)
+			    cout << "dead-end elimination OFF" << endl;
+		    ToulBar2::DEE = 0;
+		    if (ToulBar2::debug)
+			    cout << "TRW-S OFF" << endl;
+		    ToulBar2::trwsAccuracy = -1.;
+	    }
 
-        }
+	}
 
-        else {
-            cout << "<<<< ERROR >>>>  : " << endl;
-            _tprintf(
-                _T("%s: '%s' (use --help to get command line help)\n"),
-                GetLastErrorText(args.LastError()), args.OptionText());
+	else {
+		cout << "<<<< ERROR >>>>  : " << endl;
+		_tprintf(
+				_T("%s: '%s' (use --help to get command line help)\n"),
+				GetLastErrorText(args.LastError()), args.OptionText());
 
-            _tprintf(_T("invalid Option :%s or Invalid argument: %s \n please check help using --help option "), args.OptionText(), args.OptionArg() ? args.OptionArg() : "");
+		_tprintf(_T("invalid Option :%s or Invalid argument: %s \n please check help using --help option "), args.OptionText(), args.OptionArg() ? args.OptionArg() : "");
 
-            return 1;
-        }
+		return 1;
+	}
     }
     // process any files that were passed to us on the command line.
     // send them to the globber so that all wildcards are expanded
@@ -1880,326 +1905,327 @@ int _tmain(int argc, TCHAR* argv[])
     // See the SimpleGlob.h header file for details of the flags.
     CSimpleGlob glob(SG_GLOB_NODOT | SG_GLOB_NOCHECK);
     if (SG_SUCCESS != glob.Add(args.FileCount(), args.Files())) {
-        _tprintf(_T("Error while globbing files\n"));
-        return 1;
+	    _tprintf(_T("Error while globbing files\n"));
+	    return 1;
     }
 
     // dump all of the details, the script that was passed on the
     // command line and the expanded file names
     if (ToulBar2::verbose > 0) {
-        cout << "cmd line parsing ---> " << glob.FileCount() << " Filename(s) found in command line" << endl;
+	    cout << "cmd line parsing ---> " << glob.FileCount() << " Filename(s) found in command line" << endl;
     }
     string strfile;
     string strext;
 
     if (random_desc == NULL) {
-        for (int n = 0; n < glob.FileCount() + ((ToulBar2::stdin_format.size() > 0) ? 1 : 0); ++n) {
-            string problem = "";
-            if (n < glob.FileCount())
-                problem = to_string(glob.File(n));
+    	ToulBar2::problemFileName = to_string(glob.File(0)); //kad :to access globally to the problem file name, used for EPS
+	    for (int n = 0; n < glob.FileCount() + ((ToulBar2::stdin_format.size() > 0) ? 1 : 0); ++n) {
+		    string problem = "";
+		    if (n < glob.FileCount())
+			    problem = to_string(glob.File(n));
 
-            if (check_file_ext(problem, file_extension_map["wcsp_ext"]) || ToulBar2::stdin_format.compare("wcsp") == 0) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading wcsp file: " << problem << endl;
-                strext = ".wcsp";
-                strfile = problem;
-            }
-            if (check_file_ext(problem, file_extension_map["wcspgz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd wcsp file: " << problem << endl;
-                strext = ".wcsp.gz";
-                strfile = problem;
-                ToulBar2::gz = true;
-            }
-            if (check_file_ext(problem, file_extension_map["wcspxz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed wcsp file: " << problem << endl;
-                strext = ".wcsp.xz";
-                strfile = problem;
-                ToulBar2::xz = true;
-            }
-            // CFN file
-            if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn") == 0) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading cfn file: " << problem << endl;
-                strext = ".cfn";
-                strfile = problem;
-                ToulBar2::cfn = true;
-            }
-            // CFN gzip'd file
-            if (check_file_ext(problem, file_extension_map["cfngz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd cfn file: " << problem << endl;
-                strext = ".cfn.gz";
-                strfile = problem;
-                ToulBar2::cfn = true;
-                ToulBar2::gz = true;
-            }
-            // CFN xz file
-            if (check_file_ext(problem, file_extension_map["cfnxz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed cfn file: " << problem << endl;
-                strext = ".cfn.xz";
-                strfile = problem;
-                ToulBar2::cfn = true;
-                ToulBar2::xz = true;
-            }
-            // uai  file
-            if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
-                strfile = problem;
-                strext = ".uai";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading uai file:  " << problem << endl;
-                ToulBar2::uai = 1;
-                ToulBar2::bayesian = true;
-            }
-            // uai  gzip'd file
-            if (check_file_ext(problem, file_extension_map["uaigz_ext"])) {
-                strfile = problem;
-                strext = ".uai.gz";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd uai file:  " << problem << endl;
-                ToulBar2::uai = 1;
-                ToulBar2::bayesian = true;
-                ToulBar2::gz = true;
-            }
-            // uai xz compressed file
-            if (check_file_ext(problem, file_extension_map["uaixz_ext"])) {
-                strfile = problem;
-                strext = ".uai.xz";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed uai file:  " << problem << endl;
-                ToulBar2::uai = 1;
-                ToulBar2::bayesian = true;
-                ToulBar2::xz = true;
-            }
-            // uai log file
-            if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG") == 0) {
-                strfile = problem;
-                strext = ".LG";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading uai log file:  " << problem << endl;
-                ToulBar2::uai = 2;
-                ToulBar2::bayesian = true;
-            }
-            // uai log file
-            if (check_file_ext(problem, file_extension_map["uaigz_log_ext"])) {
-                strfile = problem;
-                strext = ".LG.gz";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd uai log file:  " << problem << endl;
-                ToulBar2::uai = 2;
-                ToulBar2::bayesian = true;
-                ToulBar2::gz = true;
-            }
-            // uai log file
-            if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
-                strfile = problem;
-                strext = ".LG.xz";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed uai log file:  " << problem << endl;
-                ToulBar2::uai = 2;
-                ToulBar2::bayesian = true;
-                ToulBar2::xz = true;
-            }
-            // UAI evidence file
-            if (check_file_ext(problem, file_extension_map["evid_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading evidence file:  " << problem << endl;
-                ToulBar2::evidence_file = string(problem);
-            }
+		    if (check_file_ext(problem, file_extension_map["wcsp_ext"]) || ToulBar2::stdin_format.compare("wcsp") == 0) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading wcsp file: " << problem << endl;
+			    strext = ".wcsp";
+			    strfile = problem;
+		    }
+		    if (check_file_ext(problem, file_extension_map["wcspgz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd wcsp file: " << problem << endl;
+			    strext = ".wcsp.gz";
+			    strfile = problem;
+			    ToulBar2::gz = true;
+		    }
+		    if (check_file_ext(problem, file_extension_map["wcspxz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed wcsp file: " << problem << endl;
+			    strext = ".wcsp.xz";
+			    strfile = problem;
+			    ToulBar2::xz = true;
+		    }
+		    // CFN file
+		    if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn") == 0) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading cfn file: " << problem << endl;
+			    strext = ".cfn";
+			    strfile = problem;
+			    ToulBar2::cfn = true;
+		    }
+		    // CFN gzip'd file
+		    if (check_file_ext(problem, file_extension_map["cfngz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd cfn file: " << problem << endl;
+			    strext = ".cfn.gz";
+			    strfile = problem;
+			    ToulBar2::cfn = true;
+			    ToulBar2::gz = true;
+		    }
+		    // CFN xz file
+		    if (check_file_ext(problem, file_extension_map["cfnxz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed cfn file: " << problem << endl;
+			    strext = ".cfn.xz";
+			    strfile = problem;
+			    ToulBar2::cfn = true;
+			    ToulBar2::xz = true;
+		    }
+		    // uai  file
+		    if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
+			    strfile = problem;
+			    strext = ".uai";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading uai file:  " << problem << endl;
+			    ToulBar2::uai = 1;
+			    ToulBar2::bayesian = true;
+		    }
+		    // uai  gzip'd file
+		    if (check_file_ext(problem, file_extension_map["uaigz_ext"])) {
+			    strfile = problem;
+			    strext = ".uai.gz";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd uai file:  " << problem << endl;
+			    ToulBar2::uai = 1;
+			    ToulBar2::bayesian = true;
+			    ToulBar2::gz = true;
+		    }
+		    // uai xz compressed file
+		    if (check_file_ext(problem, file_extension_map["uaixz_ext"])) {
+			    strfile = problem;
+			    strext = ".uai.xz";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed uai file:  " << problem << endl;
+			    ToulBar2::uai = 1;
+			    ToulBar2::bayesian = true;
+			    ToulBar2::xz = true;
+		    }
+		    // uai log file
+		    if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG") == 0) {
+			    strfile = problem;
+			    strext = ".LG";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading uai log file:  " << problem << endl;
+			    ToulBar2::uai = 2;
+			    ToulBar2::bayesian = true;
+		    }
+		    // uai log file
+		    if (check_file_ext(problem, file_extension_map["uaigz_log_ext"])) {
+			    strfile = problem;
+			    strext = ".LG.gz";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd uai log file:  " << problem << endl;
+			    ToulBar2::uai = 2;
+			    ToulBar2::bayesian = true;
+			    ToulBar2::gz = true;
+		    }
+		    // uai log file
+		    if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
+			    strfile = problem;
+			    strext = ".LG.xz";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed uai log file:  " << problem << endl;
+			    ToulBar2::uai = 2;
+			    ToulBar2::bayesian = true;
+			    ToulBar2::xz = true;
+		    }
+		    // UAI evidence file
+		    if (check_file_ext(problem, file_extension_map["evid_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading evidence file:  " << problem << endl;
+			    ToulBar2::evidence_file = string(problem);
+		    }
 
-            // xml file
-            if (check_file_ext(problem, file_extension_map["wcspXML_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xml file:" << problem << endl;
+		    // xml file
+		    if (check_file_ext(problem, file_extension_map["wcspXML_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xml file:" << problem << endl;
 
-                ToulBar2::xmlflag = true;
-                if (!ToulBar2::writeSolution)
-                    ToulBar2::writeSolution = (char*)"sol";
-                strext = ".xml";
-                strfile = problem;
-            }
+			    ToulBar2::xmlflag = true;
+			    if (!ToulBar2::writeSolution)
+				    ToulBar2::writeSolution = (char*)"sol";
+			    strext = ".xml";
+			    strfile = problem;
+		    }
 
-            // wcnf or cnf file
-            if (check_file_ext(problem, file_extension_map["wcnf_ext"]) || ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading wcnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".wcnf";
-                strfile = problem;
-            } else if (check_file_ext(problem, file_extension_map["cnf_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading cnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".cnf";
-                strfile = problem;
-            }
-            if (check_file_ext(problem, file_extension_map["wcnfgz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd wcnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".wcnf.gz";
-                strfile = problem;
-                ToulBar2::gz = true;
-            } else if (check_file_ext(problem, file_extension_map["cnfgz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd cnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".cnf.gz";
-                strfile = problem;
-                ToulBar2::gz = true;
-            }
-            if (check_file_ext(problem, file_extension_map["wcnfxz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed wcnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".wcnf.xz";
-                strfile = problem;
-                ToulBar2::xz = true;
-            } else if (check_file_ext(problem, file_extension_map["cnfxz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed cnf file:" << problem << endl;
-                ToulBar2::wcnf = true;
-                strext = ".cnf.xz";
-                strfile = problem;
-                ToulBar2::xz = true;
-            }
+		    // wcnf or cnf file
+		    if (check_file_ext(problem, file_extension_map["wcnf_ext"]) || ToulBar2::stdin_format.compare("wcnf") == 0 || ToulBar2::stdin_format.compare("cnf") == 0) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading wcnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".wcnf";
+			    strfile = problem;
+		    } else if (check_file_ext(problem, file_extension_map["cnf_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading cnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".cnf";
+			    strfile = problem;
+		    }
+		    if (check_file_ext(problem, file_extension_map["wcnfgz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd wcnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".wcnf.gz";
+			    strfile = problem;
+			    ToulBar2::gz = true;
+		    } else if (check_file_ext(problem, file_extension_map["cnfgz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd cnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".cnf.gz";
+			    strfile = problem;
+			    ToulBar2::gz = true;
+		    }
+		    if (check_file_ext(problem, file_extension_map["wcnfxz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed wcnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".wcnf.xz";
+			    strfile = problem;
+			    ToulBar2::xz = true;
+		    } else if (check_file_ext(problem, file_extension_map["cnfxz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed cnf file:" << problem << endl;
+			    ToulBar2::wcnf = true;
+			    strext = ".cnf.xz";
+			    strfile = problem;
+			    ToulBar2::xz = true;
+		    }
 
-            // unconstrained quadratic programming file
-            if (check_file_ext(problem, file_extension_map["qpbo_ext"]) || ToulBar2::stdin_format.compare("qpbo") == 0) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading quadratic pseudo-Boolean optimization file:" << problem << endl;
-                ToulBar2::qpbo = true;
-                strext = ".qpbo";
-                strfile = problem;
-            }
-            if (check_file_ext(problem, file_extension_map["qpbogz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd quadratic pseudo-Boolean optimization file:" << problem << endl;
-                ToulBar2::qpbo = true;
-                strext = ".qpbo.gz";
-                strfile = problem;
-                ToulBar2::gz = true;
-            }
-            if (check_file_ext(problem, file_extension_map["qpboxz_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed quadratic pseudo-Boolean optimization file:" << problem << endl;
-                ToulBar2::qpbo = true;
-                strext = ".qpbo.xz";
-                strfile = problem;
-                ToulBar2::xz = true;
-            }
+		    // unconstrained quadratic programming file
+		    if (check_file_ext(problem, file_extension_map["qpbo_ext"]) || ToulBar2::stdin_format.compare("qpbo") == 0) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading quadratic pseudo-Boolean optimization file:" << problem << endl;
+			    ToulBar2::qpbo = true;
+			    strext = ".qpbo";
+			    strfile = problem;
+		    }
+		    if (check_file_ext(problem, file_extension_map["qpbogz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading gzip'd quadratic pseudo-Boolean optimization file:" << problem << endl;
+			    ToulBar2::qpbo = true;
+			    strext = ".qpbo.gz";
+			    strfile = problem;
+			    ToulBar2::gz = true;
+		    }
+		    if (check_file_ext(problem, file_extension_map["qpboxz_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading xz compressed quadratic pseudo-Boolean optimization file:" << problem << endl;
+			    ToulBar2::qpbo = true;
+			    strext = ".qpbo.xz";
+			    strfile = problem;
+			    ToulBar2::xz = true;
+		    }
 
-            // upperbound file
+		    // upperbound file
 
-            if (check_file_ext(problem, file_extension_map["ub_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading upper bound from file: " << problem << endl;
-                string ubstring = read_UB(problem.c_str());
-                if (ubstring.c_str() != NULL) {
-                    if (ToulBar2::externalUB.length() != 0) {
-                        cerr << "Error: cannot set upper bound from command line and file simultaneously." << endl;
-                        exit(EXIT_FAILURE);
-                    } else {
-                        ToulBar2::externalUB = ubstring;
-                    }
-                } else {
-                    cerr << "error reading UB in " << problem << endl;
-                    exit(-1);
-                }
-            }
+		    if (check_file_ext(problem, file_extension_map["ub_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading upper bound from file: " << problem << endl;
+			    string ubstring = read_UB(problem.c_str());
+			    if (ubstring.c_str() != NULL) {
+				    if (ToulBar2::externalUB.length() != 0) {
+					    cerr << "Error: cannot set upper bound from command line and file simultaneously." << endl;
+					    exit(EXIT_FAILURE);
+				    } else {
+					    ToulBar2::externalUB = ubstring;
+				    }
+			    } else {
+				    cerr << "error reading UB in " << problem << endl;
+				    exit(-1);
+			    }
+		    }
 
-            // bep input file
-            if (check_file_ext(problem, file_extension_map["bep_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading BEP file: " << problem << endl;
-                strext = ".bep";
-                strfile = problem;
-            }
+		    // bep input file
+		    if (check_file_ext(problem, file_extension_map["bep_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading BEP file: " << problem << endl;
+			    strext = ".bep";
+			    strfile = problem;
+		    }
 
-            //////////////////////Mendelian-error analysis and haplotype reconstruction ////////////////////////////////////
-            // map file
+		    //////////////////////Mendelian-error analysis and haplotype reconstruction ////////////////////////////////////
+		    // map file
 
-            if (check_file_ext(problem, file_extension_map["map_ext"])) {
-                ToulBar2::map_file = string(problem);
-                ToulBar2::haplotype = new Haplotype;
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading map file: " << ToulBar2::map_file << endl;
+		    if (check_file_ext(problem, file_extension_map["map_ext"])) {
+			    ToulBar2::map_file = string(problem);
+			    ToulBar2::haplotype = new Haplotype;
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading map file: " << ToulBar2::map_file << endl;
 
-                if (glob.FileCount() < 2) {
-                    cerr << "pedigree file is missing (.pre): " << endl;
-                    exit(-1);
-                }
-            }
+			    if (glob.FileCount() < 2) {
+				    cerr << "pedigree file is missing (.pre): " << endl;
+				    exit(-1);
+			    }
+		    }
 
-            // pre file
-            if (check_file_ext(problem, file_extension_map["pre_ext"])) {
-                strfile = problem;
-                strext = ".pre";
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading pre file: " << problem << endl;
-                if (glob.FileCount() < 2)
-                    ToulBar2::pedigree = new Pedigree;
-            }
+		    // pre file
+		    if (check_file_ext(problem, file_extension_map["pre_ext"])) {
+			    strfile = problem;
+			    strext = ".pre";
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading pre file: " << problem << endl;
+			    if (glob.FileCount() < 2)
+				    ToulBar2::pedigree = new Pedigree;
+		    }
 
-            //////////////////////VARIABLE ORDERING ////////////////////////////////////
-            // filename containing variable order
-            //if (strstr(problem,".order"))
-            if (check_file_ext(problem, file_extension_map["order_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading variable order in file: " << problem << endl;
-                //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
-                ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
-            }
+		    //////////////////////VARIABLE ORDERING ////////////////////////////////////
+		    // filename containing variable order
+		    //if (strstr(problem,".order"))
+		    if (check_file_ext(problem, file_extension_map["order_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading variable order in file: " << problem << endl;
+			    //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+			    ToulBar2::varOrder = new char[problem.length() + 1];
+			    sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+		    }
 
-            //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
-            // filename containing list of clusters in topological ordering
-            //if (strstr(problem,".cov"))
-            if (check_file_ext(problem, file_extension_map["treedec_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading tree decomposition in file: " << problem << endl;
-                //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
-                ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
-                if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
-                    cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
-                    exit(EXIT_FAILURE);
-                }
-                if (ToulBar2::btdMode == 0 && ToulBar2::searchMethod == DFBB)
-                    ToulBar2::btdMode = 1;
-                ToulBar2::clusterFile = string(ToulBar2::varOrder);
-            }
+		    //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
+		    // filename containing list of clusters in topological ordering
+		    //if (strstr(problem,".cov"))
+		    if (check_file_ext(problem, file_extension_map["treedec_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading tree decomposition in file: " << problem << endl;
+			    //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+			    ToulBar2::varOrder = new char[problem.length() + 1];
+			    sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+			    if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
+				    cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
+				    exit(EXIT_FAILURE);
+			    }
+			    if (ToulBar2::btdMode == 0 && ToulBar2::searchMethod == DFBB)
+				    ToulBar2::btdMode = 1;
+			    ToulBar2::clusterFile = string(ToulBar2::varOrder);
+		    }
 
-            // filename containing list of clusters without the running intersection property
-            //if (strstr(problem,".dec"))
-            if (check_file_ext(problem, file_extension_map["clusterdec_ext"])) {
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading cluster decomposition in file: " << problem << endl;
-                ToulBar2::clusterFile = problem;
-                ifstream decfile(ToulBar2::clusterFile.c_str());
-                if (!decfile) {
-                    cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
-                    exit(EXIT_FAILURE);
-                }
-            }
+		    // filename containing list of clusters without the running intersection property
+		    //if (strstr(problem,".dec"))
+		    if (check_file_ext(problem, file_extension_map["clusterdec_ext"])) {
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading cluster decomposition in file: " << problem << endl;
+			    ToulBar2::clusterFile = problem;
+			    ifstream decfile(ToulBar2::clusterFile.c_str());
+			    if (!decfile) {
+				    cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
+				    exit(EXIT_FAILURE);
+			    }
+		    }
 
-            // read assignment in file or filename of solution
-            if (check_file_ext(problem, file_extension_map["sol_ext"])) {
-                if (certificateString && strcmp(certificateString, "") != 0) {
-                    cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl;
-                    exit(-1);
-                }
-                if (ToulBar2::verbose >= 0)
-                    cout << "loading solution in file: " << problem << endl;
+		    // read assignment in file or filename of solution
+		    if (check_file_ext(problem, file_extension_map["sol_ext"])) {
+			    if (certificateString && strcmp(certificateString, "") != 0) {
+				    cerr << "\n COMMAND LINE ERROR cannot read a solution if a partial assignment is given in the command line using -x= argument " << endl;
+				    exit(-1);
+			    }
+			    if (ToulBar2::verbose >= 0)
+				    cout << "loading solution in file: " << problem << endl;
 
-                certificate = true;
-                certificateFilename = new char[256];
-                sprintf(certificateFilename, "%s", problem.c_str());
-                certificateString = (char*)""; // ensure the search will continue starting from this solution
-            }
-        }
+			    certificate = true;
+			    certificateFilename = new char[256];
+			    sprintf(certificateFilename, "%s", problem.c_str());
+			    certificateString = (char*)""; // ensure the search will continue starting from this solution
+		    }
+	    }
     }
 
     // ----------simple opt end ----------------------
@@ -2209,10 +2235,10 @@ int _tmain(int argc, TCHAR* argv[])
     // PB FILENAME
 
     if (argc <= 1) {
-        cerr << "Problem filename is missing as command line argument!" << endl;
-        cerr << endl;
-        help_msg(argv[0]);
-        exit(EXIT_FAILURE);
+	    cerr << "Problem filename is missing as command line argument!" << endl;
+	    cerr << endl;
+	    help_msg(argv[0]);
+	    exit(EXIT_FAILURE);
     }
 
     //------------------------------tb2 option --------------
@@ -2221,47 +2247,47 @@ int _tmain(int argc, TCHAR* argv[])
     /////////////////////////////////////////
 
     if (ToulBar2::verifyOpt && (!certificate || certificateFilename == NULL)) {
-        cerr << "Error: no optimal solution file given. Cannot verify the optimal solution." << endl;
-        exit(EXIT_FAILURE);
+	    cerr << "Error: no optimal solution file given. Cannot verify the optimal solution." << endl;
+	    exit(EXIT_FAILURE);
     }
 
 #ifdef OPENMPI
     if (env0.myrank == 0) {
 #endif
-        if (ToulBar2::writeSolution) {
-            ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");
-            if (!ToulBar2::solutionFile) {
-                cerr << "Could not open file " << ToulBar2::writeSolution << endl;
-                exit(EXIT_FAILURE);
-            }
-        }
-        if (ToulBar2::uaieval) {
-            char* tmpPath = new char[strlen(argv[0]) + 1];
-            strcpy(tmpPath, argv[0]);
-            if (strcmp(tmpPath, "toulbar2") == 0)
-                strcpy(tmpPath, ".");
-            char* tmpFile = new char[strlen(strfile.c_str()) + 1];
-            strcpy(tmpFile, strfile.c_str());
-            string filename(tmpPath);
-            filename += "/";
-            filename += basename(tmpFile);
-            size_t wcsppos = string::npos;
-            if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
-                filename.replace(wcsppos, 5, ".uai");
-            filename += ".";
-            if (ToulBar2::isZ)
-                filename += "PR";
-            else
-                filename += "MPE";
-            ToulBar2::solution_uai_filename = filename;
-            ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
-            if (!ToulBar2::solution_uai_file) {
-                cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
-                exit(EXIT_FAILURE);
-            }
-            delete[] tmpPath;
-            delete[] tmpFile;
-        }
+	    if (ToulBar2::writeSolution) {
+		    ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");
+		    if (!ToulBar2::solutionFile) {
+			    cerr << "Could not open file " << ToulBar2::writeSolution << endl;
+			    exit(EXIT_FAILURE);
+		    }
+	    }
+	    if (ToulBar2::uaieval) {
+		    char* tmpPath = new char[strlen(argv[0]) + 1];
+		    strcpy(tmpPath, argv[0]);
+		    if (strcmp(tmpPath, "toulbar2") == 0)
+			    strcpy(tmpPath, ".");
+		    char* tmpFile = new char[strlen(strfile.c_str()) + 1];
+		    strcpy(tmpFile, strfile.c_str());
+		    string filename(tmpPath);
+		    filename += "/";
+		    filename += basename(tmpFile);
+		    size_t wcsppos = string::npos;
+		    if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
+			    filename.replace(wcsppos, 5, ".uai");
+		    filename += ".";
+		    if (ToulBar2::isZ)
+			    filename += "PR";
+		    else
+			    filename += "MPE";
+		    ToulBar2::solution_uai_filename = filename;
+		    ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
+		    if (!ToulBar2::solution_uai_file) {
+			    cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
+			    exit(EXIT_FAILURE);
+		    }
+		    delete[] tmpPath;
+		    delete[] tmpFile;
+	    }
 #ifdef OPENMPI
     }
 #endif
@@ -2283,143 +2309,143 @@ int _tmain(int argc, TCHAR* argv[])
     vector<int> p;
 #ifndef MENDELSOFT
     if (random_desc != NULL) {
-        int pn[10];
-        int narities = 0;
-        if (strstr(random_desc, "binsub")) {
-            forceSubModular = true;
-            randomproblem = true;
-            sscanf(random_desc, "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
-            narities = 2;
-        } else if (strstr(random_desc, "bin")) {
-            randomproblem = true;
-            sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &ToulBar2::seed);
-            narities = 2;
-        } else if (strstr(random_desc, "tern")) {
-            randomproblem = true;
-            sscanf(random_desc, "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
-            narities = 3;
-        } else // if (strstr(random_desc,"salldiff"))
-        {
-            randomproblem = true;
-            char* pch = strtok(random_desc, "-");
-            randomglobal = string(pch);
-            pch = strtok(NULL, "-");
-            n = atoi(pch);
-            pch = strtok(NULL, "-");
-            m = atoi(pch);
+	    int pn[10];
+	    int narities = 0;
+	    if (strstr(random_desc, "binsub")) {
+		    forceSubModular = true;
+		    randomproblem = true;
+		    sscanf(random_desc, "binsub-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
+		    narities = 2;
+	    } else if (strstr(random_desc, "bin")) {
+		    randomproblem = true;
+		    sscanf(random_desc, "bin-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &ToulBar2::seed);
+		    narities = 2;
+	    } else if (strstr(random_desc, "tern")) {
+		    randomproblem = true;
+		    sscanf(random_desc, "tern-%d-%d-%d-%d-%d-%d", &n, &m, &pn[0], &pn[1], &pn[2], &ToulBar2::seed);
+		    narities = 3;
+	    } else // if (strstr(random_desc,"salldiff"))
+	    {
+		    randomproblem = true;
+		    char* pch = strtok(random_desc, "-");
+		    randomglobal = string(pch);
+		    pch = strtok(NULL, "-");
+		    n = atoi(pch);
+		    pch = strtok(NULL, "-");
+		    m = atoi(pch);
 
-            while (pch != NULL) {
-                pch = strtok(NULL, "-");
-                if (pch != NULL) {
-                    pn[narities] = atoi(pch);
-                    narities++;
-                }
-            }
-            narities--;
-            ToulBar2::seed = pn[narities];
-        }
-        if (pn[0] > 100) {
-            cout << pn[0] << " tightness is a percentage" << endl;
-            pn[0] = 100;
-        }
-        for (int i = 0; i < narities; i++)
-            p.push_back(pn[i]);
-        if (forceSubModular)
-            p.push_back(pn[narities]);
-        if (narities == 0) {
-            cerr << "Random problem generator with no cost functions! (no arity)" << endl;
-            exit(-1);
-        }
+		    while (pch != NULL) {
+			    pch = strtok(NULL, "-");
+			    if (pch != NULL) {
+				    pn[narities] = atoi(pch);
+				    narities++;
+			    }
+		    }
+		    narities--;
+		    ToulBar2::seed = pn[narities];
+	    }
+	    if (pn[0] > 100) {
+		    cout << pn[0] << " tightness is a percentage" << endl;
+		    pn[0] = 100;
+	    }
+	    for (int i = 0; i < narities; i++)
+		    p.push_back(pn[i]);
+	    if (forceSubModular)
+		    p.push_back(pn[narities]);
+	    if (narities == 0) {
+		    cerr << "Random problem generator with no cost functions! (no arity)" << endl;
+		    exit(-1);
+	    }
     }
     if (strstr(strext.c_str(), ".bep") || strstr((char*)strfile.c_str(), "bEpInstance"))
-        ToulBar2::bep = new BEP;
+	    ToulBar2::bep = new BEP;
 #endif
 
     if (ToulBar2::seed < 0) { // initialize seed using current time
-        ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
-        if (ToulBar2::verbose >= 0)
-            cout << "Initial random seed is " << ToulBar2::seed << endl;
+	    ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
+	    if (ToulBar2::verbose >= 0)
+		    cout << "Initial random seed is " << ToulBar2::seed << endl;
     }
     mysrand(ToulBar2::seed);
     if (ToulBar2::incop_cmd.size() > 0 && ToulBar2::seed != 1 && ToulBar2::incop_cmd.find("0 1 ") == 0) {
-        string sseed = to_string(ToulBar2::seed);
-        ToulBar2::incop_cmd.replace(2, 1, sseed);
+	    string sseed = to_string(ToulBar2::seed);
+	    ToulBar2::incop_cmd.replace(2, 1, sseed);
     }
 
     tb2checkOptions();
     try {
-        if (randomproblem)
-            solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
-        else
-            globalUb = solver->read_wcsp((char*)strfile.c_str());
-        if (globalUb <= MIN_COST) {
-            cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-            exit(1);
-        }
+	    if (randomproblem)
+		    solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
+	    else
+		    globalUb = solver->read_wcsp((char*)strfile.c_str());
+	    if (globalUb <= MIN_COST) {
+		    cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
+		    exit(1);
+	    }
 
-        //TODO: If --show_options then dump ToulBar2 object here
+	    //TODO: If --show_options then dump ToulBar2 object here
 
-        if (certificate) {
-            if (certificateFilename != NULL)
-                solver->read_solution(certificateFilename, updateValueHeuristic);
-            else
-                solver->parse_solution(certificateString);
-        }
-        if (ToulBar2::dumpWCSP == 1) {
-            string problemname = ToulBar2::problemsaved_filename;
-            if (ToulBar2::uaieval) {
-                problemname = ToulBar2::solution_uai_filename;
-                problemname.replace(problemname.rfind(".uai.MPE"), 8, ".wcsp");
-            }
-            solver->dump_wcsp(problemname.c_str());
-        } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
+	    if (certificate) {
+		    if (certificateFilename != NULL)
+			    solver->read_solution(certificateFilename, updateValueHeuristic);
+		    else
+			    solver->parse_solution(certificateString);
+	    }
+	    if (ToulBar2::dumpWCSP == 1) {
+		    string problemname = ToulBar2::problemsaved_filename;
+		    if (ToulBar2::uaieval) {
+			    problemname = ToulBar2::solution_uai_filename;
+			    problemname.replace(problemname.rfind(".uai.MPE"), 8, ".wcsp");
+		    }
+		    solver->dump_wcsp(problemname.c_str());
+	    } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
 #ifdef LINUX
-            signal(SIGINT, timeOut);
-            signal(SIGTERM, timeOut);
-            if (timeout > 0)
-                timer(timeout);
+		    signal(SIGINT, timeOut);
+		    signal(SIGTERM, timeOut);
+		    if (timeout > 0)
+			    timer(timeout);
 #endif
-            solver->solve();
-        }
+		    solver->solve();
+	    }
     } catch (Contradiction) {
-        if (ToulBar2::verbose >= 0)
-            cout << "No solution found by initial propagation!" << endl;
-        if (ToulBar2::isZ) {
-            if (ToulBar2::uaieval) {
-                rewind(ToulBar2::solution_uai_file);
-                fprintf(ToulBar2::solution_uai_file, "PR\n");
-                fprintf(ToulBar2::solution_uai_file, PrintFormatProb, -numeric_limits<TProb>::infinity());
-                fprintf(ToulBar2::solution_uai_file, "\n");
-            }
-            cout << "Log(Z)= ";
-            cout << -numeric_limits<TProb>::infinity() << endl;
-        }
-        if (ToulBar2::maxsateval) {
-            cout << "o " << solver->getWCSP()->getUb() << endl;
-            cout << "s UNSATISFIABLE" << endl;
-        }
+	    if (ToulBar2::verbose >= 0)
+		    cout << "No solution found by initial propagation!" << endl;
+	    if (ToulBar2::isZ) {
+		    if (ToulBar2::uaieval) {
+			    rewind(ToulBar2::solution_uai_file);
+			    fprintf(ToulBar2::solution_uai_file, "PR\n");
+			    fprintf(ToulBar2::solution_uai_file, PrintFormatProb, -numeric_limits<TProb>::infinity());
+			    fprintf(ToulBar2::solution_uai_file, "\n");
+		    }
+		    cout << "Log(Z)= ";
+		    cout << -numeric_limits<TProb>::infinity() << endl;
+	    }
+	    if (ToulBar2::maxsateval) {
+		    cout << "o " << solver->getWCSP()->getUb() << endl;
+		    cout << "s UNSATISFIABLE" << endl;
+	    }
     }
     if (ToulBar2::verbose >= 0)
-        cout << "end." << endl;
+	    cout << "end." << endl;
 
     if (ToulBar2::solutionFile != NULL) {
-        if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
-            exit(EXIT_FAILURE);
-        fclose(ToulBar2::solutionFile);
+	    if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
+		    exit(EXIT_FAILURE);
+	    fclose(ToulBar2::solutionFile);
     }
     if (ToulBar2::solution_uai_file != NULL) {
-        if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
-            exit(EXIT_FAILURE);
-        fclose(ToulBar2::solution_uai_file);
+	    if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
+		    exit(EXIT_FAILURE);
+	    fclose(ToulBar2::solution_uai_file);
     }
 
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];
-	  string strfile(argv[1]);
-	  int pos = strfile.find_last_of(".");
-	  string strfilewcsp = strfile.substr(0,pos) + ".ub";
-	  sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
-	  system(line); */
+      string strfile(argv[1]);
+      int pos = strfile.find_last_of(".");
+      string strfilewcsp = strfile.substr(0,pos) + ".ub";
+      sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
+      system(line); */
 
     return 0;
 }

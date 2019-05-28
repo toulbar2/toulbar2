@@ -521,6 +521,10 @@ public:
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
+    static Long hbfs_node_dump; // hybrid best-first search dump node number David node dump limit
+    static bool EPS; //kad option for embarrassingly parallel search
+    static string problemFileName; //kad : global var to access to the problem file name e.g. 404.wcsp
+    
 };
 
 #ifdef INT_COST
