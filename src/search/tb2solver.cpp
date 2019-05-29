@@ -1632,8 +1632,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 					hbfsLimit = LONGLONG_MAX;
 
 			}
-			//kad
 
+			//kad debut
 			if (ToulBar2::EPS == true) {
 
 				int nbCores = sysconf(_SC_NPROCESSORS_ONLN);
@@ -1657,7 +1657,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 					exit(0);
 				}
 			}
-			///kad
+			///kad fin
 
 			clb = MAX(clb, open_->getLb(delta));
 			showGap(clb, cub);
@@ -1695,7 +1695,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 //kad
 /**
  *  \brief create a string toulbar2 option -x like below
- *        time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*" ",0=3,1=5,2=9" ",0=3,1=5,2#9" ",0>3,1#5,2<9"
+ *        time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x= *" ",0=3,1=5,2=9" ",0=3,1=5,2#9" ",0>3,1#5,2<9"
  *
  *  \param cp : Vector of choice Points
  *  \param nd : node of type OpenNode
@@ -1715,7 +1715,7 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open) {
 	epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
 	//epsCommand += " \"./toulbar2 ";
 	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
-	epsCommand += " -x= *\" "; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
+	epsCommand += " -x= *\""; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
 	// then, for each node nd in OpenListe open, we have to write something like this : ",0=3,1=5,2=9"
 
 	while (open.size() != 0) {
