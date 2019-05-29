@@ -5,8 +5,8 @@ release
 src/*.wcsp
 src/*.sh
 nbProcess.txt
-src/ToulbarVersion.hpp
-src/MyCPackConf.cmake
+#src/ToulbarVersion.hpp
+#src/MyCPackConf.cmake
 .cproject
 .project
 *_ori
