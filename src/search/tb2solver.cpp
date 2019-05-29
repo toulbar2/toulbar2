@@ -1715,7 +1715,7 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open) {
 	epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
 	//epsCommand += " \"./toulbar2 ";
 	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
-	epsCommand += " -x=*\" "; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
+	epsCommand += " -x= *\" "; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
 	// then, for each node nd in OpenListe open, we have to write something like this : ",0=3,1=5,2=9"
 
 	while (open.size() != 0) {
