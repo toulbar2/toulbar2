@@ -1,190 +1,69 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-<cproject
-	storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
-
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
-
-		<cconfiguration
-			id="cdt.managedbuild.toolchain.gnu.base.819881165">
-
-			<storageModule
-				buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider"
-				id="cdt.managedbuild.toolchain.gnu.base.819881165"
-				moduleId="org.eclipse.cdt.core.settings" name="Default">
-
-				<externalSettings />
-
+		<cconfiguration id="cdt.managedbuild.toolchain.gnu.base.722340418">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.722340418" moduleId="org.eclipse.cdt.core.settings" name="Default">
+				<externalSettings/>
 				<extensions>
-
-					<extension id="org.eclipse.cdt.core.GNU_ELF"
-						point="org.eclipse.cdt.core.BinaryParser" />
-
-					<extension id="org.eclipse.cdt.core.GASErrorParser"
-						point="org.eclipse.cdt.core.ErrorParser" />
-
-					<extension id="org.eclipse.cdt.core.GmakeErrorParser"
-						point="org.eclipse.cdt.core.ErrorParser" />
-
-					<extension id="org.eclipse.cdt.core.GLDErrorParser"
-						point="org.eclipse.cdt.core.ErrorParser" />
-
-					<extension id="org.eclipse.cdt.core.CWDLocator"
-						point="org.eclipse.cdt.core.ErrorParser" />
-
-					<extension id="org.eclipse.cdt.core.GCCErrorParser"
-						point="org.eclipse.cdt.core.ErrorParser" />
-
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
-
 			</storageModule>
-
-			<storageModule moduleId="cdtBuildSystem"
-				version="4.0.0">
-
-				<configuration buildProperties="" description=""
-					id="cdt.managedbuild.toolchain.gnu.base.819881165" name="Default"
-					optionalBuildProperties=""
-					parent="org.eclipse.cdt.build.core.emptycfg">
-
-					<folderInfo
-						id="cdt.managedbuild.toolchain.gnu.base.819881165.2087591982"
-						name="/" resourcePath="">
-
-						<toolChain
-							id="cdt.managedbuild.toolchain.gnu.base.1987911966"
-							name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
-
-							<targetPlatform archList="all"
-								binaryParser="org.eclipse.cdt.core.GNU_ELF"
-								id="cdt.managedbuild.target.gnu.platform.base.91378196"
-								name="Debug Platform" osList="linux,hpux,aix,qnx"
-								superClass="cdt.managedbuild.target.gnu.platform.base" />
-
-							<builder arguments="-j8"
-								buildPath="${workspace_loc:/toulbar2}/build" command="make"
-								id="cdt.managedbuild.target.gnu.builder.base.368904645"
-								keepEnvironmentInBuildfile="false" managedBuildOn="false"
-								name="Gnu Make Builder"
-								superClass="cdt.managedbuild.target.gnu.builder.base" />
-
-							<tool id="cdt.managedbuild.tool.gnu.archiver.base.431673480"
-								name="GCC Archiver"
-								superClass="cdt.managedbuild.tool.gnu.archiver.base" />
-
-							<tool
-								id="cdt.managedbuild.tool.gnu.cpp.compiler.base.453045544"
-								name="GCC C++ Compiler"
-								superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
-
-								<inputType
-									id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1564874576"
-									superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input" />
-
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.base.722340418" name="Default" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=" parent="org.eclipse.cdt.build.core.emptycfg">
+					<folderInfo id="cdt.managedbuild.toolchain.gnu.base.722340418.1209257310" name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1948077355" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.base.1088035397" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
+							<builder arguments="-j8" buildPath="${workspace_loc:/toulbar2_debug}/build" command="make" id="cdt.managedbuild.target.gnu.builder.base.2074906760" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1610550934" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.550764793" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1541084332" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
-
-							<tool
-								id="cdt.managedbuild.tool.gnu.c.compiler.base.302915631"
-								name="GCC C Compiler"
-								superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
-
-								<inputType
-									id="cdt.managedbuild.tool.gnu.c.compiler.input.571269640"
-									superClass="cdt.managedbuild.tool.gnu.c.compiler.input" />
-
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1022495709" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1210938737" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-
-							<tool
-								id="cdt.managedbuild.tool.gnu.c.linker.base.1784423766"
-								name="GCC C Linker"
-								superClass="cdt.managedbuild.tool.gnu.c.linker.base" />
-
-							<tool
-								id="cdt.managedbuild.tool.gnu.cpp.linker.base.597390141"
-								name="GCC C++ Linker"
-								superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
-
-								<inputType
-									id="cdt.managedbuild.tool.gnu.cpp.linker.input.2024437397"
-									superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-
-									<additionalInput
-										kind="additionalinputdependency" paths="$(USER_OBJS)" />
-
-									<additionalInput kind="additionalinput"
-										paths="$(LIBS)" />
-
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1548232028" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.701173181" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1627853569" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
-
 							</tool>
-
-							<tool
-								id="cdt.managedbuild.tool.gnu.assembler.base.1731584556"
-								name="GCC Assembler"
-								superClass="cdt.managedbuild.tool.gnu.assembler.base">
-
-								<inputType
-									id="cdt.managedbuild.tool.gnu.assembler.input.137986261"
-									superClass="cdt.managedbuild.tool.gnu.assembler.input" />
-
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.2111459596" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1146545242" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
-
 						</toolChain>
-
 					</folderInfo>
-
 				</configuration>
-
 			</storageModule>
-
-			<storageModule
-				moduleId="org.eclipse.cdt.core.externalSettings" />
-
-			<storageModule buildDir="build/${ConfigName}"
-				moduleId="de.marw.cdt.cmake.core.settings">
-
-				<options />
-
-				<defs />
-
-				<undefs />
-
-			</storageModule>
-
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
-
 	</storageModule>
-
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-
-		<project id="toulbar2.null.578781630" name="toulbar2" />
-
+		<project id="toulbar2_debug.null.1923706863" name="toulbar2_debug"/>
 	</storageModule>
-
-	<storageModule moduleId="scannerConfiguration">
-
-		<autodiscovery enabled="true"
-			problemReportingEnabled="true" selectedProfileId="" />
-
-	</storageModule>
-
-	<storageModule
-		moduleId="org.eclipse.cdt.core.LanguageSettingsProviders" />
-
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
-
 		<configuration configurationName="Default">
-
-			<resource resourceType="PROJECT" workspacePath="/toulbar2" />
-
+			<resource resourceType="PROJECT" workspacePath="/toulbar2_debug"/>
 		</configuration>
-
 	</storageModule>
-
-	<storageModule
-		moduleId="org.eclipse.cdt.make.core.buildtargets" />
-
-	<storageModule
-		moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings" />
-
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.722340418;cdt.managedbuild.toolchain.gnu.base.722340418.1209257310;cdt.managedbuild.tool.gnu.c.compiler.base.1022495709;cdt.managedbuild.tool.gnu.c.compiler.input.1210938737">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.722340418;cdt.managedbuild.toolchain.gnu.base.722340418.1209257310;cdt.managedbuild.tool.gnu.cpp.compiler.base.550764793;cdt.managedbuild.tool.gnu.cpp.compiler.input.1541084332">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings">
+		<doc-comment-owner id="org.eclipse.cdt.ui.doxygen">
+			<path value=""/>
+		</doc-comment-owner>
+	</storageModule>
 </cproject>

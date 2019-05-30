@@ -14,7 +14,7 @@ using namespace std;
 long Tb2Files::nbProcess(const string nbProcessFic, const int nbCores, const int nbProcPerCore) {
 
                   	   ifstream file(nbProcessFic ,ios::in);
-                  	   long nbProcess;
+                  	   long nbProcess=0;
 
                   	       if(file.good())  // file exists, it is read
                   	       {
