@@ -728,7 +728,7 @@ void Solver::assign(int varIndex, Value value, bool reverse) {
 		} else if (ToulBar2::vnsKmax > 0) {
 			cout << " " << ToulBar2::vnsKcur << " " << ToulBar2::vnsLDScur;
 		}
-		cout << " " << Exp(((Cost) (*((StoreCost*) searchSize))) / 10e6);
+		cout << " " << Exp(((Cost)(*((StoreCost*) searchSize))) / 10e6);
 		if (wcsp->getTreeDec())
 			cout << " C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
 		if (isatty(fileno(stdout)))
@@ -1406,8 +1406,8 @@ void Solver::recursiveSolve(Cost lb) {
 						getVarMinDomainDivMaxDegreeRandomized() :
 						getVarMinDomainDivMaxDegree());
 	if (varIndex >= 0) {
-		*((StoreCost*) searchSize) += ((Cost) (10e6
-				* Log(wcsp->getDomainSize(varIndex))));
+		*((StoreCost*) searchSize) += ((Cost)(
+				10e6 * Log(wcsp->getDomainSize(varIndex))));
 		if (ToulBar2::bep)
 			scheduleOrPostpone(varIndex);
 		else if (wcsp->enumerated(varIndex)) {
@@ -1645,7 +1645,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 				if (open_->size()
 						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 
-					Tb2Files::write_file("tb2eps.sh", epsCommand(*cp_, *open_, nbCores));
+					Tb2Files::write_file("tb2eps.sh",
+							epsCommand(*cp_, *open_, nbCores));
 
 // #include <thread>
 // unsigned int nthreads = std::thread::hardware_concurrency();
@@ -1701,7 +1702,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
  *  \param nd : node of type OpenNode
  *  \return a string that is a bash commande to execute toulbar2 in parallel
  */
-string Solver::epsCommand(const CPStore& cp, OpenList& open, const int nbCores) {
+string Solver::epsCommand(const CPStore& cp, OpenList& open,
+		const int nbCores) {
 // based on void Solver::restore(CPStore& cp, OpenNode nd)
 	//cout << "hbfsOpenNodeLimit = "<< ToulBar2::hbfsOpenNodeLimit << "$$$$$ kad : size of PQ list open ="<<open_->size()<<endl;
 	cout << "hbfs open node limite for eps = " << ToulBar2::hbfsOpenNodeLimit
@@ -1712,21 +1714,27 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open, const int nbCores) 
 	string epsCommand = "time ./parallel.sh -j";
 	epsCommand += to_string(nbCores); // number of process=jobs to launch in parallel = open.size() >= ToulBar2::hbfsOpenNodeLimit >> nb of cores !!!
 	epsCommand += " -r ";
-	epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
+	epsCommand += " \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
 	//epsCommand += " \"./toulbar2 ";
 	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
 	epsCommand += " -x= *\""; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
-	// then, for each node nd in OpenListe open, we have to write something like this : ",0=3,1=5,2=9"
+	// then, for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
 
 	while (open.size() != 0) {
 		OpenNode nd = open.top(); // take the top of pq
 		open.pop(); // remove it from pq
-		epsCommand += " \"";
-		for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-			epsCommand += "," + to_string(cp[idx].varIndex)
-					+ opSymbol(cp, idx, nd) + to_string(cp[idx].value);
-		} //for end
-		epsCommand += "\"";
+		long pbSize = ToulBar2::nbvar - (nd.last - nd.first); // number of vars not in the partial assignment
+		cout << "nbvar de variable non encore assignées = " << pbSize << endl;
+		if (nd.getCost() < wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
+
+			epsCommand += " \"";
+			for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
+				epsCommand += "," + to_string(cp[idx].varIndex)
+						+ opSymbol(cp, idx, nd) + to_string(cp[idx].value);
+			} //for end
+			epsCommand += "\"";
+
+		} //end of if
 	} // end while
 
 	return epsCommand;
@@ -2495,18 +2503,18 @@ bool Solver::solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost,
 		if (posx[e] != posy[e]) {
 			vector<Cost> costs(4, 0);
 			if (cost[e] > 0) {
-				costs[1] = (Cost) (multiplier * 2. * cost[e]);
+				costs[1] = (Cost)(multiplier * 2. * cost[e]);
 				costs[2] = costs[1];
 			} else {
-				costs[0] = (Cost) (multiplier * -2. * cost[e]);
+				costs[0] = (Cost)(multiplier * -2. * cost[e]);
 				costs[3] = costs[0];
 			}
 			wcsp->postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
 		} else {
 			if (cost[e] > 0) {
-				unaryCosts1[posx[e] - 1] += (Cost) (multiplier * cost[e]);
+				unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
 			} else {
-				unaryCosts0[posx[e] - 1] += (Cost) (multiplier * -cost[e]);
+				unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
 			}
 		}
 	}

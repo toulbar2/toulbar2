@@ -46,7 +46,9 @@ to tell eclipse where to build toulbar2 which will be found in build/bin/Linux d
 
 - in C/C++ general -> code analysis check use project settings and uncheck all to avoid false warning and errors
 
-- in formatter choose a format for your code that you like
+- in formatter choose a format for your code that you like.
+
+- to have the code formatted when saving the file : windows -> Preferences -> C/C++ -> editor -> Saves Actions -> select Format source Code -> format for all lines
 
 - To change font in editor : Windows -> Preferences -> General -> Appearance -> Color and font -> C/C++ -> C/C++ editor text font -> button Edit
 
