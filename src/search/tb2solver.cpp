@@ -1645,7 +1645,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 				if (open_->size()
 						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 
-					Tb2Files::write_file("tb2eps.sh", epsCommand(*cp_, *open_));
+					Tb2Files::write_file("tb2eps.sh", epsCommand(*cp_, *open_, nbCores));
 
 // #include <thread>
 // unsigned int nthreads = std::thread::hardware_concurrency();
@@ -1701,7 +1701,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
  *  \param nd : node of type OpenNode
  *  \return a string that is a bash commande to execute toulbar2 in parallel
  */
-string Solver::epsCommand(const CPStore& cp, OpenList& open) {
+string Solver::epsCommand(const CPStore& cp, OpenList& open, const int nbCores) {
 // based on void Solver::restore(CPStore& cp, OpenNode nd)
 	//cout << "hbfsOpenNodeLimit = "<< ToulBar2::hbfsOpenNodeLimit << "$$$$$ kad : size of PQ list open ="<<open_->size()<<endl;
 	cout << "hbfs open node limite for eps = " << ToulBar2::hbfsOpenNodeLimit
@@ -1709,8 +1709,8 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open) {
 	cout << " kad : global UB = " << wcsp->getUb() << endl;
 	cout << " kad : global LB = " << open.getLb() << endl;
 
-	string epsCommand = "time ./parallel.sh -j ";
-	epsCommand += to_string(open.size()); // number of process=jobs to launch in parallel = open.size() >= ToulBar2::hbfsOpenNodeLimit >> nb of cores !!!
+	string epsCommand = "time ./parallel.sh -j";
+	epsCommand += to_string(nbCores); // number of process=jobs to launch in parallel = open.size() >= ToulBar2::hbfsOpenNodeLimit >> nb of cores !!!
 	epsCommand += " -r ";
 	epsCommand +=" \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
 	//epsCommand += " \"./toulbar2 ";
