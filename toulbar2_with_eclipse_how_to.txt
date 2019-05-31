@@ -23,6 +23,8 @@ a release version.
 - cmake .. -G"Eclipse CDT4 - Unix Makefiles"
 this will generate make file and other stuff.
 
+- do cmake .. to display the options, update them e.g. eclipse path, debug or release, etc
+
 - Import this in Eclipse with :
 
 - File -> Import -> Existing code as Makefile project

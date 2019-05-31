@@ -1,6 +1,7 @@
 .vscode
 .pc
 build
+build_debug
 release
 src/*.wcsp
 src/*.sh
