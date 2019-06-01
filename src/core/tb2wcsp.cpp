@@ -745,16 +745,15 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<long double>& dcos
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
     long double minCost = std::numeric_limits<long double>::infinity();
-    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-            minCost = min(minCost, dcosts[a * y->getDomainInitSize() + b]);
-        }
+    for (long double cost : dcosts) {
+        minCost = min(minCost, cost);
     }
+
     vector<Cost> icosts;
     icosts.reserve(x->getDomainInitSize() * y->getDomainInitSize());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-            icosts[a * y->getDomainInitSize() + b] = (Cost)(round(dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint));
+            icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
         }
     }
     negCost -= (Cost)(ceil(minCost * pow(10, ToulBar2::decimalPoint)));
@@ -1622,7 +1621,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<long double>& dcosts)
     vector<Cost> icosts;
     icosts.reserve(dcosts.size());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        icosts[a] = (Cost)(round(dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint));
+        icosts[a] = (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint)));
     }
     negCost -= (Cost)(ceil(minCost * pow(10, ToulBar2::decimalPoint)));
     postUnary(xIndex, icosts);

@@ -53,17 +53,30 @@ void tb2AddFunction(WeightedCSPSolver* solver, int arity, const int* scope, cons
 
     for (int i = 0; i < arity; i++) {
         total *= prob->getDomainInitSize(scope[i]);
-        if (debug)
-            cout << "Expected " << total << " values" << endl;
     }
+    if (debug)
+        cout << "Expected " << total << " values" << endl;
+
     std::vector<long double> cost_vector(costs, costs + total);
 
     switch (arity) {
     case 1:
+        if (debug) {
+            cout << "Posting unary on " << scope[0] << endl;
+            for (long double c : cost_vector)
+                cout << c << " ";
+            cout << endl;
+        }
         prob->postUnaryConstraint(scope[0], cost_vector);
         break;
 
     case 2:
+        if (debug) {
+            cout << "Posting binary on " << scope[0] << " " << scope[1] << endl;
+            for (long double c : cost_vector)
+                cout << c << " ";
+            cout << endl;
+        }
         prob->postBinaryConstraint(scope[0], scope[1], cost_vector);
         break;
 
@@ -88,29 +101,31 @@ bool tb2Solve(WeightedCSPSolver* solver)
 
 long double tb2GetSolution(WeightedCSPSolver* solver, Value* solution)
 {
-  long double energy = solver->getWCSP()->getDPrimalBound();
+    long double energy = solver->getWCSP()->getDPrimalBound();
     const std::vector<int>& tb2solution = solver->getWCSP()->getSolution();
+    for (int i : tb2solution)
+        cout << i << " ";
+    cout << endl;
     std::copy(tb2solution.begin(), tb2solution.end(), solution);
     return energy;
 }
 
-
 void tb2Debug(const bool debug)
 {
-  ToulBar2::debug = debug;
+    ToulBar2::debug = debug;
 }
 
 void tb2Dump(const int level, const char* problem)
 {
-  ToulBar2::dumpWCSP = level;
-  ToulBar2::problemsaved_filename = to_string(problem);
+    ToulBar2::dumpWCSP = level;
+    ToulBar2::problemsaved_filename = to_string(problem);
 }
 
 void tb2UpdateUb(WeightedCSPSolver* solver, const long double newUb)
 {
-  auto* prob = solver->getWCSP();
-  Cost ctUb = prob->DoubletoCost(newUb);
-  prob->updateUb(ctUb);
+    auto* prob = solver->getWCSP();
+    Cost ctUb = prob->DoubletoCost(newUb);
+    prob->updateUb(ctUb);
 }
 
 void tb2NoPre()
@@ -118,8 +133,8 @@ void tb2NoPre()
     ToulBar2::elimDegree = -1;
     ToulBar2::elimDegree_preprocessing = -1;
     ToulBar2::preprocessTernaryRPC = 0;
-    ToulBar2::preprocessFunctional  = 0;
-    ToulBar2::preprocessNary  = 0;
+    ToulBar2::preprocessFunctional = 0;
+    ToulBar2::preprocessNary = 0;
     ToulBar2::costfuncSeparate = false;
     ToulBar2::MSTDAC = false;
     ToulBar2::DEE = 0;
@@ -161,7 +176,7 @@ void tb2MinProperVarSize(const int size)
 
 void tb2WriteSolution(const char* write)
 {
-    char* filename = new char[strlen(write)+1];
+    char* filename = new char[strlen(write) + 1];
     strcpy(filename, write);
     ToulBar2::writeSolution = filename;
 }
@@ -248,7 +263,7 @@ void tb2PartialAssign(WeightedCSPSolver* solver, const char* certificate)
 
 void tb2DeadEndElimination(const int level)
 {
-  ToulBar2::DEE = level;
+    ToulBar2::DEE = level;
 }
 
 void tb2VAC(const int depth)
@@ -261,16 +276,16 @@ void tb2MinSumDiffusion(const int min)
     ToulBar2::minsumDiffusion = min;
 }
 
-  void tb2CostThreshold(WeightedCSPSolver* solver, const long double cost)
+void tb2CostThreshold(WeightedCSPSolver* solver, const long double cost)
 {
-  auto* prob = solver->getWCSP();
-  ToulBar2::costThreshold = prob->DoubletoCost(cost);
+    auto* prob = solver->getWCSP();
+    ToulBar2::costThreshold = prob->DoubletoCost(cost);
 }
 
 void tb2CostThresholdPre(WeightedCSPSolver* solver, const long double cost)
 {
-  auto* prob = solver->getWCSP();
-  ToulBar2::costThresholdPre = prob->DoubletoCost(cost);
+    auto* prob = solver->getWCSP();
+    ToulBar2::costThresholdPre = prob->DoubletoCost(cost);
 }
 
 void tb2CostMultiplier(const long double cost)
@@ -320,47 +335,48 @@ void tb2Restart(const long maxrestarts)
 
 void tb2LCLevel(const int level)
 {
-    LcLevelType lclevel = (LcLevelType) level;
+    LcLevelType lclevel = (LcLevelType)level;
     ToulBar2::LcLevel = lclevel;
 }
 
 void tb2HBFS(const long hbfsgloballimit)
 {
-  ToulBar2::hbfs = 1;
-  ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
+    ToulBar2::hbfs = 1;
+    ToulBar2::hbfsGlobalLimit = hbfsgloballimit;
 }
 
 void tb2HBFSAlpha(const long hbfsalpha)
 {
-  ToulBar2::hbfsAlpha = hbfsalpha;
+    ToulBar2::hbfsAlpha = hbfsalpha;
 }
 
 void tb2HBFSBeta(const long hbfsbeta)
 {
-  ToulBar2::hbfsBeta = hbfsbeta;
+    ToulBar2::hbfsBeta = hbfsbeta;
 }
 
 void tb2HBFSOpenNodeLimit(const long openlimit)
 {
-  ToulBar2::hbfs = 1;
-  if (ToulBar2::hbfsGlobalLimit==0) ToulBar2::hbfsGlobalLimit = 10000;
-  ToulBar2::hbfsOpenNodeLimit = openlimit;
+    ToulBar2::hbfs = 1;
+    if (ToulBar2::hbfsGlobalLimit == 0)
+        ToulBar2::hbfsGlobalLimit = 10000;
+    ToulBar2::hbfsOpenNodeLimit = openlimit;
 }
 
 void tb2VariableEliminationOrder(const int order)
 {
-  ToulBar2::varOrder = reinterpret_cast<char *>(abs(order));
+    ToulBar2::varOrder = reinterpret_cast<char*>(abs(order));
 }
 
 void tb2Incop(const char* cmd)
 {
-  if (cmd == NULL || strlen(cmd) == 0) {
-    ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
-  } else {
-    char* cmd_ = new char[strlen(cmd)+1];
-    strcpy(cmd_, cmd);
-    ToulBar2::incop_cmd = cmd_;
-  }
+    if (cmd == NULL || strlen(cmd) == 0) {
+        ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
+    } else {
+        char* cmd_ = new char[strlen(cmd) + 1];
+        strcpy(cmd_, cmd);
+        ToulBar2::incop_cmd = cmd_;
+    }
 }
 }
 /*
