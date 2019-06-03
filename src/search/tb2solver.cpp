@@ -1620,7 +1620,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub) {
 			}
 			Store::restore(storedepthBFS);
 			cp_->store();
-			if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
+			if (cp_->size() >= (ToulBar2::hbfsCPLimit)
 					|| open_->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 				ToulBar2::hbfs = 0;
@@ -1719,23 +1719,29 @@ string Solver::epsCommand(const CPStore& cp, OpenList& open,
 	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
 	epsCommand += " -x= *\""; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
 	// then, for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
-
+    string subProblemSize = "SubProblem size(%)\n";
+    size_t initialOpenSize = open.size();
+    size_t compteur =0;
 	while (open.size() != 0) {
 		OpenNode nd = open.top(); // take the top of pq
 		open.pop(); // remove it from pq
-		long pbSize = ToulBar2::nbvar - (nd.last - nd.first); // number of vars not in the partial assignment
-		cout << "nbvar de variable non encore assignées = " << pbSize << endl;
-		if (nd.getCost() < wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
+		float pbSize = ((ToulBar2::nbvar - (nd.last - nd.first))/static_cast<float>(ToulBar2::nbvar))*100; // number of vars not in the partial assignment versus total nb of vars ; gives in % the size of the subproblems
+		//cout << "nbvar de variable non encore assignées = " << pbSize<< endl;
 
+		if (nd.getCost() <= wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
+			subProblemSize += to_string(pbSize) + "\n";
+			compteur++;
 			epsCommand += " \"";
 			for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 				epsCommand += "," + to_string(cp[idx].varIndex)
 						+ opSymbol(cp, idx, nd) + to_string(cp[idx].value);
 			} //for end
 			epsCommand += "\"";
-
 		} //end of if
 	} // end while
+	cout << "initial size of open nodes list = "<< initialOpenSize<< endl;
+	cout << "size of open nodes list that verify lb <=UB = "<< compteur<< endl;
+	Tb2Files::write_file("size.csv", subProblemSize);
 
 	return epsCommand;
 }

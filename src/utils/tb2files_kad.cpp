@@ -55,7 +55,7 @@ void Tb2Files::write_file(const string fic, const string text)
     {
 
         file << text;
-        cout << "Text : "<< text << endl;
+       // cout << "Text : "<< text << endl;
         cout<< "has been written in file "<< fic << endl;
     }
     else
