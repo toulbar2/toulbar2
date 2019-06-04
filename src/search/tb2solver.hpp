@@ -194,7 +194,7 @@ protected:
     void conflict() {}
     void enforceUb();
     void singletonConsistency();
-    string epsCommand(const CPStore& cp, OpenList& open, const int nbCores); // kad
+    string epsCommand(const CPStore& cp, OpenList& open, const int nbCores); //kad
     string opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd ); //kad
     Cost beginSolve(Cost ub);
     Cost preprocessing(Cost ub);
