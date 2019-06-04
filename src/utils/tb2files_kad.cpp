@@ -1,4 +1,4 @@
-/*
+/**
  * tb2files.cpp
  *
  *  Created on: 24 mai 2019
@@ -10,7 +10,12 @@
 
 
 using namespace std;
-
+/**
+ * @brief If the file exists, it is read otherwise it is created with the value 30 x nb of cores
+ * @param nbProcessFic
+ * @param nbCores
+ * @param nbProcPerCore
+ */
 long Tb2Files::nbProcess(const string nbProcessFic, const int nbCores, const int nbProcPerCore) {
 
                   	   ifstream file(nbProcessFic ,ios::in);

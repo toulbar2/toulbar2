@@ -1483,25 +1483,23 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 		//kad debut
 			if (ToulBar2::EPS == true) {
 
-				int nbCores = sysconf(_SC_NPROCESSORS_ONLN);
+				int nbCores = sysconf(_SC_NPROCESSORS_ONLN);// Get the number of logical CPUs.
 				//cout<< "nb of cores = "<< nbCores << endl;
 				int nbProcPerCore = 30;
 				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
 						"nbProcess.txt", nbCores, nbProcPerCore);
+				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep optimum
+				string subProblems = "subProblems.txt";
 
-				if (open_->size()
-						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-
-					Tb2Files::write_file("tb2eps.sh",
-							epsCommand(*cp_, *open_, nbCores));
-
-// #include <thread>
-// unsigned int nthreads = std::thread::hardware_concurrency();
-// grep -i 'processor' /proc/cpuinfo | wc -l  outputs the numbers of cores
-					// numofcores = sysconf(_SC_NPROCESSORS_ONLN); // Get the number of logical CPUs.
-//#include <omp.h>
-//omp_get_num_procs();
-
+				if (open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+					Tb2Files::write_file(subProblems, epsSubProblems(*cp_, *open_, nbCores));
+					string epsCommand = "cat " + subProblems + " | time parallel -j";
+					epsCommand += to_string((int) floor(2.5 * nbCores)); // number of process=jobs to launch in parallel ; factor 2.5 x nb of cores seems a good choice for speed
+					epsCommand += " --eta -k ./toulbar2 ";
+					epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
+					epsCommand += " -ub=" + to_string(wcsp->getUb()) + " {}";
+					epsCommand += " | egrep optimum";
+					Tb2Files::write_file("eps.sh", epsCommand);
 					exit(0);
 				}
 			}
@@ -1540,56 +1538,35 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 
 //kad
 /**
- *  \brief create a string toulbar2 option -x like below
- *        time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x= *" ",0=3,1=5,2=9" ",0=3,1=5,2#9" ",0>3,1#5,2<9"
- *
- *  \param cp : Vector of choice Points
- *  \param nd : node of type OpenNode
- *  \return a string that is a bash commande to execute toulbar2 in parallel
+ * @brief create the string of partial Assignments to put in subProblems.txt i.e. lines like -x=",...."
+ * @param cp
+ * @param open
+ * @param nbCores
+ * @return
  */
-string Solver::epsCommand(const CPStore& cp, OpenList& open,
-		const int nbCores) {
-// based on void Solver::restore(CPStore& cp, OpenNode nd)
-	//cout << "hbfsOpenNodeLimit = "<< ToulBar2::hbfsOpenNodeLimit << "$$$$$ kad : size of PQ list open ="<<open_->size()<<endl;
-	cout << "hbfs open node limite for eps = " << ToulBar2::hbfsOpenNodeLimit
-			<< "$$$$$ kad : size of PQ list open =" << open.size() << endl;
-	cout << " kad : global UB = " << wcsp->getUb() << endl;
-	cout << " kad : global LB = " << open.getLb() << endl;
+string Solver::epsSubProblems(const CPStore& cp, OpenList& open, const int nbCores) {
+	string epsSubProblems = "";
 
-	string epsCommand = "time ./parallel.sh -j";
-	epsCommand += to_string(nbCores); // number of process=jobs to launch in parallel = open.size() >= ToulBar2::hbfsOpenNodeLimit >> nb of cores !!!
-	epsCommand += " -r ";
-	epsCommand += " \"./toulbar2 -ub=" + to_string(wcsp->getUb()) + " ";
-	//epsCommand += " \"./toulbar2 ";
-	epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
-	epsCommand += " -x= *\""; // at this point we write this : time ./parallel.sh -j 3 -r "toulbar2 problem.wcsp -x=*"
-	// then, for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
-    string subProblemSize = "SubProblem size(%)\n";
-    size_t initialOpenSize = open.size();
-    size_t compteur =0;
+	//epsSubProblems += " -x="; // for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
 	while (open.size() != 0) {
 		OpenNode nd = open.top(); // take the top of pq
 		open.pop(); // remove it from pq
-		float pbSize = ((ToulBar2::nbvar - (nd.last - nd.first))/static_cast<float>(ToulBar2::nbvar))*100; // number of vars not in the partial assignment versus total nb of vars ; gives in % the size of the subproblems
-		//cout << "nbvar de variable non encore assignées = " << pbSize<< endl;
 
 		if (nd.getCost() <= wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
-			subProblemSize += to_string(pbSize) + "\n";
-			compteur++;
-			epsCommand += " \"";
+			epsSubProblems += "-x=\"";
 			for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-				epsCommand += "," + to_string(cp[idx].varIndex)
+				epsSubProblems += "," + to_string(cp[idx].varIndex)
 						+ opSymbol(cp, idx, nd) + to_string(cp[idx].value);
 			} //for end
-			epsCommand += "\"";
+			epsSubProblems += "\"\n";
 		} //end of if
 	} // end while
-	cout << "initial size of open nodes list = "<< initialOpenSize<< endl;
-	cout << "size of open nodes list that verify lb <=UB = "<< compteur<< endl;
-	Tb2Files::write_file("size.csv", subProblemSize);
 
-	return epsCommand;
+	return epsSubProblems;
 }
+
+
+
 
 /**
  *
