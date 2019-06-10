@@ -1727,8 +1727,7 @@ Cost Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
     if (ub <= MIN_COST) {
-        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-        exit(1);
+        cout << "Warning: initial primal bound is not strictly positive." << endl;
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
         cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;

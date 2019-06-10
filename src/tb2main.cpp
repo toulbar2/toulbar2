@@ -2693,8 +2693,7 @@ int _tmain(int argc, TCHAR* argv[])
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
         if (globalUb <= MIN_COST) {
-            cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-            exit(1);
+            cout << "Warning: initial primal bound is not strictky positive." << endl;
         }
 
         //TODO: If --show_options then dump ToulBar2 object here

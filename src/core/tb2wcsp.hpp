@@ -620,7 +620,7 @@ public:
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
-    Cost DoubletoCost(const Double& c) const {return Round(c * powl(10.0, ToulBar2::decimalPoint)) - negCost; }
+    Cost DoubletoCost(const Double& c) const { return Round(c * powl(10.0, ToulBar2::decimalPoint)) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;
