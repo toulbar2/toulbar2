@@ -909,10 +909,11 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         remove(varIndex, value, nbBacktracks >= hbfsLimit);
     if (!ToulBar2::hbfs)
         showGap(wcsp->getLb(), wcsp->getUb());
-    if (nbBacktracks >= hbfsLimit)
-        addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
+    if (nbBacktracks >= hbfsLimit){
+        addOpenNode(*cp, *open, MAX(lb, wcsp->getLb())); //kad if nb of backtracks > Z, open nodes created by DFS are added to open list
+    }
     else
-        recursiveSolve(lb);
+        recursiveSolve(lb); //kad call of DFS of HBFS
 }
 
 void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
@@ -1361,7 +1362,7 @@ void Solver::recursiveSolveLDS(int discrepancy)
 }
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
-{
+{ int nbNodesPopped=0; //kad
     if (ToulBar2::verbose >= 1 && cluster)
         cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub << endl;
     assert(clb < cub);
@@ -1440,7 +1441,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
             try {
                 Store::store();
                 OpenNode nd = open_->top();
-                open_->pop();
+                open_->pop(); nbNodesPopped++;//kad
                 if (ToulBar2::verbose >= 3) {
                     if (wcsp->getTreeDec())
                         cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
@@ -1488,10 +1489,12 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 				int nbProcPerCore = 30;
 				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
 						"nbProcess.txt", nbCores, nbProcPerCore);
-				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep optimum
+				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep Optimum
 				string subProblems = "subProblems.txt";
 
 				if (open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+					cout << "TOTAL NUMBER OF NODES ADDED IN OPEN LISTE :"<< nbNodesPopped + open_->size() << endl;
+					cout << "NUMBER OF NODES IN OPEN LISTE WHEN openNodeLimit is reached : "<< open_->size()<< endl;
 					Tb2Files::write_file(subProblems, epsSubProblems(*cp_, *open_, nbCores));
 					string epsCommand = "cat " + subProblems + " | time parallel -j";
 					epsCommand += to_string((int) floor(2.5 * nbCores)); // number of process=jobs to launch in parallel ; factor 2.5 x nb of cores seems a good choice for speed
@@ -1552,7 +1555,7 @@ string Solver::epsSubProblems(const CPStore& cp, OpenList& open, const int nbCor
 		OpenNode nd = open.top(); // take the top of pq
 		open.pop(); // remove it from pq
 
-		if (nd.getCost() <= wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
+		if (nd.getCost() < wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
 			epsSubProblems += "-x=\"";
 			for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 				epsSubProblems += "," + to_string(cp[idx].varIndex)
@@ -1626,7 +1629,7 @@ string Solver::opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd) {
 	return opSymbol;
 }
 
-///kad
+//kad
 
 Cost Solver::beginSolve(Cost ub)
 {

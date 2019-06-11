@@ -1,0 +1,1 @@
+cat subProblems.txt | time parallel -j20 --eta -k ./toulbar2 404.wcsp -ub=114 {} | egrep optimum

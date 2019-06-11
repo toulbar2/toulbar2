@@ -1,4 +1,7 @@
-in toulbar2 folder create a build folder.
+pb with git and version file ? do the following and retry git pull origin name_of_your_branch
+git reset HEAD src/ToulbarVersion.hpp
+
+In toulbar2 folder create a build folder.
 cd build
 Do ccmake .. to configure the build ( c to configure, q to exit)
 Do cmake .. to create de Makefile ( cmake .. has to be done each time new files are added to the project)
