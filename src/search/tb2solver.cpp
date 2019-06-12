@@ -1501,7 +1501,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 					epsCommand += " --eta -k ./toulbar2 ";
 					epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
 					epsCommand += " -ub=" + to_string(wcsp->getUb()) + " {}";
-					epsCommand += " | egrep optimum";
+					epsCommand += " | egrep Optimum";
 					Tb2Files::write_file("eps.sh", epsCommand);
 					exit(0);
 				}

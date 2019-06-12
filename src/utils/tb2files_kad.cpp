@@ -97,6 +97,35 @@ void Tb2Files::read_file(const string fic)
 
 }
 
+vector<int> Tb2Files::readDomains(const string fic){
+	ifstream file(fic,ios::in);
+    string line;
+	    if(file)
+	    {
+
+	        getline(file, line);
+	        getline(file, line);//get second line with domains of vars
+
+	    }
+	    else
+	    {
+	        cout << "ERREUR: no file" << endl;
+	    }
+
+	// Vector of string to save tokens
+	    vector <int> domain;
+
+	    // stringstream class check1
+	    stringstream check1(line);
+	    string token;
+
+	    // Tokenizing w.r.t. space ' '
+	    while(getline(check1, token, ' '))
+	        domain.push_back(stoi(token));
+
+ return domain;
+}
+
 Tb2Files::Tb2Files() {
 	// TODO Auto-generated constructor stub
 
