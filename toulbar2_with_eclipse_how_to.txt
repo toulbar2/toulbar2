@@ -1,0 +1,61 @@
+pb with git and version file ? do the following and retry git pull origin name_of_your_branch
+git reset HEAD src/ToulbarVersion.hpp
+
+In toulbar2 folder create a build folder.
+cd build
+Do ccmake .. to configure the build ( c to configure, q to exit)
+Do cmake .. to create the Makefile ( cmake .. has to be done each time new files are added to the project)
+Do make -j8 where 8 is the number of cores on your computer
+
+- execute cmake .. in build directory to update the Makefile
+if you add files in the code of toulbar2
+
+nb : cmake .. means execute cmake with the CMakeLists.txt file in the parent directory,
+here toulbar2 because we are in build folder, hence the two points ..
+
+prérequisites : two following "parallel" folders :
+1 - toulbar2/src
+2 - toulbar2/build    build folder has to be created if it does not exist
+
+nb : one can compile a debug version of toulbar2 in build folder and
+create another folder in toulbar2 folder named for instance : release to compile
+a release version.
+
+- cd build
+
+- cmake .. -G"Eclipse CDT4 - Unix Makefiles"
+this will generate make file and other stuff.
+
+- do cmake .. to display the options, update them e.g. eclipse path, debug or release, etc
+
+- Import this in Eclipse with :
+
+- File -> Import -> Existing code as Makefile project
+nb : the version used here is eclipse CDT of march 2019
+
+- enter a name for the project : toulbar2_debug for instance
+- enter  the path to toulbar2 folder
+- choose linux GCC as a toolchain
+- validate with finish button
+
+=> the project is created in eclipse
+
+- go to menu Project -> properties -> C/C++ build
+uncheck  use default build command and add type make -j8  ( j = jobs : where 8 is your number of processors, more than 8 is also possible with only 8 cores)
+this wil trigger a faster parallel compilation.
+add build to build directory i.e. ${workspace_loc:/toulbar2_release}/build
+to tell eclipse where to build toulbar2 which will be found in build/bin/Linux directory
+
+
+- in C/C++ general -> code analysis check use project settings and uncheck all to avoid false warning and errors
+
+- in formatter choose a format for your code that you like.
+
+- to have the code formatted when saving the file : windows -> Preferences -> C/C++ -> editor -> Saves Actions -> select Format source Code -> format for all lines
+
+- To change font in editor : Windows -> Preferences -> General -> Appearance -> Color and font -> C/C++ -> C/C++ editor text font -> button Edit
+
+
+- To execute toulbar2 from eclipse with arguments : Menu Run -> Run configuration -> C/C++ Application -> toulbar2 release default
+add toulbar2/build/bin/Linux/toulbar2 the path to the program toulbar2
+then in tab Argument add the argument to use with toulbar2 e.g.  a wcsp file name
