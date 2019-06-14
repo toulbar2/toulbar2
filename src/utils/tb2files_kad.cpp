@@ -97,7 +97,7 @@ void Tb2Files::read_file(const string fic)
 
 }
 
-vector<int> Tb2Files::readDomains(const string fic){
+vector<long> Tb2Files::readDomains(const string fic){
 	ifstream file(fic,ios::in);
     string line;
 	    if(file)
@@ -113,7 +113,7 @@ vector<int> Tb2Files::readDomains(const string fic){
 	    }
 
 	// Vector of string to save tokens
-	    vector <int> domain;
+	    vector <long> domain;
 
 	    // stringstream class check1
 	    stringstream check1(line);
