@@ -1,7 +1,7 @@
 in toulbar2 folder create a build folder.
 cd build
 Do ccmake .. to configure the build ( c to configure, q to exit)
-Do cmake .. to create de Makefile ( cmake .. has to be done each time new files are added to the project)
+Do cmake .. to create the Makefile ( cmake .. has to be done each time new files are added to the project)
 Do make -j8 where 8 is the number of cores on your computer
 
 - execute cmake .. in build directory to update the Makefile
