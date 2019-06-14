@@ -10,6 +10,11 @@
 #define SRC_UTILS_TB2FILES_KAD_HPP_
 #include <string>
 #include <fstream>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
 //#include "toulbar2lib.hpp"
 //#include "utils/tb2store.hpp"
 
@@ -23,6 +28,7 @@ public:
 static long nbProcess(const std::string nbProcessFic, const int nbCores, const int nbProcPerCore);
 static void write_file(const std::string fileName , const std::string textToWrite);
 static void read_file(const std::string );
+std::vector<int> readDomains(const std::string fic);
 
 	Tb2Files();
 	virtual ~Tb2Files();

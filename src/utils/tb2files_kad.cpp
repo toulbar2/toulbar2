@@ -61,7 +61,7 @@ void Tb2Files::write_file(const string fic, const string text)
 
         file << text;
        // cout << "Text : "<< text << endl;
-        cout<< "has been written in file "<< fic << endl;
+        cout<< "Text has been written in file "<< fic << endl;
     }
     else
     {
@@ -95,6 +95,35 @@ void Tb2Files::read_file(const string fic)
     }
     return ;
 
+}
+
+vector<long> Tb2Files::readDomains(const string fic){
+	ifstream file(fic,ios::in);
+    string line;
+	    if(file)
+	    {
+
+	        getline(file, line);
+	        getline(file, line);//get second line with domains of vars
+
+	    }
+	    else
+	    {
+	        cout << "ERREUR: no file" << endl;
+	    }
+
+	// Vector of string to save tokens
+	    vector <long> domain;
+
+	    // stringstream class check1
+	    stringstream check1(line);
+	    string token;
+
+	    // Tokenizing w.r.t. space ' '
+	    while(getline(check1, token, ' '))
+	        domain.push_back(stoi(token));
+
+ return domain;
 }
 
 Tb2Files::Tb2Files() {
