@@ -28,7 +28,7 @@ public:
 static long nbProcess(const std::string nbProcessFic, const int nbCores, const int nbProcPerCore);
 static void write_file(const std::string fileName , const std::string textToWrite);
 static void read_file(const std::string );
-std::vector<int> readDomains(const std::string fic);
+std::vector<long> readDomains(const std::string fic);
 
 	Tb2Files();
 	virtual ~Tb2Files();

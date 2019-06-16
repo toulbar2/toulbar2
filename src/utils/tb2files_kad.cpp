@@ -79,9 +79,9 @@ void Tb2Files::read_file(const string fic)
 
     if(file)
     {
-        string ligne; //Une variable pour stocker les lignes lues
+        string line; //Une variable pour stocker les lignes lues
 
-        while(getline(file, ligne))
+        while(getline(file, line))
         {
 
         }
