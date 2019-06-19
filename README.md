@@ -51,17 +51,16 @@ Compilation requires git, cmake and a C++-11 capable compiler.
 
 Required library:
 * libgmp-dev
-
-Required libraries
-* libgmp-dev
 * libboost-dev
 * libboost-graph-dev
 * libboost-iostreams-dev
-* zlib
+* zlib1g-dev
+* liblzma-dev
 
 Optional libraries:
 * libxml2-dev
 * libopenmpi-dev
+* libjemalloc-dev
 
 GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
 * BOOST
@@ -81,7 +80,7 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
     cd src
     echo '#define Toulbar_VERSION "1.0.0"' > ToulbarVersion.hpp
     g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
-     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DWCSPFORMATONLY -DWIDE_STRING -lboost_graph -lboost_iostreams -lboost_regex -lgmp -lz -static
+     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DWCSPFORMATONLY -DWIDE_STRING -lboost_graph -lboost_iostreams -lgmp -lz -llzma-static
 
 Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
 
@@ -91,7 +90,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
     cd src
     echo '#define Toulbar_VERSION "1.0.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
-     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DOPENMPI -DWCSPFORMATONLY -DWIDE_STRING -lboost_graph -lboost_iostreams -lboost_regex -lgmp -lz -llzma
+     -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DOPENMPI -DWCSPFORMATONLY -DWIDE_STRING -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 
 ## Authors
 
