@@ -49,7 +49,7 @@ Download the latest release from GitHub
 (https://github.com/toulbar2/toulbar2) or similarly use tag versions,
 e.g.:
 
-    git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
+    git clone --branch 1.0.1 https://github.com/toulbar2/toulbar2.git
 
 
 ## Installation from sources
