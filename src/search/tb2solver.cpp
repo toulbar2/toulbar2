@@ -1493,13 +1493,15 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 				string subProblems = "subProblems.txt";
 
 				if (open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+
 					cout << "TOTAL NUMBER OF NODES ADDED IN OPEN LISTE :"<< nbNodesPopped + open_->size() << endl;
 					cout << "NUMBER OF NODES IN OPEN LISTE WHEN openNodeLimit is reached : "<< open_->size()<< endl;
+					cout << "BEST CURRENT SOLUTION FOUND AT DUMP TIME : UB = "<< wcsp->getUb() <<endl;
 					Tb2Files::write_file(subProblems, epsSubProblems(*cp_, *open_, nbCores));
 					string epsCommand = "cat " + subProblems + " | time parallel -j";
-					epsCommand += to_string((int) floor(2.5 * nbCores)); // number of process=jobs to launch in parallel ; factor 2.5 x nb of cores seems a good choice for speed
+					epsCommand += nbCores; // number of process=jobs to launch in parallel equals to the number of cores
 					epsCommand += " --eta -k ./toulbar2 ";
-					epsCommand += ToulBar2::problemFileName; // global var to get access to the problem file name
+					epsCommand += wcsp-> getName() ;//ToulBar2::problemFileName;global var to get access to the problem file name
 					epsCommand += " -ub=" + to_string(wcsp->getUb()) + " {}";
 					epsCommand += " | egrep Optimum";
 					Tb2Files::write_file("eps.sh", epsCommand);
@@ -1549,7 +1551,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
  */
 string Solver::epsSubProblems(const CPStore& cp, OpenList& open, const int nbCores) {
 	string epsSubProblems = "";
-
+    int nsp = 0;// effective nb of sub problems
 	//epsSubProblems += " -x="; // for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
 	while (open.size() != 0) {
 		OpenNode nd = open.top(); // take the top of pq
@@ -1561,10 +1563,11 @@ string Solver::epsSubProblems(const CPStore& cp, OpenList& open, const int nbCor
 				epsSubProblems += "," + to_string(cp[idx].varIndex)
 						+ opSymbol(cp, idx, nd) + to_string(cp[idx].value);
 			} //for end
+			nsp++;
 			epsSubProblems += "\"\n";
 		} //end of if
 	} // end while
-
+    cout << "NUMBER OF SUBPROBLEMS REALLY GENERATED : " << nsp << endl;
 	return epsSubProblems;
 }
 
