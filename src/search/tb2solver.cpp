@@ -4,6 +4,7 @@
  */
 
 #include <utils/tb2files_kad.hpp> //kad
+#include <mpi.h>
 #include "tb2solver.hpp"
 #include "core/tb2domain.hpp"
 #include "applis/tb2pedigree.hpp"
@@ -1363,6 +1364,25 @@ void Solver::recursiveSolveLDS(int discrepancy)
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 { int nbNodesPopped=0; //kad
+
+				//kad
+if (ToulBar2::KAD == true) {
+
+				int processNb, processId;
+				MPI_Init(NULL,NULL);
+				MPI_Comm_size(MPI_COMM_WORLD, &processNb);
+				MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+
+				if( processId == 0){
+					cout << "I am the id= 0 master process of  = "<< processNb-1 << " workers!"<<endl;
+				}
+				else{
+					cout<< "I am a worker. My id is "<< processId << "!"<<endl;
+				}
+			    MPI_Finalize();
+}
+			    //kad
+
     if (ToulBar2::verbose >= 1 && cluster)
         cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub << endl;
     assert(clb < cub);

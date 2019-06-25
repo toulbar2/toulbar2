@@ -204,6 +204,7 @@ bool ToulBar2::vnsParallel;
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
 bool ToulBar2::EPS; //kad
+bool ToulBar2::KAD; //kad
 Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
 Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list

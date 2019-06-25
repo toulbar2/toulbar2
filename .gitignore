@@ -2,6 +2,7 @@
 .pc
 build
 build_debug
+debug
 release
 src/*.wcsp
 src/*.sh

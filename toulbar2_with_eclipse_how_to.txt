@@ -1,5 +1,10 @@
-pb with git and version file ? do the following and retry git pull origin name_of_your_branch
+
+
+
+nb : pb with git and version file ? do the following and retry git pull origin name_of_your_branch
 git reset HEAD src/ToulbarVersion.hpp
+
+1 - SHELL PHASE
 
 In toulbar2 folder create a build folder.
 cd build
@@ -7,30 +12,41 @@ Do ccmake .. to configure the build ( c to configure, q to exit)
 Do cmake .. to create the Makefile ( cmake .. has to be done each time new files are added to the project)
 Do make -j8 where 8 is the number of cores on your computer
 
-- execute cmake .. in build directory to update the Makefile
+nb : re-execute cmake .. in build directory to update the Makefile
 if you add files in the code of toulbar2
 
-nb : cmake .. means execute cmake with the CMakeLists.txt file in the parent directory,
-here toulbar2 because we are in build folder, hence the two points ..
+nb : ccmake .. means execute ccmake (ccmake configure cmake tool which in turn produce a makefile)
+with the CMakeLists.txt file in the parent directory.
+
+
+nb : build folder can be named as you wish : for instance you can
+create 2 folders : one folder named "debug" for the debug version, 
+the other named "release" for the release version.
 
 prérequisites : two following "parallel" folders :
 1 - toulbar2/src
 2 - toulbar2/build    build folder has to be created if it does not exist
 
-nb : one can compile a debug version of toulbar2 in build folder and
-create another folder in toulbar2 folder named for instance : release to compile
-a release version.
 
-- cd build
+- cd build   (where build designate debug or release folder or whatever)
 
-- cmake .. -G"Eclipse CDT4 - Unix Makefiles"
+- ccmake .. (where the 2 point designate the parent directory namely toulbar2)
+select the option you need e.g. replace release by DEBUG, ...
+type c to configure cmake
+
+- then cmake .. (cmake with only one c this time).
+this will generate the Makefile.
+
+- make - j 8 to compile on an 8 cores machine which produce the exe file
+toulbar2/debug/bin/Linux/toulbar2  
+
 this will generate make file and other stuff.
 
-- do cmake .. to display the options, update them e.g. eclipse path, debug or release, etc
+2 - ECLIPSE PHASE
 
 - Import this in Eclipse with :
 
-- File -> Import -> Existing code as Makefile project
+- File -> Import -> C/C++ -> Existing code as Makefile project
 nb : the version used here is eclipse CDT of march 2019
 
 - enter a name for the project : toulbar2_debug for instance
@@ -40,7 +56,7 @@ nb : the version used here is eclipse CDT of march 2019
 
 => the project is created in eclipse
 
-- go to menu Project -> properties -> C/C++ build
+- select project folder on the upper left and go to menu Project -> properties -> C/C++ build
 uncheck  use default build command and add type make -j8  ( j = jobs : where 8 is your number of processors, more than 8 is also possible with only 8 cores)
 this wil trigger a faster parallel compilation.
 add build to build directory i.e. ${workspace_loc:/toulbar2_release}/build

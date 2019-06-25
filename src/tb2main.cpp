@@ -223,6 +223,7 @@ enum {
     OPT_hbfs,
     NO_OPT_hbfs,
     OPT_EPS, //kad
+	OPT_KAD, //kad
     OPT_open,
     OPT_localsearch,
     NO_OPT_localsearch,
@@ -420,6 +421,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_hbfs, (char*)"-hbfs", SO_OPT },
     { OPT_hbfs, (char*)"-bfs", SO_OPT },
 	{ OPT_EPS, (char*) "-eps", SO_NONE }, // kad
+	{ OPT_KAD, (char*) "-kad", SO_NONE }, // kad
     { NO_OPT_hbfs, (char*)"-hbfs:", SO_NONE },
     { NO_OPT_hbfs, (char*)"-bfs:", SO_NONE },
     { OPT_open, (char*)"-open", SO_REQ_SEP },
@@ -1645,6 +1647,11 @@ int _tmain(int argc, TCHAR* argv[])
 		cout << "HBFS  Embarrassingly Parallel Search activated. "<< endl;
 			}
 
+	if (args.OptionId() == OPT_KAD) {
+			ToulBar2::KAD = true;
+			cout << "HBFS Parallel search with MPI ON "<< endl;
+				}
+
 ///kad
             if (args.OptionId() == OPT_open) {
                 ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
@@ -2214,7 +2221,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     // ----------simple opt end ----------------------
 
-    //  command line => check existencise of problem filname argument
+    //  command line => check existence of problem filename argument
 
     // PB FILENAME
 

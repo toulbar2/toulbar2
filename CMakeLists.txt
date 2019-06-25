@@ -5,7 +5,7 @@
 ##########################################
 
 cmake_minimum_required(VERSION 2.6)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
 set (doc_destination "share/doc")   		#path of doc installation 
@@ -46,6 +46,7 @@ OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
 ##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
 OPTION(MPI "MPI [default: on]" OFF)
+OPTION(HBFS_MPI "HBFS parallelization using MPI [default: on]" ON)
 OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
 OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
@@ -117,6 +118,10 @@ IF (MPI)
   SET(STATIC OFF)
 ENDIF(MPI)
 
+IF (HBFS_MPI)
+  SET(Boost ON)
+  SET(STATIC OFF)
+ENDIF(HBFS_MPI)
 ##########################################
 # static building
 ##########################################
@@ -178,7 +183,8 @@ IF(MENDELSOFT_ONLY)
   SET(XML OFF)
   SET(CPLEX OFF)
   SET(Boost OFF)
-  set(MPI OFF)
+  SET(MPI OFF)
+
   
   #basename for packaging and versioning
   set (Toulbar_NAME "mendelsoft")
@@ -286,6 +292,14 @@ IF(MPI)
   SET (mpiflag OPENMPI)
 ENDIF(MPI)
 
+
+##########################################
+IF(HBFS_MPI) 
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+#  SET (mpiflag OPENMPI)
+ENDIF(HBFS_MPI)
+
 ##########################################
 #  FLAG XML ON  ==> xmlcps supported
 ##########################################
@@ -312,6 +326,18 @@ IF(TOULBAR2)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
   ENDIF(MPI)
+
+IF(HBFS_MPI)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES})
+    IF(MPI_COMPILE_FLAGS)
+      set_target_properties(toulbar2${EXE} PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+    ENDIF(MPI_COMPILE_FLAGS)
+    IF(MPI_LINK_FLAGS)
+      set_target_properties(toulbar2${EXE} PROPERTIES LINK_FLAGS "${MPI_LINK_FLAGS}")
+    ENDIF(MPI_LINK_FLAGS)
+  ELSE(HBFS_MPI)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
+  ENDIF(HBFS_MPI)
 
   INSTALL( TARGETS toulbar2${EXE} DESTINATION bin)
 ENDIF(TOULBAR2)
