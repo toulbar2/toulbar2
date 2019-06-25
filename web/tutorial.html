@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-105144714-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-105144714-1');
+</script>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="Description" content="toulbar2, an open-source cost function network solver" />
+  <meta name="Keywords" content="cost function network, weighted constraint satisfaction problem, probabilistic graphical model, combinatorial optimization, exact solver" />
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <title>toulbar2</title>
+</head>
+
+<body>
+
+<table class="logo">
+  <tr>
+    <td><img alt="logo toulbar2" src="IMAGES/softac.gif" height="150px"/></td>
+    <td><h1>toulbar2</h1> <h2>An exact solver for cost function networks</h2></td>  
+  </tr>                                                                                    
+</table>
+
+<div id="menu">
+  <ul>
+	<li><a href="index.html">Home</a></li>
+	<li><a href="https://github.com/toulbar2/toulbar2">Download</a></li>
+	<li><a href="documentation.html">Documentation</a></li>
+	<li><a href="tutorial.html">Tutorials</a></li>
+	<li><a href="publication.html">Publications</a></li>
+  </ul>
+</div>
+
+<h3>Tutorials</h3>
+
+  <ul>
+	<li><a href="#queen">Weighted n-queen problem</a></li>
+	<li><a href="#latin">Weighted latin square problem</a></li>
+	<li><a href="#rlfap">Radio link frequency assignment problem</a></li>
+  </ul>
+
+<h2 id="queen">Weighted n-queen problem</h2>
+<h5>Brief description</h5>
+<p>The problem consists in assigning N queens on a NxN chessboard with random weights in (1..N) associated to every cell such that each queen does not attack another queen and the sum of the weights of queen's selected cells is minimized.</p>
+<h5>CFN model</h5>
+<p>A solution must have only one queen per column and per row. We create N variables for every column with domain size N to represent the selected row for each queen. A clique of binary constraints is used to express that two queens cannot be on the same row. Forbidden assignments have cost k=N**2+1. Two other cliques of binary constraints are used to express that two queens do not attack each other on a lower/upper diagonal.</p>
+<h5>Example for N=4 in JSON .cfn format</h5>
+<pre><code contenteditable spellcheck="false">
+{
+	problem: { "name": "4-queen", "mustbe": "<17" },
+	variables: {"Q0":["Row0", "Row1", "Row2", "Row3"], "Q1":["Row0", "Row1", "Row2", "Row3"], 
+		    "Q2":["Row0", "Row1", "Row2", "Row3"], "Q3":["Row0", "Row1", "Row2", "Row3"]},
+	functions: {
+		{scope: ["Q0", "Q1"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+		{scope: ["Q0", "Q2"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+		{scope: ["Q0", "Q3"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+		{scope: ["Q1", "Q2"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+		{scope: ["Q1", "Q3"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+		{scope: ["Q2", "Q3"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]},
+
+		{scope: ["Q0", "Q1"], "costs": [0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0]},
+		{scope: ["Q0", "Q2"], "costs": [0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0]},
+		{scope: ["Q0", "Q3"], "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0]},
+		{scope: ["Q1", "Q2"], "costs": [0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0]},
+		{scope: ["Q1", "Q3"], "costs": [0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0]},
+		{scope: ["Q2", "Q3"], "costs": [0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0]},
+
+		{scope: ["Q0", "Q1"], "costs": [0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0]},
+		{scope: ["Q0", "Q2"], "costs": [0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0]},
+		{scope: ["Q0", "Q3"], "costs": [0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+		{scope: ["Q1", "Q2"], "costs": [0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0]},
+		{scope: ["Q1", "Q3"], "costs": [0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0]},
+		{scope: ["Q2", "Q3"], "costs": [0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0]},
+
+		{scope: ["Q0"], "costs": [4, 4, 3, 4]},
+		{scope: ["Q1"], "costs": [4, 3, 4, 4]},
+		{scope: ["Q2"], "costs": [2, 1, 3, 2]},
+		{scope: ["Q3"], "costs": [1, 2, 3, 4]}
+}
+</code></pre>
+<figure><figcaption>Optimal solution with cost 11 for the 4-queen example</figcaption>
+<img alt="optimal solution of 4-queen problem" src="IMAGES/queen4.png" height="250px"/>
+</figure>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the previous example if called without argument. Otherwise the first argument is the number of queens N (e.g. "python3 queens.py 8").</p>
+<p>Notice that the first lines of code (import and functions flatten and cfn) are needed by all the other tutorial examples.</p>
+<figure><figcaption><a href="TUTORIALS/queens.py">queens.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+import sys
+from random import randint, seed
+seed(123456789)
+
+def flatten(x):
+    result = []
+    for el in x:
+        if hasattr(el, "__iter__") and not isinstance(el, str) and not isinstance(el, tuple) and not isinstance(el, dict):
+            result.extend(flatten(el))
+        else:
+            result.append(el)
+    return result
+
+def cfn(problem, isMinimization, initPrimalBound, floatPrecision=0):
+    globals_key_order = ["metric", "cost", "bounds", "vars1", "vars2", "nb_states", "starts", "ends", "transitions", "nb_symbols", "nb_values", "start", "terminals", "non_terminals", "min", "max", "values", "defaultcost", "tuples", "comparator", "to"]
+    print('{')
+    print('\tproblem: { "name": "%s", "mustbe": "%s%.*f" },' % (problem["name"], "<" if (isMinimization) else ">", floatPrecision, initPrimalBound))
+    print('\tvariables: {', end='')
+    for i,e in enumerate(problem["variables"]):
+        if i > 0: print(', ', end='')
+        print('"%s":' % e[0], end='')
+        if isinstance(e[1], int):
+            print(' %s' % e[1], end='')
+        else:
+            print('[', end='')
+            for j,a in enumerate(e[1]):
+                if j > 0: print(', ', end='')
+                print('"%s"' % a, end='')
+            print(']', end='')
+    print('},')
+    print( '\tfunctions: {')
+    for i,e in enumerate(flatten(problem["functions"])):
+        if i > 0: print(',')
+        if e.get("name") is not None: print('\t\t"%s": {scope: [' % e.get("name"), end='')
+        else: print('\t\t{scope: [', end='')
+        for j,x in enumerate(e.get("scope")):
+            if j > 0: print(', ', end='')
+            print('"%s"' % x, end='')
+        print('], ', end='')
+        if e.get("type") is not None:
+            print('"type:" %s, ' % e.get("type"), end='')
+        if e.get("params") is not None:
+            if isinstance(e.get("params"), dict):
+                print('"params": {', end='')
+                first = True
+                for key in globals_key_order:
+                    if key in e.get("params"):
+                        if not first: print(', ', end='')
+                        if isinstance(e.get("params")[key], str): print('"%s": "%s"' % (str(key),str(e.get("params")[key]).replace("'", '"')), end='')
+                        else: print('"%s": %s' % (str(key),str(e.get("params")[key]).replace("'", '"')), end='')
+                        first = False
+                print ('}', end='')
+            else: print('"params": %s, ' % str(e.get("params")).replace("'",'"'), end='')
+        if e.get("defaultcost") is not None:
+            print('"defaultcost:" %s, ' % e.get("defaultcost"), end='')
+        if e.get("costs") is not None:
+            print('"costs": ', end='')
+            if isinstance(e.get("costs"), str):
+                print('"%s"' % e.get("costs"), end='') # reuse future cost function by giving its name here
+            else:
+                print('[', end='')
+                for j,c in enumerate(e.get("costs")):
+                    if j > 0: print(', ', end='')
+                    if isinstance(c, str) and not c.isdigit():
+                        print('"%s"' % c, end='')
+                    else:
+                        print('%s' % c, end='')
+                print(']', end='')
+        print('}', end='')
+    print('\n}')
+
+def model(N, k):
+    Var = ["Q" + str(i) for i in range(N)]
+    Queen = {
+        "name": str(N) + "-queen",
+        "variables": [(Var[i], ["Row" + str(j) for j in range(N)]) for i in range(N)],
+        "functions":
+            [
+             # permutation constraints expressed by a clique of binary constraints
+             [{"scope": [Var[i], Var[j]], "costs": [0 if a != b else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
+             # lower diagonal constraints
+             [{"scope": [Var[i], Var[j]], "costs": [0 if a + i != b + j else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
+             # upper diagonal constraints
+             [{"scope": [Var[i], Var[j]], "costs": [0 if a - i != b - j else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
+             # random unary costs
+             [{"scope": [Var[i]], "costs": [randint(1,N) for a in range(N)]} for i in range(N)]
+            ]
+         }
+    return Queen
+
+if __name__ == '__main__':
+    # read parameters
+    N = int(sys.argv[1]) if len(sys.argv) > 1 else 4
+    # infinite cost
+    k = N**2+1
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(N, k), True, k)
+</code></pre>
+</figure>
+
+<h2></h2>
+<h2 id="latin">Weighted latin square problem</h2>
+<h5>Brief description</h5>
+<p>The problem consists in assigning a value from 0 to N-1 to every cell of a NxN chessboard. Each row and each column must be a permutation of N values. For each cell, a random weight in (1...N) is associated to every domain value. The objective is to find a complete assignment where the sum of the weights associated to the selected values for the cells is minimized.</p>
+<h5>CFN model</h5>
+<p>We create NxN variables for all cells with domain size N. A hard AllDifferent global cost function is used to model a permutation for every row and every column. Random weights are generated for every cell and domain value. Forbidden assignments have cost k=N**3+1. </p>
+<h5>Example for N=4 in JSON .cfn format</h5>
+<pre><code contenteditable spellcheck="false">
+{
+	problem: { "name": "LatinSquare4", "mustbe": "<65" },
+	variables: {"X0_0": 4, "X0_1": 4, "X0_2": 4, "X0_3": 4, "X1_0": 4, "X1_1": 4, "X1_2": 4, "X1_3": 4, "X2_0": 4, "X2_1": 4, "X2_2": 4, "X2_3": 4, "X3_0": 4, "X3_1": 4, "X3_2": 4, "X3_3": 4},
+	functions: {
+		{scope: ["X0_0", "X0_1", "X0_2", "X0_3"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X1_0", "X1_1", "X1_2", "X1_3"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X2_0", "X2_1", "X2_2", "X2_3"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X3_0", "X3_1", "X3_2", "X3_3"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+
+		{scope: ["X0_0", "X1_0", "X2_0", "X3_0"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X0_1", "X1_1", "X2_1", "X3_1"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X0_2", "X1_2", "X2_2", "X3_2"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+		{scope: ["X0_3", "X1_3", "X2_3", "X3_3"], "type:" salldiff, "params": {"metric": "var", "cost": 65}},
+
+		{scope: ["X0_0"], "costs": [4, 4, 3, 4]},
+		{scope: ["X0_1"], "costs": [4, 3, 4, 4]},
+		{scope: ["X0_2"], "costs": [2, 1, 3, 2]},
+		{scope: ["X0_3"], "costs": [1, 2, 3, 4]},
+		{scope: ["X1_0"], "costs": [3, 1, 3, 3]},
+		{scope: ["X1_1"], "costs": [4, 1, 1, 1]},
+		{scope: ["X1_2"], "costs": [4, 1, 1, 3]},
+		{scope: ["X1_3"], "costs": [4, 4, 1, 4]},
+		{scope: ["X2_0"], "costs": [1, 3, 3, 2]},
+		{scope: ["X2_1"], "costs": [2, 1, 3, 1]},
+		{scope: ["X2_2"], "costs": [3, 4, 2, 2]},
+		{scope: ["X2_3"], "costs": [2, 3, 1, 3]},
+		{scope: ["X3_0"], "costs": [3, 4, 4, 2]},
+		{scope: ["X3_1"], "costs": [3, 2, 4, 4]},
+		{scope: ["X3_2"], "costs": [4, 1, 3, 4]},
+		{scope: ["X3_3"], "costs": [4, 4, 4, 3]}
+}
+</code></pre>
+<figure><figcaption>Optimal solution with cost 35 for the latin 4-square example (in red, weights associated to the selected values)</figcaption>
+<img alt="optimal solution of 4-queen problem" src="IMAGES/latin4.png" height="250px"/>
+</figure>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the previous example if called without argument. Otherwise the first argument is the dimension N of the chessboard (e.g. "python3 latinsquare.py 8").</p>
+<figure><figcaption><a href="TUTORIALS/latinsquare.py">latinsquare.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+def model(N, k):
+    Var = {(i,j): "X" + str(i) + "_" + str(j) for i in range(N) for j in range(N)}
+    LatinSquare = {
+        "name": "LatinSquare" + str(N),
+        "variables": [(Var[(i,j)], N) for i in range(N) for j in range(N)],
+        "functions":
+            [# permutation constraints on rows
+                [{"scope": [Var[(i,j)] for j in range(N)], "type": "salldiff", "params": {"metric": "var", "cost": k}} for i in range(N)],
+             # permutation constraints on columns
+             [{"scope": [Var[(i,j)] for i in range(N)], "type": "salldiff", "params": {"metric": "var", "cost": k}} for j in range(N)],
+              # random unary costs on every cell
+             [{"scope": [Var[(i,j)]], "costs": [randint(1, N) for a in range(N)]} for i in range(N) for j in range(N)]
+            ]
+    }
+    return LatinSquare
+
+if __name__ == '__main__':
+    # read parameters
+    N = int(sys.argv[1]) if len(sys.argv) > 1 else 4
+    # infinite cost
+    k = N**3+1
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(N, k), True, k)
+</code></pre>
+</figure>
+
+
+<h2></h2>
+<h2 id="rlfap">Radio link frequency assignment problem</h2>
+<h5>Brief description</h5>
+<p>The problem consists in assigning frequencies to radio communication links in such a way that no interferences occurs. Domains are set of integers (non necessarily consecutives). Two types of constraints occur: (I) the absolute difference between two frequencies should be greater than a given number d_i (|x-y|>d_i), or (II) the absolute difference between two frequencies should exactly be equal to a given number d_i (|x-y|=d_i). Different deviations d_i, i in 0..4, may exist for the same pair of links. d_0 corresponds to hard constraints while higher deviations are soft constraints that can be violated with an associated cost a_i. Moreover, pre-assigned frequencies may be known for some links which are either hard or soft preferences (mobility cost b_i, i in 0..4). The goal is to minimize the weighted sum of violated constraints. <a href="https://doi.org/10.1023/A:1009812409930">Cabon, B., de Givry, S., Lobjois, L., Schiex, T.,  Warners, J.P. Constraints (1999) 4: 79.</a>
+</p>
+<h5>CFN model</h5>
+<p>We create N variables for every radio link with a given integer domain. Hard and soft binary cost functions express interference constraints with possible deviations. Unary cost functions are used to model mobility costs. </p>
+<h5>Data</h5>
+<p>Original data files can be download from the cost function library <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/real/celar/data/FullRLFAP">FullRLFAP</a>. Their format is described <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/real/celar/data/FullRLFAP/celar.blurb">here</a>. You can try a small example CELAR6-SUB1 (<a href="TUTORIALS/var.txt">var.txt</a>, <a href="TUTORIALS/dom.txt">dom.txt</a>, <a href="TUTORIALS/ctr.txt">ctr.txt</a>, <a href="TUTORIALS/cst.txt">cst.txt</a>) with optimum value equal to 2669.
+</p>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 rlfap.py var.txt dom.txt ctr.txt cst.txt").</p>
+<figure><figcaption><a href="TUTORIALS/rlfap.py">rlfap.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+class Data:
+    def __init__(self, var, dom, ctr, cst):
+        self.var = list()
+        self.dom = {}
+        self.ctr = list()
+        self.cost = {}
+        self.nba = {}
+        self.nbb = {}
+        self.top = 0
+
+        stream = open(var)
+        for line in stream:
+            if len(line.split())>=4:
+                (varnum, vardom, value, mobility) = line.split()[:4]
+                self.var.append((int(varnum), int(vardom), int(value), int(mobility)))
+                self.nbb["b" + str(mobility)] = self.nbb.get("b" + str(mobility), 0) + 1
+            else:
+                (varnum, vardom) = line.split()[:2]
+                self.var.append((int(varnum), int(vardom)))
+
+        stream = open(dom)
+        for line in stream:
+            domain = line.split()[:]
+            self.dom[int(domain[0])] = [int(f) for f in domain[2:]]
+
+        stream = open(ctr)
+        for line in stream:
+            (var1, var2, dummy, operand, deviation, weight) = line.split()[:6]
+            self.ctr.append((int(var1), int(var2), operand, int(deviation), int(weight)))
+            self.nba["a" + str(weight)] = self.nba.get("a" + str(weight), 0) + 1
+
+        stream = open(cst)
+        for line in stream:
+            if len(line.split()) == 3:
+                (aorbi, eq, cost) = line.split()[:3]
+                if (eq == "="):
+                    self.cost[aorbi] = int(cost)
+                    self.top += int(cost) * self.nba.get(aorbi, self.nbb.get(aorbi, 0))
+
+def model(data):
+    Var = {e[0]: "X" + str(e[0]) for e in data.var}
+    Domain = {e[0]: e[1] for e in data.var}
+    RLFAP = {
+        "name": "RLFAP",
+        "variables": [(Var[e[0]], ["f" + str(f) for f in data.dom[e[1]]]) for e in data.var],
+        "functions":
+            [# hard and soft interference
+             [{"scope": [Var[var1], Var[var2]], "costs": [0 if ((operand==">" and abs(a - b)>deviation) or (operand=="=" and abs(a - b)==deviation))
+                                                            else data.cost.get("a"+str(weight),data.top)
+                                                          for a in data.dom[Domain[var1]] for b in data.dom[Domain[var2]]]}
+              for (var1, var2, operand, deviation, weight) in data.ctr],
+             # mobility costs
+             [{"scope": [Var[e[0]]], "defaultcost": data.cost.get("b"+str(e[3]),data.top), "costs": ["f" + str(e[2]), 0] if e[2] in data.dom[e[1]] else []}
+              for e in data.var if len(e)==4]
+            ]
+    }
+    return RLFAP
+
+if __name__ == '__main__':
+    # read parameters
+    if len(sys.argv) < 5: exit('Command line arguments are filenames: var.txt dom.txt ctr.txt cst.txt')
+    data = Data(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(data), True, data.top)
+</code></pre>
+</figure>
+
+<p id="footer"><br/><br/>Last modification : June 24, 2019</p>
+</body>
+</html>
