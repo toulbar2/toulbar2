@@ -294,13 +294,6 @@ ENDIF(MPI)
 
 
 ##########################################
-IF(HBFS_MPI) 
-  find_package(MPI REQUIRED)
-  include_directories(${MPI_INCLUDE_PATH})
-#  SET (mpiflag OPENMPI)
-ENDIF(HBFS_MPI)
-
-##########################################
 #  FLAG XML ON  ==> xmlcps supported
 ##########################################
 include(${My_cmake_script}/xmlcsp.cmake)
@@ -328,7 +321,12 @@ IF(TOULBAR2)
   ENDIF(MPI)
 
 IF(HBFS_MPI)
-    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES})
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+  find_package(Boost 1.65.1 COMPONENTS serialization mpi REQUIRED)
+  include_directories(${Boost_INCLUDE_DIR})
+
+  TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
       set_target_properties(toulbar2${EXE} PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
     ENDIF(MPI_COMPILE_FLAGS)

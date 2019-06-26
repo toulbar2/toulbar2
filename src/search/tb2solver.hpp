@@ -8,6 +8,14 @@
 
 #include "toulbar2lib.hpp"
 #include "utils/tb2store.hpp"
+//kad
+#include <utils/tb2files_kad.hpp>
+#include <mpi.h>
+#include <boost/mpi.hpp>
+#include <boost/serialization/string.hpp>
+//#include <iostream>
+//#include <string>
+//kad
 
 template <class T>
 class DLink;

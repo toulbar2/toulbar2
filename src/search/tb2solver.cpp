@@ -3,8 +3,7 @@
  *
  */
 
-#include <utils/tb2files_kad.hpp> //kad
-#include <mpi.h>
+
 #include "tb2solver.hpp"
 #include "core/tb2domain.hpp"
 #include "applis/tb2pedigree.hpp"
@@ -1551,9 +1550,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster* cluster, Cost clb, Cost cub)
 
 
 	//kad
-	cout << " PARALLEL HBFS ACTIVATED!"<<endl;
-	if (ToulBar2::PARA == true)
-	{
+	cout << " PARALLEL HBFS MODE!!!"<<endl;
+		/*
 		int processNb, processId;
 		MPI_Init(NULL,NULL);
 		MPI_Comm_size(MPI_COMM_WORLD, &processNb);
@@ -1564,8 +1562,46 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster* cluster, Cost clb, Cost cub)
 		else{
 			cout<< "I am a worker. My id is "<< processId << "!"<<endl;
 		}
-		MPI_Finalize();
-	}
+		MPI_Finalize(); */
+		namespace mpi = boost::mpi;
+		mpi::environment env;
+		mpi::communicator world;
+		/* reduce operation:
+		The reduce collective summarizes the values from each process into a single value
+		at the user-specified "root" process. The Boost.MPI reduce operation takes
+		a sequence of values (one per process) and combines them via a function object.
+		For instance, we can randomly generate values in each process
+		and the compute the minimum value over all processes via a call to reduce (random_min.cpp):
+		*/
+
+		  srand(time(0) + world.rank());
+		  int my_number = rand();
+
+		  if (world.rank() == 0) {
+		    int minimum;
+		    reduce(world, my_number, minimum, mpi::minimum<int>(), 0);
+		    cout << "The minimum value is " << minimum << endl;
+		  } else {
+		    reduce(world, my_number, mpi::minimum<int>(), 0);
+		  }
+
+		/*//gather operation example:
+		 mpi::environment env;
+		  mpi::communicator world;
+
+		  srand(time(0) + world.rank());
+		  int my_number = rand();
+		  if (world.rank() == 0) {
+		    vector<int> all_numbers;
+		    gather(world, my_number, all_numbers, 0);
+		    for (int proc = 0; proc < world.size(); ++proc)
+		      cout << "Process #" << proc << " transmitted rand value "
+		                << all_numbers[proc] << std::endl;
+		  } else {
+		    gather(world, my_number, 0);
+		  }
+		  */
+
 	//kad
 
     if (ToulBar2::verbose >= 1 && cluster)
