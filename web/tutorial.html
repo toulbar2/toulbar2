@@ -174,9 +174,9 @@ def model(N, k):
             [
              # permutation constraints expressed by a clique of binary constraints
              [{"scope": [Var[i], Var[j]], "costs": [0 if a != b else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
-             # lower diagonal constraints
-             [{"scope": [Var[i], Var[j]], "costs": [0 if a + i != b + j else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
              # upper diagonal constraints
+             [{"scope": [Var[i], Var[j]], "costs": [0 if a + i != b + j else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
+             # lower diagonal constraints
              [{"scope": [Var[i], Var[j]], "costs": [0 if a - i != b - j else k for a in range(N) for b in range(N)]} for i in range(N) for j in range(N) if (i < j)],
              # random unary costs
              [{"scope": [Var[i]], "costs": [randint(1,N) for a in range(N)]} for i in range(N)]
