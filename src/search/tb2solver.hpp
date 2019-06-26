@@ -223,6 +223,10 @@ protected:
     pair<Cost, Cost> recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub);
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
     pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    //kad
+    pair<Cost, Cost> hybridSolvePara(Cluster* root, Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolvePara() { return hybridSolvePara(NULL, wcsp->getLb(), wcsp->getUb()); }
+    //kad
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value value);
