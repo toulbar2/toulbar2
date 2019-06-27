@@ -13,8 +13,7 @@
 #include <mpi.h>
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
-//#include <iostream>
-//#include <string>
+
 //kad
 
 template <class T>

@@ -1,8 +1,5 @@
-
-
-
-nb : pb with git and version file ? do the following and retry git pull origin name_of_your_branch
-git reset HEAD src/ToulbarVersion.hpp
+0 - Install Eclipse IDE for Scientific Computing which support mpi, openmpi; Parallel Tools Plateform (PTP)
+https://www.eclipse.org/downloads/packages/release/2019-03/r/eclipse-ide-scientific-computing
 
 1 - SHELL PHASE
 
@@ -17,7 +14,6 @@ if you add files in the code of toulbar2
 
 nb : ccmake .. means execute ccmake (ccmake configure cmake tool which in turn produce a makefile)
 with the CMakeLists.txt file in the parent directory.
-
 
 nb : build folder can be named as you wish : for instance you can
 create 2 folders : one folder named "debug" for the debug version, 
@@ -75,3 +71,5 @@ to tell eclipse where to build toulbar2 which will be found in build/bin/Linux d
 - To execute toulbar2 from eclipse with arguments : Menu Run -> Run configuration -> C/C++ Application -> toulbar2 release default
 add toulbar2/build/bin/Linux/toulbar2 the path to the program toulbar2
 then in tab Argument add the argument to use with toulbar2 e.g.  a wcsp file name
+
+
