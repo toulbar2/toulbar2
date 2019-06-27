@@ -1857,7 +1857,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 
 			cub = wcsp->getUb();
 			open_->updateUb(cub);
-
 			Store::restore(storedepthBFS);
 			cp_->store();
 			if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
@@ -1883,9 +1882,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 					cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs
 							<< endl;
 			}
-		}
+		} // end while (clb < cub && !open_->finished() && (clb == initiallb && cub == initialub))
 		assert(clb >= initiallb && cub <= initialub);
-	} else {
+	} // end if (ToulBar2::hbfs)
+	else { // no hbfs here
 		hbfsLimit = LONGLONG_MAX;
 		recursiveSolve();
 		cub = wcsp->getUb();
