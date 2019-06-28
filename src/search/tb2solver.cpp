@@ -79,12 +79,11 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub) {
 
 Solver::Solver(Cost initUpperBound) :
 		nbNodes(0), nbBacktracks(0), nbBacktracksLimit(LONGLONG_MAX), wcsp(
-				NULL), allVars(NULL), unassignedVars(NULL), lastConflictVar(-1), nbSol(
+		NULL), allVars(NULL), unassignedVars(NULL), lastConflictVar(-1), nbSol(
 				0.), nbSGoods(0), nbSGoodsUse(0), tailleSep(0), cp(NULL), open(
-				NULL), hbfsLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(
-				0), nbHybridNew(0), nbRecomputationNodes(0), initialLowerBound(
-				MIN_COST), globalLowerBound(MIN_COST), globalUpperBound(
-				MAX_COST), initialDepth(0) {
+		NULL), hbfsLimit(LONGLONG_MAX), nbHybrid(0), nbHybridContinue(0), nbHybridNew(
+				0), nbRecomputationNodes(0), initialLowerBound(MIN_COST), globalLowerBound(
+				MIN_COST), globalUpperBound(MAX_COST), initialDepth(0) {
 	searchSize = new StoreCost(MIN_COST);
 	wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*) this);
 }
@@ -1502,7 +1501,8 @@ void Solver::recursiveSolveLDS(int discrepancy) {
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 	int nbNodesPopped = 0; //kad
-	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE" << endl;
+	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE"
+			<< endl;
 
 	if (ToulBar2::verbose >= 1 && cluster)
 		cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub
@@ -1729,6 +1729,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 //kad
 // version without clusters
+
 pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 
 	cluster = NULL;
@@ -1746,7 +1747,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 	 }
 	 MPI_Finalize(); */
 	namespace mpi = boost::mpi;
-	mpi::environment env;
+	mpi::environment env;  // equivalent to MPI_Init
 	mpi::communicator world;
 	/* reduce operation:
 	 The reduce collective summarizes the values from each process into a single value
@@ -1780,7 +1781,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 	 * at process 0 (the "root" in this case),
 	 * which prints out the values that correspond
 	 * to each processor. (random_gather.cpp) */
-
+/*
 	srand(time(0) + world.rank());
 	int my_number = rand();
 	if (world.rank() == 0) {
@@ -1792,14 +1793,41 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 	} else {
 		gather(world, my_number, 0);
 	}
+*/
+
 
 	assert(clb < cub);
 	assert(wcsp->getUb() == cub);
 	assert(wcsp->getLb() <= clb);
-	if (ToulBar2::hbfs) {
+
+
+	if (world.rank() == 0) {
+
+		gps_position pos(1,2,3);
+		cout<< "I am the master and I send an object gps_position to my workers. "<<endl;
+		for (int proc = 1; proc < world.size(); ++proc)
+	    world.send(proc, 0, pos);
+	//    std::string msg;
+	//    world.recv(1, 1, msg);
+	  //  cout << msg << "!" << std::endl;
+	  } else {
+
+	    gps_position msg;
+		 // string msg;
+	    world.recv(0, 0, msg);
+	    cout << "I am worker # "<< world.rank() << " and I receive an object gps_position and I print the degrees = " << msg.degrees() <<endl;
+	   // cout << "I am worker # "<< world.rank() << " and I receive a msg from the master = " << msg <<endl;
+
+	   // world.send(0, 1, std::string("world"));
+	  }
+
+
+	if (ToulBar2::hbfs) { // default value hbfs=1
+
+	//if (world.rank() == 0) {
 		CPStore *cp_ = NULL; // vector of choice points
 		OpenList *open_ = NULL; // priority queue of nodes
-		Cost delta = MIN_COST;
+		Cost delta = MIN_COST;  // MIN_COST = 0  delta can be suppressed
 
 		// normal BFS without BTD, i.e., hybridSolve is not reentrant
 		if (cp != NULL)
@@ -1824,33 +1852,40 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 
 		nbHybrid++; // do not count empty root cluster
 
-		Cost initiallb = clb;
-		Cost initialub = cub;
+		// Cost initiallb = clb;
+		// Cost initialub = cub;
 		open_->updateUb(cub, delta);
 		clb = MAX(clb, open_->getLb(delta));
 
+	//} // fin if rank 0 = master process
 		while (clb < cub && !open_->finished()
-				&& (clb == initiallb && cub == initialub)) {
+		/*&& (clb == initiallb && cub == initialub)*/) { // why this condition on initiallb and initialub ?
 
-			hbfsLimit = (
-					(ToulBar2::hbfs > 0) ?
-							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
 			int storedepthBFS = Store::getDepth();
 			try {
+
+				// if (world.rank() == 0) {
+				//	cout << "I am the master. My id is " << world.rank()<< endl;
+					// I send nodes and UB to workers
+					// I receive open nodes and cub from workers
+
 				Store::store();
 				OpenNode nd = open_->top();
 				open_->pop();
+				// }  // fin if master
 
-				restore(*cp_, nd);
-				Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
-				bestlb = MAX(bestlb, clb);
-
-				{
+			//	 if (world.rank() > 0) {
+					// cout << "I am a worker. My id is " << world.rank()<< endl;
+					 // I receive a node and cub from the master
+					 // I send receive open nodes (fist, last in choice point vector) and best UB
+					 restore(*cp_, nd);
+					 Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+					 bestlb = MAX(bestlb, clb);
 					recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
-					cout
-							<< "2 - Call recursive solve from hybridSolvePara line 1707"
-							<< endl;
-				}
+					//cout << "2 - Call recursive solve from hybridSolvePara line 1707"<< endl;
+				// } // fin rank > 0
+
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
 			}
@@ -1883,11 +1918,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 							<< endl;
 			}
 		} // end while (clb < cub && !open_->finished() && (clb == initiallb && cub == initialub))
-		assert(clb >= initiallb && cub <= initialub);
-	} // end if (ToulBar2::hbfs)
-	else { // no hbfs here
+		//assert(clb >= initiallb && cub <= initialub);
+
+
+
+	} // end if (ToulBar2::hbfs) hbfs=0 DFS search only
+	else { // no hbfs here: this recursiveSolve() is not called in this context
 		hbfsLimit = LONGLONG_MAX;
 		recursiveSolve();
+		cout << " verif rec solv not called" << endl;
 		cub = wcsp->getUb();
 		clb = cub;
 
@@ -2440,10 +2479,8 @@ bool Solver::solve() {
 							initialDepth = Store::getDepth();
 							//kad
 							if (ToulBar2::PARA == true) {
-								cout
-										<< "1 - Call of  hybridSolvePara() from solver.cpp"
-										<< endl;
-								hybridSolvePara();
+								//cout<< "1 - Call of  hybridSolvePara() from solver.cpp"<< endl;
+								hybridSolvePara(); // actual call of hbfs in our context
 							} else {
 								hybridSolve();
 							}

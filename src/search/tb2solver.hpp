@@ -13,6 +13,48 @@
 #include <mpi.h>
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/mpi/datatype.hpp> // for optimization during send of objects
+/*
+ #include <boost/serialization/vector.hpp>
+#include <boost/serialization/queue.hpp>
+#include <boost/serialization/priority_queue.hpp>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/stack.hpp>
+#include <boost/serialization/list.hpp>
+
+*/
+
+class gps_position
+{
+private:
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & degrees_;
+        ar & minutes_;
+        ar & seconds_;
+    }
+
+    int degrees_;
+    int minutes_;
+    float seconds_;
+public:
+
+    gps_position(){};
+    gps_position(int d, int m, float s) :
+        degrees_(d), minutes_(m), seconds_(s)
+    {}
+    int degrees(){
+    	return degrees_;
+    }
+    void degrees(int deg){
+    	degrees_ = deg;
+    }
+};
+BOOST_IS_MPI_DATATYPE(gps_position);  // to optimize when it is a class of pali old object POD : int, long, ..
+
 
 //kad
 
