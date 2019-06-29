@@ -489,7 +489,7 @@ public:
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
-    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function network from a file (format as indicated by ToulBar2:: global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem

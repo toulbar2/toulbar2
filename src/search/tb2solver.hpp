@@ -8,6 +8,55 @@
 
 #include "toulbar2lib.hpp"
 #include "utils/tb2store.hpp"
+//kad
+#include <utils/tb2files_kad.hpp>
+#include <mpi.h>
+#include <boost/mpi.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/mpi/datatype.hpp> // for optimization during send of objects
+/*
+ #include <boost/serialization/vector.hpp>
+#include <boost/serialization/queue.hpp>
+#include <boost/serialization/priority_queue.hpp>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/stack.hpp>
+#include <boost/serialization/list.hpp>
+
+*/
+
+class gps_position
+{
+private:
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & degrees_;
+        ar & minutes_;
+        ar & seconds_;
+    }
+
+    int degrees_;
+    int minutes_;
+    float seconds_;
+public:
+
+    gps_position(){};
+    gps_position(int d, int m, float s) :
+        degrees_(d), minutes_(m), seconds_(s)
+    {}
+    int degrees(){
+    	return degrees_;
+    }
+    void degrees(int deg){
+    	degrees_ = deg;
+    }
+};
+BOOST_IS_MPI_DATATYPE(gps_position);  // to optimize when it is a class of pali old object POD : int, long, ..
+
+
+//kad
 
 template <class T>
 class DLink;
@@ -223,6 +272,10 @@ protected:
     pair<Cost, Cost> recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub);
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
     pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    //kad
+    pair<Cost, Cost> hybridSolvePara(Cluster* root, Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolvePara() { return hybridSolvePara(NULL, wcsp->getLb(), wcsp->getUb()); }
+    //kad
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value value);
