@@ -1804,10 +1804,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	if (world.rank() == 0) {
 
 		MasterToWorker work(20,2);
-		work.vec_.push_back(90);
-		work.vec_.push_back(91);
-		work.vec_.push_back(92);
-
+	//	work.vec_.push_back(90);work.vec_.push_back(91);work.vec_.push_back(92);
+		ChoicePoint my_cp(CP_REMOVE, 11, 25, false);
+		work.vec_.push_back(my_cp);
 		cout<< "I am the master and I send UB and a node to my workers. "<<endl;
 		for (int proc = 1; proc < world.size(); ++proc)
 	    world.send(proc, 0, work);
@@ -1816,21 +1815,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	  //  cout << msg << "!" << std::endl;
 	  } else {
 
-		  MasterToWorker msg;
+		  MasterToWorker work;
 		 // string msg;
-	    world.recv(0, 0, msg);
-	    cout << "I am worker # "<< world.rank() << " and I receive UB + one node and I print UB = " << msg.ub() <<endl;
-	    cout << "I am worker # "<< world.rank() << " and vector[0] = " << msg.vec_[0] <<endl;
-	   // cout << " vector[0] = " << msg.vec_[0] << endl;
-	    //copy(msg.vec_.begin(),msg.vec_.end(),ostream_iterator<Long>(std::cout, " " ));
-	   // cout << "I am worker # "<< world.rank() << " and I receive a msg from the master = " << msg <<endl;
+	    world.recv(0, 0, work);
+	    cout << "I am worker # "<< world.rank() << " and I receive UB + one node and I print UB = " << work.ub_ <<endl;
+	    cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec_[0].varIndex <<endl;
 
 	   // world.send(0, 1, string("world"));
 	  }
 
 
 	if (ToulBar2::hbfs) { // default value hbfs=1 so we enter in this if
-		//i.e. we do not perform a pure DFS search
+		//i.e. we do not perform a pure DFS search. maybe this if can be suppressed
 
 		//if (world.rank() == 0) {
 		CPStore *cp_ = NULL; // vector of choice points

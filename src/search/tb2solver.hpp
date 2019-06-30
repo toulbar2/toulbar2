@@ -14,7 +14,6 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/mpi/datatype.hpp> // for optimization during send of objects
-
 #include <boost/serialization/vector.hpp>
 /*
 #include <boost/serialization/queue.hpp>
@@ -24,53 +23,9 @@
 #include <boost/serialization/list.hpp>
 
 */
-
-
-/**
- * \brief class to send work to workers in the form of an object i.e. a message
- */
-class MasterToWorker
-{
-private:
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-        ar & ub_;
-        ar & nlb_;
-        ar & vec_;
-    }
-
-    Cost ub_; // current best solution ub when the master gives the work
-    Cost nlb_; // lower bound of the node objet popped by the master
-
-public:
-    vector<Long> vec_;
-    MasterToWorker(){};
-    MasterToWorker(Cost ub, Cost lb) :
-        ub_(ub), nlb_(lb)
-    {}
-    /**
-     * getters
-     */
-    Cost ub(){return ub_;}
-    Cost nlb(){return nlb_;}
-
-};
-
-/**
- * To optimize when it is a class of plain old objects POD : int, long, ...
- * \warning possible errors with pointers attributes
- */
-//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
-/*
-namespace boost { namespace mpi {
-  template<> struct is_mpi_datatype<vector<Long>>
-    : public mpl::true_ { };
-} }
-*/
 //kad
+
+
 
 template <class T>
 class DLink;
@@ -158,11 +113,23 @@ public:
     static const string CPOperation[CP_MAX]; // for pretty print
 
     struct ChoicePoint {
+    private:
+    	friend class boost::serialization::access;
+
+    	                template<class Archive>
+    	                void serialize(Archive & ar, const unsigned int version)
+    	                {
+    	                    ar & op;
+    	                    ar & varIndex;
+    	                    ar & varIndex;
+    	                    ar & reverse;
+    	                }
+    public:
         ChoicePointOp op; // choice point operation
         int varIndex; // variable wcsp's index
         Value value; // variable's value
         bool reverse; // true if the choice point corresponds to the last right branch of an open node
-
+        ChoicePoint(){}; // kad : default ctor added to avoid boost/serialization/access.hpp:130:9: error
         ChoicePoint(ChoicePointOp op_, int var_, Value val_, bool rev_)
             : op(op_)
             , varIndex(var_)
@@ -170,8 +137,49 @@ public:
             , reverse(rev_)
         {
         }
+
     };
 
+
+
+
+// kad
+    /**
+     * \brief class to send work to workers in the form of an object i.e. a message
+     * convention : attributes are denoted with a trailing underscore
+     *
+     */
+
+    class MasterToWorker
+    {
+    private:
+        friend class boost::serialization::access;
+
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & ub_;  // attribute
+            ar & nlb_; // nu.lb
+            ar & vec_;
+        }
+
+    public: // not a thing to do but here it is for simplicity
+        Cost ub_; // current best solution ub when the master gives the work
+        Cost nlb_; // lower bound of the node object popped by the master
+        vector<ChoicePoint> vec_;
+        MasterToWorker(){};
+        MasterToWorker(Cost ub, Cost lb) :
+            ub_(ub), nlb_(lb)
+        {}
+    };
+
+    /**
+     * To optimize when it is a class of plain old objects POD : int, long, ...
+     * \warning possible errors seg fault with pointers attributes and non POD attributes
+     */
+    //BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
+
+ //kad
     class CPStore FINAL : public vector<ChoicePoint> {
     public:
         ptrdiff_t start; // beginning of the current branch
