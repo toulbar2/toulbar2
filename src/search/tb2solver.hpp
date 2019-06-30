@@ -14,8 +14,9 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/mpi/datatype.hpp> // for optimization during send of objects
+
+#include <boost/serialization/vector.hpp>
 /*
- #include <boost/serialization/vector.hpp>
 #include <boost/serialization/queue.hpp>
 #include <boost/serialization/priority_queue.hpp>
 #include <boost/serialization/deque.hpp>
@@ -24,7 +25,11 @@
 
 */
 
-class gps_position
+
+/**
+ * \brief class to send work to workers in the form of an object i.e. a message
+ */
+class MasterToWorker
 {
 private:
     friend class boost::serialization::access;
@@ -32,30 +37,39 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        ar & degrees_;
-        ar & minutes_;
-        ar & seconds_;
+        ar & ub_;
+        ar & nlb_;
+        ar & vec_;
     }
 
-    int degrees_;
-    int minutes_;
-    float seconds_;
+    Cost ub_; // current best solution ub when the master gives the work
+    Cost nlb_; // lower bound of the node objet popped by the master
+
 public:
-
-    gps_position(){};
-    gps_position(int d, int m, float s) :
-        degrees_(d), minutes_(m), seconds_(s)
+    vector<Long> vec_;
+    MasterToWorker(){};
+    MasterToWorker(Cost ub, Cost lb) :
+        ub_(ub), nlb_(lb)
     {}
-    int degrees(){
-    	return degrees_;
-    }
-    void degrees(int deg){
-    	degrees_ = deg;
-    }
+    /**
+     * getters
+     */
+    Cost ub(){return ub_;}
+    Cost nlb(){return nlb_;}
+
 };
-BOOST_IS_MPI_DATATYPE(gps_position);  // to optimize when it is a class of pali old object POD : int, long, ..
 
-
+/**
+ * To optimize when it is a class of plain old objects POD : int, long, ...
+ * \warning possible errors with pointers attributes
+ */
+//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
+/*
+namespace boost { namespace mpi {
+  template<> struct is_mpi_datatype<vector<Long>>
+    : public mpl::true_ { };
+} }
+*/
 //kad
 
 template <class T>
@@ -273,8 +287,8 @@ protected:
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
     pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
     //kad
-    pair<Cost, Cost> hybridSolvePara(Cluster* root, Cost clb, Cost cub);
-    pair<Cost, Cost> hybridSolvePara() { return hybridSolvePara(NULL, wcsp->getLb(), wcsp->getUb()); }
+    pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolvePara() { return hybridSolvePara(wcsp->getLb(), wcsp->getUb()); }
     //kad
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 

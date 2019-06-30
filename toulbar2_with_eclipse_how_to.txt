@@ -5,7 +5,9 @@ https://www.eclipse.org/downloads/packages/release/2019-03/r/eclipse-ide-scienti
 
 In toulbar2 folder create a build folder.
 cd build
-Do ccmake .. to configure the build ( c to configure, q to exit)
+Do ccmake .. to configure the build ( c to configure, g to generate, q to quit)
+nb : do sudo apt-get install libboost-all-dev to install boost_mpi boost_serialize ...
+
 Do cmake .. to create the Makefile ( cmake .. has to be done each time new files are added to the project)
 Do make -j8 where 8 is the number of cores on your computer
 

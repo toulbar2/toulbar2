@@ -45,7 +45,7 @@ OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
 ##	OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
-OPTION(MPI "MPI [default: on]" OFF)
+OPTION(MPI "MPI [default: off]" OFF)
 OPTION(HBFS_MPI "HBFS parallelization using MPI [default: on]" ON)
 OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
@@ -118,10 +118,6 @@ IF (MPI)
   SET(STATIC OFF)
 ENDIF(MPI)
 
-IF (HBFS_MPI)
-  SET(Boost ON)
-  SET(STATIC OFF)
-ENDIF(HBFS_MPI)
 ##########################################
 # static building
 ##########################################
@@ -292,7 +288,6 @@ IF(MPI)
   SET (mpiflag OPENMPI)
 ENDIF(MPI)
 
-
 ##########################################
 #  FLAG XML ON  ==> xmlcps supported
 ##########################################
@@ -320,13 +315,16 @@ IF(TOULBAR2)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends})
   ENDIF(MPI)
 
-IF(HBFS_MPI)
-  find_package(MPI REQUIRED)
-  include_directories(${MPI_INCLUDE_PATH})
-  find_package(Boost 1.65.1 COMPONENTS serialization mpi REQUIRED)
-  include_directories(${Boost_INCLUDE_DIR})
+  IF(HBFS_MPI)
 
-  TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+    set(BOOST_LIBRARYDIR /usr/lib64/openmpi/lib) # to test boost openmpi on fedora 
+    set(BOOST_LIBRARYDIR /usr/lib64/mpich/lib) # to test boost mpich on fedora 
+    set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu) # boost openmpi on ubuntu
+    find_package(MPI REQUIRED)
+    include_directories(${MPI_INCLUDE_PATH})
+    find_package(Boost COMPONENTS serialization mpi REQUIRED)
+    include_directories(${Boost_INCLUDE_DIR})
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
       set_target_properties(toulbar2${EXE} PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
     ENDIF(MPI_COMPILE_FLAGS)

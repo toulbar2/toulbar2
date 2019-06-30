@@ -1730,12 +1730,14 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 //kad
 // version without clusters
 
-pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
+pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
-	cluster = NULL;
 	cout << " PARALLEL HBFS MODE!!!" << endl;
+	namespace mpi = boost::mpi;
+	mpi::environment env;  // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
+	mpi::communicator world;
 	/*
-	 int processNb, processId;
+	int processNb, processId;
 	 MPI_Init(NULL,NULL);
 	 MPI_Comm_size(MPI_COMM_WORLD, &processNb);
 	 MPI_Comm_rank(MPI_COMM_WORLD, &processId);
@@ -1746,9 +1748,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 	 cout<< "I am a worker. My id is "<< processId << "!"<<endl;
 	 }
 	 MPI_Finalize(); */
-	namespace mpi = boost::mpi;
-	mpi::environment env;  // equivalent to MPI_Init
-	mpi::communicator world;
+
 	/* reduce operation:
 	 The reduce collective summarizes the values from each process into a single value
 	 at the user-specified "root" process. The Boost.MPI reduce operation takes
@@ -1803,31 +1803,38 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 
 	if (world.rank() == 0) {
 
-		gps_position pos(1,2,3);
-		cout<< "I am the master and I send an object gps_position to my workers. "<<endl;
+		MasterToWorker work(20,2);
+		work.vec_.push_back(90);
+		work.vec_.push_back(91);
+		work.vec_.push_back(92);
+
+		cout<< "I am the master and I send UB and a node to my workers. "<<endl;
 		for (int proc = 1; proc < world.size(); ++proc)
-	    world.send(proc, 0, pos);
+	    world.send(proc, 0, work);
 	//    std::string msg;
 	//    world.recv(1, 1, msg);
 	  //  cout << msg << "!" << std::endl;
 	  } else {
 
-	    gps_position msg;
+		  MasterToWorker msg;
 		 // string msg;
 	    world.recv(0, 0, msg);
-	    cout << "I am worker # "<< world.rank() << " and I receive an object gps_position and I print the degrees = " << msg.degrees() <<endl;
+	    cout << "I am worker # "<< world.rank() << " and I receive UB + one node and I print UB = " << msg.ub() <<endl;
+	    cout << "I am worker # "<< world.rank() << " and vector[0] = " << msg.vec_[0] <<endl;
+	   // cout << " vector[0] = " << msg.vec_[0] << endl;
+	    //copy(msg.vec_.begin(),msg.vec_.end(),ostream_iterator<Long>(std::cout, " " ));
 	   // cout << "I am worker # "<< world.rank() << " and I receive a msg from the master = " << msg <<endl;
 
-	   // world.send(0, 1, std::string("world"));
+	   // world.send(0, 1, string("world"));
 	  }
 
 
-	if (ToulBar2::hbfs) { // default value hbfs=1
+	if (ToulBar2::hbfs) { // default value hbfs=1 so we enter in this if
+		//i.e. we do not perform a pure DFS search
 
-	//if (world.rank() == 0) {
+		//if (world.rank() == 0) {
 		CPStore *cp_ = NULL; // vector of choice points
 		OpenList *open_ = NULL; // priority queue of nodes
-		Cost delta = MIN_COST;  // MIN_COST = 0  delta can be suppressed
 
 		// normal BFS without BTD, i.e., hybridSolve is not reentrant
 		if (cp != NULL)
@@ -1840,6 +1847,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 		open_ = open;
 
 		cp_->store();
+
+		/*
 		if (open_->size() == 0) { // start a new list of open nodes if needed
 			nbHybridNew++;
 			// reinitialize current open list and insert empty node
@@ -1852,13 +1861,17 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 
 		nbHybrid++; // do not count empty root cluster
 
-		// Cost initiallb = clb;
-		// Cost initialub = cub;
-		open_->updateUb(cub, delta);
-		clb = MAX(clb, open_->getLb(delta));
+		 Cost initiallb = clb;
+		 Cost initialub = cub;
 
+		 */
+
+		open_->updateUb(cub);
+		clb = MAX(clb, open_->getLb());
+
+// queue workers idle I initialized with the rank of the workers 1 2 .... world.size()-1
 	//} // fin if rank 0 = master process
-		while (clb < cub && !open_->finished()
+		while (clb < cub && !open_->finished() /* ou queue worker idle I non empty  */
 		/*&& (clb == initiallb && cub == initialub)*/) { // why this condition on initiallb and initialub ?
 
 			hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
@@ -1903,7 +1916,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cluster *cluster, Cost clb, Cost cub) {
 				hbfsLimit = LONGLONG_MAX;
 			}
 
-			clb = MAX(clb, open_->getLb(delta));
+			clb = MAX(clb, open_->getLb());
 			showGap(clb, cub);
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
