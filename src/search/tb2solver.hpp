@@ -2,7 +2,6 @@
  *  \brief Generic solver.
  *
  */
-
 #ifndef TB2SOLVER_HPP_
 #define TB2SOLVER_HPP_
 
@@ -23,6 +22,17 @@
 #include <boost/serialization/list.hpp>
 
 */
+
+
+
+// kad
+    /**
+     * \brief class to send work to workers in the form of an object i.e. a message
+     * convention : attributes are denoted with a trailing underscore
+     *
+     */
+
+
 //kad
 
 
@@ -113,6 +123,7 @@ public:
     static const string CPOperation[CP_MAX]; // for pretty print
 
     struct ChoicePoint {
+    	//kad
     private:
     	friend class boost::serialization::access;
 
@@ -124,6 +135,7 @@ public:
     	                    ar & varIndex;
     	                    ar & reverse;
     	                }
+    //kad
     public:
         ChoicePointOp op; // choice point operation
         int varIndex; // variable wcsp's index
@@ -140,46 +152,38 @@ public:
 
     };
 
-
-
-
-// kad
-    /**
-     * \brief class to send work to workers in the form of an object i.e. a message
-     * convention : attributes are denoted with a trailing underscore
-     *
-     */
-
+    //kad
     class MasterToWorker
-    {
-    private:
-        friend class boost::serialization::access;
+            {
+            private:
+                friend class boost::serialization::access;
 
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int version)
-        {
-            ar & ub_;  // attribute
-            ar & nlb_; // nu.lb
-            ar & vec_;
-        }
+                template<class Archive>
+                void serialize(Archive & ar, const unsigned int version)
+                {
+                    ar & ub_;  // attribute
+                    ar & nlb_; // nu.lb
+                    ar & vec_;
+                }
 
-    public: // not a thing to do but here it is for simplicity
-        Cost ub_; // current best solution ub when the master gives the work
-        Cost nlb_; // lower bound of the node object popped by the master
-        vector<ChoicePoint> vec_;
-        MasterToWorker(){};
-        MasterToWorker(Cost ub, Cost lb) :
-            ub_(ub), nlb_(lb)
-        {}
-    };
+            public: // not a thing to do but here it is for simplicity
+                Cost ub_; // current best solution ub when the master gives the work
+                Cost nlb_; // lower bound of the node object popped by the master
+                vector<ChoicePoint> vec_;
+               // MasterToWorker();
+                MasterToWorker(Cost ub, Cost lb) :
+                    ub_(ub), nlb_(lb)
+                {}
+                MasterToWorker(){};
+            };
 
-    /**
-     * To optimize when it is a class of plain old objects POD : int, long, ...
-     * \warning possible errors seg fault with pointers attributes and non POD attributes
-     */
-    //BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
+        /**
+         * To optimize when it is a class of plain old objects POD : int, long, ...
+         * \warning possible errors seg fault with pointers attributes and non POD attributes
+         */
+        //BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
 
- //kad
+     //kad
     class CPStore FINAL : public vector<ChoicePoint> {
     public:
         ptrdiff_t start; // beginning of the current branch
@@ -296,6 +300,7 @@ protected:
     pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
     //kad
     pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub); //kad temporary backup. do nothing .have to be deleted at some point
     pair<Cost, Cost> hybridSolvePara() { return hybridSolvePara(wcsp->getLb(), wcsp->getUb()); }
     //kad
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
@@ -365,6 +370,9 @@ public:
 
 int solveSymMax2SAT(int n, int m, int* posx, int* posy, double* cost, int* sol);
 extern "C" int solvesymmax2sat_(int* n, int* m, int* posx, int* posy, double* cost, int* sol);
+
+
+
 
 #endif /*TB2SOLVER_HPP_*/
 

@@ -317,8 +317,8 @@ IF(TOULBAR2)
 
   IF(HBFS_MPI)
 
-    set(BOOST_LIBRARYDIR /usr/lib64/openmpi/lib) # to test boost openmpi on fedora 
-    set(BOOST_LIBRARYDIR /usr/lib64/mpich/lib) # to test boost mpich on fedora 
+  #  set(BOOST_LIBRARYDIR /usr/lib64/openmpi/lib) # to test boost openmpi on fedora 
+  #  set(BOOST_LIBRARYDIR /usr/lib64/mpich/lib) # to test boost mpich on fedora 
     set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu) # boost openmpi on ubuntu
     find_package(MPI REQUIRED)
     include_directories(${MPI_INCLUDE_PATH})

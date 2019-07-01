@@ -18,11 +18,9 @@
 //#include "toulbar2lib.hpp"
 //#include "utils/tb2store.hpp"
 
+
+
 class Tb2Files {
-
-
-
-
 
 public:
 static long nbProcess(const std::string nbProcessFic, const int nbCores, const int nbProcPerCore);
