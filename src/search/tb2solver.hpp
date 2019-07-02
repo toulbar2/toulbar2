@@ -12,30 +12,18 @@
 #include <mpi.h>
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
-#include <boost/mpi/datatype.hpp> // for optimization during send of objects
+#include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/priority_queue.hpp>
 
 /*
 #include <boost/serialization/queue.hpp>
-#include <boost/serialization/priority_queue.hpp>
+
 #include <boost/serialization/deque.hpp>
 #include <boost/serialization/stack.hpp>
 #include <boost/serialization/list.hpp>
 
 */
-
-
-
-// kad
-    /**
-     * \brief class to send work to workers in the form of an object i.e. a message
-     * convention : attributes are denoted with a trailing underscore
-     *
-     */
-
-
-//kad
-
 
 
 template <class T>
@@ -54,6 +42,16 @@ const double epsilon = 1e-6; // 1./100001.
 class Solver : public WeightedCSPSolver {
 public:
     class OpenNode {
+    private:
+                   friend class boost::serialization::access;
+
+                   template<class Archive>
+                   void serialize(Archive & ar, const unsigned int version)
+                   {
+                       ar & cost;  // node lower bound
+                       ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
+                       ar & last;  // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
+                   }
         Cost cost; // global lower bound associated to the open node
     public:
         ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -72,6 +70,15 @@ public:
 
     class CPStore;
     class OpenList FINAL : public priority_queue<OpenNode> {
+    private:
+                       friend class boost::serialization::access;
+
+                       template<class Archive>
+                       void serialize(Archive & ar, const unsigned int version)
+                       {
+                           ar & clb;
+                           ar & cub;
+                       }
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
         Cost cub; // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:
@@ -154,6 +161,11 @@ public:
     };
 
     //kad
+    /**
+     * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
+     * convention : attributes are denoted with a trailing underscore
+     *
+     */
     class Work
             {
             private:
@@ -162,24 +174,27 @@ public:
                 template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
-                	ar & sender_;
-                    ar & ub_;  // attribute
-                    ar & nlb_; // nu.lb
-                    ar & vec_;
+                	ar & sender;
+                    ar & ub;  // attribute
+                    ar & nlb; // nu.lb
+                    ar & vec;
+                  //  ar & open; // pq which will contain the node(s) to send to other processes
                 }
 
             public: // not a thing to do but here it is for simplicity
-                int sender_; // rank of the process that send the msg
-                Cost ub_; // current best solution ub when the master gives the work
-                Cost nlb_; // lower bound of the node object popped by the master
-                vector<ChoicePoint> vec_;
-                Work(Cost ub, Cost lb) :
-                    ub_(ub), nlb_(lb)
-                {};
-                Work(){};
+                int sender; // rank of the process that send the msg
+                Cost ub; // current best solution ub when the master gives the work
 
-                void populate(const CPStore &cp, const OpenNode &nd,
-                		const Cost lb, const Cost ub, const int sender);
+                Cost nlb; // lower bound of the node object popped by the master
+                vector<ChoicePoint> vec;
+                //OpenList open;
+              //  Work(Cost lb_,Cost ub_) :
+                //	 nlb(lb_), ub(ub_)
+                //{};
+               // Work(){};
+
+                void populate(const CPStore &cp_, const OpenNode &nd_,
+                		const Cost lb_, const Cost ub_, const int sender_);
             };
 
         /**

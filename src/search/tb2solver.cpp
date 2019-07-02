@@ -1727,12 +1727,12 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 }
 
 //kad
-void Solver::Work::populate(const CPStore &cp, const OpenNode &nd, const Cost lb, const Cost ub, const int sender){
-	ub_ = ub;
-	nlb_ = lb;// nd.getCost();
-	sender_ = sender;
-	for(ptrdiff_t i = nd.last-1; i>=nd.first; i--)
-		vec_.push_back(cp[i]);
+void Solver::Work::populate(const CPStore &cp, const OpenNode &nd_, const Cost lb_, const Cost ub_, const int sender_){
+	ub = ub_;
+	nlb = lb_;// nd.getCost();
+	sender = sender_;
+	for(ptrdiff_t i = nd_.last-1; i>=nd_.first; i--)
+		vec.push_back(cp[i]);
 }
 
 
@@ -1745,15 +1745,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	mpi::communicator world;
 
 	// TODO : write a method     vector<ChoicePoint>  toto(cp_, fist, last)
-		// TODO  : write a method to create object serialized with attrib , ub, nbl, vector of vector of ChoicePoint
-		// which will be usable by both the master and the workers
+	// TODO  : write a method to create object serialized with attrib , ub, nbl, vector of vector of ChoicePoint
+	// which will be usable by both the master and the workers
 
 		if (world.rank() == 0) {
 			OpenNode nd(99,0,10);
 			cp = new CPStore();
 
-         for(ptrdiff_t i = 0; i<(nd.last+10); i++)
+         for(ptrdiff_t i = 0; i<(nd.last+10); i++){
         	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
+         }
 		 Work work;
 		 work.populate(*cp, nd, 18,19,0);
 		 cout<< "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "<<endl;
@@ -1765,9 +1766,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		world.recv(mpi::any_source,0, work);
 		 cout << "I am worker # "<< world.rank()
 				 << " and I receive vector of cp, lb,ub from process "
-				 << work.sender_ << " and I print UB = " << work.ub_
-				 << " nlb ="<< work.nlb_ <<endl;
-		 cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec_[9].varIndex <<endl;
+				 << work.sender << " and I print UB = " << work.ub
+				 << " nlb ="<< work.nlb <<endl;
+		 cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec[9].varIndex <<endl;
 
 		 }
 
@@ -1990,13 +1991,13 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	assert(clb < cub);
 	assert(wcsp->getUb() == cub);
 	assert(wcsp->getLb() <= clb);
-
+/*
 	if (world.rank() == 0) {
 
-		Work work(20, 2);
-		//	work.vec_.push_back(90);work.vec_.push_back(91);work.vec_.push_back(92);
+		Work work(2, 20);
+		//	work.vec.push_back(90);work.vec.push_back(91);work.vec.push_back(92);
 		ChoicePoint my_cp(CP_REMOVE, 11, 25, false);
-		work.vec_.push_back(my_cp);
+		work.vec.push_back(my_cp);
 		cout << "I am the master and I send UB and a node to my workers. "
 				<< endl;
 		for (int proc = 1; proc < world.size(); ++proc)
@@ -2010,14 +2011,14 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 		// string msg;
 		world.recv(0, 0, work);
 		cout << "I am worker # " << world.rank()
-				<< " and I receive UB + one node and I print UB = " << work.ub_
+				<< " and I receive UB + one node and I print UB = " << work.ub
 				<< endl;
 		cout << "I am worker # " << world.rank() << " and index of var = "
-				<< work.vec_[0].varIndex << endl;
+				<< work.vec[0].varIndex << endl;
 
 		// world.send(0, 1, string("world"));
 	}
-
+*/
 //	if (ToulBar2::hbfs) { // default value hbfs=1 so we enter in this if
 	//i.e. we do not perform a pure DFS search. maybe this if can be suppressed
 
