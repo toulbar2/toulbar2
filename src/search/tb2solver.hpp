@@ -14,6 +14,7 @@
 #include <boost/serialization/string.hpp>
 #include <boost/mpi/datatype.hpp> // for optimization during send of objects
 #include <boost/serialization/vector.hpp>
+
 /*
 #include <boost/serialization/queue.hpp>
 #include <boost/serialization/priority_queue.hpp>
@@ -153,7 +154,7 @@ public:
     };
 
     //kad
-    class MasterToWorker
+    class Work
             {
             private:
                 friend class boost::serialization::access;
@@ -161,20 +162,24 @@ public:
                 template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                	ar & sender_;
                     ar & ub_;  // attribute
                     ar & nlb_; // nu.lb
                     ar & vec_;
                 }
 
             public: // not a thing to do but here it is for simplicity
+                int sender_; // rank of the process that send the msg
                 Cost ub_; // current best solution ub when the master gives the work
                 Cost nlb_; // lower bound of the node object popped by the master
                 vector<ChoicePoint> vec_;
-               // MasterToWorker();
-                MasterToWorker(Cost ub, Cost lb) :
+                Work(Cost ub, Cost lb) :
                     ub_(ub), nlb_(lb)
-                {}
-                MasterToWorker(){};
+                {};
+                Work(){};
+
+                void populate(const CPStore &cp, const OpenNode &nd,
+                		const Cost lb, const Cost ub, const int sender);
             };
 
         /**

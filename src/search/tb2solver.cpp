@@ -1727,6 +1727,15 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 }
 
 //kad
+void Solver::Work::populate(const CPStore &cp, const OpenNode &nd, const Cost lb, const Cost ub, const int sender){
+	ub_ = ub;
+	nlb_ = lb;// nd.getCost();
+	sender_ = sender;
+	for(ptrdiff_t i = nd.last-1; i>=nd.first; i--)
+		vec_.push_back(cp[i]);
+}
+
+
 // version without clusters
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
@@ -1738,33 +1747,37 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	// TODO : write a method     vector<ChoicePoint>  toto(cp_, fist, last)
 		// TODO  : write a method to create object serialized with attrib , ub, nbl, vector of vector of ChoicePoint
 		// which will be usable by both the master and the workers
-/*
-		if (world.rank() == 0) {
 
-		 MasterToWorker work(20, 2);
-		 ChoicePoint my_cp(CP_REMOVE, 11, 25, false);
-		 work.vec_.push_back(my_cp);
-		 cout<< "I am the master and I send UB and a node to my workers. "<<endl;
+		if (world.rank() == 0) {
+			OpenNode nd(99,0,10);
+			cp = new CPStore();
+
+         for(ptrdiff_t i = 0; i<(nd.last+10); i++)
+        	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
+		 Work work;
+		 work.populate(*cp, nd, 18,19,0);
+		 cout<< "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "<<endl;
 		 for (int proc = 1; proc < world.size(); ++proc)
-		 world.send(proc, 0, work);
-		 //    std::string msg;
-		 //    world.recv(1, 1, msg);
-		 //  cout << msg << "!" << std::endl;
+			 world.send(proc, 0, work);
 		 } else {
 
-		 MasterToWorker work;
-		 world.recv(0, 0, work);
-		 cout << "I am worker # "<< world.rank() << " and I receive UB + one node and I print UB = " << work.ub_ <<endl;
-		 cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec_[0].varIndex <<endl;
+		 Work work;
+		world.recv(mpi::any_source,0, work);
+		 cout << "I am worker # "<< world.rank()
+				 << " and I receive vector of cp, lb,ub from process "
+				 << work.sender_ << " and I print UB = " << work.ub_
+				 << " nlb ="<< work.nlb_ <<endl;
+		 cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec_[9].varIndex <<endl;
 
 		 }
 
-*/
+
 
 
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
-		//creation of global open_ and cp_ (global as it is managed by the master)
+
+		//creation of global open_ and cp_ (here global means it is managed by the master)
 		//  I do the following while (clb < cub) and (open_ not empty) and (idle.size() <=  world.rank()-2) (i.e. while at least one worker is still working)
 			// tant que clb<cub et qu'il reste du taf et
 
@@ -1774,7 +1787,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// I create an object "work" of type MasterToWorker initialized with wcsp->getUb(), nd.getLb() and the vector of CP
 		//I pop the queue idle to get the rank of an idle worker
 		//I send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
-		// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not. in receive phase the is necessary to push it in idle
+		// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
+		//however, in receive phase, the rank is necessary to push it in idle queue
 		//end while(idle not empty ...)   // end of loop to distribute jobs to workers
 		// I receive from the worker j : UB, the vectors of choice points and all informations concerning
 		// if I receive from worker j a no solution message, e.g. tag=1, I push j in idle
@@ -1819,8 +1833,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 						(ToulBar2::hbfs > 0) ?
 								(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
 				int storedepthBFS = Store::getDepth();
-				//try {
-					Store::store();
+				try {
+					Store::store();  // copy of the current state
 					OpenNode nd = open_->top();
 					open_->pop();
 
@@ -1830,11 +1844,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 					recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
 
-/*
+
 				} catch (Contradiction) {
 					wcsp->whenContradiction();
 				}
-*/
+
 				cub = wcsp->getUb();
 				open_->updateUb(cub);
 				Store::restore(storedepthBFS);
@@ -1979,7 +1993,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 
 	if (world.rank() == 0) {
 
-		MasterToWorker work(20, 2);
+		Work work(20, 2);
 		//	work.vec_.push_back(90);work.vec_.push_back(91);work.vec_.push_back(92);
 		ChoicePoint my_cp(CP_REMOVE, 11, 25, false);
 		work.vec_.push_back(my_cp);
@@ -1992,7 +2006,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 		//  cout << msg << "!" << std::endl;
 	} else {
 
-		MasterToWorker work;
+		Work work;
 		// string msg;
 		world.recv(0, 0, work);
 		cout << "I am worker # " << world.rank()
