@@ -1922,6 +1922,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 }  // end of hybridSolvePara(...)
 
+
+// not used just for temporary backup
 pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
@@ -1929,7 +1931,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
 	mpi::communicator world;
 
-	/*// example unsing openMPI directly with its C interface instead of boost c++ mpi interface.
+	/*// example using openMPI directly with its C interface instead of boost c++ mpi interface.
 	 int processNb, processId;
 	 MPI_Init(NULL,NULL);
 	 MPI_Comm_size(MPI_COMM_WORLD, &processNb);
