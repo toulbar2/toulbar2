@@ -45,6 +45,7 @@
 	<li><a href="#queen">Weighted n-queen problem</a></li>
 	<li><a href="#latin">Weighted latin square problem</a></li>
 	<li><a href="#rlfap">Radio link frequency assignment problem</a></li>
+	<li><a href="#mendel">Mendelian error detection problem</a></li>
   </ul>
 
 <h2 id="queen">Weighted n-queen problem</h2>
@@ -349,6 +350,73 @@ if __name__ == '__main__':
 </code></pre>
 </figure>
 
-<p id="footer"><br/><br/>Last modification : June 24, 2019</p>
+
+<h2></h2>
+<h2 id="mendel">Mendelian error detection problem</h2>
+<h5>Brief description</h5>
+<p>The problem is to detect marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees. The input is a pedigree data with partial observed genotyping data at a single locus. The problem is to assign genotypes (unordered pairs of alleles) to all individuals such that they are compatible with the Mendelian law of heredity and with the maximum number of genotyping data.
+<a href="https://doi.org/10.1007/s10601-007-9029-5">Sanchez, M., de Givry, S. and Schiex, T. Constraints (2008) 13:130.</a>
+</p>
+<h5>CFN model</h5>
+<p>We create N variables for every individual genotype with domain being all possible unordered pairs of existing alleles. Hard ternary cost functions express mendelian law of heredity. Unary cost functions are used to model potential genotyping errors. </p>
+<h5>Data</h5>
+<p>Original data files can be download from the cost function library <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/real/pedigree/data/pre">pedigree</a>. Their format is described <a href="http://www.inra.fr/mia/T/MendelSoft">here</a>. You can try a small example simple.pre (<a href="TUTORIALS/simple.pre">simple.pre</a>) with optimum value equal to 1.
+</p>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 mendel.py simple.pre").</p>
+<figure><figcaption><a href="TUTORIALS/mendel.py">mendel.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+class Data:
+    def __init__(self, ped):
+        self.id = list()
+        self.father = {}
+        self.mother = {}
+        self.alleles = {}
+        self.freq = {}
+        self.obs = 0
+
+        stream = open(ped)
+        for line in stream:
+            (locus, id, father, mother, sex, allele1, allele2) = line.split()[:]
+            self.id.append(int(id))
+            self.father[int(id)] = int(father)
+            self.mother[int(id)] = int(mother)
+            self.alleles[int(id)] = (int(allele1), int(allele2)) if int(allele1) < int(allele2) else (int(allele2), int(allele1))
+            if int(allele1) != 0: self.freq[int(allele1)] = self.freq.get(int(allele1), 0) + 1
+            if int(allele2) != 0: self.freq[int(allele2)] = self.freq.get(int(allele2), 0) + 1
+            if int(allele1) != 0 or int(allele2) != 0: self.obs += 1
+
+def model(data, k):
+    Var = {g: "g" + str(g) for g in data.id}
+    Domain = ["a" + str(a1) + "a" + str(a2)  for a1 in data.freq for a2 in data.freq if a1 <= a2]
+    Mendel = {
+        "name": "Mendel",
+        "variables": [(Var[g], Domain) for g in data.id],
+        "functions":
+            [# mendelian law of heredity
+             [{"scope": [Var[data.father[g]], Var[data.mother[g]], Var[g]],
+               "costs": [0 if (a1 in (p1,p2) and a2 in (m1,m2)) or (a2 in (p1,p2) and a1 in (m1,m2)) else k
+                         for p1 in data.freq for p2 in data.freq
+                         for m1 in data.freq for m2 in data.freq
+                         for a1 in data.freq for a2 in data.freq if p1 <= p2 and m1 <= m2 and a1 <= a2]}
+              for g in data.id if data.father.get(g, 0) != 0 and data.mother.get(g, 0) != 0],
+             # observation costs
+             [{"scope": [Var[g]],
+               "costs": [0 if (a1,a2) == data.alleles[g] else 1 for a1 in data.freq for a2 in data.freq if a1 <= a2]}
+              for g in data.id if data.alleles[g][0] != 0 and data.alleles[g][1] != 0]
+            ]
+    }
+    return Mendel
+
+if __name__ == '__main__':
+    # read parameters
+    if len(sys.argv) < 2: exit('Command line arguments are PEDFILE filename: simple.pre')
+    data = Data(sys.argv[1])
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(data, data.obs + 1), True, data.obs + 1)
+</code></pre>
+</figure>
+
+<p id="footer"><br/><br/>Last modification : July 3, 2019</p>
 </body>
 </html>
