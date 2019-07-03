@@ -175,27 +175,62 @@ public:
                 template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
-                	ar & sender;
+                    ar & node;
                     ar & ub;  // attribute
-                    ar & node; //
                     ar & vec;
+                	ar & sender;
+                    ar & subProblemId;
                   //  ar & open; // pq which will contain the node(s) to send to other processes
                 }
 
-            public: // not a thing to do but here it is for simplicity
+            public: // public attributes not a thing to do but here it is for simplicity
                 OpenNode node;
                 Cost ub; // current best solution ub when the master gives the work
                 int sender; // rank of the process that send the msg
+                Long subProblemId;
                 vector<ChoicePoint> vec;
 
-                Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_):
-                node(node_), ub(ub_), sender(sender_)
+                Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_):
+                node(node_), ub(ub_), sender(sender_),subProblemId(subProblemId_)
                 {
                 	for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
                 		vec.push_back(cp[i]);
                 }
                 Work(){}
             };
+
+    class Work2
+                {
+                private:
+                    friend class boost::serialization::access;
+
+                    template<class Archive>
+                    void serialize(Archive & ar, const unsigned int version)
+                    {
+                        ar & node;
+                        ar & ub;  // attribute
+                        ar & vec;
+                    	ar & sender;
+                        ar & subProblemId;
+                      //  ar & open; // pq which will contain the node(s) to send to other processes
+                    }
+
+                public: // public attributes not a thing to do but here it is for simplicity
+                    OpenNode node;
+                    Cost ub; // current best solution ub when the master gives the work
+                    int sender; // rank of the process that send the msg
+                    Long subProblemId;
+                    vector<ChoicePoint> vec;
+
+                    Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_):
+                    node(node_), ub(ub_), sender(sender_),subProblemId(subProblemId_)
+                    {
+                    	for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+                    		vec.push_back(cp[i]);
+                    }
+                    Work2(){}
+                };
+
 
         /**
          * To optimize when it is a class of plain old objects POD : int, long, ...
