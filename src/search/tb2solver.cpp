@@ -1738,9 +1738,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
 	mpi::communicator world;
 
-	// TODO : write a method     vector<ChoicePoint>  toto(cp_, fist, last)
-	// TODO  : write a method to create object serialized with attrib , ub, nbl, vector of vector of ChoicePoint
-	// which will be usable by both the master and the workers
+// tests
 
 		if (world.rank() == 0) {
 			OpenNode nd(99,0,10);
@@ -1766,21 +1764,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		 }
 
-
+// end tests
 
 
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
+		// INITIALIZATIONS
+		queue<int> idleQ;
+		for (int i =1; i< world.size();i++)
+			idleQ.push(i);
 
-		//creation of global open_ and cp_ (here global means it is managed by the master)
+
+		//creation of master's open_ and cp_
 		//  I do the following while (clb < cub) and (open_ not empty) and (idle.size() <=  world.rank()-2) (i.e. while at least one worker is still working)
 			// tant que clb<cub et qu'il reste du taf et
 
-		// while (idle not empty and open_ not empty)  // loop to distribute jobs to workers
+		// while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 		// I pop a node nd in open_  // ok because open_ is not empty here
-		// I create a vector of choice points(CP) from CPStore using nd.first and nd.last
-		// I create an object "work" of type MasterToWorker initialized with wcsp->getUb(), nd.getLb() and the vector of CP
-		//I pop the queue idle to get the rank of an idle worker
+		// I create the "work" to do and info to send : I create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+		//I pop the queue idleQ to get the rank of an idle worker
 		//I send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
 		// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
 		//however, in receive phase, the rank is necessary to push it in idle queue
@@ -1821,7 +1823,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		open_->updateUb(cub);
 		clb = MAX(clb, open_->getLb());
-		// idle is a queue with idle workers, initialized with the rank of the workers 1 2 .... world.size()-1
+
 			while (clb < cub && !open_->finished() ) {
 
 				hbfsLimit = (
