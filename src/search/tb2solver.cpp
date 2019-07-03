@@ -1807,19 +1807,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		open_->updateUb(cub);
 		clb = MAX(clb, open_->getLb());
-
-		//  I do the following while (clb < cub) and (open_ not empty) and (idle.size() <=  world.rank()-2) (i.e. while at least one worker is still working for the master)
-		//  here we could have implemented a a map<pair<int,int>, OpenNode> distributedWork with pair =(worker,j), worker : rank of the worker, j : job or work given to i
-		// and use !distributedWork().empty() in the while condition
-
 		Long subProblemId = 0;
-		#include <map>
+
+#include <map>
 		map<pair<int, Long>, OpenNode> givenWork;
 
 		while (clb < cub && !open_->finished() && !givenWork.empty()) {
 
-			// while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
-			while (!open_->finished() && !idleQ.empty()) {
+
+			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
+			{
 
 				// I pop a node nd in open_  // ok because open_ is not empty here
 				Store::store();  // copy of the current state
@@ -1841,26 +1838,32 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			}// end while( !open_->finished() && !idleQ.empty()) // end of loop to distribute jobs to workers
 
-			// I receive from the worker j : UB, the vectors of choice points, nodes and all other informations
-			// add nodes to open_
-			// update CPStore the vector of choice points
-
+			// I receive from the worker i an object with UB, the vectors of choice points, nodes
+			// created by DFS and all other informations.
 			Work2 work2;
 			world.recv(mpi::any_source, 0, work2);
-			// if I receive from worker i a no solution message, e.g. tag=1, I push i in idle
-			// the open nodes created by DFS.
+
+			// TODO : case no node to return
+			// TODO : case where DFS does not improve UB
+			// TODO : for each node update cp_ the vector of choice points of the master
+			// TODO : push nodes in open_
+
+			// with these info, I update UB (if < currentUB) and
+			if (wcsp->getUb() > work2.ub)
+				wcsp->setUb(work2.ub);
+
 			// I push i in queue idleQ
 			idleQ.push(work2.sender);
-			// with these info I update UB (if < currentUB) and
-            if (wcsp->getUb() > work2.ub)
-            	wcsp->setUb(work2.ub);
-			// for each node update cp_ the vector of choice points of the master
-            //  push nodes in open_
+			try {
+				givenWork.erase(make_pair(work2.sender, work2.subProblemId));
+			} catch (exception &e) {
+				cerr << "exception caught: " << e.what() << '\n';
+			}
 
-			// end while loop
-			// I return the pair CLB + solution CUB
+		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
-		} // end while (clb < cub && !open_->finished() && idle.size() <= master -2)
+
+		// the master output the results
 
 		hbfsLimit = (
 				(ToulBar2::hbfs > 0) ?
@@ -1908,9 +1911,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 		}
 
-		//return make_pair(clb, cub); // the master is responsible for outputting the results
 
-	} else {  // end master code, beginning of code executed by workers
+
+	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
 		// I create a local cp_ and open_ pqueue
@@ -1948,7 +1951,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 */
 	} // fin rank > 0
 
-	return make_pair(clb, cub); // the master is responsible for outputting the results
+	return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)
 
