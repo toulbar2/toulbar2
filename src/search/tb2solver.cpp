@@ -1727,13 +1727,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 }
 
 //kad
-void Solver::Work::populate(const CPStore &cp, const OpenNode &nd_, const Cost lb_, const Cost ub_, const int sender_){
-	ub = ub_;
-	nlb = lb_;// nd.getCost();
-	sender = sender_;
-	for(ptrdiff_t i = nd_.last-1; i>=nd_.first; i--)
-		vec.push_back(cp[i]);
-}
+
 
 
 // version without clusters
@@ -1755,8 +1749,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
          for(ptrdiff_t i = 0; i<(nd.last+10); i++){
         	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
          }
-		 Work work;
-		 work.populate(*cp, nd, 18,19,0);
+		 Work work(*cp, nd,19,0);
+
 		 cout<< "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "<<endl;
 		 for (int proc = 1; proc < world.size(); ++proc)
 			 world.send(proc, 0, work);
@@ -1767,7 +1761,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 cout << "I am worker # "<< world.rank()
 				 << " and I receive vector of cp, lb,ub from process "
 				 << work.sender << " and I print UB = " << work.ub
-				 << " nlb ="<< work.nlb <<endl;
+				 << " node lower bound ="<< work.node.getCost() <<endl;
 		 cout << "I am worker # "<< world.rank() << " and index of var = " << work.vec[9].varIndex <<endl;
 
 		 }

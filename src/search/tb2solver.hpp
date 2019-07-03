@@ -63,6 +63,7 @@ public:
             , last(last_)
         {
         }
+        OpenNode(){}
         bool operator<(const OpenNode& right) const { return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last))); } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const { return MAX(MIN_COST, cost - delta); }
@@ -176,25 +177,24 @@ public:
                 {
                 	ar & sender;
                     ar & ub;  // attribute
-                    ar & nlb; // nu.lb
+                    ar & node; //
                     ar & vec;
                   //  ar & open; // pq which will contain the node(s) to send to other processes
                 }
 
             public: // not a thing to do but here it is for simplicity
-                int sender; // rank of the process that send the msg
+                OpenNode node;
                 Cost ub; // current best solution ub when the master gives the work
-
-                Cost nlb; // lower bound of the node object popped by the master
+                int sender; // rank of the process that send the msg
                 vector<ChoicePoint> vec;
-                //OpenList open;
-              //  Work(Cost lb_,Cost ub_) :
-                //	 nlb(lb_), ub(ub_)
-                //{};
-               // Work(){};
 
-                void populate(const CPStore &cp_, const OpenNode &nd_,
-                		const Cost lb_, const Cost ub_, const int sender_);
+                Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_):
+                node(node_), ub(ub_), sender(sender_)
+                {
+                	for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+                		vec.push_back(cp[i]);
+                }
+                Work(){}
             };
 
         /**
