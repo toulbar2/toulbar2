@@ -1765,28 +1765,77 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 }
 
 // end tests
+	    size_t nbWorkers = world.size()-1;
+		if (nbWorkers <= 0) {
+			cout << "No workers availables. try to toulbar2 in sequential mode." << endl;
+		}
 
 
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
+
+
 		queue<int> idleQ;
-		for (int i =1; i< world.size();i++)
+		for (size_t i =1; i<= nbWorkers;i++)
 			idleQ.push(i);
 
 
+
 		//creation of master's open_ and cp_
+
+		CPStore *cp_ = NULL; // vector of choice points
+		OpenList *open_ = NULL; // priority queue of nodes
+		if (cp != NULL)
+				delete cp;
+			cp = new CPStore();
+			cp_ = cp;
+			if (open != NULL)
+				delete open;
+			open = new OpenList();
+			open_ = open;
+
+			cp_->store();
+
+			if (open_->size() == 0) { // start a new list of open nodes if needed
+				nbHybridNew++;
+				// reinitialize current open list and insert empty node
+				*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
+				addOpenNode(*cp_, *open_, clb);
+			} else {
+				nbHybridContinue++;
+			}
+			nbHybrid++; // do not count empty root cluster
+
+			open_->updateUb(cub);
+			clb = MAX(clb, open_->getLb());
+
 		//  I do the following while (clb < cub) and (open_ not empty) and (idle.size() <=  world.rank()-2) (i.e. while at least one worker is still working)
 			// tant que clb<cub et qu'il reste du taf et
 
+			while (clb < cub && !open_->finished() && idleQ.size() <= nbWorkers - 1) {
+
 		// while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
-		// I pop a node nd in open_  // ok because open_ is not empty here
-		// I create the "work" to do and info to send : I create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
-		//I pop the queue idleQ to get the rank of an idle worker
-		//I send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
-		// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
-		//however, in receive phase, the rank is necessary to push it in idle queue
-		//end while(idle not empty ...)   // end of loop to distribute jobs to workers
+				while( !open_->finished() && !idleQ.empty())  {
+
+					// I pop a node nd in open_  // ok because open_ is not empty here
+					Store::store();  // copy of the current state
+					OpenNode nd = open_->top();
+					open_->pop();
+
+					// I create the "work" to do and info to send : I create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+					Work work(*cp, nd, wcsp->getUb(),0);
+					//I pop the queue idleQ to get the rank of an idle worker
+					int worker = idleQ.front();
+					idleQ.pop();
+					//I send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
+					world.isend(worker, 0, work);
+							// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
+							//however, in receive phase, the rank is necessary to push it in idle queue and send new work
+
+				}// end while( !open_->finished() && !idleQ.empty()) // end of loop to distribute jobs to workers
+
+
 		// I receive from the worker j : UB, the vectors of choice points and all informations concerning
 		// if I receive from worker j a no solution message, e.g. tag=1, I push j in idle
 		// the open nodes created by DFS.
@@ -1794,37 +1843,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// with these info I update UB (if < currentUB) and recreate nodes, push them in open_
 		// I update CPStore: the vector of choice points
 		// end while loop
-
 		// I return the pair CLB + solution CUB
-		CPStore *cp_ = NULL; // vector of choice points
-		OpenList *open_ = NULL; // priority queue of nodes
 
-		// normal BFS without BTD, i.e., hybridSolve is not reentrant
-		if (cp != NULL)
-			delete cp;
-		cp = new CPStore();
-		cp_ = cp;
-		if (open != NULL)
-			delete open;
-		open = new OpenList();
-		open_ = open;
 
-		cp_->store();
 
-		if (open_->size() == 0) { // start a new list of open nodes if needed
-			nbHybridNew++;
-			// reinitialize current open list and insert empty node
-			*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp_, *open_, clb);
-		} else {
-			nbHybridContinue++;
-		}
-		nbHybrid++; // do not count empty root cluster
 
-		open_->updateUb(cub);
-		clb = MAX(clb, open_->getLb());
 
-			while (clb < cub && !open_->finished() ) {
+			} // end while (clb < cub && !open_->finished() && idle.size() <= master -2)
+
 
 				hbfsLimit = (
 						(ToulBar2::hbfs > 0) ?
@@ -1859,7 +1885,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					hbfsLimit = LONGLONG_MAX;
 				}
 
-				clb = MAX(clb, open_->getLb()); // max de
+				clb = MAX(clb, open_->getLb());
 				showGap(clb, cub);
 				if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 					assert(nbNodes > 0);
@@ -1872,7 +1898,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					if (ToulBar2::debug >= 2)
 						cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 				}
-			} // end while (clb < cub && !open_->finished())
+
 
 			//return make_pair(clb, cub); // the master is responsible for outputting the results
 
