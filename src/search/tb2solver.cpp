@@ -1766,9 +1766,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 // end tests
 	    size_t nbWorkers = world.size()-1;
-		if (nbWorkers <= 0) {
-			cout << "No workers availables. try to toulbar2 in sequential mode." << endl;
-		}
+		if (nbWorkers <= 0)
+			cout << "No workers available. try toulbar2 in sequential mode." << endl;
+
 
 
 	if (world.rank() == 0) {
@@ -1844,10 +1844,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// I update CPStore: the vector of choice points
 		// end while loop
 		// I return the pair CLB + solution CUB
-
-
-
-
 
 			} // end while (clb < cub && !open_->finished() && idle.size() <= master -2)
 
