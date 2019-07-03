@@ -1814,7 +1814,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		while (clb < cub && !open_->finished() && !givenWork.empty()) {
 
-
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
@@ -1860,8 +1859,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				cerr << "exception caught: " << e.what() << '\n';
 			}
 
-		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
+			// TODO : tackle the case where workers become unavailable
+			// they don't return ub and nodes: map givenWork will never be empty
+			// => infinite while loop.
+			// world.size() might change during the computation
+			// if workers are added, there might be no problem
+			// they are automatically taken into account except maybe if there is a renaming
+			// and with MPI it is mpirun that attribute the rank to workers
+			// behavior different from PVM (Parallel Virtual Machine), a predecessor of MPI
 
+		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
 		// the master output the results
 
@@ -1911,16 +1918,23 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 		}
 
-
-
 	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
 		// I create a local cp_ and open_ pqueue
+
 		// I receive (in blocking mode) the work object from the master
+		Work work;
+		world.recv(0, 0/*mpi::any_tag*/, work);
 		// I set local UB with the received UB
-		// I recreate a local cp_ with the vector of CPs and the node nd
-		// I restore the node:  restore(*cp_, nd);
+		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
+		wcsp->setUb(incomingUB);
+		//CPStore cpw = new CPStore();
+		//OpenNode nd = new OpenNode();
+
+		// I recreate a local cp_ with the vector of CPs
+
+		//restore(*cp_, work.node);
 		// I compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
 		// I do the DFS: recursiveSolve(bestlb);
 		// I "manage" the adaptative backtrack limit Z (possible issue : if Z too small, the communication overhead might be overwhelming.
@@ -1949,7 +1963,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 world.recv(0, 0, work);
 
 		 */
-	} // fin rank > 0
+	} // fin rank > 0 workers
 
 	return make_pair(clb, cub);
 
