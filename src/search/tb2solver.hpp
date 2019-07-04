@@ -170,49 +170,59 @@ public:
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
 	 *
 	 */
+	class CPStore;
 	class Work
-			{
-			private:
-				friend class boost::serialization::access;
+	{
+	private:
+		friend class boost::serialization::access;
 
-				template<class Archive>
-				void serialize(Archive & ar, const unsigned int version)
-				{
-					ar & node;
-					ar & ub;  // attribute
-					ar & vec;
-					ar & sender;
-					ar & subProblemId;
-					//  ar & open; // pq which will contain the node(s) to send to other processes
-				}
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int version)
+		{
+			ar & node;
+			ar & ub;  // attribute
+			ar & vec;
+			ar & sender;
+			//ar & subProblemId;
+			//  ar & open; // pq which will contain the node(s) to send to other processes
+		}
 
-			public: // public attributes not a thing to do but here it is for simplicity
-				OpenNode node;
-				Cost ub;// current best solution ub when the master gives the work
-				int sender;// rank of the process that send the msg
-				Long subProblemId;
-				vector<ChoicePoint> vec;
-				//CPStore vec; //error: le champ « vec » a le type incomplet « Solver::CPStore »
-				//
-				Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
-								: node(node_)
-								, ub(ub_)
-								, sender(sender_)
-								{
-									for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-									vec.push_back(cp[i]);
-								}
-				Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
-				: node(node_)
-				, ub(ub_)
-				, sender(sender_)
-				, subProblemId(subProblemId_)
-				{
-					for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-					vec.push_back(cp[i]);
-				}
-				Work(){}
-			};
+	public: // public attributes not a thing to do but here it is a class used as MPI message
+		OpenNode node;
+		Cost ub;// current best solution ub when the master gives the work
+		int sender;// rank of the process that send the msg
+		Long subProblemId;
+		vector<ChoicePoint> vec;
+		//CPStore vec; //error: le champ « vec » a le type incomplet « Solver::CPStore »
+		//
+		Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
+		: node(node_)
+		, ub(ub_)
+		, sender(sender_)
+		{
+			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+			vec.push_back(cp[i]);
+		}
+		// this ctr will not be used if the id of the subproblems is not used. to delete when cleaning the code
+		/*	Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
+		 : node(node_)
+		 , ub(ub_)
+		 , sender(sender_)
+		 , subProblemId(subProblemId_)
+		 {
+		 for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+		 vec.push_back(cp[i]);
+		 }*/
+
+		void vector2CPStore(CPStore * cp)
+		{
+			for(size_t i = 0; i<=vec.size()-1; i++)
+				cp->push_back(vec[i]);
+		}
+
+		Work() {}
+
+	};
 
 	class Work2
 	{
@@ -226,7 +236,7 @@ public:
 			ar & ub;  // attribute
 			ar & vec;
 			ar & sender;
-			ar & subProblemId;
+			//ar & subProblemId;
 			//  ar & open; // pq which will contain the node(s) to send to other processes
 		}
 
@@ -237,13 +247,13 @@ public:
 		Long subProblemId;
 		vector<ChoicePoint> vec;
 		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
-										: node(node_)
-										, ub(ub_)
-										, sender(sender_)
-										{
-											for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-											vec.push_back(cp[i]);
-										}
+		: node(node_)
+		, ub(ub_)
+		, sender(sender_)
+		{
+			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+			vec.push_back(cp[i]);
+		}
 		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_):
 		node(node_), ub(ub_), sender(sender_),subProblemId(subProblemId_)
 		{
@@ -259,19 +269,21 @@ public:
 	 */
 	//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
 	//kad
-
 	class CPStore FINAL : public vector<ChoicePoint> {
-		/* private:
+		/*//kad
+		 private:
 		 friend class boost::serialization::access;
 
 		 template<class Archive>
 		 void serialize(Archive & ar, const unsigned int version)
 		 {
-			 ar & boost::serialization::base_object<vector>(*this);
+		 ar & boost::serialization::base_object<vector>(*this);
 		 ar & start;
 		 ar & stop;  // attribute
 		 ar & index;
-		 }*/
+		 }
+		 //kad
+		 */
 	public:
 		ptrdiff_t start; // beginning of the current branch
 		ptrdiff_t stop;// deepest saved branch end (should be free at this position)
@@ -291,7 +303,6 @@ public:
 			index = start;
 		}
 	};
-
 
 	void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
 	void addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta = MIN_COST); ///< \param delta cost moved out from the cluster by soft arc consistency

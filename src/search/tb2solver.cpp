@@ -1629,7 +1629,9 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 					assert(res.second <= cub);
 					assert(res.second == cub || cluster->getUb() == res.second);
 					assert(
-							open_->empty() || open_->top().getCost(delta) >= nd.getCost(delta));
+							open_->empty()
+									|| open_->top().getCost(delta)
+											>= nd.getCost(delta));
 					open_->updateClosedNodesLb(res.first, delta);
 					open_->updateUb(res.second, delta);
 					cub = MIN(cub, res.second);
@@ -1739,18 +1741,19 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 	if (world.rank() == 0) {
 		OpenNode nd(99, 0, 10);
-		cp = new CPStore();
+		CPStore *cp = new CPStore();
 
 		for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
 			cp->addChoicePoint(CP_REMOVE, 36, 25, false);
 		}
-		Work work(*cp, nd, 19, 0, 1001);
-
+		//Work work(*cp, nd, 19, 0, 1001);
+		Work work(*cp, nd, 19, 0);
 		cout
 				<< "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "
 				<< endl;
 		for (int proc = 1; proc < world.size(); ++proc)
 			world.send(proc, 0, work);
+
 	} else {
 
 		Work work;
@@ -1807,15 +1810,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		clb = MAX(clb, open_->getLb());
 
 //#include <map>
-	//	map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
+		//	map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
 
-	//	Long subProblemId = 0;
-		int nbCurrentWork=0;  // number of subproblem currently being processed. number between 0 and world.size()-1
+		//	Long subProblemId = 0;
+		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
 		int worker;
 		int controle = 0; // "trick" to be sure we enter in the external while loop
 		//while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
-		while ((clb < cub && !open_->finished() && nbCurrentWork) || controle ==0 ) {
-            controle = 1;
+		while ((clb < cub && !open_->finished() && nbCurrentWork)
+				|| controle == 0) {
+			controle = 1;
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 				//   pop a node nd in open_  // ok because open_ is not empty here
@@ -1842,7 +1846,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   receive from the worker i an object with UB, the vectors of choice points, nodes
 			// created by DFS and all other informations.
 			Work2 work2;
-			world.recv(mpi::any_source, 0, work2);  // blocking recv to wait for workers' messages
+			world.recv(mpi::any_source, 0, work2); // blocking recv to wait for workers' messages
 
 			// TODO : case no node to return
 			// TODO : case where DFS does not improve UB
@@ -1856,7 +1860,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   push i in queue idleQ
 			idleQ.push(work2.sender);
 			nbCurrentWork--;
-			assert(nbCurrentWork >=0 && nbCurrentWork < world.size());
+			assert(nbCurrentWork >= 0 && nbCurrentWork < world.size());
 			//try {
 			//	givenWork.erase(make_pair(work2.sender, work2.subProblemId));
 			//} catch (exception &e) {
@@ -1870,13 +1874,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
-
 		// TODO : the master return the optimal value
 
 	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
-		// create a local cp_ and open_ pqueue
 
 		//   receive (in blocking mode) the work object from the master
 		Work work;
@@ -1884,10 +1886,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//   set local UB with the received UB
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
-		//CPStore cpw = new CPStore();
-		//OpenNode nd = new OpenNode();
-
-		//  TODO: recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 
 		//   compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
 		//   do the DFS: recursiveSolve(bestlb);
@@ -1899,75 +1897,70 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// else   send a message with tag=1 to tell the master that the worker is available
 
 		//   return the pair CLB + solution CUB
+		// create a worker's cp_ and open_ pqueue
 
-		 CPStore *cp_ = NULL; // vector of choice points
-		 OpenList *open_ = NULL; // priority queue of nodes
-
-		 if (cp != NULL)
-		 delete cp;
-		 cp = new CPStore();
-		 cp_ = cp;
-		 if (open != NULL)
-		 delete open;
-		 open = new OpenList();
-		 open_ = open;
-
-		 cp_->store();
-
-		 //world.recv(0, 0, work);
+		//  TODO: recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 
 
+		CPStore *cp_ = new CPStore(); // start = stop = index = 0
+		OpenList *open_= new OpenList();
+
+		work.vector2CPStore(cp_);
+		open_->push(work.node);
+		cp_->store(); // start = stop = index
 
 		hbfsLimit = (
-						(ToulBar2::hbfs > 0) ?
-								(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
-				int storedepthBFS = Store::getDepth();
-				try {
-					Store::store();  // copy of the current state
-					OpenNode nd = open_->top();
-					open_->pop();
+				(ToulBar2::hbfs > 0) ?
+						(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+		int storedepthBFS = Store::getDepth();
+		try {
+			Store::store();  // copy of the current state
+			OpenNode nd = open_->top();  // get a reference on the priority node
+			open_->pop();
 
-					restore(*cp_, nd);
-					Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
-					bestlb = MAX(bestlb, clb);
+			restore(*cp_, nd);
+			Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+			bestlb = MAX(bestlb, clb);
 
-					recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+			recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
 
-				} catch (Contradiction) {
-					wcsp->whenContradiction();
-				}
+		} catch (Contradiction) {
+			wcsp->whenContradiction();
+		}
 
-				cub = wcsp->getUb();
-				open_->updateUb(cub);
-				Store::restore(storedepthBFS);
-				cp_->store();
-				if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
-						|| open_->size()
-								>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-					ToulBar2::hbfs = 0;
-					ToulBar2::hbfsGlobalLimit = 0;
+		cub = wcsp->getUb();
+		open_->updateUb(cub);
+		Store::restore(storedepthBFS);
+		cp_->store();
+		if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
+				|| open_->size()
+						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+			ToulBar2::hbfs = 0;
+			ToulBar2::hbfsGlobalLimit = 0;
 
-					hbfsLimit = LONGLONG_MAX;
-				}
+			hbfsLimit = LONGLONG_MAX;
+		}
 
-				clb = MAX(clb, open_->getLb());
-				showGap(clb, cub);
-				if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-					assert(nbNodes > 0);
-					if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-							&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-						ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
-					else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
-							&& ToulBar2::hbfs >= 2)
-						ToulBar2::hbfs /= 2;
-					if (ToulBar2::debug >= 2)
-						cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
-				}
+		clb = MAX(clb, open_->getLb());
+		showGap(clb, cub);
+		if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+			assert(nbNodes > 0);
+			if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
+					&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+				ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
+			else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
+					&& ToulBar2::hbfs >= 2)
+				ToulBar2::hbfs /= 2;
+			if (ToulBar2::debug >= 2)
+				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
+		}
 	} // fin rank > 0 workers
 // TODO: this return must go in master zone
 	return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)
+
+//***********************************************************************
 
 // not used just for temporary backup
 pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
@@ -2157,7 +2150,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 			assert(nbNodes > 0);
 			if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
 					&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-				ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
+				ToulBar2::hbfs *= 2;
 			else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
 					&& ToulBar2::hbfs >= 2)
 				ToulBar2::hbfs /= 2;
@@ -3025,7 +3018,8 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost,
 	bool res = solve();
 	if (res) {
 		assert(
-				getWCSP()->getSolution().size() == getWCSP()->numberOfVariables());
+				getWCSP()->getSolution().size()
+						== getWCSP()->numberOfVariables());
 		for (unsigned int i = 0; i < getWCSP()->numberOfVariables(); i++) {
 			if (getWCSP()->getSolution()[i] == 0) {
 				sol[i] = 1;
@@ -3188,7 +3182,9 @@ void Solver::restore(CPStore &cp, OpenNode nd) {
 	for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 		assert((size_t )idx < cp.size());
 		assert(
-				!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar( cp[idx].varIndex));
+				!wcsp->getTreeDec()
+						|| wcsp->getTreeDec()->getCurrentCluster()->isVar(
+								cp[idx].varIndex));
 		if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last - 1))
 				|| (cp[idx].op == CP_REMOVE && cp[idx].reverse
 						&& idx < nd.last - 1)) {
