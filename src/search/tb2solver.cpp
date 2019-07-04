@@ -1837,7 +1837,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				//givenWork[make_pair(worker, subProblemId)] = nd;
 				//subProblemId++;
 				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
-				world.isend(worker, 0, work);
+				world.isend(worker, 0, work);   // no blocking send to workers
 				// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
 				//however, in receive phase, the rank is necessary to push it in idle queue and send new work
 
@@ -1849,9 +1849,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			world.recv(mpi::any_source, 0, work2); // blocking recv to wait for workers' messages
 
 			// TODO : case no node to return
-			// TODO : case where DFS does not improve UB
+			if(work2.open.size()!=0){
+
+				// TODO : Push nodes in open_
+			}
+
 			// TODO : for each node update cp_ the vector of choice points of the master
-			// TODO : Push nodes in open_
+			//  ????????
+
 
 			// with these info, update UB (if < currentUB) and
 			if (wcsp->getUb() > work2.ub)
@@ -1867,33 +1872,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//	cerr << "exception caught: " << e.what() << '\n';
 			//}
 
-			// TODO : tackle the case where some workers become unavailable during computation
-			// they don't return ub and nodes: the
-			//map givenWork will never be empty
-			// => infinite while loop.
 
 		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
 		// TODO : the master return the optimal value
+		// return make_pair(clb, cub);
+		cout << endl;
+		cout << "Optimum is " << wcsp->getUb()<<endl;
 
 	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
 
-		//   receive (in blocking mode) the work object from the master
+
 		Work work;
-		world.recv(0, 0/*mpi::any_tag*/, work);
+		world.recv(0, 0/*mpi::any_tag*/, work); //blocking recv from the master
 		//   set local UB with the received UB
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
 
-
-		//   restore the initial state of the Solver object
-		// if UB calculated is better   send (in blocking mode )to the master the info open nodes (fist, last in choice point vector) and best UB
-		// else   send a message with tag=1 to tell the master that the worker is available
-
-		//   return the pair CLB + solution CUB
-		// create a worker's cp_ and open_ pqueue
 
 		//  recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 		CPStore *cp_ = new CPStore(); // start = stop = index = 0
@@ -1956,12 +1953,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   create the message with UB and open nodes information from local open_ and cp_
 				int worker = world.rank();
 				Work2 work2(*cp_, *open_, wcsp->getUb(), worker);
-				world.isend(worker, 0, work);
+				world.isend(0, 0, work);  // non blocking send to master
 
+				//   TODO: restore the initial state of the Solver object
 
 		}
 	} // fin rank > 0 workers
+
 // TODO: this return must go in master zone
+
 	return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)
