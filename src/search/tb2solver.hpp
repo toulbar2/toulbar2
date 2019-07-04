@@ -18,7 +18,6 @@
 
 /*
  #include <boost/serialization/queue.hpp>
-
  #include <boost/serialization/deque.hpp>
  #include <boost/serialization/stack.hpp>
  #include <boost/serialization/list.hpp>
@@ -169,44 +168,44 @@ public:
 	//kad
 	/**
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
-	 * convention : attributes are denoted with a trailing underscore
 	 *
 	 */
 	class Work
-	{
-	private:
-		friend class boost::serialization::access;
+			{
+			private:
+				friend class boost::serialization::access;
 
-		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version)
-		{
-			ar & node;
-			ar & ub;  // attribute
-			ar & vec;
-			ar & sender;
-			ar & subProblemId;
-			//  ar & open; // pq which will contain the node(s) to send to other processes
-		}
+				template<class Archive>
+				void serialize(Archive & ar, const unsigned int version)
+				{
+					ar & node;
+					ar & ub;  // attribute
+					ar & vec;
+					ar & sender;
+					ar & subProblemId;
+					//  ar & open; // pq which will contain the node(s) to send to other processes
+				}
 
-	public: // public attributes not a thing to do but here it is for simplicity
-		OpenNode node;
-		Cost ub;// current best solution ub when the master gives the work
-		int sender;// rank of the process that send the msg
-		Long subProblemId;
-		vector<ChoicePoint> vec;
-		//CPStore vec = new CPStore();
+			public: // public attributes not a thing to do but here it is for simplicity
+				OpenNode node;
+				Cost ub;// current best solution ub when the master gives the work
+				int sender;// rank of the process that send the msg
+				Long subProblemId;
+				vector<ChoicePoint> vec;
+				//CPStore vec; //error: le champ « vec » a le type incomplet « Solver::CPStore »
+				//
 
-		Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
-		: node(node_)
-		, ub(ub_)
-		, sender(sender_)
-		, subProblemId(subProblemId_)
-		{
-			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-			vec.push_back(cp[i]);
-		}
-		Work(){}
-	};
+				Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
+				: node(node_)
+				, ub(ub_)
+				, sender(sender_)
+				, subProblemId(subProblemId_)
+				{
+					for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+					vec.push_back(cp[i]);
+				}
+				Work(){}
+			};
 
 	class Work2
 	{
@@ -246,6 +245,7 @@ public:
 	 */
 	//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
 	//kad
+
 	class CPStore FINAL : public vector<ChoicePoint> {
 		/* private:
 		 friend class boost::serialization::access;
@@ -253,6 +253,7 @@ public:
 		 template<class Archive>
 		 void serialize(Archive & ar, const unsigned int version)
 		 {
+			 ar & boost::serialization::base_object<vector>(*this);
 		 ar & start;
 		 ar & stop;  // attribute
 		 ar & index;
@@ -276,6 +277,7 @@ public:
 			index = start;
 		}
 	};
+
 
 	void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
 	void addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta = MIN_COST); ///< \param delta cost moved out from the cluster by soft arc consistency
@@ -372,7 +374,7 @@ protected:
 	pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
-	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .have to be deleted at some point
+	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .has to be deleted at some point
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);

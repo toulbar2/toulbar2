@@ -1629,9 +1629,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 					assert(res.second <= cub);
 					assert(res.second == cub || cluster->getUb() == res.second);
 					assert(
-							open_->empty()
-									|| open_->top().getCost(delta)
-											>= nd.getCost(delta));
+							open_->empty() || open_->top().getCost(delta) >= nd.getCost(delta));
 					open_->updateClosedNodesLb(res.first, delta);
 					open_->updateUb(res.second, delta);
 					cub = MIN(cub, res.second);
@@ -1807,37 +1805,38 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		open_->updateUb(cub);
 		clb = MAX(clb, open_->getLb());
-		Long subProblemId = 0;
 
 #include <map>
-		map<pair<int, Long>, OpenNode> givenWork;
+		map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
 
-		while (clb < cub && !open_->finished() && !givenWork.empty()) {
-
+		Long subProblemId = 0;
+		int worker;
+		int controle = 0; // to be sure we enter in the loop
+		while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
+            controle = 1;
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
-
-				// I pop a node nd in open_  // ok because open_ is not empty here
+				//   pop a node nd in open_  // ok because open_ is not empty here
 				Store::store();  // copy of the current state
 				OpenNode nd = open_->top();
 				open_->pop();
 
-				// I create the "work" to do and info to send : I create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+				//   create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				Work work(*cp, nd, wcsp->getUb(), 0, subProblemId);
-				//I pop the queue idleQ to get the rank of an idle worker
-				int worker = idleQ.front();
+				//  pop the queue idleQ to get the rank of an idle worker
+				worker = idleQ.front();
 				idleQ.pop();  // ok no try catch idleQ not empty here
 				//workerJob = make_pair(worker,subProblemId);
 				givenWork[make_pair(worker, subProblemId)] = nd;
 				subProblemId++;
-				//I send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
+				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
 				world.isend(worker, 0, work);
 				// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
 				//however, in receive phase, the rank is necessary to push it in idle queue and send new work
 
 			}// end while( !open_->finished() && !idleQ.empty()) // end of loop to distribute jobs to workers
 
-			// I receive from the worker i an object with UB, the vectors of choice points, nodes
+			//   receive from the worker i an object with UB, the vectors of choice points, nodes
 			// created by DFS and all other informations.
 			Work2 work2;
 			world.recv(mpi::any_source, 0, work2);
@@ -1847,11 +1846,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// TODO : for each node update cp_ the vector of choice points of the master
 			// TODO : push nodes in open_
 
-			// with these info, I update UB (if < currentUB) and
+			// with these info,   update UB (if < currentUB) and
 			if (wcsp->getUb() > work2.ub)
 				wcsp->setUb(work2.ub);
 
-			// I push i in queue idleQ
+			//   push i in queue idleQ
 			idleQ.push(work2.sender);
 			try {
 				givenWork.erase(make_pair(work2.sender, work2.subProblemId));
@@ -1859,14 +1858,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				cerr << "exception caught: " << e.what() << '\n';
 			}
 
-			// TODO : tackle the case where workers become unavailable
-			// they don't return ub and nodes: map givenWork will never be empty
+			// TODO : tackle the case where some workers become unavailable during computation
+			// they don't return ub and nodes: the
+			//map givenWork will never be empty
 			// => infinite while loop.
-			// world.size() might change during the computation
-			// if workers are added, there might be no problem
-			// they are automatically taken into account except maybe if there is a renaming
-			// and with MPI it is mpirun that attribute the rank to workers
-			// behavior different from PVM (Parallel Virtual Machine), a predecessor of MPI
 
 		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
@@ -1921,30 +1916,30 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
-		// I create a local cp_ and open_ pqueue
+		// create a local cp_ and open_ pqueue
 
-		// I receive (in blocking mode) the work object from the master
+		//   receive (in blocking mode) the work object from the master
 		Work work;
 		world.recv(0, 0/*mpi::any_tag*/, work);
-		// I set local UB with the received UB
+		//   set local UB with the received UB
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
 		//CPStore cpw = new CPStore();
 		//OpenNode nd = new OpenNode();
 
-		// I recreate a local cp_ with the vector of CPs
+		//   recreate a local cp_ with the vector of CPs
 
 		//restore(*cp_, work.node);
-		// I compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
-		// I do the DFS: recursiveSolve(bestlb);
-		// I "manage" the adaptative backtrack limit Z (possible issue : if Z too small, the communication overhead might be overwhelming.
+		//   compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
+		//   do the DFS: recursiveSolve(bestlb);
+		//   "manage" the adaptative backtrack limit Z (possible issue : if Z too small, the communication overhead might be overwhelming.
 		// we might have to use a fixed Z that is enough big
-		// I create the message with UB and open nodes information from local open_ and cp_
-		// I restore the initial state of the Solver object
-		// if UB calculated is better I send (in blocking mode )to the master the info open nodes (fist, last in choice point vector) and best UB
-		// else I send a message with tag=1 to tell the master I am available
+		//   create the message with UB and open nodes information from local open_ and cp_
+		//   restore the initial state of the Solver object
+		// if UB calculated is better   send (in blocking mode )to the master the info open nodes (fist, last in choice point vector) and best UB
+		// else   send a message with tag=1 to tell the master that the worker is available
 
-		// I return the pair CLB + solution CUB
+		//   return the pair CLB + solution CUB
 		/*
 		 CPStore *cp_ = NULL; // vector of choice points
 		 OpenList *open_ = NULL; // priority queue of nodes
@@ -3025,8 +3020,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost,
 	bool res = solve();
 	if (res) {
 		assert(
-				getWCSP()->getSolution().size()
-						== getWCSP()->numberOfVariables());
+				getWCSP()->getSolution().size() == getWCSP()->numberOfVariables());
 		for (unsigned int i = 0; i < getWCSP()->numberOfVariables(); i++) {
 			if (getWCSP()->getSolution()[i] == 0) {
 				sol[i] = 1;
@@ -3189,9 +3183,7 @@ void Solver::restore(CPStore &cp, OpenNode nd) {
 	for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 		assert((size_t )idx < cp.size());
 		assert(
-				!wcsp->getTreeDec()
-						|| wcsp->getTreeDec()->getCurrentCluster()->isVar(
-								cp[idx].varIndex));
+				!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar( cp[idx].varIndex));
 		if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last - 1))
 				|| (cp[idx].op == CP_REMOVE && cp[idx].reverse
 						&& idx < nd.last - 1)) {
