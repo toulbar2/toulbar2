@@ -1806,29 +1806,32 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		open_->updateUb(cub);
 		clb = MAX(clb, open_->getLb());
 
-#include <map>
-		map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
+//#include <map>
+	//	map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
 
-		Long subProblemId = 0;
+	//	Long subProblemId = 0;
+		int nbCurrentWork=0;  // number of subproblem currently being processed. number between 0 and world.size()-1
 		int worker;
-		int controle = 0; // to be sure we enter in the loop
-		while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
+		int controle = 0; // "trick" to be sure we enter in the external while loop
+		//while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
+		while ((clb < cub && !open_->finished() && nbCurrentWork) || controle ==0 ) {
             controle = 1;
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 				//   pop a node nd in open_  // ok because open_ is not empty here
 				Store::store();  // copy of the current state
 				OpenNode nd = open_->top();
-				open_->pop();
+				open_->pop(); //   pop a node nd in open_  // ok because open_ is not empty here
 
 				//   create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
-				Work work(*cp, nd, wcsp->getUb(), 0, subProblemId);
+				Work work(*cp, nd, wcsp->getUb(), 0);
 				//  pop the queue idleQ to get the rank of an idle worker
 				worker = idleQ.front();
+				nbCurrentWork++;
 				idleQ.pop();  // ok no try catch idleQ not empty here
 				//workerJob = make_pair(worker,subProblemId);
-				givenWork[make_pair(worker, subProblemId)] = nd;
-				subProblemId++;
+				//givenWork[make_pair(worker, subProblemId)] = nd;
+				//subProblemId++;
 				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
 				world.isend(worker, 0, work);
 				// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
@@ -1839,7 +1842,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   receive from the worker i an object with UB, the vectors of choice points, nodes
 			// created by DFS and all other informations.
 			Work2 work2;
-			world.recv(mpi::any_source, 0, work2);
+			world.recv(mpi::any_source, 0, work2);  // blocking ?
 
 			// TODO : case no node to return
 			// TODO : case where DFS does not improve UB
@@ -1852,11 +1855,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			//   push i in queue idleQ
 			idleQ.push(work2.sender);
-			try {
-				givenWork.erase(make_pair(work2.sender, work2.subProblemId));
-			} catch (exception &e) {
-				cerr << "exception caught: " << e.what() << '\n';
-			}
+			nbCurrentWork--;
+			//try {
+			//	givenWork.erase(make_pair(work2.sender, work2.subProblemId));
+			//} catch (exception &e) {
+			//	cerr << "exception caught: " << e.what() << '\n';
+			//}
 
 			// TODO : tackle the case where some workers become unavailable during computation
 			// they don't return ub and nodes: the

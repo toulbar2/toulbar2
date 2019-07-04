@@ -194,7 +194,14 @@ public:
 				vector<ChoicePoint> vec;
 				//CPStore vec; //error: le champ « vec » a le type incomplet « Solver::CPStore »
 				//
-
+				Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
+								: node(node_)
+								, ub(ub_)
+								, sender(sender_)
+								{
+									for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+									vec.push_back(cp[i]);
+								}
 				Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
 				: node(node_)
 				, ub(ub_)
