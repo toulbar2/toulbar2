@@ -200,7 +200,7 @@ public:
 		, ub(ub_)
 		, sender(sender_)
 		{
-			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+			for(ptrdiff_t i = node_.first; i<node_.last;  i++)
 			vec.push_back(cp[i]);
 		}
 		// this ctr will not be used if the id of the subproblems is not used. to delete when cleaning the code
@@ -214,7 +214,7 @@ public:
 		 vec.push_back(cp[i]);
 		 }*/
 
-		void vector2CPStore(CPStore * cp)
+		void vector2CPStore(CPStore *cp)
 		{
 			for(size_t i = 0; i<=vec.size()-1; i++)
 				cp->push_back(vec[i]);
