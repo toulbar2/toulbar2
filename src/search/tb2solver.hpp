@@ -81,6 +81,7 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
+			ar & boost::serialization::base_object<priority_queue>(*this);
 			ar & clb;
 			ar & cub;
 		}
@@ -232,34 +233,35 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
-			ar & node;
+			ar & open;
+			//ar & node;
 			ar & ub;  // attribute
 			ar & vec;
 			ar & sender;
+
 			//ar & subProblemId;
 			//  ar & open; // pq which will contain the node(s) to send to other processes
 		}
 
 	public: // public attributes not a thing to do but here it is for simplicity
-		OpenNode node;
+		//OpenNode node;
+		OpenList open;
 		Cost ub;// current best solution ub when the master gives the work
 		int sender;// rank of the process that send the msg
 		Long subProblemId;
 		vector<ChoicePoint> vec;
-		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
-		: node(node_)
+
+
+
+		Work2(const CPStore &cp, const OpenList &open_, const Cost ub_, const int sender_)
+		: open(open_)
 		, ub(ub_)
 		, sender(sender_)
 		{
-			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-			vec.push_back(cp[i]);
+			//for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+			//vec.push_back(cp[i]);
 		}
-		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_):
-		node(node_), ub(ub_), sender(sender_),subProblemId(subProblemId_)
-		{
-			for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
-			vec.push_back(cp[i]);
-		}
+
 		Work2() {}
 	};
 

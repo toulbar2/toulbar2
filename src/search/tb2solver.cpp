@@ -1887,11 +1887,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
 
-		//   compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
-		//   do the DFS: recursiveSolve(bestlb);
-		//   "manage" the adaptative backtrack limit Z (possible issue : if Z too small, the communication overhead might be overwhelming.
-		// we might have to use a fixed Z that is enough big
-		//   create the message with UB and open nodes information from local open_ and cp_
+
 		//   restore the initial state of the Solver object
 		// if UB calculated is better   send (in blocking mode )to the master the info open nodes (fist, last in choice point vector) and best UB
 		// else   send a message with tag=1 to tell the master that the worker is available
@@ -1899,14 +1895,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//   return the pair CLB + solution CUB
 		// create a worker's cp_ and open_ pqueue
 
-		//  TODO: recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
-
-
+		//  recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 		CPStore *cp_ = new CPStore(); // start = stop = index = 0
 		OpenList *open_= new OpenList();
-
 		work.vector2CPStore(cp_);
-		open_->push(work.node);
+		OpenNode recvNode = work.node;  // backup of received node
+		OpenNode nd_ = recvNode;
+		nd_.last = nd_.last - nd_.first - 1;
+		nd_.first = 0;
+
+		open_->push(nd_);
 		cp_->store(); // start = stop = index
 
 		hbfsLimit = (
@@ -1953,6 +1951,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				ToulBar2::hbfs /= 2;
 			if (ToulBar2::debug >= 2)
 				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
+
+
+			//   create the message with UB and open nodes information from local open_ and cp_
+				int worker = world.rank();
+				Work2 work2(*cp_, *open_, wcsp->getUb(), worker);
+				world.isend(worker, 0, work);
+
+
 		}
 	} // fin rank > 0 workers
 // TODO: this return must go in master zone
