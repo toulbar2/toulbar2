@@ -1842,20 +1842,21 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   receive from the worker i an object with UB, the vectors of choice points, nodes
 			// created by DFS and all other informations.
 			Work2 work2;
-			world.recv(mpi::any_source, 0, work2);  // blocking ?
+			world.recv(mpi::any_source, 0, work2);  // blocking recv to wait for workers' messages
 
 			// TODO : case no node to return
 			// TODO : case where DFS does not improve UB
 			// TODO : for each node update cp_ the vector of choice points of the master
-			// TODO : push nodes in open_
+			// TODO : Push nodes in open_
 
-			// with these info,   update UB (if < currentUB) and
+			// with these info, update UB (if < currentUB) and
 			if (wcsp->getUb() > work2.ub)
 				wcsp->setUb(work2.ub);
 
 			//   push i in queue idleQ
 			idleQ.push(work2.sender);
 			nbCurrentWork--;
+			assert(nbCurrentWork >=0 && nbCurrentWork < world.size());
 			//try {
 			//	givenWork.erase(make_pair(work2.sender, work2.subProblemId));
 			//} catch (exception &e) {
@@ -1869,53 +1870,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
-		// the master output the results
 
-		hbfsLimit = (
-				(ToulBar2::hbfs > 0) ?
-						(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
-		int storedepthBFS = Store::getDepth();
-		try {
-			Store::store();  // copy of the current state
-			OpenNode nd = open_->top();
-			open_->pop();
-
-			restore(*cp_, nd);
-			Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
-			bestlb = MAX(bestlb, clb);
-
-			recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
-
-		} catch (Contradiction) {
-			wcsp->whenContradiction();
-		}
-
-		cub = wcsp->getUb();
-		open_->updateUb(cub);
-		Store::restore(storedepthBFS);
-		cp_->store();
-		if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
-				|| open_->size()
-						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-			ToulBar2::hbfs = 0;
-			ToulBar2::hbfsGlobalLimit = 0;
-
-			hbfsLimit = LONGLONG_MAX;
-		}
-
-		clb = MAX(clb, open_->getLb());
-		showGap(clb, cub);
-		if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-			assert(nbNodes > 0);
-			if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-					&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-				ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
-			else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
-					&& ToulBar2::hbfs >= 2)
-				ToulBar2::hbfs /= 2;
-			if (ToulBar2::debug >= 2)
-				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
-		}
+		// TODO : the master return the optimal value
 
 	} else {  // end of master code, beginning of code executed by workers
 
@@ -1931,9 +1887,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//CPStore cpw = new CPStore();
 		//OpenNode nd = new OpenNode();
 
-		//   recreate a local cp_ with the vector of CPs
+		//  TODO: recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 
-		//restore(*cp_, work.node);
 		//   compute bestlb : Cost bestlb = MAX(nd.getCost(), wcsp->getLb()); bestlb = MAX(bestlb, clb);
 		//   do the DFS: recursiveSolve(bestlb);
 		//   "manage" the adaptative backtrack limit Z (possible issue : if Z too small, the communication overhead might be overwhelming.
@@ -1944,7 +1899,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// else   send a message with tag=1 to tell the master that the worker is available
 
 		//   return the pair CLB + solution CUB
-		/*
+
 		 CPStore *cp_ = NULL; // vector of choice points
 		 OpenList *open_ = NULL; // priority queue of nodes
 
@@ -1959,11 +1914,57 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		 cp_->store();
 
-		 world.recv(0, 0, work);
+		 //world.recv(0, 0, work);
 
-		 */
+
+
+		hbfsLimit = (
+						(ToulBar2::hbfs > 0) ?
+								(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+				int storedepthBFS = Store::getDepth();
+				try {
+					Store::store();  // copy of the current state
+					OpenNode nd = open_->top();
+					open_->pop();
+
+					restore(*cp_, nd);
+					Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+					bestlb = MAX(bestlb, clb);
+
+					recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+
+				} catch (Contradiction) {
+					wcsp->whenContradiction();
+				}
+
+				cub = wcsp->getUb();
+				open_->updateUb(cub);
+				Store::restore(storedepthBFS);
+				cp_->store();
+				if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
+						|| open_->size()
+								>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+					ToulBar2::hbfs = 0;
+					ToulBar2::hbfsGlobalLimit = 0;
+
+					hbfsLimit = LONGLONG_MAX;
+				}
+
+				clb = MAX(clb, open_->getLb());
+				showGap(clb, cub);
+				if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+					assert(nbNodes > 0);
+					if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
+							&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+						ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
+					else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
+							&& ToulBar2::hbfs >= 2)
+						ToulBar2::hbfs /= 2;
+					if (ToulBar2::debug >= 2)
+						cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
+				}
 	} // fin rank > 0 workers
-
+// TODO: this return must go in master zone
 	return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)

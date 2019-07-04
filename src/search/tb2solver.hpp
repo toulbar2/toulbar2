@@ -236,7 +236,14 @@ public:
 		int sender;// rank of the process that send the msg
 		Long subProblemId;
 		vector<ChoicePoint> vec;
-
+		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
+										: node(node_)
+										, ub(ub_)
+										, sender(sender_)
+										{
+											for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
+											vec.push_back(cp[i]);
+										}
 		Work2(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_):
 		node(node_), ub(ub_), sender(sender_),subProblemId(subProblemId_)
 		{
