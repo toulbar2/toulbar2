@@ -1736,9 +1736,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	namespace mpi = boost::mpi;
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
 	mpi::communicator world;
+	int worker;
+	const int master = 0;
+	const int tag0 = 0;
 
 // tests
-
+/*
 	if (world.rank() == 0) {
 		OpenNode nd(99, 0, 10);
 		CPStore *cp = new CPStore();
@@ -1767,23 +1770,23 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 	}
 
-
+*/
 // end tests
 
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
-		size_t nbWorkers0 = world.size() - 1;
-		if (nbWorkers0 <= 0)
-			cout << "No workers available. try toulbar2 in sequential mode."
+		if (world.size() == 1){
+			cout << "Only one core. No workers available. Use toulbar2 in sequential mode."
 					<< endl;
+			exit(1);
+		}
 
 		queue<int> idleQ;
-		for (int i = 1; i < world.size(); i++)
+		for (int i = 1; i < world.size(); i++)  // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working
 			idleQ.push(i);
 
 		//creation of master's open_ and cp_
-
 		CPStore *cp_ = NULL; // vector of choice points
 		OpenList *open_ = NULL; // priority queue of nodes
 		if (cp != NULL)
@@ -1815,39 +1818,36 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		//	Long subProblemId = 0;
 		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
-		int worker;
 		int controle = 0; // "trick" to be sure we enter in the external while loop
 		//while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
-		while ((clb < cub && !open_->finished() && nbCurrentWork)
+		while ((clb < cub && !open_->finished() && nbCurrentWork==0)
 				|| controle == 0) {
 			controle = 1;
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
-				//   pop a node nd in open_  // ok because open_ is not empty here
+
 				Store::store();  // copy of the current state
 				OpenNode nd = open_->top();
-				open_->pop(); //   pop a node nd in open_  // ok because open_ is not empty here
+				open_->pop();
 
 				//   create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				Work work(*cp, nd, wcsp->getUb(), 0);
 				//  pop the queue idleQ to get the rank of an idle worker
 				worker = idleQ.front();
 				nbCurrentWork++;
-				idleQ.pop();  // ok no try catch idleQ not empty here
+				idleQ.pop();
 				//workerJob = make_pair(worker,subProblemId);
 				//givenWork[make_pair(worker, subProblemId)] = nd;
 				//subProblemId++;
 				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
-				world.isend(worker, 0, work);   // no blocking send to workers
-				// nb : the master does not need to know the rank of the worker in the sending phase only if it is idle or not.
-				//however, in receive phase, the rank is necessary to push it in idle queue and send new work
+				world.isend(worker, tag0, work);   // no blocking send to worker
 
-			}// end while( !open_->finished() && !idleQ.empty()) // end of loop to distribute jobs to workers
+			} // end of loop that distribute jobs to workers
 
 			//   receive from the worker i an object with UB, the vectors of choice points, nodes
 			// created by DFS and all other informations.
 			Work2 work2;
-			world.recv(mpi::any_source, 0, work2); // blocking recv to wait for workers' messages
+			world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for workers' messages
 
 			// TODO : case no node to return
 			if(work2.open.size()!=0){
@@ -1863,7 +1863,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			if (wcsp->getUb() > work2.ub)
 				wcsp->setUb(work2.ub);
 
-			//   push i in queue idleQ
+			//   push the worker id in queue idleQ
 			idleQ.push(work2.sender);
 			nbCurrentWork--;
 			assert(nbCurrentWork >= 0 && nbCurrentWork < world.size());
@@ -1887,7 +1887,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 
 		Work work;
-		world.recv(0, 0/*mpi::any_tag*/, work); //blocking recv from the master
+		world.recv(master, tag0/*mpi::any_tag*/, work); //blocking recv from the master
 		//   set local UB with the received UB
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
@@ -1954,7 +1954,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   create the message with UB and open nodes information from local open_ and cp_
 				int worker = world.rank();
 				Work2 work2(*cp_, *open_, wcsp->getUb(), worker);
-				world.isend(0, 0, work);  // non blocking send to master
+				world.isend(master, tag0, work);  // non blocking send to master
 
 				//   TODO: restore the initial state of the Solver object
 
