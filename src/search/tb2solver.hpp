@@ -36,7 +36,13 @@ class RandomClusterChoice;
 class ParallelRandomClusterChoice;
 
 const double epsilon = 1e-6; // 1./100001.
-
+////kad
+//std::ostream& operator<< (std::ostream &out,  const OpenNode &node)
+//	{
+//	    out << "Node(first, last, lb) = Node(" << node.first << ", " << node.last << ", " << node.cost << ")";
+//	    return out;
+//	}
+////kad
 class Solver: public WeightedCSPSolver {
 public:
 	class OpenNode {
@@ -49,7 +55,7 @@ public:
 			ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
 			ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
 		}
-		Cost cost; // global lower bound associated to the open node
+		Cost cost; // global lower bound associated with the open node
 	public:
 		ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
 		ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -71,7 +77,9 @@ public:
 		Cost getCost(Cost delta = MIN_COST) const {
 			return MAX(MIN_COST, cost - delta);
 		}
+		//friend std::ostream& operator<< (std::ostream &out, const OpenNode &node);    //kad
 	};
+
 
 	class CPStore;
 	class OpenList FINAL : public priority_queue<OpenNode> {

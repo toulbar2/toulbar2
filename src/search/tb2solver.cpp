@@ -1741,49 +1741,49 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int tag0 = 0;
 
 // tests
-/*
-	if (world.rank() == 0) {
-		OpenNode nd(99, 0, 10);
-		CPStore *cp = new CPStore();
+	/*
+	 if (world.rank() == 0) {
+	 OpenNode nd(99, 0, 10);
+	 CPStore *cp = new CPStore();
 
-		for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
-			cp->addChoicePoint(CP_REMOVE, 36, 25, false);
-		}
-		//Work work(*cp, nd, 19, 0, 1001);
-		Work work(*cp, nd, 19, 0);
-		cout
-				<< "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "
-				<< endl;
-		for (int proc = 1; proc < world.size(); ++proc)
-			world.send(proc, 0, work);
+	 for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
+	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
+	 }
+	 //Work work(*cp, nd, 19, 0, 1001);
+	 Work work(*cp, nd, 19, 0);
+	 cout
+	 << "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "
+	 << endl;
+	 for (int proc = 1; proc < world.size(); ++proc)
+	 world.send(proc, 0, work);
 
-	} else {
+	 } else {
 
-		Work work;
-		world.recv(mpi::any_source, 0, work);
-		cout << "I am worker # " << world.rank()
-				<< " and I receive vector of cp, lb,ub from process "
-				<< work.sender << " and I print UB = " << work.ub
-				<< " node lower bound =" << work.node.getCost() << endl;
-		cout << "I am worker # " << world.rank() << " and index of var = "
-				<< work.vec[9].varIndex << endl;
+	 Work work;
+	 world.recv(mpi::any_source, 0, work);
+	 cout << "I am worker # " << world.rank()
+	 << " and I receive vector of cp, lb,ub from process "
+	 << work.sender << " and I print UB = " << work.ub
+	 << " node lower bound =" << work.node.getCost() << endl;
+	 cout << "I am worker # " << world.rank() << " and index of var = "
+	 << work.vec[9].varIndex << endl;
 
-	}
+	 }
 
-*/
+	 */
 // end tests
-
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
-		if (world.size() == 1){
-			cout << "Only one core. No workers available. Use toulbar2 in sequential mode."
+		if (world.size() == 1) {
+			cout
+					<< "Only one core. No workers available. Use toulbar2 in sequential mode."
 					<< endl;
 			exit(1);
 		}
 
 		queue<int> idleQ;
-		for (int i = 1; i < world.size(); i++)  // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working
+		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working
 			idleQ.push(i);
 
 		//creation of master's open_ and cp_
@@ -1820,13 +1820,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
 		int controle = 0; // "trick" to be sure we enter in the external while loop
 		//while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
-		while ((clb < cub && !open_->finished() && nbCurrentWork==0)
+		while ((clb < cub && !open_->finished() && nbCurrentWork != 0)
 				|| controle == 0) {
 			controle = 1;
+			Store::store();  // copy of the current state
 			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
-				Store::store();  // copy of the current state
 				OpenNode nd = open_->top();
 				open_->pop();
 
@@ -1840,7 +1840,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				//givenWork[make_pair(worker, subProblemId)] = nd;
 				//subProblemId++;
 				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
-				world.isend(worker, tag0, work);   // no blocking send to worker
+				world.isend(worker, tag0, work);  // non blocking send to worker
 
 			} // end of loop that distribute jobs to workers
 
@@ -1848,16 +1848,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// created by DFS and all other informations.
 			Work2 work2;
 			world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for workers' messages
+			// or non blocking mpi::request r = world.irecv(mpi::any_source, tag0, work2);
+			// and test whether data have been received with if (r.test()) {...} ?
 
 			// TODO : case no node to return
-			if(work2.open.size()!=0){
+			if (work2.open.size() != 0) {
 
 				// TODO : Push nodes in open_
+				// TODO : for each node update cp_ the vector of choice points of the master
+				//  ????????
 			}
-
-			// TODO : for each node update cp_ the vector of choice points of the master
-			//  ????????
-
 
 			// with these info, update UB (if < currentUB) and
 			if (wcsp->getUb() > work2.ub)
@@ -1873,18 +1873,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//	cerr << "exception caught: " << e.what() << '\n';
 			//}
 
-
 		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
 
 		// TODO : the master return the optimal value
 		// return make_pair(clb, cub);
 		cout << endl;
-		cout << "Optimum is " << wcsp->getUb()<<endl;
+		cout << "Optimum is " << wcsp->getUb() << endl;
 
 	} else {  // end of master code, beginning of code executed by workers
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
-
 
 		Work work;
 		world.recv(master, tag0/*mpi::any_tag*/, work); //blocking recv from the master
@@ -1892,10 +1890,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		Cost incomingUB = work.ub;  // to compare with ub obtained after the DFS
 		wcsp->setUb(incomingUB);
 
-
 		//  recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 		CPStore *cp_ = new CPStore(); // start = stop = index = 0
-		OpenList *open_= new OpenList();
+		OpenList *open_ = new OpenList();
 		work.vector2CPStore(cp_);
 		OpenNode recvNode = work.node;  // backup of received node
 		OpenNode nd_ = recvNode;
@@ -1950,13 +1947,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			if (ToulBar2::debug >= 2)
 				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
-
 			//   create the message with UB and open nodes information from local open_ and cp_
-				int worker = world.rank();
-				Work2 work2(*cp_, *open_, wcsp->getUb(), worker);
-				world.isend(master, tag0, work);  // non blocking send to master
+			int worker = world.rank();
+			Work2 work2(*cp_, *open_, wcsp->getUb(), worker);
+			world.isend(master, tag0, work);  // non blocking send to master
 
-				//   TODO: restore the initial state of the Solver object
+			//   TODO: restore the initial state of the Solver object
 
 		}
 	} // fin rank > 0 workers
