@@ -1,5 +1,12 @@
-0 - Install Eclipse IDE for Scientific Computing which support mpi, openmpi; Parallel Tools Plateform (PTP)
-https://www.eclipse.org/downloads/packages/release/2019-03/r/eclipse-ide-scientific-computing
+PREREQUISITES:
+sudo apt-get update
+
+- sudo apt-get install cmake cmake-data cmake-curses-gui libboost-all-dev libboost-graph-dev libboost-iostreams-dev zlib1g-dev liblzma-dev libjemalloc-dev libgmp3-dev htop
+
+- sudo apt-get install texstudio doxygen graphviz texlive-latex-recommended  texlive-fonts-recommended 
+
+- Install lats version Eclipse IDE for Scientific Computing which support mpi, openmpi; Parallel Tools Plateform (PTP)
+for instance via https://www.eclipse.org/downloads/packages/
 
 1 - SHELL PHASE
 
@@ -73,5 +80,8 @@ to tell eclipse where to build toulbar2 which will be found in build/bin/Linux d
 - To execute toulbar2 from eclipse with arguments : Menu Run -> Run configuration -> C/C++ Application -> toulbar2 release default
 add toulbar2/build/bin/Linux/toulbar2 the path to the program toulbar2
 then in tab Argument add the argument to use with toulbar2 e.g.  a wcsp file name
+
+
+
 
 
