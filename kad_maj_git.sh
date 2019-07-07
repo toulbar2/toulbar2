@@ -1,6 +1,6 @@
 #!/bin/bash
-git pull origin kad
-git add .
-git commit -m "master worker"
+git pull origin kad 1>/dev/null 2>&1
+git add . 1>/dev/null 2>&1
+git commit -m "master-worker" 1>/dev/null 2>&1
 git push origin kad || git push origin kad
 
