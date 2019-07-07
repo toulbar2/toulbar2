@@ -4,8 +4,6 @@ build
 build_debug
 debug
 release
-src/*.wcsp
-src/*.sh
 nbProcess.txt
 #src/ToulbarVersion.hpp
 #src/MyCPackConf.cmake
