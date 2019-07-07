@@ -5,4 +5,4 @@ git commit -m "master-worker" 1>/dev/null 2>&1
 git push origin kad 1>/dev/null 2>&1
 git push origin kad 1>/dev/null 2>&1
 git push origin kad | grep "Everything up-to-date"
-sleep 2s
+sleep 4s
