@@ -1775,12 +1775,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	if (world.rank() == 0) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
+		/* // optional verification
 		if (world.size() == 1) {
 			cout
 					<< "Only one core. No workers available. Use toulbar2 in sequential mode."
 					<< endl;
 			exit(1);
-		}
+		}*/
 
 		queue<int> idleQ;
 		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working
@@ -1789,6 +1790,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//creation of master's open_ and cp_
 		CPStore *cp_ = NULL; // vector of choice points
 		OpenList *open_ = NULL; // priority queue of nodes
+
 		if (cp != NULL)
 			delete cp;
 		cp = new CPStore();
@@ -1798,6 +1800,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		open = new OpenList();
 		open_ = open;
 
+		OpenList2 * open2_ = new OpenList2();
+		//open2_=open2;
+
+
 		cp_->store();
 		// initialization of pq open with the root node
 		if (open_->size() == 0) { // start a new list of open nodes if needed
@@ -1805,6 +1811,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// reinitialize current open list and insert empty node
 			*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
 			addOpenNode(*cp_, *open_, clb);
+
+			*open2_ = OpenList2(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
+						addOpenNode(*cp_, *open_, clb);
 		} else {
 			nbHybridContinue++;
 		}
@@ -1813,27 +1822,29 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		open_->updateUb(cub);
 		clb = MAX(clb, open_->getLb());
 
+
 //#include <map>
 		//	map<pair<int, Long>, OpenNode> givenWork; // set of subproblems send to being processed
-
 		//	Long subProblemId = 0;
-		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
+
+		int nbSentWork = 0; // number of subproblems sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 		//while ((clb < cub && !open_->finished() || !givenWork.empty())) {
 		// TODO: place correctly the condition clb < cub
-		while (clb < cub && (!open_->finished() || nbCurrentWork != 0)) {
+		// why using finished and not empty ?
+		while (clb < cub && (!open_->finished() || nbSentWork != 0)) {
 
 			Store::store();  // copy of the current state
 			while (!open_->finished() || !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
-				OpenNode nd = open_->top();
-				open_->pop();
+				//OpenNode nd = open_->top();
+				//open_->pop();
 
 				//   create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
-				Work work(*cp, nd, wcsp->getUb(), 0);
+				Work work(*open2_, wcsp->getUb(), 0);
 				//  pop the queue idleQ to get the rank of an idle worker
 				worker = idleQ.front();
-				nbCurrentWork++;
+				nbSentWork++;
 				idleQ.pop();
 				//workerJob = make_pair(worker,subProblemId);
 				//givenWork[make_pair(worker, subProblemId)] = nd;
@@ -1863,8 +1874,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			//   push the worker id in queue idleQ
 			idleQ.push(work2.sender);
-			nbCurrentWork--;
-			assert(nbCurrentWork >= 0 && nbCurrentWork < world.size());
+			nbSentWork--;
+			assert(nbSentWork >= 0 && nbSentWork < world.size());
 			//try {
 			//	givenWork.erase(make_pair(work2.sender, work2.subProblemId));
 			//} catch (exception &e) {
@@ -1891,13 +1902,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//  recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
 		CPStore *cp_ = new CPStore(); // start = stop = index = 0
 		OpenList *open_ = new OpenList();
-		work.vector2CPStore(cp_);
-		OpenNode recvNode = work.node;  // backup of received node
-		OpenNode nd_ = recvNode;
-		nd_.last = nd_.last - nd_.first - 1;
-		nd_.first = 0;
+		//work.vector2CPStore(cp_);
+		//OpenNode recvNode = work.node;  // backup of received node
+		//OpenNode nd_ = recvNode;
+		//nd_.last = nd_.last - nd_.first - 1;
+		//nd_.first = 0;
 
-		open_->push(nd_);
+		//open_->push(nd_);
 		cp_->store(); // start = stop = index
 
 		hbfsLimit = (

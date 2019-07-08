@@ -35,13 +35,7 @@ class RandomClusterChoice;
 class ParallelRandomClusterChoice;
 
 const double epsilon = 1e-6; // 1./100001.
-////kad
-//std::ostream& operator<< (std::ostream &out,  const OpenNode &node)
-//	{
-//	    out << "Node(first, last, lb) = Node(" << node.first << ", " << node.last << ", " << node.cost << ")";
-//	    return out;
-//	}
-////kad
+
 class Solver: public WeightedCSPSolver {
 public:
 	class OpenNode {
@@ -54,6 +48,7 @@ public:
 			ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
 			ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
 		}
+	protected: // \Warning cost changed from private to protected to be accessed directly by derived class OpenNode2
 		Cost cost; // global lower bound associated with the open node
 	public:
 		ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -76,7 +71,7 @@ public:
 		Cost getCost(Cost delta = MIN_COST) const {
 			return MAX(MIN_COST, cost - delta);
 		}
-		//friend std::ostream& operator<< (std::ostream &out, const OpenNode &node);    //kad
+
 	};
 
 
@@ -141,6 +136,7 @@ public:
 		CP_REMOVE_RANGE = 4,
 		CP_MAX
 	}ChoicePointOp;
+
 	static const string CPOperation[CP_MAX]; // for pretty print
 
 	struct ChoicePoint {
@@ -174,11 +170,137 @@ public:
 	};
 
 	//kad
+
+	// OpenNode2 without derivation from OpenNode class
+/*
+	class OpenNode2 {
+		private:
+			friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive &ar, const unsigned int version) {
+				ar & cost;  // node lower bound
+				ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
+				ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the index (last-1)
+			}
+			Cost cost; // global lower bound associated with the open node
+		public:
+			ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
+			ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
+
+			OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_) :
+					cost(cost_), first(first_), last(last_) {
+			}
+			OpenNode() {
+			}
+			bool operator<(const OpenNode &right) const {
+				return (cost > right.cost)
+						|| (cost == right.cost
+								&& ((last - first) < (right.last - right.first)
+										|| ((last - first)
+												== (right.last - right.first)
+												&& last >= right.last)));
+			} // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
+
+			Cost getCost(Cost delta = MIN_COST) const {
+				return MAX(MIN_COST, cost - delta);
+			}
+
+		};
+
+*/
+
+	 // OpenNode using derivation
+	 class OpenNode2 : public OpenNode {
+	private:
+			friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive &ar, const unsigned int version) {
+				ar & boost::serialization::base_object<OpenNode>(*this);
+				ar & decisions;
+			}
+	public:
+		vector<ChoicePoint> decisions;
+
+		OpenNode2(){
+		}
+/*
+		OpenNode2(Cost cost_, ptrdiff_t first_, ptrdiff_t last_)
+		: OpenNode(cost_, first_, last_)
+		  {
+		  }
+*/
+		OpenNode2(Cost cost_, const vector<ChoicePoint> & decisions_)
+				  {
+					decisions = decisions_;
+					first = 0;
+					last = (ptrdiff_t )decisions.size();  // bad cast?!
+					cost = cost_;
+
+				  }
+
+		};
+
+
+	class OpenList2 FINAL : public priority_queue<OpenNode2> {
+		private:
+			friend class boost::serialization::access;
+
+			template<class Archive>
+			void serialize(Archive & ar, const unsigned int version)
+			{
+				ar & boost::serialization::base_object<priority_queue>(*this);
+				ar & clb;
+				ar & cub;
+			}
+			Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
+			Cost cub;// current cluster upper bound (independent of any soft arc consistency cost moves)
+		public:
+			OpenList2(Cost lb, Cost ub)
+			: clb(lb)
+			, cub(ub)
+			{
+			}
+			OpenList2()
+			: clb(MAX_COST)
+			, cub(MAX_COST)
+			{
+			} /// \warning use also this method to clear an open list
+
+			bool finished() const
+			{
+				assert(clb <= cub);
+				return (empty() || CUT(top().getCost(), clb));
+			}
+			Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta)));}
+
+			Cost getClosedNodesLb(Cost delta = MIN_COST) const {return MAX(MIN_COST, clb - delta);}
+			void setClosedNodesLb(Cost lb, Cost delta = MIN_COST)
+			{
+				clb = MAX(MIN_COST, lb + delta);
+				assert(clb <= cub);
+			}
+			void updateClosedNodesLb(Cost lb, Cost delta = MIN_COST) {clb = MIN(clb, MAX(MIN_COST, lb + delta));}
+
+			Cost getUb(Cost delta = MIN_COST) const {return MAX(MIN_COST, cub - delta);}
+			void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
+			void updateUb(Cost ub, Cost delta = MIN_COST)
+			{
+				Cost tmpub = MAX(MIN_COST, ub + delta);
+				cub = MIN(cub, tmpub);
+				clb = MIN(clb, tmpub);
+			}
+
+			size_type capacity() const {return c.capacity();}
+		};
+
+
 	/**
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
 	 *
 	 */
-	class CPStore;
+
 	class Work
 	{
 	private:
@@ -187,30 +309,39 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
-			ar & node;
-			ar & ub;  // attribute
-			ar & vec;
-			ar & sender;
+			//ar & node;
+			ar & open;
+			ar & ub;  // attribute to receive current solution
+			//ar & decisions;
+			ar & sender; // sender rank can probably be taken from mpi status object
 			//ar & subProblemId;
 			//  ar & open; // pq which will contain the node(s) to send to other processes
 		}
 
-	public: // public attributes not a thing to do but here it is a class used as MPI message
-		OpenNode node;
+	public: // public attributes. Not a thing to do but here it is a class used as MPI message
+		//OpenNode node;
+		OpenList2 open; // priority queue of nodes of type OpenNode2
 		Cost ub;// current best solution ub when the master gives the work
 		int sender;// rank of the process that send the msg
-		Long subProblemId;
-		vector<ChoicePoint> vec;
-		//CPStore vec; //error: le champ « vec » a le type incomplet « Solver::CPStore »
-		//
+		//Long subProblemId;
+		//vector<ChoicePoint> decisions;
+
+
+		Work(const OpenList2 & open_, const int ub_, const int sender_=0){
+			ub = ub_;
+			open = open_;
+			sender=sender_;
+		}
+/*
 		Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_)
 		: node(node_)
 		, ub(ub_)
 		, sender(sender_)
 		{
-			for(ptrdiff_t i = node_.first; i<node_.last;  i++)
-			vec.push_back(cp[i]);
+			for(ptrdiff_t i = node_.first; i < node_.last;  i++)
+			decisions.push_back(cp[i]);
 		}
+*/
 		// this ctr will not be used if the id of the subproblems is not used. to delete when cleaning the code
 		/*	Work(const CPStore &cp, const OpenNode &node_, const Cost ub_, const int sender_, Long subProblemId_)
 		 : node(node_)
@@ -220,14 +351,14 @@ public:
 		 {
 		 for(ptrdiff_t i = node_.last-1; i>=node_.first; i--)
 		 vec.push_back(cp[i]);
-		 }*/
+		 }
 
 		void vector2CPStore(CPStore *cp)
 		{
-			for(size_t i = 0; i<=vec.size()-1; i++)
-				cp->push_back(vec[i]);
+			for(size_t i = 0; i<=decisions.size()-1; i++)
+				cp->push_back(decisions[i]);
 		}
-
+*/
 		Work() {}
 
 	};
@@ -279,8 +410,8 @@ public:
 	//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
 	//kad
 	class CPStore FINAL : public vector<ChoicePoint> {
-		/*//kad
-		 private:
+		//kad
+		/* private:
 		 friend class boost::serialization::access;
 
 		 template<class Archive>
@@ -291,8 +422,9 @@ public:
 		 ar & stop;  // attribute
 		 ar & index;
 		 }
-		 //kad
 		 */
+		 //kad
+
 	public:
 		ptrdiff_t start; // beginning of the current branch
 		ptrdiff_t stop;// deepest saved branch end (should be free at this position)
