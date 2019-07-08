@@ -1819,6 +1819,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//	Long subProblemId = 0;
 		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
 		//while ((clb < cub && !open_->finished() || !givenWork.empty())) {
+		// TODO: place correctly the condition clb < cub
 		while (clb < cub && (!open_->finished() || nbCurrentWork != 0)) {
 
 			Store::store();  // copy of the current state
@@ -1837,7 +1838,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				//workerJob = make_pair(worker,subProblemId);
 				//givenWork[make_pair(worker, subProblemId)] = nd;
 				//subProblemId++;
-				//  send (ISend : Immediate send = non blocking mode) the object "work" to that worker ;
 				world.isend(worker, tag0, work);  // non blocking send to worker
 
 			} // end of loop that distribute jobs to workers
