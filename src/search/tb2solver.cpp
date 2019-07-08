@@ -1818,13 +1818,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		//	Long subProblemId = 0;
 		int nbCurrentWork = 0; // number of subproblem currently being processed. number between 0 and world.size()-1
-		int controle = 0; // "trick" to be sure we enter in the external while loop
-		//while ((clb < cub && !open_->finished() && !givenWork.empty()) || controle ==0 ) {
-		while ((clb < cub && !open_->finished() && nbCurrentWork != 0)
-				|| controle == 0) {
-			controle = 1;
+		//while ((clb < cub && !open_->finished() || !givenWork.empty())) {
+		while (clb < cub && (!open_->finished() || nbCurrentWork != 0)) {
+
 			Store::store();  // copy of the current state
-			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
+			while (!open_->finished() || !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
 				OpenNode nd = open_->top();
