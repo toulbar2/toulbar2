@@ -15,11 +15,10 @@
 #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/priority_queue.hpp>
-
+ #include <boost/serialization/stack.hpp>
 /*
  #include <boost/serialization/queue.hpp>
  #include <boost/serialization/deque.hpp>
- #include <boost/serialization/stack.hpp>
  #include <boost/serialization/list.hpp>
 
  */
