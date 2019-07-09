@@ -34,8 +34,13 @@ graphical models:
 ## Installation from binaries
 
 You can install toulbar2 directly using the package manager in Debian
-and Debian derived Linux distributions (Ubuntu, Mint,...). For the
-most recent version, compile from source.
+and Debian derived Linux distributions (Ubuntu, Mint,...). E.g.:
+
+    echo "deb http://ftp.fr.debian.org/debian sid main" | sudo tee -a /etc/apt/sources.list
+    sudo apt-get update
+    sudo apt-get install toulbar2
+
+For the most recent version, compile from source.
 
 
 ## Download
@@ -44,7 +49,7 @@ Download the latest release from GitHub
 (https://github.com/toulbar2/toulbar2) or similarly use tag versions,
 e.g.:
 
-    git clone --branch 1.0.0 https://github.com/toulbar2/toulbar2.git
+    git clone --branch 1.0.1 https://github.com/toulbar2/toulbar2.git
 
 
 ## Installation from sources

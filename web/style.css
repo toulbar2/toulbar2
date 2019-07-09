@@ -140,4 +140,18 @@ h5 {
 	margin-bottom: 1px;
 }
 
+/* code example */
+
+pre, code {
+  font-family: monospace, monospace;
+}
+pre {
+  overflow: auto;
+}
+pre > code {
+  background-color: WhiteSmoke;
+  display: block;
+  padding: 1rem;
+  word-wrap: normal;
+}
 
