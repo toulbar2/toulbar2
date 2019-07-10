@@ -306,7 +306,7 @@ public:
 		void serialize(Archive & ar, const unsigned int version)
 		{
 
-			ar & open;
+			ar & nodeVec;
 			ar & ub;
 			ar & vecDecisions;
 			ar & sender; // sender rank can probably be taken from mpi status object
@@ -314,7 +314,7 @@ public:
 		}
 
 	public:
-		OpenList open; // priority queue which will contain the node(s) to send to other processes
+		vector<OpenNode> nodeVec; // priority queue which will contain the node(s) to send to other processes
 
 		Cost ub; //  Best current solution a.k.a incumbent solution
 
@@ -326,14 +326,17 @@ public:
 
 		//Long subProblemId; // to be used only if we want to memorize pair (i,j)
 
-		Work(const CPStore &cp, OpenList & open_, const int ub_, const int sender_ = 0, Long subProblemId=0)
-		: open(open_)
+		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
+
+
+		Work(const CPStore &cp, const vector<OpenNode> & nodeVec_, const int ub_, const int sender_=0)
+		: nodeVec(nodeVec_)
 		, ub(ub_)
 		, sender(sender_)
 		{
-			while(!open.empty()) {
-				OpenNode node = open_.top();
-				open_.pop();
+			for (size_t j = 0; j< nodeVec.size();j++)
+			{
+				OpenNode node = nodeVec[j];
 				vector<ChoicePoint> vec;
 				for(ptrdiff_t i = node.first; i < node.last; i++)
 				{
@@ -354,11 +357,11 @@ public:
 
 	};
 
-	/**
+	/*
 	 * To optimize when it is a class of plain old objects POD : int, long, ...
 	 * \warning possible errors seg fault with pointers attributes and non POD attributes
 	 */
-	//BOOST_IS_MPI_DATATYPE(MasterToWorker);  //
+	//BOOST_IS_MPI_DATATYPE(MasterToWorker);
 	//kad
 	class CPStore FINAL : public vector<ChoicePoint> {
 		//kad
