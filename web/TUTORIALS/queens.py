@@ -67,7 +67,7 @@ def cfn(problem, isMinimization, initPrimalBound, floatPrecision=0):
                         print('%s' % c, end='')
                 print(']', end='')
         print('}', end='')
-    print('\n}')
+    print('}\n}')
 
 def model(N, k):
     Var = ["Q" + str(i) for i in range(N)]

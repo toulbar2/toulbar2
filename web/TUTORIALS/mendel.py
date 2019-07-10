@@ -65,7 +65,7 @@ def cfn(problem, isMinimization, initPrimalBound, floatPrecision=0):
                         print('%s' % c, end='')
                 print(']', end='')
         print('}', end='')
-    print('\n}')
+    print('}\n}')
 
 class Data:
     def __init__(self, ped):
