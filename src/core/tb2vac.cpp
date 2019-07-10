@@ -714,8 +714,10 @@ void VACExtension::printStat(bool ini)
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
     }
     if (ini && nlb > 0 && sumlb > MIN_COST && ToulBar2::verbose >= 0) {
-            if (ToulBar2::uai) cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (iter:" << nlb << ")" << endl;
-            else cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (iter:" << nlb << ")" << endl;
+        if (ToulBar2::uai)
+            cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (iter:" << nlb << ")" << endl;
+        else
+            cout << "VAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (iter:" << nlb << ")" << endl;
     }
     //sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
@@ -766,9 +768,9 @@ void VACExtension::minsumDiffusion()
         bool change = true;
         int maxit = ToulBar2::minsumDiffusion;
         if (ToulBar2::verbose >= 0) {
-        cout << "MinSumDiffusion: " << endl;
-        cout << "   max iterations " << maxit << endl;
-        cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+            cout << "MinSumDiffusion: " << endl;
+            cout << "   max iterations " << maxit << endl;
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         }
         int ntimes = 0;
         while (change && (ntimes < maxit)) {
@@ -787,7 +789,8 @@ void VACExtension::minsumDiffusion()
             ntimes++;
             //cout << "it " << ntimes << "   changed: " << nchanged << endl;
         }
-        if (ToulBar2::verbose >= 0) cout << "   done iterations: " << ntimes << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "   done iterations: " << ntimes << endl;
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
             if (wcsp->unassigned(i)) {
                 EnumeratedVariable* evar = (EnumeratedVariable*)wcsp->getVar(i);
@@ -805,7 +808,8 @@ void VACExtension::minsumDiffusion()
                 && !wcsp->getElimTernCtr(i)->isSep())
                 wcsp->getElimTernCtr(i)->propagate();
         wcsp->propagate();
-        if (ToulBar2::verbose >= 0) cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        if (ToulBar2::verbose >= 0)
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         //    printTightMatrix();
     }
 }

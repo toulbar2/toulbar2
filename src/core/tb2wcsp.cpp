@@ -703,6 +703,8 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
+    assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
+
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
@@ -744,21 +746,24 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<long double>& dcos
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
+    assert(dcosts.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
+
     long double minCost = std::numeric_limits<long double>::infinity();
     for (long double cost : dcosts) {
         minCost = min(minCost, cost);
     }
 
     vector<Cost> icosts;
-    icosts.reserve(x->getDomainInitSize() * y->getDomainInitSize());
+    icosts.resize(dcosts.size());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
         }
     }
-    negCost -= (Cost)(ceil(minCost * pow(10, ToulBar2::decimalPoint)));
+    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
     return postBinaryConstraint(xIndex, yIndex, icosts);
 }
+
 /// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
 int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
@@ -1623,7 +1628,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<long double>& dcosts)
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         icosts[a] = (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint)));
     }
-    negCost -= (Cost)(ceil(minCost * pow(10, ToulBar2::decimalPoint)));
+    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
     postUnary(xIndex, icosts);
 }
 

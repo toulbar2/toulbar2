@@ -20,6 +20,8 @@ void tb2Initialize(bool enable_vac)
     ToulBar2::vac = enable_vac;
     ToulBar2::vacValueHeuristic = enable_vac;
     ToulBar2::weightedTightness = true;
+    // ToulBar2::verbose = 5;
+    initCosts();
 }
 
 int tb2AddVariable(WeightedCSPSolver* solver, int size, char* name, char** valueNames)
