@@ -322,6 +322,8 @@ public:
 
 		vector<vector<ChoicePoint>> vecDecisions;
 
+		// TODO: Do we have to transmit the number of backtracks Z ?
+
 		//Long subProblemId; // to be used only if we want to memorize pair (i,j)
 
 		Work(const CPStore &cp, OpenList & open_, const int ub_, const int sender_ = 0, Long subProblemId=0)
