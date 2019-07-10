@@ -1743,7 +1743,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
-		/* // optional verification
+		/* // optional verification. probably it is not interesting to do this !
 		 if (world.size() == 1) {
 		 cout << "Only one core. No workers available. Use toulbar2 in sequential mode."
 		 << endl;
@@ -1751,42 +1751,51 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 }*/
 
 		queue<int> idleQ;
-		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working
+		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
 			idleQ.push(i);
 
-		//creation of master's open_ and cp_
-		CPStore *cp_ = NULL; // vector of choice points 
-		OpenList *open_ = NULL; // priority queue of nodes
+		//creation of master's open and cp
+		CPStore *cp = NULL; // vector of choice points
+		OpenList *open = NULL; // priority queue of nodes
 
 		if (cp != NULL)
 			delete cp;
 		cp = new CPStore();
-		cp_ = cp;
+
 		if (open != NULL)
 			delete open;
 		open = new OpenList();
-		open_ = open;
 
-		OpenList2 *open2_ = new OpenList2();
+		//OpenList2 *open2_ = new OpenList2();
 		//open2_=open2;
 
-		cp_->store();
+		cp->store(); // initialize indexes of the vector CPStore
 		// initialization of pq open with the root node
-		if (open_->size() == 0) { // start a new list of open nodes if needed
+		if (open->size() == 0) { // start a new list of open nodes if needed
 			nbHybridNew++;
 			// reinitialize current open list and insert empty node
-			*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp_, *open_, clb);
+			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
+			addOpenNode(*cp, *open, clb);
 
-			*open2_ = OpenList2(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp_, *open_, clb);
+			//*open2 = OpenList2(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
+			//addOpenNode(*cp, *open, clb);
 		} else {
 			nbHybridContinue++;
 		}
 		nbHybrid++; // do not count empty root cluster
 
-		open_->updateUb(cub); // 
-		clb = MAX(clb, open_->getLb());
+		open->updateUb(cub);
+
+		if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //   to mettre aussi ds le master transmettre Z ?
+				|| open->size()
+						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+			ToulBar2::hbfs = 0;
+			ToulBar2::hbfsGlobalLimit = 0;
+
+			hbfsLimit = LONGLONG_MAX;
+		}
+
+		clb = MAX(clb, open->getLb());
 		showGap(clb, cub);
 
 		/*//  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the work that has been sent
@@ -1795,23 +1804,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 //	Long subProblemId = 0;
 		 */
 
-		int nbSentWork = 0; // number of subproblems sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
+		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
 		/* //  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the work that has been sent
-		 while ((clb < cub && !open_->finished() || !givenWork.empty())) {
+		 while (((clb < cub && !open_->finished()) || !givenWork.empty())) {
 		 */
 
-		while ((clb < cub && !open_->finished()) || nbSentWork != 0) { // if false the program terminates
+		while ((clb < cub && !open->finished()) || nbSentWork != 0) { // this while predicate solve the non-trivial termination problem in parallel programming
 
-			while (!open_->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
+			while (!open->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
-
-				//   create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
-				Work work(*cp_, *open_, wcsp->getUb(), 0);
-				//  pop the queue idleQ to get the rank of an idle worker
-				worker = idleQ.front();
-				nbSentWork++;
-				idleQ.pop();
+				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+				worker = idleQ.front();  // get the first worker in the queue
+				idleQ.pop(); // pop it hence the worker is considered active. the master suppose that the worker is processing the work.
+				nbSentWork++; // the number of work in progress increases
 
 				/* //  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the work that has been sent
 				 workerJob = make_pair(worker,subProblemId);
@@ -1819,23 +1825,27 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				 subProblemId++;
 				 */
 
-				world.isend(worker, tag0, work);  // non blocking send to worker
+				world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
+				// nb : here we can use world.probe to get infos like source, tag or errors via s.source(), s.tag(), s.error()
+				// status s = world.probe(int source = any_source, int tag = any_tag);
+				// nb : request r = world.isend(worker, tag0, work) and r.test() tests if the message is sent.
 
 			} // end of loop that distribute jobs to workers
 
-			//   receive from the worker i an object with UB, the vectors of choice points, nodes
-			// created by DFS and all other informations.
-			Work work;
+			Work work; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
 			cout
-					<< "I am the master. I'm waiting for a response from my workers. "
+					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
 					<< endl;
-			world.recv(mpi::any_source, tag0, work); // blocking recv to wait for workers' messages
+			world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
 			cout << "I am the master. I received a response from worker # "
 					<< work.sender << endl;
-			// or non blocking mpi::request r = world.irecv(mpi::any_source, tag0, work);
-			// and test whether data have been received with if (r.test()) {...} ?
+			// or non blocking com :
+			// mpi::request r = world.irecv(mpi::any_source, tag0, work);
+			// and test whether data have been received with
+			// if (r.test()) {...}
+			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
+			// and use status.source() to get de sender
 
-			// TODO : case no node to return
 			if (work.open.size() != 0) { // case where nodes are sent by the worker
 
 				// TODO : Push nodes in open_
@@ -1843,8 +1853,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				//  ????????
 			}
 
-			// with these info, update UB if UB sent < currentUB of the master
-			open_->updateUb(work.ub);
+			// with these info, update UB if the sent UB < currentUB of the master
+			open->updateUb(work.ub);
 
 			//   push the worker id in queue idleQ
 			idleQ.push(work.sender);
@@ -1858,21 +1868,21 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			 cerr << "exception caught: " << e.what() << '\n';
 			 }
 			 // TODO: not important "todo" : if the map givenWork not empty then some workers did not do their job.
-			  * those workers have to be eliminated from idleQ as they are probably out of order
-			  * and the nodes in the map givenWork have to be re-assigned to worker still in the updated idleQ.
-			  * if idelQ is empty then all the workers are our of order so cout << "error"<<endl; exit(1);
+			 * those workers have to be eliminated from idleQ as they are probably out of order
+			 * and the nodes in the map givenWork have to be re-assigned to worker still in the updated idleQ.
+			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
 
-		} // end while (clb < cub && !open_->finished() && idle.size() <= master-2)
+		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
 
-		cout << "I am the master " << endl << "Optimum is " << wcsp->getUb() << endl;
-		// the master return the optimal value
+		cout << "I am the master " << endl << "Optimum is " << wcsp->getUb()
+				<< endl;
+		// the master returns the optimal value
 		return make_pair(clb, cub);
-
 
 	}  // end of master code, beginning of code executed by workers
 
-	if (world.rank() != master) { // workers code
+	if (world.rank() != master) { // workers' code
 
 		cout << "I am a worker. My id is " << world.rank() << endl;
 		while (1) {
@@ -1884,9 +1894,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//   set local UB with the received UB
 			wcsp->setUb(work.ub);
 
-			//  recreate a local cp_ with the vector of CPs to use restore(*cp_, work.node);
-			CPStore *cp_ = new CPStore(); // start = stop = index = 0
-			OpenList *open_ = new OpenList();
+			//  recreate a local cp with the vector of CPs to use restore(*cp_, work.node);
+			CPStore *cp = new CPStore(); // start = stop = index = 0
+			OpenList *open = new OpenList();
 			//work.vector2CPStore(cp_);
 			//OpenNode recvNode = work.node;  // backup of received node
 			//OpenNode nd_ = recvNode;
@@ -1894,7 +1904,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//nd_.first = 0;
 
 			//open_->push(nd_);
-			cp_->store(); // start = stop = index
+			cp->store(); // start = stop = index
 
 			hbfsLimit = (
 					(ToulBar2::hbfs > 0) ?
@@ -1902,10 +1912,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			int storedepthBFS = Store::getDepth();
 			try {
 				Store::store();  // copy of the current state
-				OpenNode nd = open_->top(); // get a reference on the priority node
-				open_->pop();
+				OpenNode nd = open->top(); // get a reference on the priority node
+				open->pop();
 
-				restore(*cp_, nd);
+				restore(*cp, nd);
 				Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
 
@@ -1916,11 +1926,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			}
 
 			cub = wcsp->getUb();
-			open_->updateUb(cub);
+			open->updateUb(cub);
 			Store::restore(storedepthBFS);
-			cp_->store();
-			if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //   � mettre aussi ds le master transmettre Z ?
-					|| open_->size()
+			cp->store();
+			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //   to mettre aussi ds le master transmettre Z ?
+					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 				ToulBar2::hbfs = 0;
 				ToulBar2::hbfsGlobalLimit = 0;
@@ -1943,9 +1953,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs
 							<< endl;
 
-				//   create the message with UB and open nodes information from local open_ and cp_
+				//   create the message with UB and open nodes information from local open and cp
 				int worker = world.rank();
-				Work work(*cp_, *open_, wcsp->getUb(), worker);
+				Work work(*cp, *open, wcsp->getUb(), worker);
 				world.isend(master, tag0, work);  // non blocking send to master
 
 				//   TODO: restore the initial state of the Solver object
@@ -1968,38 +1978,37 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	mpi::communicator world;
 
 	// tests
-		/*
-		 if (world.rank() == 0) {
-		 OpenNode nd(99, 0, 10);
-		 CPStore *cp = new CPStore();
+	/*
+	 if (world.rank() == 0) {
+	 OpenNode nd(99, 0, 10);
+	 CPStore *cp = new CPStore();
 
-		 for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
-		 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
-		 }
-		 //Work work(*cp, nd, 19, 0, 1001);
-		 Work work(*cp, nd, 19, 0);
-		 cout
-		 << "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "
-		 << endl;
-		 for (int proc = 1; proc < world.size(); ++proc)
-		 world.send(proc, 0, work);
+	 for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
+	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
+	 }
+	 //Work work(*cp, nd, 19, 0, 1001);
+	 Work work(*cp, nd, 19, 0);
+	 cout
+	 << "I am the master and I send a vector of cp, nlb,ub and my rank to my workers. "
+	 << endl;
+	 for (int proc = 1; proc < world.size(); ++proc)
+	 world.send(proc, 0, work);
 
-		 } else {
+	 } else {
 
-		 Work work;
-		 world.recv(mpi::any_source, 0, work);
-		 cout << "I am worker # " << world.rank()
-		 << " and I receive vector of cp, lb,ub from process "
-		 << work.sender << " and I print UB = " << work.ub
-		 << " node lower bound =" << work.node.getCost() << endl;
-		 cout << "I am worker # " << world.rank() << " and index of var = "
-		 << work.vec[9].varIndex << endl;
+	 Work work;
+	 world.recv(mpi::any_source, 0, work);
+	 cout << "I am worker # " << world.rank()
+	 << " and I receive vector of cp, lb,ub from process "
+	 << work.sender << " and I print UB = " << work.ub
+	 << " node lower bound =" << work.node.getCost() << endl;
+	 cout << "I am worker # " << world.rank() << " and index of var = "
+	 << work.vec[9].varIndex << endl;
 
-		 }
+	 }
 
-		 */
+	 */
 	// end tests
-
 	/*// example using openMPI directly with its C interface instead of boost c++ mpi interface.
 	 int processNb, processId;
 	 MPI_Init(NULL,NULL);
