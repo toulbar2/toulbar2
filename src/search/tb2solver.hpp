@@ -148,7 +148,7 @@ public:
 		{
 			ar & op;
 			ar & varIndex;
-			ar & varIndex;
+			ar & value;
 			ar & reverse;
 		}
 		//kad
@@ -306,7 +306,7 @@ public:
 		void serialize(Archive & ar, const unsigned int version)
 		{
 
-			ar & nodeVec;
+			ar & nodesToTransmit;
 			ar & ub;
 			ar & vecDecisions;
 			ar & sender; // sender rank can probably be taken from mpi status object
@@ -314,7 +314,7 @@ public:
 		}
 
 	public:
-		vector<OpenNode> nodeVec; // priority queue which will contain the node(s) to send to other processes
+		OpenList nodesToTransmit; // priority queue which will contain the node(s) to send to other processes
 
 		Cost ub; //  Best current solution a.k.a incumbent solution
 
@@ -328,22 +328,30 @@ public:
 
 		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
 
-
-		Work(const CPStore &cp, const vector<OpenNode> & nodeVec_, const int ub_, const int sender_=0)
-		: nodeVec(nodeVec_)
-		, ub(ub_)
+/**
+ * \brief constructor that pop up directly the open list of the master or the worker.
+ * If it is the master, we pop up only one node, if it is a worker all the nodes of open are popped up
+ */
+		Work(const CPStore &cp, OpenList & open_, const int ub_, bool oneNode_, const int sender_=0 /*master by default*/)
+		: ub(ub_)
 		, sender(sender_)
 		{
-			for (size_t j = 0; j< nodeVec.size();j++)
+			if(oneNode_){ // Only one node will be popped up in queue open
+
+			}
+			while(!open_.empty())
 			{
-				OpenNode node = nodeVec[j];
+				OpenNode node = open_.top();
+				nodesToTransmit.push(node);
+				open_.pop(); // pop up directly the queue open_
 				vector<ChoicePoint> vec;
-				for(ptrdiff_t i = node.first; i < node.last; i++)
+				for(ptrdiff_t i = node.first; i < node.last; i++) // create a sequence of decisions in the vector vec
 				{
 					vec.push_back(cp[i]);
 				}
-				vecDecisions.push_back(vec);
+				vecDecisions.push_back(vec); // create vector of vector of decisions
 				vec.clear();
+				if(oneNode_) break; // if only one node has to be transmitted
 			}
 		}
 /*
