@@ -1955,13 +1955,37 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					wcsp->setUb(work.ub);
 
 					//  recreate a local cp with the vector of CPs to use restore(*cp_, work.node);
-					CPStore *cp = new CPStore(); // start = stop = index = 0
+					CPStore *cp = new CPStore(); // ctr initialize start = stop = index = 0
 					OpenList *open = new OpenList();
 					//work.vector2CPStore(cp_);
 					//OpenNode recvNode = work.node;  // backup of received node
 					//OpenNode nd_ = recvNode;
 					//nd_.last = nd_.last - nd_.first - 1;
 					//nd_.first = 0;
+
+					if (!work.nodesToTransmit.empty()){
+						OpenNode node;
+								while(!work.nodesToTransmit.empty()){ //maj nodes and open ; one loop only as the master send only one node ; evolutivity reasons
+									node = work.nodesToTransmit.top();
+									work.nodesToTransmit.pop();
+									node.last = node.last - node.first;
+									node.first = 0;
+									open->push(node);
+								}
+						vector<vector<ChoicePoint>> vecvec = work.vecDecisions;		// maj cp
+						//for (vector<vector<ChoicePoint>>::iterator it = vecvec.begin() ; it != vecvec.end(); ++it){// this loop is optional: it is just in case we want the master gives more than one job at a time
+							// *it gives a seq of decisions of type vector<ChoicePoint>
+						//	*it.
+						//}
+						for(size_t i = 0; i < vecvec.size();i++){}
+
+
+					}
+					else{
+						cout << "No node transmitted by the master: Error"<<endl;
+						exit(1);
+					}
+
 
 					//open_->push(nd_);
 					cp->store(); // start = stop = index
@@ -2027,6 +2051,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 
 
+            // to remove ; here just to avoid annoying warning because workers don't return
+			return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)
 
