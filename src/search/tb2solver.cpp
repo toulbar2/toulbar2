@@ -1858,7 +1858,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
 			// and use status.source() to get de sender
 
-			if (!work.nodes.empty()) { // case where nodes are sent by the worker
+			if (!work.nodeX.empty()) { // case where nodes are sent by the worker
 				// nb : if not tested node.getCost() for example will output a seg fault
 				// TODO : Push nodes in open_
 				// TODO : for each node update cp_ the vector of choice points of the master
@@ -1899,9 +1899,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		Work work;
 		OpenNode node;
 		while (1) {
-			cout << "worker #"<< world.rank()<< " waiting for work from my master " << endl;
+			cout << "worker #"<< world.rank()<< ": I am waiting for work from the master " << endl;
 			world.recv(master, tag0/*mpi::any_tag*/, work); //blocking recv from the master
-			cout << "I received  work from my master " << world.rank() << endl;
+			cout << "worker #"<< world.rank()<< ": I received  work from my master "  << endl;
+
 			//   set local UB with the received UB
 			wcsp->setUb(work.ub);
 
@@ -1912,24 +1913,24 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck,
 			// we can use while (!work.nodesToTransmit.empty()) and process one node at a time in the loop.
 			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
-			if (!work.nodes.empty()) {
-				node = work.nodes.top(); // get a reference of the OpenList nodes
-				work.nodes.pop();
+			if (!work.nodeX.empty()) {
+				node = work.nodeX.top(); // get a reference of the OpenList nodes
+				work.nodeX.pop();
 				node.last = node.last - node.first;
 				node.first = 0;
 				open->push(node);
-
-				//vector<ChoicePoint> vec = work.vecDecisions[0];	// maj cp
-			//	for (size_t i = 0; i < vec.size(); i++) {
-				//}
+				//(*cp).swap((CPStore) work.vecDecisions[0]);
+				vector<ChoicePoint> vec = work.vecDecisions[0];	// maj cp
+				for (size_t i = 0; i < vec.size(); i++) {
+					(*cp)[i]=vec[i];
+				}
 
 			} else {
-				cout << "No node sent by / received from the master: Error"
+				cout << "No node sent by the master: Error"
 						<< endl;
 				exit(1);
 			}
 
-			//open_->push(nd_);
 			cp->store(); // start = stop = index
 
 			hbfsLimit = (
@@ -1983,12 +1984,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				int worker = world.rank();
 				Work work(*cp, *open, wcsp->getUb(), worker);
 				world.isend(master, tag0, work);  // non blocking send to master
-
-				//   TODO: restore the initial state of the Solver object
-				delete(cp);
-				delete(open);
 			}
 
+			//delete(cp); do a derived class from a
+			//delete(open);
 		} // end of while(1)
 
 	} // end of workers' code
