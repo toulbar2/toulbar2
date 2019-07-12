@@ -1946,7 +1946,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
 
-				recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+				recursiveSolve(bestlb); //kad: call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
 
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
@@ -1956,7 +1956,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			open->updateUb(cub);
 			Store::restore(storedepthBFS);
 			cp->store();
-			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //   to mettre aussi ds le master transmettre Z ?
+			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
 					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 				ToulBar2::hbfs = 0;
@@ -1986,8 +1986,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				world.isend(master, tag0, work);  // non blocking send to master
 			}
 
-			//delete(cp); do a derived class from a
-			//delete(open);
+			//delete(cp); ??
+			//delete(open); ??
 		} // end of while(1)
 
 	} // end of workers' code
@@ -2004,6 +2004,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
 	namespace mpi = boost::mpi;
+	//using namespace boost::mpi; // to get rid of mpi::
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
 	mpi::communicator world;
 
