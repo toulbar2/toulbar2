@@ -306,7 +306,7 @@ public:
 		void serialize(Archive & ar, const unsigned int version)
 		{
 
-			ar & nodes;  // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
+			ar & nodeX;  // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
 			ar & vecDecisions;
 			ar & sender; // sender rank can probably be taken from mpi status object
@@ -314,7 +314,7 @@ public:
 		}
 
 	public:
-		OpenList nodes; // priority queue which will contain the node(s) to send or to receive to/from other processes
+		OpenList nodeX; // priority queue which will contain the node(s) to eXchange between the processes
 
 		Cost ub; //  Best current solution a.k.a incumbent solution
 
@@ -340,13 +340,10 @@ public:
 		: ub(ub_)
 		, sender(sender_)
 		{
-			if(oneNode_){ // Only one node will be popped up in queue open
-
-			}
 			while(!open_.empty())
 			{
 				OpenNode node = open_.top();
-				nodes.push(node);
+				nodeX.push(node);
 				open_.pop(); // pop up directly the queue open_
 				vector<ChoicePoint> vec;
 				for(ptrdiff_t i = node.first; i < node.last; i++) // create a sequence of decisions in the vector vec
@@ -355,16 +352,10 @@ public:
 				}
 				vecDecisions.push_back(vec); // create vector of vector of decisions
 				vec.clear();
-				if(oneNode_) break; // if only one node has to be transmitted
+				if(oneNode_) break; // if only one node has to be transmitted, the loop is terminated
 			}
 		}
-/*
-		 void vector2CPStore(CPStore *cp)
-		 {
-		 for(size_t i = 0; i<=decisions.size()-1; i++)
-		 cp->push_back(decisions[i]);
-		 }
-*/
+
 		Work() {}
 
 	};

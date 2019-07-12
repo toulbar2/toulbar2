@@ -1741,7 +1741,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int tag0 = 0;
 	bool oneNode = false; // if true the sender, e.g. the master, send only one node
 
-
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
@@ -1897,11 +1896,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 	if (world.rank() != master) { // workers' code
 
-		cout << "I am a worker. My id is " << world.rank() << endl;
+		Work work;
+		OpenNode node;
 		while (1) {
-			Work work;
-			cout << "I am waiting for work from my master " << world.rank()
-					<< endl;
+			cout << "worker #"<< world.rank()<< " waiting for work from my master " << endl;
 			world.recv(master, tag0/*mpi::any_tag*/, work); //blocking recv from the master
 			cout << "I received  work from my master " << world.rank() << endl;
 			//   set local UB with the received UB
@@ -1911,24 +1909,23 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			CPStore *cp = new CPStore(); // ctr initialize start = stop = index = 0
 			OpenList *open = new OpenList();
 
-// Here, the worker expect only one node to process. if we want for the master to send several nodes we can use while (!work.nodesToTransmit.empty())
-			// we keep it simple here and the master must send one node and the worker receive one node, otherwise ERROR.
+			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck,
+			// we can use while (!work.nodesToTransmit.empty()) and process one node at a time in the loop.
+			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
 			if (!work.nodes.empty()) {
-					node = work.nodes.top();  // get a reference of the OpenList nodes
-					work.nodes.pop();
-					node.last = node.last - node.first;
-					node.first = 0;
-					open->push(node);
-				vector<vector<ChoicePoint>> vecvec = work.vecDecisions;	// maj cp
-				//for (vector<vector<ChoicePoint>>::iterator it = vecvec.begin() ; it != vecvec.end(); ++it){// this loop is optional: it is just in case we want the master gives more than one job at a time
-				// *it gives a seq of decisions of type vector<ChoicePoint>
-				//	*it.
+				node = work.nodes.top(); // get a reference of the OpenList nodes
+				work.nodes.pop();
+				node.last = node.last - node.first;
+				node.first = 0;
+				open->push(node);
+
+				//vector<ChoicePoint> vec = work.vecDecisions[0];	// maj cp
+			//	for (size_t i = 0; i < vec.size(); i++) {
 				//}
-				for (size_t i = 0; i < vecvec.size(); i++) {
-				}
 
 			} else {
-				cout << "No node sent by / received from the master: Error" << endl;
+				cout << "No node sent by / received from the master: Error"
+						<< endl;
 				exit(1);
 			}
 
@@ -1988,6 +1985,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				world.isend(master, tag0, work);  // non blocking send to master
 
 				//   TODO: restore the initial state of the Solver object
+				delete(cp);
+				delete(open);
 			}
 
 		} // end of while(1)
@@ -2010,55 +2009,52 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	mpi::communicator world;
 
 	// tests 2
-		/*
-		 if (world.rank() == 0) {
-		 OpenNode nd(99, 0, 10);
-		 CPStore *cp = new CPStore();
-		 OpenList *open = new OpenList();
-		 // open->push(nd);
-		 OpenNode nd2(55, 0, 10);
-		 // open->push(nd2);
-		 // create a fake CPStore with the same choice point
-		 for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
-		 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
-		 }
-		 bool oneNode = false;
-		 //Work work(*cp, nd, 19, 0, 1001);
-		 Work work(*cp, *open, 19, oneNode, master);
-		 cout
-		 << "I am the master and I send a pq of nodes and a vector of vector of ChoicePoint, ub and my rank to my workers. "
-		 << endl;
-		 for (int worker = 1; worker < world.size(); worker++)
-		 world.isend(worker, tag0, work);
+	/*
+	 if (world.rank() == 0) {
+	 OpenNode nd(99, 0, 10);
+	 CPStore *cp = new CPStore();
+	 OpenList *open = new OpenList();
+	 // open->push(nd);
+	 OpenNode nd2(55, 0, 10);
+	 // open->push(nd2);
+	 // create a fake CPStore with the same choice point
+	 for (ptrdiff_t i = 0; i < (nd.last + 10); i++) {
+	 cp->addChoicePoint(CP_REMOVE, 36, 25, false);
+	 }
+	 bool oneNode = false;
+	 //Work work(*cp, nd, 19, 0, 1001);
+	 Work work(*cp, *open, 19, oneNode, master);
+	 cout
+	 << "I am the master and I send a pq of nodes and a vector of vector of ChoicePoint, ub and my rank to my workers. "
+	 << endl;
+	 for (int worker = 1; worker < world.size(); worker++)
+	 world.isend(worker, tag0, work);
 
-		 } else {
+	 } else {
 
-		 Work work;
-		 world.recv(mpi::any_source, 0, work);
+	 Work work;
+	 world.recv(mpi::any_source, 0, work);
 
-		 if(!work.nodesToTransmit.empty()) {
-		 OpenNode node = work.nodesToTransmit.top();
-		 vector<vector<ChoicePoint>> vecvec = work.vecDecisions;
-		 vector<ChoicePoint> vec = work.vecDecisions[1];
-		 cout << "I am worker # " << world.rank()
-		 << " and I receive a pq of nodes and a vector of vector of ChoicePoint, ub and my rank to my workers."
-		 << work.sender << " and I print UB = " << work.ub
-		 << " node lower bound =" << node.getCost() << endl;
-		 cout << "I am worker # " << world.rank() << " and index of var = "
-		 << vec[9].varIndex << " and value of var = "
-		 << vec[9].value << endl;
-		 }
-		 else {
-		 cout << "No nodes transmited !!!!! "<< "Me, worker #"<< world.rank() << "received UB = " << work.ub<< endl;
-		 }
-		 }
-		 delete cp;
-		 delete open;
-		 */
-		// end tests2
-
-
-
+	 if(!work.nodesToTransmit.empty()) {
+	 OpenNode node = work.nodesToTransmit.top();
+	 vector<vector<ChoicePoint>> vecvec = work.vecDecisions;
+	 vector<ChoicePoint> vec = work.vecDecisions[1];
+	 cout << "I am worker # " << world.rank()
+	 << " and I receive a pq of nodes and a vector of vector of ChoicePoint, ub and my rank to my workers."
+	 << work.sender << " and I print UB = " << work.ub
+	 << " node lower bound =" << node.getCost() << endl;
+	 cout << "I am worker # " << world.rank() << " and index of var = "
+	 << vec[9].varIndex << " and value of var = "
+	 << vec[9].value << endl;
+	 }
+	 else {
+	 cout << "No nodes transmited !!!!! "<< "Me, worker #"<< world.rank() << "received UB = " << work.ub<< endl;
+	 }
+	 }
+	 delete cp;
+	 delete open;
+	 */
+	// end tests2
 
 	// tests 1
 	/*
@@ -2295,7 +2291,6 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	assert(clb <= cub);
 	return make_pair(clb, cub);
 }
-
 
 string Solver::epsSubProblems(const CPStore &cp, OpenList &open,
 		const int nbCores) {
