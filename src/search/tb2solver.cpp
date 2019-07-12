@@ -1741,6 +1741,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int tag0 = 0;
 	bool oneNode = false; // if true the sender, e.g. the master, send only one node
 
+	// Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
+
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
@@ -1758,9 +1760,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		CPStore *cp = NULL; // vector of choice points
 		OpenList *open = NULL; // priority queue of nodes
 
-		if (cp != NULL)
+		if (cp != NULL)   // why these declaration/definition in two phases. cames from cluster ?
 			delete cp;
-		cp = new CPStore();
+		cp = new CPStore();  // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
 
 		if (open != NULL)
 			delete open;
@@ -1834,6 +1836,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				 */
 
 				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
+
+
 				if (r.test())
 					cout
 							<< "I am the master and I have just sent work in particular UB = "
@@ -1844,11 +1848,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			} // end of loop that distribute jobs to workers
 
+
+
 			Work work; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
 			cout
 					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
 					<< endl;
+
 			world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
+
 			cout << "I am the master. I received a response from worker # "
 					<< work.sender << endl;
 			// or non blocking com :
@@ -1858,8 +1866,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
 			// and use status.source() to get de sender
 
-			if (!work.nodeX.empty()) { // case where nodes are sent by the worker
-				// nb : if not tested node.getCost() for example will output a seg fault
+			if (!work.nodeX.empty()) { // case where nodes are actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
+				// nb : if emptyness not tested, for instance, node.getCost() for example will output a seg fault
 				// TODO : Push nodes in open_
 				// TODO : for each node update cp_ the vector of choice points of the master
 				//  ????????
@@ -1910,16 +1918,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			CPStore *cp = new CPStore(); // ctr initialize start = stop = index = 0
 			OpenList *open = new OpenList();
 
-			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck,
-			// we can use while (!work.nodesToTransmit.empty()) and process one node at a time in the loop.
+			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
+			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
 			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
 			if (!work.nodeX.empty()) {
-				node = work.nodeX.top(); // get a reference of the OpenList nodes
-				work.nodeX.pop();
+				node = work.nodeX[0];
 				node.last = node.last - node.first;
 				node.first = 0;
 				open->push(node);
-				//(*cp).swap((CPStore) work.vecDecisions[0]);
 				vector<ChoicePoint> vec = work.vecDecisions[0];	// maj cp
 				for (size_t i = 0; i < vec.size(); i++) {
 					(*cp)[i] = vec[i];
@@ -1984,8 +1990,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				Work work(*cp, *open, wcsp->getUb(), oneNode, worker);
 				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
 				if (r.test())
-					cout
-							<< "I am worker #" << worker << "and I have just sent my stuff in particular UB = "
+					cout << "I am worker #" << worker
+							<< "and I have just sent my stuff in particular UB = "
 							<< work.ub << " to the master. " << endl;
 			}
 
@@ -1995,12 +2001,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
 		cout
-				<< " Dummy return from workers to eliminate compiler warning as advised by IBM!"
+				<< " Dummy return [0,0] from workers to eliminate compiler warning as advised by IBM!"
 				<< endl;
 		cout
 				<< " The present message should not be displayed as it is the master who terminate the programme !"
 				<< endl;
-		return make_pair(-666, -666);
+		return make_pair(0, 0);
 	} // end of workers' code
 
 }  // end of hybridSolvePara(...)

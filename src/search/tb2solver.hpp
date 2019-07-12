@@ -306,19 +306,19 @@ public:
 		void serialize(Archive & ar, const unsigned int version)
 		{
 
-			ar & nodeX;  // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
+			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
 			ar & vecDecisions;
-			ar & sender; // sender rank can probably be taken from mpi status object
+			ar & sender;// sender rank can probably be taken from mpi status object
 			//ar & subProblemId; // to be used only if we want to memorize pair (i,j)
 		}
 
 	public:
-		OpenList nodeX; // priority queue which will contain the node(s) to eXchange between the processes
+		vector<OpenNode> nodeX; // priority queue which will contain the node(s) to eXchange between the processes
 
-		Cost ub; //  Best current solution a.k.a incumbent solution
+		Cost ub;//  Best current solution a.k.a incumbent solution
 
-		int sender; // rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
+		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
 		vector<vector<ChoicePoint>> vecDecisions;
 
@@ -327,33 +327,33 @@ public:
 		//Long subProblemId; // to be used only if we want to memorize pair (i,j). the idea is to improve the resilience in case of a worker becomes out of order during computation
 		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
 
-/**
- * @brief constructor that pop up directly the open list of the master or the worker.
- * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
- * @param cp_ : CPStore, i.e. vector of choice points, of either the master or the worker
- * @param open_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
- * @param ub_ : current best Solution of either the master or the worker
- * @param oneNode_: boolean. if true only one node will be popped up from open_, otherwise open_ will be emptied.
- * @param sender : rank of the sender. By default, the sender is the master of rank = 0 by convention.
- */
+		/**
+		 * @brief constructor that pop up directly the open list of the master or the worker.
+		 * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
+		 * @param cp_ : CPStore, i.e. vector of choice points, of either the master or the worker
+		 * @param open_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
+		 * @param ub_ : current best Solution of either the master or the worker
+		 * @param oneNode_: boolean. if true only one node will be popped up from open_, otherwise open_ will be emptied.
+		 * @param sender : rank of the sender. By default, the sender is the master of rank = 0 by convention.
+		 */
 		Work(const CPStore &cp_, OpenList & open_, const int ub_, const bool oneNode_, const int sender_=0 /*master by default*/)
 		: ub(ub_)
 		, sender(sender_)
 		{
+			Long i = 0;
 			while(!open_.empty())
 			{
 				OpenNode node = open_.top();
-				nodeX.push(node);
+				nodeX[i]= node;
 				open_.pop(); // pop up directly the queue open_
 				vector<ChoicePoint> vec;
-				for(ptrdiff_t i = node.first; i < node.last; i++) // create a sequence of decisions in the vector vec
+				for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec
 				{
-					//vec.push_back(cp_[i]);
-					vec[i] = cp_[i];
+					vec[i] = cp_[i]; // more efficient than  vec.push_back(cp_[i]);
 				}
-				vecDecisions.push_back(vec); // create vector of vector of decisions
+				vecDecisions[i] = vec; // create vector of vector of decisions
 				vec.clear();
-				if(oneNode_) break; // if only one node has to be transmitted, the loop is terminated
+				if(oneNode_) break;// if only one node has to be transmitted, the loop is terminated
 			}
 		}
 
