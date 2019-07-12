@@ -1892,16 +1892,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// the master returns the optimal value
 		return make_pair(clb, cub);
 
-	}  // end of master code, beginning of code executed by workers
-
-	if (world.rank() != master) { // workers' code
+	} else {		// end of master code, beginning of code executed by workers
 
 		Work work;
 		OpenNode node;
 		while (1) {
-			cout << "worker #"<< world.rank()<< ": I am waiting for work from the master " << endl;
+			cout << "worker #" << world.rank()
+					<< ": I am waiting for work from the master " << endl;
 			world.recv(master, tag0/*mpi::any_tag*/, work); //blocking recv from the master
-			cout << "worker #"<< world.rank()<< ": I received  work from my master "  << endl;
+			cout << "worker #" << world.rank()
+					<< ": I received  work from my master " << endl;
 
 			//   set local UB with the received UB
 			wcsp->setUb(work.ub);
@@ -1922,12 +1922,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				//(*cp).swap((CPStore) work.vecDecisions[0]);
 				vector<ChoicePoint> vec = work.vecDecisions[0];	// maj cp
 				for (size_t i = 0; i < vec.size(); i++) {
-					(*cp)[i]=vec[i];
+					(*cp)[i] = vec[i];
 				}
 
 			} else {
-				cout << "No node sent by the master: Error"
-						<< endl;
+				cout << "No node sent by the master: Error" << endl;
 				exit(1);
 			}
 
@@ -1982,18 +1981,27 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				//   create the message with UB and open nodes information from local open and cp
 				int worker = world.rank();
-				Work work(*cp, *open, wcsp->getUb(), worker);
-				world.isend(master, tag0, work);  // non blocking send to master
+				Work work(*cp, *open, wcsp->getUb(), oneNode, worker);
+				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
+				if (r.test())
+					cout
+							<< "I am worker #" << worker << "and I have just sent my stuff in particular UB = "
+							<< work.ub << " to the master. " << endl;
 			}
 
 			//delete(cp); ??
 			//delete(open); ??
 		} // end of while(1)
 
+		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
+		cout
+				<< " Dummy return from workers to eliminate compiler warning as advised by IBM!"
+				<< endl;
+		cout
+				<< " The present message should not be displayed as it is the master who terminate the programme !"
+				<< endl;
+		return make_pair(-666, -666);
 	} // end of workers' code
-
-	// to remove ; here just to avoid annoying warning because workers don't return
-	return make_pair(clb, cub);
 
 }  // end of hybridSolvePara(...)
 
@@ -2055,7 +2063,6 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	 delete open;
 	 */
 	// end tests2
-
 	// tests 1
 	/*
 	 if (world.rank() == 0) {

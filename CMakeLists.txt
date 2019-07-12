@@ -316,7 +316,7 @@ IF(TOULBAR2)
   ENDIF(MPI)
 
   IF(HBFS_MPI)
-
+   SET(CMAKE_CXX_COMPILER mpic++)
   #  set(BOOST_LIBRARYDIR /usr/lib64/openmpi/lib) # to test boost openmpi on fedora 
   #  set(BOOST_LIBRARYDIR /usr/lib64/mpich/lib) # to test boost mpich on fedora 
     set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu) # boost openmpi on ubuntu

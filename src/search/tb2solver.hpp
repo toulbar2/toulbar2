@@ -336,7 +336,7 @@ public:
  * @param oneNode_: boolean. if true only one node will be popped up from open_, otherwise open_ will be emptied.
  * @param sender : rank of the sender. By default, the sender is the master of rank = 0 by convention.
  */
-		Work(const CPStore &cp_, OpenList & open_, const int ub_, bool oneNode_, const int sender_=0 /*master by default*/)
+		Work(const CPStore &cp_, OpenList & open_, const int ub_, const bool oneNode_, const int sender_=0 /*master by default*/)
 		: ub(ub_)
 		, sender(sender_)
 		{
@@ -348,7 +348,8 @@ public:
 				vector<ChoicePoint> vec;
 				for(ptrdiff_t i = node.first; i < node.last; i++) // create a sequence of decisions in the vector vec
 				{
-					vec.push_back(cp_[i]);
+					//vec.push_back(cp_[i]);
+					vec[i] = cp_[i];
 				}
 				vecDecisions.push_back(vec); // create vector of vector of decisions
 				vec.clear();
