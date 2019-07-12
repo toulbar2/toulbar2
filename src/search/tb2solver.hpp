@@ -306,7 +306,7 @@ public:
 		void serialize(Archive & ar, const unsigned int version)
 		{
 
-			ar & nodesToTransmit;
+			ar & nodes;  // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
 			ar & vecDecisions;
 			ar & sender; // sender rank can probably be taken from mpi status object
@@ -314,25 +314,29 @@ public:
 		}
 
 	public:
-		OpenList nodesToTransmit; // priority queue which will contain the node(s) to send to other processes
+		OpenList nodes; // priority queue which will contain the node(s) to send or to receive to/from other processes
 
 		Cost ub; //  Best current solution a.k.a incumbent solution
 
-		int sender; // rank of the process that send the msg. nb: sender rank can probably be taken from mpi status object
+		int sender; // rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
 		vector<vector<ChoicePoint>> vecDecisions;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
-		//Long subProblemId; // to be used only if we want to memorize pair (i,j)
-
+		//Long subProblemId; // to be used only if we want to memorize pair (i,j). the idea is to improve the resilience in case of a worker becomes out of order during computation
 		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
 
 /**
- * \brief constructor that pop up directly the open list of the master or the worker.
- * If it is the master, we pop up only one node, if it is a worker all the nodes of open are popped up
+ * @brief constructor that pop up directly the open list of the master or the worker.
+ * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
+ * @param cp_ : CPStore, i.e. vector of choice points, of either the master or the worker
+ * @param open_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
+ * @param ub_ : current best Solution of either the master or the worker
+ * @param oneNode_: boolean. if true only one node will be popped up from open_, otherwise open_ will be emptied.
+ * @param sender : rank of the sender. By default, the sender is the master of rank = 0 by convention.
  */
-		Work(const CPStore &cp, OpenList & open_, const int ub_, bool oneNode_, const int sender_=0 /*master by default*/)
+		Work(const CPStore &cp_, OpenList & open_, const int ub_, bool oneNode_, const int sender_=0 /*master by default*/)
 		: ub(ub_)
 		, sender(sender_)
 		{
@@ -342,12 +346,12 @@ public:
 			while(!open_.empty())
 			{
 				OpenNode node = open_.top();
-				nodesToTransmit.push(node);
+				nodes.push(node);
 				open_.pop(); // pop up directly the queue open_
 				vector<ChoicePoint> vec;
 				for(ptrdiff_t i = node.first; i < node.last; i++) // create a sequence of decisions in the vector vec
 				{
-					vec.push_back(cp[i]);
+					vec.push_back(cp_[i]);
 				}
 				vecDecisions.push_back(vec); // create vector of vector of decisions
 				vec.clear();
@@ -470,9 +474,20 @@ protected:
 	void conflict() {}
 	void enforceUb();
 	void singletonConsistency();
-	string epsSubProblems(const CPStore& cp, OpenList& open, const int nbCores); //kad
-	//string epsCommand(const CPStore& cp, OpenList& open, const int nbCores); //kad
-	string opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd );//kad
+
+	//kad
+	/**
+	 * @brief create the string of partial Assignments to put in subProblems.txt i.e. lines like -x=",...."
+	 * @param cp
+	 * @param open
+	 * @param nbCores
+	 * @return string of sub problems
+	 */
+	string epsSubProblems(const CPStore& cp, OpenList& open, const int nbCores);
+	//string epsCommand(const CPStore& cp, OpenList& open, const int nbCores);
+	string opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd);
+	//kad
+
 	Cost beginSolve(Cost ub);
 	Cost preprocessing(Cost ub);
 	void endSolve(bool isSolution, Cost cost, bool isComplete);
