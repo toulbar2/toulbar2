@@ -41,7 +41,6 @@ public:
 	class OpenNode {
 	private:
 		friend class boost::serialization::access;
-
 		template<class Archive>
 		void serialize(Archive &ar, const unsigned int version) {
 			ar & cost;  // node lower bound
@@ -77,15 +76,6 @@ public:
 	class CPStore;
 	class OpenList FINAL : public priority_queue<OpenNode> {
 	private:
-		friend class boost::serialization::access;
-
-		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version)
-		{
-			ar & boost::serialization::base_object<priority_queue>(*this);
-			ar & clb;
-			ar & cub;
-		}
 		Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
 		Cost cub;// current cluster upper bound (independent of any soft arc consistency cost moves)
 	public:
@@ -142,10 +132,8 @@ public:
 		//kad
 	private:
 		friend class boost::serialization::access;
-
 		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version)
-		{
+		void serialize(Archive & ar, const unsigned int version){
 			ar & op;
 			ar & varIndex;
 			ar & value;
@@ -168,130 +156,7 @@ public:
 
 	};
 
-	//kad
-
-	// OpenNode2 without derivation from OpenNode class
-	/*
-	 class OpenNode2 {
-	 private:
-	 friend class boost::serialization::access;
-
-	 template<class Archive>
-	 void serialize(Archive &ar, const unsigned int version) {
-	 ar & cost;  // node lower bound
-	 ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
-	 ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the index (last-1)
-	 }
-	 Cost cost; // global lower bound associated with the open node
-	 public:
-	 ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
-	 ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
-
-	 OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_) :
-	 cost(cost_), first(first_), last(last_) {
-	 }
-	 OpenNode() {
-	 }
-	 bool operator<(const OpenNode &right) const {
-	 return (cost > right.cost)
-	 || (cost == right.cost
-	 && ((last - first) < (right.last - right.first)
-	 || ((last - first)
-	 == (right.last - right.first)
-	 && last >= right.last)));
-	 } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
-
-	 Cost getCost(Cost delta = MIN_COST) const {
-	 return MAX(MIN_COST, cost - delta);
-	 }
-
-	 };
-
-	 */
-
-	// OpenNode using derivation
-	class OpenNode2 : public OpenNode {
-	private:
-		friend class boost::serialization::access;
-
-		template<class Archive>
-		void serialize(Archive &ar, const unsigned int version) {
-			ar & boost::serialization::base_object<OpenNode>(*this);
-			ar & decisions;
-		}
-	public:
-		vector<ChoicePoint> decisions;
-
-		OpenNode2() {
-		}
-		/*
-		 OpenNode2(Cost cost_, ptrdiff_t first_, ptrdiff_t last_)
-		 : OpenNode(cost_, first_, last_)
-		 {
-		 }
-		 */
-		OpenNode2(Cost cost_, const vector<ChoicePoint> & decisions_)
-		{
-			decisions = decisions_;
-			first = 0;
-			last = (ptrdiff_t )decisions.size();  // bad cast?!
-			cost = cost_;
-		}
-
-	};
-
-	class OpenList2 FINAL : public priority_queue<OpenNode2> {
-	private:
-		friend class boost::serialization::access;
-
-		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version)
-		{
-			ar & boost::serialization::base_object<priority_queue>(*this);
-			ar & clb;
-			ar & cub;
-		}
-		Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
-		Cost cub;// current cluster upper bound (independent of any soft arc consistency cost moves)
-	public:
-		OpenList2(Cost lb, Cost ub)
-		: clb(lb)
-		, cub(ub)
-		{
-		}
-		OpenList2()
-		: clb(MAX_COST)
-		, cub(MAX_COST)
-		{
-		} /// \warning use also this method to clear an open list
-
-		bool finished() const
-		{
-			assert(clb <= cub);
-			return (empty() || CUT(top().getCost(), clb));
-		}
-		Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta)));}
-
-		Cost getClosedNodesLb(Cost delta = MIN_COST) const {return MAX(MIN_COST, clb - delta);}
-		void setClosedNodesLb(Cost lb, Cost delta = MIN_COST)
-		{
-			clb = MAX(MIN_COST, lb + delta);
-			assert(clb <= cub);
-		}
-		void updateClosedNodesLb(Cost lb, Cost delta = MIN_COST) {clb = MIN(clb, MAX(MIN_COST, lb + delta));}
-
-		Cost getUb(Cost delta = MIN_COST) const {return MAX(MIN_COST, cub - delta);}
-		void setUb(Cost ub, Cost delta = MIN_COST) {cub = MAX(MIN_COST, ub + delta);}
-		void updateUb(Cost ub, Cost delta = MIN_COST)
-		{
-			Cost tmpub = MAX(MIN_COST, ub + delta);
-			cub = MIN(cub, tmpub);
-			clb = MIN(clb, tmpub);
-		}
-
-		size_type capacity() const {return c.capacity();}
-	};
-
+//kad
 	/**
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
 	 *
@@ -301,11 +166,9 @@ public:
 	{
 	private:
 		friend class boost::serialization::access;
-
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
-
 			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
 			ar & vecDecisions;
@@ -345,16 +208,20 @@ public:
 			{
 				OpenNode node = open_.top();
 				nodeX[i]= node;
-				open_.pop(); // pop up directly the queue open_
+				open_.pop(); // pop up directly the queue open_ !!
 				vector<ChoicePoint> vec;
-				for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec
+				for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 				{
 					vec[i] = cp_[i]; // more efficient than  vec.push_back(cp_[i]);
 				}
+				vec.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data
 				vecDecisions[i] = vec; // create vector of vector of decisions
 				vec.clear();
 				if(oneNode_) break;// if only one node has to be transmitted, the loop is terminated
 			}
+			nodeX.shrink_to_fit(); // optional
+			vecDecisions.shrink_to_fit(); // optional
+
 		}
 
 		Work() {}
@@ -367,21 +234,9 @@ public:
 	 */
 	//BOOST_IS_MPI_DATATYPE(MasterToWorker);
 	//kad
-	class CPStore FINAL : public vector<ChoicePoint> {
-		//kad
-		/* private:
-		 friend class boost::serialization::access;
 
-		 template<class Archive>
-		 void serialize(Archive & ar, const unsigned int version)
-		 {
-		 ar & boost::serialization::base_object<vector>(*this);
-		 ar & start;
-		 ar & stop;  // attribute
-		 ar & index;
-		 }
-		 */
-		//kad
+
+	class CPStore FINAL : public vector<ChoicePoint> {
 	public:
 		ptrdiff_t start;// beginning of the current branch
 		ptrdiff_t stop;// deepest saved branch end (should be free at this position)

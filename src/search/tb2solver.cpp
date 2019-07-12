@@ -1760,9 +1760,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		CPStore *cp = NULL; // vector of choice points
 		OpenList *open = NULL; // priority queue of nodes
 
-		if (cp != NULL)   // why these declaration/definition in two phases. cames from cluster ?
+		if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
 			delete cp;
-		cp = new CPStore();  // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
+		cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
 
 		if (open != NULL)
 			delete open;
@@ -1783,8 +1783,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
 			addOpenNode(*cp, *open, clb);
 
-			//*open2 = OpenList2(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			//addOpenNode(*cp, *open, clb);
 		} else {
 			nbHybridContinue++;
 		}
@@ -1824,7 +1822,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				oneNode = true; // only one node will be popped up from the master's open queue
 				Work work(*cp, *open, wcsp->getUb(), oneNode, master); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				// nb : by default the sender is the master. It can be omitted. see definition of the constructor of class Work.
-				// Caution : the queue open is directly popped by this ctr of class Work
+				// Caution : the queue open is directly popped by this constructor(ctor) of class Work
 				worker = idleQ.front();  // get the first worker in the queue
 				idleQ.pop(); // pop it, hence the worker is considered active. No need for an Active queue. The master suppose that the worker is processing the work i.e. no connection problems.
 				nbSentWork++; // one more work in progress
@@ -1837,7 +1835,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
 
-
 				if (r.test())
 					cout
 							<< "I am the master and I have just sent work in particular UB = "
@@ -1847,8 +1844,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				// nb : mpi::request r = world.isend(worker, tag0, work) and r.test() tests if the message is sent.
 
 			} // end of loop that distribute jobs to workers
-
-
 
 			Work work; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
 			cout
@@ -1866,11 +1861,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
 			// and use status.source() to get de sender
 
-			if (!work.nodeX.empty()) { // case where nodes are actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
+			if (!work.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptyness not tested, for instance, node.getCost() for example will output a seg fault
 				// TODO : Push nodes in open_
 				// TODO : for each node update cp_ the vector of choice points of the master
-				//  ????????
+				assert(work.nodeX.size() == work.vecDecisions.size());
+				OpenNode node;
+				for (size_t i=0; i < work.nodeX.size();i++){
+                     node = work.nodeX[i];
+                     vector<ChoicePoint> vec = work.vecDecisions[i];
+				}
 			}
 
 			// with these info, update UB if the sent UB < currentUB of the master
@@ -1888,7 +1888,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			 cerr << "exception caught: " << e.what() << '\n';
 			 }
 			 // TODO: not important "todo" : if the map givenWork not empty then some workers did not do their job.
-			 * those workers have to be eliminated from idleQ as they are probably out of order
+			 * these workers have to be eliminated from idleQ as they are probably out of order
 			 * and the nodes in the map givenWork have to be re-assigned to worker still in the updated idleQ.
 			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
@@ -1899,10 +1899,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		//	<< endl;
 		// the master returns the optimal value
 		return make_pair(clb, cub);
+//********************************************************************************************//
 
 	} else {		// end of master code, beginning of code executed by workers
 
-		Work work;
+//********************************************************************************************//
+
+		Work work;    // worth it to declare outside the while(1) loop ?
 		OpenNode node;
 		while (1) {
 			cout << "worker #" << world.rank()
@@ -1911,16 +1914,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			cout << "worker #" << world.rank()
 					<< ": I received  work from my master " << endl;
 
-			//   set local UB with the received UB
-			wcsp->setUb(work.ub);
-
-			//  recreate a local cp with the vector of CPs to use restore(*cp_, work.node);
-			CPStore *cp = new CPStore(); // ctr initialize start = stop = index = 0
+			//  Create cp and open in the memory space of the worker
+			CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
 			OpenList *open = new OpenList();
+
+			//   set local UB with the received UB
+			//wcsp->setUb(work.ub);
+			open->updateUb(work.ub);
 
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
 			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
+			// nodeX is a vector<OpenNode> in this version of the code
 			if (!work.nodeX.empty()) {
 				node = work.nodeX[0];
 				node.last = node.last - node.first;
@@ -1935,6 +1940,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				cout << "No node sent by the master: Error" << endl;
 				exit(1);
 			}
+
+            // verification that all the data received are used.
+			// nodeX: first, last ok
+			// nothing to do with node.getCost() it is used directly through nd node below
+			// ub: ok
+			// vecDecisions; ok
+			// sender: not used because it is a master-worker and all messages come necessary from the master
+
 
 			cp->store(); // start = stop = index
 
