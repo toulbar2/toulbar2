@@ -1888,7 +1888,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			 cerr << "exception caught: " << e.what() << '\n';
 			 }
 			 // TODO: not important "todo" : if the map givenWork not empty then some workers did not do their job.
-			 * these workers have to be eliminated from idleQ as they are probably out of order
 			 * and the nodes in the map givenWork have to be re-assigned to worker still in the updated idleQ.
 			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
