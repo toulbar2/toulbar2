@@ -11,12 +11,13 @@
 #include <utils/tb2files_kad.hpp>
 #include <mpi.h>
 #include <boost/mpi.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/priority_queue.hpp>
-#include <boost/serialization/stack.hpp>
+#include <boost/serialization/array.hpp>
 /*
+ #include <boost/serialization/string.hpp>
+ #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
+ #include <boost/serialization/priority_queue.hpp>
+ #include <boost/serialization/stack.hpp>
  #include <boost/serialization/queue.hpp>
  #include <boost/serialization/deque.hpp>
  #include <boost/serialization/list.hpp>
@@ -177,6 +178,8 @@ public:
 		}
 
 	public:
+		// TODO : See if std arrays or built in arrays are usable here and faster than std vectors
+
 		vector<OpenNode> nodeX; // priority queue which will contain the node(s) to eXchange between the processes
 
 		Cost ub;//  Best current solution a.k.a incumbent solution
