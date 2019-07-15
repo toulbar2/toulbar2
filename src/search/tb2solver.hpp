@@ -134,7 +134,7 @@ public:
 	private:
 		friend class boost::serialization::access;
 		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version){
+		void serialize(Archive & ar, const unsigned int version) {
 			ar & op;
 			ar & varIndex;
 			ar & value;
@@ -170,9 +170,9 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
+			ar & vecCp;
 			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
-			ar & vecDecisions;
 			ar & sender;// sender rank can probably be taken from mpi status object
 			//ar & subProblemId; // to be used only if we want to memorize pair (i,j)
 		}
@@ -180,13 +180,14 @@ public:
 	public:
 		// TODO : See if std arrays or built in arrays are usable here and faster than std vectors
 
-		vector<OpenNode> nodeX; // priority queue which will contain the node(s) to eXchange between the processes
+		vector<ChoicePoint> vecCp;// vector of choice points
+
+		vector<OpenNode> nodeX;// priority queue which will contain the node(s) to eXchange between the processes
 
 		Cost ub;//  Best current solution a.k.a incumbent solution
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
-		vector<vector<ChoicePoint>> vecDecisions;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
@@ -194,36 +195,49 @@ public:
 		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
 
 		/**
-		 * @brief constructor that pop up directly the open list of the master or the worker.
+		 * @brief constructor used by the master with 3 arguments that pop up directly the open queue of the master or the worker.
 		 * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
-		 * @param cp_ : CPStore, i.e. vector of choice points, of either the master or the worker
-		 * @param open_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
-		 * @param ub_ : current best Solution of either the master or the worker
-		 * @param oneNode_: boolean. if true only one node will be popped up from open_, otherwise open_ will be emptied.
-		 * @param sender : rank of the sender. By default, the sender is the master of rank = 0 by convention.
+		 * @param cpMaster_ : CPStore, i.e. vector of choice points, of either the master or the worker
+		 * @param openMaster_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
+		 * @param ubMaster_ : current best Solution of either the master or the worker
+		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
 		 */
-		Work(const CPStore &cp_, OpenList & open_, const int ub_, const bool oneNode_, const int sender_=0 /*master by default*/)
-		: ub(ub_)
+		Work(const CPStore &cpMaster_, OpenList & openMaster_, const int ubMaster_)
+		: ub(ubMaster_)
+		, sender(0) //
+		{
+			OpenNode node = openMaster_.top();
+			nodeX[0]= node;
+			openMaster_.pop(); // pop up directly the queue open_ !!
+			for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+			{
+				vecCp[i] = cpMaster_[i]; // more efficient than  vec.push_back(cp_[i]);
+				// use of std assign ?
+			}
+			cout << "vec of choice points capacity before shrinking = "<< vecCp.capacity()<< endl; // to delete
+			vecCp.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data; TO INVESTIGATE test speedup with or without
+			cout << "vec of choice points capacity after shrinking = "<< vecCp.capacity()<< endl; // to delete
+			nodeX.shrink_to_fit();// optional
+
+		}
+
+		// ctor used by the workers with 4 arguments. All the cp
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const int ubWorker_,  const int sender_)
+		: vecCp((vector<ChoicePoint>)cpWorker_)  // init of vecCp
+		, ub(ubWorker_)
 		, sender(sender_)
 		{
-			Long i = 0;
-			while(!open_.empty())
+			int i = 0;
+			// init of vector of OpenNode nodeX
+			while(!openWorker_.empty())
 			{
-				OpenNode node = open_.top();
+				OpenNode node = openWorker_.top();
 				nodeX[i]= node;
-				open_.pop(); // pop up directly the queue open_ !!
-				vector<ChoicePoint> vec;
-				for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
-				{
-					vec[i] = cp_[i]; // more efficient than  vec.push_back(cp_[i]);
-				}
-				vec.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data
-				vecDecisions[i] = vec; // create vector of vector of decisions
-				vec.clear();
-				if(oneNode_) break;// if only one node has to be transmitted, the loop is terminated
+				openWorker_.pop(); // pop up directly the queue open !!
+				i++;
 			}
 			nodeX.shrink_to_fit(); // optional
-			vecDecisions.shrink_to_fit(); // optional
+
 
 		}
 
@@ -238,10 +252,9 @@ public:
 	//BOOST_IS_MPI_DATATYPE(MasterToWorker);
 	//kad
 
-
 	class CPStore FINAL : public vector<ChoicePoint> {
 	public:
-		ptrdiff_t start;// beginning of the current branch
+		ptrdiff_t start;	// beginning of the current branch
 		ptrdiff_t stop;// deepest saved branch end (should be free at this position)
 		StoreCost index;// current branch depth (should be free at this position)
 
@@ -365,6 +378,19 @@ protected:
 	pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolve() {return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb());}
 	//kad
+	/**
+	 * @brief hybrid B&B parallelized with MPI with paradigm master-worker. Activated by -para option
+	 * The master send in non blocking mode the first node to worker 1 with clb=w0 and cub=k (see notations of wcsp formalism)
+	 * and wait for (ie receive in blocking mode) the worker to send its open nodes and UB.
+	 * Then the master update its open queue and cp, the vector of choice points aka decisions,
+	 * and distribute these nodes to worker 2 3 .... 7 1 (case of 7 workers, 1 master).
+	 * It is the number of backtrack authorized that give the signal to the worker to send its nodes.
+	 *
+	 * TODO : if possible, to avoid master bottleneck because it centralizes all the communications, maybe a better scalabilty
+	 * could be reach by transferring the initiative to return nodes to the master. This way the workers won't be idle
+	 * because the master would be occupied to transfer nodes and communicate with a large number of workers, say 100 000 !
+	 * In this case, the workers will pursue their DFS waiting for the master to tell them to return their open nodes.
+	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .has to be deleted at some point
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
