@@ -34,31 +34,44 @@ nb : build folder can be named as you wish : for instance you can
 create 2 folders : one folder named "debug" for the debug version, 
 the other named "release" for the release version.
 
+IMPORTANT IF YOU CAN UPDATE GIT : 
+put the following lines and others in .gitignore to avoid polluting the repo with build folder and eclipse project files.
+release
+debug
+.cproject
+.project
+
 prérequisites : two following "parallel" folders :
 1 - toulbar2/src
-2 - toulbar2/build    build folder has to be created if it does not exist
+2 - toulbar2/release   build folder has to be created if it does not exist
 
 
-- cd build   (where build designate debug or release folder or whatever)
+- cd build  (where build designate debug or release folder or whatever)
 
-- ccmake .. (where the 2 point designate the parent directory namely toulbar2)
-select the option you need e.g. replace release by DEBUG, ...
-type c to configure cmake
+- Configure cmake with ccmake tool: ccmake .. (where the 2 point designate the parent directory namely toulbar2)
+select the option you need e.g. replace Release by Debug, etc ...
+type c to configure cmake then g to generate conf files.
 
-- then cmake .. (cmake with only one c this time).
-this will generate the Makefile.
+- Run cmake .. (cmake with only one c this time).
+this will generate make file and other stuff.
 
-- make - j 8 to compile on an 8 cores machine which produce the exe file
+- make -j8 to compile on an 8 cores machine which produce the exe file
 toulbar2/debug/bin/Linux/toulbar2  
 
-this will generate make file and other stuff.
+
 
 2 - ECLIPSE PHASE
 
-- Import this in Eclipse with :
+Eclipse does not seem to deal properly with existing cmake project: plugin are more or less obsolete, ...
+so we import a makefile project to use make -j8 through eclipse.
+Open eclipse and create a workspace named e.g. toulbar2_eclipse_workspace for instance in your home directory.
+note that toulbar2_eclipse_workspace and toulbar2 are distinct folders. Eclipse uses the former one to save its metadata,
+the latter is used by eclipse through .project and .cproject files to write  the workbench parameters, etc
+the workbench designate the actual "workspace" where you write your code.
 
-- File -> Import -> C/C++ -> Existing code as Makefile project
-nb : the version used here is eclipse CDT of march 2019
+- Create the toulbar2 eclipse project :
+File -> Import -> C/C++ -> Existing code as Makefile project
+nb : the version used here is eclipse scientific computing 2019-06 (eclipse cdt with parallel tools)
 
 - enter a name for the project : toulbar2_debug for instance
 - enter  the path to toulbar2 folder
@@ -69,23 +82,34 @@ nb : the version used here is eclipse CDT of march 2019
 
 - select project folder on the upper left and go to menu Project -> properties -> C/C++ build
 uncheck  use default build command and add type make -j8  ( j = jobs : where 8 is your number of processors, more than 8 is also possible with only 8 cores)
-this wil trigger a faster parallel compilation.
-add build to build directory i.e. ${workspace_loc:/toulbar2_release}/build
-to tell eclipse where to build toulbar2 which will be found in build/bin/Linux directory
+this wil trigger a faster parallel compilation. (alternatively, go in Behavior tab and choose enable parallel build
+add release to build directory i.e. ${workspace_loc:/toulbar2_release}/release
+to tell eclipse where to build toulbar2.
+clic Manage configurations > rename Default with release then create
+a debug configuration if you have compiled and created a debug folder too.
+then in eclipse Projet menu you will be able to set  the default configuration.
+
+toulbar2 executable will be created in release/bin/Linux directory.
+
+To use the toulbar2 you just build, and not a possibly other version installed in your system,
+go to release/bin/Linux directory and use ./toulbar2  file.wcsp put your wcsp files in this current folder.
 
 
 - in C/C++ general -> code analysis check use project settings and uncheck all to avoid false warning and errors
 
-- in formatter choose a format for your code that you like.
+- in formatter choose a format for your code that you like. Normally toulbar2 uses K&R format style
 
 - to have the code formatted when saving the file : windows -> Preferences -> C/C++ -> editor -> Saves Actions -> select Format source Code -> format for all lines
+- mannually format the code with ctrl+shift+F
 
 - To change font in editor : Windows -> Preferences -> General -> Appearance -> Color and font -> C/C++ -> C/C++ editor text font -> button Edit
 
 
 - To execute toulbar2 from eclipse with arguments : Menu Run -> Run configuration -> C/C++ Application -> toulbar2 release default
 add toulbar2/build/bin/Linux/toulbar2 the path to the program toulbar2
-then in tab Argument add the argument to use with toulbar2 e.g.  a wcsp file name
+then in tab Argument add the argument to use with toulbar2 e.g.  a wcsp file name and other toulbar2 options.
+Choose your working folder e.g. ${workspace_loc:toulbar2}/release/bin/Linux so that to avoid to place wcsp files in toulbar2 folder.
+You can also run a parallel run configuration.
 
 
 
