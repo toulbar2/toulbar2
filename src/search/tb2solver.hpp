@@ -202,22 +202,27 @@ public:
 		 * @param ubMaster_ : current best Solution of either the master or the worker
 		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
 		 */
-		Work(const CPStore &cpMaster_, OpenList & openMaster_, const int ubMaster_)
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const int ubMaster_)
 		: ub(ubMaster_)
-		, sender(0) //
+		, sender(0)
 		{
+
+
 			OpenNode node = openMaster_.top();
-			nodeX[0]= node;
+			nodeX.push_back(node);
 			openMaster_.pop(); // pop up directly the queue open_ !!
-			for(ptrdiff_t i = node.first; i < node.last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
-			{
-				vecCp[i] = cpMaster_[i]; // more efficient than  vec.push_back(cp_[i]);
-				// use of std assign ?
-			}
+			//cout<< " VECTOR OF NODES EXCHANGED MUST HAVE ONLY ONE NODE IN IT !"<<endl; boost::mpi::environment::abort(0);
+			cout << "la taille de nodeX dans le ctor master après init  = "<< nodeX.size()<<endl;
+			cout << "la capcité de nodeX dans le ctor master  = "<< nodeX.capacity()<<endl;
+			for(ptrdiff_t i = node.first; i < node.last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+				vecCp.push_back(cpMaster_[i]);// vecCp[i] = cpMaster_[i];
+
+
+
 			//cout << "vec of choice points capacity before shrinking = "<< vecCp.capacity()<< endl; // to delete
 			//vecCp.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data; TO INVESTIGATE test speedup with or without
 			//cout << "vec of choice points capacity after shrinking = "<< vecCp.capacity()<< endl; // to delete
-			//nodeX.shrink_to_fit();// optional
+			//nodeX.shrink_to_fit();// optional: après vérication la capacité et la taille de node X sont égales à 1
 
 		}
 
@@ -232,7 +237,7 @@ public:
 			while(!openWorker_.empty())
 			{
 				OpenNode node = openWorker_.top();
-				nodeX[i]= node;
+				nodeX.push_back(node);
 				openWorker_.pop(); // pop up directly the queue open !!
 				i++;
 			}

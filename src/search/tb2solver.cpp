@@ -1824,7 +1824,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				// nb : by default the sender is the master rank=0.
-
+				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);//exit(0);
 				// Caution : the queue open is directly popped by this constructor(ctor) of class Work
 
 				worker = idleQ.front();  // get the first worker in the queue
@@ -1860,7 +1860,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			cout << "I am the master. I received a response from worker # "
 					<< work.sender << endl;
-			// or non blocking com :
+			// or non blocking mode :
 			// mpi::request r = world.irecv(mpi::any_source, tag0, work);
 			// and test whether data have been received with
 			// if (r.test()) {...}
@@ -1873,9 +1873,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			if (!work.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptiness is not tested toulbar2 will output a seg fault:  for instance, the call node.getCost() will access non authorized memory space.
 
-
-				// update first and last attributes of each node together
-	/*			OpenNode node;
+				// update first and last attributes of each node
+				OpenNode node;
 				for (size_t i = 0; i < work.nodeX.size(); i++) {
 					node = work.nodeX[i];
 					node.first += cp->start; // update node i first attribute: vector cp is full from idx 0 to start-1, so we write from start: translation of the amount "start"
@@ -1890,7 +1889,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					(*cp)[i] = work.vecCp[i - cp->start];
 					(*cp).index = (*cp).index + 1;
 				}
-				*/
 
 			}
 
