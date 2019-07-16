@@ -1783,7 +1783,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			nbHybridNew++;
 			// reinitialize current open list and insert empty node
 			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp, *open, clb);
+			addOpenNode(*cp, *open, clb);  // clb is the cost of the node. iintialization clb =w0, cub = k
 
 		} else {
 			nbHybridContinue++;
@@ -1882,7 +1882,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					addOpenNode(*cp, *open, work.nodeX[i].getCost()); // Push nodes in open
 				}
 
-				// update cp
+				// update the master's cp
 				for (ptrdiff_t i = cp->start;
 						i < cp->start + (ptrdiff_t) work.vecCp.size(); i++) {
 					//addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,work.vecCp[i].value, work.vecCp[i].reverse);
@@ -1935,12 +1935,22 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
 
 			cout << "worker #" << world.rank()
-					<< ": I received  work from my master " << endl;
+					<< ": I received  work from the master in particular UB = " << work.ub<< endl;
 
 			//  Create cp and open in the memory space of the worker
-			CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
+			//CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
+			//OpenList *open = new OpenList();
 
-			OpenList *open = new OpenList();
+			CPStore *cp = NULL; // vector of choice points
+			OpenList *open = NULL; // priority queue of nodes
+
+			if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
+				delete cp;
+			cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
+
+			if (open != NULL)
+				delete open;
+			open = new OpenList();
 
 			//   set local UB with the received UB
 			//wcsp->setUb(work.ub);
@@ -1950,17 +1960,26 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
 			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
 			// nodeX is a vector<OpenNode> in this version of the code
-			if (!work.nodeX.empty()) {
+			if (work.nodeX.size() == 1) {
 				node = work.nodeX[0];
+				// vector<OpenNode>().swap(x); or
 				node.last = node.last - node.first;
 				node.first = 0;
 				open->push(node);
+
+				cout << "cost = lb = " <<  open->top().getCost()<< endl;
+				cout << "node.first = " << open->top().first<< endl;
+				cout << "node.last = " << open->top().last<< endl;
+
 				for (size_t i = 0; i < work.vecCp.size(); i++) {
-					(*cp)[i] = work.vecCp[i];
+					//(*cp)[i] = work.vecCp[i];
+
+					addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex, work.vecCp[i].value, work.vecCp[i].reverse);
 				}
 
 			} else {
-				cout << "No node sent by the master: Error" << endl;
+				cout << "Exactly one node has to be sent by the master: Error"
+						<< endl;
 				exit(1);
 			}
 
@@ -1976,26 +1995,39 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			hbfsLimit = (
 					(ToulBar2::hbfs > 0) ?
 							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+
 			int storedepthBFS = Store::getDepth();
+
 			try {
 				Store::store();  // copy of the current state
+
 				OpenNode nd = open->top(); // get a reference on the best node (min lower bound or, in case of dead hit, max depth)
+
 				open->pop();  // Best node is taken from priority queue open
 
 				restore(*cp, nd); // replay the sequence of decisions and recompute soft arc consistency
+
 				Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
 
 				recursiveSolve(bestlb); //kad: call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+cout << "seg fault in recursiveSolve(bestlb)"<< endl;
+				cout << " exit volontaire pour test." << endl;
+				mpi::environment::abort(0);
 
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
 			}
 
 			cub = wcsp->getUb();
+
 			open->updateUb(cub);
+
 			Store::restore(storedepthBFS);
+
 			cp->store();
+
 			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
 					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -2005,7 +2037,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				hbfsLimit = LONGLONG_MAX;
 			}
 
-			//clb = MAX(clb, open_->getLb());  // master
+			clb = MAX(clb, open->getLb());  // master
 			// showGap(clb, cub);   to be done by the master
 
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
@@ -2024,7 +2056,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				int worker = world.rank();
 
 				Work work(*cp, *open, wcsp->getUb(), worker);
-
+				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);exit(0);
 				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
 				if (r.test())
 					cout << "I am worker #" << worker

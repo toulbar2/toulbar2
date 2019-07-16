@@ -12,8 +12,9 @@
 //#include <mpi.h>
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
-//#include <boost/serialization/array.hpp>
+
 /*
+ #include <boost/serialization/array.hpp>
  #include <boost/serialization/string.hpp>
  #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
  #include <boost/serialization/priority_queue.hpp>
@@ -21,7 +22,6 @@
  #include <boost/serialization/queue.hpp>
  #include <boost/serialization/deque.hpp>
  #include <boost/serialization/list.hpp>
-
  */
 
 template<class T>
@@ -212,10 +212,10 @@ public:
 			nodeX.push_back(node);
 			openMaster_.pop(); // pop up directly the queue open_ !!
 			//cout<< " VECTOR OF NODES EXCHANGED MUST HAVE ONLY ONE NODE IN IT !"<<endl; boost::mpi::environment::abort(0);
-			cout << "la taille de nodeX dans le ctor master après init  = "<< nodeX.size()<<endl;
-			cout << "la capcité de nodeX dans le ctor master  = "<< nodeX.capacity()<<endl;
+			//cout << "la taille de nodeX dans le ctor master après init  = "<< nodeX.size()<<endl;
+			//cout << "la capcité de nodeX dans le ctor master  = "<< nodeX.capacity()<<endl;
 			for(ptrdiff_t i = node.first; i < node.last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
-				vecCp.push_back(cpMaster_[i]);// vecCp[i] = cpMaster_[i];
+				vecCp.push_back(cpMaster_[i]);
 
 
 
@@ -228,20 +228,21 @@ public:
 
 		// ctor used by the workers with 4 arguments. All the cp
 		Work(const CPStore & cpWorker_, OpenList & openWorker_, const int ubWorker_,  const int sender_)
-		: vecCp((vector<ChoicePoint>)cpWorker_)  // init of vecCp
-		, ub(ubWorker_)
+		: /*vecCp((vector<ChoicePoint>)cpWorker_)*/  // init of vecCp
+		 ub(ubWorker_)
 		, sender(sender_)
 		{
-			int i = 0;
 			// init of vector of OpenNode nodeX
 			while(!openWorker_.empty())
 			{
 				OpenNode node = openWorker_.top();
 				nodeX.push_back(node);
 				openWorker_.pop(); // pop up directly the queue open !!
-				i++;
 			}
 			//nodeX.shrink_to_fit(); // optional
+			// init of vector of ChoicePoint with ALL THE CPs IN cpWorker_
+			for(size_t i = 0; i < cpWorker_.size(); i++)
+				vecCp.push_back(cpWorker_[i]);
 
 
 		}
