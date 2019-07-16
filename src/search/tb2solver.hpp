@@ -9,10 +9,10 @@
 #include "utils/tb2store.hpp"
 //kad
 #include <utils/tb2files_kad.hpp>
-#include <mpi.h>
+//#include <mpi.h>
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/array.hpp>
+//#include <boost/serialization/array.hpp>
 /*
  #include <boost/serialization/string.hpp>
  #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
@@ -214,10 +214,10 @@ public:
 				vecCp[i] = cpMaster_[i]; // more efficient than  vec.push_back(cp_[i]);
 				// use of std assign ?
 			}
-			cout << "vec of choice points capacity before shrinking = "<< vecCp.capacity()<< endl; // to delete
-			vecCp.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data; TO INVESTIGATE test speedup with or without
-			cout << "vec of choice points capacity after shrinking = "<< vecCp.capacity()<< endl; // to delete
-			nodeX.shrink_to_fit();// optional
+			//cout << "vec of choice points capacity before shrinking = "<< vecCp.capacity()<< endl; // to delete
+			//vecCp.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data; TO INVESTIGATE test speedup with or without
+			//cout << "vec of choice points capacity after shrinking = "<< vecCp.capacity()<< endl; // to delete
+			//nodeX.shrink_to_fit();// optional
 
 		}
 
@@ -236,7 +236,7 @@ public:
 				openWorker_.pop(); // pop up directly the queue open !!
 				i++;
 			}
-			nodeX.shrink_to_fit(); // optional
+			//nodeX.shrink_to_fit(); // optional
 
 
 		}
