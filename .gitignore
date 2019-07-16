@@ -1,11 +1,9 @@
-.vscode
-.pc
 build/
 debug/
 release/
 bck/
 nbProcess.txt
-.cproject
-.project
+*.cproject
+*.project
 *_ori
 

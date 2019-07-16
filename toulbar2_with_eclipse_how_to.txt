@@ -36,10 +36,10 @@ the other named "release" for the release version.
 
 IMPORTANT IF YOU CAN UPDATE GIT : 
 put the following lines and others in .gitignore to avoid polluting the repo with build folder and eclipse project files.
-release
-debug
-.cproject
-.project
+release/
+debug/
+*.cproject
+*.project
 
 prérequisites : two following "parallel" folders :
 1 - toulbar2/src
