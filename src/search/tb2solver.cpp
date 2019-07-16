@@ -2082,6 +2082,115 @@ cout << "seg fault in recursiveSolve(bestlb)"<< endl;
 
 //***********************************************************************
 
+
+//************************************************************************
+// test seq hbfs
+pair<Cost, Cost> Solver::hybridSolveParaBck2(Cost clb, Cost cub) {
+cout << "test seq hbfs : TOTOOOOOO"<<endl;
+	CPStore *cp_ = NULL; // vector of choice points
+	OpenList *open_ = NULL; // priority queue of nodes
+	// normal BFS without BTD, i.e., hybridSolve is not reentrant
+	if (cp != NULL)
+		delete cp;
+	cp = new CPStore();
+	cp_ = cp;
+	if (open != NULL)
+		delete open;
+	open = new OpenList();
+	open_ = open;
+
+	cp_->store();
+
+	if (open_->size() == 0) { // start a new list of open nodes if needed
+		nbHybridNew++;
+
+		*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub)); // reinitialize current open list and insert empty node
+		addOpenNode(*cp_, *open_, clb);
+	} else {
+		nbHybridContinue++;
+	}
+
+	nbHybrid++; // do not count empty root cluster
+
+	open_->updateUb(cub);
+
+	clb = MAX(clb, open_->getLb());
+
+	while (clb < cub && !open_->finished()) {
+
+		hbfsLimit = (
+				(ToulBar2::hbfs > 0) ?
+						(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+
+		int storedepthBFS = Store::getDepth();
+
+		try {
+
+			Store::store();
+			OpenNode nd = open_->top();
+			open_->pop(); // hbfs prélève un noeud
+
+			restore(*cp_, nd);  // replay the sequence of decisions and recompute soft arc consistency
+
+			Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
+
+			bestlb = MAX(bestlb, clb);
+
+			recursiveSolve(bestlb); // kad call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+
+		} catch (Contradiction) {
+			wcsp->whenContradiction();
+		}
+
+		cub = wcsp->getUb();
+
+		open_->updateUb(cub);
+
+		Store::restore(storedepthBFS);
+
+		cp_->store();
+
+		if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
+				|| open_->size()
+						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+
+			ToulBar2::hbfs = 0;
+
+			ToulBar2::hbfsGlobalLimit = 0;
+
+			hbfsLimit = LONGLONG_MAX;
+		}
+
+		clb = MAX(clb, open_->getLb());
+
+		showGap(clb, cub);
+
+		if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+
+			if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
+					&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+
+				ToulBar2::hbfs *= 2;
+
+			else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
+					&& ToulBar2::hbfs >= 2)
+
+				ToulBar2::hbfs /= 2;
+
+		}
+	} // end while (clb < cub && !open_->finished() && (clb == initiallb && cub == initialub))
+	cout << "fin test seq hbfs : TOTOOOOOO"<<endl;
+	return make_pair(clb, cub);
+}
+
+//fin test seq hbfs
+
+
+//**************************************************************************
+
+
+
+
 // not used just for temporary backup
 pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 
