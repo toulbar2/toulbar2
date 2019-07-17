@@ -1,14 +1,9 @@
-.vscode
-.pc
-build
-build_debug
-debug
-release
+build/
+debug/
+release/
+bck/
 nbProcess.txt
-#src/ToulbarVersion.hpp
-#src/MyCPackConf.cmake
-.cproject
-.project
+*.cproject
+*.project
 *_ori
-bck
 
