@@ -783,7 +783,7 @@ void Solver::assign(int varIndex, Value value, bool reverse) {
 	wcsp->assign(varIndex, value);
 	wcsp->propagate();
 	if (ToulBar2::hbfs)
-		addChoicePoint(CP_ASSIGN, varIndex, value, reverse);
+		addChoicePoint(CP_ASSIGN, varIndex, value, reverse); // seg fault 2
 }
 
 void Solver::remove(int varIndex, Value value, bool reverse) {
@@ -906,6 +906,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb) {
 	bool increasing = true;
 	ValueCost sorted[domsize];
 	//	bool reverse = true; // (ToulBar2::restart>0);
+
 	if (dichotomic) {
 		if (ToulBar2::dichotomicBranching == 1) {
 			middle = (wcsp->getInf(varIndex) + wcsp->getSup(varIndex)) / 2;
@@ -922,6 +923,8 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb) {
 		//    	value = wcsp->getMaxUnaryCostValue(varIndex);
 		//		assert(wcsp->canbe(varIndex,value));
 	}
+
+
 	try {
 		Store::store();
 		lastConflictVar = varIndex;
@@ -940,7 +943,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb) {
 			//    	} else if (reverse) {
 			//    		remove(varIndex, value);
 		} else
-			assign(varIndex, value);
+			assign(varIndex, value); // seg fault 1
 		lastConflictVar = -1;
 		recursiveSolve(lb); //cout << "3 - Call recursive solve from binaryChoicePoint. line 881"<< endl;
 	} catch (Contradiction) {
@@ -1405,6 +1408,7 @@ void Solver::newSolution() {
 }
 
 void Solver::recursiveSolve(Cost lb) {
+
 	int varIndex = -1;
 	if (ToulBar2::bep)
 		varIndex = getMostUrgent();
@@ -1783,7 +1787,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			nbHybridNew++;
 			// reinitialize current open list and insert empty node
 			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp, *open, clb);  // clb is the cost of the node. iintialization clb =w0, cub = k
+			addOpenNode(*cp, *open, clb); // clb is the cost of the node. initialization clb =w0, cub = k
 
 		} else {
 			nbHybridContinue++;
@@ -1922,25 +1926,26 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		return make_pair(clb, cub);
 //********************************************************************************************//
 
-	} else {		// end of master code, beginning of code executed by workers
+	} else {// end of master code, beginning of code executed by workers' code
 
 //********************************************************************************************//
 
-		Work work;    // worth it to declare outside the while(1) loop ?
-		OpenNode node;
+
 		while (1) {
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
-
+			Work work;
 			world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
 
 			cout << "worker #" << world.rank()
-					<< ": I received  work from the master in particular UB = " << work.ub<< endl;
+					<< ": I received  work from the master in particular UB = "
+					<< work.ub << endl;
 
 			//  Create cp and open in the memory space of the worker
-			//CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
-			//OpenList *open = new OpenList();
+			CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
+			OpenList *open = new OpenList();
 
+/*
 			CPStore *cp = NULL; // vector of choice points
 			OpenList *open = NULL; // priority queue of nodes
 
@@ -1951,55 +1956,49 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			if (open != NULL)
 				delete open;
 			open = new OpenList();
+*/
+
+			cp->store(); // start = stop = index
 
 			//   set local UB with the received UB
-			//wcsp->setUb(work.ub);
 			open->updateUb(work.ub);
 
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
-			// But we keep it simple here and the master must send one node and each and every worker receive one node, otherwise ERROR.
+			// But we keep it simple here and the master must send one node and each and every worker receives one node, otherwise ERROR.
 			// nodeX is a vector<OpenNode> in this version of the code
-			if (work.nodeX.size() == 1) {
-				node = work.nodeX[0];
-				// vector<OpenNode>().swap(x); or
-				node.last = node.last - node.first;
-				node.first = 0;
-				open->push(node);
+			assert(work.nodeX.size() == 1);
 
-				cout << "cost = lb = " <<  open->top().getCost()<< endl;
-				cout << "node.first = " << open->top().first<< endl;
-				cout << "node.last = " << open->top().last<< endl;
-
-				for (size_t i = 0; i < work.vecCp.size(); i++) {
-					//(*cp)[i] = work.vecCp[i];
-
-					addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex, work.vecCp[i].value, work.vecCp[i].reverse);
-				}
-
-			} else {
-				cout << "Exactly one node has to be sent by the master: Error"
-						<< endl;
-				exit(1);
+			// updating cp: if vecCP empty the loop is not executed
+			for (size_t i = 0; i < work.vecCp.size(); i++) {
+				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
+						work.vecCp[i].value, work.vecCp[i].reverse);
 			}
+			for (size_t i = 0; i < cp->size(); i++) {
+				cout<< (*cp)[i].varIndex << endl;
+						}
+
+			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop et push node with first= cp-> start and last= cp->index
+			// so first and last from the master are probably not to be transmitted.
+
+			cout << "cost = lb = " << open->top().getCost() << endl;
+			cout << "node.first = " << open->top().first << endl;
+			cout << "node.last = " << open->top().last << endl;
 
 			// check list to verify that all the data received are used.
-			// nodeX: first, last ok
+			// nodeX: first, last  probalby not necessary to be transmitted
 			// nothing to do with node.getCost() it is used directly through nd node below
 			// ub: ok
-			// vecDecisions; ok
 			// sender: not used because it is a master-worker and all messages come necessary from the master
-
-			cp->store(); // start = stop = index
 
 			hbfsLimit = (
 					(ToulBar2::hbfs > 0) ?
-							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX); // number of backtracks max
 
-			int storedepthBFS = Store::getDepth();
+			int storedepthBFS = Store::getDepth(); // store the depth of the DFS search
 
 			try {
-				Store::store();  // copy of the current state
+				Store::store();  // store the current state
 
 				OpenNode nd = open->top(); // get a reference on the best node (min lower bound or, in case of dead hit, max depth)
 
@@ -2011,10 +2010,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
 
-				recursiveSolve(bestlb); //kad: call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
-cout << "seg fault in recursiveSolve(bestlb)"<< endl;
-				cout << " exit volontaire pour test." << endl;
-				mpi::environment::abort(0);
+				//cout << " exit volontaire pour test." << endl; mpi::environment::abort(0);
+
+				recursiveSolve(bestlb); // call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
+
+				//cout << "seg fault in recursiveSolve(bestlb)"<< endl; // probably bad code before recursive DFS cause this issue not the recursion itself
+				//cout << " exit volontaire pour test." << endl; mpi::environment::abort(0);
+				// recursive DFS updates open with open nodes + Ub which are to be transmitted to the master.
 
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
@@ -2028,6 +2030,7 @@ cout << "seg fault in recursiveSolve(bestlb)"<< endl;
 
 			cp->store();
 
+			// in case lack of memory HBFS become DFS
 			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
 					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -2040,11 +2043,13 @@ cout << "seg fault in recursiveSolve(bestlb)"<< endl;
 			clb = MAX(clb, open->getLb());  // master
 			// showGap(clb, cub);   to be done by the master
 
+
+			// adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
 				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
 						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-					ToulBar2::hbfs *= 2; // kad  ToulBar2::hbfs = Z
+					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z
 				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
 						&& ToulBar2::hbfs >= 2)
 					ToulBar2::hbfs /= 2;
@@ -2056,7 +2061,9 @@ cout << "seg fault in recursiveSolve(bestlb)"<< endl;
 				int worker = world.rank();
 
 				Work work(*cp, *open, wcsp->getUb(), worker);
-				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);exit(0);
+
+				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);
+
 				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
 				if (r.test())
 					cout << "I am worker #" << worker
@@ -2082,11 +2089,10 @@ cout << "seg fault in recursiveSolve(bestlb)"<< endl;
 
 //***********************************************************************
 
-
 //************************************************************************
 // test seq hbfs
 pair<Cost, Cost> Solver::hybridSolveParaBck2(Cost clb, Cost cub) {
-cout << "test seq hbfs : TOTOOOOOO"<<endl;
+	cout << "test seq hbfs : TOTOOOOOO" << endl;
 	CPStore *cp_ = NULL; // vector of choice points
 	OpenList *open_ = NULL; // priority queue of nodes
 	// normal BFS without BTD, i.e., hybridSolve is not reentrant
@@ -2130,7 +2136,7 @@ cout << "test seq hbfs : TOTOOOOOO"<<endl;
 			OpenNode nd = open_->top();
 			open_->pop(); // hbfs prélève un noeud
 
-			restore(*cp_, nd);  // replay the sequence of decisions and recompute soft arc consistency
+			restore(*cp_, nd); // replay the sequence of decisions and recompute soft arc consistency
 
 			Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
 
@@ -2179,17 +2185,13 @@ cout << "test seq hbfs : TOTOOOOOO"<<endl;
 
 		}
 	} // end while (clb < cub && !open_->finished() && (clb == initiallb && cub == initialub))
-	cout << "fin test seq hbfs : TOTOOOOOO"<<endl;
+	cout << "fin test seq hbfs : TOTOOOOOO" << endl;
 	return make_pair(clb, cub);
 }
 
 //fin test seq hbfs
 
-
 //**************************************************************************
-
-
-
 
 // not used just for temporary backup
 pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
@@ -3369,6 +3371,7 @@ void Solver::CPStore::addChoicePoint(ChoicePointOp op, int varIndex,
 		cout << "add choice point " << CPOperation[op] << ((reverse) ? "*" : "")
 				<< " (" << varIndex << ", " << value << ") at position "
 				<< index << endl;
+
 	if ((size_t) index >= size()) {
 		assert((size_t )index == size());
 		push_back(ChoicePoint(op, varIndex, value, reverse));
@@ -3397,7 +3400,7 @@ void Solver::addChoicePoint(ChoicePointOp op, int varIndex, Value value,
 					<< " Bytes allocated for hybrid best-first search open nodes at cluster "
 					<< td->getCurrentCluster()->getId() << "." << endl;
 	} else {
-		CPStore::size_type before = cp->capacity();
+		CPStore::size_type before = cp->capacity(); //segfault  in worker when using capacity Signal code: Address not mapped (1) CPStore cp = 0 = NULL
 		cp->addChoicePoint(op, varIndex, value, reverse);
 		CPStore::size_type after = cp->capacity();
 		if (ToulBar2::verbose >= 0 && after > before
