@@ -9,11 +9,12 @@
 #include "utils/tb2store.hpp"
 //kad
 #include <utils/tb2files_kad.hpp>
-//#include <mpi.h>
+
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
 
 /*
+ #include <mpi.h>
  #include <boost/serialization/array.hpp>
  #include <boost/serialization/string.hpp>
  #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
