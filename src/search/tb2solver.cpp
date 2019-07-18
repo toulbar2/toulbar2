@@ -1407,8 +1407,9 @@ void Solver::newSolution() {
 }
 
 void Solver::recursiveSolve(Cost lb) {
-	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of cp = "<< cp << endl;
-	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of Solver::cp = "<< cp << endl;
+	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of cp = " << cp << endl;
+	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of Solver::cp = " << cp
+			<< endl;
 	int varIndex = -1;
 	if (ToulBar2::bep)
 		varIndex = getMostUrgent();
@@ -1751,20 +1752,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int tag0 = 0;
 
 	// Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
-/*
-		CPStore *cp = NULL; // vector of choice points
-		OpenList *open = NULL; // priority queue of nodes
 
-		if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
-			delete cp;
-		cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
 
-		if (open != NULL)
-			delete open;
-		open = new OpenList();
-*/
+	CPStore *cp_ = NULL; // vector of choice points
+	OpenList *open_ = NULL; // priority queue of nodes
+	// normal BFS without BTD, i.e., hybridSolve is not reentrant
+	if (cp != NULL)
+		delete cp;
 	cp = new CPStore();
+	cp_ = cp;
+	if (open != NULL)
+		delete open;
 	open = new OpenList();
+	open_ = open;
+
 
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
@@ -1780,27 +1781,24 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
 			idleQ.push(i);
 
-
 		/*  // is it possible to replace the above lines by the two lines below ?
 		 *  where is the delete associated with the cp and open ?
 		 CPStore * cp = new CPStore();
 		 OpenList * open = new OpenList();
 		 */
 
-		cp->store(); // initialize indexes of the vector CPStore
-		// initialization of pq open with the root node
-		if (open->size() == 0) { // start a new list of open nodes if needed
-			nbHybridNew++;
-			// reinitialize current open list and insert empty node
-			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
-			addOpenNode(*cp, *open, clb); // clb is the cost of the node. initialization clb =w0, cub = k
+		cp_->store();
 
+		if (open_->size() == 0) { // start a new list of open nodes if needed
+			nbHybridNew++;
+			*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub)); // reinitialize current open list and insert empty node
+			addOpenNode(*cp_, *open_, clb);
 		} else {
 			nbHybridContinue++;
 		}
 		nbHybrid++; // do not count empty root cluster
 
-		open->updateUb(cub);
+		open_->updateUb(cub);
 
 		if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //
 				|| open->size()
@@ -1813,7 +1811,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		clb = MAX(clb, open->getLb());
 
-		showGap(clb, cub);
+	//	showGap(clb, cub);
 
 		/*//  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the job aka of the work that has been sent
 		 #include <map>  // complexity of c++ std container is quite good probably because it is based on red-black tree algorithm
@@ -1937,29 +1935,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 //********************************************************************************************//
 		Work work;
-		//  Create cp and open in the memory space of the worker
 
 		//CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
-		//OpenList *open = new OpenList();
-
-		/*
-		 CPStore *cp = NULL; // vector of choice points
-		 OpenList *open = NULL; // priority queue of nodes
-
-		 if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
-		 delete cp;
-		 cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
-
-		 if (open != NULL)
-		 delete open;
-		 open = new OpenList();
-		 */
 
 		while (1) {
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
-            assert(s.error() == 0); // recv ok
+			assert(s.error() == 0); // recv ok
 			cout << "worker #" << world.rank()
 					<< ": I received  work from the master in particular UB = "
 					<< work.ub << endl;
@@ -2167,11 +2150,8 @@ pair<Cost, Cost> Solver::hybridSolveParaBck2(Cost clb, Cost cub) {
 		if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
 				|| open_->size()
 						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-
 			ToulBar2::hbfs = 0;
-
 			ToulBar2::hbfsGlobalLimit = 0;
-
 			hbfsLimit = LONGLONG_MAX;
 		}
 
