@@ -1928,6 +1928,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 //********************************************************************************************//
 
 	} else {// end of master code, beginning of code executed by workers' code
+		// gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 
 //********************************************************************************************//
 
