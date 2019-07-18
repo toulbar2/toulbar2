@@ -1407,8 +1407,8 @@ void Solver::newSolution() {
 }
 
 void Solver::recursiveSolve(Cost lb) {
-	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of cp = " << cp << endl;
-	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of Solver::cp = " << cp
+	cout << "XXXXXXXXXXXXXXXXXXXXX recursive solv: cp->size() = " << cp->size() << endl;
+	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: cp->capacity() = " << cp->capacity()
 			<< endl;
 	int varIndex = -1;
 	if (ToulBar2::bep)
