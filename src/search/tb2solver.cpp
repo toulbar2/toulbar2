@@ -1739,6 +1739,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 // version without clusters
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
+	// mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 -para 404.wcsp
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
 	namespace mpi = boost::mpi;
