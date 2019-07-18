@@ -924,7 +924,6 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb) {
 		//		assert(wcsp->canbe(varIndex,value));
 	}
 
-
 	try {
 		Store::store();
 		lastConflictVar = varIndex;
@@ -1408,7 +1407,8 @@ void Solver::newSolution() {
 }
 
 void Solver::recursiveSolve(Cost lb) {
-
+	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of cp = "<< cp << endl;
+	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: adr of Solver::cp = "<< cp << endl;
 	int varIndex = -1;
 	if (ToulBar2::bep)
 		varIndex = getMostUrgent();
@@ -1740,7 +1740,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 // version without clusters
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	// mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 -para 404.wcsp
-
+	// or
+	// mpirun -np 2 xterm -e gdb ./toulbar2   and in each xterm type run -para -404.wcsp
 	cout << " PARALLEL HBFS MODE!!!" << endl;
 	namespace mpi = boost::mpi;
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
@@ -1750,6 +1751,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int tag0 = 0;
 
 	// Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
+/*
+		CPStore *cp = NULL; // vector of choice points
+		OpenList *open = NULL; // priority queue of nodes
+
+		if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
+			delete cp;
+		cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
+
+		if (open != NULL)
+			delete open;
+		open = new OpenList();
+*/
+	cp = new CPStore();
+	open = new OpenList();
 
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
@@ -1765,16 +1780,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
 			idleQ.push(i);
 
-		CPStore *cp = NULL; // vector of choice points
-		OpenList *open = NULL; // priority queue of nodes
-
-		if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
-			delete cp;
-		cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
-
-		if (open != NULL)
-			delete open;
-		open = new OpenList();
 
 		/*  // is it possible to replace the above lines by the two lines below ?
 		 *  where is the delete associated with the cp and open ?
@@ -1931,34 +1936,33 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 
 //********************************************************************************************//
+		Work work;
+		//  Create cp and open in the memory space of the worker
 
+		//CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
+		//OpenList *open = new OpenList();
+
+		/*
+		 CPStore *cp = NULL; // vector of choice points
+		 OpenList *open = NULL; // priority queue of nodes
+
+		 if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
+		 delete cp;
+		 cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
+
+		 if (open != NULL)
+		 delete open;
+		 open = new OpenList();
+		 */
 
 		while (1) {
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
-			Work work;
-			world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
-
+			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
+            assert(s.error() == 0); // recv ok
 			cout << "worker #" << world.rank()
 					<< ": I received  work from the master in particular UB = "
 					<< work.ub << endl;
-
-			//  Create cp and open in the memory space of the worker
-			CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
-			OpenList *open = new OpenList();
-
-/*
-			CPStore *cp = NULL; // vector of choice points
-			OpenList *open = NULL; // priority queue of nodes
-
-			if (cp != NULL) // why these declaration/definition in two phases. cames from cluster ?
-				delete cp;
-			cp = new CPStore(); // why no delete for cp and open. destructor of base class vector<ChoicePoint> sufficient ? memory leak ; usage of valgrind ?
-
-			if (open != NULL)
-				delete open;
-			open = new OpenList();
-*/
 
 			cp->store(); // start = stop = index
 
@@ -1976,11 +1980,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
 						work.vecCp[i].value, work.vecCp[i].reverse);
 			}
+			//cp->addChoicePoint(CP_REMOVE, 9, 1, false);
+			// print cp for testing
 			for (size_t i = 0; i < cp->size(); i++) {
-				cout<< (*cp)[i].varIndex << endl;
-						}
+				cout << "TOXXXXXXXXXX varINdex dans cp" << endl;
+				cout << (*cp)[i].varIndex << endl;
+			}
 
-			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop et push node with first= cp-> start and last= cp->index
+			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
 			// so first and last from the master are probably not to be transmitted.
 
 			cout << "cost = lb = " << open->top().getCost() << endl;
@@ -2044,7 +2051,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			clb = MAX(clb, open->getLb());  // master
 			// showGap(clb, cub);   to be done by the master
-
 
 			// adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
@@ -3427,7 +3433,7 @@ void Solver::addOpenNode(CPStore &cp, OpenList &open, Cost lb, Cost delta) {
 	assert(cp.start <= idx);
 	open.push(OpenNode(MAX(MIN_COST, lb + delta), cp.start, idx)); // lb ds opennode worker, 0 qqch first <- first+start last = last +start
 
-	cp.stop = max(cp.stop, idx);  // kad: 
+	cp.stop = max(cp.stop, idx);  // kad:
 }
 
 //// BUG: not compatible with boosting search by variable elimination (default dummy assignment may be incompatible with restored choice point)

@@ -400,7 +400,7 @@ protected:
 	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .has to be deleted at some point
-	pair<Cost, Cost> hybridSolveParaBck2(Cost clb, Cost cub);
+	pair<Cost, Cost> hybridSolveParaBck2(Cost clb, Cost cub);//kad temporary backup.
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
