@@ -1735,11 +1735,12 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 //kad
 
-// version without clusters
+// version without clusters (no BTD)
+
+// Parallel Debug tool: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 -para 404.wcsp
+// or
+// mpirun -np 2 xterm -e gdb ./toulbar2   then, in each xterm, type:  run -para 404.wcsp
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
-	// mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 -para 404.wcsp
-	// or
-	// mpirun -np 2 xterm -e gdb ./toulbar2   and in each xterm type run -para -404.wcsp
 	cout << " PARALLEL HBFS MODE!!!" << endl;
 	namespace mpi = boost::mpi;
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
@@ -1748,20 +1749,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 	const int master = 0;
 	const int tag0 = 0;
 
-	// Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
+	// INFO: Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
 
-	//CPStore *cp_ = NULL; // vector of choice points
-	//OpenList *open_ = NULL; // priority queue of nodes
-	// normal BFS without BTD, i.e., hybridSolve is not reentrant
 	if (cp != NULL)
 		delete cp;
 	cp = new CPStore(); // define vector od CPs declared as attribute of class Solver. It is a class global variable defining partly the "state" of the solver.
-	//cp_ = cp;
 	if (open != NULL)
 		delete open;
-	open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too !
-	//open_ = open;
+	open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
 
+// ********************************************************************************************
+// *************************************** Master *********************************************
+// ********************************************************************************************
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
@@ -1788,15 +1787,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		nbHybrid++; // do not count empty root cluster
 
 		open->updateUb(cub);
-
-		if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //
-				|| open->size()
-						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-			ToulBar2::hbfs = 0;
-			ToulBar2::hbfsGlobalLimit = 0;
-
-			hbfsLimit = LONGLONG_MAX;
-		}
 
 		clb = MAX(clb, open->getLb());
 
@@ -1854,7 +1844,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					<< endl;
 
 			mpi::status sr = world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
+
 			assert(sr.error() == 0);
+
 			cout << "I am the master. I received a response from worker # "
 					<< work.sender << endl;
 			// or non blocking mode :
@@ -1866,6 +1858,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			// with these info, update UB if the sent UB < currentUB of the master
 			open->updateUb(work.ub);
+			cout << "ZZZZZ updating UB with  " <<  work.ub << endl;
+			cout << "ZZZZZ clb  " <<  open->getLb() << endl;
+			cout << "ZZZZZ cub  " <<  open->getUb() << endl;
 
 			if (!work.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptiness is not tested toulbar2 will output a seg fault:  for instance, the call node.getCost() will access non authorized memory space.
@@ -1884,8 +1879,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 						i < cp->start + (ptrdiff_t) work.vecCp.size(); i++) {
 					addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
 							work.vecCp[i].value, work.vecCp[i].reverse);
-					//cp->push_back(work.vecCp[i - cp->start]) ;
-					//(*cp).index = (*cp).index + 1;
 				}
 
 			}
@@ -1911,6 +1904,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			 * and the nodes in the map givenWork have to be re-assigned to worker still in the updated idleQ.
 			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
+
+			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //
+						|| open->size()
+								>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+					ToulBar2::hbfs = 0;
+					ToulBar2::hbfsGlobalLimit = 0;
+
+					hbfsLimit = LONGLONG_MAX;
+				}
 
 		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
 
