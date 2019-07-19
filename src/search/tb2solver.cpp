@@ -1407,9 +1407,6 @@ void Solver::newSolution() {
 }
 
 void Solver::recursiveSolve(Cost lb) {
-	cout << "XXXXXXXXXXXXXXXXXXXXX recursive solv: cp->size() = " << cp->size() << endl;
-	cout << "XXXXXXXXXXXXXXXXXXXXX rec solv: cp->capacity() = " << cp->capacity()
-			<< endl;
 	int varIndex = -1;
 	if (ToulBar2::bep)
 		varIndex = getMostUrgent();
@@ -1753,19 +1750,17 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 	// Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
 
-
-	CPStore *cp_ = NULL; // vector of choice points
-	OpenList *open_ = NULL; // priority queue of nodes
+	//CPStore *cp_ = NULL; // vector of choice points
+	//OpenList *open_ = NULL; // priority queue of nodes
 	// normal BFS without BTD, i.e., hybridSolve is not reentrant
 	if (cp != NULL)
 		delete cp;
-	cp = new CPStore();
-	cp_ = cp;
+	cp = new CPStore(); // define vector od CPs declared as attribute of class Solver. It is a class global variable defining partly the "state" of the solver.
+	//cp_ = cp;
 	if (open != NULL)
 		delete open;
-	open = new OpenList();
-	open_ = open;
-
+	open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too !
+	//open_ = open;
 
 	if (world.rank() == master) {
 		cout << "I am the master. My id is " << world.rank() << endl;
@@ -1787,18 +1782,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 OpenList * open = new OpenList();
 		 */
 
-		cp_->store();
+		cp->store();
 
-		if (open_->size() == 0) { // start a new list of open nodes if needed
+		if (open->size() == 0) { // start a new list of open nodes if needed
 			nbHybridNew++;
-			*open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub)); // reinitialize current open list and insert empty node
-			addOpenNode(*cp_, *open_, clb);
+			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub)); // reinitialize current open list and insert empty node
+			addOpenNode(*cp, *open, clb);
 		} else {
 			nbHybridContinue++;
 		}
 		nbHybrid++; // do not count empty root cluster
 
-		open_->updateUb(cub);
+		open->updateUb(cub);
 
 		if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //
 				|| open->size()
@@ -1811,7 +1806,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		clb = MAX(clb, open->getLb());
 
-	//	showGap(clb, cub);
+		//	showGap(clb, cub);
 
 		/*//  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the job aka of the work that has been sent
 		 #include <map>  // complexity of c++ std container is quite good probably because it is based on red-black tree algorithm
@@ -1934,23 +1929,24 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		// gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 
 //********************************************************************************************//
-		Work work;
 
-		//CPStore *cp = new CPStore(); // ctor initialize start = stop = index = 0
+		//cp = new CPStore(); // ctor initialize start = stop = index = 0
 
 		while (1) {
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
+			Work work;
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
+
 			assert(s.error() == 0); // recv ok
+
 			cout << "worker #" << world.rank()
 					<< ": I received  work from the master in particular UB = "
 					<< work.ub << endl;
 
 			cp->store(); // start = stop = index
 
-			//   set local UB with the received UB
-			open->updateUb(work.ub);
+			open->updateUb(work.ub); // set local UB with the received UB
 
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
@@ -1958,14 +1954,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// nodeX is a vector<OpenNode> in this version of the code
 			assert(work.nodeX.size() == 1);
 
-			// updating cp: if vecCP empty the loop is not executed
-			for (size_t i = 0; i < work.vecCp.size(); i++) {
+			for (size_t i = 0; i < work.vecCp.size(); i++) { // updating cp: if vecCP empty the loop is not executed
 				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
 						work.vecCp[i].value, work.vecCp[i].reverse);
 			}
+
 			//cp->addChoicePoint(CP_REMOVE, 9, 1, false);
-			// print cp for testing
-			for (size_t i = 0; i < cp->size(); i++) {
+
+			for (size_t i = 0; i < cp->size(); i++) { // print cp for testing
 				cout << "TOXXXXXXXXXX varINdex dans cp" << endl;
 				cout << (*cp)[i].varIndex << endl;
 			}
@@ -2002,13 +1998,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
 
-				//cout << " exit volontaire pour test." << endl; mpi::environment::abort(0);
+				//cout << " forcing exit ..." << endl; mpi::environment::abort(0);
 
-				recursiveSolve(bestlb); // call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve
-
-				//cout << "seg fault in recursiveSolve(bestlb)"<< endl; // probably bad code before recursive DFS cause this issue not the recursion itself
-				//cout << " exit volontaire pour test." << endl; mpi::environment::abort(0);
-				// recursive DFS updates open with open nodes + Ub which are to be transmitted to the master.
+				recursiveSolve(bestlb); // call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve. Recursive DFS updates open with open nodes + Ub which are to be transmitted to the master.
 
 			} catch (Contradiction) {
 				wcsp->whenContradiction();
@@ -2022,7 +2014,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			cp->store();
 
-			// in case lack of memory HBFS become DFS
+			// in case of lack of memory HBFS become DFS
 			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
 					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -2052,8 +2044,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				int worker = world.rank();
 
 				Work work(*cp, *open, wcsp->getUb(), worker);
-
-				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);
+                cout << " size of open after DFS = "<<open->size()<<endl;
+				cout<<"worker # here! "
+						<< worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
 
 				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
 				if (r.test())
