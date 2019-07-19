@@ -1962,7 +1962,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			//cp->addChoicePoint(CP_REMOVE, 9, 1, false);
 
 			for (size_t i = 0; i < cp->size(); i++) { // print cp for testing
-				cout << "TOXXXXXXXXXX varINdex dans cp" << endl;
+				cout << "YYYYYYYYYYY varIndex dans cp" << endl;
 				cout << (*cp)[i].varIndex << endl;
 			}
 
@@ -2027,33 +2027,39 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			clb = MAX(clb, open->getLb());  // master
 			// showGap(clb, cub);   to be done by the master
 
-			// adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
 				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
 						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z
+					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
 						&& ToulBar2::hbfs >= 2)
-					ToulBar2::hbfs /= 2;
+					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
+			}
+
 				if (ToulBar2::debug >= 2)
 					cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs
 							<< endl;
 
-				//   create the message with UB and open nodes information from local open and cp
+
 				int worker = world.rank();
 
-				Work work(*cp, *open, wcsp->getUb(), worker);
-                cout << " size of open after DFS = "<<open->size()<<endl;
-				cout<<"worker # here! "
-						<< worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
+				cout << " size of open after DFS = "<<open->size()<<endl;
 
-				mpi::request r = world.isend(master, tag0, work); // non blocking send to master
+				Work work2(*cp, *open, wcsp->getUb(), worker); //   create the message with UB and open nodes information from local open and cp
+
+			cout
+					<< "XXXXXXXXXXXXXXXXXXXXXXXXXXXXxxxxxxXXX : just after creation of work"<< endl;
+
+				// cout<<"worker # here! " << worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
+
+				mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
+
 				if (r.test())
 					cout << "I am worker #" << worker
-							<< "and I have just sent my stuff in particular UB = "
-							<< work.ub << " to the master. " << endl;
-			}
+							<< " and I have just sent my stuff in particular UB = "
+							<< work2.ub << " to the master. " << endl;
+
 
 			//delete(cp); ??
 			//delete(open); ??
