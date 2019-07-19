@@ -1776,12 +1776,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
 			idleQ.push(i);
 
-		/*  // is it possible to replace the above lines by the two lines below ?
-		 *  where is the delete associated with the cp and open ?
-		 CPStore * cp = new CPStore();
-		 OpenList * open = new OpenList();
-		 */
-
 		cp->store();
 
 		if (open->size() == 0) { // start a new list of open nodes if needed
@@ -1806,7 +1800,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		clb = MAX(clb, open->getLb());
 
-		//	showGap(clb, cub);
+		showGap(clb, cub);
 
 		/*//  code to be used only if we want to memorize pair (i,j) with i rank of the worker, j id of the job aka of the work that has been sent
 		 #include <map>  // complexity of c++ std container is quite good probably because it is based on red-black tree algorithm
@@ -1859,8 +1853,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
 					<< endl;
 
-			world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
-
+			mpi::status sr = world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
+			assert(sr.error() == 0);
 			cout << "I am the master. I received a response from worker # "
 					<< work.sender << endl;
 			// or non blocking mode :
@@ -1888,9 +1882,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 				// update the master's cp
 				for (ptrdiff_t i = cp->start;
 						i < cp->start + (ptrdiff_t) work.vecCp.size(); i++) {
-					//addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,work.vecCp[i].value, work.vecCp[i].reverse);
-					(*cp)[i] = work.vecCp[i - cp->start];
-					(*cp).index = (*cp).index + 1;
+					addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
+							work.vecCp[i].value, work.vecCp[i].reverse);
+					//cp->push_back(work.vecCp[i - cp->start]) ;
+					//(*cp).index = (*cp).index + 1;
 				}
 
 			}
@@ -1919,9 +1914,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
 
-		//cout << "I am the master " << endl << "Optimum is " << wcsp->getUb()
-		//	<< endl;
-		// the master returns the optimal value
+		cout << "I am the master " << endl << "Optimum is " << wcsp->getUb() << endl;
 		return make_pair(clb, cub);
 //********************************************************************************************//
 
@@ -1937,7 +1930,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					<< ": I am waiting for work from the master " << endl;
 			Work work;
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
-
 			assert(s.error() == 0); // recv ok
 
 			cout << "worker #" << world.rank()
@@ -1957,13 +1949,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			for (size_t i = 0; i < work.vecCp.size(); i++) { // updating cp: if vecCP empty the loop is not executed
 				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
 						work.vecCp[i].value, work.vecCp[i].reverse);
-			}
-
-			//cp->addChoicePoint(CP_REMOVE, 9, 1, false);
-
-			for (size_t i = 0; i < cp->size(); i++) { // print cp for testing
-				cout << "YYYYYYYYYYY varIndex dans cp" << endl;
-				cout << (*cp)[i].varIndex << endl;
 			}
 
 			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
@@ -2037,32 +2022,29 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			}
 
-				if (ToulBar2::debug >= 2)
-					cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs
-							<< endl;
+			if (ToulBar2::debug >= 2)
+				cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
+			int worker = world.rank();
 
-				int worker = world.rank();
+			cout << " size of open after DFS = " << open->size() << endl;
 
-				cout << " size of open after DFS = "<<open->size()<<endl;
+			Work work2(*cp, *open, wcsp->getUb(), worker); //   create the message with UB and open nodes information from local open and cp
 
-				Work work2(*cp, *open, wcsp->getUb(), worker); //   create the message with UB and open nodes information from local open and cp
+			// cout<<"worker # here! " << worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
 
-			cout
-					<< "XXXXXXXXXXXXXXXXXXXXXXXXXXXXxxxxxxXXX : just after creation of work"<< endl;
+			cout << " number of nodes transmitted = " << work2.nodeX.size()
+					<< endl;
+			cout << " capacity of vector nodeX = " << work2.nodeX.capacity()
+					<< endl;
 
-				// cout<<"worker # here! " << worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
+			mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
 
-				mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
+			if (r.test())
+				cout << "I am worker #" << worker
+						<< " and I have just sent my stuff in particular UB = "
+						<< work2.ub << " to the master. " << endl;
 
-				if (r.test())
-					cout << "I am worker #" << worker
-							<< " and I have just sent my stuff in particular UB = "
-							<< work2.ub << " to the master. " << endl;
-
-
-			//delete(cp); ??
-			//delete(open); ??
 		} // end of while(1)
 
 		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
@@ -2072,6 +2054,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		cout
 				<< " The present message should not be displayed as it is the master who terminate the programme !"
 				<< endl;
+
 		return make_pair(0, 0);
 	} // end of workers' code
 

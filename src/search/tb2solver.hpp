@@ -189,7 +189,6 @@ public:
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
-
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
 		//Long subProblemId; // to be used only if we want to memorize pair (i,j). the idea is to improve the resilience in case of a worker becomes out of order during computation
@@ -207,44 +206,39 @@ public:
 		: ub(ubMaster_)
 		, sender(0)
 		{
-
-
 			OpenNode node = openMaster_.top();
 			nodeX.push_back(node);
+			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity
 			openMaster_.pop(); // pop up directly the queue open_ !!
-			//cout<< " VECTOR OF NODES EXCHANGED MUST HAVE ONLY ONE NODE IN IT !"<<endl; boost::mpi::environment::abort(0);
-			//cout << "la taille de nodeX dans le ctor master après init  = "<< nodeX.size()<<endl;
-			//cout << "la capcité de nodeX dans le ctor master  = "<< nodeX.capacity()<<endl;
+
+			// TODO: See if transmission of node's cost + ub + vecCp  is sufficient. sender=0 not necessary and vector nodeX contains first and last which are
+			// necessary only in the master to compute vecCp.
+
 			for(ptrdiff_t i = node.first; i < node.last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 				vecCp.push_back(cpMaster_[i]);
-
-
-
-			//cout << "vec of choice points capacity before shrinking = "<< vecCp.capacity()<< endl; // to delete
-			//vecCp.shrink_to_fit(); // optional : just to be sure vec.capacity() fit to the actual data; TO INVESTIGATE test speedup with or without
-			//cout << "vec of choice points capacity after shrinking = "<< vecCp.capacity()<< endl; // to delete
-			//nodeX.shrink_to_fit();// optional: après vérication la capacité et la taille de node X sont égales à 1
+			vecCp.shrink_to_fit();
 
 		}
 
-		// ctor used by the workers with 4 arguments. All the cp
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const int ubWorker_,  const int sender_)
-		: /*vecCp((vector<ChoicePoint>)cpWorker_)*/  // init of vecCp
-		 ub(ubWorker_)
+
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const int ubWorker_,  const int sender_) // ctor used by the workers with 4 arguments. All the cp
+		: ub(ubWorker_)
 		, sender(sender_)
 		{
-			// init of vector of OpenNode nodeX
-			while(!openWorker_.empty())
+
+			while(!openWorker_.empty()) // init of vector of OpenNode nodeX
 			{
 				OpenNode node = openWorker_.top();
 				nodeX.push_back(node);
 				openWorker_.pop(); // pop up directly the queue open !!
 			}
-			//nodeX.shrink_to_fit(); // optional
-			// init of vector of ChoicePoint with ALL THE CPs IN cpWorker_
-			for(size_t i = 0; i < cpWorker_.size(); i++)
+
+			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity
+
+			for(size_t i = 0; i < cpWorker_.size(); i++) // init of vector of ChoicePoint with ALL THE CPs in cpWorker_
 				vecCp.push_back(cpWorker_[i]);
 
+			vecCp.shrink_to_fit();
 
 		}
 
@@ -256,7 +250,7 @@ public:
 	 * To optimize when it is a class of plain old objects POD : int, long, ...
 	 * \warning possible errors seg fault with pointers attributes and non POD attributes
 	 */
-	//BOOST_IS_MPI_DATATYPE(MasterToWorker);
+	//BOOST_IS_MPI_DATATYPE(Work);
 	//kad
 
 	class CPStore FINAL : public vector<ChoicePoint> {
