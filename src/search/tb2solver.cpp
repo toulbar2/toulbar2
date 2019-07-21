@@ -1751,17 +1751,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 	// INFO: Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
 
-	if (cp != NULL)
-		delete cp;
-	cp = new CPStore(); // define vector od CPs declared as attribute of class Solver. It is a class global variable defining partly the "state" of the solver.
-	if (open != NULL)
-		delete open;
-	open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
-
 // ********************************************************************************************
 // *************************************** Master *********************************************
 // ********************************************************************************************
 	if (world.rank() == master) {
+
+		if (cp != NULL)
+			delete cp;
+		cp = new CPStore(); // define vector of CPs declared as attribute of class Solver. It is a class global variable defining partly the "state" of the solver.
+		if (open != NULL)
+			delete open;
+		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
+
 		cout << "I am the master. My id is " << world.rank() << endl;
 		// INITIALIZATIONS
 		/* // optional verification. probably it is not interesting to do this !
@@ -1808,8 +1809,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			while (!open->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
-
-				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+				// is it wcsp->getUb() or open->getUb
+				Work work(*cp, *open, open->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				// nb : by default the sender is the master rank=0.
 				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);//exit(0);
 				// Caution : the queue open is directly popped by this constructor(ctor) of class Work
@@ -1838,17 +1839,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			} // end of loop that distribute jobs to workers
 
-			Work work; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
+			Work work2; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
 			cout
 					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
 					<< endl;
 
-			mpi::status sr = world.recv(mpi::any_source, tag0, work); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
+			mpi::status sr = world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
 
 			assert(sr.error() == 0);
-
-			cout << "I am the master. I received a response from worker # "
-					<< work.sender << endl;
+			if (sr.error() == 0) {
+				cout << "I am the master. I received a response from worker # "
+						<< work2.sender << endl;
+			}
 			// or non blocking mode :
 			// mpi::request r = world.irecv(mpi::any_source, tag0, work);
 			// and test whether data have been received with
@@ -1856,30 +1858,32 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
 			// and use status.source() to get de sender
 
-			// with these info, update UB if the sent UB < currentUB of the master
-			open->updateUb(work.ub);
-			cout << "ZZZZZ updating UB with  " <<  work.ub << endl;
-			cout << "ZZZZZ clb  " <<  open->getLb() << endl;
-			cout << "ZZZZZ cub  " <<  open->getUb() << endl;
+			// with these info, update cub if the sent ub < current ub of the master
+			open->updateUb(work2.ub);
+			cout << "ZZZZZ updated open->cub with  " << work2.ub << endl;
+			cout << "ZZZZZ clb  " << open->getLb() << endl;
+			cout << "ZZZZZ cub  " << open->getUb() << endl;
 
-			if (!work.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
+			if (!work2.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptiness is not tested toulbar2 will output a seg fault:  for instance, the call node.getCost() will access non authorized memory space.
+
+				// update the master's cp
+				for (ptrdiff_t i = 0;
+						i < (ptrdiff_t) work2.vecCp.size(); i++) {
+					addChoicePoint(work2.vecCp[i].op, work2.vecCp[i].varIndex,
+							work2.vecCp[i].value, work2.vecCp[i].reverse);
+				}
 
 				// update first and last attributes of each node
 				OpenNode node;
-				for (size_t i = 0; i < work.nodeX.size(); i++) {
-					node = work.nodeX[i];
+				for (size_t i = 0; i < work2.nodeX.size(); i++) {
+					node = work2.nodeX[i];
 					node.first += cp->start; // update node i first attribute: vector cp is full from idx 0 to start-1, so we write from start: translation of the amount "start"
-					node.last += cp->start;   // idem
-					addOpenNode(*cp, *open, work.nodeX[i].getCost()); // Push nodes in open
+					node.last  += cp->start;   // idem
+					addOpenNode(*cp, *open, work2.nodeX[i].getCost()); // Push nodes in open, update cp->stop and first, last, cost=lb of the node
 				}
 
-				// update the master's cp
-				for (ptrdiff_t i = cp->start;
-						i < cp->start + (ptrdiff_t) work.vecCp.size(); i++) {
-					addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
-							work.vecCp[i].value, work.vecCp[i].reverse);
-				}
+				cp->store();
 
 			}
 
@@ -1890,7 +1894,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// sender: not used because it is a master -> worker message and all messages come necessary from the master
 
 			//   push the worker id in queue idleQ
-			idleQ.push(work.sender);
+			idleQ.push(work2.sender);
 			nbSentWork--;
 			//assert(nbSentWork >= 0 && nbSentWork < world.size());
 
@@ -1905,42 +1909,47 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
 
-			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) //
-						|| open->size()
-								>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-					ToulBar2::hbfs = 0;
-					ToulBar2::hbfsGlobalLimit = 0;
+			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) // in case of lack of memory HBFS become DFS
+					|| open->size()
+							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+				ToulBar2::hbfs = 0;
+				ToulBar2::hbfsGlobalLimit = 0;
 
-					hbfsLimit = LONGLONG_MAX;
-				}
+				hbfsLimit = LONGLONG_MAX;
+			}
 
 		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
 
-		cout << "I am the master " << endl << "Optimum is " << wcsp->getUb() << endl;
 		return make_pair(clb, cub);
 //********************************************************************************************//
 
-	} else {// end of master code, beginning of code executed by workers' code
+	} else { // end of master code, beginning of code executed by workers' code
 		// gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 
 //********************************************************************************************//
 
-		//cp = new CPStore(); // ctor initialize start = stop = index = 0
-
 		while (1) {
+
+			if (cp != NULL)
+				delete cp;
+			cp = new CPStore(); // ctor initialize start = stop = index = 0
+			if (open != NULL)
+				delete open;
+			open = new OpenList();
+
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
 			Work work;
-			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master /*mpi::any_tag*/
+			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
 			assert(s.error() == 0); // recv ok
 
 			cout << "worker #" << world.rank()
-					<< ": I received  work from the master in particular UB = "
+					<< ": I received  work from the master in particular cub = "
 					<< work.ub << endl;
 
 			cp->store(); // start = stop = index
 
-			open->updateUb(work.ub); // set local UB with the received UB
+			open->updateUb(work.ub); // update cub and clb of worker's open queue
 
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
@@ -1948,9 +1957,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// nodeX is a vector<OpenNode> in this version of the code
 			assert(work.nodeX.size() == 1);
 
-			for (size_t i = 0; i < work.vecCp.size(); i++) { // updating cp: if vecCP empty the loop is not executed
+			for (size_t i = 0; i < work.vecCp.size(); i++) { // updating cp: if vecCP with CPs from 0 to (last-first-1). if vecCP is empty the loop is not executed
 				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
-						work.vecCp[i].value, work.vecCp[i].reverse);
+						work.vecCp[i].value, work.vecCp[i].reverse);  // update cp->index
 			}
 
 			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
@@ -1966,7 +1975,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// ub: ok
 			// sender: not used because it is a master-worker and all messages come necessary from the master
 
-			hbfsLimit = (
+			hbfsLimit = ( // TODO: see if it is the master that send hbfsLimit?
 					(ToulBar2::hbfs > 0) ?
 							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX); // number of backtracks max
 
@@ -2001,8 +2010,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			cp->store();
 
-			// in case of lack of memory HBFS become DFS
-			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit)
+			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) // in case of lack of memory HBFS become DFS
 					|| open->size()
 							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 				ToulBar2::hbfs = 0;
@@ -2031,7 +2039,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			cout << " size of open after DFS = " << open->size() << endl;
 
-			Work work2(*cp, *open, wcsp->getUb(), worker); //   create the message with UB and open nodes information from local open and cp
+			Work work2(*cp, *open, open->getUb(), worker); //   create the message with cub and open nodes information from local open and cp
 
 			// cout<<"worker # here! " << worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
 
@@ -2044,7 +2052,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			if (r.test())
 				cout << "I am worker #" << worker
-						<< " and I have just sent my stuff in particular UB = "
+						<< " and I have just sent my stuff in particular cub = "
 						<< work2.ub << " to the master. " << endl;
 
 		} // end of while(1)
@@ -2207,14 +2215,14 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	 vector<ChoicePoint> vec = work.vecDecisions[1];
 	 cout << "I am worker # " << world.rank()
 	 << " and I receive a pq of nodes and a vector of vector of ChoicePoint, ub and my rank to my workers."
-	 << work.sender << " and I print UB = " << work.ub
+	 << work.sender << " and I print cub = " << work.ub
 	 << " node lower bound =" << node.getCost() << endl;
 	 cout << "I am worker # " << world.rank() << " and index of var = "
 	 << vec[9].varIndex << " and value of var = "
 	 << vec[9].value << endl;
 	 }
 	 else {
-	 cout << "No nodes transmited !!!!! "<< "Me, worker #"<< world.rank() << "received UB = " << work.ub<< endl;
+	 cout << "No nodes transmited !!!!! "<< "Me, worker #"<< world.rank() << "received cub = " << work.ub<< endl;
 	 }
 	 }
 	 delete cp;
@@ -2244,7 +2252,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	 world.recv(mpi::any_source, 0, work);
 	 cout << "I am worker # " << world.rank()
 	 << " and I receive vector of cp, lb,ub from process "
-	 << work.sender << " and I print UB = " << work.ub
+	 << work.sender << " and I print cub = " << work.ub
 	 << " node lower bound =" << work.node.getCost() << endl;
 	 cout << "I am worker # " << world.rank() << " and index of var = "
 	 << work.vec[9].varIndex << endl;
@@ -2322,7 +2330,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	 //	work.vec.push_back(90);work.vec.push_back(91);work.vec.push_back(92);
 	 ChoicePoint my_cp(CP_REMOVE, 11, 25, false);
 	 work.vec.push_back(my_cp);
-	 cout << "I am the master and I send UB and a node to my workers. "
+	 cout << "I am the master and I send cub and a node to my workers. "
 	 << endl;
 	 for (int proc = 1; proc < world.size(); ++proc)
 	 world.send(proc, 0, work);
@@ -2335,7 +2343,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 	 // string msg;
 	 world.recv(0, 0, work);
 	 cout << "I am worker # " << world.rank()
-	 << " and I receive UB + one node and I print UB = " << work.ub
+	 << " and I receive cub + one node and I print cub = " << work.ub
 	 << endl;
 	 cout << "I am worker # " << world.rank() << " and index of var = "
 	 << work.vec[0].varIndex << endl;
@@ -2391,7 +2399,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 
 			// if (world.rank() == 0) {
 			//	cout << "I am the master. My id is " << world.rank()<< endl;
-			// I send nodes and UB to workers
+			// I send nodes and cub to workers
 			// I receive open nodes and cub from workers
 
 			Store::store();
@@ -2402,7 +2410,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck(Cost clb, Cost cub) {
 			//	 if (world.rank() > 0) {
 			// cout << "I am a worker. My id is " << world.rank()<< endl;
 			// I receive a node and cub from the master
-			// I send receive open nodes (fist, last in choice point vector) and best UB
+			// I send receive open nodes (fist, last in choice point vector) and best cub
 			restore(*cp_, nd);
 			Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
 			bestlb = MAX(bestlb, clb);
@@ -2466,7 +2474,7 @@ string Solver::epsSubProblems(const CPStore &cp, OpenList &open,
 		OpenNode nd = open.top(); // take the top of pq
 		open.pop(); // remove it from pq
 
-		if (nd.getCost() < wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignement will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
+		if (nd.getCost() < wcsp->getUb()) { // if the lb of the node is less than global UB, it's ok, if not, the assignment will not give a solution; Simon's idea to avoid assignements that are not possible (like pruning)
 			epsSubProblems += "-x=\"";
 			for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 				epsSubProblems += "," + to_string(cp[idx].varIndex)

@@ -206,17 +206,17 @@ public:
 		: ub(ubMaster_)
 		, sender(0)
 		{
-			OpenNode node = openMaster_.top();
-			nodeX.push_back(node);
-			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity
+			//OpenNode node = openMaster_.top();
+			nodeX.push_back(openMaster_.top());
+			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity . to be tested if this improve speedup or not. Indeed, boost.MPI may take care correctly of this problem.
 			openMaster_.pop(); // pop up directly the queue open_ !!
 
-			// TODO: See if transmission of node's cost + ub + vecCp  is sufficient. sender=0 not necessary and vector nodeX contains first and last which are
+			// TODO: See if no need to pass a whole node and if transmission of only node's cost + ub + vecCp  is sufficient. sender=0 not necessary and vector nodeX contains first and last which are
 			// necessary only in the master to compute vecCp.
 
-			for(ptrdiff_t i = node.first; i < node.last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 				vecCp.push_back(cpMaster_[i]);
-			vecCp.shrink_to_fit();
+			vecCp.shrink_to_fit(); // to be tested
 
 		}
 
