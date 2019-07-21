@@ -1831,7 +1831,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 				if (r.test())
 					cout
-							<< "I am the master and I have just sent work in particular UB = "
+							<< "I am the master and I have just sent work in particular cub = "
 							<< work.ub << " to worker # " << worker << endl;
 				// nb : here we can use world.probe to get infos like source, tag or errors via s.source(), s.tag(), s.error()
 				// mpi::status s = world.probe(int source = any_source, int tag = any_tag);
@@ -1860,30 +1860,34 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			// with these info, update cub if the sent ub < current ub of the master
 			open->updateUb(work2.ub);
-			cout << "ZZZZZ updated open->cub with  " << work2.ub << endl;
+			cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
 			cout << "ZZZZZ clb  " << open->getLb() << endl;
 			cout << "ZZZZZ cub  " << open->getUb() << endl;
-
+			cout << "ZZZZZ wcsp->getUb()  " << wcsp->getUb() << endl;
 			if (!work2.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptiness is not tested toulbar2 will output a seg fault:  for instance, the call node.getCost() will access non authorized memory space.
 
 				// update the master's cp
-				for (ptrdiff_t i = 0;
-						i < (ptrdiff_t) work2.vecCp.size(); i++) {
-					addChoicePoint(work2.vecCp[i].op, work2.vecCp[i].varIndex,
-							work2.vecCp[i].value, work2.vecCp[i].reverse);
+				// before: start=stop=index= idx_before points on the first free place in cp
+				for (ptrdiff_t i = 0; i < (ptrdiff_t) work2.vecCp.size(); i++) {
+					//addChoicePoint(work2.vecCp[i].op, work2.vecCp[i].varIndex,work2.vecCp[i].value, work2.vecCp[i].reverse);
+					cp->push_back(work2.vecCp[i]);
 				}
+				// after: start = stop=idx_before index = new first free place in cp = idx_after
 
 				// update first and last attributes of each node
 				OpenNode node;
 				for (size_t i = 0; i < work2.nodeX.size(); i++) {
 					node = work2.nodeX[i];
 					node.first += cp->start; // update node i first attribute: vector cp is full from idx 0 to start-1, so we write from start: translation of the amount "start"
-					node.last  += cp->start;   // idem
-					addOpenNode(*cp, *open, work2.nodeX[i].getCost()); // Push nodes in open, update cp->stop and first, last, cost=lb of the node
+					node.last += cp->start;   // idem
+					//addOpenNode(*cp, *open, work2.nodeX[i].getCost()); // Push nodes in open, update cp->stop and first, last, cost=lb of the node
+					open->push(node);
 				}
 
-				cp->store();
+				cp->stop = cp->start + work2.vecCp.size();
+
+				cp->store(); // start = stop index = start
 
 			}
 
@@ -1921,12 +1925,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
 
 		return make_pair(clb, cub);
-//********************************************************************************************//
 
-	} else { // end of master code, beginning of code executed by workers' code
+	} else { // end of master code, beginning of code executed by the workers
 		// gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 
-//********************************************************************************************//
+// ********************************************************************************************
+// *************************************** Worker *********************************************
+// ********************************************************************************************
 
 		while (1) {
 
@@ -1936,6 +1941,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			if (open != NULL)
 				delete open;
 			open = new OpenList();
+
+			cp->store(); // start = stop = index
 
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
@@ -1947,8 +1954,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					<< ": I received  work from the master in particular cub = "
 					<< work.ub << endl;
 
-			cp->store(); // start = stop = index
-
 			open->updateUb(work.ub); // update cub and clb of worker's open queue
 
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
@@ -1959,7 +1964,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			for (size_t i = 0; i < work.vecCp.size(); i++) { // updating cp: if vecCP with CPs from 0 to (last-first-1). if vecCP is empty the loop is not executed
 				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
-						work.vecCp[i].value, work.vecCp[i].reverse);  // update cp->index
+						work.vecCp[i].value, work.vecCp[i].reverse); // update cp->index
 			}
 
 			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
