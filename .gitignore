@@ -1,7 +1,9 @@
 build/
+build.dav/
 debug/
 release/
 bck/
+old/
 nbProcess.txt
 *.cproject
 *.project

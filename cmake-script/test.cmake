@@ -116,8 +116,9 @@ FOREACH (UTEST ${validation_file})
 		MESSAGE(STATUS "TNAME: ${TNAME}")
 	endif($verbose)
 
-	IF (EXISTS ${UBF}) # if ub file exist
-		add_test(Phase1_Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${UBP} ${command_line_option})
+	IF (EXISTS ${UBF}) # if ub file existnp 
+#		add_test(Phase1_Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${UBP} ${command_line_option})
+		add_test(Phase1_Toulbar_${TNAME} mpirun -np 4 ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${UBP} ${command_line_option})
 		set_tests_properties (Phase1_Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 	ELSE()
 		add_test(Phase1_Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${command_line_option})
