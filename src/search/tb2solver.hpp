@@ -203,7 +203,7 @@ public:
 		 * @param ubMaster_ : current best Solution of either the master or the worker
 		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
 		 */
-		Work(const CPStore& cpMaster_, OpenList& openMaster_, const int ubMaster_)
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_)
 		: ub(ubMaster_)
 		, sender(0)
 		{
@@ -222,7 +222,7 @@ public:
 		}
 
 
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const int ubWorker_,  const int sender_) // ctor used by the workers with 4 arguments. All the cp
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_,  const int sender_) // ctor used by the workers with 4 arguments. All the cp
 		: ub(ubWorker_)
 		, sender(sender_)
 		{
@@ -236,7 +236,8 @@ public:
 
 			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity
 
-			for(size_t i = 0; i < cpWorker_.size(); i++) // init of vector of ChoicePoint with ALL THE CPs in cpWorker_
+//			for(size_t i = 0; i < cpWorker_.size(); i++) // init of vector of ChoicePoint with ALL THE CPs in cpWorker_
+				for(ptrdiff_t i = 0; i < cpWorker_.stop ; i++)
 				vecCp.push_back(cpWorker_[i]);
 
 			vecCp.shrink_to_fit();

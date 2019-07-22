@@ -1748,6 +1748,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 	int worker;
 	const int master = 0;
 	const int tag0 = 0;
+	Cost cub_init = cub;
 
 	// INFO: Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
 
@@ -1862,10 +1863,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			// with these info, update cub if the sent ub < current ub of the master
 			wcsp->updateUb(work2.ub);
 			open->updateUb(work2.ub);
-			cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
-			cout << "ZZZZZ clb  " << open->getLb() << endl;
-			cout << "ZZZZZ cub  " << open->getUb() << endl;
-			cout << "ZZZZZ wcsp->getUb()  " << wcsp->getUb() << endl;
+
+
+
+			if (ToulBar2::verbose >= 1) {
+				cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
+				cout << "ZZZZZ clb  " << open->getLb() << endl;
+				cout << "ZZZZZ cub  " << open->getUb() << endl;
+				cout << "ZZZZZ wcsp->getUb()  " << wcsp->getUb() << endl;
+			}
+
 			if (!work2.nodeX.empty()) { // case where at least one node is actually sent by the worker. nodeX: stl c++ container containing nodes eXchanged
 				// nb : if emptiness is not tested toulbar2 will output a seg fault:  for instance, the call node.getCost() will access non authorized memory space.
 
@@ -1892,6 +1899,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 				cp->store(); // start = stop index = start
 
 			}
+			cub = wcsp->getUb();
+			clb = MAX(clb, open->getLb());  // master
+			showGap(clb, cub);
 
 			// check list to verify that all the data received are used.
 			// nodeX: first, last updated. nothing to do with node.getCost() it is used directly through nd node below
@@ -1915,17 +1925,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			 * if idelQ is empty then all the workers are out of order => cout << "error"<<endl; exit(1);
 			 */
 
-			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) // in case of lack of memory HBFS become DFS
-					|| open->size()
-							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-				ToulBar2::hbfs = 0;
-				ToulBar2::hbfsGlobalLimit = 0;
-
-				hbfsLimit = LONGLONG_MAX;
-			}
-
 		} // end while ((clb < cub && !open->finished()) || nbSentWork != 0)
-
+		cout << "sortie de boucle master terminaison optimum:" << endl;
+		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
+//cout<< "Optimum: " << wcsp ->getUb() << " in " << solver.getNumberOfFails() << " fails and " << solver.getTime() << " seconds." << endl;
+		mpi::environment::abort(0); // on tue everybody
 		return make_pair(clb, cub);
 
 	} else { // end of master code, beginning of code executed by the workers
@@ -1971,7 +1975,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
 			// so first and last from the master are probably not to be transmitted.
-cp ->store();
+			cp->store();
 			cout << "cost = lb = " << open->top().getCost() << endl;
 			cout << "node.first = " << open->top().first << endl;
 			cout << "node.last = " << open->top().last << endl;
@@ -2009,9 +2013,9 @@ cp ->store();
 				wcsp->whenContradiction();
 			}
 
-			cub = wcsp->getUb();
+			//cub = wcsp->getUb();
 
-			open->updateUb(cub);
+			//open->updateUb(cub);
 
 			Store::restore(storedepthBFS);
 
@@ -2026,8 +2030,7 @@ cp ->store();
 				hbfsLimit = LONGLONG_MAX;
 			}
 
-			clb = MAX(clb, open->getLb());  // master
-			// showGap(clb, cub);   to be done by the master
+
 
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
@@ -2046,7 +2049,7 @@ cp ->store();
 
 			cout << " size of open after DFS = " << open->size() << endl;
 
-			Work work2(*cp, *open, open->getUb(), worker); //   create the message with cub and open nodes information from local open and cp
+			Work work2(*cp, *open, wcsp->getUb(), worker); //   create the message with cub and open nodes information from local open and cp
 
 			// cout<<"worker # here! " << worker<< " I'm about to send work to the master."<<endl; mpi::environment::abort(0);
 
@@ -2066,13 +2069,13 @@ cp ->store();
 
 		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
 		cout
-				<< " Dummy return [0,0] from workers to eliminate compiler warning as advised by IBM!"
+				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
 				<< endl;
 		cout
 				<< " The present message should not be displayed as it is the master who terminate the programme !"
 				<< endl;
 
-		return make_pair(0, 0);
+		return make_pair(MAX_COST, MAX_COST);
 	} // end of workers' code
 
 }  // end of hybridSolvePara(...)
