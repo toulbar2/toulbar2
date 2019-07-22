@@ -451,7 +451,7 @@ public:
             *cost_ptr = solutionCost;
         return solution;
     }
-    void setSolution(Cost cost, TAssign* sol = NULL)
+    void setSolution(Cost cost, TAssign* sol = NULL)  // to do only if it improves things
     {
         solutionCost = cost;
         for (unsigned int i = 0; i < numberOfVariables(); i++) {

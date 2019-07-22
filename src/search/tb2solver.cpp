@@ -1301,9 +1301,9 @@ void Solver::newSolution() {
 		}
 	}
 
-	wcsp->restoreSolution();
+	wcsp->restoreSolution(); // maj all vars pour être ds l'affectation courante (necessaire qd eleimination de vars)
 	if (!ToulBar2::isZ)
-		wcsp->setSolution(wcsp->getLb());
+		wcsp->setSolution(wcsp->getLb()); // prend affection courante et stock ds un vector solution
 
 	if (ToulBar2::showSolutions) {
 
@@ -1740,7 +1740,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 // Parallel Debug tool: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 -para 404.wcsp
 // or
 // mpirun -np 2 xterm -e gdb ./toulbar2   then, in each xterm, type:  run -para 404.wcsp
-pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
+pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 	cout << " PARALLEL HBFS MODE!!!" << endl;
 	namespace mpi = boost::mpi;
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
@@ -1805,12 +1805,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 		 while (((clb < cub && !open_->finished()) || !givenWork.empty())) {
 		 */
 
-		while ((clb < cub && !open->finished()) || nbSentWork != 0) { // this while predicate solve the non-trivial termination problem in parallel programming
+		//while ((clb < cub && !open->finished()) || nbSentWork != 0) { // this while predicate solve the non-trivial termination problem in parallel programming
+		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
 
 			while (!open->finished() && !idleQ.empty()) // while (open_ not empty and idle not empty) = while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 				// is it wcsp->getUb() or open->getUb
-				Work work(*cp, *open, open->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
+				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send :   create an object "work" of type Work initialized with wcsp->getUb(), the node just popped and the vector of CP
 				// nb : by default the sender is the master rank=0.
 				//cout<< " exit volontaire pour test."<<endl; mpi::environment::abort(0);//exit(0);
 				// Caution : the queue open is directly popped by this constructor(ctor) of class Work
@@ -1857,8 +1858,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 			// if (r.test()) {...}
 			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
 			// and use status.source() to get de sender
-
+// cf vns sol to messages an msg to sol
 			// with these info, update cub if the sent ub < current ub of the master
+			wcsp->updateUb(work2.ub);
 			open->updateUb(work2.ub);
 			cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
 			cout << "ZZZZZ clb  " << open->getLb() << endl;
@@ -1954,8 +1956,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 					<< ": I received  work from the master in particular cub = "
 					<< work.ub << endl;
 
-			open->updateUb(work.ub); // update cub and clb of worker's open queue
-
+			wcsp->updateUb(work.ub); // update cub and clb of worker's open queue
+			open->updateUb(work.ub);
 			// The workers expect only one node to process. if we want for the master to send several nodes to avoid the master's bottleneck for instance,
 			// we can use while (!work.nodeX.empty()) and process one node at a time in the loop.
 			// But we keep it simple here and the master must send one node and each and every worker receives one node, otherwise ERROR.
@@ -1969,7 +1971,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) {
 
 			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
 			// so first and last from the master are probably not to be transmitted.
-
+cp ->store();
 			cout << "cost = lb = " << open->top().getCost() << endl;
 			cout << "node.first = " << open->top().first << endl;
 			cout << "node.last = " << open->top().last << endl;

@@ -97,6 +97,7 @@ public:
 			assert(clb <= cub);
 			return (empty() || CUT(top().getCost(), clb));
 		}
+		// compute global frontier Lb that appears in anytime information [...]
 		Cost getLb(Cost delta = MIN_COST) const {return MIN(MAX(MIN_COST, clb - delta), (empty() ? MAX_COST : top().getCost(delta)));}
 
 		Cost getClosedNodesLb(Cost delta = MIN_COST) const {return MAX(MIN_COST, clb - delta);}
