@@ -1752,6 +1752,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 	// INFO: Every process whether it is a master or a worker sends in non-blocking mode (mpi::isend) and receive in blocking mode (mpi::recv)
 
+	//#if !defined(NDEBUG)
+    // debug build code
+//#endif
+
 // ********************************************************************************************
 // *************************************** Master *********************************************
 // ********************************************************************************************
@@ -1765,6 +1769,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
 
 		cout << "I am the master. My id is " << world.rank() << endl;
+
 		// INITIALIZATIONS
 		/* // optional verification. probably it is not interesting to do this !
 		 if (world.size() == 1) {
