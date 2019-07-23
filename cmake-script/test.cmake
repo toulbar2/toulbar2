@@ -95,11 +95,14 @@ FOREACH (UTEST ${validation_file})
 	IF (EXISTS ${TPATH}/${FOPT})
 	  include (${TPATH}/${FOPT})
 	  MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
+	  set (Nb_cpu ${Default_Nb_cpu})
 	ELSE()
 	  # init default value :
 	  set (command_line_option ${Default_test_option} )
 	  set (test_timeout ${Default_test_timeout})
+	  set (Nb_cpu ${Default_Nb_cpu})
 	  set (test_regexp  ${Default_test_regexp})
+
 	  
 	  MESSAGE(STATUS "file: ${TPATH}/${FOPT} not found ==>
 	default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
@@ -118,10 +121,10 @@ FOREACH (UTEST ${validation_file})
 
 	IF (EXISTS ${UBF}) # if ub file existnp 
 #		add_test(Phase1_Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${UBP} ${command_line_option})
-		add_test(Phase1_Toulbar_${TNAME} mpirun -np 4 ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${UBP} ${command_line_option})
+		add_test(Phase1_Toulbar_${TNAME} mpirun -np  ${Nb_cpu}  ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${UBP} ${command_line_option})
 		set_tests_properties (Phase1_Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 	ELSE()
-		add_test(Phase1_Toulbar_${TNAME} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${UTEST} ${command_line_option})
+		add_test(Phase1_Toulbar_${TNAME} mpirun -np ${Nb_cpu}  ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${command_line_option})
 		set_tests_properties (Phase1_Toulbar_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
 	ENDIF()
 
