@@ -1915,7 +1915,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		cout << "sortie de boucle master terminaison optimum:" << endl;
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 //cout<< "Optimum: " << wcsp ->getUb() << " in " << solver.getNumberOfFails() << " fails and " << solver.getTime() << " seconds." << endl;
-		mpi::environment::abort(0); // on tue everybody
+		//mpi::environment::abort(0); // on tue everybody
 		return make_pair(clb, cub);
 
 	} else { // end of master code, beginning of code executed by the workers
