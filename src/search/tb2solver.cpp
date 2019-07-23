@@ -1735,7 +1735,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 //kad
 
-// version without clusters (no BTD)
+// Parallel version of HBFS without BTD
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
@@ -1767,9 +1767,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			delete open;
 		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
 
+#if !defined(NDEBUG) // debug build code
 		cout << "I am the master. My id is " << world.rank() << endl;
+#endif
 
 		queue<int> idleQ; // container with the rank of the workers
+
 		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
 			idleQ.push(i);
 
@@ -1806,6 +1809,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 				nbSentWork++; // one more work in progress
 
 				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
+
 #if !defined(NDEBUG)
 				if (r.test())
 					cout
@@ -1817,13 +1821,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			Work work2; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
 
+#if !defined(NDEBUG) // debug build code
 			cout
 					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
 					<< endl;
+#endif
 
 			mpi::status sr = world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
 
-#if !defined(NDEBUG)
+#if !defined(NDEBUG) // debug build code
 			if (sr.error() == 0) {
 				cout << "I am the master. I received a response from worker # "
 						<< work2.sender << endl;
@@ -1831,10 +1837,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 #endif
 
 			wcsp->updateUb(work2.ub);
+
 			open->updateUb(work2.ub);
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
 			cout << "ZZZZZ clb  " << open->getLb() << endl;
 			cout << "ZZZZZ cub  " << open->getUb() << endl;
@@ -1878,7 +1884,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
-		mpi::environment::abort(0); // on tue everybody
+		mpi::environment::abort(0); // kills everybody
 
 		return make_pair(clb, cub);
 
@@ -1890,6 +1896,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		while (1) {
 
+			//mpi::irecv()
+
 			if (cp != NULL)
 				delete cp;
 			cp = new CPStore(); // ctor initializes start = stop = index = 0
@@ -1899,7 +1907,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			cp->store();
 
-#if !defined(NDEBUG)
+#if !defined(NDEBUG) // debug build code
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
 #endif
@@ -1908,8 +1916,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
 			assert(s.error() == 0); // recv ok
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			cout << "worker #" << world.rank()
 					<< ": I received  work from the master in particular cub = "
 					<< work.ub << endl;
@@ -1930,9 +1937,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			cp->store();
 
-#if !defined(NDEBUG)
-			// debug build code
-			// update cub and clb of worker's open queue
+#if !defined(NDEBUG) // debug build code
 			cout << "cost = lb = " << open->top().getCost() << endl;
 			cout << "node.first = " << open->top().first << endl;
 			cout << "node.last = " << open->top().last << endl;
@@ -1957,8 +1962,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 				Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
 
 				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
-
-				//cout << " forcing exit ..." << endl; mpi::environment::abort(0);
 
 				recursiveSolve(bestlb); // call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve. Recursive DFS updates open with open nodes + Ub which are to be transmitted to the master.
 
@@ -1993,22 +1996,19 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			}
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 #endif
 
 			int worker = world.rank();
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			cout << " size of open after DFS = " << open->size() << endl;
 #endif
 
 			Work work2(*cp, *open, wcsp->getUb(), worker); //  create the message with cub and open nodes information from local open and cp
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			cout << " number of nodes transmitted = " << work2.nodeX.size()
 					<< endl;
 			cout << " capacity of vector nodeX = " << work2.nodeX.capacity()
@@ -2017,8 +2017,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
 
-#if !defined(NDEBUG)
-			// debug build code
+#if !defined(NDEBUG) // debug build code
 			if (r.test())
 				cout << "I am worker #" << worker
 						<< " and I have just sent my stuff in particular cub = "
@@ -2042,9 +2041,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 }  // end of hybridSolvePara(...)
 
+
+
 //***********************************************************************
 
-// version parallel V1 avant nettoyage du code
+
+
+// backup version parallel V1 avant nettoyage du code
 // gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
 // or
 // mpirun -np 2 xterm -e gdb ./toulbar2   then, in each xterm, type:  run -para 404.wcsp
@@ -2166,14 +2169,7 @@ pair<Cost, Cost> Solver::hybridSolveParaBck3(Cost clb, Cost cub) { // -para
 				cout << "I am the master. I received a response from worker # "
 						<< work2.sender << endl;
 			}
-			// or non blocking mode :
-			// mpi::request r = world.irecv(mpi::any_source, tag0, work);
-			// and test whether data have been received with
-			// if (r.test()) {...}
-			// or blocking with status to get the sender rank from mpi : status s = world.recv(mpi::any_source, tag0, work)
-			// and use status.source() to get de sender
-// cf vns sol to messages an msg to sol
-			// with these info, update cub if the sent ub < current ub of the master
+
 			wcsp->updateUb(work2.ub);
 			open->updateUb(work2.ub);
 

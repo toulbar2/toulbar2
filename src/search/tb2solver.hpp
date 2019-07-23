@@ -192,9 +192,6 @@ public:
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
-		//Long subProblemId; // to be used only if we want to memorize pair (i,j). the idea is to improve the resilience in case of a worker becomes out of order during computation
-		// Work(const CPStore &cp, const vector<OpenNode> & openVec_, const int ub_, const int sender_ = 0, Long subProblemId=0)
-
 		/**
 		 * @brief constructor used by the master with 3 arguments that pop up directly the open queue of the master or the worker.
 		 * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
@@ -207,22 +204,18 @@ public:
 		: ub(ubMaster_)
 		, sender(0)
 		{
-			//OpenNode node = openMaster_.top();
+
 			nodeX.push_back(openMaster_.top());
-			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity . to be tested if this improve speedup or not. Indeed, boost.MPI may take care correctly of this problem.
-			openMaster_.pop(); // pop up directly the queue open_ !!
 
-			// TODO: See if no need to pass a whole node and if transmission of only node's cost + ub + vecCp  is sufficient. sender=0 not necessary and vector nodeX contains first and last which are
-			// necessary only in the master to compute vecCp.
+			openMaster_.pop();// pop up directly the queue open_ !!
 
-			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)  // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
-				vecCp.push_back(cpMaster_[i]);
-			vecCp.shrink_to_fit(); // to be tested
+			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+			vecCp.push_back(cpMaster_[i]);
+
 
 		}
 
-
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_,  const int sender_) // ctor used by the workers with 4 arguments. All the cp
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_) // ctor used by the workers with 4 arguments. All the cp
 		: ub(ubWorker_)
 		, sender(sender_)
 		{
@@ -230,30 +223,22 @@ public:
 			while(!openWorker_.empty()) // init of vector of OpenNode nodeX
 			{
 				OpenNode node = openWorker_.top();
+
 				nodeX.push_back(node);
+
 				openWorker_.pop(); // pop up directly the queue open !!
+
 			}
 
-			nodeX.shrink_to_fit(); // to transmit a vector with size = capacity
-
-//			for(size_t i = 0; i < cpWorker_.size(); i++) // init of vector of ChoicePoint with ALL THE CPs in cpWorker_
-				for(ptrdiff_t i = 0; i < cpWorker_.stop ; i++)
-				vecCp.push_back(cpWorker_[i]);
-
-			vecCp.shrink_to_fit();
+			for(ptrdiff_t i = 0; i < cpWorker_.stop; i++)
+			vecCp.push_back(cpWorker_[i]);
 
 		}
 
 		Work() {}
 
 	};
-
-	/*
-	 * To optimize when it is a class of plain old objects POD : int, long, ...
-	 * \warning possible errors seg fault with pointers attributes and non POD attributes
-	 */
-	//BOOST_IS_MPI_DATATYPE(Work);
-	//kad
+//kad
 
 	class CPStore FINAL : public vector<ChoicePoint> {
 	public:
