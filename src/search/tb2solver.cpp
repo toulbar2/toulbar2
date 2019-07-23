@@ -1914,12 +1914,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			Work work;
 
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
-			assert(s.error() == 0); // recv ok
 
 #if !defined(NDEBUG) // debug build code
+			if (s.error() == 0){
+
 			cout << "worker #" << world.rank()
 					<< ": I received  work from the master in particular cub = "
 					<< work.ub << endl;
+			}
 #endif
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
