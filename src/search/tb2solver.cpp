@@ -1911,7 +1911,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		 */
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
-		mpi::environment::abort(0); // kills everybody
+		//mpi::environment::abort(0); // kills everybody
 		//MPI_Finalize();
 
 		return make_pair(clb, cub);
