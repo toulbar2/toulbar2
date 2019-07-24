@@ -1793,12 +1793,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		showGap(clb, cub);
 
-		Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
-
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
 		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
-
+			Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
@@ -1887,6 +1885,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			cub = wcsp->getUb();
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
+			cout << "clb = "<< clb <<" minLbWorkers = "<< minLbWorkers<< " open->getLb() = "<< open->getLb()<< endl;
+			//clb = MAX(clb, open->getLb());
 
 			showGap(clb, cub);
 
@@ -1916,7 +1916,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		 */
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
-		//mpi::environment::abort(0); // kills everybody
+		mpi::environment::abort(0); // kills everybody
 		//MPI_Finalize();
 
 		return make_pair(clb, cub);
