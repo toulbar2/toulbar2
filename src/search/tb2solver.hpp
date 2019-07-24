@@ -207,11 +207,10 @@ public:
 
 			nodeX.push_back(openMaster_.top());
 
-			openMaster_.pop();// pop up directly the queue open_ !!
+			openMaster_.pop();			// pop up directly the queue open_ !!
 
 			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 			vecCp.push_back(cpMaster_[i]);
-
 
 		}
 
@@ -381,7 +380,7 @@ protected:
 	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .has to be deleted at some point
-	pair<Cost, Cost> hybridSolveParaBck2(Cost clb, Cost cub);//kad temporary backup sequential simplified release even if it si named ParaBck2 !
+	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub);//kad temporary backup sequential simplified release
 	pair<Cost, Cost> hybridSolveParaBck3(Cost clb, Cost cub);// parallel version before code cleaning.
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	//kad

@@ -1827,15 +1827,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 					<< endl;
 #endif
 
-			mpi::status sr = world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
 
-#if !defined(NDEBUG) // debug build code
+#ifdef NDEBUG  // compile release code
+
+			world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
+
+#else // compile debug code
+
+			mpi::status sr = world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
 			if (sr.error() == 0) {
 				cout << "I am the master. I received a response from worker # "
 						<< work2.sender << endl;
 			}
-#endif
 
+#endif
 			wcsp->updateUb(work2.ub);
 
 			open->updateUb(work2.ub);
@@ -1913,15 +1918,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 #endif
 			Work work;
 
+
+
+
+#ifdef NDEBUG  // compile release code
+
+			world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
+
+#else // compile debug code
+
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
 
-#if !defined(NDEBUG) // debug build code
-			if (s.error() == 0){
+			if (s.error() == 0) {
 
-			cout << "worker #" << world.rank()
-					<< ": I received  work from the master in particular cub = "
-					<< work.ub << endl;
-			}
+							cout << "worker #" << world.rank()
+									<< ": I received  work from the master in particular cub = "
+									<< work.ub << endl;
+
+						}
+
 #endif
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
@@ -2043,11 +2058,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 }  // end of hybridSolvePara(...)
 
-
-
 //***********************************************************************
-
-
 
 // backup version parallel V1 avant nettoyage du code
 // gdb parallel debug command: mpirun -n 2 xterm -hold -e gdb -ex run --args ./toulbar2 404.wcsp -para
@@ -2388,8 +2399,8 @@ pair<Cost, Cost> Solver::hybridSolveParaBck3(Cost clb, Cost cub) { // -para
 }  // end of hybridSolveParaBck3(...)
 
 //************************************************************************
-// version sequentielle expurgée pour tests
-pair<Cost, Cost> Solver::hybridSolveParaBck2(Cost clb, Cost cub) {
+// Sequential simplified release of hbfs
+pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
 	cout << "test seq hbfs : TOTOOOOOO" << endl;
 	CPStore *cp_ = NULL; // vector of choice points
 	OpenList *open_ = NULL; // priority queue of nodes
