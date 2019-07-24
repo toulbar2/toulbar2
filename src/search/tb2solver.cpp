@@ -1891,11 +1891,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		} // end while. The programme terminates
 
-		cout << "sortie de boucle master terminaison optimum:" << endl;
+		cout
+				<< "I am the master and I've just exited from the termination loop."
+				<< endl;
 
+		// The master terminate the workers
+		/*		Work workFinished;
+		 workFinished.terminate = true;
+
+		 for (worker = 1; worker < world.size(); worker++)
+		 world.isend(worker, tag0, workFinished);
+
+		 cout
+		 << "I am the master and I've just send terminate boolean to workers"
+		 << endl;
+		 */
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
 		mpi::environment::abort(0); // kills everybody
+		//MPI_Finalize();
 
 		return make_pair(clb, cub);
 
@@ -1937,6 +1951,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 						<< work.ub << endl;
 
 #endif
+
+			//if (work.terminate == true) // if the master sends work with boolean terminate = true the worker must terminate
+			//	mpi::environment::abort(0);
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 
@@ -2014,7 +2031,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			}
 
-
 #if !defined(NDEBUG) // debug build code
 
 			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
@@ -2039,7 +2055,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 					<< endl;
 #endif
 
-
 #ifdef NDEBUG  // release build
 
 			world.isend(master, tag0, work2); // non blocking send to master
@@ -2049,9 +2064,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
 
 			if (r.test())
-					cout << "I am worker #" << worker
-							<< " and I have just sent my stuff in particular cub = "
-							<< work2.ub << " to the master. " << endl;
+				cout << "I am worker #" << worker
+						<< " and I have just sent my stuff in particular cub = "
+						<< work2.ub << " to the master. " << endl;
 
 #endif
 

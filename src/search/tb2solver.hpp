@@ -13,8 +13,8 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
 
+//#include <mpi.h>
 /*
- #include <mpi.h>
  #include <boost/serialization/array.hpp>
  #include <boost/serialization/string.hpp>
  #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
@@ -176,7 +176,7 @@ public:
 			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
 			ar & sender;// sender rank can probably be taken from mpi status object
-			//ar & subProblemId; // to be used only if we want to memorize pair (i,j)
+			ar & terminate;
 		}
 
 	public:
@@ -189,6 +189,8 @@ public:
 		Cost ub;//  Best current solution a.k.a incumbent solution
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
+
+		bool terminate = false;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
