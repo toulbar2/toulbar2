@@ -1895,6 +1895,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 				<< "I am the master and I've just exited from the termination loop."
 				<< endl;
 
+		cout << "XXXX condition sortie boucle clb < cub: clb = " << clb << " cub = "<< cub<< endl;
+
+
 		// The master terminate the workers
 		/*		Work workFinished;
 		 workFinished.terminate = true;
