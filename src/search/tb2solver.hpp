@@ -372,16 +372,8 @@ protected:
 	 * Then the master update its open queue and cp, the vector of choice points aka decisions,
 	 * and distribute these nodes to worker 2 3 .... 7 1 (case of 7 workers, 1 master).
 	 * It is the number of backtrack authorized that give the signal to the worker to send its nodes.
-	 *
-	 * TODO : if possible, to avoid master bottleneck because it centralizes all the communications, maybe a better scalabilty
-	 * could be reach by transferring the initiative to return nodes to the master. This way the workers won't be idle
-	 * because the master would be occupied to transfer nodes and communicate with a large number of workers, say 100 000 !
-	 * In this case, the workers will pursue their DFS waiting for the master to tell them to return their open nodes.
 	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
-	pair<Cost, Cost> hybridSolveParaBck(Cost clb, Cost cub);//kad temporary backup. do nothing .has to be deleted at some point
-	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub);//kad temporary backup sequential simplified release
-	pair<Cost, Cost> hybridSolveParaBck3(Cost clb, Cost cub);// parallel version before code cleaning.
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
