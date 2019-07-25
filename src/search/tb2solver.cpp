@@ -1793,9 +1793,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		showGap(clb, cub);
 
+#include <map>
+
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 
-		Cost minLbWorkers = MAX_COST;
+		Cost minLbWorkers;
 
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
@@ -1803,7 +1805,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			//Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
-
 
 				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send
 
@@ -1893,10 +1894,19 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			activeWork.erase(work2.sender);
 
 			// find the min cost lb in the map activeWork
-			if(activeWork.empty()){
+			if (activeWork.empty()) {
+
 				minLbWorkers = MAX_COST;
-			}
-			else{
+
+			} else {
+				minLbWorkers = MAX_COST;
+				for (unordered_map<int,Cost>::/*const_*/iterator it = activeWork.begin();
+						it != activeWork.end(); ++it) {
+
+					if (it->second < minLbWorkers)
+						minLbWorkers = it->second;
+
+				}
 
 			}
 
@@ -1910,16 +1920,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			showGap(clb, cub);
 
-
-
 		} // end while. The programme terminates
 
 		cout
 				<< "I am the master and I've just exited from the termination loop."
 				<< endl;
 
-		cout << "XXXX condition sortie boucle clb < cub: clb = " << clb << " cub = "<< cub<< endl;
-
+		cout << "XXXX condition sortie boucle clb < cub: clb = " << clb
+				<< " cub = " << cub << endl;
 
 		// The master terminate the workers
 		/*		Work workFinished;
