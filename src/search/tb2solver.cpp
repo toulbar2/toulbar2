@@ -1787,13 +1787,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		}
 		nbHybrid++; // do not count empty root cluster
 
+		open->updateUb(cub);  // already up to date; probably a line that can be deleted
 
-		open->updateUb(cub);  // already up to date
-		//cout << "I am the master. My id is " << world.rank() << endl;
+		clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
 
-		clb = MAX(clb, open->getLb()); // already up to date
-
-		 showGap(clb, cub);  // does nothing
+		 showGap(clb, cub);  // does nothing ; probably a line that can be deleted
 
 #include <map>
 
@@ -1803,6 +1801,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
+		///  \warning nbSentWork is redundant with
 		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
 			//Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
@@ -1895,8 +1894,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			activeWork.erase(work2.sender);
 
-			// find the min cost lb in the map activeWork
-			if (activeWork.empty()) {
+			if (activeWork.empty()) {			// find the min cost lb in the map activeWork
 
 				minLbWorkers = MAX_COST;
 
