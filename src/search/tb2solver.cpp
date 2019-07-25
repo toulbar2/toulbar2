@@ -1814,7 +1814,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 				worker = idleQ.front();  // get the first worker in the queue
 
-				activeWork[worker] = work.nodeX[0].getCost();
+				activeWork[worker] = work.nodeX[0].getCost();  // getCost gives the local lb of the node
 
 				idleQ.pop(); // pop it, hence the worker is considered active.
 
@@ -1917,8 +1917,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 			nbSentWork--;
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
-			//cout << "clb = "<< clb <<" minLbWorkers = "<< minLbWorkers<< " open->getLb() = "<< open->getLb()<< endl;
-			clb = MAX(clb, open->getLb());
 
 			showGap(clb, cub);
 

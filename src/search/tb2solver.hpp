@@ -50,7 +50,7 @@ public:
 			ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
 		}
 	protected: // \Warning cost changed from private to protected to be accessed directly by derived class OpenNode2
-		Cost cost; // global lower bound associated with the open node
+		Cost cost; // lower bound associated with the open node
 	public:
 		ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
 		ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -115,6 +115,7 @@ public:
 			Cost tmpub = MAX(MIN_COST, ub + delta);
 			cub = MIN(cub, tmpub);
 			clb = MIN(clb, tmpub);
+			cout << "XXXX: maj cub et clb du open dans updateUb. cub = "<< cub<< " clb = "<<clb<<endl;
 		}
 
 		size_type capacity() const {return c.capacity();}
