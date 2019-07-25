@@ -1796,14 +1796,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
 		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
-			Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
+			//Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
 
 				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send
 
-				if(work.nodeX[0].getCost() < minLbWorkers) minLbWorkers=work.nodeX[0].getCost(); // compute the min
+				//if(work.nodeX[0].getCost() < minLbWorkers) minLbWorkers=work.nodeX[0].getCost(); // compute the min
 
 				worker = idleQ.front();  // get the first worker in the queue
 
@@ -1884,9 +1884,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			cub = wcsp->getUb();
 
-			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
-			cout << "clb = "<< clb <<" minLbWorkers = "<< minLbWorkers<< " open->getLb() = "<< open->getLb()<< endl;
-			//clb = MAX(clb, open->getLb());
+			//clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
+			//cout << "clb = "<< clb <<" minLbWorkers = "<< minLbWorkers<< " open->getLb() = "<< open->getLb()<< endl;
+			clb = MAX(clb, open->getLb());
 
 			showGap(clb, cub);
 
