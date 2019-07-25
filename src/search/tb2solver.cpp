@@ -1793,6 +1793,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		showGap(clb, cub);
 
+		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
+
+		Cost minLbWorkers = MAX_COST;
+
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
 		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
@@ -1806,6 +1810,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 				//if(work.nodeX[0].getCost() < minLbWorkers) minLbWorkers=work.nodeX[0].getCost(); // compute the min
 
 				worker = idleQ.front();  // get the first worker in the queue
+
+				activeWork[worker] = work.nodeX[0].getCost();
 
 				idleQ.pop(); // pop it, hence the worker is considered active.
 
@@ -1884,15 +1890,27 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			cub = wcsp->getUb();
 
-			//clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
+			activeWork.erase(work2.sender);
+
+			// find the min cost lb in the map activeWork
+			if(activeWork.empty()){
+				minLbWorkers = MAX_COST;
+			}
+			else{
+
+			}
+
+			idleQ.push(work2.sender);
+
+			nbSentWork--;
+
+			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 			//cout << "clb = "<< clb <<" minLbWorkers = "<< minLbWorkers<< " open->getLb() = "<< open->getLb()<< endl;
 			clb = MAX(clb, open->getLb());
 
 			showGap(clb, cub);
 
-			idleQ.push(work2.sender);
 
-			nbSentWork--;
 
 		} // end while. The programme terminates
 
