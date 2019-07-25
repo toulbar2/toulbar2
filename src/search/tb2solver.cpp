@@ -1787,11 +1787,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		}
 		nbHybrid++; // do not count empty root cluster
 
-		open->updateUb(cub);
 
-		clb = MAX(clb, open->getLb());
+		open->updateUb(cub);  // already up to date
+		//cout << "I am the master. My id is " << world.rank() << endl;
 
-		showGap(clb, cub);
+		clb = MAX(clb, open->getLb()); // already up to date
+
+		 showGap(clb, cub);  // does nothing
 
 		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
@@ -1911,7 +1913,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		 */
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
-		//mpi::environment::abort(0); // kills everybody
+		mpi::environment::abort(0); // kills everybody
 		//MPI_Finalize();
 
 		return make_pair(clb, cub);
@@ -1956,7 +1958,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 #endif
 
 			//if (work.terminate == true) // if the master sends work with boolean terminate = true the worker must terminate
-			//	mpi::environment::abort(0);
+			//	mpi::environment::abort(0);  // does not work properly: exit(0) too does not terminates workers properly
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 
