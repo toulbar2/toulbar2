@@ -115,7 +115,6 @@ public:
 			Cost tmpub = MAX(MIN_COST, ub + delta);
 			cub = MIN(cub, tmpub);
 			clb = MIN(clb, tmpub);
-			cout << "XXXX: maj cub et clb du open dans updateUb. cub = "<< cub<< " clb = "<<clb<<endl;
 		}
 
 		size_type capacity() const {return c.capacity();}
