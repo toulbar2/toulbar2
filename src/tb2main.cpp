@@ -772,7 +772,7 @@ void help_msg(char* toulbar2filename)
     cout << endl;
 #endif
     //kad
-        cout << "usage for HBFS parallel version:  mpirun -np `nproc` ./toulbar2 -para file.wcsp"<< endl;
+        cout << "usage for HBFS parallel version:  mpirun -q -np `nproc` ./toulbar2 -para file.wcsp |grep -v Aborting" << endl;
     //kad
     cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;

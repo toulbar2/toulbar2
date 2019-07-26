@@ -1,0 +1,4 @@
+#!/bin/bash
+# script to put in toulbar2/your_build_folder/bin/Linux to run toulbar2 in parallel
+echo "usage: ./run file.wcsp"
+mpirun -q -np `nproc` ./toulbar2 -para $1 |grep -v Aborting

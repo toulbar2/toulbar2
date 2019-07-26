@@ -1922,12 +1922,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // ./toulbar2 -pa
 
 		} // end while. The programme terminates
 
-		cout
-				<< "I am the master and I've just exited from the termination loop."
-				<< endl;
+		//cout<< "I am the master and I've just exited from the termination loop."<< endl;
 
-		cout << "XXXX condition sortie boucle clb < cub: clb = " << clb
-				<< " cub = " << cub << endl;
+		//cout << "XXXX condition sortie boucle clb < cub: clb = " << clb << " cub = " << cub << endl;
 
 		// The master terminate the workers
 		/*		Work workFinished;
