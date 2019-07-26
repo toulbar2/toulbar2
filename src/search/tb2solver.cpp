@@ -1787,6 +1787,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 		}
 		nbHybrid++; // do not count empty root cluster
 
+		// the 3 commented lines below does not seem to be usefull : for instance, all tests with "make test" have passed without them
 	//	open->updateUb(cub);  // already up to date; probably a line that can be deleted
 
 	//	clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
@@ -1796,6 +1797,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 #include <map>
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
+		// nb: choice of unordered_map because it is more effcieint than a map that would loose time in ordering the keys
 
 		Cost minLbWorkers;
 
