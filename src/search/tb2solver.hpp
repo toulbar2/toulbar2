@@ -377,6 +377,8 @@ protected:
 	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
+	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub);//kad sequential simplified release of hbfs
+	pair<Cost, Cost> hybridSolveSeq() {return hybridSolveSeq(wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
