@@ -1799,11 +1799,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 		Cost minLbWorkers;
 
-		int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
+		//int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
 
-		///  \warning nbSentWork is redundant with
-		while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
-			//Cost minLbWorkers = MAX_COST; // min of lower bound of nodes sent to workers = min cost of nodes currently processed by the workers
+		///  \warning nbSentWork is redundant
+		//while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
+			while (clb < cub && (!open->finished() || !activeWork.empty() )) {
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
@@ -1817,7 +1817,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 				idleQ.pop(); // pop it, hence the worker is considered active.
 
-				nbSentWork++; // one more work in progress
+			//	nbSentWork++; // one more work in progress
 
 #ifdef NDEBUG  // compile release code
 
@@ -1894,13 +1894,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 			activeWork.erase(work2.sender);
 
-			if (activeWork.empty()) {			// find the min cost lb in the map activeWork
+		/*	if (activeWork.empty()) {			// find the min cost lb in the map activeWork
 
 				minLbWorkers = MAX_COST;
 
-			} else {
+			} else {*/
 				minLbWorkers = MAX_COST;
-				for (unordered_map<int,Cost>::/*const_*/iterator it = activeWork.begin();
+				for (unordered_map<int,Cost>::const_iterator it = activeWork.begin();
 						it != activeWork.end(); ++it) {
 
 					if (it->second < minLbWorkers)
@@ -1908,11 +1908,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // -para
 
 				}
 
-			}
+			//}
 
 			idleQ.push(work2.sender);
 
-			nbSentWork--;
+			//nbSentWork--;
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
