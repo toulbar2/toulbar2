@@ -758,7 +758,7 @@ void help_msg(char* toulbar2filename)
 #ifdef OPENMPI
     //    cout << "   -cpdgvns : initial upperbound found by cooperative parallel DGVNS (usage: \"mpirun -n [NbOfProcess] toulbar2 -cpdgvns problem.wcsp\")" << endl;
     //    cout << "   -rsdgvns : initial upperbound found by replicated synchronous DGVNS (usage: \"mpirun -n [NbOfProcess] toulbar2 -rsdgvns problem.wcsp\")" << endl;
-    cout << " (usage for parallel version: mpirun -np `nproc` ./toulbar2 -para 404.wcsp)";
+    cout << " (usage for parallel version: \"mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp\")";
 #endif
     cout << endl;
     cout << "   -vnsini=[integer] : initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (" << ToulBar2::vnsInitSol << " by default)" << endl;
@@ -772,7 +772,8 @@ void help_msg(char* toulbar2filename)
     cout << endl;
 #endif
     //kad
-        cout << "usage for HBFS parallel version:  mpirun -q -np `nproc` ./toulbar2 -para file.wcsp |grep -v Aborting" << endl;
+        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
+        cout << "usage for HBFS parallel version:  chmod +x run; usage: ./run nproc problem.wcsp"<< endl;
     //kad
     cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
