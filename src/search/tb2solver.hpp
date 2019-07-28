@@ -172,6 +172,8 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
+			ar & nbNodes;
+			ar & nbBacktracks;
 			ar & vecCp;
 			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
 			ar & ub;
@@ -180,7 +182,10 @@ public:
 		}
 
 	public:
-		// TODO : See if std arrays or built in arrays are usable here and faster than std vectors
+		// possible TODO : See if std arrays or built in arrays are usable here and faster than std vectors
+		Long nbNodes;
+
+		Long nbBacktracks;
 
 		vector<ChoicePoint> vecCp;// vector of choice points
 
@@ -216,8 +221,10 @@ public:
 
 		}
 
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_) // ctor used by the workers with 4 arguments. All the cp
-		: ub(ubWorker_)
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_,  Long nbBacktracks_) // ctor used by the workers with 4 arguments. All the cp
+		: nbNodes(nbNodes_)
+		, nbBacktracks(nbBacktracks_)
+		, ub(ubWorker_)
 		, sender(sender_)
 		{
 

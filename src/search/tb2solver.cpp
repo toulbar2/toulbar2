@@ -1794,6 +1794,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		nbHybrid++; // do not count empty root cluster
 
+		open->updateUb(cub);
+		clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
+		showGap(clb, cub);
+
 #include <map>
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
@@ -1805,7 +1809,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
 
-				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send
+				Work work(*cp, *open, wcsp->getUb()); // Uses the ctor of class Work to send a node and so on to the workers
 
 				worker = idleQ.front();  // get the first worker in the queue
 
@@ -1829,7 +1833,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			} // End of loop that distribute jobs to workers
 
-			Work work2; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
+			Work work2; // object work will be populated with workers' best solution ub and other information from this worker after it has performed a DFS
 
 #if !defined(NDEBUG) // debug build code
 			cout
@@ -1854,6 +1858,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			wcsp->updateUb(work2.ub);
 
 			open->updateUb(work2.ub);
+
+			nbNodes += work2.nbNodes;
+			nbBacktracks += work2.nbBacktracks;
 
 #if !defined(NDEBUG) // debug build code
 
@@ -2027,21 +2034,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 			}
 
-#if !defined(NDEBUG) // debug build code
-
-			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
-
-#endif
-
 			int worker = world.rank();
 
 #if !defined(NDEBUG) // debug build code
+
+			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
 			cout << " size of open after DFS = " << open->size() << endl;
 
 #endif
 
-			Work work2(*cp, *open, wcsp->getUb(), worker); //  create the message with cub and open nodes information from local open and cp
+			Work work2(*cp, *open, wcsp->getUb(), worker, nbNodes,
+					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
 
 #if !defined(NDEBUG) // debug build code
 
@@ -2142,7 +2146,7 @@ pair<Cost, Cost> Solver::hybridSolvePara0(Cost clb, Cost cub) { // usage ./toulb
 
 		//	clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
 
-		// showGap(clb, cub);  // does nothing ; probably a line that can be deleted
+		// showGap(clb, cub);  //  probably a line that can be deleted
 
 #include <map>
 
@@ -2426,7 +2430,8 @@ pair<Cost, Cost> Solver::hybridSolvePara0(Cost clb, Cost cub) { // usage ./toulb
 
 #endif
 
-			Work work2(*cp, *open, wcsp->getUb(), worker); //  create the message with cub and open nodes information from local open and cp
+			Work work2(*cp, *open, wcsp->getUb(), worker, nbNodes,
+					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
 
 #if !defined(NDEBUG) // debug build code
 
@@ -2514,7 +2519,7 @@ pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
 
 			Store::store();
 			OpenNode nd = open_->top();
-			open_->pop(); // hbfs prélève un noeud
+			open_->pop();
 
 			restore(*cp_, nd); // replay the sequence of decisions and recompute soft arc consistency
 
@@ -2566,7 +2571,7 @@ pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
 	return make_pair(clb, cub);
 }
 
-//fin seq hbfs
+//end of seq hbfs
 
 //**************************************************************
 
