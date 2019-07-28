@@ -1796,7 +1796,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		open->updateUb(cub);
 		clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
-		showGap(clb, cub);
+		//showGap(clb, cub);
 
 #include <map>
 
