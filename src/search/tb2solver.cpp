@@ -1280,7 +1280,7 @@ void Solver::newSolution() {
 						<< ToulBar2::haplotype->Cost2LogProb(wcsp->getLb())
 						<< " (" << nbBacktracks << " backtracks, " << nbNodes
 						<< " nodes, depth " << Store::getDepth() << ")" << endl;
-			else if (!ToulBar2::bayesian)
+			else if (!ToulBar2::bayesian) // kad: output for e.g. 404.wcsp solving
 				cout << "New solution: " << std::fixed
 						<< std::setprecision(ToulBar2::decimalPoint)
 						<< wcsp->getDDualBound()
@@ -1766,7 +1766,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		if (open != NULL)
 			delete open;
 		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
-
+		cout << "YYYYYYYYYYYYYY : I am the master. My id is " << world.rank() << endl;
 #if !defined(NDEBUG) // debug build code
 		cout << "I am the master. My id is " << world.rank() << endl;
 #endif
@@ -1794,8 +1794,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		nbHybrid++; // do not count empty root cluster
 
-		open->updateUb(cub);
-		clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
+		open->updateUb(cub);  // probably a line that can be deleted
+
+		clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted too
+
 		//showGap(clb, cub);
 
 #include <map>
@@ -2047,6 +2049,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
+		// YYYY	New solution:
+
 			Work work2(*cp, *open, wcsp->getUb(), worker, nbNodes,
 					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
 
@@ -2090,391 +2094,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 }  // end of hybridSolvePara(...)
 
-/*********************************************************************************/
-/***** Parallel version without stats and printing of solutions *******************/
-/*********************************************************************************/
-pair<Cost, Cost> Solver::hybridSolvePara0(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
-	cout << " PARALLEL HBFS MODE!!!" << endl;
-
-	namespace mpi = boost::mpi;
-
-	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
-
-	mpi::communicator world;
-
-	int worker;
-
-	const int master = 0;
-
-	const int tag0 = 0;
-
-	Cost cub_init = cub;
-
-// ********************************************************************************************
-// *************************************** Master *********************************************
-// ********************************************************************************************
-
-	if (world.rank() == master) {
-
-		if (cp != NULL)
-			delete cp;
-		cp = new CPStore(); // define vector of CPs declared as attribute of class Solver. It is a class global variable defining partly the "state" of the solver.
-		if (open != NULL)
-			delete open;
-		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
-
-#if !defined(NDEBUG) // debug build code
-		cout << "I am the master. My id is " << world.rank() << endl;
-#endif
-
-		queue<int> idleQ; // container with the rank of the workers
-
-		for (int i = 1; i < world.size(); i++) // if 8 workers, queue will be 7 5 6 4 3 2 1 with worker 1 the first to begin working and 7 the last one.
-			idleQ.push(i);
-
-		cp->store();
-
-		if (open->size() == 0) { // start a new list of open nodes if needed
-			nbHybridNew++;
-			*open = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub)); // reinitialize current open list and insert empty node
-			addOpenNode(*cp, *open, clb);
-		} else {
-			nbHybridContinue++;
-		}
-		nbHybrid++; // do not count empty root cluster
-
-		// the 3 commented lines below does not seem to be usefull : for instance, all tests with "make test" have passed without them
-		//	open->updateUb(cub);  // already up to date; probably a line that can be deleted
-
-		//	clb = MAX(clb, open->getLb()); // already up to date ; probably a line that can be deleted
-
-		// showGap(clb, cub);  //  probably a line that can be deleted
-
-#include <map>
-
-		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
-		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
-
-		Cost minLbWorkers;
-
-		//int nbSentWork = 0; // number of subproblems (or nodes) sent to workers. We suppose that they are currently being processed i.e. no network problem, latency not important. number between 0 and world.size()-1
-
-		///  \warning nbSentWork is redundant with map activeWork has been commented in the code
-		//while (clb < cub && (!open->finished() || nbSentWork != 0)) { // this while predicate solve the non-trivial termination problem in parallel programming
-		while (clb < cub && (!open->finished() || !activeWork.empty())) {
-			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
-			{
-
-				Work work(*cp, *open, wcsp->getUb()); // Create the "work" to do and info to send
-
-				//if(work.nodeX[0].getCost() < minLbWorkers) minLbWorkers=work.nodeX[0].getCost(); // compute the min
-
-				worker = idleQ.front();  // get the first worker in the queue
-
-				activeWork[worker] = work.nodeX[0].getCost(); // getCost gives the local lb of the node
-
-				idleQ.pop(); // pop it, hence the worker is considered active.
-
-				//	nbSentWork++; // one more work in progress
-
-#ifdef NDEBUG  // compile release code
-
-				world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
-
-#else
-				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
-
-				if (r.test())
-					cout
-							<< "I am the master and I have just sent work in particular cub = "
-							<< work.ub << " to worker # " << worker << endl;
-#endif
-
-			} // End of loop that distribute jobs to workers
-
-			Work work2; // object work will be populated with workers' ub and other information from this worker after it has performed a DFS
-
-#if !defined(NDEBUG) // debug build code
-			cout
-					<< "I am the master. I'm waiting for a response from my workers 'cause I'm not paying them to do nothing. "
-					<< endl;
-#endif
-
-#ifdef NDEBUG  // compile release code
-
-			world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
-
-#else // compile debug code
-
-			mpi::status sr = world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
-
-			if (sr.error() == 0) {
-				cout << "I am the master. I received a response from worker # "
-						<< work2.sender << endl;
-			}
-
-#endif
-			wcsp->updateUb(work2.ub);
-
-			open->updateUb(work2.ub);
-
-#if !defined(NDEBUG) // debug build code
-
-			cout << "ZZZZZ open->cub updated with  " << work2.ub << endl;
-			cout << "ZZZZZ clb  " << open->getLb() << endl;
-			cout << "ZZZZZ cub  " << open->getUb() << endl;
-			cout << "ZZZZZ wcsp->getUb()  " << wcsp->getUb() << endl;
-
-#endif
-
-			if (!work2.nodeX.empty()) {
-
-				for (ptrdiff_t i = 0; i < (ptrdiff_t) work2.vecCp.size(); i++) {
-					cp->push_back(work2.vecCp[i]);
-				}
-
-				OpenNode node;
-
-				for (size_t i = 0; i < work2.nodeX.size(); i++) {
-					node = work2.nodeX[i];
-					node.first += cp->start;
-					node.last += cp->start;
-					open->push(node);
-				}
-
-				cp->stop = cp->start + work2.vecCp.size();
-
-				cp->store();
-
-			}
-
-			cub = wcsp->getUb();
-
-			activeWork.erase(work2.sender);
-
-			/*	if (activeWork.empty()) {			// find the min cost lb in the map activeWork
-
-			 minLbWorkers = MAX_COST;
-
-			 } else {*/
-			minLbWorkers = MAX_COST;
-			for (unordered_map<int, Cost>::const_iterator it =
-					activeWork.begin(); it != activeWork.end(); ++it) {
-
-				if (it->second < minLbWorkers)
-					minLbWorkers = it->second;
-
-			}
-
-			//}
-
-			idleQ.push(work2.sender);
-
-			//nbSentWork--;
-
-			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
-
-			showGap(clb, cub);
-
-		} // end while. The programme terminates
-
-		//cout<< "I am the master and I've just exited from the termination loop."<< endl;
-
-		//cout << "XXXX condition sortie boucle clb < cub: clb = " << clb << " cub = " << cub << endl;
-
-		// The master terminate the workers
-		/*		Work workFinished;
-		 workFinished.terminate = true;
-
-		 for (worker = 1; worker < world.size(); worker++)
-		 world.isend(worker, tag0, workFinished);
-
-		 cout
-		 << "I am the master and I've just send terminate boolean to workers"
-		 << endl;
-		 */
-		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
-
-		mpi::environment::abort(0); // kills everybody
-		//MPI_Finalize();
-
-		return make_pair(clb, cub);
-
-	} else { // end of master code, beginning of code executed by the workers
-
-// ********************************************************************************************
-// *************************************** Worker *********************************************
-// ********************************************************************************************
-
-		while (1) {
-
-			if (cp != NULL)
-				delete cp;
-			cp = new CPStore(); // ctor initializes start = stop = index = 0
-			if (open != NULL)
-				delete open;
-			open = new OpenList();
-
-			cp->store();
-
-#if !defined(NDEBUG) // debug build code
-			cout << "worker #" << world.rank()
-					<< ": I am waiting for work from the master " << endl;
-#endif
-
-			Work work;
-
-#ifdef NDEBUG  // compile release code
-
-			world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
-
-#else // compile debug code
-
-			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
-
-			if (s.error() == 0)
-				cout << "worker #" << world.rank()
-						<< ": I received  work from the master in particular cub = "
-						<< work.ub << endl;
-
-#endif
-
-			//if (work.terminate == true) // if the master sends work with boolean terminate = true the worker must terminate
-			//	mpi::environment::abort(0);  // does not work properly: exit(0) too does not terminates workers properly
-
-			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
-
-			open->updateUb(work.ub); // update cub and clb that are attributes of worker's open queue
-
-			assert(work.nodeX.size() == 1);
-
-			for (size_t i = 0; i < work.vecCp.size(); i++) {
-				addChoicePoint(work.vecCp[i].op, work.vecCp[i].varIndex,
-						work.vecCp[i].value, work.vecCp[i].reverse); // update cp->index
-			}
-
-			addOpenNode(*cp, *open, work.nodeX[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
-
-			cp->store();
-
-#if !defined(NDEBUG) // debug build code
-
-			cout << "cost = lb = " << open->top().getCost() << endl;
-			cout << "node.first = " << open->top().first << endl;
-			cout << "node.last = " << open->top().last << endl;
-
-#endif
-
-			hbfsLimit = ( // TODO: see if it is the master that send hbfsLimit?
-					(ToulBar2::hbfs > 0) ?
-							(nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX); // number of backtracks max
-
-			int storedepthBFS = Store::getDepth(); // store the depth of the DFS search
-
-			try {
-
-				Store::store();  // store the current state
-
-				OpenNode nd = open->top(); // get a reference on the best node (min lower bound or, in case of dead hit, max depth)
-
-				open->pop();  // Best node is taken from priority queue open
-
-				restore(*cp, nd); // replay the sequence of decisions and recompute soft arc consistency
-
-				Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
-
-				bestlb = MAX(bestlb, clb); // clb comes from the argument given to hybridSolvePara(clb,cub)
-
-				recursiveSolve(bestlb); // call of DFS of HBFS. recursiveSolve calls binaryChoicePoint which in turn call  recursiveSolve. Recursive DFS updates open with open nodes + Ub which are to be transmitted to the master.
-
-			} catch (Contradiction) {
-
-				wcsp->whenContradiction();
-
-			}
-
-			Store::restore(storedepthBFS);
-
-			cp->store();
-
-			if (cp->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) // in case of lack of memory HBFS become DFS
-					|| open->size()
-							>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
-
-				ToulBar2::hbfs = 0;
-
-				ToulBar2::hbfsGlobalLimit = 0;
-
-				hbfsLimit = LONGLONG_MAX;
-			}
-
-			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-				assert(nbNodes > 0);
-				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
-						&& ToulBar2::hbfs >= 2)
-					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-			}
-
-#if !defined(NDEBUG) // debug build code
-
-			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
-
-#endif
-
-			int worker = world.rank();
-
-#if !defined(NDEBUG) // debug build code
-
-			cout << " size of open after DFS = " << open->size() << endl;
-
-#endif
-
-			Work work2(*cp, *open, wcsp->getUb(), worker, nbNodes,
-					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
-
-#if !defined(NDEBUG) // debug build code
-
-			cout << " number of nodes transmitted = " << work2.nodeX.size()
-					<< endl;
-			cout << " capacity of vector nodeX = " << work2.nodeX.capacity()
-					<< endl;
-#endif
-
-#ifdef NDEBUG  // release build
-
-			world.isend(master, tag0, work2); // non blocking send to master
-
-#else  // debug build
-
-			mpi::request r = world.isend(master, tag0, work2); // non blocking send to master
-
-			if (r.test())
-				cout << "I am worker #" << worker
-						<< " and I have just sent my stuff in particular cub = "
-						<< work2.ub << " to the master. " << endl;
-
-#endif
-
-		} // end of while(1)
-
-		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
-		cout
-				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
-				<< endl;
-
-		cout
-				<< " The present message should not be displayed as it is the master who terminate the programme !"
-				<< endl;
-
-		return make_pair(MAX_COST, MAX_COST);
-
-	} // end of workers' code
-
-}  // end of hybridSolvePara0(...)
 
 /************************************************************************/
 /********* Sequential simplified release of hbfs ************************/
