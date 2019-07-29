@@ -1936,6 +1936,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cp->store();
 
+			nbNodes = 0;
+			nbBacktracks = 0;
+
 #if !defined(NDEBUG) // debug build code
 			cout << "worker #" << world.rank()
 					<< ": I am waiting for work from the master " << endl;
