@@ -1766,7 +1766,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		if (open != NULL)
 			delete open;
 		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
-		cout << "YYYYYYYYYYYYYY : I am the master. My id is " << world.rank() << endl;
+		//cout << "YYYYYYYYYYYYYY : I am the master. My id is " << world.rank() << endl;
 #if !defined(NDEBUG) // debug build code
 		cout << "I am the master. My id is " << world.rank() << endl;
 #endif
