@@ -320,7 +320,8 @@ IF(TOULBAR2)
    SET(CMAKE_CXX_COMPILER mpic++)
   #  set(BOOST_LIBRARYDIR /usr/lib64/openmpi/lib) # to test boost openmpi on fedora 
   #  set(BOOST_LIBRARYDIR /usr/lib64/mpich/lib) # to test boost mpich on fedora 
-    set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu) # boost openmpi on ubuntu
+   set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu) # boost openmpi on ubuntu
+   # set(BOOST_LIBRARYDIR /tools/libraries/Boost/boost_1_70_0/stage/lib) # on the cluster
     find_package(MPI REQUIRED)
     include_directories(${MPI_INCLUDE_PATH})
     find_package(Boost COMPONENTS serialization mpi REQUIRED)
