@@ -1,0 +1,22 @@
+#%Module1.0#################################################################
+
+# description : module to load environnment on SLURM cluster
+# kad version 1.0
+# usage: module load -f ~/save/my_own_module
+# To unload one module: module unload bioinfo/bowtie2-2.2.9
+# To unload all module and specific variable: module purge
+
+limit coredumpsize 0
+module purge
+module load compiler/gcc-7.2.0
+module load mpi/openmpi-2.1.2
+module load compiler/cmake-3.12.3
+
+chemin="/tools/libraries/Boost/boost_1_70_0"
+
+export BOOST_ROOT=${chemin}
+export Boost_LIBRARY_DIRS=${chemin}/lib/
+export Boost_INCLUDE_DIRS=${chemin}/include/
+
+
+
