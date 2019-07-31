@@ -12,12 +12,11 @@ module load compiler/gcc-7.2.0
 module load mpi/openmpi-2.1.2
 module load compiler/cmake-3.12.3
 
-
-
 setenv BOOST_ROOT /tools/libraries/Boost/boost_1_70_0
+setenv Boost_INCLUDE_DIRS /tools/libraries/Boost/boost_1_70_0
+setenv Boost_LIBRARY_DIRS /tools/libraries/Boost/boost_1_70_0/stage/lib
 
-
-
+prepend-path	 LD_LIBRARY_PATH  /tools/libraries/Boost/boost_1_70_0/stage/lib
 
 #export BOOST_ROOT=${chemin}
 #export Boost_LIBRARY_DIRS=${chemin}/lib/
@@ -30,5 +29,9 @@ setenv BOOST_ROOT /tools/libraries/Boost/boost_1_70_0
 #prepend-path	 MANPATH /tools/cluster/mpi/openmpi/2.1.2/gcc-4.8.5/share/man 
 
 
-
+#The Boost C++ Libraries were successfully built!
+#The following directory should be added to compiler include paths:
+#    /home/abeldjilali/Bureau/boost_1_70_0
+#The following directory should be added to linker library paths:
+#    /home/abeldjilali/Bureau/boost_1_70_0/stage/lib
 
