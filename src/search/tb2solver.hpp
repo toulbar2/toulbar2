@@ -172,17 +172,19 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
+			ar & sol;
 			ar & nbNodes;
 			ar & nbBacktracks;
 			ar & vecCp;
-			ar & nodeX; // TODO : Is it necessary to transmit a hole node: maybe nodes.cost and the value (last-first) would suffice ?
+			ar & nodeX;
 			ar & ub;
-			ar & sender;// sender rank can probably be taken from mpi status object
-			ar & terminate;
+			ar & sender;
 		}
 
 	public:
-		// possible TODO : See if std arrays or built in arrays are usable here and faster than std vectors
+
+		vector<Value> sol;
+
 		Long nbNodes;
 
 		Long nbBacktracks;
@@ -194,8 +196,6 @@ public:
 		Cost ub;//  Best current solution a.k.a incumbent solution
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
-
-		bool terminate = false;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 

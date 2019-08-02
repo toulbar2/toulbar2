@@ -1963,6 +1963,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
+
+
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 
 			open->updateUb(work.ub); // update cub and clb that are attributes of worker's open queue
@@ -2041,7 +2043,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			int worker = world.rank();
 
-#if !defined(NDEBUG) // debug build code
+#if !defined(NDEBUG) // code to compile only in debug mode
 
 			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
@@ -2050,8 +2052,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #endif
 
 		// YYYY	New solution:
+			Cost newWorkerUb = wcsp->getUb();
 
-			Work work2(*cp, *open, wcsp->getUb(), worker, nbNodes,
+			Work work2(*cp, *open, newWorkerUb, worker, nbNodes,
 					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
 
 #if !defined(NDEBUG) // debug build code
