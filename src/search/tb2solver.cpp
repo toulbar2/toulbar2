@@ -1806,7 +1806,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
 
 		Cost minLbWorkers;
-
+        unsigned long NbNodePushed=0;
 		while (clb < cub && (!open->finished() || !activeWork.empty())) {
 			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
 			{
@@ -1820,9 +1820,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				idleQ.pop(); // pop it, hence the worker is considered active.
 
 #ifdef NDEBUG  // code that will be compiled in release mode
-
+				
 				world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
-
+				NbNodePushed++;
 #else         // code that will be compiled if in debug mode
 
 				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
@@ -1914,11 +1914,24 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		} // end while. The programme terminates
 
-		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
+	//	endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
 
+		//mpi::environment::abort(0); // kills everybody
+		
+		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // affichage de Optimal: XXX  
+		
+		cout << "Finishing Master open nodes pushed : " << NbNodePushed << endl;
+ 		
+ 		Work workFinished;
+		workFinished.terminate = true;
+
+		for (worker = 1; worker < world.size(); worker++)
+			world.isend(worker, tag0, workFinished);  
+		
 		mpi::environment::abort(0); // kills everybody
-		//MPI_Finalize();
-
+		
+		MPI_Finalize();
+		
 		return make_pair(clb, cub);
 
 	} else { // end of master code, beginning of code executed by the workers
@@ -1926,8 +1939,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 // *************************************** Worker *********************************************
 // ********************************************************************************************
+long nbworkercall= 0;
 
 		while (1) {
+			nbworkercall++;
 
 			if (cp != NULL)
 				delete cp;
@@ -1962,8 +1977,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						<< work.ub << endl;
 
 #endif
-
-
+			if(work.terminate)  { // worjer exit()
+		 
+			 cout  << " Finishing worker : " << world.rank() << " nb call : " << nbworkercall	 -1 << endl ;
+             return make_pair(MAX_COST, MAX_COST);
+        }
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 

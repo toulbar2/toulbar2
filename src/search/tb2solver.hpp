@@ -178,7 +178,8 @@ public:
 			ar & vecCp;
 			ar & nodeX;
 			ar & ub;
-			ar & sender;
+			ar & sender;// sender rank can probably be taken from mpi status object
+			ar & terminate;
 		}
 
 	public:
@@ -196,6 +197,8 @@ public:
 		Cost ub;//  Best current solution a.k.a incumbent solution
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
+
+		bool terminate = false;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
