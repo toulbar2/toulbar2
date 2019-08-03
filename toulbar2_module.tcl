@@ -13,8 +13,8 @@ module load mpi/openmpi-2.1.2
 module load compiler/cmake-3.12.3
 
 setenv BOOST_ROOT /tools/libraries/Boost/boost_1_70_0
-setenv Boost_INCLUDE_DIRS /tools/libraries/Boost/boost_1_70_0
-setenv Boost_LIBRARY_DIRS /tools/libraries/Boost/boost_1_70_0/stage/lib
+setenv Boost_INCLUDE_DIRS /tools/libraries/Boost/boost_1_70_0/include
+setenv Boost_LIBRARY_DIRS /tools/libraries/Boost/boost_1_70_0/lib
 
 prepend-path	 LD_LIBRARY_PATH  /tools/libraries/Boost/boost_1_70_0/stage/lib
 
