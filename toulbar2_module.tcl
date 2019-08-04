@@ -12,11 +12,11 @@ module load compiler/gcc-7.2.0
 module load mpi/openmpi-2.1.2
 module load compiler/cmake-3.12.3
 
-setenv BOOST_ROOT /tools/libraries/Boost/boost_1_70_0
-setenv Boost_INCLUDE_DIRS /tools/libraries/Boost/boost_1_70_0/include
-setenv Boost_LIBRARY_DIRS /tools/libraries/Boost/boost_1_70_0/lib
+setenv BOOST_ROOT /tools/libraries/Boost/boost_1_70_0_openmpi-2.1.2
+setenv Boost_INCLUDE_DIR /tools/libraries/Boost/boost_1_70_0_openmpi-2.1.2/include
+setenv Boost_LIBRARY_DIR /tools/libraries/Boost/boost_1_70_0_openmpi-2.1.2/lib
 
-prepend-path	 LD_LIBRARY_PATH  /tools/libraries/Boost/boost_1_70_0/stage/lib
+prepend-path	 LD_LIBRARY_PATH  /tools/libraries/Boost/boost_1_70_0_openmpi-2.1.2/lib
 
 #export BOOST_ROOT=${chemin}
 #export Boost_LIBRARY_DIRS=${chemin}/lib/
