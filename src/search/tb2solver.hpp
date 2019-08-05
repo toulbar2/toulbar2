@@ -172,18 +172,17 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
-			ar & sol;
+
 			ar & nbNodes;
 			ar & nbBacktracks;
 			ar & vecCp;
 			ar & nodeX;
 			ar & ub;
 			ar & sender;// sender rank can probably be taken from mpi status object
+			ar & sol;
 		}
 
 	public:
-
-		vector<Value> sol;
 
 		Long nbNodes;
 
@@ -197,6 +196,8 @@ public:
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
+		vector<Value> sol;
+
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
 		/**
@@ -207,7 +208,7 @@ public:
 		 * @param ubMaster_ : current best Solution of either the master or the worker
 		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
 		 */
-		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_)
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> sol_ )
 		: ub(ubMaster_)
 		, sender(0)
 		{
@@ -219,9 +220,14 @@ public:
 			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 			vecCp.push_back(cpMaster_[i]);
 
+
+			cout << " size of sol in master's message constructor : must be 0 "<<sol.size() << endl;
+			sol.clear();
+			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+
 		}
 
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_,  Long nbBacktracks_) // ctor used by the workers with 4 arguments. All the cp
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_,  Long nbBacktracks_, vector<Value> sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)
 		, ub(ubWorker_)
@@ -240,6 +246,10 @@ public:
 
 			for(ptrdiff_t i = 0; i < cpWorker_.stop; i++)
 			vecCp.push_back(cpWorker_[i]);
+
+
+			sol.clear();
+			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 
 		}
 

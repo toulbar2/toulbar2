@@ -1766,7 +1766,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		if (open != NULL)
 			delete open;
 		open = new OpenList(); // define priority queue of OpenNode declared as attribute of class Solver. class global variable too!
-		//cout << "YYYYYYYYYYYYYY : I am the master. My id is " << world.rank() << endl;
+
 #if !defined(NDEBUG) // debug build code
 		cout << "I am the master. My id is " << world.rank() << endl;
 #endif
@@ -1806,12 +1806,30 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
 
 		Cost minLbWorkers;
-        unsigned long NbNodePushed=0;
+
 		while (clb < cub && (!open->finished() || !activeWork.empty())) {
-			while (!open->finished() && !idleQ.empty()) // while( there is work to do and workers to do it) // loop to distribute jobs to workers
+			while (!open->finished() && !idleQ.empty()) // while there is work to do and workers to do it // loop to distribute jobs to workers
 			{
 
-				Work work(*cp, *open, wcsp->getUb()); // Uses the ctor of class Work to send a node and so on to the workers
+				// YYYY	solution passing in master
+				Cost masterUb = wcsp->getUb();
+				vector<Value> masterSol;
+				assert(masterSol.size() == 0);
+				cout << "masterSol size == 0 = " << masterSol.size() << endl;
+
+				if (unassignedVars->empty()) { // solution value improved and all vars assigned
+					wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
+					Cost incumbentUb = getSolution(masterSol);
+					//debug
+					assert(masterUb == incumbentUb);
+					if (masterUb != incumbentUb) {
+						cout << "  masterUb != incumbentUb : ERROR " << endl;
+						boost::mpi::environment::abort(999);
+					}
+				}
+				// end of	solution passing in master
+
+				Work work(*cp, *open, wcsp->getUb(), masterSol); // Uses the ctor of class Work to send a node and so on to the workers
 
 				worker = idleQ.front();  // get the first worker in the queue
 
@@ -1822,7 +1840,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #ifdef NDEBUG  // code that will be compiled in release mode
 				
 				world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
-				NbNodePushed++;
+
 #else         // code that will be compiled if in debug mode
 
 				mpi::request r = world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
@@ -1857,11 +1875,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			}
 
 #endif
+
 			wcsp->updateUb(work2.ub);
 
 			open->updateUb(work2.ub);
 
 			nbNodes += work2.nbNodes;
+
 			nbBacktracks += work2.nbBacktracks;
 
 #if !defined(NDEBUG) // debug build code
@@ -1910,14 +1930,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
+			// YYYY solution passing in master
+			vector<Value> workerSol;
+			assert(workerSol.size() == 0);
+
+			if (work2.ub < wcsp->getUb() && !work2.sol.empty()) { // if the master had received an improving sol from the worker
+					//wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
+
+				wcsp->setSolution(wcsp->getLb()); // take current assignment and stock it in solution (stl c++ map)
+			}
+			// End of solution passing in master
+
 			showGap(clb, cub);
 
 		} // end while. The programme terminates
 
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // affichage de Optimal: XXX
-		
+
 		mpi::environment::abort(0); // kills everybody
-		
+
 		return make_pair(clb, cub);
 
 	} else { // end of master code, beginning of code executed by the workers
@@ -1927,7 +1958,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 
 		while (1) {
-
 
 			if (cp != NULL)
 				delete cp;
@@ -1939,6 +1969,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			cp->store();
 
 			nbNodes = 0;
+
 			nbBacktracks = 0;
 
 #if !defined(NDEBUG) // debug build code
@@ -1948,11 +1979,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			Work work;
 
-#ifdef NDEBUG  // compile release code
+#ifdef NDEBUG  // code compiled if release mode
 
 			world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
 
-#else // compile debug code
+#else // code compiled if debug mode
 
 			mpi::status s = world.recv(master, tag0, work); //blocking recv from the master     /*mpi::any_tag*/
 
@@ -1962,6 +1993,17 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						<< work.ub << endl;
 
 #endif
+
+			// YYYY solution passing in worker
+			vector<Value> masterSol;
+			assert(masterSol.size() == 0);
+
+			if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the master had received an improving sol from the worker
+					//wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
+
+				wcsp->setSolution(wcsp->getLb()); // take current assignment and stock it in solution (stl c++ map)
+			}
+			// End of solution passing in worker
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 
@@ -2049,11 +2091,25 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-		// YYYY	New solution:
+			// YYYY	solution passing in worker
 			Cost newWorkerUb = wcsp->getUb();
+			vector<Value> workerSol;
+			assert(workerSol.size() == 0);
+			cout << "workerSol size == 0 = " << workerSol.size() << endl;
 
-			Work work2(*cp, *open, newWorkerUb, worker, nbNodes,
-					nbBacktracks); //  create the message with cub and open nodes information from local open and cp
+			if (newWorkerUb < work.ub && unassignedVars->empty()) { // solution value improved and all vars assigned
+				wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
+				Cost incumbentUb = getSolution(workerSol);
+				//debug
+				assert(newWorkerUb == incumbentUb);
+				if (newWorkerUb != incumbentUb) {
+					cout << "  newWorkerUb != incumbentUb : ERROR " << endl;
+					boost::mpi::environment::abort(999);
+				}
+			}
+			// end of	solution passing in worker
+			Work work2(*cp, *open, newWorkerUb, worker, nbNodes, nbBacktracks,
+					workerSol); //  create the message with cub and open nodes information from local open and cp
 
 #if !defined(NDEBUG) // debug build code
 
@@ -2094,8 +2150,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 	} // end of workers' code
 
 }  // end of hybridSolvePara(...)
-
-
 
 /************************************************************************/
 /********* Sequential simplified release of hbfs ************************/
