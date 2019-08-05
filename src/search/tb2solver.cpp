@@ -1914,23 +1914,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		} // end while. The programme terminates
 
-	//	endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true);
-
-		//mpi::environment::abort(0); // kills everybody
-		
-		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // affichage de Optimal: XXX  
-		
-		cout << "Finishing Master open nodes pushed : " << NbNodePushed << endl;
- 		
- 		Work workFinished;
-		workFinished.terminate = true;
-
-		for (worker = 1; worker < world.size(); worker++)
-			world.isend(worker, tag0, workFinished);  
+		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // affichage de Optimal: XXX
 		
 		mpi::environment::abort(0); // kills everybody
-		
-		MPI_Finalize();
 		
 		return make_pair(clb, cub);
 
@@ -1939,10 +1925,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 // *************************************** Worker *********************************************
 // ********************************************************************************************
-long nbworkercall= 0;
 
 		while (1) {
-			nbworkercall++;
+
 
 			if (cp != NULL)
 				delete cp;
@@ -1977,11 +1962,6 @@ long nbworkercall= 0;
 						<< work.ub << endl;
 
 #endif
-			if(work.terminate)  { // worjer exit()
-		 
-			 cout  << " Finishing worker : " << world.rank() << " nb call : " << nbworkercall	 -1 << endl ;
-             return make_pair(MAX_COST, MAX_COST);
-        }
 
 			wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
 
