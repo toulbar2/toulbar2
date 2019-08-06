@@ -2005,6 +2005,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			// YYYY The worker receives a solution from the master
 
 			vector<Value> masterSol;
+
 // the hereafter commented "if" leads to a drop down of perfs : 404.wcsp solving takes twice the time so it is a BAD IDEA
 			//if (!unassignedVars->empty()
 			//		|| (work.ub < wcsp->getUb() && !work.sol.empty())) { // if the worker does not have a solution or if it receives an improving sol from the master
@@ -2094,7 +2095,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			int worker = world.rank();
 
-#if !defined(NDEBUG) // code to compile only in debug mode
+#if !defined(NDEBUG) // code that will be compiled only in debug mode
 
 			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
