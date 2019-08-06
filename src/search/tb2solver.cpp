@@ -1823,9 +1823,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #ifdef NDEBUG
 
-					getSolution(masterSol);
+					 getSolution(masterSol);
 
 #else
+
 					Cost incumbentUb = getSolution(masterSol); // simplified code that assume masterUb != incumbentUb
 
 					if (masterUb != incumbentUb) {
@@ -1833,6 +1834,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						boost::mpi::environment::abort(999);
 					}
 #endif
+
 				}
 				// end of	solution passing in master
 
@@ -2000,12 +2002,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-			// YYYY The workers receives a solution from the master
+			// YYYY The worker receives a solution from the master
 
 			vector<Value> masterSol;
+// the hereafter commented "if" leads to a drop down of perfs : 404.wcsp solving takes twice the time so it is a BAD IDEA
+			//if (!unassignedVars->empty()
+			//		|| (work.ub < wcsp->getUb() && !work.sol.empty())) { // if the worker does not have a solution or if it receives an improving sol from the master
 
-			if (!unassignedVars->empty()
-					|| (work.ub < wcsp->getUb() && !work.sol.empty())) { // if the worker does not have a solution or if it receives an improving sol from the master
+			if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master
 
 				wcsp->setSolution(wcsp->getLb()); // take current assignment and stock it in solution (stl c++ map)
 
@@ -2109,9 +2113,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
 
 #ifdef NDEBUG
-				getSolution(workerSol);
+				 getSolution(workerSol);
 
 #else
+
 				Cost incumbentUb = getSolution(workerSol);
 
 				if (newWorkerUb != incumbentUb) {
