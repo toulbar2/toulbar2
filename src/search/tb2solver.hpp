@@ -220,9 +220,6 @@ public:
 			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 			vecCp.push_back(cpMaster_[i]);
 
-
-			cout << " size of sol in master's message constructor : must be 0 "<<sol.size() << endl;
-			sol.clear();
 			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 
 		}
@@ -247,8 +244,6 @@ public:
 			for(ptrdiff_t i = 0; i < cpWorker_.stop; i++)
 			vecCp.push_back(cpWorker_[i]);
 
-
-			sol.clear();
 			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 
 		}

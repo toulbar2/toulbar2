@@ -1814,8 +1814,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				// YYYY	solution passing in master
 				Cost masterUb = wcsp->getUb();
 				vector<Value> masterSol;
-				assert(masterSol.size() == 0);
-				cout << "masterSol size == 0 = " << masterSol.size() << endl;
 
 				if (unassignedVars->empty()) { // solution value improved and all vars assigned
 					wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
@@ -2094,8 +2092,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			// YYYY	solution passing in worker
 			Cost newWorkerUb = wcsp->getUb();
 			vector<Value> workerSol;
-			assert(workerSol.size() == 0);
-			cout << "workerSol size == 0 = " << workerSol.size() << endl;
+
 
 			if (newWorkerUb < work.ub && unassignedVars->empty()) { // solution value improved and all vars assigned
 				wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
