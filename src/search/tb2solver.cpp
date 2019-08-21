@@ -1811,30 +1811,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			while (!open->finished() && !idleQ.empty()) // while there is work to do and workers to do it // loop to distribute jobs to workers
 			{
 
-				Cost masterUb = wcsp->getUb();
+				Cost masterUb;
+				Cost initUb = wcsp->getUb();  // ????
 
 				// YYYY	The master sends a solution to the worker systematically provided it has already found one
 
-				vector<Value> masterSol;
+				vector<Value> masterSol = wcsp->getSolution(&masterUb);
 
-				if (unassignedVars->empty()) { // all vars are assigned so a solution exists
+				if (masterUb >= MAX_COST) { // no solution. master has the best sol or nothing
 
-					wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
-
-#ifdef NDEBUG
-
-					 getSolution(masterSol);
-
-#else
-
-					Cost incumbentUb = getSolution(masterSol); // simplified code that assume masterUb != incumbentUb
-
-					if (masterUb != incumbentUb) {
-						cout << "  masterUb != incumbentUb : ERROR " << endl;
-						boost::mpi::environment::abort(999);
-					}
-#endif
-
+						masterSol.clear();
 				}
 				// end of	solution passing in master
 
@@ -1941,11 +1927,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			// YYYY The master receives a solution from from the worker
 
-			vector<Value> workerSol;
+			vector<Value> workerSol;  // transformer vector to map
 
 			if (work2.ub < wcsp->getUb() && !work2.sol.empty()) { // if the master receives an improving sol from the worker
 
-				wcsp->setSolution(wcsp->getLb()); // take current assignment and stock it in solution (stl c++ map)
+				wcsp->setSolution(work2.ub, &workerSol); // take current assignment and stock it in solution (stl c++ map)
 			}
 			// End of solution passing in master
 
@@ -2004,15 +1990,16 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			// YYYY The worker receives a solution from the master
 
-			vector<Value> masterSol;
+			vector<Value> masterSol;  // transfo en map
 
 // the hereafter commented "if" leads to a drop down of perfs : 404.wcsp solving takes twice the time so it is a BAD IDEA
 			//if (!unassignedVars->empty()
 			//		|| (work.ub < wcsp->getUb() && !work.sol.empty())) { // if the worker does not have a solution or if it receives an improving sol from the master
 
-			if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master
+			if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master  utilité assert work.ub < wcsp->getUb() ?????
 
-				wcsp->setSolution(wcsp->getLb()); // take current assignment and stock it in solution (stl c++ map)
+				wcsp->setSolution(work.ub, &masterSol); // take current assignment and stock it in solution (stl c++ map)
+				//????????????
 
 			}
 			// End of solution passing in worker
@@ -2103,32 +2090,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-			Cost newWorkerUb = wcsp->getUb();
+			Cost newWorkerUb;
 
 			// YYYY	The worker sends to the master its solution if it is an improvment
 
-			vector<Value> workerSol;
+			vector<Value> workerSol = wcsp->getSolution(&newWorkerUb);
 
-			if (newWorkerUb < work.ub && unassignedVars->empty()) { // solution value improved and all vars assigned
+			if (newWorkerUb >= work.ub) { // no better sol
 
-				wcsp->restoreSolution(); // maj all vars to be in the current assignment (necessary when vars are eliminated)
-
-#ifdef NDEBUG
-				 getSolution(workerSol);
-
-#else
-
-				Cost incumbentUb = getSolution(workerSol);
-
-				if (newWorkerUb != incumbentUb) {
-					cout << "  newWorkerUb != incumbentUb : ERROR in worker #"
-							<< world.rank() << endl;
-					boost::mpi::environment::abort(999);
-				}
-#endif
+				workerSol.clear();
 			}
 
-			// end of	solution passing in worker
+			// end of solution passing in worker
 
 			Work work2(*cp, *open, newWorkerUb, worker, nbNodes, nbBacktracks,
 					workerSol); //  create the message with cub and open nodes information from local open and cp

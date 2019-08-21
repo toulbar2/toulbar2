@@ -208,7 +208,7 @@ public:
 		 * @param ubMaster_ : current best Solution of either the master or the worker
 		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
 		 */
-		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> sol_ )
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> sol_ )  // & ??????????????
 		: ub(ubMaster_)
 		, sender(0)
 		{
@@ -223,7 +223,9 @@ public:
 			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 
 		}
-
+		/**
+				 * @brief constructor used by the worker
+				 */
 		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_,  Long nbBacktracks_, vector<Value> sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)

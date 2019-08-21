@@ -457,7 +457,7 @@ public:
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
             Value v = ((sol != NULL) ? (*sol)[i] : getValue(i));
             if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
-                setBestValue(i, v);
+                setBestValue(i, v); // update another array used for value heuristic choice
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
     }
