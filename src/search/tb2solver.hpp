@@ -178,7 +178,7 @@ public:
 			ar & vecCp;
 			ar & nodeX;
 			ar & ub;
-			ar & sender;// sender rank can probably be taken from mpi status object
+			ar & sender; // sender rank can probably be taken from mpi status object
 			ar & sol;
 		}
 
@@ -188,7 +188,7 @@ public:
 
 		Long nbBacktracks;
 
-		vector<ChoicePoint> vecCp;// vector of choice points
+		vector<ChoicePoint> vecCp; // vector of choice points
 
 		vector<OpenNode> nodeX;// priority queue which will contain the node(s) to eXchange between the processes
 
@@ -201,14 +201,9 @@ public:
 		// TODO: Do we have to transmit the number of backtracks Z ?
 
 		/**
-		 * @brief constructor used by the master with 3 arguments that pop up directly the open queue of the master or the worker.
-		 * If it is the master, we pop up only one node ( boolean oneNode = true), if it is a worker all the nodes of open are popped up (oneNOde=false)
-		 * @param cpMaster_ : CPStore, i.e. vector of choice points, of either the master or the worker
-		 * @param openMaster_ : OpenList open (priority queue of OpenNode) of either the master or the worker. open_ is modified by this constructor
-		 * @param ubMaster_ : current best Solution of either the master or the worker
-		 * @param sender : rank of the sender. By default, if the sender is the master rank = 0 by convention.
+		 * @brief constructor used by the master
 		 */
-		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> sol_ )  // & ??????????????
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> & sol_ ) // & ??????????????
 		: ub(ubMaster_)
 		, sender(0)
 		{
@@ -220,13 +215,13 @@ public:
 			for(ptrdiff_t i = nodeX[0].first; i < nodeX[0].last; i++)// create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
 			vecCp.push_back(cpMaster_[i]);
 
-			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+			sol.swap(sol_);//after the swap sol_ in the worker is an empty vector
 
 		}
 		/**
-				 * @brief constructor used by the worker
-				 */
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_,  Long nbBacktracks_, vector<Value> sol_) // ctor used by the workers with 4 arguments. All the cp
+		 * @brief constructor used by the worker
+		 */
+		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)
 		, ub(ubWorker_)
@@ -393,7 +388,7 @@ protected:
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	pair<Cost, Cost> hybridSolvePara0(Cost clb, Cost cub); // kad Parallel version without stats and printing of solutions
 	pair<Cost, Cost> hybridSolvePara0() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
-	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub);//kad sequential simplified release of hbfs
+	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub); //kad sequential simplified release of hbfs
 	pair<Cost, Cost> hybridSolveSeq() {return hybridSolveSeq(wcsp->getLb(), wcsp->getUb());}
 	//kad
 	pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
