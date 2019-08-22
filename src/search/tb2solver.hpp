@@ -203,7 +203,7 @@ public:
 		/**
 		 * @brief constructor used by the master
 		 */
-		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> & sol_ ) // & ??????????????
+		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> & sol_ ) // nb : correction par simple ajout de &
 		: ub(ubMaster_)
 		, sender(0)
 		{

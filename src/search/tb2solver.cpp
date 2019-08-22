@@ -1800,11 +1800,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		//showGap(clb, cub);
 
-#include <map>
+// #include <map>
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
-
+// nb : if compilation with intel compiler probably it will be nessary to switch to a normal map !?
 		Cost minLbWorkers;
 
 		while (clb < cub && (!open->finished() || !activeWork.empty())) {
@@ -1812,19 +1812,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			{
 
 				Cost masterUb;
-				Cost initUb = wcsp->getUb();  // ????
 
-				// YYYY	The master sends a solution to the worker systematically provided it has already found one
+				// YYYY	The master sends a solution to the worker  if it has already found one
 
 				vector<Value> masterSol = wcsp->getSolution(&masterUb);
 
-				if (masterUb >= MAX_COST) { // no solution. master has the best sol or nothing
+				if (masterUb >= MAX_COST) { // no solution. nb : the master gets the best sol or nothing
 
-						masterSol.clear();
+					masterSol.clear();
 				}
 				// end of	solution passing in master
 
-				Work work(*cp, *open, masterUb, masterSol); // Uses the ctor of class Work to send a node and so on to the workers
+				Work work(*cp, *open, wcsp->getUb(), masterSol); // Uses the ctor of class Work to send a node and so on to the workers
 
 				worker = idleQ.front();  // get the first worker in the queue
 
@@ -1925,14 +1924,28 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
-			// YYYY The master receives a solution from from the worker
+			// YYYY The master receives a solution from the worker
 
-			vector<Value> workerSol;  // transformer vector to map
+			vector<Value> workerSol;
+
+// transformation of vector to map necessary because wcsp->getSolution return a vector not a map: see :
+// typedef map<int, Value> TAssign;
+// void setSolution(Cost cost, TAssign* sol = NULL) = 0;
+
+			map<int, Value> workerSolMap;
+
+			for (int i = 0; i < int(workerSol.size()); i++) { // convert vector to map ; tested and it works fine !
+
+				workerSolMap[i] = workerSol[i];
+
+			}
 
 			if (work2.ub < wcsp->getUb() && !work2.sol.empty()) { // if the master receives an improving sol from the worker
 
-				wcsp->setSolution(work2.ub, &workerSol); // take current assignment and stock it in solution (stl c++ map)
+				wcsp->setSolution(work2.ub, &workerSolMap); // take current assignment and stock it in solution (stl c++ map)
+
 			}
+
 			// End of solution passing in master
 
 			showGap(clb, cub);
@@ -1988,18 +2001,23 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-			// YYYY The worker receives a solution from the master
+			// YYYY The worker receives a vector solution from the master
 
-			vector<Value> masterSol;  // transfo en map
+			vector<Value> masterSol;
 
-// the hereafter commented "if" leads to a drop down of perfs : 404.wcsp solving takes twice the time so it is a BAD IDEA
-			//if (!unassignedVars->empty()
-			//		|| (work.ub < wcsp->getUb() && !work.sol.empty())) { // if the worker does not have a solution or if it receives an improving sol from the master
+			map<int, Value> masterSolMap; // convert vector to map
 
-			if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master  utilité assert work.ub < wcsp->getUb() ?????
+			for (int i = 0; i < int(masterSol.size()); i++) {
+				masterSolMap[i] = masterSol[i];
+			}
 
-				wcsp->setSolution(work.ub, &masterSol); // take current assignment and stock it in solution (stl c++ map)
-				//????????????
+			assert(work.ub < wcsp->getUb());
+
+			//	if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master  utilité assert work.ub < wcsp->getUb() ?????
+
+			if (!work.sol.empty()) { // the master is supposed to always sends an optimal solution or nothing
+
+				wcsp->setSolution(work.ub, &masterSolMap); // take current assignment and stock it in solution (stl c++ map)
 
 			}
 			// End of solution passing in worker
@@ -2092,9 +2110,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			Cost newWorkerUb;
 
-			// YYYY	The worker sends to the master its solution if it is an improvment
+			// YYYY	The worker sends to the master its solution if it is an improvement
 
-			vector<Value> workerSol = wcsp->getSolution(&newWorkerUb);
+			vector<Value> workerSol = wcsp->getSolution(&newWorkerUb); // getSolution initialize newWorkerUb
 
 			if (newWorkerUb >= work.ub) { // no better sol
 
@@ -2149,6 +2167,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 /************************************************************************/
 /********* Sequential simplified release of hbfs ************************/
 /************************************************************************/
+
 pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
 	cout << "SEQUENTIAL HBFS SIMPLIFIED RELEASE. " << endl;
 	CPStore *cp_ = NULL; // vector of choice points
