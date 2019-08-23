@@ -1505,11 +1505,15 @@ void Solver::recursiveSolveLDS(int discrepancy) {
 		newSolution();
 }
 
+/**
+ * hybrid Solve with subproblems production for embarrassingly parallel search
+*/
+
 pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 	int nbNodesPopped = 0; //kad
 	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE"
 			<< endl;
-
+	exit(66); // ZZZZ
 	if (ToulBar2::verbose >= 1 && cluster)
 		cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub
 				<< endl;
@@ -1739,7 +1743,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
-
+exit(99); //ZZZZ
 	namespace mpi = boost::mpi;
 
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
@@ -1965,7 +1969,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 
 		while (1) {
-			//ToulBar2::hbfs = 100000;
 
 			if (cp != NULL)
 				delete cp;
@@ -2089,15 +2092,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				hbfsLimit = LONGLONG_MAX;
 			}
 
-//			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-//				assert(nbNodes > 0);
-//				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-//						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-//					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-//				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
-//						&& ToulBar2::hbfs >= 2)
-//					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-//			}
+			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+				assert(nbNodes > 0);
+				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
+						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
+				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
+						&& ToulBar2::hbfs >= 2)
+					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
+			}
 
 			int worker = world.rank();
 
