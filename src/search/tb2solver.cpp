@@ -1965,6 +1965,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 
 		while (1) {
+			//ToulBar2::hbfs = 100000;
 
 			if (cp != NULL)
 				delete cp;
@@ -2088,15 +2089,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				hbfsLimit = LONGLONG_MAX;
 			}
 
-			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
-				assert(nbNodes > 0);
-				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
-					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
-						&& ToulBar2::hbfs >= 2)
-					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
-			}
+//			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
+//				assert(nbNodes > 0);
+//				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
+//						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+//					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
+//				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
+//						&& ToulBar2::hbfs >= 2)
+//					ToulBar2::hbfs /= 2; // adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
+//			}
 
 			int worker = world.rank();
 
