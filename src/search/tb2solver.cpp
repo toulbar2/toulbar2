@@ -1513,7 +1513,6 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 	int nbNodesPopped = 0; //kad
 	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE"
 			<< endl;
-	exit(66); // ZZZZ
 	if (ToulBar2::verbose >= 1 && cluster)
 		cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub
 				<< endl;
@@ -1743,7 +1742,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
-exit(99); //ZZZZ
+
 	namespace mpi = boost::mpi;
 
 	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
