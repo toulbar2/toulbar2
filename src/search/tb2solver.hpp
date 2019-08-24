@@ -180,9 +180,12 @@ public:
 			ar & ub;
 			ar & sender; // sender rank can probably be taken from mpi status object
 			ar & sol;
+			ar & terminate;
 		}
 
 	public:
+
+		char terminate = 'c'; // 'c' : the worker continue working, 's' the worker stop working and exit
 
 		Long nbNodes;
 

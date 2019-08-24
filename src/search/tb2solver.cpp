@@ -1760,6 +1760,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 	Cost cub_init = cub;
 
+	//char terminate='c';
+
 // ********************************************************************************************
 // ************************************mmm Master mmm******************************************
 // ********************************************************************************************
@@ -1960,8 +1962,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // print Optimal: XXX
 
-		mpi::environment::abort(0); // kills everybody
+		//
 
+		Work finish;
+			finish.terminate = 's';  // master says stop to all workers
+			for(int i =1; i< world.size();i++)
+			    world.isend(i, tag0, finish);
+
+		//terminate='s';
+		//broadcast(world, terminate, 0);
+
+
+
+		//mpi::environment::abort(0); // kills everybody
+		//env.~environment();  // explicit call to destructor to force mpi finalize
 		return make_pair(clb, cub);
 
 // mpirun -n <NP> xterm -hold -e gdb -ex run --args ./program [arg1] [arg2] [...]
@@ -1970,7 +1984,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 // ************************************www Worker www******************************************
 // ********************************************************************************************
-
+ //char terminate = 'c';
+//		while (terminate == 'c') {
 		while (1) {
 			if (cp != NULL)
 				delete cp;
@@ -2006,6 +2021,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						<< work.ub << endl;
 
 #endif
+			//cout << "I am worker #" << world.rank()<<endl;
+//			cout << "I am worker #" << world.rank() << " says " << terminate << endl;
+				if (work.terminate != 'c') { // zzz
+
+//					cout << "worker #" << world.rank()
+//					<< ": I received  stop signal from the master and i must go out my while loop: terminate = "
+//					<< work.terminate << endl;
+							break;
+						}
 
 			// YYYY The worker receives a vector solution from the master
 
@@ -2158,17 +2182,20 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		} // end of while(1)
 
 		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
-		cout
-				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
-				<< endl;
-
-		cout
-				<< " The present message should not be displayed as it is the master who terminate the programme !"
-				<< endl;
+//		cout
+//				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
+//				<< endl;
+//
+//		cout
+//				<< " The present message should not be displayed as it is the master who terminate the programme !"
+//				<< endl;
 
 		return make_pair(MAX_COST, MAX_COST);
 
+
+
 	} // end of workers' code
+	// env.~environment();
 
 }  // end of hybridSolvePara(...)  fff
 
