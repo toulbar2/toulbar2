@@ -1741,7 +1741,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 // ********************************************************************************************
 // ******************** Parallel version of HBFS without BTD *******************************
 // ********************************************************************************************
-// DDD
+// ddd
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
 	cout << " PARALLEL HBFS MODE!!!" << endl;
@@ -1761,7 +1761,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 	Cost cub_init = cub;
 
 // ********************************************************************************************
-// ************************************MMM Master MMM******************************************
+// ************************************mmm Master mmm******************************************
 // ********************************************************************************************
 
 	if (world.rank() == master) {
@@ -1960,24 +1960,17 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // print Optimal: XXX
 
-		//
-
-//		Work finish;
-//			finish.terminate = 's';
-//			world.isend(worker, tag0, finish);
-
 		mpi::environment::abort(0); // kills everybody
-		env.~environment();
+
 		return make_pair(clb, cub);
 
-
+// mpirun -n <NP> xterm -hold -e gdb -ex run --args ./program [arg1] [arg2] [...]
 	} else { // end of master code, beginning of code executed by the workers
 
 // ********************************************************************************************
-// ************************************WWW Worker WWW *****************************************
+// ************************************www Worker www******************************************
 // ********************************************************************************************
-// char terminate = 'c';
-//		while (terminate == 'c') {
+
 		while (1) {
 			if (cp != NULL)
 				delete cp;
@@ -2013,12 +2006,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						<< work.ub << endl;
 
 #endif
-
-//				if (work.terminate == 's') { // ZZZZZ
-//							//MPI_Finalize();
-//							//exit(0);
-//							break;
-//						}
 
 			// YYYY The worker receives a vector solution from the master
 
@@ -2151,6 +2138,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 					<< endl;
 #endif
 
+
+
 #ifdef NDEBUG  // release build
 
 			world.isend(master, tag0, work2); // non blocking send to master
@@ -2180,9 +2169,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		return make_pair(MAX_COST, MAX_COST);
 
 	} // end of workers' code
-	 env.~environment();
 
-}  // end of hybridSolvePara(...)  FFF
+}  // end of hybridSolvePara(...)  fff
 
 
 

@@ -1,4 +1,4 @@
 #!/bin/bash
 # script to put in toulbar2/your_build_folder/bin/Linux to run toulbar2 in parallel
-echo "usage: ./run nproc file.wcsp"
-mpirun -q -np $1 ./toulbar2 -para $* |egrep -v 'Aborting|^$'
+echo "usage: ./run nproc file.wcsp [other options]"
+/usr/bin/time -f "Elapsed time: %e seconds" mpirun -q -np $1 ./toulbar2 -para $* |egrep -v 'Aborting|^$'

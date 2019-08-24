@@ -13,7 +13,7 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
 
-#include <mpi.h>
+//#include <mpi.h>
 /*
  #include <boost/serialization/array.hpp>
  #include <boost/serialization/string.hpp>
@@ -164,7 +164,7 @@ public:
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
 	 *
 	 */
-
+//www
 	class Work
 	{
 	private:
@@ -180,12 +180,9 @@ public:
 			ar & ub;
 			ar & sender; // sender rank can probably be taken from mpi status object
 			ar & sol;
-			//ar & terminate;
 		}
 
 	public:
-
-		//char terminate = 'c'; // 'c' : the worker continue working, 's' the worker stop working and exit
 
 		Long nbNodes;
 
@@ -206,6 +203,7 @@ public:
 		/**
 		 * @brief constructor used by the master
 		 */
+		//www
 		Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost ubMaster_, vector<Value> & sol_ ) // nb : correction par simple ajout de &
 		: ub(ubMaster_)
 		, sender(0)
@@ -224,6 +222,7 @@ public:
 		/**
 		 * @brief constructor used by the worker
 		 */
+		//www
 		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)
