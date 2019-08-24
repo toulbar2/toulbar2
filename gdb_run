@@ -2,4 +2,4 @@
 # script to put e.g. in toulbar2/your_build_folder/bin/Linux to run toulbar2 in parallel
 echo "usage: $0 nproc file.wcsp [other options]"
 
-mpirun -n $1 xterm -hold -e gdb -ex run --args ./toulbar2 -para $*
+mpirun -n $1 xterm -e gdb -ex run --args ./toulbar2 -para $*
