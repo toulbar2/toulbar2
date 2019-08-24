@@ -1964,7 +1964,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		return make_pair(clb, cub);
 
-// mpirun -n <NP> xterm -hold -e gdb -ex run --args ./program [arg1] [arg2] [...]
+// mpirun -n <NP> xterm -e gdb -ex run --args ./program [arg1] [arg2] [...]
 	} else { // end of master code, beginning of code executed by the workers
 
 // ********************************************************************************************
