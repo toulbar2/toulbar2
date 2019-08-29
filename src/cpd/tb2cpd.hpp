@@ -50,7 +50,7 @@ public:
     size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size(); }
     char* nativeSequence = NULL;
     AminoMRF* AminoMat;
-    bool isPSSMlen() { return PSSM.size(); };
+    size_t PSSMlen() { return PSSM.size(); };
     float PSMBias = 0.0;
     float PSSMBias = 0.0;
     float AminoMRFBias = 0.0;

@@ -190,8 +190,8 @@ void Solver::applyCompositionalBiases()
     }
 
     if (ToulBar2::cpd->PSSMBias != 0) {
-        if (ToulBar2::cpd->isPSSMlen() != wcsp->numberOfVariables()) {
-            cerr << "The number of variable is not equal to the PSSM length." << endl;
+        if (ToulBar2::cpd->PSSMlen() != wcsp->numberOfVariables()) {
+            cerr << "The number of variables (" << wcsp->numberOfVariables() << ") is not equal to the PSSM length (" << ToulBar2::cpd->PSSMlen() << ")." << endl;
             exit(EXIT_FAILURE);
         } else {
             for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {

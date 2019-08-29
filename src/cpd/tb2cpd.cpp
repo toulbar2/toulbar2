@@ -313,7 +313,7 @@ void Cpd::readPSMatrix(const char* filename)
     file.open(filename);
 
     if (!file.is_open()) {
-        cerr << "Could not open PSSM file, aborting." << endl;
+        cerr << "Could not open PSM file, aborting." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -361,12 +361,11 @@ void Cpd::readPSSMatrix(const char* filename)
     int minscore = std::numeric_limits<int>::max();
 
     getline(file, s); //Skip header line
+    int pos;
 
-    while (file) {
-        int pos;
+    while (file >> pos) {
         vector<int> scores;
         char cons;
-        file >> pos;
         file >> cons;
 
         scores.clear();
@@ -382,8 +381,9 @@ void Cpd::readPSSMatrix(const char* filename)
 
     // renormalize to have only penalties
     for (auto& v : PSSM)
-        for (auto& i : v)
+        for (auto& i : v) {
             i -= minscore;
+        }
 }
 
 void Cpd::fillPSSMbiases(size_t varIndex, vector<Cost>& biases)
