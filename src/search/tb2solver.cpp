@@ -1810,7 +1810,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
-// nb : if compilation with intel compiler probably it will be nessary to switch to a normal map !?
+// nb : if compilation with intel compiler probably it will be necessary to switch to a normal map !?
 		Cost minLbWorkers;
 
 		while (clb < cub && (!open->finished() || !activeWork.empty())) {
@@ -1916,7 +1916,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cub = wcsp->getUb();
 
-			activeWork.erase(work2.sender);
+			activeWork.erase(work2.sender); // $$$$$$$$$$$$$$$$$$$$$  there is a doubt on the position of this line
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
@@ -1929,6 +1929,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			idleQ.push(work2.sender);
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
+
+  // activeWork.erase(work2.sender);  // $$$$$$$$$$$$$$$$$$$$$ there is a doubt on the position of this line
 
 			// YYYY The master receives a solution from the worker
 
