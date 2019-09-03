@@ -1893,7 +1893,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-			if (!work2.nodeX.empty()) {
+			if (!work2.nodeX.empty()) { // the master updates its CPStore with the decisions associated with the nodes sent by the worker
 
 				for (ptrdiff_t i = 0; i < (ptrdiff_t) work2.vecCp.size(); i++) {
 					cp->push_back(work2.vecCp[i]);
@@ -1901,7 +1901,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 				OpenNode node;
 
-				for (size_t i = 0; i < work2.nodeX.size(); i++) {
+				for (size_t i = 0; i < work2.nodeX.size(); i++) { // the push the nodes sent by the worker
 					node = work2.nodeX[i];
 					node.first += cp->start;
 					node.last += cp->start;
@@ -1920,7 +1920,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
-					activeWork.begin(); it != activeWork.end(); ++it) {
+					activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers.
 
 				if (it->second < minLbWorkers)
 					minLbWorkers = it->second;
@@ -1930,7 +1930,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
-  // activeWork.erase(work2.sender);  // $$$$$$$$$$$$$$$$$$$$$ there is a doubt on the position of this line
+  // activeWork.erase(work2.sender);  // $$$$$$$$$$$$$$$$$$$$$ I think this line should be here !
 
 			// YYYY The master receives a solution from the worker
 
