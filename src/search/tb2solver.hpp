@@ -8,10 +8,11 @@
 #include "toulbar2lib.hpp"
 #include "utils/tb2store.hpp"
 //kad
-#include <utils/tb2files_kad.hpp>
+#include <utils/tb2files_kad.hpp>  // for eps
 
-#include <boost/mpi.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/mpi.hpp> // for para
+#include <boost/serialization/vector.hpp>  // for para
+#include <chrono> // for timing hbfs para
 
 //#include <mpi.h>
 /*
@@ -248,13 +249,14 @@ public:
 				openWorker_.pop(); // pop up directly the queue open !!
 
 			}
-			openWorker_.init();
+			openWorker_.init(); // clb=cub=MAX_COST  method added to init openList attributes
+			// because emptying an openList is not enough we have to init its attributes
 
 			for(ptrdiff_t i = 0; i < cpWorker_.stop; i++)
 			vecCp.push_back(cpWorker_[i]);
 
-			cpWorker_.clear();
-			cpWorker_.shrink_to_fit();
+			cpWorker_.clear();   // size = 0  added to put new cp out of the while(1)
+			cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0
 
 			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 

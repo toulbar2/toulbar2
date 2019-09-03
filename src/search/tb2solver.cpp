@@ -1762,11 +1762,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 	Cost cub_init = cub;
 
-	//char terminate='c';
+
 
 // ********************************************************************************************
 // ************************************mmm Master mmm******************************************
 // ********************************************************************************************
+
+	auto begin = std::chrono::high_resolution_clock::now();  // to compute elapsed time in parallel code
 
 	if (world.rank() == master) {
 
@@ -1978,6 +1980,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		//mpi::environment::abort(0); // kills everybody
 		//env.~environment();  // explicit call to destructor to force mpi finalize
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
+		cout << "ELAPSED TIME PASSED IN HBFS PARA : "<< duration << endl;
+
 		return make_pair(clb, cub);
 
 // mpirun -n <NP> xterm -hold -e gdb -ex run --args ./program [arg1] [arg2] [...]
@@ -1987,8 +1994,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ************************************www Worker www******************************************
 // ********************************************************************************************
 
-		cp = new CPStore();
-		open = new OpenList();
+		// warning as CPStore and openList derive from stl containers and have other attributes
+		// one should not forget to initialize them properly !!!
+		cp = new CPStore();  // cp out of while(1)
+		open = new OpenList(); // open ou of while(1)
+		// results for 404.wcsp on a 4 cores laptop : elapsed time decreases from 10.45s to 9.85
+		// these times are mean value on three executions each.
 		while (1) {
 
 		//	if (cp != NULL)
@@ -1997,7 +2008,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		//		if (open != NULL)
 		//			delete open;
 		//		open = new OpenList();
-            cp->stop=0;
+
+            cp->stop=0; // to have stop=start=index=0
+
 			cp->store();
 
 			nbNodes = 0;
@@ -2196,7 +2209,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		return make_pair(MAX_COST, MAX_COST);  // used only to avoid warnings: a worker should not return "things"
 
 	} // end of workers' code
-	  // env.~environment();
+	  // env.~environment(); // explicit call of destructor
 
 }  // end of hybridSolvePara(...)  fff
 
