@@ -1762,13 +1762,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 	Cost cub_init = cub;
 
-
-
 // ********************************************************************************************
 // ************************************mmm Master mmm******************************************
 // ********************************************************************************************
 
-	auto begin = std::chrono::high_resolution_clock::now();  // to compute elapsed time in parallel code
+	auto begin = chrono::high_resolution_clock::now(); // to compute elapsed time in parallel code
 
 	if (world.rank() == master) {
 
@@ -1817,7 +1815,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
 // nb : if compilation with intel compiler probably it will be nessary to switch to a normal map !?
+
 		Cost minLbWorkers;
+
+		auto totalWaiting = 0;
 
 		while (clb < cub && (!open->finished() || !activeWork.empty())) {
 			while (!open->finished() && !idleQ.empty()) // while there is work to do and workers to do it // loop to distribute jobs to workers
@@ -1867,6 +1868,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 					<< endl;
 #endif
 
+			auto beginWaiting = chrono::high_resolution_clock::now();
+
 #ifdef NDEBUG  // compile release code
 
 			world.recv(mpi::any_source, tag0, work2); // blocking recv to wait for matching messages from any worker. The master waits for "work" with tag0 from any source
@@ -1881,6 +1884,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			}
 
 #endif
+
+			auto endWaiting = chrono::high_resolution_clock::now();
+			auto durationWaiting = chrono::duration_cast < chrono::milliseconds
+					> (endWaiting - beginWaiting).count();
+			totalWaiting += durationWaiting;
 
 			wcsp->updateUb(work2.ub);
 
@@ -1922,7 +1930,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cub = wcsp->getUb();
 
-		//	activeWork.erase(work2.sender);    //$$$$$$$$  moved just below the calculus of the min of the lb of the workers : minLbWork
+			activeWork.erase(work2.sender);
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
@@ -1931,8 +1939,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				if (it->second < minLbWorkers)
 					minLbWorkers = it->second;
 			}
-
-			activeWork.erase(work2.sender);  //  $$$$$$$$$$$$$$
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
@@ -1981,9 +1987,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		//mpi::environment::abort(0); // kills everybody
 		//env.~environment();  // explicit call to destructor to force mpi finalize
 
-		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
-		cout << "ELAPSED TIME PASSED IN HBFS PARA : "<< duration << endl;
+		auto end = chrono::high_resolution_clock::now();
+		auto duration = chrono::duration_cast < chrono::milliseconds
+				> (end - begin).count();
+		cout << "ELAPSED TIME PASSED IN HBFS PARA : " << duration / 1000.0
+				<< " seconds" << endl;
+
+		cout << "TOTAL TIME PASSED WAITING FOR WORK FOR THE MASTER #"
+				<< world.rank() << " : " << totalWaiting / 1000.0
+				<< " seconds" << endl;
 
 		return make_pair(clb, cub);
 
@@ -1994,6 +2006,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ************************************www Worker www******************************************
 // ********************************************************************************************
 
+		auto beginW = chrono::high_resolution_clock::now();
+		auto totalWaiting = 0;
 		// warning as CPStore and openList derive from stl containers and have other attributes
 		// one should not forget to initialize them properly !!!
 		cp = new CPStore();  // cp out of while(1)
@@ -2002,14 +2016,14 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		// these times are mean value on three executions each.
 		while (1) {
 
-		//	if (cp != NULL)
+			//	if (cp != NULL)
 			//		delete cp;
 			//	cp = new CPStore(); // ctor initializes start = stop = index = 0
-		//		if (open != NULL)
-		//			delete open;
-		//		open = new OpenList();
+			//		if (open != NULL)
+			//			delete open;
+			//		open = new OpenList();
 
-            cp->stop=0; // to have stop=start=index=0
+			cp->stop = 0; // to have stop=start=index=0
 
 			cp->store();
 
@@ -2023,6 +2037,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #endif
 
 			Work work;
+
+			auto beginWaiting = chrono::high_resolution_clock::now();
 
 #ifdef NDEBUG  // code compiled if release mode
 
@@ -2038,9 +2054,24 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 						<< work.ub << endl;
 
 #endif
+
+			auto endWaiting = chrono::high_resolution_clock::now();
+			auto durationWaiting = chrono::duration_cast < chrono::nanoseconds
+					> (endWaiting - beginWaiting).count();
+			totalWaiting += durationWaiting;
+
 			//cout << "I am worker #" << world.rank()<<endl;
 //			cout << "I am worker #" << world.rank() << " says " << terminate << endl;
 			if (work.terminate != 'c') { // zzz
+				auto endW = chrono::high_resolution_clock::now();
+				auto durationW = chrono::duration_cast < chrono::milliseconds
+						> (endW - beginW).count();
+				cout << "ELAPSED TIME PASSED IN WORKER #" << world.rank()
+						<< " : " << durationW / 1000.0 << " seconds" << endl;
+
+				cout << "TOTAL TIME PASSED WAITING FOR WORK FOR WORKER #"
+						<< world.rank() << " : " << totalWaiting / 1000000000.0
+						<< " seconds" << endl;
 
 //					cout << "worker #" << world.rank()
 //					<< ": I received  stop signal from the master and i must go out my while loop: terminate = "
@@ -2197,16 +2228,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		} // end of while(1)
 		delete cp;
 		delete open;
-		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
-//		cout
-//				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
-//				<< endl;
-//
-//		cout
-//				<< " The present message should not be displayed as it is the master who terminate the programme !"
-//				<< endl;
 
-		return make_pair(MAX_COST, MAX_COST);  // used only to avoid warnings: a worker should not return "things"
+		return make_pair(MAX_COST, MAX_COST); // used only to avoid warnings: a worker should not return "things"
 
 	} // end of workers' code
 	  // env.~environment(); // explicit call of destructor
