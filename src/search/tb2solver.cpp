@@ -1920,7 +1920,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cub = wcsp->getUb();
 
-			activeWork.erase(work2.sender);
+		//	activeWork.erase(work2.sender);    //$$$$$$$$  moved just below the calculus of the min of the lb of the workers : minLbWork
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
@@ -1930,9 +1930,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 					minLbWorkers = it->second;
 			}
 
-			idleQ.push(work2.sender);
+			activeWork.erase(work2.sender);  //  $$$$$$$$$$$$$$
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
+
+			idleQ.push(work2.sender);
 
 			// YYYY The master receives a solution from the worker
 
