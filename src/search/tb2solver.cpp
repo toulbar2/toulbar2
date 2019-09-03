@@ -1229,7 +1229,7 @@ void Solver::singletonConsistency() {
 					remove(varIndex, sorted[a].value);
 					if (ToulBar2::verbose >= 0) {
 						cout << ".";
-						flush(cout);
+						flush (cout);
 					}
 					// WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
 				}
@@ -1266,7 +1266,8 @@ void Solver::newSolution() {
 		ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ,
 				wcsp->getLb() + wcsp->getNegativeLb());
 		if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0
-				&& ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
+				&& ToulBar2::logepsilon > -numeric_limits < TLogProb
+						> ::infinity())
 			cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , "
 					<< (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU)
 							+ ToulBar2::markov_log) << endl;
@@ -1507,7 +1508,7 @@ void Solver::recursiveSolveLDS(int discrepancy) {
 
 /**
  * hybrid Solve with subproblems production for embarrassingly parallel search
-*/
+ */
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 	int nbNodesPopped = 0; //kad
@@ -1632,7 +1633,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 				Cost bestlb = MAX(nd.getCost(delta), wcsp->getLb());
 				bestlb = MAX(bestlb, clb);
 				if (cluster) {
-					pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
+					pair < Cost, Cost > res = recursiveSolve(cluster, bestlb,
+							cub);
 					assert(res.first <= res.second);
 					assert(res.first >= bestlb);
 					assert(res.second <= cub);
@@ -1722,7 +1724,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 		if (cluster) {
 			cluster->hbfsGlobalLimit = LONGLONG_MAX;
 			cluster->hbfsLimit = LONGLONG_MAX;
-			pair<Cost, Cost> res = recursiveSolve(cluster, clb, cub);
+			pair < Cost, Cost > res = recursiveSolve(cluster, clb, cub);
 			clb = MAX(clb, res.first);
 			cub = MIN(cub, res.second);
 		} else {
@@ -1965,14 +1967,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		//
 
 		Work finish;
-			finish.terminate = 's';  // master says stop to all workers
-			for(int i =1; i< world.size();i++)
-			    world.isend(i, tag0, finish);
+		finish.terminate = 's';  // master says stop to all workers
+		for (int i = 1; i < world.size(); i++)
+			world.isend(i, tag0, finish);
 
 		//terminate='s';
 		//broadcast(world, terminate, 0);
-
-
 
 		//mpi::environment::abort(0); // kills everybody
 		//env.~environment();  // explicit call to destructor to force mpi finalize
@@ -1984,16 +1984,18 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ********************************************************************************************
 // ************************************www Worker www******************************************
 // ********************************************************************************************
- //char terminate = 'c';
-//		while (terminate == 'c') {
-		while (1) {
-			if (cp != NULL)
-				delete cp;
-			cp = new CPStore(); // ctor initializes start = stop = index = 0
-			if (open != NULL)
-				delete open;
-			open = new OpenList();
 
+		cp = new CPStore();
+		open = new OpenList();
+		while (1) {
+
+		//	if (cp != NULL)
+			//		delete cp;
+			//	cp = new CPStore(); // ctor initializes start = stop = index = 0
+		//		if (open != NULL)
+		//			delete open;
+		//		open = new OpenList();
+            cp->stop=0;
 			cp->store();
 
 			nbNodes = 0;
@@ -2023,13 +2025,13 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #endif
 			//cout << "I am worker #" << world.rank()<<endl;
 //			cout << "I am worker #" << world.rank() << " says " << terminate << endl;
-				if (work.terminate != 'c') { // zzz
+			if (work.terminate != 'c') { // zzz
 
 //					cout << "worker #" << world.rank()
 //					<< ": I received  stop signal from the master and i must go out my while loop: terminate = "
 //					<< work.terminate << endl;
-							break;
-						}
+				break;
+			}
 
 			// YYYY The worker receives a vector solution from the master
 
@@ -2162,8 +2164,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 					<< endl;
 #endif
 
-
-
 #ifdef NDEBUG  // release build
 
 			world.isend(master, tag0, work2); // non blocking send to master
@@ -2180,7 +2180,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #endif
 
 		} // end of while(1)
-
+		delete cp;
+		delete open;
 		// dummy return to eliminate warning: control reaches end of non-void function [-Wreturn-type]
 //		cout
 //				<< " Dummy return [MAX_COST, MAX_COST] from workers to eliminate compiler warning as advised by IBM!"
@@ -2190,16 +2191,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 //				<< " The present message should not be displayed as it is the master who terminate the programme !"
 //				<< endl;
 
-		return make_pair(MAX_COST, MAX_COST);
-
-
+		return make_pair(MAX_COST, MAX_COST);  // used only to avoid warnings: a worker should not return "things"
 
 	} // end of workers' code
-	// env.~environment();
+	  // env.~environment();
 
 }  // end of hybridSolvePara(...)  fff
-
-
 
 /************************************************************************/
 /********* Sequential simplified release of hbfs ************************/
@@ -2477,8 +2474,8 @@ Cost Solver::beginSolve(Cost ub) {
 	}
 
 	if (ToulBar2::isZ) {
-		ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-		ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+		ToulBar2::logZ = -numeric_limits < TLogProb > ::infinity();
+		ToulBar2::logU = -numeric_limits < TLogProb > ::infinity();
 	}
 
 	return ub;
@@ -2678,8 +2675,10 @@ bool Solver::solve() {
 					wcsp->propagate();
 					Store::store();
 					if (ToulBar2::isZ) {
-						ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-						ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+						ToulBar2::logZ = -numeric_limits < TLogProb
+								> ::infinity();
+						ToulBar2::logU = -numeric_limits < TLogProb
+								> ::infinity();
 					}
 				}
 				try {
@@ -2702,10 +2701,10 @@ bool Solver::solve() {
 							enforceUb();
 							wcsp->propagate();
 							if (ToulBar2::isZ) {
-								ToulBar2::logZ =
-										-numeric_limits<TLogProb>::infinity();
-								ToulBar2::logU =
-										-numeric_limits<TLogProb>::infinity();
+								ToulBar2::logZ = -numeric_limits < TLogProb
+										> ::infinity();
+								ToulBar2::logU = -numeric_limits < TLogProb
+										> ::infinity();
 							}
 							if (discrepancy > abs(ToulBar2::lds)) {
 								if (ToulBar2::lds < 0) {
@@ -2780,7 +2779,7 @@ bool Solver::solve() {
 													td->getCluster(i)->sepSize();
 									}
 								} else {
-									pair<Cost, Cost> res = make_pair(
+									pair < Cost, Cost > res = make_pair(
 											wcsp->getLb(), ub);
 									do {
 										try {
@@ -2809,8 +2808,8 @@ bool Solver::solve() {
 							}
 							case 2:
 							case 3: {
-								pair<Cost, Cost> res = make_pair(wcsp->getLb(),
-										ub);
+								pair < Cost, Cost > res = make_pair(
+										wcsp->getLb(), ub);
 								do { //TODO: set up for optimality gap pretty print
 									res = russianDollSearch(start, res.second);
 									//				        if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
@@ -3084,8 +3083,8 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost,
 		wcsp->makeEnumeratedVariable(to_string(i), 0, 1);
 	}
 
-	vector<Cost> unaryCosts0(n, 0);
-	vector<Cost> unaryCosts1(n, 0);
+	vector < Cost > unaryCosts0(n, 0);
+	vector < Cost > unaryCosts1(n, 0);
 
 	// find total cost
 	Double sumcost = 0.;
@@ -3098,7 +3097,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost,
 	// create weighted binary clauses
 	for (int e = 0; e < m; e++) {
 		if (posx[e] != posy[e]) {
-			vector<Cost> costs(4, 0);
+			vector < Cost > costs(4, 0);
 			if (cost[e] > 0) {
 				costs[1] = (Cost)(multiplier * 2. * cost[e]);
 				costs[2] = costs[1];
@@ -3119,7 +3118,7 @@ bool Solver::solve_symmax2sat(int n, int m, int *posx, int *posy, double *cost,
 	// create weighted unary clauses
 	for (int i = 0; i < n; i++) {
 		if (unaryCosts0[i] > 0 || unaryCosts1[i] > 0) {
-			vector<Cost> costs(2, 0);
+			vector < Cost > costs(2, 0);
 			costs[0] = unaryCosts0[i];
 			costs[1] = unaryCosts1[i];
 			wcsp->postUnary(i, costs);

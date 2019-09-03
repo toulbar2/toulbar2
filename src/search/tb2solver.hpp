@@ -91,6 +91,12 @@ public:
 		, cub(MAX_COST)
 		{
 		} /// \warning use also this method to clear an open list
+ void init()
+	{
+	 clb=MAX_COST;
+	 cub=MAX_COST;
+	}
+
 
 		bool finished() const
 		{
@@ -226,7 +232,7 @@ public:
 		 * @brief constructor used by the worker
 		 */
 		//www
-		Work(const CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
+		Work(CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)
 		, ub(ubWorker_)
@@ -242,9 +248,13 @@ public:
 				openWorker_.pop(); // pop up directly the queue open !!
 
 			}
+			openWorker_.init();
 
 			for(ptrdiff_t i = 0; i < cpWorker_.stop; i++)
 			vecCp.push_back(cpWorker_[i]);
+
+			cpWorker_.clear();
+			cpWorker_.shrink_to_fit();
 
 			sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
 
