@@ -403,8 +403,8 @@ protected:
 	 */
 	pair<Cost, Cost> hybridSolvePara(Cost clb, Cost cub);
 	pair<Cost, Cost> hybridSolvePara() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
-	pair<Cost, Cost> hybridSolvePara0(Cost clb, Cost cub); // kad Parallel version without stats and printing of solutions
-	pair<Cost, Cost> hybridSolvePara0() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
+	//pair<Cost, Cost> hybridSolvePara0(Cost clb, Cost cub); // kad Parallel version without stats and printing of solutions
+	//pair<Cost, Cost> hybridSolvePara0() {return hybridSolvePara(wcsp->getLb(), wcsp->getUb());}
 	pair<Cost, Cost> hybridSolveSeq(Cost clb, Cost cub); //kad sequential simplified release of hbfs
 	pair<Cost, Cost> hybridSolveSeq() {return hybridSolveSeq(wcsp->getLb(), wcsp->getUb());}
 	//kad

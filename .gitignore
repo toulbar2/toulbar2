@@ -9,7 +9,5 @@ nbProcess.txt
 *.cproject
 *.project
 *_ori
-geno*
-*.tcl
 kad*
 intel*

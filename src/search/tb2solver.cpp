@@ -1814,8 +1814,12 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
+<<<<<<< HEAD
 // nb : if compilation with intel compiler probably it will be nessary to switch to a normal map !?
 
+=======
+// nb : if compilation with intel compiler probably it will be necessary to switch to a normal map !?
+>>>>>>> 7a651ad5eb8dd2a91a778c866301135a1469cb1a
 		Cost minLbWorkers;
 
 		auto totalWaiting = 0;
@@ -1907,7 +1911,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #endif
 
-			if (!work2.nodeX.empty()) {
+			if (!work2.nodeX.empty()) { // the master updates its CPStore with the decisions associated with the nodes sent by the worker
 
 				for (ptrdiff_t i = 0; i < (ptrdiff_t) work2.vecCp.size(); i++) {
 					cp->push_back(work2.vecCp[i]);
@@ -1915,7 +1919,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 				OpenNode node;
 
-				for (size_t i = 0; i < work2.nodeX.size(); i++) {
+				for (size_t i = 0; i < work2.nodeX.size(); i++) { // the push the nodes sent by the worker
 					node = work2.nodeX[i];
 					node.first += cp->start;
 					node.last += cp->start;
@@ -1930,11 +1934,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cub = wcsp->getUb();
 
-			activeWork.erase(work2.sender);
+			activeWork.erase(work2.sender); // $$$$$$$$$$$$$$$$$$$$$  there is a doubt on the position of this line
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
-					activeWork.begin(); it != activeWork.end(); ++it) {
+					activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers.
 
 				if (it->second < minLbWorkers)
 					minLbWorkers = it->second;
@@ -1942,7 +1946,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
+<<<<<<< HEAD
 			idleQ.push(work2.sender);
+=======
+  // activeWork.erase(work2.sender);  // $$$$$$$$$$$$$$$$$$$$$ I think this line should be here !
+>>>>>>> 7a651ad5eb8dd2a91a778c866301135a1469cb1a
 
 			// YYYY The master receives a solution from the worker
 
@@ -1999,7 +2007,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		return make_pair(clb, cub);
 
-// mpirun -n <NP> xterm -hold -e gdb -ex run --args ./program [arg1] [arg2] [...]
+// mpirun -n <NP> xterm -e gdb -ex run --args ./program [arg1] [arg2] [...]
 	} else { // end of master code, beginning of code executed by the workers
 
 // ********************************************************************************************
