@@ -1814,12 +1814,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 		unordered_map<int, Cost> activeWork; // map the rank i of a worker with the cost=lb of a node
 		// nb: choice of unordered_map because it is more efficient than a map that would loose time in ordering the keys
-<<<<<<< HEAD
+
 // nb : if compilation with intel compiler probably it will be nessary to switch to a normal map !?
 
-=======
-// nb : if compilation with intel compiler probably it will be necessary to switch to a normal map !?
->>>>>>> 7a651ad5eb8dd2a91a778c866301135a1469cb1a
 		Cost minLbWorkers;
 
 		auto totalWaiting = 0;
@@ -1934,7 +1931,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cub = wcsp->getUb();
 
-			activeWork.erase(work2.sender); // $$$$$$$$$$$$$$$$$$$$$  there is a doubt on the position of this line
+			activeWork.erase(work2.sender);
 
 			minLbWorkers = MAX_COST;
 			for (unordered_map<int, Cost>::const_iterator it =
@@ -1946,11 +1943,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			clb = MAX(clb, MIN(minLbWorkers, open->getLb()));
 
-<<<<<<< HEAD
 			idleQ.push(work2.sender);
-=======
-  // activeWork.erase(work2.sender);  // $$$$$$$$$$$$$$$$$$$$$ I think this line should be here !
->>>>>>> 7a651ad5eb8dd2a91a778c866301135a1469cb1a
 
 			// YYYY The master receives a solution from the worker
 
@@ -2001,7 +1994,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		cout << "ELAPSED TIME PASSED IN HBFS PARA : " << duration / 1000.0
 				<< " seconds" << endl;
 
-		cout << "TOTAL TIME PASSED WAITING FOR WORK FOR THE MASTER #"
+		cout << "*************** TOTAL WAITING TIME OF THE MASTER #"
 				<< world.rank() << " : " << totalWaiting / 1000.0
 				<< " seconds" << endl;
 
@@ -2014,7 +2007,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 // ************************************www Worker www******************************************
 // ********************************************************************************************
 
-		auto beginW = chrono::high_resolution_clock::now();
+
 		auto totalWaiting = 0;
 		// warning as CPStore and openList derive from stl containers and have other attributes
 		// one should not forget to initialize them properly !!!
@@ -2064,21 +2057,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 #endif
 
 			auto endWaiting = chrono::high_resolution_clock::now();
-			auto durationWaiting = chrono::duration_cast < chrono::nanoseconds
+			auto durationWaiting = chrono::duration_cast < chrono::milliseconds
 					> (endWaiting - beginWaiting).count();
 			totalWaiting += durationWaiting;
 
 			//cout << "I am worker #" << world.rank()<<endl;
 //			cout << "I am worker #" << world.rank() << " says " << terminate << endl;
 			if (work.terminate != 'c') { // zzz
-				auto endW = chrono::high_resolution_clock::now();
-				auto durationW = chrono::duration_cast < chrono::milliseconds
-						> (endW - beginW).count();
-				cout << "ELAPSED TIME PASSED IN WORKER #" << world.rank()
-						<< " : " << durationW / 1000.0 << " seconds" << endl;
-
-				cout << "TOTAL TIME PASSED WAITING FOR WORK FOR WORKER #"
-						<< world.rank() << " : " << totalWaiting / 1000000000.0
+				cout << "TOTAL WAITING TIME OF WORKER #"
+						<< world.rank() << " : " << totalWaiting / 1000.0
 						<< " seconds" << endl;
 
 //					cout << "worker #" << world.rank()
