@@ -1511,6 +1511,8 @@ void Solver::recursiveSolveLDS(int discrepancy) {
  */
 
 pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
+
+	auto begin = chrono::high_resolution_clock::now();  // XXX timing of serial hbfs
 	int nbNodesPopped = 0; //kad
 	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE"
 			<< endl;
@@ -1735,6 +1737,13 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 		}
 	}
 	assert(clb <= cub);
+
+	auto end = chrono::high_resolution_clock::now();  // XXX timing of serial hbfs
+			auto duration = chrono::duration_cast < chrono::milliseconds
+					> (end - begin).count();
+			cout << "ELAPSED TIME PASSED IN SERIAL HBFS : " << duration / 1000.0
+					<< " seconds" << endl;
+
 	return make_pair(clb, cub);
 }
 
