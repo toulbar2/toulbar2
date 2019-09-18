@@ -20,7 +20,7 @@ constexpr int NumNatAA = 20;
 
 // AminoMRF Class
 // Read MRF trained from multiple alignment. The MRF (alignment) should have
-// exactly the same number of variables/columns as the currently solved design problem.
+// exactly the same number of variables/columns as the native protein.
 AminoMRF::AminoMRF(const char* filename)
 {
     ifstream file;
@@ -37,6 +37,7 @@ AminoMRF::AminoMRF(const char* filename)
     bool binariesReached = false;
     string s;
 
+    // We don't normalize unaries as they will receive projections from binaries
     while (!binariesReached) {
         getline(file, s);
         if (s[0] == '#') {
@@ -45,16 +46,9 @@ AminoMRF::AminoMRF(const char* filename)
         }
         stringstream ss(s);
 
-        TLogProb minscore = std::numeric_limits<TLogProb>::max();
         for (int i = 0; i < NumNatAA; i++) {
             ss >> LP;
             unaries[nv].push_back(-LP);
-            minscore = min(minscore, -LP);
-        }
-        for (int i = 0; i < NumNatAA; i++) {
-            unaries[nv][i] -= minscore;
-            if (unaries[nv][i] == 0.0 && ToulBar2::verbose > 0)
-                cout << "Variable " << nv << " preferred AA is " << AminoMRFs[i] << endl;
         }
         nv++;
     }
@@ -82,12 +76,12 @@ AminoMRF::AminoMRF(const char* filename)
         TLogProb maxscore = std::numeric_limits<TLogProb>::min();
         pair<int, int> pv(n, m);
         for (int i = 0; i < NumNatAA + 1; i++) {
-            if (i < 20)
+            if (i < NumNatAA)
                 binaries[pv].resize(NumNatAA);
 
             for (int j = 0; j < NumNatAA + 1; j++) {
                 file >> LP;
-                if (i < 20 && j < 20) {
+                if (i < NumNatAA && j < NumNatAA) {
                     binaries[pv][i].push_back(-LP);
                     minscore = min(minscore, -LP);
                     maxscore = max(maxscore, -LP);
@@ -144,28 +138,119 @@ TLogProb AminoMRF::eval(const string& sequence)
     return paid;
 }
 
-// Must be called after the problem is loaded.
+// Must be called after the problem is loaded. Must be in CFN format.
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
-    // check residue numbers
-    if (pb->numberOfVariables() < nVar) {
-        cerr << "The loaded evolutionary MRF has more variables than the number of variables in the problem\nAborting\n";
+    const static bool debug = true;
+
+    if (ToulBar2::cpd->nativeSequence == NULL) {
+        cerr << "Error: the native sequence must be provided using --native.\n";
         exit(1);
     }
-    if (pb->numberOfVariables() > nVar) {
-        cout << "WARNING: the loaded evolutionary MRF has less variables than in the problem. Extra variables won't be penalized\n";
+
+    // check residue numbers
+    if (strlen(ToulBar2::cpd->nativeSequence) != nVar) {
+        cerr << "Error: the loaded evolutionary MRF has not the size of the native protein.\n";
+        exit(1);
+    }
+
+    // project and process binaries
+    map<int, size_t> posList; // map of designed position to varIdx
+    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        posList[pb->getVars()[varIdx]->getPosition()] = varIdx;
+        if (debug)
+            cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
+    }
+
+    // parse all binaries with one non mutable variable and project on the corresponding unary
+    for (auto const& bincf : binaries) {
+        int pos1 = bincf.first.first;
+        int pos2 = bincf.first.second;
+
+        if (debug)
+            cout << "MRF pair " << pos1 << "-" << pos2 << " ";
+
+        if (posList.count(pos1) + posList.count(pos2) == 1) { // different types (designable/absent)
+            if (debug)
+                cout << "must be projected." << endl;
+            if (posList.count(pos2)) { // project on second
+                char natAA = ToulBar2::cpd->nativeSequence[pos1];
+                int natIdx = AminoMRFIdx.find(natAA)->second;
+                if (debug)
+                    cout << "Projecting on position " << pos2 << " using AA " << natAA << " for position " << pos1 << endl;
+                for (size_t i = 0; i < NumNatAA; i++) {
+                    unaries[pos2][i] += bincf.second[natIdx][i];
+                }
+            } else { // project on first
+                char natAA = ToulBar2::cpd->nativeSequence[pos2];
+                int natIdx = AminoMRFIdx.find(natAA)->second;
+                if (debug)
+                    cout << "Projecting on position " << pos1 << " using " << natAA << " for position " << pos2 << endl;
+                for (size_t i = 0; i < NumNatAA; i++) {
+                    unaries[pos1][i] += bincf.second[i][natIdx];
+                }
+            }
+        }
+
+        if (posList.count(pos1) + posList.count(pos2) == 2) { // both designable
+
+            bool warn = true;
+            vector<Cost> biases;
+            int varIdx1 = posList[pos1];
+            int varIdx2 = posList[pos2];
+            if (debug)
+                cout << "will be normalized and posted on " << varIdx1 << "-" << varIdx2 << endl;
+
+            for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
+                for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx2]) {
+                    int valIdx1 = AminoMRFIdx.find(c1)->second;
+                    int valIdx2 = AminoMRFIdx.find(c2)->second;
+                    if (bincf.second[valIdx1][valIdx2] == 0.0)
+                        warn = false;
+                    Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * bincf.second[valIdx1][valIdx2]);
+                    biases.push_back(bias);
+                }
+            }
+            if (warn && ToulBar2::verbose > 0) {
+                cout << "WARNING: the preferred amino acid pair (";
+                for (int i = 0; i < NumNatAA; i++)
+                    for (int j = 0; j < NumNatAA; j++)
+                        if (bincf.second[i][j] == 0.0)
+                            cout << "[" << AminoMRFs[i] << AminoMRFs[j] << "]";
+                cout << ") has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
+            }
+            pb->postBinaryConstraint(varIdx1, varIdx2, biases);
+        }
+        if (debug && (posList.count(pos1) + posList.count(pos2) == 0))
+            cout << " will be ignored" << endl;
     }
 
     // process unaries
-    for (size_t varIdx = 0; varIdx < nVar; varIdx++) {
+    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
         bool warn = true;
         vector<Cost> biases;
+        int pos = pb->getVars()[varIdx]->getPosition();
 
+        if (debug)
+            cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
+
+        // Normalize
+        TLogProb minscore = std::numeric_limits<TLogProb>::max();
+        for (int i = 0; i < NumNatAA; i++) {
+            minscore = min(minscore, unaries[pos][i]);
+        }
+        for (int i = 0; i < NumNatAA; i++) {
+            unaries[pos][i] -= minscore;
+        }
+        if (debug)
+            cout << "Normalized." << endl;
+
+        // Insert in the CFN model
         for (char c : ToulBar2::cpd->getRotamers2AA()[varIdx]) {
             int valIdx = AminoMRFIdx.find(c)->second;
             if (unaries[varIdx][valIdx] == 0.0)
                 warn = false;
-            Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * unaries[varIdx][valIdx]);
+            Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * unaries[pos][valIdx]);
 
             biases.push_back(bias);
         }
@@ -178,34 +263,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             cout << ") has been excluded from design at residue " << varIdx + 1 << endl;
         }
         pb->postUnaryConstraint(varIdx, biases);
-    }
-
-    // process binaries
-    for (auto const& bincf : binaries) {
-        int varIdx1 = bincf.first.first;
-        int varIdx2 = bincf.first.second;
-        bool warn = true;
-        vector<Cost> biases;
-
-        for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
-            for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx2]) {
-                int valIdx1 = AminoMRFIdx.find(c1)->second;
-                int valIdx2 = AminoMRFIdx.find(c2)->second;
-                if (bincf.second[valIdx1][valIdx2] == 0.0)
-                    warn = false;
-                Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * bincf.second[valIdx1][valIdx2]);
-                biases.push_back(bias);
-            }
-        }
-        if (warn && ToulBar2::verbose > 0) {
-            cout << "WARNING: the preferred amino acid pair (";
-            for (int i = 0; i < NumNatAA; i++)
-                for (int j = 0; j < NumNatAA; j++)
-                    if (bincf.second[i][j] == 0.0)
-                        cout << "[" << AminoMRFs[i] << AminoMRFs[j] << "]";
-            cout << ") has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
-        }
-        pb->postBinaryConstraint(varIdx1, varIdx2, biases);
+        if (debug)
+            cout << "Posted." << endl;
     }
 }
 

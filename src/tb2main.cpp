@@ -1876,15 +1876,18 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "debug level = " << ToulBar2::debug << endl;
             }
 
-            ////////////////////////////////////////////////////////////////////////////////////////
-            /////				Protein Design
-            ////////////////////////////////////////////////////////////////////////////////////////
-
             // restricts aminoacid sequence
             if (args.OptionId() == OPT_MUTATE) {
                 mutate = true;
                 mutationString = args.OptionArg();
             }
+
+            // Do we want best sequence/conformation for enumerations ?
+            if (args.OptionId() == OPT_BESTCONF) {
+                requireCpd();
+                ToulBar2::bestconf = true;
+            }
+            ////////////////// Evolutionary information for Protein Design //////////////////
 
             // define native sequence
             if (args.OptionId() == OPT_NATIVE) {
@@ -1927,13 +1930,6 @@ int _tmain(int argc, TCHAR* argv[])
                 requireCpd();
                 ToulBar2::cpd->AminoMRFBias = atof(args.OptionArg());
             }
-
-            // Do we want best sequence/conformation for enumerations ?
-            if (args.OptionId() == OPT_BESTCONF) {
-                requireCpd();
-                ToulBar2::bestconf = true;
-            }
-
             // discrete integration for computing the partition function Z
             if (args.OptionId() == OPT_Z) {
                 ToulBar2::isZ = true;

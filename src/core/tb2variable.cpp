@@ -44,6 +44,14 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     linkEliminateQueue.content.var = this;
     linkEliminateQueue.content.timeStamp = -1;
     isSep_ = false;
+
+    if (ToulBar2::cfn) {
+        nativeResidue = name[0];
+        position = stoi(name.substr(1)) - 1; // we start at 0 internally
+    } else {
+        nativeResidue = 'Z';
+        position = -1;
+    }
 }
 
 DLink<ConstraintLink>* Variable::link(Constraint* c, int index)
@@ -58,8 +66,6 @@ DLink<ConstraintLink>* Variable::link(Constraint* c, int index)
     constrs.push_back(elt, true);
     return elt;
 }
-
-
 
 int Variable::getCurrentVarId()
 {

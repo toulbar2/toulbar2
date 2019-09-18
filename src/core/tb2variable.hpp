@@ -18,6 +18,9 @@
 class Variable : public WCSPLink {
 protected:
     string name;
+    int position; // position in the protein
+    char nativeResidue; //one char residue in the native
+
     vector<string> valueNames;
     int dac; // DAC order
 
@@ -56,6 +59,8 @@ public:
     virtual bool enumerated() const = 0;
 
     string getName() const { return name; }
+    int getPosition() const { return position; }
+    char getNativeResidue() const { return nativeResidue; }
     void newValueName(const string& vname) { valueNames.push_back(vname); }
     string& getValueName(int idx) { return valueNames[idx]; }
     int getDACOrder() const { return dac; }
