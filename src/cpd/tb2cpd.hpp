@@ -10,7 +10,8 @@
 // So it's not compatible with rigid positions for now.
 class AminoMRF {
 public:
-    AminoMRF(const char* filename); // read from file
+    AminoMRF(const char* filename); // read from CCMPredfile
+    AminoMRF(const char* filename, size_t fmtnum); // read from PMRF binary file. The second argument must be equal to 1
     ~AminoMRF();
     size_t nVar;
     size_t nPot;
@@ -23,6 +24,7 @@ private:
     map<int, vector<TLogProb>> unaries;
     map<pair<int, int>, vector<vector<TLogProb>>> binaries;
     static const map<char, int> AminoMRFIdx;
+    static const map<char, int> AminoPMRFIdx;
 };
 
 class Cpd {

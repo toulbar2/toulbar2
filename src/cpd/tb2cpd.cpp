@@ -15,11 +15,17 @@ const map<char, int> AminoMRF::AminoMRFIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 
     { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
     { 'Y', 18 }, { 'V', 19 } };
 
+const map<char, int> AminoMRF::AminoPMRFIdx = { { 'A', 0 }, { 'C', 1 }, { 'D', 2 }, { 'E', 3 }, { 'F', 4 }, { 'G', 5 },
+    { 'H', 6 }, { 'I', 7 }, { 'K', 8 }, { 'L', 9 }, { 'M', 10 }, { 'N', 11 },
+    { 'P', 12 }, { 'Q', 13 }, { 'R', 14 }, { 'S', 15 }, { 'T', 16 }, { 'V', 17 },
+    { 'W', 18 }, { 'Y', 19 } };
+
 const string AminoMRFs = "ARNDCQEGHILKMFPSTWYV-";
+const string AminoPMRFs = "ACDEFGHIKLMNPQRSTVWY-";
 constexpr int NumNatAA = 20;
 
 // AminoMRF Class
-// Read MRF trained from multiple alignment. The MRF (alignment) should have
+// Read MRF trained from multiple alignment using CCMPred. The MRF (alignment) should have
 // exactly the same number of variables/columns as the native protein.
 AminoMRF::AminoMRF(const char* filename)
 {
@@ -100,6 +106,91 @@ AminoMRF::AminoMRF(const char* filename)
         if (maxscore > 1e-1)
             nPot++;
     } while (!file.eof());
+    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
+}
+
+// AminoMRF Class
+// Read MRF trained from multiple alignment using PMRF. The MRF (alignment) should have
+// exactly the same number of variables/columns as the native protein. The fmt is there
+// to have different signatire and should be the expected fmt number of the file (ie. 1).
+AminoMRF::AminoMRF(const char* filename, size_t fmt)
+{
+    ifstream file;
+    file.open(filename);
+
+    if (!file.is_open()) {
+        cerr << "Could not open alignment MRF file, aborting." << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    size_t fmtnum;
+    file.read((char*)&fmtnum, sizeof(size_t));
+    if (fmtnum != fmt) {
+        cerr << "toulbar2 only supports format 1 PMRF files\n";
+        exit(EXIT_FAILURE);
+    }
+    float neff; // effective number of sequences in the alignment
+    file.read((char*)&neff, sizeof(float));
+    // Reading native sequence
+    size_t n, n2; //n is native length, n2 is the number of edges
+    string seq;
+    file.read((char*)&n, sizeof(size_t));
+    std::getline(file, seq, '\0');
+    // Reading MRF architecture
+    file.read((char*)&n2, sizeof(size_t));
+    vector<pair<size_t, size_t>> edgeList;
+    size_t idx1, idx2;
+    for (size_t i = 0; i < n2; ++i) {
+        file.read((char*)&idx1, sizeof(size_t));
+        file.read((char*)&idx2, sizeof(size_t));
+        edgeList.push_back(make_pair(idx1, idx2));
+    }
+    // Skipping sequence profile for now
+    file.ignore(n * (NumNatAA + 1) * sizeof(float));
+
+    // Reading unaries
+    // We don't normalize unaries as they will receive projections from binaries
+    float tmpUnary[NumNatAA + 1];
+    for (size_t i = 0; i < n; ++i) {
+        file.read((char*)tmpUnary, (NumNatAA + 1) * sizeof(float));
+        for (size_t j = 0; j < NumNatAA + 1; ++j) {
+            unaries[j].push_back(-tmpUnary[j]);
+        }
+    }
+
+    // Reading binaries
+    float tmpBinary[(NumNatAA + 1) * (NumNatAA + 1)];
+    float minscore = std::numeric_limits<float>::max();
+    float maxscore = std::numeric_limits<float>::min();
+    for (pair<size_t, size_t> e : edgeList) {
+        file.read((char*)tmpBinary, (NumNatAA + 1) * (NumNatAA + 1) * sizeof(float));
+        for (int i = 0; i < NumNatAA + 1; i++) {
+            if (i < NumNatAA)
+                binaries[e].resize(NumNatAA);
+
+            for (int j = 0; j < NumNatAA + 1; j++) {
+                if (i < NumNatAA && j < NumNatAA) {
+                    float LP = -tmpBinary[i * (NumNatAA) + j];
+                    binaries[e][i].push_back(LP);
+                    minscore = min(minscore, LP);
+                    maxscore = max(maxscore, LP);
+                }
+            }
+        }
+
+        // renormalize globally
+        maxscore -= minscore;
+        for (int i = 0; i < NumNatAA; i++) {
+            for (int j = 0; j < NumNatAA; j++) {
+                binaries[e][i][j] -= minscore;
+            }
+        }
+
+        if (maxscore > 1e-1)
+            nPot++;
+    }
+    while (!file.eof())
+        ;
     cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
 
