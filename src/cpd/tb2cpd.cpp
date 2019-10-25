@@ -115,6 +115,8 @@ AminoMRF::AminoMRF(const char* filename)
 // to have different signatire and should be the expected fmt number of the file (ie. 1).
 AminoMRF::AminoMRF(const char* filename, size_t fmt)
 {
+    static bool debug = false;
+
     ifstream file;
     file.open(filename);
 
@@ -129,23 +131,37 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         cerr << "toulbar2 only supports format 1 PMRF files\n";
         exit(EXIT_FAILURE);
     }
+    if (debug)
+        cout << "fmtnum = " << fmtnum << endl;
+
     float neff; // effective number of sequences in the alignment
     file.read((char*)&neff, sizeof(float));
+    if (debug)
+        cout << "neff = " << neff << endl;
+
     // Reading native sequence
     size_t n, n2; //n is native length, n2 is the number of edges
-    string seq;
     file.read((char*)&n, sizeof(size_t));
-    std::getline(file, seq, '\0');
+    std::getline(file, ToulBar2::cpd->nativeSequence, '\0');
     // Reading MRF architecture
     file.read((char*)&n2, sizeof(size_t));
+    if (debug) {
+        cout << "Native: " << ToulBar2::cpd->nativeSequence << endl;
+        cout << "Variables: " << n << endl;
+        cout << "Edges: " << n2 << endl;
+    }
+    nVar = n;
+
     vector<pair<size_t, size_t>> edgeList;
     size_t idx1, idx2;
     for (size_t i = 0; i < n2; ++i) {
         file.read((char*)&idx1, sizeof(size_t));
         file.read((char*)&idx2, sizeof(size_t));
+        if (debug)
+            cout << "Edge " << idx1 << " - " << idx2 << endl;
         edgeList.push_back(make_pair(idx1, idx2));
     }
-    // Skipping sequence profile for now
+    // Skipping sequence profile for now - TODO usable for PSSM
     file.ignore(n * (NumNatAA + 1) * sizeof(float));
 
     // Reading unaries
@@ -153,15 +169,20 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
     float tmpUnary[NumNatAA + 1];
     for (size_t i = 0; i < n; ++i) {
         file.read((char*)tmpUnary, (NumNatAA + 1) * sizeof(float));
+        unaries[i].resize(NumNatAA);
         for (size_t j = 0; j < NumNatAA + 1; ++j) {
-            unaries[j].push_back(-tmpUnary[j]);
+            // We need to convert the PMRF idx to a CCMpred idx
+            unaries[i][AminoMRFIdx.find(AminoPMRFs[j])->second] = -tmpUnary[j];
         }
+        if (debug)
+            cout << "Read unary on variable " << i << endl;
     }
 
     // Reading binaries
     float tmpBinary[(NumNatAA + 1) * (NumNatAA + 1)];
     float minscore = std::numeric_limits<float>::max();
     float maxscore = std::numeric_limits<float>::min();
+
     for (pair<size_t, size_t> e : edgeList) {
         file.read((char*)tmpBinary, (NumNatAA + 1) * (NumNatAA + 1) * sizeof(float));
         for (int i = 0; i < NumNatAA + 1; i++) {
@@ -188,9 +209,10 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
 
         if (maxscore > 1e-1)
             nPot++;
+        if (debug)
+            cout << "Read binary on " << e.first << " - " << e.second << endl;
     }
-    while (!file.eof())
-        ;
+
     cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
 
@@ -232,15 +254,15 @@ TLogProb AminoMRF::eval(const string& sequence)
 // Must be called after the problem is loaded. Must be in CFN format.
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
-    const static bool debug = true;
+    const static bool debug = false;
 
-    if (ToulBar2::cpd->nativeSequence == NULL) {
+    if (ToulBar2::cpd->nativeSequence.empty()) {
         cerr << "Error: the native sequence must be provided using --native.\n";
         exit(1);
     }
 
     // check residue numbers
-    if (strlen(ToulBar2::cpd->nativeSequence) != nVar) {
+    if (ToulBar2::cpd->nativeSequence.size() != nVar) {
         cerr << "Error: the loaded evolutionary MRF has not the size of the native protein.\n";
         exit(1);
     }
@@ -321,6 +343,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
+
+        // TODO check pos vs VarIdx below
 
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;

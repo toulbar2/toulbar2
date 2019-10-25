@@ -252,6 +252,7 @@ enum {
     OPT_PSSMATRIX,
     OPT_NATIVE,
     OPT_AMINOMRF,
+    OPT_AMINOPMRF,
     OPT_AMINOMRFBIAS,
     OPT_BESTCONF,
     // Z options
@@ -489,6 +490,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_PSSMATRIX, (char*)"--pssm", SO_REQ_SEP },
     { OPT_NATIVE, (char*)"--native", SO_REQ_SEP },
     { OPT_AMINOMRF, (char*)"--aminoMRF", SO_REQ_SEP },
+    { OPT_AMINOPMRF, (char*)"--aminoPMRF", SO_REQ_SEP },
     { OPT_AMINOMRFBIAS, (char*)"--aminoMRFbias", SO_REQ_SEP },
     { OPT_BESTCONF, (char*)"--bestconf", SO_NONE },
     // Z options
@@ -906,7 +908,8 @@ void help_msg(char* toulbar2filename)
     cout << "   --psmbias=[weight] : multiplier for native similarity bias (default is 0)." << endl;
     cout << "   --pssmbias=[weight] : multiplier for PSSM bias (default is 0)." << endl;
     cout << "   --native=[sequence] : native sequence." << endl;
-    cout << "   --aminoMRF=[filepath] : path to an additive MRF over all positions and amino acids" << endl;
+    cout << "   --aminoMRF=[filepath] : path to an additive MRF over all positions and amino acids (CCMPred format)" << endl;
+    cout << "   --aminoPMRF=[filepath] : path to an additive MRF over all positions and amino acids (PMRF format)" << endl;
     cout << "   --aminoMRFbias=[weight] : multiplier  for the amino RMF biases (raw CMCpred format)" << endl;
 
     cout << "---------------------------------------------------------------------------------------" << endl;
@@ -1911,6 +1914,12 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_AMINOMRF) {
                 requireCpd();
                 ToulBar2::cpd->AminoMat = new AminoMRF(args.OptionArg());
+            }
+
+            // get AminoPMRF filename (fileformat 1)
+            if (args.OptionId() == OPT_AMINOPMRF) {
+                requireCpd();
+                ToulBar2::cpd->AminoMat = new AminoMRF(args.OptionArg(), 1);
             }
 
             // get psm bias

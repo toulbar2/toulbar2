@@ -50,7 +50,7 @@ public:
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
     size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size(); }
-    char* nativeSequence = NULL;
+    string nativeSequence;
     AminoMRF* AminoMat;
     size_t PSSMlen() { return PSSM.size(); };
     float PSMBias = 0.0;
