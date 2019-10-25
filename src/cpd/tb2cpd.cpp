@@ -193,7 +193,7 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
 
             for (int j = 0; j < NumNatAA + 1; j++) {
                 if (i < NumNatAA && j < NumNatAA) {
-                    float LP = -tmpBinary[AminoPMRFIdx.find(AminoMRFs[i])->second * (NumNatAA) + AminoPMRFIdx.find(AminoMRFs[j])->second];
+                    float LP = -tmpBinary[(AminoPMRFIdx.find(AminoMRFs[i])->second * NumNatAA) + AminoPMRFIdx.find(AminoMRFs[j])->second];
                     binaries[e][i][j] = LP;
                     minscore = min(minscore, LP);
                     maxscore = max(maxscore, LP);
@@ -238,22 +238,32 @@ TLogProb AminoMRF::getBinary(int var1, int var2, int AAidx1, int AAidx2)
     return binaries[pv][AAidx1][AAidx2];
 }
 
-TLogProb AminoMRF::eval(const string& sequence)
+TLogProb AminoMRF::eval(const string& sequence, const vector<Variable*>& vars)
 {
+    static bool debug = false;
+
     TLogProb paid = 0.0;
     for (size_t varIdx1 = 0; varIdx1 < nVar; varIdx1++) {
+        int pos1 = vars[varIdx1]->getPosition();
         int code1 = AminoMRFIdx.find(sequence[varIdx1])->second;
-        paid += unaries[varIdx1][code1];
+        if (debug)
+            cout << "Unary at position " << pos1 << " amino acid code " << code1 << endl;
+        paid += unaries[pos1][code1];
         for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nVar; varIdx2++) {
+            int pos2 = vars[varIdx2]->getPosition();
             int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
-            pair<int, int> pv(varIdx1, varIdx2);
-            paid += binaries[pv][code1][code2];
+            if (debug)
+                cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
+
+            pair<int, int> pv(pos1, pos2);
+            if (binaries.count(pv))
+                paid += binaries[pv][code1][code2];
         }
     }
     return paid;
 }
 
-// Must be called after the problem is loaded. Must be in CFN format.
+// Must be called after the problem is loaded, CFN format only.
 void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 {
     const static bool debug = false;
@@ -272,7 +282,11 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     // project and process binaries
     map<int, size_t> posList; // map of designed position to varIdx
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
-        posList[pb->getVars()[varIdx]->getPosition()] = varIdx;
+        int pos = pb->getVars()[varIdx]->getPosition();
+        if (pos < 0 || (unsigned int)pos >= nVar) {
+            cerr << "Variable " << pb->getVars()[varIdx] << " has an out-of-range sequence position (wrt. native)" << endl;
+        }
+        posList[pos] = varIdx;
         if (debug)
             cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
     }
@@ -346,8 +360,6 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
 
-        // TODO check pos vs VarIdx below
-
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
 
@@ -365,7 +377,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         // Insert in the CFN model
         for (char c : ToulBar2::cpd->getRotamers2AA()[varIdx]) {
             int valIdx = AminoMRFIdx.find(c)->second;
-            if (unaries[varIdx][valIdx] == 0.0)
+            if (unaries[pos][valIdx] == 0.0)
                 warn = false;
             Cost bias = Round(powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * CMRFBias * unaries[pos][valIdx]);
 
@@ -374,7 +386,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (warn) {
             cout << "WARNING: the preferred amino acid (";
             for (int i = 0; i < NumNatAA; i++) {
-                if (unaries[varIdx][i] == 0.0)
+                if (unaries[pos][i] == 0.0)
                     cout << AminoMRFs[i];
             }
             cout << ") has been excluded from design at residue " << varIdx + 1 << endl;
@@ -599,26 +611,26 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
     }
     cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy;
     if (AminoMRFBias != 0.0) {
-        Double Evol = AminoMRFBias * AminoMat->eval(sequence);
+        Double Evol = AminoMRFBias * AminoMat->eval(sequence, vars);
         cout << " (evol " << Evol << "E " << energy - Evol << ")";
     }
     cout << endl;
 }
 
-void Cpd::printSequence(TAssign& vars)
+void Cpd::printSequence(TAssign& assig, const vector<Variable*>& vars)
 {
     string sequence;
     cout << "New rotamers:";
-    for (size_t i = 0; i < vars.size(); i++) {
-        char aa = rotamers2aa[i][vars[i]];
+    for (size_t i = 0; i < assig.size(); i++) {
+        char aa = rotamers2aa[i][assig[i]];
         if (aa != '*') {
             sequence.push_back(aa);
-            cout << " " << vars[i];
+            cout << " " << assig[i];
         }
     }
     cout << "\nNew sequence: " << sequence;
     if (AminoMRFBias != 0.0)
-        cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence) << ")";
+        cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence, vars) << ")";
     cout << endl;
 }
 

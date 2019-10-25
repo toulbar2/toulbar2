@@ -17,7 +17,7 @@ public:
     size_t nPot;
     TLogProb getUnary(int var, int AAidx);
     TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
-    TLogProb eval(const string& sequence);
+    TLogProb eval(const string& sequence, const vector<Variable*>& vars);
     void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
 private:
@@ -43,7 +43,7 @@ public:
     void storeSequence(const vector<Variable*>& vars, Double energy);
     void printSequences();
     void printSequence(const vector<Variable*>& vars, Double energy);
-    void printSequence(TAssign& vars);
+    void printSequence(TAssign& assig, const vector<Variable*>& vars);
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
