@@ -185,14 +185,16 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
 
     for (pair<size_t, size_t> e : edgeList) {
         file.read((char*)tmpBinary, (NumNatAA + 1) * (NumNatAA + 1) * sizeof(float));
+        binaries[e].resize(NumNatAA);
+
         for (int i = 0; i < NumNatAA + 1; i++) {
             if (i < NumNatAA)
-                binaries[e].resize(NumNatAA);
+                binaries[e][i].resize(NumNatAA);
 
             for (int j = 0; j < NumNatAA + 1; j++) {
                 if (i < NumNatAA && j < NumNatAA) {
-                    float LP = -tmpBinary[i * (NumNatAA) + j];
-                    binaries[e][i].push_back(LP);
+                    float LP = -tmpBinary[AminoPMRFIdx.find(AminoMRFs[i])->second * (NumNatAA) + AminoPMRFIdx.find(AminoMRFs[j])->second];
+                    binaries[e][i][j] = LP;
                     minscore = min(minscore, LP);
                     maxscore = max(maxscore, LP);
                 }
