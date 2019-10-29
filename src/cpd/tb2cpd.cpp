@@ -242,14 +242,16 @@ TLogProb AminoMRF::eval(const string& sequence, const vector<Variable*>& vars)
 {
     static bool debug = false;
 
+    size_t nbCFNVars = vars.size();
     TLogProb paid = 0.0;
-    for (size_t varIdx1 = 0; varIdx1 < nVar; varIdx1++) {
+    for (size_t varIdx1 = 0; varIdx1 < nbCFNVars; varIdx1++) {
         int pos1 = vars[varIdx1]->getPosition();
         int code1 = AminoMRFIdx.find(sequence[varIdx1])->second;
-        if (debug)
+        if (debug) {
             cout << "Unary at position " << pos1 << " amino acid code " << code1 << endl;
+        }
         paid += unaries[pos1][code1];
-        for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nVar; varIdx2++) {
+        for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
             int pos2 = vars[varIdx2]->getPosition();
             int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
             if (debug)
