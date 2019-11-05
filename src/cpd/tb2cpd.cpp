@@ -611,11 +611,14 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
             cout << " " << vars[i]->getValue();
         }
     }
-    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint) << energy;
+    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint);
     if (AminoMRFBias != 0.0) {
         Double Evol = AminoMRFBias * AminoMat->eval(sequence, vars);
-        cout << " (evol " << Evol << "E " << energy - Evol << ")";
+        cout << energy - Evol << " (evol " << Evol << ", joint " << energy << ")";
+    } else {
+        cout << energy;
     }
+
     cout << endl;
 }
 
