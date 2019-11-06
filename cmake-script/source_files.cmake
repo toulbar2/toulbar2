@@ -23,9 +23,9 @@
                         ${My_Source}/globals/tb2grammarutils.cpp
                         ${My_Source}/globals/tb2maxconstr.cpp
                         ${My_Source}/globals/tb2treeconstr.cpp
-##                        ${My_Source}/globals/tb2linearconstr.cpp
-##                        ${My_Source}/globals/tb2lpsconstr.cpp
-##                        ${My_Source}/globals/tb2mipsolver.cpp
+#                        ${My_Source}/globals/tb2linearconstr.cpp
+#                        ${My_Source}/globals/tb2lpsconstr.cpp
+#                        ${My_Source}/globals/tb2mipsolver.cpp
                         ${My_Source}/incop/*.cpp
                         ${My_Source}/search/*.cpp
                         ${My_Source}/utils/*.cpp
@@ -35,7 +35,7 @@
         )
 
 MESSAGE(STATUS "-------------\n")
-MESSAGE(STATUS "toulbar file = ${source_files}\n")
+MESSAGE(STATUS "toulbar2 source files = ${source_files}\n")
 MESSAGE(STATUS "-------------\n")
 
 #########################
@@ -62,9 +62,9 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/globals/tb2grammarutils.*pp
                         ${My_Source}/globals/tb2maxconstr.*pp
                         ${My_Source}/globals/tb2treeconstr.*pp
-##                        ${My_Source}/globals/tb2linearconstr.*pp
-##                        ${My_Source}/globals/tb2lpsconstr.*pp
-##                        ${My_Source}/globals/tb2mipsolver.*pp
+#                        ${My_Source}/globals/tb2linearconstr.*pp
+#                        ${My_Source}/globals/tb2lpsconstr.*pp
+#                        ${My_Source}/globals/tb2mipsolver.*pp
                         ${My_Source}/incop/*.h
                         ${My_Source}/incop/*.cpp 
                         ${My_Source}/search/*.*pp
@@ -72,5 +72,3 @@ MESSAGE(STATUS "-------------\n")
                         ${My_Source}/vns/*.*pp 
                         ${My_Source}/ToulbarVersion.*pp
         )
-
-

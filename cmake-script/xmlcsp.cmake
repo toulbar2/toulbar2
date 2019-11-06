@@ -43,5 +43,4 @@ ELSE(XML)
         MESSAGE(STATUS "-XML FORMAT IS OFF")
 ENDIF(XML)
 
-MESSAGE(STATUS "#######XML script end##########################\n")
 

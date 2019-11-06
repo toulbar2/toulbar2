@@ -613,7 +613,11 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
 void help_msg(char* toulbar2filename)
 {
     cout << "*************************" << endl;
+#ifdef MENDELSOFT
+    cout << "* MendelSoft Help Message *" << endl;
+#else
     cout << "* ToulBar2 Help Message *" << endl;
+#endif
     cout << "*************************" << endl;
     cout << endl;
     cout << "Command line is:" << endl;
@@ -931,9 +935,15 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["clusterdec_ext"] = ".dec";
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-    if (ToulBar2::verbose >= 0)
-        cout << "c " << CurrentBinaryPath << "toulbar2"
-             << "  version : " << ToulBar2::version << ", copyright (c) 2006-2019, toulbar2 team" << endl;
+    if (ToulBar2::verbose >= 0) {
+        cout << "c " << CurrentBinaryPath;
+#ifdef MENDELSOFT
+        cout << "mendelsoft";
+#else
+        cout << "toulbar2";
+#endif
+        cout << "  version : " << ToulBar2::version << ", copyright (c) 2006-2019, toulbar2 team" << endl;
+    }
 
     // --------------------------simple opt ----------------------
 
