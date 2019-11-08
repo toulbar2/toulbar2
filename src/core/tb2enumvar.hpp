@@ -38,9 +38,10 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
-    bool moreThanOne;
+    StoreInt moreThanOne;
     int domSizeInBoolOfP;
-    Value strictACValue;
+    StoreValue strictACValue;
+    Value strictACValueInBoolOfP;
     Value RINS_lastValue;
     vector<Value> RINS_valuesToBeRemoved;
 

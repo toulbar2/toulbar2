@@ -127,8 +127,9 @@ void VACExtension::iniThreshold()
         done = (c < wcsp->getUb());
         ++it;
     }
-    if (!done)
-        c = UNIT_COST;
+    if (!done) {
+        c = max(UNIT_COST, wcsp->getUb()-1);
+    }
     itThreshold = c;
 }
 
@@ -229,7 +230,8 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
 
 bool VACExtension::propagate()
 {
-    //cout << "CALL to VAC::propagate()" << endl;
+    //cout << "CALL to VAC::propagate(). Depth: " << Store::depth << endl;
+
     if (Store::getDepth() >= abs(ToulBar2::vac)) {
         inconsistentVariable = -1;
         return false;
@@ -244,6 +246,7 @@ bool VACExtension::propagate()
 
     bool isvac = true;
     bool util = false;
+    bool isvacatleastonce = false;
 
     breakCycles = 0;
 
@@ -279,6 +282,7 @@ bool VACExtension::propagate()
             //assert(wcsp->verify()); // it modifies binary supports???
             assert(wcsp->NC.empty());
             assert(VAC.empty());
+            // skip this current itThreshold if there are no new value removals do be done compared to previous itThreshold
             while (!enqueueVAC(itThreshold, prevItThreshold) && itThreshold != MIN_COST) {
                 prevItThreshold = itThreshold;
                 nextScaleCost();
@@ -337,14 +341,19 @@ bool VACExtension::propagate()
             }
 
             if (isvac) {
+            	isvacatleastonce = true;
+                ToulBar2::isVAC = true;
+                if (ToulBar2::verbose) cout << "Fulya -- is VAC !!! threshold: " << itThreshold << endl;
+                if (ToulBar2::verbose >= 3) cout << *wcsp << endl;
 
                 ToulBar2::RINS_nbStrictACVariables = 0;
 
                 for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                     if (wcsp->getVar(i)->enumerated()) {
                         EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
-                        xi->moreThanOne = false;
-                        xi->strictACValue = xi->getSupport();
+//                        xi->moreThanOne = 0;
+//                        xi->strictACValue = xi->getSupport();
+                        xi->strictACValueInBoolOfP = xi->getSupport();
                         xi->domSizeInBoolOfP = 0;
                         int currentDomSize = xi->getDomainSize();
                         int initDomSize = xi->getDomainInitSize();
@@ -357,39 +366,39 @@ bool VACExtension::propagate()
                             if (currentIndex < currentDomSize && domcost[currentIndex].value == v) {
                                 if (((VACVariable*)xi)->getVACCost(domcost[currentIndex].value) == MIN_COST) {
                                     xi->domSizeInBoolOfP += 1;
-                                    xi->strictACValue = domcost[currentIndex].value;
+                                    xi->strictACValueInBoolOfP = domcost[currentIndex].value;
                                 }
                                 currentIndex++;
                             } else {
                                 xi->RINS_valuesToBeRemoved.push_back(v);
                             }
                         }
-                        xi->moreThanOne = (xi->domSizeInBoolOfP > 1) ? true : false;
-                        if (ToulBar2::strictAC == 2 && xi->domSizeInBoolOfP == 1) {
-                            for (ConstraintList::iterator itc = xi->getConstrs()->begin();
-                                 itc != xi->getConstrs()->end(); ++itc) {
-                                Constraint* c = (*itc).constr;
-                                if (c->isBinary()) {
-                                    EnumeratedVariable* xj = (EnumeratedVariable*)(((BinaryConstraint*)c)->getVarDiffFrom(xi));
-                                    if (xj->domSizeInBoolOfP > 1) // TODO: xj may be not refreshed yet
-                                        xi->moreThanOne = true;
-                                }
-                            }
-                        }
-                        if (ToulBar2::strictAC == 3 && xi->domSizeInBoolOfP > 1 && xi->getCost(xi->strictACValue) == MIN_COST) {
-                            xi->moreThanOne = false;
-                            for (ConstraintList::iterator itc = xi->getConstrs()->begin();
-                                 !xi->moreThanOne && itc != xi->getConstrs()->end(); ++itc) {
-                                Constraint* c = (*itc).constr;
-                                if (c->isBinary()) {
-                                    BinaryConstraint* cij = ((BinaryConstraint*)c);
-                                    EnumeratedVariable* xj = (EnumeratedVariable*)cij->getVarDiffFrom(xi);
-                                    if (xj->wcspIndex < xi->wcspIndex && !xj->moreThanOne && cij->getCost(xi, xj, xi->strictACValue, xj->strictACValue) > MIN_COST) {
-                                        xi->moreThanOne = true;
-                                    }
-                                }
-                            }
-                        }
+//                        xi->moreThanOne = (xi->domSizeInBoolOfP > 1) ? 1 : 0;
+//                        if (ToulBar2::strictAC == 2 && xi->domSizeInBoolOfP == 1) {
+//                            for (ConstraintList::iterator itc = xi->getConstrs()->begin();
+//                                 itc != xi->getConstrs()->end(); ++itc) {
+//                                Constraint* c = (*itc).constr;
+//                                if (c->isBinary()) {
+//                                    EnumeratedVariable* xj = (EnumeratedVariable*)(((BinaryConstraint*)c)->getVarDiffFrom(xi));
+//                                    if (xj->domSizeInBoolOfP > 1) // TODO: xj may be not refreshed yet
+//                                        xi->moreThanOne = 1;
+//                                }
+//                            }
+//                        }
+//                        if (ToulBar2::strictAC == 3 && xi->domSizeInBoolOfP > 1 && xi->getCost(xi->strictACValue) == MIN_COST) {
+//                            xi->moreThanOne = 0;
+//                            for (ConstraintList::iterator itc = xi->getConstrs()->begin();
+//                                 !xi->moreThanOne && itc != xi->getConstrs()->end(); ++itc) {
+//                                Constraint* c = (*itc).constr;
+//                                if (c->isBinary()) {
+//                                    BinaryConstraint* cij = ((BinaryConstraint*)c);
+//                                    EnumeratedVariable* xj = (EnumeratedVariable*)cij->getVarDiffFrom(xi);
+//                                    if (xj->wcspIndex < xi->wcspIndex && !xj->moreThanOne && cij->getCost(xi, xj, xi->strictACValue, xj->strictACValue) > MIN_COST) {
+//                                        xi->moreThanOne = 1;
+//                                    }
+//                                }
+//                            }
+//                        }
 
                         if (xi->domSizeInBoolOfP == 1) {
                             ToulBar2::RINS_nbStrictACVariables++;
@@ -478,11 +487,11 @@ bool VACExtension::propagate()
                                         if (ToulBar2::RINS_HBFSnodes == 0 || xi->RINS_lastValue == -1) {
                                             //cout << "add " << i << " to variables" << endl;
                                             variables.push_back(i);
-                                            values.push_back(xi->strictACValue);
-                                        } else if (xi->strictACValue == xi->RINS_lastValue) {
+                                            values.push_back(xi->strictACValueInBoolOfP);
+                                        } else if (xi->strictACValueInBoolOfP == xi->RINS_lastValue) {
                                             //cout << *iter << " ";
                                             variables.push_back(i);
-                                            values.push_back(xi->strictACValue);
+                                            values.push_back(xi->strictACValueInBoolOfP);
                                         }
                                         //else update domain
                                     }
@@ -602,6 +611,15 @@ bool VACExtension::propagate()
             }
         }
     }
+    if (ToulBar2::strictAC && isvacatleastonce) {
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+            if (wcsp->getVar(i)->enumerated()) {
+                EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
+                xi->moreThanOne = (xi->domSizeInBoolOfP > 1)?1:0;
+                xi->strictACValue = xi->strictACValueInBoolOfP;
+            }
+        }
+    }
 
     return util;
 }
@@ -638,6 +656,8 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
 
 void VACExtension::enforcePass1()
 {
+    if(ToulBar2::verbose >= 1)
+        cout << "enforcePass1 itThreshold: " << itThreshold << endl;
     VACVariable* xj;
     VACBinaryConstraint* cij;
 

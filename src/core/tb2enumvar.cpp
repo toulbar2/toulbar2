@@ -22,9 +22,10 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , support(iinf)
     , watchForIncrease(false)
     , watchForDecrease(false)
-    , moreThanOne(false)
+    , moreThanOne((isup > iinf)?1:0)
     , domSizeInBoolOfP(isup - iinf + 1)
     , strictACValue(support)
+    , strictACValueInBoolOfP(support)
     , RINS_lastValue(-1)
 {
     init();
@@ -37,9 +38,10 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , support(min(d, dsize))
     , watchForIncrease(false)
     , watchForDecrease(false)
-    , moreThanOne(false)
+    , moreThanOne((dsize>1)?1:0)
     , domSizeInBoolOfP(dsize)
     , strictACValue(support)
+    , strictACValueInBoolOfP(support)
     , RINS_lastValue(-1)
 {
     init();
@@ -116,6 +118,7 @@ void EnumeratedVariable::print(ostream& os)
             os << " " << getCost(*iter);
         }
         os << " > s:" << support;
+        os << " SAC:" << !moreThanOne << " SACval:" << strictACValue;
     }
 }
 

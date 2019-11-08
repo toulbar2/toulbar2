@@ -49,11 +49,19 @@ int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
 int ToulBar2::strictAC;
+int ToulBar2::SACifVAC;
+int ToulBar2::VACthreshold;
+int ToulBar2::reverseSAC;
+int ToulBar2::currentOpenNodeDepth;
+int ToulBar2::BFSVAC;
+int ToulBar2::BFSSAC;
+bool ToulBar2::isVAC;
 int ToulBar2::BoolDomSize;
 int ToulBar2::nbTimesIsVAC;
 int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
 bool ToulBar2::RINS;
 int ToulBar2::useRINS;
+int ToulBar2::RINSreset;
 int ToulBar2::RINS_nbStrictACVariables;
 bool ToulBar2::RINS_newSolutionFound;
 double ToulBar2::RINS_probabilty;
@@ -242,11 +250,19 @@ void tb2init()
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
     ToulBar2::strictAC = 0;
+    ToulBar2::SACifVAC = 0;
+    ToulBar2::VACthreshold = 0;
+    ToulBar2::reverseSAC = 0;
+    ToulBar2::currentOpenNodeDepth = 0;
+    ToulBar2::BFSVAC = -1;
+    ToulBar2::BFSSAC = 0;
+    ToulBar2::isVAC = false;
     ToulBar2::BoolDomSize = 0;
     ToulBar2::nbTimesIsVAC = 0;
     ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
     ToulBar2::RINS = false;
     ToulBar2::useRINS = 0;
+    ToulBar2::RINSreset = 0;
     ToulBar2::RINS_nbStrictACVariables = 0;
     ToulBar2::RINS_newSolutionFound = false;
     ToulBar2::RINS_probabilty = 1.0;
@@ -2078,7 +2094,7 @@ void WCSP::preprocessing()
     }
 #endif
 
-    if (ToulBar2::vac && ToulBar2::useRINS) {
+    if ((ToulBar2::vac && ToulBar2::useRINS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
         ToulBar2::RINS_saveitThresholds = true;
         ToulBar2::RINS_itThresholds.clear();
         ToulBar2::RINS_lastRatio = 0.0000000001;
@@ -2087,7 +2103,7 @@ void WCSP::preprocessing()
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
         ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
-        if (ToulBar2::RINS_angle < 0) {
+        if (ToulBar2::VACthreshold || ToulBar2::RINS_angle < 0) {
             if (ToulBar2::verbose >= 0) cout << "RINS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
             ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
         } else {

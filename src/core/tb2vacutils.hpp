@@ -165,7 +165,7 @@ private:
     vector<Long> kX_timeStamp;
     vector<Long> kY_timeStamp;
 
-    StoreCost myThreshold; /** The local threshold used to break loops */
+    Cost myThreshold; /** The local threshold used to break loops */
 
 public:
     VACBinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, vector<Cost>& tab);

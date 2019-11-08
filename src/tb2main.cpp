@@ -202,12 +202,18 @@ enum {
     OPT_deltaUb,
     OPT_strictAC,
     NO_OPT_strictAC,
+    OPT_reverseSAC,
+    OPT_BFSVAC,
+    OPT_BFSSAC,
+    OPT_SACifVAC,
+    OPT_VACthreshold,
     OPT_BoolDomSize,
     NO_OPT_BoolDomSize,
     OPT_RINS,
     NO_OPT_RINS,
     OPT_RINS_angle,
     NO_OPT_RINS_angle,
+    OPT_RINSreset,
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -398,6 +404,11 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_strictAC, (char*)"-strictAC", SO_OPT },
     { OPT_strictAC, (char*)"-sac", SO_OPT },
     { NO_OPT_strictAC, (char*)"-sac:", SO_NONE },
+    { OPT_SACifVAC, (char*)"-SACifVAC", SO_OPT },
+    { OPT_VACthreshold, (char*)"-VACthreshold", SO_OPT },
+    { OPT_reverseSAC, (char*)"-reverseSAC:", SO_OPT },
+    { OPT_BFSVAC, (char*)"-BFSVAC", SO_OPT },
+    { OPT_BFSSAC, (char*)"-BFSSAC", SO_OPT },
     { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
     { OPT_BoolDomSize, (char*)"-booldomsz", SO_NONE },
     { NO_OPT_BoolDomSize, (char*)"-booldomsz:", SO_NONE },
@@ -408,6 +419,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_RINS_angle, (char*)"-RINSangle", SO_OPT },
     { OPT_RINS_angle, (char*)"-auto", SO_OPT },
     { NO_OPT_RINS_angle, (char*)"-auto:", SO_NONE },
+    { OPT_RINSreset, (char*)"-RINSreset:", SO_NONE },
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_OPT },
@@ -1902,6 +1914,51 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "Strict AC OFF" << endl;
             }
 
+            if (args.OptionId() == OPT_SACifVAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::SACifVAC = 1;
+                else
+                    ToulBar2::SACifVAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "SAC is used only when the problem is VAC." << endl;
+            }
+
+            if (args.OptionId() == OPT_VACthreshold) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::VACthreshold = 1;
+                else
+                    ToulBar2::VACthreshold = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "VAC iterations will go until the threshold calculated by RINS approach." << endl;
+            }
+
+            if (args.OptionId() == OPT_reverseSAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::reverseSAC = 1;
+                else
+                    ToulBar2::reverseSAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "Reverse Strict AC ON " << ToulBar2::reverseSAC << endl;
+            }
+
+            if (args.OptionId() == OPT_BFSVAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::BFSVAC = 0;
+                else
+                    ToulBar2::BFSVAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "VAC will run only at open nodes and their children within the next " << ToulBar2::BFSVAC << " levels." << endl;
+            }
+
+            if (args.OptionId() == OPT_BFSSAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::BFSSAC = 1;
+                else
+                    ToulBar2::BFSSAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "SAC or reverseSAC will continue in DFS nodes " << endl;
+            }
+
             if (args.OptionId() == OPT_BoolDomSize) {
                 ToulBar2::BoolDomSize = 1;
                 if (ToulBar2::debug)
@@ -1940,6 +1997,12 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "RINS angle set to 90°" << endl;
                 ToulBar2::RINS_angle = 90;
+            }
+
+            if (args.OptionId() == OPT_RINSreset) {
+                ToulBar2::RINSreset = 1;
+                if (ToulBar2::debug)
+                    cout << "RINS reset ON" << endl;
             }
 
         }
