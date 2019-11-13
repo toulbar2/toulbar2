@@ -711,7 +711,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
             cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << MPI_Wtime() - startTime << " seconds." << endl;
     }
     if (improved && ToulBar2::showSolutions) {
-        wcsp->printSolution(cout);
+        wcsp->printSolution();
         cout << endl;
     }
     if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {

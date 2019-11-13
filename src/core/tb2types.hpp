@@ -374,7 +374,7 @@ public:
     static int debug;
     static string externalUB;
     static int showSolutions;
-    static char* writeSolution;
+    static int writeSolution;
     static FILE* solutionFile;
     static Long allSolutions;
     static int dumpWCSP;

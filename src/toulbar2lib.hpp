@@ -369,8 +369,9 @@ public:
     virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value>& getSolution(Cost* cost_ptr = NULL) = 0; ///< \brief returns current best solution and its cost
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
-    virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution
-    virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution
+    virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
+    virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
+    virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
 
     virtual void print(ostream& os) = 0; ///< \brief print current domains and active cost functions (see \ref verbosity)
     virtual void dump(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes

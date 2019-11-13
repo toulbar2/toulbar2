@@ -666,6 +666,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)" << endl;
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
+    cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
     cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
@@ -880,6 +881,7 @@ int _tmain(int argc, TCHAR* argv[])
     bool certificate = false;
     char* certificateFilename = NULL;
     char* certificateString = NULL;
+    char* solutionFileName = NULL;
     char buf[512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
     int timeout = 0;
@@ -1256,15 +1258,18 @@ int _tmain(int argc, TCHAR* argv[])
 
             //#############################################
             if (args.OptionId() == OPT_writeSolution) {
-                ToulBar2::writeSolution = (char*)"sol";
+                if (!ToulBar2::writeSolution) ToulBar2::writeSolution = 1;
+                if (solutionFileName == NULL) solutionFileName = (char*)"sol";
 
                 if (args.OptionArg() != NULL) {
                     char* tmpFile = new char[strlen(args.OptionArg()) + 1];
                     strcpy(tmpFile, args.OptionArg());
-                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '0' || tmpFile[0] == '1' || tmpFile[0] == '2'))
-                        ToulBar2::pedigreeCorrectionMode = atoi(tmpFile);
-                    else
-                        ToulBar2::writeSolution = tmpFile;
+                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '0' || tmpFile[0] == '1' || tmpFile[0] == '2' || tmpFile[0] == '3')) {
+                        if (atoi(tmpFile)<=2) ToulBar2::pedigreeCorrectionMode = atoi(tmpFile);
+                        if (atoi(tmpFile)>=1) ToulBar2::writeSolution = atoi(tmpFile);
+                    } else {
+                    	solutionFileName = tmpFile;
+                    }
                 }
             }
 
@@ -2025,8 +2030,10 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading xml file:" << problem << endl;
 
                 ToulBar2::xmlflag = true;
-                if (!ToulBar2::writeSolution)
-                    ToulBar2::writeSolution = (char*)"sol";
+                if (!ToulBar2::writeSolution) {
+                    ToulBar2::writeSolution = 1;
+                    solutionFileName = (char*)"sol";
+                }
                 strext = ".xml";
                 strfile = problem;
             }
@@ -2239,9 +2246,9 @@ int _tmain(int argc, TCHAR* argv[])
     if (env0.myrank == 0) {
 #endif
         if (ToulBar2::writeSolution) {
-            ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");
+            ToulBar2::solutionFile = fopen(solutionFileName, "w");
             if (!ToulBar2::solutionFile) {
-                cerr << "Could not open file " << ToulBar2::writeSolution << endl;
+                cerr << "Could not open file " << solutionFileName << endl;
                 exit(EXIT_FAILURE);
             }
         }

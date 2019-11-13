@@ -461,16 +461,84 @@ public:
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
     }
+    void printSolution()
+    {
+    	for (unsigned int i = 0; i < numberOfVariables(); i++) {
+    		if (ToulBar2::cfn) {
+    			Value myvalue = solution[i];
+    			string valuelabel = getVar(i)->getValueName(myvalue);
+    			string varlabel = getName(i);
+
+    			switch (ToulBar2::showSolutions) {
+    			case 1:
+    				cout << myvalue;
+    				break;
+    			case 2:
+    				cout << valuelabel;
+    				break;
+    			case 3:
+    				cout << varlabel << "=" << valuelabel;
+    				break;
+    			default:
+    				break;
+    			}
+    		} else {
+    			cout << solution[i];
+    		}
+    		cout << (i < numberOfVariables() - 1 ? " " : "");
+    	}
+    }
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-            os << solution[i] << (i < numberOfVariables() - 1 ? " " : "");
+    		if (ToulBar2::cfn) {
+    			Value myvalue = solution[i];
+    			string valuelabel = getVar(i)->getValueName(myvalue);
+    			string varlabel = getName(i);
+
+    			switch (ToulBar2::writeSolution) {
+    			case 1:
+    				os << myvalue;
+    				break;
+    			case 2:
+    				os << valuelabel;
+    				break;
+    			case 3:
+    				os << varlabel << "=" << valuelabel;
+    				break;
+    			default:
+    				break;
+    			}
+    		} else {
+    			os << solution[i];
+    		}
+            os << (i < numberOfVariables() - 1 ? " " : "");
         }
     }
     void printSolution(FILE* f)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-            fprintf(f, "%d", solution[i]);
+    		if (ToulBar2::cfn) {
+    			Value myvalue = solution[i];
+    			string valuelabel = getVar(i)->getValueName(myvalue);
+    			string varlabel = getName(i);
+
+    			switch (ToulBar2::writeSolution) {
+    			case 1:
+    				fprintf(f, "%d", myvalue);
+    				break;
+    			case 2:
+    				fprintf(f, "%s", valuelabel.c_str());
+    				break;
+    			case 3:
+    				fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
+    				break;
+    			default:
+    				break;
+    			}
+    		} else {
+    			fprintf(f, "%d", solution[i]);
+    		}
             if (i < numberOfVariables() - 1)
                 fprintf(f, " ");
         }

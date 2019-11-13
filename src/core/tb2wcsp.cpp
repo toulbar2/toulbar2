@@ -51,7 +51,7 @@ int ToulBar2::verbose;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
-char* ToulBar2::writeSolution;
+int ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
 Long ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
@@ -221,7 +221,7 @@ void tb2init()
     ToulBar2::verbose = 0;
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
-    ToulBar2::writeSolution = NULL;
+    ToulBar2::writeSolution = 0;
     ToulBar2::solutionFile = NULL;
     ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;

@@ -2235,7 +2235,7 @@ void TreeDecomposition::newSolution(Cost lb)
         wcsp->setSolution(lb, &a);
 
     if (ToulBar2::showSolutions) {
-        wcsp->printSolution(cout);
+        wcsp->printSolution();
         cout << endl;
     }
 
