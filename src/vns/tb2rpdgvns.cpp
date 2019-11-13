@@ -719,9 +719,18 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }
+    if (ToulBar2::xmlflag) {
+        cout << "o " << bestUb << endl;
+    }
+    if (ToulBar2::maxsateval) {
+        cout << "o " << bestUb << endl;
+    }
     if (ToulBar2::uaieval && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(bestUb);
     }
+
+    if (ToulBar2::newsolution)
+        (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 }
 #endif
 
