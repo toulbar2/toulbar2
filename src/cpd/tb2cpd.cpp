@@ -603,6 +603,8 @@ void Cpd::printSequences()
 void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
 {
     string sequence;
+    size_t mutations = 0;
+
     cout << "New rotamers:";
     for (size_t i = 0; i < vars.size(); i++) {
         char aa = rotamers2aa[i][vars[i]->getValue()];
@@ -610,8 +612,9 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
             sequence.push_back(aa);
             cout << " " << vars[i]->getValue();
         }
+        mutations += (aa != vars[i]->getNativeResidue());
     }
-    cout << "\nNew sequence: " << sequence << " Energy: " << std::setprecision(ToulBar2::decimalPoint);
+    cout << "\nNew sequence: " << sequence << " Mutations: " << mutations << " Energy: " << std::setprecision(ToulBar2::decimalPoint);
     if (AminoMRFBias != 0.0) {
         Double Evol = AminoMRFBias * AminoMat->eval(sequence, vars);
         cout << energy - Evol << " (evol " << Evol << ", joint " << energy << ")";
@@ -625,6 +628,8 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
 void Cpd::printSequence(TAssign& assig, const vector<Variable*>& vars)
 {
     string sequence;
+    size_t mutations = 0;
+
     cout << "New rotamers:";
     for (size_t i = 0; i < assig.size(); i++) {
         char aa = rotamers2aa[i][assig[i]];
@@ -632,8 +637,9 @@ void Cpd::printSequence(TAssign& assig, const vector<Variable*>& vars)
             sequence.push_back(aa);
             cout << " " << assig[i];
         }
+        mutations += (aa != vars[i]->getNativeResidue());
     }
-    cout << "\nNew sequence: " << sequence;
+    cout << "\nNew sequence: " << sequence << " Mutations: " << mutations;
     if (AminoMRFBias != 0.0)
         cout << " (evol " << AminoMRFBias * AminoMat->eval(sequence, vars) << ")";
     cout << endl;
