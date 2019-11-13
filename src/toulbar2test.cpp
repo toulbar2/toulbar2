@@ -4,6 +4,14 @@
  */
 
 #include "toulbar2lib.hpp"
+
+#include "core/tb2wcsp.hpp"
+#include "vns/tb2vnsutils.hpp"
+#include "vns/tb2dgvns.hpp"
+#ifdef OPENMPI
+#include "vns/tb2cpdgvns.hpp"
+#include "vns/tb2rpdgvns.hpp"
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,11 +22,21 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 int main(int argc, char* argv[])
 {
-    mysrand(getpid());
+#ifdef OPENMPI
+    MPIEnv env0;
+    MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &env0.ntasks);
+    MPI_Comm_rank(MPI_COMM_WORLD, &env0.myrank);
+#endif
 
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
+#ifdef OPENMPI
+    if (env0.myrank == 0) ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
+    else ToulBar2::verbose = -1;
+#else
     ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
+#endif
 
     // uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
     //	ToulBar2::vac = 1; // option -A
@@ -27,11 +45,26 @@ int main(int argc, char* argv[])
     //	ToulBar2::lds = 1;  // option -l=1
     // uncomment if INCOP local search enable
     //	ToulBar2::incop_cmd = Incop_cmd; // option -i
-    // uncomment these four lines below if variable neighborhood search enable
-    // ToulBar2::lds = 4;
-    // ToulBar2::restart = 10000;
-    // ToulBar2::searchMethod = VNS;
-    // ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
+    // uncomment the following lines if variable neighborhood search enable
+    //ToulBar2::lds = 4;
+    //ToulBar2::restart = 10000;
+	//#ifdef OPENMPI
+	//     if (env0.ntasks > 1) {
+	//    	 ToulBar2::searchMethod = RPDGVNS;
+	//    	 ToulBar2::vnsParallel = true;
+	//    	 ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+	//    	 ToulBar2::vnsParallelSync = false;
+	//     } else {
+	//    	 ToulBar2::searchMethod = DGVNS;
+	//    	 ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+	//     }
+	//#else
+	//	ToulBar2::searchMethod = DGVNS;
+	//	ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+    //**or**
+    //  ToulBar2::searchMethod = VNS;
+    //  ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
+	//#endif
 
     // create a problem with three 0/1 variables
     initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
@@ -41,6 +74,7 @@ int main(int argc, char* argv[])
     int z = solver->getWCSP()->makeEnumeratedVariable("z", 0, 1);
 
     // add random unary cost functions on each variable
+    mysrand(getpid());
     {
         vector<Cost> costs(2, 0);
         costs[0] = randomCost(0, 100);
@@ -88,14 +122,26 @@ int main(int argc, char* argv[])
     //	ToulBar2::verbose = verbose;
 
     if (solver->solve()) {
+#ifdef OPENMPI
+    if (env0.myrank == 0) {
+#endif
         // show optimal solution
         vector<Value> sol;
         Cost optimum = solver->getSolution(sol);
         cout << "Optimum=" << optimum << endl;
         cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
-    } else {
-        cout << "No solution found!" << endl;
+#ifdef OPENMPI
     }
+#endif
+    } else {
+#ifdef OPENMPI
+    if (env0.myrank == 0) {
+#endif
+        cout << "No solution found!" << endl;
+#ifdef OPENMPI
+    }
+#endif
+   }
     // cout << "Problem lower bound: " << solver->getWCSP()->getLb() << endl; // initial problem lower bound possibly enhanced by value removals at the root during search
 
     return 0;
