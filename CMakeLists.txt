@@ -50,7 +50,7 @@ OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default
 OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
 OPTION(STATIC "static compilation flag [default: off]" OFF)
 OPTION(verbose "verbose mode [default:on]" ON)
-OPTION(COVER_TEST "cover test [default:on]" OFF)
+OPTION(COVER_TEST "cover test [default:on]" ON)
 OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 
