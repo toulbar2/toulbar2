@@ -126,6 +126,7 @@ IF(STATIC)
   SET(WITH_MEM_JEMALLOC OFF)
   SET(XML OFF)
   SET(MPI OFF)
+  set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++") 
