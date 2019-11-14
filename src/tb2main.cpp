@@ -902,6 +902,8 @@ void help_msg(char* toulbar2filename)
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "----------------------------------- Protein Design ------------------------------------" << endl;
     cout << "---------------------------------------------------------------------------------------" << endl;
+    cout << "   --scpbranch : use SCP branching for enumeration" << endl;
+    cout << "   --bestconf : find best conformation while SCP branching is used" << endl;    
     cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl;
     cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)." << endl;
     cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl;
