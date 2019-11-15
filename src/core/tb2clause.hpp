@@ -140,6 +140,7 @@ public:
             }
         }
     }
+    void resetConflictWeight() { conflictWeights.assign(conflictWeights.size(),0); Constraint::resetConflictWeight();}
 
     bool universal()
     {

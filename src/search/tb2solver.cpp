@@ -2060,9 +2060,8 @@ bool Solver::solve()
                                 //}
                                 if(ToulBar2::RINSreset){
                                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-                                        EnumeratedVariable* xi = (EnumeratedVariable*)(((WCSP*)wcsp)->getVar(i));
-                                        xi->resetWeightedDegree();
-                                        wcsp->setBestValue(i, -1);
+                                        wcsp->resetWeightedDegree(i);
+                                        wcsp->setBestValue(i, wcsp->getSup(i) + 1);
                                     }
                                 }
                             }

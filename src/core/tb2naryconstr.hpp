@@ -57,6 +57,7 @@ public:
             }
         }
     }
+    void resetConflictWeight() { conflictWeights.assign(conflictWeights.size(),0); Constraint::resetConflictWeight();}
 
     ptrdiff_t getCostsIndex(const String& s) const
     {

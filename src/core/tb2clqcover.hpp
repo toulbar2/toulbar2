@@ -92,6 +92,7 @@ public:
             }
         }
     }
+    void resetConflictWeight() { conflictWeights.assign(conflictWeights.size(),0); Constraint::resetConflictWeight();}
     double computeTightness() override;
     void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; }
 

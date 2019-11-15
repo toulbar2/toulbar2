@@ -65,7 +65,7 @@ public:
             fromElim2->incConflictWeight(from);
     }
     void incConflictWeight(Long incval) { conflictWeight += incval; }
-    void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
+    virtual void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
     void elimFrom(Constraint* from1, Constraint* from2 = NULL)
     {
         fromElim1 = from1;
