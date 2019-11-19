@@ -4,7 +4,7 @@ dist: trusty
 
 addons:
   apt:
-    packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev open-mpi-bin
+    packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev openmpi-bin
 
 script:
   - mkdir build
