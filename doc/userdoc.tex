@@ -364,13 +364,14 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-w=[filename]}] writes last/all solutions found in the specified
   filename (or "sol" if no parameter is given). The current directory
   is used as a relative path.
-\item[{-z=[filename]}]  saves problem in wcsp format in filename (or
+\item[{-w=[integer]}] 1: writes value numbers, 2: writes value names, 3: writes also variable names (default value is 1, this option can be used in combination with -w=filename).
+\item[{-z=[filename]}] saves problem in wcsp format in filename (or
   "problem.wcsp" if no parameter is given) writes also the graphviz
   dot file and the degree distribution of the input problem
 \item[{-z=[integer]}] 1: saves original instance (by default), 2: saves
   after preprocessing (this option can be used in combination with -z=filename)
-\item[{-x=[(,i=a)*]}] assigns variable of index i to value a (multiple
-  assignments are separated by a comma and no space) (without any
+\item[{-x=[(,i[=#<>]a)*]}] performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple
+  operations are separated by a comma and no space) (without any
   argument, a complete assignment -- used as initial upper bound and
   as value heuristic -- read from default file "sol" or given as input
   filename with ".sol" extension)
