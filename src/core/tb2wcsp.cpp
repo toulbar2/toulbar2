@@ -1666,6 +1666,9 @@ void WCSP::sortConstraints()
     for (unsigned int i = 0; i < vars.size(); i++) {
         vars[i]->sortConstraints();
     }
+    AC.sort(false); // sort in decreasing order to get the smallest DAC index first when doing pop() on this queue
+    DAC.sort(true); // sort in increasing order to get the largest DAC index first when doing pop() on this queue
+    EAC1.sort(true); // sort in increasing order to get the smallest DAC index first when doing pop() on the EAC2 queue
 }
 
 void WCSP::updateCurrentVarsId()
@@ -2582,6 +2585,7 @@ void WCSP::propagateAC()
 {
     if (ToulBar2::verbose >= 2)
         cout << "ACQueue size: " << AC.getSize() << endl;
+    if (Store::getDepth()==0) AC.sort(false);
     while (!AC.empty()) {
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
@@ -2595,6 +2599,7 @@ void WCSP::propagateDAC()
 {
     if (ToulBar2::verbose >= 2)
         cout << "DACQueue size: " << DAC.getSize() << endl;
+    if (Store::getDepth()==0) DAC.sort(true);
     while (!DAC.empty()) {
         if (ToulBar2::interrupted)
             throw TimeOut();
@@ -2941,6 +2946,7 @@ void WCSP::propagateEAC()
     fillEAC2();
     if (ToulBar2::verbose >= 2)
         cout << "EAC2Queue size: " << EAC2.getSize() << endl;
+    if (Store::getDepth()==0) EAC2.sort(false);
     while (!EAC2.empty()) {
         if (ToulBar2::interrupted)
             throw TimeOut();

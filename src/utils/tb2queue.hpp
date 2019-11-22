@@ -46,6 +46,7 @@ public:
     Variable* pop_max();
     Variable* pop_max(int* incdec);
     Variable* pop_first();
+    void sort(bool increase = true);
 
     void print(ostream& o);
 };
