@@ -245,8 +245,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   {\em stoppinglowerbound randomseed nbiterations method nbmoves
   neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors
   neighborhoodchoice3 autotuning tracemode}.
-\item[{-x=[(,i=a)*]}] assigns variable of index i to value a (multiple
-  assignments are separated by a comma and no space) (without any
+\item[{-x=[(,i[$=\#<>$]a)*]}] performs an elementary operation ('$=$':assign, '$\#$':remove, '$<$':decrease, '$>$':increase) with value a on variable of index i (multiple operations are separated by a comma and no space) (without any
   argument, a complete assignment -- used as initial upper bound and
   as a value heuristic -- read from default file "sol" taken as a certificate or given directly as an additional input
   filename with ".sol" extension and without {\bf -x})
@@ -370,7 +369,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   dot file and the degree distribution of the input problem
 \item[{-z=[integer]}] 1: saves original instance (by default), 2: saves
   after preprocessing (this option can be used in combination with -z=filename)
-\item[{-x=[(,i[=#<>]a)*]}] performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple
+\item[{-x=[(,i[$=\#<>$]a)*]}] performs an elementary operation ('$=$':assign, '$\#$':remove, '$<$':decrease, '$>$':increase) with value a on variable of index i (multiple
   operations are separated by a comma and no space) (without any
   argument, a complete assignment -- used as initial upper bound and
   as value heuristic -- read from default file "sol" or given as input
