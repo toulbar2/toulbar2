@@ -286,10 +286,15 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
         int pos = pb->getVars()[varIdx]->getPosition();
         bool isAA = pb->getVars()[varIdx]->getName()[0] != 'Z';
+
+        if (debug)
+            cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
+
         if ((pos < 0 || (unsigned int)pos >= nVar) && isAA) {
             cerr << "Variable " << pb->getVars()[varIdx]->getName() << " has an out-of-range sequence position (wrt. native)" << endl;
         }
-        posList[pos] = varIdx;
+        if (isAA)
+            posList[pos] = varIdx;
         if (debug)
             cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
     }
@@ -362,6 +367,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
+        if (pb->getVars()[varIdx]->getName()[0] == 'Z')
+            break;
 
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
