@@ -285,8 +285,9 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     map<int, size_t> posList; // map of designed position to varIdx
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
         int pos = pb->getVars()[varIdx]->getPosition();
-        if (pos < 0 || (unsigned int)pos >= nVar) {
-            cerr << "Variable " << pb->getVars()[varIdx] << " has an out-of-range sequence position (wrt. native)" << endl;
+        bool isAA = pb->getVars()[varIdx]->getName()[0] != 'Z';
+        if ((pos < 0 || (unsigned int)pos >= nVar) && isAA) {
+            cerr << "Variable " << pb->getVars()[varIdx]->getName() << " has an out-of-range sequence position (wrt. native)" << endl;
         }
         posList[pos] = varIdx;
         if (debug)
