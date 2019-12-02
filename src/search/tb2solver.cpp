@@ -929,7 +929,7 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
     enforceUb();
     nbBacktracks++;
 
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
     switch (branching) {
     case SCPType::scp:
@@ -1037,7 +1037,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         enforceZUb();
     }
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1130,7 +1130,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         Store::restore();
         enforceUb();
         nbBacktracks++;
-        if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+        if (nbBacktracks > nbBacktracksLimit)
             throw NbBacktracksOut();
 #ifdef OPENMPI
         if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1214,7 +1214,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     Store::restore();
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1251,7 +1251,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
     //delete [] sorted;
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1284,7 +1284,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     //delete [] sorted;
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -2145,8 +2145,13 @@ bool Solver::solve()
                         }
                     }
                 } catch (NbBacktracksOut) {
-                    nbbacktracksout = true;
-                    ToulBar2::limited = false;
+                    if (ToulBar2::restart > 0) {
+                        nbbacktracksout = true;
+                        ToulBar2::limited = false;
+                    } else {
+                        nbbacktracksout = false;
+                        ToulBar2::limited = true;
+                    }
                 }
                 Store::restore(storedepth);
             } while (nbbacktracksout);
