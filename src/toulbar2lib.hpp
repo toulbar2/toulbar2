@@ -427,7 +427,7 @@ ostream& operator<<(ostream& os, WeightedCSP& wcsp); ///< \see WeightedCSP::prin
 
 class WeightedCSPSolver {
 public:
-    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound); ///< \brief WeightedCSP Solver factory
+    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound, Long nbBacktracksLimit = LONGLONG_MAX); ///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}
 

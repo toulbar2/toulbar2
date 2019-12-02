@@ -2,9 +2,9 @@
 
 extern "C" {
 
-WeightedCSPSolver* tb2Create()
+WeightedCSPSolver* tb2Create(Long nbBacktracksLimit)
 {
-    return WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
+    return WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST, nbBacktracksLimit);
 }
 
 void tb2Destroy(WeightedCSPSolver* solver)

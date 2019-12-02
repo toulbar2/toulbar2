@@ -300,7 +300,7 @@ protected:
     TLogProb BTD_sharpZ(Cluster* cluster);
 
 public:
-    Solver(Cost initUpperBound);
+    Solver(Cost initUpperBound, Long nbBacktracksLimit = LONGLONG_MAX);
     ~Solver();
 
     Cost read_wcsp(const char* fileName);

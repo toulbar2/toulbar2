@@ -30,7 +30,7 @@ const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DE
  *
  */
 
-WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
+WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub, Long nbBacktracksLimit)
 {
 #ifdef OPENMPI
     MPIEnv env0;
@@ -55,16 +55,16 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
         solver = new TreeDecRefinement(ub);
         break;
     default:
-        solver = new Solver(ub);
+        solver = new Solver(ub, nbBacktracksLimit);
         break;
     };
     return solver;
 }
 
-Solver::Solver(Cost initUpperBound)
+Solver::Solver(Cost initUpperBound, Long nbBtLimit)
     : nbNodes(0)
     , nbBacktracks(0)
-    , nbBacktracksLimit(LONGLONG_MAX)
+    , nbBacktracksLimit(nbBtLimit)
     , wcsp(NULL)
     , allVars(NULL)
     , unassignedVars(NULL)
