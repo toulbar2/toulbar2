@@ -45,12 +45,19 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     linkEliminateQueue.content.timeStamp = -1;
     isSep_ = false;
 
-    if (ToulBar2::cfn) {
-        nativeResidue = name[0];
-        position = stoi(name.substr(1)) - 1; // we start at 0 internally
-    } else {
-        nativeResidue = 'Z';
-        position = -1;
+    if (ToulBar2::cfn && ToulBar2::cpd) {
+        if (name.size() >= 2) {
+            nativeResidue = name[0];
+            try {
+                position = stoi(name.substr(1)) - 1; // we start at 0 internally
+            } catch (const std::invalid_argument&) {
+                cerr << "Error: invalid position in variable '" << name << "'" << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            cerr << "Error: invalid name for variable '" << name << "'" << endl;
+            exit(EXIT_FAILURE);
+        }
     }
 }
 

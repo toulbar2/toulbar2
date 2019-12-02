@@ -2258,7 +2258,7 @@ void TreeDecomposition::newSolution(Cost lb)
         wcsp->printSolution(cout);
         cout << endl;
         if (ToulBar2::cpd) {
-            ToulBar2::cpd->printSequence(a);
+            ToulBar2::cpd->printSequence(a, wcsp->getVars());
         }
     }
 

@@ -863,8 +863,10 @@ void CFNStreamReader::enforceUB(Cost bound)
             bound += ToulBar2::deltaUb;
         }
     }
-
+    if (ToulBar2::bestconf)
+        ToulBar2::enumUB = bound;
     wcsp->updateUb(bound);
+    
 }
 
 // Returns the index of the value name for the given variable

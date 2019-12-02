@@ -177,7 +177,7 @@ void Solver::mutate(std::string mutationString)
 void Solver::applyCompositionalBiases()
 {
     if (ToulBar2::cpd->PSMBias != 0) {
-        if (ToulBar2::cpd->nativeSequence == NULL) {
+        if (ToulBar2::cpd->nativeSequence.empty()) {
             cerr << "Cannot bias energy based on similarity matrix without native sequence." << endl;
             exit(EXIT_FAILURE);
         } else {

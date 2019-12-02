@@ -10,19 +10,21 @@
 // So it's not compatible with rigid positions for now.
 class AminoMRF {
 public:
-    AminoMRF(const char* filename); // read from file
+    AminoMRF(const char* filename); // read from CCMPredfile
+    AminoMRF(const char* filename, size_t fmtnum); // read from PMRF binary file. The second argument must be equal to 1
     ~AminoMRF();
     size_t nVar;
     size_t nPot;
     TLogProb getUnary(int var, int AAidx);
     TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
-    TLogProb eval(const string& sequence);
+    TLogProb eval(const string& sequence, const vector<Variable*>& vars);
     void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
 private:
     map<int, vector<TLogProb>> unaries;
     map<pair<int, int>, vector<vector<TLogProb>>> binaries;
     static const map<char, int> AminoMRFIdx;
+    static const map<char, int> AminoPMRFIdx;
 };
 
 class Cpd {
@@ -41,14 +43,14 @@ public:
     void storeSequence(const vector<Variable*>& vars, Double energy);
     void printSequences();
     void printSequence(const vector<Variable*>& vars, Double energy);
-    void printSequence(TAssign& vars);
+    void printSequence(TAssign& assig, const vector<Variable*>& vars);
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
     size_t rot2aaSize(int varIndex) { return rotamers2aa[varIndex].size(); }
-    char* nativeSequence = NULL;
+    string nativeSequence;
     AminoMRF* AminoMat;
     size_t PSSMlen() { return PSSM.size(); };
     float PSMBias = 0.0;
