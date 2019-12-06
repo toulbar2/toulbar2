@@ -507,6 +507,8 @@ void Cpd::computeAAbounds()
 
 void Cpd::readPSMatrix(const char* filename)
 {
+    static bool debug = false;
+
     ifstream file;
     file.open(filename);
 
@@ -514,22 +516,19 @@ void Cpd::readPSMatrix(const char* filename)
         cerr << "Could not open PSM file, aborting." << endl;
         exit(EXIT_FAILURE);
     }
-
-    string s;
     int minscore = std::numeric_limits<int>::max();
 
-    do
-        getline(file, s); //Skip comments and AA line
-    while (s[0] == '#');
-
-    for (int i = 0; i < 24; i++) {
-        file >> s; // skip AA
-        for (int j = 0; j < 24; j++) {
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
             file >> PSM[i][j];
+            if (debug)
+                cout << i << " " << j << " " << PSM[i][j] << endl;
             PSM[i][j] = -PSM[i][j];
             minscore = min(minscore, PSM[i][j]);
         }
     }
+    if (debug)
+        cout << "Neg-shifting by " << minscore << endl;
 
     // renormalize to have only penalties
     for (int i = 0; i < 24; i++)
@@ -539,10 +538,20 @@ void Cpd::readPSMatrix(const char* filename)
 
 void Cpd::fillPSMbiases(size_t varIndex, vector<Cost>& biases)
 {
-    for (char c : rotamers2aa[varIndex]) {
-        int bias = PSMBias * PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
-        biases.push_back((Cost)bias);
+    const bool debug = false;
+
+    if (debug) {
+        cout << "natbias on var " << varIndex << " ";
     }
+
+    for (char c : rotamers2aa[varIndex]) {
+        Cost bias = (Cost)powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier * PSMBias * PSM[PSMIdx.find(c)->second][PSMIdx.find(nativeSequence[varIndex])->second];
+        biases.push_back((Cost)bias);
+        if (debug)
+            cout << bias << " ";
+    }
+    if (debug)
+        cout << endl;
 }
 
 void Cpd::readPSSMatrix(const char* filename)

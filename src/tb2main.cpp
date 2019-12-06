@@ -903,7 +903,7 @@ void help_msg(char* toulbar2filename)
     cout << "----------------------------------- Protein Design ------------------------------------" << endl;
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "   --scpbranch : use SCP branching for enumeration" << endl;
-    cout << "   --bestconf : find best conformation while SCP branching is used" << endl;    
+    cout << "   --bestconf : find best conformation while SCP branching is used" << endl;
     cout << "   --mut=[pos:peptide] : restricts the domain of residues to the indicated sequence of amino-acid, starting at variable pos." << endl;
     cout << "   --psm=[filepath] : path to the protein similarity matrix file used for composition biases (default matrix is identity)." << endl;
     cout << "   --pssm=[filepath] : path to the PSSM file used for composition biases (PSIBlast format)." << endl;
@@ -2700,7 +2700,7 @@ int _tmain(int argc, TCHAR* argv[])
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
         if (globalUb <= MIN_COST) {
-            cout << "Warning: initial primal bound is not strictky positive." << endl;
+            cout << "Warning: initial primal bound is not strictly positive." << endl;
         }
 
         //TODO: If --show_options then dump ToulBar2 object here
