@@ -20,7 +20,6 @@ void tb2Initialize(bool enable_vac)
     ToulBar2::vac = enable_vac;
     ToulBar2::vacValueHeuristic = enable_vac;
     ToulBar2::weightedTightness = true;
-    // ToulBar2::verbose = 5;
     initCosts();
 }
 
@@ -112,6 +111,11 @@ long double tb2GetSolution(WeightedCSPSolver* solver, Value* solution)
     return energy;
 }
 
+void tb2Verbose(int verbose)
+{  
+  ToulBar2::verbose = verbosity;
+}
+  
 void tb2Debug(const bool debug)
 {
     ToulBar2::debug = debug;
