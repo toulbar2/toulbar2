@@ -111,7 +111,7 @@ long double tb2GetSolution(WeightedCSPSolver* solver, Value* solution)
     return energy;
 }
 
-void tb2Verbose(int verbose)
+void tb2Verbose(int verbosity)
 {  
   ToulBar2::verbose = verbosity;
 }
