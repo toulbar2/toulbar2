@@ -531,8 +531,10 @@ void Cpd::readPSMatrix(const char* filename)
         cout << "Neg-shifting by " << minscore << endl;
 
     // renormalize to have only penalties
-    for (int i = 0; i < 24; i++)
-        for (int j = 0; j < 24; j++)
+    // the indices 20, 21, 22 for Z/X/* are
+    // left to their initial zero value for now (don't care)
+    for (int i = 0; i < 20; i++)
+        for (int j = 0; j < 20; j++)
             PSM[i][j] -= minscore;
 }
 
