@@ -510,26 +510,36 @@ public:
         if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
             return true;
         if (varIndex == 0) {
-            unsigned int xindex = x->toIndex(a);
-            if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
-                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                    if (y->getCost(*iterY) == MIN_COST && getCost(a, *iterY) == MIN_COST) {
-                        supportX[xindex] = *iterY;
-                        return true;
+            assert(y->canbe(y->getSupport()));
+            assert(y->getCost(y->getSupport()) == MIN_COST);
+            if (getCost(a, y->getSupport()) > MIN_COST) {
+                x->moreThanOne = 1;
+                unsigned int xindex = x->toIndex(a);
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
+                    for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                        if (y->getCost(*iterY) == MIN_COST && getCost(a, *iterY) == MIN_COST) {
+                            supportX[xindex] = *iterY;
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
             }
         } else {
-            unsigned int yindex = y->toIndex(a);
-            if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
-                for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-                    if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {
-                        supportY[yindex] = *iterX;
-                        return true;
+            assert(x->canbe(x->getSupport()));
+            assert(x->getCost(x->getSupport()) == MIN_COST);
+            if (getCost(x->getSupport(), a) > MIN_COST) {
+                y->moreThanOne = 1;
+                unsigned int yindex = y->toIndex(a);
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
+                    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+                        if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {
+                            supportY[yindex] = *iterX;
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
             }
         }
         return true;

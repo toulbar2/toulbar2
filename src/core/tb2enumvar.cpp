@@ -415,14 +415,19 @@ bool EnumeratedVariable::isEAC(Value a)
 bool EnumeratedVariable::isEAC()
 {
     assert(canbe(support));
+    moreThanOne = 0;
+    strictACValue = support;
     if (isEAC(support))
         return true;
     else {
         for (iterator iter = begin(); iter != end(); ++iter) {
+//            moreThanOne = 0;
+//            strictACValue = support;
             if (*iter != support && isEAC(*iter))
                 return true;
         }
     }
+    moreThanOne = 1;
     return false;
 }
 

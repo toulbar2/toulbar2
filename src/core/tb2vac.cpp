@@ -366,7 +366,7 @@ bool VACExtension::propagate()
                             if (currentIndex < currentDomSize && domcost[currentIndex].value == v) {
                                 if (((VACVariable*)xi)->getVACCost(domcost[currentIndex].value) == MIN_COST) {
                                     xi->domSizeInBoolOfP += 1;
-                                    xi->strictACValueInBoolOfP = domcost[currentIndex].value;
+                                    xi->strictACValueInBoolOfP = domcost[currentIndex].value; // take the last valid value which is unique if domSizeInBoolOfP==1 (moreThanOne=0)
                                 }
                                 currentIndex++;
                             } else {
