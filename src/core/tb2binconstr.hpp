@@ -513,7 +513,7 @@ public:
             assert(y->canbe(y->getSupport()));
             assert(y->getCost(y->getSupport()) == MIN_COST);
             if (getCost(a, y->getSupport()) > MIN_COST) {
-                x->moreThanOne = 1;
+                if (ToulBar2::strictAC) x->moreThanOne = 1;
                 unsigned int xindex = x->toIndex(a);
                 if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
                     for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -529,7 +529,7 @@ public:
             assert(x->canbe(x->getSupport()));
             assert(x->getCost(x->getSupport()) == MIN_COST);
             if (getCost(x->getSupport(), a) > MIN_COST) {
-                y->moreThanOne = 1;
+                if (ToulBar2::strictAC) y->moreThanOne = 1;
                 unsigned int yindex = y->toIndex(a);
                 if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
                     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {

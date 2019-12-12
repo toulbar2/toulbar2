@@ -415,8 +415,10 @@ bool EnumeratedVariable::isEAC(Value a)
 bool EnumeratedVariable::isEAC()
 {
     assert(canbe(support));
-    moreThanOne = 0;
-    strictACValue = support;
+    if (ToulBar2::strictAC) {
+        moreThanOne = 0;
+        strictACValue = support;
+    }
     if (isEAC(support))
         return true;
     else {
@@ -427,7 +429,7 @@ bool EnumeratedVariable::isEAC()
                 return true;
         }
     }
-    moreThanOne = 1;
+    if (ToulBar2::strictAC) moreThanOne = 1;
     return false;
 }
 
