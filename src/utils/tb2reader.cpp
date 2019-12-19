@@ -3204,7 +3204,7 @@ void WCSP::read_wcnf(const char* fileName)
     string dummy, sflag;
 
     file >> sflag;
-    while (sflag == "c") {
+    while (sflag[0] == 'c') {
         getline(file, dummy);
         file >> sflag;
     }
