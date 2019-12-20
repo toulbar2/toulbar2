@@ -407,6 +407,7 @@ void GlobalConstraint::propagateNIC()
 
 bool GlobalConstraint::isEAC(int index, Value a)
 {
+    if (ToulBar2::strictAC) reviseEACGreedySolution(index, a);
     if (currentVar != index) {
         currentVar = index;
 

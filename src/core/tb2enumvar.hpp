@@ -123,6 +123,8 @@ public:
     bool isEAC() FINAL;
     void propagateEAC();
     void setCostProvidingPartition();
+    bool checkEACGreedySolution();
+    bool reviseEACGreedySolution();
 
     void eliminate() FINAL;
     bool elimVar(BinaryConstraint* xy);

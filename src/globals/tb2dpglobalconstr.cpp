@@ -180,7 +180,7 @@ void DPGlobalConstraint::propagateDAC()
 
 bool DPGlobalConstraint::isEAC(int var, Value val)
 {
-
+    if (ToulBar2::strictAC) reviseEACGreedySolution(var, val);
     for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
         EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {

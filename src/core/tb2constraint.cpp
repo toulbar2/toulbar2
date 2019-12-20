@@ -36,6 +36,36 @@ Constraint::Constraint(WCSP* w, int elimCtrIndex)
     cluster = -1;
 }
 
+bool Constraint::checkEACGreedySolution(int index, Value support)
+{
+    int a = arity();
+    String t(a, '0');
+    for (int i = 0; i < a; i++) {
+        Variable* var = getVar(i);
+        if (var->enumerated())
+            t[i] = ((EnumeratedVariable*)var)->toIndex((i==index)?support:var->getSupport()) + CHAR_FIRST;
+        else
+            t[i] = ((i==index)?support:var->getSupport()) + CHAR_FIRST;
+    }
+    return (evalsubstr(t, this) == MIN_COST);
+}
+
+bool Constraint::reviseEACGreedySolution(int index, Value support)
+{
+    bool result = checkEACGreedySolution(index, support);
+    if (!result) {
+        if (index >= 0) {
+            ((EnumeratedVariable*) getVar(index))->moreThanOne = 1;
+        } else {
+            int a = arity();
+            for (int i = 0; i < a; i++) {
+                ((EnumeratedVariable*) getVar(i))->moreThanOne = 1;
+            }
+        }
+    }
+    return result;
+}
+
 /// \return size of the cartesian product of all domains in the constraint scope.
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long Constraint::getDomainSizeProduct()

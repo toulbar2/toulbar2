@@ -187,7 +187,7 @@ protected:
     }
 
     // No need to run anything for (weak) ED(G)AC*
-    bool isEAC(int var, Value val) { return true; }
+    bool isEAC(int var, Value val) { if (ToulBar2::strictAC) reviseEACGreedySolution(var, val); return true; }
     void findFullSupportEAC(int var) {}
 
 public:

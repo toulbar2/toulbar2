@@ -26,6 +26,7 @@ protected:
 
     StoreValue inf;
     StoreValue sup;
+//    StoreInt eac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
 
     ConstraintList constrs;
     //ConstraintList triangles;

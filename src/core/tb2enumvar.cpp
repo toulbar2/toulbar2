@@ -226,9 +226,10 @@ void EnumeratedVariable::findSupport()
             projectLB(minCost);
         }
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
-        if (support != newSupport)
-            queueDEE();
+        bool supportChanged = (support != newSupport);
+        if (supportChanged) queueDEE();
         support = newSupport;
+        if (ToulBar2::strictAC && supportChanged) reviseEACGreedySolution();
     }
 }
 
@@ -321,6 +322,30 @@ void EnumeratedVariable::propagateDAC()
     }
 }
 
+bool EnumeratedVariable::checkEACGreedySolution()
+{
+    bool result = true;
+    for (ConstraintList::iterator iter = constrs.begin(); result && iter != constrs.end(); ++iter) {
+        result = result && (*iter).constr->checkEACGreedySolution();
+    }
+    return result;
+}
+
+bool EnumeratedVariable::reviseEACGreedySolution()
+{
+    bool broken = false;
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        bool result = (*iter).constr->reviseEACGreedySolution();
+        if (!result) broken = true;
+    }
+    if (!broken) {
+        moreThanOne = 0;
+    } else {
+        assert(moreThanOne == 1);
+    }
+    return (!broken);
+}
+
 void EnumeratedVariable::fillEAC2(bool self)
 {
     if (self)
@@ -396,9 +421,10 @@ bool EnumeratedVariable::isEAC(Value a)
                 return false;
             }
         }
-        if (support != a)
-            queueDEE();
+        bool supportChanged = (support != a);
+        if (supportChanged) queueDEE();
         support = a;
+        if (ToulBar2::strictAC && supportChanged) reviseEACGreedySolution();
 #ifndef NDEBUG
         if (ToulBar2::verbose >= 4)
             cout << getName() << "(" << a << ") is EAC!" << endl;
@@ -423,8 +449,10 @@ bool EnumeratedVariable::isEAC()
         return true;
     else {
         for (iterator iter = begin(); iter != end(); ++iter) {
-//            moreThanOne = 0;
-//            strictACValue = support;
+            if (ToulBar2::strictAC) {
+                moreThanOne = 0;
+                strictACValue = *iter;
+            }
             if (*iter != support && isEAC(*iter))
                 return true;
         }

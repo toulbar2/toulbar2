@@ -2563,8 +2563,19 @@ bool WCSP::verify()
         }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         // Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
+        Value oldsupport = vars[i]->getSupport();
+        int old_moreThanOne = ((EnumeratedVariable *) vars[i])->moreThanOne;
         if (ToulBar2::LcLevel == LC_EDAC && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !vars[i]->isEAC()) {
             cout << "support of variable " << vars[i]->getName() << " not EAC!" << endl;
+            return false;
+        }
+        if (oldsupport != vars[i]->getSupport()) {
+            cout << "warning! support of variable " << vars[i]->getName() << " has been changed from " << oldsupport << " to " << vars[i]->getSupport() << " when verifying itself for debugging!" << endl;
+        }
+        if (ToulBar2::strictAC && vars[i]->unassigned() && old_moreThanOne != ((EnumeratedVariable *) vars[i])->moreThanOne && old_moreThanOne == 0) {
+            if (ToulBar2::verbose >= 4) cout << endl << *this;
+            cout << endl << "check:" << ((EnumeratedVariable *) vars[i])->checkEACGreedySolution() << endl;
+            cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong strictAC status.." << endl;
             return false;
         }
     }

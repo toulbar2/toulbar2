@@ -424,6 +424,14 @@ public:
             else
                 x->queueAC();
         }
+        if (ToulBar2::strictAC) {
+            reviseEACGreedySolution();
+            for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+                if ((*iter).constr->isTernary() && (*iter).constr->getIndex(y) >= 0) {
+                    (*iter).constr->reviseEACGreedySolution(); // all ternary cost functions including this current binary cost function need to be revised
+                }
+            }
+        }
     }
     void remove(int varIndex)
     {
@@ -482,6 +490,28 @@ public:
         }
     }
 
+    bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        assert(x->canbe((getIndex(x)==index)?a:x->getSupport()));
+        assert(x->getCost((getIndex(x)==index)?a:x->getSupport()) == MIN_COST);
+        assert(y->canbe((getIndex(y)==index)?a:y->getSupport()));
+        assert(y->getCost((getIndex(y)==index)?a:y->getSupport()) == MIN_COST);
+        return (getCost((getIndex(x)==index)?a:x->getSupport(), (getIndex(y)==index)?a:y->getSupport()) == MIN_COST);
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, a);
+        if (!result) {
+            if (index >= 0) ((EnumeratedVariable *) getVar(index))->moreThanOne = 1;
+            else {
+                x->moreThanOne = 1;
+                y->moreThanOne = 1;
+            }
+        }
+        return result;
+    }
+
     void fillEAC2(int varIndex)
     {
         assert(!isDuplicate());
@@ -507,7 +537,7 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return true;
         if (varIndex == 0) {
             assert(y->canbe(y->getSupport()));
@@ -548,7 +578,7 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return;
         if (varIndex == 0)
             findFullSupportX();
