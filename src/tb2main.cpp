@@ -51,6 +51,8 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
 
+void conflict() {}
+
 #ifdef PARETOPAIR_COST
 void initCosts()
 {
@@ -2370,8 +2372,7 @@ int _tmain(int argc, TCHAR* argv[])
         else
             globalUb = solver->read_wcsp((char*)strfile.c_str());
         if (globalUb <= MIN_COST) {
-            cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-            exit(1);
+            THROWCONTRADICTION;
         }
 
         //TODO: If --show_options then dump ToulBar2 object here
