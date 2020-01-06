@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <cfenv>
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -867,6 +868,9 @@ void help_msg(char* toulbar2filename)
 
 int _tmain(int argc, TCHAR* argv[])
 {
+//#pragma STDC FENV_ACCESS ON
+    std::fesetround(FE_TONEAREST);
+
 #ifdef OPENMPI
     MPIEnv env0;
     MPI_Init(NULL, NULL);

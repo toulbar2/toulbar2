@@ -198,14 +198,24 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
         //        }
         i++;
     }
-    wcsp->assignLS(variables, values);
-    if (ToulBar2::verbose >= 0)
-        cout << " Solution cost: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "," << wcsp->getDUb() << std::setprecision(DECIMAL_POINT) << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+    bool contradiction = false;
+    try {
+        wcsp->assignLS(variables, values);
+    } catch (Contradiction) {
+        contradiction = true;
+    }
     assert(wcsp->numberOfUnassignedVariables() == 0);
-    if (ToulBar2::verifyOpt) {
-        ToulBar2::verifiedOptimum = wcsp->getLb();
+    if (contradiction) {
+        if (ToulBar2::verbose >= 0)
+            cout << " Input complete assignment " << filename << " is not a valid solution!" << endl;
     } else {
-        wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST));
+        if (ToulBar2::verbose >= 0)
+            cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+        if (ToulBar2::verifyOpt) {
+            ToulBar2::verifiedOptimum = wcsp->getLb();
+        } else {
+            wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST));
+        }
     }
     Store::restore(depth);
     if (ToulBar2::verifyOpt) {
@@ -296,7 +306,7 @@ void Solver::parse_solution(const char* certificate)
     wcsp->assignLS(variables, values);
     wcsp->propagate();
     if (ToulBar2::verbose >= 0)
-        cout << " Solution cost: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "," << wcsp->getDUb() << std::setprecision(DECIMAL_POINT) << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+        cout << " Input (partial) assignment bounds: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDLb() << "," << wcsp->getDUb() << std::setprecision(DECIMAL_POINT) << "] (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
 
     //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     //    Store::restore(depth);
