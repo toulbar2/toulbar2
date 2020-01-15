@@ -1307,7 +1307,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "clique", ":rhs:N:values:[V+]S" },
+        { "clique", ":rhs:N:values:[v+]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
