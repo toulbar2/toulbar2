@@ -93,6 +93,20 @@ public:
         }
     }
     double computeTightness() override;
+    Cost getMaxFiniteCost()
+    {
+        if (!CUT(all0, wcsp->getUb())) {
+            return all0;
+        } else {
+            return MIN_COST;
+        }
+    }
+    void setInfiniteCost(Cost ub)
+    {
+        Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
+        if (CUT(all0, ub))
+            all0 = mult_ub;
+    }
     void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; }
 
 private:
