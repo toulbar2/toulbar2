@@ -68,7 +68,8 @@ IF(NOT CMAKE_BUILD_TYPE)
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "-Wall -std=c++11" )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11" )
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
