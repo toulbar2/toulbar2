@@ -541,6 +541,9 @@ public:
                 }
             }
         }
+        if (costs.empty()) {
+            if (CUT(top, ub)) top = mult_ub;
+        }
     }
 
     pair<Value, Value> getSupport(EnumeratedVariable* var, Value v)
