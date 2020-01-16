@@ -2104,9 +2104,20 @@ void WCSP::setInfiniteCost()
     }
 }
 
+int WCSP::getMaxCurrentDomainSize() const
+{
+    int max = (vars.size()>0)?1:0;
+    for (unsigned int i = 0; i < vars.size(); i++) {
+        if (vars[i]->unassigned()) {
+            int sz = vars[i]->getDomainSize();
+            if (sz > max) max = sz;
+        }
+    }
+    return max;
+}
+
 unsigned int WCSP::getDomainSizeSum() const
 {
-    //    cout << " " << connectedComponents() << endl;
     unsigned int sum = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned())

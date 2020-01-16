@@ -357,6 +357,7 @@ public:
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
     int getMaxDomainSize() const { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
+    int getMaxCurrentDomainSize() const; ///< \brief maximum current domain size found in all variables
     unsigned int getDomainSizeSum() const; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
