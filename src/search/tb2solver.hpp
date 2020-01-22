@@ -249,6 +249,7 @@ public:
 
     virtual void newSolution();
     Cost getSolution(vector<Value>& solution);
+    vector< pair<Double, vector<Value> > > getSolutions(int number);
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
 

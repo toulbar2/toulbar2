@@ -1,0 +1,318 @@
+/** \file toulbar2py.cpp
+ *  \brief Python wrapper to toulbar2 library
+ *
+<pre>
+    Copyright (c) 2006-2020, toulbar2 team
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
+</pre>
+ */
+
+//How to manually extract interesting properties to bind in Python:
+// awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
+// awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
+
+//How to compile Python toulbar2py module library:
+// first recompile toulbar2 with shared library (ccmake option LIBTB2 on)
+// cd src
+// ln -s ../lib/Linux/libtb2.so .
+// c++ -O3 -DNDEBUG -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` -I. -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DWCSPFORMATONLY -DWIDE_STRING toulbar2py.cpp -o toulbar2py`python3-config --extension-suffix` libtb2.so
+
+//Examples using toulbar2py module from Python:
+// python -c "import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions(1))"
+// python -c "import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); tb2.option.cfn = True; tb2.option.gz = True; m.read('../validation/default/1aho.cfn.gz'); tb2.option.showSolutions = 1; tb2.check(); res = m.solve(); print(m.wcsp.getDPrimalBound()); print(res); print(m.solutions(1))"
+// python -c "import random; import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); m.wcsp.makeEnumeratedVariable('x', 0, 1); m.wcsp.makeEnumeratedVariable('y', 0, 1); m.wcsp.makeEnumeratedVariable('z', 0, 1); m.wcsp.postUnaryConstraint(0, [random.randint(0,10),random.randint(0,10)]); m.wcsp.sortConstraints(); tb2.option.showSolutions = 1; tb2.check(); res = m.solve(); print(m.wcsp.getDPrimalBound()); print(res); print(m.solutions(1));"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+//PYBIND11_MAKE_OPAQUE(std::vector<int>);
+
+namespace py = pybind11;
+
+#include "toulbar2lib.hpp"
+
+PYBIND11_MODULE(toulbar2py, m) {
+    m.def("init", [](){ tb2init(); }); // must be called at the very beginning
+    m.attr("MAX_COST") = py::cast(MAX_COST);
+    m.attr("MIN_COST") = py::cast(MIN_COST);
+
+    py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete> >(m, "option")
+        .def_readonly_static("version", &ToulBar2::version)
+        .def_readwrite_static("verbose", &ToulBar2::verbose)
+        .def_readwrite_static("debug", &ToulBar2::debug)
+        .def_readwrite_static("externalUB", &ToulBar2::externalUB)
+        .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
+        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
+        .def_readwrite_static("allSolutions", &ToulBar2::allSolutions)
+        .def_readwrite_static("dumpWCSP", &ToulBar2::dumpWCSP)
+        .def_readwrite_static("approximateCountingBTD", &ToulBar2::approximateCountingBTD)
+        .def_readwrite_static("binaryBranching", &ToulBar2::binaryBranching)
+        .def_readwrite_static("dichotomicBranching", &ToulBar2::dichotomicBranching)
+        .def_readwrite_static("dichotomicBranchingSize", &ToulBar2::dichotomicBranchingSize)
+        .def_readwrite_static("sortDomains", &ToulBar2::sortDomains)
+        .def_readwrite_static("solutionBasedPhaseSaving", &ToulBar2::solutionBasedPhaseSaving)
+        .def_readwrite_static("elimDegree", &ToulBar2::elimDegree)
+        .def_readwrite_static("elimDegree_preprocessing", &ToulBar2::elimDegree_preprocessing)
+        .def_readwrite_static("elimSpaceMaxMB", &ToulBar2::elimSpaceMaxMB)
+        .def_readwrite_static("minsumDiffusion", &ToulBar2::minsumDiffusion)
+        .def_readwrite_static("preprocessTernaryRPC", &ToulBar2::preprocessTernaryRPC)
+        .def_readwrite_static("preprocessFunctional", &ToulBar2::preprocessFunctional)
+        .def_readwrite_static("costfuncSeparate", &ToulBar2::costfuncSeparate)
+        .def_readwrite_static("preprocessNary", &ToulBar2::preprocessNary)
+        .def_readwrite_static("QueueComplexity", &ToulBar2::QueueComplexity)
+        .def_readwrite_static("Static_variable_ordering", &ToulBar2::Static_variable_ordering)
+        .def_readwrite_static("lastConflict", &ToulBar2::lastConflict)
+        .def_readwrite_static("weightedDegree", &ToulBar2::weightedDegree)
+        .def_readwrite_static("weightedTightness", &ToulBar2::weightedTightness)
+        .def_readwrite_static("MSTDAC", &ToulBar2::MSTDAC)
+        .def_readwrite_static("DEE", &ToulBar2::DEE)
+        .def_readwrite_static("DEE_", &ToulBar2::DEE_)
+        .def_readwrite_static("nbDecisionVars", &ToulBar2::nbDecisionVars)
+        .def_readwrite_static("lds", &ToulBar2::lds)
+        .def_readwrite_static("limited", &ToulBar2::limited)
+        .def_readwrite_static("restart", &ToulBar2::restart)
+        .def_readwrite_static("cfn", &ToulBar2::cfn)
+        .def_readwrite_static("gz", &ToulBar2::gz)
+        .def_readwrite_static("xz", &ToulBar2::xz)
+        .def_readwrite_static("bayesian", &ToulBar2::bayesian)
+        .def_readwrite_static("uai", &ToulBar2::uai)
+        .def_readwrite_static("resolution", &ToulBar2::resolution)
+        .def_readwrite_static("errorg", &ToulBar2::errorg)
+        .def_readwrite_static("NormFactor", &ToulBar2::NormFactor)
+        .def_readwrite_static("vac", &ToulBar2::vac)
+        .def_readwrite_static("costThresholdS", &ToulBar2::costThresholdS)
+        .def_readwrite_static("costThresholdPreS", &ToulBar2::costThresholdPreS)
+        .def_readwrite_static("costThreshold", &ToulBar2::costThreshold)
+        .def_readwrite_static("costThresholdPre", &ToulBar2::costThresholdPre)
+        .def_readwrite_static("trwsAccuracy", &ToulBar2::trwsAccuracy)
+        .def_readwrite_static("trwsOrder", &ToulBar2::trwsOrder)
+        .def_readwrite_static("trwsNIter", &ToulBar2::trwsNIter)
+        .def_readwrite_static("trwsNIterNoChange", &ToulBar2::trwsNIterNoChange)
+        .def_readwrite_static("trwsNIterComputeUb", &ToulBar2::trwsNIterComputeUb)
+        .def_readwrite_static("costMultiplier", &ToulBar2::costMultiplier)
+        .def_readwrite_static("decimalPoint", &ToulBar2::decimalPoint)
+        .def_readwrite_static("deltaUbS", &ToulBar2::deltaUbS)
+        .def_readwrite_static("deltaUb", &ToulBar2::deltaUb)
+        .def_readwrite_static("singletonConsistency", &ToulBar2::singletonConsistency)
+        .def_readwrite_static("vacValueHeuristic", &ToulBar2::vacValueHeuristic)
+        .def_readwrite_static("LcLevel", (int *) &ToulBar2::LcLevel)
+        .def_readwrite_static("wcnf", &ToulBar2::wcnf)
+        .def_readwrite_static("qpbo", &ToulBar2::qpbo)
+        .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
+        .def_readwrite_static("varOrder", &ToulBar2::varOrder)
+        .def_readwrite_static("btdMode", &ToulBar2::btdMode)
+        .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
+        .def_readwrite_static("btdRootCluster", &ToulBar2::btdRootCluster)
+        .def_readwrite_static("maxsateval", &ToulBar2::maxsateval)
+        .def_readwrite_static("xmlflag", &ToulBar2::xmlflag)
+        .def_readwrite_static("markov_log", &ToulBar2::markov_log)
+        .def_readwrite_static("evidence_file", &ToulBar2::evidence_file)
+        .def_readwrite_static("solution_uai_filename", &ToulBar2::solution_uai_filename)
+        .def_readwrite_static("problemsaved_filename", &ToulBar2::problemsaved_filename)
+        .def_readwrite_static("isZ", &ToulBar2::isZ)
+        .def_readwrite_static("logZ", &ToulBar2::logZ)
+        .def_readwrite_static("logU", &ToulBar2::logU)
+        .def_readwrite_static("logepsilon", &ToulBar2::logepsilon)
+        .def_readwrite_static("uaieval", &ToulBar2::uaieval)
+        .def_readwrite_static("stdin_format", &ToulBar2::stdin_format)
+        .def_readwrite_static("startCpuTime", &ToulBar2::startCpuTime)
+        .def_readwrite_static("splitClusterMaxSize", &ToulBar2::splitClusterMaxSize)
+        .def_readwrite_static("boostingBTD", &ToulBar2::boostingBTD)
+        .def_readwrite_static("maxSeparatorSize", &ToulBar2::maxSeparatorSize)
+        .def_readwrite_static("minProperVarSize", &ToulBar2::minProperVarSize)
+        .def_readwrite_static("smallSeparatorSize", &ToulBar2::smallSeparatorSize)
+        .def_readwrite_static("Berge_Dec", &ToulBar2::Berge_Dec)
+        .def_readwrite_static("nbvar", &ToulBar2::nbvar)
+        .def_readwrite_static("learning", &ToulBar2::learning)
+        .def_readwrite_static("interrupted", &ToulBar2::interrupted)
+        .def_readwrite_static("seed", &ToulBar2::seed)
+        .def_readwrite_static("incop_cmd", &ToulBar2::incop_cmd)
+        .def_readwrite_static("searchMethod", (int *) &ToulBar2::searchMethod)
+        .def_readwrite_static("clusterFile", &ToulBar2::clusterFile)
+        .def_readwrite_static("vnsInitSol", (int *) &ToulBar2::vnsInitSol)
+        .def_readwrite_static("vnsLDSmin", &ToulBar2::vnsLDSmin)
+        .def_readwrite_static("vnsLDSmax", &ToulBar2::vnsLDSmax)
+        .def_readwrite_static("vnsLDSinc", (int *) &ToulBar2::vnsLDSinc)
+        .def_readwrite_static("vnsKmin", &ToulBar2::vnsKmin)
+        .def_readwrite_static("vnsKmax", &ToulBar2::vnsKmax)
+        .def_readwrite_static("vnsKinc", (int *) &ToulBar2::vnsKinc)
+        .def_readwrite_static("vnsLDScur", &ToulBar2::vnsLDScur)
+        .def_readwrite_static("vnsKcur", &ToulBar2::vnsKcur)
+        .def_readwrite_static("vnsNeighborVarHeur", (int *) &ToulBar2::vnsNeighborVarHeur)
+        .def_readwrite_static("vnsNeighborChange", &ToulBar2::vnsNeighborChange)
+        .def_readwrite_static("vnsNeighborSizeSync", &ToulBar2::vnsNeighborSizeSync)
+        .def_readwrite_static("vnsParallelLimit", &ToulBar2::vnsParallelLimit)
+        .def_readwrite_static("vnsParallelSync", &ToulBar2::vnsParallelSync)
+        .def_readwrite_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
+        .def_readwrite_static("vnsOptimum", &ToulBar2::vnsOptimum)
+        .def_readwrite_static("vnsParallel", &ToulBar2::vnsParallel)
+        .def_readwrite_static("hbfs", &ToulBar2::hbfs)
+        .def_readwrite_static("hbfsGlobalLimit", &ToulBar2::hbfsGlobalLimit)
+        .def_readwrite_static("hbfsAlpha", &ToulBar2::hbfsAlpha)
+        .def_readwrite_static("hbfsBeta", &ToulBar2::hbfsBeta)
+        .def_readwrite_static("hbfsCPLimit", &ToulBar2::hbfsCPLimit)
+        .def_readwrite_static("hbfsOpenNodeLimit", &ToulBar2::hbfsOpenNodeLimit)
+        .def_readwrite_static("verifyOpt", &ToulBar2::verifyOpt)
+        .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum);
+    m.def("check", &tb2checkOptions); // should be called after setting the options
+
+    py::class_<WeightedCSP>(m, "WCSP")
+//        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
+        .def("getIndex", &WeightedCSP::getIndex)
+        .def("getName", (string (WeightedCSP::*)() const) &WeightedCSP::getName)
+        .def("getLb", &WeightedCSP::getLb)
+        .def("getUb", &WeightedCSP::getUb)
+        .def("getDPrimalBound", &WeightedCSP::getDPrimalBound)
+        .def("getDDualBound", &WeightedCSP::getDDualBound)
+        .def("getDLb", &WeightedCSP::getDLb)
+        .def("getDUb", &WeightedCSP::getDUb)
+        .def("updateUb", &WeightedCSP::updateUb)
+        .def("enforceUb", &WeightedCSP::enforceUb)
+        .def("increaseLb", &WeightedCSP::increaseLb)
+        .def("finiteUb", &WeightedCSP::finiteUb)
+        .def("setInfiniteCost", &WeightedCSP::setInfiniteCost)
+        .def("enumerated", &WeightedCSP::enumerated)
+        .def("getName", (string (WeightedCSP::*)(int) const) &WeightedCSP::getName)
+        .def("getInf", &WeightedCSP::getInf)
+        .def("getSup", &WeightedCSP::getSup)
+        .def("getValue", &WeightedCSP::getValue)
+        .def("getDomainSize", &WeightedCSP::getDomainSize)
+        .def("getEnumDomain", &WeightedCSP::getEnumDomain)
+        .def("getEnumDomainAndCost", &WeightedCSP::getEnumDomainAndCost)
+        .def("getDomainInitSize", &WeightedCSP::getDomainInitSize)
+        .def("toValue", &WeightedCSP::toValue)
+        .def("toIndex", &WeightedCSP::toIndex)
+        .def("getDACOrder", &WeightedCSP::getDACOrder)
+        .def("assigned", &WeightedCSP::assigned)
+        .def("unassigned", &WeightedCSP::unassigned)
+        .def("canbe", &WeightedCSP::canbe)
+        .def("cannotbe", &WeightedCSP::cannotbe)
+        .def("nextValue", &WeightedCSP::nextValue)
+        .def("increase", &WeightedCSP::increase)
+        .def("decrease", &WeightedCSP::decrease)
+        .def("assign", &WeightedCSP::assign)
+        .def("remove", &WeightedCSP::remove)
+        .def("assignLS", (void (WeightedCSP::*)(vector<int>& varIndexes, vector<Value>& newValues)) &WeightedCSP::assignLS)
+        .def("getUnaryCost", &WeightedCSP::getUnaryCost)
+        .def("getMaxUnaryCost", &WeightedCSP::getMaxUnaryCost)
+        .def("getMaxUnaryCostValue", &WeightedCSP::getMaxUnaryCostValue)
+        .def("getSupport", &WeightedCSP::getSupport)
+        .def("getBestValue", &WeightedCSP::getBestValue)
+        .def("setBestValue", &WeightedCSP::setBestValue)
+        .def("getIsPartOfOptimalSolution", &WeightedCSP::getIsPartOfOptimalSolution)
+        .def("setIsPartOfOptimalSolution", &WeightedCSP::setIsPartOfOptimalSolution)
+        .def("getDegree", &WeightedCSP::getDegree)
+        .def("getTrueDegree", &WeightedCSP::getTrueDegree)
+        .def("getWeightedDegree", &WeightedCSP::getWeightedDegree)
+        .def("resetWeightedDegree", &WeightedCSP::resetWeightedDegree)
+        .def("preprocessing", &WeightedCSP::preprocessing)
+        .def("sortConstraints", &WeightedCSP::sortConstraints) // must be called after creating the model
+        .def("whenContradiction", &WeightedCSP::whenContradiction)
+        .def("propagate", &WeightedCSP::propagate)
+        .def("verify", &WeightedCSP::verify)
+        .def("numberOfVariables", &WeightedCSP::numberOfVariables)
+        .def("numberOfUnassignedVariables", &WeightedCSP::numberOfUnassignedVariables)
+        .def("numberOfConstraints", &WeightedCSP::numberOfConstraints)
+        .def("numberOfConnectedConstraints", &WeightedCSP::numberOfConnectedConstraints)
+        .def("numberOfConnectedBinaryConstraints", &WeightedCSP::numberOfConnectedBinaryConstraints)
+        .def("medianDomainSize", &WeightedCSP::medianDomainSize)
+        .def("medianDegree", &WeightedCSP::medianDegree)
+        .def("getMaxDomainSize", &WeightedCSP::getMaxDomainSize)
+        .def("getMaxCurrentDomainSize", &WeightedCSP::getMaxCurrentDomainSize)
+        .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
+        .def("cartProd", &WeightedCSP::cartProd)
+        .def("getNbDEE", &WeightedCSP::getNbDEE)
+        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) &WeightedCSP::makeEnumeratedVariable)
+        .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
+        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Cost>& costs)) &WeightedCSP::postUnaryConstraint)
+        .def("postBinaryConstraint", &WeightedCSP::postBinaryConstraint)
+        .def("postTernaryConstraint", &WeightedCSP::postTernaryConstraint)
+        .def("postNaryConstraintBegin", &WeightedCSP::postNaryConstraintBegin)
+        .def("postNaryConstraintTuple", &WeightedCSP::postNaryConstraintTuple)
+        .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
+        .def("postSupxyc", &WeightedCSP::postSupxyc)
+        .def("postDisjunction", &WeightedCSP::postDisjunction)
+        .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
+        .def("postCliqueConstraint", &WeightedCSP::postCliqueConstraint)
+        .def("postWAmong", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) &WeightedCSP::postWAmong)
+        .def("postWVarAmong", &WeightedCSP::postWVarAmong)
+//        .def("postWRegular", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObj<int>>& initial_States, const vector<WeightedObj<int>>& accepting_States, const vector<DFATransition>& Wtransitions)) &WeightedCSP::postWRegular)
+        .def("postWAllDiff", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWAllDiff)
+        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObj<Value>>& values)) &WeightedCSP::postWGcc)
+        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
+        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
+        .def("postWGrammarCNF", &WeightedCSP::postWGrammarCNF)
+        .def("postMST", &WeightedCSP::postMST)
+        .def("postMaxWeight", &WeightedCSP::postMaxWeight)
+        .def("postWSum", &WeightedCSP::postWSum)
+        .def("postWVarSum", &WeightedCSP::postWVarSum)
+        .def("postWOverlap", &WeightedCSP::postWOverlap)
+        .def("getListSuccessors", &WeightedCSP::getListSuccessors)
+        .def("isGlobal", &WeightedCSP::isGlobal)
+        .def("read_wcsp", &WeightedCSP::read_wcsp)
+        .def("read_uai", &WeightedCSP::read_uai2008)
+        .def("read_random", &WeightedCSP::read_random)
+        .def("read_wcnf", &WeightedCSP::read_wcnf)
+        .def("read_qpbo", &WeightedCSP::read_qpbo)
+        .def("getSolutionCost", &WeightedCSP::getSolutionCost)
+        .def("getSolution", &WeightedCSP::getSolution)
+        .def("setSolution", &WeightedCSP::setSolution)
+        .def("printSolution", (void (WeightedCSP::*)(ostream& )) &WeightedCSP::printSolution)
+        .def("print", &WeightedCSP::print)
+        .def("dump", &WeightedCSP::dump)
+        .def("decimalToCost", &WeightedCSP::decimalToCost)
+        .def("Cost2ADCost", &WeightedCSP::Cost2ADCost) // translate internal WCSP cost value to original problem real cost value (CFN)
+        .def("Cost2RDCost", &WeightedCSP::Cost2RDCost)
+        .def("Prob2Cost", &WeightedCSP::Prob2Cost)
+        .def("Cost2Prob", &WeightedCSP::Cost2Prob)
+        .def("Cost2LogProb", &WeightedCSP::Cost2LogProb)
+        .def("LogProb2Cost", &WeightedCSP::LogProb2Cost)
+        .def("LogSumExp", (Cost (WeightedCSP::*)(Cost c1, Cost c2) const) &WeightedCSP::LogSumExp)
+        .def("LogSumExp", (TLogProb (WeightedCSP::*)(TLogProb logc1, Cost c2) const) &WeightedCSP::LogSumExp)
+        .def("LogSumExp", (TLogProb (WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) &WeightedCSP::LogSumExp);
+
+    py::class_<WeightedCSPSolver>(m, "Solver")
+        .def(py::init([](Cost ub) { initCosts(); return WeightedCSPSolver::makeWeightedCSPSolver(ub); }), py::arg("ub") = MAX_COST)
+        .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
+        .def("read", &WeightedCSPSolver::read_wcsp)
+        .def("solve", &WeightedCSPSolver::solve)
+        .def("solutions", &WeightedCSPSolver::getSolutions)
+        .def("getNbNodes", &WeightedCSPSolver::getNbNodes)
+        .def("getNbBacktracks", &WeightedCSPSolver::getNbBacktracks)
+        .def("increase", &WeightedCSPSolver::increase)
+        .def("decrease", &WeightedCSPSolver::decrease)
+        .def("assign", &WeightedCSPSolver::assign)
+        .def("remove", &WeightedCSPSolver::remove)
+        .def("create_random", &WeightedCSPSolver::read_random)
+        .def("narycsp", &WeightedCSPSolver::narycsp)
+        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
+        .def("dump_wcsp", &WeightedCSPSolver::dump_wcsp)
+        .def("read_solution", &WeightedCSPSolver::read_solution)
+        .def("parse_solution", &WeightedCSPSolver::parse_solution);
+}
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */
