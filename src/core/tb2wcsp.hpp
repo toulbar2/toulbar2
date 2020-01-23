@@ -44,6 +44,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<Variable*> vars; ///< list of all variables
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
+    vector< pair<Double, vector<Value> > > solutions; ///< remember all solutions found
     Cost solutionCost; ///< and its cost
     vector<Constraint*> constrs; ///< list of original cost functions
     int NCBucketSize; ///< number of buckets for NC bucket sort
@@ -452,6 +453,7 @@ public:
             *cost_ptr = solutionCost;
         return solution;
     }
+    const vector< pair<Double, vector<Value> > >& getSolutions() {return solutions;}
     void setSolution(Cost cost, TAssign* sol = NULL)
     {
         solutionCost = cost;
@@ -461,6 +463,7 @@ public:
                 setBestValue(i, v);
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
+        solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
     }
     void printSolution()
     {

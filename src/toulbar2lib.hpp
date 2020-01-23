@@ -370,6 +370,7 @@ public:
     virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value>& getSolution(Cost* cost_ptr = NULL) = 0; ///< \brief returns current best solution and its cost
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
+    virtual const vector< pair<Double, vector<Value> > >& getSolutions() = 0; ///\brief returns all solutions found
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
     virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
     virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
@@ -523,7 +524,7 @@ public:
     virtual void parse_solution(const char* certificate) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
     virtual Cost getSolution(vector<Value>& solution) = 0; ///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual vector< pair<Double, vector<Value> > > getSolutions(int number) = 0; ///< \brief after solving the problem, return best solution founds with their corresponding value
+    virtual const vector< pair<Double, vector<Value> > > &getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM

@@ -329,18 +329,6 @@ Cost Solver::getSolution(vector<Value>& solution)
     return cost;
 }
 
-vector< pair<Double, vector<Value> > > Solver::getSolutions(int number)
-{
-    Cost cost = MAX_COST;
-    vector<Value> sol = wcsp->getSolution(&cost);
-    assert(sol.size() == wcsp->numberOfVariables());
-    vector< pair<Double, vector<Value> > > res;
-    if (number >= 1 && cost < MAX_COST) {
-        res.push_back(make_pair(wcsp->Cost2ADCost(cost), sol));
-    }
-    return res;
-}
-
 set<int> Solver::getUnassignedVars() const
 {
     set<int> res;
