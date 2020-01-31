@@ -113,8 +113,10 @@ public:
     virtual Value getSup(int varIndex) const = 0; ///< \brief maximum current domain value
     virtual Value getValue(int varIndex) const = 0; ///< \brief current assigned value \warning undefined if not assigned yet
     virtual unsigned int getDomainSize(int varIndex) const = 0; ///< \brief current domain size
-    virtual bool getEnumDomain(int varIndex, Value* array) = 0; ///< \brief gets current domain values in an array
-    virtual bool getEnumDomainAndCost(int varIndex, ValueCost* array) = 0; ///< \brief gets current domain values and unary costs in an array
+    virtual vector<Value> getEnumDomain(int varIndex) = 0; ///< \brief gets current domain values in an array
+    virtual bool getEnumDomain(int varIndex, Value* array) = 0; ///< \deprecated
+    virtual vector< pair<Value, Cost> > getEnumDomainAndCost(int varIndex) = 0; ///< \brief gets current domain values and unary costs in an array
+    virtual bool getEnumDomainAndCost(int varIndex, ValueCost* array) = 0; ///< \deprecated
     virtual unsigned int getDomainInitSize(int varIndex) const = 0; ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) = 0; ///< \brief gets value from index (warning! assumes EnumeratedVariable)
     virtual unsigned int toIndex(int varIndex, Value value) = 0; ///< \brief gets index from value (warning! assumes EnumeratedVariable)
@@ -217,8 +219,10 @@ public:
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
-    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
-    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0;
+    virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) = 0; /// \deprecated
+    virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
+    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; /// \deprecated
     virtual void postNaryConstraintEnd(int ctrindex) = 0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value* d, int dsize, Cost penalty) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) = 0;
@@ -367,10 +371,12 @@ public:
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
 
+    virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual const Double getSolutionValue() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
-    virtual const vector<Value>& getSolution(Cost* cost_ptr = NULL) = 0; ///< \brief returns current best solution and its cost
+    virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
+    virtual const vector< pair<Double, vector<Value> > > getSolutions() = 0; ///\brief returns all solutions found
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
-    virtual const vector< pair<Double, vector<Value> > >& getSolutions() = 0; ///\brief returns all solutions found
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
     virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
     virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
@@ -523,8 +529,11 @@ public:
     virtual void read_solution(const char* fileName, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a file
     virtual void parse_solution(const char* certificate) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
-    virtual Cost getSolution(vector<Value>& solution) = 0; ///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const vector< pair<Double, vector<Value> > > &getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
+    virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual const Double getSolutionValue() = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual const Cost getSolutionCost() = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual const Cost getSolution(vector<Value>& solution) = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual const vector< pair<Double, vector<Value> > > getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM

@@ -248,8 +248,11 @@ public:
     void parse_solution(const char* certificate);
 
     virtual void newSolution();
-    Cost getSolution(vector<Value>& solution);
-    const vector< pair<Double, vector<Value> > >& getSolutions() {return wcsp->getSolutions();}
+    const vector<Value> getSolution() {return wcsp->getSolution();}
+    const Double getSolutionValue() {return wcsp->getSolutionValue();}
+    const Cost getSolutionCost() {return wcsp->getSolutionCost();}
+    const Cost getSolution(vector<Value> &solution) {Cost cost = MAX_COST; solution = wcsp->getSolution(&cost); return cost;}
+    const vector< pair<Double, vector<Value> > > getSolutions() {return wcsp->getSolutions();}
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
 
@@ -262,8 +265,9 @@ public:
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
-            cout << "... limit on the number of backtracks reached!" << endl;
+            cout << what() << endl;
     }
+    const char * what() const {return "... limit on the number of backtracks reached!";}
 };
 
 class NbSolutionsOut {
@@ -272,8 +276,9 @@ public:
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
-            cout << "... limit on the number of solutions reached!" << endl;
+            cout << what() << endl;
     }
+    const char * what() const {return "... limit on the number of solutions reached!";}
 };
 
 class TimeOut {
@@ -282,8 +287,9 @@ public:
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
-            cout << "... time limit reached!" << endl;
+            cout << what() << endl;
     }
+    const char * what() const {return "... time limit reached!";}
 };
 
 int solveSymMax2SAT(int n, int m, int* posx, int* posy, double* cost, int* sol);

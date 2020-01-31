@@ -211,7 +211,9 @@ public:
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
     Value getValue(int varIndex) const { return vars[varIndex]->getValue(); } ///< \brief current assigned value \warning undefined if not assigned yet
     unsigned int getDomainSize(int varIndex) const { return vars[varIndex]->getDomainSize(); } ///< \brief current domain size
+    vector<Value> getEnumDomain(int varIndex) { vector<Value> array(getDomainSize(varIndex)); assert(enumerated(varIndex)); getEnumDomain(varIndex, array.data()); return array; }
     bool getEnumDomain(int varIndex, Value* array);
+    vector< pair<Value, Cost> > getEnumDomainAndCost(int varIndex) { vector< pair<Value, Cost> > array(getDomainSize(varIndex)); assert(enumerated(varIndex)); getEnumDomainAndCost(varIndex, (ValueCost *) array.data()); return array; }
     bool getEnumDomainAndCost(int varIndex, ValueCost* array);
     unsigned int getDomainInitSize(int varIndex) const
     {
@@ -394,7 +396,9 @@ public:
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
+    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples); }
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
+    void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
@@ -446,14 +450,16 @@ public:
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format
     void solution_UAI(Cost res); ///< \brief output solution in UAI 2008 output format
 
+    const vector<Value> getSolution() {return solution;}
+    const Double getSolutionValue() {return Cost2ADCost(solutionCost);}
     const Cost getSolutionCost() {return solutionCost;}
-    const vector<Value>& getSolution(Cost* cost_ptr)
+    const vector<Value> getSolution(Cost* cost_ptr)
     {
         if (cost_ptr != NULL)
             *cost_ptr = solutionCost;
         return solution;
     }
-    const vector< pair<Double, vector<Value> > >& getSolutions() {return solutions;}
+    const vector< pair<Double, vector<Value> > > getSolutions() {return solutions;}
     void setSolution(Cost cost, TAssign* sol = NULL)
     {
         solutionCost = cost;

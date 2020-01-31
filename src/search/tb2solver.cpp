@@ -319,16 +319,6 @@ void Solver::dump_wcsp(const char* fileName, bool original)
         wcsp->dump(pb, original);
 }
 
-Cost Solver::getSolution(vector<Value>& solution)
-{
-    Cost cost = MAX_COST;
-    vector<Value> sol = wcsp->getSolution(&cost);
-    assert(sol.size() == wcsp->numberOfVariables());
-    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
-        solution.push_back(sol[i]);
-    return cost;
-}
-
 set<int> Solver::getUnassignedVars() const
 {
     set<int> res;
@@ -1585,6 +1575,7 @@ Cost Solver::beginSolve(Cost ub)
     nbNodes = 0;
     lastConflictVar = -1;
     tailleSep = 0;
+    ToulBar2::limited = false;
 
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
@@ -1705,6 +1696,7 @@ bool Solver::solve()
     Cost initialUpperBound = wcsp->getUb();
 
     //        Store::store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
+    int initdepth = Store::getDepth();
     try {
         try {
             initialUpperBound = preprocessing(initialUpperBound);
@@ -1897,6 +1889,7 @@ bool Solver::solve()
         }
     } catch (NbSolutionsOut) {
     }
+    Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()
     endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
     return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getSolutionCost() < initialUpperBound);
@@ -2092,9 +2085,10 @@ bool Solver::solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, 
 
     bool res = solve();
     if (res) {
-        assert(getWCSP()->getSolution().size() == getWCSP()->numberOfVariables());
+        vector<Value> solution = getSolution();
+        assert(solution.size() == getWCSP()->numberOfVariables());
         for (unsigned int i = 0; i < getWCSP()->numberOfVariables(); i++) {
-            if (getWCSP()->getSolution()[i] == 0) {
+            if (solution[i] == 0) {
                 sol[i] = 1;
             } else {
                 sol[i] = -1;
