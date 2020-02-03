@@ -2184,7 +2184,6 @@ Cost WCSP::read_wcsp(const char* fileName)
     file >> top;
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << pbname << endl;
-    ToulBar2::nbvar = nbvar;
 
     assert(vars.empty());
     assert(constrs.empty());
@@ -2667,7 +2666,6 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 {
     naryRandom randwcsp(this, seed);
     randwcsp.Input(n, m, p, forceSubModular, globalname);
-    ToulBar2::nbvar = n;
 
     unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
@@ -2755,7 +2753,6 @@ void WCSP::read_uai2008(const char* fileName)
     //bool bayes = uaitype == string("BAYES");
 
     file >> nbvar;
-    ToulBar2::nbvar = nbvar;
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
@@ -3217,7 +3214,6 @@ void WCSP::read_wcnf(const char* fileName)
     Cost top;
     file >> format;
     file >> nbvar;
-    ToulBar2::nbvar = nbvar;
     file >> nbclauses;
     if (format == "wcnf") {
         getline(file, strtop);
@@ -3441,7 +3437,6 @@ void WCSP::read_qpbo(const char* fileName)
     m = e;
 
     // create Boolean variables
-    ToulBar2::nbvar = n;
     for (int i = 0; i < n; i++) {
         makeEnumeratedVariable(to_string(i), 0, 1);
     }

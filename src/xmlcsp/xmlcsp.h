@@ -147,7 +147,7 @@ public:
         nvars++;
     }
 
-    virtual void endVariablesSection() { ToulBar2::nbvar = nvars; }
+    virtual void endVariablesSection() {}
     virtual void beginRelationsSection(int nbRelations) {}
 
     virtual void beginRelation(const string& name, int idRel,

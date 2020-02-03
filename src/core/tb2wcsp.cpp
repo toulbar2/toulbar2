@@ -166,7 +166,6 @@ TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
 int ToulBar2::Berge_Dec = 0; // berge decomposition flag  > 0 if wregular found in the problem
-int ToulBar2::nbvar = 0; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
 bool ToulBar2::interrupted;
@@ -327,7 +326,6 @@ void tb2init()
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
     ToulBar2::Berge_Dec = 0;
-    ToulBar2::nbvar = 0;
 
     ToulBar2::timeOut = NULL;
     ToulBar2::interrupted = false;
@@ -1628,13 +1626,13 @@ void WCSP::sortConstraints()
         //	}
 
         //Mark native variable
-        for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : ToulBar2::nbvar) - 1; i >= 0; i--) {
-            if (!marked[i]) {
+        for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : numberOfVariables()) - 1; i >= 0; i--) {
+            if (!marked[i] && getName(i)[0] != IMPLICIT_VAR_TAG) {
                 visit(i, revdac, marked, listofsuccessors);
             }
         }
         //Mark q variable only
-        for (int i = numberOfVariables() - 1; i > ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : ToulBar2::nbvar) - 1; i--) {
+        for (int i = numberOfVariables() - 1; i >= 0; i--) {
             if (!marked[i]) {
                 visit(i, revdac, marked, listofsuccessors);
             }

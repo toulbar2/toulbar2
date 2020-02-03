@@ -336,7 +336,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
     int k = kinit;
     //cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
     //cout << env0.myrank <<" slave 1" << endl ;
-    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
+    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< wcsp->numberOfVariables() << "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
     for (; k <= kmax && k <= unassignedVars->getSize() && ToulBar2::vnsOptimum < bestUb;) {
         //neighborhood and partial instantiation
         //cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;

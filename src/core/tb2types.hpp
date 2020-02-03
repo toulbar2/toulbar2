@@ -34,6 +34,9 @@
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
 
+/// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
+const char IMPLICIT_VAR_TAG = '#';
+
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
