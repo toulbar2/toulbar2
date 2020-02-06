@@ -223,6 +223,8 @@ enum {
     NO_OPT_lds,
     OPT_restart,
     NO_OPT_restart,
+    OPT_btlimit,
+    NO_OPT_btlimit,
     OPT_hbfs,
     NO_OPT_hbfs,
     OPT_open,
@@ -419,6 +421,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_lds, (char*)"-l:", SO_NONE },
     { OPT_restart, (char*)"-L", SO_OPT },
     { NO_OPT_restart, (char*)"-L:", SO_NONE },
+    { OPT_btlimit, (char*)"-bt", SO_OPT },
+    { NO_OPT_btlimit, (char*)"-bt:", SO_NONE },
     { OPT_hbfs, (char*)"-hbfs", SO_OPT },
     { OPT_hbfs, (char*)"-bfs", SO_OPT },
     { NO_OPT_hbfs, (char*)"-hbfs:", SO_NONE },
@@ -695,6 +699,7 @@ void help_msg(char* toulbar2filename)
 #ifdef LINUX
     cout << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
+    cout << "   -bt=[integer] : limit on the number of backtracks (" << ToulBar2::backtrackLimit << " by default)" << endl;
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
     cout << "   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
@@ -1633,6 +1638,25 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "restart OFF" << endl;
                 ToulBar2::restart = -1;
+            }
+
+            // backtrack limit option
+            if (args.OptionId() == OPT_btlimit) {
+                string comment;
+                if (args.OptionArg() == NULL) {
+                    comment = " (default value) ";
+                    ToulBar2::backtrackLimit = maxrestarts;
+                } else {
+                    Long maxbt = atoll(args.OptionArg());
+                    if (maxbt >= 0)
+                        ToulBar2::backtrackLimit = maxbt;
+                }
+                if (ToulBar2::debug)
+                    cout << "backtrack limit ON #bt = " << ToulBar2::backtrackLimit << comment << endl;
+            } else if (args.OptionId() == NO_OPT_btlimit) {
+                if (ToulBar2::debug)
+                    cout << "backtrack limit OFF" << endl;
+                ToulBar2::backtrackLimit = LONGLONG_MAX;
             }
 
             // hybrid BFS option

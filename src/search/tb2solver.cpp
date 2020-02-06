@@ -884,7 +884,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
     Store::restore();
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -963,7 +963,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
         Store::restore();
         enforceUb();
         nbBacktracks++;
-        if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+        if (nbBacktracks > nbBacktracksLimit)
             throw NbBacktracksOut();
 #ifdef OPENMPI
         if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1047,7 +1047,7 @@ void Solver::scheduleOrPostpone(int varIndex)
     Store::restore();
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1083,7 +1083,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
     //delete [] sorted;
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1116,7 +1116,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     //delete [] sorted;
     enforceUb();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -1572,6 +1572,7 @@ Cost Solver::beginSolve(Cost ub)
     }
 
     nbBacktracks = 0;
+    nbBacktracksLimit = ToulBar2::backtrackLimit;
     nbNodes = 0;
     lastConflictVar = -1;
     tailleSep = 0;
@@ -1726,7 +1727,7 @@ bool Solver::solve()
                     }
                     //			if (!(wcsp->getUb() < upperbound) && nbNodes >= ToulBar2::restart) {
                     if (nbNodes >= ToulBar2::restart) {
-                        nbBacktracksLimit = LONGLONG_MAX;
+                        nbBacktracksLimit = ToulBar2::backtrackLimit;
                         ToulBar2::restart = 0;
                         if (ToulBar2::verbose >= 0)
                             cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
@@ -1745,7 +1746,7 @@ bool Solver::solve()
                             }
                         }
                     } else {
-                        nbBacktracksLimit = nbBacktracks + currentNbBacktracksLimit * 100;
+                        nbBacktracksLimit = min(ToulBar2::backtrackLimit , nbBacktracks + currentNbBacktracksLimit * 100);
                         if (ToulBar2::verbose >= 0)
                             cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
                     }
@@ -1879,6 +1880,7 @@ bool Solver::solve()
                         }
                     }
                 } catch (NbBacktracksOut) {
+                    if (nbBacktracks > ToulBar2::backtrackLimit) throw NbBacktracksOut();
                     nbbacktracksout = true;
                     ToulBar2::limited = false;
                 }
@@ -1887,7 +1889,7 @@ bool Solver::solve()
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-    } catch (NbSolutionsOut) {
+    } catch (SolverOut) {
     }
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()

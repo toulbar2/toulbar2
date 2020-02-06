@@ -77,6 +77,7 @@ bool ToulBar2::solutionBasedPhaseSaving;
 int ToulBar2::lds;
 bool ToulBar2::limited;
 Long ToulBar2::restart;
+Long ToulBar2::backtrackLimit;
 bool ToulBar2::generation;
 int ToulBar2::minsumDiffusion;
 bool ToulBar2::Static_variable_ordering;
@@ -245,6 +246,7 @@ void tb2init()
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
     ToulBar2::restart = -1;
+    ToulBar2::backtrackLimit = LONGLONG_MAX;
     ToulBar2::generation = false;
     ToulBar2::minsumDiffusion = 0;
     ToulBar2::Static_variable_ordering = false;

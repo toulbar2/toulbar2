@@ -408,6 +408,7 @@ public:
     static int lds;
     static bool limited;
     static Long restart;
+    static Long backtrackLimit;
     static externalevent setvalue;
     static externalevent setmin;
     static externalevent setmax;

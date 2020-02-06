@@ -259,37 +259,30 @@ public:
     WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
 
-class NbBacktracksOut {
+class SolverOut : public exception {
 public:
-    NbBacktracksOut()
+    SolverOut()
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
             cout << what() << endl;
     }
-    const char * what() const {return "... limit on the number of backtracks reached!";}
+    virtual const char * what() const throw() {return "... some solver limit was reached!";}
 };
 
-class NbSolutionsOut {
+class NbBacktracksOut : public SolverOut {
 public:
-    NbSolutionsOut()
-    {
-        ToulBar2::limited = true;
-        if (ToulBar2::verbose >= 2)
-            cout << what() << endl;
-    }
-    const char * what() const {return "... limit on the number of solutions reached!";}
+    const char * what() const throw() FINAL {return "... limit on the number of backtracks reached!";}
 };
 
-class TimeOut {
+class NbSolutionsOut : public SolverOut {
 public:
-    TimeOut()
-    {
-        ToulBar2::limited = true;
-        if (ToulBar2::verbose >= 2)
-            cout << what() << endl;
-    }
-    const char * what() const {return "... time limit reached!";}
+    const char * what() const throw() FINAL {return "... limit on the number of solutions reached!";}
+};
+
+class TimeOut : public SolverOut {
+public:
+    const char * what() const throw() FINAL {return "... time limit reached!";}
 };
 
 int solveSymMax2SAT(int n, int m, int* posx, int* posy, double* cost, int* sol);

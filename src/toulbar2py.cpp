@@ -99,6 +99,7 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite_static("lds", &ToulBar2::lds)
         .def_readwrite_static("limited", &ToulBar2::limited)
         .def_readwrite_static("restart", &ToulBar2::restart)
+        .def_readwrite_static("backtrackLimit", &ToulBar2::backtrackLimit)
         .def_readwrite_static("cfn", &ToulBar2::cfn)
         .def_readwrite_static("gz", &ToulBar2::gz)
         .def_readwrite_static("xz", &ToulBar2::xz)
