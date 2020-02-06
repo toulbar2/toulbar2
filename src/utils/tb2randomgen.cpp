@@ -33,17 +33,17 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
         // soft alldiff
-        vector<BoundedObj<Value>> values;
+        vector<BoundedObjValue> values;
         for (unsigned int i = 0; i < scopeVars[0]->getDomainInitSize(); i++) {
-            values.push_back(BoundedObj<Value>(i, 1));
+            values.push_back(BoundedObjValue(i, 1));
         }
         wcsp.postWGcc(scopeIndexs, arity, "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : "DAG"), Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
-        vector<WeightedObj<int>> init(1, WeightedObj<int>(0));
-        vector<WeightedObj<int>> last(1, WeightedObj<int>(1));
+        vector<WeightedObjInt> init(1, WeightedObjInt(0));
+        vector<WeightedObjInt> last(1, WeightedObjInt(1));
         if (globalname == "wregular")
-            last.push_back(WeightedObj<int>(0, Top));
+            last.push_back(WeightedObjInt(0, Top));
         vector<DFATransition> trans;
         for (unsigned int i = 0; i < scopeVars[0]->getDomainInitSize(); i++) {
             trans.push_back(DFATransition(0, i, (i % 2) ? 1 : 0));

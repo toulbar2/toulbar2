@@ -188,6 +188,24 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("store", &Store::store)
         .def("restore", static_cast<void (*)(int)>(&Store::restore));
 
+    py::class_<WeightedObjInt>(m, "WeightedObjInt")
+        .def(py::init<int, Cost>())
+        .def_readwrite("val", &WeightedObjInt::val)
+        .def_readwrite("weight", &WeightedObjInt::weight);
+
+    py::class_<DFATransition>(m, "DFATransition")
+        .def(py::init<int, Value, int, Cost>())
+        .def_readwrite("start", &DFATransition::start)
+        .def_readwrite("end", &DFATransition::end)
+        .def_readwrite("symbol", &DFATransition::symbol)
+        .def_readwrite("weight", &DFATransition::weight);
+
+    py::class_<BoundedObjValue>(m, "BoundedObjValue")
+        .def(py::init<Value, unsigned int, unsigned int>())
+        .def_readwrite("val", &BoundedObjValue::val)
+        .def_readwrite("upper", &BoundedObjValue::upper)
+        .def_readwrite("lower", &BoundedObjValue::lower);
+
     py::class_<WeightedCSP>(m, "WCSP")
 //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
         .def("getIndex", &WeightedCSP::getIndex)
@@ -267,11 +285,11 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
         .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int>& scope, const string&arguments)) &WeightedCSP::postCliqueConstraint)
-//        .def("postWAmong", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) &WeightedCSP::postWAmong)
-//        .def("postWVarAmong", &WeightedCSP::postWVarAmong)
-//        .def("postWRegular", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObj<int>>& initial_States, const vector<WeightedObj<int>>& accepting_States, const vector<DFATransition>& Wtransitions)) &WeightedCSP::postWRegular)
+        .def("postWAmong", (int (WeightedCSP::*)(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) &WeightedCSP::postWAmong)
+        .def("postWVarAmong", (void (WeightedCSP::*)(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) &WeightedCSP::postWVarAmong)
+        .def("postWRegular", (int (WeightedCSP::*)(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) &WeightedCSP::postWRegular)
 //        .def("postWAllDiff", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWAllDiff)
-//        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObj<Value>>& values)) &WeightedCSP::postWGcc)
+//        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
 //        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
 //        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
 //        .def("postWGrammarCNF", &WeightedCSP::postWGrammarCNF)

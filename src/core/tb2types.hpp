@@ -35,7 +35,7 @@
 #include "utils/tb2integer.hpp"
 
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
-const char IMPLICIT_VAR_TAG = '#';
+const string IMPLICIT_VAR_TAG = "#";
 
 /// Domain value (can be positive or negative integers)
 typedef int Value;
@@ -227,12 +227,11 @@ typedef unsigned int uint;
  */
 
 // A value with weight
-template <class Object>
-struct WeightedObj {
-    Object val;
+struct WeightedObjInt {
+    int val;
     Cost weight;
 
-    WeightedObj(const Object& val_, Cost weight_ = MIN_COST)
+    WeightedObjInt(int val_, Cost weight_ = MIN_COST)
         : val(val_)
         , weight(weight_)
     {
@@ -240,13 +239,12 @@ struct WeightedObj {
 };
 
 // A value with upper and lower limit
-template <class Object>
-struct BoundedObj {
-    Object val;
+struct BoundedObjValue {
+    Value val;
     unsigned int upper;
     unsigned int lower;
 
-    BoundedObj(const Object& val_, unsigned int upper_, unsigned int lower_ = 0)
+    BoundedObjValue(Value val_, unsigned int upper_, unsigned int lower_ = 0)
         : val(val_)
         , upper(upper_)
         , lower(lower_)

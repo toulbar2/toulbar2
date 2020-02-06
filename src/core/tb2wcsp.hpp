@@ -410,20 +410,26 @@ public:
 
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
 
-    int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<Value>& values, int lb, int ub); ///< \brief post a soft among cost function
+    int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
+    int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub); ///< \deprecated
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex);} ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \deprecated
+    int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost,
+        int nbStates,
+        const vector<WeightedObjInt>& initial_States,
+        const vector<WeightedObjInt>& accepting_States,
+        const vector<DFATransition>& Wtransitions) { return postWRegular(scope.data(), scope.size(), semantics, propagator, baseCost, nbStates, initial_States, accepting_States, Wtransitions); } ///< \brief post a soft or weighted regular cost function
     int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
-        const vector<WeightedObj<int>>& initial_States,
-        const vector<WeightedObj<int>>& accepting_States,
-        const vector<DFATransition>& Wtransitions); ///< \brief post a soft or weighted regular cost function
+        const vector<WeightedObjInt>& initial_States,
+        const vector<WeightedObjInt>& accepting_States,
+        const vector<DFATransition>& Wtransitions); ///< \deprecated
     void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft alldifferent cost function
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObj<Value>>& values); ///< \brief post a soft global cardinality cost function
+        const vector<BoundedObjValue>& values); ///< \brief post a soft global cardinality cost function
     void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
     int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
     void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function

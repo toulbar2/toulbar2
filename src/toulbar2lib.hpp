@@ -244,11 +244,11 @@ public:
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
-    virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<Value>& values, int lb, int ub)
-        = 0;
+    virtual int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
+    virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \deprecated
 
     /// \brief post a soft or weighted regular cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -257,16 +257,12 @@ public:
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation ("flow", "DAG")
     /// \param nbStates the number of the states in the corresponding DFA. The states are indexed as 0, 1, ..., nbStates-1
-    /// \param initial_States a vector of WeightedObj specifying the starting states with weight
-    /// \param accepting_States a vector of WeightedObj specifying the final states
+    /// \param initial_States a vector of WeightedObjInt specifying the starting states with weight
+    /// \param accepting_States a vector of WeightedObjInt specifying the final states
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
-    virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        int nbStates,
-        const vector<WeightedObj<int>>& initial_States,
-        const vector<WeightedObj<int>>& accepting_States,
-        const vector<DFATransition>& Wtransitions)
-        = 0;
+    virtual int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
+    virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \deprecated
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
     /// \brief post a soft alldifferent cost function
@@ -284,9 +280,9 @@ public:
     /// \param semantics the semantics of the global cost function: "var" (DAG-based propagator only) or -- "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
-    /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
+    /// \param values a vector of BoundedObjValue, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObj<Value>>& values)
+        const vector<BoundedObjValue>& values)
         = 0;
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) = 0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 

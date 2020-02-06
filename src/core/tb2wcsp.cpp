@@ -879,7 +879,7 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
     //delete [] decomposableGCF;
 }
 
-void WCSP::postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
+void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -1039,12 +1039,12 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         int nvalues;
-        vector<BoundedObj<Value>> values;
+        vector<BoundedObjValue> values;
         file >> semantics >> baseCost >> nvalues;
         for (int i = 0; i < nvalues; i++) {
             int d, high, low;
             file >> d >> low >> high;
-            values.push_back(BoundedObj<Value>(d, high, low));
+            values.push_back(BoundedObjValue(d, high, low));
         }
         if (mult)
             baseCost *= ToulBar2::costMultiplier;
@@ -1171,8 +1171,8 @@ int WCSP::postWAmong(int* scopeIndex, int arity, const string& semantics, const 
 
 int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     int nbStates,
-    const vector<WeightedObj<int>>& initial_States,
-    const vector<WeightedObj<int>>& accepting_States,
+    const vector<WeightedObjInt>& initial_States,
+    const vector<WeightedObjInt>& accepting_States,
     const vector<DFATransition>& Wtransitions)
 {
 #ifndef NDEBUG
@@ -1247,7 +1247,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
 }
 
 int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-    const vector<BoundedObj<Value>>& values)
+    const vector<BoundedObjValue>& values)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -1627,7 +1627,7 @@ void WCSP::sortConstraints()
 
         //Mark native variable
         for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : numberOfVariables()) - 1; i >= 0; i--) {
-            if (!marked[i] && getName(i)[0] != IMPLICIT_VAR_TAG) {
+            if (!marked[i] && getName(i)[0] != IMPLICIT_VAR_TAG[0]) {
                 visit(i, revdac, marked, listofsuccessors);
             }
         }

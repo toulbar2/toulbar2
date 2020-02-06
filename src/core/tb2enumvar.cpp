@@ -1161,7 +1161,7 @@ void EnumeratedVariable::eliminate()
         return;
     if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars)
         return;
-    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && getName()[0] != IMPLICIT_VAR_TAG)
+    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && getName()[0] != IMPLICIT_VAR_TAG[0])
         return;
 
     assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster(cluster)->isActive());
@@ -1355,7 +1355,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
 {
     if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars)
         return false;
-    if (ToulBar2::allSolutions && getName()[0] != IMPLICIT_VAR_TAG && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0))
+    if (ToulBar2::allSolutions && getName()[0] != IMPLICIT_VAR_TAG[0] && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0))
         return false;
     double mult = (1.0 * x->getDomainSize()) / getDomainSize();
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
