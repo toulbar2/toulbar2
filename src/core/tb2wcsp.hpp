@@ -385,15 +385,18 @@ public:
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, Value* d, int dsize);
+    void addValueName(int xIndex, const string& name);
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     void postUnary(int xIndex, vector<Cost>& costs);
     int postUnary(int xIndex, Value* d, int dsize, Cost penalty);
+    void postUnaryConstraint(int xIndex, vector<Double>& costs);
     void postUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
     int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) { return postUnary(xIndex, d, dsize, penalty); }
     int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL);
     int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
+    int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples); }
@@ -707,6 +710,7 @@ public:
     // warning: ToulBar2::NormFactor has to be initialized
 
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
+    Cost DoubletoCost(const Double& c) const { return Round(c * powl(10.0, ToulBar2::decimalPoint)) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;

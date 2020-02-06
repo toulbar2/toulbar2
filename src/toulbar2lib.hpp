@@ -214,9 +214,12 @@ public:
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, Value* d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
+    virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
+    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs) = 0;
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
@@ -386,6 +389,7 @@ public:
     // warning: ToulBar2::NormFactor has to be initialized
 
     virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
+    virtual Cost DoubletoCost(const Double& c) const = 0;
     virtual Double Cost2ADCost(const Cost& c) const = 0;
     virtual Double Cost2RDCost(const Cost& c) const = 0;
     virtual Cost Prob2Cost(TProb p) const = 0;

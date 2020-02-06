@@ -597,6 +597,14 @@ int WCSP::makeEnumeratedVariable(string n, Value* d, int dsize)
     return x->wcspIndex;
 }
 
+void WCSP::addValueName(int xIndex, const string& name)
+{
+    Variable* x = getVar(xIndex);
+    if (x->enumerated()) {
+        x->newValueName(name);
+    }
+}
+
 /// \brief create an interval variable with its domain bounds
 int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 {
@@ -629,6 +637,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
+    assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
@@ -654,6 +663,38 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
     }
 
     return ctr->wcspIndex;
+}
+
+/// \brief create a binary cost function from a vector of floating point values that will be approximated to the ToulBar2:decimalPoint precision
+/// \param xIndex index of enumerated variable x as returned by makeEnumeratedVariable
+/// \param yIndex index of enumerated variable y
+/// \param costs a flat vector of floating point costs (y indexes moving first)
+///
+/// \note This must ONLY be called before search.
+///
+/// \warning The cost Vector must have the same size as Cartesian product of original domains.
+int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts)
+{
+    assert(xIndex != yIndex);
+    EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
+    EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
+
+    assert(dcosts.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
+
+    long double minCost = std::numeric_limits<long double>::infinity();
+    for (long double cost : dcosts) {
+        minCost = min(minCost, cost);
+    }
+
+    vector<Cost> icosts;
+    icosts.resize(dcosts.size());
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+        for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+            icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
+        }
+    }
+    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
+    return postBinaryConstraint(xIndex, yIndex, icosts);
 }
 
 /// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
@@ -1501,6 +1542,27 @@ int WCSP::postUnary(int xIndex, Value* d, int dsize, Cost penalty)
     assert(!vars[xIndex]->enumerated());
     Unary* ctr = new Unary(this, (IntervalVariable*)vars[xIndex], d, dsize, penalty);
     return ctr->wcspIndex;
+}
+
+/// \brief add unary floating point costs approximated to the current ToulBar2::decimalPoint precision to enumerated variable \e xIndex
+/// \note  The ToulBar2::decimapPoint precision must have been set previously for the rest of the CFN existence.
+void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts)
+{
+    assert(vars[xIndex]->enumerated());
+    EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
+
+    // normalize the cost function to make it positive
+    long double minCost = std::numeric_limits<long double>::infinity();
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+        minCost = min(minCost, dcosts[a]);
+    }
+    vector<Cost> icosts;
+    icosts.reserve(dcosts.size());
+    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+        icosts[a] = (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint)));
+    }
+    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
+    postUnary(xIndex, icosts);
 }
 
 /// \brief create a soft constraint \f$x \geq y + cst\f$ with the associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):top , 0 )\f$

@@ -33,6 +33,9 @@
 #include "utils/tb2utils.hpp"
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
+#ifdef QUAD_PROB
+#include <quadmath.h> // only with gcc/g++
+#endif
 
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
@@ -66,6 +69,9 @@ const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
 const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
+//inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+//inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+//inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
@@ -189,16 +195,49 @@ const Cost LARGE_COST = PARETOPAIR_100;
 const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
+#ifdef QUAD_PROB
+typedef __float128 TProb;
+typedef __float128 TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)roundq(f); }
+#endif
+
 #ifdef DOUBLE_PROB
 typedef double TProb;
 typedef double TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)round(f); }
 #endif
 
 #ifdef LONGDOUBLE_PROB
 typedef Double TProb;
 typedef Double TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)roundl(f); }
 #endif
 
+inline TLogProb GLogSumExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) + exp(c2)]
+{
+    if (logc1 == -numeric_limits<TLogProb>::infinity())
+        return logc2;
+    else if (logc2 == -numeric_limits<TLogProb>::infinity())
+        return logc1;
+    else {
+        if (logc1 >= logc2)
+            return logc1 + (Log1p(Exp(logc2 - logc1)));
+        else
+            return logc2 + (Log1p(Exp(logc1 - logc2)));
+    }
+}
+
+inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) - exp(c2)]
+{
+    if (logc1 == logc2)
+        return -numeric_limits<TLogProb>::infinity();
+    else if (logc1 > logc2)
+        return logc1 + (Log(-Expm1(logc2 - logc1)));
+    else {
+        cerr << "My oh my ! Try to Logarithm a negative number" << endl;
+        exit(0);
+    }
+}
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)
 
