@@ -674,7 +674,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     }
 
     for (unsigned int i = 0; i < valueNames.size(); ++i)
-        wcsp->getVar(varIndex)->newValueName(valueNames[i]);
+        wcsp->addValueName(varIndex, valueNames[i]);
 
     return domainSize;
 }

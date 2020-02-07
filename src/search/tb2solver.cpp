@@ -1224,10 +1224,11 @@ void Solver::newSolution()
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else if (ToulBar2::cfn) {
-                Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
-                string valuelabel = ((WCSP*)wcsp)->getVar(i)->getValueName(myvalue);
-                string varlabel = wcsp->getName(i);
+            } else if (wcsp->enumerated(i) && ((EnumeratedVariable *)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
+                EnumeratedVariable *myvar  = (EnumeratedVariable *)((WCSP*)wcsp)->getVar(i);
+                Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][myvar->toIndex(myvar->getValue())].value : myvar->getValue());
+                string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+                string varlabel = myvar->getName();
 
                 switch (ToulBar2::showSolutions) {
                 case 1:

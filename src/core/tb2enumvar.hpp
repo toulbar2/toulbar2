@@ -16,6 +16,7 @@ protected:
     StoreCost deltaCost;
     StoreValue support; // Warning! the unary support has to be backtrackable
     double trwsGamma; // The gamma factor used in TRW-S
+    vector<string> valueNames;
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
@@ -39,6 +40,10 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
     bool enumerated() const FINAL { return true; }
+
+    bool isValueNames() { return valueNames.size() == getDomainInitSize(); }
+    void addValueName(const string& vname) { valueNames.push_back(vname); }
+    string& getValueName(int index) { return valueNames[index]; }
 
     unsigned int getDomainInitSize() const { return domain.getInitSize(); }
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)

@@ -601,7 +601,7 @@ void WCSP::addValueName(int xIndex, const string& name)
 {
     Variable* x = getVar(xIndex);
     if (x->enumerated()) {
-        x->newValueName(name);
+        ((EnumeratedVariable *) x)->addValueName(name);
     }
 }
 

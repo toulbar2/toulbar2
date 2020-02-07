@@ -484,10 +484,11 @@ public:
     void printSolution()
     {
     	for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (ToulBar2::cfn) {
+    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
+    		    EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
     			Value myvalue = solution[i];
-    			string valuelabel = getVar(i)->getValueName(myvalue);
-    			string varlabel = getName(i);
+    			string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+    			string varlabel = myvar->getName();
 
     			switch (ToulBar2::showSolutions) {
     			case 1:
@@ -511,10 +512,11 @@ public:
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (ToulBar2::cfn) {
+    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
+                EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
     			Value myvalue = solution[i];
-    			string valuelabel = getVar(i)->getValueName(myvalue);
-    			string varlabel = getName(i);
+                string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+                string varlabel = myvar->getName();
 
     			switch (ToulBar2::writeSolution) {
     			case 1:
@@ -538,10 +540,11 @@ public:
     void printSolution(FILE* f)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (ToulBar2::cfn) {
+    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
+                EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
     			Value myvalue = solution[i];
-    			string valuelabel = getVar(i)->getValueName(myvalue);
-    			string varlabel = getName(i);
+                string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+                string varlabel = myvar->getName();
 
     			switch (ToulBar2::writeSolution) {
     			case 1:
