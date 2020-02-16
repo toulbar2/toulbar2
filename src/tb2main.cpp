@@ -403,7 +403,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
     { OPT_strictAC, (char*)"-strictAC", SO_OPT },
     { OPT_strictAC, (char*)"-sac", SO_OPT },
+    { OPT_strictAC, (char*)"-vacint", SO_OPT },
     { NO_OPT_strictAC, (char*)"-sac:", SO_NONE },
+    { NO_OPT_strictAC, (char*)"-vacint:", SO_NONE },
     { OPT_SACifVAC, (char*)"-SACifVAC", SO_OPT },
     { OPT_VACthreshold, (char*)"-VACthreshold", SO_OPT },
     { OPT_reverseSAC, (char*)"-reverseSAC:", SO_OPT },
@@ -414,8 +416,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_BoolDomSize, (char*)"-booldomsz:", SO_NONE },
     { OPT_RINS, (char*)"-RINS", SO_OPT },
     { OPT_RINS, (char*)"-rins", SO_OPT },
+    { OPT_RINS, (char*)"-rasps", SO_OPT },
     { NO_OPT_RINS, (char*)"-RINS:", SO_NONE },
     { NO_OPT_RINS, (char*)"-rins:", SO_NONE },
+    { NO_OPT_RINS, (char*)"-rasps:", SO_NONE },
     { OPT_RINS_angle, (char*)"-RINSangle", SO_OPT },
     { OPT_RINS_angle, (char*)"-auto", SO_OPT },
     { NO_OPT_RINS_angle, (char*)"-auto:", SO_NONE },
@@ -822,11 +826,11 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
     cout << endl;
-    cout << "   -sac : VAC-based variable ordering heuristic";
+    cout << "   -vacint : VAC-integral variable ordering heuristic";
     if (ToulBar2::strictAC)
         cout << " (default option)";
     cout << endl;
-    cout << "   -rins=[integer] : VAC-based upper bound probing heuristic (0: disable, 1: DFS, n>1: LDS(n-1)) (default value is " << ToulBar2::RINS << ")" << endl;
+    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, 1: DFS, n>1: LDS(n-1)) (default value is " << ToulBar2::RINS << ")" << endl;
     cout << "   -auto=[integer] : automatic threshold cost value selection for probing heuristic and also for VAC during search if a negative value is used (default value is " << ToulBar2::RINS_angle << ")" << endl;
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";

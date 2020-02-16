@@ -489,6 +489,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::allSolutions || ToulBar2::isZ) {
         ToulBar2::DEE = 0;
+        ToulBar2::strictAC = 0;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
         cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
@@ -522,9 +523,24 @@ void tb2checkOptions()
         cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
         exit(1);
     }
+    if (ToulBar2::strictAC && ToulBar2::btdMode >= 1) {
+        cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::strictAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports
+        cerr << "Error: VAC-based variable ordering heuristic requires EDAC local consistency (select EDAC using -k option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::useRINS && ToulBar2::btdMode >= 1) {
+        cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
+        exit(1);
+    }
     if (ToulBar2::vac && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning VAC assumes AC supports
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         exit(1);
+    }
+    if (ToulBar2::vac && ToulBar2::strictAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports when using strictAC
+        ToulBar2::vacValueHeuristic = true;
     }
     if (ToulBar2::preprocessFunctional > 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) {
         cerr << "Error: functional elimination requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
@@ -2110,6 +2126,14 @@ void WCSP::preprocessing()
             if (ToulBar2::verbose >= 0) cout << "RINS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
         }
     }
+    if (ToulBar2::strictAC) {
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            if (vars[i]->unassigned()) vars[i]->isEAC(); // update EAC supports using values from best known solution if provided
+        }
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            if (vars[i]->unassigned()) vars[i]->isEAC(); // update moreThanOne VAC-integrality using new EAC supports
+        }
+    }
 }
 
 Cost WCSP::finiteUb() const
@@ -2563,20 +2587,18 @@ bool WCSP::verify()
         }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         // Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
-        Value oldsupport = vars[i]->getSupport();
-        int old_moreThanOne = ((EnumeratedVariable *) vars[i])->moreThanOne;
-        if (ToulBar2::LcLevel == LC_EDAC && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !vars[i]->isEAC()) {
-            cout << "support of variable " << vars[i]->getName() << " not EAC!" << endl;
-            return false;
+        int old_moreThanOne = 1;
+        if (vars[i]->enumerated()) old_moreThanOne = ((EnumeratedVariable *) vars[i])->moreThanOne;
+        if (ToulBar2::LcLevel == LC_EDAC && vars[i]->enumerated() && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !((EnumeratedVariable *) vars[i])->isEAC(vars[i]->getSupport())) {
+            if (ToulBar2::verbose >= 4) cout << endl << *this;
+            cout << "warning! support of variable " << vars[i]->getName() << " not EAC!" << endl;
+            if (!ToulBar2::vacValueHeuristic) return false;
         }
-        if (oldsupport != vars[i]->getSupport()) {
-            cout << "warning! support of variable " << vars[i]->getName() << " has been changed from " << oldsupport << " to " << vars[i]->getSupport() << " when verifying itself for debugging!" << endl;
-        }
-        if (ToulBar2::strictAC && vars[i]->unassigned() && old_moreThanOne != ((EnumeratedVariable *) vars[i])->moreThanOne && old_moreThanOne == 0) {
+        if (ToulBar2::strictAC && vars[i]->unassigned() && old_moreThanOne == 0 && old_moreThanOne != ((EnumeratedVariable *) vars[i])->moreThanOne) {
             if (ToulBar2::verbose >= 4) cout << endl << *this;
             cout << endl << "check:" << ((EnumeratedVariable *) vars[i])->checkEACGreedySolution() << endl;
             cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong strictAC status.." << endl;
-            return false;
+            if (Store::getDepth() >= abs(ToulBar2::vac)) return false;
         }
     }
     if (ToulBar2::LcLevel >= LC_AC) {

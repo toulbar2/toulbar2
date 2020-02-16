@@ -214,10 +214,12 @@ void EnumeratedVariable::findSupport()
     if (cannotbe(support) || getCost(support) > MIN_COST) {
         Value newSupport = getInf();
         Cost minCost = getCost(newSupport);
+        Value bestValue = wcsp->getBestValue(wcspIndex);
         iterator iter = begin();
         for (++iter; minCost > MIN_COST && iter != end(); ++iter) {
             Cost cost = getCost(*iter);
-            if (GLB(&minCost, cost)) {
+            if (cost < minCost || (cost == minCost && *iter == bestValue)) { // GLB(&minCost, cost)) {
+                minCost = cost;
                 newSupport = *iter;
             }
         }
@@ -226,10 +228,8 @@ void EnumeratedVariable::findSupport()
             projectLB(minCost);
         }
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
-        bool supportChanged = (support != newSupport);
-        if (supportChanged) queueDEE();
-        support = newSupport;
-        if (ToulBar2::strictAC && supportChanged) reviseEACGreedySolution();
+        if (support != newSupport) queueDEE();
+        setSupport(newSupport);
     }
 }
 
@@ -250,7 +250,7 @@ Cost EnumeratedVariable::normalizeTRWS()
     assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
     if (support != newSupport)
         queueDEE();
-    support = newSupport;
+    setSupport(newSupport);
     queueNC();
     queueAC();
     queueDAC();
@@ -326,6 +326,7 @@ bool EnumeratedVariable::checkEACGreedySolution()
 {
     bool result = true;
     for (ConstraintList::iterator iter = constrs.begin(); result && iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isSep()) continue;
         result = result && (*iter).constr->checkEACGreedySolution();
     }
     return result;
@@ -335,11 +336,13 @@ bool EnumeratedVariable::reviseEACGreedySolution()
 {
     bool broken = false;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isSep()) continue;
         bool result = (*iter).constr->reviseEACGreedySolution();
         if (!result) broken = true;
     }
     if (!broken) {
         moreThanOne = 0;
+        strictACValue = support;
     } else {
         assert(moreThanOne == 1);
     }
@@ -421,10 +424,8 @@ bool EnumeratedVariable::isEAC(Value a)
                 return false;
             }
         }
-        bool supportChanged = (support != a);
-        if (supportChanged) queueDEE();
-        support = a;
-        if (ToulBar2::strictAC && supportChanged) reviseEACGreedySolution();
+        if (support != a) queueDEE();
+        setSupport(a);
 #ifndef NDEBUG
         if (ToulBar2::verbose >= 4)
             cout << getName() << "(" << a << ") is EAC!" << endl;
@@ -438,24 +439,57 @@ bool EnumeratedVariable::isEAC(Value a)
     return false;
 }
 
+//bool EnumeratedVariable::isEAC()
+//{
+//    assert(canbe(support));
+//    if (ToulBar2::strictAC) {
+//        moreThanOne = 0;
+//        strictACValue = support;
+//    }
+//    if (isEAC(support)) return true;
+//    Value bestValue = wcsp->getBestValue(wcspIndex);
+//    if (support != bestValue && canbe(bestValue)) {
+//        if (ToulBar2::strictAC) {
+//            moreThanOne = 0;
+//            strictACValue = bestValue;
+//        }
+//        if (isEAC(bestValue)) return true;
+//    }
+//    for (iterator iter = begin(); iter != end(); ++iter) {
+//        if (*iter == support || *iter == bestValue) continue;
+//        if (ToulBar2::strictAC) {
+//            moreThanOne = 0;
+//            strictACValue = *iter;
+//        }
+//        if (isEAC(*iter)) return true;
+//    }
+//    if (ToulBar2::strictAC) moreThanOne = 1;
+//    return false;
+//}
+
 bool EnumeratedVariable::isEAC()
 {
     assert(canbe(support));
+    Value bestValue = wcsp->getBestValue(wcspIndex);
+    if (support != bestValue && canbe(bestValue)) {
+        if (ToulBar2::strictAC) {
+            moreThanOne = 0;
+            strictACValue = bestValue;
+        }
+        if (isEAC(bestValue)) return true;
+    }
     if (ToulBar2::strictAC) {
         moreThanOne = 0;
         strictACValue = support;
     }
-    if (isEAC(support))
-        return true;
-    else {
-        for (iterator iter = begin(); iter != end(); ++iter) {
-            if (ToulBar2::strictAC) {
-                moreThanOne = 0;
-                strictACValue = *iter;
-            }
-            if (*iter != support && isEAC(*iter))
-                return true;
+    if (isEAC(support)) return true;
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        if (*iter == support || *iter == bestValue) continue;
+        if (ToulBar2::strictAC) {
+            moreThanOne = 0;
+            strictACValue = *iter;
         }
+        if (isEAC(*iter)) return true;
     }
     if (ToulBar2::strictAC) moreThanOne = 1;
     return false;

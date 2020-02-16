@@ -2,8 +2,8 @@
  * ****** Set of useful classes to enforce VAC
  */
 
-#include "tb2vacutils.hpp"
 #include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 
 VACVariable::VACVariable(WCSP* wcsp, string n, Value iinf, Value isup)
     : EnumeratedVariable(wcsp, n, iinf, isup)

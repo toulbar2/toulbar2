@@ -68,7 +68,10 @@ void NaryConstraint::assign(int varIndex)
             //	  cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
             deconnect();
             projectNary();
+        } else {
+            if (ToulBar2::strictAC) reviseEACGreedySolution();
         }
+
     }
 }
 

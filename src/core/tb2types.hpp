@@ -621,6 +621,7 @@ class Solver;
 class Cluster;
 class Separator;
 class TreeDecomposition;
+class VACExtension;
 
 class ConstraintLink {
 public:

@@ -10,9 +10,9 @@
  *  \see <em> Soft Arc Consistency Revisited. </em> Cooper et al. Artificial Intelligence. 2010.
  */
 
-#include "tb2vacutils.hpp"
-#include "search/tb2clusters.hpp"
 #include <math.h> /* atan2 */
+#include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 #define PI 3.14159265
 
 class tVACStat {
@@ -244,7 +244,6 @@ bool VACExtension::propagate()
             cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
     }
 
-    bool isvac = true;
     bool util = false;
     bool isvacatleastonce = false;
 
@@ -262,6 +261,7 @@ bool VACExtension::propagate()
 
     while (!util && itThreshold != MIN_COST) {
         int storedepth = Store::getDepth();
+        bool isvac = true;
 #ifdef AC2001
         resetSupports();
 #endif
@@ -280,7 +280,7 @@ bool VACExtension::propagate()
             inconsistentVariable = -1;
             nbIterations++;
             //assert(wcsp->verify()); // it modifies binary supports???
-            assert(wcsp->NC.empty());
+            //assert(wcsp->NC.empty());
             assert(VAC.empty());
             // skip this current itThreshold if there are no new value removals do be done compared to previous itThreshold
             while (!enqueueVAC(itThreshold, prevItThreshold) && itThreshold != MIN_COST) {
@@ -325,12 +325,18 @@ bool VACExtension::propagate()
                     pair<VACVariable*, Value> p;
                     p.first = x;
                     p.second = x->getSup() + 1;
-                    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-                        if (x->getCost(*iterX) == MIN_COST) {
-                            if (x->assigned())
-                                nbassignedzero++;
-                            p.second = *iterX;
-                            break;
+                    Value bestValue = wcsp->getBestValue(x->wcspIndex);
+                    if (x->canbe(bestValue) && x->getCost(bestValue) == MIN_COST) { // favor solution-based phase saving
+                        if (x->assigned()) nbassignedzero++;
+                        p.second = bestValue;
+                    } else {
+                        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+                            if (x->getCost(*iterX) == MIN_COST) {
+                                if (x->assigned())
+                                    nbassignedzero++;
+                                p.second = *iterX;
+                                break;
+                            }
                         }
                     }
                     if (x->canbe(p.second))
@@ -602,7 +608,7 @@ bool VACExtension::propagate()
             if (x->canbe(iter->second)) {
                 assert(x->getCost(iter->second) == MIN_COST);
                 if (ToulBar2::verbose > 0
-                    && x->getSupport() != iter->second)
+                    && (x->getSupport() != iter->second))
                     cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << " to " << iter->second << endl;
                 x->setSupport(iter->second);
             } else {
@@ -858,8 +864,14 @@ bool VACExtension::enforcePass3()
             bneckCF->setThreshold(bneckCost + UNIT_COST);
         }
         breakCycles++;
-        //if (ToulBar2::verbose > 1) cout << "BreakCycle   (var: " << minvar << ", val= " << minval << ")   thr: " <<  xi->getThreshold() << endl;
+        if (ToulBar2::verbose > 1) {
+            cout << "BreakCycle: bneckCost=" << bneckCost + UNIT_COST <<  ", bneckVar=" << bneckVar << ", bneckCF=";
+            if (bneckCF) cout << *bneckCF;
+            else cout << bneckCF;
+            cout << endl;
+        }
         if (breakCycles > 5) {
+            if (ToulBar2::verbose > 1) cout << "BreakCycle stops!" << endl;
             inconsistentVariable = -1;
             itThreshold = MIN_COST;
         }
@@ -989,6 +1001,8 @@ void VACExtension::clear()
     while (!VAC.empty())
         VAC.pop();
 #ifdef INCREMENTALVAC
+    while (!wcsp->NC.empty())
+        wcsp->NC.pop();
     while (!VAC2.empty())
         VAC2.pop();
 #endif

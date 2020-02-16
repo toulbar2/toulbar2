@@ -13,8 +13,6 @@
 #include "tb2intervar.hpp"
 
 class NaryConstraint;
-class VACExtension;
-
 class GlobalConstraint;
 class FlowBasedGlobalConstraint;
 class AllDiffConstraint;

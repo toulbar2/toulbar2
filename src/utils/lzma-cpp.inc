@@ -117,7 +117,7 @@ void lzma_base::reset(bool compress, bool realloc)
 
         lzma_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(
             compress ?
-                lzma_easy_encoder(s, level, LZMA_CHECK_CRC32) :
+                lzma_easy_encoder(s, level, LZMA_CHECK_CRC32) : // replace level by lzma::default_compression on MacOSX if compilation error
                 lzma_stream_decoder(s, 100 * 1024 * 1024, LZMA_CONCATENATED)
         );
     }
@@ -132,7 +132,7 @@ void lzma_base::do_init
 
     memset(s, 0, sizeof(*s));
 
-    level = p.level;
+    level = p.level; // comment this line on MacOSX if compilation error
     lzma_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(
         compress ?
             lzma_easy_encoder(s, p.level, LZMA_CHECK_CRC32) :

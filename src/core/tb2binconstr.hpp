@@ -636,7 +636,7 @@ public:
 
     bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value>& functional);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
     void dump(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }

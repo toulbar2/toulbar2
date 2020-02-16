@@ -105,7 +105,7 @@ public:
     virtual bool checkEACGreedySolution(int index = -1, Value a = 0); // if index is non-negative use value a instead of its support for the corresponding variable
     virtual bool reviseEACGreedySolution(int index = -1, Value a = 0); // if index is negative revise all variables else only one
     virtual void fillEAC2(int index) {}
-    virtual bool isEAC(int index, Value a) {if (ToulBar2::strictAC) reviseEACGreedySolution(index, a); return true;}
+    virtual bool isEAC(int index, Value a) {if (ToulBar2::strictAC && !isSep()) {bool res = reviseEACGreedySolution(index, a); if (ToulBar2::verbose>=3 && !res) cout << "Current greedy solution violates this constraint: " << *this << endl;} return true;}
     virtual void findFullSupportEAC(int index) {}
 
     virtual void linkCostProvidingPartition(int index, Variable* support) {}

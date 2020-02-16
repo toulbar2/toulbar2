@@ -90,7 +90,7 @@ public:
     void extend(Value value, Cost cost);
     void extendAll(Cost cost);
     Value getSupport() const FINAL { return support; }
-    void setSupport(Value val) { support = val; }
+    void setSupport(Value val) { if (support != val) {if (ToulBar2::verbose>=7) cout << "change support for " << getName() << " from " << support << " to " << val << endl; support = val; if (ToulBar2::strictAC) reviseEACGreedySolution();} }
     inline Cost getCost(const Value value) const FINAL
     {
         return costs[toIndex(value)] - deltaCost;
@@ -235,7 +235,7 @@ public:
     void permuteDomain(Value a, Value b);
     ValueCost* sortDomain(vector<Cost>& costs);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
 };
 
 #endif /*TB2ENUMVAR_HPP_*/

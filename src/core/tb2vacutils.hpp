@@ -147,10 +147,8 @@ public:
 
     bool averaging(); /**< For Min-Sum diffusion */
 
-    friend ostream& operator<<(ostream& os, VACVariable& v)
-    {
-        return os;
-    }
+    void print(ostream& os) {EnumeratedVariable::print(os); cout << " Threshold: " << myThreshold;}
+
     void KilledOne();
 };
 
@@ -232,10 +230,7 @@ public:
 
     bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 
-    friend ostream& operator<<(ostream& os, VACBinaryConstraint& c)
-    {
-        return os;
-    }
+    void print(ostream& os) {BinaryConstraint::print(os); cout << "Threshold: " << myThreshold << endl;}
 };
 
 /**

@@ -52,7 +52,7 @@ bool Constraint::checkEACGreedySolution(int index, Value support)
 
 bool Constraint::reviseEACGreedySolution(int index, Value support)
 {
-    bool result = checkEACGreedySolution(index, support);
+    bool result = !isGlobal() && checkEACGreedySolution(index, support);
     if (!result) {
         if (index >= 0) {
             ((EnumeratedVariable*) getVar(index))->moreThanOne = 1;

@@ -237,6 +237,8 @@ public:
             if (nonassigned <= 3) {
                 deconnect();
                 projectNary();
+            } else {
+                if (ToulBar2::strictAC) reviseEACGreedySolution();
             }
         }
     }
