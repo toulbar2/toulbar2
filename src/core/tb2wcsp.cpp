@@ -2628,6 +2628,7 @@ void WCSP::whenContradiction()
     EAC2.clear();
     Eliminate.clear();
     DEE.clear();
+    FEAC.clear();
     objectiveChanged = false;
     nbNodes++;
     if (ToulBar2::RINS)
@@ -3117,6 +3118,20 @@ void WCSP::propagateDEE()
     }
 }
 
+
+void WCSP::propagateFEAC()
+{
+    if (ToulBar2::verbose >= 2)
+        cout << "FEACQueue size: " << FEAC.getSize() << endl;
+    while (!FEAC.empty()) {
+        if (ToulBar2::interrupted)
+            throw TimeOut();
+        EnumeratedVariable* x = (EnumeratedVariable*) FEAC.pop();
+        if (x->unassigned())
+            x->reviseEACGreedySolution();
+    }
+}
+
 /// \defgroup varelim Variable elimination
 /// - \e i-bounded variable elimination eliminates all variables with a degree less than or equal to \e i.
 ///		It can be done with arbitrary i-bound in preprocessing only and iff all their cost functions are in extension.
@@ -3273,6 +3288,7 @@ void WCSP::propagate()
         if (td)
             propagateSeparator();
     } while (objectiveChanged);
+    propagateFEAC();
     revise(NULL);
 
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
@@ -3294,6 +3310,7 @@ void WCSP::propagate()
     assert(EAC2.empty());
     assert(Eliminate.empty());
     DEE.clear(); // DEE might not be empty if verify() has modified supports
+    assert(FEAC.empty());
     nbNodes++;
 }
 

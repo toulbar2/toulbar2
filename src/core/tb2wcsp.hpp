@@ -53,6 +53,7 @@ class WCSP FINAL : public WeightedCSP {
     Queue EAC1; ///< EAC intermediate queue (non backtrackable list)
     Queue EAC2; ///< EAC queue (non backtrackable list)
     Queue Eliminate; ///< Variable Elimination queue (non backtrackable list)
+    Queue FEAC; ///< FullEAC queue (non backtrackable list)
     SeparatorList PendingSeparator; ///< List of pending separators for BTD-like methods (backtrackable list)
     Queue DEE; ///< Dead-End Elimination queue (non backtrackable list)
     bool objectiveChanged; ///< flag if lb or ub has changed (NC propagation needs to be done)
@@ -544,6 +545,7 @@ public:
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
+    void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 
     void propagateNC(); ///< \brief removes forbidden values
     void propagateIncDec(); ///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
@@ -555,6 +557,7 @@ public:
     void propagateEAC(); ///< \brief ensures unary existential arc consistency supports
     void propagateSeparator(); ///< \brief exploits graph-based learning
     void propagateDEE(); ///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
+    void propagateFEAC(); ///< \brief seek if new EAC support is also FullEAC support (i.e., compatible with all its EAC value neighbors)
 
     /// \brief sorts the list of constraints associated to each variable based on smallest problem variable indexes
     /// \warning side-effect: updates DAC order according to an existing variable elimination order

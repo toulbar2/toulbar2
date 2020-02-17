@@ -22,6 +22,7 @@ protected:
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
     DLink<VariableWithTimeStamp> linkDEEQueue;
+    DLink<VariableWithTimeStamp> linkFEACQueue;
 
     bool watchForIncrease; ///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease; ///< \warning should be true if there exists a cost function on this variable watching for decrease events
@@ -90,7 +91,7 @@ public:
     void extend(Value value, Cost cost);
     void extendAll(Cost cost);
     Value getSupport() const FINAL { return support; }
-    void setSupport(Value val) { if (support != val) {if (ToulBar2::verbose>=7) cout << "change support for " << getName() << " from " << support << " to " << val << endl; support = val; if (ToulBar2::strictAC) reviseEACGreedySolution();} }
+    void setSupport(Value val) { if (support != val) {if (ToulBar2::verbose>=7) cout << "change support for " << getName() << " from " << support << " to " << val << endl; support = val; if (ToulBar2::strictAC) queueFEAC();} }
     inline Cost getCost(const Value value) const FINAL
     {
         return costs[toIndex(value)] - deltaCost;
@@ -118,6 +119,7 @@ public:
 
     void queueEAC1();
     void queueEAC2();
+    void queueFEAC();
     void fillEAC2(bool self);
     bool isEAC(Value a);
     bool isEAC() FINAL;

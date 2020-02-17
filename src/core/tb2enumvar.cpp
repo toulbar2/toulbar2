@@ -65,6 +65,8 @@ void EnumeratedVariable::init()
     linkEAC2Queue.content.timeStamp = -1;
     linkDEEQueue.content.var = this;
     linkDEEQueue.content.timeStamp = -1;
+    linkFEACQueue.content.var = this;
+    linkFEACQueue.content.timeStamp = -1;
     DEE.constr = NULL;
     DEE.scopeIndex = -1;
     if (ToulBar2::DEE >= 2)
@@ -150,6 +152,11 @@ void EnumeratedVariable::queueEAC2()
 void EnumeratedVariable::queueDEE()
 {
     wcsp->queueDEE(&linkDEEQueue);
+}
+
+void EnumeratedVariable::queueFEAC()
+{
+    wcsp->queueFEAC(&linkFEACQueue);
 }
 
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
