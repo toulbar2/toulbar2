@@ -155,7 +155,7 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
                 recursiveSolveLDS(discrepancy);
             else
                 recursiveSolve();
-        } catch (TimeOut) {
+        } catch (cont TimeOut &) {
             ToulBar2::limited = true;
         }
     } catch (Contradiction) {
