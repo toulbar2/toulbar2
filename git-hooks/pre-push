@@ -5,4 +5,5 @@ HASH=`git rev-parse --short HEAD^1`
 mkdir -p $ROOT/build
 cd $ROOT/build
 cmake ..
+make -j $(nproc)
 make test
