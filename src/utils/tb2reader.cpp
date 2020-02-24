@@ -3134,24 +3134,27 @@ void WCSP::solution_XML(bool opt)
         cout << "s OPTIMUM FOUND" << endl;
 
     //ofstream fsol;
-    ifstream sol;
-    sol.open(ToulBar2::writeSolution);
+    //ifstream sol;
+    //sol.open(ToulBar2::writeSolution);
     //if(!sol) { cout << "cannot open solution file to translate" << endl; exit(EXIT_FAILURE); }
     //fsol.open("solution");
     //fsol << "SOL ";
 
+    freopen(NULL, "r", ToulBar2::solutionFile);
     cout << "v ";
     for (unsigned int i = 0; i < vars.size(); i++) {
         int value;
-        sol >> value;
+        //soll >> value;
+        fscanf(ToulBar2::solutionFile, "%d", &value);
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
     }
     cout << endl;
+    freopen(NULL, "w", ToulBar2::solutionFile);
 
     //fsol << endl;
     //fsol.close();
-    sol.close();
+    //sol.close();
 #endif
 }
 

@@ -642,7 +642,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 #ifdef XMLFLAG
-    cout << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1";
+    cout << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1 (constraints in extension only)";
 #ifdef MAXCSP
     cout << " (Max-CSP only)";
 #endif
