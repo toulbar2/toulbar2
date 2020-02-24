@@ -1880,7 +1880,7 @@ bool Solver::solve()
                             hybridSolve();
                         }
                     }
-                } catch (NbBacktracksOut) {
+                } catch (const NbBacktracksOut &) {
                     if (nbBacktracks > ToulBar2::backtrackLimit) throw NbBacktracksOut();
                     nbbacktracksout = true;
                     ToulBar2::limited = false;
@@ -1890,7 +1890,7 @@ bool Solver::solve()
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-    } catch (SolverOut) {
+    } catch (const SolverOut &) {
     }
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()
