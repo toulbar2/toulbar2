@@ -35,7 +35,7 @@
 // git clone https://github.com/toulbar2/toulbar2.git
 // cd toulbar2
 // #compile toulbar2 to produce a shared C++ library
-// cmake -D LIBTB2=ON -D MPI=OFF -D WITH_MEM_JEMALLOC=OFF .
+// cmake -DLIBTB2=ON -DMPI=OFF -DWITH_MEM_JEMALLOC=OFF .
 // make
 // cd src
 // #compile toulbar2py python3 module
@@ -43,6 +43,7 @@
 // c++ -O3 -DNDEBUG -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` -I. -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DNARYCHAR -DWIDE_STRING toulbar2py.cpp -o toulbar2py`python3-config --extension-suffix` libtb2.so
 
 //Examples using toulbar2py module from Python:
+// NB: libtb2.so must be in your dynamic loader path (ldconfig) or export LD_LIBRARY_PATH=.
 // python -c "import sys; sys.path.append('.'); import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
 // python -c "import sys; sys.path.append('.'); import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
 // python -c "import sys; sys.path.append('.'); import random; import toulbar2py as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
