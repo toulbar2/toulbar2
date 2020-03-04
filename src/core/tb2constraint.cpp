@@ -309,14 +309,16 @@ Constraint* Constraint::copy()
     int scope[arity()];
     for (int i = 0; i < arity(); i++)
         scope[i] = getVar(i)->wcspIndex;
-    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), getDefCost(), size());
+    Cost defcost = getDefCost();
+    Long nb = size();
+    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), defcost, (nb==1)?2:nb); // be sure to not create a clause instead of NaryConstraint!
     Cost c;
     String t;
     first();
     while (next(t, c)) {
-        wcsp->postNaryConstraintTuple(ctrIndex, t, c);
+        if (c != defcost) wcsp->postNaryConstraintTuple(ctrIndex, t, c);
     }
-    wcsp->getCtr(ctrIndex)->deconnect();
+    wcsp->getCtr(ctrIndex)->deconnect(true);
     return wcsp->getCtr(ctrIndex);
 }
 

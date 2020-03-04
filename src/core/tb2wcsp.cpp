@@ -3660,7 +3660,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     return ctr;
 }
 
-void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var)
+void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* ctr_copy)
 {
     if (ctr_inout->getIndex(var) < 0)
         return;
@@ -3681,6 +3681,13 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var)
              << endl;
 
     if (truearity - 1 > 3) {
+        if (!ctr_inout->isNary()) {
+            assert(ctr_copy && ctr_copy->isNary());
+            ctr_inout->deconnect();
+            ctr_inout = ctr_copy->copy();
+            ctr_inout->reconnect();
+        }
+        assert(ctr_inout->isNary());
         ((NaryConstraint*)ctr_inout)->project(var);
         ctr_inout->propagate();
         if (ToulBar2::verbose >= 1)
@@ -3713,7 +3720,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var)
 
     switch (truearity - 1) {
     case 3: {
-        NaryConstraint* nctr = (NaryConstraint*)ctr_inout;
+        bool isnary = ctr_inout->isNary();
         if (truearity == 4 && arity >= 5) {
             for (i = 0; i < arity; i++) {
                 if (ctr_inout->getVar(i)->assigned())
@@ -3736,7 +3743,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var)
                             t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
                             t[arity] = '\0';
                             String strt(t);
-                            Cost c = nctr->eval(strt) + var->getCost(*itv);
+                            Cost c = ((isnary)?((NaryConstraint *)ctr_inout)->eval(strt):ctr_inout->evalsubstr(strt,ctr_inout)) + var->getCost(*itv);
                             if (ToulBar2::isZ)
                                 mincost = LogSumExp(mincost, c);
                             else if (c < mincost)
@@ -3875,7 +3882,7 @@ void WCSP::variableElimination(EnumeratedVariable* var)
         elimInfos[getElimOrder()] = ei;
         elimOrderInc();
         elimSpace += csumcopy->space();
-        project(csum, var);
+        project(csum, var, csumcopy);
     } else {
         if (ToulBar2::isZ) { // add all unary loglike into lowerbound or negCost
             Cost clogz = MAX_COST;

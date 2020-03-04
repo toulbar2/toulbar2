@@ -676,7 +676,7 @@ public:
     void restoreSolution(Cluster* c = NULL);
 
     Constraint* sum(Constraint* ctr1, Constraint* ctr2);
-    void project(Constraint*& ctr_inout, EnumeratedVariable* var);
+    void project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* ctr_copy = NULL);
     void variableElimination(EnumeratedVariable* var);
 
     void processTernary(); ///< \brief projects&subtracts ternary cost functions (see \ref preprocessing)

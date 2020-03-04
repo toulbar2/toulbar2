@@ -17,6 +17,8 @@ class WeightedClause : public AbstractNaryConstraint {
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     String evalTuple; // temporary data structure
     vector<Long> conflictWeights; // used by weighted degree heuristics
+    bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
+    bool done; // should be true after one call to next
 
     Value getTuple(int i) { return scope[i]->toValue(tuple[i] - CHAR_FIRST); }
     Value getClause(int i) { return scope[i]->toValue(!(tuple[i] - CHAR_FIRST)); }
@@ -83,6 +85,8 @@ public:
         , lb(MIN_COST)
         , support(0)
         , nonassigned(arity_in)
+        , zeros(true)
+        , done(false)
     {
         if (tuple_in.empty() && arity_in > 0)
             tuple = String(arity_in, CHAR_FIRST);
@@ -202,6 +206,9 @@ public:
     double computeTightness() { return 1.0 * cost / getDomainSizeProduct(); }
 
     //    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST,MAX_COST),make_pair(MAX_COST,MAX_COST)); }
+
+    void first() {zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c==MIN_COST; }); done = false; if (!zeros) firstlex();}
+    bool next(String& t, Cost& c) {if (!zeros) return nextlex(t,c); if (done) return false; t = tuple; c = cost-lb; done = true; return true;}
 
     Cost getMaxFiniteCost()
     {
