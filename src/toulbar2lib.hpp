@@ -170,6 +170,7 @@ public:
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
+    virtual unsigned int medianArity() const = 0; ///< \brief median arity of current cost functions
     virtual int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
     virtual int getMaxCurrentDomainSize() const = 0; ///< \brief maximum current domain size found in all variables
     virtual unsigned int getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes

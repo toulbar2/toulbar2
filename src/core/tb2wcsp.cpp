@@ -2221,9 +2221,35 @@ unsigned int WCSP::numberOfConnectedConstraints() const
     return res;
 }
 
+unsigned int WCSP::medianArity() const
+{
+    unsigned int nb = numberOfConnectedConstraints();
+    if (nb == 0)
+        return 0;
+    int arity[nb];
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+            arity[pos] = constrs[i]->arity();
+            pos++;
+        }
+    for (int i = 0; i < elimBinOrder; i++)
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) {
+            arity[pos] = 2;
+            pos++;
+        }
+    for (int i = 0; i < elimTernOrder; i++)
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+            arity[pos] = 3;
+            pos++;
+        }
+    assert(pos == numberOfConnectedConstraints() && pos == nb);
+    return stochastic_selection<int>(arity, 0, nb - 1, nb / 2);
+}
+
 unsigned int WCSP::numberOfConnectedBinaryConstraints() const
 {
-    int res = 0;
+    unsigned int res = 0;
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && constrs[i]->arity() == 2 && !constrs[i]->isSep())
             res++;
@@ -2238,7 +2264,7 @@ unsigned int WCSP::medianDomainSize() const
     unsigned int nbunvars = numberOfUnassignedVariables();
     if (nbunvars == 0)
         return 0;
-    int domain[nbunvars];
+    unsigned int domain[nbunvars];
     unsigned int pos = 0;
     for (unsigned int i = 0; i < vars.size(); i++)
         if (unassigned(i)) {
@@ -2246,7 +2272,7 @@ unsigned int WCSP::medianDomainSize() const
             pos++;
         }
     assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-    return stochastic_selection<int>(domain, 0, nbunvars - 1, nbunvars / 2);
+    return stochastic_selection<unsigned int>(domain, 0, nbunvars - 1, nbunvars / 2);
 }
 
 unsigned int WCSP::medianDegree() const

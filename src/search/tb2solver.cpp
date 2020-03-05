@@ -1657,7 +1657,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
 
     if (ToulBar2::verbose >= 0)
-        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxCurrentDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. degree:" << wcsp->medianDegree() << ")" << endl;
+        cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxCurrentDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. arity:" << wcsp->medianArity() << ", med. degree:" << wcsp->medianDegree() << ")" << endl;
     if (ToulBar2::verbose >= 0) {
         Double Dlb = wcsp->getDLb();
         Double Dub = wcsp->getDUb();
