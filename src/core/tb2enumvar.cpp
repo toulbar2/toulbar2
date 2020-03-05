@@ -1360,9 +1360,9 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
     double mult = (1.0 * x->getDomainSize()) / getDomainSize();
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr = (*iter).constr;
-        if (!ctr->extension() || ctr->isSep())
+        if (ctr->isGlobal() || ctr->isSep() || (!ctr->extension() && Store::getDepth()>0))
             return false;
-        if (mult > 1.1 && ctr->isNary() && (mult * ((NaryConstraint*)ctr)->size() > MAX_NB_TUPLES))
+        if (mult > 1.1 && (mult * ctr->size() > MAX_NB_TUPLES))
             return false;
     }
     return true;
@@ -1384,8 +1384,12 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
     }
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr = (*iter).constr;
-        assert(ctr->extension());
+        assert(!ctr->isGlobal());
         assert(!ctr->isSep());
+        if (!ctr->extension()) {
+            ctr->deconnect();
+            ctr = ctr->copy();
+        }
         if (ctr != xy)
             ctr->deconnect();
         bool noduplicate = (ctr->getIndex(x) < 0);
@@ -1491,7 +1495,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             break;
         }
         default: {
-            //	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST);
+            //	  int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, MIN_COST, 0, true);
             //	  NaryConstraint *newctrok = (NaryConstraint*) wcsp->getCtr(res);
             //	  assert(newctrok->arity() == scopeSize);
             //	  bool empty = true;
@@ -1524,7 +1528,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             assert(ctr->isNary());
             NaryConstraint* oldctr = (NaryConstraint*)ctr;
             Cost defcost = oldctr->getDefCost();
-            int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost, (noduplicate) ? oldctr->size() * x->getDomainInitSize() / getDomainInitSize() : oldctr->size() / getDomainInitSize());
+            int res = wcsp->postNaryConstraintBegin(scopeIndex, scopeSize, defcost, (noduplicate) ? oldctr->size() * x->getDomainInitSize() / getDomainInitSize() : oldctr->size() / getDomainInitSize(), true);
             Constraint* newctrctr = wcsp->getCtr(res);
             assert(newctrctr->arity() == scopeSize);
             AbstractNaryConstraint* newctr = (AbstractNaryConstraint*)newctrctr;

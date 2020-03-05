@@ -786,9 +786,10 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 /// \param arity size of scopeIndex
 /// \param defval default cost for any tuple
 /// \param nbtuples number of tuples to be inserted after creating this global cost function (optional parameter, zero if unknown)
-/// \note should not be used for binary or ternary cost functions
+/// \param forcenary if false then it may create a specialized global cost function (e.g., a clause) instead of a basic NaryConstraint object
+/// \note should not be used for unary or binary or ternary cost functions
 /// \warning do not forget to initially propagate the global cost function using WCSP::postNaryConstraintEnd
-int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples)
+int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples, bool forcenary)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -803,7 +804,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
             binary = false;
     }
     AbstractNaryConstraint* ctr = NULL;
-    if (binary && nbtuples == 1 && defval == MIN_COST && arity > NARYPROJECTIONSIZE) {
+    if (!forcenary && binary && nbtuples == 1 && defval == MIN_COST && arity > NARYPROJECTIONSIZE) {
         ctr = new WeightedClause(this, scopeVars, arity);
     } else {
         ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
@@ -3566,7 +3567,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     vector<Cost> costs;
 
     if (arityU > NARYPROJECTIONSIZE) { // || isGlobal()) {
-        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size()); //TODO: improve estimated number of tuples
+        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size(), true); //TODO: improve estimated number of tuples
         ctr = getCtr(ctrIndex);
         assert(ctr->isNary());
         NaryConstraint* nary = (NaryConstraint*)ctr;

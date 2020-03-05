@@ -117,9 +117,9 @@ public:
 
     virtual void dump(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
 
-    virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
-    virtual Long size() const { return 0; } ///< \brief number of tuples stored by the cost function
-    virtual Long space() const { return 0; } ///< \brief estimate of the cost function memory space size
+    virtual Long getDomainSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
+    virtual Long size() const { return getDomainSizeProduct(); } ///< \brief number of tuples stored by the cost function
+    virtual Long space() const { Long sz = size(); Long eltsz = sizeof(Cost) + arity() * sizeof(Char); if (sz<LONGLONG_MAX/eltsz) return (sz*eltsz); else return LONGLONG_MAX; } ///< \brief estimate of the cost function memory space size
 
     virtual void firstlex() {} ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order (initialization call)
     virtual bool nextlex(String& t, Cost& c)

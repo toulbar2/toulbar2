@@ -111,6 +111,12 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    Long size() const FINAL
+    {
+        Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
+        if (sumdelta == MIN_COST) return 1;
+        return getDomainSizeProduct();
+    }
 
     void reconnect()
     {

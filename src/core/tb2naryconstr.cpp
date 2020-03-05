@@ -470,7 +470,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
         existX = subscopeX[0]->getConstr(subscopeX[1], subscopeX[2]);
         naryx = wcsp->newTernaryConstr(subscopeX[0], subscopeX[1], subscopeX[2], costs);
     } else {
-        index = wcsp->postNaryConstraintBegin(scopeX, a - 1, wcsp->getUb(), size() / vz->getDomainInitSize());
+        index = wcsp->postNaryConstraintBegin(scopeX, a - 1, wcsp->getUb(), size() / vz->getDomainInitSize(), true);
         naryx = wcsp->getCtr(index);
     }
 
@@ -532,7 +532,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
         existZ = subscopeZ[0]->getConstr(subscopeZ[1], subscopeZ[2]);
         naryz = wcsp->newTernaryConstr(subscopeZ[0], subscopeZ[1], subscopeZ[2], costs);
     } else {
-        index = wcsp->postNaryConstraintBegin(scopeZ, a - 1, wcsp->getUb(), size() / vx->getDomainInitSize());
+        index = wcsp->postNaryConstraintBegin(scopeZ, a - 1, wcsp->getUb(), size() / vx->getDomainInitSize(), true);
         naryz = wcsp->getCtr(index);
     }
 

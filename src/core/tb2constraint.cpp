@@ -38,7 +38,7 @@ Constraint::Constraint(WCSP* w, int elimCtrIndex)
 
 /// \return size of the cartesian product of all domains in the constraint scope.
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
-Long Constraint::getDomainSizeProduct()
+Long Constraint::getDomainSizeProduct() const
 {
     if (arity() == 0)
         return 0;
@@ -310,8 +310,7 @@ Constraint* Constraint::copy()
     for (int i = 0; i < arity(); i++)
         scope[i] = getVar(i)->wcspIndex;
     Cost defcost = getDefCost();
-    Long nb = size();
-    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), defcost, (nb==1)?2:nb); // be sure to not create a clause instead of NaryConstraint!
+    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), defcost, size(), true); // be sure to not create a clause instead of NaryConstraint!
     Cost c;
     String t;
     first();

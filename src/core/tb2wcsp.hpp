@@ -400,8 +400,8 @@ public:
     int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
-    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples); }
-    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
+    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
+    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
