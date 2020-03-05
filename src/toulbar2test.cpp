@@ -32,8 +32,10 @@ int main(int argc, char* argv[])
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
 #ifdef OPENMPI
-    if (env0.myrank == 0) ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
-    else ToulBar2::verbose = -1;
+    if (env0.myrank == 0)
+        ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
+    else
+        ToulBar2::verbose = -1;
 #else
     ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
 #endif
@@ -48,23 +50,23 @@ int main(int argc, char* argv[])
     // uncomment the following lines if variable neighborhood search enable
     //ToulBar2::lds = 4;
     //ToulBar2::restart = 10000;
-	//#ifdef OPENMPI
-	//     if (env0.ntasks > 1) {
-	//    	 ToulBar2::searchMethod = RPDGVNS;
-	//    	 ToulBar2::vnsParallel = true;
-	//    	 ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
-	//    	 ToulBar2::vnsParallelSync = false;
-	//     } else {
-	//    	 ToulBar2::searchMethod = DGVNS;
-	//    	 ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
-	//     }
-	//#else
-	//	ToulBar2::searchMethod = DGVNS;
-	//	ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+    //#ifdef OPENMPI
+    //     if (env0.ntasks > 1) {
+    //    	 ToulBar2::searchMethod = RPDGVNS;
+    //    	 ToulBar2::vnsParallel = true;
+    //    	 ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
+    //    	 ToulBar2::vnsParallelSync = false;
+    //     } else {
+    //    	 ToulBar2::searchMethod = DGVNS;
+    //    	 ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+    //     }
+    //#else
+    //	ToulBar2::searchMethod = DGVNS;
+    //	ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
     //**or**
     //  ToulBar2::searchMethod = VNS;
     //  ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
-	//#endif
+    //#endif
 
     // create a problem with three 0/1 variables
     initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
@@ -123,25 +125,25 @@ int main(int argc, char* argv[])
 
     if (solver->solve()) {
 #ifdef OPENMPI
-    if (env0.myrank == 0) {
+        if (env0.myrank == 0) {
 #endif
-        // show optimal solution
-        vector<Value> sol;
-        Cost optimum = solver->getSolution(sol);
-        cout << "Optimum=" << optimum << endl;
-        cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
+            // show optimal solution
+            vector<Value> sol;
+            Cost optimum = solver->getSolution(sol);
+            cout << "Optimum=" << optimum << endl;
+            cout << "Solution: x=" << sol[x] << " ,y=" << sol[y] << " ,z=" << sol[z] << endl;
 #ifdef OPENMPI
-    }
+        }
 #endif
     } else {
 #ifdef OPENMPI
-    if (env0.myrank == 0) {
+        if (env0.myrank == 0) {
 #endif
-        cout << "No solution found!" << endl;
+            cout << "No solution found!" << endl;
 #ifdef OPENMPI
-    }
+        }
 #endif
-   }
+    }
     // cout << "Problem lower bound: " << solver->getWCSP()->getLb() << endl; // initial problem lower bound possibly enhanced by value removals at the root during search
 
     return 0;

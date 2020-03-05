@@ -115,7 +115,7 @@ public:
     virtual unsigned int getDomainSize(int varIndex) const = 0; ///< \brief current domain size
     virtual vector<Value> getEnumDomain(int varIndex) = 0; ///< \brief gets current domain values in an array
     virtual bool getEnumDomain(int varIndex, Value* array) = 0; ///< \deprecated
-    virtual vector< pair<Value, Cost> > getEnumDomainAndCost(int varIndex) = 0; ///< \brief gets current domain values and unary costs in an array
+    virtual vector<pair<Value, Cost>> getEnumDomainAndCost(int varIndex) = 0; ///< \brief gets current domain values and unary costs in an array
     virtual bool getEnumDomainAndCost(int varIndex, ValueCost* array) = 0; ///< \deprecated
     virtual unsigned int getDomainInitSize(int varIndex) const = 0; ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) = 0; ///< \brief gets value from index (warning! assumes EnumeratedVariable)
@@ -376,7 +376,7 @@ public:
     virtual const Double getSolutionValue() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
-    virtual const vector< pair<Double, vector<Value> > > getSolutions() = 0; ///\brief returns all solutions found
+    virtual const vector<pair<Double, vector<Value>>> getSolutions() = 0; ///\brief returns all solutions found
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
     virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
@@ -535,7 +535,7 @@ public:
     virtual const Double getSolutionValue() = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual const Cost getSolutionCost() = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual const Cost getSolution(vector<Value>& solution) = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const vector< pair<Double, vector<Value> > > getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
+    virtual const vector<pair<Double, vector<Value>>> getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM

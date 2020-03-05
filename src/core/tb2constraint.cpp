@@ -315,7 +315,8 @@ Constraint* Constraint::copy()
     String t;
     first();
     while (next(t, c)) {
-        if (c != defcost) wcsp->postNaryConstraintTuple(ctrIndex, t, c);
+        if (c != defcost)
+            wcsp->postNaryConstraintTuple(ctrIndex, t, c);
     }
     wcsp->getCtr(ctrIndex)->deconnect(true);
     return wcsp->getCtr(ctrIndex);

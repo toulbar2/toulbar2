@@ -542,7 +542,8 @@ public:
             }
         }
         if (costs.empty()) {
-            if (CUT(top, ub)) top = mult_ub;
+            if (CUT(top, ub))
+                top = mult_ub;
         }
     }
 

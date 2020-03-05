@@ -61,20 +61,21 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 
-PYBIND11_MODULE(toulbar2py, m) {
-    m.def("init", [](){ tb2init(); }); // must be called at the very beginning
+PYBIND11_MODULE(toulbar2py, m)
+{
+    m.def("init", []() { tb2init(); }); // must be called at the very beginning
     m.attr("MAX_COST") = py::cast(MAX_COST);
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
     py::register_exception<Contradiction>(m, "Contradiction");
 
-    py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete> >(m, "option")
+    py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete>>(m, "option")
         .def_readonly_static("version", &ToulBar2::version)
         .def_readwrite_static("verbose", &ToulBar2::verbose)
         .def_readwrite_static("debug", &ToulBar2::debug)
         .def_readwrite_static("externalUB", &ToulBar2::externalUB)
         .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
-//        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
+        //        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
         .def_readwrite_static("allSolutions", &ToulBar2::allSolutions)
         .def_readwrite_static("dumpWCSP", &ToulBar2::dumpWCSP)
         .def_readwrite_static("approximateCountingBTD", &ToulBar2::approximateCountingBTD)
@@ -127,7 +128,7 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite_static("deltaUb", &ToulBar2::deltaUb)
         .def_readwrite_static("singletonConsistency", &ToulBar2::singletonConsistency)
         .def_readwrite_static("vacValueHeuristic", &ToulBar2::vacValueHeuristic)
-        .def_readwrite_static("LcLevel", (int *) &ToulBar2::LcLevel)
+        .def_readwrite_static("LcLevel", (int*)&ToulBar2::LcLevel)
         .def_readwrite_static("wcnf", &ToulBar2::wcnf)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
@@ -135,7 +136,7 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite_static("btdMode", &ToulBar2::btdMode)
         .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
         .def_readwrite_static("btdRootCluster", &ToulBar2::btdRootCluster)
-//        .def_readwrite_static("maxsateval", &ToulBar2::maxsateval)
+        //        .def_readwrite_static("maxsateval", &ToulBar2::maxsateval)
         .def_readwrite_static("xmlflag", &ToulBar2::xmlflag)
         .def_readwrite_static("markov_log", &ToulBar2::markov_log)
         .def_readwrite_static("evidence_file", &ToulBar2::evidence_file)
@@ -158,18 +159,18 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite_static("interrupted", &ToulBar2::interrupted)
         .def_readwrite_static("seed", &ToulBar2::seed)
         .def_readwrite_static("incop_cmd", &ToulBar2::incop_cmd)
-        .def_readwrite_static("searchMethod", (int *) &ToulBar2::searchMethod)
+        .def_readwrite_static("searchMethod", (int*)&ToulBar2::searchMethod)
         .def_readwrite_static("clusterFile", &ToulBar2::clusterFile)
-        .def_readwrite_static("vnsInitSol", (int *) &ToulBar2::vnsInitSol)
+        .def_readwrite_static("vnsInitSol", (int*)&ToulBar2::vnsInitSol)
         .def_readwrite_static("vnsLDSmin", &ToulBar2::vnsLDSmin)
         .def_readwrite_static("vnsLDSmax", &ToulBar2::vnsLDSmax)
-        .def_readwrite_static("vnsLDSinc", (int *) &ToulBar2::vnsLDSinc)
+        .def_readwrite_static("vnsLDSinc", (int*)&ToulBar2::vnsLDSinc)
         .def_readwrite_static("vnsKmin", &ToulBar2::vnsKmin)
         .def_readwrite_static("vnsKmax", &ToulBar2::vnsKmax)
-        .def_readwrite_static("vnsKinc", (int *) &ToulBar2::vnsKinc)
+        .def_readwrite_static("vnsKinc", (int*)&ToulBar2::vnsKinc)
         .def_readwrite_static("vnsLDScur", &ToulBar2::vnsLDScur)
         .def_readwrite_static("vnsKcur", &ToulBar2::vnsKcur)
-        .def_readwrite_static("vnsNeighborVarHeur", (int *) &ToulBar2::vnsNeighborVarHeur)
+        .def_readwrite_static("vnsNeighborVarHeur", (int*)&ToulBar2::vnsNeighborVarHeur)
         .def_readwrite_static("vnsNeighborChange", &ToulBar2::vnsNeighborChange)
         .def_readwrite_static("vnsNeighborSizeSync", &ToulBar2::vnsNeighborSizeSync)
         .def_readwrite_static("vnsParallelLimit", &ToulBar2::vnsParallelLimit)
@@ -187,7 +188,7 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum);
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)
 
-    py::class_<Store, std::unique_ptr<Store, py::nodelete> >(m, "store")
+    py::class_<Store, std::unique_ptr<Store, py::nodelete>>(m, "store")
         .def("getDepth", &Store::getDepth)
         .def("store", &Store::store)
         .def("restore", static_cast<void (*)(int)>(&Store::restore));
@@ -211,9 +212,9 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def_readwrite("lower", &BoundedObjValue::lower);
 
     py::class_<WeightedCSP>(m, "WCSP")
-//        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
+        //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
         .def("getIndex", &WeightedCSP::getIndex)
-        .def("getName", (string (WeightedCSP::*)() const) &WeightedCSP::getName)
+        .def("getName", (string(WeightedCSP::*)() const) & WeightedCSP::getName)
         .def("getLb", &WeightedCSP::getLb)
         .def("getUb", &WeightedCSP::getUb)
         .def("getDPrimalBound", &WeightedCSP::getDPrimalBound)
@@ -227,13 +228,13 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("finiteUb", &WeightedCSP::finiteUb)
         .def("setInfiniteCost", &WeightedCSP::setInfiniteCost)
         .def("enumerated", &WeightedCSP::enumerated)
-        .def("getName", (string (WeightedCSP::*)(int) const) &WeightedCSP::getName)
+        .def("getName", (string(WeightedCSP::*)(int) const) & WeightedCSP::getName)
         .def("getInf", &WeightedCSP::getInf)
         .def("getSup", &WeightedCSP::getSup)
         .def("getValue", &WeightedCSP::getValue)
         .def("getDomainSize", &WeightedCSP::getDomainSize)
-        .def("getEnumDomain", (vector<Value> (WeightedCSP::*)(int varIndex)) &WeightedCSP::getEnumDomain)
-        .def("getEnumDomainAndCost", (vector< pair<Value, Cost> > (WeightedCSP::*)(int varIndex)) &WeightedCSP::getEnumDomainAndCost)
+        .def("getEnumDomain", (vector<Value>(WeightedCSP::*)(int varIndex)) & WeightedCSP::getEnumDomain)
+        .def("getEnumDomainAndCost", (vector<pair<Value, Cost>>(WeightedCSP::*)(int varIndex)) & WeightedCSP::getEnumDomainAndCost)
         .def("getDomainInitSize", &WeightedCSP::getDomainInitSize)
         .def("toValue", &WeightedCSP::toValue)
         .def("toIndex", &WeightedCSP::toIndex)
@@ -247,15 +248,15 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("decrease", &WeightedCSP::decrease)
         .def("assign", &WeightedCSP::assign)
         .def("remove", &WeightedCSP::remove)
-        .def("assignLS", (void (WeightedCSP::*)(vector<int>& varIndexes, vector<Value>& newValues)) &WeightedCSP::assignLS)
+        .def("assignLS", (void (WeightedCSP::*)(vector<int> & varIndexes, vector<Value> & newValues)) & WeightedCSP::assignLS)
         .def("getUnaryCost", &WeightedCSP::getUnaryCost)
         .def("getMaxUnaryCost", &WeightedCSP::getMaxUnaryCost)
         .def("getMaxUnaryCostValue", &WeightedCSP::getMaxUnaryCostValue)
         .def("getSupport", &WeightedCSP::getSupport)
         .def("getBestValue", &WeightedCSP::getBestValue)
         .def("setBestValue", &WeightedCSP::setBestValue)
-//        .def("getIsPartOfOptimalSolution", &WeightedCSP::getIsPartOfOptimalSolution)
-//        .def("setIsPartOfOptimalSolution", &WeightedCSP::setIsPartOfOptimalSolution)
+        //        .def("getIsPartOfOptimalSolution", &WeightedCSP::getIsPartOfOptimalSolution)
+        //        .def("setIsPartOfOptimalSolution", &WeightedCSP::setIsPartOfOptimalSolution)
         .def("getDegree", &WeightedCSP::getDegree)
         .def("getTrueDegree", &WeightedCSP::getTrueDegree)
         .def("getWeightedDegree", &WeightedCSP::getWeightedDegree)
@@ -277,39 +278,39 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
         .def("cartProd", &WeightedCSP::cartProd)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
-        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) &WeightedCSP::makeEnumeratedVariable)
+        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
-        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Double>& costs)) &WeightedCSP::postUnaryConstraint)
-        .def("postBinaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, vector<Double>& costs)) &WeightedCSP::postBinaryConstraint)
+        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Double>& costs)) & WeightedCSP::postUnaryConstraint)
+        .def("postBinaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, vector<Double>& costs)) & WeightedCSP::postBinaryConstraint)
         .def("postTernaryConstraint", &WeightedCSP::postTernaryConstraint)
-        .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int>& scope, Cost defval, Long nbtuples, bool forcenary)) &WeightedCSP::postNaryConstraintBegin)
-        .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) &WeightedCSP::postNaryConstraintTuple)
+        .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
+        .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
-        .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int>& scope, const string&arguments)) &WeightedCSP::postCliqueConstraint)
-        .def("postWAmong", (int (WeightedCSP::*)(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) &WeightedCSP::postWAmong)
-        .def("postWVarAmong", (void (WeightedCSP::*)(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) &WeightedCSP::postWVarAmong)
-        .def("postWRegular", (int (WeightedCSP::*)(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) &WeightedCSP::postWRegular)
-//        .def("postWAllDiff", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWAllDiff)
-//        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
-//        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
-//        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
-//        .def("postWGrammarCNF", &WeightedCSP::postWGrammarCNF)
-//        .def("postMST", &WeightedCSP::postMST)
-//        .def("postMaxWeight", &WeightedCSP::postMaxWeight)
-//        .def("postWSum", &WeightedCSP::postWSum)
-//        .def("postWVarSum", &WeightedCSP::postWVarSum)
-//        .def("postWOverlap", &WeightedCSP::postWOverlap)
+        .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> & scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
+        .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
+        .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
+        .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
+        //        .def("postWAllDiff", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWAllDiff)
+        //        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
+        //        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
+        //        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
+        //        .def("postWGrammarCNF", &WeightedCSP::postWGrammarCNF)
+        //        .def("postMST", &WeightedCSP::postMST)
+        //        .def("postMaxWeight", &WeightedCSP::postMaxWeight)
+        //        .def("postWSum", &WeightedCSP::postWSum)
+        //        .def("postWVarSum", &WeightedCSP::postWVarSum)
+        //        .def("postWOverlap", &WeightedCSP::postWOverlap)
         .def("isGlobal", &WeightedCSP::isGlobal)
-        .def("getSolution", (const vector<Value> (WeightedCSP::*)()) &WeightedCSP::getSolution)
+        .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
         .def("getSolutionValue", &WeightedCSP::getSolutionValue)
         .def("getSolutionCost", &WeightedCSP::getSolutionCost)
         .def("getSolutions", &WeightedCSP::getSolutions)
-//        .def("setSolution", &WeightedCSP::setSolution)
-        .def("printSolution", (void (WeightedCSP::*)(ostream& )) &WeightedCSP::printSolution)
+        //        .def("setSolution", &WeightedCSP::setSolution)
+        .def("printSolution", (void (WeightedCSP::*)(ostream&)) & WeightedCSP::printSolution)
         .def("print", &WeightedCSP::print)
         .def("dump", &WeightedCSP::dump)
         .def("decimalToCost", &WeightedCSP::decimalToCost)
@@ -320,25 +321,36 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("Cost2Prob", &WeightedCSP::Cost2Prob)
         .def("Cost2LogProb", &WeightedCSP::Cost2LogProb)
         .def("LogProb2Cost", &WeightedCSP::LogProb2Cost)
-        .def("LogSumExp", (Cost (WeightedCSP::*)(Cost c1, Cost c2) const) &WeightedCSP::LogSumExp)
-        .def("LogSumExp", (TLogProb (WeightedCSP::*)(TLogProb logc1, Cost c2) const) &WeightedCSP::LogSumExp)
-        .def("LogSumExp", (TLogProb (WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) &WeightedCSP::LogSumExp);
+        .def("LogSumExp", (Cost(WeightedCSP::*)(Cost c1, Cost c2) const) & WeightedCSP::LogSumExp)
+        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, Cost c2) const) & WeightedCSP::LogSumExp)
+        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp);
 
     py::class_<WeightedCSPSolver>(m, "Solver")
         .def(py::init([](Cost ub) { ToulBar2::startCpuTime = cpuTime(); initCosts(); return WeightedCSPSolver::makeWeightedCSPSolver(ub); }), py::arg("ub") = MAX_COST)
         .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
-        .def("read", [](WeightedCSPSolver &s, const char* fileName){
-            if (strstr(fileName,".xz")==&fileName[strlen(fileName)-strlen(".xz")]) ToulBar2::xz = true;
-            if (strstr(fileName,".gz")==&fileName[strlen(fileName)-strlen(".gz")]) ToulBar2::gz = true;
-            if (strstr(fileName,".cfn")) ToulBar2::cfn = true;
-            if (strstr(fileName,".wcnf") || strstr(fileName,".cnf")) ToulBar2::wcnf = true;
-            if (strstr(fileName,".qpbo")) ToulBar2::qpbo = true;
-            if (strstr(fileName,".uai")) {ToulBar2::uai = 1; ToulBar2::bayesian = true;}
-            if (strstr(fileName,".LG")) {ToulBar2::uai = 2; ToulBar2::bayesian = true;}
+        .def("read", [](WeightedCSPSolver& s, const char* fileName) {
+            if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
+                ToulBar2::xz = true;
+            if (strstr(fileName, ".gz") == &fileName[strlen(fileName) - strlen(".gz")])
+                ToulBar2::gz = true;
+            if (strstr(fileName, ".cfn"))
+                ToulBar2::cfn = true;
+            if (strstr(fileName, ".wcnf") || strstr(fileName, ".cnf"))
+                ToulBar2::wcnf = true;
+            if (strstr(fileName, ".qpbo"))
+                ToulBar2::qpbo = true;
+            if (strstr(fileName, ".uai")) {
+                ToulBar2::uai = 1;
+                ToulBar2::bayesian = true;
+            }
+            if (strstr(fileName, ".LG")) {
+                ToulBar2::uai = 2;
+                ToulBar2::bayesian = true;
+            }
             tb2checkOptions();
             return s.read_wcsp(fileName);
-            })
-        .def("solve", [](WeightedCSPSolver &s, int timeout){
+        })
+        .def("solve", [](WeightedCSPSolver& s, int timeout) {
             if (ToulBar2::seed < 0) { // initialize seed using current time
                 ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
                 if (ToulBar2::verbose >= 0) cout << "Initial random seed is " << ToulBar2::seed << endl;
@@ -360,8 +372,8 @@ PYBIND11_MODULE(toulbar2py, m) {
                 if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
                 return false;
             }
-            return res;}, py::arg("timeout") = 0)
-        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) &WeightedCSPSolver::getSolution)
+            return res; }, py::arg("timeout") = 0)
+        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) & WeightedCSPSolver::getSolution)
         .def("solutionValue", &WeightedCSPSolver::getSolutionValue)
         .def("solutionCost", &WeightedCSPSolver::getSolutionCost)
         .def("solutions", &WeightedCSPSolver::getSolutions)
@@ -372,8 +384,8 @@ PYBIND11_MODULE(toulbar2py, m) {
         .def("assign", &WeightedCSPSolver::assign)
         .def("remove", &WeightedCSPSolver::remove)
         .def("generate", &WeightedCSPSolver::read_random)
-//        .def("narycsp", &WeightedCSPSolver::narycsp)
-//        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
+        //        .def("narycsp", &WeightedCSPSolver::narycsp)
+        //        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
         .def("dump_wcsp", &WeightedCSPSolver::dump_wcsp)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);

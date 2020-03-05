@@ -252,7 +252,7 @@ enum {
     OPT_seed,
     OPT_random,
 
-    // VNS Methods
+// VNS Methods
 #ifdef BOOST
     OPT_VNS_search,
 #ifdef OPENMPI
@@ -454,7 +454,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_seed, (char*)"-seed", SO_REQ_SEP },
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
 
-    // VNS Methods
+// VNS Methods
 #ifdef BOOST
     { OPT_VNS_search, (char*)"-vns", SO_NONE },
     { OPT_VNS_search, (char*)"--vns", SO_NONE },
@@ -873,7 +873,7 @@ void help_msg(char* toulbar2filename)
 
 int _tmain(int argc, TCHAR* argv[])
 {
-//#pragma STDC FENV_ACCESS ON
+    //#pragma STDC FENV_ACCESS ON
     std::fesetround(FE_TONEAREST);
 
 #ifdef OPENMPI
@@ -994,7 +994,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "Search Method used =  " << mode << endl;
             }
 
-            // VNS
+// VNS
 #ifdef BOOST
             if (args.OptionId() == OPT_VNS_search) {
                 //                ToulBar2::searchMethod = VNS;
@@ -1269,17 +1269,21 @@ int _tmain(int argc, TCHAR* argv[])
 
             //#############################################
             if (args.OptionId() == OPT_writeSolution) {
-                if (!ToulBar2::writeSolution) ToulBar2::writeSolution = 1;
-                if (solutionFileName == NULL) solutionFileName = (char*)"sol";
+                if (!ToulBar2::writeSolution)
+                    ToulBar2::writeSolution = 1;
+                if (solutionFileName == NULL)
+                    solutionFileName = (char*)"sol";
 
                 if (args.OptionArg() != NULL) {
                     char* tmpFile = new char[strlen(args.OptionArg()) + 1];
                     strcpy(tmpFile, args.OptionArg());
                     if (strlen(tmpFile) == 1 && (tmpFile[0] == '0' || tmpFile[0] == '1' || tmpFile[0] == '2' || tmpFile[0] == '3')) {
-                        if (atoi(tmpFile)<=2) ToulBar2::pedigreeCorrectionMode = atoi(tmpFile);
-                        if (atoi(tmpFile)>=1) ToulBar2::writeSolution = atoi(tmpFile);
+                        if (atoi(tmpFile) <= 2)
+                            ToulBar2::pedigreeCorrectionMode = atoi(tmpFile);
+                        if (atoi(tmpFile) >= 1)
+                            ToulBar2::writeSolution = atoi(tmpFile);
                     } else {
-                    	solutionFileName = tmpFile;
+                        solutionFileName = tmpFile;
                     }
                 }
             }

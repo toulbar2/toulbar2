@@ -3152,9 +3152,9 @@ void WCSP::solution_XML(bool opt)
     cout << endl;
     freopen(NULL, "w", ToulBar2::solutionFile);
 
-    //fsol << endl;
-    //fsol.close();
-    //sol.close();
+//fsol << endl;
+//fsol.close();
+//sol.close();
 #endif
 }
 

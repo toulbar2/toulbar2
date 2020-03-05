@@ -44,7 +44,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<Variable*> vars; ///< list of all variables
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
-    vector< pair<Double, vector<Value> > > solutions; ///< remember all solutions found
+    vector<pair<Double, vector<Value>>> solutions; ///< remember all solutions found
     Cost solutionCost; ///< and its cost
     vector<Constraint*> constrs; ///< list of original cost functions
     int NCBucketSize; ///< number of buckets for NC bucket sort
@@ -211,9 +211,21 @@ public:
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
     Value getValue(int varIndex) const { return vars[varIndex]->getValue(); } ///< \brief current assigned value \warning undefined if not assigned yet
     unsigned int getDomainSize(int varIndex) const { return vars[varIndex]->getDomainSize(); } ///< \brief current domain size
-    vector<Value> getEnumDomain(int varIndex) { vector<Value> array(getDomainSize(varIndex)); assert(enumerated(varIndex)); getEnumDomain(varIndex, array.data()); return array; }
+    vector<Value> getEnumDomain(int varIndex)
+    {
+        vector<Value> array(getDomainSize(varIndex));
+        assert(enumerated(varIndex));
+        getEnumDomain(varIndex, array.data());
+        return array;
+    }
     bool getEnumDomain(int varIndex, Value* array);
-    vector< pair<Value, Cost> > getEnumDomainAndCost(int varIndex) { vector< pair<Value, Cost> > array(getDomainSize(varIndex)); assert(enumerated(varIndex)); getEnumDomainAndCost(varIndex, (ValueCost *) array.data()); return array; }
+    vector<pair<Value, Cost>> getEnumDomainAndCost(int varIndex)
+    {
+        vector<pair<Value, Cost>> array(getDomainSize(varIndex));
+        assert(enumerated(varIndex));
+        getEnumDomainAndCost(varIndex, (ValueCost*)array.data());
+        return array;
+    }
     bool getEnumDomainAndCost(int varIndex, ValueCost* array);
     unsigned int getDomainInitSize(int varIndex) const
     {
@@ -407,7 +419,11 @@ public:
     void postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
-    int postCliqueConstraint(vector<int>& scope, const string& arguments) { istringstream file(arguments); return postCliqueConstraint(scope.data(), scope.size(), file); }
+    int postCliqueConstraint(vector<int>& scope, const string& arguments)
+    {
+        istringstream file(arguments);
+        return postCliqueConstraint(scope.data(), scope.size(), file);
+    }
     int postCliqueConstraint(int* scopeIndex, int arity, istream& file);
 
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
@@ -417,7 +433,7 @@ public:
     int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
     int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub); ///< \deprecated
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex);} ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \deprecated
     int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
@@ -461,16 +477,16 @@ public:
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format
     void solution_UAI(Cost res); ///< \brief output solution in UAI 2008 output format
 
-    const vector<Value> getSolution() {return solution;}
-    const Double getSolutionValue() {return Cost2ADCost(solutionCost);}
-    const Cost getSolutionCost() {return solutionCost;}
+    const vector<Value> getSolution() { return solution; }
+    const Double getSolutionValue() { return Cost2ADCost(solutionCost); }
+    const Cost getSolutionCost() { return solutionCost; }
     const vector<Value> getSolution(Cost* cost_ptr)
     {
         if (cost_ptr != NULL)
             *cost_ptr = solutionCost;
         return solution;
     }
-    const vector< pair<Double, vector<Value> > > getSolutions() {return solutions;}
+    const vector<pair<Double, vector<Value>>> getSolutions() { return solutions; }
     void setSolution(Cost cost, TAssign* sol = NULL)
     {
         solutionCost = cost;
@@ -484,85 +500,85 @@ public:
     }
     void printSolution()
     {
-    	for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
-    		    EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
-    			Value myvalue = solution[i];
-    			string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
-    			string varlabel = myvar->getName();
+        for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
+                EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
+                Value myvalue = solution[i];
+                string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+                string varlabel = myvar->getName();
 
-    			switch (ToulBar2::showSolutions) {
-    			case 1:
-    				cout << myvalue;
-    				break;
-    			case 2:
-    				cout << valuelabel;
-    				break;
-    			case 3:
-    				cout << varlabel << "=" << valuelabel;
-    				break;
-    			default:
-    				break;
-    			}
-    		} else {
-    			cout << solution[i];
-    		}
-    		cout << (i < numberOfVariables() - 1 ? " " : "");
-    	}
+                switch (ToulBar2::showSolutions) {
+                case 1:
+                    cout << myvalue;
+                    break;
+                case 2:
+                    cout << valuelabel;
+                    break;
+                case 3:
+                    cout << varlabel << "=" << valuelabel;
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                cout << solution[i];
+            }
+            cout << (i < numberOfVariables() - 1 ? " " : "");
+        }
     }
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
-                EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
-    			Value myvalue = solution[i];
+            if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
+                EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
+                Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-    			switch (ToulBar2::writeSolution) {
-    			case 1:
-    				os << myvalue;
-    				break;
-    			case 2:
-    				os << valuelabel;
-    				break;
-    			case 3:
-    				os << varlabel << "=" << valuelabel;
-    				break;
-    			default:
-    				break;
-    			}
-    		} else {
-    			os << solution[i];
-    		}
+                switch (ToulBar2::writeSolution) {
+                case 1:
+                    os << myvalue;
+                    break;
+                case 2:
+                    os << valuelabel;
+                    break;
+                case 3:
+                    os << varlabel << "=" << valuelabel;
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                os << solution[i];
+            }
             os << (i < numberOfVariables() - 1 ? " " : "");
         }
     }
     void printSolution(FILE* f)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-    		if (enumerated(i) && ((EnumeratedVariable *)getVar(i))->isValueNames()) {
-                EnumeratedVariable *myvar = (EnumeratedVariable *)getVar(i);
-    			Value myvalue = solution[i];
+            if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
+                EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
+                Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-    			switch (ToulBar2::writeSolution) {
-    			case 1:
-    				fprintf(f, "%d", myvalue);
-    				break;
-    			case 2:
-    				fprintf(f, "%s", valuelabel.c_str());
-    				break;
-    			case 3:
-    				fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
-    				break;
-    			default:
-    				break;
-    			}
-    		} else {
-    			fprintf(f, "%d", solution[i]);
-    		}
+                switch (ToulBar2::writeSolution) {
+                case 1:
+                    fprintf(f, "%d", myvalue);
+                    break;
+                case 2:
+                    fprintf(f, "%s", valuelabel.c_str());
+                    break;
+                case 3:
+                    fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                fprintf(f, "%d", solution[i]);
+            }
             if (i < numberOfVariables() - 1)
                 fprintf(f, " ");
         }

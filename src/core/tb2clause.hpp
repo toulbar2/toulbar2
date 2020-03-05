@@ -114,7 +114,8 @@ public:
     Long size() const FINAL
     {
         Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
-        if (sumdelta == MIN_COST) return 1;
+        if (sumdelta == MIN_COST)
+            return 1;
         return getDomainSizeProduct();
     }
 
@@ -211,17 +212,33 @@ public:
 
     double computeTightness() { return 1.0 * cost / getDomainSizeProduct(); }
 
-    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int index, Value a, Value b)
+    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
     {
         Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
-        bool supporta = (getClause(index)==a);
-        Cost maxcosta = max((supporta)?MIN_COST:(cost-lb), sumdelta-((supporta)?MIN_COST:(Cost)deltaCosts[index]));
-        Cost maxcostb = max((supporta)?(cost-lb):MIN_COST, sumdelta-((supporta)?(Cost)deltaCosts[index]:MIN_COST));
-        return make_pair(make_pair(maxcosta,maxcosta),make_pair(maxcostb,maxcostb));
+        bool supporta = (getClause(index) == a);
+        Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)deltaCosts[index]));
+        Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)deltaCosts[index] : MIN_COST));
+        return make_pair(make_pair(maxcosta, maxcosta), make_pair(maxcostb, maxcostb));
     }
 
-    void first() {zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c==MIN_COST; }); done = false; if (!zeros) firstlex();}
-    bool next(String& t, Cost& c) {if (!zeros) return nextlex(t,c); if (done) return false; t = tuple; c = cost-lb; done = true; return true;}
+    void first()
+    {
+        zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c == MIN_COST; });
+        done = false;
+        if (!zeros)
+            firstlex();
+    }
+    bool next(String& t, Cost& c)
+    {
+        if (!zeros)
+            return nextlex(t, c);
+        if (done)
+            return false;
+        t = tuple;
+        c = cost - lb;
+        done = true;
+        return true;
+    }
 
     Cost getMaxFiniteCost()
     {

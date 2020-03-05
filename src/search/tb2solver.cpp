@@ -279,11 +279,11 @@ void Solver::parse_solution(const char* certificate)
             break;
         }
         case '>': {
-            wcsp->increase(var, value+1);
+            wcsp->increase(var, value + 1);
             break;
         }
         case '<': {
-            wcsp->decrease(var, value-1);
+            wcsp->decrease(var, value - 1);
             break;
         }
         default: {
@@ -1224,8 +1224,8 @@ void Solver::newSolution()
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else if (wcsp->enumerated(i) && ((EnumeratedVariable *)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
-                EnumeratedVariable *myvar  = (EnumeratedVariable *)((WCSP*)wcsp)->getVar(i);
+            } else if (wcsp->enumerated(i) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
+                EnumeratedVariable* myvar = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
                 Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][myvar->toIndex(myvar->getValue())].value : myvar->getValue());
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
@@ -1747,7 +1747,7 @@ bool Solver::solve()
                             }
                         }
                     } else {
-                        nbBacktracksLimit = min(ToulBar2::backtrackLimit , nbBacktracks + currentNbBacktracksLimit * 100);
+                        nbBacktracksLimit = min(ToulBar2::backtrackLimit, nbBacktracks + currentNbBacktracksLimit * 100);
                         if (ToulBar2::verbose >= 0)
                             cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
                     }
@@ -1880,8 +1880,9 @@ bool Solver::solve()
                             hybridSolve();
                         }
                     }
-                } catch (const NbBacktracksOut &) {
-                    if (nbBacktracks > ToulBar2::backtrackLimit) throw NbBacktracksOut();
+                } catch (const NbBacktracksOut&) {
+                    if (nbBacktracks > ToulBar2::backtrackLimit)
+                        throw NbBacktracksOut();
                     nbbacktracksout = true;
                     ToulBar2::limited = false;
                 }
@@ -1890,7 +1891,7 @@ bool Solver::solve()
         } catch (Contradiction) {
             wcsp->whenContradiction();
         }
-    } catch (const SolverOut &) {
+    } catch (const SolverOut&) {
     }
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()

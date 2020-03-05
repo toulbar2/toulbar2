@@ -1360,7 +1360,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
     double mult = (1.0 * x->getDomainSize()) / getDomainSize();
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr = (*iter).constr;
-        if (ctr->isGlobal() || ctr->isSep() || (!ctr->extension() && Store::getDepth()>0))
+        if (ctr->isGlobal() || ctr->isSep() || (!ctr->extension() && Store::getDepth() > 0))
             return false;
         if (mult > 1.1 && (mult * ctr->size() > MAX_NB_TUPLES))
             return false;

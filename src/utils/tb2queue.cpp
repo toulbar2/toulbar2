@@ -163,14 +163,13 @@ void Queue::sort(bool increase)
     for (iterator iter = begin(); iter != end(); ++iter) {
         sorted[i++] = iter.getElt();
     }
-    qsort(sorted, size, sizeof(DLink<VariableWithTimeStamp>*), (increase)?cmpVariableDAC:cmpVariableRevDAC);
+    qsort(sorted, size, sizeof(DLink<VariableWithTimeStamp>*), (increase) ? cmpVariableDAC : cmpVariableRevDAC);
     for (int i = 0; i < size; i++) {
         erase(sorted[i], false);
         push_back(sorted[i], false);
     }
     delete[] sorted;
 }
-
 
 void Queue::print(ostream& os)
 {

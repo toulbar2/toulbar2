@@ -604,7 +604,7 @@ public:
         if (ToulBar2::verbose >= 2)
             cout << what() << endl;
     }
-    const char * what() const {return "... contradiction!";}
+    const char* what() const { return "... contradiction!"; }
 };
 #define THROWCONTRADICTION            \
     {                                 \

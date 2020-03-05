@@ -601,7 +601,7 @@ void WCSP::addValueName(int xIndex, const string& name)
 {
     Variable* x = getVar(xIndex);
     if (x->enumerated()) {
-        ((EnumeratedVariable *) x)->addValueName(name);
+        ((EnumeratedVariable*)x)->addValueName(name);
     }
 }
 
@@ -2169,11 +2169,12 @@ void WCSP::setInfiniteCost()
 
 int WCSP::getMaxCurrentDomainSize() const
 {
-    int max = (vars.size()>0)?1:0;
+    int max = (vars.size() > 0) ? 1 : 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned()) {
             int sz = vars[i]->getDomainSize();
-            if (sz > max) max = sz;
+            if (sz > max)
+                max = sz;
         }
     }
     return max;
@@ -2366,7 +2367,7 @@ void WCSP::print(ostream& os)
 void printClique(ostream& os, int arity, Constraint* ctr)
 {
     assert(arity >= 2);
-    if (arity > MAX_ARITY/10) {
+    if (arity > MAX_ARITY / 10) {
         cerr << "warning! cost function arity is too large for primal graph representation." << endl;
         return;
     }
@@ -2689,7 +2690,8 @@ void WCSP::propagateAC()
 {
     if (ToulBar2::verbose >= 2)
         cout << "ACQueue size: " << AC.getSize() << endl;
-    if (Store::getDepth()==0) AC.sort(false);
+    if (Store::getDepth() == 0)
+        AC.sort(false);
     while (!AC.empty()) {
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
@@ -2703,7 +2705,8 @@ void WCSP::propagateDAC()
 {
     if (ToulBar2::verbose >= 2)
         cout << "DACQueue size: " << DAC.getSize() << endl;
-    if (Store::getDepth()==0) DAC.sort(true);
+    if (Store::getDepth() == 0)
+        DAC.sort(true);
     while (!DAC.empty()) {
         if (ToulBar2::interrupted)
             throw TimeOut();
@@ -3050,7 +3053,8 @@ void WCSP::propagateEAC()
     fillEAC2();
     if (ToulBar2::verbose >= 2)
         cout << "EAC2Queue size: " << EAC2.getSize() << endl;
-    if (Store::getDepth()==0) EAC2.sort(false);
+    if (Store::getDepth() == 0)
+        EAC2.sort(false);
     while (!EAC2.empty()) {
         if (ToulBar2::interrupted)
             throw TimeOut();
@@ -3774,7 +3778,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                             t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
                             t[arity] = '\0';
                             String strt(t);
-                            Cost c = ((isnary)?((NaryConstraint *)ctr_inout)->eval(strt):ctr_inout->evalsubstr(strt,ctr_inout)) + var->getCost(*itv);
+                            Cost c = ((isnary) ? ((NaryConstraint*)ctr_inout)->eval(strt) : ctr_inout->evalsubstr(strt, ctr_inout)) + var->getCost(*itv);
                             if (ToulBar2::isZ)
                                 mincost = LogSumExp(mincost, c);
                             else if (c < mincost)
