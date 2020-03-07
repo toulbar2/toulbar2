@@ -1,11 +1,11 @@
-#code executed if the boost option is add
+# code executed if the boost option is set
 FILE(GLOB boost_file ${My_Source}/utils/tb2boostgraph.cpp)
 
 # list of cpp file extension 
 SET (source_files ${source_files} ${boost_file})
 
 # boost detection 
-MESSAGE(STATUS "- boost flag on  .")
+MESSAGE(STATUS "Boost flag on.")
 
 find_package(Boost 1.34.0 REQUIRED COMPONENTS graph iostreams)
 #find_package(ZLIB)
