@@ -2,6 +2,13 @@
 ROOT=`git rev-parse --show-toplevel`
 HASH=`git rev-parse --short HEAD^1`
 
+echo "Generating new version file..."
+$ROOT/cmake-script/genVersionFile.sh 
+git add -f $ROOT/src/ToulbarVersion.hpp
+git add -f $ROOT/src/MyCPackConf.cmake
+git commit -m"[misc] Updated version file on push"
+echo "Adding fresh version files."
+
 mkdir -p $ROOT/build
 cd $ROOT/build
 cmake ..
