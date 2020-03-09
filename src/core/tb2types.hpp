@@ -411,6 +411,38 @@ protected:
 public:
     static string version;
     static int verbose;
+
+    static int strictAC;
+    static int SACifVAC;
+    static int VACthreshold;
+    static int reverseSAC;
+    static int currentOpenNodeDepth;
+    static int BFSVAC;
+    static int BFSSAC;
+    static bool isVAC;
+    static int BoolDomSize;
+    static int nbTimesIsVAC;
+    static int nbTimesIsVACitThresholdMoreThanOne;
+    static bool RINS;
+    static int useRINS;
+    static int RINSreset;
+    static int RINS_nbStrictACVariables;
+    static bool RINS_newSolutionFound;
+    static double RINS_probabilty;
+    static int RINS_nbCalls;
+    static int RINS_nbNewSolutionFound;
+    static int RINS_nbNodesOn;
+    static int RINS_nbNodesOff;
+    static int RINS_nbBacktracksOn;
+    static int RINS_nbBacktracksOff;
+    static Cost RINS_lastitThreshold;
+    static double RINS_lastRatio;
+    static bool RINS_saveitThresholds;
+    static vector<pair<Cost, double>> RINS_itThresholds;
+    static int RINS_angle;
+    static int RINS_HBFSnodes;
+    static int RINS_lastHBFSnode;
+
     static int debug;
     static string externalUB;
     static int showSolutions;
@@ -633,6 +665,7 @@ class Solver;
 class Cluster;
 class Separator;
 class TreeDecomposition;
+class VACExtension;
 
 class ConstraintLink {
 public:

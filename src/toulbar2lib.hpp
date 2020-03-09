@@ -2,7 +2,7 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2019, toulbar2 team
+    Copyright (c) 2006-2020, toulbar2 team
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -136,8 +136,8 @@ public:
     /// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
-    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) = 0;
-    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate) = 0;
+    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false) = 0;
+    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false) = 0;
 
     virtual Cost getUnaryCost(int varIndex, Value v) const = 0; ///< \brief unary cost associated to a domain value
     virtual Cost getMaxUnaryCost(int varIndex) const = 0; ///< \brief maximum unary cost in the domain
@@ -415,7 +415,6 @@ public:
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;
     virtual void removeSingleton() = 0;
-    virtual int getVACHeuristic() = 0;
     virtual void printVACStat() = 0;
 };
 

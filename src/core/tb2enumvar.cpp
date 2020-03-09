@@ -8,6 +8,7 @@
 #include "tb2binconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 #include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 
 /*
  * Constructors and misc.
@@ -21,6 +22,10 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , support(iinf)
     , watchForIncrease(false)
     , watchForDecrease(false)
+    , moreThanOne((isup > iinf) ? 1 : 0)
+    , domSizeInBoolOfP(isup - iinf + 1)
+    , strictACValueInBoolOfP(support)
+    , RINS_lastValue(-1)
 {
     init();
 }
@@ -32,6 +37,10 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , support(min(d, dsize))
     , watchForIncrease(false)
     , watchForDecrease(false)
+    , moreThanOne((dsize > 1) ? 1 : 0)
+    , domSizeInBoolOfP(dsize)
+    , strictACValueInBoolOfP(support)
+    , RINS_lastValue(-1)
 {
     init();
 }
@@ -54,6 +63,8 @@ void EnumeratedVariable::init()
     linkEAC2Queue.content.timeStamp = -1;
     linkDEEQueue.content.var = this;
     linkDEEQueue.content.timeStamp = -1;
+    linkFEACQueue.content.var = this;
+    linkFEACQueue.content.timeStamp = -1;
     DEE.constr = NULL;
     DEE.scopeIndex = -1;
     if (ToulBar2::DEE >= 2)
@@ -99,11 +110,15 @@ void EnumeratedVariable::print(ostream& os)
     if (ToulBar2::weightedDegree)
         os << "/" << getWeightedDegree();
     if (unassigned()) {
-        os << " <";
+        os << " ";
+        os << "<";
         for (iterator iter = begin(); iter != end(); ++iter) {
             os << " " << getCost(*iter);
         }
         os << " > s:" << support;
+        if (ToulBar2::strictAC && !moreThanOne) {
+            os << "!";
+        }
     }
 }
 
@@ -137,6 +152,10 @@ void EnumeratedVariable::queueDEE()
     wcsp->queueDEE(&linkDEEQueue);
 }
 
+void EnumeratedVariable::queueFEAC()
+{
+    wcsp->queueFEAC(&linkFEACQueue);
+}
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
@@ -199,10 +218,12 @@ void EnumeratedVariable::findSupport()
     if (cannotbe(support) || getCost(support) > MIN_COST) {
         Value newSupport = getInf();
         Cost minCost = getCost(newSupport);
+        Value bestValue = wcsp->getBestValue(wcspIndex);
         iterator iter = begin();
         for (++iter; minCost > MIN_COST && iter != end(); ++iter) {
             Cost cost = getCost(*iter);
-            if (GLB(&minCost, cost)) {
+            if (cost < minCost || (cost == minCost && *iter == bestValue)) { // GLB(&minCost, cost)) {
+                minCost = cost;
                 newSupport = *iter;
             }
         }
@@ -213,7 +234,7 @@ void EnumeratedVariable::findSupport()
         assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
         if (support != newSupport)
             queueDEE();
-        support = newSupport;
+        setSupport(newSupport);
     }
 }
 
@@ -234,7 +255,7 @@ Cost EnumeratedVariable::normalizeTRWS()
     assert(canbe(newSupport) && (getCost(newSupport) == MIN_COST || SUPPORTTEST(getCost(newSupport))));
     if (support != newSupport)
         queueDEE();
-    support = newSupport;
+    setSupport(newSupport);
     queueNC();
     queueAC();
     queueDAC();
@@ -306,6 +327,35 @@ void EnumeratedVariable::propagateDAC()
     }
 }
 
+bool EnumeratedVariable::checkEACGreedySolution()
+{
+    bool result = true;
+    for (ConstraintList::iterator iter = constrs.begin(); result && iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isSep())
+            continue;
+        result = result && (*iter).constr->checkEACGreedySolution();
+    }
+    return result;
+}
+
+bool EnumeratedVariable::reviseEACGreedySolution()
+{
+    bool broken = false;
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isSep())
+            continue;
+        bool result = (*iter).constr->reviseEACGreedySolution();
+        if (!result)
+            broken = true;
+    }
+    if (!broken) {
+        moreThanOne = 0;
+    } else {
+        assert(moreThanOne == 1);
+    }
+    return (!broken);
+}
+
 void EnumeratedVariable::fillEAC2(bool self)
 {
     if (self)
@@ -359,6 +409,8 @@ void EnumeratedVariable::setCostProvidingPartition()
 bool EnumeratedVariable::isEAC(Value a)
 {
     if (getCost(a) == MIN_COST) {
+        if (ToulBar2::strictAC)
+            moreThanOne = 0;
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
             if ((*iter).constr->isDuplicate())
                 continue;
@@ -383,7 +435,7 @@ bool EnumeratedVariable::isEAC(Value a)
         }
         if (support != a)
             queueDEE();
-        support = a;
+        setSupport(a);
 #ifndef NDEBUG
         if (ToulBar2::verbose >= 4)
             cout << getName() << "(" << a << ") is EAC!" << endl;
@@ -400,14 +452,21 @@ bool EnumeratedVariable::isEAC(Value a)
 bool EnumeratedVariable::isEAC()
 {
     assert(canbe(support));
+    Value bestValue = wcsp->getBestValue(wcspIndex);
+    if (support != bestValue && canbe(bestValue)) {
+        if (isEAC(bestValue))
+            return true;
+    }
     if (isEAC(support))
         return true;
-    else {
-        for (iterator iter = begin(); iter != end(); ++iter) {
-            if (*iter != support && isEAC(*iter))
-                return true;
-        }
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        if (*iter == support || *iter == bestValue)
+            continue;
+        if (isEAC(*iter))
+            return true;
     }
+    if (ToulBar2::strictAC)
+        moreThanOne = 1;
     return false;
 }
 
@@ -846,7 +905,7 @@ void EnumeratedVariable::assign(Value newValue, bool isDecision)
     }
 }
 
-void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
+void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force)
 {
     if (ToulBar2::verbose >= 2)
         cout << "assignLS " << *this << " -> " << newValue << endl;
@@ -854,7 +913,7 @@ void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs)
     if (wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue)
         wcsp->setIsPartOfOptimalSolution(false);
 #endif
-    if (unassigned() || getValue() != newValue) {
+    if (force || unassigned() || getValue() != newValue) {
         if (cannotbe(newValue))
             THROWCONTRADICTION;
         changeNCBucket(-1);

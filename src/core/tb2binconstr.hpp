@@ -268,6 +268,12 @@ public:
     }
     Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
 
+    void resetSupports()
+    {
+        supportX.assign(supportX.size(), y->getInf());
+        supportY.assign(supportY.size(), x->getInf());
+    }
+
     Value getSupport(EnumeratedVariable* var, Value v)
     {
         if (var == x)
@@ -418,6 +424,14 @@ public:
             else
                 x->queueAC();
         }
+        if (ToulBar2::strictAC) {
+            reviseEACGreedySolution();
+            for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+                if ((*iter).constr->isTernary() && (*iter).constr->getIndex(y) >= 0) {
+                    (*iter).constr->reviseEACGreedySolution(); // all ternary cost functions including this current binary cost function need to be revised
+                }
+            }
+        }
     }
     void remove(int varIndex)
     {
@@ -476,6 +490,29 @@ public:
         }
     }
 
+    bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        assert(x->canbe((getIndex(x) == index) ? a : x->getSupport()));
+        assert(x->getCost((getIndex(x) == index) ? a : x->getSupport()) == MIN_COST);
+        assert(y->canbe((getIndex(y) == index) ? a : y->getSupport()));
+        assert(y->getCost((getIndex(y) == index) ? a : y->getSupport()) == MIN_COST);
+        return (getCost((getIndex(x) == index) ? a : x->getSupport(), (getIndex(y) == index) ? a : y->getSupport()) == MIN_COST);
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, a);
+        if (!result) {
+            if (index >= 0)
+                ((EnumeratedVariable*)getVar(index))->moreThanOne = 1;
+            else {
+                x->moreThanOne = 1;
+                y->moreThanOne = 1;
+            }
+        }
+        return result;
+    }
+
     void fillEAC2(int varIndex)
     {
         assert(!isDuplicate());
@@ -483,7 +520,7 @@ public:
             if (varIndex == 0) {
                 assert(y->canbe(y->getSupport()));
                 unsigned int yindex = y->toIndex(y->getSupport());
-                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     y->queueEAC2();
                 }
             }
@@ -491,7 +528,7 @@ public:
             if (varIndex == 1) {
                 assert(x->canbe(x->getSupport()));
                 unsigned int xindex = x->toIndex(x->getSupport());
-                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     x->queueEAC2();
                 }
             }
@@ -501,29 +538,41 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return true;
         if (varIndex == 0) {
-            unsigned int xindex = x->toIndex(a);
-            if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
-                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                    if (y->getCost(*iterY) == MIN_COST && getCost(a, *iterY) == MIN_COST) {
-                        supportX[xindex] = *iterY;
-                        return true;
+            assert(y->canbe(y->getSupport()));
+            assert(y->getCost(y->getSupport()) == MIN_COST);
+            if (getCost(a, y->getSupport()) > MIN_COST) {
+                if (ToulBar2::strictAC)
+                    x->moreThanOne = 1;
+                unsigned int xindex = x->toIndex(a);
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
+                    for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                        if (y->getCost(*iterY) == MIN_COST && getCost(a, *iterY) == MIN_COST) {
+                            supportX[xindex] = *iterY;
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
             }
         } else {
-            unsigned int yindex = y->toIndex(a);
-            if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
-                for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-                    if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {
-                        supportY[yindex] = *iterX;
-                        return true;
+            assert(x->canbe(x->getSupport()));
+            assert(x->getCost(x->getSupport()) == MIN_COST);
+            if (getCost(x->getSupport(), a) > MIN_COST) {
+                if (ToulBar2::strictAC)
+                    y->moreThanOne = 1;
+                unsigned int yindex = y->toIndex(a);
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
+                    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+                        if (x->getCost(*iterX) == MIN_COST && getCost(*iterX, a) == MIN_COST) {
+                            supportY[yindex] = *iterX;
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
             }
         }
         return true;
@@ -532,7 +581,7 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return;
         if (varIndex == 0)
             findFullSupportX();
@@ -590,7 +639,7 @@ public:
 
     bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value>& functional);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
     void dump(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }

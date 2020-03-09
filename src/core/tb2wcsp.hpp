@@ -13,8 +13,6 @@
 #include "tb2intervar.hpp"
 
 class NaryConstraint;
-class VACExtension;
-
 class GlobalConstraint;
 class FlowBasedGlobalConstraint;
 class AllDiffConstraint;
@@ -56,6 +54,7 @@ class WCSP FINAL : public WeightedCSP {
     Queue EAC1; ///< EAC intermediate queue (non backtrackable list)
     Queue EAC2; ///< EAC queue (non backtrackable list)
     Queue Eliminate; ///< Variable Elimination queue (non backtrackable list)
+    Queue FEAC; ///< FullEAC queue (non backtrackable list)
     SeparatorList PendingSeparator; ///< List of pending separators for BTD-like methods (backtrackable list)
     Queue DEE; ///< Dead-End Elimination queue (non backtrackable list)
     bool objectiveChanged; ///< flag if lb or ub has changed (NC propagation needs to be done)
@@ -73,6 +72,7 @@ class WCSP FINAL : public WeightedCSP {
     WCSP(const WCSP& wcsp);
     WCSP& operator=(const WCSP& wcsp);
     friend class CFNStreamReader;
+    friend class VACExtension;
 
 public:
     /// \brief variable elimination information used in backward phase to get a solution during search
@@ -274,19 +274,20 @@ public:
     /// \brief assigns a set of variables at once and propagates
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
+    /// \param force boolean if true then apply assignLS even if the variable is already assigned
     /// \note this function is equivalent but faster than a sequence of \ref WCSP::assign. it is particularly useful for Local Search methods such as Large Neighborhood Search.
-    void assignLS(vector<int>& varIndexes, vector<Value>& newValues)
+    void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false)
     {
         assert(varIndexes.size() == newValues.size());
         unsigned int size = varIndexes.size();
-        assignLS((size > 0) ? &varIndexes[0] : NULL, (size > 0) ? &newValues[0] : NULL, size, true);
+        assignLS((size > 0) ? &varIndexes[0] : NULL, (size > 0) ? &newValues[0] : NULL, size, true, force);
     }
 
-    void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate)
+    void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false)
     {
         ConstraintSet delayedctrs;
         for (unsigned int i = 0; i < size; i++)
-            vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs);
+            vars[varIndexes[i]]->assignLS(newValues[i], delayedctrs, force);
         for (ConstraintSet::iterator it = delayedctrs.begin(); it != delayedctrs.end(); ++it)
             if (!(*it)->isGlobal()) {
                 if ((*it)->isSep())
@@ -495,6 +496,9 @@ public:
             if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
                 setBestValue(i, v);
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
+            if (vars[i]->enumerated() && ToulBar2::useRINS == -1) {
+                ((EnumeratedVariable*)vars[i])->RINS_lastValue = solution[i];
+            }
         }
         solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
     }
@@ -649,6 +653,7 @@ public:
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
+    void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 
     void propagateNC(); ///< \brief removes forbidden values
     void propagateIncDec(); ///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
@@ -660,6 +665,7 @@ public:
     void propagateEAC(); ///< \brief ensures unary existential arc consistency supports
     void propagateSeparator(); ///< \brief exploits graph-based learning
     void propagateDEE(); ///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
+    void propagateFEAC(); ///< \brief seek if new EAC support is also FullEAC support (i.e., compatible with all its EAC value neighbors)
 
     /// \brief sorts the list of constraints associated to each variable based on smallest problem variable indexes
     /// \warning side-effect: updates DAC order according to an existing variable elimination order
@@ -708,7 +714,6 @@ public:
     void updateSingleton();
     void removeSingleton();
     void printVACStat();
-    int getVACHeuristic();
 
     // -----------------------------------------------------------
     // Data and methods for Cluster Tree Decomposition

@@ -152,6 +152,12 @@ public:
         }
     }
 
+    void resetConflictWeight()
+    {
+        conflictWeights.assign(conflictWeights.size(), 0);
+        Constraint::resetConflictWeight();
+    }
+
     bool universal()
     {
         if (cost != MIN_COST || lb != MIN_COST)
@@ -273,6 +279,9 @@ public:
             if (nonassigned <= 3) {
                 deconnect();
                 projectNary();
+            } else {
+                if (ToulBar2::strictAC)
+                    reviseEACGreedySolution();
             }
         }
     }

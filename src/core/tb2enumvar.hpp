@@ -23,6 +23,7 @@ protected:
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
     DLink<VariableWithTimeStamp> linkDEEQueue;
+    DLink<VariableWithTimeStamp> linkFEACQueue;
 
     bool watchForIncrease; ///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease; ///< \warning should be true if there exists a cost function on this variable watching for decrease events
@@ -31,14 +32,20 @@ protected:
 
     void init();
 
-    virtual void increaseFast(Value newInf); // Do not check for a support nor insert in NC and DAC queue
-    virtual void decreaseFast(Value newSup); // Do not check for a support nor insert in NC and DAC queue
-    virtual void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
+    void increaseFast(Value newInf); // Do not check for a support nor insert in NC and DAC queue
+    void decreaseFast(Value newSup); // Do not check for a support nor insert in NC and DAC queue
+    void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
 
 public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
+    StoreInt moreThanOne;
+    int domSizeInBoolOfP;
+    StoreValue strictACValue;
+    Value strictACValueInBoolOfP;
+    Value RINS_lastValue;
+    vector<Value> RINS_valuesToBeRemoved;
     bool enumerated() const FINAL { return true; }
 
     bool isValueNames() { return valueNames.size() == getDomainInitSize(); }
@@ -77,18 +84,27 @@ public:
     bool canbeAfterElim(Value v) const { return domain.canbe(v); }
     bool cannotbe(Value v) const FINAL { return v < inf || v > sup || domain.cannotbe(v); }
 
-    virtual void increase(Value newInf, bool isDecision = false);
-    virtual void decrease(Value newSup, bool isDecision = false);
-    virtual void remove(Value value, bool isDecision = false);
-    virtual void assign(Value newValue, bool isDecision = false);
+    void increase(Value newInf, bool isDecision = false) FINAL;
+    void decrease(Value newSup, bool isDecision = false) FINAL;
+    void remove(Value value, bool isDecision = false) FINAL;
+    void assign(Value newValue, bool isDecision = false) FINAL;
     void assignWhenEliminated(Value newValue);
-    void assignLS(Value newValue, ConstraintSet& delayedCtrs);
+    void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) FINAL;
 
-    virtual void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
-    virtual void extend(Value value, Cost cost);
-    virtual void extendAll(Cost cost);
+    void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
+    void extend(Value value, Cost cost);
+    void extendAll(Cost cost);
     Value getSupport() const FINAL { return support; }
-    void setSupport(Value val) { support = val; }
+    void setSupport(Value val)
+    {
+        if (support != val) {
+            if (ToulBar2::verbose >= 7)
+                cout << "change support for " << getName() << " from " << support << " to " << val << endl;
+            support = val;
+            if (ToulBar2::strictAC)
+                queueFEAC();
+        }
+    }
     inline Cost getCost(const Value value) const FINAL
     {
         return costs[toIndex(value)] - deltaCost;
@@ -101,11 +117,11 @@ public:
 
     Cost getInfCost() const FINAL { return costs[toIndex(getInf())] - deltaCost; }
     Cost getSupCost() const FINAL { return costs[toIndex(getSup())] - deltaCost; }
-    void projectInfCost(Cost cost);
-    void projectSupCost(Cost cost);
+    void projectInfCost(Cost cost) FINAL;
+    void projectSupCost(Cost cost) FINAL;
 
-    void propagateNC();
-    bool verifyNC();
+    void propagateNC() FINAL;
+    bool verifyNC() FINAL;
     void queueAC(); // public method used also by tb2binconstr.hpp
     void queueDAC();
     void propagateAC();
@@ -116,22 +132,24 @@ public:
 
     void queueEAC1();
     void queueEAC2();
+    void queueFEAC();
     void fillEAC2(bool self);
     bool isEAC(Value a);
-    bool isEAC();
+    bool isEAC() FINAL;
     void propagateEAC();
     void setCostProvidingPartition();
-    virtual void queueVAC2() {}
+    bool checkEACGreedySolution();
+    bool reviseEACGreedySolution();
 
-    void eliminate();
+    void eliminate() FINAL;
     bool elimVar(BinaryConstraint* xy);
     bool elimVar(ConstraintLink xylink, ConstraintLink xzlink);
     bool elimVar(TernaryConstraint* xyz);
 
-    void queueDEE();
+    void queueDEE() FINAL;
     void propagateDEE(Value a, Value b, bool dee = true);
     bool verifyDEE(Value a, Value b);
-    bool verifyDEE();
+    bool verifyDEE() FINAL;
 
     // merge current cost functions to x's list by replacing current variable y by x thanks to functional constraint xy (i.e., y := functional[x])
     void mergeTo(BinaryConstraint* xy, map<Value, Value>& functional);
@@ -232,7 +250,7 @@ public:
     void permuteDomain(Value a, Value b);
     ValueCost* sortDomain(vector<Cost>& costs);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
 };
 
 #endif /*TB2ENUMVAR_HPP_*/

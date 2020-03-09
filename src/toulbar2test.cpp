@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
     //	solver->getWCSP()->print(cout);
     //	ToulBar2::verbose = verbose;
 
+    //tb2checkOptions();
     if (solver->solve()) {
 #ifdef OPENMPI
         if (env0.myrank == 0) {

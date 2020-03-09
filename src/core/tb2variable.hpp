@@ -25,6 +25,7 @@ protected:
 
     StoreValue inf;
     StoreValue sup;
+    //    StoreInt eac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
 
     ConstraintList constrs;
     //ConstraintList triangles;
@@ -46,6 +47,8 @@ protected:
     // make it private because we don't want copy nor assignment
     Variable(const Variable& x);
     Variable& operator=(const Variable& x);
+
+    friend class VACExtension;
 
 public:
     Variable(WCSP* w, string n, Value iinf, Value isup);
@@ -77,7 +80,7 @@ public:
     virtual void decrease(Value newSup, bool isDecision = false) = 0;
     virtual void remove(Value remValue, bool isDecision = false) = 0;
     virtual void assign(Value newValue, bool isDecision = false) = 0;
-    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs) = 0;
+    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) = 0;
 
     //    ConstraintList *getTriangles() {return &triangles;}
     ConstraintList* getConstrs() { return &constrs; }
@@ -107,7 +110,9 @@ public:
     virtual Value getSupport() const { return inf; } // If there is no defined support then return inf
 
     Cost getMaxCost() const { return maxCost; }
+    void setMaxCost(Cost cost) { maxCost = cost; }
     Value getMaxCostValue() const { return maxCostValue; }
+    void setMaxCostValue(Value value) { maxCostValue = value; }
 
     virtual void propagateNC() = 0;
     virtual bool verifyNC() = 0;

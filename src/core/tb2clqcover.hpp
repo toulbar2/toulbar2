@@ -34,7 +34,7 @@ public:
     {
         bool iszerotuple = true;
         for (int i = 0; i < arity_; i++) {
-            if (inclq[i][scope[i]->toValue(s[i] - CHAR_FIRST)]) {
+            if (inclq[i][s[i] - CHAR_FIRST]) {
                 iszerotuple = false;
                 break;
             }
@@ -92,6 +92,11 @@ public:
             }
         }
     }
+    void resetConflictWeight()
+    {
+        conflictWeights.assign(conflictWeights.size(), 0);
+        Constraint::resetConflictWeight();
+    }
     double computeTightness() override;
     Cost getMaxFiniteCost()
     {
@@ -114,7 +119,7 @@ private:
     // definition
 
     // two views of values in the clique: vector<bool> per variable
-    // (inclq[var][val] == true iff (var,val) is in clique) and array
+    // (inclq[var][var->toIndex(val)] == true iff (var,val) is in clique) and array
     // of values in clique per variable
     vector<vector<bool>> inclq;
     vector<vector<int>> clqvals;

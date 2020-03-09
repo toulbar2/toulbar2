@@ -203,6 +203,22 @@ enum {
     NO_OPT_trws,
     OPT_costMultiplier,
     OPT_deltaUb,
+
+    OPT_strictAC,
+    NO_OPT_strictAC,
+    OPT_reverseSAC,
+    OPT_BFSVAC,
+    OPT_BFSSAC,
+    OPT_SACifVAC,
+    OPT_VACthreshold,
+    OPT_BoolDomSize,
+    NO_OPT_BoolDomSize,
+    OPT_RINS,
+    NO_OPT_RINS,
+    OPT_RINS_angle,
+    NO_OPT_RINS_angle,
+    OPT_RINSreset,
+
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -392,6 +408,31 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
+
+    { OPT_strictAC, (char*)"-strictAC", SO_OPT },
+    { OPT_strictAC, (char*)"-sac", SO_OPT },
+    { OPT_strictAC, (char*)"-vacint", SO_OPT },
+    { NO_OPT_strictAC, (char*)"-sac:", SO_NONE },
+    { NO_OPT_strictAC, (char*)"-vacint:", SO_NONE },
+    { OPT_SACifVAC, (char*)"-SACifVAC", SO_OPT },
+    { OPT_VACthreshold, (char*)"-VACthreshold", SO_OPT },
+    { OPT_reverseSAC, (char*)"-reverseSAC:", SO_OPT },
+    { OPT_BFSVAC, (char*)"-BFSVAC", SO_OPT },
+    { OPT_BFSSAC, (char*)"-BFSSAC", SO_OPT },
+    { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
+    { OPT_BoolDomSize, (char*)"-booldomsz", SO_NONE },
+    { NO_OPT_BoolDomSize, (char*)"-booldomsz:", SO_NONE },
+    { OPT_RINS, (char*)"-RINS", SO_OPT },
+    { OPT_RINS, (char*)"-rins", SO_OPT },
+    { OPT_RINS, (char*)"-rasps", SO_OPT },
+    { NO_OPT_RINS, (char*)"-RINS:", SO_NONE },
+    { NO_OPT_RINS, (char*)"-rins:", SO_NONE },
+    { NO_OPT_RINS, (char*)"-rasps:", SO_NONE },
+    { OPT_RINS_angle, (char*)"-RINSangle", SO_OPT },
+    { OPT_RINS_angle, (char*)"-auto", SO_OPT },
+    { NO_OPT_RINS_angle, (char*)"-auto:", SO_NONE },
+    { OPT_RINSreset, (char*)"-RINSreset:", SO_NONE },
+
     { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_OPT },
@@ -790,7 +831,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -x=[(,i[=#<>]a)*] : performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple operations are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file \"sol\" taken as a certificate or given as input filename with \".sol\" extension)" << endl;
     cout << endl;
     cout << "   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is " << ToulBar2::minsumDiffusion << ")" << endl;
-    cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than a given value (default value is " << ToulBar2::vac << ")" << endl;
+    cout << "   -A=[integer] : enforces VAC at each search node with a search depth less than the absolute value of a given value, if negative value then VAC is not performed inside depth-first search of hybrid best-first search (default value is " << ToulBar2::vac << ")" << endl;
     cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
     cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
@@ -802,6 +843,14 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
     cout << endl;
+
+    cout << "   -vacint : VAC-integral variable ordering heuristic";
+    if (ToulBar2::strictAC)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, 1: DFS, n>1: LDS(n-1)) (default value is " << ToulBar2::RINS << ")" << endl;
+    cout << "   -auto=[integer] : automatic threshold cost value selection for probing heuristic and also for VAC during search if a negative value is used (default value is " << ToulBar2::RINS_angle << ")" << endl;
+
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
     if (ToulBar2::trwsOrder)
@@ -1450,7 +1499,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::vac = 1;
                 } else {
                     int depth = atoi(args.OptionArg());
-                    if (depth >= 1)
+                    if (depth != 0)
                         ToulBar2::vac = depth;
                 }
                 if (ToulBar2::debug)
@@ -1910,6 +1959,109 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::trwsAccuracy = -1.;
             }
 
+            if (args.OptionId() == OPT_strictAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::strictAC = 1;
+                else
+                    ToulBar2::strictAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "Strict AC ON " << ToulBar2::strictAC << endl;
+            } else if (args.OptionId() == NO_OPT_strictAC) {
+                ToulBar2::strictAC = 0;
+                if (ToulBar2::debug)
+                    cout << "Strict AC OFF" << endl;
+            }
+
+            if (args.OptionId() == OPT_SACifVAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::SACifVAC = 1;
+                else
+                    ToulBar2::SACifVAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "SAC is used only when the problem is VAC." << endl;
+            }
+
+            if (args.OptionId() == OPT_VACthreshold) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::VACthreshold = 1;
+                else
+                    ToulBar2::VACthreshold = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "VAC iterations will go until the threshold calculated by RINS approach." << endl;
+            }
+
+            if (args.OptionId() == OPT_reverseSAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::reverseSAC = 1;
+                else
+                    ToulBar2::reverseSAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "Reverse Strict AC ON " << ToulBar2::reverseSAC << endl;
+            }
+
+            if (args.OptionId() == OPT_BFSVAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::BFSVAC = 0;
+                else
+                    ToulBar2::BFSVAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "VAC will run only at open nodes and their children within the next " << ToulBar2::BFSVAC << " levels." << endl;
+            }
+
+            if (args.OptionId() == OPT_BFSSAC) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::BFSSAC = 1;
+                else
+                    ToulBar2::BFSSAC = atoi(args.OptionArg());
+                if (ToulBar2::debug)
+                    cout << "SAC or reverseSAC will continue in DFS nodes " << endl;
+            }
+
+            if (args.OptionId() == OPT_BoolDomSize) {
+                ToulBar2::BoolDomSize = 1;
+                if (ToulBar2::debug)
+                    cout << "Using Domain Size in Bool of P" << endl;
+            } else if (args.OptionId() == NO_OPT_BoolDomSize) {
+                ToulBar2::BoolDomSize = 0;
+                if (ToulBar2::debug)
+                    cout << "Do not use Domain Size in Bool of P" << endl;
+            }
+
+            if (args.OptionId() == OPT_RINS) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::useRINS = 1;
+                else {
+                    int n = atoi(args.OptionArg());
+                    ToulBar2::useRINS = n;
+                }
+                if (ToulBar2::debug)
+                    cout << "RINS ON" << endl;
+            } else if (args.OptionId() == NO_OPT_RINS) {
+                if (ToulBar2::debug)
+                    cout << "RINS OFF" << endl;
+                ToulBar2::useRINS = 0;
+            }
+
+            if (args.OptionId() == OPT_RINS_angle) {
+                if (args.OptionArg() == NULL)
+                    ToulBar2::RINS_angle = -10;
+                else {
+                    int n = atoi(args.OptionArg());
+                    ToulBar2::RINS_angle = n;
+                }
+                if (ToulBar2::debug)
+                    cout << "RINS angle set to " << ToulBar2::RINS_angle << "°" << endl;
+            } else if (args.OptionId() == NO_OPT_RINS_angle) {
+                if (ToulBar2::debug)
+                    cout << "RINS angle set to 90°" << endl;
+                ToulBar2::RINS_angle = 90;
+            }
+
+            if (args.OptionId() == OPT_RINSreset) {
+                ToulBar2::RINSreset = 1;
+                if (ToulBar2::debug)
+                    cout << "RINS reset ON" << endl;
+            }
         }
 
         else {

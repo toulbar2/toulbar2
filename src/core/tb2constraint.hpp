@@ -65,7 +65,7 @@ public:
             fromElim2->incConflictWeight(from);
     }
     void incConflictWeight(Long incval) { conflictWeight += incval; }
-    void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
+    virtual void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
     void elimFrom(Constraint* from1, Constraint* from2 = NULL)
     {
         fromElim1 = from1;
@@ -102,8 +102,18 @@ public:
     virtual void assign(int index) { propagate(); }
     void assigns();
 
+    virtual bool checkEACGreedySolution(int index = -1, Value a = 0); // if index is non-negative use value a instead of its support for the corresponding variable
+    virtual bool reviseEACGreedySolution(int index = -1, Value a = 0); // if index is negative revise all variables else only one
     virtual void fillEAC2(int index) {}
-    virtual bool isEAC(int index, Value a) { return true; }
+    virtual bool isEAC(int index, Value a)
+    {
+        if (ToulBar2::strictAC && !isSep()) {
+            bool res = reviseEACGreedySolution(index, a);
+            if (ToulBar2::verbose >= 4 && !res)
+                cout << "Current greedy solution violates this constraint: " << *this << endl;
+        }
+        return true;
+    }
     virtual void findFullSupportEAC(int index) {}
 
     virtual void linkCostProvidingPartition(int index, Variable* support) {}

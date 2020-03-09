@@ -1,6 +1,5 @@
 #include "tb2globalconstr.hpp"
 #include "core/tb2wcsp.hpp"
-#include "core/tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 GlobalConstraint::GlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
@@ -137,6 +136,8 @@ void GlobalConstraint::assign(int varIndex)
             projectLB(eval(t));
         } else {
             pushAll();
+            if (ToulBar2::strictAC)
+                reviseEACGreedySolution();
         }
     }
 }
@@ -408,6 +409,8 @@ void GlobalConstraint::propagateNIC()
 
 bool GlobalConstraint::isEAC(int index, Value a)
 {
+    if (ToulBar2::strictAC)
+        reviseEACGreedySolution(index, a);
     if (currentVar != index) {
         currentVar = index;
 

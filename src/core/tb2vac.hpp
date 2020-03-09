@@ -5,10 +5,15 @@
 #ifndef TB2VAC_HPP_
 #define TB2VAC_HPP_
 
-#include "utils/tb2btqueue.hpp"
-#include "tb2vacutils.hpp"
+#include "utils/tb2queue.hpp"
+
+#define INCREMENTALVAC
+//#define AC2001
 
 class tVACStat;
+class VACVariable;
+class VACBinaryConstraint;
+class VACTernaryConstraint;
 
 typedef map<Cost, int> tScale;
 
@@ -20,11 +25,14 @@ class VACExtension {
 private:
     WCSP* wcsp; /**< Reference to the WCSP that will be processed */
     Queue VAC; /**< Non backtrackable list; AC2001 queue used for Pass1 inside VAC */
+#ifdef INCREMENTALVAC
+    Queue VAC2; /**< Non backtrackable list; AC2001 queue used for incremental VAC */
+#endif
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
-    BTQueue VAC2; /**< Backtrackable list; updated during AC and EDAC */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
 
+    Cost prevItThreshold; /**< The previous cost threshold (theta) for the iterative threshold descent */
     Cost itThreshold; /**< The cost threshold (theta) for the iterative threshold descent */
     int breakCycles; /**< Number of iterations with no c0 increase */
     tScale scaleCost; /**w The list of all costs used in the WCSP ? */
@@ -42,10 +50,10 @@ private:
     bool enforcePass3(); /**< Project and extends costs to increase c0 according to the plan */
     void enforcePass3VACDecomposition(); /**< Enforces VAC decomposition pass 3 (substract cost and decrease top) */
 
-    void reset(); /**< Cleanup for next iteration: clean Q, selects variables for AC2001 queue */
+    void clear(); /**< empty all VAC queues */
+    void resetSupports(); /**< reset binary supports for AC2001 optimal O(ed^2) complexity */
+    bool enqueueVAC(Cost threshold, Cost previousThreshold); /**< selects more variables for AC2001 queue having unary costs between threshold and previousThreshold ; returns false if nothing to be done */
 
-    map<int, tVACStat*> heapAccess;
-    vector<tVACStat*> heap;
     Cost sumlb;
     Long nlb;
     Long sumvars;
@@ -56,27 +64,25 @@ private:
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
 
-    EnumeratedVariable* nearIncVar; /**< A variable whose domain is reduced to 1 value during Pass1 -- Unused apparently */
-    Cost atThreshold; /**< The value of itThreshold when this single value variable appeared -- Unused apparently */
-
 public:
     VACExtension(WCSP* w);
     ~VACExtension();
 
     bool firstTime() { return nbIterations == 0; } /**< Is it the first iteration ? */
 
-    bool isVAC() const; /**< Is the WCSP VAC-epsilon ? Pass1 must be enforced */
+    bool isVAC() const { return (inconsistentVariable == -1); } /**< Is the WCSP VAC-epsilon ? Pass1 must be enforced */
     bool propagate(); /**< Starts one VAC iteration */
     bool isNull(Cost c) const { return (c < itThreshold); } /**< is the Cost significant (above itThreshold aka theta) */
 
-    void clear(); /**< empty VAC queue */
     void queueVAC(DLink<VariableWithTimeStamp>* link);
+#ifdef INCREMENTALVAC
+    void queueVAC2(DLink<VariableWithTimeStamp>* link);
+#endif
     void queueSeekSupport(DLink<VariableWithTimeStamp>* link);
-    void queueVAC2(DLink<Variable*>* link);
-    void dequeueVAC2(DLink<Variable*>* link);
 
     void init();
     void iniThreshold(); /**< Initialize itThreshold to the strongest cost in the cost scale */
+    void iniThreshold(Cost c);
     Cost getThreshold() { return itThreshold; }
     void nextScaleCost(); /**< Sets ItThreshold to the next scale */
     void histogram(Cost c);
@@ -85,23 +91,18 @@ public:
     set<int> singletonI;
     set<int> singleton;
 
-    // int varAssign;
-    // Value valAssign;
-    // void assign(int varIndex, Value newValue) { varAssign = varIndex; valAssign = newValue; }
-
     void iniSingleton();
     void updateSingleton();
     void removeSingleton();
 
-    int getHeuristic();
-    // int  getVarACDom( int i );
-    // Cost getVarCostStat( int i );
-    // Long getVarTimesStat( int i );
-    // void updateStat(Cost lambda);
     void printStat(bool ini = false);
     void printTightMatrix();
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
+
+    Long getNbIterations() const { return nbIterations; }
+
+    Cost RINS_finditThreshold();
 };
 
 #endif /*TB2VAC_HPP_*/

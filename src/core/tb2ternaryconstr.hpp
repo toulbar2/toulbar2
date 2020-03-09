@@ -547,6 +547,13 @@ public:
         }
     }
 
+    void resetSupports()
+    {
+        supportX.assign(supportX.size(), make_pair(y->getInf(), z->getInf()));
+        supportY.assign(supportY.size(), make_pair(x->getInf(), z->getInf()));
+        supportZ.assign(supportZ.size(), make_pair(x->getInf(), y->getInf()));
+    }
+
     pair<Value, Value> getSupport(EnumeratedVariable* var, Value v)
     {
         if (var == x)
@@ -590,6 +597,8 @@ public:
         x->queueEAC1();
         y->queueEAC1();
         z->queueEAC1();
+        if (ToulBar2::strictAC)
+            reviseEACGreedySolution();
     }
 
     void remove(int varIndex)
@@ -683,6 +692,32 @@ public:
         }
     }
 
+    bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        assert(x->canbe((getIndex(x) == index) ? a : x->getSupport()));
+        assert(x->getCost((getIndex(x) == index) ? a : x->getSupport()) == MIN_COST);
+        assert(y->canbe((getIndex(y) == index) ? a : y->getSupport()));
+        assert(y->getCost((getIndex(y) == index) ? a : y->getSupport()) == MIN_COST);
+        assert(z->canbe((getIndex(z) == index) ? a : z->getSupport()));
+        assert(z->getCost((getIndex(z) == index) ? a : z->getSupport()) == MIN_COST);
+        return (getCostWithBinaries(x, y, z, (getIndex(x) == index) ? a : x->getSupport(), (getIndex(y) == index) ? a : y->getSupport(), (getIndex(z) == index) ? a : z->getSupport()) == MIN_COST);
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, a);
+        if (!result) {
+            if (index >= 0)
+                ((EnumeratedVariable*)getVar(index))->moreThanOne = 1;
+            else {
+                x->moreThanOne = 1;
+                y->moreThanOne = 1;
+                z->moreThanOne = 1;
+            }
+        }
+        return result;
+    }
+
     void fillEAC2(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
         vector<pair<Value, Value>>& supportX)
     {
@@ -691,7 +726,7 @@ public:
         unsigned int xindex = x->toIndex(x->getSupport());
         Value ysupport = supportX[xindex].first;
         Value zsupport = supportX[xindex].second;
-        if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || getCostWithBinaries(x, y, z, x->getSupport(), ysupport, zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+        if (y->cannotbe(ysupport) || z->cannotbe(zsupport) || getCostWithBinaries(x, y, z, x->getSupport(), ysupport, zsupport) + y->getCost(ysupport) + z->getCost(zsupport) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
             x->queueEAC2();
         }
     }
@@ -718,7 +753,7 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return true;
         switch (varIndex) {
         case 0:
@@ -739,7 +774,7 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
             return;
         assert(!wcsp->getTreeDec() || (cluster == xy->getCluster() && cluster == xz->getCluster() && cluster == yz->getCluster()));
         switch (varIndex) {
@@ -1666,42 +1701,50 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
     EnumeratedVariable* x, Value a, EnumeratedVariable* y, EnumeratedVariable* z,
     vector<pair<Value, Value>>& supportX)
 {
-    unsigned int xindex = x->toIndex(a);
-    assert(getIndex(y) < getIndex(z));
-    pair<Value, Value> support = supportX[xindex];
-    if (y->cannotbe(support.first) || z->cannotbe(support.second) || getCostWithBinaries(x, y, z, a, support.first, support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
-        if (functionalZ) {
-            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-                Value valZ = getFunctionZ(x, y, a, *iterY);
-                if (valZ != WRONG_VAL && z->canbe(valZ)) {
-                    if (getCostWithBinaries(x, y, z, a, *iterY, valZ) + y->getCost(*iterY) + z->getCost(valZ) == MIN_COST) {
-                        supportX[xindex] = make_pair(*iterY, valZ);
-                        return true;
+    assert(y->canbe(y->getSupport()));
+    assert(y->getCost(y->getSupport()) == MIN_COST);
+    assert(z->canbe(z->getSupport()));
+    assert(z->getCost(z->getSupport()) == MIN_COST);
+    if (getCostWithBinaries(x, y, z, a, y->getSupport(), z->getSupport()) > MIN_COST) {
+        if (ToulBar2::strictAC)
+            x->moreThanOne = 1;
+        unsigned int xindex = x->toIndex(a);
+        assert(getIndex(y) < getIndex(z));
+        pair<Value, Value> support = supportX[xindex];
+        if (y->cannotbe(support.first) || z->cannotbe(support.second) || getCostWithBinaries(x, y, z, a, support.first, support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
+            if (functionalZ) {
+                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                    Value valZ = getFunctionZ(x, y, a, *iterY);
+                    if (valZ != WRONG_VAL && z->canbe(valZ)) {
+                        if (getCostWithBinaries(x, y, z, a, *iterY, valZ) + y->getCost(*iterY) + z->getCost(valZ) == MIN_COST) {
+                            supportX[xindex] = make_pair(*iterY, valZ);
+                            return true;
+                        }
                     }
                 }
-            }
-        } else if (functionalY) {
-            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-                Value valY = getFunctionY(x, z, a, *iterZ);
-                if (valY != WRONG_VAL && y->canbe(valY)) {
-                    if (getCostWithBinaries(x, y, z, a, valY, *iterZ) + y->getCost(valY) + z->getCost(*iterZ) == MIN_COST) {
-                        supportX[xindex] = make_pair(valY, *iterZ);
-                        return true;
-                    }
-                }
-            }
-        } else {
-            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            } else if (functionalY) {
                 for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-                    if (getCostWithBinaries(x, y, z, a, *iterY, *iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == MIN_COST) {
-                        supportX[xindex] = make_pair(*iterY, *iterZ);
-                        return true;
+                    Value valY = getFunctionY(x, z, a, *iterZ);
+                    if (valY != WRONG_VAL && y->canbe(valY)) {
+                        if (getCostWithBinaries(x, y, z, a, valY, *iterZ) + y->getCost(valY) + z->getCost(*iterZ) == MIN_COST) {
+                            supportX[xindex] = make_pair(valY, *iterZ);
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                    for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                        if (getCostWithBinaries(x, y, z, a, *iterY, *iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == MIN_COST) {
+                            supportX[xindex] = make_pair(*iterY, *iterZ);
+                            return true;
+                        }
                     }
                 }
             }
+            //        cout << x->getName() << " = " << a << " not EAC due to constraint " << *this << endl;
+            return false;
         }
-        //        cout << x->getName() << " = " << a << " not EAC due to constraint " << *this << endl;
-        return false;
     }
     return true;
 }

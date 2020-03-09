@@ -35,7 +35,7 @@ public:
             decrease(newValue - 1, isDecision);
     }
     void assign(Value newValue, bool isDecision = false);
-    void assignLS(Value newValue, ConstraintSet& delayedCtrs);
+    void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false);
 
     Cost getInfCost() const FINAL { return infCost; }
     Cost getSupCost() const FINAL { return supCost; }

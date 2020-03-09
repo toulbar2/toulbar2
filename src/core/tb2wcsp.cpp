@@ -48,6 +48,37 @@ StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_S
 int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
+
+int ToulBar2::strictAC;
+int ToulBar2::SACifVAC;
+int ToulBar2::VACthreshold;
+int ToulBar2::reverseSAC;
+int ToulBar2::currentOpenNodeDepth;
+int ToulBar2::BFSVAC;
+int ToulBar2::BFSSAC;
+bool ToulBar2::isVAC;
+int ToulBar2::BoolDomSize;
+int ToulBar2::nbTimesIsVAC;
+int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
+bool ToulBar2::RINS;
+int ToulBar2::useRINS;
+int ToulBar2::RINSreset;
+int ToulBar2::RINS_nbStrictACVariables;
+bool ToulBar2::RINS_newSolutionFound;
+double ToulBar2::RINS_probabilty;
+int ToulBar2::RINS_nbCalls;
+int ToulBar2::RINS_nbNewSolutionFound;
+int ToulBar2::RINS_nbNodesOn;
+int ToulBar2::RINS_nbNodesOff;
+int ToulBar2::RINS_nbBacktracksOn;
+int ToulBar2::RINS_nbBacktracksOff;
+Cost ToulBar2::RINS_lastitThreshold;
+double ToulBar2::RINS_lastRatio;
+bool ToulBar2::RINS_saveitThresholds;
+vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
+int ToulBar2::RINS_angle;
+int ToulBar2::RINS_HBFSnodes;
+int ToulBar2::RINS_lastHBFSnode;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
@@ -219,6 +250,37 @@ void tb2init()
     ToulBar2::stdin_format = "";
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
+
+    ToulBar2::strictAC = 0;
+    ToulBar2::SACifVAC = 0;
+    ToulBar2::VACthreshold = 0;
+    ToulBar2::reverseSAC = 0;
+    ToulBar2::currentOpenNodeDepth = 0;
+    ToulBar2::BFSVAC = -1;
+    ToulBar2::BFSSAC = 0;
+    ToulBar2::isVAC = false;
+    ToulBar2::BoolDomSize = 0;
+    ToulBar2::nbTimesIsVAC = 0;
+    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
+    ToulBar2::RINS = false;
+    ToulBar2::useRINS = 0;
+    ToulBar2::RINSreset = 0;
+    ToulBar2::RINS_nbStrictACVariables = 0;
+    ToulBar2::RINS_newSolutionFound = false;
+    ToulBar2::RINS_probabilty = 1.0;
+    ToulBar2::RINS_nbCalls = 0;
+    ToulBar2::RINS_nbNewSolutionFound = 0;
+    ToulBar2::RINS_nbNodesOn = 0;
+    ToulBar2::RINS_nbNodesOff = 0;
+    ToulBar2::RINS_nbBacktracksOn = 0;
+    ToulBar2::RINS_nbBacktracksOff = 0;
+    ToulBar2::RINS_lastitThreshold = 1;
+    ToulBar2::RINS_lastRatio = 0.0000000001;
+    ToulBar2::RINS_saveitThresholds = false;
+    ToulBar2::RINS_angle = 10;
+    ToulBar2::RINS_HBFSnodes = 0;
+    ToulBar2::RINS_lastHBFSnode = 0;
+
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
     ToulBar2::writeSolution = 0;
@@ -429,6 +491,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::allSolutions || ToulBar2::isZ) {
         ToulBar2::DEE = 0;
+        ToulBar2::strictAC = 0;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
         cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
@@ -458,13 +521,28 @@ void tb2checkOptions()
         cerr << "Error: cannot restrict solving to a problem rooted at a subtree, use RDS (-B=2)." << endl;
         exit(1);
     }
-    if (ToulBar2::vac > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+    if (abs(ToulBar2::vac) > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
         cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::strictAC && ToulBar2::btdMode >= 1) {
+        cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::strictAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports
+        cerr << "Error: VAC-based variable ordering heuristic requires EDAC local consistency (select EDAC using -k option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::useRINS && ToulBar2::btdMode >= 1) {
+        cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
         exit(1);
     }
     if (ToulBar2::vac && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning VAC assumes AC supports
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         exit(1);
+    }
+    if (ToulBar2::vac && ToulBar2::strictAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports when using strictAC
+        ToulBar2::vacValueHeuristic = true;
     }
     if (ToulBar2::preprocessFunctional > 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) {
         cerr << "Error: functional elimination requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
@@ -2095,6 +2173,34 @@ void WCSP::preprocessing()
         setDACOrder(order);
     }
 #endif
+    if ((ToulBar2::vac && ToulBar2::useRINS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
+        ToulBar2::RINS_saveitThresholds = true;
+        ToulBar2::RINS_itThresholds.clear();
+        ToulBar2::RINS_lastRatio = 0.0000000001;
+        //        vac->iniThreshold();
+        //        vac->propagate();
+        propagate();
+        ToulBar2::RINS_saveitThresholds = false;
+        ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
+        if (ToulBar2::VACthreshold || ToulBar2::RINS_angle < 0) {
+            if (ToulBar2::verbose >= 0)
+                cout << "RINS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+            ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
+        } else {
+            if (ToulBar2::verbose >= 0)
+                cout << "RINS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+        }
+    }
+    if (ToulBar2::strictAC) {
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            if (vars[i]->unassigned())
+                vars[i]->isEAC(); // update EAC supports using values from best known solution if provided
+        }
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            if (vars[i]->unassigned())
+                vars[i]->isEAC(); // update Full EAC status using previously updated EAC supports (also used to check all constraints without queueing in FEAC queue)
+        }
+    }
 }
 
 Cost WCSP::finiteUb() const
@@ -2590,9 +2696,28 @@ bool WCSP::verify()
         }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         // Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
-        if (ToulBar2::LcLevel == LC_EDAC && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !vars[i]->isEAC()) {
-            cout << "support of variable " << vars[i]->getName() << " not EAC!" << endl;
-            return false;
+        int old_moreThanOne = 1;
+        if (vars[i]->enumerated())
+            old_moreThanOne = ((EnumeratedVariable*)vars[i])->moreThanOne;
+        if (ToulBar2::LcLevel == LC_EDAC && vars[i]->enumerated() && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !((EnumeratedVariable*)vars[i])->isEAC(vars[i]->getSupport())) {
+            if (ToulBar2::verbose >= 4)
+                cout << endl
+                     << *this;
+            cout << "warning! support of variable " << vars[i]->getName() << " not EAC!" << endl;
+            if (!ToulBar2::vacValueHeuristic)
+                return false;
+        }
+        if (ToulBar2::strictAC && vars[i]->unassigned() && old_moreThanOne == 0 && old_moreThanOne != ((EnumeratedVariable*)vars[i])->moreThanOne) {
+            if (ToulBar2::verbose >= 4)
+                cout << endl
+                     << *this;
+            if (Store::getDepth() >= 1 || ToulBar2::setvalue != NULL) { // do not report error before preprocessing is done
+                cout << endl
+                     << "check:" << ((EnumeratedVariable*)vars[i])->checkEACGreedySolution() << endl;
+                cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong strictAC status.." << endl;
+            }
+            if (Store::getDepth() >= max(1,abs(ToulBar2::vac)))
+                return false;
         }
     }
     if (ToulBar2::LcLevel >= LC_AC) {
@@ -2622,8 +2747,13 @@ void WCSP::whenContradiction()
     EAC2.clear();
     Eliminate.clear();
     DEE.clear();
+    FEAC.clear();
     objectiveChanged = false;
     nbNodes++;
+    if (ToulBar2::RINS)
+        ToulBar2::RINS_nbNodesOn++;
+    else
+        ToulBar2::RINS_nbNodesOff++;
 }
 
 ///\defgroup ncbucket NC bucket sort
@@ -3115,6 +3245,19 @@ void WCSP::propagateDEE()
     }
 }
 
+void WCSP::propagateFEAC()
+{
+    if (ToulBar2::verbose >= 2)
+        cout << "FEACQueue size: " << FEAC.getSize() << endl;
+    while (!FEAC.empty()) {
+        if (ToulBar2::interrupted)
+            throw TimeOut();
+        EnumeratedVariable* x = (EnumeratedVariable*)FEAC.pop();
+        if (x->unassigned())
+            x->reviseEACGreedySolution();
+    }
+}
+
 /// \defgroup varelim Variable elimination
 /// - \e i-bounded variable elimination eliminates all variables with a degree less than or equal to \e i.
 ///		It can be done with arbitrary i-bound in preprocessing only and iff all their cost functions are in extension.
@@ -3243,6 +3386,9 @@ void WCSP::propagate()
                                 }
                         }
                         propagateNC();
+                        if (ToulBar2::DEE_) {
+                            propagateDEE(); // DEE requires NC and can break soft AC but not VAC
+                        }
                         if (ToulBar2::LcLevel == LC_EDAC && eac_iter > MAX_EAC_ITER) {
                             EAC1.clear();
                             cout << "c automatically switch from EDAC to FDAC." << endl;
@@ -3251,20 +3397,11 @@ void WCSP::propagate()
                         } // avoids pathological cases with too many very slow lower bound increase by EAC
                     }
                 } while (!Eliminate.empty());
-                if (ToulBar2::DEE_) {
-                    propagateDEE();
-                }
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
                 if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && !CSP(getLb(), getUb())) {
-                    //				assert(verify());
-                    if (vac->firstTime()) {
-                        vac->init();
-                        if (ToulBar2::verbose >= 1)
-                            cout << "Dual bound before VAC: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
-                    }
-                    vac->propagate();
+                    vac->propagate(); // VAC requires soft AC
                 }
             } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
@@ -3277,12 +3414,13 @@ void WCSP::propagate()
         if (td)
             propagateSeparator();
     } while (objectiveChanged);
+    propagateFEAC();
     revise(NULL);
 
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
-    assert(verify());
+    assert(ToulBar2::useRINS || verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
@@ -3298,6 +3436,7 @@ void WCSP::propagate()
     assert(EAC2.empty());
     assert(Eliminate.empty());
     DEE.clear(); // DEE might not be empty if verify() has modified supports
+    assert(FEAC.empty());
     nbNodes++;
 }
 
@@ -4124,13 +4263,6 @@ void WCSP::printVACStat()
 {
     if (vac)
         vac->printStat();
-}
-int WCSP::getVACHeuristic()
-{
-    if (vac)
-        return vac->getHeuristic();
-    else
-        return -1;
 }
 
 // -----------------------------------------------------------
