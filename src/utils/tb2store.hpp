@@ -231,7 +231,7 @@ public:
 
     StoreBasic& operator=(const StoreBasic& elt)
     { ///< \note assignment has to be backtrackable
-        if (&elt != this) {
+        if (&elt != this && v != elt.v) {
             mystore.store(&v);
             v = elt.v;
         }
@@ -240,20 +240,26 @@ public:
 
     StoreBasic& operator=(const T vv)
     {
-        mystore.store(&v);
-        v = vv;
+        if (v != vv) {
+            mystore.store(&v);
+            v = vv;
+        }
         return *this;
     }
     StoreBasic& operator+=(const T vv)
     {
-        mystore.store(&v);
-        v += vv;
+        if (vv != 0) {
+            mystore.store(&v);
+            v += vv;
+        }
         return *this;
     }
     StoreBasic& operator-=(const T vv)
     {
-        mystore.store(&v);
-        v -= vv;
+        if (vv != 0) {
+            mystore.store(&v);
+            v -= vv;
+        }
         return *this;
     }
 
