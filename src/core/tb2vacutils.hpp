@@ -7,7 +7,7 @@
 
 #include "tb2enumvar.hpp"
 #include "tb2binconstr.hpp"
-#include "tb2ternaryconstr.hpp"
+//#include "tb2ternaryconstr.hpp"
 #include "tb2vac.hpp"
 
 class VACVariable : public EnumeratedVariable {

@@ -237,6 +237,7 @@ public:
     Long getNbNodes() const FINAL { return nbNodes; }
     Long getNbBacktracks() const FINAL { return nbBacktracks; }
     set<int> getUnassignedVars() const;
+    unsigned int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search
 
     virtual bool solve();
 

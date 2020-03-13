@@ -25,7 +25,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , moreThanOne((isup > iinf) ? 1 : 0)
     , domSizeInBoolOfP(isup - iinf + 1)
     , strictACValueInBoolOfP(support)
-    , RINS_lastValue(-1)
 {
     init();
 }
@@ -40,7 +39,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , moreThanOne((dsize > 1) ? 1 : 0)
     , domSizeInBoolOfP(dsize)
     , strictACValueInBoolOfP(support)
-    , RINS_lastValue(-1)
 {
     init();
 }
@@ -353,6 +351,7 @@ bool EnumeratedVariable::reviseEACGreedySolution()
     } else {
         assert(moreThanOne == 1);
     }
+    if (ToulBar2::verbose >= 1) cout << "revise greedy solution for variable " << *this << endl;
     return (!broken);
 }
 
@@ -409,8 +408,6 @@ void EnumeratedVariable::setCostProvidingPartition()
 bool EnumeratedVariable::isEAC(Value a)
 {
     if (getCost(a) == MIN_COST) {
-        if (ToulBar2::strictAC)
-            moreThanOne = 0;
         for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
             if ((*iter).constr->isDuplicate())
                 continue;
@@ -454,14 +451,20 @@ bool EnumeratedVariable::isEAC()
     assert(canbe(support));
     Value bestValue = wcsp->getBestValue(wcspIndex);
     if (support != bestValue && canbe(bestValue)) {
+        if (ToulBar2::strictAC)
+            moreThanOne = 0;
         if (isEAC(bestValue))
             return true;
     }
+    if (ToulBar2::strictAC)
+        moreThanOne = 0;
     if (isEAC(support))
         return true;
     for (iterator iter = begin(); iter != end(); ++iter) {
         if (*iter == support || *iter == bestValue)
             continue;
+        if (ToulBar2::strictAC)
+            moreThanOne = 0;
         if (isEAC(*iter))
             return true;
     }

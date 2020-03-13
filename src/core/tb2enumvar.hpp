@@ -42,9 +42,7 @@ public:
 
     StoreInt moreThanOne;
     int domSizeInBoolOfP;
-    StoreValue strictACValue;
     Value strictACValueInBoolOfP;
-    Value RINS_lastValue;
     vector<Value> RINS_valuesToBeRemoved;
     bool enumerated() const FINAL { return true; }
 

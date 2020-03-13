@@ -496,9 +496,6 @@ public:
             if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
                 setBestValue(i, v);
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
-            if (vars[i]->enumerated() && ToulBar2::useRINS == -1) {
-                ((EnumeratedVariable*)vars[i])->RINS_lastValue = solution[i];
-            }
         }
         solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
     }

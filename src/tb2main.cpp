@@ -206,10 +206,8 @@ enum {
 
     OPT_strictAC,
     NO_OPT_strictAC,
-    OPT_reverseSAC,
     OPT_BFSVAC,
     OPT_BFSSAC,
-    OPT_SACifVAC,
     OPT_VACthreshold,
     OPT_BoolDomSize,
     NO_OPT_BoolDomSize,
@@ -414,17 +412,13 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_strictAC, (char*)"-vacint", SO_OPT },
     { NO_OPT_strictAC, (char*)"-sac:", SO_NONE },
     { NO_OPT_strictAC, (char*)"-vacint:", SO_NONE },
-    { OPT_SACifVAC, (char*)"-SACifVAC", SO_OPT },
-    { OPT_VACthreshold, (char*)"-VACthreshold", SO_OPT },
-    { OPT_reverseSAC, (char*)"-reverseSAC:", SO_OPT },
+    { OPT_VACthreshold, (char*)"-VACthreshold", SO_NONE },
     { OPT_BFSVAC, (char*)"-BFSVAC", SO_OPT },
     { OPT_BFSSAC, (char*)"-BFSSAC", SO_OPT },
-    { OPT_BoolDomSize, (char*)"-BoolDomSize", SO_NONE },
-    { OPT_BoolDomSize, (char*)"-booldomsz", SO_NONE },
-    { NO_OPT_BoolDomSize, (char*)"-booldomsz:", SO_NONE },
     { OPT_RINS, (char*)"-RINS", SO_OPT },
     { OPT_RINS, (char*)"-rins", SO_OPT },
     { OPT_RINS, (char*)"-rasps", SO_OPT },
+    { OPT_RINS, (char*)"-RASPS", SO_OPT },
     { NO_OPT_RINS, (char*)"-RINS:", SO_NONE },
     { NO_OPT_RINS, (char*)"-rins:", SO_NONE },
     { NO_OPT_RINS, (char*)"-rasps:", SO_NONE },
@@ -1972,31 +1966,10 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "Strict AC OFF" << endl;
             }
 
-            if (args.OptionId() == OPT_SACifVAC) {
-                if (args.OptionArg() == NULL)
-                    ToulBar2::SACifVAC = 1;
-                else
-                    ToulBar2::SACifVAC = atoi(args.OptionArg());
-                if (ToulBar2::debug)
-                    cout << "SAC is used only when the problem is VAC." << endl;
-            }
-
             if (args.OptionId() == OPT_VACthreshold) {
-                if (args.OptionArg() == NULL)
-                    ToulBar2::VACthreshold = 1;
-                else
-                    ToulBar2::VACthreshold = atoi(args.OptionArg());
+                ToulBar2::VACthreshold = true;
                 if (ToulBar2::debug)
                     cout << "VAC iterations will go until the threshold calculated by RINS approach." << endl;
-            }
-
-            if (args.OptionId() == OPT_reverseSAC) {
-                if (args.OptionArg() == NULL)
-                    ToulBar2::reverseSAC = 1;
-                else
-                    ToulBar2::reverseSAC = atoi(args.OptionArg());
-                if (ToulBar2::debug)
-                    cout << "Reverse Strict AC ON " << ToulBar2::reverseSAC << endl;
             }
 
             if (args.OptionId() == OPT_BFSVAC) {
@@ -2014,17 +1987,7 @@ int _tmain(int argc, TCHAR* argv[])
                 else
                     ToulBar2::BFSSAC = atoi(args.OptionArg());
                 if (ToulBar2::debug)
-                    cout << "SAC or reverseSAC will continue in DFS nodes " << endl;
-            }
-
-            if (args.OptionId() == OPT_BoolDomSize) {
-                ToulBar2::BoolDomSize = 1;
-                if (ToulBar2::debug)
-                    cout << "Using Domain Size in Bool of P" << endl;
-            } else if (args.OptionId() == NO_OPT_BoolDomSize) {
-                ToulBar2::BoolDomSize = 0;
-                if (ToulBar2::debug)
-                    cout << "Do not use Domain Size in Bool of P" << endl;
+                    cout << "SAC will continue in DFS nodes " << endl;
             }
 
             if (args.OptionId() == OPT_RINS) {

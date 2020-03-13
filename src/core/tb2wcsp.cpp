@@ -50,28 +50,16 @@ int WCSP::wcspCounter = 0;
 int ToulBar2::verbose;
 
 int ToulBar2::strictAC;
-int ToulBar2::SACifVAC;
 int ToulBar2::VACthreshold;
-int ToulBar2::reverseSAC;
 int ToulBar2::currentOpenNodeDepth;
 int ToulBar2::BFSVAC;
 int ToulBar2::BFSSAC;
-bool ToulBar2::isVAC;
-int ToulBar2::BoolDomSize;
 int ToulBar2::nbTimesIsVAC;
 int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
 bool ToulBar2::RINS;
 int ToulBar2::useRINS;
 int ToulBar2::RINSreset;
 int ToulBar2::RINS_nbStrictACVariables;
-bool ToulBar2::RINS_newSolutionFound;
-double ToulBar2::RINS_probabilty;
-int ToulBar2::RINS_nbCalls;
-int ToulBar2::RINS_nbNewSolutionFound;
-int ToulBar2::RINS_nbNodesOn;
-int ToulBar2::RINS_nbNodesOff;
-int ToulBar2::RINS_nbBacktracksOn;
-int ToulBar2::RINS_nbBacktracksOff;
 Cost ToulBar2::RINS_lastitThreshold;
 double ToulBar2::RINS_lastRatio;
 bool ToulBar2::RINS_saveitThresholds;
@@ -79,6 +67,7 @@ vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
 int ToulBar2::RINS_angle;
 int ToulBar2::RINS_HBFSnodes;
 int ToulBar2::RINS_lastHBFSnode;
+Long ToulBar2::RINS_nbBacktracks;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
@@ -252,34 +241,21 @@ void tb2init()
     ToulBar2::verbose = 0;
 
     ToulBar2::strictAC = 0;
-    ToulBar2::SACifVAC = 0;
-    ToulBar2::VACthreshold = 0;
-    ToulBar2::reverseSAC = 0;
+    ToulBar2::VACthreshold = false;
     ToulBar2::currentOpenNodeDepth = 0;
     ToulBar2::BFSVAC = -1;
     ToulBar2::BFSSAC = 0;
-    ToulBar2::isVAC = false;
-    ToulBar2::BoolDomSize = 0;
     ToulBar2::nbTimesIsVAC = 0;
     ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
     ToulBar2::RINS = false;
     ToulBar2::useRINS = 0;
     ToulBar2::RINSreset = 0;
     ToulBar2::RINS_nbStrictACVariables = 0;
-    ToulBar2::RINS_newSolutionFound = false;
-    ToulBar2::RINS_probabilty = 1.0;
-    ToulBar2::RINS_nbCalls = 0;
-    ToulBar2::RINS_nbNewSolutionFound = 0;
-    ToulBar2::RINS_nbNodesOn = 0;
-    ToulBar2::RINS_nbNodesOff = 0;
-    ToulBar2::RINS_nbBacktracksOn = 0;
-    ToulBar2::RINS_nbBacktracksOff = 0;
     ToulBar2::RINS_lastitThreshold = 1;
     ToulBar2::RINS_lastRatio = 0.0000000001;
     ToulBar2::RINS_saveitThresholds = false;
     ToulBar2::RINS_angle = 10;
-    ToulBar2::RINS_HBFSnodes = 0;
-    ToulBar2::RINS_lastHBFSnode = 0;
+    ToulBar2::RINS_nbBacktracks = 1000;
 
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
@@ -534,7 +510,15 @@ void tb2checkOptions()
         exit(1);
     }
     if (ToulBar2::useRINS && ToulBar2::btdMode >= 1) {
-        cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
+        cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -rasps option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::useRINS && !ToulBar2::vac) {
+        cerr << "Error: VAC-based upper bound probing heuristic requires VAC at least in preprocessing (add -A option)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::VACthreshold && !ToulBar2::vac) {
+        cerr << "Error: VAC threshold heuristic requires VAC during search (add -A option)." << endl;
         exit(1);
     }
     if (ToulBar2::vac && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning VAC assumes AC supports
@@ -2177,8 +2161,6 @@ void WCSP::preprocessing()
         ToulBar2::RINS_saveitThresholds = true;
         ToulBar2::RINS_itThresholds.clear();
         ToulBar2::RINS_lastRatio = 0.0000000001;
-        //        vac->iniThreshold();
-        //        vac->propagate();
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
         ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
@@ -2750,10 +2732,6 @@ void WCSP::whenContradiction()
     FEAC.clear();
     objectiveChanged = false;
     nbNodes++;
-    if (ToulBar2::RINS)
-        ToulBar2::RINS_nbNodesOn++;
-    else
-        ToulBar2::RINS_nbNodesOff++;
 }
 
 ///\defgroup ncbucket NC bucket sort
@@ -3420,7 +3398,7 @@ void WCSP::propagate()
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
-    assert(ToulBar2::useRINS || verify());
+    assert(verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
