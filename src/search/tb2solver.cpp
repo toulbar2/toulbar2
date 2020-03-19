@@ -1514,8 +1514,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 	auto begin = chrono::high_resolution_clock::now();  // XXX timing of serial hbfs
 	int nbNodesPopped = 0; //kad
-	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE"
-			<< endl;
+//	cout << " SEQUENTIAL HBFS MODE!!! ADD -para OPTION FOR PARALLEL MODE" << endl;
 	if (ToulBar2::verbose >= 1 && cluster)
 		cout << "hybridSolve C" << cluster->getId() << " " << clb << " " << cub
 				<< endl;
@@ -1755,11 +1754,9 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 // ddd
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
-	cout << " PARALLEL HBFS MODE!!!" << endl;
+//	cout << " PARALLEL HBFS MODE!!!" << endl;
 
 	namespace mpi = boost::mpi;
-
-	mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
 
 	mpi::communicator world;
 
@@ -1769,13 +1766,15 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 	const int tag0 = 0;
 
-	Cost cub_init = cub;
+	Long nbjob = 0;
 
 // ********************************************************************************************
 // ************************************mmm Master mmm******************************************
 // ********************************************************************************************
 
 	auto begin = chrono::high_resolution_clock::now(); // to compute elapsed time in parallel code
+
+    nbHybrid++;
 
 	if (world.rank() == master) {
 
@@ -1810,8 +1809,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			nbHybridContinue++;
 
 		}
-
-		nbHybrid++; // do not count empty root cluster
 
 		open->updateUb(cub);  // probably a line that can be deleted
 
@@ -1854,6 +1851,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 				idleQ.pop(); // pop it, hence the worker is considered active.
 
+				nbjob++;
+
 #ifdef NDEBUG  // code that will be compiled in release mode
 				
 				world.isend(worker, tag0, work); // non blocking send: the master send "work" to "worker" with tag0
@@ -1871,6 +1870,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			} // End of loop that distribute jobs to workers
 
 			Work work2; // object work will be populated with workers' best solution ub and other information from this worker after it has performed a DFS
+			Cost initub = wcsp->getUb();
 
 #if !defined(NDEBUG) // debug build code
 			cout
@@ -1907,6 +1907,8 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			nbNodes += work2.nbNodes;
 
 			nbBacktracks += work2.nbBacktracks;
+
+			((WCSP *) wcsp)->incNbDEE(work2.nbDEE);
 
 #if !defined(NDEBUG) // debug build code
 
@@ -1956,23 +1958,52 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			// YYYY The master receives a solution from the worker
 
-			vector<Value> workerSol;
+			if (work2.ub < initub && !work2.sol.empty()) { // if the master receives an improving sol from the worker
 
-// transformation of vector to map necessary because wcsp->getSolution return a vector not a map: see :
-// typedef map<int, Value> TAssign;
-// void setSolution(Cost cost, TAssign* sol = NULL) = 0;
+			    // transformation of vector to map necessary because wcsp->getSolution return a vector not a map: see :
+			    // typedef map<int, Value> TAssign;
+			    // void setSolution(Cost cost, TAssign* sol = NULL) = 0;
 
-			map<int, Value> workerSolMap;
+			    map<int, Value> workerSolMap;
 
-			for (int i = 0; i < int(workerSol.size()); i++) { // convert vector to map ; tested and it works fine !
+			    for (int i = 0; i < int(work2.sol.size()); i++) { // convert vector to map ; tested and it works fine !
 
-				workerSolMap[i] = workerSol[i];
+			        workerSolMap[i] = work2.sol[i];
 
-			}
-
-			if (work2.ub < wcsp->getUb() && !work2.sol.empty()) { // if the master receives an improving sol from the worker
+			    }
 
 				wcsp->setSolution(work2.ub, &workerSolMap); // take current assignment and stock it in solution (stl c++ map)
+			    if (ToulBar2::verbose >= 0) {
+			        if (!ToulBar2::bayesian)
+			            cout << "New solution: " << std::fixed
+                        << std::setprecision(ToulBar2::decimalPoint)
+                        << wcsp->getDPrimalBound()
+                        << std::setprecision(DECIMAL_POINT) << " ("
+			            << nbBacktracks << " backtracks, " << nbNodes
+			            << " nodes, depth " << Store::getDepth() << ")" << endl;
+			        else
+			            cout << "New solution: "  << std::fixed
+                        << std::setprecision(ToulBar2::decimalPoint)
+                        << wcsp->getDPrimalBound()
+                        << std::setprecision(DECIMAL_POINT) << " energy: "
+			            << -(wcsp->Cost2LogProb(wcsp->getUb()) + ToulBar2::markov_log) << " prob: "
+			            << std::scientific
+			            << wcsp->Cost2Prob(wcsp->getUb()) * Exp(ToulBar2::markov_log) << std::fixed
+			            << " (" << nbBacktracks << " backtracks, " << nbNodes
+			            << " nodes, depth " << Store::getDepth() << ")" << endl;
+			    }
+			    if (ToulBar2::showSolutions) {
+			        wcsp->printSolution(cout);
+			        cout << endl;
+			    }
+			    if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
+			        rewind(ToulBar2::solutionFile);
+			        wcsp->printSolution(ToulBar2::solutionFile);
+			        fprintf(ToulBar2::solutionFile, "\n");
+			    }
+			    if (ToulBar2::uaieval && !ToulBar2::isZ) {
+			        ((WCSP*)wcsp)->solution_UAI(work2.ub);
+			    }
 
 			}
 
@@ -1981,10 +2012,6 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			showGap(clb, cub);
 
 		} // end while. The programme terminates
-
-		endSolve(wcsp->getUb() < cub_init, wcsp->getUb(), true); // print Optimal: XXX
-
-		//
 
 		Work finish;
 		finish.terminate = 's';  // master says stop to all workers
@@ -2001,10 +2028,10 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 		auto duration = chrono::duration_cast < chrono::milliseconds
 				> (end - begin).count();
 		cout << "ELAPSED TIME PASSED IN HBFS PARA : " << duration / 1000.0
-				<< " seconds" << endl;
+				<< " seconds,  #jobs: " << nbjob << endl;
 
-		cout << "*************** TOTAL WAITING TIME OF THE MASTER #"
-				<< world.rank() << " : " << totalWaiting / 1000.0
+		cout << "TOTAL WAITING TIME OF THE MASTER"
+				<< " : " << totalWaiting / 1000.0
 				<< " seconds" << endl;
 
 		return make_pair(clb, cub);
@@ -2037,9 +2064,11 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			cp->store();
 
-			nbNodes = 0;
+			Long initNbNodes = nbNodes;
 
-			nbBacktracks = 0;
+			Long initNbBacktracks = nbBacktracks;
+
+			Long initNbDEE = wcsp->getNbDEE();
 
 #if !defined(NDEBUG) // debug build code
 			cout << "worker #" << world.rank()
@@ -2083,23 +2112,21 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 				break;
 			}
 
-			// YYYY The worker receives a vector solution from the master
-
-			vector<Value> masterSol;
-
-			map<int, Value> masterSolMap; // convert vector to map
-
-			for (int i = 0; i < int(masterSol.size()); i++) {
-				masterSolMap[i] = masterSol[i];
-			}
-
 			assert(work.ub < wcsp->getUb());
 
 			//	if (work.ub < wcsp->getUb() && !work.sol.empty()) { // if the worker receives an improving sol from the master  utilité assert work.ub < wcsp->getUb() ?????
 
 			if (!work.sol.empty()) { // the master is supposed to always sends an optimal solution or nothing
 
-				wcsp->setSolution(work.ub, &masterSolMap); // take current assignment and stock it in solution (stl c++ map)
+	            // YYYY The worker receives a vector solution from the master
+
+	            map<int, Value> masterSolMap; // convert vector to map
+
+	            for (int i = 0; i < int(work.sol.size()); i++) {
+	                masterSolMap[i] = work.sol[i];
+	            }
+
+	            wcsp->setSolution(work.ub, &masterSolMap); // take current assignment and stock it in solution (stl c++ map)
 
 			}
 			// End of solution passing in worker
@@ -2173,7 +2200,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 			if (ToulBar2::hbfs && nbRecomputationNodes > 0) { // wait until a nonempty open node is restored (at least after first global solution is found)
 				assert(nbNodes > 0);
 				if (nbRecomputationNodes > nbNodes / ToulBar2::hbfsBeta
-						&& ToulBar2::hbfs <= ToulBar2::hbfsGlobalLimit)
+						&& ToulBar2::hbfs*2 <= ToulBar2::hbfsGlobalLimit)
 					ToulBar2::hbfs *= 2; //   ToulBar2::hbfs = Z ? adaptative backtrack limit Z to mitigate replays with Z sufficiently big.
 				else if (nbRecomputationNodes < nbNodes / ToulBar2::hbfsAlpha
 						&& ToulBar2::hbfs >= 2)
@@ -2184,9 +2211,9 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 #if !defined(NDEBUG) // code that will be compiled only in debug mode
 
-			cout << "HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
+			cout << "[" << world.rank() << "] HBFS backtrack limit: Z = " << ToulBar2::hbfs << endl;
 
-			cout << " size of open after DFS = " << open->size() << endl;
+			cout << "[" << world.rank() << "] size of open after DFS = " << open->size() << endl;
 
 #endif
 
@@ -2203,7 +2230,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 			// end of solution passing in worker
 
-			Work work2(*cp, *open, newWorkerUb, worker, nbNodes, nbBacktracks,
+			Work work2(*cp, *open, newWorkerUb, worker, nbNodes - initNbNodes, nbBacktracks - initNbBacktracks, wcsp->getNbDEE() - initNbDEE,
 					workerSol); //  create the message with cub and open nodes information from local open and cp
 
 #if !defined(NDEBUG) // debug build code
@@ -2245,7 +2272,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 /************************************************************************/
 
 pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
-	cout << "SEQUENTIAL HBFS SIMPLIFIED RELEASE. " << endl;
+//	cout << "SEQUENTIAL HBFS SIMPLIFIED RELEASE. " << endl;
 	CPStore *cp_ = NULL; // vector of choice points
 	OpenList *open_ = NULL; // priority queue of nodes
 	// normal BFS without BTD, i.e., hybridSolve is not reentrant
@@ -2909,6 +2936,7 @@ bool Solver::solve() {
 }
 
 void Solver::endSolve(bool isSolution, Cost cost, bool isComplete) {
+
 	static string solType[4] = { "Optimum: ", "Primal bound: ",
 			"guaranteed primal bound: ", "Primal bound: " };
 	ToulBar2::DEE_ = 0;
@@ -2976,10 +3004,11 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete) {
 	if (ToulBar2::vac)
 		wcsp->printVACStat();
 
-	if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
-		cout << "Node redundancy during HBFS: "
-				<< 100. * nbRecomputationNodes / nbNodes << " %" << endl;
-
+	if (ToulBar2::verbose >= -1 && nbHybrid >= 1 && nbNodes > 0) {
+	    boost::mpi::communicator world;
+	    cout << "Node redundancy during HBFS: "
+				<< 100. * nbRecomputationNodes / nbNodes << " % ( #pid: " << world.rank() << ")" << endl;
+	}
 	if (isSolution) {
 		if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag
 				&& !ToulBar2::maxsateval) {

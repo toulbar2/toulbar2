@@ -179,36 +179,38 @@ public:
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
-
 			ar & nbNodes;
 			ar & nbBacktracks;
-			ar & vecCp;
-			ar & nodeX;
+			ar & nbDEE;
 			ar & ub;
 			ar & sender; // sender rank can probably be taken from mpi status object
+            ar & nodeX;
+            ar & vecCp;
 			ar & sol;
-			ar & terminate;
+            ar & terminate;
 		}
 
 	public:
 
-		char terminate = 'c'; // 'c' : the worker continue working, 's' the worker stop working and exit
+		Long nbNodes = 0;
 
-		Long nbNodes;
+		Long nbBacktracks = 0;
 
-		Long nbBacktracks;
-
-		vector<ChoicePoint> vecCp; // vector of choice points
-
-		vector<OpenNode> nodeX;// priority queue which will contain the node(s) to eXchange between the processes
+		Long nbDEE = 0;
 
 		Cost ub;//  Best current solution a.k.a incumbent solution
 
 		int sender;// rank of the process that send the msg. nb: sender rank can be taken from mpi status object but in non blocking mode we have to use probe() function to get the sender or the tag etc.
 
+        vector<OpenNode> nodeX;// priority queue which will contain the node(s) to eXchange between the processes
+
+        vector<ChoicePoint> vecCp; // vector of choice points
+
 		vector<Value> sol;
 
 		// TODO: Do we have to transmit the number of backtracks Z ?
+
+        char terminate = 'c'; // 'c' : the worker continue working, 's' the worker stop working and exit
 
 		/**
 		 * @brief constructor used by the master
@@ -233,9 +235,10 @@ public:
 		 * @brief constructor used by the worker
 		 */
 		//www
-		Work(CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
+		Work(CPStore & cpWorker_, OpenList & openWorker_, const Cost ubWorker_, const int sender_, Long nbNodes_, Long nbBacktracks_, Long nbDEE_, vector<Value> & sol_) // ctor used by the workers with 4 arguments. All the cp
 		: nbNodes(nbNodes_)
 		, nbBacktracks(nbBacktracks_)
+		, nbDEE(nbDEE_)
 		, ub(ubWorker_)
 		, sender(sender_)
 		{

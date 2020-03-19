@@ -19,7 +19,7 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
-const Long hbfsgloballimit = 10000;
+const Long hbfsgloballimit = 16384;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -225,6 +225,8 @@ enum {
     OPT_EPS, //kad
 	OPT_PARA, //kad
     OPT_open,
+    OPT_HBFS_ALPHA,
+    OPT_HBFS_BETA,
     OPT_localsearch,
     NO_OPT_localsearch,
     OPT_EDAC,
@@ -425,6 +427,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_hbfs, (char*)"-hbfs:", SO_NONE },
     { NO_OPT_hbfs, (char*)"-bfs:", SO_NONE },
     { OPT_open, (char*)"-open", SO_REQ_SEP },
+    { OPT_HBFS_ALPHA, (char*)"-hbfsmin", SO_REQ_SEP },
+    { OPT_HBFS_BETA, (char*)"-hbfsmax", SO_REQ_SEP },
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
@@ -771,10 +775,6 @@ void help_msg(char* toulbar2filename)
     cout << "   -best=[integer] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
     cout << endl;
 #endif
-    //kad
-        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
-        cout << "usage for HBFS parallel version:  chmod +x run; usage: ./run nproc problem.wcsp"<< endl;
-    //kad
     cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
     cout << "   -z=[integer] : 1: saves original instance (by default), 2: saves after preprocessing" << endl;
@@ -836,7 +836,15 @@ void help_msg(char* toulbar2filename)
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
+    cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100/ToulBar2::hbfsAlpha << "%)" << endl;
+    cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100/ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+#ifdef OPENMPI
+    //kad
+//        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
+//        cout << "usage for HBFS parallel version:  chmod +x run; usage: ./run nproc problem.wcsp"<< endl;
+    //kad
+#endif
     cout << "---------------------------" << endl;
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
@@ -869,14 +877,14 @@ void help_msg(char* toulbar2filename)
 int _tmain(int argc, TCHAR* argv[])
 {
 #ifdef OPENMPI
-    MPIEnv env0;
-    MPI_Init(NULL, NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &env0.ntasks);
-    MPI_Comm_rank(MPI_COMM_WORLD, &env0.myrank);
+    boost::mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
+    boost::mpi::communicator world;
 #endif
     tb2init();
 #ifdef OPENMPI
-    if (env0.myrank != 0)
+    if (world.size() > 1)
+        ToulBar2::PARA = true;
+    if (world.rank() != 0)
         ToulBar2::verbose = -1;
 #endif
 
@@ -896,7 +904,7 @@ int _tmain(int argc, TCHAR* argv[])
     //	ToulBar2::lds = 1;
 
     // Configuration for UAI Evaluation
-    // ToulBar2::uaieval = (env0.myrank == 0);
+    // ToulBar2::uaieval = (world.rank() == 0);
     //  ToulBar2::verbose = 0;
     //  ToulBar2::lds = 1;
     //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -987,7 +995,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::lds = maxdiscrepancy;
                 ToulBar2::restart = maxrestarts;
 #ifdef OPENMPI
-                if (env0.ntasks > 1) {
+                if (world.size() > 1) {
                     ToulBar2::searchMethod = RPDGVNS;
                     ToulBar2::vnsParallel = true;
                     ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
@@ -1034,7 +1042,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_vns_output) {
 #ifdef OPENMPI
-                if (env0.myrank == 0) {
+                if (world.rank() == 0) {
 #endif
                     ToulBar2::vnsOutput.clear();
                     ToulBar2::vnsOutput.open(args.OptionArg(),
@@ -1042,7 +1050,7 @@ int _tmain(int argc, TCHAR* argv[])
                     if (!ToulBar2::vnsOutput) {
                         cerr << "File " << args.OptionArg() << " cannot be open!" << endl;
 #ifdef OPENMPI
-                        for (int rank = 1; rank < env0.ntasks; ++rank) {
+                        for (int rank = 1; rank < world.size(); ++rank) {
                             MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
                         }
 #endif
@@ -1092,7 +1100,7 @@ int _tmain(int argc, TCHAR* argv[])
             //                    } else if (type.compare("3") == 0) {
             //                        ToulBar2::vnsRestart = VNS_FULL_RESTART;
             //                    } else {
-            //                        if (env0.myrank == 0) {
+            //                        if (world.rank() == 0) {
             //                            cout << "Error : No implementation found for the given strategy"
             //                                 << endl;
             //                            cout << "Program will exit" << endl;
@@ -1667,6 +1675,22 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
                 if (ToulBar2::debug)
                     cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
+            }
+
+            if (args.OptionId() == OPT_HBFS_ALPHA) {
+                Long limit = atoll(args.OptionArg());
+                if (limit > 0)
+                    ToulBar2::hbfsAlpha = 100LL/limit;
+                if (ToulBar2::debug)
+                    cout << "HBFS alpha limit = " << 100LL/ToulBar2::hbfsAlpha << endl;
+            }
+
+            if (args.OptionId() == OPT_HBFS_BETA) {
+                Long limit = atoll(args.OptionArg());
+                if (limit > 0)
+                    ToulBar2::hbfsBeta = 100LL/limit;
+                if (ToulBar2::debug)
+                    cout << "HBFS beta limit = " << 100LL/ToulBar2::hbfsBeta << endl;
             }
 
             // local search INCOP
@@ -2247,7 +2271,7 @@ int _tmain(int argc, TCHAR* argv[])
     }
 
 #ifdef OPENMPI
-    if (env0.myrank == 0) {
+    if (world.rank() == 0) {
 #endif
         if (ToulBar2::writeSolution) {
             ToulBar2::solutionFile = fopen(ToulBar2::writeSolution, "w");

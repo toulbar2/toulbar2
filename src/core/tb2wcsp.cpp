@@ -365,7 +365,7 @@ void tb2init()
     ToulBar2::vnsParallel = false;
 
     ToulBar2::hbfs = 1;
-    ToulBar2::hbfsGlobalLimit = 10000;
+    ToulBar2::hbfsGlobalLimit = 16384;
     ToulBar2::PARA = false;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
@@ -487,6 +487,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::dichotomicBranching >= 2 && ToulBar2::hbfs) {
         cout << "Error: general dichotomic branching not implemented with hybrid best-first search (use simple dichotomic branching or add -hbfs: parameter)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::hbfsAlpha < ToulBar2::hbfsBeta) {
+        cout << "Error: hybrid best-first search compromise min alpha threshold should be less than or equal to max beta threshold (change threshold using -hbfsmin and -hbfsmax parameters)." << endl;
         exit(1);
     }
     if (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
