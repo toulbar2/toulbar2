@@ -708,11 +708,11 @@ public:
         bool result = checkEACGreedySolution(index, a);
         if (!result) {
             if (index >= 0)
-                ((EnumeratedVariable*)getVar(index))->moreThanOne = 1;
+                getVar(index)->unsetFullEAC();
             else {
-                x->moreThanOne = 1;
-                y->moreThanOne = 1;
-                z->moreThanOne = 1;
+                x->unsetFullEAC();
+                y->unsetFullEAC();
+                z->unsetFullEAC();
             }
         }
         return result;
@@ -1707,7 +1707,7 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
     assert(z->getCost(z->getSupport()) == MIN_COST);
     if (getCostWithBinaries(x, y, z, a, y->getSupport(), z->getSupport()) > MIN_COST) {
         if (ToulBar2::strictAC)
-            x->moreThanOne = 1;
+            x->unsetFullEAC();
         unsigned int xindex = x->toIndex(a);
         assert(getIndex(y) < getIndex(z));
         pair<Value, Value> support = supportX[xindex];

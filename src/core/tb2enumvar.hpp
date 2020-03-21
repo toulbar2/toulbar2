@@ -40,8 +40,6 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
-    StoreInt moreThanOne;
-
     bool enumerated() const FINAL { return true; }
 
     bool isValueNames() { return valueNames.size() == getDomainInitSize(); }

@@ -22,7 +22,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     , support(iinf)
     , watchForIncrease(false)
     , watchForDecrease(false)
-    , moreThanOne((isup > iinf) ? 1 : 0)
 {
     init();
 }
@@ -34,7 +33,6 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
     , support(min(d, dsize))
     , watchForIncrease(false)
     , watchForDecrease(false)
-    , moreThanOne((dsize > 1) ? 1 : 0)
 {
     init();
 }
@@ -110,7 +108,7 @@ void EnumeratedVariable::print(ostream& os)
             os << " " << getCost(*iter);
         }
         os << " > s:" << support;
-        if (ToulBar2::strictAC && !moreThanOne) {
+        if (ToulBar2::strictAC && isFullEAC()) {
             os << "!";
         }
     }
@@ -343,9 +341,9 @@ bool EnumeratedVariable::reviseEACGreedySolution()
             broken = true;
     }
     if (!broken) {
-        moreThanOne = 0;
+       setFullEAC();
     } else {
-        assert(moreThanOne == 1);
+        assert(!isFullEAC());
     }
     if (ToulBar2::verbose >= 1) cout << "revise greedy solution for variable " << *this << endl;
     return (!broken);
@@ -448,24 +446,24 @@ bool EnumeratedVariable::isEAC()
     Value bestValue = wcsp->getBestValue(wcspIndex);
     if (support != bestValue && canbe(bestValue)) {
         if (ToulBar2::strictAC)
-            moreThanOne = 0;
+            setFullEAC();
         if (isEAC(bestValue))
             return true;
     }
     if (ToulBar2::strictAC)
-        moreThanOne = 0;
+        setFullEAC();
     if (isEAC(support))
         return true;
     for (iterator iter = begin(); iter != end(); ++iter) {
         if (*iter == support || *iter == bestValue)
             continue;
         if (ToulBar2::strictAC)
-            moreThanOne = 0;
+            setFullEAC();
         if (isEAC(*iter))
             return true;
     }
     if (ToulBar2::strictAC)
-        moreThanOne = 1;
+        unsetFullEAC();
     return false;
 }
 

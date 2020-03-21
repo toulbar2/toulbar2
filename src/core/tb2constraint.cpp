@@ -55,11 +55,11 @@ bool Constraint::reviseEACGreedySolution(int index, Value support)
     bool result = !isGlobal() && checkEACGreedySolution(index, support);
     if (!result) {
         if (index >= 0) {
-            ((EnumeratedVariable*)getVar(index))->moreThanOne = 1;
+            getVar(index)->unsetFullEAC();
         } else {
             int a = arity();
             for (int i = 0; i < a; i++) {
-                ((EnumeratedVariable*)getVar(i))->moreThanOne = 1;
+                getVar(i)->unsetFullEAC();
             }
         }
     }

@@ -306,7 +306,7 @@ bool VACExtension::propagate()
                 while (!SeekSupport.empty()) {
                     VACVariable* x = (VACVariable*)SeekSupport.pop();
                     bool vacintegral = ToulBar2::strictAC && x->getDomainSize()==1;
-                    if (vacintegral && (x->getInf() != x->getSupport() || x->moreThanOne)) {
+                    if (vacintegral && (x->getInf() != x->getSupport() || !x->isFullEAC())) {
                         acSupport.push_back(make_tuple(x, x->getInf(), true));
                     } else if (!vacintegral && x->cannotbe(x->getSupport())) {
                         Value bestValue = wcsp->getBestValue(x->wcspIndex);
@@ -481,10 +481,10 @@ bool VACExtension::propagate()
             bool vacintegral = get<2>(*iter);
             if (x->canbe(val)) {
                 if (x->getCost(val) == MIN_COST) {
-                    if (ToulBar2::verbose > 0 && (x->getSupport() != val || (vacintegral && x->moreThanOne)))
-                        cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << ((!x->moreThanOne)?"!":"") << " to " << val << ((vacintegral)?"!":"") << endl;
-                    if (vacintegral && x->moreThanOne) {
-                        x->moreThanOne = 0; // TODO: is it better to set VAC-integrality to true even if current unary cost is not zero?
+                    if (ToulBar2::verbose > 0 && (x->getSupport() != val || (vacintegral && !x->isFullEAC())))
+                        cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << ((x->isFullEAC())?"!":"") << " to " << val << ((vacintegral)?"!":"") << endl;
+                    if (vacintegral && !x->isFullEAC()) {
+                        x->setFullEAC(); // TODO: is it better to set VAC-integrality to true even if current unary cost is not zero?
 #ifndef NDEBUG
                         x->queueFEAC(); // TODO: is it better to set VAC-integrality to true even if some cost functions are violated?
 #endif

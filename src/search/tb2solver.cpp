@@ -544,7 +544,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         //double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
         if (ToulBar2::strictAC) {
             EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
-            if ((var->moreThanOne)
+            if (!var->isFullEAC()
                 && ((varIndex < 0)
                        || (heuristic < best - epsilon * best)
                        || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {

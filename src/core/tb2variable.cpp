@@ -21,6 +21,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     , pos(-1)
     , inf(iinf)
     , sup(isup)
+    , fulleac((isup > iinf) ? 0 : 1)
     , constrs(&Store::storeConstraint)
     ,
     //triangles(&Store::storeConstraint),

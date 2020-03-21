@@ -25,7 +25,7 @@ protected:
 
     StoreValue inf;
     StoreValue sup;
-    //    StoreInt eac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
+    StoreInt fulleac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
 
     ConstraintList constrs;
     //ConstraintList triangles;
@@ -108,6 +108,9 @@ public:
     virtual Cost getCost(const Value value) const = 0;
 
     virtual Value getSupport() const { return inf; } // If there is no defined support then return inf
+    bool isFullEAC() const { return fulleac; }
+    void setFullEAC() { fulleac = 1; }
+    void unsetFullEAC() { fulleac = 0; }
 
     Cost getMaxCost() const { return maxCost; }
     void setMaxCost(Cost cost) { maxCost = cost; }

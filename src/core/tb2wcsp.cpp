@@ -2667,9 +2667,9 @@ bool WCSP::verify()
         }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         // Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
-        int old_moreThanOne = 1;
+        bool old_fulleac = false;
         if (vars[i]->enumerated())
-            old_moreThanOne = ((EnumeratedVariable*)vars[i])->moreThanOne;
+            old_fulleac = vars[i]->isFullEAC();
         if (ToulBar2::LcLevel == LC_EDAC && vars[i]->enumerated() && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !((EnumeratedVariable*)vars[i])->isEAC(vars[i]->getSupport())) {
             if (ToulBar2::verbose >= 4)
                 cout << endl
@@ -2678,7 +2678,7 @@ bool WCSP::verify()
             if (!ToulBar2::vacValueHeuristic)
                 return false;
         }
-        if (ToulBar2::strictAC && vars[i]->unassigned() && old_moreThanOne == 0 && old_moreThanOne != ((EnumeratedVariable*)vars[i])->moreThanOne) {
+        if (ToulBar2::strictAC && vars[i]->unassigned() && old_fulleac && old_fulleac != vars[i]->isFullEAC()) {
             if (ToulBar2::verbose >= 4)
                 cout << endl
                      << *this;
