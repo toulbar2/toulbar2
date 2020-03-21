@@ -49,24 +49,18 @@ int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
 
-int ToulBar2::strictAC;
-int ToulBar2::VACthreshold;
-int ToulBar2::currentOpenNodeDepth;
-int ToulBar2::BFSVAC;
-int ToulBar2::BFSSAC;
+bool ToulBar2::strictAC;
+bool ToulBar2::VACthreshold;
 int ToulBar2::nbTimesIsVAC;
 int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
 bool ToulBar2::RINS;
 int ToulBar2::useRINS;
-int ToulBar2::RINSreset;
+bool ToulBar2::RINSreset;
 int ToulBar2::RINS_nbStrictACVariables;
 Cost ToulBar2::RINS_lastitThreshold;
-double ToulBar2::RINS_lastRatio;
 bool ToulBar2::RINS_saveitThresholds;
 vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
 int ToulBar2::RINS_angle;
-int ToulBar2::RINS_HBFSnodes;
-int ToulBar2::RINS_lastHBFSnode;
 Long ToulBar2::RINS_nbBacktracks;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
@@ -240,19 +234,15 @@ void tb2init()
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
 
-    ToulBar2::strictAC = 0;
+    ToulBar2::strictAC = false;
     ToulBar2::VACthreshold = false;
-    ToulBar2::currentOpenNodeDepth = 0;
-    ToulBar2::BFSVAC = -1;
-    ToulBar2::BFSSAC = 0;
     ToulBar2::nbTimesIsVAC = 0;
     ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
     ToulBar2::RINS = false;
     ToulBar2::useRINS = 0;
-    ToulBar2::RINSreset = 0;
+    ToulBar2::RINSreset = false;
     ToulBar2::RINS_nbStrictACVariables = 0;
     ToulBar2::RINS_lastitThreshold = 1;
-    ToulBar2::RINS_lastRatio = 0.0000000001;
     ToulBar2::RINS_saveitThresholds = false;
     ToulBar2::RINS_angle = 10;
     ToulBar2::RINS_nbBacktracks = 1000;
@@ -467,7 +457,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::allSolutions || ToulBar2::isZ) {
         ToulBar2::DEE = 0;
-        ToulBar2::strictAC = 0;
+        ToulBar2::strictAC = false;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
         cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
@@ -2160,17 +2150,16 @@ void WCSP::preprocessing()
     if ((ToulBar2::vac && ToulBar2::useRINS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
         ToulBar2::RINS_saveitThresholds = true;
         ToulBar2::RINS_itThresholds.clear();
-        ToulBar2::RINS_lastRatio = 0.0000000001;
         propagate();
         ToulBar2::RINS_saveitThresholds = false;
         ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
         if (ToulBar2::VACthreshold || ToulBar2::RINS_angle < 0) {
             if (ToulBar2::verbose >= 0)
-                cout << "RINS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+                cout << "RASPS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
             ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
         } else {
             if (ToulBar2::verbose >= 0)
-                cout << "RINS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+                cout << "RASPS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
         }
     }
     if (ToulBar2::strictAC) {

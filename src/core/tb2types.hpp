@@ -412,25 +412,19 @@ public:
     static string version;
     static int verbose;
 
-    static int strictAC;
-    static int VACthreshold;
-    static int currentOpenNodeDepth;
-    static int BFSVAC;
-    static int BFSSAC;
+    static bool strictAC;
+    static bool VACthreshold;
     static int nbTimesIsVAC;
     static int nbTimesIsVACitThresholdMoreThanOne;
     static bool RINS;
     static int useRINS;
-    static int RINSreset;
+    static bool RINSreset;
+    static int RINS_angle;
+    static Long RINS_nbBacktracks;
     static int RINS_nbStrictACVariables;
     static Cost RINS_lastitThreshold;
-    static double RINS_lastRatio;
     static bool RINS_saveitThresholds;
     static vector<pair<Cost, double>> RINS_itThresholds;
-    static int RINS_angle;
-    static int RINS_HBFSnodes;
-    static int RINS_lastHBFSnode;
-    static Long RINS_nbBacktracks;
 
     static int debug;
     static string externalUB;

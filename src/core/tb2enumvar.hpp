@@ -41,9 +41,7 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
 
     StoreInt moreThanOne;
-    int domSizeInBoolOfP;
-    Value strictACValueInBoolOfP;
-    vector<Value> RINS_valuesToBeRemoved;
+
     bool enumerated() const FINAL { return true; }
 
     bool isValueNames() { return valueNames.size() == getDomainInitSize(); }
@@ -96,7 +94,7 @@ public:
     void setSupport(Value val)
     {
         if (support != val) {
-            if (ToulBar2::verbose >= 7)
+            if (ToulBar2::verbose >= 8)
                 cout << "change support for " << getName() << " from " << support << " to " << val << endl;
             support = val;
             if (ToulBar2::strictAC)

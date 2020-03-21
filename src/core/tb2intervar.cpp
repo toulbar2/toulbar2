@@ -214,7 +214,7 @@ void IntervalVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bool
 {
     if (ToulBar2::verbose >= 2)
         cout << "assignLS " << *this << " -> " << newValue << endl;
-    if (unassigned() || getValue() != newValue) {
+    if (force || unassigned() || getValue() != newValue) {
         if (cannotbe(newValue))
             THROWCONTRADICTION;
         changeNCBucket(-1);

@@ -542,7 +542,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         Long wdeg = wcsp->getWeightedDegree(*iter);
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         //double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
-        if (ToulBar2::strictAC > 0) {
+        if (ToulBar2::strictAC) {
             EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
             if ((var->moreThanOne)
                 && ((varIndex < 0)
@@ -564,10 +564,10 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
     }
 
     if (varIndex == -1) {
-        if (ToulBar2::strictAC > 0) {
+        if (ToulBar2::strictAC) {
             if (!unassignedVars->empty()) {
-                if (ToulBar2::verbose)
-                    cout << "ALL VARIABLES ARE SAC !" << endl;
+                if (ToulBar2::verbose >= 2)
+                    cout << "Fast greedy assignment for " << unassignedVars->getSize() << " variables!" << endl;
                 Cost currentUb = wcsp->getUb();
                 Cost newUb = currentUb;
                 int depth = Store::getDepth();
@@ -1526,10 +1526,8 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     open_->updateUb(res.second, delta);
                     cub = MIN(cub, res.second);
                 } else {
-                    ToulBar2::currentOpenNodeDepth = Store::depth;
                     if (ToulBar2::vac < 0)
                         ToulBar2::vac = 0;
-                    //cout << "Call to recursiveSolve from open node. Depth: " << Store::depth << endl;
                     recursiveSolve(bestlb);
                 }
             } catch (Contradiction) {
@@ -1860,9 +1858,6 @@ bool Solver::solve()
                                     THROWCONTRADICTION;
                                 }
                                 ToulBar2::lds = 0;
-                                //					  for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-                                //					  		wcsp->resetWeightedDegree(*iter);
-                                //					  }
                                 initialDepth = Store::getDepth();
                                 hybridSolve();
                             } else {
@@ -1963,7 +1958,7 @@ bool Solver::solve()
                                 ((WCSP*)wcsp)->vac->propagate(); // VAC done again
                                 ToulBar2::RINS = false;
                                 if (ToulBar2::verbose >= 0)
-                                    cout << "RINS done in preprocessing (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
+                                    cout << "RASPS done in preprocessing (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
                                 enforceUb();
                                 wcsp->propagate();
                                 if (ToulBar2::RINSreset) {

@@ -166,7 +166,7 @@ void VACExtension::nextScaleCost()
 }
 
 void VACExtension::resetSupports()
-{
+{ // TODO: reset TernaryConstraint supports
     for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
         Constraint* ctr = wcsp->getCtr(i);
         if (ctr->isBinary() && ctr->connected()) {
@@ -202,7 +202,6 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
     int bucket = cost2log2glb(threshold);
     if (bucket < 0)
         bucket = 0;
-    //    if (ToulBar2::verbose >= 8) cout << "previousThreshold: " << previousThreshold << " (" <<  bucket2 << "), threshold " << threshold  << " (" <<  bucket << ")" << endl;
     for (; bucket <= bucket2; bucket++) {
         VariableList* varlist = wcsp->getNCBucket(bucket);
         for (VariableList::iterator iter = varlist->begin(); iter != varlist->end();) {
@@ -253,13 +252,6 @@ bool VACExtension::propagate()
     static vector<tuple<VACVariable*, Value, bool>> acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
     bool acSupportOK = false;
 
-    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-        if (wcsp->getVar(i)->enumerated()) {
-            EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
-            xi->domSizeInBoolOfP = xi->getDomainSize();
-        }
-    }
-
     while (!util && itThreshold != MIN_COST) {
         int storedepth = Store::getDepth();
         bool isvac = true;
@@ -292,10 +284,6 @@ bool VACExtension::propagate()
                 inconsistentVariable = -1;
                 return false;
             }
-            if (ToulBar2::verbose >= 4)
-                cout << "VAC itThreshold: " << itThreshold << " before enforcePass1 (prevItThreshold: " << prevItThreshold << ")" << endl;
-            if (ToulBar2::verbose >= 8)
-                cout << *wcsp << endl;
             enforcePass1();
             isvac = isVAC();
             assert(!isvac || checkPass1());
@@ -366,7 +354,7 @@ bool VACExtension::propagate()
                     Long storerestart = ToulBar2::restart;
                     bool storeLimited = ToulBar2::limited;
                     int storeVac = ToulBar2::vac;
-                    int storeStrictAC = ToulBar2::strictAC;
+                    bool storeStrictAC = ToulBar2::strictAC;
 
                     ToulBar2::hbfs = 0;
                     ToulBar2::hbfsGlobalLimit = 0;
@@ -379,7 +367,7 @@ bool VACExtension::propagate()
                     }
                     ToulBar2::limited = false;
                     ToulBar2::vac = 0;
-                    ToulBar2::strictAC = 0;
+                    ToulBar2::strictAC = false;
 
                     Cost lastUB = wcsp->getUb();
                     try {
@@ -497,7 +485,9 @@ bool VACExtension::propagate()
                         cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << ((!x->moreThanOne)?"!":"") << " to " << val << ((vacintegral)?"!":"") << endl;
                     if (vacintegral && x->moreThanOne) {
                         x->moreThanOne = 0; // TODO: is it better to set VAC-integrality to true even if current unary cost is not zero?
-                        x->queueFEAC();
+#ifndef NDEBUG
+                        x->queueFEAC(); // TODO: is it better to set VAC-integrality to true even if some cost functions are violated?
+#endif
                     }
                     x->setSupport(val);
                 }
@@ -516,10 +506,8 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
     bool wipeout = false;
     VACVariable* xi;
     xi = (VACVariable*)cij->getVarDiffFrom(xj);
-    //    if (ToulBar2::verbose >= 8) cout << "revise " << *((EnumeratedVariable *) xi) << endl;
     for (EnumeratedVariable::iterator it = xi->begin(); it != xi->end(); ++it) {
         Value v = *it;
-        //        if (ToulBar2::verbose >= 8) cout << "check variable " << xi->getName() << " with value " << v << " and cost " << xi->getVACCost(v) << endl;
         if (xi->getVACCost(v) > MIN_COST) {
             xi->removeVAC(v);
         } else if (cij->revise(xi, v)) {
@@ -543,7 +531,7 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
 
 void VACExtension::enforcePass1()
 {
-    if (ToulBar2::verbose >= 1)
+    if (ToulBar2::verbose >= 4)
         cout << "enforcePass1 itThreshold: " << itThreshold << endl;
     VACVariable* xj;
     VACBinaryConstraint* cij;

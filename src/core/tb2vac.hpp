@@ -99,8 +99,6 @@ public:
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
 
-    Long getNbIterations() const { return nbIterations; }
-
     Cost RINS_finditThreshold();
 };
 
