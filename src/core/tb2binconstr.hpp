@@ -424,7 +424,7 @@ public:
             else
                 x->queueAC();
         }
-        if (ToulBar2::strictAC) {
+        if (ToulBar2::FullEAC) {
             reviseEACGreedySolution();
             for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
                 if ((*iter).constr->isTernary() && (*iter).constr->getIndex(y) >= 0) {
@@ -538,13 +538,13 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return true;
         if (varIndex == 0) {
             assert(y->canbe(y->getSupport()));
             assert(y->getCost(y->getSupport()) == MIN_COST);
             if (getCost(a, y->getSupport()) > MIN_COST) {
-                if (ToulBar2::strictAC)
+                if (ToulBar2::FullEAC)
                     x->unsetFullEAC();
                 unsigned int xindex = x->toIndex(a);
                 if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
@@ -561,7 +561,7 @@ public:
             assert(x->canbe(x->getSupport()));
             assert(x->getCost(x->getSupport()) == MIN_COST);
             if (getCost(x->getSupport(), a) > MIN_COST) {
-                if (ToulBar2::strictAC)
+                if (ToulBar2::FullEAC)
                     y->unsetFullEAC();
                 unsigned int yindex = y->toIndex(a);
                 if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
@@ -581,7 +581,7 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return;
         if (varIndex == 0)
             findFullSupportX();

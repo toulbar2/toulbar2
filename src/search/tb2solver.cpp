@@ -542,7 +542,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         Long wdeg = wcsp->getWeightedDegree(*iter);
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         //double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
-        if (ToulBar2::strictAC) {
+        if (ToulBar2::FullEAC) {
             EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
             if (!var->isFullEAC()
                 && ((varIndex < 0)
@@ -564,7 +564,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
     }
 
     if (varIndex == -1) {
-        if (ToulBar2::strictAC) {
+        if (ToulBar2::FullEAC) {
             if (!unassignedVars->empty()) {
                 if (ToulBar2::verbose >= 2)
                     cout << "Fast greedy assignment for " << unassignedVars->getSize() << " variables!" << endl;
@@ -1595,7 +1595,7 @@ Cost Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         exit(1);
     }
-    if (ToulBar2::strictAC && ToulBar2::vac && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
+    if (ToulBar2::FullEAC && ToulBar2::vac && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
         cerr << "Error: VAC-based and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -sac option)." << endl;
         exit(1);
     }
@@ -1950,18 +1950,18 @@ bool Solver::solve()
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
                             initialDepth = Store::getDepth();
-                            if (ToulBar2::useRINS) {
+                            if (ToulBar2::useRASPS) {
                                 enforceUb();
                                 wcsp->propagate();
-                                ToulBar2::RINS = true;
-                                ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RINS_lastitThreshold);
+                                ToulBar2::RASPS = true;
+                                ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RASPSlastitThreshold);
                                 ((WCSP*)wcsp)->vac->propagate(); // VAC done again
-                                ToulBar2::RINS = false;
+                                ToulBar2::RASPS = false;
                                 if (ToulBar2::verbose >= 0)
                                     cout << "RASPS done in preprocessing (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
                                 enforceUb();
                                 wcsp->propagate();
-                                if (ToulBar2::RINSreset) {
+                                if (ToulBar2::RASPSreset) {
                                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                                         wcsp->resetWeightedDegree(i);
                                         wcsp->setBestValue(i, wcsp->getSup(i) + 1);

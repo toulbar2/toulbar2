@@ -95,7 +95,7 @@ public:
             if (ToulBar2::verbose >= 8)
                 cout << "change support for " << getName() << " from " << support << " to " << val << endl;
             support = val;
-            if (ToulBar2::strictAC)
+            if (ToulBar2::FullEAC)
                 queueFEAC();
         }
     }

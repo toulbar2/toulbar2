@@ -49,19 +49,19 @@ int WCSP::wcspCounter = 0;
 
 int ToulBar2::verbose;
 
-bool ToulBar2::strictAC;
+bool ToulBar2::FullEAC;
 bool ToulBar2::VACthreshold;
 int ToulBar2::nbTimesIsVAC;
 int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
-bool ToulBar2::RINS;
-int ToulBar2::useRINS;
-bool ToulBar2::RINSreset;
-int ToulBar2::RINS_nbStrictACVariables;
-Cost ToulBar2::RINS_lastitThreshold;
-bool ToulBar2::RINS_saveitThresholds;
-vector<pair<Cost, double>> ToulBar2::RINS_itThresholds;
-int ToulBar2::RINS_angle;
-Long ToulBar2::RINS_nbBacktracks;
+bool ToulBar2::RASPS;
+int ToulBar2::useRASPS;
+bool ToulBar2::RASPSreset;
+int ToulBar2::RASPSnbStrictACVariables;
+Cost ToulBar2::RASPSlastitThreshold;
+bool ToulBar2::RASPSsaveitThresholds;
+vector<pair<Cost, double>> ToulBar2::RASPSitThresholds;
+int ToulBar2::RASPSangle;
+Long ToulBar2::RASPSnbBacktracks;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
@@ -234,18 +234,18 @@ void tb2init()
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
 
-    ToulBar2::strictAC = false;
+    ToulBar2::FullEAC = false;
     ToulBar2::VACthreshold = false;
     ToulBar2::nbTimesIsVAC = 0;
     ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
-    ToulBar2::RINS = false;
-    ToulBar2::useRINS = 0;
-    ToulBar2::RINSreset = false;
-    ToulBar2::RINS_nbStrictACVariables = 0;
-    ToulBar2::RINS_lastitThreshold = 1;
-    ToulBar2::RINS_saveitThresholds = false;
-    ToulBar2::RINS_angle = 10;
-    ToulBar2::RINS_nbBacktracks = 1000;
+    ToulBar2::RASPS = false;
+    ToulBar2::useRASPS = 0;
+    ToulBar2::RASPSreset = false;
+    ToulBar2::RASPSnbStrictACVariables = 0;
+    ToulBar2::RASPSlastitThreshold = 1;
+    ToulBar2::RASPSsaveitThresholds = false;
+    ToulBar2::RASPSangle = 10;
+    ToulBar2::RASPSnbBacktracks = 1000;
 
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
@@ -457,7 +457,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::allSolutions || ToulBar2::isZ) {
         ToulBar2::DEE = 0;
-        ToulBar2::strictAC = false;
+        ToulBar2::FullEAC = false;
     }
     if (ToulBar2::lds && ToulBar2::btdMode >= 1) {
         cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
@@ -491,19 +491,19 @@ void tb2checkOptions()
         cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
         exit(1);
     }
-    if (ToulBar2::strictAC && ToulBar2::btdMode >= 1) {
+    if (ToulBar2::FullEAC && ToulBar2::btdMode >= 1) {
         cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
         exit(1);
     }
-    if (ToulBar2::strictAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports
+    if (ToulBar2::FullEAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports
         cerr << "Error: VAC-based variable ordering heuristic requires EDAC local consistency (select EDAC using -k option)." << endl;
         exit(1);
     }
-    if (ToulBar2::useRINS && ToulBar2::btdMode >= 1) {
+    if (ToulBar2::useRASPS && ToulBar2::btdMode >= 1) {
         cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -rasps option)." << endl;
         exit(1);
     }
-    if (ToulBar2::useRINS && !ToulBar2::vac) {
+    if (ToulBar2::useRASPS && !ToulBar2::vac) {
         cerr << "Error: VAC-based upper bound probing heuristic requires VAC at least in preprocessing (add -A option)." << endl;
         exit(1);
     }
@@ -515,7 +515,7 @@ void tb2checkOptions()
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         exit(1);
     }
-    if (ToulBar2::vac && ToulBar2::strictAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports when using strictAC
+    if (ToulBar2::vac && ToulBar2::FullEAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
         ToulBar2::vacValueHeuristic = true;
     }
     if (ToulBar2::preprocessFunctional > 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) {
@@ -2147,22 +2147,22 @@ void WCSP::preprocessing()
         setDACOrder(order);
     }
 #endif
-    if ((ToulBar2::vac && ToulBar2::useRINS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
-        ToulBar2::RINS_saveitThresholds = true;
-        ToulBar2::RINS_itThresholds.clear();
+    if ((ToulBar2::vac && ToulBar2::useRASPS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
+        ToulBar2::RASPSsaveitThresholds = true;
+        ToulBar2::RASPSitThresholds.clear();
         propagate();
-        ToulBar2::RINS_saveitThresholds = false;
-        ToulBar2::RINS_lastitThreshold = vac->RINS_finditThreshold();
-        if (ToulBar2::VACthreshold || ToulBar2::RINS_angle < 0) {
+        ToulBar2::RASPSsaveitThresholds = false;
+        ToulBar2::RASPSlastitThreshold = vac->RASPSFindItThreshold();
+        if (ToulBar2::VACthreshold || ToulBar2::RASPSangle < 0) {
             if (ToulBar2::verbose >= 0)
-                cout << "RASPS/VAC threshold: " << ToulBar2::RINS_lastitThreshold << endl;
-            ToulBar2::costThreshold = ToulBar2::RINS_lastitThreshold;
+                cout << "RASPS/VAC threshold: " << ToulBar2::RASPSlastitThreshold << endl;
+            ToulBar2::costThreshold = ToulBar2::RASPSlastitThreshold;
         } else {
             if (ToulBar2::verbose >= 0)
-                cout << "RASPS threshold: " << ToulBar2::RINS_lastitThreshold << endl;
+                cout << "RASPS threshold: " << ToulBar2::RASPSlastitThreshold << endl;
         }
     }
-    if (ToulBar2::strictAC) {
+    if (ToulBar2::FullEAC) {
         for (unsigned int i = 0; i < vars.size(); i++) {
             if (vars[i]->unassigned())
                 vars[i]->isEAC(); // update EAC supports using values from best known solution if provided
@@ -2678,14 +2678,14 @@ bool WCSP::verify()
             if (!ToulBar2::vacValueHeuristic)
                 return false;
         }
-        if (ToulBar2::strictAC && vars[i]->unassigned() && old_fulleac && old_fulleac != vars[i]->isFullEAC()) {
+        if (ToulBar2::FullEAC && vars[i]->unassigned() && old_fulleac && old_fulleac != vars[i]->isFullEAC()) {
             if (ToulBar2::verbose >= 4)
                 cout << endl
                      << *this;
             if (Store::getDepth() >= 1 || ToulBar2::setvalue != NULL) { // do not report error before preprocessing is done
                 cout << endl
                      << "check:" << ((EnumeratedVariable*)vars[i])->checkEACGreedySolution() << endl;
-                cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong strictAC status.." << endl;
+                cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong FullEAC status!" << endl;
             }
             if (Store::getDepth() >= max(1,abs(ToulBar2::vac)))
                 return false;

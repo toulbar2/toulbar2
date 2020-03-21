@@ -107,7 +107,7 @@ public:
     virtual void fillEAC2(int index) {}
     virtual bool isEAC(int index, Value a)
     {
-        if (ToulBar2::strictAC && !isSep()) {
+        if (ToulBar2::FullEAC && !isSep()) {
             bool res = reviseEACGreedySolution(index, a);
             if (ToulBar2::verbose >= 4 && !res)
                 cout << "Current greedy solution violates this constraint: " << *this << endl;

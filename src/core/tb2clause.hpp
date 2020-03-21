@@ -280,7 +280,7 @@ public:
                 deconnect();
                 projectNary();
             } else {
-                if (ToulBar2::strictAC)
+                if (ToulBar2::FullEAC)
                     reviseEACGreedySolution();
             }
         }

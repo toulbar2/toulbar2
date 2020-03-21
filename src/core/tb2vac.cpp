@@ -207,11 +207,6 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
         for (VariableList::iterator iter = varlist->begin(); iter != varlist->end();) {
             x = (VACVariable*)*iter;
             if (x->unassigned() && !(x->isNull(x->getMaxCost()))) {
-                //                if (ToulBar2::RINS) {
-                //                    for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
-                //                        if (x->getVACCost(*it) > MIN_COST) x->removeVAC(*it);
-                //                    }
-                //                }
                 if (td) {
                     if (td->isActiveAndInCurrentClusterSubTree(x->getCluster())) {
                         x->queueVAC();
@@ -305,7 +300,7 @@ bool VACExtension::propagate()
                 // remember first arc consistent domain values in Bool(P) before restoring domains and check VAC-integrality
                 while (!SeekSupport.empty()) {
                     VACVariable* x = (VACVariable*)SeekSupport.pop();
-                    bool vacintegral = ToulBar2::strictAC && x->getDomainSize()==1;
+                    bool vacintegral = ToulBar2::FullEAC && x->getDomainSize()==1;
                     if (vacintegral && (x->getInf() != x->getSupport() || !x->isFullEAC())) {
                         acSupport.push_back(make_tuple(x, x->getInf(), true));
                     } else if (!vacintegral && x->cannotbe(x->getSupport())) {
@@ -329,19 +324,19 @@ bool VACExtension::propagate()
                 if (itThreshold > 1)
                     ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
 
-                if (ToulBar2::RINS_saveitThresholds) {
-                    ToulBar2::RINS_nbStrictACVariables = wcsp->numberOfVariables() - wcsp->numberOfUnassignedVariables();
-                    double ratio = (ToulBar2::RINS_nbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RINS_nbStrictACVariables / (double)wcsp->numberOfVariables()) / (double)itThreshold);
+                if (ToulBar2::RASPSsaveitThresholds) {
+                    ToulBar2::RASPSnbStrictACVariables = wcsp->numberOfVariables() - wcsp->numberOfUnassignedVariables();
+                    double ratio = (ToulBar2::RASPSnbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RASPSnbStrictACVariables / (double)wcsp->numberOfVariables()) / (double)itThreshold);
                     if (ToulBar2::verbose >= 0) {
                         cout << std::fixed << std::setprecision(7);
-                        cout << "Threshold: " << itThreshold << " NbStrictAC: " << ToulBar2::RINS_nbStrictACVariables << " Ratio: " << ratio << endl;
+                        cout << "Threshold: " << itThreshold << " NbAssignedVar: " << ToulBar2::RASPSnbStrictACVariables << " Ratio: " << ratio << endl;
                         cout << std::fixed << std::setprecision(DECIMAL_POINT);
                     }
-                    ToulBar2::RINS_itThresholds.push_back(std::make_pair(itThreshold, ratio));
+                    ToulBar2::RASPSitThresholds.push_back(std::make_pair(itThreshold, ratio));
                 }
 
-                if (ToulBar2::RINS) {
-                    ToulBar2::RINS = false;
+                if (ToulBar2::RASPS) {
+                    ToulBar2::RASPS = false;
                     assert(ToulBar2::restart < 1);
                     Store::store();
 
@@ -354,20 +349,20 @@ bool VACExtension::propagate()
                     Long storerestart = ToulBar2::restart;
                     bool storeLimited = ToulBar2::limited;
                     int storeVac = ToulBar2::vac;
-                    bool storeStrictAC = ToulBar2::strictAC;
+                    bool storeFullEAC = ToulBar2::FullEAC;
 
                     ToulBar2::hbfs = 0;
                     ToulBar2::hbfsGlobalLimit = 0;
                     solver->hbfsLimit = LONGLONG_MAX;
-                    solver->nbBacktracksLimit = solver->nbBacktracks + ToulBar2::RINS_nbBacktracks;
-                    if (ToulBar2::useRINS <= 1) {
+                    solver->nbBacktracksLimit = solver->nbBacktracks + ToulBar2::RASPSnbBacktracks;
+                    if (ToulBar2::useRASPS <= 1) {
                         ToulBar2::restart = 1; // random variable selection for breaking ties in DFS
                     } else {
                         ToulBar2::restart = -1; // no randomness for LDS
                     }
                     ToulBar2::limited = false;
                     ToulBar2::vac = 0;
-                    ToulBar2::strictAC = false;
+                    ToulBar2::FullEAC = false;
 
                     Cost lastUB = wcsp->getUb();
                     try {
@@ -394,12 +389,12 @@ bool VACExtension::propagate()
                             if (variables.size() > 0)
                                 wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
                             wcsp->propagate();
-                            if (ToulBar2::useRINS <= 1) {
+                            if (ToulBar2::useRASPS <= 1) {
                                 //cout << "call to recursiveSolve from VAC" << endl;
                                 solver->recursiveSolve(wcsp->getLb()); // if a new solution is found, UB will be updated automatically
                             } else {
                                 //cout << "call to recursiveSolveLDS from VAC" << endl;
-                                solver->recursiveSolveLDS(ToulBar2::useRINS - 1);
+                                solver->recursiveSolveLDS(ToulBar2::useRASPS - 1);
                             }
                         } catch (Contradiction) {
                             wcsp->whenContradiction();
@@ -415,7 +410,7 @@ bool VACExtension::propagate()
                     ToulBar2::restart = storerestart;
                     ToulBar2::limited = storeLimited; // still a complete search
                     ToulBar2::vac = storeVac;
-                    ToulBar2::strictAC = storeStrictAC;
+                    ToulBar2::FullEAC = storeFullEAC;
 
                     Store::restore(storedepth);
                     inconsistentVariable = -1;
@@ -1014,25 +1009,25 @@ void VACExtension::minsumDiffusion()
     }
 }
 
-Cost VACExtension::RINS_finditThreshold()
+Cost VACExtension::RASPSFindItThreshold()
 {
     Cost result = ToulBar2::costThreshold;
-    unsigned int size = ToulBar2::RINS_itThresholds.size();
+    unsigned int size = ToulBar2::RASPSitThresholds.size();
 
     if (size > 0) {
         if (size < 3) {
-            return ToulBar2::RINS_itThresholds[size - 1].first;
+            return ToulBar2::RASPSitThresholds[size - 1].first;
         }
 
-        double lastRatio = ToulBar2::RINS_itThresholds[size - 1].second;
+        double lastRatio = ToulBar2::RASPSitThresholds[size - 1].second;
         for (unsigned int i = 0; i < size; i++) {
-            ToulBar2::RINS_itThresholds[i].second = ToulBar2::RINS_itThresholds[i].second / lastRatio;
+            ToulBar2::RASPSitThresholds[i].second = ToulBar2::RASPSitThresholds[i].second / lastRatio;
         }
 
         unsigned int i = 1;
         double stepSize = 2.0 / (double)size;
-        while (i < size - 1 && atan2(ToulBar2::RINS_itThresholds[i + 1].second - ToulBar2::RINS_itThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)abs(ToulBar2::RINS_angle)) {
-            result = ToulBar2::RINS_itThresholds[i].first;
+        while (i < size - 1 && atan2(ToulBar2::RASPSitThresholds[i + 1].second - ToulBar2::RASPSitThresholds[i - 1].second, stepSize) * 180.0 / PI < (double)abs(ToulBar2::RASPSangle)) {
+            result = ToulBar2::RASPSitThresholds[i].first;
             i++;
         }
     }

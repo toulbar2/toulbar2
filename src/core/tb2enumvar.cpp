@@ -108,7 +108,7 @@ void EnumeratedVariable::print(ostream& os)
             os << " " << getCost(*iter);
         }
         os << " > s:" << support;
-        if (ToulBar2::strictAC && isFullEAC()) {
+        if (ToulBar2::FullEAC && isFullEAC()) {
             os << "!";
         }
     }
@@ -445,24 +445,24 @@ bool EnumeratedVariable::isEAC()
     assert(canbe(support));
     Value bestValue = wcsp->getBestValue(wcspIndex);
     if (support != bestValue && canbe(bestValue)) {
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             setFullEAC();
         if (isEAC(bestValue))
             return true;
     }
-    if (ToulBar2::strictAC)
+    if (ToulBar2::FullEAC)
         setFullEAC();
     if (isEAC(support))
         return true;
     for (iterator iter = begin(); iter != end(); ++iter) {
         if (*iter == support || *iter == bestValue)
             continue;
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             setFullEAC();
         if (isEAC(*iter))
             return true;
     }
-    if (ToulBar2::strictAC)
+    if (ToulBar2::FullEAC)
         unsetFullEAC();
     return false;
 }

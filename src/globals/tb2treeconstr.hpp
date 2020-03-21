@@ -189,7 +189,7 @@ protected:
     // No need to run anything for (weak) ED(G)AC*
     bool isEAC(int var, Value val)
     {
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             reviseEACGreedySolution(var, val);
         return true;
     }

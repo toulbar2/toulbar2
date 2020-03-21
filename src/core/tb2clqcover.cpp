@@ -338,7 +338,7 @@ void CliqueConstraint::assign(int idx)
                  << state{ this } << "\n";
         deconnect();
     } else {
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             reviseEACGreedySolution();
     }
 

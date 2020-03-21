@@ -842,18 +842,18 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::vacValueHeuristic)
         cout << " (default option)";
     cout << endl;
-    cout << "   -vacint : VAC-integral/Full-EAC variable ordering heuristic";
-    if (ToulBar2::strictAC)
+    cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
+    if (ToulBar2::FullEAC)
         cout << " (default option)";
     cout << "   -vacthr : automatic threshold cost value selection for VAC during search";
     if (ToulBar2::VACthreshold)
         cout << " (default option)";
     cout << endl;
-    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is " << ((ToulBar2::useRINS)?ToulBar2::RINS_nbBacktracks:0) << ")" << endl;
-    cout << "   -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is " << ((ToulBar2::useRINS>1)?(ToulBar2::useRINS-1):0) << ")" << endl;
-    cout << "   -raspsdeg=[integer] : automatic threshold cost value selection for probing heuristic (default value is " << ToulBar2::RINS_angle << "°)" << endl;
+    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is " << ((ToulBar2::useRASPS)?ToulBar2::RASPSnbBacktracks:0) << ")" << endl;
+    cout << "   -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is " << ((ToulBar2::useRASPS>1)?(ToulBar2::useRASPS-1):0) << ")" << endl;
+    cout << "   -raspsdeg=[integer] : automatic threshold cost value selection for probing heuristic (default value is " << ToulBar2::RASPSangle << "°)" << endl;
     cout << "   -raspsini : reset weighted degree variable ordering heuristic after doing upper bound probing";
-    if (ToulBar2::RINSreset)
+    if (ToulBar2::RASPSreset)
         cout << " (default option)";
     cout << endl;
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
@@ -1965,11 +1965,11 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_VACINT) {
-                ToulBar2::strictAC = true;
+                ToulBar2::FullEAC = true;
                 if (ToulBar2::debug)
                     cout << "Strict AC ON" << endl;
             } else if (args.OptionId() == NO_OPT_VACINT) {
-                ToulBar2::strictAC = false;
+                ToulBar2::FullEAC = false;
                 if (ToulBar2::debug)
                     cout << "Strict AC OFF" << endl;
             }
@@ -1986,56 +1986,56 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_RASPS) {
                 if (args.OptionArg() == NULL) {
-                    if (ToulBar2::useRINS == 0) ToulBar2::useRINS = 1;
-                    ToulBar2::RINS_nbBacktracks = raspsbacktracks;
+                    if (ToulBar2::useRASPS == 0) ToulBar2::useRASPS = 1;
+                    ToulBar2::RASPSnbBacktracks = raspsbacktracks;
                 } else {
                     Long limit = atoll(args.OptionArg());
-                    if (ToulBar2::useRINS == 0) ToulBar2::useRINS = 1;
-                    ToulBar2::RINS_nbBacktracks = limit;
+                    if (ToulBar2::useRASPS == 0) ToulBar2::useRASPS = 1;
+                    ToulBar2::RASPSnbBacktracks = limit;
                 }
                 if (ToulBar2::debug)
-                    cout << "RAPS ON " << ToulBar2::RINS_nbBacktracks << endl;
+                    cout << "RAPS ON " << ToulBar2::RASPSnbBacktracks << endl;
             } else if (args.OptionId() == NO_OPT_RASPS) {
                 if (ToulBar2::debug)
                     cout << "RASPS OFF" << endl;
-                ToulBar2::useRINS = 0;
+                ToulBar2::useRASPS = 0;
             }
 
             if (args.OptionId() == OPT_RASPSangle) {
                 if (args.OptionArg() == NULL)
-                    ToulBar2::RINS_angle = raspsangle;
+                    ToulBar2::RASPSangle = raspsangle;
                 else {
                     int n = atoi(args.OptionArg());
-                    ToulBar2::RINS_angle = n;
+                    ToulBar2::RASPSangle = n;
                 }
                 if (ToulBar2::debug)
-                    cout << "RASPS angle set to " << ToulBar2::RINS_angle << "°" << endl;
+                    cout << "RASPS angle set to " << ToulBar2::RASPSangle << "°" << endl;
             } else if (args.OptionId() == NO_OPT_RASPSangle) {
                 if (ToulBar2::debug)
                     cout << "RASPS angle set to 90°" << endl;
-                ToulBar2::RINS_angle = 90;
+                ToulBar2::RASPSangle = 90;
             }
 
             if (args.OptionId() == OPT_RASPSreset) {
-                ToulBar2::RINSreset = true;
+                ToulBar2::RASPSreset = true;
                 if (ToulBar2::debug)
                     cout << "RASPS reset ON" << endl;
             } else if (args.OptionId() == NO_OPT_RASPSreset) {
-                ToulBar2::RINSreset = false;
+                ToulBar2::RASPSreset = false;
                 if (ToulBar2::debug)
                     cout << "RASPS reset OFF" << endl;
             }
 
             if (args.OptionId() == OPT_RASPSlds) {
                 if (args.OptionArg() == NULL)
-                    ToulBar2::useRINS = maxdiscrepancy + 1;
+                    ToulBar2::useRASPS = maxdiscrepancy + 1;
                 else {
                         int lds = atoi(args.OptionArg());
                         if (lds > 0)
-                            ToulBar2::useRINS = lds+1;
+                            ToulBar2::useRASPS = lds+1;
                     }
                 if (ToulBar2::debug)
-                    cout << "RASPSlds" << ToulBar2::useRINS << endl;
+                    cout << "RASPSlds" << ToulBar2::useRASPS << endl;
             }
         }
 

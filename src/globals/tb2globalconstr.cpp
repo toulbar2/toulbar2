@@ -136,7 +136,7 @@ void GlobalConstraint::assign(int varIndex)
             projectLB(eval(t));
         } else {
             pushAll();
-            if (ToulBar2::strictAC)
+            if (ToulBar2::FullEAC)
                 reviseEACGreedySolution();
         }
     }
@@ -409,7 +409,7 @@ void GlobalConstraint::propagateNIC()
 
 bool GlobalConstraint::isEAC(int index, Value a)
 {
-    if (ToulBar2::strictAC)
+    if (ToulBar2::FullEAC)
         reviseEACGreedySolution(index, a);
     if (currentVar != index) {
         currentVar = index;

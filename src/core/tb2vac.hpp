@@ -99,7 +99,7 @@ public:
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
 
-    Cost RINS_finditThreshold();
+    Cost RASPSFindItThreshold();
 };
 
 #endif /*TB2VAC_HPP_*/

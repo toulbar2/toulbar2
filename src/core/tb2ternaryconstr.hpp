@@ -597,7 +597,7 @@ public:
         x->queueEAC1();
         y->queueEAC1();
         z->queueEAC1();
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             reviseEACGreedySolution();
     }
 
@@ -753,7 +753,7 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return true;
         switch (varIndex) {
         case 0:
@@ -774,7 +774,7 @@ public:
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::strictAC)
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return;
         assert(!wcsp->getTreeDec() || (cluster == xy->getCluster() && cluster == xz->getCluster() && cluster == yz->getCluster()));
         switch (varIndex) {
@@ -1706,7 +1706,7 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
     assert(z->canbe(z->getSupport()));
     assert(z->getCost(z->getSupport()) == MIN_COST);
     if (getCostWithBinaries(x, y, z, a, y->getSupport(), z->getSupport()) > MIN_COST) {
-        if (ToulBar2::strictAC)
+        if (ToulBar2::FullEAC)
             x->unsetFullEAC();
         unsigned int xindex = x->toIndex(a);
         assert(getIndex(y) < getIndex(z));

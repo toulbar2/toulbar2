@@ -412,19 +412,19 @@ public:
     static string version;
     static int verbose;
 
-    static bool strictAC;
+    static bool FullEAC;
     static bool VACthreshold;
     static int nbTimesIsVAC;
     static int nbTimesIsVACitThresholdMoreThanOne;
-    static bool RINS;
-    static int useRINS;
-    static bool RINSreset;
-    static int RINS_angle;
-    static Long RINS_nbBacktracks;
-    static int RINS_nbStrictACVariables;
-    static Cost RINS_lastitThreshold;
-    static bool RINS_saveitThresholds;
-    static vector<pair<Cost, double>> RINS_itThresholds;
+    static bool RASPS;
+    static int useRASPS;
+    static bool RASPSreset;
+    static int RASPSangle;
+    static Long RASPSnbBacktracks;
+    static int RASPSnbStrictACVariables;
+    static Cost RASPSlastitThreshold;
+    static bool RASPSsaveitThresholds;
+    static vector<pair<Cost, double>> RASPSitThresholds;
 
     static int debug;
     static string externalUB;
