@@ -57,14 +57,8 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 
-<<<<<<< HEAD:src/toulbar2py.cpp
-PYBIND11_MODULE(toulbar2py, m)
-{
-    m.def("init", []() { tb2init(); }); // must be called at the very beginning
-=======
 PYBIND11_MODULE(pytoulbar2, m) {
     m.def("init", [](){ tb2init(); }); // must be called at the very beginning
->>>>>>> 8b05f6e142ec1bd3f69a7eaddd18cb1f15fffa27:src/pytoulbar2.cpp
     m.attr("MAX_COST") = py::cast(MAX_COST);
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
