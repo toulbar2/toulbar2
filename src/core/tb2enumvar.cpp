@@ -345,7 +345,6 @@ bool EnumeratedVariable::reviseEACGreedySolution()
     } else {
         assert(!isFullEAC());
     }
-    if (ToulBar2::verbose >= 1) cout << "revise greedy solution for variable " << *this << endl;
     return (!broken);
 }
 
