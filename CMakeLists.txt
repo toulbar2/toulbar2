@@ -1,18 +1,17 @@
 ##########################################
-# cmake file for toulbar2 framework building , test and packaging
-# version 0.9 
-# David allouche 17/10/10
+# cmake file for toulbar2 building, testing and packaging
+# version 0.9 -# David allouche 17/10/10
 ##########################################
 
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
-set (doc_destination "share/doc")   		#path of doc installation 
+set (doc_destination "share/doc")   #path of doc installation 
 set (My_misc_source misc/src/)
 list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
-set (MAINTAINER "David Allouche <david.allouche@inra.fr>") #used in packaging 
+set (MAINTAINER "David Allouche <david.allouche@inrae.fr>") #used in packaging 
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 
 ##########################################
@@ -32,13 +31,12 @@ include(CMakeDependentOption)
 ##########################################
 # cmake option definition
 ##########################################
-
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
-#	OPTION(MENDELSOFT "mendelsoft compilation and packaging option [default:off]" OFF)
 OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF) 
 OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
-OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF) 
-OPTION(ILOG  "ilog solver binding [default: off]" OFF) 
+OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
+OPTION(PYTB2 "Python3 toulbar2 module compilation [default: off]" OFF)
+OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
 OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
@@ -111,7 +109,6 @@ SET(Default_test_timeout 300 CACHE INTEGER "default test timeout")
 SET(Default_validation_dir "validation" CACHE string "default location of validation files")
 SET(Default_cover_dir "cover" CACHE string "default location of cover test files")
 SET(Default_regexp "end." CACHE string "default regex searched in test output")
-
 SET(Default_BenchDir "benchmarks" CACHE string "default location of benchmark files")
 SET(Default_BenchFormat "wcsp" CACHE string "default format extension for benchmark files search") 
 SET(Default_bench_timeout 30 CACHE INTEGER "default timeout used for benchmarking ")
@@ -122,7 +119,6 @@ MARK_AS_ADVANCED(FORCE Default_test_option Default_test_timeout Default_validati
 ##########################################
 # static building
 ##########################################
-
 IF(STATIC)
   MESSAGE(STATUS "STATIC COMPILATION ON (warning: jemalloc, xml, and MPI options not compliant with static link)")
   SET(WITH_MEM_JEMALLOC OFF)
@@ -205,12 +201,22 @@ ENDIF(WIN32)
 # Find optional libs 
 ##########################################
 
-# list of files used for compilation are included in source_file.cmake 
-# new file need to be added to this list
-# you can also define your own list and add it to the wall list
-# for example: SET (source_files ${source_files} ${my_file_2add})
-
 include(${My_cmake_script}/source_files.cmake)
+
+IF(PYTB2)
+  SET(WITH_MEM_JEMALLOC OFF)
+  SET(MPI OFF)
+  set(LIBTB2 ON)
+  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  EXECUTE_PROCESS(
+    COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
+    OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+  MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
+  EXECUTE_PROCESS(
+    COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
+    OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
+  MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+ENDIF(PYTB2)
 
 if(WITH_MEM_JEMALLOC)
   find_package(JeMalloc)
@@ -222,16 +228,16 @@ endif()
 
 MESSAGE(STATUS "Search for GMP library")
 INCLUDE(FindPkgConfig)
-include(${My_cmake_script}/FindGmp.cmake)
-SET (all_depends  ${all_depends} "gmp") 
+INCLUDE(${My_cmake_script}/FindGmp.cmake)
+SET(all_depends  ${all_depends} "gmp") 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
 INCLUDE(FindPkgConfig)
 INCLUDE(FindGit)
 
 IF(Boost) 
-  include(${My_cmake_script}/Boost_option.cmake)
-  link_directories(${Boost_LIBRARY_DIR})
+  INCLUDE(${My_cmake_script}/Boost_option.cmake)
+  LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF(Boost)
 
@@ -240,21 +246,26 @@ IF(MPI)
 #  SET(CMAKE_CXX_COMPILER mpicxx)
 #  SET(CMAKE_CXX_COMPILER /usr/mpi/gcc/openmpi-1.10.3rc4/bin/mpicxx)
 #  SET(CMAKE_SYSTEM_PREFIX_PATH /usr/mpi/gcc/openmpi-1.10.3rc4)
-  find_package(MPI REQUIRED)
-  include_directories(${MPI_INCLUDE_PATH})
-  SET (mpiflag OPENMPI)
+  FIND_PACKAGE(MPI REQUIRED)
+  INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+  SET(mpiflag OPENMPI)
 ENDIF(MPI)
 
-include(${My_cmake_script}/xmlcsp.cmake)
+INCLUDE(${My_cmake_script}/xmlcsp.cmake)
+
 
 ##########################################
 # Build executables
 ##########################################
+# the list of source files used to compile is set in source_file.cmake
+# new files need to be added to this list
 
 INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 
 IF(TOULBAR2)
-  add_executable(toulbar2${EXE} ${source_files})
+  ADD_LIBRARY(tb2-objects OBJECT ${LIBTB2FILES})
+  ADD_EXECUTABLE(toulbar2${EXE} ${My_Source}/tb2main.cpp $<TARGET_OBJECTS:tb2-objects>)
+  ADD_LIBRARY(tb2-archive STATIC $<TARGET_OBJECTS:tb2-objects>)
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   ADD_DEPENDENCIES(toulbar2${EXE} gen_version)
@@ -277,17 +288,18 @@ ENDIF(TOULBAR2)
 # mendelsoft compilation
 ##########################################
 IF(MENDELSOFT)
-  add_executable(mendelsoft${EXE} ${source_files})
+  ADD_EXECUTABLE(mendelsoft${EXE} ${source_files})
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   ADD_DEPENDENCIES(mendelsoft${EXE} gen_version)
   TARGET_LINK_LIBRARIES(mendelsoft${EXE} ${all_depends})
-  install( TARGETS mendelsoft${EXE} DESTINATION bin)
+  INSTALL( TARGETS mendelsoft${EXE} DESTINATION bin)
 ENDIF(MENDELSOFT)
 
 ##########################################
 # LIBTB2 GENERATION 
 ##########################################
+
 IF(LIBTB2)
   IF(WIN32 AND LONG_COSTS)
     MESSAGE(STATUS "LIBTB2 not compliant with win32 if using LONG_COSTS!")
@@ -298,17 +310,29 @@ IF(LIBTB2)
   
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
-  ADD_LIBRARY(tb2 ${LIBTB2FILES})
+  ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
+  SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
+
+  IF(PYTB2)
+    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytoulbar2")
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+  ENDIF(PYTB2)
+  
   IF(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends} ${MPI_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
-      set_target_properties(tb2 PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+      SET_TARGET_PROPERTIES(tb2 PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
     ENDIF(MPI_COMPILE_FLAGS)
     IF(MPI_LINK_FLAGS)
-      set_target_properties(tb2 PROPERTIES LINK_FLAGS "${MPI_LINK_FLAGS}")
+      SET_TARGET_PROPERTIES(tb2 PROPERTIES LINK_FLAGS "${MPI_LINK_FLAGS}")
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
+    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2

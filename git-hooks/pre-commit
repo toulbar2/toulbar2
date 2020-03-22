@@ -1,9 +1,0 @@
-#!/bin/sh
-ROOT=`git rev-parse --show-toplevel`
-
-echo "Generating new version file..."
-$ROOT/cmake-script/genVersionFile.sh 
-git add -f $ROOT/src/ToulbarVersion.hpp
-git add -f $ROOT/src/MyCPackConf.cmake
-echo "Adding fresh version files to the commit."
-exit 0
