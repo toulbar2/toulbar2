@@ -16,7 +16,7 @@ public:
     virtual void setNumStates(int nStates) = 0;
     virtual void addInitialState(int begin) = 0;
     virtual void addFinalState(int end) = 0;
-    virtual void addTransition(int start, int symbol, int end, int weight) = 0;
+    virtual void addTransition(int start, int symbol, int end, Cost weight) = 0;
 };
 
 class GlobalConstraint : public AbstractGlobalConstraint {

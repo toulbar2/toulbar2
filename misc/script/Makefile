@@ -53,6 +53,7 @@ CFLAGS = -std=c++11 -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLINUX -DLONGLON
 # -DNUMBERJACK # 
 # -DOPENMPI # enables variable neighborhood search
 # -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3 # catches numerical integer overflows
+# -Wconversion # catch type conversion from larger to smaller type (e.g., Cost to int)
 
 OFLAGS = -O3 -DNDEBUG
 # -O3 -DNDEBUG

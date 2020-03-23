@@ -8,15 +8,15 @@ public:
     virtual void setStartSymbol(int start) = 0;
     virtual void setNumNonTerminals(int num) = 0;
     virtual void setNumTerminals(int num) = 0;
-    virtual void addProduction(int A, int B, int C, int weight) = 0;
-    virtual void addProduction(int A, int v, int weight) = 0;
+    virtual void addProduction(int A, int B, int C, Cost weight) = 0;
+    virtual void addProduction(int A, int v, Cost weight) = 0;
 };
 
 struct WCNFRule {
     int from;
-    int weight;
+    Cost weight;
     int to[2];
-    WCNFRule(int A = 0, int B = 0, int C = 0, int w = 0)
+    WCNFRule(int A = 0, int B = 0, int C = 0, Cost w = 0)
         : from(A)
         , weight(w)
     {
@@ -89,13 +89,13 @@ public:
     inline int toIndex(Value v) { return ((valIndex.find(v) == valIndex.end()) ? -1 : valIndex[v]); }
     inline int toValue(int index) { return indexValue[index]; }
 
-    void addProduction(int A, int B, int C, int weight)
+    void addProduction(int A, int B, int C, Cost weight)
     {
         WCNFRule rule(A, B, C, weight);
         nonTermProd.push_back(rule);
     }
 
-    void addProduction(int A, int v, int weight)
+    void addProduction(int A, int v, Cost weight)
     {
         WCNFRule rule(A, v, -1, weight);
         termProd.push_back(rule);
@@ -111,7 +111,7 @@ public:
         nNonTerminals++;
     }
 
-    void addVariableMeasure(int violationCost); // Convert to a weighted CNF s.t. it includes variable-based violation
+    void addVariableMeasure(Cost violationCost); // Convert to a weighted CNF s.t. it includes variable-based violation
 
     /* iterator for rules like A->v*/
     typedef vector<WCNFRule>::iterator TermProdIterator;

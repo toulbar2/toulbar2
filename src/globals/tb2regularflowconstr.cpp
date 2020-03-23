@@ -214,7 +214,7 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
             int curValue = s[curIndex] - CHAR_FIRST;
             for (map<int, Cost>::iterator i = costTb[curState][curValue].begin();
                  i != costTb[curState][curValue].end(); i++) {
-                int nextWeight = weight + i->second;
+                Cost nextWeight = weight + i->second;
                 int nextState = i->first;
                 int nextIndex = curIndex + 1;
                 minqueue.push(make_pair(nextWeight, make_pair(nextIndex, nextState)));
@@ -223,7 +223,7 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
             if (insdef > 0) {
                 for (map<int, Cost>::iterator i = costTb[curState][epsilonChar].begin();
                      i != costTb[curState][epsilonChar].end(); i++) {
-                    int nextWeight = weight + i->second;
+                    Cost nextWeight = weight + i->second;
                     int nextState = i->first;
                     int nextIndex = curIndex;
                     minqueue.push(make_pair(nextWeight, make_pair(nextIndex, nextState)));

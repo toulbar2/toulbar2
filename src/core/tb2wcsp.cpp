@@ -492,7 +492,7 @@ void tb2checkOptions()
         exit(1);
     }
     if (ToulBar2::FullEAC && ToulBar2::btdMode >= 1) {
-        cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -sac option)." << endl;
+        cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -vacint option)." << endl;
         exit(1);
     }
     if (ToulBar2::FullEAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports

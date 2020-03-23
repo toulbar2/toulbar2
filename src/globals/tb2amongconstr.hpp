@@ -11,7 +11,7 @@ class AmongConstraint : public DPGlobalConstraint {
 private:
     template <class Source>
     struct TableCell {
-        int val;
+        Cost val;
         Source source;
     };
 

@@ -67,8 +67,8 @@ void GlobalCardinalityConstraint::read(istream& file, bool mult)
             THROWCONTRADICTION;
         }
         //JP Start//
-        int wshortage = def;
-        int wexcess = def;
+        Cost wshortage = def;
+        Cost wexcess = def;
         if (mode == WVALUE) {
             file >> wshortage >> wexcess;
             if (mult) {

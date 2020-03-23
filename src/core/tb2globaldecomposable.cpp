@@ -431,7 +431,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
                     break;
                 positionSymbol++;
             }
-            int weight = transition->weight;
+            Cost weight = transition->weight;
 
             if (symbol < DomXi) {
                 unsigned long cindex = start * DomXi * DomQj + positionSymbol * DomQj + end;
@@ -1154,7 +1154,7 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
             for (unsigned long counterPosition = 0; counterPosition < varCi->getDomainInitSize(); counterPosition++) {
                 long counter = varCi->toValue(counterPosition);
 
-                int nextCounter = counter;
+                long nextCounter = counter;
                 if (values.find(value) != values.end()) {
                     nextCounter++;
                 }

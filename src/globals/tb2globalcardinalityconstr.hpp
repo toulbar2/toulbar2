@@ -18,7 +18,7 @@ private:
         return make_pair(varindex + 1, mapval[val]);
     }
     //JP Start// This array stores the respective weight of each bound
-    map<Value, pair<int, int>> weights;
+    map<Value, pair<Cost, Cost>> weights;
     int nDistinctDomainValue;
     //JP End//
 public:
@@ -51,7 +51,7 @@ public:
             upper = arity();
         bound[value] = make_pair(lower, upper);
     }
-    void addValueAndWeights(Value value, int wexcess = -1, int wshortage = -1)
+    void addValueAndWeights(Value value, Cost wexcess = -1, Cost wshortage = -1)
     {
         if (wexcess == -1)
             wexcess = def;

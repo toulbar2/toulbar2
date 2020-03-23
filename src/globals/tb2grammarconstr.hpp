@@ -24,7 +24,7 @@ private:
 
     /*struct Rule {
         int from;        
-        int weight;
+        Cost weight;
         int to[2];
     };
 

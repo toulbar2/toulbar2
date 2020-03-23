@@ -68,15 +68,15 @@ void SameConstraint::read(istream& file, bool mult)
 Cost SameConstraint::evalOriginal(const String& s)
 {
     Cost tuple_cost = 0;
-    map<char, int> appear;
+    map<Char, Cost> appear;
     for (vector<int>::iterator i = group[0].begin(); i != group[0].end(); i++) {
         appear[s[*i]] += def;
     }
     for (vector<int>::iterator i = group[1].begin(); i != group[1].end(); i++) {
         appear[s[*i]] -= def;
     }
-    int sum = 0;
-    for (map<char, int>::iterator i = appear.begin(); i != appear.end(); i++) {
+    Cost sum = MIN_COST;
+    for (map<Char, Cost>::iterator i = appear.begin(); i != appear.end(); i++) {
         sum += (i->second < 0) ? (-(i->second)) : i->second;
     }
     tuple_cost += sum / 2;

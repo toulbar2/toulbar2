@@ -67,7 +67,7 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
     for (unsigned int currentState = 0; currentState < nbStates; currentState++) {
         for (unsigned int symbol = 0; symbol < (unsigned int)nbSymbols; symbol++) {
             string res = forbiddenPattern.substr(0, currentState) + ((char)(symbol + 48));
-            int weight = (res == forbiddenPattern) ? cost : 0;
+            Cost weight = (res == forbiddenPattern) ? cost : 0;
             int start = currentState;
             int end = 0;
             for (int receptionState = ((int)min(currentState + 1, nbStates - 1)); receptionState > 0; receptionState--) {

@@ -149,9 +149,9 @@ inline Cost MULT(Cost a, double b)
     if (a >= MAX_COST)
         return MAX_COST;
     else if (b <= UNIT_COST)
-        return a * b;
-    else if (a < MAX_COST / b)
-        return a * b;
+        return (Cost)((double)a * b);
+    else if (a < (double)MAX_COST / b)
+        return (Cost)((double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         exit(1);
@@ -296,7 +296,7 @@ struct DFATransition {
     int start;
     int end;
     Value symbol;
-    unsigned int weight;
+    Cost weight;
 
     DFATransition(int start_, Value symbol_, int end_, Cost weight_ = MIN_COST)
         : start(start_)
@@ -310,7 +310,7 @@ struct DFATransition {
 // A production rule in CFG
 struct CFGProductionRule {
     int from;
-    unsigned int weight;
+    Cost weight;
     int order;
     int* to;
 };

@@ -1595,8 +1595,8 @@ Cost Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         exit(1);
     }
-    if (ToulBar2::FullEAC && ToulBar2::vac && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
-        cerr << "Error: VAC-based and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -sac option)." << endl;
+    if (ToulBar2::FullEAC && ToulBar2::vac>1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
+        cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         exit(1);
     }
 

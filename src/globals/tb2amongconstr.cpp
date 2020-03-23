@@ -90,11 +90,11 @@ Cost AmongConstraint::minCostOriginal()
 
     minBarU[0].val = minU[0].val = -1;
     for (int i = 1; i <= n; i++) {
-        int minu, minbaru;
+        Cost minu, minbaru;
         minu = minbaru = wcsp->getUb();
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(i - 1);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
-            int uCost(0), baruCost(def);
+            Cost uCost(0), baruCost(def);
             if (V.find(*v) == V.end()) {
                 uCost = def;
                 baruCost = 0;
@@ -108,7 +108,7 @@ Cost AmongConstraint::minCostOriginal()
 
     recomputeTable(curf);
 
-    int minCost = wcsp->getUb();
+    Cost minCost = wcsp->getUb();
     for (int j = lb; j <= ub; j++) {
         minCost = min(minCost, curf[n][j].val);
     }
@@ -193,8 +193,8 @@ void AmongConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable
         table[i][0].val = table[i - 1][0].val + minBarU[i].val;
         table[i][0].source = 0;
         for (int j = 1; j <= ub; j++) {
-            int choice1 = table[i - 1][j].val + minBarU[i].val;
-            int choice2 = table[i - 1][j - 1].val + minU[i].val;
+            Cost choice1 = table[i - 1][j].val + minBarU[i].val;
+            Cost choice2 = table[i - 1][j - 1].val + minU[i].val;
             if (choice1 > choice2) {
                 table[i][j].val = choice2;
                 table[i][j].source = 2;
@@ -209,8 +209,8 @@ void AmongConstraint::recomputeTable(DPTableCell** table, DPTableCell** invTable
         for (int i = n - 1; i >= 0; i--) {
             for (int j = 0; j < ub; j++) {
                 invTable[i][j].val = 0;
-                int choice1 = invTable[i + 1][j].val + minBarU[i + 1].val;
-                int choice2 = invTable[i + 1][j + 1].val + minU[i + 1].val;
+                Cost choice1 = invTable[i + 1][j].val + minBarU[i + 1].val;
+                Cost choice2 = invTable[i + 1][j + 1].val + minU[i + 1].val;
                 if (choice1 > choice2) {
                     invTable[i][j].val = choice2;
                     invTable[i][j].source = 2;

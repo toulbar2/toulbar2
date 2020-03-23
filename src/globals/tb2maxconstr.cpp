@@ -87,7 +87,7 @@ void MaxConstraint::initMemoization()
 
 Cost MaxConstraint::evalOriginal(const String& s)
 {
-    int largeComp = 0;
+    Cost largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {
         if (largeComp < weightMap[i][s[i] - CHAR_FIRST])

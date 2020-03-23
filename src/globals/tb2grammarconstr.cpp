@@ -69,7 +69,8 @@ void GrammarConstraint::read(istream& file, bool mult)
             break;
         }
         case 2: {
-            int A, v, w;
+            int A, v;
+            Cost w;
             file >> A >> v >> w;
             if (mult)
                 w *= ToulBar2::costMultiplier;
@@ -77,7 +78,8 @@ void GrammarConstraint::read(istream& file, bool mult)
             break;
         }
         case 3: {
-            int A, B, C, w;
+            int A, B, C;
+            Cost w;
             file >> A >> B >> C >> w;
             if (mult)
                 w *= ToulBar2::costMultiplier;
@@ -157,7 +159,7 @@ Cost GrammarConstraint::minCostOriginal()
 
     recomputeTable(curf);
 
-    int minCost = curf[0][n - 1][cfg.getStartSymbol()];
+    Cost minCost = curf[0][n - 1][cfg.getStartSymbol()];
 
     return minCost;
 }
@@ -177,7 +179,7 @@ Cost GrammarConstraint::eval(const String& s)
     }
 
     recomputeTable(curf);
-    int minCost = curf[0][n - 1][cfg.getStartSymbol()];
+    Cost minCost = curf[0][n - 1][cfg.getStartSymbol()];
 
     return minCost - projectedCost;
 }

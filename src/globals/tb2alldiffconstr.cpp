@@ -74,7 +74,7 @@ Cost AllDiffConstraint::evalOriginal(const String& s)
             }
         }
     } else {
-        set<char> count;
+        set<Char> count;
         for (unsigned int i = 0; i < s.length(); i++) {
             count.insert(s[i]);
         }

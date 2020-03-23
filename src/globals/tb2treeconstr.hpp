@@ -97,7 +97,7 @@ public:
 
 class TreeConstraint : public DPGlobalConstraint {
 private:
-    int curTreeCost;
+    Cost curTreeCost;
 
     struct Edge {
         int u;
@@ -112,8 +112,8 @@ private:
         bool operator<(const Edge& e) const { return weight < e.weight; }
     };
 
-    int minTreeEdgeCost;
-    int maxTreeEdgeCost;
+    Cost minTreeEdgeCost;
+    Cost maxTreeEdgeCost;
     set<pair<int, int>> treeEdge;
 
     struct CCTreeNode; // Forward declaration
@@ -165,8 +165,8 @@ private:
 
     map<int, int> val2VarIndex;
 
-    int recomputeCurMST();
-    int recomputeMST(vector<Edge>& edgeList);
+    Cost recomputeCurMST();
+    Cost recomputeMST(vector<Edge>& edgeList);
 
 protected:
     Cost minCostOriginal();

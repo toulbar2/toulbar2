@@ -70,7 +70,7 @@ inline void mysrand(int seed)
 {
     return srand48(seed);
 }
-inline int myrand() { return lrand48(); }
+inline int myrand() { return (int)lrand48(); }
 inline Long myrandl() { return (Long)((Long)lrand48() /**LONGLONG_MAX*/); }
 inline double mydrand() { return drand48(); }
 #endif

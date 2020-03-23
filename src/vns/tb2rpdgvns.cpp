@@ -393,7 +393,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                         k *= 2;
                         break;
                     case VNS_LUBY:
-                        k = ToulBar2::vnsKmin * luby(rank);
+                        k = ToulBar2::vnsKmin * (int)luby(rank);
                         break;
                     case VNS_ADD1JUMP:
                         if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1)
@@ -423,7 +423,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                         lds *= 2;
                         break;
                     case VNS_LUBY:
-                        lds = ToulBar2::vnsLDSmin * luby(restart);
+                        lds = ToulBar2::vnsLDSmin * (int)luby(restart);
                         break;
                     default:
                         cerr << "Unknown LDS increment strategy inside VNS (see option -linc)!" << endl;
