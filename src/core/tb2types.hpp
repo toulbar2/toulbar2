@@ -538,7 +538,6 @@ public:
     static int smallSeparatorSize;
 
     static int Berge_Dec; // flag for berge acyclic decomposition
-    static int nbvar; // initial number of variable (read in the file)
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;
     static bool interrupted;
