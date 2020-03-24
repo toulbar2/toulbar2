@@ -23,6 +23,7 @@ const Long maxrestarts = 10000;
 const Long hbfsgloballimit = 10000;
 const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
+const double relativegap = 0.0001;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -204,7 +205,8 @@ enum {
     OPT_trwsNIterComputeUb,
     NO_OPT_trws,
     OPT_costMultiplier,
-    OPT_deltaUb,
+    OPT_deltaUbAbsolute,
+    OPT_deltaUbRelative,
 
     OPT_VACINT,
     NO_OPT_VACINT,
@@ -432,7 +434,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_RASPSreset, (char*)"-raspsini:", SO_NONE },
     { OPT_RASPSlds, (char*)"-raspslds", SO_OPT },
 
-    { OPT_deltaUb, (char*)"-agap", SO_REQ_SEP },
+    { OPT_deltaUbAbsolute, (char*)"-agap", SO_REQ_SEP },
+    { OPT_deltaUbRelative, (char*)"-rgap", SO_OPT },
     { NO_OPT_trws, (char*)"-trws:", SO_NONE },
     { OPT_trwsAccuracy, (char*)"-trws", SO_OPT },
     { OPT_trwsAccuracy, (char*)"--trws-accuracy", SO_REQ_SEP },
@@ -708,7 +711,8 @@ void help_msg(char* toulbar2filename)
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
     cout << "   -help : shows this help message" << endl;
     cout << "   -ub=[decimal] : initial problem upperbound (default value is " << MAX_COST << ")" << endl;
-    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation)" << endl;
+    cout << "   -agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation (default value is " << ToulBar2::deltaUbS << ")" << endl;
+    cout << "   -rgap=[double] : stop search if the relative optimality gap reduces below the given value (provides guaranteed approximation (default value is " << ToulBar2::deltaUbRelativeGap << ")" << endl;
     cout << "   -v=[integer] : verbosity level" << endl;
     cout << "   -s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)" << endl;
 #ifndef MENDELSOFT
@@ -1909,9 +1913,16 @@ int _tmain(int argc, TCHAR* argv[])
                 rtrim(ToulBar2::externalUB);
             }
 
-            if (args.OptionId() == OPT_deltaUb) {
+            if (args.OptionId() == OPT_deltaUbAbsolute) {
                 ToulBar2::deltaUbS = args.OptionArg();
                 rtrim(ToulBar2::deltaUbS);
+            }
+
+            if (args.OptionId() == OPT_deltaUbRelative) {
+                ToulBar2::deltaUbRelativeGap = relativegap;
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::deltaUbRelativeGap = atof(args.OptionArg());
+                }
             }
 
             // CPU timer

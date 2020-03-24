@@ -500,6 +500,8 @@ public:
     static unsigned int decimalPoint;
     static string deltaUbS;
     static Cost deltaUb;
+    static Cost deltaUbAbsolute;
+    static Double deltaUbRelativeGap;
     static bool singletonConsistency;
     static bool vacValueHeuristic;
     static BEP* bep;

@@ -843,7 +843,8 @@ void CFNStreamReader::enforceUB(Cost bound)
         bound = min(bound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
     }
     if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUb = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound,wcsp->getUb())));
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
             bound += ToulBar2::deltaUb;
@@ -2070,7 +2071,8 @@ Cost WCSP::read_wcsp(const char* fileName)
     }
 
     if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
+        ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
+        ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
     }
 
     if (ToulBar2::externalUB.size()) {
@@ -2080,6 +2082,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             top = top * K;
         else
             top = MAX_COST;
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
         updateUb(top + ToulBar2::deltaUb);
         // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
     }
@@ -2194,6 +2197,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     else
         top = MAX_COST;
 
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
     // read variable domain sizes
@@ -3228,6 +3232,7 @@ void WCSP::read_wcnf(const char* fileName)
                 top = top * K;
             else
                 top = MAX_COST;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
             updateUb(top + ToulBar2::deltaUb);
         } else {
             if (ToulBar2::verbose >= 0)
@@ -3236,7 +3241,9 @@ void WCSP::read_wcnf(const char* fileName)
     } else {
         if (ToulBar2::verbose >= 0)
             cout << "c Max-SAT input format" << endl;
-        updateUb((nbclauses + 1) * K + ToulBar2::deltaUb);
+        Cost top = (nbclauses + 1) * K;
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+        updateUb(top + ToulBar2::deltaUb);
     }
 
     // create Boolean variables
@@ -3460,7 +3467,9 @@ void WCSP::read_qpbo(const char* fileName)
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
     }
-    updateUb((Cost)multiplier * sumcost + 1 + ToulBar2::deltaUb);
+    Cost top = (Cost)multiplier * sumcost + 1;
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+    updateUb(top + ToulBar2::deltaUb);
 
     // create weighted binary clauses
     for (int e = 0; e < m; e++) {

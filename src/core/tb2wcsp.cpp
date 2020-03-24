@@ -156,6 +156,8 @@ double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
 string ToulBar2::deltaUbS;
 Cost ToulBar2::deltaUb;
+Cost ToulBar2::deltaUbAbsolute;
+Double ToulBar2::deltaUbRelativeGap;
 
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
@@ -329,8 +331,10 @@ void tb2init()
     ToulBar2::trwsNIterComputeUb = 100;
     ToulBar2::costMultiplier = UNIT_COST;
     ToulBar2::decimalPoint = 0;
-    ToulBar2::deltaUbS = "";
+    ToulBar2::deltaUbS = "0";
     ToulBar2::deltaUb = MIN_COST;
+    ToulBar2::deltaUbAbsolute = MIN_COST;
+    ToulBar2::deltaUbRelativeGap = 0.;
 
     ToulBar2::bep = NULL;
     ToulBar2::wcnf = false;

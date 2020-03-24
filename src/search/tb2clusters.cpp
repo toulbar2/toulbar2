@@ -2208,6 +2208,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable* x, Value value, C
 // use assignment "a" instead
 void TreeDecomposition::newSolution(Cost lb)
 {
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)lb));
     wcsp->setUb(lb);
 
     TAssign a;

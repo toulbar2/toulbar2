@@ -1246,9 +1246,10 @@ void Solver::newSolution()
     }
     assert(allVarsAssigned);
 #endif
-    if (!ToulBar2::allSolutions && !ToulBar2::isZ)
+    if (!ToulBar2::allSolutions && !ToulBar2::isZ) {
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)wcsp->getLb()));
         wcsp->updateUb(wcsp->getLb());
-    else if (!ToulBar2::btdMode)
+    } else if (!ToulBar2::btdMode)
         nbSol += 1.;
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
@@ -1677,6 +1678,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
         }
         wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
@@ -1687,6 +1689,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
@@ -1698,6 +1701,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             wcsp->setInfiniteCost();
             wcsp->enforceUb();
@@ -2043,7 +2047,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << endl;
 
             if (isLimited == 2)
-                cout << "(" << ToulBar2::deltaUbS << ")-";
+                cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
             if (ToulBar2::haplotype)
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else if (!ToulBar2::bayesian)
@@ -2055,7 +2059,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 ((WCSP*)wcsp)->solution_XML(true);
             } else if (ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
-                    cout << "(" << ToulBar2::deltaUbS << ")-";
+                    cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             } else if (ToulBar2::maxsateval && !isLimited) {
                 cout << "o " << cost << endl;
