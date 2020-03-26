@@ -15,7 +15,6 @@ class WeightedClause : public AbstractNaryConstraint {
     vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
-    String evalTuple; // temporary data structure
     vector<Long> conflictWeights; // used by weighted degree heuristics
     bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
     bool done; // should be true after one call to next
@@ -91,15 +90,10 @@ public:
         if (tuple_in.empty() && arity_in > 0)
             tuple = String(arity_in, CHAR_FIRST);
         deltaCosts = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
-        Char* tbuf = new Char[arity_in + 1];
-        tbuf[arity_in] = '\0';
         for (int i = 0; i < arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize() == 2);
-            tbuf[i] = CHAR_FIRST;
             conflictWeights.push_back(0);
         }
-        evalTuple = String(tbuf);
-        delete[] tbuf;
     }
 
     virtual ~WeightedClause() {}

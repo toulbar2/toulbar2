@@ -211,6 +211,32 @@ Cost NaryConstraint::eval(const String& s)
         return costs[getCostsIndex(s)];
 }
 
+bool NaryConstraint::checkEACGreedySolution(int index, Value support)
+{
+    int a = arity();
+    for (int i = 0; i < a; i++) {
+        EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+        evalTuple[i] = var->toIndex((i == index) ? support : var->getSupport()) + CHAR_FIRST;
+    }
+    return (eval(evalTuple) == MIN_COST);
+}
+
+bool NaryConstraint::reviseEACGreedySolution(int index, Value support)
+{
+    bool result = checkEACGreedySolution(index, support);
+    if (!result) {
+        if (index >= 0) {
+            getVar(index)->unsetFullEAC();
+        } else {
+            int a = arity();
+            for (int i = 0; i < a; i++) {
+                getVar(i)->unsetFullEAC();
+            }
+        }
+    }
+    return result;
+}
+
 /// Set new default cost to df (df <= Top), keep existing costs SMALLER than this default cost in a Map or a table
 void NaryConstraint::keepAllowedTuples(Cost df)
 {

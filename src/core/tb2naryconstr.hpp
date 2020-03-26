@@ -183,6 +183,9 @@ public:
     //    void starrule(const String& t, Cost minc);
     void projectFromZero(int index) {}
 
+    bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL;
+    bool reviseEACGreedySolution(int index = -1, Value a = 0) FINAL;
+
     void fillRandom();
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
