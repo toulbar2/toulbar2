@@ -11,7 +11,7 @@
 class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
     String tuple; // forbidden assignment corresponding to the negation of the clause
-    StoreCost lb; // projected cost to problem lower bound
+    StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
@@ -113,7 +113,7 @@ public:
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     Long size() const FINAL
     {
-        Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
+        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
         if (sumdelta == MIN_COST)
             return 1;
         return getDomainSizeProduct();
@@ -170,18 +170,23 @@ public:
 
     Cost eval(const String& s)
     {
-        Cost res = -lb;
-        bool istuple = true;
-        for (int i = 0; i < arity_; i++) {
-            if (tuple[i] != s[i]) {
-                res += deltaCosts[i];
-                istuple = false;
+        if (lb==MIN_COST && tuple[support] != s[support]) {
+            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+            return MIN_COST;
+        } else {
+            Cost res = -lb;
+            bool istuple = true;
+            for (int i = 0; i < arity_; i++) {
+                if (tuple[i] != s[i]) {
+                    res += deltaCosts[i];
+                    istuple = false;
+                }
             }
+            if (istuple)
+                res += cost;
+            assert(res >= MIN_COST);
+            return res;
         }
-        if (istuple)
-            res += cost;
-        assert(res >= MIN_COST);
-        return res;
     }
     Cost evalsubstr(const String& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
     Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
@@ -220,7 +225,7 @@ public:
 
     pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
     {
-        Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
+        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
         bool supporta = (getClause(index) == a);
         Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)deltaCosts[index]));
         Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)deltaCosts[index] : MIN_COST));
@@ -248,7 +253,7 @@ public:
 
     Cost getMaxFiniteCost()
     {
-        Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
+        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
         if (CUT(cost, wcsp->getUb()))
@@ -325,6 +330,49 @@ public:
     {
         if (index == support && cost > lb)
             propagate();
+    }
+
+    bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool zerolb = (lb==MIN_COST);
+        if (zerolb && getTuple(support) != ((support==index)?supportValue:getVar(support)->getSupport())) {
+            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+            return true;
+        } else {
+            Cost res = -lb;
+            bool istuple = true;
+            for (int i = 0; i < arity_; i++) {
+                if (getTuple(i) != ((i==index)?supportValue:getVar(i)->getSupport())) {
+                    res += deltaCosts[i];
+                    istuple = false;
+                    if (zerolb) {
+                        assert(res == MIN_COST);
+                        assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+                        return true;
+                    }
+                }
+            }
+            if (istuple)
+                res += cost;
+            assert(res >= MIN_COST);
+            return (res == MIN_COST);
+        }
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, supportValue);
+        if (!result) {
+            if (index >= 0) {
+                getVar(index)->unsetFullEAC();
+            } else {
+                int a = arity();
+                for (int i = 0; i < a; i++) {
+                    getVar(i)->unsetFullEAC();
+                }
+            }
+        }
+        return result;
     }
 
     void print(ostream& os)
