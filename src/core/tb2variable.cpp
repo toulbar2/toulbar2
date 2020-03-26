@@ -12,11 +12,18 @@
  * Constructors and misc.
  *
  */
-
+// Variable name in the CPD branch may encode various important informations
+// - pos 0: the native amno acid one letter code
+// - followed by a string giving the position of the residue in the sequence of the protein
+// - may be followed by '-' and a sequence of letter options:
+//      - 'e': masks the residue for evolutionary biases (see tb2cpd, MRF class)
+// - may be followed by '_' and a string giving the state number in multistate design
+// - Only state 0 receives evolutionary biases (default state in monostate design)
 Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     : WCSPLink(w, w->numberOfVariables())
     , name(n)
     , evolutionMasked(false)
+    , state(0)
     , dac(w->numberOfVariables())
     , timestamp(-1)
     , pos(-1)
@@ -49,14 +56,21 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     if (ToulBar2::cfn && ToulBar2::cpd) {
         if (name.size() >= 2) {
             nativeResidue = name[0];
+
+            size_t separatorPos = name.find('-');
+            size_t multiStatePos = name.find('_');
+
+            if (separatorPos != string::npos) {
+                evolutionMasked = (name.find('e', separatorPos) != string::npos);
+            }
+
             try {
-                unsigned separatorPos = name.find("_");
-                if (separatorPos != string::npos) {
-                    evolutionMasked = (name.find('e', separatorPos) != string::npos);
+                if (multiStatePos != string::npos) {
+                    state = stoi(name.substr(multiStatePos + 1));
                 }
-                position = stoi(name.substr(1, separatorPos - 1)) - 1; // we start at 0 internally
+                position = stoi(name.substr(1, min(separatorPos, multiStatePos) - 1)) - 1; // we start at 0 internally
             } catch (const std::invalid_argument&) {
-                cerr << "Error: invalid position in variable '" << name << "'" << endl;
+                cerr << "Error: invalid position or state number in variable '" << name << "'" << endl;
                 exit(EXIT_FAILURE);
             }
         } else {

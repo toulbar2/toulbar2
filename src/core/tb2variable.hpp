@@ -21,6 +21,7 @@ protected:
     int position; // position in the protein
     char nativeResidue; //one char residue in the native
     bool evolutionMasked; //this residue should not be involved in the evolutionnary energy network
+    int state; // state number in multistate design
     vector<string> valueNames;
     int dac; // DAC order
 
@@ -62,6 +63,7 @@ public:
     int getPosition() const { return position; }
     bool isEvolutionMasked() const { return evolutionMasked; }
     char getNativeResidue() const { return nativeResidue; }
+    int getState() const { return state; }
     void newValueName(const string& vname) { valueNames.push_back(vname); }
     string& getValueName(int idx) { return valueNames[idx]; }
     int getDACOrder() const { return dac; }

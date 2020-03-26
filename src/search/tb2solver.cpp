@@ -182,6 +182,9 @@ void Solver::applyCompositionalBiases()
             exit(EXIT_FAILURE);
         } else {
             for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
+                if (wcsp->getVars()[varIndex]->getState())
+                    continue;
+
                 vector<Cost> biases;
                 ToulBar2::cpd->fillPSMbiases(varIndex, biases);
                 wcsp->postUnaryConstraint(varIndex, biases);
@@ -190,15 +193,20 @@ void Solver::applyCompositionalBiases()
     }
 
     if (ToulBar2::cpd->PSSMBias != 0) {
-        if (ToulBar2::cpd->PSSMlen() != wcsp->numberOfVariables()) {
-            cerr << "The number of variables (" << wcsp->numberOfVariables() << ") is not equal to the PSSM length (" << ToulBar2::cpd->PSSMlen() << ")." << endl;
+        unsigned nbV = 0;
+
+        for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
+            if (wcsp->getVars()[varIndex]->getState())
+                continue;
+
+            vector<Cost> biases;
+            ToulBar2::cpd->fillPSSMbiases(varIndex, biases);
+            wcsp->postUnaryConstraint(varIndex, biases);
+            nbV++;
+        }
+        if (ToulBar2::cpd->PSSMlen() != nbV) {
+            cerr << "The number of residues (" << nbV << ") is not equal to the PSSM length (" << ToulBar2::cpd->PSSMlen() << ")." << endl;
             exit(EXIT_FAILURE);
-        } else {
-            for (unsigned int varIndex = 0; varIndex < wcsp->numberOfVariables(); varIndex++) {
-                vector<Cost> biases;
-                ToulBar2::cpd->fillPSSMbiases(varIndex, biases);
-                wcsp->postUnaryConstraint(varIndex, biases);
-            }
         }
     }
 
@@ -208,7 +216,7 @@ void Solver::applyCompositionalBiases()
         } else {
             cerr << "An additive MRF sequence probability distribution file is required,\n";
             cerr << "See --AminoMRF option flag.\n";
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 }

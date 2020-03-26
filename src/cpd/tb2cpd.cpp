@@ -24,7 +24,7 @@ const string AminoMRFs = "ARNDCQEGHILKMFPSTWYV-";
 const string AminoPMRFs = "ACDEFGHIKLMNPQRSTVWY-";
 constexpr int NumNatAA = 20;
 
-// AminoMRF Class
+// AminoMRF Class - obsolete (CCMPred not used anymore)
 // Read MRF trained from multiple alignment using CCMPred. The MRF (alignment) should have
 // exactly the same number of variables/columns as the native protein.
 AminoMRF::AminoMRF(const char* filename)
@@ -245,23 +245,27 @@ TLogProb AminoMRF::eval(const string& sequence, const vector<Variable*>& vars)
     size_t nbCFNVars = vars.size();
     TLogProb paid = 0.0;
     for (size_t varIdx1 = 0; varIdx1 < nbCFNVars; varIdx1++) {
+        if (vars[varIdx1]->getState() || vars[varIdx1]->isEvolutionMasked())
+            continue;
+
         int pos1 = vars[varIdx1]->getPosition();
         int code1 = AminoMRFIdx.find(sequence[varIdx1])->second;
         if (debug) {
             cout << "Unary at position " << pos1 << " amino acid code " << code1 << endl;
         }
-        if (!vars[varIdx1]->isEvolutionMasked()) {
-            paid += unaries[pos1][code1];
-            for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
-                int pos2 = vars[varIdx2]->getPosition();
-                int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
-                if (debug)
-                    cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
+        paid += unaries[pos1][code1];
+        for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
+            if (vars[varIdx2]->getState() || vars[varIdx2]->isEvolutionMasked())
+                continue;
 
-                pair<int, int> pv(pos1, pos2);
-                if (!vars[varIdx2]->isEvolutionMasked() && binaries.count(pv))
-                    paid += binaries[pv][code1][code2];
-            }
+            int pos2 = vars[varIdx2]->getPosition();
+            int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
+            if (debug)
+                cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
+
+            pair<int, int> pv(pos1, pos2);
+            if (binaries.count(pv))
+                paid += binaries[pv][code1][code2];
         }
     }
     return paid;
@@ -286,6 +290,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     // project and process binaries
     map<int, size_t> posList; // map of designed position to varIdx
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        if (pb->getVars()[varIdx]->getState())
+            continue;
         int pos = pb->getVars()[varIdx]->getPosition();
         bool isAA = pb->getVars()[varIdx]->getName()[0] != 'Z';
 
@@ -367,11 +373,11 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
     // process unaries
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        if (pb->getVars()[varIdx]->getState() || pb->getVars()[varIdx]->getName()[0] == 'Z' || pb->getVars()[varIdx]->isEvolutionMasked())
+            continue;
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
-        if ((pb->getVars()[varIdx]->getName()[0] == 'Z') || pb->getVars()[varIdx]->isEvolutionMasked())
-            continue;
 
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
