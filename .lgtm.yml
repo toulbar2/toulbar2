@@ -3,10 +3,10 @@ extraction:
     prepare:
       packages:
         - libgmp-dev
-	- libboost-graph-dev
-	- libboost-iostreams-deva
-	- zlib1g-dev
-	- liblzma-dev
+        - libboost-graph-dev
+        - libboost-iostreams-deva
+        - zlib1g-dev
+        - liblzma-dev
     configure:
       command:
         - mkdir _lgtm_build_dir
