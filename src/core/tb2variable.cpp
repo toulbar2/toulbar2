@@ -16,6 +16,7 @@
 Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     : WCSPLink(w, w->numberOfVariables())
     , name(n)
+    , evolutionMasked(false)
     , dac(w->numberOfVariables())
     , timestamp(-1)
     , pos(-1)
@@ -49,7 +50,11 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
         if (name.size() >= 2) {
             nativeResidue = name[0];
             try {
-                position = stoi(name.substr(1)) - 1; // we start at 0 internally
+                unsigned separatorPos = name.find("_");
+                if (separatorPos != string::npos) {
+                    evolutionMasked = (name.find('e', separatorPos) != string::npos);
+                }
+                position = stoi(name.substr(1, separatorPos - 1)) - 1; // we start at 0 internally
             } catch (const std::invalid_argument&) {
                 cerr << "Error: invalid position in variable '" << name << "'" << endl;
                 exit(EXIT_FAILURE);

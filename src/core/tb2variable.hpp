@@ -20,7 +20,7 @@ protected:
     string name;
     int position; // position in the protein
     char nativeResidue; //one char residue in the native
-
+    bool evolutionMasked; //this residue should not be involved in the evolutionnary energy network
     vector<string> valueNames;
     int dac; // DAC order
 
@@ -60,6 +60,7 @@ public:
 
     string getName() const { return name; }
     int getPosition() const { return position; }
+    bool isEvolutionMasked() const { return evolutionMasked; }
     char getNativeResidue() const { return nativeResidue; }
     void newValueName(const string& vname) { valueNames.push_back(vname); }
     string& getValueName(int idx) { return valueNames[idx]; }

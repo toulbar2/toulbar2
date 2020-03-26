@@ -250,16 +250,18 @@ TLogProb AminoMRF::eval(const string& sequence, const vector<Variable*>& vars)
         if (debug) {
             cout << "Unary at position " << pos1 << " amino acid code " << code1 << endl;
         }
-        paid += unaries[pos1][code1];
-        for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
-            int pos2 = vars[varIdx2]->getPosition();
-            int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
-            if (debug)
-                cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
+        if (!vars[varIdx1]->isEvolutionMasked()) {
+            paid += unaries[pos1][code1];
+            for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
+                int pos2 = vars[varIdx2]->getPosition();
+                int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
+                if (debug)
+                    cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
 
-            pair<int, int> pv(pos1, pos2);
-            if (binaries.count(pv))
-                paid += binaries[pv][code1][code2];
+                pair<int, int> pv(pos1, pos2);
+                if (!vars[varIdx2]->isEvolutionMasked() && binaries.count(pv))
+                    paid += binaries[pv][code1][code2];
+            }
         }
     }
     return paid;
@@ -309,8 +311,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
         if (posList.count(pos1) + posList.count(pos2) == 1) { // different types (designable/absent)
             if (debug)
-                cout << "must be projected." << endl;
-            if (posList.count(pos2)) { // project on second
+                cout << "must be projected (if not masked)." << endl;
+            if (posList.count(pos2) && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // project on second
                 char natAA = ToulBar2::cpd->nativeSequence[pos1];
                 int natIdx = AminoMRFIdx.find(natAA)->second;
                 if (debug)
@@ -318,7 +320,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
                 for (size_t i = 0; i < NumNatAA; i++) {
                     unaries[pos2][i] += bincf.second[natIdx][i];
                 }
-            } else { // project on first
+            } else if (!pb->getVars()[posList[pos1]]->isEvolutionMasked()) { // project on first
                 char natAA = ToulBar2::cpd->nativeSequence[pos2];
                 int natIdx = AminoMRFIdx.find(natAA)->second;
                 if (debug)
@@ -329,12 +331,13 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             }
         }
 
-        if (posList.count(pos1) + posList.count(pos2) == 2) { // both designable
+        if ((posList.count(pos1) + posList.count(pos2) == 2) && !pb->getVars()[posList[pos1]]->isEvolutionMasked() && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // both designable and not Masked
 
             bool warn = true;
             vector<Cost> biases;
             int varIdx1 = posList[pos1];
             int varIdx2 = posList[pos2];
+
             if (debug)
                 cout << "will be normalized and posted on " << varIdx1 << "-" << varIdx2 << endl;
 
@@ -358,7 +361,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             }
             pb->postBinaryConstraint(varIdx1, varIdx2, biases);
         }
-        if (debug && (posList.count(pos1) + posList.count(pos2) == 0))
+        if (debug && ((posList.count(pos1) + posList.count(pos2) == 0)))
             cout << " will be ignored" << endl;
     }
 
@@ -367,8 +370,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
-        if (pb->getVars()[varIdx]->getName()[0] == 'Z')
-            break;
+        if ((pb->getVars()[varIdx]->getName()[0] == 'Z') || pb->getVars()[varIdx]->isEvolutionMasked())
+            continue;
 
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
