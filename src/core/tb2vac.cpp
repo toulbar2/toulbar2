@@ -399,7 +399,7 @@ bool VACExtension::propagate()
                         } catch (Contradiction) {
                             wcsp->whenContradiction();
                         }
-                    } catch (NbBacktracksOut) {
+                    } catch (const NbBacktracksOut&) {
                     }
 
                     ToulBar2::hbfs = storehbfs;
