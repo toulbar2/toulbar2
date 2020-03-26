@@ -2,6 +2,9 @@
  *  \brief Flow based global cost function : sgcc_flow
  */
 
+#ifndef TB2GLOBALCARDCONSTR_HPP_
+#define TB2GLOBALCARDCONSTR_HPP_
+
 //#include "glpk.h"
 //#include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
@@ -64,6 +67,8 @@ public:
     //    void print(ostream& os);
     void dump(ostream& os, bool original = true);
 };
+
+#endif /*TB2GLOBALCARDCONSTR_HPP_*/
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

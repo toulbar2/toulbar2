@@ -17,6 +17,8 @@ AmongConstraint::~AmongConstraint()
     deleteTable(f);
     deleteTable(curf);
     deleteTable(invf);
+    delete[] minBarU;
+    delete[] minU;
 }
 
 void AmongConstraint::read(istream& file, bool mult)

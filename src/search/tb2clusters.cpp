@@ -736,8 +736,7 @@ void Cluster::getSolution(TAssign& sol)
 {
     TVars::iterator it;
     if (parent == NULL || this == td->getRootRDS()) {
-        if (vars.size() == 0) {
-        } else {
+        if (vars.size() != 0) {
             it = beginVars();
             while (it != endVars()) {
                 assert(wcsp->assigned(*it));

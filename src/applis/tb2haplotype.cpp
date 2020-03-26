@@ -1194,7 +1194,7 @@ void Haplotype::sparse_matrix()
             }
         }
     }
-    K = 0.5 * K + nbDesc * log(0.5);
+    K = 0.5 * K + nbDesc * Log(0.5);
     //affichage
     if (ToulBar2::verbose >= 1) {
         cout << "sparse matrix : \n";

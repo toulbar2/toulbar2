@@ -594,7 +594,7 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
         if (semantics == "lin" || semantics == "var")
             unaryCosts[positionVar] = gap * baseCost;
         if (semantics == "quad")
-            unaryCosts[positionVar] = gap * gap * baseCost;
+            unaryCosts[positionVar] = gap * (gap * baseCost);
         //cout << positionVar << " (=) " << i << " ==> " << unaryCosts[positionVar] << endl;
 
         if (!compFound) {
@@ -621,7 +621,7 @@ Cost WeightedSum::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     if (comparator == "!=") {
         if (sum != rightRes)
@@ -637,7 +637,7 @@ Cost WeightedSum::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     if (comparator == ">" || comparator == ">=") {
         int newRightRes = rightRes;
@@ -649,7 +649,7 @@ Cost WeightedSum::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     return 0;
 }
@@ -799,7 +799,7 @@ void WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
             if (semantics == "lin" || semantics == "var")
                 binaryCosts[positionArray] = (gap * baseCost >= top) ? top : gap * baseCost;
             if (semantics == "quad")
-                binaryCosts[positionArray] = (gap * gap * baseCost >= top) ? top : gap * gap * baseCost;
+                binaryCosts[positionArray] = (gap * (gap * baseCost) >= top) ? top : gap * (gap * baseCost);
             //cout << valueCounter << "," << valueVariable << "," << gap << " : " << binaryCosts[positionArray] << endl;
         }
     }
@@ -950,7 +950,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
                 if (semantics == "lin" || semantics == "var")
                     unaryCosts[i] = gap * baseCost;
                 if (semantics == "quad")
-                    unaryCosts[i] = gap * gap * baseCost;
+                    unaryCosts[i] = gap * (gap * baseCost);
             }
         }
     } else if (comparator == "!=") {
@@ -976,7 +976,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
                 if (semantics == "lin" || semantics == "var")
                     unaryCosts[i] = gap * baseCost;
                 if (semantics == "quad")
-                    unaryCosts[i] = gap * gap * baseCost;
+                    unaryCosts[i] = gap * (gap * baseCost);
             }
         }
     } else if (comparator == ">" || comparator == ">=") {
@@ -994,7 +994,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
                 if (semantics == "lin" || semantics == "var")
                     unaryCosts[i] = gap * baseCost;
                 if (semantics == "quad")
-                    unaryCosts[i] = gap * gap * baseCost;
+                    unaryCosts[i] = gap * (gap * baseCost);
             }
         }
     } else
@@ -1020,7 +1020,7 @@ Cost WeightedOverlap::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     if (comparator == "!=") {
         if (occurency != rightRes)
@@ -1036,7 +1036,7 @@ Cost WeightedOverlap::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     if (comparator == ">" || comparator == ">=") {
         int newRightRes = rightRes;
@@ -1048,7 +1048,7 @@ Cost WeightedOverlap::evaluate(int* tuple)
         if (semantics == "lin" || semantics == "var")
             return gap * baseCost;
         if (semantics == "quad")
-            return gap * gap * baseCost;
+            return gap * (gap * baseCost);
     }
     return 0;
 }

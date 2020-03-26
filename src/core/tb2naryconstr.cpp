@@ -49,6 +49,8 @@ NaryConstraint::~NaryConstraint()
         delete pf;
     if (costs)
         delete[] costs;
+    if (filters)
+        delete filters;
 }
 
 // USED ONLY DURING SEARCH

@@ -103,7 +103,7 @@ void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin
     int mx = x->getDomainInitSize();
     int my = y->getDomainInitSize();
     int mz = z->getDomainInitSize();
-    long total_nogoods = mx * my * mz;
+    int total_nogoods = mx * my * mz;
 
     vector<Cost> costs;
     for (a = 0; a < mx; a++)
@@ -185,7 +185,7 @@ void naryRandom::generateBinCtr(int i, int j, long nogoods, Cost costMin, Cost c
     EnumeratedVariable* y = (EnumeratedVariable*)wcsp.getVar(j);
     int mx = x->getDomainInitSize();
     int my = y->getDomainInitSize();
-    long total_nogoods = mx * my;
+    int total_nogoods = mx * my;
 
     vector<Cost> costs;
     for (a = 0; a < mx; a++)

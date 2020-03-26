@@ -205,12 +205,12 @@ FullincrCSPConfiguration::FullincrCSPConfiguration(int nbv, int domsize)
     }
 }
 
-Configuration::~Configuration() { delete config; }
+Configuration::~Configuration() { delete[] config; }
 FullincrCSPConfiguration::~FullincrCSPConfiguration()
 {
     for (int i = 0; i < nbvar; i++)
-        delete tabconflicts[i];
-    delete tabconflicts;
+        delete[] tabconflicts[i];
+    delete[] tabconflicts;
 }
 
 IncrCSPConfiguration::~IncrCSPConfiguration()

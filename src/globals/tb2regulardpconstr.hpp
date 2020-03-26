@@ -22,6 +22,12 @@ private:
         {
         }
 
+        ~DFA()
+        {
+            delete[] transition;
+            delete[] invTransition;
+        }
+
         void setNumStates(int size)
         {
             transition = new vector<pair<int, int>>[size];

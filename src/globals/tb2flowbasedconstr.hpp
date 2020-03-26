@@ -80,10 +80,9 @@ protected:
     }
 
 public:
-    FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                             arity_in);
+    FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
-    ~FlowBasedGlobalConstraint() {}
+    virtual ~FlowBasedGlobalConstraint();
 
     virtual void organizeConfig() {}
     virtual void initStructure();

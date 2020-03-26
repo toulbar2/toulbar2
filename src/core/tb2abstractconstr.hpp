@@ -492,7 +492,12 @@ public:
     {
     }
 
-    virtual ~AbstractNaryConstraint() {}
+    virtual ~AbstractNaryConstraint()
+    {
+        delete[] scope;
+        delete[] scope_dac;
+        delete[] links;
+    }
 
     int arity() const FINAL { return arity_; }
     Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs

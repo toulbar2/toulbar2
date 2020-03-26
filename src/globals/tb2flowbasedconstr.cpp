@@ -10,6 +10,16 @@ FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVaria
 {
 }
 
+FlowBasedGlobalConstraint::~FlowBasedGlobalConstraint()
+{
+    if (zeroEdges) {
+        for (int i=0; i<graph->size(); i++)
+            delete[] zeroEdges[i];
+        delete[] zeroEdges;
+    }
+    delete graph;
+}
+
 Cost FlowBasedGlobalConstraint::constructFlow(Graph& g)
 {
     pair<int, Cost> result = g.minCostFlow(MIN_COST, g.size() - 1);
