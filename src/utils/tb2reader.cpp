@@ -2121,7 +2121,8 @@ Cost WCSP::read_wcsp(const char* fileName)
     }
     // TOOLBAR WCSP LEGACY PARSER
     string pbname;
-    int nbvar, nbval, nbconstr;
+    unsigned int nbvar, nbval;
+    int nbconstr;
     int nbvaltrue = 0;
     Cost top;
     int i, j, k, t, ic;
@@ -2188,9 +2189,6 @@ Cost WCSP::read_wcsp(const char* fileName)
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << pbname << endl;
 
-    assert(vars.empty());
-    assert(constrs.empty());
-
     double K = ToulBar2::costMultiplier;
     if (top < MAX_COST / K)
         top = top * K;
@@ -2201,17 +2199,29 @@ Cost WCSP::read_wcsp(const char* fileName)
     updateUb(top + ToulBar2::deltaUb);
 
     // read variable domain sizes
-    for (i = 0; i < nbvar; i++) {
+    for (unsigned int i = 0; i < nbvar; i++) {
         string varname;
         varname = to_string(i);
         file >> domsize;
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
         if (ToulBar2::verbose >= 3)
-            cout << "read variable " << i << " of size " << domsize << endl;
-        DEBONLY(int theindex =)
-        ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
-        assert(theindex == i);
+            cout << "read " << ((i>=numberOfVariables())?"new":"known") << " variable " << i << " of size " << domsize << endl;
+        if (i>=numberOfVariables()) {
+            DEBONLY(int theindex =)
+                ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
+            assert(theindex == (int)i);
+        } else {
+            if ((domsize >= 0) != getVar(i)->enumerated()) {
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain type (" << (getVar(i)->enumerated()?((EnumeratedVariable*)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize()) << ") different than the new one (" << domsize << ")!" << endl;
+                exit(EXIT_FAILURE);
+            } else if (domsize < 0) {
+                decrease(i, -domsize - 1);
+            } else if (domsize >= 0 && (unsigned int)domsize != ((EnumeratedVariable*)getVar(i))->getDomainInitSize()) {
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain size " << (getVar(i)->enumerated()?((EnumeratedVariable*)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize()) << " different than the new one of " << domsize << "!" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
     }
 
     // read each constraint

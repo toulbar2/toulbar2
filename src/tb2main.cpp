@@ -2076,8 +2076,8 @@ int _tmain(int argc, TCHAR* argv[])
     if (ToulBar2::verbose > 0) {
         cout << "cmd line parsing ---> " << glob.FileCount() << " Filename(s) found in command line" << endl;
     }
-    string strfile;
-    string strext;
+    vector<string> strfile;
+    set<string> strext;
 
     if (random_desc == NULL) {
         for (int n = 0; n < glob.FileCount() + ((ToulBar2::stdin_format.size() > 0) ? 1 : 0); ++n) {
@@ -2088,37 +2088,37 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["wcsp_ext"]) || ToulBar2::stdin_format.compare("wcsp") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading wcsp file: " << problem << endl;
-                strext = ".wcsp";
-                strfile = problem;
+                strext.insert(".wcsp");
+                strfile.push_back(problem);
             }
             if (check_file_ext(problem, file_extension_map["wcspgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd wcsp file: " << problem << endl;
-                strext = ".wcsp.gz";
-                strfile = problem;
+                strext.insert(".wcsp.gz");
+                strfile.push_back(problem);
                 ToulBar2::gz = true;
             }
             if (check_file_ext(problem, file_extension_map["wcspxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed wcsp file: " << problem << endl;
-                strext = ".wcsp.xz";
-                strfile = problem;
+                strext.insert(".wcsp.xz");
+                strfile.push_back(problem);
                 ToulBar2::xz = true;
             }
             // CFN file
             if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn") == 0) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading cfn file: " << problem << endl;
-                strext = ".cfn";
-                strfile = problem;
+                strext.insert(".cfn");
+                strfile.push_back(problem);
                 ToulBar2::cfn = true;
             }
             // CFN gzip'd file
             if (check_file_ext(problem, file_extension_map["cfngz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd cfn file: " << problem << endl;
-                strext = ".cfn.gz";
-                strfile = problem;
+                strext.insert(".cfn.gz");
+                strfile.push_back(problem);
                 ToulBar2::cfn = true;
                 ToulBar2::gz = true;
             }
@@ -2126,15 +2126,15 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["cfnxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed cfn file: " << problem << endl;
-                strext = ".cfn.xz";
-                strfile = problem;
+                strext.insert(".cfn.xz");
+                strfile.push_back(problem);
                 ToulBar2::cfn = true;
                 ToulBar2::xz = true;
             }
             // uai  file
             if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
-                strfile = problem;
-                strext = ".uai";
+                strfile.push_back(problem);
+                strext.insert(".uai");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading uai file:  " << problem << endl;
                 ToulBar2::uai = 1;
@@ -2142,8 +2142,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
             // uai  gzip'd file
             if (check_file_ext(problem, file_extension_map["uaigz_ext"])) {
-                strfile = problem;
-                strext = ".uai.gz";
+                strfile.push_back(problem);
+                strext.insert(".uai.gz");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd uai file:  " << problem << endl;
                 ToulBar2::uai = 1;
@@ -2152,8 +2152,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
             // uai xz compressed file
             if (check_file_ext(problem, file_extension_map["uaixz_ext"])) {
-                strfile = problem;
-                strext = ".uai.xz";
+                strfile.push_back(problem);
+                strext.insert(".uai.xz");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed uai file:  " << problem << endl;
                 ToulBar2::uai = 1;
@@ -2162,8 +2162,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG") == 0) {
-                strfile = problem;
-                strext = ".LG";
+                strfile.push_back(problem);
+                strext.insert(".LG");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading uai log file:  " << problem << endl;
                 ToulBar2::uai = 2;
@@ -2171,8 +2171,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaigz_log_ext"])) {
-                strfile = problem;
-                strext = ".LG.gz";
+                strfile.push_back(problem);
+                strext.insert(".LG.gz");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd uai log file:  " << problem << endl;
                 ToulBar2::uai = 2;
@@ -2181,8 +2181,8 @@ int _tmain(int argc, TCHAR* argv[])
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
-                strfile = problem;
-                strext = ".LG.xz";
+                strfile.push_back(problem);
+                strext.insert(".LG.xz");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed uai log file:  " << problem << endl;
                 ToulBar2::uai = 2;
@@ -2206,8 +2206,8 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::writeSolution = 1;
                     solutionFileName = (char*)"sol";
                 }
-                strext = ".xml";
-                strfile = problem;
+                strext.insert(".xml");
+                strfile.push_back(problem);
             }
 
             // wcnf or cnf file
@@ -2215,43 +2215,43 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::verbose >= 0)
                     cout << "loading wcnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".wcnf";
-                strfile = problem;
+                strext.insert(".wcnf");
+                strfile.push_back(problem);
             } else if (check_file_ext(problem, file_extension_map["cnf_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading cnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".cnf";
-                strfile = problem;
+                strext.insert(".cnf");
+                strfile.push_back(problem);
             }
             if (check_file_ext(problem, file_extension_map["wcnfgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd wcnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".wcnf.gz";
-                strfile = problem;
+                strext.insert(".wcnf.gz");
+                strfile.push_back(problem);
                 ToulBar2::gz = true;
             } else if (check_file_ext(problem, file_extension_map["cnfgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd cnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".cnf.gz";
-                strfile = problem;
+                strext.insert(".cnf.gz");
+                strfile.push_back(problem);
                 ToulBar2::gz = true;
             }
             if (check_file_ext(problem, file_extension_map["wcnfxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed wcnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".wcnf.xz";
-                strfile = problem;
+                strext.insert(".wcnf.xz");
+                strfile.push_back(problem);
                 ToulBar2::xz = true;
             } else if (check_file_ext(problem, file_extension_map["cnfxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed cnf file:" << problem << endl;
                 ToulBar2::wcnf = true;
-                strext = ".cnf.xz";
-                strfile = problem;
+                strext.insert(".cnf.xz");
+                strfile.push_back(problem);
                 ToulBar2::xz = true;
             }
 
@@ -2260,23 +2260,23 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::verbose >= 0)
                     cout << "loading quadratic pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::qpbo = true;
-                strext = ".qpbo";
-                strfile = problem;
+                strext.insert(".qpbo");
+                strfile.push_back(problem);
             }
             if (check_file_ext(problem, file_extension_map["qpbogz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd quadratic pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::qpbo = true;
-                strext = ".qpbo.gz";
-                strfile = problem;
+                strext.insert(".qpbo.gz");
+                strfile.push_back(problem);
                 ToulBar2::gz = true;
             }
             if (check_file_ext(problem, file_extension_map["qpboxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed quadratic pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::qpbo = true;
-                strext = ".qpbo.xz";
-                strfile = problem;
+                strext.insert(".qpbo.xz");
+                strfile.push_back(problem);
                 ToulBar2::xz = true;
             }
 
@@ -2303,8 +2303,8 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["bep_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading BEP file: " << problem << endl;
-                strext = ".bep";
-                strfile = problem;
+                strext.insert(".bep");
+                strfile.push_back(problem);
             }
 
             //////////////////////Mendelian-error analysis and haplotype reconstruction ////////////////////////////////////
@@ -2324,8 +2324,8 @@ int _tmain(int argc, TCHAR* argv[])
 
             // pre file
             if (check_file_ext(problem, file_extension_map["pre_ext"])) {
-                strfile = problem;
-                strext = ".pre";
+                strfile.push_back(problem);
+                strext.insert(".pre");
                 if (ToulBar2::verbose >= 0)
                     cout << "loading pre file: " << problem << endl;
                 if (glob.FileCount() < 2)
@@ -2429,8 +2429,8 @@ int _tmain(int argc, TCHAR* argv[])
             strcpy(tmpPath, argv[0]);
             if (strcmp(tmpPath, "toulbar2") == 0)
                 strcpy(tmpPath, ".");
-            char* tmpFile = new char[strlen(strfile.c_str()) + 1];
-            strcpy(tmpFile, strfile.c_str());
+            char* tmpFile = new char[strlen(strfile.back().c_str()) + 1];
+            strcpy(tmpFile, strfile.back().c_str());
             string filename(tmpPath);
             filename += "/";
             filename += basename(tmpFile);
@@ -2520,7 +2520,7 @@ int _tmain(int argc, TCHAR* argv[])
             exit(-1);
         }
     }
-    if (strstr(strext.c_str(), ".bep") || strstr((char*)strfile.c_str(), "bEpInstance"))
+    if (strext.count(".bep") || strstr((char*)strfile.back().c_str(), "bEpInstance"))
         ToulBar2::bep = new BEP;
 #endif
 
@@ -2539,10 +2539,31 @@ int _tmain(int argc, TCHAR* argv[])
     try {
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
-        else
-            globalUb = solver->read_wcsp((char*)strfile.c_str());
-        if (globalUb <= MIN_COST) {
-            THROWCONTRADICTION;
+        else {
+            if (strfile.size()==0) {
+                cerr << "No problem file given as input!" << endl;
+                exit(EXIT_FAILURE);
+            } else if (strfile.size()==1) {
+                globalUb = solver->read_wcsp((char*)strfile.back().c_str());
+                if (globalUb <= MIN_COST) {
+                    THROWCONTRADICTION;
+                }
+            } else {
+                if (strext.size() > 1) {
+                    cerr << "Sorry, multiple problem files must have the same file extension!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                if (strext.begin()->find(".wcsp") == string::npos) {
+                    cerr << "Sorry, multiple problem files must have a file extension which contains '.wcsp'!" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                for (auto f:strfile) {
+                    globalUb = solver->read_wcsp((char*)f.c_str());
+                    if (globalUb <= MIN_COST) {
+                        THROWCONTRADICTION;
+                    }
+                }
+            }
         }
 
         //TODO: If --show_options then dump ToulBar2 object here
