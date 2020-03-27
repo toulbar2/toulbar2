@@ -92,7 +92,7 @@ public:
             }
         }
     }
-    void resetConflictWeight()
+    void resetConflictWeight() override
     {
         conflictWeights.assign(conflictWeights.size(), 0);
         Constraint::resetConflictWeight();
