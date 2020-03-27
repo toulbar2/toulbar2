@@ -4,7 +4,7 @@ extraction:
       packages:
         - libgmp-dev
         - libboost-graph-dev
-        - libboost-iostreams-deva
+        - libboost-iostreams-dev
         - zlib1g-dev
         - liblzma-dev
     configure:
