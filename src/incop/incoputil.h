@@ -30,6 +30,7 @@ public:
     // ofstream* stat_file;           // le fichier où s'affiche les stat
     int thresholdchanges; // nombre de changements de seuil pour l'ensemble des essais
     Stat_GWW(int number_pbs, int number_tries);
+    ~Stat_GWW();
     void init_pb(int t);
     void init_run();
     void init_try(int trynumber);

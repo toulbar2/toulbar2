@@ -1,3 +1,6 @@
+#ifndef INCOP_H_
+#define INCOP_H_
+
 /* Les définitions des classes de la partie algorithme + OpProblem */
 /** the definitions of classes of the algorithmic part + OpProblem */
 
@@ -788,3 +791,4 @@ public:
     /** number of particles to be regrouped at each iteration */
     int nbkilled;
 };
+#endif /* INCOP_H_ */

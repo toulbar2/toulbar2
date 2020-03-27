@@ -1,3 +1,6 @@
+#ifndef INCOP_CSPROBLEM_H_
+#define  INCOP_CSPROBLEM_H_
+
 /* classe des problèmes de satisfaction de contraintes CSP*/
 /** Finite domain CSP class */
 class CSProblem : public OpProblem {
@@ -83,3 +86,4 @@ public:
 };
 
 int** csp_constraintdatastructure(int nbvar);
+#endif /* INCOP_CSPROBLEM_H_*/

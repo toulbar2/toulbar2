@@ -154,7 +154,7 @@ void Haplotype::readMap(const char* fileName)
      */
 }
 
-inline bool cmp_generation(Individual i1, Individual i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
+inline bool cmp_generation(const Individual &i1, const Individual &i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
 
 int Haplotype::fixGenerationNumber(int index)
 {

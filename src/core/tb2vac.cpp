@@ -396,10 +396,10 @@ bool VACExtension::propagate()
                                 //cout << "call to recursiveSolveLDS from VAC" << endl;
                                 solver->recursiveSolveLDS(ToulBar2::useRASPS - 1);
                             }
-                        } catch (Contradiction) {
+                        } catch (const Contradiction &) {
                             wcsp->whenContradiction();
                         }
-                    } catch (const NbBacktracksOut&) {
+                    } catch (const NbBacktracksOut &) {
                     }
 
                     ToulBar2::hbfs = storehbfs;

@@ -215,7 +215,7 @@ FullincrCSPConfiguration::~FullincrCSPConfiguration()
 
 IncrCSPConfiguration::~IncrCSPConfiguration()
 {
-    delete tabconflicts;
+    delete[] tabconflicts;
 }
 
 void Configuration::init_conflicts() { ; }

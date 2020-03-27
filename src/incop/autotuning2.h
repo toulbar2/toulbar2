@@ -1,5 +1,9 @@
+#ifndef INCOP_AUTOTUNING2_HPP_
+#define INCOP_AUTOTUNING2_HPP_
+
 /* Reglage automatique d'un algorithme à un paramètre */
 /** Automatic tuning of a local search algorithm with one parameter */
+
 
 class Tuning {
 public:
@@ -70,3 +74,5 @@ void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* probl
                                                                                                                    parameter1,
     int& parameter2, int tuningwalkrate, int tuningmaxtries);
 int endoslve(double maxtime);
+
+#endif /* INCOP_AUTOTUNING2_HPP_ */

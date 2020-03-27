@@ -3032,7 +3032,7 @@ void WCSP::propagateTRWS()
                 assert(numberOfUnassignedVariables() == 0);
                 ((Solver*)getSolver())->Solver::newSolution();
                 bestUb = min<Cost>(getUb(), bestUb);
-            } catch (Contradiction) {
+            } catch (const Contradiction &) {
                 whenContradiction();
             }
             Store::restore(depth);
@@ -3475,10 +3475,10 @@ void WCSP::restoreSolution(Cluster* c)
                 tctr[xctrindex] = vxi + CHAR_FIRST;
                 cctr = ctr->evalsubstr(tctr, ctr);
             }
-            Cost c = x->getCost(vx) + cxy + cxz + cxyz + cctr;
+            Cost loc = x->getCost(vx) + cxy + cxz + cxyz + cctr;
             //cout << "test " << vx << "," << x->getCost(vx) << "," << cxy << "," << cxz << "," << cxyz << endl;
-            if (c < mincost) {
-                mincost = c;
+            if (loc < mincost) {
+                mincost = loc;
                 minv = vx;
             }
         }
@@ -4491,7 +4491,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
             if (decimalToken[readIdx])
                 throw std::invalid_argument("Not a cost");
             return cost;
-        } catch (const std::invalid_argument&) {
+        } catch (const std::invalid_argument &) {
             cerr << "Error: invalid cost '" << decimalToken;
             if (lineNumber)
                 cerr << "' at line " << lineNumber << endl;
@@ -4516,7 +4516,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
             if (decimalPart[readIdx])
                 throw std::invalid_argument("Not a cost");
         }
-    } catch (const std::invalid_argument&) {
+    } catch (const std::invalid_argument &) {
         cerr << "Error: invalid cost '" << decimalToken;
         if (lineNumber)
             cerr << "' at line " << lineNumber << endl;

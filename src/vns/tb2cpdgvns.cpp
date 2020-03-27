@@ -75,7 +75,7 @@ bool CooperativeParallelDGVNS::solve()
         lastUb = MAX_COST;
         lastSolution.clear();
         preprocessing(MAX_COST);
-    } catch (Contradiction) {
+    } catch (const Contradiction &) {
         wcsp->whenContradiction();
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)

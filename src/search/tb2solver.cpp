@@ -202,7 +202,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     bool contradiction = false;
     try {
         wcsp->assignLS(variables, values);
-    } catch (Contradiction) {
+    } catch (const Contradiction &) {
         contradiction = true;
     }
     assert(wcsp->numberOfUnassignedVariables() == 0);
@@ -584,7 +584,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
                     nbNodes++;
                     newSolution(); /* it will update ub */
                     newUb = wcsp->getUb();
-                } catch (Contradiction) {
+                } catch (const Contradiction &) {
                     wcsp->whenContradiction();
                 }
                 Store::restore(depth);
@@ -935,7 +935,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
             assign(varIndex, value);
         lastConflictVar = -1;
         recursiveSolve(lb);
-    } catch (Contradiction) {
+    } catch (const Contradiction &) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
@@ -1015,7 +1015,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
                 remove(varIndex, value);
             lastConflictVar = -1;
             recursiveSolveLDS(discrepancy - 1);
-        } catch (Contradiction) {
+        } catch (const Contradiction &) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1100,7 +1100,7 @@ void Solver::scheduleOrPostpone(int varIndex)
         else
             assign(varIndex, xinf);
         recursiveSolve();
-    } catch (Contradiction) {
+    } catch (const Contradiction &) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
@@ -1135,7 +1135,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
             Store::store();
             assign(varIndex, sorted[v].value);
             recursiveSolve(lb);
-        } catch (Contradiction) {
+        } catch (const Contradiction &) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1169,7 +1169,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
             Store::store();
             assign(varIndex, sorted[v].value);
             recursiveSolveLDS(discrepancy - v);
-        } catch (Contradiction) {
+        } catch (const Contradiction &) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1204,7 +1204,7 @@ void Solver::singletonConsistency()
                 try {
                     Store::store();
                     assign(varIndex, sorted[a].value);
-                } catch (Contradiction) {
+                } catch (const Contradiction &) {
                     wcsp->whenContradiction();
                     deadend = true;
                     done = false;
@@ -1531,7 +1531,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         ToulBar2::vac = 0;
                     recursiveSolve(bestlb);
                 }
-            } catch (Contradiction) {
+            } catch (const Contradiction &) {
                 wcsp->whenContradiction();
             }
             if (!cluster) { // synchronize current upper bound with DFS (without tree decomposition)
@@ -1870,7 +1870,7 @@ bool Solver::solve()
                                     Store::store();
                                     initialDepth = Store::getDepth();
                                     recursiveSolveLDS(discrepancy);
-                                } catch (Contradiction) {
+                                } catch (const Contradiction &) {
                                     wcsp->whenContradiction();
                                 }
                                 Store::restore(storedepth);
@@ -1918,7 +1918,7 @@ bool Solver::solve()
                                             initialDepth = Store::getDepth();
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
-                                        } catch (Contradiction) {
+                                        } catch (const Contradiction &) {
                                             wcsp->whenContradiction();
                                             res.first = res.second;
                                         }
@@ -1983,7 +1983,7 @@ bool Solver::solve()
                 }
                 Store::restore(storedepth);
             } while (nbbacktracksout);
-        } catch (Contradiction) {
+        } catch (const Contradiction &) {
             wcsp->whenContradiction();
         }
     } catch (const SolverOut&) {

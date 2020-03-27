@@ -2590,7 +2590,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
             solver->solve();
         }
-    } catch (Contradiction) {
+    } catch (const Contradiction &) {
         if (ToulBar2::verbose >= 0)
             cout << "No solution found by initial propagation!" << endl;
         if (ToulBar2::isZ) {

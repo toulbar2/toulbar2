@@ -1,4 +1,3 @@
-import random
 import toulbar2py as tb2
 tb2.init()
 m = tb2.Solver(1)

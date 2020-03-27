@@ -543,7 +543,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
                         bestsolution[i] = wcsp->getValue(i);
                         wcsp->setBestValue(i, bestsolution[i]);
                     }
-                } catch (Contradiction) {
+                } catch (const Contradiction &) {
                     wcsp->whenContradiction();
                 }
                 Store::restore(depth);

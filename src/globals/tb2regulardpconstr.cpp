@@ -103,9 +103,9 @@ Cost RegularDPConstraint::eval(const String& s)
     recomputeTable(curf);
 
     Cost minCost = top;
-    for (vector<int>::iterator s = dfa.final.begin(); s != dfa.final.end(); s++)
-        if (minCost > curf[n][*s].val)
-            minCost = curf[n][*s].val;
+    for (vector<int>::iterator ss = dfa.final.begin(); ss != dfa.final.end(); ss++)
+        if (minCost > curf[n][*ss].val)
+            minCost = curf[n][*ss].val;
 
     return minCost - projectedCost;
 }

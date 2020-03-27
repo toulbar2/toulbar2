@@ -648,8 +648,8 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         try {
             domainSize = stoi(token);
             if (domainSize >= 0)
-                for (int i = 0; i < domainSize; i++)
-                    valueNames.push_back(to_string(i));
+                for (int ii = 0; ii < domainSize; ii++)
+                    valueNames.push_back(to_string(ii));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }
@@ -673,8 +673,8 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         }
     }
 
-    for (unsigned int i = 0; i < valueNames.size(); ++i)
-        wcsp->addValueName(varIndex, valueNames[i]);
+    for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
+        wcsp->addValueName(varIndex, valueNames[ii]);
 
     return domainSize;
 }
