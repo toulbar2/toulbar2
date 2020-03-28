@@ -466,6 +466,20 @@ CFNStreamReader::~CFNStreamReader()
 bool inline isOBrace(const string& token) { return ((token == "{") || (token == "[")); }
 bool inline isCBrace(const string& token) { return ((token == "}") || (token == "]")); }
 
+inline void yellOBrace(const string& token, const int &l){
+    if (!isOBrace(token)) {
+        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+inline void yellCBrace(const string& token, const int &l){
+    if (!isCBrace(token)) {
+        cerr << "Error: expected a ']' or ']' instead of '" << token << "' at line " << l << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
 // checks if the next token is an opening brace
 // and yells otherwise
 void CFNStreamReader::skipOBrace()
@@ -474,10 +488,7 @@ void CFNStreamReader::skipOBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    if (!isOBrace(token)) {
-        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
-    }
+    yellOBrace(token,l);
 }
 // checks if the next token is a closing brace
 // and yells otherwise
@@ -487,10 +498,7 @@ void CFNStreamReader::skipCBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    if (!isCBrace(token)) {
-        cerr << "Error: expected a '} or ']' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
-    }
+    yellCBrace(token,l);
 }
 
 // Tests if a read token is the expected (JSON) tag and yells otherwise.
@@ -1808,13 +1816,12 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     string start_symbol = token;
 
     skipJSONTag("terminals"); // 0 or 2
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token); // First [
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken(); // Second [ or ]
     while (token != "]") {
 
         string terminal_rule;
-        isOBrace(token);
+        yellOBrace(token,lineNumber);
         // Read terminal_symbol
         std::tie(lineNumber, token) = this->getNextToken();
         terminal_rule += token + " ";
@@ -1836,19 +1843,17 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
         terminal_rules.push_back(terminal_rule);
 
-        std::tie(lineNumber, token) = this->getNextToken();
-        isCBrace(token);
+        skipCBrace();
         std::tie(lineNumber, token) = this->getNextToken();
     }
 
     skipJSONTag("non_terminals"); // 1 or 3
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token); // First [
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken(); // Second [ or ]
     while (token != "]") {
 
         string non_terminal_rule;
-        isOBrace(token);
+        yellOBrace(token,lineNumber);
 
         // Read nonterminal_in
         std::tie(lineNumber, token) = this->getNextToken();
@@ -1875,8 +1880,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
         non_terminal_rules.push_back(non_terminal_rule);
 
-        std::tie(lineNumber, token) = this->getNextToken();
-        isCBrace(token);
+        skipCBrace();
         std::tie(lineNumber, token) = this->getNextToken();
     }
 
@@ -1926,8 +1930,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
     // TODO Cost should be >= 0
 
     skipJSONTag("vars1");
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token);
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken();
 
     while (token != "]") {
@@ -1947,8 +1950,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
     }
 
     skipJSONTag("vars2");
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token);
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken();
 
     while (token != "]") {
