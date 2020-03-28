@@ -2691,7 +2691,7 @@ bool WCSP::verify()
                      << "check:" << ((EnumeratedVariable*)vars[i])->checkEACGreedySolution() << endl;
                 cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong FullEAC status!" << endl;
             }
-            if (Store::getDepth() >= max(1,abs(ToulBar2::vac)))
+            if (Store::getDepth() >= max(1, abs(ToulBar2::vac)))
                 return false;
         }
     }
@@ -3032,7 +3032,7 @@ void WCSP::propagateTRWS()
                 assert(numberOfUnassignedVariables() == 0);
                 ((Solver*)getSolver())->Solver::newSolution();
                 bestUb = min<Cost>(getUb(), bestUb);
-            } catch (const Contradiction &) {
+            } catch (const Contradiction&) {
                 whenContradiction();
             }
             Store::restore(depth);
@@ -4176,10 +4176,10 @@ void WCSP::ternaryCompletion()
                                             // 		bctr2, bctr3);
                                             // if (added)
                                             float tight = bctr->computeTightness() + bctr2->computeTightness() + bctr3->computeTightness();
-                                            int xsize = x->getDomainInitSize();
-                                            int ysize = y->getDomainInitSize();
-                                            int zsize = z->getDomainInitSize();
-                                            TripleVarCostSize tvcs = { x, y, z, tight, xsize * ysize * (long unsigned int)zsize };
+                                            long unsigned xsize = x->getDomainInitSize();
+                                            long unsigned ysize = y->getDomainInitSize();
+                                            long unsigned zsize = z->getDomainInitSize();
+                                            TripleVarCostSize tvcs = { x, y, z, tight, xsize * ysize * zsize };
                                             triplelist.push_back(tvcs);
                                         }
                                     }
@@ -4491,7 +4491,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
             if (decimalToken[readIdx])
                 throw std::invalid_argument("Not a cost");
             return cost;
-        } catch (const std::invalid_argument &) {
+        } catch (const std::invalid_argument&) {
             cerr << "Error: invalid cost '" << decimalToken;
             if (lineNumber)
                 cerr << "' at line " << lineNumber << endl;
@@ -4516,7 +4516,7 @@ Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumb
             if (decimalPart[readIdx])
                 throw std::invalid_argument("Not a cost");
         }
-    } catch (const std::invalid_argument &) {
+    } catch (const std::invalid_argument&) {
         cerr << "Error: invalid cost '" << decimalToken;
         if (lineNumber)
             cerr << "' at line " << lineNumber << endl;

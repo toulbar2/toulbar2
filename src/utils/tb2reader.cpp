@@ -666,9 +666,9 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // set the value names (if any) in the Variable.values map
     varValNameToIdx.resize(varValNameToIdx.size() + 1);
     assert(varValNameToIdx.size() == varIndex + 1);
-    for (unsigned int i = 0; i < valueNames.size(); ++i) {
-        if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[i], i)).second) {
-            cerr << "Error: duplicated value name '" << valueNames[i] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+    for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
+        if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
+            cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -844,7 +844,7 @@ void CFNStreamReader::enforceUB(Cost bound)
     }
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound,wcsp->getUb())));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound, wcsp->getUb())));
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
             bound += ToulBar2::deltaUb;
@@ -2082,7 +2082,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             top = top * K;
         else
             top = MAX_COST;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
         updateUb(top + ToulBar2::deltaUb);
         // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
     }
@@ -2195,7 +2195,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     else
         top = MAX_COST;
 
-    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
     // read variable domain sizes
@@ -2206,19 +2206,19 @@ Cost WCSP::read_wcsp(const char* fileName)
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
         if (ToulBar2::verbose >= 3)
-            cout << "read " << ((i>=numberOfVariables())?"new":"known") << " variable " << i << " of size " << domsize << endl;
-        if (i>=numberOfVariables()) {
+            cout << "read " << ((i >= numberOfVariables()) ? "new" : "known") << " variable " << i << " of size " << domsize << endl;
+        if (i >= numberOfVariables()) {
             DEBONLY(int theindex =)
-                ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
+            ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
             assert(theindex == (int)i);
         } else {
             if ((domsize >= 0) != getVar(i)->enumerated()) {
-                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain type (" << (getVar(i)->enumerated()?((EnumeratedVariable*)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize()) << ") different than the new one (" << domsize << ")!" << endl;
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain type (" << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << ") different than the new one (" << domsize << ")!" << endl;
                 exit(EXIT_FAILURE);
             } else if (domsize < 0) {
                 decrease(i, -domsize - 1);
             } else if (domsize >= 0 && (unsigned int)domsize != ((EnumeratedVariable*)getVar(i))->getDomainInitSize()) {
-                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain size " << (getVar(i)->enumerated()?((EnumeratedVariable*)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize()) << " different than the new one of " << domsize << "!" << endl;
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain size " << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << " different than the new one of " << domsize << "!" << endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -2415,7 +2415,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
                     EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
                     EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
-                    vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
+                    vector<Cost> costs((size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize(), MIN_COST);
                     postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
@@ -3242,7 +3242,7 @@ void WCSP::read_wcnf(const char* fileName)
                 top = top * K;
             else
                 top = MAX_COST;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
             updateUb(top + ToulBar2::deltaUb);
         } else {
             if (ToulBar2::verbose >= 0)
@@ -3252,7 +3252,7 @@ void WCSP::read_wcnf(const char* fileName)
         if (ToulBar2::verbose >= 0)
             cout << "c Max-SAT input format" << endl;
         Cost top = (nbclauses + 1) * K;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
         updateUb(top + ToulBar2::deltaUb);
     }
 
@@ -3478,7 +3478,7 @@ void WCSP::read_qpbo(const char* fileName)
         exit(EXIT_FAILURE);
     }
     Cost top = (Cost)multiplier * sumcost + 1;
-    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top,getUb())));
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
     // create weighted binary clauses

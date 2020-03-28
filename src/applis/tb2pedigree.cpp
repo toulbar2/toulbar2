@@ -138,7 +138,7 @@ void Pedigree::read_bayesian(const char* fileName, WCSP* wcsp)
     buildWCSP_bayesian(fileName, wcsp);
 }
 
-inline bool cmp_generation(const Individual i1, const Individual &i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
+inline bool cmp_generation(const Individual& i1, const Individual& i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
 
 int Pedigree::fixGenerationNumber(int index)
 {

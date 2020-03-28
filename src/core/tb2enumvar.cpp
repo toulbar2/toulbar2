@@ -60,7 +60,7 @@ void EnumeratedVariable::init()
     DEE.constr = NULL;
     DEE.scopeIndex = -1;
     if (ToulBar2::DEE >= 2)
-        DEE2 = vector<ConstraintLink>(getDomainInitSize() * getDomainInitSize(), DEE);
+        DEE2 = vector<ConstraintLink>((long unsigned)getDomainInitSize() * getDomainInitSize(), DEE);
     queueDEE();
 }
 
@@ -341,7 +341,7 @@ bool EnumeratedVariable::reviseEACGreedySolution()
             broken = true;
     }
     if (!broken) {
-       setFullEAC();
+        setFullEAC();
     } else {
         assert(!isFullEAC());
     }
@@ -1490,7 +1490,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             EnumeratedVariable* u = (EnumeratedVariable*)wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);
             assert(x == u || x == v);
-            vector<Cost> costs(u->getDomainInitSize() * v->getDomainInitSize(), MIN_COST);
+            vector<Cost> costs((size_t)u->getDomainInitSize() * v->getDomainInitSize(), MIN_COST);
             bool empty = true;
             String oldtuple(ctr->arity(), CHAR_FIRST);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
@@ -1523,7 +1523,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);
             EnumeratedVariable* w = (EnumeratedVariable*)wcsp->getVar(scopeIndex[2]);
             assert(x == u || x == v || x == w);
-            vector<Cost> costs(u->getDomainInitSize() * v->getDomainInitSize() * w->getDomainInitSize(), MIN_COST);
+            vector<Cost> costs((size_t)u->getDomainInitSize() * (size_t)v->getDomainInitSize() * (size_t)w->getDomainInitSize(), MIN_COST);
             bool empty = true;
             String oldtuple(ctr->arity(), CHAR_FIRST);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {

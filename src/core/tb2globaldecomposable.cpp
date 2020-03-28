@@ -1351,7 +1351,7 @@ void WeightedGcc::rec_sum_counters(WCSP* wcsp, int* cscope, int carity, int totl
 {
     if (rec == nb) {
         if (carity == 2) {
-            vector<Cost> costs(wcsp->getDomainInitSize(cscope[0]) * wcsp->getDomainInitSize(cscope[1]), wcsp->getUb());
+            vector<Cost> costs((size_t)wcsp->getDomainInitSize(cscope[0]) * (size_t)wcsp->getDomainInitSize(cscope[1]), wcsp->getUb());
             for (int u = wcsp->getInf(cscope[0]); u <= wcsp->getSup(cscope[0]); u++) {
                 for (int v = wcsp->getInf(cscope[1]); v <= wcsp->getSup(cscope[1]); v++) {
                     if (u + v >= totlb && u + v <= min(totub, arity)) {
@@ -1361,7 +1361,7 @@ void WeightedGcc::rec_sum_counters(WCSP* wcsp, int* cscope, int carity, int totl
             }
             wcsp->postBinaryConstraint(cscope[0], cscope[1], costs);
         } else if (carity == 3) {
-            vector<Cost> costs(wcsp->getDomainInitSize(cscope[0]) * wcsp->getDomainInitSize(cscope[1]) * wcsp->getDomainInitSize(cscope[2]), wcsp->getUb());
+            vector<Cost> costs((size_t)wcsp->getDomainInitSize(cscope[0]) * (size_t)wcsp->getDomainInitSize(cscope[1]) * (size_t)wcsp->getDomainInitSize(cscope[2]), wcsp->getUb());
             for (int u = wcsp->getInf(cscope[0]); u <= wcsp->getSup(cscope[0]); u++) {
                 for (int v = wcsp->getInf(cscope[1]); v <= wcsp->getSup(cscope[1]); v++) {
                     for (int w = wcsp->getInf(cscope[2]); w <= wcsp->getSup(cscope[2]); w++) {

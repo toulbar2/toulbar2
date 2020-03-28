@@ -26,7 +26,7 @@ void BEP::read(const char* fileName, WCSP* wcsp)
     earliest.resize(size);
     latest.resize(size);
     revenue.resize(size);
-    delay.resize(size * size);
+    delay.resize((size_t)size * (size_t)size);
     getline(file, str);
     for (int i = 0; i < size; i++) {
         int pos;
@@ -42,7 +42,7 @@ void BEP::read(const char* fileName, WCSP* wcsp)
         file >> latest[pos];
         latest[pos] -= duration[pos];
         file >> revenue[pos];
-        top += revenue[pos] * (size - 1);
+        top += (Cost)revenue[pos] * (size - 1);
     }
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -70,7 +70,7 @@ void BEP::read(const char* fileName, WCSP* wcsp)
             if (BAC) {
                 wcsp->postSpecialDisjunction(i, j, duration[i] + delay[i * size + j], duration[j] + delay[j * size + i], latest[i] + 1, latest[j] + 1, revenue[i], revenue[j]);
             } else {
-                vector<Cost> costs((latest[i] + 2) * (latest[j] + 2), 0);
+                vector<Cost> costs(((size_t)latest[i] + 2) * ((size_t)latest[j] + 2), 0);
                 for (int a = earliest[i]; a <= latest[i] + 1; a++) {
                     for (int b = earliest[j]; b <= latest[j] + 1; b++) {
                         if (a > latest[i] && b > latest[j])

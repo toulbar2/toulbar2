@@ -1,4 +1,5 @@
-
+#ifndef INCOP_UTIL_H_
+#define INCOP_UTIL_H
 
 //---------------------------------------------------------------------------------------------
 //    trombe : les stats sous forme de classe (... enfin une struct quoi !)
@@ -66,3 +67,5 @@ void ecriture_meilleure_valeur(string& method, Long valeur, Long seuil, int nbmo
 void ecriture_fin_lsrun(double avgnhtries, double avgsqnhtries);
 void ecriture_stat_essai();
 void ofile_name(char* filename, int argc, char** argv);
+
+#endif /* INCOP_UTIL_H_ */

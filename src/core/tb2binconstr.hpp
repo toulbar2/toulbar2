@@ -371,8 +371,8 @@ public:
             supportY.resize(sizeY);
         if (max(sizeX, sizeY) > trwsM.size())
             trwsM.resize(max(sizeX, sizeY), MIN_COST);
-        if (sizeX * sizeY > costs.size())
-            costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
+        if ((unsigned long)sizeX * (unsigned long)sizeY > costs.size())
+            costs.resize((size_t)sizeX * (size_t)sizeY, StoreCost(MIN_COST));
         linkX->removed = true;
         linkY->removed = true;
         linkX->content.constr = this;

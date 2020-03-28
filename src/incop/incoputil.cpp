@@ -54,13 +54,15 @@ Stat_GWW::Stat_GWW(int number_problems, int number_tries)
     current_pb = 0;
 }
 
-Stat_GWW::~Stat_GWW() {
-  delete[] trouve;
-  delete[] nb_moves;
-  delete[] nb_moves_up;
-  delete[] nb_moves_down;
-  delete[] total_problem_time;
-  delete[] execution_time_try;
+Stat_GWW::~Stat_GWW()
+{
+    delete[] trouve;
+    delete[] cost_try;
+    delete[] nb_moves;
+    delete[] nb_moves_up;
+    delete[] nb_moves_down;
+    delete[] total_problem_time;
+    delete[] execution_time_try;
 }
 
 void Stat_GWW::init_pb(int t)

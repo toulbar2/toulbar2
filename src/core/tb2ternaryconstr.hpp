@@ -1100,8 +1100,8 @@ public:
             supportY.resize(sizeY);
         if (sizeZ > supportZ.size())
             supportZ.resize(sizeZ);
-        if (sizeX * sizeY * sizeZ > costs.size())
-            costs.resize(sizeX * sizeY * sizeZ, StoreCost(MIN_COST));
+        if ((unsigned long)sizeX * (unsigned long)sizeY * (unsigned long)sizeZ > costs.size())
+            costs.resize((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
         linkX->removed = true;
         linkY->removed = true;
         linkZ->removed = true;
