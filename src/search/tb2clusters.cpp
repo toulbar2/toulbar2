@@ -37,19 +37,17 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
 {
-    Char* tbuf = new Char[arity_in + 1];
-    tbuf[arity_in] = '\0';
+    Tuple tbuf(arity_in,0);
+
     for (int i = 0; i < arity_in; i++) {
-        tbuf[i] = CHAR_FIRST;
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         vars.insert(scope_in[i]->wcspIndex);
-        if (domsize + CHAR_FIRST > (unsigned int)std::numeric_limits<Char>::max()) {
-            cerr << "Nary constraints overflow. Try undefine NARYCHAR in makefile." << endl;
+        if (domsize > (unsigned int)std::numeric_limits<tValue>::max()) {
+            cerr << "Nary constraints overflow. Extend tValue type range." << endl;
             exit(EXIT_FAILURE);
         }
     }
-    t = String(tbuf);
-    delete[] tbuf;
+    t = Tuple(tbuf);
 
     linkSep.content = this;
 
@@ -89,20 +87,15 @@ void Separator::setup(Cluster* cluster_in)
     if (!nvars)
         return;
 
-    Char* sbuf = new Char[cluster->getNbVars() + 1];
-    int i = 0;
+    Tuple sbuf(cluster->getNbVars(),0);
     int nproper = 0;
     it = cluster->beginVars();
     while (it != cluster->endVars()) {
         if (!cluster->isSepVar(*it))
             nproper++;
-        sbuf[i] = CHAR_FIRST;
         ++it;
-        i++;
     }
-    sbuf[nproper] = '\0';
-    s = String(sbuf);
-    delete[] sbuf;
+    s = Tuple(sbuf);
 }
 
 void Separator::assign(int varIndex)
@@ -195,7 +188,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
         Value val = wcsp->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -203,11 +196,11 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     if (ToulBar2::verbose >= 1)
         cout << ")";
     assert(clb < cub || clb + deltares >= MIN_COST);
-    //assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
+    //assert(nogoods.find(Tuple(t)) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
     TNoGoods::iterator itng = nogoods.find(t);
     if (ToulBar2::verbose >= 3) {
         cout << " <C" << cluster->getId() << ",";
-        Cout << t;
+        cout << t;
         cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
     }
     if (open) {
@@ -253,7 +246,7 @@ void Separator::setSg(Cost c, BigInteger nb)
         Value val = wcsp->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -309,7 +302,7 @@ bool Separator::get(Cost& clb, Cost& cub, Solver::OpenList** open)
         Value val = cluster->getWCSP()->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         clb -= delta[i][val]; // delta structure
         cub -= delta[i][val]; // delta structure
         ++it;
@@ -359,7 +352,7 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
         Value val = cluster->getWCSP()->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         res -= delta[i][val]; // delta structure
         ++it;
         i++;
@@ -382,13 +375,13 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
     }
 }
 
-bool Separator::solGet(TAssign& a, String& sol)
+bool Separator::solGet(TAssign& a, Tuple& sol)
 {
     int i = 0;
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         Value val = a[*it];
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         ++it;
         i++;
     }
@@ -400,9 +393,9 @@ bool Separator::solGet(TAssign& a, String& sol)
 
         if (ToulBar2::verbose >= 1) {
             cout << "asking  solution  sep:";
-            Cout << t;
+            cout << t;
             cout << "  cost: " << p.first << endl;
-            Cout << "  sol: " << sol << endl;
+            cout << "  sol: " << sol << endl;
         }
 
         return true;
@@ -420,7 +413,7 @@ void Separator::solRec(Cost ub)
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
         Value val = wcsp->getValue(*it);
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         deltares += delta[i][val];
         ++it;
         i++;
@@ -441,7 +434,7 @@ void Separator::solRec(Cost ub)
         assert(wcsp->assigned(*it));
         if (!cluster->isSepVar(*it)) {
             Value val = wcsp->getValue(*it);
-            s[i] = val + CHAR_FIRST;
+            s[i] = val;
             i++;
         }
         ++it;
@@ -452,7 +445,7 @@ void Separator::solRec(Cost ub)
     if (ToulBar2::verbose >= 1) {
         cout << "recording solution  "
              << " cost: " << ub << " + delta: " << deltares;
-        Cout << " sol: " << s << " sep: " << t << endl;
+        cout << " sol: " << s << " sep: " << t << endl;
     }
 }
 
@@ -495,7 +488,7 @@ void Separator::print(ostream& os)
             TPairNG p = it->second;
             os << "<";
             for (unsigned int i = 0; i < it->first.size(); i++) {
-                os << it->first[i] - CHAR_FIRST;
+                os << it->first[i];
                 if (i < it->first.size() - 1)
                     os << " ";
             }
@@ -746,7 +739,7 @@ void Cluster::getSolution(TAssign& sol)
             }
         }
     }
-    String s;
+    Tuple s;
     if (sep) {
 #ifndef NDEBUG
         bool found = sep->solGet(sol, s);
@@ -758,7 +751,7 @@ void Cluster::getSolution(TAssign& sol)
         it = beginVars();
         while (it != endVars()) {
             if (!isSepVar(*it)) {
-                sol[*it] = ((EnumeratedVariable*)wcsp->getVar(*it))->toValue(s[i] - CHAR_FIRST);
+                sol[*it] = ((EnumeratedVariable*)wcsp->getVar(*it))->toValue(s[i]);
                 //				cout << *it << " := " << sol[*it] << endl;
                 if (!ToulBar2::verifyOpt)
                     wcsp->setBestValue(*it, sol[*it]);

@@ -199,7 +199,7 @@ public:
     TreeConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~TreeConstraint();
 
-    Cost eval(const String& s);
+    Cost eval(const Tuple& s);
 
     void read(istream& file, bool mult = true) {} //No parameter needed
     void initMemoization();

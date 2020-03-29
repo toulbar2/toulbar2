@@ -8,13 +8,13 @@
  * - ::TProb : probability value (exact type depends on compilation flag)
  * - ::TLogProb : log probability value (exact type depends on compilation flag)
  * - ::Double : large float (long double)
- * - ::String : string with extended character size (wide string) to encode tuples
+ * - ::tValue : a short Value type for tuples
+ * - ::Tuple : vector of tValues to encode tuples
  *
  * \note Compilation flag for Cost is: \c INT_COST (int), \c LONGLONG_COST (long long), or \c PARETOPAIR_COST (see ::ParetoPair)
  * \warning \c PARETOPAIR_COST is fragile.
  * \note Compilation flag for TProb is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for T(Log)Prob is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
- * \note Compilation flag for String is: \c WIDE_STRING or nothing (usual C++ string)
  */
 
 #ifndef TB2TYPES_HPP_
@@ -26,9 +26,6 @@
 
 //#define DOUBLE_PROB
 //#define LONGDOUBLE_PROB
-
-// uncomment if using large enumerated domains with BTD or in nary cost functions
-//#define WIDE_STRING
 
 #include "utils/tb2utils.hpp"
 //Must be included after tb2utils.hpp
@@ -51,6 +48,9 @@ const Value MIN_VAL = -(INT_MAX / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
+
+typedef short int tValue;
+typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
@@ -251,12 +251,6 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 
 typedef map<int, int> TSCOPE;
 typedef map<int, Value> TAssign;
-
-#ifdef NARYCHAR
-#define CHAR_FIRST '0'
-#else
-#define CHAR_FIRST 1
-#endif
 
 typedef unsigned int uint;
 

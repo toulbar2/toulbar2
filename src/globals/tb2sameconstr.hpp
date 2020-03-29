@@ -25,7 +25,7 @@ public:
 
     ~SameConstraint() {}
 
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
     /*void addToGroup(int gp, Variable *var) {
 			for (int i=0;i<arity_;i++) {
 				if (getVar(i) == var) {

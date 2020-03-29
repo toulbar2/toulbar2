@@ -1207,9 +1207,8 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
-    Char buf[MAX_ARITY];
-    String tup;
-    map<String, Cost> costFunction;
+    Tuple tup(scope.size());
+    map<Tuple, Cost> costFunction;
     unsigned int arity = scope.size();
     unsigned long int nbTuples = 0;
     int scopeArray[arity];
@@ -1224,13 +1223,11 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         while (!isCBrace(token)) {
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
-                buf[scopeIdx] = '\0';
-                tup = buf;
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
                 if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
 
-                if (not costFunction.insert(pair<String, Cost>(tup, cost)).second) {
+                if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
                     cerr << "Error: tuple on scope [ ";
                     for (int i : scope)
                         cout << i << " ";
@@ -1243,9 +1240,8 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             } else {
                 unsigned int valueIdx = getValueIdx(scope[scopeIdx], token, lineNumber);
                 assert(valueIdx >= 0 && valueIdx < wcsp->getDomainInitSize(scope[scopeIdx]));
-                buf[scopeIdx] = valueIdx + CHAR_FIRST; // fill String
+                tup[scopeIdx] = valueIdx; // fill Tuple
             }
-
             scopeIdx = ((scopeIdx == arity) ? 0 : scopeIdx + 1);
             std::tie(lineNumber, token) = this->getNextToken();
         }
@@ -1834,7 +1830,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
-            if (cost < 0) {
+            if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(EXIT_FAILURE);
             }
@@ -1871,7 +1867,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
-            if (cost < 0) {
+            if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(EXIT_FAILURE);
             }
@@ -2145,8 +2141,8 @@ Cost WCSP::read_wcsp(const char* fileName)
     int maxarity = 0;
     vector<int> sharedSize;
     vector<vector<Cost>> sharedCosts;
-    vector<vector<String>> sharedTuples;
-    vector<String> emptyTuples;
+    vector<vector<Tuple>> sharedTuples;
+    vector<Tuple> emptyTuples;
 
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
@@ -2285,21 +2281,18 @@ Cost WCSP::read_wcsp(const char* fileName)
                     int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
                     NaryConstraint* nary = (NaryConstraint*)constrs[naryIndex];
 
-                    Char buf[MAX_ARITY];
-                    vector<String> tuples;
+                    Tuple tup(arity,0);
+                    vector<Tuple> tuples;
                     vector<Cost> costs;
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
-                                file >> j;
-                                buf[i] = j + CHAR_FIRST;
+                                file >> tup[i];
                             }
-                            buf[i] = '\0';
                             file >> cost;
                             Cost tmpcost = MULT(cost, K);
                             if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                                 tmpcost *= MEDIUM_COST;
-                            String tup = buf;
                             if (shared) {
                                 tuples.push_back(tup);
                                 costs.push_back(tmpcost);
@@ -2879,7 +2872,7 @@ void WCSP::read_uai2008(const char* fileName)
     TernaryConstraint* tctr = NULL;
     BinaryConstraint* bctr = NULL;
     NaryConstraint* nctr = NULL;
-    String s;
+    Tuple s;
 
     ToulBar2::markov_log = 0; // for the MARKOV Case
 
@@ -3271,7 +3264,7 @@ void WCSP::read_wcnf(const char* fileName)
     for (int ic = 0; ic < nbclauses; ic++) {
 
         int scopeIndex[MAX_ARITY];
-        Char buf[MAX_ARITY];
+        Tuple tup;
         int arity = 0;
         if (ToulBar2::verbose >= 3)
             cout << "read clause on ";
@@ -3285,7 +3278,7 @@ void WCSP::read_wcnf(const char* fileName)
             file >> j;
             if (j != 0 && !tautology) {
                 scopeIndex[arity] = abs(j) - 1;
-                buf[arity] = ((j > 0) ? 0 : 1) + CHAR_FIRST;
+                tup.push_back((j > 0) ? 0 : 1);
                 int k = 0;
                 while (k < arity) {
                     if (scopeIndex[k] == scopeIndex[arity]) {
@@ -3294,7 +3287,7 @@ void WCSP::read_wcnf(const char* fileName)
                     k++;
                 }
                 if (k < arity) {
-                    if (buf[k] != buf[arity]) {
+                    if (tup[k] != tup[arity]) {
                         tautology = true;
                         if (ToulBar2::verbose >= 3)
                             cout << j << " is a tautology! skipped.";
@@ -3310,12 +3303,11 @@ void WCSP::read_wcnf(const char* fileName)
             cout << endl;
         if (tautology)
             continue;
-        buf[arity] = '\0';
+
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
             int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 1);
-            String tup = buf;
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
         } else if (arity == 3) {
@@ -3327,7 +3319,7 @@ void WCSP::read_wcnf(const char* fileName)
                     }
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 4 + (buf[1] - CHAR_FIRST) * 2 + (buf[2] - CHAR_FIRST)] = MULT(cost, K);
+            costs[(tup[0]) * 4 + (tup[1]) * 2 + (tup[2])] = MULT(cost, K);
             postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
         } else if (arity == 2) {
             vector<Cost> costs;
@@ -3336,13 +3328,13 @@ void WCSP::read_wcnf(const char* fileName)
                     costs.push_back(MIN_COST);
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 2 + (buf[1] - CHAR_FIRST)] = MULT(cost, K);
+            costs[(tup[0]) * 2 + (tup[1])] = MULT(cost, K);
             postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
         } else if (arity == 1) {
             EnumeratedVariable* x = (EnumeratedVariable*)vars[scopeIndex[0]];
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = x;
-            if ((buf[0] - CHAR_FIRST) == 0) {
+            if ((tup[0]) == 0) {
                 unaryconstr.costs.push_back(MULT(cost, K));
                 unaryconstr.costs.push_back(MIN_COST);
             } else {

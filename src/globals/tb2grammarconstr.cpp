@@ -169,12 +169,12 @@ Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost GrammarConstraint::eval(const String& s)
+Cost GrammarConstraint::eval(const Tuple& s)
 {
     int n = arity();
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
-            u[i][j] = unary(cfg.toValue(j), i, s[i] - CHAR_FIRST);
+            u[i][j] = unary(cfg.toValue(j), i, s[i]);
         }
     }
 

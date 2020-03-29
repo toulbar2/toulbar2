@@ -10,7 +10,7 @@
 // warning! we assume binary variables
 class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
-    String tuple; // forbidden assignment corresponding to the negation of the clause
+    Tuple tuple; // forbidden assignment corresponding to the negation of the clause
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
@@ -19,8 +19,8 @@ class WeightedClause : public AbstractNaryConstraint {
     bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
     bool done; // should be true after one call to next
 
-    Value getTuple(int i) { return scope[i]->toValue(tuple[i] - CHAR_FIRST); }
-    Value getClause(int i) { return scope[i]->toValue(!(tuple[i] - CHAR_FIRST)); }
+    Value getTuple(int i) { return scope[i]->toValue(tuple[i]); }
+    Value getClause(int i) { return scope[i]->toValue(!(tuple[i])); }
     void projectLB(Cost c)
     {
         lb += c;
@@ -77,7 +77,7 @@ class WeightedClause : public AbstractNaryConstraint {
 
 public:
     // warning! give the negation of the clause as input
-    WeightedClause(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in = MIN_COST, String tuple_in = String())
+    WeightedClause(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in = MIN_COST, Tuple tuple_in = Tuple())
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , cost(cost_in)
         , tuple(tuple_in)
@@ -88,7 +88,7 @@ public:
         , done(false)
     {
         if (tuple_in.empty() && arity_in > 0)
-            tuple = String(arity_in, CHAR_FIRST);
+            tuple = Tuple(arity_in, 0);
         deltaCosts = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
         for (int i = 0; i < arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize() == 2);
@@ -98,7 +98,7 @@ public:
 
     virtual ~WeightedClause() {}
 
-    void setTuple(const String& tin, Cost c) FINAL
+    void setTuple(const Tuple& tin, Cost c) FINAL
     {
         cost = c;
         tuple = tin;
@@ -162,7 +162,7 @@ public:
         return true;
     }
 
-    Cost eval(const String& s)
+    Cost eval(const Tuple& s)
     {
         if (lb==MIN_COST && tuple[support] != s[support]) {
             assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
@@ -182,10 +182,10 @@ public:
             return res;
         }
     }
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
     template <class T>
-    Cost evalsubstrAny(const String& s, T* ctr)
+    Cost evalsubstrAny(const Tuple& s, T* ctr)
     {
         int count = 0;
 
@@ -210,7 +210,7 @@ public:
     {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+            evalTuple[i] = var->toIndex(var->getValue());
         }
         return eval(evalTuple);
     }
@@ -233,7 +233,7 @@ public:
         if (!zeros)
             firstlex();
     }
-    bool next(String& t, Cost& c)
+    bool next(Tuple& t, Cost& c)
     {
         if (!zeros)
             return nextlex(t, c);
@@ -308,7 +308,7 @@ public:
 
     bool verify()
     {
-        String t;
+        Tuple t;
         Cost c;
         firstlex();
         while (nextlex(t, c)) {
@@ -415,17 +415,17 @@ public:
             if (maxdelta == MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
-                    os << scope[i]->toValue(tuple[i] - CHAR_FIRST) << " ";
+                    os << scope[i]->toValue(tuple[i]) << " ";
                 }
                 os << cost << endl;
             } else {
                 os << " " << 0 << " " << getDomainSizeProduct() << endl;
-                String t;
+                Tuple t;
                 Cost c;
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << scope[i]->toValue(t[i] - CHAR_FIRST) << " ";
+                        os << scope[i]->toValue(t[i]) << " ";
                     }
                     os << c << endl;
                 }
@@ -439,18 +439,18 @@ public:
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
                     if (scope[i]->unassigned())
-                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i] - CHAR_FIRST)) << " ";
+                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i])) << " ";
                 }
                 os << min(wcsp->getUb(), cost) << endl;
             } else {
                 os << " " << 0 << " " << getDomainSizeProduct() << endl;
-                String t;
+                Tuple t;
                 Cost c;
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
                         if (scope[i]->unassigned())
-                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i] - CHAR_FIRST)) << " ";
+                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i])) << " ";
                     }
                     os << min(wcsp->getUb(), c) << endl;
                 }

@@ -388,7 +388,7 @@ public:
                 EnumeratedVariable** scopeVar = new EnumeratedVariable*[arity];
                 int* scopeIndex = new int[arity];
                 int* values = new int[arity];
-                String strvalues(arity, '0');
+                Tuple strvalues(arity, 0);
                 map<int, int> scopeOrder;
 
                 int index = 0;
@@ -438,7 +438,7 @@ public:
                             int* t = *itl;
                             for (int i = 0; i < r->arity; i++) {
                                 int pos = scopeOrder[scopeIndex[i]];
-                                strvalues[i] = CHAR_FIRST + DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
+                                strvalues[i] = DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
                             }
                             if (r->type == REL_SUPPORT) {
                                 wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MIN_COST);

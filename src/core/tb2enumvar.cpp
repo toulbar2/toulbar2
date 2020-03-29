@@ -1222,9 +1222,9 @@ void EnumeratedVariable::eliminate()
     assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster(cluster)->isActive());
 
     if (ToulBar2::elimDegree_preprocessing_ >= 0 && (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) || getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
-        if (ToulBar2::elimSpaceMaxMB && (Double)wcsp->elimSpace + (sizeof(Char) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() > (Double)ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
+        if (ToulBar2::elimSpaceMaxMB && (Double)wcsp->elimSpace + (sizeof(tValue) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() > (Double)ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
             if (ToulBar2::verbose >= 1)
-                cout << "Generic variable elimination of " << getName() << " stopped (" << (Double)wcsp->elimSpace / 1024. / 1024. << " + " << (Double)(sizeof(Char) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
+                cout << "Generic variable elimination of " << getName() << " stopped (" << (Double)wcsp->elimSpace / 1024. / 1024. << " + " << (Double)(sizeof(tValue) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;
             return;
         }
         wcsp->variableElimination(this);
@@ -1492,15 +1492,15 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             assert(x == u || x == v);
             vector<Cost> costs((size_t)u->getDomainInitSize() * v->getDomainInitSize(), MIN_COST);
             bool empty = true;
-            String oldtuple(ctr->arity(), CHAR_FIRST);
+            Tuple oldtuple(ctr->arity(), 0);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
                     for (int i = 0; i < ctr->arity(); i++) {
                         if (ctr->getVar(i) == this) {
-                            oldtuple[i] = toIndex(functional[(x == u) ? (*iterU) : (*iterV)]) + CHAR_FIRST;
+                            oldtuple[i] = toIndex(functional[(x == u) ? (*iterU) : (*iterV)]);
                         } else {
                             assert(ctr->getVar(i) == u || ctr->getVar(i) == v);
-                            oldtuple[i] = ((ctr->getVar(i) == u) ? (u->toIndex(*iterU)) : (v->toIndex(*iterV))) + CHAR_FIRST;
+                            oldtuple[i] = ((ctr->getVar(i) == u) ? (u->toIndex(*iterU)) : (v->toIndex(*iterV)));
                         }
                     }
                     Cost cost = ctr->evalsubstr(oldtuple, ctr);
@@ -1525,16 +1525,16 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             assert(x == u || x == v || x == w);
             vector<Cost> costs((size_t)u->getDomainInitSize() * (size_t)v->getDomainInitSize() * (size_t)w->getDomainInitSize(), MIN_COST);
             bool empty = true;
-            String oldtuple(ctr->arity(), CHAR_FIRST);
+            Tuple oldtuple(ctr->arity(), 0);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
                     for (EnumeratedVariable::iterator iterW = w->begin(); iterW != w->end(); ++iterW) {
                         for (int i = 0; i < ctr->arity(); i++) {
                             if (ctr->getVar(i) == this) {
-                                oldtuple[i] = toIndex(functional[(x == u) ? (*iterU) : ((x == v) ? (*iterV) : (*iterW))]) + CHAR_FIRST;
+                                oldtuple[i] = toIndex(functional[(x == u) ? (*iterU) : ((x == v) ? (*iterV) : (*iterW))]);
                             } else {
                                 assert(ctr->getVar(i) == u || ctr->getVar(i) == v || ctr->getVar(i) == w);
-                                oldtuple[i] = ((ctr->getVar(i) == u) ? (u->toIndex(*iterU)) : ((ctr->getVar(i) == v) ? (v->toIndex(*iterV)) : (w->toIndex(*iterW)))) + CHAR_FIRST;
+                                oldtuple[i] = ((ctr->getVar(i) == u) ? (u->toIndex(*iterU)) : ((ctr->getVar(i) == v) ? (v->toIndex(*iterV)) : (w->toIndex(*iterW))));
                             }
                         }
                         Cost cost = ctr->evalsubstr(oldtuple, ctr);
@@ -1554,19 +1554,19 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             //	  NaryConstraint *newctrok = (NaryConstraint*) wcsp->getCtr(res);
             //	  assert(newctrok->arity() == scopeSize);
             //	  bool empty = true;
-            //	  String oldtuple(ctr->arity(),CHAR_FIRST);
+            //	  Tuple oldtuple(ctr->arity(),0);
             //	  EnumeratedVariable* scopeNewCtr[newctrok->arity()];
             //	  for(int i=0;i<newctrok->arity();i++) {
             //		scopeNewCtr[i] = (EnumeratedVariable*) newctrok->getVar(i);
             //	  }
-            //	  String tuple;
+            //	  Tuple tuple;
             //	  Cost cost;
             //	  newctrok->firstlex();
             //	  while (newctrok->nextlex(tuple,cost)) {
             //		for(int i=0;i<ctr->arity();i++) {
             //		  if (ctr->getVar(i) == this) {
             //			assert(newctrok->getIndex(x)>=0);
-            //			oldtuple[i] = toIndex(functional[x->toValue(tuple[newctrok->getIndex(x)] - CHAR_FIRST)]) + CHAR_FIRST;
+            //			oldtuple[i] = toIndex(functional[x->toValue(tuple[newctrok->getIndex(x)])]);
             //		  } else {
             //			assert(newctrok->getIndex(ctr->getVar(i))>=0);
             //			oldtuple[i] = tuple[newctrok->getIndex(ctr->getVar(i))];
@@ -1587,7 +1587,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             Constraint* newctrctr = wcsp->getCtr(res);
             assert(newctrctr->arity() == scopeSize);
             AbstractNaryConstraint* newctr = (AbstractNaryConstraint*)newctrctr;
-            String newtuple(scopeSize, CHAR_FIRST);
+            Tuple newtuple(scopeSize, 0);
             EnumeratedVariable* scopeNewCtr[scopeSize];
             for (int i = 0; i < scopeSize; i++) {
                 scopeNewCtr[i] = (EnumeratedVariable*)newctr->getVar(i);
@@ -1597,7 +1597,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             int posold = oldctr->getIndex(this);
             assert(posold >= 0);
             int posxold = oldctr->getIndex(x); // check if x is already in the scope of the old cost function
-            String tuple;
+            Tuple tuple;
             Cost cost;
             oldctr->first();
             while (oldctr->next(tuple, cost)) {
@@ -1609,13 +1609,13 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
                         }
                     }
                     if (posxold >= 0) {
-                        if (functional[x->toValue(tuple[posxold] - CHAR_FIRST)] == toValue(tuple[posold] - CHAR_FIRST)) {
+                        if (functional[x->toValue(tuple[posxold])] == toValue(tuple[posold])) {
                             newctr->setTuple(newtuple, cost);
                         }
                     } else {
                         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
-                            if (functional[*iterX] == toValue(tuple[posold] - CHAR_FIRST)) {
-                                newtuple[posx] = x->toIndex(*iterX) + CHAR_FIRST;
+                            if (functional[*iterX] == toValue(tuple[posold])) {
+                                newtuple[posx] = x->toIndex(*iterX);
                                 newctr->setTuple(newtuple, cost);
                             }
                         }
@@ -1631,7 +1631,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             //				  ToulBar2::verbose = 7;
             //				  cout << "BUG: " << cost << " " << newcost << " (" << defcost << ")" << endl;
             //				  for(unsigned int i=0;i<tuple.size();i++) {
-            //					  cout << tuple[i] - CHAR_FIRST;
+            //					  cout << tuple[i];
             //				  }
             //				  cout << endl;
             //				  cout << *oldctr << endl;

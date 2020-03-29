@@ -85,13 +85,13 @@ void MaxConstraint::initMemoization()
     best.resize(n);
 }
 
-Cost MaxConstraint::evalOriginal(const String& s)
+Cost MaxConstraint::evalOriginal(const Tuple& s)
 {
     Cost largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {
-        if (largeComp < weightMap[i][s[i] - CHAR_FIRST])
-            largeComp = weightMap[i][s[i] - CHAR_FIRST];
+        if (largeComp < weightMap[i][s[i]])
+            largeComp = weightMap[i][s[i]];
     }
     return largeComp;
 }

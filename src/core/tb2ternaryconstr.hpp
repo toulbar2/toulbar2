@@ -939,19 +939,18 @@ public:
         zvar = z;
     }
 
-    bool next(String& t, Cost& c)
+    bool next(Tuple& t, Cost& c)
     {
-        Char tch[4];
+        Tuple tch(3,0);
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
-            tch[0] = ix + CHAR_FIRST;
+            tch[0] = ix;
             if (itvy != yvar->end()) {
                 unsigned int iy = yvar->toIndex(*itvy);
-                tch[1] = iy + CHAR_FIRST;
+                tch[1] = iy;
                 if (itvz != zvar->end()) {
                     unsigned int iz = zvar->toIndex(*itvz);
-                    tch[2] = iz + CHAR_FIRST;
-                    tch[3] = '\0';
+                    tch[2] = iz;
                     t = tch;
                     c = getCost(xvar, yvar, zvar, *itvx, *itvy, *itvz);
                     ++itvz;
@@ -1027,13 +1026,13 @@ public:
     void separate(EnumeratedVariable* a, EnumeratedVariable* c);
 
     void firstlex() { first(); }
-    bool nextlex(String& t, Cost& c) { return next(t, c); }
+    bool nextlex(Tuple& t, Cost& c) { return next(t, c); }
 
-    void setTuple(const String& t, Cost c) FINAL
+    void setTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
-        Value v2 = z->toValue(t[2] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
+        Value v2 = z->toValue(t[2]);
         setcost(x, y, z, v0, v1, v2, c);
     }
 
@@ -1051,15 +1050,15 @@ public:
     //        addCost( v0, v1, v2, c );
     //    }
 
-    void addtoTuple(const String& t, Cost c) FINAL
+    void addtoTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
-        Value v2 = z->toValue(t[2] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
+        Value v2 = z->toValue(t[2]);
         addCost(v0, v1, v2, c);
     }
 
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL
     {
         Value vals[3];
         int count = 0;
@@ -1068,7 +1067,7 @@ public:
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             int ind = ctr->getIndex(var);
             if (ind >= 0) {
-                vals[i] = var->toValue(s[ind] - CHAR_FIRST);
+                vals[i] = var->toValue(s[ind]);
                 count++;
             }
         }
@@ -1077,7 +1076,7 @@ public:
         else
             return MIN_COST;
     }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
 
     void fillElimConstr(EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Constraint* from1)
     {

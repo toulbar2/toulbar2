@@ -248,7 +248,7 @@ public:
         }
     }
 
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL
     {
         Value vals[2];
         int count = 0;
@@ -257,7 +257,7 @@ public:
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             int ind = ctr->getIndex(var);
             if (ind >= 0) {
-                vals[i] = var->toValue(s[ind] - CHAR_FIRST);
+                vals[i] = var->toValue(s[ind]);
                 count++;
             }
         }
@@ -266,7 +266,7 @@ public:
         else
             return MIN_COST;
     }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
 
     void resetSupports()
     {
@@ -303,16 +303,15 @@ public:
         yvar = y;
     }
 
-    bool next(String& t, Cost& c)
+    bool next(Tuple& t, Cost& c)
     {
-        Char tch[3];
+        Tuple tch(2,0);
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
-            tch[0] = ix + CHAR_FIRST;
+            tch[0] = ix;
             if (itvy != yvar->end()) {
                 unsigned int iy = yvar->toIndex(*itvy);
-                tch[1] = iy + CHAR_FIRST;
-                tch[2] = '\0';
+                tch[1] = iy;
                 t = tch;
                 c = getCost(xvar, yvar, *itvx, *itvy);
                 ++itvy;
@@ -327,19 +326,19 @@ public:
     }
 
     void firstlex() { first(); }
-    bool nextlex(String& t, Cost& c) { return next(t, c); }
+    bool nextlex(Tuple& t, Cost& c) { return next(t, c); }
 
-    void setTuple(const String& t, Cost c) FINAL
+    void setTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
         setcost(v0, v1, c);
     }
 
-    void addtoTuple(const String& t, Cost c) FINAL
+    void addtoTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
         addcost(v0, v1, c);
     }
 

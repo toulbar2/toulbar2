@@ -70,7 +70,7 @@ protected:
     virtual void augmentStructure(MIP& mip, Cost& cost, int varindex, map<Value, Cost>& delta);
 
     // compute the cost according to the original cost struture
-    virtual Cost evalOriginal(const String& s) { return MIN_COST; }
+    virtual Cost evalOriginal(const Tuple& s) { return MIN_COST; }
     virtual Cost getMinCost()
     {
         return cost;

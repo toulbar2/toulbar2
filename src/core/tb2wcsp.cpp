@@ -898,19 +898,19 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
     Constraint* ctr = getCtr(ctrindex);
     //    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
     assert(arity == ctr->arity());
-    String s(arity, CHAR_FIRST);
+    Tuple s(arity, 0);
     for (int i = 0; i < arity; i++)
-        s[i] = ((EnumeratedVariable*)ctr->getVar(i))->toIndex(tuple[i]) + CHAR_FIRST;
+        s[i] = ((EnumeratedVariable*)ctr->getVar(i))->toIndex(tuple[i]);
     ctr->setTuple(s, cost);
 }
 
 /// \brief set one tuple with a specific cost for global cost function in extension
 /// \param ctrindex index of cost function as returned by WCSP::postNaryConstraintBegin
-/// \param tuple String encoding of values (indexes plus CHAR_FIRST) assigned to variables ordered by following the original scope order
+/// \param tuple Tuple encoding of values assigned to variables ordered by following the original scope order
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
 /// \warning string encoding of tuples is for advanced users only!
-void WCSP::postNaryConstraintTuple(int ctrindex, const String& tuple, Cost cost)
+void WCSP::postNaryConstraintTuple(int ctrindex, const Tuple& tuple, Cost cost)
 {
     if (ToulBar2::vac)
         histogram(cost);
@@ -1899,7 +1899,7 @@ void WCSP::preprocessing()
     if (ToulBar2::elimDegree_preprocessing <= -3) {
         int deg = medianDegree();
         Double domsize = medianDomainSize();
-        Double size = (Double)numberOfUnassignedVariables() * (sizeof(Char) * deg + sizeof(Cost)) * Pow(domsize, deg + 1);
+        Double size = (Double)numberOfUnassignedVariables() * (sizeof(tValue) * deg + sizeof(Cost)) * Pow(domsize, deg + 1);
         if (ToulBar2::debug >= 2)
             cout << "MAX ESTIMATED ELIM SIZE: " << size << endl;
         assert(ToulBar2::elimSpaceMaxMB > 0);
@@ -3433,7 +3433,7 @@ void WCSP::restoreSolution(Cluster* c)
         Constraint* ctr = ei.ctr;
         Value vy = -1;
         Value vz = -1;
-        String tctr;
+        Tuple tctr;
         Cost cctr;
         int xctrindex = -1;
         if (y)
@@ -3472,7 +3472,7 @@ void WCSP::restoreSolution(Cluster* c)
             if (xyz)
                 cxyz = xyz->getCost(x, y, z, vx, vy, vz);
             if (ctr) {
-                tctr[xctrindex] = vxi + CHAR_FIRST;
+                tctr[xctrindex] = vxi;
                 cctr = ctr->evalsubstr(tctr, ctr);
             }
             Cost loc = x->getCost(vx) + cxy + cxz + cxyz + cctr;
@@ -3678,7 +3678,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
 
     Cost Top = getUb();
     unsigned int vxi, vyi, vzi;
-    String tuple, tuple1, tuple2;
+    Tuple tuple, tuple1, tuple2;
     Cost cost, cost1, cost2;
     int ctrIndex = -INT_MAX;
     Constraint* ctr = NULL;
@@ -3714,7 +3714,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     } else if (arityU == 3) {
         EnumeratedVariable* z = scopeU[2];
         EnumeratedVariable* scopeTernary[3] = { x, y, z };
-        String t;
+        Tuple t;
         t.resize(3);
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
             for (vyi = 0; vyi < y->getDomainInitSize(); vyi++)
@@ -3737,9 +3737,9 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                                 c = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
                             } else {
                                 assert(ctr2->isNary());
-                                t[0] = vxi + CHAR_FIRST;
-                                t[1] = vyi + CHAR_FIRST;
-                                t[2] = vzi + CHAR_FIRST;
+                                t[0] = vxi;
+                                t[1] = vyi;
+                                t[2] = vzi;
                                 c = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
                             }
                             costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy) + c;
@@ -3752,18 +3752,18 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                                 c1 = ((TernaryConstraint*)ctr1)->getCost(x, y, z, vx, vy, vz);
                             } else {
                                 assert(ctr1->isNary());
-                                t[0] = vxi + CHAR_FIRST;
-                                t[1] = vyi + CHAR_FIRST;
-                                t[2] = vzi + CHAR_FIRST;
+                                t[0] = vxi;
+                                t[1] = vyi;
+                                t[2] = vzi;
                                 c1 = ((NaryConstraint*)ctr1)->eval(t, scopeTernary);
                             }
                             if (ctr2->isTernary()) {
                                 c2 = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
                             } else {
                                 assert(ctr2->isNary());
-                                t[0] = vxi + CHAR_FIRST;
-                                t[1] = vyi + CHAR_FIRST;
-                                t[2] = vzi + CHAR_FIRST;
+                                t[0] = vxi;
+                                t[1] = vyi;
+                                t[2] = vzi;
                                 c2 = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
                             }
                             costsum += c1 + c2;
@@ -3859,7 +3859,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
     Constraint* ctr = NULL;
     Cost Top = MAX_COST; // getUb();
     int ctrIndex;
-    Char t[arity + 1];
+    Tuple t(arity,0);
     vector<Cost> costs;
     Cost negcost = 0;
 
@@ -3869,7 +3869,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
         if (truearity == 4 && arity >= 5) {
             for (i = 0; i < arity; i++) {
                 if (ctr_inout->getVar(i)->assigned())
-                    t[ctr_inout->getIndex(ctr_inout->getVar(i))] = ((EnumeratedVariable*)ctr_inout->getVar(i))->toIndex(ctr_inout->getVar(i)->getValue()) + CHAR_FIRST;
+                    t[ctr_inout->getIndex(ctr_inout->getVar(i))] = ((EnumeratedVariable*)ctr_inout->getVar(i))->toIndex(ctr_inout->getVar(i)->getValue());
             }
         }
         for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
@@ -3880,14 +3880,13 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                     Value v2 = evars[2]->toValue(vzi);
                     Cost mincost = Top;
                     if (evars[0]->canbe(v0) && evars[1]->canbe(v1) && evars[2]->canbe(v2)) {
-                        t[ctr_inout->getIndex(evars[0])] = vxi + CHAR_FIRST;
-                        t[ctr_inout->getIndex(evars[1])] = vyi + CHAR_FIRST;
-                        t[ctr_inout->getIndex(evars[2])] = vzi + CHAR_FIRST;
+                        t[ctr_inout->getIndex(evars[0])] = vxi;
+                        t[ctr_inout->getIndex(evars[1])] = vyi;
+                        t[ctr_inout->getIndex(evars[2])] = vzi;
 
                         for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
-                            t[ctr_inout->getIndex(var)] = var->toIndex(*itv) + CHAR_FIRST;
-                            t[arity] = '\0';
-                            String strt(t);
+                            t[ctr_inout->getIndex(var)] = var->toIndex(*itv);
+                            Tuple strt(t);
                             Cost c = ((isnary) ? ((NaryConstraint*)ctr_inout)->eval(strt) : ctr_inout->evalsubstr(strt, ctr_inout)) + var->getCost(*itv);
                             if (ToulBar2::isZ)
                                 mincost = LogSumExp(mincost, c);

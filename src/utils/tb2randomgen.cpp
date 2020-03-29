@@ -65,7 +65,7 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
     int arity = indexs.size();
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
     int* scopeIndexs = new int[arity];
-    Char* tuple = new Char[arity + 1];
+
     Cost Top = wcsp.getUb();
     if (costMax < Top)
         Top = costMax;
@@ -73,16 +73,14 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];
         scopeVars[i] = (EnumeratedVariable*)wcsp.getVar(indexs[i]);
-        tuple[i] = 0 + CHAR_FIRST;
     }
-    tuple[arity] = '\0';
 
     Constraint* nctr = wcsp.getCtr(wcsp.postNaryConstraintBegin(scopeIndexs, arity, 0, nogoods));
 
-    String s(tuple);
+    Tuple s(arity,0);
     while (nogoods > 0) {
         for (i = 0; i < arity; i++)
-            s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST;
+            s[i] = myrand() % scopeVars[i]->getDomainInitSize();
         Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
         nctr->setTuple(s, c);
         nogoods--;
@@ -91,7 +89,6 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
 
     delete[] scopeIndexs;
     delete[] scopeVars;
-    delete[] tuple;
 }
 
 void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin, Cost costMax)
@@ -243,14 +240,12 @@ int naryRandom::inc(vector<int>& index, int i)
 
     index[i]++;
     if (index[i] == n - ((int)index.size() - i - 1)) {
-        if (i >= 0) {
-            int val = inc(index, i - 1);
-            if (val < 0)
-                return -1;
-            index[i] = val + 1;
-            if (index[i] == n)
-                return -1;
-        }
+        int val = inc(index, i - 1);
+        if (val < 0)
+            return -1;
+        index[i] = val + 1;
+        if (index[i] == n)
+            return -1;
     }
     return index[i];
 }

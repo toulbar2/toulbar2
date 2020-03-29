@@ -62,7 +62,7 @@ public:
     AmongConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~AmongConstraint();
 
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
 
     void read(istream& file, bool mult = true);
     void setUpperBound(int upper) { ub = upper; }

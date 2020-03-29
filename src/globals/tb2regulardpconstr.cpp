@@ -91,12 +91,12 @@ Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost RegularDPConstraint::eval(const String& s)
+Cost RegularDPConstraint::eval(const Tuple& s)
 {
     int n = arity();
     for (int i = 1; i <= n; i++) {
         for (unsigned int j = 0; j < dfa.symbol.size(); j++) {
-            u[i][j].val = unary(dfa.symbol[j], i - 1, s[i - 1] - CHAR_FIRST);
+            u[i][j].val = unary(dfa.symbol[j], i - 1, s[i - 1]);
         }
     }
 

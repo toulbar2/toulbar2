@@ -132,7 +132,7 @@ public:
     virtual Long space() const
     {
         Long sz = size();
-        Long eltsz = sizeof(Cost) + arity() * sizeof(Char);
+        Long eltsz = sizeof(Cost) + arity() * sizeof(tValue);
         if (sz < LONGLONG_MAX / eltsz)
             return (sz * eltsz);
         else
@@ -140,14 +140,14 @@ public:
     } ///< \brief estimate of the cost function memory space size
 
     virtual void firstlex() {} ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order (initialization call)
-    virtual bool nextlex(String& t, Cost& c)
+    virtual bool nextlex(Tuple& t, Cost& c)
     {
         cout << "dummy nextlex on (" << this << ")!" << endl;
         return false;
     } ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order
 
     virtual void first() { firstlex(); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost (initialization call)
-    virtual bool next(String& t, Cost& c) { return nextlex(t, c); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
+    virtual bool next(Tuple& t, Cost& c) { return nextlex(t, c); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
 
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta) {}
     virtual bool separability(EnumeratedVariable* alpha, EnumeratedVariable* beta) { return false; }
@@ -175,16 +175,16 @@ public:
     }
     bool verifySeparate(Constraint* ctr1, Constraint* ctr2);
 
-    virtual void setTuple(const String& t, Cost c) {}
-    virtual void addtoTuple(const String& t, Cost c) {}
+    virtual void setTuple(const Tuple& t, Cost c) {}
+    virtual void addtoTuple(const Tuple& t, Cost c) {}
 
     virtual void getScope(TSCOPE& scope_inv) {}
-    virtual Cost evalsubstr(const String& s, Constraint* ctr)
+    virtual Cost evalsubstr(const Tuple& s, Constraint* ctr)
     {
         cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;
     }
-    virtual Cost evalsubstr(const String& s, NaryConstraint* ctr)
+    virtual Cost evalsubstr(const Tuple& s, NaryConstraint* ctr)
     {
         cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;

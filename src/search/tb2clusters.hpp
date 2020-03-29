@@ -29,14 +29,14 @@ struct CmpClusterStruct {
 typedef set<Cluster*, CmpClusterStruct> TClustersSorted;
 
 typedef triplet<Cost, Cost, Solver::OpenList> TPairNG;
-typedef pair<Cost, String> TPairSol;
+typedef pair<Cost, Tuple> TPairSol;
 
-typedef map<String, TPairNG> TNoGoods;
-typedef map<String, TPairSol> TSols;
+typedef map<Tuple, TPairNG> TNoGoods;
+typedef map<Tuple, TPairSol> TSols;
 
 // for solution counting :
 typedef pair<Cost, BigInteger> TPairSG;
-typedef map<String, TPairSG> TSGoods;
+typedef map<Tuple, TPairSG> TSGoods;
 
 class Separator : public AbstractNaryConstraint {
 private:
@@ -53,8 +53,8 @@ private:
     TSols solutions;
     DLink<Separator*> linkSep; // link to insert the separator in PendingSeparator list
 
-    String t; // temporary buffer for a separator tuple
-    String s; // temporary buffer for a solution tuple
+    Tuple t; // temporary buffer for a separator tuple
+    Tuple s; // temporary buffer for a solution tuple
 
 public:
     Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
@@ -75,7 +75,7 @@ public:
     BigInteger getSg(Cost& res, BigInteger& nb);
 
     void solRec(Cost ub);
-    bool solGet(TAssign& a, String& sol);
+    bool solGet(TAssign& a, Tuple& sol);
 
     void resetLb();
     void resetUb();

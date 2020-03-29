@@ -30,11 +30,11 @@ public:
 
     void propagate() override;
 
-    Cost eval(const String& s) override
+    Cost eval(const Tuple& s) override
     {
         bool iszerotuple = true;
         for (int i = 0; i < arity_; i++) {
-            if (inclq[i][s[i] - CHAR_FIRST]) {
+            if (inclq[i][s[i]]) {
                 iszerotuple = false;
                 break;
             }
@@ -44,10 +44,10 @@ public:
         else
             return MIN_COST;
     }
-    Cost evalsubstr(const String& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
     template <class T>
-    Cost evalsubstrAny(const String& s, T* ctr)
+    Cost evalsubstrAny(const Tuple& s, T* ctr)
     {
         int count = 0;
 

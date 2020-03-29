@@ -187,7 +187,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
     }
 }
 
-Cost RegularFlowConstraint::evalOriginal(const String& s)
+Cost RegularFlowConstraint::evalOriginal(const Tuple& s)
 {
 
     typedef pair<Cost, pair<int, int>> Element;
@@ -211,7 +211,7 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
                 break;
             }
         } else {
-            int curValue = s[curIndex] - CHAR_FIRST;
+            int curValue = s[curIndex];
             for (map<int, Cost>::iterator i = costTb[curState][curValue].begin();
                  i != costTb[curState][curValue].end(); i++) {
                 Cost nextWeight = weight + i->second;

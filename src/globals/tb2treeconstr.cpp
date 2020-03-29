@@ -63,7 +63,7 @@ Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost TreeConstraint::eval(const String& s)
+Cost TreeConstraint::eval(const Tuple& s)
 {
 
     int n = arity();
@@ -74,7 +74,7 @@ Cost TreeConstraint::eval(const String& s)
     edgeList.resize(n);
 
     for (int i = 0; i < n; i++) {
-        int val = s[i] - CHAR_FIRST;
+        int val = s[i];
         if (val2VarIndex[val] == i) {
             root = i;
             nRoot++;

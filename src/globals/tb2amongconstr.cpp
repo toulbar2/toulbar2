@@ -125,12 +125,12 @@ Cost AmongConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost AmongConstraint::evalOriginal(const String& s)
+Cost AmongConstraint::evalOriginal(const Tuple& s)
 {
     int n = arity();
     int count = 0;
     for (int i = 0; i < n; i++) {
-        if (V.find(s[i] - CHAR_FIRST) != V.end())
+        if (V.find(s[i]) != V.end())
             count++;
     }
     return max(0, max(lb - count, count - ub)) * def;

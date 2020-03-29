@@ -119,13 +119,13 @@ void GlobalCardinalityConstraint::organizeConfig()
     }
 }
 
-Cost GlobalCardinalityConstraint::evalOriginal(const String& s)
+Cost GlobalCardinalityConstraint::evalOriginal(const Tuple& s)
 {
 
     Cost excess = 0, shortage = 0, cost = 0;
     map<Value, int> appear;
-    for (unsigned int i = 0; i < s.length(); i++) {
-        appear[s[i] - CHAR_FIRST]++;
+    for (unsigned int i = 0; i < s.size(); i++) {
+        appear[s[i]]++;
     }
     for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
         if (appear[i->first] < i->second.lower_bound) {

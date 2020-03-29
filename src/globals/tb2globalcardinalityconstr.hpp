@@ -44,7 +44,7 @@ public:
     }
 
     string getName();
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
     void read(istream& file, bool mult = true);
 
     //GlobalCostFunctionParameters* getParameters() {return this;}

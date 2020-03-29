@@ -73,7 +73,7 @@ protected:
     virtual void augmentStructure(Graph& graph, StoreCost& cost, int varindex, map<Value, Cost>& delta);
 
     // compute the cost according to the original cost structure
-    virtual Cost evalOriginal(const String& s) { return MIN_COST; }
+    virtual Cost evalOriginal(const Tuple& s) { return MIN_COST; }
     virtual Cost getMinCost()
     {
         return cost;

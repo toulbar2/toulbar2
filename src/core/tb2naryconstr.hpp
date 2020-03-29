@@ -7,7 +7,7 @@
 #include "tb2wcsp.hpp"
 
 class NaryConstraint : public AbstractNaryConstraint {
-    typedef map<String, Cost> TUPLES;
+    typedef map<Tuple, Cost> TUPLES;
     TUPLES* pf;
     Cost* costs;
     ptrdiff_t costSize;
@@ -63,12 +63,12 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    ptrdiff_t getCostsIndex(const String& s) const
+    ptrdiff_t getCostsIndex(const Tuple& s) const
     {
         ptrdiff_t index = 0;
         ptrdiff_t base = 1;
         for (int i = arity_ - 1; i >= 0; --i) {
-            index += (s[i] - CHAR_FIRST) * base;
+            index += (s[i]) * base;
             base *= ((EnumeratedVariable*)getVar(i))->getDomainInitSize();
         }
         assert(base == costSize);
@@ -77,19 +77,19 @@ public:
         return index;
     }
     Long size() const FINAL { return (Long)(pf) ? pf->size() : ((costs) ? costSize : 0); }
-    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(Char))) : ((costs) ? ((Long)costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
-    Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(Char)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(Char))) : LONGLONG_MAX; } // putative memory space
+    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? ((Long)costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
+    Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(tValue)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(Value))) : LONGLONG_MAX; } // putative memory space
     bool expandtodo() { return space() > getDomainInitSizeProduct(); } // should be getDomainInitSizeProduct() * sizeof(Cost) ?
     bool expandtodo(Long nbtuples) { return space(nbtuples) > getDomainInitSizeProduct(); } // getDomainInitSizeProduct() * sizeof(Cost) ?
     void expand();
 
-    bool consistent(const String& t);
-    Cost eval(const String& s);
-    Cost eval(const String& s, EnumeratedVariable** scope_in);
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    bool consistent(const Tuple& t);
+    Cost eval(const Tuple& s);
+    Cost eval(const Tuple& s, EnumeratedVariable** scope_in);
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
     template <class T>
-    Cost evalsubstrAny(const String& s, T* ctr)
+    Cost evalsubstrAny(const Tuple& s, T* ctr)
     {
         int count = 0;
 
@@ -114,7 +114,7 @@ public:
     {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+            evalTuple[i] = var->toIndex(var->getValue());
         }
         return eval(evalTuple);
     }
@@ -130,34 +130,34 @@ public:
     double computeTightness();
 
     void first();
-    bool next(String& t, Cost& c);
+    bool next(Tuple& t, Cost& c);
 
     void first(EnumeratedVariable* a, EnumeratedVariable* b);
     bool separability(EnumeratedVariable* a, EnumeratedVariable* b);
     void separate(EnumeratedVariable* a, EnumeratedVariable* c);
 
-    void setTuple(const String& tin, Cost c) FINAL
+    void setTuple(const Tuple& tin, Cost c) FINAL
     {
         if (pf)
             (*pf)[tin] = c;
         else
             costs[getCostsIndex(tin)] = c;
     }
-    void addtoTuple(const String& tin, Cost c) FINAL
+    void addtoTuple(const Tuple& tin, Cost c) FINAL
     {
         if (pf)
             (*pf)[tin] += c;
         else
             costs[getCostsIndex(tin)] += c;
     }
-    //    void setTuple( const String& tin, Cost c, EnumeratedVariable** scope_in );
-    //    void addtoTuple( const String& tin, Cost c, EnumeratedVariable** scope_in );
+    //    void setTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in );
+    //    void addtoTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in );
 
     void addtoTuples(Cost c); // c can be positive or negative (if greater than the minimum cost)
     void addtoTuples(EnumeratedVariable* x, Value v, Cost c); // the same operation but restricted to tuples with x assigned to v
 
     void setInfiniteCost(Cost ub);
-    void insertSum(const String& t1, Cost c1, Constraint* ctr1, const String& t2, Cost c2, Constraint* ctr2, bool bFilters = false);
+    void insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const Tuple& t2, Cost c2, Constraint* ctr2, bool bFilters = false);
     //    void permute( EnumeratedVariable** scope_in );
 
     void projectxy(EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
@@ -180,7 +180,7 @@ public:
     void decrease(int index) {}
     void remove(int index) {}
 
-    //    void starrule(const String& t, Cost minc);
+    //    void starrule(const Tuple& t, Cost minc);
     void projectFromZero(int index) {}
 
     bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL;

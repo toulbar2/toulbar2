@@ -23,31 +23,6 @@ void timeOut(int sig);
 void timer(int t); ///< \brief set a timer (in seconds)
 void timerStop(); ///< \brief stop a timer
 
-#ifdef WIDE_STRING
-typedef wchar_t Char;
-typedef wstring String;
-#define Cout wcout
-#include <cwchar>
-#define Strcpy wcscpy
-//    #define Strncpy wcsncpy
-//    #define Strcat wcscat
-//    #define Strncat wcsncat
-#define Strcmp wcscmp
-//    #define Strncmp wcsncmp
-#define Strlen wcslen
-#else
-typedef char Char;
-typedef string String;
-#define Cout cout
-#define Strcpy strcpy
-#define Strncpy strncpy
-#define Strcat strcat
-#define Strncat strncat
-#define Strcmp strcmp
-#define Strncmp strncmp
-#define Strlen strlen
-#endif
-
 typedef long long Long;
 
 #ifndef LONGLONG_MAX

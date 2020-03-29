@@ -396,7 +396,7 @@ pair<pair<Cost, Cost>, pair<Cost, Cost>> TernaryConstraint::getMaxCost(int varIn
 bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable* vz)
 {
     Cost c1, c;
-    Char tch[4];
+    Tuple tch(3,0);
     bool neweq = true; // true if we have  not a difference value
     bool sep = true; // false if vy and vz are not separable
     Cost diff = 0;
@@ -410,14 +410,13 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
         itvz = zvar->begin();
         while (sep && itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
-            tch[0] = ix + CHAR_FIRST;
+            tch[0] = ix;
             while (sep && itvy != yvar->end()) {
                 unsigned int iy = yvar->toIndex(*itvy);
-                tch[1] = iy + CHAR_FIRST;
+                tch[1] = iy;
                 while (sep && itvy != itvyfirst && itvz != zvar->end()) {
                     unsigned int iz = zvar->toIndex(*itvz);
-                    tch[2] = iz + CHAR_FIRST;
-                    tch[3] = '\0';
+                    tch[2] = iz;
 
                     c1 = getCost(xvar, yvar, zvar, *itvx, *(itvyfirst), *itvz);
                     c = getCost(xvar, yvar, zvar, *itvx, *itvy, *itvz);
@@ -430,7 +429,7 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
                                 cout << endl;
                         }
                         if (ToulBar2::verbose >= 3)
-                            cout << " C" << tch[2] - CHAR_FIRST << "." << tch[0] - CHAR_FIRST << "." << tch[1] - CHAR_FIRST << " -  C" << tch[2] - CHAR_FIRST << "." << tch[0] - 48 << "." << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
+                            cout << " C" << tch[2] << "." << tch[0] << "." << tch[1] << " -  C" << tch[2] << "." << tch[0] << "." << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
 
                         if (neweq) {
                             diff = squareminus(c, c1, wcsp->getUb());

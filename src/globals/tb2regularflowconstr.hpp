@@ -157,7 +157,7 @@ private:
 
     void buildWeightedDFATable();
 
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
 
 public:
     RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
@@ -168,7 +168,7 @@ public:
 
     string getName();
 
-    //Cost eval(const String& s);
+    //Cost eval(const Tuple& s);
     void read(istream& file, bool mult = true);
     WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     void organizeConfig();

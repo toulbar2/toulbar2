@@ -155,13 +155,13 @@ bool VACVariable::averaging()
                 Cost cu = getCost(*it);
                 Cost cmin = Top;
                 int tindex = nctr->getIndex(this);
-                String tuple;
+                Tuple tuple;
                 Cost cost;
                 Long nbtuples = 0;
                 nctr->first();
                 while (nctr->next(tuple, cost)) {
                     nbtuples++;
-                    if (toValue(tuple[tindex] - CHAR_FIRST) == (*it) && cost < cmin)
+                    if (toValue(tuple[tindex]) == (*it) && cost < cmin)
                         cmin = cost;
                 }
                 if (nctr->getDefCost() < cmin && nbtuples < nctr->getDomainSizeProduct() / getDomainSize())

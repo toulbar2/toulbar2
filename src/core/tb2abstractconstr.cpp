@@ -53,7 +53,7 @@ void AbstractNaryConstraint::firstlex()
     }
 }
 
-bool AbstractNaryConstraint::nextlex(String& t, Cost& c)
+bool AbstractNaryConstraint::nextlex(Tuple& t, Cost& c)
 {
     int i;
     int a = arity_;
@@ -64,7 +64,7 @@ bool AbstractNaryConstraint::nextlex(String& t, Cost& c)
     t.resize(a);
     for (i = 0; i < a; i++) {
         var = (EnumeratedVariable*)getVar(i);
-        t[i] = var->toIndex(*it_values[i]) + CHAR_FIRST;
+        t[i] = var->toIndex(*it_values[i]);
     }
     c = eval(t);
 
@@ -107,13 +107,13 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             }
         }
         Cost cost;
-        String t;
+        Tuple t;
         first();
         while (next(t, cost)) {
-            unsigned int a = t[0] - CHAR_FIRST;
-            unsigned int b = t[1] - CHAR_FIRST;
-            unsigned int c = t[2] - CHAR_FIRST;
-            costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
+            Value a = t[0];
+            Value b = t[1];
+            Value c = t[2];
+            costs[(a * sizeY * sizeZ) + (b * sizeZ) + c] = cost;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
     } else if (arity_ == 2) {
@@ -128,12 +128,12 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             }
         }
         Cost cost;
-        String t;
+        Tuple t;
         first();
         while (next(t, cost)) {
-            unsigned int a = t[0] - CHAR_FIRST;
-            unsigned int b = t[1] - CHAR_FIRST;
-            costs[a * sizeY + b] = cost;
+            Value a = t[0];
+            Value b = t[1];
+            costs[(a * sizeY) + b] = cost;
         }
         wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs);
     } else if (arity_ == 1) {
@@ -144,10 +144,10 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             costs.push_back(getDefCost());
         }
         Cost cost;
-        String t;
+        Tuple t;
         first();
         while (next(t, cost)) {
-            unsigned int a = t[0] - CHAR_FIRST;
+            Value a = t[0];
             costs[a] = cost;
         }
         wcsp->postUnaryConstraint(x->wcspIndex, costs);
@@ -240,10 +240,10 @@ void AbstractNaryConstraint::projectNary()
         if (var->unassigned()) {
             unassigned[nunassigned] = var;
             indexs[nunassigned] = i;
-            evalTuple[i] = CHAR_FIRST;
+            evalTuple[i] = 0;
             nunassigned++;
         } else
-            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+            evalTuple[i] = var->toIndex(var->getValue());
     }
 
     EnumeratedVariable* x = unassigned[0];
@@ -260,9 +260,9 @@ void AbstractNaryConstraint::projectNary()
                     Value xval = *iterx;
                     Value yval = *itery;
                     Value zval = *iterz;
-                    evalTuple[indexs[0]] = x->toIndex(xval) + CHAR_FIRST;
-                    evalTuple[indexs[1]] = y->toIndex(yval) + CHAR_FIRST;
-                    evalTuple[indexs[2]] = z->toIndex(zval) + CHAR_FIRST;
+                    evalTuple[indexs[0]] = x->toIndex(xval);
+                    evalTuple[indexs[1]] = y->toIndex(yval);
+                    evalTuple[indexs[2]] = z->toIndex(zval);
                     Cost curcost = eval(evalTuple);
                     if (curcost > MIN_COST)
                         flag = true;
@@ -280,14 +280,14 @@ void AbstractNaryConstraint::projectNary()
             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
                 Value xval = *iterx;
                 Value yval = *itery;
-                evalTuple[indexs[0]] = x->toIndex(xval) + CHAR_FIRST;
-                evalTuple[indexs[1]] = y->toIndex(yval) + CHAR_FIRST;
+                evalTuple[indexs[0]] = x->toIndex(xval);
+                evalTuple[indexs[1]] = y->toIndex(yval);
                 Cost curcost = eval(evalTuple);
                 if (curcost > MIN_COST)
                     flag = true;
                 xy->setcost(xval, yval, curcost);
                 if (ToulBar2::verbose >= 5) {
-                    Cout << evalTuple;
+                    cout << evalTuple;
                     cout << " " << curcost << endl;
                 }
             }
@@ -298,7 +298,7 @@ void AbstractNaryConstraint::projectNary()
     } else if (nunassigned == 1) {
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             Value xval = *iterx;
-            evalTuple[indexs[0]] = x->toIndex(xval) + CHAR_FIRST;
+            evalTuple[indexs[0]] = x->toIndex(xval);
             Cost c = eval(evalTuple);
             if (c > MIN_COST) {
                 if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
