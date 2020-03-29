@@ -1,5 +1,5 @@
 #ifndef INCOP_UTIL_H_
-#define INCOP_UTIL_H
+#define INCOP_UTIL_H_
 
 //---------------------------------------------------------------------------------------------
 //    trombe : les stats sous forme de classe (... enfin une struct quoi !)
