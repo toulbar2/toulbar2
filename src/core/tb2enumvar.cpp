@@ -60,7 +60,7 @@ void EnumeratedVariable::init()
     DEE.constr = NULL;
     DEE.scopeIndex = -1;
     if (ToulBar2::DEE >= 2)
-        DEE2 = vector<ConstraintLink>((long unsigned)getDomainInitSize() * getDomainInitSize(), DEE);
+        DEE2 = vector<ConstraintLink>((size_t)getDomainInitSize() * (size_t)getDomainInitSize(), DEE);
     queueDEE();
 }
 
@@ -1490,7 +1490,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             EnumeratedVariable* u = (EnumeratedVariable*)wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);
             assert(x == u || x == v);
-            vector<Cost> costs((size_t)u->getDomainInitSize() * v->getDomainInitSize(), MIN_COST);
+            vector<Cost> costs((size_t)u->getDomainInitSize() * (size_t)v->getDomainInitSize(), MIN_COST);
             bool empty = true;
             Tuple oldtuple(ctr->arity(), 0);
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {

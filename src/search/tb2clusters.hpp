@@ -86,7 +86,7 @@ public:
     void addDelta(unsigned int posvar, Value value, Cost cost)
     {
         assert(posvar < vars.size());
-        delta[posvar][value] += cost;
+        delta[posvar][wcsp->toIndex(posvar, value)] += cost;
     }
     Cost getCurrentDelta(); // separator variables may be unassigned
 

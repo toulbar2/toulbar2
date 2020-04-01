@@ -185,7 +185,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
         t[i] = val;
@@ -196,7 +196,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     if (ToulBar2::verbose >= 1)
         cout << ")";
     assert(clb < cub || clb + deltares >= MIN_COST);
-    //assert(nogoods.find(Tuple(t)) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
+    //assert(nogoods.find(t) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
     TNoGoods::iterator itng = nogoods.find(t);
     if (ToulBar2::verbose >= 3) {
         cout << " <C" << cluster->getId() << ",";
@@ -243,7 +243,7 @@ void Separator::setSg(Cost c, BigInteger nb)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
         t[i] = val;
@@ -265,14 +265,14 @@ Cost Separator::getCurrentDelta()
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         if (wcsp->assigned(*it)) {
-            Value val = wcsp->getValue(*it);
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
             sumdelta += delta[i][val];
         } else {
             EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar(*it);
             if (wcsp->td->isDeltaModified(x->wcspIndex)) {
                 Cost del = -MAX_COST;
                 for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
-                    Value val = *itx;
+                    tValue val = x->toIndex(*itx);
                     // Cost unaryc = x->getCost(val);
                     // Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
                     if (del < delta[i][val])
@@ -298,8 +298,8 @@ bool Separator::get(Cost& clb, Cost& cub, Solver::OpenList** open)
         cout << "( ";
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        assert(cluster->getWCSP()->assigned(*it));
-        Value val = cluster->getWCSP()->getValue(*it);
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
         t[i] = val; // build the tuple
@@ -348,8 +348,8 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
         cout << "( ";
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        assert(cluster->getWCSP()->assigned(*it));
-        Value val = cluster->getWCSP()->getValue(*it);
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
         t[i] = val; // build the tuple
@@ -380,7 +380,7 @@ bool Separator::solGet(TAssign& a, Tuple& sol)
     int i = 0;
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        Value val = a[*it];
+        tValue val = wcsp->toIndex(*it, a[*it]);
         t[i] = val; // build the tuple
         ++it;
         i++;
@@ -412,7 +412,7 @@ void Separator::solRec(Cost ub)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         t[i] = val; // build the tuple
         deltares += delta[i][val];
         ++it;
@@ -433,7 +433,7 @@ void Separator::solRec(Cost ub)
     while (it != cluster->endVars()) {
         assert(wcsp->assigned(*it));
         if (!cluster->isSepVar(*it)) {
-            Value val = wcsp->getValue(*it);
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
             s[i] = val;
             i++;
         }
@@ -751,7 +751,7 @@ void Cluster::getSolution(TAssign& sol)
         it = beginVars();
         while (it != endVars()) {
             if (!isSepVar(*it)) {
-                sol[*it] = ((EnumeratedVariable*)wcsp->getVar(*it))->toValue(s[i]);
+                sol[*it] = wcsp->toValue(*it, s[i]);
                 //				cout << *it << " := " << sol[*it] << endl;
                 if (!ToulBar2::verifyOpt)
                     wcsp->setBestValue(*it, sol[*it]);

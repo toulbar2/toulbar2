@@ -21,7 +21,7 @@ while (( $n < $nend )) ; do
     rm -f toolbar_sol
     rm -f sol
     randomfile=nary-$n-$d-$tight-$bctr-$tctr-$nary-$nary5-$seed 
-    toulbar2 -random=$randomfile -C=$K -z > /dev/null
+    ./toulbar2 -random=$randomfile -C=$K -z > /dev/null
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     ub0=`cat toolbar_opt`
     ub=`expr $ub0 + 2`

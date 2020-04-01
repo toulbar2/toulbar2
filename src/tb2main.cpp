@@ -2520,7 +2520,7 @@ int _tmain(int argc, TCHAR* argv[])
             exit(-1);
         }
     }
-    if (strext.count(".bep") || strstr((char*)strfile.back().c_str(), "bEpInstance"))
+    if (strext.count(".bep") || (strfile.size()>0 && strstr((char*)strfile.back().c_str(), "bEpInstance")))
         ToulBar2::bep = new BEP;
 #endif
 

@@ -1207,9 +1207,9 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
-    Tuple tup(scope.size());
-    map<Tuple, Cost> costFunction;
     unsigned int arity = scope.size();
+    Tuple tup(arity);
+    map<Tuple, Cost> costFunction;
     unsigned long int nbTuples = 0;
     int scopeArray[arity];
     for (unsigned int i = 0; i < scope.size(); i++) {
@@ -2287,7 +2287,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
-                                file >> tup[i];
+                                file >> tup[i]; // FIXME: why not translating from Value to tValue?
                             }
                             file >> cost;
                             Cost tmpcost = MULT(cost, K);
@@ -3278,7 +3278,11 @@ void WCSP::read_wcnf(const char* fileName)
             file >> j;
             if (j != 0 && !tautology) {
                 scopeIndex[arity] = abs(j) - 1;
-                tup.push_back((j > 0) ? 0 : 1);
+                if (arity<tup.size()) {
+                    tup[arity] = ((j > 0) ? 0 : 1);
+                } else {
+                    tup.push_back((j > 0) ? 0 : 1);
+                }
                 int k = 0;
                 while (k < arity) {
                     if (scopeIndex[k] == scopeIndex[arity]) {

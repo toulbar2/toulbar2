@@ -941,7 +941,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
     if (pf) {
         Tuple t, tnext, tproj;
         Cost c;
-        Value val;
+        Value val, valnext;
         TUPLES fproj;
         TUPLES::iterator it;
         // First part of the projection: complexity O(|f|) we swap positions between the projected variable and the last variable
@@ -972,6 +972,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
             t = it->first;
             c = it->second;
             val = x->toValue(t[arity_ - 1]);
+            t.resize(arity_ - 1);
             bool end = false;
             unsigned int ntuples = ((x->canbe(val)) ? 1 : 0);
             markValue.clear();
@@ -983,37 +984,40 @@ void NaryConstraint::project(EnumeratedVariable* x)
                 bool sameprefix = false;
 
                 Cost cnext = MAX_COST;
+                Value valnext = -1;
                 if (!end) {
                     tnext = it->first;
                     cnext = it->second;
+                    valnext = x->toValue(tnext[arity_ - 1]);
+                    tnext.resize(arity_ - 1);
                     sameprefix = (t == tnext);
-                    //cout << "<" << t << "," << c << ">   <" << tnext << "," << cnext << ">       : " << t.compare(0,arity_-1,tnext,0,arity_-1) << endl;
                 }
                 if (!sameprefix) {
                     if (ntuples < x->getDomainSize()) {
                         for (EnumeratedVariable::iterator itv = x->begin(); itv != x->end(); ++itv) {
                             if (markValue.find(*itv) == markValue.end()) {
+                                Cost udefcost =  default_cost + x->getCost(*itv);
                                 if (ToulBar2::isZ) {
-                                    c = wcsp->LogSumExp(c, default_cost + x->getCost(*itv));
-                                } else if (default_cost + x->getCost(*itv) < c)
-                                    c = default_cost + x->getCost(*itv);
+                                    c = wcsp->LogSumExp(c, udefcost);
+                                } else if (udefcost < c)
+                                    c = udefcost;
                             }
                         }
                     }
                     if (ToulBar2::isZ && c < negcost)
                         negcost = c;
-                    if (c != default_cost || ToulBar2::isZ)
+                    if (c != default_cost || ToulBar2::isZ) {
                         (*pf)[t] = c;
+                    }
                     t = tnext;
                     c = cnext;
-                    val = x->toValue(t[arity_ - 1]);
+                    val = valnext;
                     ntuples = ((x->canbe(val)) ? 1 : 0);
                     markValue.clear();
                     markValue.insert(val);
                 } else {
-                    val = x->toValue(t[arity_ - 1]);
-                    markValue.insert(val);
-                    if (x->canbe(val))
+                    markValue.insert(valnext);
+                    if (x->canbe(valnext))
                         ntuples++;
                     if (ToulBar2::isZ) {
                         c = wcsp->LogSumExp(c, cnext);

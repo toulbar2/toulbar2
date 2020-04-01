@@ -78,7 +78,7 @@ public:
     }
     Long size() const FINAL { return (Long)(pf) ? pf->size() : ((costs) ? costSize : 0); }
     Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? ((Long)costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
-    Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(tValue)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(Value))) : LONGLONG_MAX; } // putative memory space
+    Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(tValue)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(tValue))) : LONGLONG_MAX; } // putative memory space
     bool expandtodo() { return space() > getDomainInitSizeProduct(); } // should be getDomainInitSizeProduct() * sizeof(Cost) ?
     bool expandtodo(Long nbtuples) { return space(nbtuples) > getDomainInitSizeProduct(); } // getDomainInitSizeProduct() * sizeof(Cost) ?
     void expand();

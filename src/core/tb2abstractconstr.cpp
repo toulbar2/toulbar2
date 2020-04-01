@@ -110,9 +110,9 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
         Tuple t;
         first();
         while (next(t, cost)) {
-            Value a = t[0];
-            Value b = t[1];
-            Value c = t[2];
+            tValue a = t[0];
+            tValue b = t[1];
+            tValue c = t[2];
             costs[(a * sizeY * sizeZ) + (b * sizeZ) + c] = cost;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
@@ -131,8 +131,8 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
         Tuple t;
         first();
         while (next(t, cost)) {
-            Value a = t[0];
-            Value b = t[1];
+            tValue a = t[0];
+            tValue b = t[1];
             costs[(a * sizeY) + b] = cost;
         }
         wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs);
@@ -147,7 +147,7 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
         Tuple t;
         first();
         while (next(t, cost)) {
-            Value a = t[0];
+            tValue a = t[0];
             costs[a] = cost;
         }
         wcsp->postUnaryConstraint(x->wcspIndex, costs);
