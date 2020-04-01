@@ -941,7 +941,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
     if (pf) {
         Tuple t, tnext, tproj;
         Cost c;
-        Value val, valnext;
+        Value val;
         TUPLES fproj;
         TUPLES::iterator it;
         // First part of the projection: complexity O(|f|) we swap positions between the projected variable and the last variable
@@ -973,11 +973,11 @@ void NaryConstraint::project(EnumeratedVariable* x)
             c = it->second;
             val = x->toValue(t[arity_ - 1]);
             t.resize(arity_ - 1);
-            bool end = false;
-            unsigned int ntuples = ((x->canbe(val)) ? 1 : 0);
             markValue.clear();
-            markValue.insert(val);
-
+            if (x->canbe(val)) {
+                markValue.insert(val);
+            }
+            bool end = false;
             while (!end) {
                 it++;
                 end = (it == fproj.end());
@@ -993,7 +993,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
                     sameprefix = (t == tnext);
                 }
                 if (!sameprefix) {
-                    if (ntuples < x->getDomainSize()) {
+                    if (markValue.size() < x->getDomainSize()) {
                         for (EnumeratedVariable::iterator itv = x->begin(); itv != x->end(); ++itv) {
                             if (markValue.find(*itv) == markValue.end()) {
                                 Cost udefcost =  default_cost + x->getCost(*itv);
@@ -1012,13 +1012,14 @@ void NaryConstraint::project(EnumeratedVariable* x)
                     t = tnext;
                     c = cnext;
                     val = valnext;
-                    ntuples = ((x->canbe(val)) ? 1 : 0);
                     markValue.clear();
-                    markValue.insert(val);
+                    if (x->canbe(val)) {
+                        markValue.insert(val);
+                    }
                 } else {
-                    markValue.insert(valnext);
-                    if (x->canbe(valnext))
-                        ntuples++;
+                    if (x->canbe(valnext)) {
+                        markValue.insert(valnext);
+                    }
                     if (ToulBar2::isZ) {
                         c = wcsp->LogSumExp(c, cnext);
                     } else if (cnext < c)
