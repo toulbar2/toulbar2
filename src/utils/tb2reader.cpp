@@ -3278,7 +3278,7 @@ void WCSP::read_wcnf(const char* fileName)
             file >> j;
             if (j != 0 && !tautology) {
                 scopeIndex[arity] = abs(j) - 1;
-                if (arity<tup.size()) {
+                if (arity<(int)tup.size()) {
                     tup[arity] = ((j > 0) ? 0 : 1);
                 } else {
                     tup.push_back((j > 0) ? 0 : 1);
