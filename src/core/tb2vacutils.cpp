@@ -81,6 +81,7 @@ void VACVariable::init()
 
 bool VACVariable::averaging()
 {
+    Tuple tuple;
     Cost Top = wcsp->getUb();
     bool change = false;
     EnumeratedVariable* x;
@@ -155,7 +156,6 @@ bool VACVariable::averaging()
                 Cost cu = getCost(*it);
                 Cost cmin = Top;
                 int tindex = nctr->getIndex(this);
-                Tuple tuple;
                 Cost cost;
                 Long nbtuples = 0;
                 nctr->first();

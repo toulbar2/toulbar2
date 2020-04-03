@@ -237,11 +237,11 @@ bool NaryConstraint::reviseEACGreedySolution(int index, Value support)
 /// Set new default cost to df (df <= Top), keep existing costs SMALLER than this default cost in a Map or a table
 void NaryConstraint::keepAllowedTuples(Cost df)
 {
+    static Tuple t;
     assert(CUT(wcsp->getUb(), df));
     if (pf) {
         TUPLES* pfnew = new TUPLES;
 
-        Tuple t;
         Cost c;
         firstlex();
         while (nextlex(t, c)) {
@@ -326,6 +326,7 @@ void NaryConstraint::first(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz)
 {
+    static Tuple t1, t;
     int a = arity_, i = a - 1, k;
     bool finished = false;
     bool neweq = true;
@@ -335,7 +336,6 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
     vector<int> ordre(a, -1);
     EnumeratedVariable* var;
     EnumeratedVariable* scope_in[a];
-    Tuple t1, t;
     t1.resize(a);
     t.resize(a);
 
@@ -441,9 +441,12 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
 
 void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 {
+    static Tuple t, tX, tZ;
     Cost cost, minCost = MAX_COST;
     int a = arity_;
-    Tuple t(a, 0), tX(a - 1, 0), tZ(a - 1, 0);
+    t.resize(a);
+    tX.resize(a - 1);
+    tZ.resize(a - 1);
     int index, k;
     EnumeratedVariable* var = NULL;
     Constraint* existX = NULL;
@@ -737,10 +740,10 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 void NaryConstraint::addtoTuples(EnumeratedVariable* x, Value v, Cost costi)
 {
+    static Tuple tuple;
     Cost Top = wcsp->getUb();
     int tindex = getIndex(x);
     assert(tindex >= 0);
-    Tuple tuple;
     Cost cost;
     if (getDefCost() < Top) {
         firstlex();
@@ -764,8 +767,8 @@ void NaryConstraint::addtoTuples(EnumeratedVariable* x, Value v, Cost costi)
 void NaryConstraint::addtoTuples(Cost costi)
 {
     assert(costi >= MIN_COST || getMinCost() >= -costi);
+    static Tuple tuple;
     Cost Top = wcsp->getUb();
-    Tuple tuple;
     Cost cost;
     Cost olddf = default_cost;
     default_cost = Top;
@@ -815,8 +818,6 @@ void NaryConstraint::insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const
         return;
     Cost csum = c1 + c2;
 
-    Tuple t(arity_,0);
-
     for (int i = 0; i < arity_; i++) {
         EnumeratedVariable* v = scope[i];
         int pos = i;
@@ -826,13 +827,15 @@ void NaryConstraint::insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const
         if ((pos1 >= 0) && (pos2 >= 0)) {
             if (t1[pos1] != t2[pos2])
                 return;
-            t[pos] = t1[pos1];
+            evalTuple[pos] = t1[pos1];
         } else if (pos1 >= 0)
-            t[pos] = t1[pos1];
+            evalTuple[pos] = t1[pos1];
         else if (pos2 >= 0)
-            t[pos] = t2[pos2];
+            evalTuple[pos] = t2[pos2];
+        else
+            evalTuple[pos] = 0;
 
-        Cost unaryc = v->getCost(v->toValue(t[pos]));
+        Cost unaryc = v->getCost(v->toValue(evalTuple[pos]));
         if (unaryc >= Top)
             return;
         csum += unaryc;
@@ -845,7 +848,8 @@ void NaryConstraint::insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const
         while (it != filters->end()) {
             Constraint* ctr = *it;
             if (ctr->connected()) {
-                Cost c = ctr->evalsubstr(t, this);
+                assert(ctr != this);
+                Cost c = ctr->evalsubstr(evalTuple, this);
                 if (c >= Top)
                     return;
                 csum += c;
@@ -857,9 +861,9 @@ void NaryConstraint::insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const
     }
 
     if (pf)
-        (*pf)[t] = c1 + c2;
+        (*pf)[evalTuple] = c1 + c2;
     else
-        costs[getCostsIndex(t)] = c1 + c2;
+        costs[getCostsIndex(evalTuple)] = c1 + c2;
 }
 
 // THIS CODE IS NEVER USED!!!
@@ -939,7 +943,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
     Cost negcost = 0;
 
     if (pf) {
-        Tuple t, tnext, tproj;
+        Tuple t, tnext, tproj, tswap;
         Cost c;
         Value val;
         TUPLES fproj;
@@ -954,7 +958,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
             c += ((x->canbe(val)) ? (x->getCost(val)) : Top);
             if (c > Top)
                 c = Top;
-            Tuple tswap(t);
+            tswap = t;
             tValue a = tswap[arity_ - 1];
             tswap[arity_ - 1] = tswap[xindex];
             tswap[xindex] = a;
@@ -1168,9 +1172,8 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
     TUPLES& fproj)
 {
     assert(CUT(default_cost, wcsp->getUb()));
-
+    static Tuple t;
     Tuple txy(2,0);
-    Tuple t;
     Cost c;
     TUPLES::iterator itproj;
 
@@ -1257,6 +1260,7 @@ inline bool cmp_pairvars(pair<EnumeratedVariable*, EnumeratedVariable*> pv1, pai
 }
 void NaryConstraint::preprojectall2()
 {
+    Tuple t;
     assert(connected());
     assert(CUT(default_cost, wcsp->getUb()));
 
@@ -1271,7 +1275,6 @@ void NaryConstraint::preprojectall2()
             TUPLES fproj;
             projectxy(x, y, fproj);
 
-            Tuple t;
             vector<Cost> xy;
             unsigned int a, b;
             unsigned int sizex = x->getDomainInitSize();

@@ -37,8 +37,6 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
 {
-    Tuple tbuf(arity_in,0);
-
     for (int i = 0; i < arity_in; i++) {
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         vars.insert(scope_in[i]->wcspIndex);
@@ -47,7 +45,7 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
             exit(EXIT_FAILURE);
         }
     }
-    t = Tuple(tbuf);
+    t = Tuple(arity_in,0);
 
     linkSep.content = this;
 
@@ -87,7 +85,6 @@ void Separator::setup(Cluster* cluster_in)
     if (!nvars)
         return;
 
-    Tuple sbuf(cluster->getNbVars(),0);
     int nproper = 0;
     it = cluster->beginVars();
     while (it != cluster->endVars()) {
@@ -95,7 +92,7 @@ void Separator::setup(Cluster* cluster_in)
             nproper++;
         ++it;
     }
-    s = Tuple(sbuf);
+    s = Tuple(cluster->getNbVars(),0);
 }
 
 void Separator::assign(int varIndex)
@@ -727,6 +724,7 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 // side-effect: remember last solution
 void Cluster::getSolution(TAssign& sol)
 {
+    static Tuple s; //FIXME: unsafe???
     TVars::iterator it;
     if (parent == NULL || this == td->getRootRDS()) {
         if (vars.size() != 0) {
@@ -739,7 +737,6 @@ void Cluster::getSolution(TAssign& sol)
             }
         }
     }
-    Tuple s;
     if (sep) {
 #ifndef NDEBUG
         bool found = sep->solGet(sol, s);

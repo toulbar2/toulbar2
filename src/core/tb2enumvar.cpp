@@ -1426,6 +1426,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
 // only in preprocessing
 void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functional)
 {
+    static Tuple oldtuple, newtuple, tuple;
     assert(Store::getDepth() == 0);
     assert(unassigned());
     EnumeratedVariable* x = (EnumeratedVariable*)xy->getVarDiffFrom(this);
@@ -1492,7 +1493,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             assert(x == u || x == v);
             vector<Cost> costs((size_t)u->getDomainInitSize() * (size_t)v->getDomainInitSize(), MIN_COST);
             bool empty = true;
-            Tuple oldtuple(ctr->arity(), 0);
+            oldtuple.resize(ctr->arity());
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
                     for (int i = 0; i < ctr->arity(); i++) {
@@ -1525,7 +1526,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             assert(x == u || x == v || x == w);
             vector<Cost> costs((size_t)u->getDomainInitSize() * (size_t)v->getDomainInitSize() * (size_t)w->getDomainInitSize(), MIN_COST);
             bool empty = true;
-            Tuple oldtuple(ctr->arity(), 0);
+            oldtuple.resize(ctr->arity());
             for (EnumeratedVariable::iterator iterU = u->begin(); iterU != u->end(); ++iterU) {
                 for (EnumeratedVariable::iterator iterV = v->begin(); iterV != v->end(); ++iterV) {
                     for (EnumeratedVariable::iterator iterW = w->begin(); iterW != w->end(); ++iterW) {
@@ -1587,7 +1588,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             Constraint* newctrctr = wcsp->getCtr(res);
             assert(newctrctr->arity() == scopeSize);
             AbstractNaryConstraint* newctr = (AbstractNaryConstraint*)newctrctr;
-            Tuple newtuple(scopeSize, 0);
+            newtuple.resize(scopeSize);
             EnumeratedVariable* scopeNewCtr[scopeSize];
             for (int i = 0; i < scopeSize; i++) {
                 scopeNewCtr[i] = (EnumeratedVariable*)newctr->getVar(i);
@@ -1597,7 +1598,6 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             int posold = oldctr->getIndex(this);
             assert(posold >= 0);
             int posxold = oldctr->getIndex(x); // check if x is already in the scope of the old cost function
-            Tuple tuple;
             Cost cost;
             oldctr->first();
             while (oldctr->next(tuple, cost)) {

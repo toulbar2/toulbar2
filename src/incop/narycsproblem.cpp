@@ -231,6 +231,7 @@ void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<Value>* tabdomaines, v
 int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
     vector<int>* connexions, vector<Value>* tabdomaines)
 {
+    static Tuple tuple;
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;
     for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
@@ -250,7 +251,6 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
                 }
             assert(ct->constrainedvariables.size() == (unsigned int)arity);
             ct->compute_indexmultiplyers(tabdomaines);
-            Tuple tuple;
             Cost cost;
             wcsp->getCtr(i)->firstlex();
             while (wcsp->getCtr(i)->nextlex(tuple, cost)) {
@@ -273,7 +273,6 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
                     (*vv)[numvar]->constraints.push_back(ct);
                 }
             ct->compute_indexmultiplyers(tabdomaines);
-            Tuple tuple;
             Cost cost;
             ctr->firstlex();
             while (ctr->nextlex(tuple, cost)) {
@@ -296,7 +295,6 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
                     (*vv)[numvar]->constraints.push_back(ct);
                 }
             ct->compute_indexmultiplyers(tabdomaines);
-            Tuple tuple;
             Cost cost;
             ctr->firstlex();
             while (ctr->nextlex(tuple, cost)) {

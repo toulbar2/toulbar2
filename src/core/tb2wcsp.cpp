@@ -893,12 +893,13 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost)
 {
+    static Tuple s;
     if (ToulBar2::vac)
         histogram(cost);
     Constraint* ctr = getCtr(ctrindex);
     //    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
     assert(arity == ctr->arity());
-    Tuple s(arity, 0);
+    s.resize(arity);
     for (int i = 0; i < arity; i++)
         s[i] = ((EnumeratedVariable*)ctr->getVar(i))->toIndex(tuple[i]);
     ctr->setTuple(s, cost);
@@ -3413,6 +3414,7 @@ void WCSP::propagate()
 
 void WCSP::restoreSolution(Cluster* c)
 {
+    static Tuple tctr;
     int elimo = getElimOrder();
     for (int i = elimo - 1; i >= 0; i--) {
         elimInfo ei = elimInfos[i];
@@ -3433,7 +3435,6 @@ void WCSP::restoreSolution(Cluster* c)
         Constraint* ctr = ei.ctr;
         Value vy = -1;
         Value vz = -1;
-        Tuple tctr;
         Cost cctr;
         int xctrindex = -1;
         if (y)
@@ -3714,8 +3715,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     } else if (arityU == 3) {
         EnumeratedVariable* z = scopeU[2];
         EnumeratedVariable* scopeTernary[3] = { x, y, z };
-        Tuple t;
-        t.resize(3);
+        Tuple t(3,0);
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
             for (vyi = 0; vyi < y->getDomainInitSize(); vyi++)
                 for (vzi = 0; vzi < z->getDomainInitSize(); vzi++) {
@@ -3859,7 +3859,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
     Constraint* ctr = NULL;
     Cost Top = MAX_COST; // getUb();
     int ctrIndex;
-    Tuple t(arity,0);
+    Tuple t(arity, 0);
     vector<Cost> costs;
     Cost negcost = 0;
 
@@ -3886,8 +3886,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
 
                         for (EnumeratedVariable::iterator itv = var->begin(); itv != var->end(); ++itv) {
                             t[ctr_inout->getIndex(var)] = var->toIndex(*itv);
-                            Tuple strt(t);
-                            Cost c = ((isnary) ? ((NaryConstraint*)ctr_inout)->eval(strt) : ctr_inout->evalsubstr(strt, ctr_inout)) + var->getCost(*itv);
+                            Cost c = ((isnary) ? ((NaryConstraint*)ctr_inout)->eval(t) : ctr_inout->evalsubstr(t, ctr_inout)) + var->getCost(*itv);
                             if (ToulBar2::isZ)
                                 mincost = LogSumExp(mincost, c);
                             else if (c < mincost)

@@ -2196,6 +2196,10 @@ Cost WCSP::read_wcsp(const char* fileName)
     ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
+    Tuple tup;
+    vector<Tuple> tuples;
+    vector<Cost> costs;
+
     // read variable domain sizes
     for (unsigned int i = 0; i < nbvar; i++) {
         string varname;
@@ -2281,9 +2285,9 @@ Cost WCSP::read_wcsp(const char* fileName)
                     int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
                     NaryConstraint* nary = (NaryConstraint*)constrs[naryIndex];
 
-                    Tuple tup(arity,0);
-                    vector<Tuple> tuples;
-                    vector<Cost> costs;
+                    tup.resize(arity);
+                    tuples.clear();
+                    costs.clear();
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
@@ -3261,14 +3265,14 @@ void WCSP::read_wcnf(const char* fileName)
     }
 
     // Read each clause
+    Tuple tup;
     for (int ic = 0; ic < nbclauses; ic++) {
 
         int scopeIndex[MAX_ARITY];
-        Tuple tup;
+        tup.clear();
         int arity = 0;
         if (ToulBar2::verbose >= 3)
             cout << "read clause on ";
-
         int j = 0;
         Cost cost = UNIT_COST;
         if (format == "wcnf")

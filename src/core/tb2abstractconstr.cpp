@@ -89,6 +89,7 @@ bool AbstractNaryConstraint::nextlex(Tuple& t, Cost& c)
 // projects n-ary cost function of arity less than 3 into a unary/binary/ternary cost function in extension before the search
 void AbstractNaryConstraint::projectNaryBeforeSearch()
 {
+    Tuple t;
     assert(arity_ <= 3);
     deconnect(); // Warning! It assumes the default cost is not used if the cost function has zero arity
     if (arity_ == 3) {
@@ -107,7 +108,6 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             }
         }
         Cost cost;
-        Tuple t;
         first();
         while (next(t, cost)) {
             tValue a = t[0];
@@ -128,7 +128,6 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             }
         }
         Cost cost;
-        Tuple t;
         first();
         while (next(t, cost)) {
             tValue a = t[0];
@@ -144,7 +143,6 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             costs.push_back(getDefCost());
         }
         Cost cost;
-        Tuple t;
         first();
         while (next(t, cost)) {
             tValue a = t[0];
