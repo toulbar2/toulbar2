@@ -233,6 +233,20 @@ public:
         }
     }
 
+    Cost getMaxFiniteCost()
+    {
+        Cost ub = wcsp->getUb();
+        Cost maxcost = MIN_COST;
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                Cost cost = getCost(*iterX, *iterY);
+                if (cost < ub && cost > maxcost)
+                    maxcost = cost;
+            }
+        }
+        return maxcost;
+    }
+
     void setInfiniteCost(Cost ub)
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);

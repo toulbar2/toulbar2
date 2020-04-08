@@ -2428,7 +2428,8 @@ void WCSP::printNCBuckets()
 
 void WCSP::print(ostream& os)
 {
-    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
+//    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -2545,7 +2546,7 @@ void WCSP::dump(ostream& os, bool original)
     if (getLb() > MIN_COST)
         os << "0 " << getLb() << " 0" << endl;
 
-    if (!ToulBar2::uaieval) {
+    if (!ToulBar2::uaieval && ToulBar2::verbose >= 0) {
         //####################" dump dot file ###############################""
         strcat(Pb_graph, ".dot");
         cout << " Graph structure saved in problem.dot " << endl;

@@ -1673,7 +1673,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 {
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // do not perform hbfs operations in preprocessing except for building tree decomposition
-
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
@@ -1683,29 +1682,36 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         }
         wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
     }
+    Cost initialLowerBound = wcsp->getLb();
     wcsp->enforceUb();
     wcsp->propagate(); // initial propagation
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
-        if (finiteUb < initialUpperBound) {
-            initialUpperBound = finiteUb;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
-            wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
+        if (finiteUb < initialUpperBound || wcsp->getLb() > initialLowerBound) {
+            if (finiteUb < initialUpperBound) {
+                ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
+                wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
+            }
             wcsp->setInfiniteCost();
-            wcsp->enforceUb();
-            wcsp->propagate();
+            if (finiteUb < initialUpperBound) {
+                wcsp->enforceUb();
+                wcsp->propagate();
+                initialUpperBound = finiteUb;
+            }
         }
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
-            initialUpperBound = finiteUb;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
+             ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
-            wcsp->setInfiniteCost();
+        }
+        wcsp->setInfiniteCost();
+        if (finiteUb < initialUpperBound) {
             wcsp->enforceUb();
             wcsp->propagate();
+            initialUpperBound = finiteUb;
         }
     }
     if (ToulBar2::verbose >= 0)

@@ -516,6 +516,22 @@ public:
             costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] = c;
     }
 
+    Cost getMaxFiniteCost()
+    {
+        Cost ub = wcsp->getUb();
+        Cost maxcost = MIN_COST;
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                    Cost cost = getCost(*iterX, *iterY, *iterZ);
+                    if (cost < ub && cost > maxcost)
+                        maxcost = cost;
+                }
+            }
+        }
+        return maxcost;
+    }
+
     void setInfiniteCost(Cost ub)
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
