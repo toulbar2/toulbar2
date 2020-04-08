@@ -2592,23 +2592,24 @@ void WCSP::dump_CFN(ostream& os, bool original)
     os << getDPrimalBound() << "\" }\n";
 
     // Domain variables
-    os << "{\"variables\": {\n";
+    os << "\"variables\": {\n";
     for (unsigned int i = 0; i < vars.size(); i++) {
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
         if (original) {
             os << "\"" << s->getName() << "\" : ";
             os << "[ \"" << s->getValueName(0) << "\"";
             for (size_t p = 1; p < s->getDomainInitSize(); p++)
-                os << ", \"" << s->getValueName(p);
+                os << ", \"" << s->getValueName(p) << "\"";
             os << " ],\n";
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\" : ";
-            int domsize = s->getDomainInitSize();
+            int domsize = s->getDomainSize();
             Value* values = new Value[domsize];
             s->getDomain(values);
             os << "[ \"" << s->getValueName(values[0]) << "\"";
-            for (int p = 1; p < domsize; p++)
+            for (int p = 1; p < domsize; p++) {
                 os << ", \"" << s->getValueName(values[p]);
+            }
             os << " ],\n";
         }
     }
@@ -2616,13 +2617,13 @@ void WCSP::dump_CFN(ostream& os, bool original)
     os << "},\n\"functions\": {\n";
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && !constrs[i]->isSep())
-            constrs[i]->dumpCFN(os, original);
+            constrs[i]->dump_CFN(os, original);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
-            elimBinConstrs[i]->dumpCFN(os, original);
+            elimBinConstrs[i]->dump_CFN(os, original);
     for (int i = 0; i < elimTernOrder; i++)
         if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
-            elimTernConstrs[i]->dumpCFN(os, original);
+            elimTernConstrs[i]->dump_CFN(os, original);
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
@@ -2630,13 +2631,18 @@ void WCSP::dump_CFN(ostream& os, bool original)
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\": { \"scope\": [";
             os << ((original) ? i : vars[i]->getCurrentVarId()) << "], \"defaultcost\": " << getDPrimalBound() << ",\n";
+            os << "\"costs\": [ ";
             for (int v = 0; v < size; v++) {
-                os << ((original) ? (domcost[v].value) : v) << " "
-                   << ((original) ? Cost2ADCost(domcost[v].cost) : min(getDPrimalBound(), Cost2ADCost(domcost[v].cost))) << endl;
+                os << ((original) ? (domcost[v].value) : v) << ", "
+                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound(), Cost2RDCost(domcost[v].cost)));
+                if (v != (size - 1)) {
+                    os << ", ";
+                }
             }
+            os << "]},\n";
         }
     }
-    os << "\"F_0\": { \"costs\": [ " << getDDualBound() << " ] }\n}" << endl;
+    os << "\"F_0\": { \"scope\": [] \"costs\": [ " << getDDualBound() << " ] }\n}" << endl;
 }
 
 ostream& operator<<(ostream& os, WCSP& wcsp)
@@ -3287,7 +3293,7 @@ void WCSP::propagate()
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                            && !DAC.empty())
+                               && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();

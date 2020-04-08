@@ -376,6 +376,7 @@ public:
 
     virtual void print(ostream& os) = 0; ///< \brief print current domains and active cost functions (see \ref verbosity)
     virtual void dump(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
+    virtual void dump_CFN(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
 
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs

@@ -118,7 +118,7 @@ public:
     virtual void print(ostream& os) { os << this << " Unknown constraint!"; }
 
     virtual void dump(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
-    virtual void dumpCFN(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
+    virtual void dump_CFN(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
 
     virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
     virtual Long size() const { return 0; } ///< \brief number of tuples stored by the cost function

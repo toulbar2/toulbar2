@@ -84,7 +84,7 @@ void BinaryConstraint::dump(ostream& os, bool original)
 
 void BinaryConstraint::dump_CFN(ostream& os, bool original)
 {
-    os << "\"F_\"" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\": { \"scope\": [ ";
+    os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\": { \"scope\": [ ";
     os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << ", " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " ], ";
     os << "\"defaultcost\": 0.0,\n\"costs\": [\n";
     int i = 0;
@@ -92,7 +92,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << ", "
-               << ((original) ? wcsp->Cost2ADCost(getCost(*iterX, *iterY)) : min(wcsp->getDPrimalBound(), wcsp->Cost2ADCost(getCost(*iterX, *iterY)))) << "," << endl;
+               << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : min(wcsp->getDPrimalBound(), wcsp->Cost2RDCost(getCost(*iterX, *iterY)))) << "," << endl;
         }
     }
     os << "]}\n";

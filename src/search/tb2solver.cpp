@@ -357,7 +357,7 @@ void Solver::dump_wcsp(const char* fileName, bool original)
 {
     ofstream pb(fileName);
     if (pb)
-        wcsp->dump(pb, original);
+        wcsp->dump_CFN(pb, original);
 }
 
 Cost Solver::getSolution(vector<Value>& solution)
