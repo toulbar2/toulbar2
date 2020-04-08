@@ -483,6 +483,7 @@ public:
 
     void print(ostream& os); ///< \brief print current domains and active cost functions (see \ref verbosity)
     void dump(ostream& os, bool original = true); ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
+    void dump_CFN(ostream& os, bool original = true); ///< \brief output the current WCSP into a file in CFN format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
     friend ostream& operator<<(ostream& os, WCSP& wcsp); ///< \relates WCSP::print
 
     // -----------------------------------------------------------

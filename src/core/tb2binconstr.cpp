@@ -21,7 +21,7 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     assert(tab.size() == sizeX * sizeY);
     supportX = vector<Value>(sizeX, y->getInf());
     supportY = vector<Value>(sizeY, x->getInf());
-    trwsM = vector<Cost>(max(sizeX,sizeY), MIN_COST);
+    trwsM = vector<Cost>(max(sizeX, sizeY), MIN_COST);
 
     costs = vector<StoreCost>(sizeX * sizeY, StoreCost(MIN_COST));
 
@@ -80,6 +80,22 @@ void BinaryConstraint::dump(ostream& os, bool original)
             os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
         }
     }
+}
+
+void BinaryConstraint::dump_CFN(ostream& os, bool original)
+{
+    os << "\"F_\"" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\": { \"scope\": [ ";
+    os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << ", " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " ], ";
+    os << "\"defaultcost\": 0.0,\n\"costs\": [\n";
+    int i = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
+        int j = 0;
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
+            os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << ", "
+               << ((original) ? wcsp->Cost2ADCost(getCost(*iterX, *iterY)) : min(wcsp->getDPrimalBound(), wcsp->Cost2ADCost(getCost(*iterX, *iterY)))) << "," << endl;
+        }
+    }
+    os << "]}\n";
 }
 
 /*
