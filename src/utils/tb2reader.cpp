@@ -640,7 +640,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // A domain or domain size is there: the variable has no name
     // we create an integer name that cannot clash with user names
     if (isOBrace(token) || isdigit(token[0])) {
-        varName = to_string(i);
+        varName = "x" + to_string(i);
     } else {
         varName = token;
         std::tie(lineNumber, token) = this->getNextToken();
