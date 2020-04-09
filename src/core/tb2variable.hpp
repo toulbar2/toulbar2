@@ -65,7 +65,7 @@ public:
     char getNativeResidue() const { return nativeResidue; }
     int getState() const { return state; }
     void newValueName(const string& vname) { valueNames.push_back(vname); }
-    string& getValueName(int idx) { return valueNames[idx]; }
+    const string& getValueName(int idx) const;
     int getDACOrder() const { return dac; }
     void setDACOrder(int order) { dac = order; }
     Value getInf() const { return inf; }

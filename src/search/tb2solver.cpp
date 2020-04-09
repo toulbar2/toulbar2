@@ -356,8 +356,12 @@ void Solver::parse_solution(const char* certificate)
 void Solver::dump_wcsp(const char* fileName, bool original)
 {
     ofstream pb(fileName);
-    if (pb)
-        wcsp->dump_CFN(pb, original);
+    if (pb) {
+        if (ToulBar2::dumpWCSP > 2)
+            wcsp->dump_CFN(pb, original);
+        else
+            wcsp->dump(pb, original);
+    }
 }
 
 Cost Solver::getSolution(vector<Value>& solution)
@@ -982,7 +986,9 @@ void Solver::showGap(Cost newLb, Cost newUb)
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
+            std::ios_base::fmtflags f(cout.flags());
             cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+            cout.flags(f);
         }
     }
 }

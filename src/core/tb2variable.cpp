@@ -110,6 +110,15 @@ void Variable::setCurrentVarId(int idx)
     timestamp = wcsp->getNbNodes();
 }
 
+const string& Variable::getValueName(int idx) const
+{
+    static const string None = std::string("");
+    if (valueNames.empty())
+        return None;
+    else
+        return valueNames[idx];
+}
+
 int cmpConstraint(const void* p1, const void* p2)
 {
     DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);

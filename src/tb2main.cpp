@@ -1846,26 +1846,23 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "verbose level = " << ToulBar2::verbose << endl;
             }
 
-            //  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
+            //  z: save problem in wcsp/cfn format in filename \"problem.wcsp/cfn\" (1:before, 2:current problem after preprocessing)
 
             if (args.OptionId() == OPT_dumpWCSP) {
                 if (!ToulBar2::dumpWCSP)
                     ToulBar2::dumpWCSP = 1;
                 if (args.OptionArg() != NULL) {
-                    char* tmpFile = new char[strlen(args.OptionArg()) + 1];
-                    strcpy(tmpFile, args.OptionArg());
-                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '1' || tmpFile[0] == '2'))
-                        ToulBar2::dumpWCSP = atoi(tmpFile);
-                    else
-                        ToulBar2::problemsaved_filename = to_string(tmpFile);
+                    if (strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') {
+                        ToulBar2::dumpWCSP = atoi(args.OptionArg());
+                        if (ToulBar2::problemsaved_filename.empty())
+                            ToulBar2::problemsaved_filename = ((ToulBar2::dumpWCSP < 3) ? "problem.wcsp" : "problem.cfn");
+                    } else
+                        ToulBar2::problemsaved_filename = to_string(args.OptionArg());
                 }
 
-                if (ToulBar2::dumpWCSP <= 1) {
-                    if (ToulBar2::debug)
-                        cout << "original problem dump in problem.wcsp (see also Graphviz and degree distribution)" << endl;
-                } else {
-                    if (ToulBar2::debug)
-                        cout << "dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)" << endl;
+                if (ToulBar2::debug) {
+                    cout << "Problem will be saved in " << ToulBar2::problemsaved_filename;
+                    cout << "after " << (ToulBar2::dumpWCSP % 1 ? "loading." : "preprocessing.") << endl;
                 }
             }
 
