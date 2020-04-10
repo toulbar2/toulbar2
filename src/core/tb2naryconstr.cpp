@@ -1442,6 +1442,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
     os << "\"F_";
 
     if (original) {
+        printed = false;
         for (int i = 0; i < arity_; i++) {
             if (printed)
                 os << "_";
@@ -1470,6 +1471,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     if (printed)
                         os << ",";
                     os << scope[i]->toValue(t[i] - CHAR_FIRST);
+                    printed = true;
                 }
                 os << "," << wcsp->Cost2RDCost(c);
             }
@@ -1530,7 +1532,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
         }
     }
-    os << "]}\n";
+    os << "]},\n";
 }
 
 /* Local Variables: */

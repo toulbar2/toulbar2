@@ -2584,9 +2584,9 @@ void WCSP::dump_CFN(ostream& os, bool original)
         }
     }
     // Header
-    os << "{\"problem:\"{\"name\":\"" << name << "\",\"mustbe\":\"" << ((ToulBar2::costMultiplier < 0) ? ">" : "<");
+    os << "{\"problem\":{\"name\":\"" << name << "\",\"mustbe\":\"" << ((ToulBar2::costMultiplier < 0) ? ">" : "<");
     os << fixed << setprecision(ToulBar2::decimalPoint);
-    os << getDPrimalBound() << "\"}\n";
+    os << getDPrimalBound() << "\"},\n";
 
     // Domain variables
     os << "\"variables\":{\n";
@@ -2620,7 +2620,8 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 for (int p = 0; p < domsize; p++) {
                     if (printed)
                         os << ",";
-                    os << "\"" << (s->getValueName(p).empty() ? 0 : s->getValueName(p));
+                    os << "\"" << (s->getValueName(p).empty() ? 0 : s->getValueName(p)) << "\"";
+                    printed = true;
                 }
                 os << "]";
             }
@@ -2658,7 +2659,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "]},\n";
         }
     }
-    os << "\"F_0\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}" << endl;
+    os << "\"F\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}\n}" << endl;
     os.flags(f);
 }
 
