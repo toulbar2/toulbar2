@@ -45,7 +45,7 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
             exit(EXIT_FAILURE);
         }
     }
-    t = Tuple(arity_in,0);
+    t = Tuple(arity_in, 0);
 
     linkSep.content = this;
 
@@ -92,7 +92,7 @@ void Separator::setup(Cluster* cluster_in)
             nproper++;
         ++it;
     }
-    s = Tuple(cluster->getNbVars(),0);
+    s = Tuple(cluster->getNbVars(), 0);
 }
 
 void Separator::assign(int varIndex)
@@ -2231,7 +2231,7 @@ void TreeDecomposition::newSolution(Cost lb)
 
     if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
         if (!ToulBar2::allSolutions)
-            rewind(ToulBar2::solutionFile);
+            fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }

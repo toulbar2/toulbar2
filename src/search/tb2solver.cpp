@@ -202,7 +202,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     bool contradiction = false;
     try {
         wcsp->assignLS(variables, values);
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         contradiction = true;
     }
     assert(wcsp->numberOfUnassignedVariables() == 0);
@@ -584,7 +584,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
                     nbNodes++;
                     newSolution(); /* it will update ub */
                     newUb = wcsp->getUb();
-                } catch (const Contradiction &) {
+                } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                 }
                 Store::restore(depth);
@@ -935,7 +935,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
             assign(varIndex, value);
         lastConflictVar = -1;
         recursiveSolve(lb);
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
@@ -1015,7 +1015,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
                 remove(varIndex, value);
             lastConflictVar = -1;
             recursiveSolveLDS(discrepancy - 1);
-        } catch (const Contradiction &) {
+        } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1100,7 +1100,7 @@ void Solver::scheduleOrPostpone(int varIndex)
         else
             assign(varIndex, xinf);
         recursiveSolve();
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
@@ -1135,7 +1135,7 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
             Store::store();
             assign(varIndex, sorted[v].value);
             recursiveSolve(lb);
-        } catch (const Contradiction &) {
+        } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1169,7 +1169,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
             Store::store();
             assign(varIndex, sorted[v].value);
             recursiveSolveLDS(discrepancy - v);
-        } catch (const Contradiction &) {
+        } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
         Store::restore(storedepth);
@@ -1204,7 +1204,7 @@ void Solver::singletonConsistency()
                 try {
                     Store::store();
                     assign(varIndex, sorted[a].value);
-                } catch (const Contradiction &) {
+                } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                     deadend = true;
                     done = false;
@@ -1330,7 +1330,7 @@ void Solver::newSolution()
         }
         if (ToulBar2::solutionFile != NULL) {
             if (!ToulBar2::allSolutions)
-                rewind(ToulBar2::solutionFile);
+                fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
             wcsp->printSolution(ToulBar2::solutionFile);
             fprintf(ToulBar2::solutionFile, "\n");
         }
@@ -1531,7 +1531,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         ToulBar2::vac = 0;
                     recursiveSolve(bestlb);
                 }
-            } catch (const Contradiction &) {
+            } catch (const Contradiction&) {
                 wcsp->whenContradiction();
             }
             if (!cluster) { // synchronize current upper bound with DFS (without tree decomposition)
@@ -1596,7 +1596,7 @@ Cost Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         exit(1);
     }
-    if (ToulBar2::FullEAC && ToulBar2::vac>1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
+    if (ToulBar2::FullEAC && ToulBar2::vac > 1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
         cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         exit(1);
     }
@@ -1677,7 +1677,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
         }
         wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
@@ -1689,7 +1689,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound || wcsp->getLb() > initialLowerBound) {
             if (finiteUb < initialUpperBound) {
-                ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
+                ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
                 wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             }
             wcsp->setInfiniteCost();
@@ -1704,7 +1704,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
-             ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb,wcsp->getUb())));
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
         }
         wcsp->setInfiniteCost();
@@ -1876,7 +1876,7 @@ bool Solver::solve()
                                     Store::store();
                                     initialDepth = Store::getDepth();
                                     recursiveSolveLDS(discrepancy);
-                                } catch (const Contradiction &) {
+                                } catch (const Contradiction&) {
                                     wcsp->whenContradiction();
                                 }
                                 Store::restore(storedepth);
@@ -1924,7 +1924,7 @@ bool Solver::solve()
                                             initialDepth = Store::getDepth();
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
-                                        } catch (const Contradiction &) {
+                                        } catch (const Contradiction&) {
                                             wcsp->whenContradiction();
                                             res.first = res.second;
                                         }
@@ -1978,7 +1978,93 @@ bool Solver::solve()
                                     }
                                 }
                             }
-                            hybridSolve();
+                            if (ToulBar2::divNbSol > 1) {
+                                int initDepth = Store::getDepth();
+                                Cost initUb = initialUpperBound;
+                                bool incrementalSearch = true;
+                                solTrie.init(wcsp->getDivVariables());
+                                unsigned int sol_j = 0;
+
+                                try {
+                                    do {
+                                        if (ToulBar2::verbose >= 0)
+                                            cout << "+++++++++ Search for solution " << sol_j + 1 << " +++++++++" << endl;
+                                        wcsp->setUb(initUb); // (re)start search with initial upper bound
+                                        wcsp->initSolutionCost(); // set solution cost to infinity but do not forget solution vector
+                                        Mdd mdd;
+
+                                        //get solution from previous solve ; sol_j = number of the last solution found
+                                        if (sol_j > 0) {
+                                            switch (ToulBar2::divMethod) {
+                                            case 0:
+                                                wcsp->addDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                break;
+                                            case 1:
+                                                wcsp->addHDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                break;
+                                            case 2:
+                                                wcsp->addTDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                break;
+                                            default:
+                                                cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod;
+                                            }
+                                            wcsp->propagate();
+                                        }
+                                        sol_j += 1;
+                                        incrementalSearch = (sol_j < ToulBar2::divNbSol);
+                                        Store::store(); // protect the current CFN from changes by search or new cost functions
+                                        if (ToulBar2::divWidth > 0 && sol_j > 1) {
+                                            if (ToulBar2::verbose >= 1)
+                                                cout << "computing MDD.." << endl;
+                                            mdd = computeMDD(&solTrie, initUb);
+                                            if (ToulBar2::verbose >= 1)
+                                                cout << "MDD computed." << endl;
+
+                                            /*ofstream os(to_string(this) + "-wregular.dot");
+                                          printLayers(os, mdd);
+                                          os.close();*/
+                                            switch (ToulBar2::divMethod) {
+                                            case 0:
+                                                wcsp->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
+                                                break;
+                                            case 1:
+                                                wcsp->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                break;
+                                            case 2:
+                                                wcsp->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                break;
+                                            default:
+                                                cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod;
+                                            }
+                                            wcsp->propagate();
+                                        }
+                                        try {
+                                            hybridSolve();
+                                        } catch (Contradiction) {
+                                            wcsp->whenContradiction();
+                                        }
+                                        Store::restore(initDepth); // undo search
+                                        if (wcsp->getSolutionCost() < initUb) {
+                                            vector<Value> divSol;
+                                            for (auto var : wcsp->getDivVariables()) {
+                                                divSol.push_back(wcsp->getSolution()[var->wcspIndex]);
+                                            }
+                                            solTrie.insertSolution(divSol);
+                                            if (ToulBar2::solutionFile) {
+                                                ToulBar2::solutionFileRewindPos = ftell(ToulBar2::solutionFile);
+                                            }
+                                        } else {
+                                            incrementalSearch = false;
+                                        }
+                                        endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
+                                    } while (incrementalSearch); // this or an exception (no solution)
+                                } catch (Contradiction) {
+                                    wcsp->whenContradiction();
+                                    endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
+                                }
+                            } else {
+                                hybridSolve();
+                            }
                         }
                     }
                 } catch (const NbBacktracksOut&) {
@@ -1989,14 +2075,17 @@ bool Solver::solve()
                 }
                 Store::restore(storedepth);
             } while (nbbacktracksout);
-        } catch (const Contradiction &) {
+        } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
     } catch (const SolverOut&) {
     }
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()
-    endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
+
+    if (ToulBar2::divNbSol <= 1)
+        endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
+
     return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getSolutionCost() < initialUpperBound);
 }
 
@@ -2397,6 +2486,335 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     }
     wcsp->propagate();
     //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
+}
+
+Solver::SolutionTrie::TrieNode::TrieNode(size_t w)
+{
+    sons.resize(w, NULL);
+}
+
+Solver::SolutionTrie::TrieNode::~TrieNode()
+{
+    for (size_t i = 0; i < sons.size(); i++)
+        delete sons[i];
+}
+
+vector<size_t> Solver::SolutionTrie::TrieNode::widths;
+
+bool Solver::SolutionTrie::TrieNode::present(Value v)
+{
+    return (sons[v] != NULL);
+}
+
+vector<vector<Solver::SolutionTrie::TrieNode*>> Solver::SolutionTrie::TrieNode::insertNode(Value v, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos)
+{
+    sons[v] = new TrieNode(widths[pos + 1]);
+    nodesAtPos[pos + 1].push_back(sons[v]);
+    return nodesAtPos;
+}
+
+vector<vector<Solver::SolutionTrie::TrieNode*>> Solver::SolutionTrie::TrieNode::insertSolution(const vector<Value>& sol, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos)
+{
+    if (pos < sol.size()) {
+        if (!present(sol[pos])) {
+            nodesAtPos = insertNode(sol[pos], pos, nodesAtPos);
+        }
+        assert((unsigned)sol[pos] < sons.size());
+        return sons[sol[pos]]->insertSolution(sol, pos + 1, nodesAtPos);
+    } else {
+        return nodesAtPos;
+    }
+}
+
+void Solver::SolutionTrie::init(const vector<Variable*>& vv)
+{
+    for (auto var : vv) {
+        Solver::SolutionTrie::TrieNode::widths.push_back(((EnumeratedVariable*)var)->getDomainInitSize());
+    }
+    Solver::SolutionTrie::TrieNode::widths.push_back(0); // for leaf nodes
+    if (!vv.empty()) {
+        root.sons.resize(Solver::SolutionTrie::TrieNode::widths[0], NULL);
+        nodesAtPos.resize(vv.size() + 1);
+        nodesAtPos[0].push_back(&root);
+    }
+}
+void Solver::SolutionTrie::TrieNode::printTrie(vector<Value>& sol)
+{
+    if (sons.size() == 0) {
+        cout << sol << endl;
+    } else {
+        for (size_t i = 0; i < sons.size(); i++)
+            if (sons[i] != NULL) {
+                sol.push_back(i);
+                sons[i]->printTrie(sol);
+                sol.pop_back();
+            }
+    }
+}
+
+size_t Solver::SolutionTrie::TrieNode::nbSolutions = 0;
+
+void Solver::SolutionTrie::insertSolution(const vector<Value>& sol)
+{
+    nodesAtPos = root.insertSolution(sol, 0, nodesAtPos);
+}
+
+void Solver::SolutionTrie::printTrie()
+{
+    vector<Value> sol;
+    root.printTrie(sol);
+}
+
+Mdd Solver::computeMDD(Solver::SolutionTrie* solTrie, Cost cost)
+{
+    //The SolutionTrie computes solution Prefix Tree, in divVariables order.
+    // To merge equivalent nodes, we need the suffix tree, so we reverse the variables order.
+    // variables
+    vector<Variable*> varReverse;
+    for (unsigned v = 0; v < wcsp->getDivVariables().size(); v++) {
+        varReverse.push_back(wcsp->getDivVariables()[wcsp->getDivVariables().size() - v - 1]);
+    }
+    int nLayers = varReverse.size();
+    Mdd mdd(nLayers);
+    vector<int> layerWidth;
+    layerWidth.push_back(1);
+    //solTrie
+    vector<vector<Solver::SolutionTrie::TrieNode*>> nodesAtLayer;
+
+    for (unsigned pos = 0; pos < solTrie->getNodesAtPos().size(); pos++) {
+        nodesAtLayer.push_back(solTrie->getNodesAtPos()[solTrie->getNodesAtPos().size() - pos - 1]);
+    }
+    map<vector<int>, int> DistCountsA;
+    vector<int> initCount(nodesAtLayer[0].size(), 0);
+    DistCountsA[initCount] = 0;
+    map<vector<int>, int> DistCountsB;
+    map<vector<int>, int>& prevDistCounts = DistCountsA;
+    map<vector<int>, int>& nextDistCounts = DistCountsB;
+
+    //for relaxation
+    vector<vector<Cost>> oldArcs; // for arcs redirection during relaxation
+    vector<vector<Cost>> alphap(nLayers + 1); // if divRelax=3, alphap[layer][node] = smallest path weight from root to node, with unary costs.
+    alphap[0].push_back(0); // alphap at root = 0
+
+    for (int layer = 0; layer < nLayers; layer++) { // layer = arcs
+        EnumeratedVariable* x = (EnumeratedVariable*)varReverse[layer];
+
+        mdd[layer].resize(prevDistCounts.size());
+        for (unsigned source = 0; source < prevDistCounts.size(); source++) {
+            mdd[layer][source].resize(ToulBar2::divWidth);
+            for (unsigned target = 0; target < ToulBar2::divWidth; target++) {
+                mdd[layer][source][target].resize(x->getDomainInitSize(), wcsp->getUb());
+            }
+        }
+
+        unsigned source;
+        unsigned target;
+        Cost toPay;
+        for (auto const& nodeState : prevDistCounts) {
+            source = nodeState.second;
+            for (unsigned val = 0; val < x->getDomainInitSize(); val++) {
+                vector<int> nextCount(nodesAtLayer[layer + 1].size(), -1);
+                for (unsigned node_index = 0; node_index < nodesAtLayer[layer + 1].size(); node_index++) {
+                    auto node = nodesAtLayer[layer + 1][node_index];
+                    for (unsigned sol = 0; sol < node->sons.size(); sol++) { // node <---sol----nodep
+                        auto nodep = node->sons[sol];
+                        if (nodep != NULL) {
+                            auto nodep_it = find(nodesAtLayer[layer].begin(), nodesAtLayer[layer].end(), nodep);
+                            unsigned nodep_index = distance(nodesAtLayer[layer].begin(), nodep_it);
+                            assert(nodep_index < nodesAtLayer[layer].size());
+
+                            if (nextCount[node_index] == -1) {
+                                nextCount[node_index] = nodeState.first[nodep_index] + (val != sol);
+                            } else {
+                                nextCount[node_index] = min(nextCount[node_index], nodeState.first[nodep_index] + (val != sol));
+                            }
+                        }
+                    }
+                    nextCount[node_index] = min((unsigned int)nextCount[node_index], ToulBar2::divBound);
+                }
+                //merge nodes that won't lead to a satisfying solution:
+                bool sat = true;
+                for (int count : nextCount) {
+                    if (count < (int)ToulBar2::divBound + layer - nLayers) {
+                        sat = false;
+                        break;
+                    }
+                }
+                if (!sat)
+                    nextCount.resize(nextCount.size(), 0);
+                if (layer != nLayers - 1) {
+                    toPay = MIN_COST;
+                    map<vector<int>, int>::iterator it;
+                    std::tie(it, std::ignore) = nextDistCounts.insert(pair<vector<int>, int>(nextCount, nextDistCounts.size()));
+                    target = (*it).second;
+                } else {
+                    toPay = MIN_COST;
+                    target = 0;
+                    assert(layer + 1 == nLayers);
+                    for (int count : nextCount) {
+                        if (count < (int)ToulBar2::divBound) {
+                            toPay = cost;
+                            break;
+                        }
+                    }
+                }
+                if (target < mdd[layer][source].size()) {
+                    mdd[layer][source][target][val] = toPay;
+                } else {
+                    vector<Cost> newTarget(x->getDomainInitSize(), wcsp->getUb());
+                    // when a new target appears in the mdd, we need to add all arcs from ALL sources!!
+                    for (unsigned s = 0; s < mdd[layer].size(); s++) {
+                        mdd[layer][s].push_back(newTarget);
+                    }
+                    mdd[layer][source][target][val] = toPay;
+                }
+            }
+        }
+        unsigned nTargets = nextDistCounts.size();
+        if (nTargets > ToulBar2::divWidth) {
+            // select nodes for merging
+            int n_merge = nTargets - ToulBar2::divWidth + 1;
+            vector<int> to_merge(nextDistCounts.size(), -1);
+            iota(to_merge.begin(), to_merge.end(), 0);
+            if (ToulBar2::divRelax == 0) {
+                for (int i = 0; i < n_merge; ++i) {
+                    int j = myrand() % (nextDistCounts.size() - i);
+                    std::swap(to_merge[i], to_merge[i + j]);
+                }
+            } else if (ToulBar2::divRelax == 1) {
+                vector<int> stateDiv(nextDistCounts.size());
+                for (const auto& node : nextDistCounts) {
+                    stateDiv[node.second] = accumulate(node.first.begin(), node.first.end(), 0);
+                }
+                auto comparator = [stateDiv](int a, int b) { return stateDiv[a] > stateDiv[b]; };
+                std::sort(to_merge.begin(), to_merge.end(), comparator);
+            } else if (ToulBar2::divRelax == 2) {
+                vector<int> stateDiv(nextDistCounts.size());
+                for (const auto& node : nextDistCounts) {
+                    stateDiv[node.second] = accumulate(node.first.begin(), node.first.end(), 0);
+                }
+                auto comparator = [stateDiv](int a, int b) { return stateDiv[a] < stateDiv[b]; };
+                std::sort(to_merge.begin(), to_merge.end(), comparator);
+            } else if (ToulBar2::divRelax == 3) {
+                vector<Cost> alphaptmp(nTargets, wcsp->getUb());
+                for (unsigned source = 0; source < mdd[layer].size(); source++) {
+                    for (unsigned target = 0; target < mdd[layer][source].size(); target++) {
+                        for (unsigned val = 0; val < x->getDomainInitSize(); val++) {
+                            alphaptmp[target] = min(alphaptmp[target], alphap[layer][source] + mdd[layer][source][target][val] + x->getCost(x->toValue(val)));
+                        }
+                    }
+                }
+                auto comparator = [alphaptmp](int a, int b) { return alphaptmp[a] > alphaptmp[b]; };
+                std::sort(to_merge.begin(), to_merge.end(), comparator);
+            } else {
+                cerr << "Error: no such relaxing method: " << ToulBar2::divRelax;
+            }
+
+            to_merge.resize(n_merge);
+
+            //Merging nodes:TODO
+            //Computing new state for merged nodes
+            vector<int> newCount(nodesAtLayer[layer + 1].size(), -1);
+
+            vector<int> newTarget(nextDistCounts.size(), -1); //vector with new state nodes ids
+            for (int state_index : to_merge) {
+                auto state_it = std::find_if(nextDistCounts.begin(), nextDistCounts.end(), [state_index](const pair<vector<int>, int>& mo) { return mo.second == state_index; });
+                assert(state_it != nextDistCounts.end());
+                for (unsigned nodeid = 0; nodeid < nodesAtLayer[layer + 1].size(); nodeid++) {
+                    if (newCount[nodeid] == -1) {
+                        newCount[nodeid] = state_it->first[nodeid];
+                    } else {
+                        newCount[nodeid] = max(newCount[nodeid], state_it->first[nodeid]);
+                        // we are allowing more solutions - we don't want to remove any solution (!! relaxation)
+                        // exact mdds for each single solution are required
+                    }
+                }
+                nextDistCounts.erase(state_it->first);
+            }
+            //The nodes need to be renumbered - we want nodeids = 0, 1 , ... , divWidth
+            map<vector<int>, int>::iterator it;
+            std::tie(it, std::ignore) = nextDistCounts.insert(pair<vector<int>, int>(newCount, to_merge[0]));
+            int newNode = (*it).second;
+            unsigned nodeid = 0;
+            for (auto state : nextDistCounts) {
+                if (state.second == newNode) {
+                    newTarget[newNode] = nodeid;
+                    for (auto node : to_merge) {
+                        newTarget[node] = nodeid;
+                    }
+                } else {
+                    newTarget[state.second] = nodeid;
+                }
+                nextDistCounts[state.first] = nodeid;
+                nodeid++;
+            }
+            //redirecting arcs in mdd[layer] from each source to new targets
+            for (unsigned source = 0; source < mdd[layer].size(); source++) {
+                oldArcs.clear();
+                oldArcs = mdd[layer][source];
+                mdd[layer][source].resize(nodeid);
+                for (unsigned target = 0; target < nodeid; target++) {
+                    mdd[layer][source][target].resize(x->getDomainInitSize());
+                    for (unsigned val = 0; val < x->getDomainInitSize(); val++) {
+                        mdd[layer][source][target][val] = wcsp->getUb(); // erase all arcs from source
+                    }
+                }
+                for (unsigned oldTarget = 0; oldTarget < oldArcs.size(); oldTarget++) {
+                    for (unsigned val = 0; val < x->getDomainInitSize(); val++) {
+                        mdd[layer][source][newTarget[oldTarget]][val] = min(mdd[layer][source][newTarget[oldTarget]][val], oldArcs[oldTarget][val]);
+                    }
+                }
+            }
+        }
+        if (ToulBar2::divWidth > 0 && ToulBar2::divRelax == 3 && layer != nLayers - 1) {
+            //Computing alphap[layer+1]
+            alphap[layer + 1].resize(ToulBar2::divWidth, wcsp->getUb());
+            for (unsigned source = 0; source < mdd[layer].size(); source++) {
+                for (unsigned target = 0; target < mdd[layer][source].size(); target++) {
+                    for (unsigned val = 0; val < x->getDomainInitSize(); val++) {
+                        alphap[layer + 1][target] = min(alphap[layer + 1][target], alphap[layer][source] + mdd[layer][source][target][val] + x->getCost(x->toValue(val)));
+                    }
+                }
+            }
+        }
+
+        layerWidth.push_back((layer != nLayers - 1) ? nextDistCounts.size() : 1);
+        prevDistCounts.clear();
+        swap(prevDistCounts, nextDistCounts);
+    }
+    return mdd;
+}
+
+std::ostream& Solver::printLayers(std::ostream& os, Mdd mdd)
+{
+
+    os << "digraph \"wregular\" {" << endl;
+    os << "\tgraph [hierarchic=1];" << endl;
+    // Draw vertices
+    int nodeShift = 0;
+    for (unsigned layer = 0; layer < mdd.size(); layer++) {
+        for (unsigned node = 0; node < mdd[layer].size(); node++) {
+            os << "\t" << nodeShift + node << " [name=\"" << layer << "," << node << "\"];" << endl;
+        }
+        nodeShift += mdd[layer].size();
+    }
+    // and Arcs
+    nodeShift = 0;
+    for (unsigned layer = 0; layer < mdd.size(); layer++) {
+        for (unsigned source = 0; source < mdd[layer].size(); source++) {
+            for (unsigned target = 0; target < mdd[layer][source].size(); target++) {
+                for (unsigned val = 0; val < mdd[layer][source][target].size(); val++) {
+                    if (mdd[layer][source][target][val] < wcsp->getUb()) {
+                        os << "\t" << nodeShift + source << " -> " << nodeShift + mdd[layer].size() + target << " [label=\"";
+                        os << val << "," << mdd[layer][source][target][val] << "\"];" << endl;
+                    }
+                }
+            }
+        }
+        nodeShift += mdd[layer].size();
+    }
+    os << "}";
+    return os;
 }
 
 /* Local Variables: */

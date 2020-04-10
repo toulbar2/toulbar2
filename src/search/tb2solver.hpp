@@ -82,7 +82,40 @@ public:
         }
 
         size_type capacity() const { return c.capacity(); }
+        priority_queue::container_type::iterator begin() { return c.begin(); }
+        priority_queue::container_type::iterator end() { return c.end(); }
     };
+
+    class SolutionTrie {
+    public:
+        class TrieNode {
+        public:
+            TrieNode(size_t w = 0);
+            ~TrieNode();
+            vector<vector<TrieNode*>> insertSolution(const vector<Value>& sol, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
+            vector<TrieNode*> sons;
+            vector<vector<TrieNode*>> insertNode(Value v, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
+            bool present(Value v);
+            void printTrie(vector<Value>& sol);
+            static size_t nbSolutions;
+            static vector<size_t> widths;
+        };
+
+        SolutionTrie(){};
+        ~SolutionTrie(){};
+        void init(const vector<Variable*>& vv);
+        void insertSolution(const vector<Value>& sol);
+        void printTrie();
+        size_t getNbSolutions() { return root.nbSolutions; };
+        vector<vector<TrieNode*>> getNodesAtPos() { return nodesAtPos; };
+
+    private:
+        TrieNode root;
+        vector<vector<TrieNode*>> nodesAtPos;
+    };
+
+    Mdd computeMDD(SolutionTrie* solTrie, Cost cost);
+    ostream& printLayers(ostream& os, Mdd mdd);
 
     typedef enum {
         CP_ASSIGN = 0,
@@ -174,6 +207,7 @@ protected:
     void initGap(Cost newlb, Cost newub);
     void showGap(Cost newlb, Cost newub);
 
+    SolutionTrie solTrie;
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
@@ -266,7 +300,7 @@ public:
     WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
 
-class SolverOut : public exception {
+class SolverOut : public std::exception {
 public:
     SolverOut()
     {

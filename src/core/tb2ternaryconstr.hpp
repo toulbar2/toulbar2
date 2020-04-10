@@ -957,7 +957,7 @@ public:
 
     bool next(Tuple& t, Cost& c)
     {
-        Tuple tch(3,0);
+        Tuple tch(3, 0);
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
             tch[0] = ix;

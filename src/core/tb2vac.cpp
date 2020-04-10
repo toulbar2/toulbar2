@@ -300,7 +300,7 @@ bool VACExtension::propagate()
                 // remember first arc consistent domain values in Bool(P) before restoring domains and check VAC-integrality
                 while (!SeekSupport.empty()) {
                     VACVariable* x = (VACVariable*)SeekSupport.pop();
-                    bool vacintegral = ToulBar2::FullEAC && x->getDomainSize()==1;
+                    bool vacintegral = ToulBar2::FullEAC && x->getDomainSize() == 1;
                     if (vacintegral && (x->getInf() != x->getSupport() || !x->isFullEAC())) {
                         acSupport.push_back(make_tuple(x, x->getInf(), true));
                     } else if (!vacintegral && x->cannotbe(x->getSupport())) {
@@ -375,8 +375,8 @@ bool VACExtension::propagate()
                                 if (wcsp->getVar(i)->enumerated()) {
                                     EnumeratedVariable* xi = (EnumeratedVariable*)wcsp->getVar(i);
                                     if (xi->getInf() == xi->getSup()) {
-                                            variables.push_back(i);
-                                            values.push_back(xi->getInf());
+                                        variables.push_back(i);
+                                        values.push_back(xi->getInf());
                                     } else {
                                         xi->queueDAC();
                                         xi->queueEAC1();
@@ -396,17 +396,18 @@ bool VACExtension::propagate()
                                 //cout << "call to recursiveSolveLDS from VAC" << endl;
                                 solver->recursiveSolveLDS(ToulBar2::useRASPS - 1);
                             }
-                        } catch (const Contradiction &) {
+                        } catch (const Contradiction&) {
                             wcsp->whenContradiction();
                         }
-                    } catch (const NbBacktracksOut &) {
+                    } catch (const NbBacktracksOut&) {
                     }
 
                     ToulBar2::hbfs = storehbfs;
                     ToulBar2::hbfsGlobalLimit = storehbfsGlobalLimit;
                     solver->hbfsLimit = storehbfsLimit;
                     solver->nbBacktracksLimit = storenbBacktracksLimit;
-                    if (solver->nbBacktracksLimit < LONGLONG_MAX) solver->nbBacktracksLimit += solver->nbBacktracks - storenbBacktracks;
+                    if (solver->nbBacktracksLimit < LONGLONG_MAX)
+                        solver->nbBacktracksLimit += solver->nbBacktracks - storenbBacktracks;
                     ToulBar2::restart = storerestart;
                     ToulBar2::limited = storeLimited; // still a complete search
                     ToulBar2::vac = storeVac;
@@ -477,7 +478,7 @@ bool VACExtension::propagate()
             if (x->canbe(val)) {
                 if (x->getCost(val) == MIN_COST) {
                     if (ToulBar2::verbose > 0 && (x->getSupport() != val || (vacintegral && !x->isFullEAC())))
-                        cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << ((x->isFullEAC())?"!":"") << " to " << val << ((vacintegral)?"!":"") << endl;
+                        cout << "CHANGE SUPPORT " << x->getName() << " from " << x->getSupport() << ((x->isFullEAC()) ? "!" : "") << " to " << val << ((vacintegral) ? "!" : "") << endl;
                     if (vacintegral && !x->isFullEAC()) {
                         x->setFullEAC(); // TODO: is it better to set VAC-integrality to true even if current unary cost is not zero?
 #ifndef NDEBUG

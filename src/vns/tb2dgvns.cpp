@@ -18,7 +18,7 @@ bool VNSSolver::solve()
         lastUb = MAX_COST;
         lastSolution.clear();
         preprocessing(MAX_COST);
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (lastUb < MAX_COST)
             wcsp->setSolution(lastUb, &lastSolution);
@@ -46,7 +46,7 @@ bool VNSSolver::solve()
             endSolve(lastUb < MAX_COST, lastUb, true);
             return (lastUb < MAX_COST);
         }
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (bestUb < MAX_COST)
             wcsp->setSolution(bestUb, &bestSolution);

@@ -218,11 +218,15 @@ public:
     virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
-    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs) = 0;
+    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
-    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs) = 0;
+    virtual void postIncrementalUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
+    virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
+    virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
+    virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false) = 0; /// \deprecated
     virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
@@ -367,6 +371,7 @@ public:
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
     virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief load problem in all format supported by toulbar2. Returns the UB known to the solver before solving (file and command line).
+    virtual void read_legacy(const char* fileName) = 0; ///< \brief load problem in wcsp legacy format
     virtual void read_uai2008(const char* fileName) = 0; ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
@@ -377,6 +382,7 @@ public:
     virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
     virtual const vector<pair<Double, vector<Value>>> getSolutions() = 0; ///\brief returns all solutions found
+    virtual void initSolutionCost() = 0; ///< \brief invalidate best solution by changing its cost to MAX_COST
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
     virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
@@ -411,6 +417,14 @@ public:
 
     virtual void buildTreeDecomposition() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;
+
+    virtual const vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
+    virtual void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual void addHMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual void addTMDDConstraint(Mdd mdd, int relaxed) = 0;
 
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;

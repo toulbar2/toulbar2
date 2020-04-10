@@ -130,7 +130,7 @@ void GlobalConstraint::assign(int varIndex)
             deconnect();
             Tuple t(arity_, 0);
             for (int i = 0; i < arity_; i++) {
-                t[i] = ((EnumeratedVariable *)getVar(i))->toIndex(getVar(i)->getValue());
+                t[i] = ((EnumeratedVariable*)getVar(i))->toIndex(getVar(i)->getValue());
             }
             wcsp->revise(this);
             projectLB(eval(t));

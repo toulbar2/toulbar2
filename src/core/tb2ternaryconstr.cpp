@@ -396,7 +396,7 @@ pair<pair<Cost, Cost>, pair<Cost, Cost>> TernaryConstraint::getMaxCost(int varIn
 bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable* vz)
 {
     Cost c1, c;
-    Tuple tch(3,0);
+    Tuple tch(3, 0);
     bool neweq = true; // true if we have  not a difference value
     bool sep = true; // false if vy and vz are not separable
     Cost diff = 0;

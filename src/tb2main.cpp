@@ -24,6 +24,7 @@ const Long hbfsgloballimit = 10000;
 const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
 const double relativegap = 0.0001;
+const int maxdivnbsol = 100;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -249,6 +250,10 @@ enum {
     NO_OPT_localsearch,
     OPT_EDAC,
     OPT_ub,
+    OPT_divDist,
+    OPT_divWidth,
+    OPT_divMethod,
+    OPT_divRelax,
     OPT_Z,
     OPT_epsilon,
     OPT_learning,
@@ -474,6 +479,13 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
+    { OPT_divDist, (char*)"-div", SO_REQ_SEP }, // distance between solutions
+    { OPT_divWidth, (char*)"-divwidth", SO_REQ_SEP }, // max relaxed MDD width
+    { OPT_divWidth, (char*)"-mdd", SO_REQ_SEP }, // max relaxed MDD width
+    { OPT_divRelax, (char*)"-divrelax", SO_REQ_SEP }, // relaxation method
+    { OPT_divRelax, (char*)"-mddh", SO_REQ_SEP }, // relaxation method
+    { OPT_divMethod, (char*)"-divmethod", SO_REQ_SEP }, // encoding of diversity constraint
+    { OPT_divMethod, (char*)"-divm", SO_REQ_SEP }, // encoding of diversity constraint
     // MENDELSOFT
     { OPT_generation, (char*)"-g", SO_NONE }, //sort pedigree by increasing generation number and if equal by increasing individual number
     //	{ OPT_pedigree_by_MPE,  		(char*) "-y", 				SO_OPT			}, // bayesian flag
@@ -853,8 +865,8 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::VACthreshold)
         cout << " (default option)";
     cout << endl;
-    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is " << ((ToulBar2::useRASPS)?ToulBar2::RASPSnbBacktracks:0) << ")" << endl;
-    cout << "   -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is " << ((ToulBar2::useRASPS>1)?(ToulBar2::useRASPS-1):0) << ")" << endl;
+    cout << "   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is " << ((ToulBar2::useRASPS) ? ToulBar2::RASPSnbBacktracks : 0) << ")" << endl;
+    cout << "   -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is " << ((ToulBar2::useRASPS > 1) ? (ToulBar2::useRASPS - 1) : 0) << ")" << endl;
     cout << "   -raspsdeg=[integer] : automatic threshold cost value selection for probing heuristic (default value is " << ToulBar2::RASPSangle << "°)" << endl;
     cout << "   -raspsini : reset weighted degree variable ordering heuristic after doing upper bound probing";
     if (ToulBar2::RASPSreset)
@@ -891,6 +903,10 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::allSolutions)
         cout << " (default value is " << ToulBar2::allSolutions << ")";
     cout << endl;
+    cout << "   -div=[integer] : minimum Hamming distance between diverse solutions (use in conjunction with -a=integer with a limit of " << maxdivnbsol << " solutions) (default value is " << ToulBar2::divBound << ")" << endl;
+    cout << "   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary (default value is " << ToulBar2::divMethod << ")" << endl;
+    cout << "   -mdd=[integer] : maximum relaxed MDD width for diverse solution global constraint (default value is " << ToulBar2::divWidth << ")" << endl;
+    cout << "   -mddh=[integer] : MDD relaxation heuristic: 0: random, 1: high div, 2: small div, 3: high unary costs (default value is " << ToulBar2::divRelax << ")" << endl;
     cout << "   -D : approximate satisfiable solution count with BTD";
     if (ToulBar2::approximateCountingBTD)
         cout << " (default option)";
@@ -1907,6 +1923,41 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::verifyOpt = true;
 #endif
 
+            // diversity
+            if (args.OptionId() == OPT_divDist) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::divBound = atoi(args.OptionArg());
+                    ToulBar2::divNbSol = min((Long)maxdivnbsol, ToulBar2::allSolutions);
+                    ToulBar2::allSolutions = 0;
+                    if (ToulBar2::debug)
+                        cout << "Diversity distance = " << ToulBar2::divBound << endl;
+                }
+            }
+
+            if (args.OptionId() == OPT_divWidth) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::divWidth = atoi(args.OptionArg());
+                    if (ToulBar2::debug)
+                        cout << "Diversity MDD maximum width = " << ToulBar2::divWidth << endl;
+                }
+            }
+
+            if (args.OptionId() == OPT_divMethod) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::divMethod = atoi(args.OptionArg());
+                    if (ToulBar2::debug)
+                        cout << "Diversity method = " << ToulBar2::divMethod << endl;
+                }
+            }
+
+            if (args.OptionId() == OPT_divRelax) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::divRelax = atoi(args.OptionArg());
+                    if (ToulBar2::debug)
+                        cout << "Diversity MDD relaxation method = " << ToulBar2::divRelax << endl;
+                }
+            }
+
             // upper bound initialisation from command line
             if (args.OptionId() == OPT_ub) {
                 ToulBar2::externalUB = args.OptionArg();
@@ -1997,11 +2048,13 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_RASPS) {
                 if (args.OptionArg() == NULL) {
-                    if (ToulBar2::useRASPS == 0) ToulBar2::useRASPS = 1;
+                    if (ToulBar2::useRASPS == 0)
+                        ToulBar2::useRASPS = 1;
                     ToulBar2::RASPSnbBacktracks = raspsbacktracks;
                 } else {
                     Long limit = atoll(args.OptionArg());
-                    if (ToulBar2::useRASPS == 0) ToulBar2::useRASPS = 1;
+                    if (ToulBar2::useRASPS == 0)
+                        ToulBar2::useRASPS = 1;
                     ToulBar2::RASPSnbBacktracks = limit;
                 }
                 if (ToulBar2::debug)
@@ -2041,10 +2094,10 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() == NULL)
                     ToulBar2::useRASPS = maxdiscrepancy + 1;
                 else {
-                        int lds = atoi(args.OptionArg());
-                        if (lds > 0)
-                            ToulBar2::useRASPS = lds+1;
-                    }
+                    int lds = atoi(args.OptionArg());
+                    if (lds > 0)
+                        ToulBar2::useRASPS = lds + 1;
+                }
                 if (ToulBar2::debug)
                     cout << "RASPSlds" << ToulBar2::useRASPS << endl;
             }
@@ -2520,7 +2573,7 @@ int _tmain(int argc, TCHAR* argv[])
             exit(-1);
         }
     }
-    if (strext.count(".bep") || (strfile.size()>0 && strstr((char*)strfile.back().c_str(), "bEpInstance")))
+    if (strext.count(".bep") || (strfile.size() > 0 && strstr((char*)strfile.back().c_str(), "bEpInstance")))
         ToulBar2::bep = new BEP;
 #endif
 
@@ -2540,10 +2593,10 @@ int _tmain(int argc, TCHAR* argv[])
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else {
-            if (strfile.size()==0) {
+            if (strfile.size() == 0) {
                 cerr << "No problem file given as input!" << endl;
                 exit(EXIT_FAILURE);
-            } else if (strfile.size()==1) {
+            } else if (strfile.size() == 1) {
                 globalUb = solver->read_wcsp((char*)strfile.back().c_str());
                 if (globalUb <= MIN_COST) {
                     THROWCONTRADICTION;
@@ -2557,7 +2610,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "Sorry, multiple problem files must have a file extension which contains '.wcsp'!" << endl;
                     exit(EXIT_FAILURE);
                 }
-                for (auto f:strfile) {
+                for (auto f : strfile) {
                     globalUb = solver->read_wcsp((char*)f.c_str());
                     if (globalUb <= MIN_COST) {
                         THROWCONTRADICTION;
@@ -2590,7 +2643,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
             solver->solve();
         }
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         if (ToulBar2::verbose >= 0)
             cout << "No solution found by initial propagation!" << endl;
         if (ToulBar2::isZ) {

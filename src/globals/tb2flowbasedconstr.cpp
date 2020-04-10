@@ -13,7 +13,7 @@ FlowBasedGlobalConstraint::FlowBasedGlobalConstraint(WCSP* wcsp, EnumeratedVaria
 FlowBasedGlobalConstraint::~FlowBasedGlobalConstraint()
 {
     if (zeroEdges) {
-        for (int i=0; i<graph->size(); i++)
+        for (int i = 0; i < graph->size(); i++)
             delete[] zeroEdges[i];
         delete[] zeroEdges;
     }

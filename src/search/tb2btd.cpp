@@ -347,7 +347,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
         pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
         clb = MIN(res.first, clb);
         cub = MIN(res.second, cub);
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -392,7 +392,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
             clb = MIN(res.first, clb);
             cub = MIN(res.second, cub);
         }
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -443,7 +443,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
         lastConflictVar = -1;
         nb = sharpBTD(cluster);
         nbSol += nb;
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -471,7 +471,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
 
         nb = sharpBTD(cluster);
         nbSol += nb;
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -563,7 +563,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             else
                                 csol = MAX_COST;
                         }
-                    } catch (const Contradiction &) {
+                    } catch (const Contradiction&) {
                         wcsp->whenContradiction();
                         c->nogoodRec(ubSon, MAX_COST, &c->open);
                         clb += ubSon - lbSon;
@@ -725,7 +725,7 @@ pair<Cost, Cost> Solver::russianDollSearch(Cluster* c, Cost cub)
             cout << "---  done  cost = [" << res.first << "," << res.second << "] (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl
                  << endl;
 
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         res.first = res.second;
         c->setLbRDS(cub);
@@ -802,7 +802,7 @@ BigInteger Solver::sharpBTD(Cluster* cluster)
                     nb = sharpBTD(c);
                     c->sgoodRec(0, nb);
                     nbSGoods++;
-                } catch (const Contradiction &) {
+                } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                     c->sgoodRec(0, 0); // no solution
                     nbSGoods++;

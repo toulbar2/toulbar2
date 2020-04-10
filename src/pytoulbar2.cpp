@@ -57,8 +57,9 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 
-PYBIND11_MODULE(pytoulbar2, m) {
-    m.def("init", [](){ tb2init(); }); // must be called at the very beginning
+PYBIND11_MODULE(pytoulbar2, m)
+{
+    m.def("init", []() { tb2init(); }); // must be called at the very beginning
     m.attr("MAX_COST") = py::cast(MAX_COST);
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
@@ -135,6 +136,11 @@ PYBIND11_MODULE(pytoulbar2, m) {
         .def_readwrite_static("wcnf", &ToulBar2::wcnf)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
+        .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
+        .def_readwrite_static("divBound", &ToulBar2::divBound)
+        .def_readwrite_static("divWidth", &ToulBar2::divWidth)
+        .def_readwrite_static("divMethod", &ToulBar2::divMethod)
+        .def_readwrite_static("divRelax", &ToulBar2::divRelax)
         .def_readwrite_static("varOrder", &ToulBar2::varOrder)
         .def_readwrite_static("btdMode", &ToulBar2::btdMode)
         .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
@@ -284,9 +290,9 @@ PYBIND11_MODULE(pytoulbar2, m) {
         .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
-        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Double>& costs)) & WeightedCSP::postUnaryConstraint)
-        .def("postBinaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, vector<Double>& costs)) & WeightedCSP::postBinaryConstraint)
-        .def("postTernaryConstraint", &WeightedCSP::postTernaryConstraint)
+        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postUnaryConstraint, py::arg("incremental") = false)
+        .def("postBinaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postBinaryConstraint, py::arg("incremental") = false)
+        .def("postTernaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postTernaryConstraint, py::arg("incremental") = false)
         .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
         .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)

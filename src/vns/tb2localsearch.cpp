@@ -123,7 +123,7 @@ Cost LocalSearch::evaluate_partialInstantiation(
         wcsp->setUb(MAX_COST);
         wcsp->assignLS(variables, values);
         cost = wcsp->getLb();
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
@@ -159,7 +159,7 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
         } catch (const TimeOut&) {
             ToulBar2::limited = true;
         }
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);

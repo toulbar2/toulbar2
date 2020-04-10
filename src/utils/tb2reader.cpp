@@ -466,14 +466,16 @@ CFNStreamReader::~CFNStreamReader()
 bool inline isOBrace(const string& token) { return ((token == "{") || (token == "[")); }
 bool inline isCBrace(const string& token) { return ((token == "}") || (token == "]")); }
 
-inline void yellOBrace(const string& token, const int &l){
+inline void yellOBrace(const string& token, const int& l)
+{
     if (!isOBrace(token)) {
         cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
         exit(EXIT_FAILURE);
     }
 }
 
-inline void yellCBrace(const string& token, const int &l){
+inline void yellCBrace(const string& token, const int& l)
+{
     if (!isCBrace(token)) {
         cerr << "Error: expected a ']' or ']' instead of '" << token << "' at line " << l << endl;
         exit(EXIT_FAILURE);
@@ -488,7 +490,7 @@ void CFNStreamReader::skipOBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    yellOBrace(token,l);
+    yellOBrace(token, l);
 }
 // checks if the next token is a closing brace
 // and yells otherwise
@@ -498,7 +500,7 @@ void CFNStreamReader::skipCBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    yellCBrace(token,l);
+    yellCBrace(token, l);
 }
 
 // Tests if a read token is the expected (JSON) tag and yells otherwise.
@@ -1817,7 +1819,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     while (token != "]") {
 
         string terminal_rule;
-        yellOBrace(token,lineNumber);
+        yellOBrace(token, lineNumber);
         // Read terminal_symbol
         std::tie(lineNumber, token) = this->getNextToken();
         terminal_rule += token + " ";
@@ -1849,7 +1851,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     while (token != "]") {
 
         string non_terminal_rule;
-        yellOBrace(token,lineNumber);
+        yellOBrace(token, lineNumber);
 
         // Read nonterminal_in
         std::tie(lineNumber, token) = this->getNextToken();
@@ -1994,6 +1996,33 @@ Cost WCSP::read_wcsp(const char* fileName)
     name = string(basename(Nfile2));
     free(Nfile2);
 
+    // Done internally by the CFN reader
+    if (!ToulBar2::cfn) {
+        if (ToulBar2::deltaUbS.length() != 0) {
+            ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
+            ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
+        }
+
+        if (ToulBar2::externalUB.size()) {
+            Cost top = string2Cost(ToulBar2::externalUB.c_str());
+            double K = ToulBar2::costMultiplier;
+            if (top < MAX_COST / K)
+                top = top * K;
+            else
+                top = MAX_COST;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+            updateUb(top + ToulBar2::deltaUb);
+            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+        }
+
+        if (ToulBar2::costThresholdS.size())
+            ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
+        if (ToulBar2::costThresholdPreS.size())
+            ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
+        if (ToulBar2::vnsOptimumS.size())
+            ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
+    }
+
     if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
 #ifdef BOOST
         ifstream Rfile;
@@ -2010,7 +2039,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 
             } else {
                 CFNStreamReader fileReader(stream, this);
-                return getUb();
             }
         }
 #else
@@ -2033,7 +2061,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 
             //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
-            return getUb();
         }
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
@@ -2056,7 +2083,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 
             //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
-            return getUb();
         }
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
@@ -2066,58 +2092,105 @@ Cost WCSP::read_wcsp(const char* fileName)
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-    }
-
-    if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
-        ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
-    }
-
-    if (ToulBar2::externalUB.size()) {
-        Cost top = string2Cost(ToulBar2::externalUB.c_str());
-        double K = ToulBar2::costMultiplier;
-        if (top < MAX_COST / K)
-            top = top * K;
-        else
-            top = MAX_COST;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
-        updateUb(top + ToulBar2::deltaUb);
-        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-    }
-
-    if (ToulBar2::costThresholdS.size())
-        ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
-    if (ToulBar2::costThresholdPreS.size())
-        ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
-    if (ToulBar2::vnsOptimumS.size())
-        ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
-
-    if (ToulBar2::haplotype) {
+    } else if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
-        return getUb();
     } else if (ToulBar2::pedigree) {
         if (!ToulBar2::bayesian)
             ToulBar2::pedigree->read(fileName, this);
         else
             ToulBar2::pedigree->read_bayesian(fileName, this);
-        return getUb();
     } else if (ToulBar2::uai) {
         read_uai2008(fileName);
-        return getUb();
     } else if (ToulBar2::xmlflag) {
         read_XML(fileName);
-        return getUb();
     } else if (ToulBar2::bep) {
         ToulBar2::bep->read(fileName, this);
-        return getUb();
     } else if (ToulBar2::wcnf) {
         read_wcnf(fileName);
-        return getUb();
     } else if (ToulBar2::qpbo) {
         read_qpbo(fileName);
-        return getUb();
+    } else {
+        read_legacy(fileName);
     }
-    // TOOLBAR WCSP LEGACY PARSER
+
+    // Diverse variables structure and variables allocation and initialization
+    if (ToulBar2::divNbSol > 1) {
+        for (auto var : vars) {
+            if (var->unassigned() && var->getName()[0] != IMPLICIT_VAR_TAG[0]) {
+                if (var->enumerated()) {
+                    divVariables.push_back(var);
+                } else {
+                    cerr << "Error: cannot control diversity of non enumerated variable: " << var->getName() << endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+
+        // Dual variables allocation, only needed for divMethod 0 Dual or 1 Hidden
+        if (ToulBar2::divMethod < 2) {
+            divVarsId.resize(ToulBar2::divNbSol);
+            for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + ":"
+                            + std::to_string(min(ToulBar2::divBound, (val % (ToulBar2::divBound + 1)) + (val / (ToulBar2::divBound + 1)))));
+                    }
+                }
+            }
+        }
+
+        // Hidden variables, only needed for divMethod 1 Hidden or 2 Ternary
+        if (ToulBar2::divMethod >= 1) {
+            divHVarsId.resize(ToulBar2::divNbSol); // make room for hidden state variables
+            for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
+                bool first = true;
+                for (Variable* x : divVariables) {
+                    if (!first) {
+                        int xId = x->wcspIndex;
+                        divHVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                        EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
+                        for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                            theVar->addValueName("q" + std::to_string(val));
+                        }
+                    }
+                    first = false;
+                }
+            }
+        }
+
+        // Joint DivMin MDD
+        if (ToulBar2::divWidth > 0) { //add variables for relaxed constraint
+            if (ToulBar2::divMethod < 2) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[ToulBar2::divNbSol - 1][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("Q" + std::to_string(val));
+                    }
+                }
+            }
+            if (ToulBar2::divMethod >= 1) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[ToulBar2::divNbSol - 1][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("q" + std::to_string(val));
+                    }
+                }
+            }
+        }
+    }
+    return getUb();
+}
+
+// TOULBAR2 WCSP LEGACY PARSER
+void WCSP::read_legacy(const char* fileName)
+{
     string pbname;
     unsigned int nbvar, nbval;
     int nbconstr;
@@ -2672,7 +2745,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::verbose >= 0)
         cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
-    return getUb();
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
@@ -2903,6 +2975,8 @@ void WCSP::read_uai2008(const char* fileName)
             maxp = max(maxp, p);
         }
         if (ToulBar2::uai == 1 && maxp == 0.)
+            THROWCONTRADICTION;
+        if (ToulBar2::uai == 2 && maxp < -1e38)
             THROWCONTRADICTION;
 
         Cost minc = MAX_COST;
@@ -3282,7 +3356,7 @@ void WCSP::read_wcnf(const char* fileName)
             file >> j;
             if (j != 0 && !tautology) {
                 scopeIndex[arity] = abs(j) - 1;
-                if (arity<(int)tup.size()) {
+                if (arity < (int)tup.size()) {
                     tup[arity] = ((j > 0) ? 0 : 1);
                 } else {
                     tup.push_back((j > 0) ? 0 : 1);

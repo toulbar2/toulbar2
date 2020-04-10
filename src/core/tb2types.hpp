@@ -37,6 +37,9 @@
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
 
+/// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
+const string DIVERSE_VAR_TAG = "^";
+
 /// Domain value (can be positive or negative integers)
 typedef int Value;
 /// Maximum domain value
@@ -425,6 +428,7 @@ public:
     static int showSolutions;
     static int writeSolution;
     static FILE* solutionFile;
+    static long solutionFileRewindPos;
     static Long allSolutions;
     static int dumpWCSP;
     static bool approximateCountingBTD;
@@ -503,6 +507,12 @@ public:
     static bool wcnf;
     static bool qpbo;
     static double qpboQuadraticCoefMultiplier;
+
+    static unsigned int divNbSol;
+    static unsigned int divBound;
+    static unsigned int divWidth;
+    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary
+    static unsigned int divRelax; // 0: random, 1: high div, 2: small div, 3: high unary costs
 
     static char* varOrder;
     static int btdMode;
@@ -690,6 +700,9 @@ public:
 };
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
+
+//For incremental diverse solution search - relaxed constraint
+typedef vector<vector<vector<vector<Cost>>>> Mdd; //mdd[layer][source][target][value] = label weight if source---val--->target exists, getUb otherwise
 
 #endif /*TB2TYPES_HPP_*/
 

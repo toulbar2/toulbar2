@@ -119,7 +119,7 @@ bool ReplicatedParallelDGVNS::solve()
         lastUb = MAX_COST;
         lastSolution.clear();
         preprocessing(MAX_COST);
-    } catch (const Contradiction &) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)
@@ -715,7 +715,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         cout << endl;
     }
     if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
-        rewind(ToulBar2::solutionFile);
+        fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }

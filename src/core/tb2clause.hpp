@@ -107,7 +107,7 @@ public:
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     Long size() const FINAL
     {
-        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         if (sumdelta == MIN_COST)
             return 1;
         return getDomainSizeProduct();
@@ -164,7 +164,7 @@ public:
 
     Cost eval(const Tuple& s)
     {
-        if (lb==MIN_COST && tuple[support] != s[support]) {
+        if (lb == MIN_COST && tuple[support] != s[support]) {
             assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
             return MIN_COST;
         } else {
@@ -219,7 +219,7 @@ public:
 
     pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
     {
-        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         bool supporta = (getClause(index) == a);
         Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)deltaCosts[index]));
         Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)deltaCosts[index] : MIN_COST));
@@ -247,7 +247,7 @@ public:
 
     Cost getMaxFiniteCost()
     {
-        Cost sumdelta = ((lb>MIN_COST)?accumulate(deltaCosts.begin(), deltaCosts.end(), -lb):MIN_COST);
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
         if (CUT(cost, wcsp->getUb()))
@@ -328,15 +328,15 @@ public:
 
     bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
     {
-        bool zerolb = (lb==MIN_COST);
-        if (zerolb && getTuple(support) != ((support==index)?supportValue:getVar(support)->getSupport())) {
+        bool zerolb = (lb == MIN_COST);
+        if (zerolb && getTuple(support) != ((support == index) ? supportValue : getVar(support)->getSupport())) {
             assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
             return true;
         } else {
             Cost res = -lb;
             bool istuple = true;
             for (int i = 0; i < arity_; i++) {
-                if (getTuple(i) != ((i==index)?supportValue:getVar(i)->getSupport())) {
+                if (getTuple(i) != ((i == index) ? supportValue : getVar(i)->getSupport())) {
                     res += deltaCosts[i];
                     istuple = false;
                     if (zerolb) {

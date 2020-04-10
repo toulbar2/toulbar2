@@ -63,6 +63,7 @@ private:
     int bneckVar;
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
+
 public:
     VACExtension(WCSP* w);
     ~VACExtension();

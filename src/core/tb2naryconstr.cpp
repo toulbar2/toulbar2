@@ -1000,7 +1000,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
                     if (markValue.size() < x->getDomainSize()) {
                         for (EnumeratedVariable::iterator itv = x->begin(); itv != x->end(); ++itv) {
                             if (markValue.find(*itv) == markValue.end()) {
-                                Cost udefcost =  default_cost + x->getCost(*itv);
+                                Cost udefcost = default_cost + x->getCost(*itv);
                                 if (ToulBar2::isZ) {
                                     c = wcsp->LogSumExp(c, udefcost);
                                 } else if (udefcost < c)
@@ -1173,7 +1173,7 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
 {
     assert(CUT(default_cost, wcsp->getUb()));
     static Tuple t;
-    Tuple txy(2,0);
+    Tuple txy(2, 0);
     Cost c;
     TUPLES::iterator itproj;
 

@@ -77,7 +77,7 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
 
     Constraint* nctr = wcsp.getCtr(wcsp.postNaryConstraintBegin(scopeIndexs, arity, 0, nogoods));
 
-    Tuple s(arity,0);
+    Tuple s(arity, 0);
     while (nogoods > 0) {
         for (i = 0; i < arity; i++)
             s[i] = myrand() % scopeVars[i]->getDomainInitSize();

@@ -11,6 +11,7 @@
 #include "tb2constraint.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
+#include "search/tb2solver.hpp"
 
 class NaryConstraint;
 class GlobalConstraint;
@@ -40,6 +41,9 @@ class WCSP FINAL : public WeightedCSP {
     Cost ub; ///< current problem upper bound
     StoreCost negCost; ///< shifting value to be added to problem lowerbound when computing the partition function
     vector<Variable*> vars; ///< list of all variables
+    vector<Variable*> divVariables; ///< list of variables submitted to diversity requirements
+    vector<map<int, int>> divVarsId; // vector[j][idx] = index of the dual variable that encodes the diversity constraint on sol j at position idx
+    vector<map<int, int>> divHVarsId; // vector[j][idx] = index of the hidden variable that encodes the diversity constraint on sol j between idx/idx+1
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
     vector<pair<Double, vector<Value>>> solutions; ///< remember all solutions found
@@ -404,21 +408,41 @@ public:
 
     void postUnary(int xIndex, vector<Cost>& costs);
     int postUnary(int xIndex, Value* d, int dsize, Cost penalty);
-    void postUnaryConstraint(int xIndex, vector<Double>& costs);
+    void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false);
     void postUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
+    void postIncrementalUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
     int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) { return postUnary(xIndex, d, dsize, penalty); }
     int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL);
     int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
-    int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs);
+    int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
+    int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
+    int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
+    int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTuple(int ctrindex, const Tuple& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
+
+    // -----------------------------------------------------------
+    // Methods for diverse solutions
+    // -----------------------------------------------------------
+
+    void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost); // to look for the (j+1)-th solution, with j = sol_id
+    void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
+    void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
+    void addMDDConstraint(Mdd mdd, int relaxed);
+    void addHMDDConstraint(Mdd mdd, int relaxed);
+    void addTMDDConstraint(Mdd mdd, int relaxed);
+
+    const vector<Variable*>& getDivVariables()
+    {
+        return divVariables;
+    }
 
     int postCliqueConstraint(vector<int>& scope, const string& arguments)
     {
@@ -473,6 +497,7 @@ public:
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = ""); ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
+    void read_legacy(const char* fileName); ///< \brief common ending section for all readers
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format
@@ -488,6 +513,7 @@ public:
         return solution;
     }
     const vector<pair<Double, vector<Value>>> getSolutions() { return solutions; }
+    void initSolutionCost() { solutionCost = MAX_COST; }
     void setSolution(Cost cost, TAssign* sol = NULL)
     {
         solutionCost = cost;
