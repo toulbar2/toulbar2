@@ -2011,7 +2011,7 @@ bool Solver::solve()
                                             wcsp->propagate();
                                         }
                                         sol_j += 1;
-                                        incrementalSearch = (sol_j < ToulBar2::divNbSol);
+                                        incrementalSearch = (sol_j < ToulBar2::divNbSol && wcsp->getDivVariables().size() > 0 && ToulBar2::divBound <= wcsp->getDivVariables().size());
                                         Store::store(); // protect the current CFN from changes by search or new cost functions
                                         if (ToulBar2::divWidth > 0 && sol_j > 1) {
                                             if (ToulBar2::verbose >= 1)
