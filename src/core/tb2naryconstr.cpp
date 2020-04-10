@@ -1435,6 +1435,104 @@ void NaryConstraint::dump(ostream& os, bool original)
     }
 }
 
+void NaryConstraint::dump_CFN(ostream& os, bool original)
+{
+
+    bool printed = false;
+    os << "\"F_";
+
+    if (original) {
+        for (int i = 0; i < arity_; i++) {
+            if (printed)
+                os << "_";
+            os << scope[i]->wcspIndex;
+            printed = true;
+        }
+
+        os << "\":{\"scope\":[";
+        printed = false;
+        for (int i = 0; i < arity_; i++) {
+            if (printed)
+                os << ",";
+            os << scope[i]->wcspIndex;
+            printed = true;
+        }
+        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        if (pf) {
+            TUPLES::iterator it = pf->begin();
+            printed = false;
+            while (it != pf->end()) {
+                String t = it->first;
+                Cost c = it->second;
+                it++;
+                os << endl;
+                for (unsigned int i = 0; i < t.size(); i++) {
+                    if (printed)
+                        os << ",";
+                    os << scope[i]->toValue(t[i] - CHAR_FIRST);
+                }
+                os << "," << wcsp->Cost2RDCost(c);
+            }
+        } else {
+            int a = arity_;
+            vector<unsigned int> t(a, 0);
+            printed = false;
+            for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+                os << endl;
+                for (int i = 0; i < a; i++) {
+                    if (printed)
+                        os << ",";
+                    printed = true;
+                    os << ((EnumeratedVariable*)getVar(i))->toValue(t[i]);
+                }
+                os << "," << wcsp->Cost2RDCost(costs[idx]);
+                int i = a - 1;
+                while (i >= 0 && t[i] == ((EnumeratedVariable*)getVar(i))->getDomainInitSize() - 1) {
+                    t[i] = 0;
+                    i--;
+                }
+                if (i >= 0)
+                    t[i]++;
+            }
+        }
+    } else {
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned()) {
+                if (printed)
+                    os << "_";
+                os << scope[i]->getCurrentVarId();
+                printed = true;
+            }
+        os << "\":{\"scope\":[";
+        printed = false;
+        for (int i = 0; i < arity_; i++)
+            if (scope[i]->unassigned()) {
+                if (printed)
+                    os << ",";
+                os << scope[i]->getCurrentVarId();
+                printed = true;
+            }
+        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+
+        String tuple;
+        Cost cost;
+        first();
+        printed = false;
+        while (next(tuple, cost)) {
+            os << endl;
+            for (unsigned int i = 0; i < tuple.size(); i++) {
+                if (printed)
+                    os << ",";
+                printed = true;
+                if (scope[i]->unassigned())
+                    os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i] - CHAR_FIRST));
+            }
+            os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
+        }
+    }
+    os << "]}\n";
+}
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

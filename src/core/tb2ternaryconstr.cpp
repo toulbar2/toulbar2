@@ -276,6 +276,36 @@ void TernaryConstraint::dump(ostream& os, bool original)
     }
 }
 
+void TernaryConstraint::dump_CFN(ostream& os, bool original)
+{
+    bool printed = false;
+    os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_"
+       << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "_"
+       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[";
+    os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << ","
+       << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << ","
+       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "],";
+    os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
+    int i = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
+        int j = 0;
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
+            int k = 0;
+            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
+                if (printed)
+                    os << ",\n";
+                if (getCost(*iterX, *iterY, *iterZ) != MIN_COST) {
+                    os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << "," << ((original) ? (*iterZ) : k) << ","
+                       << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
+                    printed = true;
+                } else
+                    printed = false;
+            }
+        }
+    }
+    os << "]}\n";
+}
+
 /*
  * Propagation methods
  *

@@ -181,6 +181,7 @@ public:
     void fillRandom();
     void print(ostream& os);
     void dump(ostream& os, bool original = true);
+    void dump_CFN(ostream& os, bool original = true);
 };
 #endif /*TB2NARYCONSTR_HPP_*/
 

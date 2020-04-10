@@ -95,8 +95,8 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
             if (printed)
                 os << ",\n";
             if (getCost(*iterX, *iterY) != MIN_COST) {
-                os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << ","
-                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : min(wcsp->getDPrimalBound(), wcsp->Cost2RDCost(getCost(*iterX, *iterY))));
+                os << ((original) ? (*iterX) : i) << "," << ((original) ? (*iterY) : j) << ","
+                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost((wcsp->getUb(), getCost(*iterX, *iterY))));
                 printed = true;
             } else
                 printed = false;
