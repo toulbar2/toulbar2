@@ -15,14 +15,14 @@ public:
     //void init_jobs(string jobsfile);
     // unsigned nb_jobs() { return jobs.size();};
     bool next_job(string& wcsp_id);
-    void send_results(Cost new_cost);
+    void send_results(Double new_cost);
     bool request_sequence();
     bool find_next_job(int myjob);
     // void init_node();
     // void shutdown_node();
     // int mpi_rank();
-    void send_seqid_and_cost(unsigned seqid, Cost new_cost);
-    std::tuple<unsigned, Cost> receive_seqid_and_cost(int source);
+    void send_seqid_and_cost(unsigned seqid, Double new_cost);
+    std::tuple<unsigned, Double> receive_seqid_and_cost(int source);
     void process_job_results(int slave_job, int slave_rank);
     //void spin_off_solver(int source);
     void send_new_sequence(int source);

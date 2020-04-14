@@ -33,7 +33,7 @@ bool Jobs::next_job(string& wcsp_id)
 }
 
 // This method sends results ... and request sequence
-void Jobs::send_results(Cost new_cost)
+void Jobs::send_results(Double new_cost)
 {
     MPI_Send(&current_job, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
     send_seqid_and_cost(current_sequence, new_cost);
@@ -42,7 +42,7 @@ void Jobs::send_results(Cost new_cost)
 bool Jobs::request_sequence()
 {
     MPI_Recv(&current_sequence, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status_);
-    if (current_sequence >= 0 && status_.MPI_TAG == 1)
+    if (status_.MPI_TAG == 1)
         return true;
     else {
         current_job = 0;
@@ -67,24 +67,24 @@ bool Jobs::find_next_job(int myjob)
     }
 }
 
-void Jobs::send_seqid_and_cost(unsigned seqid, Cost new_cost)
+void Jobs::send_seqid_and_cost(unsigned seqid, Double new_cost)
 {
     MPI_Send(&seqid, 1, MPI_UNSIGNED, 0, 0, MPI_COMM_WORLD);
-    MPI_Send(&new_cost, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(&new_cost, 1, MPI_LONG_DOUBLE, 0, 0, MPI_COMM_WORLD);
 }
 
-tuple<unsigned, Cost> Jobs::receive_seqid_and_cost(int source)
+tuple<unsigned, Double> Jobs::receive_seqid_and_cost(int source)
 {
-    Cost new_cost;
+    Double new_cost;
     unsigned seqid;
     MPI_Recv(&seqid, 1, MPI_UNSIGNED, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status_);
-    MPI_Recv(&new_cost, 1, MPI_LONG_LONG, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status_);
+    MPI_Recv(&new_cost, 1, MPI_LONG_DOUBLE, source, MPI_ANY_TAG, MPI_COMM_WORLD, &status_);
     return make_tuple(seqid, new_cost);
 }
 
 void Jobs::process_job_results(int slave_job, int slave_rank)
 {
-    Cost new_cost;
+    Double new_cost;
     unsigned seqid;
     tie(seqid, new_cost) = receive_seqid_and_cost(slave_rank);
     ToulBar2::sequence_handler->update_sequences(slave_job - 1, seqid, new_cost); // jobs start at one

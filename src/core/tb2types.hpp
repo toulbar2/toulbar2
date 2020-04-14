@@ -470,6 +470,7 @@ namespace ToulBar2 {
     extern BaseJobs* jobs;
 #endif
     extern SequenceHandler* sequence_handler;
+    extern bool diffneg;
     extern string map_file;
     extern bool cfn;
     extern bool gz;

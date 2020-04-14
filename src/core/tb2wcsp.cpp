@@ -112,6 +112,7 @@ Tb2ScpBranch* ToulBar2::scpbranch;
 BaseJobs* ToulBar2::jobs;
 #endif
 SequenceHandler* ToulBar2::sequence_handler;
+bool ToulBar2::diffneg;
 bool ToulBar2::cfn;
 bool ToulBar2::gz;
 bool ToulBar2::xz;
@@ -298,7 +299,7 @@ void tb2init()
     ToulBar2::pedigree = NULL;
     ToulBar2::haplotype = NULL;
     ToulBar2::cpd = NULL;
-
+    ToulBar2::diffneg = false;
     ToulBar2::cfn = false;
     ToulBar2::gz = false;
     ToulBar2::xz = false;

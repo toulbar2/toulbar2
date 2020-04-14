@@ -293,7 +293,7 @@ enum {
     OPT_mpi,
 #endif
     OPT_neg,
-
+    OPT_diffneg,
     // VNS Methods
     OPT_VNS_search,
 #ifdef OPENMPI
@@ -520,6 +520,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_mpi, (char*)"--jobs", SO_OPT },
 #endif
     { OPT_neg, (char*)"--negative-sequences", SO_OPT },
+    { OPT_diffneg, (char*)"--diffneg", SO_OPT },
 
     // VNS Methods
     { OPT_VNS_search, (char*)"-vns", SO_NONE },
@@ -2124,6 +2125,10 @@ int _tmain(int argc, TCHAR* argv[])
                     exit(1);
                 }
             }
+            if (args.OptionId() == OPT_diffneg)
+                {
+                    ToulBar2::diffneg = true;
+                }
         }
 
         else {

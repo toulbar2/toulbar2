@@ -160,18 +160,21 @@ void Solver::mutate(char* mutationString)
 
 void Solver::mutate(std::string mutationString)
 {
-    if (mutationString.size() > wcsp->numberOfVariables()) {
-        cerr << "Mutation position and string go beyond the end of the protein sequence!" << endl;
-        exit(EXIT_FAILURE);
-    } else {
-        for (size_t i = 0; i < mutationString.size(); i++)
-            for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
-                if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
-                    wcsp->remove(i, v);
+    // if (mutationString.size() > wcsp->numberOfVariables()) {
+    //     cerr << "Mutation position and string go beyond the end of the protein sequence!" << endl;
+    //     exit(EXIT_FAILURE);
+    // } else {
+    for (size_t i = 0; i < mutationString.size(); i++)
+        if (((size_t)ToulBar2::cpd->getRight(i,0))!=ToulBar2::cpd->rot2aaSize(i)-1 && i <= wcsp->numberOfVariables()) // find out if current residue is mutable
+            {
+                for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
+                    if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
+                        wcsp->remove(i, v);
+                    }
                 }
             }
-        wcsp->propagate();
-    }
+    wcsp->propagate();
+        //    }
 }
 
 void Solver::applyCompositionalBiases()
@@ -2040,7 +2043,7 @@ bool Solver::solve()
                                 }
 #ifdef OPENMPI
                                 if (ToulBar2::sequence_handler) {
-                                    ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
+                                    ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getDDualBound());
                                     wcsp->setUb(initialUpperBound);
                                 }
 #endif
@@ -2152,7 +2155,7 @@ bool Solver::solve()
                             }
 #ifdef OPENMPI
                             if (ToulBar2::sequence_handler) {
-                                ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getUb());
+                                ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getDDualBound());
                                 wcsp->setUb(initialUpperBound);
                             }
 #endif
