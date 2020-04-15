@@ -1,6 +1,11 @@
 ######################################
 # personal properties for -D Option
 ######################################
+if(WIDE_STRING)
+  set(WIDE_STRING "WIDE_STRING")
+ELSE(WIDE_STRING)
+  set(WIDE_STRING "")
+ENDIF(WIDE_STRING)
 
 set(PROBABILITY "DOUBLE_PROB")
 
@@ -45,13 +50,13 @@ ELSE(WIN32)
   IF(TOULBAR2)
     set_property(
       TARGET toulbar2
-      PROPERTY COMPILE_DEFINITIONS WCSPFORMATONLY ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+      PROPERTY COMPILE_DEFINITIONS WCSPFORMATONLY ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
     set_property(
       TARGET tb2-archive
-      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
     set_property(
       TARGET tb2-objects
-      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
   ENDIF(TOULBAR2)
   
   IF(MENDELSOFT)
@@ -63,14 +68,14 @@ ELSE(WIN32)
   IF(LIBTB2)
     set_property(
       TARGET tb2-PIC-objects
-      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
     set_property(
       TARGET tb2
-      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+      PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
     IF(PYTB2)
       set_property(
 	TARGET pytb2
-	PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${PROBABILITY})
+	PROPERTY COMPILE_DEFINITIONS ${COST} ${XMLFLAG} LINUX ${boostflag} ${mpiflag} ${WIDE_STRING} ${PROBABILITY})
     ENDIF(PYTB2)
   ENDIF(LIBTB2)
   
