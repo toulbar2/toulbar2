@@ -13,8 +13,8 @@ public:
     AminoMRF(const char* filename); // read from CCMPredfile
     AminoMRF(const char* filename, size_t fmtnum); // read from PMRF binary file. The second argument must be equal to 1
     ~AminoMRF();
-    size_t nVar;
-    size_t nPot;
+    size_t nVar = 0;
+    size_t nPot = 0;
     TLogProb getUnary(int var, int AAidx);
     TLogProb getBinary(int var1, int var2, int AAidx1, int AAidx2);
     TLogProb eval(const string& sequence, const vector<Variable*>& vars);

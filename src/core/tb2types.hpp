@@ -413,190 +413,188 @@ struct ValueCost {
     friend bool operator==(const ValueCost& u, const ValueCost& v) { return u.cost == v.cost; }
 };
 
-
-
 ///contains all global variables (mainly solver's command-line options)
 namespace ToulBar2 {
-    extern string version;
-    extern int verbose;
-    extern int debug;
-    extern string externalUB;
-    extern int showSolutions;
-    extern char* writeSolution;
-    extern FILE* solutionFile;
-    extern Long allSolutions;
-    extern int dumpWCSP;
-    extern bool approximateCountingBTD;
-    extern bool binaryBranching;
-    extern int dichotomicBranching;
-    extern unsigned int dichotomicBranchingSize;
-    extern bool sortDomains;
-    extern map<int, ValueCost*> sortedDomains;
-    extern bool solutionBasedPhaseSaving;
-    extern int elimDegree;
-    extern int elimDegree_preprocessing;
-    extern int elimDegree_;
-    extern int elimDegree_preprocessing_;
-    extern int elimSpaceMaxMB;
-    extern int minsumDiffusion;
-    extern int prodsumDiffusion;
-    extern int preprocessTernaryRPC;
-    extern int preprocessFunctional;
-    extern bool costfuncSeparate;
-    extern int preprocessNary;
-    extern bool QueueComplexity;
-    extern bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
-    extern bool lastConflict;
-    extern int weightedDegree;
-    extern int weightedTightness;
-    extern bool MSTDAC;
-    extern int DEE;
-    extern int DEE_;
-    extern int nbDecisionVars;
-    extern int lds;
-    extern bool limited;
-    extern Long restart;
-    extern externalevent setvalue;
-    extern externalevent setmin;
-    extern externalevent setmax;
-    extern externalevent removevalue;
-    extern externalcostevent setminobj;
-    extern externalsolution newsolution;
-    extern Pedigree* pedigree;
-    extern Haplotype* haplotype;
-    extern Cpd* cpd;
-    extern Tb2ScpBranch* scpbranch;
+extern string version;
+extern int verbose;
+extern int debug;
+extern string externalUB;
+extern int showSolutions;
+extern char* writeSolution;
+extern FILE* solutionFile;
+extern Long allSolutions;
+extern int dumpWCSP;
+extern bool approximateCountingBTD;
+extern bool binaryBranching;
+extern int dichotomicBranching;
+extern unsigned int dichotomicBranchingSize;
+extern bool sortDomains;
+extern map<int, ValueCost*> sortedDomains;
+extern bool solutionBasedPhaseSaving;
+extern int elimDegree;
+extern int elimDegree_preprocessing;
+extern int elimDegree_;
+extern int elimDegree_preprocessing_;
+extern int elimSpaceMaxMB;
+extern int minsumDiffusion;
+extern int prodsumDiffusion;
+extern int preprocessTernaryRPC;
+extern int preprocessFunctional;
+extern bool costfuncSeparate;
+extern int preprocessNary;
+extern bool QueueComplexity;
+extern bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
+extern bool lastConflict;
+extern int weightedDegree;
+extern int weightedTightness;
+extern bool MSTDAC;
+extern int DEE;
+extern int DEE_;
+extern int nbDecisionVars;
+extern int lds;
+extern bool limited;
+extern Long restart;
+extern externalevent setvalue;
+extern externalevent setmin;
+extern externalevent setmax;
+extern externalevent removevalue;
+extern externalcostevent setminobj;
+extern externalsolution newsolution;
+extern Pedigree* pedigree;
+extern Haplotype* haplotype;
+extern Cpd* cpd;
+extern Tb2ScpBranch* scpbranch;
 #ifdef OPENMPI
-    extern BaseJobs* jobs;
+extern BaseJobs* jobs;
 #endif
-    extern SequenceHandler* sequence_handler;
-    extern bool diffneg;
-    extern string map_file;
-    extern bool cfn;
-    extern bool gz;
-    extern bool xz;
-    extern bool bayesian;
-    extern int uai;
-    extern int resolution;
-    extern TProb errorg;
-    extern TLogProb NormFactor;
-    extern int foundersprob_class;
-    extern vector<TProb> allelefreqdistrib;
-    extern bool consecutiveAllele;
-    extern bool generation;
-    extern int pedigreeCorrectionMode;
-    extern int pedigreePenalty;
-    extern int vac;
-    extern string costThresholdS;
-    extern string costThresholdPreS;
-    extern Cost costThreshold;
-    extern Cost costThresholdPre;
-    extern double trwsAccuracy;
-    extern bool trwsOrder;
-    extern unsigned int trwsNIter;
-    extern unsigned int trwsNIterNoChange;
-    extern unsigned int trwsNIterComputeUb;
-    extern double costMultiplier;
-    extern unsigned int decimalPoint;
-    extern string deltaUbS;
-    extern Cost deltaUb;
-    extern bool singletonConsistency;
-    extern bool vacValueHeuristic;
-    extern BEP* bep;
-    extern LcLevelType LcLevel;
-    extern bool wcnf;
-    extern bool qpbo;
-    extern double qpboQuadraticCoefMultiplier;
+extern SequenceHandler* sequence_handler;
+extern bool diffneg;
+extern string map_file;
+extern bool cfn;
+extern bool gz;
+extern bool xz;
+extern bool bayesian;
+extern int uai;
+extern int resolution;
+extern TProb errorg;
+extern TLogProb NormFactor;
+extern int foundersprob_class;
+extern vector<TProb> allelefreqdistrib;
+extern bool consecutiveAllele;
+extern bool generation;
+extern int pedigreeCorrectionMode;
+extern int pedigreePenalty;
+extern int vac;
+extern string costThresholdS;
+extern string costThresholdPreS;
+extern Cost costThreshold;
+extern Cost costThresholdPre;
+extern double trwsAccuracy;
+extern bool trwsOrder;
+extern unsigned int trwsNIter;
+extern unsigned int trwsNIterNoChange;
+extern unsigned int trwsNIterComputeUb;
+extern double costMultiplier;
+extern unsigned int decimalPoint;
+extern string deltaUbS;
+extern Cost deltaUb;
+extern bool singletonConsistency;
+extern bool vacValueHeuristic;
+extern BEP* bep;
+extern LcLevelType LcLevel;
+extern bool wcnf;
+extern bool qpbo;
+extern double qpboQuadraticCoefMultiplier;
 
-    extern char* varOrder;
-    extern int btdMode;
-    extern int btdSubTree;
-    extern int btdRootCluster;
+extern char* varOrder;
+extern int btdMode;
+extern int btdSubTree;
+extern int btdRootCluster;
 
-    extern bool maxsateval;
-    extern bool xmlflag;
-    extern TLogProb markov_log;
-    extern string evidence_file;
-    extern FILE* solution_uai_file;
-    extern string solution_uai_filename;
-    extern string problemsaved_filename;
-    extern bool isZ;
-    extern float isZCelTemp;
-    extern int isZUB;
-    extern Cost enumUB;
-    extern bool bestconf;
-    extern bool stop; // STOP TB2 (TMP way)
-    extern bool isGumbel;
-    extern Seq* seq;
-    extern TLogProb logZ;
-    extern TLogProb Entropy;
-    extern TLogProb Enthalpy;
-    extern TLogProb GlobalLogUbZ; // Upper bound on Z.
-    extern TLogProb GlobalLogLbZ; // Upper bound on Z.
-    extern TLogProb logU; // upper bound on rejected potentials
-    extern TLogProb logepsilon; // epsilon for Z* pruning
-    extern TProb sigma; // sigma set for HBFS-Counting
-    extern TrieNum* trieZ; // Trie over preprocessing Optimum Energies
-    extern string Trie_File;
-    extern bool isTrie_File;
+extern bool maxsateval;
+extern bool xmlflag;
+extern TLogProb markov_log;
+extern string evidence_file;
+extern FILE* solution_uai_file;
+extern string solution_uai_filename;
+extern string problemsaved_filename;
+extern bool isZ;
+extern float isZCelTemp;
+extern int isZUB;
+extern Cost enumUB;
+extern bool bestconf;
+extern bool stop; // STOP TB2 (TMP way)
+extern bool isGumbel;
+extern Seq* seq;
+extern TLogProb logZ;
+extern TLogProb Entropy;
+extern TLogProb Enthalpy;
+extern TLogProb GlobalLogUbZ; // Upper bound on Z.
+extern TLogProb GlobalLogLbZ; // Upper bound on Z.
+extern TLogProb logU; // upper bound on rejected potentials
+extern TLogProb logepsilon; // epsilon for Z* pruning
+extern TProb sigma; // sigma set for HBFS-Counting
+extern TrieNum* trieZ; // Trie over preprocessing Optimum Energies
+extern string Trie_File;
+extern bool isTrie_File;
 
-    extern TLogProb ubE;
-    extern TLogProb Normalizing_Constant;
+extern TLogProb ubE;
+extern TLogProb Normalizing_Constant;
 
-    extern bool uaieval;
-    extern string stdin_format; // stdin format declaration
+extern bool uaieval;
+extern string stdin_format; // stdin format declaration
 
-    extern double startCpuTime;
+extern double startCpuTime;
 
-    extern int splitClusterMaxSize;
-    extern double boostingBTD;
-    extern int maxSeparatorSize;
-    extern int minProperVarSize;
-    extern int smallSeparatorSize;
+extern int splitClusterMaxSize;
+extern double boostingBTD;
+extern int maxSeparatorSize;
+extern int minProperVarSize;
+extern int smallSeparatorSize;
 
-    extern int Berge_Dec; // flag for berge acyclic decomposition
-    extern int nbvar; // initial number of variable (read in the file)
-    extern bool learning; // if true, perform pseudoboolean learning
-    extern externalfunc timeOut;
-    extern bool interrupted;
-    extern int seed;
+extern int Berge_Dec; // flag for berge acyclic decomposition
+extern int nbvar; // initial number of variable (read in the file)
+extern bool learning; // if true, perform pseudoboolean learning
+extern externalfunc timeOut;
+extern bool interrupted;
+extern int seed;
 
-    extern string incop_cmd;
+extern string incop_cmd;
 
-    extern SearchMethod searchMethod;
+extern SearchMethod searchMethod;
 
-    extern string clusterFile; // cluster tree decomposition file (without running intersection property)
-    extern ofstream vnsOutput; // output file for VNS
+extern string clusterFile; // cluster tree decomposition file (without running intersection property)
+extern ofstream vnsOutput; // output file for VNS
 
-    extern VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
-    extern int vnsLDSmin; // discrepancy initial value
-    extern int vnsLDSmax; // discrepancy maximum value
-    extern VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
-    extern int vnsKmin; // neighborhood initial size
-    extern int vnsKmax; // neighborhood maximum size
-    extern VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
+extern VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
+extern int vnsLDSmin; // discrepancy initial value
+extern int vnsLDSmax; // discrepancy maximum value
+extern VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
+extern int vnsKmin; // neighborhood initial size
+extern int vnsKmax; // neighborhood maximum size
+extern VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
 
-    extern int vnsLDScur; // current discrepancy (used only for debugging display)
-    extern int vnsKcur; // current neighborhood size (used only for debugging display)
-    extern VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
-    extern bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
-    extern bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
-    extern bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
-    extern bool vnsParallelSync; // true if RSGDVNS else RADGVNS
-    extern string vnsOptimumS;
-    extern Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
-    extern bool vnsParallel; // true if in master/slaves paradigm
+extern int vnsLDScur; // current discrepancy (used only for debugging display)
+extern int vnsKcur; // current neighborhood size (used only for debugging display)
+extern VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
+extern bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
+extern bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
+extern bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
+extern bool vnsParallelSync; // true if RSGDVNS else RADGVNS
+extern string vnsOptimumS;
+extern Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
+extern bool vnsParallel; // true if in master/slaves paradigm
 
-    extern Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
-    extern Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
-    extern Long hbfsAlpha; // inverse of minimum node redundancy goal limit
-    extern Long hbfsBeta; // inverse of maximum node redundancy goal limit
-    extern ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
-    extern ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+extern Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
+extern Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
+extern Long hbfsAlpha; // inverse of minimum node redundancy goal limit
+extern Long hbfsBeta; // inverse of maximum node redundancy goal limit
+extern ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
+extern ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
 
-    extern bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
-    extern Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
-};
+extern bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
+extern Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
+}; // namespace ToulBar2
 
 #ifdef INT_COST
 inline Cost rounding(Cost lb)

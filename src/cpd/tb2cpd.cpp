@@ -1,24 +1,21 @@
 #include "tb2cpd.hpp"
 
 const map<char, int> Cpd::PSMIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
-    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 },
-    { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
-    { 'Y', 18 }, { 'V', 19 }, { 'B', 20 }, { 'Z', 21 }, { 'X', 22 }, { '*', 23 } };
+    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 }, { 'M', 12 }, { 'F', 13 },
+    { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 }, { 'Y', 18 }, { 'V', 19 }, { 'B', 20 },
+    { 'Z', 21 }, { 'X', 22 }, { '*', 23 } };
 
 const map<char, int> Cpd::PSSMIdx = { { 'A', 0 }, { 'G', 1 }, { 'I', 2 }, { 'L', 3 }, { 'V', 4 }, { 'M', 5 },
-    { 'F', 6 }, { 'W', 7 }, { 'P', 8 }, { 'C', 9 }, { 'S', 10 }, { 'T', 11 },
-    { 'Y', 12 }, { 'N', 13 }, { 'Q', 14 }, { 'H', 15 }, { 'K', 16 }, { 'R', 17 },
-    { 'D', 18 }, { 'E', 19 } };
+    { 'F', 6 }, { 'W', 7 }, { 'P', 8 }, { 'C', 9 }, { 'S', 10 }, { 'T', 11 }, { 'Y', 12 }, { 'N', 13 },
+    { 'Q', 14 }, { 'H', 15 }, { 'K', 16 }, { 'R', 17 }, { 'D', 18 }, { 'E', 19 } };
 
 const map<char, int> AminoMRF::AminoMRFIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
-    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 },
-    { 'M', 12 }, { 'F', 13 }, { 'P', 14 }, { 'S', 15 }, { 'T', 16 }, { 'W', 17 },
-    { 'Y', 18 }, { 'V', 19 } };
+    { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 }, { 'M', 12 }, { 'F', 13 }, { 'P', 14 },
+    { 'S', 15 }, { 'T', 16 }, { 'W', 17 }, { 'Y', 18 }, { 'V', 19 } };
 
 const map<char, int> AminoMRF::AminoPMRFIdx = { { 'A', 0 }, { 'C', 1 }, { 'D', 2 }, { 'E', 3 }, { 'F', 4 }, { 'G', 5 },
-    { 'H', 6 }, { 'I', 7 }, { 'K', 8 }, { 'L', 9 }, { 'M', 10 }, { 'N', 11 },
-    { 'P', 12 }, { 'Q', 13 }, { 'R', 14 }, { 'S', 15 }, { 'T', 16 }, { 'V', 17 },
-    { 'W', 18 }, { 'Y', 19 } };
+    { 'H', 6 }, { 'I', 7 }, { 'K', 8 }, { 'L', 9 }, { 'M', 10 }, { 'N', 11 }, { 'P', 12 }, { 'Q', 13 }, { 'R', 14 },
+    { 'S', 15 }, { 'T', 16 }, { 'V', 17 }, { 'W', 18 }, { 'Y', 19 } };
 
 const string AminoMRFs = "ARNDCQEGHILKMFPSTWYV-";
 const string AminoPMRFs = "ACDEFGHIKLMNPQRSTVWY-";
@@ -112,7 +109,7 @@ AminoMRF::AminoMRF(const char* filename)
 // AminoMRF Class
 // Read MRF trained from multiple alignment using PMRF. The MRF (alignment) should have
 // exactly the same number of variables/columns as the native protein. The fmt is there
-// to have different signatire and should be the expected fmt number of the file (ie. 1).
+// to have different signature and should be the expected fmt number of the file (ie. 1).
 AminoMRF::AminoMRF(const char* filename, size_t fmt)
 {
     static bool debug = false;
@@ -159,6 +156,10 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         file.read((char*)&idx2, sizeof(size_t));
         if (debug)
             cout << "Edge " << idx1 << " - " << idx2 << endl;
+        if (idx1 < 0 || idx1 >= n || idx2 < 0 || idx2 >= n) {
+            cerr << "Error: eMRF edge list contains an out-of-range position." << endl;
+            exit(EXIT_FAILURE);
+        }
         edgeList.push_back(make_pair(idx1, idx2));
     }
     // Skipping sequence profile for now - TODO usable for PSSM
@@ -170,8 +171,9 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
     for (size_t i = 0; i < n; ++i) {
         file.read((char*)tmpUnary, (NumNatAA + 1) * sizeof(float));
         unaries[i].resize(NumNatAA);
-        for (size_t j = 0; j < NumNatAA + 1; ++j) {
+        for (size_t j = 0; j < NumNatAA; ++j) {
             // We need to convert the PMRF idx to a CCMpred idx
+            assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
             unaries[i][AminoMRFIdx.find(AminoPMRFs[j])->second] = -tmpUnary[j];
         }
         if (debug)
@@ -193,7 +195,10 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
 
             for (int j = 0; j < NumNatAA + 1; j++) {
                 if (i < NumNatAA && j < NumNatAA) {
-                    float LP = -tmpBinary[(AminoPMRFIdx.find(AminoMRFs[i])->second * NumNatAA) + AminoPMRFIdx.find(AminoMRFs[j])->second];
+                    assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
+                    assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
+
+                    float LP = -tmpBinary[(AminoMRFIdx.find(AminoPMRFs[i])->second * NumNatAA) + AminoMRFIdx.find(AminoPMRFs[j])->second];
                     binaries[e][i][j] = LP;
                     minscore = min(minscore, LP);
                     maxscore = max(maxscore, LP);
@@ -244,22 +249,24 @@ TLogProb AminoMRF::eval(const string& sequence, const vector<Variable*>& vars)
 
     size_t nbCFNVars = vars.size();
     TLogProb paid = 0.0;
+    auto it = AminoMRFIdx.end();
+
     for (size_t varIdx1 = 0; varIdx1 < nbCFNVars; varIdx1++) {
-        if (vars[varIdx1]->getState() || vars[varIdx1]->isEvolutionMasked())
+        if ((vars[varIdx1]->getState()) || (vars[varIdx1]->isEvolutionMasked()) || ((it = AminoMRFIdx.find(sequence[varIdx1])) == AminoMRFIdx.end()))
             continue;
 
         int pos1 = vars[varIdx1]->getPosition();
-        int code1 = AminoMRFIdx.find(sequence[varIdx1])->second;
+        int code1 = it->second;
         if (debug) {
-            cout << "Unary at position " << pos1 << " amino acid code " << code1 << endl;
+            cout << "Unary on " << vars[varIdx1]->getName() << " at position " << pos1 << " amino acid code " << code1 << endl;
         }
         paid += unaries[pos1][code1];
         for (size_t varIdx2 = varIdx1 + 1; varIdx2 < nbCFNVars; varIdx2++) {
-            if (vars[varIdx2]->getState() || vars[varIdx2]->isEvolutionMasked())
+            if ((vars[varIdx2]->getState()) || (vars[varIdx2]->isEvolutionMasked()) || ((it = AminoMRFIdx.find(sequence[varIdx2])) == AminoMRFIdx.end()))
                 continue;
 
             int pos2 = vars[varIdx2]->getPosition();
-            int code2 = AminoMRFIdx.find(sequence[varIdx2])->second;
+            int code2 = it->second;
             if (debug)
                 cout << "Binary at positions " << pos1 << " - " << pos2 << " amino acid codes " << code1 << " - " << code2 << endl;
 
