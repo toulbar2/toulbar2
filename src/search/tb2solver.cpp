@@ -101,6 +101,7 @@ Solver::Solver(Cost initUpperBound)
     , globalLowerBound(MIN_COST)
     , globalUpperBound(MAX_COST)
     , initialDepth(0)
+    , prevDivSolutionCost(MIN_COST)
 {
     searchSize = new StoreCost(MIN_COST);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
@@ -1353,6 +1354,8 @@ void Solver::newSolution()
         throw NbBacktracksOut();
     if (ToulBar2::allSolutions && nbSol >= ToulBar2::allSolutions)
         throw NbSolutionsOut();
+    if (ToulBar2::divNbSol > 1 && wcsp->getLb() <= prevDivSolutionCost)
+        throw DivSolutionOut();
 }
 
 void Solver::recursiveSolve(Cost lb)
@@ -1981,6 +1984,7 @@ bool Solver::solve()
                             if (ToulBar2::divNbSol > 1) {
                                 int initDepth = Store::getDepth();
                                 Cost initUb = initialUpperBound;
+                                prevDivSolutionCost = MIN_COST;
                                 bool incrementalSearch = true;
                                 solTrie.init(wcsp->getDivVariables());
                                 unsigned int sol_j = 0;
@@ -2038,13 +2042,27 @@ bool Solver::solve()
                                             }
                                             wcsp->propagate();
                                         }
+                                        // reactivate on-the-fly variable elimination and dead-end elimination
+                                        for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
+                                            if (wcsp->unassigned(i)) {
+                                                ((WCSP *)wcsp)->getVar(i)->queueEliminate();
+                                                ((WCSP *)wcsp)->getVar(i)->queueDEE();
+                                            }
+                                        }
+                                        wcsp->propagate();
                                         try {
-                                            hybridSolve();
+                                            try {
+                                                hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
+                                            } catch (DivSolutionOut) {
+                                                ToulBar2::limited = false;
+                                            }
                                         } catch (Contradiction) {
                                             wcsp->whenContradiction();
                                         }
                                         Store::restore(initDepth); // undo search
                                         if (wcsp->getSolutionCost() < initUb) {
+                                            assert(wcsp->getSolutionCost() >= prevDivSolutionCost);
+                                            prevDivSolutionCost = wcsp->getSolutionCost();
                                             vector<Value> divSol;
                                             for (auto var : wcsp->getDivVariables()) {
                                                 divSol.push_back(wcsp->getSolution()[var->wcspIndex]);

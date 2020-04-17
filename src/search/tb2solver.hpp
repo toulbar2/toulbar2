@@ -207,6 +207,7 @@ protected:
     void initGap(Cost newlb, Cost newub);
     void showGap(Cost newlb, Cost newub);
 
+    Cost prevDivSolutionCost;
     SolutionTrie solTrie;
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
@@ -319,6 +320,11 @@ public:
 class NbSolutionsOut : public SolverOut {
 public:
     const char* what() const throw() FINAL { return "... limit on the number of solutions reached!"; }
+};
+
+class DivSolutionOut : public SolverOut {
+public:
+    const char* what() const throw() FINAL { return "... optimal diverse solution found!"; }
 };
 
 class TimeOut : public SolverOut {

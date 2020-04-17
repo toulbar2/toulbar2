@@ -24,7 +24,7 @@ const Long hbfsgloballimit = 10000;
 const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
 const double relativegap = 0.0001;
-const int maxdivnbsol = 100;
+const int maxdivnbsol = 1000;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -1927,8 +1927,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_divDist) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::divBound = atoi(args.OptionArg());
-                    ToulBar2::divNbSol = min((Long)maxdivnbsol, ToulBar2::allSolutions);
-                    ToulBar2::allSolutions = 0;
+                    ToulBar2::divNbSol = maxdivnbsol;
                     if (ToulBar2::debug)
                         cout << "Diversity distance = " << ToulBar2::divBound << endl;
                 }

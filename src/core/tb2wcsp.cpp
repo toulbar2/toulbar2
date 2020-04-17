@@ -424,6 +424,16 @@ void tb2init()
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
 void tb2checkOptions()
 {
+    if (ToulBar2::divBound >= 1 && ToulBar2::divNbSol == 0) {
+        cerr << "Error: ask for zero diverse solutions!" << endl;
+        exit(1);
+    }
+    if (ToulBar2::divNbSol >= 1 && ToulBar2::allSolutions > 0) {
+        if (ToulBar2::verbose >= 0 && ToulBar2::allSolutions > ToulBar2::divNbSol)
+            cout << "Warning! A limit of " << ToulBar2::divNbSol << " diverse solutions has been applied! (try a smaller value with option -a)" << endl;
+        ToulBar2::divNbSol = min((Long)ToulBar2::divNbSol, ToulBar2::allSolutions);
+        ToulBar2::allSolutions = 0;
+    }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
         cerr << "Error: cost multiplier cannot be used with UAI and QPBO formats. Use option -precision instead." << endl;
         exit(1);
@@ -441,6 +451,10 @@ void tb2checkOptions()
     }
     if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::searchMethod != DFBB) {
         cerr << "Error: cannot find all solutions or compute a partition function with VNS. Deactivate either option." << endl;
+        exit(1);
+    }
+    if (ToulBar2::divNbSol > 1 && ToulBar2::searchMethod != DFBB) {
+        cerr << "Error: cannot find diverse solutions with VNS. Deactivate either option." << endl;
         exit(1);
     }
     if (ToulBar2::approximateCountingBTD && ToulBar2::searchMethod != DFBB) {
@@ -461,6 +475,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode > 1) {
         cerr << "Error: RDS-like method cannot currently enumerate solutions. Use DFS/HBFS search or BTD (feasibility only)." << endl;
+        exit(1);
+    }
+    if (ToulBar2::divNbSol > 1 && ToulBar2::btdMode >= 1) {
+        cerr << "Error: BTD-like methods cannot currently find diverse solutions. Use DFS/HBFS search." << endl;
         exit(1);
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ToulBar2::elimDegree > 0) {
