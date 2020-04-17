@@ -2467,47 +2467,6 @@ int _tmain(int argc, TCHAR* argv[])
         exit(EXIT_FAILURE);
     }
 
-#ifdef OPENMPI
-    if (env0.myrank == 0) {
-#endif
-        if (ToulBar2::writeSolution) {
-            ToulBar2::solutionFile = fopen(solutionFileName, "w");
-            if (!ToulBar2::solutionFile) {
-                cerr << "Could not open file " << solutionFileName << endl;
-                exit(EXIT_FAILURE);
-            }
-        }
-        if (ToulBar2::uaieval) {
-            char* tmpPath = new char[strlen(argv[0]) + 1];
-            strcpy(tmpPath, argv[0]);
-            if (strcmp(tmpPath, "toulbar2") == 0)
-                strcpy(tmpPath, ".");
-            char* tmpFile = new char[strlen(strfile.back().c_str()) + 1];
-            strcpy(tmpFile, strfile.back().c_str());
-            string filename(tmpPath);
-            filename += "/";
-            filename += basename(tmpFile);
-            size_t wcsppos = string::npos;
-            if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
-                filename.replace(wcsppos, 5, ".uai");
-            filename += ".";
-            if (ToulBar2::isZ)
-                filename += "PR";
-            else
-                filename += "MPE";
-            ToulBar2::solution_uai_filename = filename;
-            ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
-            if (!ToulBar2::solution_uai_file) {
-                cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
-                exit(EXIT_FAILURE);
-            }
-            delete[] tmpPath;
-            delete[] tmpFile;
-        }
-#ifdef OPENMPI
-    }
-#endif
-
     //TODO: If --show_options then dump ToulBar2 object here
 
     ToulBar2::startCpuTime = cpuTime();
@@ -2627,6 +2586,48 @@ int _tmain(int argc, TCHAR* argv[])
             else
                 solver->parse_solution(certificateString);
         }
+
+#ifdef OPENMPI
+        if (env0.myrank == 0) {
+#endif
+            if (ToulBar2::writeSolution) {
+                ToulBar2::solutionFile = fopen(solutionFileName, "w");
+                if (!ToulBar2::solutionFile) {
+                    cerr << "Could not open file " << solutionFileName << endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (ToulBar2::uaieval) {
+                char* tmpPath = new char[strlen(argv[0]) + 1];
+                strcpy(tmpPath, argv[0]);
+                if (strcmp(tmpPath, "toulbar2") == 0)
+                    strcpy(tmpPath, ".");
+                char* tmpFile = new char[strlen(strfile.back().c_str()) + 1];
+                strcpy(tmpFile, strfile.back().c_str());
+                string filename(tmpPath);
+                filename += "/";
+                filename += basename(tmpFile);
+                size_t wcsppos = string::npos;
+                if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
+                    filename.replace(wcsppos, 5, ".uai");
+                filename += ".";
+                if (ToulBar2::isZ)
+                    filename += "PR";
+                else
+                    filename += "MPE";
+                ToulBar2::solution_uai_filename = filename;
+                ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
+                if (!ToulBar2::solution_uai_file) {
+                    cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
+                    exit(EXIT_FAILURE);
+                }
+                delete[] tmpPath;
+                delete[] tmpFile;
+            }
+#ifdef OPENMPI
+        }
+#endif
+
         if (ToulBar2::dumpWCSP == 1) {
             string problemname = ToulBar2::problemsaved_filename;
             if (ToulBar2::uaieval) {
