@@ -1,4 +1,4 @@
-#if (BOOST_VERSION > 106700)
+#if (BOOST_VERSION > 107000)
 // (C) Copyright Milan Svoboda 2008.
 // Originally developed under the fusecompress project.
 // Based on bzip2.cpp by:
