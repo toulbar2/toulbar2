@@ -654,6 +654,7 @@ public:
 
     virtual void print(ostream& os);
     void dump(ostream& os, bool original = true);
+    void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }
 

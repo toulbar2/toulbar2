@@ -317,8 +317,12 @@ void Solver::parse_solution(const char* certificate)
 void Solver::dump_wcsp(const char* fileName, bool original)
 {
     ofstream pb(fileName);
-    if (pb)
-        wcsp->dump(pb, original);
+    if (pb) {
+        if (ToulBar2::dumpWCSP > 2)
+            wcsp->dump_CFN(pb, original);
+        else
+            wcsp->dump(pb, original);
+    }
 }
 
 set<int> Solver::getUnassignedVars() const
@@ -881,7 +885,9 @@ void Solver::showGap(Cost newLb, Cost newUb)
         if (ToulBar2::verbose >= 0 && newgap < oldgap) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
+            std::ios_base::fmtflags f(cout.flags());
             cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+            cout.flags(f);
         }
     }
 }
@@ -1323,6 +1329,8 @@ void Solver::newSolution()
             string problemname = ToulBar2::problemsaved_filename;
             if (problemname.rfind(".wcsp") != string::npos)
                 problemname.replace(problemname.rfind(".wcsp"), 5, ".pre");
+            else if (problemname.rfind(".cfn") != string::npos)
+                problemname.replace(problemname.rfind(".wcsp"), 4, ".pre");
             ToulBar2::pedigree->save((problemname.find("problem.pre") == 0) ? "problem_corrected.pre" : problemname.c_str(), (WCSP*)wcsp, true, false);
             ToulBar2::pedigree->printSol((WCSP*)wcsp);
             ToulBar2::pedigree->printCorrectSol((WCSP*)wcsp);
@@ -2053,10 +2061,10 @@ bool Solver::solve()
                                         try {
                                             try {
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
-                                            } catch (DivSolutionOut) {
+                                            } catch (const DivSolutionOut&) {
                                                 ToulBar2::limited = false;
                                             }
-                                        } catch (Contradiction) {
+                                        } catch (const Contradiction&) {
                                             wcsp->whenContradiction();
                                         }
                                         Store::restore(initDepth); // undo search
@@ -2076,7 +2084,7 @@ bool Solver::solve()
                                         }
                                         endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
                                     } while (incrementalSearch); // this or an exception (no solution)
-                                } catch (Contradiction) {
+                                } catch (const Contradiction&) {
                                     wcsp->whenContradiction();
                                     endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
                                 }

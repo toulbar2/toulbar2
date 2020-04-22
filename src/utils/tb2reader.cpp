@@ -646,7 +646,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // A domain or domain size is there: the variable has no name
     // we create an integer name that cannot clash with user names
     if (isOBrace(token) || isdigit(token[0])) {
-        varName = to_string(i);
+        varName = "x" + to_string(i);
     } else {
         varName = token;
         std::tie(lineNumber, token) = this->getNextToken();
@@ -2276,7 +2276,7 @@ void WCSP::read_legacy(const char* fileName)
     // read variable domain sizes
     for (unsigned int i = 0; i < nbvar; i++) {
         string varname;
-        varname = to_string(i);
+        varname = "x" + to_string(i);
         file >> domsize;
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
@@ -2841,7 +2841,7 @@ void WCSP::read_uai2008(const char* fileName)
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
-        varname = to_string(i);
+        varname = "x" + to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 3)
             cout << "read variable " << i << " of size " << domsize << endl;
@@ -3332,7 +3332,7 @@ void WCSP::read_wcnf(const char* fileName)
     // create Boolean variables
     for (int i = 0; i < nbvar; i++) {
         string varname;
-        varname = to_string(i);
+        varname = "x" + to_string(i);
         DEBONLY(int theindex =)
         makeEnumeratedVariable(varname, 0, 1);
         assert(theindex == i);
@@ -3534,7 +3534,7 @@ void WCSP::read_qpbo(const char* fileName)
 
     // create Boolean variables
     for (int i = 0; i < n; i++) {
-        makeEnumeratedVariable(to_string(i), 0, 1);
+        makeEnumeratedVariable("x" + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(n, 0);

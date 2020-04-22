@@ -314,7 +314,7 @@ void tb2init()
     ToulBar2::uai = 0;
     ToulBar2::solution_uai_file = NULL;
     ToulBar2::solution_uai_filename = "sol";
-    ToulBar2::problemsaved_filename = "problem.wcsp";
+    ToulBar2::problemsaved_filename = "";
     ToulBar2::markov_log = 0;
     ToulBar2::xmlflag = false;
     ToulBar2::maxsateval = false;
@@ -3199,6 +3199,100 @@ void WCSP::dump(ostream& os, bool original)
     }
 }
 
+// Warning! make the assumption that all initial domains start at zero!!!
+void WCSP::dump_CFN(ostream& os, bool original)
+{
+    bool printed = false;
+    std::ios_base::fmtflags f(os.flags());
+    // dump filename in ToulBar2::problemsaved_filename
+
+    for (unsigned int i = 0; i < vars.size(); i++) {
+        if (vars[i]->getInf() < 0 || !vars[i]->enumerated()) {
+            cerr << "Cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    // Header
+    os << "{\"problem\":{\"name\":\"" << name << "\",\"mustbe\":\"" << ((ToulBar2::costMultiplier < 0) ? ">" : "<");
+    os << fixed << setprecision(ToulBar2::decimalPoint);
+    os << getDPrimalBound() << "\"},\n";
+
+    // Domain variables
+    os << "\"variables\":{\n";
+    for (unsigned int i = 0; i < vars.size(); i++) {
+        assert(enumerated(i));
+        EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
+        if (original) {
+            os << "\"" << s->getName() << "\":";
+            if (s->getValueName(0).empty()) {
+                os << s->getDomainInitSize();
+            } else {
+                os << "[";
+                printed = false;
+                for (size_t p = 0; p < s->getDomainInitSize(); p++) {
+                    if (printed)
+                        os << ",";
+                    os << "\"" << s->getValueName(p) << "\"";
+                    printed = true;
+                }
+                os << "],\n";
+            }
+        } else if (s->unassigned()) {
+            os << "\"" << s->getName() << "\":";
+            int domsize = s->getDomainSize();
+            Value* values = new Value[domsize];
+            s->getDomain(values);
+            if (!s->isValueNames()) {
+                os << domsize;
+            } else {
+                os << "[";
+                printed = false;
+                for (int p = 0; p < domsize; p++) {
+                    if (printed)
+                        os << ",";
+                    assert(!s->getValueName(s->toIndex(values[p])).empty());
+                    os << "\"" << s->getValueName(s->toIndex(values[p])) << "\"";
+                    printed = true;
+                }
+                os << "]";
+            }
+            if (i < vars.size() - 1)
+                os << ",";
+            os << "\n";
+        }
+    }
+
+    os << "},\n\"functions\": {\n";
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && !constrs[i]->isSep())
+            constrs[i]->dump_CFN(os, original);
+    for (int i = 0; i < elimBinOrder; i++)
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
+            elimBinConstrs[i]->dump_CFN(os, original);
+    for (int i = 0; i < elimTernOrder; i++)
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
+            elimTernConstrs[i]->dump_CFN(os, original);
+    for (unsigned int i = 0; i < vars.size(); i++) {
+        if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
+            int size = vars[i]->getDomainSize();
+            ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
+            getEnumDomainAndCost(i, domcost);
+            os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
+            os << ((original) ? i : vars[i]->getCurrentVarId()) << "],\"defaultcost\":" << 0.0 << ",\n";
+            os << "\"costs\":[";
+            for (int v = 0; v < size; v++) {
+                os << ((original) ? (domcost[v].value) : v) << ","
+                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound(), Cost2RDCost(domcost[v].cost)));
+                if (v != (size - 1)) {
+                    os << ",";
+                }
+            }
+            os << "]},\n";
+        }
+    }
+    os << "\"F\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}\n}" << endl;
+    os.flags(f);
+}
 ostream& operator<<(ostream& os, WCSP& wcsp)
 {
     wcsp.print(os);

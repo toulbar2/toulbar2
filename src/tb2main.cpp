@@ -836,9 +836,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -best=[integer] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
     cout << endl;
 #endif
-    cout << "   -z=[filename] : saves problem in wcsp format in filename (or \"problem.wcsp\"  if no parameter is given)" << endl;
-    cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem" << endl;
-    cout << "   -z=[integer] : 1: saves original instance (by default), 2: saves after preprocessing" << endl;
+    cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
+    cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only)" << endl;
+    cout << "   -z=[integer] : 1 or 3: saves original instance (by default), 2 or 4: saves after preprocessing (this option can be combined with the previous one)" << endl;
     cout << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 #ifndef NDEBUG
     cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
@@ -1868,26 +1868,21 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "verbose level = " << ToulBar2::verbose << endl;
             }
 
-            //  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
+            //  z: save problem in wcsp/cfn format in filename \"problem.wcsp/cfn\" (1/3:before, 2/4:current problem after preprocessing)
 
             if (args.OptionId() == OPT_dumpWCSP) {
                 if (!ToulBar2::dumpWCSP)
                     ToulBar2::dumpWCSP = 1;
                 if (args.OptionArg() != NULL) {
-                    char* tmpFile = new char[strlen(args.OptionArg()) + 1];
-                    strcpy(tmpFile, args.OptionArg());
-                    if (strlen(tmpFile) == 1 && (tmpFile[0] == '1' || tmpFile[0] == '2'))
-                        ToulBar2::dumpWCSP = atoi(tmpFile);
-                    else
-                        ToulBar2::problemsaved_filename = to_string(tmpFile);
+                    if (strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') {
+                        ToulBar2::dumpWCSP = atoi(args.OptionArg());
+                    } else
+                        ToulBar2::problemsaved_filename = to_string(args.OptionArg());
                 }
 
-                if (ToulBar2::dumpWCSP <= 1) {
-                    if (ToulBar2::debug)
-                        cout << "original problem dump in problem.wcsp (see also Graphviz and degree distribution)" << endl;
-                } else {
-                    if (ToulBar2::debug)
-                        cout << "dump after preprocessing in problem.wcsp (see also Graphviz and degree distribution)" << endl;
+                if (ToulBar2::debug) {
+                    cout << "Problem will be saved in " << ToulBar2::problemsaved_filename;
+                    cout << "after " << (ToulBar2::dumpWCSP % 1 ? "loading." : "preprocessing.") << endl;
                 }
             }
             //   Z: debug mode (save problem at each node if verbosity option set!)
@@ -2626,6 +2621,9 @@ int _tmain(int argc, TCHAR* argv[])
 #ifdef OPENMPI
         }
 #endif
+
+        if (ToulBar2::problemsaved_filename.empty())
+            ToulBar2::problemsaved_filename = ((ToulBar2::dumpWCSP < 3) ? "problem.wcsp" : "problem.cfn");
 
         if (ToulBar2::dumpWCSP == 1) {
             string problemname = ToulBar2::problemsaved_filename;

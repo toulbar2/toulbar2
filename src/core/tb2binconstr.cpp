@@ -93,6 +93,28 @@ void BinaryConstraint::dump(ostream& os, bool original)
     }
 }
 
+void BinaryConstraint::dump_CFN(ostream& os, bool original)
+{
+    bool printed = false;
+    os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\":{\"scope\":[";
+    os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "," << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "],";
+    os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
+    int i = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
+        int j = 0;
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
+            if (getCost(*iterX, *iterY) != MIN_COST) {
+                if (printed)
+                    os << ",\n";
+                os << ((original) ? (*iterX) : i) << "," << ((original) ? (*iterY) : j) << ","
+                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost((wcsp->getUb(), getCost(*iterX, *iterY))));
+                printed = true;
+            } 
+        }
+    }
+    os << "\n]},\n";
+}
+
 /*
  * Propagation methods
  *

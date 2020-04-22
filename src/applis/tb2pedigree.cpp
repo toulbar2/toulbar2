@@ -778,7 +778,9 @@ void Pedigree::printCorrectSol(WCSP* wcsp)
     string problemname = ToulBar2::problemsaved_filename;
     if (problemname.rfind(".wcsp") != string::npos)
         problemname.replace(problemname.rfind(".wcsp"), 5, "_correct.sol");
-    if (problemname.rfind(".pre") != string::npos)
+    else if (problemname.rfind(".cfn") != string::npos)
+        problemname.replace(problemname.rfind(".cfn"), 4, "_correct.sol");
+    else if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, "_correct.sol");
     if (problemname.rfind("_correct.sol") == string::npos)
         problemname = problemname + to_string("_correct.sol");
@@ -810,6 +812,8 @@ void Pedigree::printSol(WCSP* wcsp)
     string problemname = ToulBar2::problemsaved_filename;
     if (problemname.rfind(".wcsp") != string::npos)
         problemname.replace(problemname.rfind(".wcsp"), 5, ".sol");
+    if (problemname.rfind(".cfn") != string::npos)
+        problemname.replace(problemname.rfind(".cfn"), 4, ".sol");
     if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, ".sol");
     if (problemname.rfind(".sol") == string::npos)

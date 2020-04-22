@@ -42,9 +42,9 @@ public:
 
     bool enumerated() const FINAL { return true; }
 
-    bool isValueNames() { return valueNames.size() == getDomainInitSize(); }
+    bool isValueNames() const { return valueNames.size() == getDomainInitSize(); }
     void addValueName(const string& vname) { valueNames.push_back(vname); }
-    string& getValueName(int index) { return valueNames[index]; }
+    const string& getValueName(int index) const { static const string None = std::string(""); if (isValueNames()) return valueNames[index]; else return None; }
 
     unsigned int getDomainInitSize() const { return domain.getInitSize(); }
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
