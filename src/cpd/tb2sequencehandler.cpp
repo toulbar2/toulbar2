@@ -54,11 +54,18 @@ bool SequenceHandler::update_best_cost(unsigned sequence_index)
   for (unsigned i = 0; i < sequencecosts[sequence_index].size(); i++)
     if (sequencecosts[sequence_index][i] < mincost)
       mincost = sequencecosts[sequence_index][i];
-  if (mincost > bestcost) {
-    bestcost = mincost;
-    bestsequence = sequence_index;
-    return true;
-  }
+  if (ToulBar2::diffneg)
+    if ((mincost - costs_[sequence_index]) > (bestcost - costs_[sequence_index])) {
+      bestcost = mincost;
+      bestsequence = sequence_index;
+      return true;
+    }
+  else
+    if (mincost > bestcost) {
+      bestcost = mincost;
+      bestsequence = sequence_index;
+      return true;
+    }
   return false;
 }
 
@@ -110,8 +117,8 @@ bool SequenceHandler::distribute_sequence(int backbone, unsigned& sequence_index
 // store a new cost for a sequence and check if anything can be updated
 void SequenceHandler::update_sequences(int backbone, unsigned sequence_index, Double cost)
 {
-  if (ToulBar2::diffneg)
-      cost = cost - costs_[sequence_index];
+  // if (ToulBar2::diffneg)
+  //     cost = cost - costs_[sequence_index];
   if (cost < bestcost)
     remove_sequence(sequence_index);
   else {
@@ -126,8 +133,8 @@ void SequenceHandler::report()
   cout << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
   if (ToulBar2::diffneg)
     {
-      cout << "Energy : " << bestcost + costs_[bestsequence] << endl;
-      cout << "Energy difference with positive states : " << bestcost << endl;
+      cout << "Energy : " << bestcost  << endl;
+      cout << "Energy difference with positive states : " << bestcost - costs_[bestsequence] << endl;
     }
   else
     cout << "Energy : " << bestcost << endl;
