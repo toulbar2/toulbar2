@@ -54,12 +54,13 @@ bool SequenceHandler::update_best_cost(unsigned sequence_index)
   for (unsigned i = 0; i < sequencecosts[sequence_index].size(); i++)
     if (sequencecosts[sequence_index][i] < mincost)
       mincost = sequencecosts[sequence_index][i];
-  if (ToulBar2::diffneg)
+  if (ToulBar2::diffneg) {
     if ((mincost - costs_[sequence_index]) > (bestcost - costs_[sequence_index])) {
       bestcost = mincost;
       bestsequence = sequence_index;
       return true;
     }
+  }
   else
     if (mincost > bestcost) {
       bestcost = mincost;
