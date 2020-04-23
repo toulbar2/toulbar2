@@ -175,6 +175,7 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
             // We need to convert the PMRF idx to a CCMpred idx
             assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
             unaries[i][AminoMRFIdx.find(AminoPMRFs[j])->second] = -tmpUnary[j];
+            if (debug) cout << AminoPMRFs[j] << " " <<  -tmpUnary[j] << " ";
         }
         if (debug)
             cout << "Read unary on variable " << i << endl;
@@ -189,20 +190,19 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         file.read((char*)tmpBinary, (NumNatAA + 1) * (NumNatAA + 1) * sizeof(float));
         binaries[e].resize(NumNatAA);
 
-        for (int i = 0; i < NumNatAA + 1; i++) {
-            if (i < NumNatAA)
-                binaries[e][i].resize(NumNatAA);
+        for (int i = 0; i < NumNatAA; i++) 
+            binaries[e][i].resize(NumNatAA);
+        
+        for (int i = 0; i < NumNatAA; i++) {
+            for (int j = 0; j < NumNatAA; j++) {
+                float LP = -tmpBinary[j * (NumNatAA + 1) + i];
+                if (debug) cout << AminoPMRFs[i] << " " << AminoPMRFs[j] << " " << LP << endl;
+                assert(AminoMRFIdx.find(AminoPMRFs[i]) != AminoMRFIdx.end());
+                assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
 
-            for (int j = 0; j < NumNatAA + 1; j++) {
-                if (i < NumNatAA && j < NumNatAA) {
-                    assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
-                    assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
-
-                    float LP = -tmpBinary[(AminoMRFIdx.find(AminoPMRFs[i])->second * NumNatAA) + AminoMRFIdx.find(AminoPMRFs[j])->second];
-                    binaries[e][i][j] = LP;
-                    minscore = min(minscore, LP);
-                    maxscore = max(maxscore, LP);
-                }
+                binaries[e][AminoMRFIdx.find(AminoPMRFs[i])->second][AminoMRFIdx.find(AminoPMRFs[j])->second] = LP;
+                minscore = min(minscore, LP);
+                maxscore = max(maxscore, LP);
             }
         }
 
