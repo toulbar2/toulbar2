@@ -400,6 +400,7 @@ public:
         os << " arity: " << arity_;
         os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
     }
+
     void dump(ostream& os, bool original = true)
     {
         Cost maxdelta = MIN_COST;
@@ -415,7 +416,7 @@ public:
             if (maxdelta == MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
-                    os << scope[i]->toValue(tuple[i]) << " ";
+                    os << tuple[i] << " ";
                 }
                 os << cost << endl;
             } else {
@@ -425,7 +426,7 @@ public:
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << scope[i]->toValue(t[i]) << " ";
+                        os << t[i] << " ";
                     }
                     os << c << endl;
                 }
@@ -456,6 +457,113 @@ public:
                 }
             }
         }
+    }
+
+    void dump_CFN(ostream& os, bool original = true)
+    {
+        bool printed = false;
+        os << "\"F_";
+
+        Cost maxdelta = MIN_COST;
+        for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
+            Cost d = (*it);
+            if (d > maxdelta)
+                maxdelta = d;
+        }
+        if (original) {
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << "_";
+                os << scope[i]->wcspIndex;
+                printed = true;
+            }
+
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << ",";
+                os << scope[i]->wcspIndex;
+                printed = true;
+            }
+            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+
+            if (maxdelta == MIN_COST) {
+                printed = false;
+                for (int i = 0; i < arity_; i++) {
+                    if (printed)
+                        os << ",";
+                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
+                    printed = true;
+                }
+                os << "," << wcsp->Cost2RDCost(cost);
+            } else {
+                Tuple t;
+                Cost c;
+                printed = false;
+                firstlex();
+                while (nextlex(t, c)) {
+                    os << endl;
+                    for (int i = 0; i < arity_; i++) {
+                        if (printed)
+                            os << ",";
+                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        printed = true;
+                   }
+                   os << "," << wcsp->Cost2RDCost(c);
+                }
+            }
+        } else {
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << "_";
+                    os << scope[i]->getCurrentVarId();
+                    printed = true;
+                }
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << ",";
+                    os << scope[i]->getCurrentVarId();
+                    printed = true;
+                }
+            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+
+            if (maxdelta == MIN_COST) {
+                printed = false;
+                for (int i = 0; i < arity_; i++) {
+                    if (scope[i]->unassigned()) {
+                        if (printed)
+                            os << ",";
+                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i]));
+                        printed = true;
+                    }
+                }
+                os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), cost));
+            } else {
+                Tuple t;
+                Cost c;
+                printed = false;
+                firstlex();
+                while (nextlex(t, c)) {
+                    os << endl;
+                    for (int i = 0; i < arity_; i++) {
+                        if (scope[i]->unassigned()) {
+                            if (printed)
+                                os << ",";
+                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                            printed = true;
+                        }
+                    }
+                    os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), c));
+                }
+            }
+        }
+        os << "]},\n";
     }
 };
 #endif /*TB2WCLAUSE_HPP_*/

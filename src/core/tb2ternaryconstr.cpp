@@ -269,7 +269,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? (*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? z->toIndex(*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
             }
         }
     }
@@ -294,7 +294,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
                 if (printed)
                     os << ",\n";
                 if (getCost(*iterX, *iterY, *iterZ) != MIN_COST) {
-                    os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << "," << ((original) ? (*iterZ) : k) << ","
+                    os << ((original) ? x->toIndex(*iterX) : i) << ", " << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
                        << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
                     printed = true;
                 } else

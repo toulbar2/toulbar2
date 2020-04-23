@@ -1423,7 +1423,7 @@ void NaryConstraint::dump(ostream& os, bool original)
                 Cost c = it->second;
                 it++;
                 for (unsigned int i = 0; i < t.size(); i++) {
-                    os << scope[i]->toValue(t[i]) << " ";
+                    os << t[i] << " ";
                 }
                 os << c << endl;
             }
@@ -1432,11 +1432,11 @@ void NaryConstraint::dump(ostream& os, bool original)
             vector<unsigned int> t(a, 0);
             for (ptrdiff_t idx = 0; idx < costSize; idx++) {
                 for (int i = 0; i < a; i++) {
-                    os << ((EnumeratedVariable*)getVar(i))->toValue(t[i]) << " ";
+                    os << t[i] << " ";
                 }
                 os << costs[idx] << endl;
                 int i = a - 1;
-                while (i >= 0 && t[i] == ((EnumeratedVariable*)getVar(i))->getDomainInitSize() - 1) {
+                while (i >= 0 && t[i] == scope[i]->getDomainInitSize() - 1) {
                     t[i] = 0;
                     i--;
                 }
@@ -1503,7 +1503,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (unsigned int i = 0; i < t.size(); i++) {
                     if (printed)
                         os << ",";
-                    os << scope[i]->toValue(t[i]);
+                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->Cost2RDCost(c);
@@ -1518,11 +1518,11 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     if (printed)
                         os << ",";
                     printed = true;
-                    os << ((EnumeratedVariable*)getVar(i))->toValue(t[i]);
+                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
                 }
                 os << "," << wcsp->Cost2RDCost(costs[idx]);
                 int i = a - 1;
-                while (i >= 0 && t[i] == ((EnumeratedVariable*)getVar(i))->getDomainInitSize() - 1) {
+                while (i >= 0 && t[i] == scope[i]->getDomainInitSize() - 1) {
                     t[i] = 0;
                     i--;
                 }
@@ -1549,18 +1549,18 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             }
         os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
 
-        Tuple tuple;
+        Tuple t;
         Cost cost;
         first();
         printed = false;
-        while (next(tuple, cost)) {
+        while (next(t, cost)) {
             os << endl;
-            for (unsigned int i = 0; i < tuple.size(); i++) {
+            for (unsigned int i = 0; i < t.size(); i++) {
                 if (printed)
                     os << ",";
                 printed = true;
                 if (scope[i]->unassigned())
-                    os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i]));
+                    os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
             }
             os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
         }

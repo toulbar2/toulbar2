@@ -314,14 +314,19 @@ void Solver::parse_solution(const char* certificate)
     //    Store::restore(depth);
 }
 
-void Solver::dump_wcsp(const char* fileName, bool original)
+void Solver::dump_wcsp(const char* fileName, bool original, ProblemFormat format)
 {
     ofstream pb(fileName);
-    if (pb) {
-        if (ToulBar2::dumpWCSP > 2)
-            wcsp->dump_CFN(pb, original);
-        else
-            wcsp->dump(pb, original);
+    switch (format) {
+    case WCSP_FORMAT:
+        wcsp->dump(pb, original);
+        break;
+    case CFN_FORMAT:
+        wcsp->dump_CFN(pb, original);
+        break;
+    default:
+        cerr << "Cannot save in this problem format! " << format << endl;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -1778,7 +1783,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
 
     if (ToulBar2::dumpWCSP) {
-        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), false);
+        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), false, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)));
         cout << "end." << endl;
         exit(0);
     }

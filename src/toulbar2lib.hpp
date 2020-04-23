@@ -541,7 +541,7 @@ public:
     /// \see ::solvesymmax2sat_ for Fortran call
     virtual bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol) = 0;
 
-    virtual void dump_wcsp(const char* fileName, bool original = true) = 0; ///< \brief output current problem in a file \see WeightedCSP::dump
+    virtual void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT) = 0; ///< \brief output current problem in a file \see WeightedCSP::dump
     virtual void read_solution(const char* fileName, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a file
     virtual void parse_solution(const char* certificate) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
 

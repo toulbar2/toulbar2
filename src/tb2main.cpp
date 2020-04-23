@@ -1871,18 +1871,30 @@ int _tmain(int argc, TCHAR* argv[])
             //  z: save problem in wcsp/cfn format in filename \"problem.wcsp/cfn\" (1/3:before, 2/4:current problem after preprocessing)
 
             if (args.OptionId() == OPT_dumpWCSP) {
-                if (!ToulBar2::dumpWCSP)
-                    ToulBar2::dumpWCSP = 1;
                 if (args.OptionArg() != NULL) {
                     if (strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') {
                         ToulBar2::dumpWCSP = atoi(args.OptionArg());
-                    } else
+                        if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) != CFN_FORMAT) {
+                            cerr << "Error: filename extension .cfn not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
+                            exit(EXIT_FAILURE);
+                        }
+                        if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) != WCSP_FORMAT) {
+                            cerr << "Error: filename extension .wcsp not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
+                            exit(EXIT_FAILURE);
+                        }
+                    } else {
                         ToulBar2::problemsaved_filename = to_string(args.OptionArg());
-                }
+                        if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && !ToulBar2::dumpWCSP)
+                            ToulBar2::dumpWCSP = 3;
+                        else
+                            ToulBar2::dumpWCSP = 1;
+                    }
+                } else if (!ToulBar2::dumpWCSP)
+                    ToulBar2::dumpWCSP = 1;
 
                 if (ToulBar2::debug) {
                     cout << "Problem will be saved in " << ToulBar2::problemsaved_filename;
-                    cout << "after " << (ToulBar2::dumpWCSP % 1 ? "loading." : "preprocessing.") << endl;
+                    cout << "after " << ((ToulBar2::dumpWCSP % 2) ? "loading." : "preprocessing.") << endl;
                 }
             }
             //   Z: debug mode (save problem at each node if verbosity option set!)
@@ -2623,15 +2635,15 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
 
         if (ToulBar2::problemsaved_filename.empty())
-            ToulBar2::problemsaved_filename = ((ToulBar2::dumpWCSP < 3) ? "problem.wcsp" : "problem.cfn");
+            ToulBar2::problemsaved_filename = ((static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? "problem.cfn" : "problem.wcsp");
 
-        if (ToulBar2::dumpWCSP == 1) {
+        if (ToulBar2::dumpWCSP % 2) {
             string problemname = ToulBar2::problemsaved_filename;
             if (ToulBar2::uaieval) {
                 problemname = ToulBar2::solution_uai_filename;
-                problemname.replace(problemname.rfind(".uai.MPE"), 8, ".wcsp");
+                problemname.replace(problemname.rfind(".uai.MPE"), 8, (static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? ".cfn" : ".wcsp");
             }
-            solver->dump_wcsp(problemname.c_str());
+            solver->dump_wcsp(problemname.c_str(), true, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)));
         } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
 #ifdef LINUX
             signal(SIGINT, timeOut);

@@ -3224,38 +3224,29 @@ void WCSP::dump_CFN(ostream& os, bool original)
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
         if (original) {
             os << "\"" << s->getName() << "\":";
-            if (s->getValueName(0).empty()) {
-                os << s->getDomainInitSize();
-            } else {
-                os << "[";
-                printed = false;
-                for (size_t p = 0; p < s->getDomainInitSize(); p++) {
-                    if (printed)
-                        os << ",";
-                    os << "\"" << s->getValueName(p) << "\"";
-                    printed = true;
-                }
-                os << "],\n";
+            os << "[";
+            printed = false;
+            for (size_t p = 0; p < s->getDomainInitSize(); p++) {
+                if (printed)
+                    os << ",";
+                os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
+                printed = true;
             }
+            os << "],\n";
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
             int domsize = s->getDomainSize();
             Value* values = new Value[domsize];
             s->getDomain(values);
-            if (!s->isValueNames()) {
-                os << domsize;
-            } else {
-                os << "[";
-                printed = false;
-                for (int p = 0; p < domsize; p++) {
-                    if (printed)
-                        os << ",";
-                    assert(!s->getValueName(s->toIndex(values[p])).empty());
-                    os << "\"" << s->getValueName(s->toIndex(values[p])) << "\"";
-                    printed = true;
-                }
-                os << "]";
+            os << "[";
+            printed = false;
+            for (int p = 0; p < domsize; p++) {
+                if (printed)
+                    os << ",";
+                os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
+                printed = true;
             }
+            os << "]";
             if (i < vars.size() - 1)
                 os << ",";
             os << "\n";

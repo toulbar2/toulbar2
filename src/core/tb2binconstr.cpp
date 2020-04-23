@@ -88,7 +88,7 @@ void BinaryConstraint::dump(ostream& os, bool original)
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
-            os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+            os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
         }
     }
 }
@@ -106,7 +106,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
             if (getCost(*iterX, *iterY) != MIN_COST) {
                 if (printed)
                     os << ",\n";
-                os << ((original) ? (*iterX) : i) << "," << ((original) ? (*iterY) : j) << ","
+                os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << ","
                    << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost((wcsp->getUb(), getCost(*iterX, *iterY))));
                 printed = true;
             } 

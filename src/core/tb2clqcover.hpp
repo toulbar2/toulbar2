@@ -112,7 +112,7 @@ public:
         if (CUT(all0, ub))
             all0 = mult_ub;
     }
-    void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; }
+    void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
 
 private:
     // ----------------------------------------------------------------------

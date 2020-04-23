@@ -393,6 +393,20 @@ typedef enum {
     VNS_ADD1JUMP = 4
 } VNSInc;
 
+typedef enum {
+    WCSP_FORMAT = 1,
+    CFN_FORMAT,
+    WCNF_FORMAT,
+    BEP_FORMAT,
+    CNF_FORMAT,
+    LG_FORMAT,
+    MAP_FORMAT,
+    PRE_FORMAT,
+    QPBO_FORMAT,
+    UAI_FORMAT,
+    XCSP2_FORMAT
+} ProblemFormat;
+
 struct ValueCost {
     Value value;
     Cost cost;
