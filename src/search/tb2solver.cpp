@@ -160,21 +160,25 @@ void Solver::mutate(char* mutationString)
 
 void Solver::mutate(std::string mutationString)
 {
-    // if (mutationString.size() > wcsp->numberOfVariables()) {
-    //     cerr << "Mutation position and string go beyond the end of the protein sequence!" << endl;
-    //     exit(EXIT_FAILURE);
-    // } else {
     for (size_t i = 0; i < mutationString.size(); i++)
         if (((size_t)ToulBar2::cpd->getRight(i,0))!=ToulBar2::cpd->rot2aaSize(i)-1 && i <= wcsp->numberOfVariables()) // find out if current residue is mutable
             {
+                bool present = false;
                 for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
-                    if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
-                        wcsp->remove(i, v);
+                    if (ToulBar2::cpd->getAA(i, v) == mutationString[i] && wcsp->canbe(i, v)) {
+                        present = true;
                     }
                 }
+                if (present)
+                    for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
+                        if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
+                            wcsp->remove(i, v);
+                        }
+                    }
+                else
+                    cout << "WARNING: Couldn't mutate position " << i+1 << "  to " << mutationString[i] << " as it would wipe out a domain" << endl;
             }
     wcsp->propagate();
-        //    }
 }
 
 void Solver::applyCompositionalBiases()
