@@ -54,26 +54,34 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     isSep_ = false;
 
     if (ToulBar2::cfn && ToulBar2::cpd) {
-        if (name.size() >= 2) {
+        if (name.size() > 0) {
             nativeResidue = name[0];
-
-            size_t separatorPos = name.find('-');
-            size_t multiStatePos = name.find('_');
-
-            if (separatorPos != string::npos) {
-                evolutionMasked = (name.find('e', separatorPos) != string::npos);
-            }
-
-            try {
-                if (multiStatePos != string::npos) {
-                    state = stoi(name.substr(multiStatePos + 1));
+            if (name[0] != 'Z' || name[0] != 'X') {// Special non designable AA variables
+                
+                size_t separatorPos = name.find('-');
+                size_t multiStatePos = name.find('_');
+                
+                if (separatorPos != string::npos) {
+                    evolutionMasked = (name.find('e', separatorPos) != string::npos);
                 }
-                position = stoi(name.substr(1, min(separatorPos, multiStatePos) - 1)) - 1; // we start at 0 internally
-            } catch (const std::invalid_argument&) {
-                cerr << "Error: invalid position or state number in variable '" << name << "'" << endl;
-                exit(EXIT_FAILURE);
+                
+                try {
+                    if (multiStatePos != string::npos) {
+                        state = stoi(name.substr(multiStatePos + 1));
+                    }
+                    position = stoi(name.substr(1, min(separatorPos, multiStatePos) - 1)) - 1; // we start at 0 internally
+                } catch (const std::invalid_argument&) {
+                    cerr << "Error: invalid position or state number in variable '" << name << "'" << endl;
+                    exit(EXIT_FAILURE);
+                }
             }
-        } else {
+            else
+                {
+                    evolutionMasked = true;
+                    state =-1;
+                }
+        }
+        else {
             cerr << "Error: invalid name for variable '" << name << "'" << endl;
             exit(EXIT_FAILURE);
         }
