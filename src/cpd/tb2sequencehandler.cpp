@@ -131,6 +131,7 @@ void SequenceHandler::update_sequences(int backbone, unsigned sequence_index, Do
 
 void SequenceHandler::report()
 {
+  cout << "Writing report:" << endl;
   cout << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
   if (ToulBar2::diffneg)
     {
