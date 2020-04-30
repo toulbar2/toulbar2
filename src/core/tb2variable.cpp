@@ -56,7 +56,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     if (ToulBar2::cfn && ToulBar2::cpd) {
         if (name.size() > 0) {
             nativeResidue = name[0];
-            if (name[0] != 'Z' || name[0] != 'X') {// Special non designable AA variables
+            if (name[0] != 'Z' && name[0] != 'X') {// Special non designable AA variables
                 
                 size_t separatorPos = name.find('-');
                 size_t multiStatePos = name.find('_');
