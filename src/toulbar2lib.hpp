@@ -109,6 +109,7 @@ public:
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain
 
     virtual string getName(int varIndex) const = 0; ///< \note by default, variables names are integers, starting at zero
+    virtual int getVarIndex(const string& s) const = 0; ///< return variable index from its name, or numberOfVariables() if not found
     virtual Value getInf(int varIndex) const = 0; ///< \brief minimum current domain value
     virtual Value getSup(int varIndex) const = 0; ///< \brief maximum current domain value
     virtual Value getValue(int varIndex) const = 0; ///< \brief current assigned value \warning undefined if not assigned yet
@@ -120,6 +121,7 @@ public:
     virtual unsigned int getDomainInitSize(int varIndex) const = 0; ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) = 0; ///< \brief gets value from index (warning! assumes EnumeratedVariable)
     virtual unsigned int toIndex(int varIndex, Value value) = 0; ///< \brief gets index from value (warning! assumes EnumeratedVariable)
+    virtual unsigned int toIndex(int varIndex, const string& valueName) = 0; ///< \brief gets index from value name (warning! assumes EnumeratedVariable with value names)
     virtual int getDACOrder(int varIndex) const = 0; ///< \brief index of the variable in the DAC variable ordering
 
     virtual bool assigned(int varIndex) const = 0;

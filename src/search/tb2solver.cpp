@@ -168,8 +168,38 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     while (!file.eof()) {
         if ((unsigned int)i >= wcsp->numberOfVariables())
             break;
+        int i_copy = i;
         Value value = 0;
-        file >> value;
+        string token;
+        file >> token;
+        if (token.length() == 0)
+            break;
+        if (not isdigit(token[0])) {
+            size_t operation = token.find("=");
+            if (operation != string::npos) {
+                i = wcsp->getVarIndex(token.substr(0, operation));
+                if ((unsigned int)i >= wcsp->numberOfVariables()) {
+                    cerr << "Solution file incorrect! " << i_copy << " " << token << " " << i << endl;
+                    exit(EXIT_FAILURE);
+                }
+                operation++;
+            } else {
+                operation = 0;
+            }
+            if (not isdigit(token[operation])) {
+                unsigned int idx = wcsp->toIndex(i, token.substr(operation, string::npos));
+                if (idx >= wcsp->getDomainInitSize(i)) {
+                    cerr << "Solution file incorrect! " << i_copy << " " << token << " " << i << " " << idx << endl;
+                    exit(EXIT_FAILURE);
+                }
+                value = wcsp->toValue(i, idx);
+            } else {
+                value = atoi(token.substr(operation, string::npos).c_str());
+            }
+        } else {
+            value = atoi(token.c_str());
+        }
+
         if (ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) {
             int j = wcsp->getDomainInitSize(i) - 1;
             while (j >= 0) {
@@ -198,6 +228,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
         //			  wcsp->setBestValue(i, value); // side-effect: remember last solution
         //			}
         //        }
+        i = i_copy;
         i++;
     }
     bool contradiction = false;
@@ -243,19 +274,61 @@ void Solver::parse_solution(const char* certificate)
 
     vector<int> variables;
     vector<Value> values;
+    char svar[1024];
+    char svalue[1024];
     int var;
     Value value;
-    char operation;
-    int items;
-    while ((certif2 != NULL) && (certif2[0] != 0)) {
-        items = sscanf(certif2, "%d%c%d", &var, &operation, &value);
-        if ((items != 3) || ((unsigned int)var >= wcsp->numberOfVariables())) {
-            cerr << "Certificate " << certif2 << " incorrect!" << endl;
+    char operation = '\0';
+    while ((certif2 != NULL) && (certif2[0] != '\0')) {
+        int items = 0;
+        char *ope = strpbrk(certif2+1, "=#<>"); // avoid first character of a variable name (can be an operation char)
+        if (ope) {
+            items++;
+            operation = *ope;
+            items++;
+            strncpy(svar, certif2, ope - certif2);
+            svar[ope - certif2] = '\0';
+            char *nextsep = strpbrk(ope+2, sep);
+            if (nextsep) {
+                items++;
+                strncpy(svalue, ope+1, nextsep-ope-1);
+                svalue[nextsep-ope-1] = '\0';
+            } else {
+                if (strlen(ope+1) > 0) {
+                    items++;
+                    strcpy(svalue, ope+1);
+                }
+            }
+
+        }
+        if (items != 3) {
+            cerr << "Certificate " << certif2 << " incorrect! " << items << endl;
             exit(EXIT_FAILURE);
         }
         certif2 = strstr(certif2, sep);
         if (certif2)
             certif2++;
+
+        if (not isdigit(svar[0])) {
+            var = wcsp->getVarIndex(to_string(svar));
+            if ((unsigned int)var >= wcsp->numberOfVariables()) {
+                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            var = atoi(svar);
+        }
+
+        if (not isdigit(svalue[0])) {
+            unsigned int idx = wcsp->toIndex(var, to_string(svalue));
+            if (idx >= wcsp->getDomainInitSize(var)) {
+                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                exit(EXIT_FAILURE);
+            }
+            value = wcsp->toValue(var, idx);
+        } else {
+            value = atoi(svalue);
+        }
 
         if (ToulBar2::sortDomains && ToulBar2::sortedDomains.find(var) != ToulBar2::sortedDomains.end()) {
             int j = wcsp->getDomainInitSize(var) - 1;

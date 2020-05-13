@@ -26,6 +26,7 @@
 #endif
 
 #include <limits>
+#include <iterator>
 #include <vector>
 #include <map>
 #include <sstream>

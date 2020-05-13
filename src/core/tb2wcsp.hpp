@@ -211,6 +211,7 @@ public:
     bool enumerated(int varIndex) const { return vars[varIndex]->enumerated(); } ///< \brief true if the variable has an enumerated domain
 
     string getName(int varIndex) const { return vars[varIndex]->getName(); } ///< \note by default, variables names are integers, starting at zero
+    int getVarIndex(const string& s) const { vector<Variable *>::const_iterator iter = find_if(vars.begin(), vars.end(), [&s](const Variable *var){return (var->getName()==s);}); return std::distance(vars.begin(), iter); }
     Value getInf(int varIndex) const { return vars[varIndex]->getInf(); } ///< \brief minimum current domain value
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
     Value getValue(int varIndex) const { return vars[varIndex]->getValue(); } ///< \brief current assigned value \warning undefined if not assigned yet
@@ -245,7 +246,12 @@ public:
     {
         assert(vars[varIndex]->enumerated());
         return ((EnumeratedVariable*)vars[varIndex])->toIndex(value);
-    } ///< \brief gets value from index (warning! assumes EnumeratedVariable)
+    } ///< \brief gets index from value (warning! assumes EnumeratedVariable)
+    unsigned int toIndex(int varIndex, const string& valueName)
+    {
+        assert(vars[varIndex]->enumerated());
+        return ((EnumeratedVariable*)vars[varIndex])->toIndex(valueName);
+    }///< \brief gets index from value name (warning! assumes EnumeratedVariable)
     int getDACOrder(int varIndex) const { return vars[varIndex]->getDACOrder(); } ///< \brief index of the variable in the DAC variable ordering
     void updateCurrentVarsId(); ///< \brief determines the position of each variable in the current list of unassigned variables (see \ref WCSP::dump)
 
