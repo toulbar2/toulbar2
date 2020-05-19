@@ -230,15 +230,10 @@ protected:
     void conflict() {}
     void enforceUb();
     void singletonConsistency();
-    Cost beginSolve(Cost ub);
-    Cost preprocessing(Cost ub);
-    void endSolve(bool isSolution, Cost cost, bool isComplete);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    void recursiveSolve(Cost lb = MIN_COST);
-    void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
     void scheduleOrPostpone(int varIndex);
 
@@ -255,7 +250,6 @@ protected:
     pair<Cost, Cost> binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost cub, int varIndex, Value value);
     pair<Cost, Cost> recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub);
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
-    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value value);
@@ -274,7 +268,16 @@ public:
     set<int> getUnassignedVars() const;
     unsigned int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search
 
-    virtual bool solve();
+    virtual bool solve(bool first = true);
+
+    // internal methods called by solve, for advanced programmers only!!!
+    void beginSolve(Cost ub);
+    Cost preprocessing(Cost ub);
+    void recursiveSolve(Cost lb = MIN_COST);
+    void recursiveSolveLDS(int discrepancy);
+    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    void endSolve(bool isSolution, Cost cost, bool isComplete);
+    // end of internal solve methods
 
     Cost narycsp(string cmd, vector<Value>& solution);
 
@@ -282,7 +285,7 @@ public:
 
     void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT);
     void read_solution(const char* fileName, bool updateValueHeuristic = true);
-    void parse_solution(const char* certificate);
+    void parse_solution(const char* certificate, bool updateValueHeuristic = true);
 
     virtual void newSolution();
     const vector<Value> getSolution() { return wcsp->getSolution(); }

@@ -750,7 +750,7 @@ void Cluster::getSolution(TAssign& sol)
             if (!isSepVar(*it)) {
                 sol[*it] = wcsp->toValue(*it, s[i]);
                 //				cout << *it << " := " << sol[*it] << endl;
-                if (!ToulBar2::verifyOpt)
+                if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
                     wcsp->setBestValue(*it, sol[*it]);
                 i++;
             }

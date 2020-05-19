@@ -256,7 +256,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     }
 }
 
-void Solver::parse_solution(const char* certificate)
+void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
 {
     wcsp->propagate();
 
@@ -346,7 +346,8 @@ void Solver::parse_solution(const char* certificate)
             variables.push_back(var);
             values.push_back(value);
             // side-effect: remember last solution
-            wcsp->setBestValue(var, value);
+            if (updateValueHeuristic)
+                wcsp->setBestValue(var, value);
             break;
         }
         case '#': {
@@ -1670,7 +1671,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
     return make_pair(clb, cub);
 }
 
-Cost Solver::beginSolve(Cost ub)
+void Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
     if (ub <= MIN_COST) {
@@ -1755,7 +1756,13 @@ Cost Solver::beginSolve(Cost ub)
         ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     }
 
-    return ub;
+    // reactivate on-the-fly variable elimination and dead-end elimination if needed
+    for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
+        if (wcsp->unassigned(i)) {
+            ((WCSP *)wcsp)->getVar(i)->queueEliminate();
+            ((WCSP *)wcsp)->getVar(i)->queueDEE();
+        }
+    }
 }
 
 Cost Solver::preprocessing(Cost initialUpperBound)
@@ -1838,8 +1845,10 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
     initGap(wcsp->getLb(), wcsp->getUb());
 
-    if (ToulBar2::DEE == 4)
+    if (ToulBar2::DEE == 4) {
         ToulBar2::DEE_ = 0; // only PSNS in preprocessing
+        ToulBar2::DEE = 0; // avoid doing DEE later in the case of incremental solving
+    }
 
     if (ToulBar2::isZ && ToulBar2::verbose >= 1)
         cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
@@ -1864,9 +1873,9 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     return initialUpperBound;
 }
 
-bool Solver::solve()
+bool Solver::solve(bool first)
 {
-    wcsp->setUb(beginSolve(wcsp->getUb()));
+    beginSolve(wcsp->getUb());
 
     Cost initialUpperBound = wcsp->getUb();
 
@@ -1874,7 +1883,11 @@ bool Solver::solve()
     int initdepth = Store::getDepth();
     try {
         try {
-            initialUpperBound = preprocessing(initialUpperBound);
+            if (first) {
+                initialUpperBound = preprocessing(initialUpperBound);
+            } else {
+                initGap(wcsp->getLb(), wcsp->getUb());
+            }
 
             Cost upperbound = MAX_COST;
             if (ToulBar2::restart >= 0) {
@@ -1888,7 +1901,7 @@ bool Solver::solve()
             Long nbBacktracksLimitTop = 1;
             int storedepth = Store::getDepth();
             do {
-                //		  Store::store();
+                Store::store();
                 if (ToulBar2::restart >= 0) {
                     nbbacktracksout = false;
                     nbrestart++;
@@ -2048,7 +2061,6 @@ bool Solver::solve()
                             if (ToulBar2::verbose >= 0 && nbHybrid >= 1)
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
-                            initialDepth = Store::getDepth();
                             if (ToulBar2::useRASPS) {
                                 enforceUb();
                                 wcsp->propagate();
@@ -2138,6 +2150,7 @@ bool Solver::solve()
                                         wcsp->propagate();
                                         try {
                                             try {
+                                                initialDepth = Store::getDepth();
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
                                             } catch (const DivSolutionOut&) {
                                                 ToulBar2::limited = false;
@@ -2167,6 +2180,7 @@ bool Solver::solve()
                                     endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
                                 }
                             } else {
+                                initialDepth = Store::getDepth();
                                 hybridSolve();
                             }
                         }

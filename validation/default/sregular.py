@@ -1,4 +1,4 @@
-import toulbar2py as tb2
+import pytoulbar2 as tb2
 tb2.init()
 m = tb2.Solver(12)
 v1=m.wcsp.makeEnumeratedVariable('v1', 0,1)

@@ -43,8 +43,8 @@
 // NB: pytoulbar2.cpython* must be in your Python3 path or export PYTHONPATH=.
 // python3 -c "import sys; sys.path.append('.'); import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
 // python3 -c "import sys; sys.path.append('.'); import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)],False); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)],False); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)],False); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)],False); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)],False); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)],False); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)],False); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)],False); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)],False); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)],False); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)],False); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)],False); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1, False); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1, False); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -56,6 +56,7 @@ namespace py = pybind11;
 #include "toulbar2lib.hpp"
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
+#include "search/tb2solver.hpp"
 
 PYBIND11_MODULE(pytoulbar2, m)
 {
@@ -64,6 +65,7 @@ PYBIND11_MODULE(pytoulbar2, m)
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
     py::register_exception<Contradiction>(m, "Contradiction");
+    py::register_exception<SolverOut>(m, "SolverOut");
 
     py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete>>(m, "option")
         .def_readonly_static("version", &ToulBar2::version)
@@ -289,12 +291,18 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
         .def("cartProd", &WeightedCSP::cartProd)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
-        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
+        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) &WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
-        .def("postUnaryConstraint", (void (WeightedCSP::*)(int xIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postUnaryConstraint)
-        .def("postBinaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postBinaryConstraint)
-        .def("postTernaryConstraint", (int (WeightedCSP::*)(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental)) & WeightedCSP::postTernaryConstraint)
+        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+            return s.postUnaryConstraint(xIndex, costs, incremental);
+        }, py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
+            return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
+        }, py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def("postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
+            return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
+        }, py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
         .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
@@ -317,6 +325,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         //        .def("postWOverlap", &WeightedCSP::postWOverlap)
         .def("isGlobal", &WeightedCSP::isGlobal)
         .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
+        .def("initSolutionCost", &WeightedCSP::initSolutionCost)
         .def("getSolutionValue", &WeightedCSP::getSolutionValue)
         .def("getSolutionCost", &WeightedCSP::getSolutionCost)
         .def("getSolutions", &WeightedCSP::getSolutions)
@@ -362,7 +371,7 @@ PYBIND11_MODULE(pytoulbar2, m)
             tb2checkOptions();
             return s.read_wcsp(fileName);
         })
-        .def("solve", [](WeightedCSPSolver& s, int timeout) {
+        .def("solve", [](WeightedCSPSolver& s, bool first, int timeout) {
             if (ToulBar2::seed < 0) { // initialize seed using current time
                 ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
                 if (ToulBar2::verbose >= 0) cout << "Initial random seed is " << ToulBar2::seed << endl;
@@ -379,13 +388,20 @@ PYBIND11_MODULE(pytoulbar2, m)
 #endif
             bool res = false;
             try {
-                res = s.solve();
+                res = s.solve(first);
             } catch (Contradiction) {
+                s.getWCSP()->whenContradiction();
                 if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
                 return false;
             }
-            return res; }, py::arg("timeout") = 0)
-        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) & WeightedCSPSolver::getSolution)
+            return res; }, py::arg("first") = true, py::arg("timeout") = 0)
+        .def("beginSolve", &WeightedCSPSolver::beginSolve)
+        .def("preprocessing", &WeightedCSPSolver::preprocessing)
+        .def("recursiveSolve", &WeightedCSPSolver::recursiveSolve)
+        .def("recursiveSolveLDS", &WeightedCSPSolver::recursiveSolveLDS)
+        .def("hybridSolve", &WeightedCSPSolver::hybridSolve)
+        .def("endSolve", &WeightedCSPSolver::endSolve)
+        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) &WeightedCSPSolver::getSolution)
         .def("solutionValue", &WeightedCSPSolver::getSolutionValue)
         .def("solutionCost", &WeightedCSPSolver::getSolutionCost)
         .def("solutions", &WeightedCSPSolver::getSolutions)
@@ -398,7 +414,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("generate", &WeightedCSPSolver::read_random)
         //        .def("narycsp", &WeightedCSPSolver::narycsp)
         //        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
-        .def("dump_wcsp", &WeightedCSPSolver::dump_wcsp)
+        .def("dump_wcsp", (void (WeightedCSPSolver::*)(const char*, bool, int)) &WeightedCSPSolver::dump_wcsp)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);
 }

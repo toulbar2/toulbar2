@@ -523,7 +523,16 @@ public:
     /// \return false if there is no solution found
     /// \warning after solving, the current problem has been modified by various preprocessing techniques
     /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSPSolver::getSolution INSTEAD
-    virtual bool solve() = 0;
+    virtual bool solve(bool first = true) = 0;
+
+    // internal methods called by solve, for advanced programmers only!!!
+    virtual void beginSolve(Cost ub) = 0;
+    virtual Cost preprocessing(Cost ub) = 0;
+    virtual void recursiveSolve(Cost lb = MIN_COST) = 0;
+    virtual void recursiveSolveLDS(int discrepancy) = 0;
+    virtual pair<Cost, Cost> hybridSolve() = 0;
+    virtual void endSolve(bool isSolution, Cost cost, bool isComplete) = 0;
+    // end of internal solve methods
 
     /// \brief solves the current problem using INCOP local search solver by Bertrand Neveu
     /// \return best solution cost found
@@ -545,7 +554,7 @@ public:
 
     virtual void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT) = 0; ///< \brief output current problem in a file \see WeightedCSP::dump
     virtual void read_solution(const char* fileName, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a file
-    virtual void parse_solution(const char* certificate) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
+    virtual void parse_solution(const char* certificate, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual const Double getSolutionValue() = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
