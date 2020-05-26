@@ -380,7 +380,7 @@ public:
                 unassigned_++;
             if (getClause(i) == 0)
                 os << "-";
-            os << scope[i]->wcspIndex;
+            os << wcsp->getName(scope[i]->wcspIndex);
             if (i < arity_ - 1)
                 os << ",";
         }

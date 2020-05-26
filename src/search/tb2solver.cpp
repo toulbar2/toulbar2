@@ -1740,6 +1740,7 @@ void Solver::beginSolve(Cost ub)
     nbBacktracks = 0;
     nbBacktracksLimit = ToulBar2::backtrackLimit;
     nbNodes = 0;
+    nbRecomputationNodes = 0;
     lastConflictVar = -1;
     tailleSep = 0;
     ToulBar2::limited = false;
@@ -1886,6 +1887,8 @@ bool Solver::solve(bool first)
             if (first) {
                 initialUpperBound = preprocessing(initialUpperBound);
             } else {
+                if (ToulBar2::elimDegree >= 0)
+                    ToulBar2::elimDegree_ = ToulBar2::elimDegree;
                 initGap(wcsp->getLb(), wcsp->getUb());
             }
 
@@ -2209,8 +2212,10 @@ bool Solver::solve(bool first)
 
 void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 {
-    static string solType[4] = { "Optimum: ", "Primal bound: ", "guaranteed primal bound: ", "Primal bound: " };
     ToulBar2::DEE_ = 0;
+    ToulBar2::elimDegree_ = -1;
+
+    static string solType[4] = { "Optimum: ", "Primal bound: ", "guaranteed primal bound: ", "Primal bound: " };
 
     int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
 

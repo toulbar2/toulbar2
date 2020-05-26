@@ -226,6 +226,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
         .def("getIndex", &WeightedCSP::getIndex)
         .def("getName", (string(WeightedCSP::*)() const) & WeightedCSP::getName)
+        .def("setName", &WeightedCSP::setName)
         .def("getLb", &WeightedCSP::getLb)
         .def("getUb", &WeightedCSP::getUb)
         .def("getDPrimalBound", &WeightedCSP::getDPrimalBound)
@@ -347,7 +348,20 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp);
 
     py::class_<WeightedCSPSolver>(m, "Solver")
-        .def(py::init([](Cost ub) { ToulBar2::startCpuTime = cpuTime(); initCosts(); return WeightedCSPSolver::makeWeightedCSPSolver(ub); }), py::arg("ub") = MAX_COST)
+        .def(py::init([](Cost ub) {
+            ToulBar2::startCpuTime = cpuTime();
+            initCosts();
+            if (ToulBar2::seed < 0) { // initialize seed using current time
+                ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
+                if (ToulBar2::verbose >= 0) cout << "Initial random seed is " << ToulBar2::seed << endl;
+            }
+            mysrand(ToulBar2::seed);
+            if (ToulBar2::incop_cmd.size() > 0 && ToulBar2::seed != 1 && ToulBar2::incop_cmd.find("0 1 ") == 0) {
+                string sseed = to_string(ToulBar2::seed);
+                ToulBar2::incop_cmd.replace(2, 1, sseed);
+            }
+            return WeightedCSPSolver::makeWeightedCSPSolver(ub);
+        }), py::arg("ub") = MAX_COST)
         .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
         .def("read", [](WeightedCSPSolver& s, const char* fileName) {
             if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
@@ -368,24 +382,22 @@ PYBIND11_MODULE(pytoulbar2, m)
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
             }
+#ifdef XMLFLAG
+            if (strstr(fileName, ".xml")) {
+                ToulBar2::xmlflag = true;
+            }
+#endif
             tb2checkOptions();
             return s.read_wcsp(fileName);
         })
-        .def("solve", [](WeightedCSPSolver& s, bool first, int timeout) {
-            if (ToulBar2::seed < 0) { // initialize seed using current time
-                ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
-                if (ToulBar2::verbose >= 0) cout << "Initial random seed is " << ToulBar2::seed << endl;
-            }
-            mysrand(ToulBar2::seed);
-            if (ToulBar2::incop_cmd.size() > 0 && ToulBar2::seed != 1 && ToulBar2::incop_cmd.find("0 1 ") == 0) {
-                string sseed = to_string(ToulBar2::seed);
-                ToulBar2::incop_cmd.replace(2, 1, sseed);
-            }
 #ifdef LINUX
+        .def("timer", [](WeightedCSPSolver& s, int timeout) {
             signal(SIGINT, timeOut);
             signal(SIGTERM, timeOut);
             if (timeout > 0) timer(timeout);
+        })
 #endif
+        .def("solve", [](WeightedCSPSolver& s, bool first) {
             bool res = false;
             try {
                 res = s.solve(first);
@@ -394,7 +406,7 @@ PYBIND11_MODULE(pytoulbar2, m)
                 if (ToulBar2::verbose >= 0) cout << "No solution found by initial propagation!" << endl;
                 return false;
             }
-            return res; }, py::arg("first") = true, py::arg("timeout") = 0)
+            return res; }, py::arg("first") = true)
         .def("beginSolve", &WeightedCSPSolver::beginSolve)
         .def("preprocessing", &WeightedCSPSolver::preprocessing)
         .def("recursiveSolve", &WeightedCSPSolver::recursiveSolve)

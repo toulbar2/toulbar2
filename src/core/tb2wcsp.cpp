@@ -3213,7 +3213,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
         }
     }
     // Header
-    os << "{\"problem\":{\"name\":\"" << name << "\",\"mustbe\":\"" << ((ToulBar2::costMultiplier < 0) ? ">" : "<");
+    os << "{\"problem\":{\"name\":\"" << getName() << "\",\"mustbe\":\"" << ((ToulBar2::costMultiplier < 0) ? ">" : "<");
     os << fixed << setprecision(ToulBar2::decimalPoint);
     os << getDPrimalBound() << "\"},\n";
 

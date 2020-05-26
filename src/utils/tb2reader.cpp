@@ -665,26 +665,42 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         }
     }
 
+    unsigned int  varIndex = wcsp->getVarIndex(varName);
+    bool newvar = (varIndex == wcsp->numberOfVariables());
     if (ToulBar2::verbose >= 1)
-        cout << "Variable " << varName << " with domain size " << domainSize << " read" << endl;
+        cout << "Variable " << varName << ((newvar)?" new ":" known ") << "with domain size " << domainSize << " read" << endl;
     // Create the toulbar2 variable and store its name in the variable map.
-    unsigned int varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    if (newvar) {
+        varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    }
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
         exit(EXIT_FAILURE);
     }
     // set the value names (if any) in the Variable.values map
-    varValNameToIdx.resize(varValNameToIdx.size() + 1);
-    assert(varValNameToIdx.size() == varIndex + 1);
+    varValNameToIdx.resize(max((size_t) varIndex + 1, varValNameToIdx.size() + 1));
+    assert(varValNameToIdx.size() >= varIndex + 1);
     for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
         if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
             cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
     }
-
-    for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
-        wcsp->addValueName(varIndex, valueNames[ii]);
+    if (newvar) {
+        for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
+            wcsp->addValueName(varIndex, valueNames[ii]);
+    } else {
+        if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != domainSize) {
+            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            exit(EXIT_FAILURE);
+        }
+        for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
+            if (wcsp->getVar(varIndex)->getValueName(ii) != valueNames[ii]) {
+                cerr << "Error: same variable has two different domains " << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
 
     return domainSize;
 }
@@ -839,10 +855,10 @@ void CFNStreamReader::enforceUB(Cost bound)
     if (ToulBar2::costMultiplier < 0.0)
         shifted = -shifted; // shifted unscaled upper bound
 
-    if (shifted < (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
+    if (shifted <= (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
         bound = (bound * ToulBar2::costMultiplier) + wcsp->negCost;
     else {
-        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << endl;
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << bound << " " << wcsp->negCost << " )" << endl;
         exit(EXIT_FAILURE);
     }
 

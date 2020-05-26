@@ -2571,8 +2571,8 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "Sorry, multiple problem files must have the same file extension!" << endl;
                     exit(EXIT_FAILURE);
                 }
-                if (strext.begin()->find(".wcsp") == string::npos) {
-                    cerr << "Sorry, multiple problem files must have a file extension which contains '.wcsp'!" << endl;
+                if (strext.begin()->find(".wcsp") == string::npos && strext.begin()->find(".cfn") == string::npos && strext.begin()->find(".xml") == string::npos) {
+                    cerr << "Sorry, multiple problem files must have a file extension which contains either '.wcsp' or '.cfn' or '.xml'!" << endl;
                     exit(EXIT_FAILURE);
                 }
                 for (auto f : strfile) {

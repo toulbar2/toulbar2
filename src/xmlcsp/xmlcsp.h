@@ -45,6 +45,9 @@ public:
 
 private:
     int nvars;
+    int wcsp_nvars;
+    map<int, string> varName;
+    map<int, int> xml2wcspIndex;
 
     typedef struct {
         int arity;
@@ -102,8 +105,8 @@ public:
 
         wcsp->updateUb(MAX_COST_XML);
         initialLowerBound = MIN_COST;
-
         nvars = 0;
+        wcsp_nvars = wcsp->numberOfVariables();
     }
 
     virtual void beginDomainsSection(int nbDomains)
@@ -141,7 +144,14 @@ public:
     virtual void addVariable(const string& name, int idVar,
         const string& domain, int idDomain)
     {
-        wcsp->varsDom[nvars] = idDomain;
+        int varindex = wcsp->getVarIndex(name);
+        if (varindex == wcsp->numberOfVariables()) {
+            varindex = wcsp_nvars;
+            wcsp_nvars++;
+        }
+        wcsp->varsDom[varindex] = idDomain;
+        varName[nvars] = name;
+        xml2wcspIndex[nvars] = varindex;
         if (maxDomSize < nDoms[idDomain])
             maxDomSize = nDoms[idDomain];
         nvars++;
@@ -357,16 +367,44 @@ public:
     void createWCSP()
     {
         int i = 0;
-        map<int, int>::iterator it = wcsp->varsDom.begin();
-        while (it != wcsp->varsDom.end()) {
-            int domsize = nDoms[it->second];
-            string varname = to_string(i);
+        map<int, string>::iterator it = varName.begin();
+        while (it != varName.end()) {
+            int domsize = nDoms[wcsp->varsDom[xml2wcspIndex[it->first]]];
+            string varname = it->second;
+            int varindex = wcsp->getVarIndex(varname);
             if (ToulBar2::verbose >= 3)
-                cout << "read variable " << i << " of size " << domsize << endl;
-            if (domsize >= 0)
-                wcsp->makeEnumeratedVariable(varname, 0, domsize - 1);
-            else
-                wcsp->makeIntervalVariable(varname, 0, -domsize - 1);
+                cout << "read " << ((varindex < wcsp->numberOfVariables())?"known":"new") << " variable " << i << " of size " << domsize << endl;
+            if (varindex == wcsp->numberOfVariables()) {
+                if (domsize >= 0) {
+                    varindex = wcsp->makeEnumeratedVariable(varname, 0, domsize - 1);
+                    for (int idx = 0; idx < domsize; idx++) {
+                        int v = wcsp->Doms[wcsp->varsDom[varindex]][idx];
+                        ((EnumeratedVariable *) wcsp->getVar(varindex))->addValueName("v" + to_string(v));
+                    }
+                } else {
+                    varindex = wcsp->makeIntervalVariable(varname, 0, -domsize - 1);
+                }
+            } else {
+                if (wcsp->enumerated(varindex)) {
+                    assert(domsize >= 0);
+                    if (domsize != wcsp->getDomainInitSize(varindex)) {
+                        cerr << "wrong domain size " << domsize << " compared to previous one " << wcsp->getDomainInitSize(varindex) << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    for (int idx = 0; idx < domsize; idx++) {
+                        int v = wcsp->Doms[wcsp->varsDom[varindex]][idx];
+                        string vname = "v" + to_string(v);
+                        if (((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) != vname) {
+                            cerr << "wrong domain value name " << vname << " compared to previous one " << ((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) << endl;
+                            exit(EXIT_FAILURE);
+                        }
+                    }
+                } else {
+                    wcsp->increase(varindex, 0);
+                    wcsp->decrease(varindex, abs(domsize) - 1);
+                }
+            }
+            assert(varindex == xml2wcspIndex[it->first]);
             ++it;
             i++;
         }
@@ -394,7 +432,7 @@ public:
                 int index = 0;
                 list<int>::iterator its = cxml->scope.begin();
                 while (its != cxml->scope.end()) {
-                    int id = *its;
+                    int id = xml2wcspIndex[*its];
                     scopeOrder[id] = index;
                     ++its;
                     index++;

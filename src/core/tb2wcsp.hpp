@@ -129,7 +129,8 @@ public:
     // General API for weighted CSP global constraint
 
     int getIndex() const { return instance; } ///< \brief instantiation occurrence number of current WCSP object
-    string getName() const { return name; }
+    string getName() const { return (name.size()>0)?name:"problem"; }
+    void setName(const string& problem) { name = problem; }
     void* getSolver() const { return solver; }
 
     Cost getLb() const { return lb; } ///< \brief gets problem internal lower bound

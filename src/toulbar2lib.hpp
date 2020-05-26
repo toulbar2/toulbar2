@@ -80,6 +80,7 @@ public:
 
     virtual int getIndex() const = 0; ///< \brief instantiation occurrence number of current WCSP object
     virtual string getName() const = 0; ///< \brief get WCSP problem name (defaults to filename with no extension)
+    virtual void setName(const string& problem) = 0; ///< \brief set WCSP problem name
     virtual void* getSolver() const = 0; ///< \brief special hook to access solver information
 
     virtual Cost getLb() const = 0; ///< \brief gets internal dual lower bound

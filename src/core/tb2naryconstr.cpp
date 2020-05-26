@@ -1351,7 +1351,7 @@ void NaryConstraint::print(ostream& os)
     for (int i = 0; i < arity_; i++) {
         if (scope[i]->unassigned())
             unassigned_++;
-        os << scope[i]->wcspIndex;
+        os << wcsp->getName(scope[i]->wcspIndex);
         if (i < arity_ - 1)
             os << ",";
         totaltuples = totaltuples * scope[i]->getDomainInitSize();
