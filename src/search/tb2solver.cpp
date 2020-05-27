@@ -1671,15 +1671,21 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 			}
 
 			//kad debut
-			if (ToulBar2::EPS == true) {
+// EPS FLAG 
+			if (ToulBar2::EPS > 0 ) {
 
+#ifdef OPENMPI
 				int nbCores = sysconf(_SC_NPROCESSORS_ONLN); // Get the number of logical CPUs.
+#endif
+			
 				//cout<< "nb of cores = "<< nbCores << endl;
-				int nbProcPerCore = 30;
+				int nbProcPerCore = ToulBar2::EPS;
+				int nbCores = ToulBar2::nbproc;
 				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
 						"nbProcess.txt", nbCores, nbProcPerCore);
 				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep Optimum
-				string subProblems = "subProblems.txt";
+				//string subProblems = "subProblems.txt";
+				string subProblems = ToulBar2::EPS_saved_filename;
 
 				if (open_->size()
 						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -1747,11 +1753,13 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 }
 
 //kad
+#ifdef OPENMPI
 
 // ********************************************************************************************
 // ******************** Parallel version of HBFS without BTD *******************************
 // ********************************************************************************************
-// ddd
+// 
+
 pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulbar2 -para file.wcsp
 
 //	cout << " PARALLEL HBFS MODE!!!" << endl;
@@ -2267,6 +2275,7 @@ pair<Cost, Cost> Solver::hybridSolvePara(Cost clb, Cost cub) { // usage ./toulba
 
 }  // end of hybridSolvePara(...)  fff
 
+#endif // openmpi
 /************************************************************************/
 /********* Sequential simplified release of hbfs ************************/
 /************************************************************************/
@@ -2785,6 +2794,7 @@ bool Solver::solve() {
 								//					  		wcsp->resetWeightedDegree(*iter);
 								//					  }
 								initialDepth = Store::getDepth();
+#ifdef OPENMPI
 								//kad
 								if (ToulBar2::PARA == true) {
 									cout
@@ -2792,8 +2802,11 @@ bool Solver::solve() {
 											<< endl;
 									hybridSolvePara();
 								} else {
+#endif
 									hybridSolve();
+#ifdef OPENMPI
 								}
+#endif
 								//kad
 							} else {
 								try {
@@ -2907,13 +2920,17 @@ bool Solver::solve() {
 										<< " % of " << nbHybrid << endl;
 						} else { // if no lds and no tree decomposition then
 							initialDepth = Store::getDepth();
+#ifdef OPENMPI
 							//kad
 							if (ToulBar2::PARA == true) {
 								//cout<< "1 - Call of  hybridSolvePara() from solver.cpp"<< endl;
 								hybridSolvePara(); // actual call of hbfs in our context
 							} else {
+#endif
 								hybridSolve();
+#ifdef OPENMPI
 							}
+#endif
 							//kad
 						}
 					}
@@ -3004,11 +3021,14 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete) {
 	if (ToulBar2::vac)
 		wcsp->printVACStat();
 
+#ifdef OPENMPI
 	if (ToulBar2::verbose >= -1 && nbHybrid >= 1 && nbNodes > 0) {
 	    boost::mpi::communicator world;
 	    cout << "Node redundancy during HBFS: "
 				<< 100. * nbRecomputationNodes / nbNodes << " % ( #pid: " << world.rank() << ")" << endl;
 	}
+
+#endif
 	if (isSolution) {
 		if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag
 				&& !ToulBar2::maxsateval) {

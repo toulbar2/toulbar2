@@ -108,6 +108,8 @@ string ToulBar2::stdin_format;
 FILE* ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
+string ToulBar2::EPS_saved_filename;
+int ToulBar2::nbproc;
 TLogProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
 string ToulBar2::map_file;
@@ -203,8 +205,15 @@ bool ToulBar2::vnsParallel;
 
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
-bool ToulBar2::EPS; //kad
-bool ToulBar2::PARA; //kad
+
+Long ToulBar2::EPS; // EPS nb step by kad
+
+string ToulBar2::EPS_filname; // EPS nb step by kad
+
+#ifdef OPENMPI
+bool ToulBar2::PARA; //MPI flag for parallele mpi  by kad
+#endif
+
 Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
 Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
@@ -366,7 +375,9 @@ void tb2init()
 
     ToulBar2::hbfs = 1;
     ToulBar2::hbfsGlobalLimit = 16384;
+#ifdef OPENMPI
     ToulBar2::PARA = false;
+#endif
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
@@ -374,6 +385,9 @@ void tb2init()
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;
+    ToulBar2::EPS_filname="subProblems.txt";
+    ToulBar2::EPS = 30;
+    ToulBar2::nbproc = 4;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2

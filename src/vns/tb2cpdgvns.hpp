@@ -74,9 +74,9 @@ public:
     void MsgToSol(MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k, int& kmax, Cost& bestUb, int& sec, int& msec, map<int, int>& bestSolution);
 };
 
-#endif
 #endif /* TB2CPDGVNS_HPP_ */
 
+#endif
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

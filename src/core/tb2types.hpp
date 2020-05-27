@@ -1,4 +1,4 @@
-/** \file tb2types.hpp
+/*kad* \file tb2types.hpp
  *  \brief Macros, types, and globals.
  *
  * The main types are:
@@ -464,6 +464,10 @@ public:
     static FILE* solution_uai_file;
     static string solution_uai_filename;
     static string problemsaved_filename;
+// EPS
+    static string EPS_saved_filename;
+    static int nbproc;
+
     static bool isZ;
     static TLogProb logZ;
     static TLogProb logU; // upper bound on rejected potentials
@@ -521,8 +525,14 @@ public:
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
-    static bool EPS; //kad option for embarrassingly parallel search
+
+    static Long EPS; //kad option for embarrassingly parallel search
+    static string EPS_filname; //filename for  embarrassingly parallel search subproblemes writing
+
+#ifdef OPENMPI
     static bool PARA; //kad option for MPI HBFS parallel search
+#endif
+
 };
 
 #ifdef INT_COST

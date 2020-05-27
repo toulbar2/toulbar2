@@ -222,8 +222,14 @@ enum {
     NO_OPT_restart,
     OPT_hbfs,
     NO_OPT_hbfs,
-    OPT_EPS, //kad
-	OPT_PARA, //kad
+
+    OPT_EPS_nbproc,
+    OPT_EPS_sub_ext,
+    OPT_EPS, // EPS option by kad
+    OPT_EPS_saved_filename, // subproblem filename
+#ifdef OPENMPI
+    OPT_PARA, // MPI flag for parallele mpi hbfs by kad
+#endif
     OPT_open,
     OPT_HBFS_ALPHA,
     OPT_HBFS_BETA,
@@ -314,6 +320,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_evid_ext, (char*)"--evid_ext", SO_REQ_SEP },
     { OPT_map_ext, (char*)"--map_ext", SO_REQ_SEP },
     { OPT_sol_ext, (char*)"--sol_ext", SO_REQ_SEP },
+    { OPT_EPS_sub_ext, (char*)"--eps_ext", SO_REQ_SEP },
     { OPT_bep_ext, (char*)"--bep_ext", SO_REQ_SEP },
     { OPT_ub_ext, (char*)"--ub_ext", SO_REQ_SEP },
     { OPT_pre_ext, (char*)"--pre_ext", SO_REQ_SEP },
@@ -422,8 +429,12 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_restart, (char*)"-L:", SO_NONE },
     { OPT_hbfs, (char*)"-hbfs", SO_OPT },
     { OPT_hbfs, (char*)"-bfs", SO_OPT },
-	{ OPT_EPS, (char*) "-eps", SO_NONE }, // kad
-	{ OPT_PARA, (char*) "-para", SO_NONE }, // kad
+    { OPT_EPS, (char*) "-epsinit", SO_OPT }, // nb process by proc 
+    { OPT_EPS_nbproc, (char*)"-nbproc", SO_OPT }, // verbose level
+    { OPT_EPS_saved_filename, (char*)"-seps", SO_OPT }, // subproblem filename
+#ifdef OPENMPI
+	{ OPT_PARA, (char*) "-para", SO_NONE }, 
+#endif
     { NO_OPT_hbfs, (char*)"-hbfs:", SO_NONE },
     { NO_OPT_hbfs, (char*)"-bfs:", SO_NONE },
     { OPT_open, (char*)"-open", SO_REQ_SEP },
@@ -839,6 +850,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100/ToulBar2::hbfsAlpha << "%)" << endl;
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100/ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+// EPS help command:
+    cout << endl;
+    cout << "   -epsinit : embarassively parallele hybride best-first search flag :   " << ToulBar2::hbfsOpenNodeLimit << " subProblem list  generation " << endl;
 #ifdef OPENMPI
     //kad
 //        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
@@ -1653,18 +1667,32 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfsGlobalLimit = 0;
             }
 
-//kad
-	if (args.OptionId() == OPT_EPS) {
-		ToulBar2::EPS = true;
-		cout << "HBFS  Embarrassingly Parallel Search activated. "<< endl;
-			}
+// EPS : 
+ if (args.OptionId() == OPT_EPS) {
+		cout << "HBFS  Embarrassingly Parallel Search activated.  "<< endl;
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::EPS= atoi(args.OptionArg());
+                } else {
+                    ToulBar2::EPS= 30;
+                }
+		cout << "EPS init LEVEL : "<< ToulBar2::EPS <<  endl;
+            }
 
+ if (args.OptionId() == OPT_EPS_nbproc) {
+		cout << "HBFS  Embarrassingly Parallel Search activated.  "<< endl;
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::nbproc= atoi(args.OptionArg());
+                }
+		cout << "nb proc used for EPS  init LEVEL : "<< ToulBar2::nbproc <<  endl;
+            }
+//MPI parallel flag
+#ifdef OPENMPI
 	if (args.OptionId() == OPT_PARA) {
 			ToulBar2::PARA = true;
-			//cout << "HBFS Parallel search with MPI ON "<< endl;
+			cout << "HBFS Parallel search with MPI ON "<< endl;
 				}
+#endif
 
-///kad
             if (args.OptionId() == OPT_open) {
                 ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
                 Long openlimit = atoll(args.OptionArg());
@@ -1789,6 +1817,18 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "verbose level = " << ToulBar2::verbose << endl;
             }
+	 
+	     // eps sub pb filename
+
+	  // seps 
+	 	if (args.OptionId() == OPT_EPS_saved_filename) {
+	                char buf[512];
+                sprintf(buf, "%s", args.OptionArg());
+                 ToulBar2::EPS_saved_filename = to_string(buf);
+                     cout << " EPS : saved subproblem into file " <<  ToulBar2::EPS_saved_filename <<endl;
+             }
+
+
 
             //  z: save problem in wcsp format in filename \"problem.wcsp\" (1:before, 2:current problem after preprocessing)
 

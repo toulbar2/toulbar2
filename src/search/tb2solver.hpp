@@ -8,23 +8,14 @@
 #include "toulbar2lib.hpp"
 #include "utils/tb2store.hpp"
 //kad
-#include <utils/tb2files_kad.hpp>  // for eps
+#include <utils/tb2files_eps.hpp>  // files utils for eps
 
+#ifdef OPENMPI
 #include <boost/mpi.hpp> // for para
+#endif
+
 #include <boost/serialization/vector.hpp>  // for para
 #include <chrono> // for timing hbfs para
-
-//#include <mpi.h>
-/*
- #include <boost/serialization/array.hpp>
- #include <boost/serialization/string.hpp>
- #include <boost/mpi/datatype.hpp> // for optimization during send if objects contain only PODs: int,float, ...
- #include <boost/serialization/priority_queue.hpp>
- #include <boost/serialization/stack.hpp>
- #include <boost/serialization/queue.hpp>
- #include <boost/serialization/deque.hpp>
- #include <boost/serialization/list.hpp>
- */
 
 template<class T>
 class DLink;
@@ -166,6 +157,7 @@ public:
 
 	};
 
+#ifdef OPENMPI 
 //kad
 	/**
 	 * \brief class to send work to workers in the form of an object i.e. a message in MPI's semantic
@@ -269,6 +261,7 @@ public:
 
 	};
 //kad
+#endif
 
 	class CPStore FINAL : public vector<ChoicePoint> {
 	public:
