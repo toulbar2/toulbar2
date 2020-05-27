@@ -668,11 +668,13 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     unsigned int  varIndex = wcsp->getVarIndex(varName);
     bool newvar = (varIndex == wcsp->numberOfVariables());
     if (ToulBar2::verbose >= 1)
-        cout << "Variable " << varName << ((newvar)?" new ":" known ") << "with domain size " << domainSize << " read" << endl;
+        cout << "Variable " << varName << ((newvar)?" new ":" known ") << "with domain size " << domainSize << " read";
     // Create the toulbar2 variable and store its name in the variable map.
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
     }
+    if (ToulBar2::verbose >= 1)
+        cout  << " # " << varIndex << endl;
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
         exit(EXIT_FAILURE);

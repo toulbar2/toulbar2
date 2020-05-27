@@ -3023,7 +3023,12 @@ void printClique(ostream& os, int arity, Constraint* ctr)
     }
     for (int i = 0; i < arity - 1; i++) {
         for (int j = i + 1; j < arity; j++) {
-            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
+//            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
+            if (ctr->getVar(i)->wcspIndex < ctr->getVar(j)->wcspIndex) {
+                os << ctr->getVar(i)->getName() << " -- " << ctr->getVar(j)->getName() << " [len= " << ctr->getTightness() << "];" << endl;
+            } else {
+                os << ctr->getVar(j)->getName() << " -- " << ctr->getVar(i)->getName() << " [len= " << ctr->getTightness() << "];" << endl;
+            }
         }
     }
 }
