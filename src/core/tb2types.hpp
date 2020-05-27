@@ -466,7 +466,7 @@ public:
     static string problemsaved_filename;
 // EPS
     static string EPS_saved_filename;
-    static int nbproc;
+    static int EPS_nbproc;
 
     static bool isZ;
     static TLogProb logZ;

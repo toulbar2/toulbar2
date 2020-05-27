@@ -430,7 +430,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_hbfs, (char*)"-hbfs", SO_OPT },
     { OPT_hbfs, (char*)"-bfs", SO_OPT },
     { OPT_EPS, (char*) "-epsinit", SO_OPT }, // nb process by proc 
-    { OPT_EPS_nbproc, (char*)"-nbproc", SO_OPT }, // verbose level
+    { OPT_EPS_nbproc, (char*)"-epsnbproc", SO_OPT }, // verbose level
     { OPT_EPS_saved_filename, (char*)"-seps", SO_OPT }, // subproblem filename
 #ifdef OPENMPI
 	{ OPT_PARA, (char*) "-para", SO_NONE }, 
@@ -852,7 +852,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
 // EPS help command:
     cout << endl;
-    cout << "   -epsinit : embarassively parallele hybride best-first search flag :   " << ToulBar2::hbfsOpenNodeLimit << " subProblem list  generation " << endl;
+    cout << "   -epsinit : embarassively parallele hybride best-first search subproblem  number  by default :   " << ToulBar2::EPS << " subProblem list  generation " << endl;
+    cout << "   -epsnbproc : proc number used for EPS sub problem calculation  by default :   " << ToulBar2::EPS_nbproc<< "  proc for generation " << endl;
+    cout << "   -seps : subprobem filename by defautl name :   " << ToulBar2::EPS_saved_filename << " for subProblem filename generation " << endl;
 #ifdef OPENMPI
     //kad
 //        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
@@ -1681,9 +1683,9 @@ int _tmain(int argc, TCHAR* argv[])
  if (args.OptionId() == OPT_EPS_nbproc) {
 		cout << "HBFS  Embarrassingly Parallel Search activated.  "<< endl;
                 if (args.OptionArg() != NULL) {
-                    ToulBar2::nbproc= atoi(args.OptionArg());
+                    ToulBar2::EPS_nbproc= atoi(args.OptionArg());
                 }
-		cout << "nb proc used for EPS  init LEVEL : "<< ToulBar2::nbproc <<  endl;
+		cout << "nb proc used for EPS  init LEVEL : "<< ToulBar2::EPS_nbproc <<  endl;
             }
 //MPI parallel flag
 #ifdef OPENMPI

@@ -1680,7 +1680,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 			
 				//cout<< "nb of cores = "<< nbCores << endl;
 				int nbProcPerCore = ToulBar2::EPS;
-				int nbCores = ToulBar2::nbproc;
+				int nbCores = ToulBar2::EPS_nbproc;
 				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
 						"nbProcess.txt", nbCores, nbProcPerCore);
 				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep Optimum
