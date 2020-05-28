@@ -108,7 +108,6 @@ string ToulBar2::stdin_format;
 FILE* ToulBar2::solution_uai_file;
 string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
-int ToulBar2::EPS_nbproc;
 TLogProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
 string ToulBar2::map_file;
@@ -205,8 +204,11 @@ bool ToulBar2::vnsParallel;
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
 
-Long ToulBar2::EPS; // EPS nb step by kad
+int ToulBar2::EPS_nbproc;
+Long ToulBar2::EPS_LEV; // EPS nb step by kad
+bool ToulBar2::EPS; // EPS nb step by kad
 string ToulBar2::EPS_saved_filename;
+string ToulBar2::problemFileName;
 
 
 #ifdef OPENMPI
@@ -385,8 +387,9 @@ void tb2init()
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;
 
-    ToulBar2::EPS_saved_filename="subProblems.txt";
-    ToulBar2::EPS = 30;
+    ToulBar2::EPS_saved_filename="subProblems.sub";
+    ToulBar2::EPS_LEV = 30;
+    ToulBar2::EPS = false;
     ToulBar2::EPS_nbproc = 4;
 }
 

@@ -1672,16 +1672,18 @@ int _tmain(int argc, TCHAR* argv[])
 // EPS : 
  if (args.OptionId() == OPT_EPS) {
 		cout << "HBFS  Embarrassingly Parallel Search activated.  "<< endl;
+                    ToulBar2::EPS= true;
                 if (args.OptionArg() != NULL) {
-                    ToulBar2::EPS= atoi(args.OptionArg());
+                    ToulBar2::EPS_LEV= atoi(args.OptionArg());
                 } else {
-                    ToulBar2::EPS= 30;
+                    ToulBar2::EPS_LEV= 30;
                 }
 		cout << "EPS init LEVEL : "<< ToulBar2::EPS <<  endl;
             }
 
  if (args.OptionId() == OPT_EPS_nbproc) {
 		cout << "HBFS  Embarrassingly Parallel Search activated.  "<< endl;
+                    ToulBar2::EPS= true;
                 if (args.OptionArg() != NULL) {
                     ToulBar2::EPS_nbproc= atoi(args.OptionArg());
                 }
@@ -1990,6 +1992,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading wcsp file: " << problem << endl;
                 strext = ".wcsp";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["wcspgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -1997,6 +2000,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".wcsp.gz";
                 strfile = problem;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["wcspxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2004,6 +2008,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".wcsp.xz";
                 strfile = problem;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             }
             // CFN file
             if (check_file_ext(problem, file_extension_map["cfn_ext"]) || ToulBar2::stdin_format.compare("cfn") == 0) {
@@ -2012,6 +2017,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".cfn";
                 strfile = problem;
                 ToulBar2::cfn = true;
+                ToulBar2::problemFileName= problem;
             }
             // CFN gzip'd file
             if (check_file_ext(problem, file_extension_map["cfngz_ext"])) {
@@ -2021,6 +2027,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strfile = problem;
                 ToulBar2::cfn = true;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             // CFN xz file
             if (check_file_ext(problem, file_extension_map["cfnxz_ext"])) {
@@ -2030,6 +2037,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strfile = problem;
                 ToulBar2::cfn = true;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai  file
             if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
@@ -2039,6 +2047,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading uai file:  " << problem << endl;
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai  gzip'd file
             if (check_file_ext(problem, file_extension_map["uaigz_ext"])) {
@@ -2049,6 +2058,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai xz compressed file
             if (check_file_ext(problem, file_extension_map["uaixz_ext"])) {
@@ -2059,6 +2069,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uai_log_ext"]) || ToulBar2::stdin_format.compare("LG") == 0) {
@@ -2068,6 +2079,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading uai log file:  " << problem << endl;
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaigz_log_ext"])) {
@@ -2078,6 +2090,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
@@ -2088,6 +2101,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             }
             // UAI evidence file
             if (check_file_ext(problem, file_extension_map["evid_ext"])) {
@@ -2121,6 +2135,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::wcnf = true;
                 strext = ".cnf";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["wcnfgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2129,6 +2144,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".wcnf.gz";
                 strfile = problem;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             } else if (check_file_ext(problem, file_extension_map["cnfgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading gzip'd cnf file:" << problem << endl;
@@ -2136,6 +2152,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".cnf.gz";
                 strfile = problem;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["wcnfxz_ext"])) {
                 if (ToulBar2::verbose >= 0)

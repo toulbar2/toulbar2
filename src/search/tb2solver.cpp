@@ -16,6 +16,7 @@
 #include "vns/tb2rpdgvns.hpp"
 #endif
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void *solver);
 
@@ -1672,20 +1673,24 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 
 			//kad debut
 // EPS FLAG 
-			if (ToulBar2::EPS > 0 ) {
+			if (ToulBar2::EPS  ) {
 
 #ifdef OPENMPI
 				int nbCores = sysconf(_SC_NPROCESSORS_ONLN); // Get the number of logical CPUs.
 #endif
 			
 				//cout<< "nb of cores = "<< nbCores << endl;
-				int nbProcPerCore = ToulBar2::EPS;
+				int nbProcPerCore = ToulBar2::EPS_LEV;
 				int nbCores = ToulBar2::EPS_nbproc;
 				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
 						"nbProcess.txt", nbCores, nbProcPerCore);
 				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep Optimum
 				//string subProblems = "subProblems.txt";
 				string subProblems = ToulBar2::EPS_saved_filename;
+				string ubEPSf;
+				ubEPSf= ToulBar2::problemFileName+ string (".ub") ;
+				boost::filesystem::path p(ubEPSf);
+				ubEPSf = p.filename().string();
 
 				if (open_->size()
 						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -1695,8 +1700,17 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 					cout
 							<< "NUMBER OF NODES IN OPEN LISTE WHEN openNodeLimit is reached : "
 							<< open_->size() << endl;
-					cout << "BEST CURRENT SOLUTION FOUND AT DUMP TIME : UB = "
+				stringstream  ubEPS;
+					
+				if(ToulBar2::cfn) {
+				cout << "BEST CURRENT SOLUTION FOUND AT DUMP TIME : UB = ";
+			        cout << "best solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
+				ubEPS << fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
+				} else {
+					cout << "BEST SOLUTION FOUND for WCSP  AT DUMP TIME : UB = "
 							<< wcsp->getUb() << endl;
+				 ubEPS << wcsp->getUb() << endl;
+				}
 					Tb2Files::write_file(subProblems,
 							epsSubProblems(*cp_, *open_, nbCores));
 					string epsCommand = "cat " + subProblems
@@ -1707,6 +1721,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 					epsCommand += " -ub=" + to_string(wcsp->getUb()) + " {}";
 					epsCommand += " | egrep Optimum";
 					Tb2Files::write_file("eps.sh", epsCommand);
+					Tb2Files::write_file(ubEPSf,  ubEPS.str()) ;
 					exit(0);
 				}
 			}

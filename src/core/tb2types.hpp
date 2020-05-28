@@ -464,9 +464,6 @@ public:
     static FILE* solution_uai_file;
     static string solution_uai_filename;
     static string problemsaved_filename;
-// EPS
-    static string EPS_saved_filename;
-    static int EPS_nbproc;
 
     static bool isZ;
     static TLogProb logZ;
@@ -526,8 +523,13 @@ public:
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
 
-    static Long EPS; //kad option for embarrassingly parallel search
+// EPS
+    static string EPS_saved_filename;
+    static int EPS_nbproc;
+    static bool EPS; //kad option for embarrassingly parallel search
+    static Long EPS_LEV; //kad option for embarrassingly parallel search
     static string EPS_filname; //filename for  embarrassingly parallel search subproblemes writing
+    static string problemFileName; //initial instance filename 
 
 #ifdef OPENMPI
     static bool PARA; //kad option for MPI HBFS parallel search
