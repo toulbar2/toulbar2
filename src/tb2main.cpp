@@ -852,9 +852,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
 // EPS help command:
     cout << endl;
-    cout << "   -epsinit : embarassively parallele hybride best-first search subproblem  number  by default :   " << ToulBar2::EPS << " subProblem list  generation " << endl;
-    cout << "   -epsnbproc : proc number used for EPS sub problem calculation  by default :   " << ToulBar2::EPS_nbproc<< "  proc for generation " << endl;
-    cout << "   -seps : subprobem filename by defautl name :   " << ToulBar2::EPS_saved_filename << " for subProblem filename generation " << endl;
+    cout << "   -epsinit : embarassively parallele hybride best-first search subproblem  number ( by default :   " << ToulBar2::EPS_LEV << " by processor cf -epsnbroc option ) " << endl;
+    cout << "   -epsnbproc : proc number used for EPS open node calculation ( by default :   " << ToulBar2::EPS_nbproc<< " by  processors) " << endl;
+    cout << "   -seps : foo.sub :( default subproblem filename:   " << ToulBar2::EPS_saved_filename << " ) " << endl;
 #ifdef OPENMPI
     //kad
 //        cout << "usage for HBFS parallel version:  create a run script with mpirun -q -np $1 ./toulbar2 -para $2 |egrep -v 'Aborting|^$'" << endl;
