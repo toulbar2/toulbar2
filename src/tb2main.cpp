@@ -1678,7 +1678,8 @@ int _tmain(int argc, TCHAR* argv[])
                 } else {
                     ToulBar2::EPS_LEV= 30;
                 }
-		cout << "EPS init LEVEL : "<< ToulBar2::EPS <<  endl;
+		cout << "EPS  node by proc : "<< ToulBar2::EPS_LEV <<  endl;
+
             }
 
  if (args.OptionId() == OPT_EPS_nbproc) {
