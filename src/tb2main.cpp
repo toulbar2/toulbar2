@@ -853,7 +853,7 @@ void help_msg(char* toulbar2filename)
 // EPS help command:
     cout << endl;
     cout << "   -epsinit : embarassively parallele hybride best-first search subproblem  number ( by default :   " << ToulBar2::EPS_LEV << " by processor cf -epsnbroc option ) " << endl;
-    cout << "   -epsnbproc : proc number used for EPS open node calculation ( by default :   " << ToulBar2::EPS_nbproc<< " by  processors) " << endl;
+    cout << "   -epsnbproc : proc number used for EPS open node script ( by default :   " << ToulBar2::EPS_nbproc<< " by  processors) " << endl;
     cout << "   -seps : foo.sub :( default subproblem filename:   " << ToulBar2::EPS_saved_filename << " ) " << endl;
 #ifdef OPENMPI
     //kad
@@ -910,6 +910,7 @@ int _tmain(int argc, TCHAR* argv[])
     char* certificateString = NULL;
     char buf[512];
     char* CurrentBinaryPath = find_bindir(argv[0], buf, 512); // current binary path search
+    ToulBar2::CurrentBinaryPath=CurrentBinaryPath;
     int timeout = 0;
     bool updateValueHeuristic = true;
 
@@ -964,7 +965,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
     if (ToulBar2::verbose >= 0)
-        cout << "c " << CurrentBinaryPath << "toulbar2"
+        cout << "c " << ToulBar2::CurrentBinaryPath << "toulbar2"
              << "  version : " << ToulBar2::version << ", copyright (c) 2006-2019, toulbar2 team" << endl;
 
     // --------------------------simple opt ----------------------
@@ -2121,6 +2122,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::writeSolution = (char*)"sol";
                 strext = ".xml";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             }
 
             // wcnf or cnf file
@@ -2130,6 +2132,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::wcnf = true;
                 strext = ".wcnf";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             } else if (check_file_ext(problem, file_extension_map["cnf_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading cnf file:" << problem << endl;
@@ -2162,6 +2165,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".wcnf.xz";
                 strfile = problem;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             } else if (check_file_ext(problem, file_extension_map["cnfxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed cnf file:" << problem << endl;
@@ -2178,6 +2182,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::qpbo = true;
                 strext = ".qpbo";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["qpbogz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2186,6 +2191,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".qpbo.gz";
                 strfile = problem;
                 ToulBar2::gz = true;
+                ToulBar2::problemFileName= problem;
             }
             if (check_file_ext(problem, file_extension_map["qpboxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2194,6 +2200,7 @@ int _tmain(int argc, TCHAR* argv[])
                 strext = ".qpbo.xz";
                 strfile = problem;
                 ToulBar2::xz = true;
+                ToulBar2::problemFileName= problem;
             }
 
             // upperbound file
@@ -2221,6 +2228,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading BEP file: " << problem << endl;
                 strext = ".bep";
                 strfile = problem;
+                ToulBar2::problemFileName= problem;
             }
 
             //////////////////////Mendelian-error analysis and haplotype reconstruction ////////////////////////////////////
@@ -2231,6 +2239,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::haplotype = new Haplotype;
                 if (ToulBar2::verbose >= 0)
                     cout << "loading map file: " << ToulBar2::map_file << endl;
+                ToulBar2::problemFileName= problem;
 
                 if (glob.FileCount() < 2) {
                     cerr << "pedigree file is missing (.pre): " << endl;

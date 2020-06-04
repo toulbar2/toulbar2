@@ -357,7 +357,7 @@ protected:
 	 * @param nbCores
 	 * @return string of sub problems
 	 */
-	string epsSubProblems(const CPStore& cp, OpenList& open, const int nbCores);
+	string epsSubProblems(const CPStore& cp, OpenList& open);
 	//string epsCommand(const CPStore& cp, OpenList& open, const int nbCores);
 	string opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd);
 	//kad

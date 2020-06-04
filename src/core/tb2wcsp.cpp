@@ -204,9 +204,10 @@ bool ToulBar2::vnsParallel;
 Long ToulBar2::hbfs;
 Long ToulBar2::hbfsGlobalLimit;
 
-int ToulBar2::EPS_nbproc;
-Long ToulBar2::EPS_LEV; // EPS nb step by kad
-bool ToulBar2::EPS; // EPS nb step by kad
+int ToulBar2::EPS_nbproc; // EPS nb core used in shell script for EPS resolution  
+string ToulBar2::CurrentBinaryPath; // toulbar2 bin path
+Long ToulBar2::EPS_LEV; // EPS hbfs node limit for dump subproblem
+bool ToulBar2::EPS; // EPS flag option
 string ToulBar2::EPS_saved_filename;
 string ToulBar2::problemFileName;
 

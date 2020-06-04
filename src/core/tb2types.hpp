@@ -523,13 +523,15 @@ public:
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
 
+    static string CurrentBinaryPath; // toulbar2 bin path
+
 // EPS
-    static string EPS_saved_filename;
-    static int EPS_nbproc;
-    static bool EPS; //kad option for embarrassingly parallel search
-    static Long EPS_LEV; //kad option for embarrassingly parallel search
+    static string EPS_saved_filename; // filemane of subproblem dumped during eps init phase
+    static bool EPS; //flag option for embarrassingly parallel search
+    static Long EPS_LEV; // eps number of subproblem ( hbfs opennode limit for
     static string EPS_filname; //filename for  embarrassingly parallel search subproblemes writing
     static string problemFileName; //initial instance filename 
+    static int EPS_nbproc; // nb processor used for eps.sh script
 
 #ifdef OPENMPI
     static bool PARA; //kad option for MPI HBFS parallel search

@@ -1,2 +1,2 @@
 // Cmake generated version
-#define Toulbar_VERSION "1.0.1-490-gd6b863dd-EPS (1590763778)"
+#define Toulbar_VERSION "1.0.1-491-gb75aebff-EPS-tainted (1591267423)"

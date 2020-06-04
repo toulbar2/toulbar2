@@ -1671,61 +1671,62 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster *cluster, Cost clb, Cost cub) {
 					hbfsLimit = LONGLONG_MAX;
 			}
 
-			//kad debut
 // EPS FLAG 
 			if (ToulBar2::EPS  ) {
 
-#ifdef OPENMPI
-				int nbCores = sysconf(_SC_NPROCESSORS_ONLN); // Get the number of logical CPUs.
-#endif
 			
-				//cout<< "nb of cores = "<< nbCores << endl;
-				int nbProcPerCore = ToulBar2::EPS_LEV;
-				int nbCores = ToulBar2::EPS_nbproc;
-				ToulBar2::hbfsOpenNodeLimit = Tb2Files::nbProcess(
-						"nbProcess.txt", nbCores, nbProcPerCore);
-				//cat nbProcess.txt | time parallel -j20 --eta ./toulbar2  404.wcsp   -ub=114 {} | egrep Optimum
-				//string subProblems = "subProblems.txt";
+				ToulBar2::hbfsOpenNodeLimit = ToulBar2::EPS_LEV;
+
 				string subProblems = ToulBar2::EPS_saved_filename;
 				string ubEPSf;
+
 				ubEPSf= ToulBar2::problemFileName+ string (".ub") ;
 				boost::filesystem::path p(ubEPSf);
 				ubEPSf = p.filename().string();
 
-				if (open_->size()
-						>= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
 
-					cout << "TOTAL NUMBER OF NODES ADDED IN OPEN LISTE :"
-							<< nbNodesPopped + open_->size() << endl;
-					cout
-							<< "NUMBER OF NODES IN OPEN LISTE WHEN openNodeLimit is reached : "
-							<< open_->size() << endl;
-				stringstream  ubEPS;
-					
-				if(ToulBar2::cfn) {
-				cout << "BEST CURRENT SOLUTION FOUND AT DUMP TIME : UB = ";
-			        cout << "best solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
-				ubEPS << fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
-				} else {
-					cout << "BEST SOLUTION FOUND for WCSP  AT DUMP TIME : UB = "
-							<< wcsp->getUb() << endl;
-				 ubEPS << wcsp->getUb() << endl;
+				int l=0;
+
+				//while(!p.extension().empty() or l < 2)
+				while(l < 3)
+				{
+					l++;
+   					 p = p.stem();
 				}
-					Tb2Files::write_file(subProblems,
-							epsSubProblems(*cp_, *open_, nbCores));
-					string epsCommand = "cat " + subProblems
-							+ " | time parallel -j";
-					epsCommand += nbCores; // number of process=jobs to launch in parallel equals to the number of cores
-					epsCommand += " --eta -k ./toulbar2 ";
-					epsCommand += wcsp->getName(); //ToulBar2::problemFileName;global var to get access to the problem file name
-					epsCommand += " -ub=" + to_string(wcsp->getUb()) + " {}";
-					epsCommand += " | egrep Optimum";
-					Tb2Files::write_file("eps.sh", epsCommand);
-					Tb2Files::write_file(ubEPSf,  ubEPS.str()) ;
-					exit(0);
+				string ubEPSf_basename = p.string();
+
+					
+
+				if (open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
+
+				cout << "EPS Nodes added in open liste :" << nbNodesPopped + open_->size() << endl;
+				cout << "EPS Nodes number when openNodeLimit is reached : " << open_->size() << endl;
+				stringstream  ubEPS;
+
+				if(! (ToulBar2::bayesian)) {
+				cout << "EPS upperbound bound EPS (init phase):  " << endl;
+				cout << "UB= "		<< wcsp->getUb() << endl;
+				 ubEPS << wcsp->getUb() ;
+				} else {
+
+				cout << "EPS upperbound bound EPS (init phase):  " ;
+			        cout << "UB= " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
+				ubEPS << fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT);
+
+				}
+					
+				Tb2Files::write_file(subProblems, epsSubProblems(*cp_, *open_));
+				string epsCommand = "cat " + subProblems + " | time parallel -j";
+				epsCommand += to_string(ToulBar2::EPS_nbproc) ; // number of process=jobs to launch in parallel equals to the number of cores
+				epsCommand += " --eta -k "+ToulBar2::CurrentBinaryPath+"toulbar2 ";
+				epsCommand += wcsp->getName(); //ToulBar2::problemFileName;global var to get access to the problem file name
+				epsCommand += " -ub=" + ubEPS.str() + " {}" + " | egrep Optimum| sort -r";
+				Tb2Files::write_file(ubEPSf_basename+".sh", epsCommand);
+				Tb2Files::write_file(ubEPSf,  ubEPS.str()) ;
+				exit(0);
 				}
 			}
-			//kad fin
+			//  FIN EPS
 
 			clb = MAX(clb, open_->getLb(delta));
 			showGap(clb, cub);
@@ -2394,8 +2395,7 @@ pair<Cost, Cost> Solver::hybridSolveSeq(Cost clb, Cost cub) {
 
 //**************************************************************
 
-string Solver::epsSubProblems(const CPStore &cp, OpenList &open,
-		const int nbCores) {
+string Solver::epsSubProblems(const CPStore &cp, OpenList &open) {
 	string epsSubProblems = "";
 	int nsp = 0; // effective nb of sub problems
 	//epsSubProblems += " -x="; // for each node nd in OpenListe open, we have to write partial assignments like this: ",0=3,1=5,2=9" "..." "..."
@@ -2413,7 +2413,7 @@ string Solver::epsSubProblems(const CPStore &cp, OpenList &open,
 			epsSubProblems += "\"\n";
 		} //end of if
 	} // end while
-	cout << "NUMBER OF SUBPROBLEMS REALLY GENERATED : " << nsp << endl;
+	cout << "#EPS Subproblems GENERATED : " << nsp << endl;
 	return epsSubProblems;
 }
 

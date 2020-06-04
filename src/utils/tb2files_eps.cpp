@@ -16,42 +16,6 @@ using namespace std;
  * @param nbCores
  * @param nbProcPerCore
  */
-long Tb2Files::nbProcess(const string nbProcessFic, const int nbCores, const int nbProcPerCore) {
-
-                  	   ifstream file(nbProcessFic ,ios::in);
-                  	   long nbProcess=0;
-
-                  	       if(file.good())  // file exists, it is read
-                  	       {
-                  	           string line; // variable to memorize a line in the file
-                  	           while(getline(file, line))
-                  	           {
-                  	        	   nbProcess= atoll(line.c_str());
-
-                  	           }
-                  	           file.close();
-
-                  	       }
-                  	       else  // file does not exists it is created and  written
-                  	       {
-
-                  	    	   ofstream file(nbProcessFic);
-                  	    	   if(file)  // if ok
-                  	    	   {
-                  	    		 nbProcess= nbCores * nbProcPerCore;
-                  	    		   file << nbProcess; //default value 30 * nbCores for now. todo : machine learning to compute optimal value
-                  	    	   }
-                  	    	   else
-                  	    	   {
-
-                  	    	      cout << "File error "<<  nbProcessFic << endl;
-                  	    	   }
-                  	    	   file.close();
-                  	       }
-                  	       return nbProcess;
-
-}
-
 
 void Tb2Files::write_file(const string fic, const string text)
 {
@@ -60,8 +24,7 @@ void Tb2Files::write_file(const string fic, const string text)
     {
 
         file << text;
-       // cout << "Text : "<< text << endl;
-        cout<< "Text has been written in file "<< fic << endl;
+        cout<< "Data written in: "<< fic << endl;
     }
     else
     {
@@ -135,40 +98,4 @@ Tb2Files::~Tb2Files() {
 	// TODO Auto-generated destructor stub
 }
 
-
-std::string basename(const std::string &filename)
-{
-    if (filename.empty()) {
-        return {};
-    }
-
-    auto len = filename.length();
-    auto index = filename.find_last_of("/\\");
-
-    if (index == std::string::npos) {
-        return filename;
-    }
-
-    if (index + 1 >= len) {
-
-        len--;
-        index = filename.substr(0, len).find_last_of("/\\");
-
-        if (len == 0) {
-            return filename;
-        }
-
-        if (index == 0) {
-            return filename.substr(1, len - 1);
-        }
-
-        if (index == std::string::npos) {
-            return filename.substr(0, len);
-        }
-
-        return filename.substr(index + 1, len - index - 1);
-    }
-
-    return filename.substr(index + 1, len - index);
-}
 
