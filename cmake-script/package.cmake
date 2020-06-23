@@ -6,6 +6,10 @@
 
 INCLUDE(InstallRequiredSystemLibraries)
 
+SET( Toulbar_PACKAGE_DESCRIPTION "Exact combinatorial optimization for Graphical Models")
+SET(Toulbar_PACKAGE_SUMMARY "Toulbar2 is a Exact combinatorial optimization for Graphical Models solver based on cost function network ")
+SET(Toulbar_NAME "toulbar2" )
+
 
 IF (APPLE)
 	SET(CPACK_GENERATOR "OSXX11")
@@ -29,7 +33,7 @@ ENDIF (WIN32)
 	SET(PACKAGE_DESCRIPTION "${Toulbar_PACKAGE_DESCRIPTION}")
 	SET(PACKAGE_DESCRIPTION_SUMMARY "${Toulbar_PACKAGE_SUMMARY}" )
 	SET(CPACK_PACKAGE_NAME "${Toulbar_NAME}")
-	SET(CPACK_PACKAGE_VENDOR "${Toulbar_NAME} Development Team ")
+	SET(CPACK_PACKAGE_VENDOR "${Toulbar_NAME} Development Team : https://github.com/toulbar2/toulbar2")
 	SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${Toulbar_PACKAGE_SUMMARY}")
 	SET(CPACK_PACKAGE_CONTACT "${CONTACT}")
 	SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
