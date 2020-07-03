@@ -913,7 +913,7 @@ void help_msg(char* toulbar2filename)
     cout << "   --native=[sequence] : native sequence." << endl;
     cout << "   --aminoMRF=[filepath] : path to an additive MRF over all positions and amino acids (CCMPred format)" << endl;
     cout << "   --aminoPMRF=[filepath] : path to an additive MRF over all positions and amino acids (PMRF format)" << endl;
-    cout << "   --aminoMRFbias=[weight] : multiplier  for the amino RMF biases (raw CMCpred format)" << endl;
+    cout << "   --aminoMRFbias=[weight] : multiplier  for the amino RMF biases (CCMpred xor PMRF)" << endl;
 
     cout << "---------------------------------------------------------------------------------------" << endl;
     cout << "--------------------------- Computation of Partition Function -------------------------" << endl;

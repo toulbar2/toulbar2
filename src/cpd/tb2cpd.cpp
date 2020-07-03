@@ -21,14 +21,17 @@ const string AminoMRFs = "ARNDCQEGHILKMFPSTWYV-";
 const string AminoPMRFs = "ACDEFGHIKLMNPQRSTVWY-";
 constexpr int NumNatAA = 20;
 
-// AminoMRF Class - obsolete (CCMPred not used anymore)
+// AminoMRF Class
 // Read MRF trained from multiple alignment using CCMPred. The MRF (alignment) should have
 // exactly the same number of variables/columns as the native protein.
 AminoMRF::AminoMRF(const char* filename)
 {
+    constexpr bool debug = true;
+
     ifstream file;
     file.open(filename);
 
+    if (debug) cout << std::scientific << std::setprecision(8); 
     if (!file.is_open()) {
         cerr << "Could not open alignment MRF file, aborting." << endl;
         exit(EXIT_FAILURE);
@@ -43,6 +46,8 @@ AminoMRF::AminoMRF(const char* filename)
     // We don't normalize unaries as they will receive projections from binaries
     while (!binariesReached) {
         getline(file, s);
+        if (debug) cout << s << endl;
+
         if (s[0] == '#') {
             binariesReached = true;
             break;
@@ -53,6 +58,7 @@ AminoMRF::AminoMRF(const char* filename)
             ss >> LP;
             unaries[nv].push_back(-LP);
         }
+        if (debug) std::cout << "Read var " << nv << endl;
         nv++;
     }
 
@@ -74,14 +80,14 @@ AminoMRF::AminoMRF(const char* filename)
         ss >> n;
         ss >> m;
 
+        if (debug) cout << n << ", " << m << " ";
         // we just ignore the gap
         TLogProb minscore = std::numeric_limits<TLogProb>::max();
         TLogProb maxscore = std::numeric_limits<TLogProb>::min();
         pair<int, int> pv(n, m);
-        for (int i = 0; i < NumNatAA + 1; i++) {
-            if (i < NumNatAA)
-                binaries[pv].resize(NumNatAA);
+        binaries[pv].resize(NumNatAA);
 
+        for (int i = 0; i < NumNatAA + 1; i++) {
             for (int j = 0; j < NumNatAA + 1; j++) {
                 file >> LP;
                 if (i < NumNatAA && j < NumNatAA) {
@@ -102,6 +108,7 @@ AminoMRF::AminoMRF(const char* filename)
 
         if (maxscore > 1e-1)
             nPot++;
+        if (debug) cout << "Maxscore " << maxscore << endl;
     } while (!file.eof());
     cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
@@ -178,7 +185,7 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
             if (debug) cout << AminoPMRFs[j] << " " <<  -tmpUnary[j] << " ";
         }
         if (debug)
-            cout << "Read unary on variable " << i << endl;
+            cout << "\nRead unary on variable " << i << endl;
     }
 
     // Reading binaries
@@ -190,9 +197,9 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         file.read((char*)tmpBinary, (NumNatAA + 1) * (NumNatAA + 1) * sizeof(float));
         binaries[e].resize(NumNatAA);
 
-        for (int i = 0; i < NumNatAA; i++) 
+        for (int i = 0; i < NumNatAA; i++)
             binaries[e][i].resize(NumNatAA);
-        
+
         for (int i = 0; i < NumNatAA; i++) {
             for (int j = 0; j < NumNatAA; j++) {
                 float LP = -tmpBinary[j * (NumNatAA + 1) + i];
