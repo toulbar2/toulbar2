@@ -26,7 +26,7 @@ constexpr int NumNatAA = 20;
 // exactly the same number of variables/columns as the native protein.
 AminoMRF::AminoMRF(const char* filename)
 {
-    constexpr bool debug = true;
+    constexpr bool debug = false;
 
     ifstream file;
     file.open(filename);
@@ -43,6 +43,9 @@ AminoMRF::AminoMRF(const char* filename)
     bool binariesReached = false;
     string s;
 
+    if (ToulBar2::verbose >= 0) {
+        cout << "Loading CCMpred eMRF file...\n";
+    }
     // We don't normalize unaries as they will receive projections from binaries
     while (!binariesReached) {
         getline(file, s);
@@ -110,7 +113,7 @@ AminoMRF::AminoMRF(const char* filename)
             nPot++;
         if (debug) cout << "Maxscore " << maxscore << endl;
     } while (!file.eof());
-    cout << "loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
+    cout << "Loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
 
 // AminoMRF Class

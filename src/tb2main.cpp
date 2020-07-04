@@ -2720,7 +2720,7 @@ int _tmain(int argc, TCHAR* argv[])
         if (ToulBar2::cpd)
             solver->applyCompositionalBiases();
 
-        if (ToulBar2::dumpWCSP == 1) {
+        if ((ToulBar2::dumpWCSP & 1)== 1) {
             string problemname = ToulBar2::problemsaved_filename;
             if (ToulBar2::uaieval) {
                 problemname = ToulBar2::solution_uai_filename;
