@@ -2606,7 +2606,10 @@ void WCSP::dump_CFN(ostream& os, bool original)
                     os << "\"" << s->getValueName(p) << "\"";
                     printed = true;
                 }
-                os << "],\n";
+                os << "]";
+                if (i < vars.size() - 1)
+                    os << ",";
+                os << "\n";
             }
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
@@ -2648,7 +2651,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << ((original) ? i : vars[i]->getCurrentVarId()) << "],\"defaultcost\":" << 0.0 << ",\n";
+            os << vars[i]->getName() << "],\"defaultcost\":" << 0.0 << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (domcost[v].value) : v) << ","

@@ -1451,15 +1451,15 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             printed = true;
         }
 
-        os << "\":{\"scope\":[";
+        os << "\":{\"scope\":[\"";
         printed = false;
         for (int i = 0; i < arity_; i++) {
             if (printed)
-                os << ",";
-            os << scope[i]->wcspIndex;
+                os << "\",\"";
+            os << scope[i]->getName();
             printed = true;
         }
-        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        os << "\"],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
         if (pf) {
             TUPLES::iterator it = pf->begin();
             printed = false;
@@ -1506,16 +1506,16 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 os << scope[i]->getCurrentVarId();
                 printed = true;
             }
-        os << "\":{\"scope\":[";
+        os << "\":{\"scope\":[\"";
         printed = false;
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned()) {
                 if (printed)
-                    os << ",";
-                os << scope[i]->getCurrentVarId();
+                    os << "\",\"";
+                os << scope[i]->getName();
                 printed = true;
             }
-        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        os << "\"],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
 
         String tuple;
         Cost cost;
