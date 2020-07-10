@@ -293,6 +293,11 @@ void Variable::projectLB(Cost cost)
             cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
         wcsp->td->getCluster(getCluster())->increaseLb(cost);
     }
+    if (ToulBar2::bilevel && Store::getDepth() == 0) {
+        char cluster = getName().back();
+        if (cluster=='1') ToulBar2::initialLbP2 += cost;
+        else if (cluster=='2') ToulBar2::initialLbNegP2 += cost;
+    }
 }
 
 void Variable::propagateIncDec(int incdec)

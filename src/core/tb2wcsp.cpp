@@ -234,6 +234,12 @@ ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
 
+bool ToulBar2::bilevel;
+Cost ToulBar2::bilevelShiftP2;
+Cost ToulBar2::bilevelShiftNegP2;
+Cost ToulBar2::initialLbP2;
+Cost ToulBar2::initialLbNegP2;
+
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
@@ -419,6 +425,12 @@ void tb2init()
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;
+
+    ToulBar2::bilevel = false;
+    ToulBar2::bilevelShiftP2 = MIN_COST;
+    ToulBar2::bilevelShiftNegP2 = MIN_COST;
+    ToulBar2::initialLbP2 = MIN_COST;
+    ToulBar2::initialLbNegP2 = MIN_COST;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
@@ -589,6 +601,10 @@ void tb2checkOptions()
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
     }
+    if (ToulBar2::bilevel && ToulBar2::btdMode != 1) {
+        cerr << "Error: BTD search mode required for bi-level optimization (use '-B=1')." << endl;
+        exit(1);
+    }
 }
 
 /*
@@ -739,6 +755,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     BinaryConstraint* ctr = x->getConstr(y);
     if (ctr) {
+        assert(!ToulBar2::bilevel);
         ctr->reconnect();
         ctr->addCosts(x, y, costs);
         ctr->propagate();

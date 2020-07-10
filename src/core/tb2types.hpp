@@ -596,6 +596,12 @@ public:
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
+
+    static bool bilevel; // bi-level optimization using BTD with only three clusters (P1 -> P2, P1 -> NegP2)
+    static Cost bilevelShiftP2;
+    static Cost bilevelShiftNegP2;
+    static Cost initialLbP2;
+    static Cost initialLbNegP2;
 };
 
 #ifdef INT_COST

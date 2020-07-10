@@ -191,6 +191,10 @@ enum {
     OPT_costfuncSeparate,
     NO_OPT_costfuncSeparate,
     OPT_nopre,
+    OPT_bilevel,
+    NO_OPT_bilevel,
+    OPT_bilevelShiftP2,
+    OPT_bilevelShiftNegP2,
 
     // VAC OPTION
     OPT_minsumDiffusion,
@@ -406,6 +410,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costfuncSeparate, (char*)"-dec", SO_NONE },
     { NO_OPT_costfuncSeparate, (char*)"-dec:", SO_NONE },
     { OPT_nopre, (char*)"-nopre", SO_NONE },
+    { OPT_bilevel, (char*)"-bilevel", SO_NONE },
+    { NO_OPT_bilevel, (char*)"-bilevel:", SO_NONE },
+    { OPT_bilevelShiftP2, (char*)"-shift2", SO_REQ_SEP },
+    { OPT_bilevelShiftNegP2, (char*)"-shiftneg2", SO_REQ_SEP },
     // vac option
     { OPT_vac, (char*)"-A", SO_OPT },
     { NO_OPT_vac, (char*)"-A:", SO_NONE },
@@ -911,6 +919,12 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::approximateCountingBTD)
         cout << " (default option)";
     cout << endl;
+    cout << "   -bilevel : bi-level optimization with BTD using a predefined cluster tree decomposition into three clusters (root:Problem1, left child:Problem2, right child:NegProblem2, such that NegProblem2 = -Problem2 while preserving the same hard constraints)";
+    if (ToulBar2::bilevel)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -shift2=[integer] : Cost shifting value for Problem2" << endl;
+    cout << "   -shiftneg2=[integer] : Cost shifting value for NegProblem2" << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
@@ -1384,6 +1398,21 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::approximateCountingBTD = true;
                 ToulBar2::allSolutions = LONGLONG_MAX;
                 ToulBar2::btdMode = 1;
+            }
+
+            // bi-level optimization
+            if (args.OptionId() == OPT_bilevel) {
+                ToulBar2::bilevel = true;
+            } else if (args.OptionId() == NO_OPT_bilevel) {
+                ToulBar2::bilevel = false;
+            }
+            if (args.OptionId() == OPT_bilevelShiftP2) {
+                assert(args.OptionArg() != NULL);
+                ToulBar2::bilevelShiftP2 = atoll(args.OptionArg());
+            }
+            if (args.OptionId() == OPT_bilevelShiftNegP2) {
+                assert(args.OptionArg() != NULL);
+                ToulBar2::bilevelShiftNegP2 = atoll(args.OptionArg());
             }
 
             if (args.OptionId() == OPT_binaryBranching) {

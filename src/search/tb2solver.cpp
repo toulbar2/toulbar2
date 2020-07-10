@@ -1859,6 +1859,35 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             ToulBar2::approximateCountingBTD = 0;
         ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
         wcsp->buildTreeDecomposition();
+        //BILEVEL
+        if (ToulBar2::bilevel) {
+            auto iter = wcsp->getTreeDec()->getRoot()->beginEdges();
+            Cluster *leftson = *iter;
+            ++iter;
+            Cluster *rightson = *iter;
+            // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
+            //leftson->getSep()->unqueueSep();
+            //leftson.isused = false???
+            leftson->deactivate();
+            // propagate channeling constraints between Problem1 and NegProblem2 only
+            for (unsigned int i=0; i < ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
+                BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
+                if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
+                    ctr->reconnect();
+                    ctr->assignCluster();
+                    ctr->propagate();
+                }
+            }
+//            wcsp->propagate();
+            if (ToulBar2::verbose >= 0) {
+                Cost lbP2 = ToulBar2::initialLbP2 + leftson->getLb() + leftson->getCurrentDelta();
+                Cost lbNegP2 = ToulBar2::initialLbNegP2 + rightson->getLb() + rightson->getCurrentDelta();
+                cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(wcsp->getLb() - lbP2 - lbNegP2 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftP2 - ToulBar2::bilevelShiftNegP2)) << endl;
+                cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::bilevelShiftP2) << endl;
+                cout << "Initial lower bound for NegProblem2: " << wcsp->Cost2RDCost(lbNegP2 - ToulBar2::bilevelShiftNegP2) << endl;
+                cout << "Initial lower bound for bilevel Problem1 - min(Problem2) = Problem1 + NegProblem2: " << wcsp->Cost2RDCost(wcsp->getLb() - lbP2 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftP2)) << endl;
+            }
+        }
     } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)ToulBar2::weightedDegree))) {
         if (ToulBar2::verbose >= 0)
             cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;

@@ -116,6 +116,8 @@ public:
 
     VACExtension* vac; ///< link to VAC management system
 
+    vector<int> delayedBilevelCtr; ///< internal list of deconnected constraints between clusters waiting for tree decomposition initialization
+
 #ifdef XMLFLAG
     map<int, int> varsDom; ///< structures for solution translation: we don't have to parse the XML file again
     vector<vector<int>> Doms; ///< structures for solution translation: we don't have to parse the XML file again
@@ -766,8 +768,8 @@ public:
     // warning: ToulBar2::NormFactor has to be initialized
 
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
-    Cost DoubletoCost(const Double& c) const { return Round(c * powl(10.0, ToulBar2::decimalPoint)) + negCost; }
-    Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
+    Cost DoubletoCost(const Double& c) const { return Round(c * powl(10.0, ToulBar2::decimalPoint)) + getNegativeLb(); }
+    Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - getNegativeLb()); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;

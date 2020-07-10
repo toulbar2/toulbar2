@@ -310,7 +310,7 @@ public:
     int getValueIdx(int variableIdx, const string& token, int lineNumber);
     void readScope(vector<int>& scope);
     pair<unsigned, unsigned> readCostFunctions();
-    void readZeroAryCostFunction(bool all, Cost defaultCost);
+    void readZeroAryCostFunction(bool all, Cost defaultCost, const string& funcName);
     void readNaryCostFunction(vector<int>& scope, bool all, Cost defaultCost);
     void readArithmeticCostFunction();
     void readGlobalCostFunction(vector<int>& scope, const std::string& globalCfnName, int line);
@@ -406,7 +406,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     wcsp->sortConstraints();
 
     if (ToulBar2::verbose >= 0)
-        cout << "Read " << nvar << " variables, with " << nval << " values at most, and " << ncf << " cost functions, with maximum arity " << maxarity << "." << endl;
+        cout << "Read " << nvar << " variables, with " << nval << " values at most, and " << ncf << " cost functions, with maximum arity " << maxarity << " (shifting value: " << wcsp->getNegativeLb() << ")." << endl;
 }
 
 // Reads a line. Skips comment lines starting with '#' and // too.
@@ -668,7 +668,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     unsigned int  varIndex = wcsp->getVarIndex(varName);
     bool newvar = (varIndex == wcsp->numberOfVariables());
     if (ToulBar2::verbose >= 1)
-        cout << "Variable " << varName << ((newvar)?" new ":" known ") << "with domain size " << domainSize << " read";
+        cout << "Variable '" << varName << ((newvar)?"' new ":"' known ") << "with domain size " << domainSize << " read";
     // Create the toulbar2 variable and store its name in the variable map.
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
@@ -693,12 +693,12 @@ unsigned CFNStreamReader::readVariable(unsigned i)
             wcsp->addValueName(varIndex, valueNames[ii]);
     } else {
         if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != domainSize) {
-            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
             if (wcsp->getVar(varIndex)->getValueName(ii) != valueNames[ii]) {
-                cerr << "Error: same variable has two different domains " << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+                cerr << "Error: same variable has two different domain values " << wcsp->getVar(varIndex)->getValueName(ii) << ", " << valueNames[ii] << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -1071,7 +1071,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
         // Table cost function
         if (!isGlobal && !isReused) {
             if (scope.size() == 0) {
-                this->readZeroAryCostFunction(skipDefaultCost, defaultCost);
+                this->readZeroAryCostFunction(skipDefaultCost, defaultCost, funcName);
             } else if (scope.size() > NARYPROJECTIONSIZE) {
                 this->readNaryCostFunction(scope, skipDefaultCost, defaultCost);
             } else {
@@ -1180,7 +1180,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
 // Reads a 0ary function.
 // Starts: after the cost table OBrace
 // Ends:   after the function CBrace
-void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
+void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost, const string& funcName)
 {
     string token;
     int lineNumber;
@@ -1203,6 +1203,11 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
         zeroAryCost = 0;
     }
     wcsp->increaseLb(zeroAryCost);
+    if (ToulBar2::bilevel && Store::getDepth() == 0) {
+        char cluster =  funcName.back();
+        if (cluster=='1') ToulBar2::initialLbP2 += zeroAryCost;
+        else if (cluster=='2') ToulBar2::initialLbNegP2 += zeroAryCost;
+    }
     skipCBrace(); // read final function CBrace
 }
 

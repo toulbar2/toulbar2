@@ -30,7 +30,14 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
 
-    propagate();
+    if (ToulBar2::bilevel && xx->getName().back() != yy->getName().back()) {
+        // detect channeling constraints and postpone their propagation
+        assert(xx->getName().back() == '0' || yy->getName().back() == '0'); // channeling constraints must be between root cluster and left/right child cluster
+        deconnect(true);
+        wcsp->delayedBilevelCtr.push_back(wcspIndex);
+    } else {
+        propagate();
+    }
 }
 
 BinaryConstraint::BinaryConstraint(WCSP* wcsp)
@@ -97,7 +104,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\":{\"scope\":[";
-    os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "," << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "],";
+    os << x->getName() << "," << y->getName() << "],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {

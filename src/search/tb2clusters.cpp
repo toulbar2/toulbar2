@@ -1568,7 +1568,7 @@ int TreeDecomposition::makeRooted()
             EnumeratedVariable** scopeVars = new EnumeratedVariable*[1];
             oneroot->setSep(new Separator(wcsp, scopeVars, 0));
             if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) {
-                oneroot->getSep()->unqueueSep();
+                oneroot->getSep()->unqueueSep(); // assert((*oneroot->getVars()->begin())->assigned()) ??? separator must have been queued before!
             }
             root->addEdge(oneroot);
             oneroot->setParent(root);

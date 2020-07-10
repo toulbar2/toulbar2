@@ -200,7 +200,7 @@ public:
     TClusters& getDescendants() { return descendants; }
     bool isEdge(Cluster* c);
     void accelerateDescendants();
-    bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; }
+    bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; } ///< test if c is a descendant of this
 
     TCtrs& getCtrs() { return ctrs; }
     void addCtrs(TCtrs& ctrsin);

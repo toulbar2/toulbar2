@@ -513,6 +513,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             // Solves each cluster son with local lower and upper bounds
             Cluster* c = *iter;
             ++iter;
+            //BILEVEL
+            if (ToulBar2::bilevel && c != *cluster->beginEdges()) continue; // skip the right cluster NegProblem2
             Cost lbSon = MIN_COST;
             Cost ubSon = MAX_COST;
             bool good = false;
@@ -540,9 +542,33 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     td->setCurrentCluster(c);
                     wcsp->setUb(ubSon);
                     wcsp->setLb((good) ? c->getLbRec() : lbSon);
+                    //BILEVEL
+                    // TODO: compute better initial bounds for Problem2
+                    if (ToulBar2::bilevel) {
+                        wcsp->setUb(MAX_COST);
+                        wcsp->setLb(MIN_COST);
+                        ubSon = MAX_COST;
+                        lbSon = MIN_COST;
+                    }
                     try {
                         Store::store();
                         wcsp->enforceUb();
+                        //BILEVEL
+                        if (ToulBar2::bilevel) {
+                            // add channeling constraints between Problem1 and Problem2
+                            for (unsigned int i=0; i< ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
+                                BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
+                                if (ctr->getVar(0)->getName().back() == '1' || ctr->getVar(1)->getName().back() == '1') {
+                                    static vector<Cost> costs;
+                                    costs.resize(((EnumeratedVariable *)ctr->getVar(0))->getDomainInitSize()*((EnumeratedVariable *)ctr->getVar(1))->getDomainInitSize(), MIN_COST);
+                                    int incbin = wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs);
+                                    BinaryConstraint *incbinctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(incbin);
+                                    incbinctr->addCosts(ctr);
+                                    incbinctr->assignCluster();
+                                    incbinctr->propagate();
+                                }
+                            }
+                        }
                         wcsp->propagate();
                         Cost bestlb = MAX(wcsp->getLb(), lbSon);
                         if (csol < MAX_COST && iter == cluster->endSortedEdges())
@@ -556,6 +582,15 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
                         assert(res.first >= bestlb && res.second <= ubSon);
                         c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
+                        //BILEVEL
+                        if (ToulBar2::bilevel) {
+                            assert(res.first == res.second); // Problem2 must be solved to optimality
+                            assert(c->getCurrentDelta() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
+                            // Compute new global upper bound for Problem1 + NegProblem2
+                            csol = td->getRoot()->getLb() - res.first + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                            Store::restore();
+                            break;
+                        }
                         clb += res.first - lbSon;
                         if (csol < MAX_COST) {
                             if (res.second < ubSon || csolution)
@@ -579,8 +614,14 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         csol += ubSon - lbSon;
                     }
                 }
+            } else {
+                if (ToulBar2::bilevel) {
+                    // Problem2 has been already solved
+                    csol = td->getRoot()->getLb() - lbSon + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                }
             }
         }
+
         assert(csol >= clb);
         if (csol < cub) {
             // A new solution has been found for the current cluster
