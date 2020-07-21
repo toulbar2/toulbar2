@@ -861,6 +861,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)
         cout << " (default option)";
+    cout << endl;
     cout << "   -vacthr : automatic threshold cost value selection for VAC during search";
     if (ToulBar2::VACthreshold)
         cout << " (default option)";

@@ -3204,7 +3204,6 @@ void WCSP::dump(ostream& os, bool original)
     }
 }
 
-// Warning! make the assumption that all initial domains start at zero!!!
 void WCSP::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
@@ -3237,7 +3236,6 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
-            os << "],\n";
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
             int domsize = s->getDomainSize();
@@ -3251,11 +3249,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
                 printed = true;
             }
-            os << "]";
-            if (i < vars.size() - 1)
-                os << ",";
-            os << "\n";
         }
+        os << "]";
+        if (i < vars.size() - 1)
+            os << ",";
+        os << "\n";
     }
 
     os << "},\n\"functions\": {\n";
@@ -3274,10 +3272,10 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << ((original) ? i : vars[i]->getCurrentVarId()) << "],\"defaultcost\":" << 0.0 << ",\n";
+            os << ((original) ? i : vars[i]->getCurrentVarId()) << "],\"defaultcost\":" << 0 << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
-                os << ((original) ? (domcost[v].value) : v) << ","
+                os << ((original) ? (((EnumeratedVariable *) vars[i])->toIndex(domcost[v].value)) : v) << ","
                    << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound(), Cost2RDCost(domcost[v].cost)));
                 if (v != (size - 1)) {
                     os << ",";
