@@ -65,7 +65,7 @@ void CooperativeParallelDGVNS::MsgToSol(
 
 //---------------- Class Definition --------------------------//
 
-bool CooperativeParallelDGVNS::solve()
+bool CooperativeParallelDGVNS::solve(bool first)
 {
     mysrand(abs(ToulBar2::seed) + env0.myrank);
 
@@ -74,7 +74,12 @@ bool CooperativeParallelDGVNS::solve()
     try {
         lastUb = MAX_COST;
         lastSolution.clear();
-        preprocessing(MAX_COST);
+        if (first) {
+            preprocessing(MAX_COST);
+        } else {
+            if (ToulBar2::elimDegree >= 0)
+                ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+        }
     } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (env0.myrank == 0) {

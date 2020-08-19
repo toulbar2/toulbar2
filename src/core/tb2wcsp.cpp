@@ -33,6 +33,7 @@
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
 #include "tb2clqcover.hpp"
+#include "tb2knapsack.hpp"
 
 /*
  * Global variables with their default value
@@ -1714,6 +1715,10 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
+    }else {
+        if(gcname =="knapsack"){
+        postKnapsackConstraint(scopeIndex,arity,file);
+        return -1;}
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
@@ -1785,6 +1790,81 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new CliqueConstraint(this, scopeVars.data(), arity);
     cc->read(file);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
+}
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
+{
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+        //Eliminate variable with weigth 0.
+    vector<int> Weightzero;
+    vector<Long> weights;
+    int nbzeros=0;
+    Long readw;
+    Long capacity;
+    Long MaxWeight=0;
+    Long NegCapacity=0;
+
+    file >> capacity;
+
+    bool isclause = (capacity <= 1 && arity > 3);
+    Long clausecapacity = 1;
+    vector<tValue> clausetuple(arity, 0);
+
+    for (int i = 0; i != arity; ++i) {
+        file >> readw;
+        isclause &= (readw == 1 || readw == -1);
+        if (readw == -1) {
+            clausetuple[i] = 1;
+            clausecapacity--;
+        }
+        weights.push_back(readw);
+        if(weights[i]==0){
+            Weightzero.push_back(i);
+            nbzeros++;}
+        else if(weights[i]<0)
+            NegCapacity-=weights[i];
+        else
+            MaxWeight+=weights[i];
+    }
+    isclause &= (clausecapacity == capacity);
+    int k=0;
+    for(int i=0; i<nbzeros;i++){
+        weights.erase(weights.begin() + Weightzero[i]-k);
+        for(int j=Weightzero[i]-k;j<arity;j++)
+            *(scopeIndex+j)=*(scopeIndex+j+1);
+        k++;
+        arity--;
+    }
+    vector<EnumeratedVariable*> scopeVars(arity);
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    AbstractNaryConstraint* cc = NULL;
+    if (isclause) {
+        assert(arity == clausetuple.size());
+        if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
+        cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
+    } else {
+        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight,NegCapacity);
+    }
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
     else {
@@ -2272,6 +2352,8 @@ void WCSP::sortConstraints()
                 bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
+    }
+    for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         getCtr(*idctr)->propagate();
     }
     delayedNaryCtr.clear();
@@ -2588,7 +2670,7 @@ void WCSP::preprocessing()
     while (merged) {
         merged = false;
         for (unsigned int i = 0; i < constrs.size(); i++)
-            if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->arity() == 2 && constrs[i]->extension()
+            if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isBinary()
                 && (ToulBar2::preprocessFunctional == 1 || constrs[i]->getVar(0)->getDomainSize() == constrs[i]->getVar(1)->getDomainSize())) {
                 BinaryConstraint* xy = (BinaryConstraint*)constrs[i];
                 EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
@@ -2607,8 +2689,7 @@ void WCSP::preprocessing()
         for (int i = 0; i < elimBinOrder; i++)
             if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()
                 && elimBinConstrs[i]->getVar(0)->getDomainSize() == elimBinConstrs[i]->getVar(1)->getDomainSize()) {
-                assert(elimBinConstrs[i]->arity() == 2);
-                assert(elimBinConstrs[i]->extension());
+                assert(elimBinConstrs[i]->isBinary());
                 BinaryConstraint* xy = (BinaryConstraint*)elimBinConstrs[i];
                 EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
                 EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
@@ -4809,13 +4890,13 @@ void WCSP::ternaryCompletion()
         EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
         for (ConstraintList::iterator it = x->getConstrs()->begin(); it != x->getConstrs()->end(); ++it) {
             Constraint* ctr = (*it).constr;
-            if (ctr->arity() == 2) {
+            if (ctr->isBinary()) {
                 BinaryConstraint* bctr = (BinaryConstraint*)ctr;
                 EnumeratedVariable* y = (EnumeratedVariable*)bctr->getVarDiffFrom(x);
                 if (y->wcspIndex > x->wcspIndex)
                     for (ConstraintList::iterator it2 = y->getConstrs()->begin(); it2 != y->getConstrs()->end(); ++it2) {
                         Constraint* ctr2 = (*it2).constr;
-                        if (ctr != ctr2 && ctr2->arity() == 2) {
+                        if (ctr != ctr2 && ctr2->isBinary()) {
                             BinaryConstraint* bctr2 = (BinaryConstraint*)ctr2;
                             EnumeratedVariable* z = (EnumeratedVariable*)bctr2->getVarDiffFrom(y);
                             if (z->wcspIndex > y->wcspIndex)

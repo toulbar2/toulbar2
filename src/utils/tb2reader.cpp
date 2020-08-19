@@ -12,6 +12,7 @@
 #include "tb2randomgen.hpp"
 #include "core/tb2globaldecomposable.hpp"
 #include "core/tb2clqcover.hpp"
+#include "core/tb2knapsack.hpp"
 
 #ifdef BOOST
 #define BOOST_IOSTREAMS_NO_LIB
@@ -131,6 +132,7 @@ typedef struct {
  * - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
  * - Global cost functions using a dedicated propagator:
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
+ *     - knapsack \e capacity (\e weights)* to express a reverse knapsack constraint (i.e. greater than or equal to) with capacity and weights are positive or negative integer coefficients
  *
  * - Global cost functions using a flow-based propagator:
  *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
@@ -173,6 +175,7 @@ typedef struct {
  * \warning The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
+ * \warning Knapsack constraint is equivalent to a linear constraint on Boolean variables with >= comparison operator (use negative numbers to get <=).
  *
  * \note More about network-based global cost functions can be found here https://metivier.users.greyc.fr/decomposable/
  *
@@ -181,6 +184,7 @@ typedef struct {
  * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
+ * - knapsack constraint (w0 * x0 + w1 * x1 + w2 * x2 + w3 * x3 >= c) on four Boolean variables: \code 4 0 1 2 3 -1 knapsack c w0 w1 w2 w3 \endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
@@ -692,7 +696,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
             wcsp->addValueName(varIndex, valueNames[ii]);
     } else {
-        if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != domainSize) {
+        if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int) domainSize) {
             cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
@@ -1333,6 +1337,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
     map<string, string> GCFTemplates = {
         { "clique", ":rhs:N:values:[v+]S" },
+        { "knapsack", ":capacity:N:weights:[N]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1384,6 +1389,9 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
                 exit(EXIT_FAILURE);
             }
+        } else if (funcName == "knapsack") {
+            string ps = paramsStream.str();
+            this->wcsp->postKnapsackConstraint(scopeArray, arity, paramsStream);
         } else { // monolithic
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
@@ -1604,7 +1612,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
             std::tie(lineNumber, token) = this->getNextToken();
             for (char c : token) {
-                if (!isdigit(c)) {
+                if (!isdigit(c) && c != '-') {
                     cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
                     exit(EXIT_FAILURE);
                 }
@@ -1648,7 +1656,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     char symbol = repeatedSymbols[repeatIndex];
                     if (symbol == 'N') {
                         for (char c : token) {
-                            if (!isdigit(c)) {
+                            if (!isdigit(c) && c != '-') {
                                 cerr << "Error: integer required at line " << lineNumber << " but read " << token << endl;
                                 exit(EXIT_FAILURE);
                             }
@@ -2350,6 +2358,8 @@ void WCSP::read_legacy(const char* fileName)
                     decomposableGCF->addToCostFunctionNetwork(this);
                 } else if (gcname == "clique") {
                     postCliqueConstraint(scopeIndex, arity, file);
+                } else if (gcname == "knapsack") {
+                    postKnapsackConstraint(scopeIndex, arity, file);
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
@@ -2609,7 +2619,13 @@ void WCSP::read_legacy(const char* fileName)
                     file >> funcparam5;
                     file >> funcparam6;
                     postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
-                } else {
+                } else if(funcname=="knapsack"){
+                        int scopeIndex[2];
+                        scopeIndex[0] = i;
+                        scopeIndex[1] = j;
+                    postKnapsackConstraint(scopeIndex,arity,file);
+                }
+                else{
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
@@ -2638,7 +2654,12 @@ void WCSP::read_legacy(const char* fileName)
                     if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
-                    } else { // monolithic global cost functions
+                    }else if(gcname=="knapsack"){
+                        int scopeIndex[1];
+                        scopeIndex[0] = i;
+                        postKnapsackConstraint(scopeIndex,arity,file);
+                      }
+                    else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                     }
                 } else {
@@ -2767,6 +2788,17 @@ void WCSP::read_legacy(const char* fileName)
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
 {
+    if (ToulBar2::externalUB.size()) {
+        Cost top = string2Cost(ToulBar2::externalUB.c_str());
+        double K = ToulBar2::costMultiplier;
+        if (top < MAX_COST / K)
+            top = top * K;
+        else
+            top = MAX_COST;
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+        updateUb(top + ToulBar2::deltaUb);
+        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+    }
     naryRandom randwcsp(this, seed);
     randwcsp.Input(n, m, p, forceSubModular, globalname);
 

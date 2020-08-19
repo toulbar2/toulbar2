@@ -1,0 +1,18 @@
+{
+    problem: { name: "knapsack", mustbe: "<100"},
+    variables: { "v1": 2, "v2": 2, "v3": 2, "v4": 2 },
+    functions: {
+	"c1": {scope: ["v1"], costs: [0, 1]},
+	"c2": {scope: ["v2"], costs: [0, 2]},
+	"c3": {scope: ["v3"], costs: [0, 3]},
+	"c4": {scope: ["v4"], costs: [0, 4]},
+	"c1234": {scope: ["v1", "v2", "v3", "v4"], 
+                  type: "knapsack", 
+                  params: {
+                     capacity: 10, 
+                     weights: [2, 3, 4, 5]
+                  }
+                 }
+    }
+}
+

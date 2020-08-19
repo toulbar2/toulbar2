@@ -10,14 +10,19 @@
 #include "core/tb2wcsp.hpp"
 #ifdef BOOST
 
-bool VNSSolver::solve()
+bool VNSSolver::solve(bool first)
 {
     // Initialization
     beginSolve(MAX_COST);
     try {
         lastUb = MAX_COST;
         lastSolution.clear();
-        preprocessing(MAX_COST);
+        if (first) {
+            preprocessing(MAX_COST);
+        } else {
+            if (ToulBar2::elimDegree >= 0)
+                ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+        }
     } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (lastUb < MAX_COST)

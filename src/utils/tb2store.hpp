@@ -273,6 +273,7 @@ typedef StoreBasic<Value> StoreValue;
 typedef StoreValue StoreInt;
 typedef StoreBasic<Cost> StoreCost;
 typedef StoreBasic<BigInteger> StoreBigInteger;
+typedef StoreCost StoreLong;
 
 /*
  * Container for all storable stacks

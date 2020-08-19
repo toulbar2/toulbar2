@@ -1114,9 +1114,9 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
 
     ConstraintLink links[2] = { { NULL, 0 }, { NULL, 0 } };
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->arity() == 2)
+        if ((*iter).constr->isBinary())
             links[n2links++] = (*iter);
-        else if ((*iter).constr->arity() == 3)
+        else if ((*iter).constr->isTernary())
             n3links++;
         else
             return false;
@@ -1320,7 +1320,7 @@ void EnumeratedVariable::permuteDomain(Value a, Value b)
     assert(canbe(a) && canbe(b));
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr = (*iter).constr;
-        if (ctr->arity() == 2 && !ctr->isSep() && ctr->extension()) {
+        if (ctr->isBinary() && !ctr->isSep()) {
             BinaryConstraint* bctr = (BinaryConstraint*)ctr;
             bctr->permute(this, a, b);
         } else {

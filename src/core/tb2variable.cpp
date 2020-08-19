@@ -435,7 +435,7 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
-        if ((*iter).constr->arity() == 2) {
+        if ((*iter).constr->isBinary()) {
             BinaryConstraint* bctr = (BinaryConstraint*)(*iter).constr;
             double bintight = bctr->getTightness();
             if (bintight > maxtight) {

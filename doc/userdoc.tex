@@ -535,6 +535,7 @@ AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
 \item Global cost functions using a dedicated propagator\-:
 \begin{DoxyItemize}
 \item clique {\itshape 1} ({\itshape nb\-\_\-values} ({\itshape value})$\ast$)$\ast$ to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most {\itshape 1} occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
+\item knapsack {\itshape capacity} ({\itshape weight)$\ast$ to express a reverse knapsack hard constraint with minimum capacity and a list of weights associated to the variables in the scope of the constraint (warning! it assumes Boolean 0/1 variables and is equivalent to a linear constraint with >= operator, use negative numbers to express <=)
 \end{DoxyItemize}
 \item Global cost functions using a flow-\/based propagator\-:
 \begin{DoxyItemize}
@@ -614,6 +615,11 @@ Examples\-:
 2 2 3 0 1 1 1 1000 
 \end{DoxyCode}
 
+\item knapsack constraint (\{x0,x1,x2,x3\}) on Boolean variables such that $2*x0 + 3*x1 + 4*x2 + 5*x3 >= 10$\-:
+ \begin{DoxyCode}
+4 0 1 2 3 -1 knapsack 10 2 3 4 5
+\end{DoxyCode}
+ 
 \item soft\-\_\-alldifferent(\{x0,x1,x2,x3\})\-:
 \begin{DoxyCode}
 4 0 1 2 3 -1 salldiff var 1 
