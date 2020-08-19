@@ -30,6 +30,13 @@ graphical models:
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
 
+Toulbar2 is now also able to collaborate with ML code that can learn
+an additive graphical model (with constraints) from data (see the
+associated paper at
+https://miat.inrae.fr/schiex/Export/Pushing_Data_in_your_CP_model.pdf
+where it is shown hot it can learn to play the Sudoky without the
+rules). The current CFN learning code is available at
+https://forgemia.inra.fr/thomas.schiex/cfn-learn.
 
 ## Installation from binaries
 
