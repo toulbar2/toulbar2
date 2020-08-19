@@ -132,7 +132,7 @@ typedef struct {
  * - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
  * - Global cost functions using a dedicated propagator:
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
- *     - knapsack \e capacity (\e weights)* to express a reverse knapsack constraint (i.e. greater than or equal to) with capacity and weights are positive or negative integer coefficients
+ *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
  *
  * - Global cost functions using a flow-based propagator:
  *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
@@ -175,7 +175,6 @@ typedef struct {
  * \warning The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
- * \warning Knapsack constraint is equivalent to a linear constraint on Boolean variables with >= comparison operator (use negative numbers to get <=).
  *
  * \note More about network-based global cost functions can be found here https://metivier.users.greyc.fr/decomposable/
  *
@@ -184,7 +183,7 @@ typedef struct {
  * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
- * - knapsack constraint (w0 * x0 + w1 * x1 + w2 * x2 + w3 * x3 >= c) on four Boolean variables: \code 4 0 1 2 3 -1 knapsack c w0 w1 w2 w3 \endcode
+ * - knapsack constraint (2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode

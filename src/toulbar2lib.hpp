@@ -22,7 +22,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)
+    toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
 </pre>
  */
 

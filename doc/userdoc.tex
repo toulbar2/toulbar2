@@ -60,13 +60,16 @@ optimality, it will bound the quality of the solution provided.
 It can also apply a variable neighborhood search algorithm exploiting a problem decomposition~\cite{Ouali17}.
 This algorithm is complete (if enough CPU-time is given) and it can be run in parallel using OpenMPI.
 
-Beyond the service of providing optimal solutions, \toulbar2 can also
+Beyond the service of providing optimal solutions, \toulbar2 can also find a greedy sequence of diverse solutions~\cite{Ruffini19a} or
 exhaustively enumerate solutions below a cost threshold and
 perform guaranteed approximate weighted counting of solutions. For
 stochastic graphical models, this means that \toulbar2 will compute
 the partition function (or the normalizing constant $Z$). These
 problems being \#P-complete, \toulbar2 runtimes can quickly increase
 on such problems.
+
+By exploiting the new \toulbar2 python interface, with incremental solving capabilities, it is possible to learn a CFN from data and to combine it with mandatory constraints~\cite{Schiex20b}. 
+See examples at \url{https://forgemia.inra.fr/thomas.schiex/cfn-learn}. 
 
 \section{How do I install it ?}
 
@@ -189,15 +192,18 @@ Substitutability) preprocessing.
 \subsection{General control}
 
 \begin{description}
+\item[{-agap=[decimal]}] : stops search if the absolute optimality gap reduces below the given value (provides guaranteed approximation) (default value is 0)
+\item[{-rgap=[double]}] : stops search if the relative optimality gap reduces below the given value (provides guaranteed approximation) (default value is 0)
 \item[{-a=[integer]}] finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, 
 or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD)
 \item[{-D}] approximate satisfiable solution count with BTD
 \item[{-logz}] computes log of probability of evidence (i.e. log
   partition function or log(Z) or PR task) for graphical models only
   (problem file extension .uai)
-\item[{-timer=[integer]}] give a CPU time limit in seconds. \toulbar2
+\item[{-timer=[integer]}] gives a CPU time limit in seconds. \toulbar2
   will stop after the specified CPU time has been consumed. The time
   limit is a CPU user time limit, not wall clock time limit.
+\item[{-bt=[integer]}] gives a limit on the number of backtracks (9223372036854775807 by default)
 \item[{-seed=[integer]}] random seed non-negative value or use current time if a negative value is given (default value is 1)
 \end{description}
 
@@ -222,7 +228,8 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   on all binary cost functions if n is lower than the given value
   (default value is 10). See~\cite{Favier11a}.
 \item[{-mst}] find a maximum spanning tree ordering for DAC
-\item[{-M=[integer]}]
+\item[{-S}] preprocessing only: performs singleton consistency (only in conjunction with option -A)
+\item[{-M=[integer]}] preprocessing only: 
   apply the Min Sum Diffusion algorithm (default is inactivated, with
   a number of iterations of 0). See~\cite{Cooper10a}.
 \item[{-trws=[float]}] 
@@ -249,6 +256,11 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   argument, a complete assignment -- used as initial upper bound and
   as a value heuristic -- read from default file "sol" taken as a certificate or given directly as an additional input
   filename with ".sol" extension and without {\bf -x})
+\item[{-ub=[decimal]}] gives an initial upper bound
+\item[{-rasps=[integer]}] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks, 1000 if no integer given) (default value is 0)
+\item[{-raspslds=[integer]}] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is 0)
+\item[{-raspsdeg=[integer]}] : automatic threshold cost value selection for probing heuristic (default value is 10 degrees)
+\item[{-raspsini}] : reset weighted degree variable ordering heuristic after doing upper bound probing
 \end{description}
 
 \subsection{Tree search algorithms and tree decomposition selection}
@@ -308,8 +320,12 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-k=[integer]}] soft local consistency level (NC~\cite{Larrosa2002} with Strong NIC for global cost functions=0~\cite{LL2009}, (G)AC=1~\cite{Schiex00b,Larrosa2002}, D(G)AC=2~\cite{CooperFCSP}, FD(G)AC=3~\cite{Larrosa2003}, (weak) ED(G)AC=4~\cite{Heras05,LL2010}) (default value is 4). See also~\cite{Cooper10a,LL2012asa}.
 \item[{-A=[integer]}] enforces VAC~\cite{Cooper08} at each search node with a search depth less than a given value (default value is 0)
 \item[{-V}] VAC-based value ordering heuristic (default option)
+\item[{-T=[decimal]}] : threshold cost value for VAC (default value is 1)
+\item[{-P=[decimal]}] : threshold cost value for VAC during the preprocessing phase only (default value is 1)
+\item[{-C=[float]}] : multiplies all costs internally by this number when loading the problem (cannot be done with cfn format and probabilistic graphical models in uai/LG formats) (default value is 1)
+\item[-vacthr] automatic threshold cost value selection for VAC during search (must be combined with option -A)
 \item[{-dee=[integer]}] restricted dead-end elimination~\cite{Givry13a} (value pruning by dominance rule from EAC value (dee$>=1$ and dee$<=3$)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)
-\item[{-o}] ensures an optimal worst-case time complexity of DAC and EAC (can be slower in practice)
+\item[-o] ensures an optimal worst-case time complexity of DAC and EAC (can be slower in practice)
 \end{description}
 
 \subsection{Branching, variable and value ordering}
@@ -342,6 +358,18 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   of the sorted domain based on unary costs. 
 \item[-sortd] sorts domains in preprocessing based on increasing unary costs (works only for binary WCSPs).
 \item[-solr] solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
+\item[-vacint] VAC-integrality/Full-EAC variable ordering heuristic (can be combined with option -A)
+\end{description}
+
+\subsection{Diverse solutions}
+
+\toulbar2 can search for a greedy sequence of diverse solutions with guaranteed local optimality and minimum pairwise Hamming distance~\cite{Ruffini19a}.
+
+\begin{description}
+\item[{-div=[integer]}] : minimum Hamming distance between diverse solutions (use in conjunction with -a=integer with a limit of 1000 solutions) (default value is 0)
+\item[{-divm=[integer]}] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary (default value is 0)
+\item[{-mdd=[integer]}] : maximum relaxed MDD width for diverse solution global constraint (default value is 0)
+\item[{-mddh=[integer]}] : MDD relaxation heuristic: 0: random, 1: high div, 2: small div, 3: high unary costs (default value is 0)
 \end{description}
 
 \subsection{Console output}
@@ -425,14 +453,19 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
        \begin{itemize}
        \item pn is the number of salldiff global cost functions (p2 and
          p3 still being used for the number of random binary and
-         ternary cost functions). {\em salldiff} can be replaced by {\em gcc} or {\em regular} keywords with three possible forms ({\em e.g., sgcc, sgccdp, wgcc}).
+         ternary cost functions). {\em salldiff} can be replaced by {\em gcc} or {\em regular} keywords with three possible forms ({\em e.g., sgcc, sgccdp, wgcc}) and by {\em knapsack}.
        \end{itemize}
      \end{itemize}
    \end{description}
     
 \section{Input File formats}
 \label{file-formats}
-Notice that by default \toulbar2 distinguishes file formats based on their extension.
+Notice that by default \toulbar2 distinguishes file formats based on their extension. 
+It is possible to read a file from a unix pipe using option {\tt -stdin=[format]}~; {\em e.g.,} {\tt cat example.wcsp | toulbar2 --stdin=wcsp}\\
+
+It is also possible to read and combine multiple problem files (warning, they must be all in the same format, either wcsp, cfn, or xml). 
+Variables with the same name are merged (domains must be identical), otherwise the merge is based on variable indexes (wcsp format).
+
 \subsection{cfn format (.cfn, .cfn.gz, and .cfn.xz file extension)}
 With this JSON compatible format, it is possible:
 \begin{itemize}
@@ -535,7 +568,7 @@ AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
 \item Global cost functions using a dedicated propagator\-:
 \begin{DoxyItemize}
 \item clique {\itshape 1} ({\itshape nb\-\_\-values} ({\itshape value})$\ast$)$\ast$ to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most {\itshape 1} occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
-\item knapsack {\itshape capacity} ({\itshape weight)$\ast$ to express a reverse knapsack hard constraint with minimum capacity and a list of weights associated to the variables in the scope of the constraint (warning! it assumes Boolean 0/1 variables and is equivalent to a linear constraint with >= operator, use negative numbers to express <=)
+\item knapsack {\itshape capacity} ({\itshape weight})$\ast$ to express a reverse knapsack hard constraint with minimum capacity and a list of weights associated to the variables in the scope of the constraint (warning! it assumes Boolean 0/1 variables and is equivalent to a linear constraint with >= operator, use negative numbers to express the <= operator)
 \end{DoxyItemize}
 \item Global cost functions using a flow-\/based propagator\-:
 \begin{DoxyItemize}
@@ -1028,7 +1061,10 @@ $$X' * W * X = \sum_{i=1}^N \sum_{j=1}^N  W_{ij} * X_i * X_j$$
 
 where $W$ is a symmetric squared $N \times N$ matrix expressed by all its non-zero half ($i \leq j$) squared matrix coefficients, $X$ is a vector of $N$ binary variables with domain values in $\{0,1\}$ or $\{1,-1\}$, and $X'$ is the transposed vector of $X$.
 
-Note that for two indices $i \neq j$, coefficient $W_{ij} = W_{ji}$ (symmetric matrix) and it appears twice in the previous sum. Note also that coefficients can be positive or negative and are real float numbers. They are converted to fixed-point real numbers by multiplying them by $10^{precision}$ (see option {\em -precision} to modify it, default value is 7).  Infinite coefficients are forbidden.
+Note that for two indices $i \neq j$, coefficient $W_{ij} = W_{ji}$ (symmetric matrix) and it appears twice in the previous sum.
+It can be controled by the option {\tt -qpmult=[double]} which defines a coefficient multiplier for quadratic terms (default value is 2).
+
+Note also that coefficients can be positive or negative and are real float numbers. They are converted to fixed-point real numbers by multiplying them by $10^{precision}$ (see option {\em -precision} to modify it, default value is 7).  Infinite coefficients are forbidden.
 
 Notice that depending on the sign of the number of variables in the first text line, the domain of all variables is either $\{0,1\}$ or $\{1,-1\}$.
 
@@ -1049,9 +1085,15 @@ coefficient $W_{ij}$ (float number)
 such that $i \leq j$ and $W_{ij} \neq 0$
 \end{itemize}
 
+\subsection{XCSP2.1 format (.xml)}
+
+CSP and weighted CSP in XML format XCSP 2.1, with constraints in extension only, can be read. See a description of this deprecated format here \url{http://www.cril.univ-artois.fr/CPAI08/XCSP2_1.pdf}.
+
+Warning, \toulbar2 must be compiled with a specific option XML in the cmake.
+
 \subsection{Linkage format (.pre)}
 
-See \texttt{mendelsoft} companion software at \url{http://www.inra.fr/mia/T/MendelSoft} for pedigree correction. See also \url{https://carlit.toulouse.inra.fr/cgi-bin/awki.cgi/HaplotypeInference} for haplotype inference in half-sib families.
+See \texttt{mendelsoft} companion software at \url{http://miat.inrae.fr/MendelSoft} for pedigree correction. See also \url{https://carlit.toulouse.inra.fr/cgi-bin/awki.cgi/HaplotypeInference} for haplotype inference in half-sib families.
 
 %\subsection{BEP format}
 
@@ -1059,18 +1101,12 @@ See \texttt{mendelsoft} companion software at \url{http://www.inra.fr/mia/T/Mend
 
 See \toulbar2 reference manual which describes the libtb2.so C++ library API.
 
-\section{Using it from Python/Numberjack}
+\section{Using it from Python}
 
-See \url{http://numberjack.ucc.ie}.
+A Python interface is now available. Compile \toulbar2 with cmake option PYTB2 (and without MPI options) to generate a Python module {\sc pytoulbar2}
+ (in lib directory). See examples in {\tt src/pytoulbar2.cpp} file and {\tt python} directory.
 
-%\section{How does it work}
-%\label{how-work}
-%TODO
-%\subsection{Preprocessing}
-
-%\subsection{Upper bounding}
-
-%\subsection{Search algorithms}
+An older verion of \toulbar2 was integrated inside Numberjack. See  \url{http://numberjack.ucc.ie}.
 
 \bibliographystyle{plain}
 \bibliography{publications.bib}

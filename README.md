@@ -101,7 +101,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
 ## Authors
 
-toulbar2 was originally developped by Toulouse (INRA MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. 
+toulbar2 was originally developped by Toulouse (INRAE MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver. 
 
 Additional contributions by:
 * Caen University, France (GREYC) and University of Oran, Algeria for (parallel) variable neighborhood search methods
@@ -220,10 +220,24 @@ France. 5-9 september 2016
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
  In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017
 
+ Variable neighborhood search for graphical model energy minimization 
+ A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, L Loukil, and P Boizumault
+ Artificial Intelligence, 278(103194), 2020 
+
 * Clique cut global cost function (clique)
  Clique Cuts in Weighted Constraint Satisfaction
  S de Givry and G Katsirelos
  In Proc. of CP-17, pages 97-113, Melbourne, Australia, 2017
 
-Copyright (C) 2006-2019, toulbar2 team.
-toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)
+* Optimal sequence of diverse solutions
+ Guaranteed diversity & quality for the Weighted CSP
+ M Ruffini, J Vucinic, S de Givry, G Katsirelos, S Barbe, and T Schiex
+ In Proc. of ICTAI-19, pages 18-25, Portland, OR, USA, 2019
+ 
+* VAC integrality based variable heuristics and initial upper-bounding (RASPS)
+ Relaxation-Aware Heuristics for Exact Optimization in Graphical Models
+ F Trösser, S de Givry and G Katsirelos
+ In Proc. of CPAIOR-20, Vienna, Austria, 2020
+ 
+Copyright (C) 2006-2020, toulbar2 team.
+toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
