@@ -2088,71 +2088,92 @@ bool Solver::solve(bool first)
                                 prevDivSolutionCost = MIN_COST;
                                 bool incrementalSearch = true;
                                 solTrie.init(wcsp->getDivVariables());
-                                unsigned int sol_j = 0;
+                                vector<Cost> energies;
+                                bool extrapolatedBound = false;
 
                                 try {
                                     do {
                                         if (ToulBar2::verbose >= 0)
-                                            cout << "+++++++++ Search for solution " << sol_j + 1 << " +++++++++" << endl;
-                                        wcsp->setUb(initUb); // (re)start search with initial upper bound
+                                            cout << "+++++++++ Search for solution " << energies.size() + 1 << " +++++++++" << endl;
+                                        wcsp->setUb(initUb); // (re-)start search with an initial upper bound
                                         wcsp->initSolutionCost(); // set solution cost to infinity but do not forget solution vector
-                                        Mdd mdd;
 
-                                        //get solution from previous solve ; sol_j = number of the last solution found
-                                        if (sol_j > 0) {
+                                        //get solution from previous solve and add pairwise Hamming distance constraint
+                                        if (energies.size() > 0 && !extrapolatedBound) {
                                             switch (ToulBar2::divMethod) {
                                             case 0:
-                                                wcsp->addDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                wcsp->addDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
                                                 break;
                                             case 1:
-                                                wcsp->addHDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                wcsp->addHDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
                                                 break;
                                             case 2:
-                                                wcsp->addTDivConstraint(wcsp->getSolution(), sol_j - 1, initUb);
+                                                wcsp->addTDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
                                                 break;
                                             default:
-                                                cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod;
+                                                cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
+                                                exit(EXIT_FAILURE);
                                             }
                                             wcsp->propagate();
                                         }
-                                        sol_j += 1;
-                                        incrementalSearch = (sol_j < ToulBar2::divNbSol && wcsp->getDivVariables().size() > 0 && ToulBar2::divBound <= wcsp->getDivVariables().size());
+
+                                        Cost eUpperBound = initUb;
+                                        if (!extrapolatedBound) { // previous extrapolated bound was fine
+                                            if (energies.size() >= 2) {
+                                                auto back = energies.end() - 1;
+                                                Cost maxDelta = *(back) - *(--back);
+                                                int maxCount = 5;
+                                                while (back != energies.begin() && --maxCount >= 0) {
+                                                    maxDelta = max(maxDelta, *(back) - *(--back));
+                                                }
+                                                Cost newUb = energies.back() + max(UNIT_COST, 2 * maxDelta);
+                                                if (initUb > newUb) {
+                                                    extrapolatedBound = true;
+                                                    eUpperBound = newUb;
+                                                    wcsp->setUb(eUpperBound); // start search with an extrapolated upper bound
+                                                    if (ToulBar2::verbose >= 0)
+                                                        cout << "+++++++++ predictive bounding: " << wcsp->Cost2ADCost(eUpperBound) << endl;
+                                                }
+                                            }
+                                        } else {
+                                            extrapolatedBound = false;
+                                        }
+
                                         Store::store(); // protect the current CFN from changes by search or new cost functions
-                                        if (ToulBar2::divWidth > 0 && sol_j > 1) {
-                                            if (ToulBar2::verbose >= 1)
-                                                cout << "computing MDD.." << endl;
-                                            mdd = computeMDD(&solTrie, initUb);
-                                            if (ToulBar2::verbose >= 1)
-                                                cout << "MDD computed." << endl;
-
-                                            /*ofstream os(to_string(this) + "-wregular.dot");
-                                          printLayers(os, mdd);
-                                          os.close();*/
-                                            switch (ToulBar2::divMethod) {
-                                            case 0:
-                                                wcsp->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
-                                                break;
-                                            case 1:
-                                                wcsp->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
-                                                break;
-                                            case 2:
-                                                wcsp->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
-                                                break;
-                                            default:
-                                                cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod;
-                                            }
-                                            wcsp->propagate();
-                                        }
-                                        // reactivate on-the-fly variable elimination and dead-end elimination
-                                        for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
-                                            if (wcsp->unassigned(i)) {
-                                                ((WCSP *)wcsp)->getVar(i)->queueEliminate();
-                                                ((WCSP *)wcsp)->getVar(i)->queueDEE();
-                                            }
-                                        }
-                                        wcsp->propagate();
                                         try {
                                             try {
+                                                if (ToulBar2::divWidth > 0 && energies.size() > 1) {
+                                                    if (ToulBar2::verbose >= 1)
+                                                        cout << "computing MDD.." << endl;
+                                                    Mdd mdd = computeMDD(&solTrie, initUb);
+                                                    if (ToulBar2::verbose >= 1)
+                                                        cout << "MDD computed." << endl;
+                                                    //ofstream os(to_string(this) + "-wregular.dot");
+                                                    //printLayers(os, mdd);
+                                                    //os.close();
+                                                    switch (ToulBar2::divMethod) {
+                                                    case 0:
+                                                        wcsp->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
+                                                        break;
+                                                    case 1:
+                                                        wcsp->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        break;
+                                                    case 2:
+                                                        wcsp->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        break;
+                                                    default:
+                                                        cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
+                                                        exit(EXIT_FAILURE);
+                                                    }
+                                                }
+                                                // reactivate on-the-fly variable elimination and dead-end elimination
+                                                for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
+                                                    if (wcsp->unassigned(i)) {
+                                                        ((WCSP *)wcsp)->getVar(i)->queueEliminate();
+                                                        ((WCSP *)wcsp)->getVar(i)->queueDEE();
+                                                    }
+                                                }
+                                                wcsp->propagate();
                                                 initialDepth = Store::getDepth();
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
                                             } catch (const DivSolutionOut&) {
@@ -2162,21 +2183,26 @@ bool Solver::solve(bool first)
                                             wcsp->whenContradiction();
                                         }
                                         Store::restore(initDepth); // undo search
-                                        if (wcsp->getSolutionCost() < initUb) {
+                                        if (wcsp->getSolutionCost() < eUpperBound) {
                                             assert(wcsp->getSolutionCost() >= prevDivSolutionCost);
                                             prevDivSolutionCost = wcsp->getSolutionCost();
+                                            energies.push_back(prevDivSolutionCost);
                                             vector<Value> divSol;
-                                            for (auto var : wcsp->getDivVariables()) {
+                                            for (auto const& var : wcsp->getDivVariables()) {
                                                 divSol.push_back(wcsp->getSolution()[var->wcspIndex]);
                                             }
                                             solTrie.insertSolution(divSol);
                                             if (ToulBar2::solutionFile) {
                                                 ToulBar2::solutionFileRewindPos = ftell(ToulBar2::solutionFile);
                                             }
-                                        } else {
-                                            incrementalSearch = false;
+                                            incrementalSearch = (energies.size() < ToulBar2::divNbSol && wcsp->getDivVariables().size() > 0 && ToulBar2::divBound <= wcsp->getDivVariables().size());
+                                            extrapolatedBound = false;
+                                        } else { // No solution found
+                                            if (!extrapolatedBound) {
+                                                incrementalSearch = false;
+                                            }
                                         }
-                                        endSolve(wcsp->getSolutionCost() < initUb, wcsp->getSolutionCost(), !ToulBar2::limited);
+                                        endSolve(wcsp->getSolutionCost() < eUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
                                     } while (incrementalSearch); // this or an exception (no solution)
                                 } catch (const Contradiction&) {
                                     wcsp->whenContradiction();

@@ -817,7 +817,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         if (nbCostInserted < costVecSize) // there are some defaultCost remaining
             minCost = min(defaultCost, minCost);
     }
-    // al is true: we expect a full costs list
+    // all is true: we expect a full costs list
     else {
         unsigned int tableIdx = 0;
         while (tableIdx < costVecSize) {
@@ -1095,7 +1095,6 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                         assert(costs.size() == unarycf.var->getDomainInitSize());
                         unarycf.costs = costs;
                         unaryCFs.push_back(unarycf);
-                        //this->wcsp->postUnaryConstraint(scope[0], costs);
                         if (isShared) {
                             unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
                             for (const auto& ns : tableShares[funcName]) {
