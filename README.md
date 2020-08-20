@@ -227,8 +227,7 @@ France. 5-9 september 2016
 * Unified parallel decomposition guided variable neighborhood search (UDGVNS/UPDGVNS)
  Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
- In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017
- &
+ In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017 ;
  Variable neighborhood search for graphical model energy minimization 
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, L Loukil, and P Boizumault
  Artificial Intelligence, 278(103194), 2020 
