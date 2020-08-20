@@ -237,7 +237,7 @@ Please use one of the following references for citing toulbar2:
  S de Givry and G Katsirelos
  In Proc. of CP-17, pages 97-113, Melbourne, Australia, 2017
 
-* Optimal sequence of diverse solutions (div):
+* Greedy sequence of diverse solutions (div):
  Guaranteed diversity & quality for the Weighted CSP
  M Ruffini, J Vucinic, S de Givry, G Katsirelos, S Barbe, and T Schiex
  In Proc. of ICTAI-19, pages 18-25, Portland, OR, USA, 2019
