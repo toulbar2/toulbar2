@@ -1488,7 +1488,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
         for (int i = 0; i < arity_; i++) {
             if (printed)
                 os << ",";
-            os << scope[i]->wcspIndex;
+            os << scope[i]->getName();
             printed = true;
         }
         os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";

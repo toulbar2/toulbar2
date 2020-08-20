@@ -737,7 +737,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << scope[i]->wcspIndex;
+                os << scope[i]->getName();
                 printed = true;
             }
             os << "],\n\"type\":\"knapsack\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
@@ -780,7 +780,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << scope[i]->getCurrentVarId();
+                    os << scope[i]->getName();
                     printed = true;
                 }
             os << "],\n\"type\":\"knapsack\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";

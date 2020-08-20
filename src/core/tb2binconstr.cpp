@@ -97,7 +97,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\":{\"scope\":[";
-    os << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "," << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "],";
+    os << x->getName() << "," << y->getName() << "],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
