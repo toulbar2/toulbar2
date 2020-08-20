@@ -30,7 +30,7 @@ graphical models:
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
 
-Toulbar2 is now also able to collaborate with ML code that can learn
+toulbar2 is now also able to collaborate with ML code that can learn
 an additive graphical model (with constraints) from data (see the
 associated
 [paper](https://miat.inrae.fr/schiex/Export/Pushing_Data_in_your_CP_model.pdf),
@@ -228,7 +228,7 @@ France. 5-9 september 2016
  Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, F Eckhardt, and L Loukil
  In Proc. of UAI-17, pages 550-559, Sydney, Australia, 2017
-
+ &
  Variable neighborhood search for graphical model energy minimization 
  A Ouali, D Allouche, S de Givry, S Loudni, Y Lebbah, L Loukil, and P Boizumault
  Artificial Intelligence, 278(103194), 2020 
