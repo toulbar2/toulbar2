@@ -144,6 +144,9 @@ enum {
     OPT_qpbo_ext,
     OPT_qpbogz_ext,
     OPT_qpboxz_ext,
+    OPT_opb_ext,
+    OPT_opbgz_ext,
+    OPT_opbxz_ext,
     OPT_treedec_ext,
     OPT_clusterdec_ext,
 
@@ -349,6 +352,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_qpbo_ext, (char*)"--qpbo_ext", SO_REQ_SEP },
     { OPT_qpbogz_ext, (char*)"--qpbogz_ext", SO_REQ_SEP },
     { OPT_qpboxz_ext, (char*)"--qpboxz_ext", SO_REQ_SEP },
+    { OPT_opb_ext, (char*)"--opb_ext", SO_REQ_SEP },
+    { OPT_opbgz_ext, (char*)"--opbgz_ext", SO_REQ_SEP },
+    { OPT_opbxz_ext, (char*)"--opbxz_ext", SO_REQ_SEP },
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
@@ -694,6 +700,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
+    cout << "   *.opb : linear pseudo-Boolean optimization format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 #ifdef XMLFLAG
@@ -715,7 +722,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
 #ifdef BOOST
-    cout << "Note: cfn, cnf, LG, qpbo, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
+    cout << "Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
 #endif
     cout << "Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=\".new\" Examples: --cfn_ext='.json' --wcspgz_ext='.wgz' --sol_ext='.sol2'  " << endl;
     cout << endl;
@@ -838,7 +845,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only)" << endl;
-    cout << "   -z=[integer] : 1 or 3: saves original instance (by default), 2 or 4: saves after preprocessing (this option can be combined with the previous one)" << endl;
+    cout << "   -z=[integer] : 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves after preprocessing in 2-wcsp or 4-cfn format (this option can be combined with the previous one)" << endl;
     cout << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 #ifndef NDEBUG
     cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
@@ -1019,6 +1026,9 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["qpbo_ext"] = ".qpbo";
     file_extension_map["qpbogz_ext"] = ".qpbo.gz";
     file_extension_map["qpboxz_ext"] = ".qpbo.xz";
+    file_extension_map["opb_ext"] = ".opb";
+    file_extension_map["opbgz_ext"] = ".opb.gz";
+    file_extension_map["opbxz_ext"] = ".opb.xz";
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
 
@@ -2336,6 +2346,31 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading xz compressed quadratic pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::qpbo = true;
                 strext.insert(".qpbo.xz");
+                strfile.push_back(problem);
+                ToulBar2::xz = true;
+            }
+
+            // linear pseudo-Boolean optimization file
+            if (check_file_ext(problem, file_extension_map["opb_ext"]) || ToulBar2::stdin_format.compare("opb") == 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading linear pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb");
+                strfile.push_back(problem);
+            }
+            if (check_file_ext(problem, file_extension_map["opbgz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading gzip'd linear pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb.gz");
+                strfile.push_back(problem);
+                ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["opbxz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xz compressed linear pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb.xz");
                 strfile.push_back(problem);
                 ToulBar2::xz = true;
             }

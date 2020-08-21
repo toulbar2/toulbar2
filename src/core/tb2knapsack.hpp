@@ -447,7 +447,7 @@ public:
                         if (c > 0) {
                             //New value for p_k to obtain integer cost (p_k' might be decimal)
                             Double Newkcost = 0;
-                            Double epsi = 1e-5;
+                            Double epsi = 1e-7;
                             if(splitvar != 0) {
                                 if (capacity >= 0)
                                     Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]),

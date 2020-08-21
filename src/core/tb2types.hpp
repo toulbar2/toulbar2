@@ -397,6 +397,7 @@ typedef enum {
     WCSP_FORMAT = 1,
     CFN_FORMAT,
     WCNF_FORMAT,
+    OPB_FORMAT,
     BEP_FORMAT,
     CNF_FORMAT,
     LG_FORMAT,
@@ -521,6 +522,7 @@ public:
     static bool wcnf;
     static bool qpbo;
     static double qpboQuadraticCoefMultiplier;
+    static bool opb;
 
     static unsigned int divNbSol;
     static unsigned int divBound;

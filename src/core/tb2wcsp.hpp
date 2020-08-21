@@ -413,6 +413,8 @@ public:
     void addValueName(int xIndex, const string& name);
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
+    void postNullaryConstraint(Double cost);
+    void postNullaryConstraint(Cost cost);
     void postUnary(int xIndex, vector<Cost>& costs);
     int postUnary(int xIndex, Value* d, int dsize, Cost penalty);
     void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false);
@@ -510,6 +512,7 @@ public:
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = ""); ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
+    void read_opb(const char* fileName); ///< \brief load linear pseudo-Boolean optimization problem
     void read_legacy(const char* fileName); ///< \brief common ending section for all readers
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)

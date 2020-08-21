@@ -171,6 +171,7 @@ BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
 double ToulBar2::qpboQuadraticCoefMultiplier;
+bool ToulBar2::opb;
 
 char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
@@ -357,6 +358,7 @@ void tb2init()
     ToulBar2::wcnf = false;
     ToulBar2::qpbo = false;
     ToulBar2::qpboQuadraticCoefMultiplier = 2.;
+    ToulBar2::opb = false;
 
     ToulBar2::varOrder = NULL;
     ToulBar2::btdMode = 0;
@@ -435,8 +437,8 @@ void tb2checkOptions()
         ToulBar2::divNbSol = min((Long)ToulBar2::divNbSol, ToulBar2::allSolutions);
         ToulBar2::allSolutions = 0;
     }
-    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
-        cerr << "Error: cost multiplier cannot be used with UAI and QPBO formats. Use option -precision instead." << endl;
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb)) {
+        cerr << "Error: cost multiplier cannot be used with UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
         exit(1);
     }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
@@ -1859,7 +1861,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     AbstractNaryConstraint* cc = NULL;
     if (isclause) {
-        assert(arity == clausetuple.size());
+        assert(arity == (int)clausetuple.size());
         if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
         cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
     } else {
@@ -2216,6 +2218,21 @@ int WCSP::postMaxWeight(int* scopeIndex, int arity, const string& semantics, con
     return gc->wcspIndex;
 }
 
+/// \brief add a constant cost to problem lower bound (can be positive or negative)
+void WCSP::postNullaryConstraint(Cost cost)
+{
+    if (cost >= MIN_COST) {
+        increaseLb(cost);
+    } else {
+        decreaseLb(cost);
+    }
+}
+
+void WCSP::postNullaryConstraint(Double cost)
+{
+    postNullaryConstraint((Cost)(round(cost * pow(10, ToulBar2::decimalPoint))));
+}
+
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
 void WCSP::postUnary(int xIndex, vector<Cost>& costs)
@@ -2253,7 +2270,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
 
     // normalize the cost function to make it positive
-    long double minCost = std::numeric_limits<long double>::infinity();
+    Double minCost = std::numeric_limits<Double>::infinity();
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         minCost = min(minCost, dcosts[a]);
     }
@@ -3353,7 +3370,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << ((original) ? i : vars[i]->getCurrentVarId()) << "],\"defaultcost\":" << 0 << ",\n";
+            os << vars[i]->getName() << "],\"defaultcost\":" << 0 << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (((EnumeratedVariable *) vars[i])->toIndex(domcost[v].value)) : v) << ","

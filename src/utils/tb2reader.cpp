@@ -2021,7 +2021,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     free(Nfile2);
 
     // Done internally by the CFN reader
-    if (!ToulBar2::cfn) {
+    if (!ToulBar2::cfn && !ToulBar2::opb) {
         if (ToulBar2::deltaUbS.length() != 0) {
             ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
             ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
@@ -2133,6 +2133,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         read_wcnf(fileName);
     } else if (ToulBar2::qpbo) {
         read_qpbo(fileName);
+    } else if (ToulBar2::opb) {
+        read_opb(fileName);
     } else {
         read_legacy(fileName);
     }
@@ -3705,6 +3707,199 @@ void WCSP::read_qpbo(const char* fileName)
     if (ToulBar2::verbose >= 0) {
         cout << "Read " << n << " variables, with " << 2 << " values at most, and " << m << " nonzero matrix costs (quadratic coef. multiplier: " << ToulBar2::qpboQuadraticCoefMultiplier << ", shifting value: " << -negCost << ")" << endl;
     }
+}
+
+bool isInteger(string &s) {return string("0123456789+-").find(s[0]) != string::npos;}
+void WCSP::read_opb(const char* fileName)
+{
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::xz) {
+#if (BOOST_VERSION >= 106500)
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed opb format files." << endl;
+        exit(EXIT_FAILURE);
+#endif
+    }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open opb file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed opb format files." << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open opb file : " << fileName << endl;
+        exit(EXIT_FAILURE);
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
+
+    Cost inclowerbound = MIN_COST;
+    updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
+
+    int maxarity = 0;
+    int nbvar = 0;
+    int nblinear = 0;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+
+    map<string,int> varnames;
+    string dummy, token;
+    streampos prev;
+
+    // skip initial comments
+    file >> token;
+    while (token[0] == '*') {
+        getline(file, dummy);
+        file >> token;
+    }
+
+    // read linear objective function
+    bool opt = true;
+    int opsize = 4;
+    Double multiplier = Exp10((Double)ToulBar2::resolution);
+    ToulBar2::costMultiplier = multiplier;
+    if (token.substr(0,4) == "min:") {
+    } else if (token.substr(0,4) == "max:") {
+        ToulBar2::costMultiplier *= -1.0;
+    } else {
+        opt = false;
+        opsize = 0;
+    }
+
+    if (opt) {
+        do {
+            Cost cost; // cost can be negative or decimal
+            file >> token; // read cost or varname
+            if (!file) break;
+            if (isInteger(token)) {
+                cost = string2Cost((const char *)token.c_str());
+                if (token.back() != ';') {
+                    file >> token; // read varname
+                }
+            } else {
+                cost = UNIT_COST;
+            }
+            if ((cost >= MIN_COST && multiplier * cost >= (Double)MAX_COST) ||
+                (cost < MIN_COST && multiplier * -cost >= (Double)MAX_COST)) {
+                cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+                exit(EXIT_FAILURE);
+            }
+            cost *= ToulBar2::costMultiplier;
+            if (token != ";") {
+                if (!isInteger(token)) {
+                    int var = 0;
+                    if (varnames.find(token) != varnames.end()) {
+                        var = varnames[token];
+                    } else {
+                        var = makeEnumeratedVariable(token, 0, 1);
+                        addValueName(var, "v0");
+                        addValueName(var, "v1");
+                        varnames[token] = var;
+                        nbvar++;
+                    }
+                    EnumeratedVariable* x = (EnumeratedVariable*)vars[var];
+                    TemporaryUnaryConstraint unaryconstr;
+                    unaryconstr.var = x;
+                    if (cost < MIN_COST) {
+                        unaryconstr.costs.push_back(-cost);
+                        unaryconstr.costs.push_back(MIN_COST);
+                        negCost -= cost;
+                    } else {
+                        unaryconstr.costs.push_back(MIN_COST);
+                        unaryconstr.costs.push_back(cost);
+                    }
+                    unaryconstrs.push_back(unaryconstr);
+                } else {
+                    inclowerbound += cost;
+                }
+            }
+        } while (token.back() != ';');
+    }
+
+    // read linear constraints
+    while (file) {
+        vector<int> scopeIndex;
+        vector<Cost> coefs;
+        string params;
+        Cost coef; // allows long long coefficients inside linear constraints
+        do {
+            if (opt) file >> token; // read coefficient or operator or comments
+            opt = true;
+            // skip comments
+            while (file && token[0] == '*') {
+                getline(file, dummy);
+                file >> token;
+            }
+            if (!file || token == ";") break;
+            if (token.substr(0,2) == "<=" || token.substr(0,1) == "=" || token.substr(0,2) == ">=") {
+                int opsize = (token.substr(0,1) == "=")?1:2;
+                string op = token.substr(0,opsize);
+                file >> token; // read right coef
+                assert(isInteger(token));
+                coef = string2Cost((char*)token.c_str());
+                maxarity = max(maxarity, (int)scopeIndex.size());
+                nblinear++;
+                if (op == ">=" || op == "=") {
+                    params = to_string(coef);
+                    for (unsigned int i=0; i<scopeIndex.size(); i++) {
+                        params += " " + to_string(coefs[i]);
+                    }
+                    postKnapsackConstraint(scopeIndex, params);
+                }
+                if (op == "<=" || op == "=") {
+                    params = to_string(-coef);
+                    for (unsigned int i=0; i<scopeIndex.size(); i++) {
+                        params += " " + to_string(-coefs[i]);
+                    }
+                    postKnapsackConstraint(scopeIndex, params);
+                }
+            } else {
+                assert(token.back() != ';');
+                assert(isInteger(token));
+                coef = string2Cost((char*)token.c_str());
+                file >> token; // read varname
+                assert(token.back() != ';');
+                assert(!isInteger(token));
+                if (token.back() == '=') {
+                    int opsize = (token[token.size()-2] == '<' || token[token.size()-2] == '>')?2:1;
+                    token = token.substr(0, token.size() - opsize);
+                }
+                int var = 0;
+                if (varnames.find(token) != varnames.end()) {
+                    var = varnames[token];
+                } else {
+                    var = makeEnumeratedVariable(token, 0, 1);
+                    addValueName(var, "v0");
+                    addValueName(var, "v1");
+                    varnames[token] = var;
+                    nbvar++;
+                }
+                scopeIndex.push_back(var);
+                coefs.push_back(coef);
+            }
+        } while (token.back() != ';');
+    }
+
+    // apply basic initial propagation AFTER complete network loading
+    postNullaryConstraint(inclowerbound);
+
+    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+    }
+    sortConstraints();
+    if (ToulBar2::verbose >= 0)
+        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << "." << endl;
 }
 
 /* Local Variables: */

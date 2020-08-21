@@ -138,6 +138,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def_readwrite_static("wcnf", &ToulBar2::wcnf)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
+        .def_readwrite_static("opb", &ToulBar2::opb)
         .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
         .def_readwrite_static("divBound", &ToulBar2::divBound)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
@@ -295,6 +296,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) &WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
+        .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
         .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
             return s.postUnaryConstraint(xIndex, costs, incremental);
         }, py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
@@ -375,6 +377,8 @@ PYBIND11_MODULE(pytoulbar2, m)
                 ToulBar2::wcnf = true;
             if (strstr(fileName, ".qpbo"))
                 ToulBar2::qpbo = true;
+            if (strstr(fileName, ".opb"))
+                ToulBar2::opb = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;

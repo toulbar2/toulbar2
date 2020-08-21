@@ -392,11 +392,11 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   filename (or "sol" if no parameter is given). The current directory
   is used as a relative path.
 \item[{-w=[integer]}] 1: writes value numbers, 2: writes value names, 3: writes also variable names (default value is 1, this option can be used in combination with -w=filename).
-\item[{-z=[filename]}] saves problem in wcsp format in filename (or
-  "problem.wcsp" if no parameter is given) writes also the graphviz
+\item[{-z=[filename]}] saves problem in wcsp or cfn format in filename (or
+  "problem.wcsp"/"problem.cfn" if no parameter is given) writes also the graphviz
   dot file and the degree distribution of the input problem
-\item[{-z=[integer]}] 1: saves original instance (by default), 2: saves
-  after preprocessing (this option can be used in combination with -z=filename)
+\item[{-z=[integer]}] 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves
+  after preprocessing in 2-wcsp or 4-cfn format (this option can be used in combination with -z=filename)
 \item[{-x=[(,i[$=\#<>$]a)*]}] performs an elementary operation ('$=$':assign, '$\#$':remove, '$<$':decrease, '$>$':increase) with value a on variable of index i (multiple
   operations are separated by a comma and no space) (without any
   argument, a complete assignment -- used as initial upper bound and
