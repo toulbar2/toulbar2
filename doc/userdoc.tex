@@ -148,7 +148,7 @@ toulbar2 [option parameters] <file>
 and \toulbar2 will start solving the optimization problem described in
 its file argument. By default, the extension of the file (either
 \texttt{.cfn}, \texttt{.cfn.gz}, \texttt{.cfn.xz}, \texttt{.wcsp}, \texttt{.wcsp.gz}, \texttt{.wcsp.xz},
-\texttt{.wcnf}, \texttt{.wcnf.gz}, \texttt{.wcnf.xz}, \texttt{.cnf}, \texttt{.cnf.gz}, \texttt{.cnf.xz}, \texttt{.qpbo}, \texttt{.qpbo.gz}, \texttt{.qpbo.xz},
+\texttt{.wcnf}, \texttt{.wcnf.gz}, \texttt{.wcnf.xz}, \texttt{.cnf}, \texttt{.cnf.gz}, \texttt{.cnf.xz}, \texttt{.qpbo}, \texttt{.qpbo.gz}, \texttt{.qpbo.xz}, \texttt{.opb}, \texttt{.opb.gz}, \texttt{.opb.xz},
 \texttt{.uai}, \texttt{.uai.gz}, \texttt{.uai.xz}, \texttt{.LG}, \texttt{.LG.gz}, \texttt{.LG.xz}, \texttt{.pre} or \texttt{.bep}) is used
 to determine the nature of the file (see
 section~\ref{file-formats}). There is no specific order for the
@@ -1084,6 +1084,31 @@ position index $j$ (integer belonging to $[1,|N|]$),
 coefficient $W_{ij}$ (float number)
 such that $i \leq j$ and $W_{ij} \neq 0$
 \end{itemize}
+
+\subsection{OPB format (.opb)}
+
+The OPB file format is used to express pseudo-Boolean satisfaction and optimization models. 
+These models may only contain $0/1$ Boolean variables. The format is defined by an optional objective function followed by a set of linear constraints.
+Variables may be multiplied together in the objective function, but currently not in the constraints due to some restriction in the reader.
+The objective function must start with the \verb!min:! or \verb!max:! keyword followed by \verb!coef_1 varname_1_1 varname_1_2 ... coef2 varname\_2\_1 ...! and end with a \verb!;!.
+Linear constraints are composed in the same way, ended by a comparison operator (\verb!<=!, \verb!>=!, or \verb!=!) followed by the right-hand side coefficient and \verb!;!.
+Each coefficient must be an integer beginning with its sign (\verb!+! or \verb!-! with no extra space).
+Comment lines start with a \verb!*!.
+
+An example with a quadratic objective and 7 linear constraints is:
+\begin{DoxyCode}
+max: +1 x1 x2 +2 x3 x4;
++1 x2 +1 x1 >= 1;
++1 x3 +1 x1 >= 1;
++1 x4 +1 x1 >= 1;
++1 x3 +1 x2 >= 1;
++1 x4 +1 x2 >= 1;
++1 x4 +1 x3 >= 1;
++2 x1 +2 x2 +2 x3 +2 x4 <= 7;
+\end{DoxyCode}
+
+Internally, all integer costs are multiplied by a power of ten depending on the -precision option. 
+For problems with big integers, try to reduce the precision ({\em e.g.,} use option -precision 0).
 
 \subsection{XCSP2.1 format (.xml)}
 
